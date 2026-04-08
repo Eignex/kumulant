@@ -138,8 +138,10 @@ class VarianceTest {
 
     @Test
     fun `test merge`() {
-        val v1 = Variance().apply { (1..5).forEach { update(it.toDouble(), 1.0) } }
-        val v2 = Variance().apply { (6..10).forEach { update(it.toDouble(), 1.0) } }
+        val v1 =
+            Variance().apply { (1..5).forEach { update(it.toDouble(), 1.0) } }
+        val v2 =
+            Variance().apply { (6..10).forEach { update(it.toDouble(), 1.0) } }
 
         v1.merge(v2.read())
         assertEquals(8.25, v1.variance, DELTA)
@@ -268,7 +270,10 @@ class RollingStatsTest {
 
         // A simple mean would be ~91.8, but a heavily decayed mean
         // will aggressively track the latest dense value.
-        assertTrue(stat.mean > 80.0, "Mean should heavily favor the massive recent update")
+        assertTrue(
+            stat.mean > 80.0,
+            "Mean should heavily favor the massive recent update"
+        )
     }
 
     @Test
