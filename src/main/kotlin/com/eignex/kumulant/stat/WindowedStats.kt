@@ -1,29 +1,12 @@
 package com.eignex.kumulant.stat
 
-import com.eignex.kumulant.concurrent.FixedAtomicMode
 import com.eignex.kumulant.concurrent.SerialMode
 import com.eignex.kumulant.concurrent.StreamMode
 import com.eignex.kumulant.concurrent.StreamRef
 import com.eignex.kumulant.concurrent.defaultStreamMode
-import com.eignex.kumulant.concurrent.withMode
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.flatten
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
-
-fun main() {
-    val stats = withMode(FixedAtomicMode(10)) {
-        val s = Sum()
-        s.windowed(1.seconds, 10)
-    }
-    repeat(100) {
-        stats.update(it.toDouble())
-        Thread.sleep(1L)
-    }
-    println(stats.read())
-    println(stats.read().flatten())
-}
 
 fun <R : Result> SeriesStat<R>.windowed(
     duration: Duration,
