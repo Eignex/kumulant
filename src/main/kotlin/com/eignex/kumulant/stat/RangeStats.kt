@@ -2,40 +2,33 @@ package com.eignex.kumulant.stat
 
 import com.eignex.kumulant.concurrent.StreamMode
 import com.eignex.kumulant.concurrent.defaultStreamMode
+import com.eignex.kumulant.concurrent.getValue
 import com.eignex.kumulant.core.HasRange
 import com.eignex.kumulant.core.RangeResult
 import com.eignex.kumulant.core.SeriesStat
 
 /**
  * Tracks the minimum and maximum of a stream.
- *
- * Uses CAS loops on atomic references for lock-free operation under concurrent modes.
  */
 class Range(
     val mode: StreamMode = defaultStreamMode,
     override val name: String? = null
 ) : SeriesStat<RangeResult>, HasRange {
 
-    private val _min = mode.newReference(Double.POSITIVE_INFINITY)
-    private val _max = mode.newReference(Double.NEGATIVE_INFINITY)
+    private val _min = mode.newDouble(Double.POSITIVE_INFINITY)
+    private val _max = mode.newDouble(Double.NEGATIVE_INFINITY)
 
-    override val min: Double get() = _min.load()
-    override val max: Double get() = _max.load()
+    override val min: Double by _min
+    override val max: Double by _max
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        while (true) {
-            val current = _min.load()
-            if (value >= current || _min.compareAndSet(current, value)) break
-        }
-        while (true) {
-            val current = _max.load()
-            if (value <= current || _max.compareAndSet(current, value)) break
-        }
+        if (value < _min.load()) _min.store(value)
+        if (value > _max.load()) _max.store(value)
     }
 
     override fun merge(values: RangeResult) {
-        update(values.min, System.nanoTime())
-        update(values.max, System.nanoTime())
+        if (values.min < _min.load()) _min.store(values.min)
+        if (values.max > _max.load()) _max.store(values.max)
     }
 
     override fun reset() {
