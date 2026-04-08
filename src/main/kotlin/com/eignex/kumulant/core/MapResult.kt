@@ -1,4 +1,4 @@
-package com.eignex.katom.core
+package com.eignex.kumulant.core
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable

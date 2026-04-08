@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalAtomicApi::class)
 
-package com.eignex.katom.concurrent
+package com.eignex.kumulant.concurrent
 
 import java.util.concurrent.atomic.DoubleAdder as JDoubleAdder
 import java.util.concurrent.atomic.LongAdder as JLongAdder

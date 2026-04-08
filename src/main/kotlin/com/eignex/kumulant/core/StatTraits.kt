@@ -1,4 +1,4 @@
-package com.eignex.katom.core
+package com.eignex.kumulant.core
 
 import kotlin.math.pow
 import kotlin.math.sqrt

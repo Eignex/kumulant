@@ -1,7 +1,12 @@
-package com.eignex.katom.stat
+package com.eignex.kumulant.stat
 
-import com.eignex.katom.concurrent.*
-import com.eignex.katom.core.*
+import com.eignex.kumulant.concurrent.StreamDouble
+import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.concurrent.defaultStreamMode
+import com.eignex.kumulant.core.DecayingRateResult
+import com.eignex.kumulant.core.HasRate
+import com.eignex.kumulant.core.RateResult
+import com.eignex.kumulant.core.SeriesStat
 import kotlin.math.exp
 import kotlin.time.Duration
 

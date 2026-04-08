@@ -1,6 +1,6 @@
-package com.eignex.katom.core
+package com.eignex.kumulant.core
 
-import com.eignex.katom.concurrent.StreamMode
+import com.eignex.kumulant.concurrent.StreamMode
 
 /**
  * The base interface for all statistical accumulators.

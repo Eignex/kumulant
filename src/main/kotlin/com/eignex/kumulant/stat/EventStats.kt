@@ -1,10 +1,17 @@
-package com.eignex.katom.stat
+package com.eignex.kumulant.stat
 
-import com.eignex.katom.concurrent.SerialMode
-import com.eignex.katom.concurrent.StreamMode
-import com.eignex.katom.concurrent.defaultStreamMode
-import com.eignex.katom.concurrent.getValue
-import com.eignex.katom.core.*
+import com.eignex.kumulant.concurrent.SerialMode
+import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.concurrent.defaultStreamMode
+import com.eignex.kumulant.concurrent.getValue
+import com.eignex.kumulant.core.CountResult
+import com.eignex.kumulant.core.DecayingRateResult
+import com.eignex.kumulant.core.HasCount
+import com.eignex.kumulant.core.HasRate
+import com.eignex.kumulant.core.HasTotalWeights
+import com.eignex.kumulant.core.RateResult
+import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.SumResult
 import kotlin.time.Duration
 
 class Count(

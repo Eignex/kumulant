@@ -1,1 +1,1 @@
-rootProject.name = "katom"
+rootProject.name = "kumulant"

@@ -1,6 +1,9 @@
-package com.eignex.katom.concurrent
+package com.eignex.kumulant.concurrent
 
-import com.eignex.katom.core.*
+import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.VectorStat
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write

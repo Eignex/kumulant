@@ -1,7 +1,19 @@
-package com.eignex.katom.stat
+package com.eignex.kumulant.stat
 
-import com.eignex.katom.concurrent.*
-import com.eignex.katom.core.*
+import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.concurrent.defaultStreamMode
+import com.eignex.kumulant.concurrent.getValue
+import com.eignex.kumulant.core.HasMean
+import com.eignex.kumulant.core.HasSampleVariance
+import com.eignex.kumulant.core.HasShapeMoments
+import com.eignex.kumulant.core.HasSum
+import com.eignex.kumulant.core.HasTotalWeights
+import com.eignex.kumulant.core.HasVariance
+import com.eignex.kumulant.core.MomentsResult
+import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.SumResult
+import com.eignex.kumulant.core.WeightedMeanResult
+import com.eignex.kumulant.core.WeightedVarianceResult
 import kotlin.math.exp
 
 class Sum(
@@ -51,7 +63,8 @@ class Mean(
         _mean.add(r)
     }
 
-    override fun read(timestampNanos: Long) = WeightedMeanResult(totalWeights, mean, name)
+    override fun read(timestampNanos: Long) =
+        WeightedMeanResult(totalWeights, mean, name)
 
     override fun merge(values: WeightedMeanResult) {
         if (values.totalWeights <= 0.0) return
@@ -272,7 +285,8 @@ class RollingMean(
         _totalWeights.store(0.0)
     }
 
-    override fun read(timestampNanos: Long) = WeightedMeanResult(totalWeights, mean, name)
+    override fun read(timestampNanos: Long) =
+        WeightedMeanResult(totalWeights, mean, name)
 }
 
 class RollingVariance(

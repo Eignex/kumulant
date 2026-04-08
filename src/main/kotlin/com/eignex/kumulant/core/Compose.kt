@@ -1,6 +1,6 @@
 @file:Suppress("SERIALIZER_TYPE_INCOMPATIBLE")
 
-package com.eignex.katom.core
+package com.eignex.kumulant.core
 
 import kotlinx.serialization.*
 import kotlinx.serialization.encoding.Decoder

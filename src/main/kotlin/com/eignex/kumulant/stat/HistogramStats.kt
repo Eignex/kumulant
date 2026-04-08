@@ -1,7 +1,15 @@
-package com.eignex.katom.stat
+package com.eignex.kumulant.stat
 
-import com.eignex.katom.concurrent.*
-import com.eignex.katom.core.*
+import com.eignex.kumulant.concurrent.*
+import com.eignex.kumulant.concurrent.ArrayBins
+import com.eignex.kumulant.concurrent.StreamDouble
+import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.concurrent.defaultStreamMode
+import com.eignex.kumulant.core.HasQuantile
+import com.eignex.kumulant.core.QuantileResult
+import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.SketchResult
+import com.eignex.kumulant.core.SparseHistogramResult
 import kotlin.math.*
 
 class FrugalQuantile(

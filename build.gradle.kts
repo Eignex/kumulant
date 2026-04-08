@@ -16,7 +16,7 @@ version = findProperty("ciVersion") as String? ?: "SNAPSHOT"
 
 repositories { mavenCentral() }
 
-val katomGenerator by configurations.creating
+val kumulantGenerator by configurations.creating
 
 kotlin {
     jvmToolchain(21)
@@ -33,7 +33,7 @@ dependencies {
     implementation(kotlin("reflect"))
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
-    katomGenerator("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.0")
+    kumulantGenerator("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.0")
 }
 
 tasks.test { useJUnitPlatform() }
@@ -48,9 +48,9 @@ publishing {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
             pom {
-                name.set("katom")
+                name.set("kumulant")
                 description.set("Pure Kotlin JVM library.")
-                url.set("https://github.com/Eignex/katom")
+                url.set("https://github.com/Eignex/kumulant")
                 licenses {
                     license {
                         name.set("Apache-2.0")
@@ -58,9 +58,9 @@ publishing {
                     }
                 }
                 scm {
-                    url.set("https://github.com/Eignex/katom")
-                    connection.set("scm:git:https://github.com/Eignex/katom.git")
-                    developerConnection.set("scm:git:ssh://git@github.com/Eignex/katom.git")
+                    url.set("https://github.com/Eignex/kumulant")
+                    connection.set("scm:git:https://github.com/Eignex/kumulant.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/Eignex/kumulant.git")
                 }
                 developers {
                     developer {
@@ -93,12 +93,12 @@ signing {
     }
 }
 
-val generatedSourceDir = layout.buildDirectory.dir("generated/source/katom")
+val generatedSourceDir = layout.buildDirectory.dir("generated/source/kumulant")
 
 val generateExtensions by tasks.registering(ExtensionGeneratorTask::class) {
     inputDir.set(file("src/main/kotlin"))
-    outputFile.set(generatedSourceDir.map { it.file("com/eignex/katom/core/Extensions.kt") })
-    compilerClasspath.from(katomGenerator)
+    outputFile.set(generatedSourceDir.map { it.file("com/eignex/kumulant/core/Extensions.kt") })
+    compilerClasspath.from(kumulantGenerator)
 }
 
 sourceSets.main {

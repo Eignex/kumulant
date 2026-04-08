@@ -136,7 +136,7 @@ abstract class GenerateAction : WorkAction<GenerateParameters> {
 
             // Generation Logic
             val sb = StringBuilder()
-            sb.append("package com.eignex.katom.core\n\n")
+            sb.append("package com.eignex.kumulant.core\n\n")
             sb.append("// GENERATED CODE - DO NOT MODIFY\n")
             sb.append("import kotlin.jvm.JvmName\n\n")
 

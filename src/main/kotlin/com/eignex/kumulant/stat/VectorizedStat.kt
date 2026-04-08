@@ -1,11 +1,11 @@
-package com.eignex.katom.stat
+package com.eignex.kumulant.stat
 
-import com.eignex.katom.concurrent.StreamMode
-import com.eignex.katom.core.Result
-import com.eignex.katom.core.ResultList
-import com.eignex.katom.core.SeriesStat
-import com.eignex.katom.core.Stat
-import com.eignex.katom.core.VectorStat
+import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.ResultList
+import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.VectorStat
 
 
 fun <R : Result> ((Int) -> SeriesStat<R>).expandedToVector(

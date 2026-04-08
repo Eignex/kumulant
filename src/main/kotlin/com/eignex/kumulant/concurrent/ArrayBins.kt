@@ -1,4 +1,4 @@
-package com.eignex.katom.concurrent
+package com.eignex.kumulant.concurrent
 
 import kotlin.math.max
 import kotlin.math.min

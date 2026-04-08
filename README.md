@@ -1,4 +1,4 @@
-# katom
+# kumulant
 
 TODO:
 

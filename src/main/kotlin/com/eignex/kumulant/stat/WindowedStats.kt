@@ -1,14 +1,14 @@
-package com.eignex.katom.stat
+package com.eignex.kumulant.stat
 
-import com.eignex.katom.concurrent.FixedAtomicMode
-import com.eignex.katom.concurrent.SerialMode
-import com.eignex.katom.concurrent.StreamMode
-import com.eignex.katom.concurrent.StreamRef
-import com.eignex.katom.concurrent.defaultStreamMode
-import com.eignex.katom.concurrent.withMode
-import com.eignex.katom.core.Result
-import com.eignex.katom.core.SeriesStat
-import com.eignex.katom.core.flatten
+import com.eignex.kumulant.concurrent.FixedAtomicMode
+import com.eignex.kumulant.concurrent.SerialMode
+import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.concurrent.StreamRef
+import com.eignex.kumulant.concurrent.defaultStreamMode
+import com.eignex.kumulant.concurrent.withMode
+import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.flatten
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
