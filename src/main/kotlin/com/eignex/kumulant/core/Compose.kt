@@ -140,7 +140,7 @@ class SeriesStat4<A : Result, B : Result, C : Result, D : Result>(
     val s3: SeriesStat<C>,
     val s4: SeriesStat<D>,
     override val name: String? = null
-) : SeriesStat<Result4<A, B, C, D>> {
+) : SeriesStat<Result4<A, B, C, D>>, ComposedStat {
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         s1.update(value, timestampNanos, weight)
@@ -170,6 +170,8 @@ class SeriesStat4<A : Result, B : Result, C : Result, D : Result>(
         s3.reset()
         s4.reset()
     }
+
+    override fun withName(name: String) = SeriesStat4(s1, s2, s3, s4, name)
 
     override fun copy(mode: StreamMode?, name: String?) =
         SeriesStat4(s1.copy(mode), s2.copy(mode), s3.copy(mode), s4.copy(mode), name ?: this.name)
