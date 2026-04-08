@@ -4,7 +4,6 @@ import com.eignex.kumulant.concurrent.StreamMode
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 
 
@@ -41,12 +40,8 @@ class VectorizedStat<R : Result>(
         return ResultList(stats.map { it.read(timestampNanos) }, name)
     }
 
-    override fun copy(
-        mode: StreamMode?,
-        name: String?
-    ): Stat<ResultList<R>> {
-        return VectorizedStat(dimensions, template, name ?: this.name, mode ?: this.mode)
-    }
+    override fun copy(mode: StreamMode?, name: String?): VectorStat<ResultList<R>> =
+        VectorizedStat(dimensions, template, name ?: this.name, mode ?: this.mode)
 
     override fun merge(values: ResultList<R>) {
         require(values.results.size == dimensions)

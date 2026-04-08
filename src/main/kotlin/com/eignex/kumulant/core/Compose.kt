@@ -2,6 +2,7 @@
 
 package com.eignex.kumulant.core
 
+import com.eignex.kumulant.concurrent.StreamMode
 import kotlinx.serialization.*
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -90,6 +91,9 @@ class SeriesStat2<A : Result, B : Result>(
     }
 
     override fun withName(name: String) = SeriesStat2(s1, s2, name)
+
+    override fun copy(mode: StreamMode?, name: String?) =
+        SeriesStat2(s1.copy(mode), s2.copy(mode), name ?: this.name)
 }
 
 class SeriesStat3<A : Result, B : Result, C : Result>(
@@ -125,6 +129,9 @@ class SeriesStat3<A : Result, B : Result, C : Result>(
     }
 
     override fun withName(name: String) = SeriesStat3(s1, s2, s3, name)
+
+    override fun copy(mode: StreamMode?, name: String?) =
+        SeriesStat3(s1.copy(mode), s2.copy(mode), s3.copy(mode), name ?: this.name)
 }
 
 class SeriesStat4<A : Result, B : Result, C : Result, D : Result>(
@@ -163,6 +170,9 @@ class SeriesStat4<A : Result, B : Result, C : Result, D : Result>(
         s3.reset()
         s4.reset()
     }
+
+    override fun copy(mode: StreamMode?, name: String?) =
+        SeriesStat4(s1.copy(mode), s2.copy(mode), s3.copy(mode), s4.copy(mode), name ?: this.name)
 }
 
 operator fun <A : Result, B : Result> SeriesStat<A>.plus(

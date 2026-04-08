@@ -1,10 +1,6 @@
 package com.eignex.kumulant.core
 
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
 
@@ -36,22 +32,6 @@ value class ResultDouble(val value: Double) : ResultValue
 value class ResultArray(val values: DoubleArray) : ResultValue
 
 
-object ResultValueSerializer : KSerializer<ResultEntry> {
-
-    override fun deserialize(decoder: Decoder): ResultEntry =
-        throw UnsupportedOperationException("Deserialization not supported for MapResult.")
-
-    override val descriptor: SerialDescriptor
-        get() = TODO("Not yet implemented")
-
-    override fun serialize(
-        encoder: Encoder,
-        value: ResultEntry
-    ) {
-        TODO("Not yet implemented")
-    }
-}
-
 fun Result.flatten(prefixResults: Boolean = true): List<ResultEntry> =
     flattenToList(prefixResults)
 
@@ -59,25 +39,62 @@ private fun Result.flattenToList(
     usePrefix: Boolean,
     prefix: String = ""
 ): List<ResultEntry> {
+    // Composed result types hold sub-Results typed via generic parameters; handle them
+    // directly to avoid Kotlin reflection issues with generic type erasure.
+    when (this) {
+        is Result2<*, *> -> {
+            val dest = mutableListOf<ResultEntry>()
+            listOf(first, second).forEach { r ->
+                val n = r.nameOrDefault
+                dest.addAll(r.flattenToList(usePrefix, if (usePrefix) "$prefix$n." else ""))
+            }
+            return dest
+        }
+        is Result3<*, *, *> -> {
+            val dest = mutableListOf<ResultEntry>()
+            listOf(first, second, third).forEach { r ->
+                val n = r.nameOrDefault
+                dest.addAll(r.flattenToList(usePrefix, if (usePrefix) "$prefix$n." else ""))
+            }
+            return dest
+        }
+        is Result4<*, *, *, *> -> {
+            val dest = mutableListOf<ResultEntry>()
+            listOf(first, second, third, fourth).forEach { r ->
+                val n = r.nameOrDefault
+                dest.addAll(r.flattenToList(usePrefix, if (usePrefix) "$prefix$n." else ""))
+            }
+            return dest
+        }
+        is ResultList<*> -> {
+            val dest = mutableListOf<ResultEntry>()
+            results.forEach { r ->
+                val n = r.nameOrDefault
+                dest.addAll(r.flattenToList(usePrefix, if (usePrefix) "$prefix$n." else ""))
+            }
+            return dest
+        }
+        else -> Unit
+    }
+
     val constructorOrder = this::class.primaryConstructor?.parameters
         ?.mapIndexed { index, param -> param.name to index }
         ?.toMap() ?: emptyMap()
 
-    val sortedProperties = this::class.memberProperties
+    @Suppress("UNCHECKED_CAST")
+    val sortedProperties = (this::class.memberProperties as Collection<kotlin.reflect.KProperty1<Any, *>>)
         .filter { it.name in constructorOrder && it.name != "name" }
         .sortedBy { constructorOrder[it.name] }
 
     val destination = mutableListOf<ResultEntry>()
 
     sortedProperties.forEach { prop ->
-        val value = prop.call(this) ?: return@forEach
+        val value = prop.get(this) ?: return@forEach
         val key = if (usePrefix) "$prefix${prop.name}" else prop.name
 
-        // todo somehow result2 first/second not added
-        // trying to remove trim excess a bit
         if (value is Result) {
-            val name = value.nameOrDefault
-            val newPrefix = if (usePrefix) "$prefix$name." else ""
+            val n = value.nameOrDefault
+            val newPrefix = if (usePrefix) "$prefix$n." else ""
             destination.addAll(value.flattenToList(usePrefix, newPrefix))
         } else {
             destination.add(ResultEntry(key, ResultValue.create(value)))

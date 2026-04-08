@@ -95,12 +95,8 @@ class WindowedSeriesStat<R : Result>(
         }
     }
 
-    override fun copy(
-        mode: StreamMode?,
-        name: String?
-    ): SeriesStat<R> {
-        TODO("Not yet implemented")
-    }
+    override fun copy(mode: StreamMode?, name: String?): SeriesStat<R> =
+        WindowedSeriesStat(windowDuration, slices, template, mode ?: this.mode, name ?: this.name)
 
     override fun read(timestampNanos: Long): R {
         // Create an empty accumulator using the factory
