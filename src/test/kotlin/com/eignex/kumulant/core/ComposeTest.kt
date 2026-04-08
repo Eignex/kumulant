@@ -3,6 +3,7 @@ package com.eignex.kumulant.core
 import com.eignex.kumulant.concurrent.AtomicMode
 import com.eignex.kumulant.concurrent.SerialMode
 import com.eignex.kumulant.stat.*
+import kotlinx.serialization.json.Json
 import kotlin.test.*
 
 private const val DELTA = 1e-12
@@ -120,5 +121,26 @@ class ComposeTest {
         assertTrue(keys.any { it.endsWith("sum") })
         assertTrue(keys.any { it.endsWith("mean") })
         assertTrue(keys.any { it.endsWith("variance") })
+    }
+
+    @Test
+    fun `Result2 round-trips through JSON with typed decode`() {
+        val stat = Sum(name = "s") + Mean(name = "m")
+        stat.update(2.0); stat.update(4.0)
+        val json = Json.encodeToString(stat.read())
+        val decoded: Result2<SumResult, WeightedMeanResult> = Json.decodeFromString(json)
+        assertEquals(6.0, decoded.first.sum, DELTA)
+        assertEquals(3.0, decoded.second.mean, DELTA)
+    }
+
+    @Test
+    fun `Result3 round-trips through JSON with typed decode`() {
+        val stat = Sum(name = "s") + Mean(name = "m") + Variance(name = "v")
+        stat.update(1.0); stat.update(3.0)
+        val json = Json.encodeToString(stat.read())
+        val decoded: Result3<SumResult, WeightedMeanResult, WeightedVarianceResult> = Json.decodeFromString(json)
+        assertEquals(4.0, decoded.first.sum, DELTA)
+        assertEquals(2.0, decoded.second.mean, DELTA)
+        assertEquals(1.0, decoded.third.variance, DELTA)
     }
 }

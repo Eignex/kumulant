@@ -1,5 +1,3 @@
-@file:Suppress("SERIALIZER_TYPE_INCOMPATIBLE")
-
 package com.eignex.kumulant.core
 
 import com.eignex.kumulant.concurrent.StreamMode
@@ -20,47 +18,71 @@ data class ResultList<out R : Result>(
     override fun withName(name: String) = ResultList<R>(results, name)
 }
 
-class ResultDelegateSerializer<T : Result> : KSerializer<T> {
+@Suppress("SERIALIZER_TYPE_INCOMPATIBLE")
+@Serializable(with = Result2.Companion::class)
+@SerialName("Result2")
+data class Result2<A : Result, B : Result>(
+    val first: A,
+    val second: B,
+    override val name: String? = null
+) : Result {
+    @Serializable @SerialName("Result2")
+    private data class S(val results: List<Result>, val name: String? = null)
 
-    private val delegate = Result.serializer()
-    override val descriptor = delegate.descriptor
-
-    override fun serialize(encoder: Encoder, value: T) {
-        encoder.encodeSerializableValue(delegate, value as Result)
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun deserialize(decoder: Decoder): T {
-        return decoder.decodeSerializableValue(delegate) as T
+    companion object : KSerializer<Result2<*, *>> {
+        override val descriptor = S.serializer().descriptor
+        override fun serialize(encoder: Encoder, value: Result2<*, *>) =
+            S.serializer().serialize(encoder, S(listOf(value.first, value.second), value.name))
+        @Suppress("UNCHECKED_CAST")
+        override fun deserialize(decoder: Decoder) =
+            S.serializer().deserialize(decoder).let { Result2(it.results[0], it.results[1], it.name) }
     }
 }
 
-@Serializable
-@SerialName("Result2")
-data class Result2<A : Result, B : Result>(
-    @Serializable(with = ResultDelegateSerializer::class) val first: A,
-    @Serializable(with = ResultDelegateSerializer::class) val second: B,
-    override val name: String? = null
-) : Result
-
-@Serializable
+@Suppress("SERIALIZER_TYPE_INCOMPATIBLE")
+@Serializable(with = Result3.Companion::class)
 @SerialName("Result3")
 data class Result3<A : Result, B : Result, C : Result>(
-    @Serializable(with = ResultDelegateSerializer::class) val first: A,
-    @Serializable(with = ResultDelegateSerializer::class) val second: B,
-    @Serializable(with = ResultDelegateSerializer::class) val third: C,
+    val first: A,
+    val second: B,
+    val third: C,
     override val name: String? = null
-) : Result
+) : Result {
+    @Serializable @SerialName("Result3")
+    private data class S(val results: List<Result>, val name: String? = null)
 
-@Serializable
+    companion object : KSerializer<Result3<*, *, *>> {
+        override val descriptor = S.serializer().descriptor
+        override fun serialize(encoder: Encoder, value: Result3<*, *, *>) =
+            S.serializer().serialize(encoder, S(listOf(value.first, value.second, value.third), value.name))
+        @Suppress("UNCHECKED_CAST")
+        override fun deserialize(decoder: Decoder) =
+            S.serializer().deserialize(decoder).let { Result3(it.results[0], it.results[1], it.results[2], it.name) }
+    }
+}
+
+@Suppress("SERIALIZER_TYPE_INCOMPATIBLE")
+@Serializable(with = Result4.Companion::class)
 @SerialName("Result4")
 data class Result4<A : Result, B : Result, C : Result, D : Result>(
-    @Serializable(with = ResultDelegateSerializer::class) val first: A,
-    @Serializable(with = ResultDelegateSerializer::class) val second: B,
-    @Serializable(with = ResultDelegateSerializer::class) val third: C,
-    @Serializable(with = ResultDelegateSerializer::class) val fourth: D,
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D,
     override val name: String? = null
-) : Result
+) : Result {
+    @Serializable @SerialName("Result4")
+    private data class S(val results: List<Result>, val name: String? = null)
+
+    companion object : KSerializer<Result4<*, *, *, *>> {
+        override val descriptor = S.serializer().descriptor
+        override fun serialize(encoder: Encoder, value: Result4<*, *, *, *>) =
+            S.serializer().serialize(encoder, S(listOf(value.first, value.second, value.third, value.fourth), value.name))
+        @Suppress("UNCHECKED_CAST")
+        override fun deserialize(decoder: Decoder) =
+            S.serializer().deserialize(decoder).let { Result4(it.results[0], it.results[1], it.results[2], it.results[3], it.name) }
+    }
+}
 
 class SeriesStat2<A : Result, B : Result>(
     val s1: SeriesStat<A>,
