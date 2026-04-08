@@ -1,15 +1,27 @@
 package com.eignex.katom.stat
 
-import com.eignex.katom.core.*
+import com.eignex.katom.concurrent.StreamMode
+import com.eignex.katom.core.Result
+import com.eignex.katom.core.ResultList
+import com.eignex.katom.core.SeriesStat
+import com.eignex.katom.core.Stat
+import com.eignex.katom.core.VectorStat
 
-class ExpandedVectorStat<R : Result>(
+
+fun <R : Result> ((Int) -> SeriesStat<R>).expandedToVector(
+    dimensions: Int
+): VectorStat<ResultList<R>> {
+    return VectorizedStat(dimensions, this)
+}
+class VectorizedStat<R : Result>(
     val dimensions: Int,
-    factory: (index: Int) -> SeriesStat<R>,
+    val template: (index: Int) -> SeriesStat<R>,
     override val name: String? = null,
+    val mode: StreamMode? = null
 ) : VectorStat<ResultList<R>> {
 
     private val stats: Array<SeriesStat<R>> =
-        Array(dimensions) { i -> factory(i) }
+        Array(dimensions) { i -> template(i) }
 
     override fun update(
         vector: DoubleArray,
@@ -27,6 +39,13 @@ class ExpandedVectorStat<R : Result>(
 
     override fun read(timestampNanos: Long): ResultList<R> {
         return ResultList(stats.map { it.read(timestampNanos) }, name)
+    }
+
+    override fun copy(
+        mode: StreamMode?,
+        name: String?
+    ): Stat<ResultList<R>> {
+        return VectorizedStat(dimensions, template, name ?: this.name, mode ?: this.mode)
     }
 
     override fun merge(values: ResultList<R>) {

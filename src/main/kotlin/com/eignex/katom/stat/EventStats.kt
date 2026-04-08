@@ -28,6 +28,11 @@ class Count(
     }
 
     override fun read(timestampNanos: Long) = CountResult(count, name)
+
+    override fun copy(
+        mode: StreamMode?,
+        name: String?
+    ) = Count(mode ?: this.mode, name ?: this.name)
 }
 
 
@@ -42,6 +47,11 @@ class TotalWeights(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         _totalWeights.add(weight)
     }
+
+    override fun copy(
+        mode: StreamMode?,
+        name: String?
+    ) = TotalWeights(mode ?: this.mode, name ?: this.name)
 
     override fun merge(values: SumResult) {
         _totalWeights.add(values.sum)
@@ -65,6 +75,11 @@ class EventRate(
         _rate.update(1.0, timestampNanos)
     }
 
+    override fun copy(
+        mode: StreamMode?,
+        name: String?
+    ) = EventRate(mode ?: this.mode, name ?: this.name)
+
     override fun merge(values: RateResult) {
         _rate.merge(values)
     }
@@ -79,7 +94,7 @@ class EventRate(
 }
 
 class DecayingEventRate(
-    halfLife: Duration,
+    val halfLife: Duration,
     val mode: StreamMode = defaultStreamMode,
     override val name: String? = null
 ) : SeriesStat<DecayingRateResult>, HasRate {
@@ -88,6 +103,11 @@ class DecayingEventRate(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         _rate.update(1.0, timestampNanos)
     }
+
+    override fun copy(
+        mode: StreamMode?,
+        name: String?
+    ) = DecayingEventRate(halfLife, mode ?: this.mode, name ?: this.name)
 
     override fun merge(values: DecayingRateResult) {
         _rate.merge(values)

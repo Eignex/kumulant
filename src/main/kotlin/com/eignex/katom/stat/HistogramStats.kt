@@ -38,6 +38,17 @@ class FrugalQuantile(
         }
     }
 
+    override fun copy(
+        mode: StreamMode?,
+        name: String?
+    ) = FrugalQuantile(
+        q,
+        stepSize,
+        initialEstimate,
+        mode ?: this.mode,
+        name ?: this.name
+    )
+
     override fun merge(values: QuantileResult) {
         val current = _estimate.load()
         _estimate.store((current + values.quantile) / 2.0)
@@ -92,6 +103,16 @@ class DDSketch(
             _zeroCount.add(weight)
         }
     }
+
+    override fun copy(
+        mode: StreamMode?,
+        name: String?
+    ) = DDSketch(
+        relativeError,
+        probabilities,
+        mode ?: this.mode,
+        name ?: this.name
+    )
 
     override fun merge(values: SketchResult) {
         require(abs(this.gamma - values.gamma) < 1e-9) {
@@ -198,7 +219,7 @@ class DDSketch(
  */
 class HdrHistogram(
     val lowestDiscernibleValue: Double = 0.001,
-    initialHighestTrackableValue: Double = 100.0,
+    val initialHighestTrackableValue: Double = 100.0,
     val significantDigits: Int = 3,
     val mode: StreamMode = defaultStreamMode,
     override val name: String? = null
@@ -301,6 +322,17 @@ class HdrHistogram(
             return
         }
     }
+
+    override fun copy(
+        mode: StreamMode?,
+        name: String?
+    ) = HdrHistogram(
+        lowestDiscernibleValue,
+        initialHighestTrackableValue,
+        significantDigits,
+        mode ?: this.mode,
+        name ?: this.name
+    )
 
     override fun merge(values: SparseHistogramResult) {
         for (i in values.lowerBounds.indices) {

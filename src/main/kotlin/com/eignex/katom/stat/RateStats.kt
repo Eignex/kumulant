@@ -25,6 +25,11 @@ class Rate(
         _totalValues.add(value * weight)
     }
 
+    override fun copy(
+        mode: StreamMode?,
+        name: String?
+    ) = Rate(mode ?: this.mode, name ?: this.name)
+
     override fun read(timestampNanos: Long): RateResult {
         val start = if (_startTimestampNanos == Long.MIN_VALUE) timestampNanos
         else _startTimestampNanos
@@ -56,7 +61,7 @@ class Rate(
 }
 
 class DecayingRate(
-    halfLife: Duration,
+    val halfLife: Duration,
     val mode: StreamMode = defaultStreamMode,
     override val name: String? = null,
 ) : SeriesStat<DecayingRateResult>, HasRate {
@@ -89,6 +94,11 @@ class DecayingRate(
             return
         }
     }
+
+    override fun copy(
+        mode: StreamMode?,
+        name: String?
+    ) = DecayingRate(halfLife, mode ?: this.mode, name ?: this.name)
 
     private fun tryRotateEpoch(oldEpoch: Epoch, now: Long) {
         val oldVal = oldEpoch.accumulator.load()
