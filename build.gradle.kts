@@ -34,6 +34,7 @@ dependencies {
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.10.0")
     kumulantGenerator("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.0")
 }
 

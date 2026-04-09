@@ -1,9 +1,14 @@
+@file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+
 package com.eignex.kumulant.core
 
 import com.eignex.kumulant.concurrent.AtomicMode
 import com.eignex.kumulant.concurrent.SerialMode
 import com.eignex.kumulant.stat.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.encodeToByteArray
+import kotlinx.serialization.protobuf.ProtoBuf
 import kotlin.test.*
 
 private const val DELTA = 1e-12
@@ -142,5 +147,39 @@ class ComposeTest {
         assertEquals(4.0, decoded.first.sum, DELTA)
         assertEquals(2.0, decoded.second.mean, DELTA)
         assertEquals(1.0, decoded.third.variance, DELTA)
+    }
+
+    @Test
+    fun `Result2 round-trips through protobuf with typed decode`() {
+        val stat = Sum(name = "s") + Mean(name = "m")
+        stat.update(2.0); stat.update(4.0)
+        val bytes = ProtoBuf.encodeToByteArray(stat.read())
+        val decoded: Result2<SumResult, WeightedMeanResult> = ProtoBuf.decodeFromByteArray(bytes)
+        assertEquals(6.0, decoded.first.sum, DELTA)
+        assertEquals(3.0, decoded.second.mean, DELTA)
+    }
+
+    @Test
+    fun `Result3 round-trips through protobuf with typed decode`() {
+        val stat = Sum(name = "s") + Mean(name = "m") + Variance(name = "v")
+        stat.update(1.0); stat.update(3.0)
+        val bytes = ProtoBuf.encodeToByteArray(stat.read())
+        val decoded: Result3<SumResult, WeightedMeanResult, WeightedVarianceResult> = ProtoBuf.decodeFromByteArray(bytes)
+        assertEquals(4.0, decoded.first.sum, DELTA)
+        assertEquals(2.0, decoded.second.mean, DELTA)
+        assertEquals(1.0, decoded.third.variance, DELTA)
+    }
+
+    @Test
+    fun `Result4 round-trips through protobuf with typed decode`() {
+        val stat = Sum(name = "s") + Mean(name = "m") + Variance(name = "v") + Moments(name = "mo")
+        stat.update(1.0); stat.update(3.0); stat.update(5.0)
+        val bytes = ProtoBuf.encodeToByteArray(stat.read())
+        val decoded: Result4<SumResult, WeightedMeanResult, WeightedVarianceResult, MomentsResult> =
+            ProtoBuf.decodeFromByteArray(bytes)
+        assertEquals(9.0, decoded.first.sum, DELTA)
+        assertEquals(3.0, decoded.second.mean, DELTA)
+        assertEquals(8.0 / 3.0, decoded.third.variance, DELTA)
+        assertEquals(3.0, decoded.fourth.mean, DELTA)
     }
 }
