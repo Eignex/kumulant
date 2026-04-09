@@ -93,7 +93,7 @@ class RateTest {
     @Test
     fun `copy is independent`() {
         val r1 = Rate().apply { update(10.0, T0) }
-        val r2 = r1.copy()
+        val r2 = r1.create()
         r2.update(5.0, T1)
         assertEquals(10.0, r1.read(T1).totalValue, DELTA)
     }
@@ -170,7 +170,7 @@ class DecayingSumTest {
     fun `copy is independent`() {
         val s1 = DecayingSum(halfLife = 1.seconds)
         s1.update(10.0, T0)
-        val s2 = s1.copy()
+        val s2 = s1.create()
         s2.update(10.0, T1)
         assertTrue(s1.read(T2).sum < s2.read(T2).sum)
     }
@@ -239,7 +239,7 @@ class DecayingMeanTest {
     fun `copy is independent`() {
         val m1 = DecayingMean(halfLife = 1.seconds)
         m1.update(5.0, T0)
-        val m2 = m1.copy()
+        val m2 = m1.create()
         repeat(100) { m2.update(100.0, T1) }
         assertTrue(m2.read(T1).mean > m1.read(T1).mean)
     }
@@ -314,7 +314,7 @@ class DecayingVarianceTest {
     fun `copy is independent`() {
         val v1 = DecayingVariance(halfLife = 1.seconds)
         v1.update(5.0, T0)
-        val v2 = v1.copy()
+        val v2 = v1.create()
         repeat(50) { v2.update(100.0, T1) }
         // v2 mean should be near 100; v1 mean should still be near 5
         assertTrue(v2.read(T1).mean > v1.read(T1).mean)
@@ -352,7 +352,7 @@ class DecayingRateTest {
     fun `copy is independent`() {
         val r1 = DecayingRate(halfLife = 1.seconds)
         r1.update(10.0, T0)
-        val r2 = r1.copy()
+        val r2 = r1.create()
         r2.update(100.0, T1)
         // r1 must not see r2's update
         val rate1 = r1.read(T2).rate

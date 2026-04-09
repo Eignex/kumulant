@@ -57,7 +57,7 @@ class CountTest {
     @Test
     fun `copy is independent`() {
         val c1 = Count(AtomicMode).apply { update(1.0) }
-        val c2 = c1.copy(SerialMode)
+        val c2 = c1.create(SerialMode)
         c2.update(2.0)
         assertEquals(1L, c1.count)
         assertEquals(1L, c2.count)
@@ -150,7 +150,7 @@ class EventRateTest {
     @Test
     fun `copy is independent`() {
         val er1 = EventRate().apply { repeat(5) { update(1.0) } }
-        val er2 = er1.copy()
+        val er2 = er1.create()
         repeat(3) { er2.update(1.0) }
         assertEquals(5.0, er1.read().totalValue, DELTA)
     }
@@ -189,7 +189,7 @@ class DecayingEventRateTest {
     fun `copy is independent`() {
         val er1 = DecayingEventRate(halfLife = 1.seconds)
         repeat(10) { er1.update(1.0) }
-        val er2 = er1.copy()
+        val er2 = er1.create()
         repeat(100) { er2.update(1.0) }
         assertTrue(er2.rate > er1.rate)
     }

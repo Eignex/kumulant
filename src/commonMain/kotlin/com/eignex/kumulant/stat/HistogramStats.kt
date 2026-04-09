@@ -46,7 +46,7 @@ class FrugalQuantile(
         }
     }
 
-    override fun copy(
+    override fun create(
         mode: StreamMode?,
         name: String?
     ) = FrugalQuantile(
@@ -111,7 +111,7 @@ class DDSketch(
         }
     }
 
-    override fun copy(
+    override fun create(
         mode: StreamMode?,
         name: String?
     ) = DDSketch(
@@ -316,7 +316,7 @@ class HdrHistogram(
         }
     }
 
-    override fun copy(
+    override fun create(
         mode: StreamMode?,
         name: String?
     ) = HdrHistogram(

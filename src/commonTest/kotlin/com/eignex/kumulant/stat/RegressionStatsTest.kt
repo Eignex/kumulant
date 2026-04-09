@@ -149,7 +149,7 @@ class OLSTest {
         val ols1 = OLS(AtomicMode, "orig").apply {
             for (x in 0..4) update(x.toDouble(), x.toDouble())
         }
-        val ols2 = ols1.copy(SerialMode, "copy")
+        val ols2 = ols1.create(SerialMode, "copy")
         ols2.update(100.0, 200.0)
         // ols1 must not be affected
         assertEquals(5.0, ols1.read().totalWeights, EPS)
@@ -230,7 +230,7 @@ class CovarianceTest {
             update(1.0, 2.0)
             update(2.0, 4.0)
         }
-        val c2 = c1.copy(name = "copy")
+        val c2 = c1.create(name = "copy")
         c2.update(5.0, 10.0)
         // c1 unchanged
         assertEquals(2.0, c1.read().totalWeights, EPS)

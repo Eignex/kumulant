@@ -143,7 +143,7 @@ class StatOperationsTest {
     fun `copy of mapSeries stat is independent`() {
         val s1 = Sum().mapSeries { it * 10.0 }
         s1.update(1.0)
-        val s2 = s1.copy()
+        val s2 = s1.create()
         s2.update(1.0)
         assertEquals(10.0, s1.read().sum, DELTA)
         assertEquals(10.0, s2.read().sum, DELTA)

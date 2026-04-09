@@ -10,7 +10,7 @@ class SumTest {
     @Test
     fun `copy starts fresh and is independent`() {
         val s1 = Sum().apply { update(10.0) }
-        val s2 = s1.copy()   // fresh empty copy
+        val s2 = s1.create()   // fresh empty copy
         s1.update(5.0)
         assertEquals(15.0, s1.sum, DELTA)
         assertEquals(0.0, s2.sum, DELTA)
@@ -60,7 +60,7 @@ class MeanTest {
     @Test
     fun `copy starts fresh and is independent`() {
         val m1 = Mean().apply { update(10.0) }
-        val m2 = m1.copy()   // fresh empty copy
+        val m2 = m1.create()   // fresh empty copy
         m1.update(20.0)
         assertEquals(15.0, m1.mean, DELTA)
         assertEquals(0.0, m2.totalWeights, DELTA)
@@ -131,7 +131,7 @@ class VarianceTest {
     @Test
     fun `copy starts fresh and is independent`() {
         val v1 = Variance().apply { update(10.0); update(20.0) }
-        val v2 = v1.copy()   // fresh empty copy
+        val v2 = v1.create()   // fresh empty copy
         v1.update(30.0)
         assertEquals(3.0, v1.totalWeights, DELTA)
         assertEquals(0.0, v2.totalWeights, DELTA)
@@ -222,7 +222,7 @@ class MomentsTest {
     @Test
     fun `copy starts fresh and is independent`() {
         val m1 = Moments().apply { update(1.0); update(2.0); update(3.0) }
-        val m2 = m1.copy()   // fresh empty copy
+        val m2 = m1.create()   // fresh empty copy
         m1.update(4.0)
         assertEquals(4.0, m1.totalWeights, delta)
         assertEquals(0.0, m2.totalWeights, delta)
@@ -318,7 +318,7 @@ class RollingStatsTest {
     @Test
     fun `RollingMean copy starts fresh and is independent`() {
         val m1 = RollingMean(alpha = 0.5).apply { update(10.0) }
-        val m2 = m1.copy()   // fresh empty copy
+        val m2 = m1.create()   // fresh empty copy
         repeat(10) { m1.update(10.0) }
         assertEquals(0.0, m2.mean, delta)
         assertTrue(m1.mean > 0.0)
@@ -334,7 +334,7 @@ class RollingStatsTest {
     @Test
     fun `RollingVariance copy starts fresh and is independent`() {
         val v1 = RollingVariance(alpha = 0.5).apply { update(1.0); update(2.0) }
-        val v2 = v1.copy()   // fresh empty copy
+        val v2 = v1.create()   // fresh empty copy
         repeat(10) { v1.update(1000.0) }
         assertEquals(0.0, v2.totalWeights, delta)
         assertTrue(v1.totalWeights > 0.0)

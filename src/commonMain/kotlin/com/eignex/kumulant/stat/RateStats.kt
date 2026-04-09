@@ -37,7 +37,7 @@ class Rate(
         _totalValues.add(value * weight)
     }
 
-    override fun copy(
+    override fun create(
         mode: StreamMode?,
         name: String?
     ) = Rate(mode ?: this.mode, name ?: this.name)
@@ -147,7 +147,7 @@ class DecayingSum(
         epochRef.compareAndSet(current, Epoch(currentTimeNanos(), mode.newDouble(0.0)))
     }
 
-    override fun copy(mode: StreamMode?, name: String?) =
+    override fun create(mode: StreamMode?, name: String?) =
         DecayingSum(halfLife, mode ?: this.mode, name ?: this.name)
 }
 
@@ -186,7 +186,7 @@ class DecayingRate(
 
     override val rate: Double get() = read().rate
 
-    override fun copy(mode: StreamMode?, name: String?) =
+    override fun create(mode: StreamMode?, name: String?) =
         DecayingRate(halfLife, mode ?: this.mode, name ?: this.name)
 }
 
@@ -236,7 +236,7 @@ class DecayingMean(
         _sumW.reset()
     }
 
-    override fun copy(mode: StreamMode?, name: String?) =
+    override fun create(mode: StreamMode?, name: String?) =
         DecayingMean(halfLife, mode ?: this.mode, name ?: this.name)
 }
 
@@ -305,6 +305,6 @@ class DecayingVariance(
         _sumW.reset()
     }
 
-    override fun copy(mode: StreamMode?, name: String?) =
+    override fun create(mode: StreamMode?, name: String?) =
         DecayingVariance(halfLife, mode ?: this.mode, name ?: this.name)
 }

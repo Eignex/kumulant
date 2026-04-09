@@ -42,7 +42,7 @@ class Sum(
         _sum.store(0.0)
     }
 
-    override fun copy(mode: StreamMode?, name: String?) = Sum(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = Sum(mode ?: this.mode, name ?: this.name)
 }
 
 class Mean(
@@ -87,7 +87,7 @@ class Mean(
         _mean.store(0.0)
     }
 
-    override fun copy(mode: StreamMode?, name: String?) = Mean(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = Mean(mode ?: this.mode, name ?: this.name)
 }
 
 class Variance(
@@ -144,7 +144,7 @@ class Variance(
     override fun read(timestampNanos: Long) =
         WeightedVarianceResult(totalWeights, mean, variance, name)
 
-    override fun copy(mode: StreamMode?, name: String?) = Variance(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = Variance(mode ?: this.mode, name ?: this.name)
 }
 
 class Moments(
@@ -233,7 +233,7 @@ class Moments(
     override fun read(timestampNanos: Long) =
         MomentsResult(totalWeights, mean, m2, m3, m4, name)
 
-    override fun copy(mode: StreamMode?, name: String?) = Moments(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = Moments(mode ?: this.mode, name ?: this.name)
 }
 
 class RollingMean(
@@ -298,7 +298,7 @@ class RollingMean(
     override fun read(timestampNanos: Long) =
         WeightedMeanResult(totalWeights, mean, name)
 
-    override fun copy(mode: StreamMode?, name: String?) = RollingMean(alpha, mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = RollingMean(alpha, mode ?: this.mode, name ?: this.name)
 }
 
 class RollingVariance(
@@ -397,5 +397,5 @@ class RollingVariance(
         name
     )
 
-    override fun copy(mode: StreamMode?, name: String?) = RollingVariance(alpha, mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = RollingVariance(alpha, mode ?: this.mode, name ?: this.name)
 }

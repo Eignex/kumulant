@@ -32,8 +32,8 @@ class LockedSeriesStat<R : Result>(private val delegate: SeriesStat<R>) :
         return lock.read { delegate.read(timestampNanos) }
     }
 
-    override fun copy(mode: StreamMode?, name: String?): SeriesStat<R> =
-        LockedSeriesStat(delegate.copy(mode, name))
+    override fun create(mode: StreamMode?, name: String?): SeriesStat<R> =
+        LockedSeriesStat(delegate.create(mode, name))
 }
 
 class LockedPairedStat<R : Result>(private val delegate: PairedStat<R>) :
@@ -56,8 +56,8 @@ class LockedPairedStat<R : Result>(private val delegate: PairedStat<R>) :
         return lock.read { delegate.read(timestampNanos) }
     }
 
-    override fun copy(mode: StreamMode?, name: String?): PairedStat<R> =
-        LockedPairedStat(delegate.copy(mode, name))
+    override fun create(mode: StreamMode?, name: String?): PairedStat<R> =
+        LockedPairedStat(delegate.create(mode, name))
 }
 
 class LockedVectorStat<R : Result>(private val delegate: VectorStat<R>) :
@@ -80,6 +80,6 @@ class LockedVectorStat<R : Result>(private val delegate: VectorStat<R>) :
         return lock.read { delegate.read(timestampNanos) }
     }
 
-    override fun copy(mode: StreamMode?, name: String?): VectorStat<R> =
-        LockedVectorStat(delegate.copy(mode, name))
+    override fun create(mode: StreamMode?, name: String?): VectorStat<R> =
+        LockedVectorStat(delegate.create(mode, name))
 }

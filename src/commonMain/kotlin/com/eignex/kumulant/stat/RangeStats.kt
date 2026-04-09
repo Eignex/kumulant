@@ -42,7 +42,7 @@ class Range(
 
     override fun read(timestampNanos: Long) = RangeResult(min, max, name)
 
-    override fun copy(mode: StreamMode?, name: String?) = Range(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = Range(mode ?: this.mode, name ?: this.name)
 }
 
 class Min(
@@ -67,7 +67,7 @@ class Min(
 
     override fun read(timestampNanos: Long) = MinResult(min, name)
 
-    override fun copy(mode: StreamMode?, name: String?) = Min(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = Min(mode ?: this.mode, name ?: this.name)
 }
 
 class Max(
@@ -92,7 +92,7 @@ class Max(
 
     override fun read(timestampNanos: Long) = MaxResult(max, name)
 
-    override fun copy(mode: StreamMode?, name: String?) = Max(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = Max(mode ?: this.mode, name ?: this.name)
 }
 
 // Planned: Percentile — exact min/max at arbitrary quantile boundaries using a sorted structure

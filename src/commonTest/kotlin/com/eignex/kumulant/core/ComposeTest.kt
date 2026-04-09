@@ -49,7 +49,7 @@ class ComposeTest {
     fun `SeriesStat2 copy is independent`() {
         val s1 = Sum(AtomicMode, "a") + Mean(AtomicMode, "b")
         s1.update(10.0)
-        val s2 = s1.copy(SerialMode)
+        val s2 = s1.create(SerialMode)
         s2.update(5.0)
         // s1 must not see s2's update
         assertEquals(10.0, s1.read().first.sum, DELTA)
@@ -76,7 +76,7 @@ class ComposeTest {
     fun `SeriesStat3 copy is independent fresh stat`() {
         val s1 = Sum() + Mean() + Variance()
         s1.update(10.0)
-        val s2 = s1.copy(SerialMode)
+        val s2 = s1.create(SerialMode)
         s2.update(5.0)
         assertEquals(10.0, s1.read().first.sum, DELTA)
         assertEquals(5.0, s2.read().first.sum, DELTA)
@@ -97,7 +97,7 @@ class ComposeTest {
     fun `SeriesStat4 copy is independent fresh stat`() {
         val s1 = Sum() + Mean() + Variance() + Moments()
         s1.update(10.0)
-        val s2 = s1.copy(SerialMode)
+        val s2 = s1.create(SerialMode)
         s2.update(20.0)
         assertEquals(10.0, s1.read().first.sum, DELTA)
         assertEquals(20.0, s2.read().first.sum, DELTA)

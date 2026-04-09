@@ -87,7 +87,7 @@ class RangeStatsTest {
     @Test
     fun `copy creates independent fresh stat`() {
         val r1 = Range(AtomicMode, "orig").apply { update(5.0) }
-        val r2 = r1.copy(SerialMode, "copy")
+        val r2 = r1.create(SerialMode, "copy")
         r2.update(1.0)
         // r1 unchanged by r2's update
         assertEquals(5.0, r1.min, DELTA)
@@ -137,7 +137,7 @@ class MinStatsTest {
     @Test
     fun `copy is independent`() {
         val m1 = Min().apply { update(5.0) }
-        val m2 = m1.copy()
+        val m2 = m1.create()
         m2.update(1.0)
         assertEquals(5.0, m1.min, DELTA)
         assertEquals(1.0, m2.min, DELTA)
@@ -178,7 +178,7 @@ class MaxStatsTest {
     @Test
     fun `copy is independent`() {
         val m1 = Max().apply { update(5.0) }
-        val m2 = m1.copy()
+        val m2 = m1.create()
         m2.update(10.0)
         assertEquals(5.0, m1.max, DELTA)
         assertEquals(10.0, m2.max, DELTA)

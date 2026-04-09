@@ -36,7 +36,7 @@ class Count(
 
     override fun read(timestampNanos: Long) = CountResult(count, name)
 
-    override fun copy(
+    override fun create(
         mode: StreamMode?,
         name: String?
     ) = Count(mode ?: this.mode, name ?: this.name)
@@ -54,7 +54,7 @@ class TotalWeights(
         _totalWeights.add(weight)
     }
 
-    override fun copy(
+    override fun create(
         mode: StreamMode?,
         name: String?
     ) = TotalWeights(mode ?: this.mode, name ?: this.name)
@@ -81,7 +81,7 @@ class EventRate(
         _rate.update(1.0, timestampNanos)
     }
 
-    override fun copy(
+    override fun create(
         mode: StreamMode?,
         name: String?
     ) = EventRate(mode ?: this.mode, name ?: this.name)
@@ -110,7 +110,7 @@ class DecayingEventRate(
         _rate.update(1.0, timestampNanos)
     }
 
-    override fun copy(
+    override fun create(
         mode: StreamMode?,
         name: String?
     ) = DecayingEventRate(halfLife, mode ?: this.mode, name ?: this.name)

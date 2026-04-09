@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 private const val DELTA = 1e-12
@@ -97,7 +96,7 @@ class WindowedStatsTest {
     fun `copy is independent`() {
         val w1 = sumWindowed()
         w1.update(10.0, T3)
-        val w2 = w1.copy()
+        val w2 = w1.create()
         w2.update(5.0, T3)
         // w1 should not see w2's update (copy is fresh)
         assertEquals(10.0, w1.read(T9).sum, DELTA)

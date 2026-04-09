@@ -94,7 +94,7 @@ class FrugalQuantileTest {
     @Test
     fun `copy is independent`() {
         val fq1 = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 0.0)
-        val fq2 = fq1.copy()
+        val fq2 = fq1.create()
         repeat(100) { fq2.update(100.0) }
         assertEquals(0.0, fq1.quantile)  // fq1 unchanged
         assertTrue(fq2.quantile > fq1.quantile)
@@ -221,7 +221,7 @@ class DDSketchTest {
     fun `copy is independent`() {
         val s1 = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
         for (i in 1..10) s1.update(i.toDouble())
-        val s2 = s1.copy()
+        val s2 = s1.create()
         for (i in 1..1000) s2.update(i.toDouble())
         // s1 should still reflect only 10 observations
         assertEquals(10.0, s1.read().totalWeights)

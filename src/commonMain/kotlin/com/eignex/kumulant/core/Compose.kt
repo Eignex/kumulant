@@ -125,8 +125,8 @@ class SeriesStat2<A : Result, B : Result>(
 
     override fun withName(name: String) = SeriesStat2(s1, s2, name)
 
-    override fun copy(mode: StreamMode?, name: String?) =
-        SeriesStat2(s1.copy(mode), s2.copy(mode), name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) =
+        SeriesStat2(s1.create(mode), s2.create(mode), name ?: this.name)
 }
 
 class SeriesStat3<A : Result, B : Result, C : Result>(
@@ -163,8 +163,8 @@ class SeriesStat3<A : Result, B : Result, C : Result>(
 
     override fun withName(name: String) = SeriesStat3(s1, s2, s3, name)
 
-    override fun copy(mode: StreamMode?, name: String?) =
-        SeriesStat3(s1.copy(mode), s2.copy(mode), s3.copy(mode), name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) =
+        SeriesStat3(s1.create(mode), s2.create(mode), s3.create(mode), name ?: this.name)
 }
 
 class SeriesStat4<A : Result, B : Result, C : Result, D : Result>(
@@ -206,8 +206,8 @@ class SeriesStat4<A : Result, B : Result, C : Result, D : Result>(
 
     override fun withName(name: String) = SeriesStat4(s1, s2, s3, s4, name)
 
-    override fun copy(mode: StreamMode?, name: String?) =
-        SeriesStat4(s1.copy(mode), s2.copy(mode), s3.copy(mode), s4.copy(mode), name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) =
+        SeriesStat4(s1.create(mode), s2.create(mode), s3.create(mode), s4.create(mode), name ?: this.name)
 }
 
 operator fun <A : Result, B : Result> SeriesStat<A>.plus(

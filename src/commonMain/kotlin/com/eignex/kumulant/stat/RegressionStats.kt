@@ -120,7 +120,7 @@ class OLS(
         )
     }
 
-    override fun copy(mode: StreamMode?, name: String?) = OLS(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = OLS(mode ?: this.mode, name ?: this.name)
 }
 
 /**
@@ -202,7 +202,7 @@ class Covariance(
         name = name
     )
 
-    override fun copy(mode: StreamMode?, name: String?) = Covariance(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?, name: String?) = Covariance(mode ?: this.mode, name ?: this.name)
 }
 
 // Planned: WLS (Weighted Least Squares) — support externally supplied per-observation weights

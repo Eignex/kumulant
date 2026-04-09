@@ -24,7 +24,7 @@ interface Stat<R : Result> {
      */
     fun read(timestampNanos: Long = currentTimeNanos()): R
 
-    fun copy(mode: StreamMode? = null, name: String? = null): Stat<R>
+    fun create(mode: StreamMode? = null, name: String? = null): Stat<R>
 
     val name: String?
 }
@@ -35,7 +35,7 @@ interface SeriesStat<R : Result> : Stat<R> {
 
     fun update(value: Double, timestampNanos: Long, weight: Double = 1.0)
 
-    override fun copy(mode: StreamMode?, name: String?): SeriesStat<R>
+    override fun create(mode: StreamMode?, name: String?): SeriesStat<R>
 }
 
 interface PairedStat<R : Result> : Stat<R> {
@@ -44,7 +44,7 @@ interface PairedStat<R : Result> : Stat<R> {
 
     fun update(x: Double, y: Double, timestampNanos: Long, weight: Double = 1.0)
 
-    override fun copy(mode: StreamMode?, name: String?): PairedStat<R>
+    override fun create(mode: StreamMode?, name: String?): PairedStat<R>
 }
 
 interface VectorStat<R : Result> : Stat<R> {
@@ -53,5 +53,5 @@ interface VectorStat<R : Result> : Stat<R> {
 
     fun update(vector: DoubleArray, timestampNanos: Long, weight: Double = 1.0)
 
-    override fun copy(mode: StreamMode?, name: String?): VectorStat<R>
+    override fun create(mode: StreamMode?, name: String?): VectorStat<R>
 }

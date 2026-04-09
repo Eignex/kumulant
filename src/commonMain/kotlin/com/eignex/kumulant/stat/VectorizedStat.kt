@@ -39,7 +39,7 @@ class VectorizedStat<R : Result>(
         return ResultList(stats.map { it.read(timestampNanos) }, name)
     }
 
-    override fun copy(mode: StreamMode?, name: String?): VectorStat<ResultList<R>> =
+    override fun create(mode: StreamMode?, name: String?): VectorStat<ResultList<R>> =
         VectorizedStat(dimensions, template, name ?: this.name, mode ?: this.mode)
 
     override fun merge(values: ResultList<R>) {
