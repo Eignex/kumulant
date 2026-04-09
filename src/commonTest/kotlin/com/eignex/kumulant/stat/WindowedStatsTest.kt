@@ -93,7 +93,7 @@ class WindowedStatsTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val w1 = sumWindowed()
         w1.update(10.0, T3)
         val w2 = w1.create()

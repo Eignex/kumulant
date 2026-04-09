@@ -91,7 +91,7 @@ class RateTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val r1 = Rate().apply { update(10.0, T0) }
         val r2 = r1.create()
         r2.update(5.0, T1)
@@ -167,7 +167,7 @@ class DecayingSumTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val s1 = DecayingSum(halfLife = 1.seconds)
         s1.update(10.0, T0)
         val s2 = s1.create()
@@ -236,7 +236,7 @@ class DecayingMeanTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val m1 = DecayingMean(halfLife = 1.seconds)
         m1.update(5.0, T0)
         val m2 = m1.create()
@@ -311,7 +311,7 @@ class DecayingVarianceTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val v1 = DecayingVariance(halfLife = 1.seconds)
         v1.update(5.0, T0)
         val v2 = v1.create()
@@ -349,7 +349,7 @@ class DecayingRateTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val r1 = DecayingRate(halfLife = 1.seconds)
         r1.update(10.0, T0)
         val r2 = r1.create()

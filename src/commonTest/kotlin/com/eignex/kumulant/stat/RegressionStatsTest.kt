@@ -145,7 +145,7 @@ class OLSTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val ols1 = OLS(AtomicMode, "orig").apply {
             for (x in 0..4) update(x.toDouble(), x.toDouble())
         }
@@ -225,7 +225,7 @@ class CovarianceTest {
     }
 
     @Test
-    fun `copy produces fresh independent stat`() {
+    fun `create produces fresh independent stat`() {
         val c1 = Covariance(name = "orig").apply {
             update(1.0, 2.0)
             update(2.0, 4.0)

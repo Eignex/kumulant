@@ -85,7 +85,7 @@ class RangeStatsTest {
     }
 
     @Test
-    fun `copy creates independent fresh stat`() {
+    fun `create produces fresh independent stat`() {
         val r1 = Range(AtomicMode, "orig").apply { update(5.0) }
         val r2 = r1.create(SerialMode, "copy")
         r2.update(1.0)
@@ -135,7 +135,7 @@ class MinStatsTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val m1 = Min().apply { update(5.0) }
         val m2 = m1.create()
         m2.update(1.0)
@@ -176,7 +176,7 @@ class MaxStatsTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val m1 = Max().apply { update(5.0) }
         val m2 = m1.create()
         m2.update(10.0)

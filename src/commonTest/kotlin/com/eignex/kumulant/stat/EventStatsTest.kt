@@ -55,7 +55,7 @@ class CountTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val c1 = Count(AtomicMode).apply { update(1.0) }
         val c2 = c1.create(SerialMode)
         c2.update(2.0)
@@ -148,7 +148,7 @@ class EventRateTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val er1 = EventRate().apply { repeat(5) { update(1.0) } }
         val er2 = er1.create()
         repeat(3) { er2.update(1.0) }
@@ -186,7 +186,7 @@ class DecayingEventRateTest {
     }
 
     @Test
-    fun `copy is independent`() {
+    fun `create produces fresh independent stat`() {
         val er1 = DecayingEventRate(halfLife = 1.seconds)
         repeat(10) { er1.update(1.0) }
         val er2 = er1.create()
