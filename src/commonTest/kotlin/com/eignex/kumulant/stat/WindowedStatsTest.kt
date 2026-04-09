@@ -10,12 +10,12 @@ private const val DELTA = 1e-12
  * Timestamps for windowed tests. Window = 10s, slices = 10, so each slice = 1s.
  * Bucket index = (timestamp_seconds) % 10.
  */
-private const val T0 = 0L                   // slice 0
-private const val T3 = 3_000_000_000L       // slice 3
-private const val T9 = 9_000_000_000L       // slice 9
-private const val T10 = 10_000_000_000L     // slice 0 again (rotates bucket)
-private const val T11 = 11_000_000_000L     // slice 1 again (rotates bucket)
-private const val T20 = 20_000_000_000L     // all original slices have expired
+private const val T0 = 0L // slice 0
+private const val T3 = 3_000_000_000L // slice 3
+private const val T9 = 9_000_000_000L // slice 9
+private const val T10 = 10_000_000_000L // slice 0 again (rotates bucket)
+private const val T11 = 11_000_000_000L // slice 1 again (rotates bucket)
+private const val T20 = 20_000_000_000L // all original slices have expired
 
 class WindowedStatsTest {
 
@@ -32,8 +32,8 @@ class WindowedStatsTest {
     @Test
     fun `update older than window is excluded`() {
         val w = sumWindowed()
-        w.update(100.0, T0)   // at T10 this is exactly 10s old — on the boundary
-        w.update(5.0, T10)    // bucket rotation evicts T0's data from slot 0
+        w.update(100.0, T0) // at T10 this is exactly 10s old — on the boundary
+        w.update(5.0, T10) // bucket rotation evicts T0's data from slot 0
         // read at T11: cutoff = T11 - 10s = T1, so T0 is excluded anyway
         assertEquals(5.0, w.read(T11).sum, DELTA)
     }
@@ -69,8 +69,8 @@ class WindowedStatsTest {
     @Test
     fun `slot rotation evicts stale data from reused bucket`() {
         val w = sumWindowed()
-        w.update(100.0, T0)   // bucket index 0 at T0
-        w.update(7.0, T10)    // bucket index 0 at T10 → evicts T0 data
+        w.update(100.0, T0) // bucket index 0 at T0
+        w.update(7.0, T10) // bucket index 0 at T10 → evicts T0 data
         // T0 data (100) is gone; T10 data (7) is within window at T11
         assertEquals(7.0, w.read(T11).sum, DELTA)
     }
@@ -78,8 +78,8 @@ class WindowedStatsTest {
     @Test
     fun `late out-of-order event is dropped`() {
         val w = sumWindowed()
-        w.update(5.0, T10)    // bucket 0 now holds data at T10
-        w.update(99.0, T0)    // T0 < T10 for same bucket → dropped
+        w.update(5.0, T10) // bucket 0 now holds data at T10
+        w.update(99.0, T0) // T0 < T10 for same bucket → dropped
         assertEquals(5.0, w.read(T11).sum, DELTA)
     }
 

@@ -10,7 +10,7 @@ class SumTest {
     @Test
     fun `create produces fresh independent stat`() {
         val s1 = Sum().apply { update(10.0) }
-        val s2 = s1.create()   // creates a fresh empty instance
+        val s2 = s1.create() // creates a fresh empty instance
         s1.update(5.0)
         assertEquals(15.0, s1.sum, DELTA)
         assertEquals(0.0, s2.sum, DELTA)
@@ -60,7 +60,7 @@ class MeanTest {
     @Test
     fun `create produces fresh independent stat`() {
         val m1 = Mean().apply { update(10.0) }
-        val m2 = m1.create()   // creates a fresh empty instance
+        val m2 = m1.create() // creates a fresh empty instance
         m1.update(20.0)
         assertEquals(15.0, m1.mean, DELTA)
         assertEquals(0.0, m2.totalWeights, DELTA)
@@ -130,8 +130,11 @@ class MeanTest {
 class VarianceTest {
     @Test
     fun `create produces fresh independent stat`() {
-        val v1 = Variance().apply { update(10.0); update(20.0) }
-        val v2 = v1.create()   // creates a fresh empty instance
+        val v1 = Variance().apply {
+            update(10.0)
+            update(20.0)
+        }
+        val v2 = v1.create() // creates a fresh empty instance
         v1.update(30.0)
         assertEquals(3.0, v1.totalWeights, DELTA)
         assertEquals(0.0, v2.totalWeights, DELTA)
@@ -140,7 +143,8 @@ class VarianceTest {
     @Test
     fun `read result carries name`() {
         val v = Variance(name = "spread")
-        v.update(1.0); v.update(2.0)
+        v.update(1.0)
+        v.update(2.0)
         assertEquals("spread", v.read().name)
     }
 
@@ -221,8 +225,12 @@ class MomentsTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val m1 = Moments().apply { update(1.0); update(2.0); update(3.0) }
-        val m2 = m1.create()   // creates a fresh empty instance
+        val m1 = Moments().apply {
+            update(1.0)
+            update(2.0)
+            update(3.0)
+        }
+        val m2 = m1.create() // creates a fresh empty instance
         m1.update(4.0)
         assertEquals(4.0, m1.totalWeights, delta)
         assertEquals(0.0, m2.totalWeights, delta)
@@ -318,7 +326,7 @@ class EwmaStatsTest {
     @Test
     fun `EwmaMean create produces fresh independent stat`() {
         val m1 = EwmaMean(alpha = 0.5).apply { update(10.0) }
-        val m2 = m1.create()   // creates a fresh empty instance
+        val m2 = m1.create() // creates a fresh empty instance
         repeat(10) { m1.update(10.0) }
         assertEquals(0.0, m2.mean, delta)
         assertTrue(m1.mean > 0.0)
@@ -333,8 +341,11 @@ class EwmaStatsTest {
 
     @Test
     fun `EwmaVariance create produces fresh independent stat`() {
-        val v1 = EwmaVariance(alpha = 0.5).apply { update(1.0); update(2.0) }
-        val v2 = v1.create()   // creates a fresh empty instance
+        val v1 = EwmaVariance(alpha = 0.5).apply {
+            update(1.0)
+            update(2.0)
+        }
+        val v2 = v1.create() // creates a fresh empty instance
         repeat(10) { v1.update(1000.0) }
         assertEquals(0.0, v2.totalWeights, delta)
         assertTrue(v1.totalWeights > 0.0)
@@ -343,7 +354,8 @@ class EwmaStatsTest {
     @Test
     fun `EwmaVariance read result carries name`() {
         val v = EwmaVariance(alpha = 0.5, name = "vol")
-        v.update(1.0); v.update(2.0)
+        v.update(1.0)
+        v.update(2.0)
         assertEquals("vol", v.read().name)
     }
 

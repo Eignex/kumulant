@@ -36,7 +36,7 @@ class FrugalQuantileTest {
         val fq = FrugalQuantile(q = 1.0, stepSize = 1.0, initialEstimate = 0.0)
         fq.update(50.0)
         val after = fq.quantile
-        fq.update(0.0)  // below current estimate; for q=1 delta=-stepSize*(1-1)=0
+        fq.update(0.0) // below current estimate; for q=1 delta=-stepSize*(1-1)=0
         assertEquals(after, fq.quantile)
     }
 
@@ -45,7 +45,7 @@ class FrugalQuantileTest {
         val fq = FrugalQuantile(q = 0.0, stepSize = 1.0, initialEstimate = 100.0)
         fq.update(0.0)
         val after = fq.quantile
-        fq.update(200.0)  // above current estimate; for q=0 delta=stepSize*0=0
+        fq.update(200.0) // above current estimate; for q=0 delta=stepSize*0=0
         assertEquals(after, fq.quantile)
     }
 
@@ -96,7 +96,7 @@ class FrugalQuantileTest {
         val fq1 = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 0.0)
         val fq2 = fq1.create()
         repeat(100) { fq2.update(100.0) }
-        assertEquals(0.0, fq1.quantile)  // fq1 unchanged
+        assertEquals(0.0, fq1.quantile) // fq1 unchanged
         assertTrue(fq2.quantile > fq1.quantile)
     }
 

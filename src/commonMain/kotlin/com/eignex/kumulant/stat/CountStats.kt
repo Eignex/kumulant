@@ -65,4 +65,3 @@ class TotalWeights(
 
     override fun read(timestampNanos: Long) = SumResult(totalWeights, name)
 }
-
