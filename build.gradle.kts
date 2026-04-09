@@ -1,112 +1,53 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+@file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
 
 plugins {
-    kotlin("jvm") version "2.3.0"
+    id("com.eignex.kmp") version "1.1.4"
     kotlin("plugin.serialization") version "2.3.0"
-    id("org.jetbrains.dokka") version "2.1.0"
-    id("org.jetbrains.kotlinx.kover") version "0.9.5"
-    `maven-publish`
-    signing
-
-    id("io.github.sgtsilvio.gradle.maven-central-publishing") version "0.4.1"
 }
 
-group = "com.eignex"
-version = findProperty("ciVersion") as String? ?: "SNAPSHOT"
-
-repositories { mavenCentral() }
+eignexPublish {
+    description.set("Pure Kotlin multiplatform streaming statistics library.")
+    githubRepo.set("Eignex/kumulant")
+}
 
 val kumulantGenerator by configurations.creating
 
 kotlin {
-    jvmToolchain(21)
-    compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
-}
+    jvm()
+    js(IR) { browser(); nodejs() }
+    wasmJs { browser(); nodejs() }
+    wasmWasi { nodejs() }
+    linuxX64(); linuxArm64()
+    macosX64(); macosArm64(); mingwX64()
+    iosX64(); iosArm64(); iosSimulatorArm64()
 
-java {
-    withSourcesJar()
-    withJavadocJar()
+    sourceSets {
+        commonMain.dependencies {
+            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
+        }
+        jvmMain.dependencies {
+            implementation(kotlin("reflect"))
+        }
+        commonTest.dependencies {
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.10.0")
+        }
+
+        commonMain {
+            kotlin.srcDir(files(layout.buildDirectory.dir("generated/source/kumulant")).builtBy("generateExtensions"))
+        }
+    }
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
-    implementation(kotlin("reflect"))
-    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.10.0")
     kumulantGenerator("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.0")
-}
-
-tasks.test { useJUnitPlatform() }
-
-tasks.named<Jar>("javadocJar") {
-    dependsOn(tasks.named("dokkaGenerate"))
-    from(layout.buildDirectory.dir("dokka/html"))
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-            pom {
-                name.set("kumulant")
-                description.set("Pure Kotlin JVM library.")
-                url.set("https://github.com/Eignex/kumulant")
-                licenses {
-                    license {
-                        name.set("Apache-2.0")
-                        url.set("https://www.apache.org/licenses/LICENSE-2.0")
-                    }
-                }
-                scm {
-                    url.set("https://github.com/Eignex/kumulant")
-                    connection.set("scm:git:https://github.com/Eignex/kumulant.git")
-                    developerConnection.set("scm:git:ssh://git@github.com/Eignex/kumulant.git")
-                }
-                developers {
-                    developer {
-                        id.set("rasros")
-                        name.set("Rasmus Ros")
-                        url.set("https://github.com/rasros")
-                    }
-                }
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            name = "localStaging"
-            url = uri(layout.buildDirectory.dir("staging-repo"))
-        }
-    }
-}
-
-signing {
-    val key = findProperty("signingKey") as String?
-    val pass = findProperty("signingPassword") as String?
-
-    if (key != null && pass != null) {
-        useInMemoryPgpKeys(key, pass)
-        sign(publishing.publications["mavenJava"])
-    } else {
-        logger.lifecycle("Signing disabled: signingKey or signingPassword not defined.")
-    }
 }
 
 val generatedSourceDir = layout.buildDirectory.dir("generated/source/kumulant")
 
 val generateExtensions by tasks.registering(ExtensionGeneratorTask::class) {
-    inputDir.set(file("src/main/kotlin"))
+    inputDir.set(file("src/commonMain/kotlin"))
     outputFile.set(generatedSourceDir.map { it.file("com/eignex/kumulant/core/Extensions.kt") })
     compilerClasspath.from(kumulantGenerator)
-}
-
-sourceSets.main {
-    java.srcDir(files(generatedSourceDir).builtBy(generateExtensions))
-}
-
-tasks.named("compileKotlin") {
-    dependsOn(generateExtensions)
 }
