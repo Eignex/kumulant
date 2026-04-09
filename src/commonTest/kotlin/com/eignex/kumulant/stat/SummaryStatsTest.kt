@@ -312,12 +312,12 @@ class MomentsTest {
     }
 }
 
-class RollingStatsTest {
+class EwmaStatsTest {
     private val delta = 1e-9
 
     @Test
-    fun `RollingMean create produces fresh independent stat`() {
-        val m1 = RollingMean(alpha = 0.5).apply { update(10.0) }
+    fun `EwmaMean create produces fresh independent stat`() {
+        val m1 = EwmaMean(alpha = 0.5).apply { update(10.0) }
         val m2 = m1.create()   // creates a fresh empty instance
         repeat(10) { m1.update(10.0) }
         assertEquals(0.0, m2.mean, delta)
@@ -325,15 +325,15 @@ class RollingStatsTest {
     }
 
     @Test
-    fun `RollingMean read result carries name`() {
-        val m = RollingMean(alpha = 0.5, name = "ema")
+    fun `EwmaMean read result carries name`() {
+        val m = EwmaMean(alpha = 0.5, name = "ema")
         m.update(5.0)
         assertEquals("ema", m.read().name)
     }
 
     @Test
-    fun `RollingVariance create produces fresh independent stat`() {
-        val v1 = RollingVariance(alpha = 0.5).apply { update(1.0); update(2.0) }
+    fun `EwmaVariance create produces fresh independent stat`() {
+        val v1 = EwmaVariance(alpha = 0.5).apply { update(1.0); update(2.0) }
         val v2 = v1.create()   // creates a fresh empty instance
         repeat(10) { v1.update(1000.0) }
         assertEquals(0.0, v2.totalWeights, delta)
@@ -341,15 +341,15 @@ class RollingStatsTest {
     }
 
     @Test
-    fun `RollingVariance read result carries name`() {
-        val v = RollingVariance(alpha = 0.5, name = "vol")
+    fun `EwmaVariance read result carries name`() {
+        val v = EwmaVariance(alpha = 0.5, name = "vol")
         v.update(1.0); v.update(2.0)
         assertEquals("vol", v.read().name)
     }
 
     @Test
-    fun `RollingMean merge behavior`() {
-        val d1 = RollingMean(alpha = 0.5)
+    fun `EwmaMean merge behavior`() {
+        val d1 = EwmaMean(alpha = 0.5)
         d1.update(10.0)
         val d2 = WeightedMeanResult(1.0, 20.0)
 
@@ -359,8 +359,8 @@ class RollingStatsTest {
     }
 
     @Test
-    fun `RollingMean biases toward heavy recent values`() {
-        val stat = RollingMean(alpha = 0.5)
+    fun `EwmaMean biases toward heavy recent values`() {
+        val stat = EwmaMean(alpha = 0.5)
         stat.update(10.0, 1.0)
         stat.update(100.0, 10.0) // Massive recent update
 
@@ -373,8 +373,8 @@ class RollingStatsTest {
     }
 
     @Test
-    fun `RollingVariance tracking volatility shift`() {
-        val stat = RollingVariance(alpha = 0.1)
+    fun `EwmaVariance tracking volatility shift`() {
+        val stat = EwmaVariance(alpha = 0.1)
 
         // Phase 1: Low variance
         repeat(50) { stat.update(10.0, 1.0) }
@@ -388,8 +388,8 @@ class RollingStatsTest {
     }
 
     @Test
-    fun `RollingVariance empty merge`() {
-        val stat = RollingVariance(alpha = 0.1)
+    fun `EwmaVariance empty merge`() {
+        val stat = EwmaVariance(alpha = 0.1)
         stat.update(10.0, 1.0)
         stat.update(20.0, 1.0)
         val currentVar = stat.variance
@@ -401,8 +401,8 @@ class RollingStatsTest {
     }
 
     @Test
-    fun `RollingVariance bias correction prevents zero division`() {
-        val stat = RollingVariance(alpha = 0.1)
+    fun `EwmaVariance bias correction prevents zero division`() {
+        val stat = EwmaVariance(alpha = 0.1)
         // Should return 0.0 or something sensible, not NaN, before updates
         assertEquals(0.0, stat.mean, delta)
         assertEquals(0.0, stat.variance, delta)
@@ -410,12 +410,12 @@ class RollingStatsTest {
 
     @Test
     fun `test reset for decaying stats`() {
-        val meanStat = RollingMean(alpha = 0.5)
+        val meanStat = EwmaMean(alpha = 0.5)
         meanStat.update(10.0)
         meanStat.reset()
         assertEquals(0.0, meanStat.mean, delta)
 
-        val varStat = RollingVariance(alpha = 0.5)
+        val varStat = EwmaVariance(alpha = 0.5)
         varStat.update(10.0)
         varStat.update(20.0)
         varStat.reset()

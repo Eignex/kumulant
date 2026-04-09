@@ -5,14 +5,10 @@ import com.eignex.kumulant.concurrent.StreamMode
 import com.eignex.kumulant.concurrent.defaultStreamMode
 import com.eignex.kumulant.concurrent.getValue
 import com.eignex.kumulant.core.CountResult
-import com.eignex.kumulant.core.DecayingRateResult
 import com.eignex.kumulant.core.HasCount
-import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.HasTotalWeights
-import com.eignex.kumulant.core.RateResult
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.SumResult
-import kotlin.time.Duration
 
 class Count(
     val mode: StreamMode = defaultStreamMode,
@@ -70,59 +66,3 @@ class TotalWeights(
     override fun read(timestampNanos: Long) = SumResult(totalWeights, name)
 }
 
-class EventRate(
-    val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
-) : SeriesStat<RateResult>, HasRate {
-
-    private val _rate = Rate(mode, name)
-
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        _rate.update(1.0, timestampNanos)
-    }
-
-    override fun create(
-        mode: StreamMode?,
-        name: String?
-    ) = EventRate(mode ?: this.mode, name ?: this.name)
-
-    override fun merge(values: RateResult) {
-        _rate.merge(values)
-    }
-
-    override fun reset() {
-        _rate.reset()
-    }
-
-    override fun read(timestampNanos: Long) = _rate.read(timestampNanos)
-
-    override val rate: Double get() = _rate.rate
-}
-
-class DecayingEventRate(
-    val halfLife: Duration,
-    val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
-) : SeriesStat<DecayingRateResult>, HasRate {
-    private val _rate = DecayingRate(halfLife, mode, name)
-
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        _rate.update(1.0, timestampNanos)
-    }
-
-    override fun create(
-        mode: StreamMode?,
-        name: String?
-    ) = DecayingEventRate(halfLife, mode ?: this.mode, name ?: this.name)
-
-    override fun merge(values: DecayingRateResult) {
-        _rate.merge(values)
-    }
-
-    override fun reset() {
-        _rate.reset()
-    }
-
-    override fun read(timestampNanos: Long) = _rate.read(timestampNanos)
-    override val rate: Double get() = _rate.rate
-}
