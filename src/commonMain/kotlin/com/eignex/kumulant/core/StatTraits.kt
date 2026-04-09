@@ -17,10 +17,15 @@ interface HasSum : Result {
     val sum: Double
 }
 
-interface HasRange : Result {
+interface HasMin : Result {
     val min: Double
+}
+
+interface HasMax : Result {
     val max: Double
 }
+
+interface HasRange : HasMin, HasMax
 
 interface HasTimestamp {
     val timestampNanos: Long

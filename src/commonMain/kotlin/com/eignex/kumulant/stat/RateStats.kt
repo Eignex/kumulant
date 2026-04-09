@@ -140,17 +140,15 @@ class DecayingRate(
             val currentEpoch = epochRef.load()
             val now = values.timestampNanos
 
-            if (now - currentEpoch.landmarkNanos > rotationThresholdNanos) {
-                tryRotateEpoch(currentEpoch, now)
-                continue
+            if (now - currentEpoch.landmarkNanos <= rotationThresholdNanos) {
+                val incomingEnergy = values.rate / (alpha * 1e9)
+                val dt = (now - currentEpoch.landmarkNanos).toDouble()
+                val scaledIncomingEnergy = incomingEnergy * exp(alpha * dt)
+                currentEpoch.accumulator.add(scaledIncomingEnergy)
+                break
             }
 
-            val incomingEnergy = values.rate / (alpha * 1e9)
-            val dt = (now - currentEpoch.landmarkNanos).toDouble()
-            val scaledIncomingEnergy = incomingEnergy * exp(alpha * dt)
-
-            currentEpoch.accumulator.add(scaledIncomingEnergy)
-            break
+            tryRotateEpoch(currentEpoch, now)
         }
     }
 

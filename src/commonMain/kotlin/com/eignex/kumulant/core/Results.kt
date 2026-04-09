@@ -73,6 +73,20 @@ data class MomentsResult(
 }
 
 @Serializable
+@SerialName("Min")
+data class MinResult(
+    override val min: Double,
+    override val name: String? = null
+) : Result, HasMin
+
+@Serializable
+@SerialName("Max")
+data class MaxResult(
+    override val max: Double,
+    override val name: String? = null
+) : Result, HasMax
+
+@Serializable
 @SerialName("Range")
 data class RangeResult(
     override val min: Double,
@@ -209,4 +223,28 @@ data class OLSResult(
 
     override val covariance: Double
         get() = slope * x.variance
+}
+
+@Serializable
+@SerialName("Covariance")
+data class CovarianceResult(
+    override val totalWeights: Double,
+    val meanX: Double,
+    val meanY: Double,
+    /** Sum of cross-deviations: sum((x - meanX)(y - meanY) * w) */
+    val sxy: Double,
+    /** Sum of squared deviations in x: sum((x - meanX)^2 * w) */
+    val sxx: Double,
+    /** Sum of squared deviations in y: sum((y - meanY)^2 * w) */
+    val syy: Double,
+    override val name: String? = null,
+) : Result, HasTotalWeights, HasCovariance, HasCorrelation {
+    override val covariance: Double get() = if (totalWeights > 0.0) sxy / totalWeights else 0.0
+    override val correlation: Double
+        get() {
+            val denom = sxx * syy
+            return if (denom > 0.0) sxy / sqrt(denom) else 0.0
+        }
+    val varX: Double get() = if (totalWeights > 0.0) sxx / totalWeights else 0.0
+    val varY: Double get() = if (totalWeights > 0.0) syy / totalWeights else 0.0
 }

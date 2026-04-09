@@ -102,3 +102,85 @@ class RangeStatsTest {
         assertEquals("latency", r.read().name)
     }
 }
+
+class MinStatsTest {
+
+    @Test
+    fun `tracks minimum`() {
+        val m = Min()
+        m.update(3.0)
+        m.update(1.0)
+        m.update(5.0)
+        assertEquals(1.0, m.min, DELTA)
+    }
+
+    @Test
+    fun `empty returns positive infinity`() {
+        assertEquals(Double.POSITIVE_INFINITY, Min().read().min)
+    }
+
+    @Test
+    fun `merge takes smaller min`() {
+        val m1 = Min().apply { update(4.0) }
+        val m2 = Min().apply { update(2.0) }
+        m1.merge(m2.read())
+        assertEquals(2.0, m1.min, DELTA)
+    }
+
+    @Test
+    fun `reset restores infinity`() {
+        val m = Min().apply { update(3.0) }
+        m.reset()
+        assertEquals(Double.POSITIVE_INFINITY, m.read().min)
+    }
+
+    @Test
+    fun `copy is independent`() {
+        val m1 = Min().apply { update(5.0) }
+        val m2 = m1.copy()
+        m2.update(1.0)
+        assertEquals(5.0, m1.min, DELTA)
+        assertEquals(1.0, m2.min, DELTA)
+    }
+}
+
+class MaxStatsTest {
+
+    @Test
+    fun `tracks maximum`() {
+        val m = Max()
+        m.update(3.0)
+        m.update(7.0)
+        m.update(2.0)
+        assertEquals(7.0, m.max, DELTA)
+    }
+
+    @Test
+    fun `empty returns negative infinity`() {
+        assertEquals(Double.NEGATIVE_INFINITY, Max().read().max)
+    }
+
+    @Test
+    fun `merge takes larger max`() {
+        val m1 = Max().apply { update(4.0) }
+        val m2 = Max().apply { update(9.0) }
+        m1.merge(m2.read())
+        assertEquals(9.0, m1.max, DELTA)
+    }
+
+    @Test
+    fun `reset restores negative infinity`() {
+        val m = Max().apply { update(7.0) }
+        m.reset()
+        assertEquals(Double.NEGATIVE_INFINITY, m.read().max)
+    }
+
+    @Test
+    fun `copy is independent`() {
+        val m1 = Max().apply { update(5.0) }
+        val m2 = m1.copy()
+        m2.update(10.0)
+        assertEquals(5.0, m1.max, DELTA)
+        assertEquals(10.0, m2.max, DELTA)
+    }
+}

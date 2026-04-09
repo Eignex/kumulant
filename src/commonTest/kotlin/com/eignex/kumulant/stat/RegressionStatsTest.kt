@@ -164,3 +164,80 @@ class OLSTest {
         assertEquals(11.0, r.predict(5.0), APPROX)
     }
 }
+
+class CovarianceTest {
+
+    @Test
+    fun `covariance of perfectly correlated data`() {
+        val cov = Covariance()
+        for (i in 1..5) cov.update(i.toDouble(), i.toDouble())
+        val r = cov.read()
+        // cov(X, X) = var(X); for [1,2,3,4,5] pop-var = 2.0
+        assertEquals(2.0, r.covariance, EPS)
+        assertEquals(1.0, r.correlation, EPS)
+    }
+
+    @Test
+    fun `covariance of negatively correlated data`() {
+        val cov = Covariance()
+        for (i in 1..5) cov.update(i.toDouble(), (6 - i).toDouble())
+        val r = cov.read()
+        assertEquals(-2.0, r.covariance, EPS)
+        assertEquals(-1.0, r.correlation, EPS)
+    }
+
+    @Test
+    fun `covariance of uncorrelated data`() {
+        val cov = Covariance()
+        // X and Y are independent by symmetry: meanX=0, meanY=0, sxy=0
+        cov.update(1.0, 1.0)
+        cov.update(-1.0, -1.0)
+        cov.update(1.0, -1.0)
+        cov.update(-1.0, 1.0)
+        val r = cov.read()
+        assertEquals(0.0, r.covariance, EPS)
+    }
+
+    @Test
+    fun `merge combines two streams correctly`() {
+        val c1 = Covariance().apply {
+            update(1.0, 2.0)
+            update(2.0, 4.0)
+        }
+        val c2 = Covariance().apply {
+            update(3.0, 6.0)
+            update(4.0, 8.0)
+        }
+        c1.merge(c2.read())
+        val r = c1.read()
+        // y = 2x exactly → correlation = 1
+        assertEquals(1.0, r.correlation, APPROX)
+    }
+
+    @Test
+    fun `reset clears state`() {
+        val cov = Covariance().apply {
+            update(1.0, 1.0)
+            update(2.0, 2.0)
+        }
+        cov.reset()
+        assertEquals(0.0, cov.read().covariance, EPS)
+    }
+
+    @Test
+    fun `copy produces fresh independent stat`() {
+        val c1 = Covariance(name = "orig").apply {
+            update(1.0, 2.0)
+            update(2.0, 4.0)
+        }
+        val c2 = c1.copy(name = "copy")
+        c2.update(5.0, 10.0)
+        // c1 unchanged
+        assertEquals(2.0, c1.read().totalWeights, EPS)
+        assertEquals(1.0, c2.read().totalWeights, EPS)
+        assertEquals("copy", c2.read().name)
+    }
+}
+
+// Planned: WLSTest — tests for weighted least squares once WLS is implemented
+// Planned: RidgeTest — tests for Ridge regression once implemented
