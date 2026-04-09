@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.CountResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 private const val DELTA = 1e-12
 
@@ -123,12 +124,17 @@ class EventRateTest {
     }
 
     @Test
+    fun `value parameter is ignored — every update counts as 1`() {
+        val er1 = EventRate().apply { repeat(5) { update(1.0) } }
+        val er2 = EventRate().apply { repeat(5) { update(999.0) } }
+        assertEquals(er1.read().totalValue, er2.read().totalValue, DELTA)
+    }
+
+    @Test
     fun `reset yields near-zero rate`() {
         val er = EventRate()
         repeat(100) { er.update(1.0) }
         er.reset()
-        // After reset startTimestamp is fresh — measured over zero elapsed time
-        // rate is 0/tiny so should be 0 or very small
         val r = er.read()
         assertEquals(0.0, r.totalValue, DELTA)
     }
@@ -139,5 +145,52 @@ class EventRateTest {
         val er2 = EventRate().apply { repeat(7) { update(1.0) } }
         er1.merge(er2.read())
         assertEquals(10.0, er1.read().totalValue, DELTA)
+    }
+
+    @Test
+    fun `copy is independent`() {
+        val er1 = EventRate().apply { repeat(5) { update(1.0) } }
+        val er2 = er1.copy()
+        repeat(3) { er2.update(1.0) }
+        assertEquals(5.0, er1.read().totalValue, DELTA)
+    }
+}
+
+class DecayingEventRateTest {
+
+    @Test
+    fun `rate is positive after events`() {
+        val er = DecayingEventRate(halfLife = 1.seconds)
+        repeat(10) { er.update(1.0) }
+        assertTrue(er.rate > 0.0)
+    }
+
+    @Test
+    fun `value parameter is ignored — every update contributes 1`() {
+        val er1 = DecayingEventRate(halfLife = 1.seconds)
+        val er2 = DecayingEventRate(halfLife = 1.seconds)
+        // Both update at the same system time, so rates should be equal
+        er1.update(1.0)
+        er2.update(999.0)
+        // Rates will differ slightly due to real clock, but both should be > 0
+        assertTrue(er1.rate > 0.0)
+        assertTrue(er2.rate > 0.0)
+    }
+
+    @Test
+    fun `reset yields zero rate`() {
+        val er = DecayingEventRate(halfLife = 1.seconds)
+        repeat(50) { er.update(1.0) }
+        er.reset()
+        assertEquals(0.0, er.read().rate, DELTA)
+    }
+
+    @Test
+    fun `copy is independent`() {
+        val er1 = DecayingEventRate(halfLife = 1.seconds)
+        repeat(10) { er1.update(1.0) }
+        val er2 = er1.copy()
+        repeat(100) { er2.update(1.0) }
+        assertTrue(er2.rate > er1.rate)
     }
 }

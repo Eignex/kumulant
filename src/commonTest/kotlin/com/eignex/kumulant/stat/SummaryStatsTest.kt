@@ -8,6 +8,22 @@ private const val DELTA = 1e-12
 
 class SumTest {
     @Test
+    fun `copy starts fresh and is independent`() {
+        val s1 = Sum().apply { update(10.0) }
+        val s2 = s1.copy()   // fresh empty copy
+        s1.update(5.0)
+        assertEquals(15.0, s1.sum, DELTA)
+        assertEquals(0.0, s2.sum, DELTA)
+    }
+
+    @Test
+    fun `read result carries name`() {
+        val s = Sum(name = "total")
+        s.update(1.0)
+        assertEquals("total", s.read().name)
+    }
+
+    @Test
     fun `test extreme values`() {
         val sum = Sum()
         sum.update(1e15, 1.0)
@@ -41,6 +57,22 @@ class SumTest {
 }
 
 class MeanTest {
+    @Test
+    fun `copy starts fresh and is independent`() {
+        val m1 = Mean().apply { update(10.0) }
+        val m2 = m1.copy()   // fresh empty copy
+        m1.update(20.0)
+        assertEquals(15.0, m1.mean, DELTA)
+        assertEquals(0.0, m2.totalWeights, DELTA)
+    }
+
+    @Test
+    fun `read result carries name`() {
+        val m = Mean(name = "avg")
+        m.update(5.0)
+        assertEquals("avg", m.read().name)
+    }
+
     @Test
     fun `test stability with large offset`() {
         val mean = Mean()
@@ -96,6 +128,22 @@ class MeanTest {
 }
 
 class VarianceTest {
+    @Test
+    fun `copy starts fresh and is independent`() {
+        val v1 = Variance().apply { update(10.0); update(20.0) }
+        val v2 = v1.copy()   // fresh empty copy
+        v1.update(30.0)
+        assertEquals(3.0, v1.totalWeights, DELTA)
+        assertEquals(0.0, v2.totalWeights, DELTA)
+    }
+
+    @Test
+    fun `read result carries name`() {
+        val v = Variance(name = "spread")
+        v.update(1.0); v.update(2.0)
+        assertEquals("spread", v.read().name)
+    }
+
     @Test
     fun `test variance sequence`() {
         val vari = Variance()
@@ -170,6 +218,22 @@ class VarianceTest {
 
 class MomentsTest {
     private val delta = 1e-9
+
+    @Test
+    fun `copy starts fresh and is independent`() {
+        val m1 = Moments().apply { update(1.0); update(2.0); update(3.0) }
+        val m2 = m1.copy()   // fresh empty copy
+        m1.update(4.0)
+        assertEquals(4.0, m1.totalWeights, delta)
+        assertEquals(0.0, m2.totalWeights, delta)
+    }
+
+    @Test
+    fun `read result carries name`() {
+        val m = Moments(name = "dist")
+        m.update(5.0)
+        assertEquals("dist", m.read().name)
+    }
 
     @Test
     fun `test skewness for symmetric distribution`() {
@@ -250,6 +314,38 @@ class MomentsTest {
 
 class RollingStatsTest {
     private val delta = 1e-9
+
+    @Test
+    fun `RollingMean copy starts fresh and is independent`() {
+        val m1 = RollingMean(alpha = 0.5).apply { update(10.0) }
+        val m2 = m1.copy()   // fresh empty copy
+        repeat(10) { m1.update(10.0) }
+        assertEquals(0.0, m2.mean, delta)
+        assertTrue(m1.mean > 0.0)
+    }
+
+    @Test
+    fun `RollingMean read result carries name`() {
+        val m = RollingMean(alpha = 0.5, name = "ema")
+        m.update(5.0)
+        assertEquals("ema", m.read().name)
+    }
+
+    @Test
+    fun `RollingVariance copy starts fresh and is independent`() {
+        val v1 = RollingVariance(alpha = 0.5).apply { update(1.0); update(2.0) }
+        val v2 = v1.copy()   // fresh empty copy
+        repeat(10) { v1.update(1000.0) }
+        assertEquals(0.0, v2.totalWeights, delta)
+        assertTrue(v1.totalWeights > 0.0)
+    }
+
+    @Test
+    fun `RollingVariance read result carries name`() {
+        val v = RollingVariance(alpha = 0.5, name = "vol")
+        v.update(1.0); v.update(2.0)
+        assertEquals("vol", v.read().name)
+    }
 
     @Test
     fun `RollingMean merge behavior`() {
