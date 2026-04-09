@@ -12,9 +12,11 @@ object AdderMode : StreamMode {
 @JvmInline
 value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
 
-    constructor(initial: Double = 0.0) : this(JDoubleAdder().also {
-        it.add(initial)
-    })
+    constructor(initial: Double = 0.0) : this(
+        JDoubleAdder().also {
+            it.add(initial)
+        }
+    )
 
     override fun load(): Double {
         return ref.sum()

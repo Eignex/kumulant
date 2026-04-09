@@ -203,8 +203,14 @@ class FilterVectorStat<R : Result>(
 
 // --- Fluent Extension Factories ---
 
-fun <R : Result> SeriesStat<R>.mapFromVector(transform: VectorTransform): VectorStat<R> = MapFromVectorStat(this, transform)
-fun <R : Result> SeriesStat<R>.mapFromPaired(transform: PairedTransform): PairedStat<R> = MapFromPairedStat(this, transform)
+fun <R : Result> SeriesStat<R>.mapFromVector(transform: VectorTransform): VectorStat<R> = MapFromVectorStat(
+    this,
+    transform
+)
+fun <R : Result> SeriesStat<R>.mapFromPaired(transform: PairedTransform): PairedStat<R> = MapFromPairedStat(
+    this,
+    transform
+)
 fun <R : Result> SeriesStat<R>.mapSeries(transform: DoubleTransform): SeriesStat<R> = MapSeriesStat(this, transform)
 
 fun <R : Result> SeriesStat<R>.onX(): PairedStat<R> = OnXStat(this)

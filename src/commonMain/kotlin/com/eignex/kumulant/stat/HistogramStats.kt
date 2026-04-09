@@ -69,7 +69,6 @@ class FrugalQuantile(
     override fun read(timestampNanos: Long) = QuantileResult(q, quantile, name)
 }
 
-
 class DDSketch(
     val relativeError: Double = 0.01,
     val probabilities: DoubleArray = doubleArrayOf(

@@ -21,12 +21,12 @@ class OLS(
     override val name: String? = null
 ) : PairedStat<OLSResult> {
 
-    private val _w   = mode.newDouble(0.0)  // total weights
-    private val _mx  = mode.newDouble(0.0)  // mean of x
-    private val _my  = mode.newDouble(0.0)  // mean of y
-    private val _sxx = mode.newDouble(0.0)  // sum of squared deviations in x
-    private val _syy = mode.newDouble(0.0)  // sum of squared deviations in y
-    private val _sxy = mode.newDouble(0.0)  // sum of cross-deviations (cov * w)
+    private val _w = mode.newDouble(0.0) // total weights
+    private val _mx = mode.newDouble(0.0) // mean of x
+    private val _my = mode.newDouble(0.0) // mean of y
+    private val _sxx = mode.newDouble(0.0) // sum of squared deviations in x
+    private val _syy = mode.newDouble(0.0) // sum of squared deviations in y
+    private val _sxy = mode.newDouble(0.0) // sum of cross-deviations (cov * w)
 
     val totalWeights: Double by _w
     val meanX: Double by _mx
@@ -75,7 +75,7 @@ class OLS(
 
         val sxx2 = values.x.variance * w2
         val syy2 = values.y.variance * w2
-        val sxy2 = values.slope * sxx2  // slope = sxy / sxx  →  sxy = slope * sxx
+        val sxy2 = values.slope * sxx2 // slope = sxy / sxx  →  sxy = slope * sxx
 
         val factor = w1 * w2 / nextW
         _sxx.add(sxx2 + dx * dx * factor)
@@ -97,25 +97,25 @@ class OLS(
     }
 
     override fun read(timestampNanos: Long): OLSResult {
-        val w   = _w.load()
-        val mx  = _mx.load()
-        val my  = _my.load()
+        val w = _w.load()
+        val mx = _mx.load()
+        val my = _my.load()
         val sxx = _sxx.load()
         val syy = _syy.load()
         val sxy = _sxy.load()
 
-        val slope     = if (sxx > 0.0) sxy / sxx else 0.0
+        val slope = if (sxx > 0.0) sxy / sxx else 0.0
         val intercept = my - slope * mx
-        val sse       = (syy - slope * sxy).coerceAtLeast(0.0)
+        val sse = (syy - slope * sxy).coerceAtLeast(0.0)
 
         return OLSResult(
             totalWeights = w,
-            slope        = slope,
-            intercept    = intercept,
-            sse          = sse,
-            x            = VarianceResult(mx, if (w > 0.0) sxx / w else 0.0),
-            y            = VarianceResult(my, if (w > 0.0) syy / w else 0.0),
-            name         = name
+            slope = slope,
+            intercept = intercept,
+            sse = sse,
+            x = VarianceResult(mx, if (w > 0.0) sxx / w else 0.0),
+            y = VarianceResult(my, if (w > 0.0) syy / w else 0.0),
+            name = name
         )
     }
 

@@ -2,12 +2,12 @@
 
 package com.eignex.kumulant.concurrent
 
-import kotlin.concurrent.atomics.AtomicLong as KAtomicLong
-import kotlin.concurrent.atomics.AtomicReference as KAtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.jvm.JvmInline
 import kotlin.math.pow
 import kotlin.reflect.KProperty
+import kotlin.concurrent.atomics.AtomicLong as KAtomicLong
+import kotlin.concurrent.atomics.AtomicReference as KAtomicReference
 
 interface StreamMode {
     fun newDouble(initial: Double = 0.0): StreamDouble
@@ -45,11 +45,13 @@ interface StreamRef<T> {
 }
 
 operator fun StreamDouble.getValue(
-    thisRef: Any?, property: KProperty<*>
+    thisRef: Any?,
+    property: KProperty<*>
 ): Double = load()
 
 operator fun StreamLong.getValue(
-    thisRef: Any?, property: KProperty<*>
+    thisRef: Any?,
+    property: KProperty<*>
 ): Long = load()
 
 class FixedAtomicMode(precision: Int) : StreamMode {
@@ -125,7 +127,6 @@ class SerialDouble(var ref: Double) : StreamDouble {
         return ret
     }
 }
-
 
 class SerialRef<T>(var ref: T) : StreamRef<T> {
     override fun load(): T = ref

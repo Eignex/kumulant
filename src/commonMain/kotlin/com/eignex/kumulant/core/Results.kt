@@ -42,7 +42,6 @@ data class WeightedMeanResult(
     override val name: String? = null,
 ) : Result, HasTotalWeights, HasMean
 
-
 @Serializable
 @SerialName("Variance")
 data class VarianceResult(
@@ -50,7 +49,6 @@ data class VarianceResult(
     override val variance: Double,
     override val name: String? = null
 ) : Result, HasMean, HasVariance
-
 
 @Serializable
 @SerialName("WeightedVariance")

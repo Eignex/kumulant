@@ -1,7 +1,7 @@
 package com.eignex.kumulant.core
 
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmInline
 
 @Serializable
 data class ResultEntry(

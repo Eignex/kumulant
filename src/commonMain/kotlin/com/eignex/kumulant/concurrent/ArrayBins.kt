@@ -3,7 +3,6 @@ package com.eignex.kumulant.concurrent
 import kotlin.math.max
 import kotlin.math.min
 
-
 /**
  * A lock-free, dynamically resizing array-backed bin manager.
  * It stores a contiguous array of StreamDouble references to avoid Map allocation overhead.

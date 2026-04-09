@@ -25,7 +25,7 @@ class WindowedSeriesStat<R : Result>(
     override val name: String? = null
 ) : SeriesStat<R> {
 
-    private val template = template.copy(mode=this.mode)
+    private val template = template.copy(mode = this.mode)
 
     init {
         require(slices > 0) { "WindowedStat requires at least 1 slice" }
@@ -41,7 +41,7 @@ class WindowedSeriesStat<R : Result>(
 
     // A ring buffer of atomic references, initialized with empty slots
     private val buckets = Array<StreamRef<Slot<R>>>(slices) {
-        mode.newReference(Slot(Long.MIN_VALUE, template.copy(mode=this.mode)))
+        mode.newReference(Slot(Long.MIN_VALUE, template.copy(mode = this.mode)))
     }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -65,7 +65,7 @@ class WindowedSeriesStat<R : Result>(
 
             // 3. If the slot is too old, allocate a fresh one and try to swap it in (Lock-free rotation)
             if (currentSlot.startNanos < expectedStart) {
-                val newSlot = Slot(expectedStart, template.copy(mode=mode))
+                val newSlot = Slot(expectedStart, template.copy(mode = mode))
                 if (bucketRef.compareAndSet(currentSlot, newSlot)) {
                     newSlot.stat.update(value, timestampNanos, weight)
                     return
@@ -112,7 +112,7 @@ class WindowedSeriesStat<R : Result>(
         // Ensure the bucket is rotated to "now" before merging
         var currentSlot = bucketRef.load()
         if (currentSlot.startNanos < expectedStart) {
-            val newSlot = Slot(expectedStart, template.copy(mode=mode))
+            val newSlot = Slot(expectedStart, template.copy(mode = mode))
             if (bucketRef.compareAndSet(currentSlot, newSlot)) {
                 currentSlot = newSlot
             } else {
@@ -125,7 +125,7 @@ class WindowedSeriesStat<R : Result>(
 
     override fun reset() {
         for (bucketRef in buckets) {
-            bucketRef.store(Slot(Long.MIN_VALUE, template.copy(mode=mode)))
+            bucketRef.store(Slot(Long.MIN_VALUE, template.copy(mode = mode)))
         }
     }
 }

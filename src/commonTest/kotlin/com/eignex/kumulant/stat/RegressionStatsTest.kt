@@ -39,7 +39,7 @@ class OLSTest {
     @Test
     fun `vertical data all same x gives slope zero`() {
         val ols = OLS()
-        repeat(5) { ols.update(3.0, it.toDouble()) }  // sxx = 0
+        repeat(5) { ols.update(3.0, it.toDouble()) } // sxx = 0
         val r = ols.read()
         assertEquals(0.0, r.slope, EPS)
     }

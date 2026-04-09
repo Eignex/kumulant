@@ -21,7 +21,9 @@ class Rate(
     val startTimestampNanos: Long get() = _startTimestampNanos.load()
 
     override fun update(
-        value: Double, timestampNanos: Long, weight: Double
+        value: Double,
+        timestampNanos: Long,
+        weight: Double
     ) {
         if (_startTimestampNanos.load() == Long.MIN_VALUE) {
             _startTimestampNanos.store(timestampNanos)
@@ -35,8 +37,11 @@ class Rate(
     ) = Rate(mode ?: this.mode, name ?: this.name)
 
     override fun read(timestampNanos: Long): RateResult {
-        val start = if (_startTimestampNanos.load() == Long.MIN_VALUE) timestampNanos
-        else _startTimestampNanos.load()
+        val start = if (_startTimestampNanos.load() == Long.MIN_VALUE) {
+            timestampNanos
+        } else {
+            _startTimestampNanos.load()
+        }
         return RateResult(
             startTimestampNanos = start,
             totalValue = _totalValues.load(),
@@ -74,12 +79,14 @@ class DecayingRate(
     private val rotationThresholdNanos = halfLife.inWholeNanoseconds * 50
 
     private class Epoch(
-        val landmarkNanos: Long, val accumulator: StreamDouble
+        val landmarkNanos: Long,
+        val accumulator: StreamDouble
     )
 
     private val epochRef = mode.newReference(
         Epoch(
-            currentTimeNanos(), mode.newDouble(0.0)
+            currentTimeNanos(),
+            mode.newDouble(0.0)
         )
     )
 
@@ -149,8 +156,10 @@ class DecayingRate(
 
     override fun reset() {
         epochRef.compareAndSet(
-            epochRef.load(), Epoch(
-                currentTimeNanos(), mode.newDouble(0.0)
+            epochRef.load(),
+            Epoch(
+                currentTimeNanos(),
+                mode.newDouble(0.0)
             )
         )
     }

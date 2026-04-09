@@ -6,7 +6,6 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
 
-
 fun <R : Result> ((Int) -> SeriesStat<R>).expandedToVector(
     dimensions: Int
 ): VectorStat<ResultList<R>> {

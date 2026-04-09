@@ -26,13 +26,15 @@ data class Result2<A : Result, B : Result>(
     val second: B,
     override val name: String? = null
 ) : Result {
-    @Serializable @SerialName("Result2")
+    @Serializable
+    @SerialName("Result2")
     private data class S(val results: List<Result>, val name: String? = null)
 
     companion object : KSerializer<Result2<*, *>> {
         override val descriptor = S.serializer().descriptor
         override fun serialize(encoder: Encoder, value: Result2<*, *>) =
             S.serializer().serialize(encoder, S(listOf(value.first, value.second), value.name))
+
         @Suppress("UNCHECKED_CAST")
         override fun deserialize(decoder: Decoder) =
             S.serializer().deserialize(decoder).let { Result2(it.results[0], it.results[1], it.name) }
@@ -48,13 +50,15 @@ data class Result3<A : Result, B : Result, C : Result>(
     val third: C,
     override val name: String? = null
 ) : Result {
-    @Serializable @SerialName("Result3")
+    @Serializable
+    @SerialName("Result3")
     private data class S(val results: List<Result>, val name: String? = null)
 
     companion object : KSerializer<Result3<*, *, *>> {
         override val descriptor = S.serializer().descriptor
         override fun serialize(encoder: Encoder, value: Result3<*, *, *>) =
             S.serializer().serialize(encoder, S(listOf(value.first, value.second, value.third), value.name))
+
         @Suppress("UNCHECKED_CAST")
         override fun deserialize(decoder: Decoder) =
             S.serializer().deserialize(decoder).let { Result3(it.results[0], it.results[1], it.results[2], it.name) }
@@ -71,16 +75,23 @@ data class Result4<A : Result, B : Result, C : Result, D : Result>(
     val fourth: D,
     override val name: String? = null
 ) : Result {
-    @Serializable @SerialName("Result4")
+    @Serializable
+    @SerialName("Result4")
     private data class S(val results: List<Result>, val name: String? = null)
 
     companion object : KSerializer<Result4<*, *, *, *>> {
         override val descriptor = S.serializer().descriptor
         override fun serialize(encoder: Encoder, value: Result4<*, *, *, *>) =
-            S.serializer().serialize(encoder, S(listOf(value.first, value.second, value.third, value.fourth), value.name))
+            S.serializer().serialize(
+                encoder,
+                S(listOf(value.first, value.second, value.third, value.fourth), value.name)
+            )
+
         @Suppress("UNCHECKED_CAST")
         override fun deserialize(decoder: Decoder) =
-            S.serializer().deserialize(decoder).let { Result4(it.results[0], it.results[1], it.results[2], it.results[3], it.name) }
+            S.serializer().deserialize(
+                decoder
+            ).let { Result4(it.results[0], it.results[1], it.results[2], it.results[3], it.name) }
     }
 }
 

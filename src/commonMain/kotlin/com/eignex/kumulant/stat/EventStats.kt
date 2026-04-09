@@ -42,7 +42,6 @@ class Count(
     ) = Count(mode ?: this.mode, name ?: this.name)
 }
 
-
 class TotalWeights(
     val mode: StreamMode = SerialMode,
     override val name: String? = null

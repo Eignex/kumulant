@@ -5,9 +5,9 @@ package com.eignex.kumulant.core
 import com.eignex.kumulant.concurrent.AtomicMode
 import com.eignex.kumulant.concurrent.SerialMode
 import com.eignex.kumulant.stat.*
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlin.test.*
 
@@ -28,7 +28,8 @@ class ComposeTest {
     @Test
     fun `SeriesStat2 merge propagates to both`() {
         val s1 = Sum() + Mean()
-        s1.update(2.0); s1.update(4.0)
+        s1.update(2.0)
+        s1.update(4.0)
         val s2 = Sum() + Mean()
         s2.update(6.0)
         s1.merge(s2.read())
@@ -63,7 +64,8 @@ class ComposeTest {
     @Test
     fun `SeriesStat3 via plus operator`() {
         val s = Sum() + Mean() + Variance()
-        s.update(1.0); s.update(3.0)
+        s.update(1.0)
+        s.update(3.0)
         val r = s.read()
         assertEquals(4.0, r.first.sum, DELTA)
         assertEquals(2.0, r.second.mean, DELTA)
@@ -83,7 +85,9 @@ class ComposeTest {
     @Test
     fun `SeriesStat4 via plus operator`() {
         val s = Sum() + Mean() + Variance() + Moments()
-        s.update(1.0); s.update(3.0); s.update(5.0)
+        s.update(1.0)
+        s.update(3.0)
+        s.update(5.0)
         val r = s.read()
         assertEquals(9.0, r.first.sum, DELTA)
         assertEquals(3.0, r.second.mean, DELTA)
@@ -108,7 +112,8 @@ class ComposeTest {
     @Test
     fun `Result2 round-trips through JSON with typed decode`() {
         val stat = Sum(name = "s") + Mean(name = "m")
-        stat.update(2.0); stat.update(4.0)
+        stat.update(2.0)
+        stat.update(4.0)
         val json = Json.encodeToString(stat.read())
         val decoded: Result2<SumResult, WeightedMeanResult> = Json.decodeFromString(json)
         assertEquals(6.0, decoded.first.sum, DELTA)
@@ -118,7 +123,8 @@ class ComposeTest {
     @Test
     fun `Result3 round-trips through JSON with typed decode`() {
         val stat = Sum(name = "s") + Mean(name = "m") + Variance(name = "v")
-        stat.update(1.0); stat.update(3.0)
+        stat.update(1.0)
+        stat.update(3.0)
         val json = Json.encodeToString(stat.read())
         val decoded: Result3<SumResult, WeightedMeanResult, WeightedVarianceResult> = Json.decodeFromString(json)
         assertEquals(4.0, decoded.first.sum, DELTA)
@@ -129,7 +135,8 @@ class ComposeTest {
     @Test
     fun `Result2 round-trips through protobuf with typed decode`() {
         val stat = Sum(name = "s") + Mean(name = "m")
-        stat.update(2.0); stat.update(4.0)
+        stat.update(2.0)
+        stat.update(4.0)
         val bytes = ProtoBuf.encodeToByteArray(stat.read())
         val decoded: Result2<SumResult, WeightedMeanResult> = ProtoBuf.decodeFromByteArray(bytes)
         assertEquals(6.0, decoded.first.sum, DELTA)
@@ -139,9 +146,12 @@ class ComposeTest {
     @Test
     fun `Result3 round-trips through protobuf with typed decode`() {
         val stat = Sum(name = "s") + Mean(name = "m") + Variance(name = "v")
-        stat.update(1.0); stat.update(3.0)
+        stat.update(1.0)
+        stat.update(3.0)
         val bytes = ProtoBuf.encodeToByteArray(stat.read())
-        val decoded: Result3<SumResult, WeightedMeanResult, WeightedVarianceResult> = ProtoBuf.decodeFromByteArray(bytes)
+        val decoded: Result3<SumResult, WeightedMeanResult, WeightedVarianceResult> = ProtoBuf.decodeFromByteArray(
+            bytes
+        )
         assertEquals(4.0, decoded.first.sum, DELTA)
         assertEquals(2.0, decoded.second.mean, DELTA)
         assertEquals(1.0, decoded.third.variance, DELTA)
@@ -150,7 +160,9 @@ class ComposeTest {
     @Test
     fun `Result4 round-trips through protobuf with typed decode`() {
         val stat = Sum(name = "s") + Mean(name = "m") + Variance(name = "v") + Moments(name = "mo")
-        stat.update(1.0); stat.update(3.0); stat.update(5.0)
+        stat.update(1.0)
+        stat.update(3.0)
+        stat.update(5.0)
         val bytes = ProtoBuf.encodeToByteArray(stat.read())
         val decoded: Result4<SumResult, WeightedMeanResult, WeightedVarianceResult, MomentsResult> =
             ProtoBuf.decodeFromByteArray(bytes)

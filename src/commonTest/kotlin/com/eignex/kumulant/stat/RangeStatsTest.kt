@@ -48,8 +48,14 @@ class RangeStatsTest {
 
     @Test
     fun `merge combines ranges`() {
-        val r1 = Range().apply { update(2.0); update(8.0) }
-        val r2 = Range().apply { update(1.0); update(5.0) }
+        val r1 = Range().apply {
+            update(2.0)
+            update(8.0)
+        }
+        val r2 = Range().apply {
+            update(1.0)
+            update(5.0)
+        }
         r1.merge(r2.read())
         assertEquals(1.0, r1.min, DELTA)
         assertEquals(8.0, r1.max, DELTA)
@@ -57,8 +63,11 @@ class RangeStatsTest {
 
     @Test
     fun `merge with empty other is no-op`() {
-        val r1 = Range().apply { update(3.0); update(7.0) }
-        val r2 = Range()  // empty: min=+inf, max=-inf
+        val r1 = Range().apply {
+            update(3.0)
+            update(7.0)
+        }
+        val r2 = Range() // empty: min=+inf, max=-inf
         r1.merge(r2.read())
         assertEquals(3.0, r1.min, DELTA)
         assertEquals(7.0, r1.max, DELTA)
@@ -66,7 +75,10 @@ class RangeStatsTest {
 
     @Test
     fun `reset clears state`() {
-        val r = Range().apply { update(1.0); update(9.0) }
+        val r = Range().apply {
+            update(1.0)
+            update(9.0)
+        }
         r.reset()
         assertEquals(Double.POSITIVE_INFINITY, r.read().min)
         assertEquals(Double.NEGATIVE_INFINITY, r.read().max)

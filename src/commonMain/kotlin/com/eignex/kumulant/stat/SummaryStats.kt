@@ -25,7 +25,9 @@ class Sum(
     override val sum: Double by _sum
 
     override fun update(
-        value: Double, timestampNanos: Long, weight: Double
+        value: Double,
+        timestampNanos: Long,
+        weight: Double
     ) {
         _sum.add(value * weight)
     }
@@ -47,7 +49,8 @@ class Mean(
     val mode: StreamMode = defaultStreamMode,
     override val name: String? = null
 ) : SeriesStat<WeightedMeanResult>,
-    HasTotalWeights, HasMean {
+    HasTotalWeights,
+    HasMean {
 
     private val _totalWeights = mode.newDouble(0.0)
     private val _mean = mode.newDouble(0.0)
@@ -203,14 +206,14 @@ class Moments(
         val nextWCu = nextWSq * nextW
         // Incremental M3 using incoming raw m2/m3
         val m3Delta = values.m3 +
-                delta3 * (w1 * w2 * (w1 - w2) / nextWSq) +
-                3.0 * delta * (w1 * values.m2 - w2 * m2) / nextW
+            delta3 * (w1 * w2 * (w1 - w2) / nextWSq) +
+            3.0 * delta * (w1 * values.m2 - w2 * m2) / nextW
 
         // Incremental M4 using incoming raw m2/m3/m4
         val m4Delta = values.m4 +
-                delta4 * (w1 * w2 * (w1 * w1 - w1 * w2 + w2 * w2) / nextWCu) +
-                6.0 * delta2 * (w1 * w1 * values.m2 + w2 * w2 * m2) / nextWSq +
-                4.0 * delta * (w1 * values.m3 - w2 * m3) / nextW
+            delta4 * (w1 * w2 * (w1 * w1 - w1 * w2 + w2 * w2) / nextWCu) +
+            6.0 * delta2 * (w1 * w1 * values.m2 + w2 * w2 * m2) / nextWSq +
+            4.0 * delta * (w1 * values.m3 - w2 * m3) / nextW
 
         _m4.add(m4Delta)
         _m3.add(m3Delta)
@@ -254,7 +257,6 @@ class RollingMean(
             val correction = getCorrection(weight)
             return if (correction == 0.0) 0.0 else biased / correction
         }
-
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         val a = getCorrection(weight)
