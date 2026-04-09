@@ -173,37 +173,23 @@ class DDSketch(
         val sortedNeg = negSnap.entries.sortedByDescending { it.key }
         val sortedPos = posSnap.entries.sortedBy { it.key }
 
-        for (i in probabilities.indices) {
-            val targetRank = probabilities[i] * total
+        fun computeQuantile(targetRank: Double): Double {
             var currentRank = 0.0
-            var found = false
-
-            // 1. Traverse Negative Bins
             for ((index, weight) in sortedNeg) {
                 currentRank += weight
-                if (currentRank >= targetRank) {
-                    computedQuantiles[i] = -valueFromIndex(index)
-                    found = true
-                    break
-                }
+                if (currentRank >= targetRank) return -valueFromIndex(index)
             }
-            if (found) continue
-
-            // 2. Traverse Zeros
             currentRank += zeroSnap
-            if (currentRank >= targetRank) {
-                computedQuantiles[i] = 0.0
-                continue
-            }
-
-            // 3. Traverse Positive Bins
+            if (currentRank >= targetRank) return 0.0
             for ((index, weight) in sortedPos) {
                 currentRank += weight
-                if (currentRank >= targetRank) {
-                    computedQuantiles[i] = valueFromIndex(index)
-                    break
-                }
+                if (currentRank >= targetRank) return valueFromIndex(index)
             }
+            return Double.NaN
+        }
+
+        for (i in probabilities.indices) {
+            computedQuantiles[i] = computeQuantile(probabilities[i] * total)
         }
 
         return SketchResult(
