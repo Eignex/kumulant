@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat
 
 import com.eignex.kumulant.core.RateResult
+import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -102,6 +103,221 @@ class RateTest {
         val r = Rate(name = "throughput")
         r.update(1.0, T0)
         assertEquals("throughput", r.read(T1).name)
+    }
+}
+
+class DecayingSumTest {
+
+    @Test
+    fun `sum is positive after update`() {
+        val s = DecayingSum(halfLife = 1.seconds)
+        s.update(10.0, T0)
+        assertTrue(s.read(T0).sum > 0.0)
+    }
+
+    @Test
+    fun `sum at update time equals value`() {
+        val s = DecayingSum(halfLife = 1.seconds)
+        s.update(5.0, T0)
+        // Read at same timestamp — no decay
+        assertEquals(5.0, s.read(T0).sum, 1e-9)
+    }
+
+    @Test
+    fun `sum decays to half after one half-life`() {
+        val s = DecayingSum(halfLife = 1.seconds)
+        s.update(8.0, T0)
+        val sumAfterHalfLife = s.read(T1).sum // T1 - T0 = 1s = 1 half-life
+        assertEquals(4.0, sumAfterHalfLife, 1e-9)
+    }
+
+    @Test
+    fun `sum decays toward zero far in the future`() {
+        val s = DecayingSum(halfLife = 1.seconds)
+        s.update(1.0, T0)
+        val sumNear = s.read(T1).sum
+        val sumFar = s.read(T3).sum // 10 half-lives later
+        assertTrue(sumFar < sumNear / 100.0)
+    }
+
+    @Test
+    fun `accumulates multiple updates`() {
+        val s = DecayingSum(halfLife = 1.seconds)
+        s.update(3.0, T0)
+        s.update(4.0, T0)
+        assertEquals(7.0, s.read(T0).sum, 1e-9)
+    }
+
+    @Test
+    fun `merge combines two sums`() {
+        val s1 = DecayingSum(halfLife = 1.seconds)
+        val s2 = DecayingSum(halfLife = 1.seconds)
+        s1.update(3.0, T0)
+        s2.update(4.0, T0)
+        s1.merge(s2.read(T0))
+        assertEquals(7.0, s1.read(T0).sum, 1e-9)
+    }
+
+    @Test
+    fun `reset yields zero sum`() {
+        val s = DecayingSum(halfLife = 1.seconds)
+        s.update(5.0, T0)
+        s.reset()
+        assertEquals(0.0, s.read(T1).sum, DELTA)
+    }
+
+    @Test
+    fun `copy is independent`() {
+        val s1 = DecayingSum(halfLife = 1.seconds)
+        s1.update(10.0, T0)
+        val s2 = s1.copy()
+        s2.update(10.0, T1)
+        assertTrue(s1.read(T2).sum < s2.read(T2).sum)
+    }
+}
+
+class DecayingMeanTest {
+
+    @Test
+    fun `mean of constant stream equals that constant`() {
+        val m = DecayingMean(halfLife = 1.seconds)
+        repeat(10) { m.update(7.0, T0) }
+        assertEquals(7.0, m.read(T0).mean, 1e-9)
+    }
+
+    @Test
+    fun `mean shifts toward recent values`() {
+        val m = DecayingMean(halfLife = 1.seconds)
+        // Old observations at value 0.0
+        repeat(100) { m.update(0.0, T0) }
+        // Fresh burst at value 100.0
+        repeat(100) { m.update(100.0, T3) } // T3 = 10 half-lives later
+        val mean = m.read(T3).mean
+        // Old contributions have decayed by >99.9%; mean should be near 100
+        assertTrue(mean > 99.0, "mean=$mean should be near 100 after old values decayed")
+    }
+
+    @Test
+    fun `weighted update influences mean proportionally`() {
+        val m = DecayingMean(halfLife = 1.seconds)
+        m.update(0.0, T0, weight = 3.0)
+        m.update(10.0, T0, weight = 1.0)
+        val mean = m.read(T0).mean
+        assertEquals(2.5, mean, 1e-9) // (0*3 + 10*1) / 4
+    }
+
+    @Test
+    fun `decayingCount halves after one half-life`() {
+        val m = DecayingMean(halfLife = 1.seconds)
+        m.update(1.0, T0)
+        val countNow = m.read(T0).decayingCount
+        val countLater = m.read(T1).decayingCount // 1 half-life later
+        assertEquals(countNow / 2.0, countLater, 1e-9)
+    }
+
+    @Test
+    fun `merge combines two independent streams`() {
+        val m1 = DecayingMean(halfLife = 1.seconds)
+        val m2 = DecayingMean(halfLife = 1.seconds)
+        repeat(10) { m1.update(0.0, T0) }
+        repeat(10) { m2.update(10.0, T0) }
+        m1.merge(m2.read(T0))
+        assertEquals(5.0, m1.read(T0).mean, 1e-9)
+    }
+
+    @Test
+    fun `reset yields zero mean and count`() {
+        val m = DecayingMean(halfLife = 1.seconds)
+        m.update(42.0, T0)
+        m.reset()
+        val r = m.read(T1)
+        assertEquals(0.0, r.mean, DELTA)
+        assertEquals(0.0, r.decayingCount, DELTA)
+    }
+
+    @Test
+    fun `copy is independent`() {
+        val m1 = DecayingMean(halfLife = 1.seconds)
+        m1.update(5.0, T0)
+        val m2 = m1.copy()
+        repeat(100) { m2.update(100.0, T1) }
+        assertTrue(m2.read(T1).mean > m1.read(T1).mean)
+    }
+}
+
+class DecayingVarianceTest {
+
+    @Test
+    fun `variance of constant stream is zero`() {
+        val v = DecayingVariance(halfLife = 1.seconds)
+        repeat(100) { v.update(5.0, T0) }
+        assertEquals(0.0, v.read(T0).variance, 1e-9)
+        assertEquals(5.0, v.read(T0).mean, 1e-9)
+    }
+
+    @Test
+    fun `variance of two equal-weight values`() {
+        val v = DecayingVariance(halfLife = 1.seconds)
+        v.update(0.0, T0)
+        v.update(10.0, T0)
+        val r = v.read(T0)
+        // mean=5, variance = E[x²] - mean² = 50 - 25 = 25
+        assertEquals(5.0, r.mean, 1e-9)
+        assertEquals(25.0, r.variance, 1e-9)
+    }
+
+    @Test
+    fun `variance increases when signal disperses`() {
+        val v = DecayingVariance(halfLife = 1.seconds)
+        // Tight cluster
+        repeat(20) { v.update(5.0, T0) }
+        val varTight = v.read(T0).variance
+        // Spread cluster — old observations fade, new ones span wide range
+        repeat(20) { i -> v.update(i.toDouble(), T3) }
+        val varSpread = v.read(T3).variance
+        assertTrue(varSpread > varTight)
+    }
+
+    @Test
+    fun `stdDev is sqrt of variance`() {
+        val v = DecayingVariance(halfLife = 1.seconds)
+        v.update(0.0, T0)
+        v.update(10.0, T0)
+        val r = v.read(T0)
+        assertEquals(sqrt(r.variance), r.stdDev, 1e-9)
+    }
+
+    @Test
+    fun `merge combines two streams`() {
+        val v1 = DecayingVariance(halfLife = 1.seconds)
+        val v2 = DecayingVariance(halfLife = 1.seconds)
+        repeat(10) { v1.update(0.0, T0) }
+        repeat(10) { v2.update(10.0, T0) }
+        v1.merge(v2.read(T0))
+        // mean=5; variance = 25 (by symmetry)
+        assertEquals(5.0, v1.read(T0).mean, 1e-9)
+        assertEquals(25.0, v1.read(T0).variance, 1e-9)
+    }
+
+    @Test
+    fun `reset clears mean and variance`() {
+        val v = DecayingVariance(halfLife = 1.seconds)
+        v.update(1.0, T0)
+        v.update(9.0, T0)
+        v.reset()
+        val r = v.read(T1)
+        assertEquals(0.0, r.mean, DELTA)
+        assertEquals(0.0, r.variance, DELTA)
+    }
+
+    @Test
+    fun `copy is independent`() {
+        val v1 = DecayingVariance(halfLife = 1.seconds)
+        v1.update(5.0, T0)
+        val v2 = v1.copy()
+        repeat(50) { v2.update(100.0, T1) }
+        // v2 mean should be near 100; v1 mean should still be near 5
+        assertTrue(v2.read(T1).mean > v1.read(T1).mean)
     }
 }
 

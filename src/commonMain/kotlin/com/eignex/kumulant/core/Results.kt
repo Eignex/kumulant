@@ -120,6 +120,37 @@ data class DecayingRateResult(
 ) : Result, HasRate, HasTimestamp
 
 @Serializable
+@SerialName("DecayingSum")
+data class DecayingSumResult(
+    val sum: Double,
+    override val timestampNanos: Long,
+    override val name: String? = null,
+) : Result, HasTimestamp
+
+@Serializable
+@SerialName("DecayingMean")
+data class DecayingMeanResult(
+    override val mean: Double,
+    /** Effective weight of observations still contributing (decays with time). */
+    val decayingCount: Double,
+    override val timestampNanos: Long,
+    override val name: String? = null,
+) : Result, HasMean, HasTimestamp
+
+@Serializable
+@SerialName("DecayingVariance")
+data class DecayingVarianceResult(
+    override val mean: Double,
+    override val variance: Double,
+    /** Effective weight of observations still contributing (decays with time). */
+    val decayingCount: Double,
+    override val timestampNanos: Long,
+    override val name: String? = null,
+) : Result, HasMean, HasVariance, HasTimestamp {
+    val stdDev: Double get() = sqrt(variance)
+}
+
+@Serializable
 @SerialName("Quantile")
 data class QuantileResult(
     override val probability: Double,
