@@ -45,8 +45,7 @@ class VectorizedStat<R : Result>(
     override fun merge(values: ResultList<R>) {
         require(values.results.size == dimensions)
         for (i in 0 until dimensions) {
-            @Suppress("UNCHECKED_CAST")
-            stats[i].merge(values.results[i] as R)
+            stats[i].merge(values.results[i])
         }
     }
 
