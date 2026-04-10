@@ -201,6 +201,18 @@ class FilterVectorStat<R : Result>(
     }
 }
 
+class WithWeightStat<R : Result>(
+    private val delegate: SeriesStat<R>,
+    private val weight: Double
+) : SeriesStat<R>, Stat<R> by delegate {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        delegate.update(value, timestampNanos, this.weight)
+    }
+    override fun create(mode: StreamMode?, name: String?): SeriesStat<R> {
+        return WithWeightStat(delegate.create(mode, name), weight)
+    }
+}
+
 // --- Fluent Extension Factories ---
 
 fun <R : Result> SeriesStat<R>.mapFromVector(transform: VectorTransform): VectorStat<R> = MapFromVectorStat(
@@ -227,3 +239,7 @@ fun <R : Result> PairedStat<R>.withFixedY(fixedY: Double): SeriesStat<R> = WithF
 fun <R : Result> SeriesStat<R>.filter(predicate: DoublePredicate): SeriesStat<R> = FilterSeriesStat(this, predicate)
 fun <R : Result> PairedStat<R>.filter(predicate: PairedPredicate): PairedStat<R> = FilterPairedStat(this, predicate)
 fun <R : Result> VectorStat<R>.filter(predicate: VectorPredicate): VectorStat<R> = FilterVectorStat(this, predicate)
+
+fun <R : Result> SeriesStat<R>.withWeight(weight: Double): SeriesStat<R> = WithWeightStat(this, weight)
+
+fun <R : Result> SeriesStat<R>.withValue(value: Double): SeriesStat<R> = mapSeries { value }
