@@ -125,7 +125,9 @@ abstract class GenerateAction : WorkAction<GenerateParameters> {
                         val typeParams = ktClass.typeParameters.map { it.name!! }
                         val primaryConstructor = ktClass.primaryConstructor
                         if (typeParams.isNotEmpty() && primaryConstructor != null) {
-                            val componentNames = primaryConstructor.valueParameters.mapNotNull { it.name }
+                            val componentNames = primaryConstructor.valueParameters
+                                .filter { param -> param.typeReference?.text in typeParams }
+                                .mapNotNull { it.name }
                             if (typeParams.size == componentNames.size) {
                                 results.add(ResultClassInfo(name, typeParams, componentNames))
                             }
