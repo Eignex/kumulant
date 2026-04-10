@@ -6,6 +6,7 @@ import kotlin.reflect.full.primaryConstructor
 fun Result.flatten(prefixResults: Boolean = true): List<ResultEntry> =
     flattenToList(prefixResults)
 
+@Suppress("UnreachableCode") // detekt false positive: type resolution infers sealed interface props, not concrete class
 private fun Result.flattenToList(
     usePrefix: Boolean,
     prefix: String = ""
@@ -48,19 +49,20 @@ private fun Result.flattenToList(
         else -> Unit
     }
 
-    val constructorOrder = this::class.primaryConstructor?.parameters
+    val self: Any = this
+    val constructorOrder = self::class.primaryConstructor?.parameters
         ?.mapIndexed { index, param -> param.name to index }
         ?.toMap() ?: emptyMap()
 
     @Suppress("UNCHECKED_CAST")
-    val sortedProperties = (this::class.memberProperties as Collection<kotlin.reflect.KProperty1<Any, *>>)
+    val sortedProperties = (self::class.memberProperties as Collection<kotlin.reflect.KProperty1<Any, *>>)
         .filter { it.name in constructorOrder && it.name != "name" }
         .sortedBy { constructorOrder[it.name] }
 
     val destination = mutableListOf<ResultEntry>()
 
-    sortedProperties.forEach { prop ->
-        val value = prop.get(this) ?: return@forEach
+    for (prop in sortedProperties) {
+        val value = prop.get(this) ?: continue
         val key = if (usePrefix) "$prefix${prop.name}" else prop.name
 
         if (value is Result) {
