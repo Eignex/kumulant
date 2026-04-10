@@ -11,7 +11,7 @@ import com.eignex.kumulant.core.SeriesStat
  * first update. Useful for measuring throughput over the lifetime of a stream.
  *
  * For time-decaying rates that weight recent observations more heavily,
- * see [DecayingRate] and [DecayingEventRate].
+ * see [DecayingRate]. Use [withValue][com.eignex.kumulant.core.withValue] to count each update as 1.
  */
 class Rate(
     val mode: StreamMode = defaultStreamMode,
@@ -71,33 +71,3 @@ class Rate(
     override val rate: Double get() = read().rate
 }
 
-/**
- * Cumulative event rate: counts each update as one event regardless of value,
- * then divides by elapsed time since the first event.
- *
- * For time-decaying event rates, see [DecayingEventRate].
- */
-class EventRate(
-    val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
-) : SeriesStat<RateResult>, HasRate {
-
-    private val _rate = Rate(mode, name)
-
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        _rate.update(1.0, timestampNanos)
-    }
-
-    override fun create(
-        mode: StreamMode?,
-        name: String?
-    ) = EventRate(mode ?: this.mode, name ?: this.name)
-
-    override fun merge(values: RateResult) = _rate.merge(values)
-
-    override fun reset() = _rate.reset()
-
-    override fun read(timestampNanos: Long) = _rate.read(timestampNanos)
-
-    override val rate: Double get() = _rate.rate
-}
