@@ -130,37 +130,6 @@ class DecayingRate(
         DecayingRate(halfLife, mode ?: this.mode, name ?: this.name)
 }
 
-/**
- * Exponentially decaying rate of events (each update counts as 1).
- *
- * Wrapper around [DecayingRate] that ignores the value and always contributes 1
- * per update. Useful for measuring how frequently events occur in real time.
- */
-class DecayingEventRate(
-    val halfLife: Duration,
-    val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
-) : SeriesStat<DecayingRateResult>, HasRate {
-
-    private val _rate = DecayingRate(halfLife, mode, name)
-
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        _rate.update(1.0, timestampNanos)
-    }
-
-    override fun create(
-        mode: StreamMode?,
-        name: String?
-    ) = DecayingEventRate(halfLife, mode ?: this.mode, name ?: this.name)
-
-    override fun merge(values: DecayingRateResult) = _rate.merge(values)
-
-    override fun reset() = _rate.reset()
-
-    override fun read(timestampNanos: Long) = _rate.read(timestampNanos)
-
-    override val rate: Double get() = _rate.rate
-}
 
 /**
  * Exponentially decaying weighted mean: mean(t) = Σ(vᵢ·wᵢ·decay) / Σ(wᵢ·decay).
