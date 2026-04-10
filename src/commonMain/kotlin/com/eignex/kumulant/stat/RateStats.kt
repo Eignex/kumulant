@@ -70,4 +70,3 @@ class Rate(
 
     override val rate: Double get() = read().rate
 }
-

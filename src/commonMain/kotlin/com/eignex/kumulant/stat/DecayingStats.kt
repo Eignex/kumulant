@@ -130,7 +130,6 @@ class DecayingRate(
         DecayingRate(halfLife, mode ?: this.mode, name ?: this.name)
 }
 
-
 /**
  * Exponentially decaying weighted mean: mean(t) = Σ(vᵢ·wᵢ·decay) / Σ(wᵢ·decay).
  *
