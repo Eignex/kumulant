@@ -7,31 +7,24 @@ import kotlin.math.sqrt
 
 @Serializable
 sealed interface Result {
-    val name: String?
 }
-
-val Result.nameOrDefault
-    get() = name ?: this::class.simpleName?.removeSuffix("Result") ?: "unknown"
 
 @Serializable
 @SerialName("Count")
 data class CountResult(
-    override val count: Long,
-    override val name: String? = null
+    override val count: Long
 ) : Result, HasCount
 
 @Serializable
 @SerialName("Sum")
 data class SumResult(
-    override val sum: Double,
-    override val name: String? = null
+    override val sum: Double
 ) : Result, HasSum
 
 @Serializable
 @SerialName("Mean")
 data class MeanResult(
     override val mean: Double,
-    override val name: String? = null,
 ) : Result, HasMean
 
 @Serializable
@@ -39,15 +32,13 @@ data class MeanResult(
 data class WeightedMeanResult(
     override val totalWeights: Double,
     override val mean: Double,
-    override val name: String? = null,
 ) : Result, HasTotalWeights, HasMean
 
 @Serializable
 @SerialName("Variance")
 data class VarianceResult(
     override val mean: Double,
-    override val variance: Double,
-    override val name: String? = null
+    override val variance: Double
 ) : Result, HasMean, HasVariance
 
 @Serializable
@@ -55,8 +46,7 @@ data class VarianceResult(
 data class WeightedVarianceResult(
     override val totalWeights: Double,
     override val mean: Double,
-    override val variance: Double,
-    override val name: String? = null
+    override val variance: Double
 ) : Result, HasMean, HasSampleVariance
 
 @Serializable
@@ -66,8 +56,7 @@ data class MomentsResult(
     override val mean: Double,
     override val m2: Double,
     override val m3: Double,
-    override val m4: Double,
-    override val name: String? = null
+    override val m4: Double
 ) : Result, HasTotalWeights, HasMean, HasSampleVariance, HasShapeMoments {
     override val sst: Double get() = m2
 }
@@ -75,23 +64,20 @@ data class MomentsResult(
 @Serializable
 @SerialName("Min")
 data class MinResult(
-    override val min: Double,
-    override val name: String? = null
+    override val min: Double
 ) : Result, HasMin
 
 @Serializable
 @SerialName("Max")
 data class MaxResult(
-    override val max: Double,
-    override val name: String? = null
+    override val max: Double
 ) : Result, HasMax
 
 @Serializable
 @SerialName("Range")
 data class RangeResult(
     override val min: Double,
-    override val max: Double,
-    override val name: String? = null
+    override val max: Double
 ) : Result, HasRange
 
 @Serializable
@@ -99,8 +85,7 @@ data class RangeResult(
 data class RateResult(
     val startTimestampNanos: Long,
     val totalValue: Double,
-    override val timestampNanos: Long,
-    override val name: String? = null
+    override val timestampNanos: Long
 ) : Result, HasRate, HasTimestamp {
     override val rate: Double
         get() {
@@ -116,7 +101,6 @@ data class RateResult(
 data class DecayingRateResult(
     override val rate: Double,
     override val timestampNanos: Long,
-    override val name: String? = null,
 ) : Result, HasRate, HasTimestamp
 
 @Serializable
@@ -124,7 +108,6 @@ data class DecayingRateResult(
 data class DecayingSumResult(
     val sum: Double,
     override val timestampNanos: Long,
-    override val name: String? = null,
 ) : Result, HasTimestamp
 
 @Serializable
@@ -134,7 +117,6 @@ data class DecayingMeanResult(
     /** Effective weight of observations still contributing (decays with time). */
     val decayingCount: Double,
     override val timestampNanos: Long,
-    override val name: String? = null,
 ) : Result, HasMean, HasTimestamp
 
 @Serializable
@@ -145,7 +127,6 @@ data class DecayingVarianceResult(
     /** Effective weight of observations still contributing (decays with time). */
     val decayingCount: Double,
     override val timestampNanos: Long,
-    override val name: String? = null,
 ) : Result, HasMean, HasVariance, HasTimestamp {
     val stdDev: Double get() = sqrt(variance)
 }
@@ -154,8 +135,7 @@ data class DecayingVarianceResult(
 @SerialName("Quantile")
 data class QuantileResult(
     override val probability: Double,
-    override val quantile: Double,
-    override val name: String? = null
+    override val quantile: Double
 ) : Result, HasQuantile
 
 @Serializable
@@ -167,8 +147,7 @@ data class SketchResult(
     val totalWeights: Double,
     val zeroCount: Double,
     val positiveBins: Map<Int, Double>,
-    val negativeBins: Map<Int, Double>,
-    override val name: String? = null
+    val negativeBins: Map<Int, Double>
 ) : Result, HasQuantiles
 
 fun SketchResult.toSparseHistogram(): SparseHistogramResult {
@@ -208,8 +187,7 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
     return SparseHistogramResult(
         lowerBounds = lowers,
         upperBounds = uppers,
-        weights = weights,
-        name = name
+        weights = weights
     )
 }
 
@@ -218,8 +196,7 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
 data class SparseHistogramResult(
     override val lowerBounds: DoubleArray,
     override val upperBounds: DoubleArray,
-    override val weights: DoubleArray,
-    override val name: String? = null
+    override val weights: DoubleArray
 ) : Result, HasSparseHistogram
 
 @Serializable
@@ -231,7 +208,6 @@ data class OLSResult(
     override val sse: Double,
     val x: VarianceResult,
     val y: VarianceResult,
-    override val name: String? = null,
 ) : Result,
     HasLinearModel,
     HasRegression,
@@ -268,7 +244,6 @@ data class CovarianceResult(
     val sxx: Double,
     /** Sum of squared deviations in y: sum((y - meanY)^2 * w) */
     val syy: Double,
-    override val name: String? = null,
 ) : Result, HasTotalWeights, HasCovariance, HasCorrelation {
     override val covariance: Double get() = if (totalWeights > 0.0) sxy / totalWeights else 0.0
     override val correlation: Double
@@ -279,3 +254,9 @@ data class CovarianceResult(
     val varX: Double get() = if (totalWeights > 0.0) sxx / totalWeights else 0.0
     val varY: Double get() = if (totalWeights > 0.0) syy / totalWeights else 0.0
 }
+
+@Serializable
+@SerialName("List")
+data class ResultList<R : Result>(
+    val results: List<R>
+) : Result
