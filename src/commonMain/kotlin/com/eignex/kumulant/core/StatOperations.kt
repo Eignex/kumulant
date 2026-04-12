@@ -2,8 +2,6 @@ package com.eignex.kumulant.core
 
 import com.eignex.kumulant.concurrent.StreamMode
 
-// --- Primitive Functional Interfaces to prevent Autoboxing ---
-
 fun interface VectorTransform {
     fun apply(vector: DoubleArray): Double
 }
@@ -28,8 +26,6 @@ fun interface VectorPredicate {
     fun test(vector: DoubleArray): Boolean
 }
 
-// --- Concrete Decorator Classes for JIT Devirtualization ---
-
 class MapFromVectorStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val transform: VectorTransform
@@ -37,8 +33,8 @@ class MapFromVectorStat<R : Result>(
     override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
         delegate.update(transform.apply(vector), timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): VectorStat<R> {
-        return MapFromVectorStat(delegate.create(mode, name), transform)
+    override fun create(mode: StreamMode?): VectorStat<R> {
+        return MapFromVectorStat(delegate.create(mode), transform)
     }
 }
 
@@ -49,8 +45,8 @@ class MapFromPairedStat<R : Result>(
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(transform.apply(x, y), timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): PairedStat<R> {
-        return MapFromPairedStat(delegate.create(mode, name), transform)
+    override fun create(mode: StreamMode?): PairedStat<R> {
+        return MapFromPairedStat(delegate.create(mode), transform)
     }
 }
 
@@ -61,8 +57,8 @@ class MapSeriesStat<R : Result>(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(transform.apply(value), timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): SeriesStat<R> {
-        return MapSeriesStat(delegate.create(mode, name), transform)
+    override fun create(mode: StreamMode?): SeriesStat<R> {
+        return MapSeriesStat(delegate.create(mode), transform)
     }
 }
 
@@ -72,8 +68,8 @@ class OnXStat<R : Result>(
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x, timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): PairedStat<R> {
-        return OnXStat(delegate.create(mode, name))
+    override fun create(mode: StreamMode?): PairedStat<R> {
+        return OnXStat(delegate.create(mode))
     }
 }
 
@@ -83,8 +79,8 @@ class OnYStat<R : Result>(
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(y, timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): PairedStat<R> {
-        return OnYStat(delegate.create(mode, name))
+    override fun create(mode: StreamMode?): PairedStat<R> {
+        return OnYStat(delegate.create(mode))
     }
 }
 
@@ -95,8 +91,8 @@ class AtIndexStat<R : Result>(
     override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
         delegate.update(vector[index], timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): VectorStat<R> {
-        return AtIndexStat(delegate.create(mode, name), index)
+    override fun create(mode: StreamMode?): VectorStat<R> {
+        return AtIndexStat(delegate.create(mode), index)
     }
 }
 
@@ -108,8 +104,8 @@ class AtIndicesStat<R : Result>(
     override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
         delegate.update(vector[indexX], vector[indexY], timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): VectorStat<R> {
-        return AtIndicesStat(delegate.create(mode, name), indexX, indexY)
+    override fun create(mode: StreamMode?): VectorStat<R> {
+        return AtIndicesStat(delegate.create(mode), indexX, indexY)
     }
 }
 
@@ -119,8 +115,8 @@ class WithTimeAsXStat<R : Result>(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x = timestampNanos / 1e9, y = value, timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): SeriesStat<R> {
-        return WithTimeAsXStat(delegate.create(mode, name))
+    override fun create(mode: StreamMode?): SeriesStat<R> {
+        return WithTimeAsXStat(delegate.create(mode))
     }
 }
 
@@ -130,8 +126,8 @@ class WithTimeAsYStat<R : Result>(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x = value, y = timestampNanos / 1e9, timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): SeriesStat<R> {
-        return WithTimeAsYStat(delegate.create(mode, name))
+    override fun create(mode: StreamMode?): SeriesStat<R> {
+        return WithTimeAsYStat(delegate.create(mode))
     }
 }
 
@@ -142,8 +138,8 @@ class WithFixedXStat<R : Result>(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x = fixedX, y = value, timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): SeriesStat<R> {
-        return WithFixedXStat(delegate.create(mode, name), fixedX)
+    override fun create(mode: StreamMode?): SeriesStat<R> {
+        return WithFixedXStat(delegate.create(mode), fixedX)
     }
 }
 
@@ -154,8 +150,8 @@ class WithFixedYStat<R : Result>(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x = value, y = fixedY, timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?, name: String?): SeriesStat<R> {
-        return WithFixedYStat(delegate.create(mode, name), fixedY)
+    override fun create(mode: StreamMode?): SeriesStat<R> {
+        return WithFixedYStat(delegate.create(mode), fixedY)
     }
 }
 
@@ -168,8 +164,8 @@ class FilterSeriesStat<R : Result>(
             delegate.update(value, timestampNanos, weight)
         }
     }
-    override fun create(mode: StreamMode?, name: String?): SeriesStat<R> {
-        return FilterSeriesStat(delegate.create(mode, name), predicate)
+    override fun create(mode: StreamMode?): SeriesStat<R> {
+        return FilterSeriesStat(delegate.create(mode), predicate)
     }
 }
 
@@ -182,8 +178,8 @@ class FilterPairedStat<R : Result>(
             delegate.update(x, y, timestampNanos, weight)
         }
     }
-    override fun create(mode: StreamMode?, name: String?): PairedStat<R> {
-        return FilterPairedStat(delegate.create(mode, name), predicate)
+    override fun create(mode: StreamMode?): PairedStat<R> {
+        return FilterPairedStat(delegate.create(mode), predicate)
     }
 }
 
@@ -196,8 +192,8 @@ class FilterVectorStat<R : Result>(
             delegate.update(vector, timestampNanos, weight)
         }
     }
-    override fun create(mode: StreamMode?, name: String?): VectorStat<R> {
-        return FilterVectorStat(delegate.create(mode, name), predicate)
+    override fun create(mode: StreamMode?): VectorStat<R> {
+        return FilterVectorStat(delegate.create(mode), predicate)
     }
 }
 
@@ -208,12 +204,10 @@ class WithWeightStat<R : Result>(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(value, timestampNanos, this.weight)
     }
-    override fun create(mode: StreamMode?, name: String?): SeriesStat<R> {
-        return WithWeightStat(delegate.create(mode, name), weight)
+    override fun create(mode: StreamMode?): SeriesStat<R> {
+        return WithWeightStat(delegate.create(mode), weight)
     }
 }
-
-// --- Fluent Extension Factories ---
 
 fun <R : Result> SeriesStat<R>.mapFromVector(transform: VectorTransform): VectorStat<R> = MapFromVectorStat(
     this,

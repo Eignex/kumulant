@@ -9,8 +9,6 @@ private const val DELTA = 1e-12
 
 class StatOperationsTest {
 
-    // --- mapSeries ---
-
     @Test
     fun `mapSeries applies transform before accumulation`() {
         val stat = Sum().mapSeries { it * 2.0 }
@@ -26,8 +24,6 @@ class StatOperationsTest {
         stat.update(3.0)
         assertEquals(7.0, stat.read().sum, DELTA)
     }
-
-    // --- filter ---
 
     @Test
     fun `filter drops values that fail predicate`() {
@@ -46,8 +42,6 @@ class StatOperationsTest {
         assertEquals(2.0, stat.read().mean, DELTA)
     }
 
-    // --- onX / onY (PairedStat adapters) ---
-
     @Test
     fun `onX feeds x to underlying stat`() {
         val stat = Sum().onX()
@@ -62,8 +56,6 @@ class StatOperationsTest {
         assertEquals(7.0, stat.read().sum, DELTA)
     }
 
-    // --- mapFromPaired ---
-
     @Test
     fun `mapFromPaired computes difference y-x`() {
         val stat = Sum().mapFromPaired { x, y -> y - x }
@@ -72,8 +64,6 @@ class StatOperationsTest {
         assertEquals(10.0, stat.read().sum, DELTA) // (10-3)+(4-1)=7+3=10
     }
 
-    // --- atIndex ---
-
     @Test
     fun `atIndex picks single element from vector`() {
         val stat = Sum().atIndex(1)
@@ -81,16 +71,12 @@ class StatOperationsTest {
         assertEquals(20.0, stat.read().sum, DELTA)
     }
 
-    // --- atIndices ---
-
     @Test
     fun `atIndices extracts two elements for paired stat`() {
         val stat = Sum().onX().atIndices(0, 2)
         stat.update(doubleArrayOf(5.0, 99.0, 3.0))
         assertEquals(5.0, stat.read().sum, DELTA) // x=vec[0], y=vec[2]; onX takes x
     }
-
-    // --- withFixedX / withFixedY ---
 
     @Test
     fun `withFixedX supplies constant x to paired stat`() {
@@ -108,8 +94,6 @@ class StatOperationsTest {
         assertEquals(6.0, stat.read().sum, DELTA)
     }
 
-    // --- filter on PairedStat ---
-
     @Test
     fun `filter on paired stat drops pairs failing predicate`() {
         val stat = Sum().onX().filter { x, _ -> x > 0.0 }
@@ -117,8 +101,6 @@ class StatOperationsTest {
         stat.update(-3.0, 1.0)
         assertEquals(5.0, stat.read().sum, DELTA)
     }
-
-    // --- filter on VectorStat ---
 
     @Test
     fun `filter on vector stat drops vectors failing predicate`() {
@@ -128,16 +110,12 @@ class StatOperationsTest {
         assertEquals(4.0, stat.read().sum, DELTA)
     }
 
-    // --- mapFromVector ---
-
     @Test
     fun `mapFromVector computes sum of elements`() {
         val stat = Sum().mapFromVector { v -> v.sum() }
         stat.update(doubleArrayOf(1.0, 2.0, 3.0))
         assertEquals(6.0, stat.read().sum, DELTA)
     }
-
-    // --- create preserves transform ---
 
     @Test
     fun `create of mapSeries stat is independent`() {
@@ -148,8 +126,6 @@ class StatOperationsTest {
         assertEquals(10.0, s1.read().sum, DELTA)
         assertEquals(10.0, s2.read().sum, DELTA)
     }
-
-    // --- reset delegates to underlying ---
 
     @Test
     fun `reset on mapSeries clears underlying stat`() {
