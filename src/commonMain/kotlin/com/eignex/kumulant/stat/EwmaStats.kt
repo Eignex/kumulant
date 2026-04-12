@@ -24,7 +24,6 @@ import kotlin.math.exp
 class EwmaMean(
     val alpha: Double,
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<WeightedMeanResult>, HasMean, HasTotalWeights {
 
     private val _biasedMean = mode.newDouble(0.0)
@@ -78,9 +77,9 @@ class EwmaMean(
     }
 
     override fun read(timestampNanos: Long) =
-        WeightedMeanResult(totalWeights, mean, name)
+        WeightedMeanResult(totalWeights, mean)
 
-    override fun create(mode: StreamMode?, name: String?) = EwmaMean(alpha, mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = EwmaMean(alpha, mode ?: this.mode)
 }
 
 /**
@@ -94,7 +93,6 @@ class EwmaMean(
 class EwmaVariance(
     val alpha: Double,
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<WeightedVarianceResult>, HasMean, HasVariance, HasTotalWeights {
 
     private val _biasedMean = mode.newDouble(0.0)
@@ -174,9 +172,8 @@ class EwmaVariance(
     override fun read(timestampNanos: Long) = WeightedVarianceResult(
         totalWeights,
         mean,
-        variance,
-        name
+        variance
     )
 
-    override fun create(mode: StreamMode?, name: String?) = EwmaVariance(alpha, mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = EwmaVariance(alpha, mode ?: this.mode)
 }

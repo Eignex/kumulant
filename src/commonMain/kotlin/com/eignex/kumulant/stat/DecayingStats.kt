@@ -30,7 +30,6 @@ import kotlin.time.Duration
 class DecayingSum(
     val halfLife: Duration,
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null,
 ) : SeriesStat<DecayingSumResult> {
 
     internal val alpha = ln(2.0) / halfLife.inWholeNanoseconds.toDouble()
@@ -65,7 +64,7 @@ class DecayingSum(
         val epoch = epochRef.load()
         val dt = (timestampNanos - epoch.landmarkNanos).toDouble()
         val sum = epoch.accumulator.load() * exp(-alpha * dt)
-        return DecayingSumResult(sum, timestampNanos, name)
+        return DecayingSumResult(sum, timestampNanos)
     }
 
     override fun merge(values: DecayingSumResult) {
@@ -87,8 +86,8 @@ class DecayingSum(
         epochRef.compareAndSet(current, Epoch(currentTimeNanos(), mode.newDouble(0.0)))
     }
 
-    override fun create(mode: StreamMode?, name: String?) =
-        DecayingSum(halfLife, mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) =
+        DecayingSum(halfLife, mode ?: this.mode)
 }
 
 /**
@@ -102,7 +101,6 @@ class DecayingSum(
 class DecayingRate(
     val halfLife: Duration,
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null,
 ) : SeriesStat<DecayingRateResult>, HasRate {
 
     private val alpha = ln(2.0) / halfLife.inWholeNanoseconds.toDouble()
@@ -113,7 +111,7 @@ class DecayingRate(
 
     override fun read(timestampNanos: Long): DecayingRateResult {
         val sum = _sum.read(timestampNanos).sum
-        return DecayingRateResult(sum * alpha * 1e9, timestampNanos, name)
+        return DecayingRateResult(sum * alpha * 1e9, timestampNanos)
     }
 
     override fun merge(values: DecayingRateResult) {
@@ -126,8 +124,8 @@ class DecayingRate(
 
     override val rate: Double get() = read().rate
 
-    override fun create(mode: StreamMode?, name: String?) =
-        DecayingRate(halfLife, mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) =
+        DecayingRate(halfLife, mode ?: this.mode)
 }
 
 /**
@@ -139,7 +137,6 @@ class DecayingRate(
 class DecayingMean(
     val halfLife: Duration,
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null,
 ) : SeriesStat<DecayingMeanResult>, HasMean {
 
     private val _sumX = DecayingSum(halfLife, mode)
@@ -161,7 +158,7 @@ class DecayingMean(
         val sumX = _sumX.read(timestampNanos).sum
         val sumW = _sumW.read(timestampNanos).sum
         val mean = if (sumW > 0.0) sumX / sumW else 0.0
-        return DecayingMeanResult(mean, sumW, timestampNanos, name)
+        return DecayingMeanResult(mean, sumW, timestampNanos)
     }
 
     override fun merge(values: DecayingMeanResult) {
@@ -175,8 +172,8 @@ class DecayingMean(
         _sumW.reset()
     }
 
-    override fun create(mode: StreamMode?, name: String?) =
-        DecayingMean(halfLife, mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) =
+        DecayingMean(halfLife, mode ?: this.mode)
 }
 
 /**
@@ -188,7 +185,6 @@ class DecayingMean(
 class DecayingVariance(
     val halfLife: Duration,
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null,
 ) : SeriesStat<DecayingVarianceResult>, HasMean, HasVariance {
 
     private val _sumX2 = DecayingSum(halfLife, mode)
@@ -224,7 +220,7 @@ class DecayingVariance(
         val sumW = _sumW.read(timestampNanos).sum
         val mean = if (sumW > 0.0) sumX / sumW else 0.0
         val variance = if (sumW > 0.0) (sumX2 / sumW - mean * mean).coerceAtLeast(0.0) else 0.0
-        return DecayingVarianceResult(mean, variance, sumW, timestampNanos, name)
+        return DecayingVarianceResult(mean, variance, sumW, timestampNanos)
     }
 
     override fun merge(values: DecayingVarianceResult) {
@@ -243,6 +239,6 @@ class DecayingVariance(
         _sumW.reset()
     }
 
-    override fun create(mode: StreamMode?, name: String?) =
-        DecayingVariance(halfLife, mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) =
+        DecayingVariance(halfLife, mode ?: this.mode)
 }

@@ -22,7 +22,6 @@ class WindowedSeriesStat<R : Result>(
     private val slices: Int,
     template: SeriesStat<R>,
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<R> {
 
     private val template = template.create(mode = this.mode)
@@ -79,8 +78,8 @@ class WindowedSeriesStat<R : Result>(
         }
     }
 
-    override fun create(mode: StreamMode?, name: String?): SeriesStat<R> =
-        WindowedSeriesStat(windowDuration, slices, template, mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?): SeriesStat<R> =
+        WindowedSeriesStat(windowDuration, slices, template, mode ?: this.mode)
 
     override fun read(timestampNanos: Long): R {
         // Create an empty accumulator using the factory

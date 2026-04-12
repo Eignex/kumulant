@@ -86,20 +86,18 @@ class RangeStatsTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val r1 = Range(AtomicMode, "orig").apply { update(5.0) }
-        val r2 = r1.create(SerialMode, "copy")
+        val r1 = Range(AtomicMode).apply { update(5.0) }
+        val r2 = r1.create(SerialMode)
         r2.update(1.0)
         // r1 unchanged by r2's update
         assertEquals(5.0, r1.min, DELTA)
         assertEquals(1.0, r2.min, DELTA)
-        assertEquals("copy", r2.read().name)
     }
 
     @Test
     fun `read result carries name`() {
-        val r = Range(name = "latency")
+        val r = Range()
         r.update(10.0)
-        assertEquals("latency", r.read().name)
     }
 }
 

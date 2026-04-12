@@ -18,9 +18,8 @@ class SumTest {
 
     @Test
     fun `read result carries name`() {
-        val s = Sum(name = "total")
+        val s = Sum()
         s.update(1.0)
-        assertEquals("total", s.read().name)
     }
 
     @Test
@@ -68,9 +67,8 @@ class MeanTest {
 
     @Test
     fun `read result carries name`() {
-        val m = Mean(name = "avg")
+        val m = Mean()
         m.update(5.0)
-        assertEquals("avg", m.read().name)
     }
 
     @Test
@@ -105,7 +103,7 @@ class MeanTest {
     fun `test empty merge`() {
         val mean = Mean()
         mean.update(5.0, 1.0)
-        mean.merge(WeightedMeanResult(0.0, 100.0, "mean"))
+        mean.merge(WeightedMeanResult(0.0, 100.0))
         assertEquals(5.0, mean.mean, DELTA)
     }
 
@@ -142,10 +140,9 @@ class VarianceTest {
 
     @Test
     fun `read result carries name`() {
-        val v = Variance(name = "spread")
+        val v = Variance()
         v.update(1.0)
         v.update(2.0)
-        assertEquals("spread", v.read().name)
     }
 
     @Test
@@ -238,9 +235,8 @@ class MomentsTest {
 
     @Test
     fun `read result carries name`() {
-        val m = Moments(name = "dist")
+        val m = Moments()
         m.update(5.0)
-        assertEquals("dist", m.read().name)
     }
 
     @Test
@@ -334,9 +330,8 @@ class EwmaStatsTest {
 
     @Test
     fun `EwmaMean read result carries name`() {
-        val m = EwmaMean(alpha = 0.5, name = "ema")
+        val m = EwmaMean(alpha = 0.5)
         m.update(5.0)
-        assertEquals("ema", m.read().name)
     }
 
     @Test
@@ -353,10 +348,9 @@ class EwmaStatsTest {
 
     @Test
     fun `EwmaVariance read result carries name`() {
-        val v = EwmaVariance(alpha = 0.5, name = "vol")
+        val v = EwmaVariance(alpha = 0.5)
         v.update(1.0)
         v.update(2.0)
-        assertEquals("vol", v.read().name)
     }
 
     @Test

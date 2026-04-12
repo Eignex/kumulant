@@ -16,7 +16,6 @@ import com.eignex.kumulant.core.WeightedVarianceResult
 
 class Sum(
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<SumResult>, HasSum {
 
     private val _sum = mode.newDouble(0.0)
@@ -30,7 +29,7 @@ class Sum(
         _sum.add(value * weight)
     }
 
-    override fun read(timestampNanos: Long) = SumResult(sum, name)
+    override fun read(timestampNanos: Long) = SumResult(sum)
 
     override fun merge(values: SumResult) {
         _sum.add(values.sum)
@@ -40,12 +39,11 @@ class Sum(
         _sum.store(0.0)
     }
 
-    override fun create(mode: StreamMode?, name: String?) = Sum(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = Sum(mode ?: this.mode)
 }
 
 class Mean(
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<WeightedMeanResult>,
     HasTotalWeights,
     HasMean {
@@ -67,7 +65,7 @@ class Mean(
     }
 
     override fun read(timestampNanos: Long) =
-        WeightedMeanResult(totalWeights, mean, name)
+        WeightedMeanResult(totalWeights, mean)
 
     override fun merge(values: WeightedMeanResult) {
         if (values.totalWeights <= 0.0) return
@@ -85,12 +83,11 @@ class Mean(
         _mean.store(0.0)
     }
 
-    override fun create(mode: StreamMode?, name: String?) = Mean(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = Mean(mode ?: this.mode)
 }
 
 class Variance(
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<WeightedVarianceResult>, HasMean, HasSampleVariance {
 
     private val _totalWeights = mode.newDouble(0.0)
@@ -140,14 +137,13 @@ class Variance(
     }
 
     override fun read(timestampNanos: Long) =
-        WeightedVarianceResult(totalWeights, mean, variance, name)
+        WeightedVarianceResult(totalWeights, mean, variance)
 
-    override fun create(mode: StreamMode?, name: String?) = Variance(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = Variance(mode ?: this.mode)
 }
 
 class Moments(
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null,
 ) : SeriesStat<MomentsResult>, HasMean, HasSampleVariance, HasShapeMoments {
 
     private val _w = mode.newDouble(0.0)
@@ -229,7 +225,7 @@ class Moments(
     }
 
     override fun read(timestampNanos: Long) =
-        MomentsResult(totalWeights, mean, m2, m3, m4, name)
+        MomentsResult(totalWeights, mean, m2, m3, m4)
 
-    override fun create(mode: StreamMode?, name: String?) = Moments(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = Moments(mode ?: this.mode)
 }

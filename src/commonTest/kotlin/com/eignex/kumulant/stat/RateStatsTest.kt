@@ -100,9 +100,8 @@ class RateTest {
 
     @Test
     fun `read result carries name`() {
-        val r = Rate(name = "throughput")
+        val r = Rate()
         r.update(1.0, T0)
-        assertEquals("throughput", r.read(T1).name)
     }
 }
 

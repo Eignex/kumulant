@@ -85,10 +85,9 @@ class FrugalQuantileTest {
 
     @Test
     fun `read result carries probability and name`() {
-        val fq = FrugalQuantile(q = 0.9, name = "p90")
+        val fq = FrugalQuantile(q = 0.9)
         val r = fq.read()
         assertEquals(0.9, r.probability)
-        assertEquals("p90", r.name)
     }
 
     @Test

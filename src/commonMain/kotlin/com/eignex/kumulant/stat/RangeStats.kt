@@ -16,7 +16,6 @@ import com.eignex.kumulant.core.SeriesStat
  */
 class Range(
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<RangeResult>, HasRange {
 
     private val _min = mode.newDouble(Double.POSITIVE_INFINITY)
@@ -40,14 +39,13 @@ class Range(
         _max.store(Double.NEGATIVE_INFINITY)
     }
 
-    override fun read(timestampNanos: Long) = RangeResult(min, max, name)
+    override fun read(timestampNanos: Long) = RangeResult(min, max)
 
-    override fun create(mode: StreamMode?, name: String?) = Range(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = Range(mode ?: this.mode)
 }
 
 class Min(
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<MinResult>, HasMin {
 
     private val _min = mode.newDouble(Double.POSITIVE_INFINITY)
@@ -65,14 +63,13 @@ class Min(
         _min.store(Double.POSITIVE_INFINITY)
     }
 
-    override fun read(timestampNanos: Long) = MinResult(min, name)
+    override fun read(timestampNanos: Long) = MinResult(min)
 
-    override fun create(mode: StreamMode?, name: String?) = Min(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = Min(mode ?: this.mode)
 }
 
 class Max(
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<MaxResult>, HasMax {
 
     private val _max = mode.newDouble(Double.NEGATIVE_INFINITY)
@@ -90,9 +87,9 @@ class Max(
         _max.store(Double.NEGATIVE_INFINITY)
     }
 
-    override fun read(timestampNanos: Long) = MaxResult(max, name)
+    override fun read(timestampNanos: Long) = MaxResult(max)
 
-    override fun create(mode: StreamMode?, name: String?) = Max(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = Max(mode ?: this.mode)
 }
 
 // Planned: Percentile — exact min/max at arbitrary quantile boundaries using a sorted structure

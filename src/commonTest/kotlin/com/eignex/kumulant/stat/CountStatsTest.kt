@@ -63,9 +63,8 @@ class CountTest {
 
     @Test
     fun `read result carries name`() {
-        val c = Count(name = "events")
+        val c = Count()
         c.update(1.0)
-        assertEquals("events", c.read().name)
     }
 }
 
@@ -104,10 +103,9 @@ class TotalWeightsTest {
 
     @Test
     fun `read returns SumResult containing total weights`() {
-        val tw = TotalWeights(name = "w")
+        val tw = TotalWeights()
         tw.update(0.0, weight = 3.5)
         val r = tw.read()
         assertEquals(3.5, r.sum, DELTA)
-        assertEquals("w", r.name)
     }
 }

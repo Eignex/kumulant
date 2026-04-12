@@ -14,7 +14,6 @@ fun <R : Result> ((Int) -> SeriesStat<R>).expandedToVector(
 class VectorizedStat<R : Result>(
     val dimensions: Int,
     val template: (index: Int) -> SeriesStat<R>,
-    override val name: String? = null,
     val mode: StreamMode? = null
 ) : VectorStat<ResultList<R>> {
 
@@ -36,11 +35,11 @@ class VectorizedStat<R : Result>(
     }
 
     override fun read(timestampNanos: Long): ResultList<R> {
-        return ResultList(stats.map { it.read(timestampNanos) }, name)
+        return ResultList(stats.map { it.read(timestampNanos) })
     }
 
-    override fun create(mode: StreamMode?, name: String?): VectorStat<ResultList<R>> =
-        VectorizedStat(dimensions, template, name ?: this.name, mode ?: this.mode)
+    override fun create(mode: StreamMode?): VectorStat<ResultList<R>> =
+        VectorizedStat(dimensions, template, mode ?: this.mode)
 
     override fun merge(values: ResultList<R>) {
         require(values.results.size == dimensions)

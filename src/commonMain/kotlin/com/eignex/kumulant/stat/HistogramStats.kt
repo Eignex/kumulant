@@ -17,7 +17,6 @@ class FrugalQuantile(
     val stepSize: Double = 0.01,
     val initialEstimate: Double = 0.0,
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<QuantileResult>, HasQuantile {
 
     init {
@@ -46,15 +45,11 @@ class FrugalQuantile(
         }
     }
 
-    override fun create(
-        mode: StreamMode?,
-        name: String?
-    ) = FrugalQuantile(
+    override fun create(mode: StreamMode?) = FrugalQuantile(
         q,
         stepSize,
         initialEstimate,
-        mode ?: this.mode,
-        name ?: this.name
+        mode ?: this.mode
     )
 
     override fun merge(values: QuantileResult) {
@@ -66,7 +61,7 @@ class FrugalQuantile(
         _estimate.store(initialEstimate)
     }
 
-    override fun read(timestampNanos: Long) = QuantileResult(q, quantile, name)
+    override fun read(timestampNanos: Long) = QuantileResult(q, quantile)
 }
 
 class DDSketch(
@@ -80,7 +75,6 @@ class DDSketch(
         0.999
     ),
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<SketchResult> {
 
     init {
@@ -111,14 +105,10 @@ class DDSketch(
         }
     }
 
-    override fun create(
-        mode: StreamMode?,
-        name: String?
-    ) = DDSketch(
+    override fun create(mode: StreamMode?) = DDSketch(
         relativeError,
         probabilities,
-        mode ?: this.mode,
-        name ?: this.name
+        mode ?: this.mode
     )
 
     override fun merge(values: SketchResult) {
@@ -164,8 +154,7 @@ class DDSketch(
                 totalWeights = total,
                 zeroCount = zeroSnap,
                 positiveBins = posSnap,
-                negativeBins = negSnap,
-                name = name
+                negativeBins = negSnap
             )
         }
 
@@ -199,8 +188,7 @@ class DDSketch(
             totalWeights = total,
             zeroCount = zeroSnap,
             positiveBins = posSnap,
-            negativeBins = negSnap,
-            name = name
+            negativeBins = negSnap
         )
     }
 }
@@ -215,7 +203,6 @@ class HdrHistogram(
     val initialHighestTrackableValue: Double = 100.0,
     val significantDigits: Int = 3,
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<SparseHistogramResult> {
 
     init {
@@ -316,15 +303,11 @@ class HdrHistogram(
         }
     }
 
-    override fun create(
-        mode: StreamMode?,
-        name: String?
-    ) = HdrHistogram(
+    override fun create(mode: StreamMode?) = HdrHistogram(
         lowestDiscernibleValue,
         initialHighestTrackableValue,
         significantDigits,
-        mode ?: this.mode,
-        name ?: this.name
+        mode ?: this.mode
     )
 
     override fun merge(values: SparseHistogramResult) {
@@ -384,6 +367,6 @@ class HdrHistogram(
             }
         }
 
-        return SparseHistogramResult(lowers, uppers, weights, name)
+        return SparseHistogramResult(lowers, uppers, weights)
     }
 }

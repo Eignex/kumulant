@@ -19,7 +19,6 @@ import com.eignex.kumulant.core.VarianceResult
  */
 class OLS(
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : PairedStat<OLSResult> {
 
     private val _w = mode.newDouble(0.0) // total weights
@@ -115,12 +114,11 @@ class OLS(
             intercept = intercept,
             sse = sse,
             x = VarianceResult(mx, if (w > 0.0) sxx / w else 0.0),
-            y = VarianceResult(my, if (w > 0.0) syy / w else 0.0),
-            name = name
+            y = VarianceResult(my, if (w > 0.0) syy / w else 0.0)
         )
     }
 
-    override fun create(mode: StreamMode?, name: String?) = OLS(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = OLS(mode ?: this.mode)
 }
 
 /**
@@ -131,7 +129,6 @@ class OLS(
  */
 class Covariance(
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : PairedStat<CovarianceResult> {
 
     private val _w = mode.newDouble(0.0)
@@ -198,11 +195,10 @@ class Covariance(
         meanY = meanY,
         sxy = _sxy.load(),
         sxx = _sxx.load(),
-        syy = _syy.load(),
-        name = name
+        syy = _syy.load()
     )
 
-    override fun create(mode: StreamMode?, name: String?) = Covariance(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = Covariance(mode ?: this.mode)
 }
 
 // Planned: WLS (Weighted Least Squares) — support externally supplied per-observation weights

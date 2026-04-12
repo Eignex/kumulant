@@ -146,14 +146,13 @@ class OLSTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val ols1 = OLS(AtomicMode, "orig").apply {
+        val ols1 = OLS(AtomicMode).apply {
             for (x in 0..4) update(x.toDouble(), x.toDouble())
         }
-        val ols2 = ols1.create(SerialMode, "copy")
+        val ols2 = ols1.create(SerialMode)
         ols2.update(100.0, 200.0)
         // ols1 must not be affected
         assertEquals(5.0, ols1.read().totalWeights, EPS)
-        assertEquals("copy", ols2.read().name)
     }
 
     @Test
@@ -226,16 +225,15 @@ class CovarianceTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val c1 = Covariance(name = "orig").apply {
+        val c1 = Covariance().apply {
             update(1.0, 2.0)
             update(2.0, 4.0)
         }
-        val c2 = c1.create(name = "copy")
+        val c2 = c1.create()
         c2.update(5.0, 10.0)
         // c1 unchanged
         assertEquals(2.0, c1.read().totalWeights, EPS)
         assertEquals(1.0, c2.read().totalWeights, EPS)
-        assertEquals("copy", c2.read().name)
     }
 }
 

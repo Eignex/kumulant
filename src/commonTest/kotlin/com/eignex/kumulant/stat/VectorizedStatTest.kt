@@ -63,11 +63,8 @@ class VectorizedStatTest {
     @Test
     fun `template receives correct index via name`() {
         val stat: VectorizedStat<SumResult> =
-            VectorizedStat(dimensions = 3, template = { i -> Sum(name = "dim$i") })
+            VectorizedStat(dimensions = 3, template = { i -> Sum() })
         val r = stat.read()
-        assertEquals("dim0", r.results[0].name)
-        assertEquals("dim1", r.results[1].name)
-        assertEquals("dim2", r.results[2].name)
     }
 
     @Test

@@ -15,7 +15,6 @@ import com.eignex.kumulant.core.SeriesStat
  */
 class Rate(
     val mode: StreamMode = defaultStreamMode,
-    override val name: String? = null
 ) : SeriesStat<RateResult>, HasRate {
 
     private val _totalValues = mode.newDouble(0.0)
@@ -33,10 +32,7 @@ class Rate(
         _totalValues.add(value * weight)
     }
 
-    override fun create(
-        mode: StreamMode?,
-        name: String?
-    ) = Rate(mode ?: this.mode, name ?: this.name)
+    override fun create(mode: StreamMode?) = Rate(mode ?: this.mode)
 
     override fun read(timestampNanos: Long): RateResult {
         val start = if (_startTimestampNanos.load() == Long.MIN_VALUE) {
@@ -47,8 +43,7 @@ class Rate(
         return RateResult(
             startTimestampNanos = start,
             totalValue = _totalValues.load(),
-            timestampNanos = timestampNanos,
-            name = name
+            timestampNanos = timestampNanos
         )
     }
 
