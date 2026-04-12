@@ -60,12 +60,6 @@ class CountTest {
         assertEquals(1L, c1.count)
         assertEquals(1L, c2.count)
     }
-
-    @Test
-    fun `read result carries name`() {
-        val c = Count()
-        c.update(1.0)
-    }
 }
 
 class TotalWeightsTest {

@@ -61,13 +61,6 @@ class VectorizedStatTest {
     }
 
     @Test
-    fun `template receives correct index via name`() {
-        val stat: VectorizedStat<SumResult> =
-            VectorizedStat(dimensions = 3, template = { i -> Sum() })
-        val r = stat.read()
-    }
-
-    @Test
     fun `weighted update applies weight to each dimension`() {
         val stat = sumVector(2)
         stat.update(doubleArrayOf(1.0, 1.0), weight = 3.0)

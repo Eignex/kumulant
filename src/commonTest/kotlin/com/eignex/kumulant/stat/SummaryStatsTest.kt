@@ -17,12 +17,6 @@ class SumTest {
     }
 
     @Test
-    fun `read result carries name`() {
-        val s = Sum()
-        s.update(1.0)
-    }
-
-    @Test
     fun `test extreme values`() {
         val sum = Sum()
         sum.update(1e15, 1.0)
@@ -63,12 +57,6 @@ class MeanTest {
         m1.update(20.0)
         assertEquals(15.0, m1.mean, DELTA)
         assertEquals(0.0, m2.totalWeights, DELTA)
-    }
-
-    @Test
-    fun `read result carries name`() {
-        val m = Mean()
-        m.update(5.0)
     }
 
     @Test
@@ -136,13 +124,6 @@ class VarianceTest {
         v1.update(30.0)
         assertEquals(3.0, v1.totalWeights, DELTA)
         assertEquals(0.0, v2.totalWeights, DELTA)
-    }
-
-    @Test
-    fun `read result carries name`() {
-        val v = Variance()
-        v.update(1.0)
-        v.update(2.0)
     }
 
     @Test
@@ -231,12 +212,6 @@ class MomentsTest {
         m1.update(4.0)
         assertEquals(4.0, m1.totalWeights, delta)
         assertEquals(0.0, m2.totalWeights, delta)
-    }
-
-    @Test
-    fun `read result carries name`() {
-        val m = Moments()
-        m.update(5.0)
     }
 
     @Test
@@ -329,12 +304,6 @@ class EwmaStatsTest {
     }
 
     @Test
-    fun `EwmaMean read result carries name`() {
-        val m = EwmaMean(alpha = 0.5)
-        m.update(5.0)
-    }
-
-    @Test
     fun `EwmaVariance create produces fresh independent stat`() {
         val v1 = EwmaVariance(alpha = 0.5).apply {
             update(1.0)
@@ -344,13 +313,6 @@ class EwmaStatsTest {
         repeat(10) { v1.update(1000.0) }
         assertEquals(0.0, v2.totalWeights, delta)
         assertTrue(v1.totalWeights > 0.0)
-    }
-
-    @Test
-    fun `EwmaVariance read result carries name`() {
-        val v = EwmaVariance(alpha = 0.5)
-        v.update(1.0)
-        v.update(2.0)
     }
 
     @Test

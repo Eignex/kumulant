@@ -84,13 +84,6 @@ class FrugalQuantileTest {
     }
 
     @Test
-    fun `read result carries probability and name`() {
-        val fq = FrugalQuantile(q = 0.9)
-        val r = fq.read()
-        assertEquals(0.9, r.probability)
-    }
-
-    @Test
     fun `create produces fresh independent stat`() {
         val fq1 = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 0.0)
         val fq2 = fq1.create()

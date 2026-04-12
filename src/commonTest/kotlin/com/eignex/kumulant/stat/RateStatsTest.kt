@@ -97,12 +97,6 @@ class RateTest {
         r2.update(5.0, T1)
         assertEquals(10.0, r1.read(T1).totalValue, DELTA)
     }
-
-    @Test
-    fun `read result carries name`() {
-        val r = Rate()
-        r.update(1.0, T0)
-    }
 }
 
 class DecayingSumTest {
