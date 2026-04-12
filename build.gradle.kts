@@ -1,4 +1,6 @@
-@file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+@file:OptIn(ExperimentalWasmDsl::class)
+
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
     id("com.eignex.kmp") version "1.1.4"
@@ -9,8 +11,6 @@ eignexPublish {
     description.set("Pure Kotlin multiplatform streaming statistics library.")
     githubRepo.set("Eignex/kumulant")
 }
-
-val kumulantGenerator by configurations.creating
 
 kotlin {
     jvm()
@@ -33,21 +33,5 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.10.0")
         }
-
-        commonMain {
-            kotlin.srcDir(files(layout.buildDirectory.dir("generated/source/kumulant")).builtBy("generateExtensions"))
-        }
     }
-}
-
-dependencies {
-    kumulantGenerator("org.jetbrains.kotlin:kotlin-compiler-embeddable:2.3.0")
-}
-
-val generatedSourceDir = layout.buildDirectory.dir("generated/source/kumulant")
-
-val generateExtensions by tasks.registering(ExtensionGeneratorTask::class) {
-    inputDir.set(file("src/commonMain/kotlin"))
-    outputFile.set(generatedSourceDir.map { it.file("com/eignex/kumulant/core/Extensions.kt") })
-    compilerClasspath.from(kumulantGenerator)
 }
