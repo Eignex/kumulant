@@ -8,9 +8,6 @@ import com.eignex.kumulant.core.DecayingMeanResult
 import com.eignex.kumulant.core.DecayingRateResult
 import com.eignex.kumulant.core.DecayingSumResult
 import com.eignex.kumulant.core.DecayingVarianceResult
-import com.eignex.kumulant.core.HasMean
-import com.eignex.kumulant.core.HasRate
-import com.eignex.kumulant.core.HasVariance
 import com.eignex.kumulant.core.SeriesStat
 import kotlin.math.exp
 import kotlin.math.ln
@@ -95,34 +92,30 @@ class DecayingSum(
  *
  * Interprets the decaying sum of values as an event intensity. In steady state
  * at a constant event rate r (values = 1), the output converges to r events/sec.
- *
- * Built on [DecayingSum]. Use [DecayingEventRate] for pure event counting.
  */
 class DecayingRate(
     val halfLife: Duration,
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<DecayingRateResult>, HasRate {
+) : SeriesStat<DecayingRateResult> {
 
     private val alpha = ln(2.0) / halfLife.inWholeNanoseconds.toDouble()
-    private val _sum = DecayingSum(halfLife, mode)
+    private val sum = DecayingSum(halfLife, mode)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) =
-        _sum.update(value, timestampNanos, weight)
+        sum.update(value, timestampNanos, weight)
 
     override fun read(timestampNanos: Long): DecayingRateResult {
-        val sum = _sum.read(timestampNanos).sum
+        val sum = sum.read(timestampNanos).sum
         return DecayingRateResult(sum * alpha * 1e9, timestampNanos)
     }
 
     override fun merge(values: DecayingRateResult) {
         if (values.rate <= 0.0) return
-        val sum = values.rate / (alpha * 1e9)
-        _sum.merge(DecayingSumResult(sum, values.timestampNanos))
+        val addedSum = values.rate / (alpha * 1e9)
+        sum.merge(DecayingSumResult(addedSum, values.timestampNanos))
     }
 
-    override fun reset() = _sum.reset()
-
-    override val rate: Double get() = read().rate
+    override fun reset() = sum.reset()
 
     override fun create(mode: StreamMode?) =
         DecayingRate(halfLife, mode ?: this.mode)
@@ -137,39 +130,32 @@ class DecayingRate(
 class DecayingMean(
     val halfLife: Duration,
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<DecayingMeanResult>, HasMean {
+) : SeriesStat<DecayingMeanResult> {
 
-    private val _sumX = DecayingSum(halfLife, mode)
-    private val _sumW = DecayingSum(halfLife, mode)
-
-    override val mean: Double
-        get() {
-            val now = currentTimeNanos()
-            val sumW = _sumW.read(now).sum
-            return if (sumW > 0.0) _sumX.read(now).sum / sumW else 0.0
-        }
+    private val sumX = DecayingSum(halfLife, mode)
+    private val sumW = DecayingSum(halfLife, mode)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        _sumX.update(value, timestampNanos, weight)
-        _sumW.update(1.0, timestampNanos, weight)
+        sumX.update(value, timestampNanos, weight)
+        sumW.update(1.0, timestampNanos, weight)
     }
 
     override fun read(timestampNanos: Long): DecayingMeanResult {
-        val sumX = _sumX.read(timestampNanos).sum
-        val sumW = _sumW.read(timestampNanos).sum
+        val sumX = sumX.read(timestampNanos).sum
+        val sumW = sumW.read(timestampNanos).sum
         val mean = if (sumW > 0.0) sumX / sumW else 0.0
         return DecayingMeanResult(mean, sumW, timestampNanos)
     }
 
     override fun merge(values: DecayingMeanResult) {
         if (values.decayingCount <= 0.0) return
-        _sumX.merge(DecayingSumResult(values.mean * values.decayingCount, values.timestampNanos))
-        _sumW.merge(DecayingSumResult(values.decayingCount, values.timestampNanos))
+        sumX.merge(DecayingSumResult(values.mean * values.decayingCount, values.timestampNanos))
+        sumW.merge(DecayingSumResult(values.decayingCount, values.timestampNanos))
     }
 
     override fun reset() {
-        _sumX.reset()
-        _sumW.reset()
+        sumX.reset()
+        sumW.reset()
     }
 
     override fun create(mode: StreamMode?) =
@@ -185,39 +171,22 @@ class DecayingMean(
 class DecayingVariance(
     val halfLife: Duration,
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<DecayingVarianceResult>, HasMean, HasVariance {
+) : SeriesStat<DecayingVarianceResult> {
 
-    private val _sumX2 = DecayingSum(halfLife, mode)
-    private val _sumX = DecayingSum(halfLife, mode)
-    private val _sumW = DecayingSum(halfLife, mode)
-
-    override val mean: Double
-        get() {
-            val now = currentTimeNanos()
-            val sumW = _sumW.read(now).sum
-            return if (sumW > 0.0) _sumX.read(now).sum / sumW else 0.0
-        }
-
-    override val variance: Double
-        get() {
-            val now = currentTimeNanos()
-            val sumW = _sumW.read(now).sum
-            if (sumW <= 0.0) return 0.0
-            val m = _sumX.read(now).sum / sumW
-            val m2 = _sumX2.read(now).sum / sumW
-            return (m2 - m * m).coerceAtLeast(0.0)
-        }
+    private val sumX2 = DecayingSum(halfLife, mode)
+    private val sumX = DecayingSum(halfLife, mode)
+    private val sumW = DecayingSum(halfLife, mode)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        _sumX2.update(value * value, timestampNanos, weight)
-        _sumX.update(value, timestampNanos, weight)
-        _sumW.update(1.0, timestampNanos, weight)
+        sumX2.update(value * value, timestampNanos, weight)
+        sumX.update(value, timestampNanos, weight)
+        sumW.update(1.0, timestampNanos, weight)
     }
 
     override fun read(timestampNanos: Long): DecayingVarianceResult {
-        val sumX2 = _sumX2.read(timestampNanos).sum
-        val sumX = _sumX.read(timestampNanos).sum
-        val sumW = _sumW.read(timestampNanos).sum
+        val sumX2 = sumX2.read(timestampNanos).sum
+        val sumX = sumX.read(timestampNanos).sum
+        val sumW = sumW.read(timestampNanos).sum
         val mean = if (sumW > 0.0) sumX / sumW else 0.0
         val variance = if (sumW > 0.0) (sumX2 / sumW - mean * mean).coerceAtLeast(0.0) else 0.0
         return DecayingVarianceResult(mean, variance, sumW, timestampNanos)
@@ -228,15 +197,15 @@ class DecayingVariance(
         val sumW = values.decayingCount
         val sumX = values.mean * sumW
         val sumX2 = (values.variance + values.mean * values.mean) * sumW
-        _sumX2.merge(DecayingSumResult(sumX2, values.timestampNanos))
-        _sumX.merge(DecayingSumResult(sumX, values.timestampNanos))
-        _sumW.merge(DecayingSumResult(sumW, values.timestampNanos))
+        this.sumX2.merge(DecayingSumResult(sumX2, values.timestampNanos))
+        this.sumX.merge(DecayingSumResult(sumX, values.timestampNanos))
+        this.sumW.merge(DecayingSumResult(sumW, values.timestampNanos))
     }
 
     override fun reset() {
-        _sumX2.reset()
-        _sumX.reset()
-        _sumW.reset()
+        sumX2.reset()
+        sumX.reset()
+        sumW.reset()
     }
 
     override fun create(mode: StreamMode?) =

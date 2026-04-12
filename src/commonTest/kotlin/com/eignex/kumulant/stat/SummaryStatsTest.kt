@@ -12,8 +12,8 @@ class SumTest {
         val s1 = Sum().apply { update(10.0) }
         val s2 = s1.create() // creates a fresh empty instance
         s1.update(5.0)
-        assertEquals(15.0, s1.sum, DELTA)
-        assertEquals(0.0, s2.sum, DELTA)
+        assertEquals(15.0, s1.read().sum, DELTA)
+        assertEquals(0.0, s2.read().sum, DELTA)
     }
 
     @Test
@@ -21,7 +21,7 @@ class SumTest {
         val sum = Sum()
         sum.update(1e15, 1.0)
         sum.update(1.0, 1.0)
-        assertEquals(1000000000000001.0, sum.sum, 0.1)
+        assertEquals(1000000000000001.0, sum.read().sum, 0.1)
     }
 
     @Test
@@ -29,7 +29,7 @@ class SumTest {
         val sum = Sum()
         sum.update(-10.0, 1.0)
         sum.update(10.0, -1.0) // -10 + (-10)
-        assertEquals(-20.0, sum.sum, DELTA)
+        assertEquals(-20.0, sum.read().sum, DELTA)
     }
 
     @Test
@@ -37,7 +37,7 @@ class SumTest {
         val s1 = Sum().apply { update(10.0, 1.0) }
         val s2 = Sum().apply { update(20.0, 1.0) }
         s1.merge(s2.read())
-        assertEquals(30.0, s1.sum, DELTA)
+        assertEquals(30.0, s1.read().sum, DELTA)
     }
 
     @Test
@@ -45,7 +45,7 @@ class SumTest {
         val sum = Sum()
         sum.update(100.0)
         sum.reset()
-        assertEquals(0.0, sum.sum, DELTA)
+        assertEquals(0.0, sum.read().sum, DELTA)
     }
 }
 
@@ -55,8 +55,8 @@ class MeanTest {
         val m1 = Mean().apply { update(10.0) }
         val m2 = m1.create() // creates a fresh empty instance
         m1.update(20.0)
-        assertEquals(15.0, m1.mean, DELTA)
-        assertEquals(0.0, m2.totalWeights, DELTA)
+        assertEquals(15.0, m1.read().mean, DELTA)
+        assertEquals(0.0, m2.read().totalWeights, DELTA)
     }
 
     @Test
@@ -67,7 +67,7 @@ class MeanTest {
         mean.update(offset + 1, 1.0)
         mean.update(offset + 2, 1.0)
         mean.update(offset + 3, 1.0)
-        assertEquals(offset + 2.0, mean.mean, DELTA)
+        assertEquals(offset + 2.0, mean.read().mean, DELTA)
     }
 
     @Test
@@ -75,8 +75,8 @@ class MeanTest {
         val mean = Mean()
         mean.update(10.0, 1.0)
         mean.update(100.0, 0.0) // Should not change mean
-        assertEquals(10.0, mean.mean, DELTA)
-        assertEquals(1.0, mean.totalWeights, DELTA)
+        assertEquals(10.0, mean.read().mean, DELTA)
+        assertEquals(1.0, mean.read().totalWeights, DELTA)
     }
 
     @Test
@@ -84,7 +84,7 @@ class MeanTest {
         val mean = Mean()
         mean.update(10.0, 90.0) // 90% weight
         mean.update(100.0, 10.0) // 10% weight
-        assertEquals(19.0, mean.mean, DELTA)
+        assertEquals(19.0, mean.read().mean, DELTA)
     }
 
     @Test
@@ -92,7 +92,7 @@ class MeanTest {
         val mean = Mean()
         mean.update(5.0, 1.0)
         mean.merge(WeightedMeanResult(0.0, 100.0))
-        assertEquals(5.0, mean.mean, DELTA)
+        assertEquals(5.0, mean.read().mean, DELTA)
     }
 
     @Test
@@ -100,7 +100,7 @@ class MeanTest {
         val mean = Mean()
         mean.update(-10.0)
         mean.update(-20.0)
-        assertEquals(-15.0, mean.mean, DELTA)
+        assertEquals(-15.0, mean.read().mean, DELTA)
     }
 
     @Test
@@ -108,8 +108,8 @@ class MeanTest {
         val mean = Mean()
         mean.update(50.0)
         mean.reset()
-        assertEquals(0.0, mean.mean, DELTA)
-        assertEquals(0.0, mean.totalWeights, DELTA)
+        assertEquals(0.0, mean.read().mean, DELTA)
+        assertEquals(0.0, mean.read().totalWeights, DELTA)
     }
 }
 
@@ -122,15 +122,15 @@ class VarianceTest {
         }
         val v2 = v1.create() // creates a fresh empty instance
         v1.update(30.0)
-        assertEquals(3.0, v1.totalWeights, DELTA)
-        assertEquals(0.0, v2.totalWeights, DELTA)
+        assertEquals(3.0, v1.read().totalWeights, DELTA)
+        assertEquals(0.0, v2.read().totalWeights, DELTA)
     }
 
     @Test
     fun `test variance sequence`() {
         val vari = Variance()
         (1..10).forEach { vari.update(it.toDouble(), 1.0) }
-        assertEquals(8.25, vari.variance, DELTA)
+        assertEquals(8.25, vari.read().variance, DELTA)
     }
 
     @Test
@@ -138,32 +138,27 @@ class VarianceTest {
         val vari = Variance()
         vari.update(10.0, 1.0)
         vari.update(20.0, 1.0)
-        assertEquals(2.0, vari.totalWeights, DELTA)
-        assertEquals(15.0, vari.mean, DELTA)
-        assertEquals(50.0, vari.sst, DELTA)
-        assertEquals(25.0, vari.variance, DELTA)
-        assertEquals(5.0, vari.stdDev, DELTA)
-
-        assertEquals(vari.read().totalWeights, vari.totalWeights, DELTA)
-        assertEquals(vari.read().mean, vari.mean, DELTA)
-        assertEquals(vari.read().sst, vari.sst, DELTA)
-        assertEquals(vari.read().variance, vari.variance, DELTA)
-        assertEquals(vari.read().stdDev, vari.stdDev, DELTA)
+        val result = vari.read()
+        assertEquals(2.0, result.totalWeights, DELTA)
+        assertEquals(15.0, result.mean, DELTA)
+        assertEquals(50.0, result.sst, DELTA)
+        assertEquals(25.0, result.variance, DELTA)
+        assertEquals(5.0, result.stdDev, DELTA)
     }
 
     @Test
     fun `test single value variance`() {
         val vari = Variance()
         vari.update(10.0, 1.0)
-        assertTrue(vari.variance.isNaN() || vari.variance == 0.0)
+        assertTrue(vari.read().variance.isNaN() || vari.read().variance == 0.0)
     }
 
     @Test
     fun `test zero variance`() {
         val vari = Variance()
         repeat(10) { vari.update(5.0) }
-        assertEquals(5.0, vari.mean, DELTA)
-        assertEquals(0.0, vari.variance, DELTA)
+        assertEquals(5.0, vari.read().mean, DELTA)
+        assertEquals(0.0, vari.read().variance, DELTA)
     }
 
     @Test
@@ -174,8 +169,8 @@ class VarianceTest {
             Variance().apply { (6..10).forEach { update(it.toDouble(), 1.0) } }
 
         v1.merge(v2.read())
-        assertEquals(8.25, v1.variance, DELTA)
-        assertEquals(5.5, v1.mean, DELTA)
+        assertEquals(8.25, v1.read().variance, DELTA)
+        assertEquals(5.5, v1.read().mean, DELTA)
     }
 
     @Test
@@ -183,7 +178,7 @@ class VarianceTest {
         val v1 = Variance()
         v1.update(1.0)
         v1.merge(Variance().read())
-        assertEquals(1.0, v1.totalWeights, DELTA)
+        assertEquals(1.0, v1.read().totalWeights, DELTA)
     }
 
     @Test
@@ -192,9 +187,9 @@ class VarianceTest {
         vari.update(10.0)
         vari.update(20.0)
         vari.reset()
-        assertEquals(0.0, vari.totalWeights, DELTA)
-        assertEquals(0.0, vari.mean, DELTA)
-        assertEquals(0.0, vari.variance, DELTA)
+        assertEquals(0.0, vari.read().totalWeights, DELTA)
+        assertEquals(0.0, vari.read().mean, DELTA)
+        assertEquals(0.0, vari.read().variance, DELTA)
     }
 }
 
@@ -210,8 +205,8 @@ class MomentsTest {
         }
         val m2 = m1.create() // creates a fresh empty instance
         m1.update(4.0)
-        assertEquals(4.0, m1.totalWeights, delta)
-        assertEquals(0.0, m2.totalWeights, delta)
+        assertEquals(4.0, m1.read().totalWeights, delta)
+        assertEquals(0.0, m2.read().totalWeights, delta)
     }
 
     @Test
@@ -221,8 +216,8 @@ class MomentsTest {
         val data = listOf(1.0, 2.0, 3.0, 4.0, 5.0)
         data.forEach { stat.update(it, 1.0) }
 
-        assertEquals(3.0, stat.mean, delta)
-        assertEquals(0.0, stat.skewness, delta)
+        assertEquals(3.0, stat.read().mean, delta)
+        assertEquals(0.0, stat.read().skewness, delta)
     }
 
     @Test
@@ -231,7 +226,7 @@ class MomentsTest {
         // Right-skewed data
         val data = listOf(1.0, 1.0, 1.0, 2.0, 10.0)
         data.forEach { stat.update(it, 1.0) }
-        assertTrue(stat.skewness > 0.0)
+        assertTrue(stat.read().skewness > 0.0)
     }
 
     @Test
@@ -240,7 +235,7 @@ class MomentsTest {
         // Left-skewed data
         val data = listOf(10.0, 10.0, 10.0, 9.0, 1.0)
         data.forEach { stat.update(it, 1.0) }
-        assertTrue(stat.skewness < 0.0)
+        assertTrue(stat.read().skewness < 0.0)
     }
 
     @Test
@@ -250,7 +245,7 @@ class MomentsTest {
         data.forEach { stat.update(it, 1.0) }
 
         // Excess Kurtosis for this small flat-ish set will be negative (Platykurtic)
-        assertTrue(stat.kurtosis < 0.0)
+        assertTrue(stat.read().kurtosis < 0.0)
     }
 
     @Test
@@ -260,7 +255,7 @@ class MomentsTest {
         repeat(100) { stat.update(0.0, 1.0) }
         stat.update(100.0, 1.0)
         stat.update(-100.0, 1.0)
-        assertTrue(stat.kurtosis > 0.0)
+        assertTrue(stat.read().kurtosis > 0.0)
     }
 
     @Test
@@ -272,8 +267,8 @@ class MomentsTest {
 
         m1.merge(m2.read())
 
-        assertEquals(60.5, m1.mean, delta)
-        assertEquals(4.0, m1.totalWeights, delta)
+        assertEquals(60.5, m1.read().mean, delta)
+        assertEquals(4.0, m1.read().totalWeights, delta)
     }
 
     @Test
@@ -283,11 +278,11 @@ class MomentsTest {
         stat.update(20.0)
         stat.reset()
 
-        assertEquals(0.0, stat.totalWeights, delta)
-        assertEquals(0.0, stat.mean, delta)
-        assertEquals(0.0, stat.variance, delta)
-        assertEquals(0.0, stat.skewness, delta)
-        assertEquals(0.0, stat.kurtosis, delta)
+        assertEquals(0.0, stat.read().totalWeights, delta)
+        assertEquals(0.0, stat.read().mean, delta)
+        assertEquals(0.0, stat.read().variance, delta)
+        assertEquals(0.0, stat.read().skewness, delta)
+        assertEquals(0.0, stat.read().kurtosis, delta)
     }
 }
 
@@ -299,8 +294,8 @@ class EwmaStatsTest {
         val m1 = EwmaMean(alpha = 0.5).apply { update(10.0) }
         val m2 = m1.create() // creates a fresh empty instance
         repeat(10) { m1.update(10.0) }
-        assertEquals(0.0, m2.mean, delta)
-        assertTrue(m1.mean > 0.0)
+        assertEquals(0.0, m2.read().mean, delta)
+        assertTrue(m1.read().mean > 0.0)
     }
 
     @Test
@@ -311,8 +306,8 @@ class EwmaStatsTest {
         }
         val v2 = v1.create() // creates a fresh empty instance
         repeat(10) { v1.update(1000.0) }
-        assertEquals(0.0, v2.totalWeights, delta)
-        assertTrue(v1.totalWeights > 0.0)
+        assertEquals(0.0, v2.read().totalWeights, delta)
+        assertTrue(v1.read().totalWeights > 0.0)
     }
 
     @Test
@@ -323,7 +318,7 @@ class EwmaStatsTest {
 
         d1.merge(d2)
         // (10 + 20) / 2 = 15
-        assertEquals(15.0, d1.mean, delta)
+        assertEquals(15.0, d1.read().mean, delta)
     }
 
     @Test
@@ -335,7 +330,7 @@ class EwmaStatsTest {
         // A simple mean would be ~91.8, but a heavily decayed mean
         // will aggressively track the latest dense value.
         assertTrue(
-            stat.mean > 80.0,
+            stat.read().mean > 80.0,
             "Mean should heavily favor the massive recent update"
         )
     }
@@ -346,11 +341,11 @@ class EwmaStatsTest {
 
         // Phase 1: Low variance
         repeat(50) { stat.update(10.0, 1.0) }
-        val lowVar = stat.variance
+        val lowVar = stat.read().variance
 
         // Phase 2: Massive spike
         stat.update(1000.0, 1.0)
-        val highVar = stat.variance
+        val highVar = stat.read().variance
 
         assertTrue(highVar > lowVar, "Variance should spike on outlier")
     }
@@ -360,20 +355,20 @@ class EwmaStatsTest {
         val stat = EwmaVariance(alpha = 0.1)
         stat.update(10.0, 1.0)
         stat.update(20.0, 1.0)
-        val currentVar = stat.variance
+        val currentVar = stat.read().variance
 
         // Merge with zero-weight remote
         stat.merge(WeightedVarianceResult(0.0, 0.0, 0.0))
 
-        assertEquals(currentVar, stat.variance, delta)
+        assertEquals(currentVar, stat.read().variance, delta)
     }
 
     @Test
     fun `EwmaVariance bias correction prevents zero division`() {
         val stat = EwmaVariance(alpha = 0.1)
         // Should return 0.0 or something sensible, not NaN, before updates
-        assertEquals(0.0, stat.mean, delta)
-        assertEquals(0.0, stat.variance, delta)
+        assertEquals(0.0, stat.read().mean, delta)
+        assertEquals(0.0, stat.read().variance, delta)
     }
 
     @Test
@@ -381,14 +376,14 @@ class EwmaStatsTest {
         val meanStat = EwmaMean(alpha = 0.5)
         meanStat.update(10.0)
         meanStat.reset()
-        assertEquals(0.0, meanStat.mean, delta)
+        assertEquals(0.0, meanStat.read().mean, delta)
 
         val varStat = EwmaVariance(alpha = 0.5)
         varStat.update(10.0)
         varStat.update(20.0)
         varStat.reset()
-        assertEquals(0.0, varStat.mean, delta)
-        assertEquals(0.0, varStat.variance, delta)
-        assertEquals(0.0, varStat.totalWeights, delta)
+        assertEquals(0.0, varStat.read().mean, delta)
+        assertEquals(0.0, varStat.read().variance, delta)
+        assertEquals(0.0, varStat.read().totalWeights, delta)
     }
 }

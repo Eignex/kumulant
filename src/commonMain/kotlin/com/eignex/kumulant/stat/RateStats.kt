@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat
 
 import com.eignex.kumulant.concurrent.StreamMode
 import com.eignex.kumulant.concurrent.defaultStreamMode
-import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.RateResult
 import com.eignex.kumulant.core.SeriesStat
 
@@ -15,34 +14,33 @@ import com.eignex.kumulant.core.SeriesStat
  */
 class Rate(
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<RateResult>, HasRate {
+) : SeriesStat<RateResult> {
 
-    private val _totalValues = mode.newDouble(0.0)
-    private val _startTimestampNanos = mode.newLong(Long.MIN_VALUE)
-    val startTimestampNanos: Long get() = _startTimestampNanos.load()
+    private val totalValues = mode.newDouble(0.0)
+    private val startTimestampNanos = mode.newLong(Long.MIN_VALUE)
 
     override fun update(
         value: Double,
         timestampNanos: Long,
         weight: Double
     ) {
-        if (_startTimestampNanos.load() == Long.MIN_VALUE) {
-            _startTimestampNanos.store(timestampNanos)
+        if (startTimestampNanos.load() == Long.MIN_VALUE) {
+            startTimestampNanos.store(timestampNanos)
         }
-        _totalValues.add(value * weight)
+        totalValues.add(value * weight)
     }
 
     override fun create(mode: StreamMode?) = Rate(mode ?: this.mode)
 
     override fun read(timestampNanos: Long): RateResult {
-        val start = if (_startTimestampNanos.load() == Long.MIN_VALUE) {
+        val start = if (startTimestampNanos.load() == Long.MIN_VALUE) {
             timestampNanos
         } else {
-            _startTimestampNanos.load()
+            startTimestampNanos.load()
         }
         return RateResult(
             startTimestampNanos = start,
-            totalValue = _totalValues.load(),
+            totalValue = totalValues.load(),
             timestampNanos = timestampNanos
         )
     }
@@ -50,18 +48,16 @@ class Rate(
     override fun merge(values: RateResult) {
         if (values.totalValue == 0.0) return
 
-        _totalValues.add(values.totalValue)
+        totalValues.add(values.totalValue)
 
-        val currentStart = _startTimestampNanos.load()
+        val currentStart = startTimestampNanos.load()
         if (currentStart == Long.MIN_VALUE || values.startTimestampNanos < currentStart) {
-            _startTimestampNanos.store(values.startTimestampNanos)
+            startTimestampNanos.store(values.startTimestampNanos)
         }
     }
 
     override fun reset() {
-        _startTimestampNanos.store(Long.MIN_VALUE)
-        _totalValues.store(0.0)
+        startTimestampNanos.store(Long.MIN_VALUE)
+        totalValues.store(0.0)
     }
-
-    override val rate: Double get() = read().rate
 }

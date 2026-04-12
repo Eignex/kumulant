@@ -5,7 +5,6 @@ import com.eignex.kumulant.concurrent.ArrayBins
 import com.eignex.kumulant.concurrent.StreamDouble
 import com.eignex.kumulant.concurrent.StreamMode
 import com.eignex.kumulant.concurrent.defaultStreamMode
-import com.eignex.kumulant.core.HasQuantile
 import com.eignex.kumulant.core.QuantileResult
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.SketchResult
@@ -17,21 +16,18 @@ class FrugalQuantile(
     val stepSize: Double = 0.01,
     val initialEstimate: Double = 0.0,
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<QuantileResult>, HasQuantile {
+) : SeriesStat<QuantileResult> {
 
     init {
         require(q in 0.0..1.0) { "Quantile q must be between 0.0 and 1.0" }
     }
 
-    private val _estimate = mode.newDouble(initialEstimate)
-
-    override val probability: Double get() = q
-    override val quantile: Double by _estimate
+    private val quantile = mode.newDouble(initialEstimate)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
 
-        val m = _estimate.load()
+        val m = quantile.load()
         val delta = if (value > m) {
             stepSize * q * weight
         } else if (value < m) {
@@ -41,7 +37,7 @@ class FrugalQuantile(
         }
 
         if (delta != 0.0) {
-            _estimate.add(delta)
+            quantile.add(delta)
         }
     }
 
@@ -53,15 +49,15 @@ class FrugalQuantile(
     )
 
     override fun merge(values: QuantileResult) {
-        val current = _estimate.load()
-        _estimate.store((current + values.quantile) / 2.0)
+        val current = quantile.load()
+        quantile.store((current + values.quantile) / 2.0)
     }
 
     override fun reset() {
-        _estimate.store(initialEstimate)
+        quantile.store(initialEstimate)
     }
 
-    override fun read(timestampNanos: Long) = QuantileResult(q, quantile)
+    override fun read(timestampNanos: Long) = QuantileResult(q, quantile.load())
 }
 
 class DDSketch(

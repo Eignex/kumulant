@@ -16,16 +16,16 @@ class RangeStatsTest {
         r.update(1.0)
         r.update(5.0)
         r.update(2.0)
-        assertEquals(1.0, r.min, DELTA)
-        assertEquals(5.0, r.max, DELTA)
+        assertEquals(1.0, r.read().min, DELTA)
+        assertEquals(5.0, r.read().max, DELTA)
     }
 
     @Test
     fun `single value makes min equal max`() {
         val r = Range()
         r.update(42.0)
-        assertEquals(42.0, r.min, DELTA)
-        assertEquals(42.0, r.max, DELTA)
+        assertEquals(42.0, r.read().min, DELTA)
+        assertEquals(42.0, r.read().max, DELTA)
     }
 
     @Test
@@ -34,8 +34,8 @@ class RangeStatsTest {
         r.update(-5.0)
         r.update(-10.0)
         r.update(-1.0)
-        assertEquals(-10.0, r.min, DELTA)
-        assertEquals(-1.0, r.max, DELTA)
+        assertEquals(-10.0, r.read().min, DELTA)
+        assertEquals(-1.0, r.read().max, DELTA)
     }
 
     @Test
@@ -57,8 +57,8 @@ class RangeStatsTest {
             update(5.0)
         }
         r1.merge(r2.read())
-        assertEquals(1.0, r1.min, DELTA)
-        assertEquals(8.0, r1.max, DELTA)
+        assertEquals(1.0, r1.read().min, DELTA)
+        assertEquals(8.0, r1.read().max, DELTA)
     }
 
     @Test
@@ -69,8 +69,8 @@ class RangeStatsTest {
         }
         val r2 = Range() // empty: min=+inf, max=-inf
         r1.merge(r2.read())
-        assertEquals(3.0, r1.min, DELTA)
-        assertEquals(7.0, r1.max, DELTA)
+        assertEquals(3.0, r1.read().min, DELTA)
+        assertEquals(7.0, r1.read().max, DELTA)
     }
 
     @Test
@@ -90,8 +90,8 @@ class RangeStatsTest {
         val r2 = r1.create(SerialMode)
         r2.update(1.0)
         // r1 unchanged by r2's update
-        assertEquals(5.0, r1.min, DELTA)
-        assertEquals(1.0, r2.min, DELTA)
+        assertEquals(5.0, r1.read().min, DELTA)
+        assertEquals(1.0, r2.read().min, DELTA)
     }
 
     @Test
@@ -109,7 +109,7 @@ class MinStatsTest {
         m.update(3.0)
         m.update(1.0)
         m.update(5.0)
-        assertEquals(1.0, m.min, DELTA)
+        assertEquals(1.0, m.read().min, DELTA)
     }
 
     @Test
@@ -122,7 +122,7 @@ class MinStatsTest {
         val m1 = Min().apply { update(4.0) }
         val m2 = Min().apply { update(2.0) }
         m1.merge(m2.read())
-        assertEquals(2.0, m1.min, DELTA)
+        assertEquals(2.0, m1.read().min, DELTA)
     }
 
     @Test
@@ -137,8 +137,8 @@ class MinStatsTest {
         val m1 = Min().apply { update(5.0) }
         val m2 = m1.create()
         m2.update(1.0)
-        assertEquals(5.0, m1.min, DELTA)
-        assertEquals(1.0, m2.min, DELTA)
+        assertEquals(5.0, m1.read().min, DELTA)
+        assertEquals(1.0, m2.read().min, DELTA)
     }
 }
 
@@ -150,7 +150,7 @@ class MaxStatsTest {
         m.update(3.0)
         m.update(7.0)
         m.update(2.0)
-        assertEquals(7.0, m.max, DELTA)
+        assertEquals(7.0, m.read().max, DELTA)
     }
 
     @Test
@@ -163,7 +163,7 @@ class MaxStatsTest {
         val m1 = Max().apply { update(4.0) }
         val m2 = Max().apply { update(9.0) }
         m1.merge(m2.read())
-        assertEquals(9.0, m1.max, DELTA)
+        assertEquals(9.0, m1.read().max, DELTA)
     }
 
     @Test
@@ -178,7 +178,7 @@ class MaxStatsTest {
         val m1 = Max().apply { update(5.0) }
         val m2 = m1.create()
         m2.update(10.0)
-        assertEquals(5.0, m1.max, DELTA)
-        assertEquals(10.0, m2.max, DELTA)
+        assertEquals(5.0, m1.read().max, DELTA)
+        assertEquals(10.0, m2.read().max, DELTA)
     }
 }

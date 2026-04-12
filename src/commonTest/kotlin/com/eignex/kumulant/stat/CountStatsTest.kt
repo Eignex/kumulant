@@ -16,12 +16,12 @@ class CountTest {
         c.update(42.0)
         c.update(-7.0)
         c.update(0.0)
-        assertEquals(3L, c.count)
+        assertEquals(3L, c.read().count)
     }
 
     @Test
     fun `empty count is zero`() {
-        assertEquals(0L, Count().count)
+        assertEquals(0L, Count().read().count)
     }
 
     @Test
@@ -32,14 +32,14 @@ class CountTest {
         }
         val c2 = Count().apply { update(3.0) }
         c1.merge(c2.read())
-        assertEquals(3L, c1.count)
+        assertEquals(3L, c1.read().count)
     }
 
     @Test
     fun `merge with zero-count result is no-op`() {
         val c = Count().apply { update(1.0) }
         c.merge(CountResult(0L))
-        assertEquals(1L, c.count)
+        assertEquals(1L, c.read().count)
     }
 
     @Test
@@ -49,7 +49,7 @@ class CountTest {
             update(2.0)
         }
         c.reset()
-        assertEquals(0L, c.count)
+        assertEquals(0L, c.read().count)
     }
 
     @Test
@@ -57,8 +57,8 @@ class CountTest {
         val c1 = Count(AtomicMode).apply { update(1.0) }
         val c2 = c1.create(SerialMode)
         c2.update(2.0)
-        assertEquals(1L, c1.count)
-        assertEquals(1L, c2.count)
+        assertEquals(1L, c1.read().count)
+        assertEquals(1L, c2.read().count)
     }
 }
 
@@ -69,7 +69,7 @@ class TotalWeightsTest {
         val tw = TotalWeights()
         tw.update(99.0, weight = 2.0)
         tw.update(0.0, weight = 3.0)
-        assertEquals(5.0, tw.totalWeights, DELTA)
+        assertEquals(5.0, tw.read().sum, DELTA)
     }
 
     @Test
@@ -77,7 +77,7 @@ class TotalWeightsTest {
         val tw = TotalWeights()
         tw.update(1.0)
         tw.update(1.0)
-        assertEquals(2.0, tw.totalWeights, DELTA)
+        assertEquals(2.0, tw.read().sum, DELTA)
     }
 
     @Test
@@ -85,14 +85,14 @@ class TotalWeightsTest {
         val tw1 = TotalWeights().apply { update(1.0, weight = 4.0) }
         val tw2 = TotalWeights().apply { update(1.0, weight = 6.0) }
         tw1.merge(tw2.read())
-        assertEquals(10.0, tw1.totalWeights, DELTA)
+        assertEquals(10.0, tw1.read().sum, DELTA)
     }
 
     @Test
     fun `reset clears accumulated weight`() {
         val tw = TotalWeights().apply { update(1.0, weight = 5.0) }
         tw.reset()
-        assertEquals(0.0, tw.totalWeights, DELTA)
+        assertEquals(0.0, tw.read().sum, DELTA)
     }
 
     @Test

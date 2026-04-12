@@ -14,39 +14,39 @@ class FrugalQuantileTest {
     fun `estimate moves up when value is above it`() {
         val fq = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 0.0)
         fq.update(100.0)
-        assertTrue(fq.quantile > 0.0)
+        assertTrue(fq.read().quantile > 0.0)
     }
 
     @Test
     fun `estimate moves down when value is below it`() {
         val fq = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 100.0)
         fq.update(0.0)
-        assertTrue(fq.quantile < 100.0)
+        assertTrue(fq.read().quantile < 100.0)
     }
 
     @Test
     fun `estimate does not move when value equals it`() {
         val fq = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 5.0)
         fq.update(5.0)
-        assertEquals(5.0, fq.quantile)
+        assertEquals(5.0, fq.read().quantile)
     }
 
     @Test
     fun `q=1 estimate only moves up`() {
         val fq = FrugalQuantile(q = 1.0, stepSize = 1.0, initialEstimate = 0.0)
         fq.update(50.0)
-        val after = fq.quantile
+        val after = fq.read().quantile
         fq.update(0.0) // below current estimate; for q=1 delta=-stepSize*(1-1)=0
-        assertEquals(after, fq.quantile)
+        assertEquals(after, fq.read().quantile)
     }
 
     @Test
     fun `q=0 estimate only moves down`() {
         val fq = FrugalQuantile(q = 0.0, stepSize = 1.0, initialEstimate = 100.0)
         fq.update(0.0)
-        val after = fq.quantile
+        val after = fq.read().quantile
         fq.update(200.0) // above current estimate; for q=0 delta=stepSize*0=0
-        assertEquals(after, fq.quantile)
+        assertEquals(after, fq.read().quantile)
     }
 
     @Test
@@ -58,14 +58,14 @@ class FrugalQuantileTest {
             fq.update(100.0)
         }
         // True median is 50; starting at 50, estimate oscillates in a tight band
-        assertTrue(fq.quantile in 40.0..60.0, "quantile=${fq.quantile}")
+        assertTrue(fq.read().quantile in 40.0..60.0, "quantile=${fq.read().quantile}")
     }
 
     @Test
     fun `zero weight update is ignored`() {
         val fq = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 5.0)
         fq.update(100.0, weight = 0.0)
-        assertEquals(5.0, fq.quantile)
+        assertEquals(5.0, fq.read().quantile)
     }
 
     @Test
@@ -73,14 +73,14 @@ class FrugalQuantileTest {
         val fq = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 3.0)
         repeat(100) { fq.update(100.0) }
         fq.reset()
-        assertEquals(3.0, fq.quantile)
+        assertEquals(3.0, fq.read().quantile)
     }
 
     @Test
     fun `merge averages two estimates`() {
         val fq = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 20.0)
         fq.merge(QuantileResult(0.5, 40.0))
-        assertEquals(30.0, fq.quantile)
+        assertEquals(30.0, fq.read().quantile)
     }
 
     @Test
@@ -88,8 +88,8 @@ class FrugalQuantileTest {
         val fq1 = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 0.0)
         val fq2 = fq1.create()
         repeat(100) { fq2.update(100.0) }
-        assertEquals(0.0, fq1.quantile) // fq1 unchanged
-        assertTrue(fq2.quantile > fq1.quantile)
+        assertEquals(0.0, fq1.read().quantile) // fq1 unchanged
+        assertTrue(fq2.read().quantile > fq1.read().quantile)
     }
 
     @Test

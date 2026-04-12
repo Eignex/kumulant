@@ -2,10 +2,6 @@ package com.eignex.kumulant.stat
 
 import com.eignex.kumulant.concurrent.StreamMode
 import com.eignex.kumulant.concurrent.defaultStreamMode
-import com.eignex.kumulant.concurrent.getValue
-import com.eignex.kumulant.core.HasMean
-import com.eignex.kumulant.core.HasTotalWeights
-import com.eignex.kumulant.core.HasVariance
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.WeightedMeanResult
 import com.eignex.kumulant.core.WeightedVarianceResult
@@ -24,33 +20,32 @@ import kotlin.math.exp
 class EwmaMean(
     val alpha: Double,
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<WeightedMeanResult>, HasMean, HasTotalWeights {
+) : SeriesStat<WeightedMeanResult> {
 
-    private val _biasedMean = mode.newDouble(0.0)
-    private val _totalWeights = mode.newDouble(0.0)
+    private val biasedMean = mode.newDouble(0.0)
+    private val totalWeights = mode.newDouble(0.0)
 
     private fun getCorrection(weight: Double): Double {
         return if (weight == 0.0) 0.0 else 1.0 - exp(-alpha * weight)
     }
 
-    override val totalWeights: Double by _totalWeights
-    override val mean: Double
+    private val mean: Double
         get() {
-            val biased = _biasedMean.load()
-            val weight = _totalWeights.load()
+            val biased = biasedMean.load()
+            val weight = totalWeights.load()
             val correction = getCorrection(weight)
             return if (correction == 0.0) 0.0 else biased / correction
         }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         val a = getCorrection(weight)
-        _biasedMean.add(a * (value - _biasedMean.load()))
-        _totalWeights.add(weight)
+        biasedMean.add(a * (value - biasedMean.load()))
+        totalWeights.add(weight)
     }
 
     override fun merge(values: WeightedMeanResult) {
         val localMean = this.mean
-        val localWeight = _totalWeights.load()
+        val localWeight = totalWeights.load()
         val localEffectiveWeight = getCorrection(localWeight)
 
         val remoteMean = values.mean
@@ -67,17 +62,17 @@ class EwmaMean(
         val newCorrection = getCorrection(newTotalWeight)
         val targetBiasedMean = mergedMean * newCorrection
 
-        _biasedMean.add(targetBiasedMean - _biasedMean.load())
-        _totalWeights.add(remoteWeight)
+        biasedMean.add(targetBiasedMean - biasedMean.load())
+        totalWeights.add(remoteWeight)
     }
 
     override fun reset() {
-        _biasedMean.store(0.0)
-        _totalWeights.store(0.0)
+        biasedMean.store(0.0)
+        totalWeights.store(0.0)
     }
 
     override fun read(timestampNanos: Long) =
-        WeightedMeanResult(totalWeights, mean)
+        WeightedMeanResult(totalWeights.load(), mean)
 
     override fun create(mode: StreamMode?) = EwmaMean(alpha, mode ?: this.mode)
 }
@@ -93,30 +88,28 @@ class EwmaMean(
 class EwmaVariance(
     val alpha: Double,
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<WeightedVarianceResult>, HasMean, HasVariance, HasTotalWeights {
+) : SeriesStat<WeightedVarianceResult> {
 
-    private val _biasedMean = mode.newDouble(0.0)
-    private val _biasedM2 = mode.newDouble(0.0)
-    private val _totalWeights = mode.newDouble(0.0)
+    private val biasedMean = mode.newDouble(0.0)
+    private val biasedM2 = mode.newDouble(0.0)
+    private val totalWeights = mode.newDouble(0.0)
 
     private fun getCorrection(weight: Double): Double {
         return if (weight == 0.0) 0.0 else 1.0 - exp(-alpha * weight)
     }
 
-    override val totalWeights: Double by _totalWeights
-
-    override val mean: Double
+    private val mean: Double
         get() {
-            val biased = _biasedMean.load()
-            val weight = _totalWeights.load()
+            val biased = biasedMean.load()
+            val weight = totalWeights.load()
             val correction = getCorrection(weight)
             return if (correction == 0.0) 0.0 else biased / correction
         }
 
-    override val variance: Double
+    private val variance: Double
         get() {
-            val biasedVar = _biasedM2.load()
-            val weight = _totalWeights.load()
+            val biasedVar = biasedM2.load()
+            val weight = totalWeights.load()
             val correction = getCorrection(weight)
             return if (correction == 0.0) 0.0 else biasedVar / correction
         }
@@ -124,22 +117,22 @@ class EwmaVariance(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         val a = getCorrection(weight)
 
-        val currentRawMean = _biasedMean.load()
+        val currentRawMean = biasedMean.load()
         val delta = value - currentRawMean
         val increment = a * delta
         val newRawMean = currentRawMean + increment
 
-        val currentBiasedM2 = _biasedM2.load()
-        _biasedM2.add(a * (delta * (value - newRawMean) - currentBiasedM2))
-        _biasedMean.add(increment)
-        _totalWeights.add(weight)
+        val currentBiasedM2 = biasedM2.load()
+        biasedM2.add(a * (delta * (value - newRawMean) - currentBiasedM2))
+        biasedMean.add(increment)
+        totalWeights.add(weight)
     }
 
     override fun merge(values: WeightedVarianceResult) {
         val remoteWeightRaw = values.totalWeights
         if (remoteWeightRaw <= 0.0) return
 
-        val localWeightRaw = _totalWeights.load()
+        val localWeightRaw = totalWeights.load()
         val w1 = getCorrection(localWeightRaw)
         val w2 = getCorrection(remoteWeightRaw)
         val wSum = w1 + w2
@@ -158,19 +151,19 @@ class EwmaVariance(
         val newTotalWeight = localWeightRaw + remoteWeightRaw
         val newCorrection = getCorrection(newTotalWeight)
 
-        _biasedMean.add(mergedMean * newCorrection - _biasedMean.load())
-        _biasedM2.add(mergedVariance * newCorrection - _biasedM2.load())
-        _totalWeights.add(remoteWeightRaw)
+        biasedMean.add(mergedMean * newCorrection - biasedMean.load())
+        biasedM2.add(mergedVariance * newCorrection - biasedM2.load())
+        totalWeights.add(remoteWeightRaw)
     }
 
     override fun reset() {
-        _biasedMean.store(0.0)
-        _biasedM2.store(0.0)
-        _totalWeights.store(0.0)
+        biasedMean.store(0.0)
+        biasedM2.store(0.0)
+        totalWeights.store(0.0)
     }
 
     override fun read(timestampNanos: Long) = WeightedVarianceResult(
-        totalWeights,
+        totalWeights.load(),
         mean,
         variance
     )

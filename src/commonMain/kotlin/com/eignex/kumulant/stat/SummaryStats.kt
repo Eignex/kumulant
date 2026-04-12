@@ -2,12 +2,6 @@ package com.eignex.kumulant.stat
 
 import com.eignex.kumulant.concurrent.StreamMode
 import com.eignex.kumulant.concurrent.defaultStreamMode
-import com.eignex.kumulant.concurrent.getValue
-import com.eignex.kumulant.core.HasMean
-import com.eignex.kumulant.core.HasSampleVariance
-import com.eignex.kumulant.core.HasShapeMoments
-import com.eignex.kumulant.core.HasSum
-import com.eignex.kumulant.core.HasTotalWeights
 import com.eignex.kumulant.core.MomentsResult
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.SumResult
@@ -16,27 +10,26 @@ import com.eignex.kumulant.core.WeightedVarianceResult
 
 class Sum(
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<SumResult>, HasSum {
+) : SeriesStat<SumResult> {
 
-    private val _sum = mode.newDouble(0.0)
-    override val sum: Double by _sum
+    private val sum = mode.newDouble(0.0)
 
     override fun update(
         value: Double,
         timestampNanos: Long,
         weight: Double
     ) {
-        _sum.add(value * weight)
+        sum.add(value * weight)
     }
 
-    override fun read(timestampNanos: Long) = SumResult(sum)
+    override fun read(timestampNanos: Long) = SumResult(sum.load())
 
     override fun merge(values: SumResult) {
-        _sum.add(values.sum)
+        sum.add(values.sum)
     }
 
     override fun reset() {
-        _sum.store(0.0)
+        sum.store(0.0)
     }
 
     override fun create(mode: StreamMode?) = Sum(mode ?: this.mode)
@@ -44,43 +37,38 @@ class Sum(
 
 class Mean(
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<WeightedMeanResult>,
-    HasTotalWeights,
-    HasMean {
+) : SeriesStat<WeightedMeanResult> {
 
-    private val _totalWeights = mode.newDouble(0.0)
-    private val _mean = mode.newDouble(0.0)
-
-    override val totalWeights: Double by _totalWeights
-    override val mean: Double by _mean
+    private val totalWeights = mode.newDouble(0.0)
+    private val mean = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        val oldMean = _mean.load()
-        val nextW = _totalWeights.addAndGet(weight)
+        val oldMean = mean.load()
+        val nextW = totalWeights.addAndGet(weight)
 
         val delta = value - oldMean
         val r = delta * (weight / nextW)
 
-        _mean.add(r)
+        mean.add(r)
     }
 
     override fun read(timestampNanos: Long) =
-        WeightedMeanResult(totalWeights, mean)
+        WeightedMeanResult(totalWeights.load(), mean.load())
 
     override fun merge(values: WeightedMeanResult) {
         if (values.totalWeights <= 0.0) return
 
-        val nextW = totalWeights + values.totalWeights
-        val delta = values.mean - mean
+        val nextW = totalWeights.load() + values.totalWeights
+        val delta = values.mean - mean.load()
         val deltaM = delta * (values.totalWeights / nextW)
 
-        _mean.add(deltaM)
-        _totalWeights.add(values.totalWeights)
+        mean.add(deltaM)
+        totalWeights.add(values.totalWeights)
     }
 
     override fun reset() {
-        _totalWeights.store(0.0)
-        _mean.store(0.0)
+        totalWeights.store(0.0)
+        mean.store(0.0)
     }
 
     override fun create(mode: StreamMode?) = Mean(mode ?: this.mode)
@@ -88,84 +76,76 @@ class Mean(
 
 class Variance(
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<WeightedVarianceResult>, HasMean, HasSampleVariance {
+) : SeriesStat<WeightedVarianceResult> {
 
-    private val _totalWeights = mode.newDouble(0.0)
-    private val _mean = mode.newDouble(0.0)
-    private val _sst = mode.newDouble(0.0)
-
-    override val totalWeights: Double by _totalWeights
-    override val mean: Double by _mean
-    override val sst: Double by _sst
+    private val totalWeights = mode.newDouble(0.0)
+    private val mean = mode.newDouble(0.0)
+    private val sst = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        val oldMean = mean
-        val nextW = _totalWeights.addAndGet(weight)
+        val oldMean = mean.load()
+        val nextW = totalWeights.addAndGet(weight)
 
         val delta = value - oldMean
         val r = delta * (weight / nextW)
 
-        _mean.add(r)
-        _sst.add((nextW - weight) * delta * r)
+        mean.add(r)
+        sst.add((nextW - weight) * delta * r)
     }
 
     override fun merge(values: WeightedVarianceResult) {
-        val w1 = _totalWeights.load()
+        val w1 = totalWeights.load()
         val w2 = values.totalWeights
         if (w2 <= 0.0) return
 
-        val m1 = _mean.load()
+        val m1 = mean.load()
         val m2 = values.mean
-        val sst2 = values.sst
+        val sst2 = values.variance * values.totalWeights
 
         val nextW = w1 + w2
         val delta = m2 - m1
 
         val deltaM = delta * (w2 / nextW)
-        _mean.add(deltaM)
+        mean.add(deltaM)
 
         val sstShift = (delta * delta) * (w1 * w2 / nextW)
-        _sst.add(sst2 + sstShift)
+        sst.add(sst2 + sstShift)
 
-        _totalWeights.add(w2)
+        totalWeights.add(w2)
     }
 
     override fun reset() {
-        _totalWeights.store(0.0)
-        _mean.store(0.0)
-        _sst.store(0.0)
+        totalWeights.store(0.0)
+        mean.store(0.0)
+        sst.store(0.0)
     }
 
-    override fun read(timestampNanos: Long) =
-        WeightedVarianceResult(totalWeights, mean, variance)
+    override fun read(timestampNanos: Long): WeightedVarianceResult {
+        val totalW = totalWeights.load()
+        val variance = if (totalW > 0.0) sst.load() / totalW else 0.0
+        return WeightedVarianceResult(totalW, mean.load(), variance)
+    }
 
     override fun create(mode: StreamMode?) = Variance(mode ?: this.mode)
 }
 
 class Moments(
     val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<MomentsResult>, HasMean, HasSampleVariance, HasShapeMoments {
+) : SeriesStat<MomentsResult> {
 
-    private val _w = mode.newDouble(0.0)
-    private val _m1 = mode.newDouble(0.0)
-    private val _m2 = mode.newDouble(0.0)
-    private val _m3 = mode.newDouble(0.0)
-    private val _m4 = mode.newDouble(0.0)
-
-    override val totalWeights: Double by _w
-    override val mean: Double by _m1
-    override val m2: Double by _m2
-    override val sst: Double get() = m2
-    override val m3: Double by _m3
-    override val m4: Double by _m4
+    private val totalWeights = mode.newDouble(0.0)
+    private val mean = mode.newDouble(0.0)
+    private val m2 = mode.newDouble(0.0)
+    private val m3 = mode.newDouble(0.0)
+    private val m4 = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
 
-        val oldM1 = _m1.load()
-        val oldM2 = _m2.load()
-        val oldM3 = _m3.load()
-        val nextW = _w.addAndGet(weight)
+        val oldM1 = mean.load()
+        val oldM2 = m2.load()
+        val oldM3 = m3.load()
+        val nextW = totalWeights.addAndGet(weight)
         val oldW = nextW - weight
 
         val delta = value - oldM1
@@ -174,20 +154,20 @@ class Moments(
         val term1 = delta * deltaW * oldW
 
         // Update raw sums using deltas
-        _m4.add(term1 * deltaW2 * (nextW * nextW - 3 * nextW + 3) + 6 * deltaW2 * oldM2 - 4 * deltaW * oldM3)
-        _m3.add(term1 * deltaW * (nextW - 2) - 3 * deltaW * oldM2)
-        _m2.add(term1)
-        _m1.add(deltaW)
+        m4.add(term1 * deltaW2 * (nextW * nextW - 3 * nextW + 3) + 6 * deltaW2 * oldM2 - 4 * deltaW * oldM3)
+        m3.add(term1 * deltaW * (nextW - 2) - 3 * deltaW * oldM2)
+        m2.add(term1)
+        mean.add(deltaW)
     }
 
     override fun merge(values: MomentsResult) {
-        val w1 = _w.load()
+        val w1 = totalWeights.load()
         val w2 = values.totalWeights
         if (w2 <= 0.0) return
 
-        val m1 = _m1.load()
-        val m2 = _m2.load()
-        val m3 = _m3.load()
+        val m1 = mean.load()
+        val m2Local = m2.load()
+        val m3Local = m3.load()
 
         val nextW = w1 + w2
         val delta = values.mean - m1
@@ -201,31 +181,37 @@ class Moments(
         // Incremental M3 using incoming raw m2/m3
         val m3Delta = values.m3 +
             delta3 * (w1 * w2 * (w1 - w2) / nextWSq) +
-            3.0 * delta * (w1 * values.m2 - w2 * m2) / nextW
+            3.0 * delta * (w1 * values.m2 - w2 * m2Local) / nextW
 
         // Incremental M4 using incoming raw m2/m3/m4
         val m4Delta = values.m4 +
             delta4 * (w1 * w2 * (w1 * w1 - w1 * w2 + w2 * w2) / nextWCu) +
-            6.0 * delta2 * (w1 * w1 * values.m2 + w2 * w2 * m2) / nextWSq +
-            4.0 * delta * (w1 * values.m3 - w2 * m3) / nextW
+            6.0 * delta2 * (w1 * w1 * values.m2 + w2 * w2 * m2Local) / nextWSq +
+            4.0 * delta * (w1 * values.m3 - w2 * m3Local) / nextW
 
-        _m4.add(m4Delta)
-        _m3.add(m3Delta)
-        _m2.add(values.m2 + (delta2 * w1 * w2 / nextW))
-        _m1.add(delta * (w2 / nextW))
-        _w.add(w2)
+        m4.add(m4Delta)
+        m3.add(m3Delta)
+        m2.add(values.m2 + (delta2 * w1 * w2 / nextW))
+        mean.add(delta * (w2 / nextW))
+        totalWeights.add(w2)
     }
 
     override fun reset() {
-        _w.store(0.0)
-        _m1.store(0.0)
-        _m2.store(0.0)
-        _m3.store(0.0)
-        _m4.store(0.0)
+        totalWeights.store(0.0)
+        mean.store(0.0)
+        m2.store(0.0)
+        m3.store(0.0)
+        m4.store(0.0)
     }
 
     override fun read(timestampNanos: Long) =
-        MomentsResult(totalWeights, mean, m2, m3, m4)
+        MomentsResult(
+            totalWeights.load(),
+            mean.load(),
+            m2.load(),
+            m3.load(),
+            m4.load()
+        )
 
     override fun create(mode: StreamMode?) = Moments(mode ?: this.mode)
 }
