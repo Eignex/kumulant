@@ -4,7 +4,7 @@ import com.eignex.kumulant.stat.EwmaMean
 import com.eignex.kumulant.stat.EwmaVariance
 import kotlin.test.*
 
-class EwmaStatsTest {
+class EwmaMeanTest {
     private val delta = 1e-9
 
     @Test
@@ -14,18 +14,6 @@ class EwmaStatsTest {
         repeat(10) { m1.update(10.0) }
         assertEquals(0.0, m2.read().mean, delta)
         assertTrue(m1.read().mean > 0.0)
-    }
-
-    @Test
-    fun `EwmaVariance create produces fresh independent stat`() {
-        val v1 = EwmaVariance(alpha = 0.5).apply {
-            update(1.0)
-            update(2.0)
-        }
-        val v2 = v1.create() // creates a fresh empty instance
-        repeat(10) { v1.update(1000.0) }
-        assertEquals(0.0, v2.read().totalWeights, delta)
-        assertTrue(v1.read().totalWeights > 0.0)
     }
 
     @Test
@@ -51,6 +39,30 @@ class EwmaStatsTest {
             stat.read().mean > 80.0,
             "Mean should heavily favor the massive recent update"
         )
+    }
+
+    @Test
+    fun `EwmaMean reset clears state`() {
+        val meanStat = EwmaMean(alpha = 0.5)
+        meanStat.update(10.0)
+        meanStat.reset()
+        assertEquals(0.0, meanStat.read().mean, delta)
+    }
+}
+
+class EwmaVarianceTest {
+    private val delta = 1e-9
+
+    @Test
+    fun `EwmaVariance create produces fresh independent stat`() {
+        val v1 = EwmaVariance(alpha = 0.5).apply {
+            update(1.0)
+            update(2.0)
+        }
+        val v2 = v1.create() // creates a fresh empty instance
+        repeat(10) { v1.update(1000.0) }
+        assertEquals(0.0, v2.read().totalWeights, delta)
+        assertTrue(v1.read().totalWeights > 0.0)
     }
 
     @Test
@@ -90,12 +102,7 @@ class EwmaStatsTest {
     }
 
     @Test
-    fun `test reset for decaying stats`() {
-        val meanStat = EwmaMean(alpha = 0.5)
-        meanStat.update(10.0)
-        meanStat.reset()
-        assertEquals(0.0, meanStat.read().mean, delta)
-
+    fun `EwmaVariance reset clears state`() {
         val varStat = EwmaVariance(alpha = 0.5)
         varStat.update(10.0)
         varStat.update(20.0)
