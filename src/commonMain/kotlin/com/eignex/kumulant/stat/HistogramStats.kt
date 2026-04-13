@@ -1,6 +1,5 @@
 package com.eignex.kumulant.stat
 
-import com.eignex.kumulant.concurrent.*
 import com.eignex.kumulant.concurrent.ArrayBins
 import com.eignex.kumulant.concurrent.StreamDouble
 import com.eignex.kumulant.concurrent.StreamMode

@@ -1,8 +1,7 @@
-package com.eignex.kumulant.stat
+package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.operation.atIndex
-import com.eignex.kumulant.operation.atX
-import com.eignex.kumulant.operation.windowed
+import com.eignex.kumulant.stat.Mean
+import com.eignex.kumulant.stat.Sum
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

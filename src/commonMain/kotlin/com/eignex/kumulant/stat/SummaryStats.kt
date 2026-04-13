@@ -12,24 +12,24 @@ class Sum(
     val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<SumResult> {
 
-    private val sum = mode.newDouble(0.0)
+    private val value = mode.newDouble(0.0)
 
     override fun update(
         value: Double,
         timestampNanos: Long,
         weight: Double
     ) {
-        sum.add(value * weight)
+        this.value.add(value * weight)
     }
 
-    override fun read(timestampNanos: Long) = SumResult(sum.load())
+    override fun read(timestampNanos: Long) = SumResult(value.load())
 
     override fun merge(values: SumResult) {
-        sum.add(values.sum)
+        value.add(values.sum)
     }
 
     override fun reset() {
-        sum.store(0.0)
+        value.store(0.0)
     }
 
     override fun create(mode: StreamMode?) = Sum(mode ?: this.mode)
@@ -40,35 +40,35 @@ class Mean(
 ) : SeriesStat<WeightedMeanResult> {
 
     private val totalWeights = mode.newDouble(0.0)
-    private val mean = mode.newDouble(0.0)
+    private val value = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        val oldMean = mean.load()
+        val oldMean = this.value.load()
         val nextW = totalWeights.addAndGet(weight)
 
         val delta = value - oldMean
         val r = delta * (weight / nextW)
 
-        mean.add(r)
+        this.value.add(r)
     }
 
     override fun read(timestampNanos: Long) =
-        WeightedMeanResult(totalWeights.load(), mean.load())
+        WeightedMeanResult(totalWeights.load(), value.load())
 
     override fun merge(values: WeightedMeanResult) {
         if (values.totalWeights <= 0.0) return
 
         val nextW = totalWeights.load() + values.totalWeights
-        val delta = values.mean - mean.load()
+        val delta = values.mean - value.load()
         val deltaM = delta * (values.totalWeights / nextW)
 
-        mean.add(deltaM)
+        value.add(deltaM)
         totalWeights.add(values.totalWeights)
     }
 
     override fun reset() {
         totalWeights.store(0.0)
-        mean.store(0.0)
+        value.store(0.0)
     }
 
     override fun create(mode: StreamMode?) = Mean(mode ?: this.mode)

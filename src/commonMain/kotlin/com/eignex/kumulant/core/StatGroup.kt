@@ -62,14 +62,14 @@ private fun toSeriesSpec(
 
 private fun toSeriesSpecs(
     specs: List<StatSpec<*, *, *>>
-): Array<StatSpec<*, out SeriesStat<*>, *>> {
+): List<StatSpec<*, out SeriesStat<*>, *>> {
     return specs.mapNotNull { (key, stat) ->
         if (stat is SeriesStat<*>) {
             toSeriesSpec(key, stat)
         } else {
             null
         }
-    }.toTypedArray()
+    }
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -133,7 +133,7 @@ abstract class StatSchema {
     protected fun <T : StatSchema> group(nestedSchema: T, mode: StreamMode? = null) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, GroupStatKey<T>>> { _, property ->
             val key = GroupStatKey(property.name, nestedSchema)
-            val groupStat = StatGroup(*toSeriesSpecs(nestedSchema.specs), mode = mode)
+            val groupStat = StatGroup(stats = toSeriesSpecs(nestedSchema.specs), mode = mode)
 
             specs.add(StatSpec(key, groupStat))
             ReadOnlyProperty { _, _ -> key }
@@ -141,19 +141,27 @@ abstract class StatSchema {
 }
 
 class StatGroup(
-    private vararg val stats: StatSpec<*, out SeriesStat<*>, *>,
+    private val stats: List<StatSpec<*, out SeriesStat<*>, *>>,
     private val mode: StreamMode? = null
 ) : SeriesStat<GroupResult>, GroupedStat {
+
+    constructor(
+        vararg stats: StatSpec<*, out SeriesStat<*>, *>,
+        mode: StreamMode? = null
+    ) : this(
+        stats = stats.asList(),
+        mode = mode
+    )
 
     constructor(
         vararg stats: Pair<StatKey<*>, SeriesStat<*>>,
         mode: StreamMode? = null
     ) : this(
-        *stats.map { toSeriesSpec(it.first, it.second) }.toTypedArray(),
+        stats = stats.map { toSeriesSpec(it.first, it.second) },
         mode = mode
     )
     constructor(schema: StatSchema, mode: StreamMode? = null) : this(
-        *toSeriesSpecs(schema.specs),
+        stats = toSeriesSpecs(schema.specs),
         mode = mode
     )
 
@@ -186,21 +194,29 @@ class StatGroup(
         val effectiveMode = mode ?: this.mode
         val newStats = stats.map { (key, stat) ->
             toSeriesSpec(key, stat.create(effectiveMode))
-        }.toTypedArray()
-        return StatGroup(*newStats, mode = effectiveMode)
+        }
+        return StatGroup(stats = newStats, mode = effectiveMode)
     }
 }
 
 class PairedStatGroup(
-    private vararg val stats: StatSpec<*, out PairedStat<*>, *>,
+    private val stats: List<StatSpec<*, out PairedStat<*>, *>>,
     private val mode: StreamMode? = null
 ) : PairedStat<GroupResult>, GroupedStat {
+
+    constructor(
+        vararg stats: StatSpec<*, out PairedStat<*>, *>,
+        mode: StreamMode? = null
+    ) : this(
+        stats = stats.asList(),
+        mode = mode
+    )
 
     constructor(
         vararg stats: Pair<StatKey<*>, PairedStat<*>>,
         mode: StreamMode? = null
     ) : this(
-        *stats.map { toPairedSpec(it.first, it.second) }.toTypedArray(),
+        stats = stats.map { toPairedSpec(it.first, it.second) },
         mode = mode
     )
 
@@ -233,21 +249,29 @@ class PairedStatGroup(
         val effectiveMode = mode ?: this.mode
         val newStats = stats.map { (key, stat) ->
             toPairedSpec(key, stat.create(effectiveMode))
-        }.toTypedArray()
-        return PairedStatGroup(*newStats, mode = effectiveMode)
+        }
+        return PairedStatGroup(stats = newStats, mode = effectiveMode)
     }
 }
 
 class VectorStatGroup(
-    private vararg val stats: StatSpec<*, out VectorStat<*>, *>,
+    private val stats: List<StatSpec<*, out VectorStat<*>, *>>,
     private val mode: StreamMode? = null
 ) : VectorStat<GroupResult>, GroupedStat {
+
+    constructor(
+        vararg stats: StatSpec<*, out VectorStat<*>, *>,
+        mode: StreamMode? = null
+    ) : this(
+        stats = stats.asList(),
+        mode = mode
+    )
 
     constructor(
         vararg stats: Pair<StatKey<*>, VectorStat<*>>,
         mode: StreamMode? = null
     ) : this(
-        *stats.map { toVectorSpec(it.first, it.second) }.toTypedArray(),
+        stats = stats.map { toVectorSpec(it.first, it.second) },
         mode = mode
     )
 
@@ -280,8 +304,8 @@ class VectorStatGroup(
         val effectiveMode = mode ?: this.mode
         val newStats = stats.map { (key, stat) ->
             toVectorSpec(key, stat.create(effectiveMode))
-        }.toTypedArray()
-        return VectorStatGroup(*newStats, mode = effectiveMode)
+        }
+        return VectorStatGroup(stats = newStats, mode = effectiveMode)
     }
 }
 
