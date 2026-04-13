@@ -5,32 +5,6 @@ import kotlin.math.sqrt
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
 
-interface HasCount : Result {
-    val count: Long
-}
-
-interface HasTotalWeights : Result {
-    val totalWeights: Double
-}
-
-interface HasSum : Result {
-    val sum: Double
-}
-
-interface HasMin : Result {
-    val min: Double
-}
-
-interface HasMax : Result {
-    val max: Double
-}
-
-interface HasRange : HasMin, HasMax
-
-interface HasTimestamp {
-    val timestampNanos: Long
-}
-
 interface HasRate : Result {
     /** The normalized rate in Events Per Second (Hz) */
     val rate: Double
@@ -44,19 +18,9 @@ interface HasRate : Result {
     )
 }
 
-interface HasEntropy : Result {
-    val entropy: Double
-}
+interface HasSampleVariance : Result {
+    val totalWeights: Double
 
-interface HasMean : Result {
-    val mean: Double
-}
-
-interface HasVariance : Result {
-    val variance: Double
-}
-
-interface HasSampleVariance : HasTotalWeights {
     /** sum of squares totals */
     val sst: Double get() = variance * totalWeights
     val variance: Double get() = if (totalWeights > 0) sst / totalWeights else 0.0
@@ -115,41 +79,6 @@ interface HasShapeMoments : HasSampleVariance {
             val factor2 = (totalWeights + 1) * kurtosis + 6.0
             return factor1 * factor2
         }
-}
-
-interface HasCardinality : Result {
-    val cardinality: Long
-    val errorBounds: Double
-}
-
-interface HasCovariance : Result {
-    val covariance: Double
-}
-
-interface HasCorrelation : Result {
-    val correlation: Double
-}
-
-interface HasQuantile : Result {
-    val probability: Double
-    val quantile: Double
-}
-
-interface HasQuantiles : Result {
-    val probabilities: DoubleArray
-    val quantiles: DoubleArray
-}
-
-interface HasHistogram : Result {
-    val bounds: DoubleArray
-    val weights: DoubleArray
-}
-
-interface HasSparseHistogram : Result {
-    val lowerBounds: DoubleArray
-    val upperBounds: DoubleArray
-
-    val weights: DoubleArray
 }
 
 /**
