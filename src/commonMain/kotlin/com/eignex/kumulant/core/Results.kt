@@ -6,8 +6,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 @Serializable
-sealed interface Result {
-}
+sealed interface Result
 
 @Serializable
 @SerialName("Count")
