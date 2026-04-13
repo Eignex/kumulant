@@ -2,14 +2,18 @@ package com.eignex.kumulant.core
 
 import com.eignex.kumulant.operation.atIndex
 import com.eignex.kumulant.operation.atIndices
+import com.eignex.kumulant.operation.atX
+import com.eignex.kumulant.operation.atY
 import com.eignex.kumulant.operation.filter
-import com.eignex.kumulant.operation.mapFromPaired
-import com.eignex.kumulant.operation.mapFromVector
-import com.eignex.kumulant.operation.mapSeries
-import com.eignex.kumulant.operation.onX
-import com.eignex.kumulant.operation.onY
+import com.eignex.kumulant.operation.foldPaired
+import com.eignex.kumulant.operation.foldVector
+import com.eignex.kumulant.operation.transformValue
+import com.eignex.kumulant.operation.transformVector
+import com.eignex.kumulant.operation.transformX
+import com.eignex.kumulant.operation.transformY
 import com.eignex.kumulant.operation.withFixedX
 import com.eignex.kumulant.operation.withFixedY
+import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.stat.Mean
 import com.eignex.kumulant.stat.Sum
 import kotlin.test.Test
@@ -20,16 +24,16 @@ private const val DELTA = 1e-12
 class StatOperationsTest {
 
     @Test
-    fun `mapSeries applies transform before accumulation`() {
-        val stat = Sum().mapSeries { it * 2.0 }
+    fun `transformValue applies transform before accumulation`() {
+        val stat = Sum().transformValue { it * 2.0 }
         stat.update(3.0)
         stat.update(5.0)
         assertEquals(16.0, stat.read().sum, DELTA)
     }
 
     @Test
-    fun `mapSeries abs value`() {
-        val stat = Sum().mapSeries { if (it < 0) -it else it }
+    fun `transformValue abs value`() {
+        val stat = Sum().transformValue { if (it < 0) -it else it }
         stat.update(-4.0)
         stat.update(3.0)
         assertEquals(7.0, stat.read().sum, DELTA)
@@ -53,22 +57,22 @@ class StatOperationsTest {
     }
 
     @Test
-    fun `onX feeds x to underlying stat`() {
-        val stat = Sum().onX()
+    fun `atX feeds x to underlying stat`() {
+        val stat = Sum().atX()
         stat.update(10.0, 99.0) // x=10, y=99
         assertEquals(10.0, stat.read().sum, DELTA)
     }
 
     @Test
-    fun `onY feeds y to underlying stat`() {
-        val stat = Sum().onY()
+    fun `atY feeds y to underlying stat`() {
+        val stat = Sum().atY()
         stat.update(99.0, 7.0) // x=99, y=7
         assertEquals(7.0, stat.read().sum, DELTA)
     }
 
     @Test
-    fun `mapFromPaired computes difference y-x`() {
-        val stat = Sum().mapFromPaired { x, y -> y - x }
+    fun `foldPaired computes difference y-x`() {
+        val stat = Sum().foldPaired { x, y -> y - x }
         stat.update(3.0, 10.0)
         stat.update(1.0, 4.0)
         assertEquals(10.0, stat.read().sum, DELTA) // (10-3)+(4-1)=7+3=10
@@ -83,14 +87,14 @@ class StatOperationsTest {
 
     @Test
     fun `atIndices extracts two elements for paired stat`() {
-        val stat = Sum().onX().atIndices(0, 2)
+        val stat = Sum().atX().atIndices(0, 2)
         stat.update(doubleArrayOf(5.0, 99.0, 3.0))
-        assertEquals(5.0, stat.read().sum, DELTA) // x=vec[0], y=vec[2]; onX takes x
+        assertEquals(5.0, stat.read().sum, DELTA) // x=vec[0], y=vec[2]; atX takes x
     }
 
     @Test
     fun `withFixedX supplies constant x to paired stat`() {
-        val stat = Sum().onX().withFixedX(7.0)
+        val stat = Sum().atX().withFixedX(7.0)
         stat.update(99.0) // y=99, but x is fixed to 7
         stat.update(99.0)
         assertEquals(14.0, stat.read().sum, DELTA)
@@ -98,7 +102,7 @@ class StatOperationsTest {
 
     @Test
     fun `withFixedY supplies constant y to paired stat`() {
-        val stat = Sum().onY().withFixedY(3.0)
+        val stat = Sum().atY().withFixedY(3.0)
         stat.update(99.0) // x=99, but y is fixed to 3
         stat.update(99.0)
         assertEquals(6.0, stat.read().sum, DELTA)
@@ -106,7 +110,7 @@ class StatOperationsTest {
 
     @Test
     fun `filter on paired stat drops pairs failing predicate`() {
-        val stat = Sum().onX().filter { x, _ -> x > 0.0 }
+        val stat = Sum().atX().filter { x, _ -> x > 0.0 }
         stat.update(5.0, 1.0)
         stat.update(-3.0, 1.0)
         assertEquals(5.0, stat.read().sum, DELTA)
@@ -121,15 +125,15 @@ class StatOperationsTest {
     }
 
     @Test
-    fun `mapFromVector computes sum of elements`() {
-        val stat = Sum().mapFromVector { v -> v.sum() }
+    fun `foldVector computes sum of elements`() {
+        val stat = Sum().foldVector { v -> v.sum() }
         stat.update(doubleArrayOf(1.0, 2.0, 3.0))
         assertEquals(6.0, stat.read().sum, DELTA)
     }
 
     @Test
-    fun `create of mapSeries stat is independent`() {
-        val s1 = Sum().mapSeries { it * 10.0 }
+    fun `create of transformValue stat is independent`() {
+        val s1 = Sum().transformValue { it * 10.0 }
         s1.update(1.0)
         val s2 = s1.create()
         s2.update(1.0)
@@ -138,10 +142,47 @@ class StatOperationsTest {
     }
 
     @Test
-    fun `reset on mapSeries clears underlying stat`() {
-        val stat = Sum().mapSeries { it * 2.0 }
+    fun `reset on transformValue clears underlying stat`() {
+        val stat = Sum().transformValue { it * 2.0 }
         stat.update(5.0)
         stat.reset()
         assertEquals(0.0, stat.read().sum, DELTA)
+    }
+
+    @Test
+    fun `transformX applies transform only to x on paired stat`() {
+        val stat = Sum().atX().transformX { it * 10.0 }
+        stat.update(2.0, 999.0)
+        assertEquals(20.0, stat.read().sum, DELTA)
+    }
+
+    @Test
+    fun `transformY applies transform only to y on paired stat`() {
+        val stat = Sum().atY().transformY { it + 3.0 }
+        stat.update(100.0, 7.0)
+        assertEquals(10.0, stat.read().sum, DELTA)
+    }
+
+    @Test
+    fun `transformVector rewrites vector before delegate update`() {
+        val stat = Sum().atIndex(0).transformVector { v ->
+            doubleArrayOf(v[0] * 2.0, v[1])
+        }
+        stat.update(doubleArrayOf(4.0, 9.0))
+        assertEquals(8.0, stat.read().sum, DELTA)
+    }
+
+    @Test
+    fun `withWeight on paired stat overrides incoming weight`() {
+        val stat = Sum().atX().withWeight(3.0)
+        stat.update(2.0, 9.0, weight = 100.0)
+        assertEquals(6.0, stat.read().sum, DELTA)
+    }
+
+    @Test
+    fun `withWeight on vector stat overrides incoming weight`() {
+        val stat = Sum().atIndex(0).withWeight(4.0)
+        stat.update(doubleArrayOf(2.5), weight = 0.1)
+        assertEquals(10.0, stat.read().sum, DELTA)
     }
 }

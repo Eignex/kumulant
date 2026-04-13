@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat
 
 import com.eignex.kumulant.core.WeightedMeanResult
-import com.eignex.kumulant.core.WeightedVarianceResult
 import kotlin.test.*
 
 private const val DELTA = 1e-12

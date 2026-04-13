@@ -16,7 +16,7 @@ data class StatSpec<
     R : Result,
     S : Stat<R>,
     K : StatKey<R>
->(
+    >(
     val key: K,
     val stat: S
 )

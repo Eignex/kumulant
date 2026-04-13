@@ -6,6 +6,21 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
 
+fun <R1 : Result, R2 : Result> SeriesStat<R1>.mapResult(
+    forward: (R1) -> R2,
+    reverse: (R2) -> R1
+): SeriesStat<R2> = MapResultSeriesStat(this, forward, reverse)
+
+fun <R1 : Result, R2 : Result> PairedStat<R1>.mapResult(
+    forward: (R1) -> R2,
+    reverse: (R2) -> R1
+): PairedStat<R2> = MapResultPairedStat(this, forward, reverse)
+
+fun <R1 : Result, R2 : Result> VectorStat<R1>.mapResult(
+    forward: (R1) -> R2,
+    reverse: (R2) -> R1
+): VectorStat<R2> = MapResultVectorStat(this, forward, reverse)
+
 class MapResultSeriesStat<R1 : Result, R2 : Result>(
     private val delegate: SeriesStat<R1>,
     private val forward: (R1) -> R2,
@@ -83,18 +98,3 @@ class MapResultVectorStat<R1 : Result, R2 : Result>(
         return MapResultVectorStat(delegate.create(mode), forward, reverse)
     }
 }
-
-fun <R1 : Result, R2 : Result> SeriesStat<R1>.mapResult(
-    forward: (R1) -> R2,
-    reverse: (R2) -> R1
-): SeriesStat<R2> = MapResultSeriesStat(this, forward, reverse)
-
-fun <R1 : Result, R2 : Result> PairedStat<R1>.mapResult(
-    forward: (R1) -> R2,
-    reverse: (R2) -> R1
-): PairedStat<R2> = MapResultPairedStat(this, forward, reverse)
-
-fun <R1 : Result, R2 : Result> VectorStat<R1>.mapResult(
-    forward: (R1) -> R2,
-    reverse: (R2) -> R1
-): VectorStat<R2> = MapResultVectorStat(this, forward, reverse)

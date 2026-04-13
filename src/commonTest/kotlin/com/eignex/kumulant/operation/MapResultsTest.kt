@@ -50,7 +50,7 @@ class MapResultsTest {
 
     @Test
     fun `paired mapResult delegates updates and transforms read`() {
-        val stat = Sum().onX().mapResult(forward, reverse)
+        val stat = Sum().atX().mapResult(forward, reverse)
         stat.update(7.0, 100.0)
         stat.update(3.0, 200.0)
         assertEquals(10.0, stat.read().mean, DELTA)
@@ -58,7 +58,7 @@ class MapResultsTest {
 
     @Test
     fun `paired mapResult merge uses reverse transform`() {
-        val stat = Sum().onX().mapResult(forward, reverse)
+        val stat = Sum().atX().mapResult(forward, reverse)
         stat.update(1.0, 1.0)
         stat.merge(MeanResult(4.0))
         assertEquals(5.0, stat.read().mean, DELTA)
