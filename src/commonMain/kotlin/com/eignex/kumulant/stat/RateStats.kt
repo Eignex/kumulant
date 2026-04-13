@@ -10,7 +10,7 @@ import com.eignex.kumulant.core.SeriesStat
  * first update. Useful for measuring throughput over the lifetime of a stream.
  *
  * For time-decaying rates that weight recent observations more heavily,
- * see [DecayingRate]. Use [withValue][com.eignex.kumulant.core.withValue] to count each update as 1.
+ * see [DecayingRate]. Use [withValue][com.eignex.kumulant.operation.withValue] to count each update as 1.
  */
 class Rate(
     val mode: StreamMode = defaultStreamMode,

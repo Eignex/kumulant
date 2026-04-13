@@ -2,6 +2,8 @@ package com.eignex.kumulant.core
 
 import com.eignex.kumulant.concurrent.SerialMode
 import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.operation.withValue
+import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.stat.Sum
 import kotlin.test.Test
 import kotlin.test.assertEquals

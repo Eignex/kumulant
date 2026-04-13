@@ -1,5 +1,15 @@
 package com.eignex.kumulant.core
 
+import com.eignex.kumulant.operation.atIndex
+import com.eignex.kumulant.operation.atIndices
+import com.eignex.kumulant.operation.filter
+import com.eignex.kumulant.operation.mapFromPaired
+import com.eignex.kumulant.operation.mapFromVector
+import com.eignex.kumulant.operation.mapSeries
+import com.eignex.kumulant.operation.onX
+import com.eignex.kumulant.operation.onY
+import com.eignex.kumulant.operation.withFixedX
+import com.eignex.kumulant.operation.withFixedY
 import com.eignex.kumulant.stat.Mean
 import com.eignex.kumulant.stat.Sum
 import kotlin.test.Test

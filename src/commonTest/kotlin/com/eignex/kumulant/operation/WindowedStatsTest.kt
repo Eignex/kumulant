@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat
 
+import com.eignex.kumulant.operation.windowed
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds

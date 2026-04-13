@@ -2,6 +2,8 @@ package com.eignex.kumulant.stat
 
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.SumResult
+import com.eignex.kumulant.operation.VectorizedStat
+import com.eignex.kumulant.operation.expandedToVector
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat
+package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.concurrent.SerialMode
 import com.eignex.kumulant.concurrent.StreamMode
