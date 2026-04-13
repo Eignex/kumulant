@@ -5,7 +5,6 @@ import com.eignex.kumulant.concurrent.StreamMode
 import com.eignex.kumulant.concurrent.currentTimeNanos
 import com.eignex.kumulant.concurrent.defaultStreamMode
 import com.eignex.kumulant.core.DecayingMeanResult
-import com.eignex.kumulant.core.DecayingRateResult
 import com.eignex.kumulant.core.DecayingSumResult
 import com.eignex.kumulant.core.DecayingVarianceResult
 import com.eignex.kumulant.core.SeriesStat
@@ -85,40 +84,6 @@ class DecayingSum(
 
     override fun create(mode: StreamMode?) =
         DecayingSum(halfLife, mode ?: this.mode)
-}
-
-/**
- * Exponentially decaying rate estimate: rate(t) = S(t) · α · 1e9 (per second).
- *
- * Interprets the decaying sum of values as an event intensity. In steady state
- * at a constant event rate r (values = 1), the output converges to r events/sec.
- */
-class DecayingRate(
-    val halfLife: Duration,
-    val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<DecayingRateResult> {
-
-    private val alpha = ln(2.0) / halfLife.inWholeNanoseconds.toDouble()
-    private val sum = DecayingSum(halfLife, mode)
-
-    override fun update(value: Double, timestampNanos: Long, weight: Double) =
-        sum.update(value, timestampNanos, weight)
-
-    override fun read(timestampNanos: Long): DecayingRateResult {
-        val sum = sum.read(timestampNanos).sum
-        return DecayingRateResult(sum * alpha * 1e9, timestampNanos)
-    }
-
-    override fun merge(values: DecayingRateResult) {
-        if (values.rate <= 0.0) return
-        val addedSum = values.rate / (alpha * 1e9)
-        sum.merge(DecayingSumResult(addedSum, values.timestampNanos))
-    }
-
-    override fun reset() = sum.reset()
-
-    override fun create(mode: StreamMode?) =
-        DecayingRate(halfLife, mode ?: this.mode)
 }
 
 /**
