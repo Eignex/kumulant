@@ -2,7 +2,11 @@
 
 TODO:
 
-make constructors that accept derived stuff so we can minimize state in stats (added vals for copy)
+Find a way to unify DecayingStats and EwmaStats
+Make Covariance DerivedStats
+Implement Ridge/Lasso 
+Implement DefaultStreamMode in a way that does not require expected
+Make a simplified grouping: ListStats
 
 histogram algos
 - [X] ddsketch
