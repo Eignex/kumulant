@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.CovarianceResult
 import com.eignex.kumulant.core.OLSResult
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.VarianceResult
+import com.eignex.kumulant.operation.mapResult
 
 /**
  * Online Ordinary Least Squares (OLS) linear regression: y = slope * x + intercept.
@@ -124,82 +125,40 @@ class OLS(
 /**
  * Online covariance and Pearson correlation between two streams.
  *
- * Uses the same Chan's parallel algorithm as [OLS] but without computing slope/intercept.
- * More efficient when you only need cov(X, Y) or corr(X, Y).
+ * Derived from [OLS]: the same Chan's parallel algorithm drives accumulation,
+ * and [CovarianceResult] is projected from [OLSResult] via [mapResult].
  */
 class Covariance(
-    val mode: StreamMode = defaultStreamMode,
-) : PairedStat<CovarianceResult> {
-
-    private val _w = mode.newDouble(0.0)
-    private val _mx = mode.newDouble(0.0)
-    private val _my = mode.newDouble(0.0)
-    private val _sxx = mode.newDouble(0.0)
-    private val _syy = mode.newDouble(0.0)
-    private val _sxy = mode.newDouble(0.0)
-
-    val totalWeights: Double by _w
-    val meanX: Double by _mx
-    val meanY: Double by _my
-
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
-
-        val nextW = _w.addAndGet(weight)
-        val oldW = nextW - weight
-
-        val dx = x - _mx.load()
-        val dy = y - _my.load()
-
-        _mx.add(dx * weight / nextW)
-        _my.add(dy * weight / nextW)
-
-        val factor = weight * oldW / nextW
-        _sxx.add(dx * dx * factor)
-        _syy.add(dy * dy * factor)
-        _sxy.add(dx * dy * factor)
+    mode: StreamMode = defaultStreamMode,
+) : PairedStat<CovarianceResult> by OLS(mode).mapResult(
+    forward = { ols ->
+        val w = ols.totalWeights
+        val sxx = ols.x.variance * w
+        val syy = ols.y.variance * w
+        CovarianceResult(
+            totalWeights = w,
+            meanX = ols.x.mean,
+            meanY = ols.y.mean,
+            sxy = ols.slope * sxx,
+            sxx = sxx,
+            syy = syy,
+        )
+    },
+    reverse = { cov ->
+        val w = cov.totalWeights
+        val slope = if (cov.sxx > 0.0) cov.sxy / cov.sxx else 0.0
+        val varX = if (w > 0.0) cov.sxx / w else 0.0
+        val varY = if (w > 0.0) cov.syy / w else 0.0
+        OLSResult(
+            totalWeights = w,
+            slope = slope,
+            intercept = cov.meanY - slope * cov.meanX,
+            sse = (cov.syy - slope * cov.sxy).coerceAtLeast(0.0),
+            x = VarianceResult(cov.meanX, varX),
+            y = VarianceResult(cov.meanY, varY),
+        )
     }
-
-    override fun merge(values: CovarianceResult) {
-        val w2 = values.totalWeights
-        if (w2 <= 0.0) return
-
-        val w1 = _w.load()
-        val nextW = w1 + w2
-
-        val dx = values.meanX - _mx.load()
-        val dy = values.meanY - _my.load()
-
-        val factor = w1 * w2 / nextW
-        _sxx.add(values.sxx + dx * dx * factor)
-        _syy.add(values.syy + dy * dy * factor)
-        _sxy.add(values.sxy + dx * dy * factor)
-
-        _mx.add(w2 * dx / nextW)
-        _my.add(w2 * dy / nextW)
-        _w.add(w2)
-    }
-
-    override fun reset() {
-        _w.store(0.0)
-        _mx.store(0.0)
-        _my.store(0.0)
-        _sxx.store(0.0)
-        _syy.store(0.0)
-        _sxy.store(0.0)
-    }
-
-    override fun read(timestampNanos: Long) = CovarianceResult(
-        totalWeights = totalWeights,
-        meanX = meanX,
-        meanY = meanY,
-        sxy = _sxy.load(),
-        sxx = _sxx.load(),
-        syy = _syy.load()
-    )
-
-    override fun create(mode: StreamMode?) = Covariance(mode ?: this.mode)
-}
+)
 
 // Planned: WLS (Weighted Least Squares) — support externally supplied per-observation weights
 // Planned: Ridge — OLS with L2 regularisation for ill-conditioned designs
