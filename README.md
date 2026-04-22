@@ -2,11 +2,7 @@
 
 TODO:
 
-Find a way to unify DecayingStats and EwmaStats
-Make Covariance DerivedStats
-Implement Ridge/Lasso 
-Implement DefaultStreamMode in a way that does not require expected
-Make a simplified grouping: ListStats
+Implement Ridge/Lasso
 
 histogram algos
 - [X] ddsketch
