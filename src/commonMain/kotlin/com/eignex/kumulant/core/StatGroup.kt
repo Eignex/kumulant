@@ -328,3 +328,95 @@ inline fun <K, S> group(
     val groupKey = GroupStatKey(name, keys)
     return StatSpec(groupKey, build(keys))
 }
+
+/**
+ * Homogeneous, positional grouping: stats of the same result type composed into a
+ * single [SeriesStat] whose result is a [ResultList]. Lighter than [StatGroup] when
+ * named access is not needed — merge is by index, not by key.
+ */
+class ListStats<R : Result>(
+    private val stats: List<SeriesStat<R>>,
+    private val mode: StreamMode? = null,
+) : SeriesStat<ResultList<R>> {
+
+    constructor(vararg stats: SeriesStat<R>, mode: StreamMode? = null) :
+        this(stats.asList(), mode)
+
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        for (stat in stats) stat.update(value, timestampNanos, weight)
+    }
+
+    override fun read(timestampNanos: Long): ResultList<R> =
+        ResultList(stats.map { it.read(timestampNanos) })
+
+    override fun merge(values: ResultList<R>) {
+        stats.zip(values.results).forEach { (stat, result) -> stat.merge(result) }
+    }
+
+    override fun reset() {
+        for (stat in stats) stat.reset()
+    }
+
+    override fun create(mode: StreamMode?): SeriesStat<ResultList<R>> {
+        val effectiveMode = mode ?: this.mode
+        return ListStats(stats.map { it.create(effectiveMode) }, effectiveMode)
+    }
+}
+
+class PairedListStats<R : Result>(
+    private val stats: List<PairedStat<R>>,
+    private val mode: StreamMode? = null,
+) : PairedStat<ResultList<R>> {
+
+    constructor(vararg stats: PairedStat<R>, mode: StreamMode? = null) :
+        this(stats.asList(), mode)
+
+    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
+        for (stat in stats) stat.update(x, y, timestampNanos, weight)
+    }
+
+    override fun read(timestampNanos: Long): ResultList<R> =
+        ResultList(stats.map { it.read(timestampNanos) })
+
+    override fun merge(values: ResultList<R>) {
+        stats.zip(values.results).forEach { (stat, result) -> stat.merge(result) }
+    }
+
+    override fun reset() {
+        for (stat in stats) stat.reset()
+    }
+
+    override fun create(mode: StreamMode?): PairedStat<ResultList<R>> {
+        val effectiveMode = mode ?: this.mode
+        return PairedListStats(stats.map { it.create(effectiveMode) }, effectiveMode)
+    }
+}
+
+class VectorListStats<R : Result>(
+    private val stats: List<VectorStat<R>>,
+    private val mode: StreamMode? = null,
+) : VectorStat<ResultList<R>> {
+
+    constructor(vararg stats: VectorStat<R>, mode: StreamMode? = null) :
+        this(stats.asList(), mode)
+
+    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
+        for (stat in stats) stat.update(vector, timestampNanos, weight)
+    }
+
+    override fun read(timestampNanos: Long): ResultList<R> =
+        ResultList(stats.map { it.read(timestampNanos) })
+
+    override fun merge(values: ResultList<R>) {
+        stats.zip(values.results).forEach { (stat, result) -> stat.merge(result) }
+    }
+
+    override fun reset() {
+        for (stat in stats) stat.reset()
+    }
+
+    override fun create(mode: StreamMode?): VectorStat<ResultList<R>> {
+        val effectiveMode = mode ?: this.mode
+        return VectorListStats(stats.map { it.create(effectiveMode) }, effectiveMode)
+    }
+}
