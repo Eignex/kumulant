@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 
+/** Adapter implementing [atX]: drives a [SeriesStat] from the x coordinate of a pair. */
 class AtXStat<R : Result>(
     private val delegate: SeriesStat<R>
 ) : PairedStat<R>, Stat<R> by delegate {
@@ -19,6 +20,7 @@ class AtXStat<R : Result>(
     }
 }
 
+/** Adapter implementing [atY]: drives a [SeriesStat] from the y coordinate of a pair. */
 class AtYStat<R : Result>(
     private val delegate: SeriesStat<R>
 ) : PairedStat<R>, Stat<R> by delegate {
@@ -31,6 +33,7 @@ class AtYStat<R : Result>(
     }
 }
 
+/** Adapter implementing [atIndex]: drives a [SeriesStat] from one slot of a vector. */
 class AtIndexStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val index: Int
@@ -44,6 +47,7 @@ class AtIndexStat<R : Result>(
     }
 }
 
+/** Adapter implementing [atIndices]: drives a [PairedStat] from two slots of a vector. */
 class AtIndicesStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val indexX: Int,
@@ -58,10 +62,14 @@ class AtIndicesStat<R : Result>(
     }
 }
 
+/** Adapt a [SeriesStat] to consume only the x coordinate of a paired input. */
 fun <R : Result> SeriesStat<R>.atX(): PairedStat<R> = AtXStat(this)
 
+/** Adapt a [SeriesStat] to consume only the y coordinate of a paired input. */
 fun <R : Result> SeriesStat<R>.atY(): PairedStat<R> = AtYStat(this)
 
+/** Adapt a [SeriesStat] to consume `vector[index]` of each incoming vector. */
 fun <R : Result> SeriesStat<R>.atIndex(index: Int): VectorStat<R> = AtIndexStat(this, index)
 
+/** Adapt a [PairedStat] to consume (`vector[indexX]`, `vector[indexY]`) of each vector. */
 fun <R : Result> PairedStat<R>.atIndices(indexX: Int, indexY: Int): VectorStat<R> = AtIndicesStat(this, indexX, indexY)

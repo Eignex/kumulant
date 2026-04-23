@@ -9,51 +9,99 @@ import kotlin.reflect.KProperty
 import kotlin.concurrent.atomics.AtomicLong as KAtomicLong
 import kotlin.concurrent.atomics.AtomicReference as KAtomicReference
 
+/**
+ * Factory for the mutable scalar cells that back stat accumulators.
+ *
+ * Choose based on concurrency needs: [SerialMode] for single-threaded, [AtomicMode]
+ * for contended multi-writer CAS, [FixedAtomicMode] for fixed-point reduction of
+ * floating-point drift, [com.eignex.kumulant.concurrent.AdderMode] (JVM) for
+ * write-heavy counters.
+ */
 interface StreamMode {
+    /** Allocate a [StreamDouble] cell seeded to [initial]. */
     fun newDouble(initial: Double = 0.0): StreamDouble
+
+    /** Allocate a [StreamLong] cell seeded to [initial]. */
     fun newLong(initial: Long = 0L): StreamLong
+
+    /** Allocate a [StreamRef] cell holding [initial]. */
     fun <T> newReference(initial: T): StreamRef<T>
 }
 
+/** Mutable `Double` cell with mode-appropriate read/write/add semantics. */
 interface StreamDouble {
+    /** Read the current value. */
     fun load(): Double
 
+    /** Overwrite the cell with [value]. */
     fun store(value: Double)
 
+    /** Add [delta] in place. */
     fun add(delta: Double)
 
+    /** Add [delta] and return the new value. */
     fun addAndGet(delta: Double): Double
+
+    /** Add [delta] and return the value before the add. */
     fun getAndAdd(delta: Double): Double
 }
 
+/** Mutable `Long` cell with mode-appropriate read/write/add semantics. */
 interface StreamLong {
+    /** Read the current value. */
     fun load(): Long
 
+    /** Overwrite the cell with [value]. */
     fun store(value: Long)
 
+    /** Add [delta] in place. */
     fun add(delta: Long)
 
+    /** Add [delta] and return the new value. */
     fun addAndGet(delta: Long): Long
+
+    /** Add [delta] and return the value before the add. */
     fun getAndAdd(delta: Long): Long
 }
 
+/**
+ * Mutable reference cell with CAS semantics.
+ *
+ * Note: JVM boxing means `StreamRef<Double>` used under [AtomicMode] compares boxed
+ * identities — avoid CAS loops on boxed primitives, prefer [StreamDouble] instead.
+ */
 interface StreamRef<T> {
+    /** Read the current referent. */
     fun load(): T
+
+    /** Overwrite the referent with [value]. */
     fun store(value: T)
+
+    /** Atomic compare-and-exchange; returns the witnessed prior value. */
     fun compareAndExchange(expectedValue: T, newValue: T): T
+
+    /** Atomic compare-and-set; returns true iff the swap happened. */
     fun compareAndSet(expectedValue: T, newValue: T): Boolean
 }
 
+/** Property-delegate getter for [StreamDouble] — `val x: Double by streamDouble`. */
 operator fun StreamDouble.getValue(
     thisRef: Any?,
     property: KProperty<*>
 ): Double = load()
 
+/** Property-delegate getter for [StreamLong] — `val x: Long by streamLong`. */
 operator fun StreamLong.getValue(
     thisRef: Any?,
     property: KProperty<*>
 ): Long = load()
 
+/**
+ * Fixed-point atomic mode: doubles are encoded as `Long` scaled by `10^[precision]`.
+ *
+ * Exact addition (no FP drift) and a tight atomic footprint, but the dynamic range is
+ * clipped to what fits in 63 bits after scaling — pick [precision] deliberately.
+ */
 class FixedAtomicMode(precision: Int) : StreamMode {
     private val scale: Double = 10.0.pow(precision)
     private val scaleLong: Long = scale.toLong()
@@ -70,18 +118,21 @@ class FixedAtomicMode(precision: Int) : StreamMode {
         AtomicReference(initial)
 }
 
+/** Atomic mode backed by platform atomics; CAS-based, safe for concurrent updates. */
 object AtomicMode : StreamMode {
     override fun newDouble(initial: Double) = AtomicDouble(initial)
     override fun newLong(initial: Long) = AtomicLong(initial)
     override fun <T> newReference(initial: T) = AtomicReference<T>(initial)
 }
 
+/** Non-atomic, single-threaded mode; cheapest path when no concurrency is required. */
 object SerialMode : StreamMode {
     override fun newDouble(initial: Double) = SerialDouble(initial)
     override fun newLong(initial: Long) = SerialLong(initial)
     override fun <T> newReference(initial: T) = SerialRef(initial)
 }
 
+/** Plain-`var` [StreamLong] implementation used by [SerialMode]. */
 class SerialLong(var ref: Long) : StreamLong {
     override fun load(): Long = ref
 
@@ -105,6 +156,7 @@ class SerialLong(var ref: Long) : StreamLong {
     }
 }
 
+/** Plain-`var` [StreamDouble] implementation used by [SerialMode]. */
 class SerialDouble(var ref: Double) : StreamDouble {
     override fun load(): Double = ref
 
@@ -128,6 +180,7 @@ class SerialDouble(var ref: Double) : StreamDouble {
     }
 }
 
+/** Plain-`var` [StreamRef] implementation used by [SerialMode]. */
 class SerialRef<T>(var ref: T) : StreamRef<T> {
     override fun load(): T = ref
 
@@ -154,6 +207,7 @@ class SerialRef<T>(var ref: T) : StreamRef<T> {
     }
 }
 
+/** Fixed-point atomic [StreamDouble] using a scaled `Long` under the hood. */
 class FixedAtomicDouble(
     initialLong: Long,
     private val scaleLong: Long,
@@ -180,6 +234,7 @@ class FixedAtomicDouble(
     }
 }
 
+/** CAS-based atomic [StreamDouble] using `Double.toRawBits` encoding over an atomic `Long`. */
 @JvmInline
 value class AtomicDouble(val ref: KAtomicLong) : StreamDouble {
 
@@ -233,6 +288,7 @@ value class AtomicDouble(val ref: KAtomicLong) : StreamDouble {
     }
 }
 
+/** Platform-atomic [StreamLong]. */
 @JvmInline
 value class AtomicLong(val ref: KAtomicLong) : StreamLong {
     constructor(initial: Long = 0L) : this(KAtomicLong(initial))
@@ -256,6 +312,7 @@ value class AtomicLong(val ref: KAtomicLong) : StreamLong {
     }
 }
 
+/** Platform-atomic [StreamRef]. */
 @JvmInline
 value class AtomicReference<T>(val ref: KAtomicReference<T>) : StreamRef<T> {
     constructor(value: T) : this(KAtomicReference(value))

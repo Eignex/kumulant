@@ -3,12 +3,21 @@ package com.eignex.kumulant.concurrent
 import java.util.concurrent.atomic.DoubleAdder as JDoubleAdder
 import java.util.concurrent.atomic.LongAdder as JLongAdder
 
+/**
+ * JVM [StreamMode] backed by `java.util.concurrent.atomic.DoubleAdder` / `LongAdder`.
+ *
+ * Optimized for many concurrent writers (striped cells). `load()` sweeps all cells and
+ * is slower than CAS atomics, so prefer this for write-heavy counters read infrequently.
+ * `load` is non-linearizable: use [AtomicMode] if reads must observe a single update
+ * atomically with subsequent writes.
+ */
 object AdderMode : StreamMode {
     override fun newDouble(initial: Double) = DoubleAdder(initial)
     override fun newLong(initial: Long) = LongAdder(initial)
     override fun <T> newReference(initial: T) = AtomicReference(initial)
 }
 
+/** [StreamDouble] backed by a striped `java.util.concurrent.atomic.DoubleAdder`. */
 @JvmInline
 value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
 
@@ -43,6 +52,7 @@ value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
     }
 }
 
+/** [StreamLong] backed by a striped `java.util.concurrent.atomic.LongAdder`. */
 @JvmInline
 value class LongAdder(val ref: JLongAdder) : StreamLong {
     constructor(initial: Long = 0L) : this(JLongAdder().also { it.add(initial) })

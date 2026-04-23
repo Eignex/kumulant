@@ -11,6 +11,13 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
 import kotlin.time.Duration
 
+/**
+ * Wrap a [SeriesStat] in a tumbling-slice sliding window of length [duration].
+ *
+ * Values are bucketed across [slices] ring-buffer slots; reads merge the in-window
+ * slots using the underlying stat's [Stat.merge]. More [slices] smooths the boundary
+ * at the cost of memory and merge work per read.
+ */
 fun <R : Result> SeriesStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
@@ -19,6 +26,7 @@ fun <R : Result> SeriesStat<R>.windowed(
     return WindowedSeriesStat(duration, slices, this, mode)
 }
 
+/** Paired-stat counterpart of [SeriesStat.windowed]. */
 fun <R : Result> PairedStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
@@ -27,6 +35,7 @@ fun <R : Result> PairedStat<R>.windowed(
     return WindowedPairedStat(duration, slices, this, mode)
 }
 
+/** Vector-stat counterpart of [SeriesStat.windowed]. */
 fun <R : Result> VectorStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
@@ -63,6 +72,7 @@ private fun safeBucketIndex(expectedStart: Long, sliceDurationNanos: Long, slice
     return if (bucketIndex < 0) bucketIndex + slices else bucketIndex
 }
 
+/** Implementation of [SeriesStat.windowed]; see that function for behavior. */
 class WindowedSeriesStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
@@ -154,6 +164,7 @@ class WindowedSeriesStat<R : Result>(
     }
 }
 
+/** Implementation of [PairedStat.windowed]; see that function for behavior. */
 class WindowedPairedStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
@@ -242,6 +253,7 @@ class WindowedPairedStat<R : Result>(
     }
 }
 
+/** Implementation of [VectorStat.windowed]; see that function for behavior. */
 class WindowedVectorStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,

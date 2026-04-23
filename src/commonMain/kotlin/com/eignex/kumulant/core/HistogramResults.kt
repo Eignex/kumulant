@@ -4,6 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.pow
 
+/** Single estimated quantile with the [probability] it targets. */
 @Serializable
 @SerialName("Quantile")
 data class QuantileResult(
@@ -11,6 +12,7 @@ data class QuantileResult(
     val quantile: Double
 ) : Result
 
+/** DDSketch snapshot: logarithmic bins plus precomputed [quantiles] for [probabilities]. */
 @Serializable
 @SerialName("Sketch")
 data class SketchResult(
@@ -23,6 +25,7 @@ data class SketchResult(
     val negativeBins: Map<Int, Double>
 ) : Result
 
+/** Histogram as parallel `[lowerBounds, upperBounds)` bucket arrays with [weights]. */
 @Serializable
 @SerialName("SparseHistogram")
 data class SparseHistogramResult(
@@ -31,6 +34,7 @@ data class SparseHistogramResult(
     val weights: DoubleArray
 ) : Result
 
+/** Project a [SketchResult] into a [SparseHistogramResult] by expanding its bin indices to bucket boundaries. */
 fun SketchResult.toSparseHistogram(): SparseHistogramResult {
     val hasZero = zeroCount > 0.0
     val totalBuckets = negativeBins.size + (if (hasZero) 1 else 0) + positiveBins.size

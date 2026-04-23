@@ -3,6 +3,7 @@ package com.eignex.kumulant.core
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** Cumulative rate: [totalValue] accumulated from [startTimestampNanos] to [timestampNanos]. */
 @Serializable
 @SerialName("Rate")
 data class RateResult(
@@ -19,6 +20,7 @@ data class RateResult(
         }
 }
 
+/** Exponentially time-decayed rate snapshot. */
 @Serializable
 @SerialName("DecayingRate")
 data class DecayingRateResult(

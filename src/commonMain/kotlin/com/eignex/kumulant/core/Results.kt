@@ -3,6 +3,7 @@ package com.eignex.kumulant.core
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** Marker for a snapshot returned by a [Stat]'s read/merge pipeline. */
 @Serializable
 sealed interface Result
 
@@ -35,5 +36,6 @@ data class ResultList<R : Result>(
     /** Positional constructor: auto-assigns index-based names ("0", "1", ...). */
     constructor(results: List<R>) : this(List(results.size) { it.toString() }, results)
 
+    /** Returns a name-to-result mapping preserving entry order. */
     fun toMap(): Map<String, R> = names.zip(results).toMap()
 }

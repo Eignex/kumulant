@@ -10,6 +10,13 @@ import com.eignex.kumulant.core.SketchResult
 import com.eignex.kumulant.core.SparseHistogramResult
 import kotlin.math.*
 
+/**
+ * Frugal-streaming single-quantile estimator.
+ *
+ * Keeps one `Double` of state that drifts toward the target quantile [q]; the drift
+ * magnitude is scaled by [stepSize]. Cheap and memory-flat but biased and noisy —
+ * use [DDSketch] when accuracy matters. Not intended for merging beyond averaging.
+ */
 class FrugalQuantile(
     val q: Double,
     val stepSize: Double = 0.01,
@@ -59,6 +66,13 @@ class FrugalQuantile(
     override fun read(timestampNanos: Long) = QuantileResult(q, quantile.load())
 }
 
+/**
+ * DDSketch: relative-error quantile sketch with logarithmic bins.
+ *
+ * Guarantees [relativeError] on every reported quantile using `O(log(max/min))`
+ * bins. Supports negative values via a mirrored bin tree and a zero-bucket.
+ * Tightening [relativeError] grows bin count roughly as `1/ε`.
+ */
 class DDSketch(
     val relativeError: Double = 0.01,
     val probabilities: DoubleArray = doubleArrayOf(

@@ -5,13 +5,16 @@ import kotlinx.serialization.Serializable
 import kotlin.properties.PropertyDelegateProvider
 import kotlin.properties.ReadOnlyProperty
 
+/** Typed name identifying a result within a [GroupResult]. */
 open class StatKey<R : Result>(val name: String)
 
+/** Key for a nested group; [keys] exposes the sub-schema for dotted lookup. */
 class GroupStatKey<K>(
     name: String,
     val keys: K
 ) : StatKey<GroupResult>(name)
 
+/** Pairs a [StatKey] with the [Stat] that produces its result. */
 data class StatSpec<
     R : Result,
     S : Stat<R>,
@@ -21,8 +24,10 @@ data class StatSpec<
     val stat: S
 )
 
+/** Marker for stats whose result is a [GroupResult]. */
 interface GroupedStat : Stat<GroupResult>
 
+/** Aggregated snapshot keyed by [StatKey.name]; use `get` operators for typed lookup. */
 @Serializable
 data class GroupResult(
     val results: Map<String, Result>,
@@ -102,6 +107,12 @@ private fun mergeEntry(
     (stat as Stat<Result>).merge(result)
 }
 
+/**
+ * Declarative, typed schema for a group of stats.
+ *
+ * Subclass and declare stats via the [stat], [pairedStat], [vectorStat], and [group]
+ * delegates; each property exposes a [StatKey] for typed retrieval from a [GroupResult].
+ */
 abstract class StatSchema {
     internal val specs = mutableListOf<StatSpec<*, *, *>>()
 
@@ -136,6 +147,7 @@ abstract class StatSchema {
         }
 }
 
+/** Fans each update out to a heterogeneous list of [SeriesStat]s and reports their results keyed by name. */
 class StatGroup(
     private val stats: List<StatSpec<*, out SeriesStat<*>, *>>,
     private val mode: StreamMode? = null
@@ -195,6 +207,7 @@ class StatGroup(
     }
 }
 
+/** [StatGroup] variant over paired (x, y) inputs. */
 class PairedStatGroup(
     private val stats: List<StatSpec<*, out PairedStat<*>, *>>,
     private val mode: StreamMode? = null
@@ -250,6 +263,7 @@ class PairedStatGroup(
     }
 }
 
+/** [StatGroup] variant over vector inputs. */
 class VectorStatGroup(
     private val stats: List<StatSpec<*, out VectorStat<*>, *>>,
     private val mode: StreamMode? = null
@@ -305,16 +319,19 @@ class VectorStatGroup(
     }
 }
 
+/** Builds a [StatSpec] from a string [name] and [value] stat. */
 fun <R : Result, S : Stat<R>> stat(
     name: String,
     value: S
 ): StatSpec<R, S, StatKey<R>> = StatSpec(StatKey(name), value)
 
+/** Builds a [StatSpec] from an existing [key] and [value] stat. */
 fun <R : Result, S : Stat<R>, K : StatKey<R>> stat(
     key: K,
     value: S
 ): StatSpec<R, S, K> = StatSpec(key, value)
 
+/** Builds a nested-group [StatSpec] whose [keys] sub-schema is passed to [build]. */
 inline fun <K, S> group(
     name: String,
     keys: K,
@@ -384,6 +401,7 @@ fun <R : Result> listStats(
     mode: StreamMode? = null,
 ): ListStats<R> = ListStats(stats.map { autoName(it) to it }, mode)
 
+/** Paired-input counterpart of [ListStats]. */
 class PairedListStats<R : Result>(
     private val entries: List<Pair<String, PairedStat<out R>>>,
     private val mode: StreamMode? = null,
@@ -433,6 +451,7 @@ fun <R : Result> pairedListStats(
     mode: StreamMode? = null,
 ): PairedListStats<R> = PairedListStats(stats.map { autoName(it) to it }, mode)
 
+/** Vector-input counterpart of [ListStats]. */
 class VectorListStats<R : Result>(
     private val entries: List<Pair<String, VectorStat<out R>>>,
     private val mode: StreamMode? = null,

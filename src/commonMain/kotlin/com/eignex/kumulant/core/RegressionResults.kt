@@ -4,6 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
 
+/** Fitted Ordinary Least Squares regression with marginal x/y variances for merge. */
 @Serializable
 @SerialName("OLS")
 data class OLSResult(
@@ -31,10 +32,12 @@ data class OLSResult(
     override val sst: Double
         get() = y.variance * totalWeights
 
+    /** Weighted covariance `slope * var(x)`. */
     val covariance: Double
         get() = slope * x.variance
 }
 
+/** Weighted covariance snapshot with second-moment sums usable for merging. */
 @Serializable
 @SerialName("Covariance")
 data class CovarianceResult(
@@ -48,12 +51,19 @@ data class CovarianceResult(
     /** Sum of squared deviations in y: sum((y - meanY)^2 * w) */
     val syy: Double,
 ) : Result {
+    /** Sample covariance `sxy / totalWeights`. */
     val covariance: Double get() = if (totalWeights > 0.0) sxy / totalWeights else 0.0
+
+    /** Pearson correlation coefficient. */
     val correlation: Double
         get() {
             val denom = sxx * syy
             return if (denom > 0.0) sxy / sqrt(denom) else 0.0
         }
+
+    /** Population variance of x. */
     val varX: Double get() = if (totalWeights > 0.0) sxx / totalWeights else 0.0
+
+    /** Population variance of y. */
     val varY: Double get() = if (totalWeights > 0.0) syy / totalWeights else 0.0
 }

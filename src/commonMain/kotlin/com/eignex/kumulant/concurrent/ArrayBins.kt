@@ -15,6 +15,7 @@ class ArrayBins(val mode: StreamMode) {
 
     private val stateRef = mode.newReference(State(0, emptyArray()))
 
+    /** Add [weight] to bin [index], growing the underlying array as needed. */
     fun add(index: Int, weight: Double) {
         while (true) {
             val state = stateRef.load()
@@ -60,6 +61,7 @@ class ArrayBins(val mode: StreamMode) {
         }
     }
 
+    /** Return a point-in-time copy of populated bins as an index-to-weight map. */
     fun snapshot(): Map<Int, Double> {
         val state = stateRef.load()
         val result = mutableMapOf<Int, Double>()
@@ -72,6 +74,7 @@ class ArrayBins(val mode: StreamMode) {
         return result
     }
 
+    /** Drop all bins, returning the manager to its empty state. */
     fun clear() {
         stateRef.store(State(0, emptyArray()))
     }

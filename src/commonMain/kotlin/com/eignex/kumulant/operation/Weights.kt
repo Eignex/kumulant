@@ -7,12 +7,16 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 
+/** Force every update through this stat to use a constant [weight], discarding caller weight. */
 fun <R : Result> SeriesStat<R>.withWeight(weight: Double): SeriesStat<R> = WithWeightStat(this, weight)
 
+/** Paired-stat counterpart of [SeriesStat.withWeight]. */
 fun <R : Result> PairedStat<R>.withWeight(weight: Double): PairedStat<R> = WithWeightPairedStat(this, weight)
 
+/** Vector-stat counterpart of [SeriesStat.withWeight]. */
 fun <R : Result> VectorStat<R>.withWeight(weight: Double): VectorStat<R> = WithWeightVectorStat(this, weight)
 
+/** Adapter implementing the series variant of [withWeight]. */
 class WithWeightStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val weight: Double
@@ -26,6 +30,7 @@ class WithWeightStat<R : Result>(
     }
 }
 
+/** Adapter implementing the paired variant of [withWeight]. */
 class WithWeightPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val weight: Double
@@ -39,6 +44,7 @@ class WithWeightPairedStat<R : Result>(
     }
 }
 
+/** Adapter implementing the vector variant of [withWeight]. */
 class WithWeightVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val weight: Double

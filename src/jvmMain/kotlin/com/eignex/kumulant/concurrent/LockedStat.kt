@@ -8,10 +8,20 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
+/**
+ * Wrap a [SeriesStat] so that all updates, reads, merges, and resets are serialized by a
+ * [java.util.concurrent.locks.ReentrantReadWriteLock]. Slower than [AtomicMode] under
+ * contention, but works with any stat regardless of internal concurrency support.
+ */
 fun <R : Result> SeriesStat<R>.locked() = LockedSeriesStat(this)
+
+/** Paired-stat counterpart of [SeriesStat.locked]. */
 fun <R : Result> PairedStat<R>.locked() = LockedPairedStat(this)
+
+/** Vector-stat counterpart of [SeriesStat.locked]. */
 fun <R : Result> VectorStat<R>.locked() = LockedVectorStat(this)
 
+/** [SeriesStat] wrapper that serializes access through a read/write lock. */
 class LockedSeriesStat<R : Result>(private val delegate: SeriesStat<R>) :
     SeriesStat<R> by delegate {
     private val lock = ReentrantReadWriteLock()
@@ -36,6 +46,7 @@ class LockedSeriesStat<R : Result>(private val delegate: SeriesStat<R>) :
         LockedSeriesStat(delegate.create(mode))
 }
 
+/** [PairedStat] wrapper that serializes access through a read/write lock. */
 class LockedPairedStat<R : Result>(private val delegate: PairedStat<R>) :
     PairedStat<R> by delegate {
     private val lock = ReentrantReadWriteLock()
@@ -60,6 +71,7 @@ class LockedPairedStat<R : Result>(private val delegate: PairedStat<R>) :
         LockedPairedStat(delegate.create(mode))
 }
 
+/** [VectorStat] wrapper that serializes access through a read/write lock. */
 class LockedVectorStat<R : Result>(private val delegate: VectorStat<R>) :
     VectorStat<R> by delegate {
     private val lock = ReentrantReadWriteLock()

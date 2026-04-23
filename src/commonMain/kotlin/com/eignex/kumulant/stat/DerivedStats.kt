@@ -12,12 +12,20 @@ import com.eignex.kumulant.operation.withWeight
 import kotlin.math.ln
 import kotlin.time.Duration
 
+/** Observation count: each update contributes 1 regardless of supplied value and weight. */
 class Count(val mode: StreamMode = defaultStreamMode) :
     SeriesStat<SumResult> by Sum(mode).withWeight(1.0).withValue(1.0)
 
+/** Sum of per-update weights — i.e. the effective sample size. */
 class TotalWeights(val mode: StreamMode = defaultStreamMode) :
     SeriesStat<SumResult> by Sum(mode).withValue(1.0)
 
+/**
+ * Time-decayed rate with the given [halfLife].
+ *
+ * Projects [DecayingSum] onto events-per-second via `α = ln 2 / halfLife`, so the
+ * rate reflects only the recent window of activity.
+ */
 class DecayingRate(
     val halfLife: Duration,
     val mode: StreamMode = defaultStreamMode,

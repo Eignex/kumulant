@@ -7,22 +7,34 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 
+/** Drop observations that fail [predicate] before forwarding to this stat. */
 fun <R : Result> SeriesStat<R>.filter(predicate: DoublePredicate): SeriesStat<R> = FilterSeriesStat(this, predicate)
+
+/** Drop paired observations that fail [predicate]. */
 fun <R : Result> PairedStat<R>.filter(predicate: PairedPredicate): PairedStat<R> = FilterPairedStat(this, predicate)
+
+/** Drop vector observations that fail [predicate]. */
 fun <R : Result> VectorStat<R>.filter(predicate: VectorPredicate): VectorStat<R> = FilterVectorStat(this, predicate)
 
+/** Predicate on a single value. */
 fun interface DoublePredicate {
+    /** Return true to accept [value]. */
     fun test(value: Double): Boolean
 }
 
+/** Predicate on a paired (x, y) observation. */
 fun interface PairedPredicate {
+    /** Return true to accept the pair. */
     fun test(x: Double, y: Double): Boolean
 }
 
+/** Predicate on a vector observation. */
 fun interface VectorPredicate {
+    /** Return true to accept the vector. */
     fun test(vector: DoubleArray): Boolean
 }
 
+/** Adapter that gates updates to a [SeriesStat] by a [DoublePredicate]. */
 class FilterSeriesStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val predicate: DoublePredicate
@@ -37,6 +49,7 @@ class FilterSeriesStat<R : Result>(
     }
 }
 
+/** Adapter that gates updates to a [PairedStat] by a [PairedPredicate]. */
 class FilterPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val predicate: PairedPredicate
@@ -51,6 +64,7 @@ class FilterPairedStat<R : Result>(
     }
 }
 
+/** Adapter that gates updates to a [VectorStat] by a [VectorPredicate]. */
 class FilterVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val predicate: VectorPredicate

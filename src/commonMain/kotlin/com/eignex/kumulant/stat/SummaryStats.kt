@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.SumResult
 import com.eignex.kumulant.core.WeightedMeanResult
 import com.eignex.kumulant.core.WeightedVarianceResult
 
+/** Weighted sum `Σ value*weight` over the stream. */
 class Sum(
     val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<SumResult> {
@@ -35,6 +36,12 @@ class Sum(
     override fun create(mode: StreamMode?) = Sum(mode ?: this.mode)
 }
 
+/**
+ * Weighted arithmetic mean via Welford-style online update.
+ *
+ * Numerically stable across wide dynamic ranges; merges two [Mean]s using Chan's
+ * parallel algorithm.
+ */
 class Mean(
     val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<WeightedMeanResult> {
@@ -74,6 +81,12 @@ class Mean(
     override fun create(mode: StreamMode?) = Mean(mode ?: this.mode)
 }
 
+/**
+ * Weighted mean and variance via Welford with Chan-style parallel merge.
+ *
+ * Population variance `sst / totalWeights`; use [HasSampleVariance.sampleVariance] on
+ * the result for the unbiased estimator.
+ */
 class Variance(
     val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<WeightedVarianceResult> {
@@ -129,6 +142,11 @@ class Variance(
     override fun create(mode: StreamMode?) = Variance(mode ?: this.mode)
 }
 
+/**
+ * Weighted first four central moments (mean, m2, m3, m4) for skewness and kurtosis.
+ *
+ * Uses the Pébay/Welford parallel recurrences; suitable for streaming and merge.
+ */
 class Moments(
     val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<MomentsResult> {

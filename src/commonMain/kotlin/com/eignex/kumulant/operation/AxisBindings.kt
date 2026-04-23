@@ -3,11 +3,19 @@ package com.eignex.kumulant.operation
 import com.eignex.kumulant.concurrent.StreamMode
 import com.eignex.kumulant.core.*
 
+/** Lift a paired stat into a series stat that feeds its x from the event timestamp (seconds). */
 fun <R : Result> PairedStat<R>.withTimeAsX(): SeriesStat<R> = WithTimeAsXStat(this)
+
+/** Lift a paired stat into a series stat that feeds its y from the event timestamp (seconds). */
 fun <R : Result> PairedStat<R>.withTimeAsY(): SeriesStat<R> = WithTimeAsYStat(this)
+
+/** Lift a paired stat into a series stat that always feeds [fixedX] as the x coordinate. */
 fun <R : Result> PairedStat<R>.withFixedX(fixedX: Double): SeriesStat<R> = WithFixedXStat(this, fixedX)
+
+/** Lift a paired stat into a series stat that always feeds [fixedY] as the y coordinate. */
 fun <R : Result> PairedStat<R>.withFixedY(fixedY: Double): SeriesStat<R> = WithFixedYStat(this, fixedY)
 
+/** Series-adapter implementation for [withTimeAsX]. */
 class WithTimeAsXStat<R : Result>(
     private val delegate: PairedStat<R>
 ) : SeriesStat<R>, Stat<R> by delegate {
@@ -25,6 +33,7 @@ class WithTimeAsXStat<R : Result>(
     }
 }
 
+/** Series-adapter implementation for [withTimeAsY]. */
 class WithTimeAsYStat<R : Result>(
     private val delegate: PairedStat<R>
 ) : SeriesStat<R>, Stat<R> by delegate {
@@ -42,6 +51,7 @@ class WithTimeAsYStat<R : Result>(
     }
 }
 
+/** Series-adapter implementation for [withFixedX]. */
 class WithFixedXStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val fixedX: Double
@@ -55,6 +65,7 @@ class WithFixedXStat<R : Result>(
     }
 }
 
+/** Series-adapter implementation for [withFixedY]. */
 class WithFixedYStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val fixedY: Double

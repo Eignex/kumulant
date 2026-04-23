@@ -24,31 +24,41 @@ interface Stat<R : Result> {
      */
     fun read(timestampNanos: Long = currentTimeNanos()): R
 
+    /** Returns a fresh accumulator with the same configuration, optionally overriding the [StreamMode]. */
     fun create(mode: StreamMode? = null): Stat<R>
 }
 
+/** Accumulator over a single scalar time series. */
 interface SeriesStat<R : Result> : Stat<R> {
+    /** Record an observation with the given [weight], stamped at the current time. */
     fun update(value: Double, weight: Double = 1.0) =
         update(value, currentTimeNanos(), weight)
 
+    /** Record an observation at [timestampNanos] with the given [weight]. */
     fun update(value: Double, timestampNanos: Long, weight: Double = 1.0)
 
     override fun create(mode: StreamMode?): SeriesStat<R>
 }
 
+/** Accumulator over paired (x, y) observations such as a regression. */
 interface PairedStat<R : Result> : Stat<R> {
+    /** Record an (x, y) observation with the given [weight] at the current time. */
     fun update(x: Double, y: Double, weight: Double = 1.0) =
         update(x, y, currentTimeNanos(), weight)
 
+    /** Record an (x, y) observation at [timestampNanos] with the given [weight]. */
     fun update(x: Double, y: Double, timestampNanos: Long, weight: Double = 1.0)
 
     override fun create(mode: StreamMode?): PairedStat<R>
 }
 
+/** Accumulator over fixed-dimensional vector observations. */
 interface VectorStat<R : Result> : Stat<R> {
+    /** Record a [vector] observation with the given [weight] at the current time. */
     fun update(vector: DoubleArray, weight: Double = 1.0) =
         update(vector, currentTimeNanos(), weight)
 
+    /** Record a [vector] observation at [timestampNanos] with the given [weight]. */
     fun update(vector: DoubleArray, timestampNanos: Long, weight: Double = 1.0)
 
     override fun create(mode: StreamMode?): VectorStat<R>

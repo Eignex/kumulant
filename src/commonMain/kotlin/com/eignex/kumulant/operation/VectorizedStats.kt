@@ -6,11 +6,19 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
 
+/** Expand a template factory into a [VectorStat] with one [SeriesStat] per of the [dimensions] slots. */
 fun <R : Result> ((Int) -> SeriesStat<R>).expandedToVector(
     dimensions: Int
 ): VectorStat<ResultList<R>> {
     return VectorizedStat(dimensions, this)
 }
+
+/**
+ * Fans each vector observation out to one [SeriesStat] per dimension.
+ *
+ * Produces a [ResultList] with positional entries. Incoming vectors must match the
+ * declared [dimensions] exactly.
+ */
 class VectorizedStat<R : Result>(
     val dimensions: Int,
     val template: (index: Int) -> SeriesStat<R>,

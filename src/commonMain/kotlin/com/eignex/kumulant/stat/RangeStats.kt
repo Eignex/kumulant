@@ -37,6 +37,7 @@ class Range(
     override fun create(mode: StreamMode?) = Range(mode ?: this.mode)
 }
 
+/** Tracks the minimum of a stream. */
 class Min(
     val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<MinResult> {
@@ -60,6 +61,7 @@ class Min(
     override fun create(mode: StreamMode?) = Min(mode ?: this.mode)
 }
 
+/** Tracks the maximum of a stream. */
 class Max(
     val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<MaxResult> {
