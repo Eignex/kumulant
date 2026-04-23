@@ -95,7 +95,7 @@ class SerialLong(var ref: Long) : StreamLong {
 
     override fun addAndGet(delta: Long): Long {
         ref += delta
-        return delta
+        return ref
     }
 
     override fun getAndAdd(delta: Long): Long {
