@@ -32,3 +32,9 @@ sealed interface DecayWeighting {
     /** Weight-driven decay: α given explicitly, progress measured in cumulative weight. */
     class Alpha(override val alpha: Double) : DecayWeighting
 }
+
+/** Shorthand for [DecayWeighting.HalfLife] — usable as a shared weighting across stats. */
+fun halfLife(halfLife: Duration): DecayWeighting.HalfLife = DecayWeighting.HalfLife(halfLife)
+
+/** Shorthand for [DecayWeighting.Alpha] — usable as a shared weighting across stats. */
+fun alpha(alpha: Double): DecayWeighting.Alpha = DecayWeighting.Alpha(alpha)
