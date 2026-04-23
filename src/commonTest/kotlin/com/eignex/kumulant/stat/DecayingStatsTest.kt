@@ -115,11 +115,11 @@ class DecayingMeanTest {
     }
 
     @Test
-    fun `decayingCount halves after one half-life`() {
+    fun `totalWeights halves after one half-life`() {
         val m = DecayingMean(halfLife = 1.seconds)
         m.update(1.0, T0)
-        val countNow = m.read(T0).decayingCount
-        val countLater = m.read(T1).decayingCount // 1 half-life later
+        val countNow = m.read(T0).totalWeights
+        val countLater = m.read(T1).totalWeights // 1 half-life later
         assertEquals(countNow / 2.0, countLater, 1e-9)
     }
 
@@ -140,7 +140,7 @@ class DecayingMeanTest {
         m.reset()
         val r = m.read(T1)
         assertEquals(0.0, r.mean, DELTA)
-        assertEquals(0.0, r.decayingCount, DELTA)
+        assertEquals(0.0, r.totalWeights, DELTA)
     }
 
     @Test

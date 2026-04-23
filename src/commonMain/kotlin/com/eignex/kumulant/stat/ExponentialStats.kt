@@ -131,9 +131,9 @@ class DecayingMean(
     }
 
     override fun merge(values: DecayingMeanResult) {
-        if (values.decayingCount <= 0.0) return
-        sumX.merge(DecayingSumResult(values.mean * values.decayingCount, values.timestampNanos))
-        sumW.merge(DecayingSumResult(values.decayingCount, values.timestampNanos))
+        if (values.totalWeights <= 0.0) return
+        sumX.merge(DecayingSumResult(values.mean * values.totalWeights, values.timestampNanos))
+        sumW.merge(DecayingSumResult(values.totalWeights, values.timestampNanos))
     }
 
     override fun reset() {
@@ -181,8 +181,8 @@ class DecayingVariance(
     }
 
     override fun merge(values: DecayingVarianceResult) {
-        if (values.decayingCount <= 0.0) return
-        val sumW = values.decayingCount
+        if (values.totalWeights <= 0.0) return
+        val sumW = values.totalWeights
         val sumX = values.mean * sumW
         val sumX2 = (values.variance + values.mean * values.mean) * sumW
         this.sumX2.merge(DecayingSumResult(sumX2, values.timestampNanos))

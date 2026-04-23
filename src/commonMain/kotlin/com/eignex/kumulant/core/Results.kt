@@ -114,7 +114,7 @@ data class DecayingSumResult(
 data class DecayingMeanResult(
     val mean: Double,
     /** Effective weight of observations still contributing (decays with time). */
-    val decayingCount: Double,
+    val totalWeights: Double,
     val timestampNanos: Long,
 ) : Result
 
@@ -124,7 +124,7 @@ data class DecayingVarianceResult(
     val mean: Double,
     val variance: Double,
     /** Effective weight of observations still contributing (decays with time). */
-    val decayingCount: Double,
+    val totalWeights: Double,
     val timestampNanos: Long,
 ) : Result {
     val stdDev: Double get() = sqrt(variance)
