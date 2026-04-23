@@ -33,7 +33,7 @@ class RangeEdgeCasesTest {
 
     @Test
     fun `NaN is ignored by the less-than and greater-than comparisons`() {
-        // All comparisons with NaN return false, so NaN inputs leave min/max untouched.
+
         val r = Range()
         r.update(5.0)
         r.update(Double.NaN)
@@ -111,7 +111,7 @@ class VarianceEdgeCasesTest {
         val result = v.read()
         assertFalse(result.variance.isNaN())
         assertFalse(result.variance.isInfinite())
-        // True variance of { +1e9, -1e9 } with mean 0 is (1e18 + 1e18)/2 = 1e18.
+
         assertEquals(1e18, result.variance, 1e12)
     }
 }
@@ -169,7 +169,6 @@ class DDSketchEdgeCasesTest {
         repeat(10) { a.update(5.0) }
         val before = a.read()
 
-        // An "empty" result with matching gamma.
         a.merge(
             SketchResult(
                 probabilities = before.probabilities,

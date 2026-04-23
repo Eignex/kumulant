@@ -160,5 +160,3 @@ class Covariance(
     }
 )
 
-// Planned: WLS (Weighted Least Squares) — support externally supplied per-observation weights
-// Planned: Ridge — OLS with L2 regularisation for ill-conditioned designs

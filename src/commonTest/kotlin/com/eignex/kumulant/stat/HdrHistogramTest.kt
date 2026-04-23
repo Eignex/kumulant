@@ -75,7 +75,7 @@ class HdrHistogramTest {
             initialHighestTrackableValue = 10.0
         )
         h.update(1.0)
-        h.update(5000.0) // way past initial highest
+        h.update(5000.0)
         val r = h.read()
         assertEquals(2.0, r.weights.sum(), DELTA)
         val totalRange = r.upperBounds.maxOrNull()!!

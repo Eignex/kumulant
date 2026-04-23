@@ -7,7 +7,6 @@ import kotlin.test.assertSame
 
 class StreamModeContextTest {
 
-    // defaultStreamMode is a global — snapshot and restore so tests don't pollute each other.
     private val snapshotMode = defaultStreamMode
 
     @AfterTest
@@ -32,7 +31,7 @@ class StreamModeContextTest {
                 throw RuntimeException("boom")
             }
         } catch (_: RuntimeException) {
-            // expected
+
         }
         assertSame(SerialMode, defaultStreamMode)
     }

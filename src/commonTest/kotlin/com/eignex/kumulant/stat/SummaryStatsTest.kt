@@ -9,7 +9,7 @@ class SumTest {
     @Test
     fun `create produces fresh independent stat`() {
         val s1 = Sum().apply { update(10.0) }
-        val s2 = s1.create() // creates a fresh empty instance
+        val s2 = s1.create()
         s1.update(5.0)
         assertEquals(15.0, s1.read().sum, DELTA)
         assertEquals(0.0, s2.read().sum, DELTA)
@@ -27,7 +27,7 @@ class SumTest {
     fun `test negative weights and values`() {
         val sum = Sum()
         sum.update(-10.0, 1.0)
-        sum.update(10.0, -1.0) // -10 + (-10)
+        sum.update(10.0, -1.0)
         assertEquals(-20.0, sum.read().sum, DELTA)
     }
 
@@ -52,7 +52,7 @@ class MeanTest {
     @Test
     fun `create produces fresh independent stat`() {
         val m1 = Mean().apply { update(10.0) }
-        val m2 = m1.create() // creates a fresh empty instance
+        val m2 = m1.create()
         m1.update(20.0)
         assertEquals(15.0, m1.read().mean, DELTA)
         assertEquals(0.0, m2.read().totalWeights, DELTA)
@@ -62,7 +62,7 @@ class MeanTest {
     fun `test stability with large offset`() {
         val mean = Mean()
         val offset = 1e9
-        // Testing that the algorithm handles data far from zero
+
         mean.update(offset + 1, 1.0)
         mean.update(offset + 2, 1.0)
         mean.update(offset + 3, 1.0)
@@ -73,7 +73,7 @@ class MeanTest {
     fun `test zero weight updates`() {
         val mean = Mean()
         mean.update(10.0, 1.0)
-        mean.update(100.0, 0.0) // Should not change mean
+        mean.update(100.0, 0.0)
         assertEquals(10.0, mean.read().mean, DELTA)
         assertEquals(1.0, mean.read().totalWeights, DELTA)
     }
@@ -81,8 +81,8 @@ class MeanTest {
     @Test
     fun `test weighted balance`() {
         val mean = Mean()
-        mean.update(10.0, 90.0) // 90% weight
-        mean.update(100.0, 10.0) // 10% weight
+        mean.update(10.0, 90.0)
+        mean.update(100.0, 10.0)
         assertEquals(19.0, mean.read().mean, DELTA)
     }
 
@@ -119,7 +119,7 @@ class VarianceTest {
             update(10.0)
             update(20.0)
         }
-        val v2 = v1.create() // creates a fresh empty instance
+        val v2 = v1.create()
         v1.update(30.0)
         assertEquals(3.0, v1.read().totalWeights, DELTA)
         assertEquals(0.0, v2.read().totalWeights, DELTA)
@@ -202,7 +202,7 @@ class MomentsTest {
             update(2.0)
             update(3.0)
         }
-        val m2 = m1.create() // creates a fresh empty instance
+        val m2 = m1.create()
         m1.update(4.0)
         assertEquals(4.0, m1.read().totalWeights, delta)
         assertEquals(0.0, m2.read().totalWeights, delta)
@@ -211,7 +211,7 @@ class MomentsTest {
     @Test
     fun `test skewness for symmetric distribution`() {
         val stat = Moments()
-        // Symmetric distribution: Skewness should be 0
+
         val data = listOf(1.0, 2.0, 3.0, 4.0, 5.0)
         data.forEach { stat.update(it, 1.0) }
 
@@ -222,7 +222,7 @@ class MomentsTest {
     @Test
     fun `test positive skewness`() {
         val stat = Moments()
-        // Right-skewed data
+
         val data = listOf(1.0, 1.0, 1.0, 2.0, 10.0)
         data.forEach { stat.update(it, 1.0) }
         assertTrue(stat.read().skewness > 0.0)
@@ -231,7 +231,7 @@ class MomentsTest {
     @Test
     fun `test negative skewness`() {
         val stat = Moments()
-        // Left-skewed data
+
         val data = listOf(10.0, 10.0, 10.0, 9.0, 1.0)
         data.forEach { stat.update(it, 1.0) }
         assertTrue(stat.read().skewness < 0.0)
@@ -243,14 +243,13 @@ class MomentsTest {
         val data = listOf(-2.0, -1.0, 0.0, 1.0, 2.0)
         data.forEach { stat.update(it, 1.0) }
 
-        // Excess Kurtosis for this small flat-ish set will be negative (Platykurtic)
         assertTrue(stat.read().kurtosis < 0.0)
     }
 
     @Test
     fun `test leptokurtic distribution`() {
         val stat = Moments()
-        // Heavy tails (Leptokurtic) -> high peak, extreme outliers
+
         repeat(100) { stat.update(0.0, 1.0) }
         stat.update(100.0, 1.0)
         stat.update(-100.0, 1.0)

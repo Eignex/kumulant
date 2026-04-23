@@ -4,10 +4,6 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-/**
- * Runs `body` concurrently across `threads` workers, each executing `iterationsPerThread`
- * iterations. A start latch forces maximum contention by releasing all workers at once.
- */
 internal fun runConcurrently(
     threads: Int,
     iterationsPerThread: Int,

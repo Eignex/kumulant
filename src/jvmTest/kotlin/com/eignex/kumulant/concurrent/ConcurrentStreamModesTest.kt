@@ -3,10 +3,6 @@ package com.eignex.kumulant.concurrent
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Multi-thread smoke tests for the lock-free `StreamMode`s. `SerialMode` is excluded —
- * it makes no thread-safety claim and would fail these assertions.
- */
 class ConcurrentStreamModesTest {
 
     @Test
@@ -61,8 +57,7 @@ class ConcurrentStreamModesTest {
         val threads = 4
         val iters = 5_000
         runConcurrently(threads, iters) { _, i ->
-            // Spread writes across a handful of indices to exercise both the fast path
-            // and the concurrent-grow path.
+
             bins.add(i % 50, 1.0)
         }
         val total = bins.snapshot().values.sum()

@@ -25,7 +25,6 @@ class SerialLongTest {
         assertEquals(12L, v.load())
     }
 
-    // Regression test: addAndGet previously returned the delta, not the updated value.
     @Test
     fun `addAndGet returns the updated value and not the delta`() {
         val v = SerialLong(10L)

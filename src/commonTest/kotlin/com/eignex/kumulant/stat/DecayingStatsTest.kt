@@ -8,11 +8,10 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val DELTA = 1e-9
 
-// Fixed timestamps for deterministic tests (nanoseconds)
-private const val T0 = 1_000_000_000L // 1 s
-private const val T1 = 2_000_000_000L // 2 s
-private const val T2 = 3_000_000_000L // 3 s
-private const val T3 = 11_000_000_000L // 11 s
+private const val T0 = 1_000_000_000L
+private const val T1 = 2_000_000_000L
+private const val T2 = 3_000_000_000L
+private const val T3 = 11_000_000_000L
 
 class DecayingSumTest {
 
@@ -27,7 +26,7 @@ class DecayingSumTest {
     fun `sum at update time equals value`() {
         val s = DecayingSum(halfLife = 1.seconds)
         s.update(5.0, T0)
-        // Read at same timestamp — no decay
+
         assertEquals(5.0, s.read(T0).sum, 1e-9)
     }
 
@@ -35,7 +34,7 @@ class DecayingSumTest {
     fun `sum decays to half after one half-life`() {
         val s = DecayingSum(halfLife = 1.seconds)
         s.update(8.0, T0)
-        val sumAfterHalfLife = s.read(T1).sum // T1 - T0 = 1s = 1 half-life
+        val sumAfterHalfLife = s.read(T1).sum
         assertEquals(4.0, sumAfterHalfLife, 1e-9)
     }
 
@@ -44,7 +43,7 @@ class DecayingSumTest {
         val s = DecayingSum(halfLife = 1.seconds)
         s.update(1.0, T0)
         val sumNear = s.read(T1).sum
-        val sumFar = s.read(T3).sum // 10 half-lives later
+        val sumFar = s.read(T3).sum
         assertTrue(sumFar < sumNear / 100.0)
     }
 
@@ -96,12 +95,12 @@ class DecayingMeanTest {
     @Test
     fun `mean shifts toward recent values`() {
         val m = DecayingMean(halfLife = 1.seconds)
-        // Old observations at value 0.0
+
         repeat(100) { m.update(0.0, T0) }
-        // Fresh burst at value 100.0
-        repeat(100) { m.update(100.0, T3) } // T3 = 10 half-lives later
+
+        repeat(100) { m.update(100.0, T3) }
         val mean = m.read(T3).mean
-        // Old contributions have decayed by >99.9%; mean should be near 100
+
         assertTrue(mean > 99.0, "mean=$mean should be near 100 after old values decayed")
     }
 
@@ -111,7 +110,7 @@ class DecayingMeanTest {
         m.update(0.0, T0, weight = 3.0)
         m.update(10.0, T0, weight = 1.0)
         val mean = m.read(T0).mean
-        assertEquals(2.5, mean, 1e-9) // (0*3 + 10*1) / 4
+        assertEquals(2.5, mean, 1e-9)
     }
 
     @Test
@@ -119,7 +118,7 @@ class DecayingMeanTest {
         val m = DecayingMean(halfLife = 1.seconds)
         m.update(1.0, T0)
         val countNow = m.read(T0).totalWeights
-        val countLater = m.read(T1).totalWeights // 1 half-life later
+        val countLater = m.read(T1).totalWeights
         assertEquals(countNow / 2.0, countLater, 1e-9)
     }
 
@@ -169,7 +168,7 @@ class DecayingVarianceTest {
         v.update(0.0, T0)
         v.update(10.0, T0)
         val r = v.read(T0)
-        // mean=5, variance = E[x²] - mean² = 50 - 25 = 25
+
         assertEquals(5.0, r.mean, 1e-9)
         assertEquals(25.0, r.variance, 1e-9)
     }
@@ -177,10 +176,10 @@ class DecayingVarianceTest {
     @Test
     fun `variance increases when signal disperses`() {
         val v = DecayingVariance(halfLife = 1.seconds)
-        // Tight cluster
+
         repeat(20) { v.update(5.0, T0) }
         val varTight = v.read(T0).variance
-        // Spread cluster — old observations fade, new ones span wide range
+
         repeat(20) { i -> v.update(i.toDouble(), T3) }
         val varSpread = v.read(T3).variance
         assertTrue(varSpread > varTight)
@@ -202,7 +201,7 @@ class DecayingVarianceTest {
         repeat(10) { v1.update(0.0, T0) }
         repeat(10) { v2.update(10.0, T0) }
         v1.merge(v2.read(T0))
-        // mean=5; variance = 25 (by symmetry)
+
         assertEquals(5.0, v1.read(T0).mean, 1e-9)
         assertEquals(25.0, v1.read(T0).variance, 1e-9)
     }
@@ -224,7 +223,7 @@ class DecayingVarianceTest {
         v1.update(5.0, T0)
         val v2 = v1.create()
         repeat(50) { v2.update(100.0, T1) }
-        // v2 mean should be near 100; v1 mean should still be near 5
+
         assertTrue(v2.read(T1).mean > v1.read(T1).mean)
     }
 }
@@ -244,7 +243,7 @@ class DecayingRateTest {
         val r = DecayingRate(halfLife = 1.seconds)
         r.update(1.0, T0)
         val rateNear = r.read(T1).rate
-        val rateFar = r.read(T3).rate // 10 s later — many half-lives
+        val rateFar = r.read(T3).rate
         assertTrue(rateFar < rateNear / 100.0, "rate should decay significantly over 10 half-lives")
     }
 
@@ -262,7 +261,7 @@ class DecayingRateTest {
         r1.update(10.0, T0)
         val r2 = r1.create()
         r2.update(100.0, T1)
-        // r1 must not see r2's update
+
         val rate1 = r1.read(T2).rate
         val rate2 = r2.read(T2).rate
         assertTrue(rate2 > rate1, "r2 should have higher rate after extra update")

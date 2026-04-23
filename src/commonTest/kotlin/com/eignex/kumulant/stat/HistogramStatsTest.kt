@@ -36,7 +36,7 @@ class FrugalQuantileTest {
         val fq = FrugalQuantile(q = 1.0, stepSize = 1.0, initialEstimate = 0.0)
         fq.update(50.0)
         val after = fq.read().quantile
-        fq.update(0.0) // below current estimate; for q=1 delta=-stepSize*(1-1)=0
+        fq.update(0.0)
         assertEquals(after, fq.read().quantile)
     }
 
@@ -45,19 +45,19 @@ class FrugalQuantileTest {
         val fq = FrugalQuantile(q = 0.0, stepSize = 1.0, initialEstimate = 100.0)
         fq.update(0.0)
         val after = fq.read().quantile
-        fq.update(200.0) // above current estimate; for q=0 delta=stepSize*0=0
+        fq.update(200.0)
         assertEquals(after, fq.read().quantile)
     }
 
     @Test
     fun `estimate stays near median of symmetric alternating stream`() {
-        // Starting near the true median (50), estimate should remain close
+
         val fq = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 50.0)
         repeat(2000) {
             fq.update(0.0)
             fq.update(100.0)
         }
-        // True median is 50; starting at 50, estimate oscillates in a tight band
+
         assertTrue(fq.read().quantile in 40.0..60.0, "quantile=${fq.read().quantile}")
     }
 
@@ -88,7 +88,7 @@ class FrugalQuantileTest {
         val fq1 = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 0.0)
         val fq2 = fq1.create()
         repeat(100) { fq2.update(100.0) }
-        assertEquals(0.0, fq1.read().quantile) // fq1 unchanged
+        assertEquals(0.0, fq1.read().quantile)
         assertTrue(fq2.read().quantile > fq1.read().quantile)
     }
 
@@ -115,7 +115,7 @@ class DDSketchTest {
         val sketch = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.1, 0.5, 0.9))
         sketch.update(42.0)
         val r = sketch.read()
-        // All quantiles should be near 42 (within relative error)
+
         for (q in r.quantiles) {
             assertTrue(abs(q - 42.0) <= 42.0 * 0.02 + 1.0, "quantile=$q expected near 42")
         }
@@ -158,7 +158,7 @@ class DDSketchTest {
         val r = sketch.read()
         assertEquals(100.0, r.totalWeights)
         assertTrue(r.zeroCount > 0.0)
-        // p50 should be at or near 0
+
         assertTrue(r.quantiles[0] <= 1.0, "p50=${r.quantiles[0]}")
     }
 
@@ -168,7 +168,7 @@ class DDSketchTest {
         for (i in -50..-1) sketch.update(i.toDouble())
         for (i in 1..50) sketch.update(i.toDouble())
         val q50 = sketch.read().quantiles[0]
-        // True median is between -1 and 1; sketch should be in that zone
+
         assertTrue(q50 in -5.0..5.0, "p50=$q50")
     }
 
@@ -215,7 +215,7 @@ class DDSketchTest {
         for (i in 1..10) s1.update(i.toDouble())
         val s2 = s1.create()
         for (i in 1..1000) s2.update(i.toDouble())
-        // s1 should still reflect only 10 observations
+
         assertEquals(10.0, s1.read().totalWeights)
     }
 
@@ -233,7 +233,7 @@ class DDSketchTest {
         assertEquals(hist.lowerBounds.size, hist.upperBounds.size)
         assertEquals(hist.lowerBounds.size, hist.weights.size)
         assertTrue(hist.weights.all { it > 0.0 })
-        // total weight in histogram equals total in sketch
+
         assertEquals(10.0, hist.weights.sum(), 1e-9)
     }
 }

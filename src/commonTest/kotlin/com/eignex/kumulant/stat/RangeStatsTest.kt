@@ -67,7 +67,7 @@ class RangeStatsTest {
             update(3.0)
             update(7.0)
         }
-        val r2 = Range() // empty: min=+inf, max=-inf
+        val r2 = Range()
         r1.merge(r2.read())
         assertEquals(3.0, r1.read().min, DELTA)
         assertEquals(7.0, r1.read().max, DELTA)
@@ -89,7 +89,7 @@ class RangeStatsTest {
         val r1 = Range(AtomicMode).apply { update(5.0) }
         val r2 = r1.create(SerialMode)
         r2.update(1.0)
-        // r1 unchanged by r2's update
+
         assertEquals(5.0, r1.read().min, DELTA)
         assertEquals(1.0, r2.read().min, DELTA)
     }

@@ -55,7 +55,7 @@ class PairedStatGroupTest {
         target.merge(onlyOls)
         val merged = target.read()
         assertEquals(3.0, merged[olsKey.first].totalWeights, DELTA)
-        // cov was not in the incoming merge payload so it stays at 1 observation
+
         assertEquals(1.0, merged[covKey.first].totalWeights, DELTA)
     }
 

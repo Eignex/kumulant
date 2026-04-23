@@ -19,7 +19,7 @@ class MonotonicClockTest {
     @Test
     fun `currentTimeNanos advances between two calls separated by work`() {
         val a = currentTimeNanos()
-        // Burn enough work so the clock can advance past timer resolution.
+
         var sink = 0L
         repeat(100_000) { sink += it.toLong() }
         val b = currentTimeNanos()

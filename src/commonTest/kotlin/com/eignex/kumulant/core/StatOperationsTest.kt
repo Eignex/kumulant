@@ -59,14 +59,14 @@ class StatOperationsTest {
     @Test
     fun `atX feeds x to underlying stat`() {
         val stat = Sum().atX()
-        stat.update(10.0, 99.0) // x=10, y=99
+        stat.update(10.0, 99.0)
         assertEquals(10.0, stat.read().sum, DELTA)
     }
 
     @Test
     fun `atY feeds y to underlying stat`() {
         val stat = Sum().atY()
-        stat.update(99.0, 7.0) // x=99, y=7
+        stat.update(99.0, 7.0)
         assertEquals(7.0, stat.read().sum, DELTA)
     }
 
@@ -75,7 +75,7 @@ class StatOperationsTest {
         val stat = Sum().foldPaired { x, y -> y - x }
         stat.update(3.0, 10.0)
         stat.update(1.0, 4.0)
-        assertEquals(10.0, stat.read().sum, DELTA) // (10-3)+(4-1)=7+3=10
+        assertEquals(10.0, stat.read().sum, DELTA)
     }
 
     @Test
@@ -89,13 +89,13 @@ class StatOperationsTest {
     fun `atIndices extracts two elements for paired stat`() {
         val stat = Sum().atX().atIndices(0, 2)
         stat.update(doubleArrayOf(5.0, 99.0, 3.0))
-        assertEquals(5.0, stat.read().sum, DELTA) // x=vec[0], y=vec[2]; atX takes x
+        assertEquals(5.0, stat.read().sum, DELTA)
     }
 
     @Test
     fun `withFixedX supplies constant x to paired stat`() {
         val stat = Sum().atX().withFixedX(7.0)
-        stat.update(99.0) // y=99, but x is fixed to 7
+        stat.update(99.0)
         stat.update(99.0)
         assertEquals(14.0, stat.read().sum, DELTA)
     }
@@ -103,7 +103,7 @@ class StatOperationsTest {
     @Test
     fun `withFixedY supplies constant y to paired stat`() {
         val stat = Sum().atY().withFixedY(3.0)
-        stat.update(99.0) // x=99, but y is fixed to 3
+        stat.update(99.0)
         stat.update(99.0)
         assertEquals(6.0, stat.read().sum, DELTA)
     }

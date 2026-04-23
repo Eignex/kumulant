@@ -39,7 +39,7 @@ class OLSTest {
     @Test
     fun `vertical data all same x gives slope zero`() {
         val ols = OLS()
-        repeat(5) { ols.update(3.0, it.toDouble()) } // sxx = 0
+        repeat(5) { ols.update(3.0, it.toDouble()) }
         val r = ols.read()
         assertEquals(0.0, r.slope, EPS)
     }
@@ -54,7 +54,7 @@ class OLSTest {
     @Test
     fun `r-squared is low for noisy data`() {
         val ols = OLS()
-        // x goes up, y is all over the place
+
         ols.update(0.0, 10.0)
         ols.update(1.0, -5.0)
         ols.update(2.0, 8.0)
@@ -151,7 +151,7 @@ class OLSTest {
         }
         val ols2 = ols1.create(SerialMode)
         ols2.update(100.0, 200.0)
-        // ols1 must not be affected
+
         assertEquals(5.0, ols1.read().totalWeights, EPS)
     }
 
@@ -171,7 +171,7 @@ class CovarianceTest {
         val cov = Covariance()
         for (i in 1..5) cov.update(i.toDouble(), i.toDouble())
         val r = cov.read()
-        // cov(X, X) = var(X); for [1,2,3,4,5] pop-var = 2.0
+
         assertEquals(2.0, r.covariance, EPS)
         assertEquals(1.0, r.correlation, EPS)
     }
@@ -188,7 +188,7 @@ class CovarianceTest {
     @Test
     fun `covariance of uncorrelated data`() {
         val cov = Covariance()
-        // X and Y are independent by symmetry: meanX=0, meanY=0, sxy=0
+
         cov.update(1.0, 1.0)
         cov.update(-1.0, -1.0)
         cov.update(1.0, -1.0)
@@ -209,7 +209,7 @@ class CovarianceTest {
         }
         c1.merge(c2.read())
         val r = c1.read()
-        // y = 2x exactly → correlation = 1
+
         assertEquals(1.0, r.correlation, APPROX)
     }
 
@@ -231,11 +231,9 @@ class CovarianceTest {
         }
         val c2 = c1.create()
         c2.update(5.0, 10.0)
-        // c1 unchanged
+
         assertEquals(2.0, c1.read().totalWeights, EPS)
         assertEquals(1.0, c2.read().totalWeights, EPS)
     }
 }
 
-// Planned: WLSTest — tests for weighted least squares once WLS is implemented
-// Planned: RidgeTest — tests for Ridge regression once implemented

@@ -10,7 +10,7 @@ class EwmaMeanTest {
     @Test
     fun `EwmaMean create produces fresh independent stat`() {
         val m1 = EwmaMean(alpha = 0.5).apply { update(10.0) }
-        val m2 = m1.create() // creates a fresh empty instance
+        val m2 = m1.create()
         repeat(10) { m1.update(10.0) }
         assertEquals(0.0, m2.read().mean, delta)
         assertTrue(m1.read().mean > 0.0)
@@ -23,7 +23,7 @@ class EwmaMeanTest {
         val d2 = WeightedMeanResult(1.0, 20.0)
 
         d1.merge(d2)
-        // (10 + 20) / 2 = 15
+
         assertEquals(15.0, d1.read().mean, delta)
     }
 
@@ -31,10 +31,8 @@ class EwmaMeanTest {
     fun `EwmaMean biases toward heavy recent values`() {
         val stat = EwmaMean(alpha = 0.5)
         stat.update(10.0, 1.0)
-        stat.update(100.0, 10.0) // Massive recent update
+        stat.update(100.0, 10.0)
 
-        // A simple mean would be ~91.8, but a heavily decayed mean
-        // will aggressively track the latest dense value.
         assertTrue(
             stat.read().mean > 80.0,
             "Mean should heavily favor the massive recent update"
@@ -59,7 +57,7 @@ class EwmaVarianceTest {
             update(1.0)
             update(2.0)
         }
-        val v2 = v1.create() // creates a fresh empty instance
+        val v2 = v1.create()
         repeat(10) { v1.update(1000.0) }
         assertEquals(0.0, v2.read().totalWeights, delta)
         assertTrue(v1.read().totalWeights > 0.0)
@@ -69,11 +67,9 @@ class EwmaVarianceTest {
     fun `EwmaVariance tracking volatility shift`() {
         val stat = EwmaVariance(alpha = 0.1)
 
-        // Phase 1: Low variance
         repeat(50) { stat.update(10.0, 1.0) }
         val lowVar = stat.read().variance
 
-        // Phase 2: Massive spike
         stat.update(1000.0, 1.0)
         val highVar = stat.read().variance
 
@@ -87,7 +83,6 @@ class EwmaVarianceTest {
         stat.update(20.0, 1.0)
         val currentVar = stat.read().variance
 
-        // Merge with zero-weight remote
         stat.merge(WeightedVarianceResult(0.0, 0.0, 0.0))
 
         assertEquals(currentVar, stat.read().variance, delta)
@@ -96,7 +91,7 @@ class EwmaVarianceTest {
     @Test
     fun `EwmaVariance bias correction prevents zero division`() {
         val stat = EwmaVariance(alpha = 0.1)
-        // Should return 0.0 or something sensible, not NaN, before updates
+
         assertEquals(0.0, stat.read().mean, delta)
         assertEquals(0.0, stat.read().variance, delta)
     }

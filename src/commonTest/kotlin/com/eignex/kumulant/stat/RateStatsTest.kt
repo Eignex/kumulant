@@ -7,10 +7,9 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val DELTA = 1e-9
 
-// Fixed timestamps for deterministic tests (nanoseconds)
-private const val T0 = 1_000_000_000L // 1 s
-private const val T1 = 2_000_000_000L // 2 s
-private const val T2 = 3_000_000_000L // 3 s
+private const val T0 = 1_000_000_000L
+private const val T1 = 2_000_000_000L
+private const val T2 = 3_000_000_000L
 
 class RateTest {
 
@@ -19,7 +18,7 @@ class RateTest {
         val r = Rate()
         r.update(10.0, T0)
         val result = r.read(T1)
-        // 10 units over 1 second = 10 per second
+
         assertEquals(10.0, result.rate, DELTA)
     }
 
@@ -36,7 +35,7 @@ class RateTest {
     fun `rate over two seconds`() {
         val r = Rate()
         r.update(20.0, T0)
-        val result = r.read(T2) // T2 - T0 = 2s
+        val result = r.read(T2)
         assertEquals(10.0, result.rate, DELTA)
     }
 
@@ -57,11 +56,11 @@ class RateTest {
     @Test
     fun `merge takes earliest start and sums totals`() {
         val r1 = Rate().apply { update(10.0, T0) }
-        val r2 = Rate().apply { update(5.0, T1) } // later start
+        val r2 = Rate().apply { update(5.0, T1) }
         r1.merge(r2.read())
         val result = r1.read(T2)
         assertEquals(15.0, result.totalValue, DELTA)
-        // start stays at T0
+
         assertEquals(T0, result.startTimestampNanos)
     }
 
@@ -83,7 +82,7 @@ class RateTest {
     @Test
     fun `per extension rescales to per-minute`() {
         val r = Rate().apply { update(60.0, T0) }
-        val result = r.read(T1) // 60 per second
+        val result = r.read(T1)
         assertEquals(3600.0, result.per(60.seconds), DELTA)
     }
 
@@ -130,7 +129,7 @@ class CounterRateTest {
     fun `counter decrease is treated as reset by default`() {
         val r = CounterRate()
         r.update(100.0, T0)
-        r.update(10.0, T1) // reset happened between samples
+        r.update(10.0, T1)
         val result = r.read(T2)
         assertEquals(10.0, result.totalValue, DELTA)
         assertEquals(T1, result.startTimestampNanos)
@@ -149,7 +148,7 @@ class CounterRateTest {
     fun `out of order timestamp is ignored`() {
         val r = CounterRate()
         r.update(100.0, T1)
-        r.update(120.0, T0) // ignored
+        r.update(120.0, T0)
         r.update(130.0, T2)
         val result = r.read(T2)
         assertEquals(30.0, result.totalValue, DELTA)

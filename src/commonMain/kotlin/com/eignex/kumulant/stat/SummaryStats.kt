@@ -153,7 +153,6 @@ class Moments(
         val deltaW2 = deltaW * deltaW
         val term1 = delta * deltaW * oldW
 
-        // Update raw sums using deltas
         m4.add(term1 * deltaW2 * (nextW * nextW - 3 * nextW + 3) + 6 * deltaW2 * oldM2 - 4 * deltaW * oldM3)
         m3.add(term1 * deltaW * (nextW - 2) - 3 * deltaW * oldM2)
         m2.add(term1)

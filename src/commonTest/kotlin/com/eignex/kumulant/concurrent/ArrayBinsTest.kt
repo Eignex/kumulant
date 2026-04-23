@@ -45,7 +45,7 @@ class ArrayBinsTest {
     fun `grows to accommodate index below initial offset`() {
         val bins = ArrayBins(SerialMode)
         bins.add(0, 1.0)
-        bins.add(-200, 2.0) // forces resize below existing offset
+        bins.add(-200, 2.0)
         val snap = bins.snapshot()
         assertEquals(1.0, snap[0]!!, DELTA)
         assertEquals(2.0, snap[-200]!!, DELTA)
@@ -55,7 +55,7 @@ class ArrayBinsTest {
     fun `grows to accommodate index above initial offset plus length`() {
         val bins = ArrayBins(SerialMode)
         bins.add(0, 1.0)
-        bins.add(10_000, 2.0) // far past initial 128-wide window
+        bins.add(10_000, 2.0)
         val snap = bins.snapshot()
         assertEquals(1.0, snap[0]!!, DELTA)
         assertEquals(2.0, snap[10_000]!!, DELTA)
@@ -66,9 +66,9 @@ class ArrayBinsTest {
         val bins = ArrayBins(SerialMode)
         bins.add(0, 1.0)
         bins.add(1, 2.0)
-        // Trigger resize
+
         bins.add(10_000, 3.0)
-        // Add more to pre-resize indices — must still land on the same values
+
         bins.add(0, 4.0)
         bins.add(1, 5.0)
         val snap = bins.snapshot()
@@ -81,7 +81,7 @@ class ArrayBinsTest {
     fun `snapshot excludes zero-weight entries`() {
         val bins = ArrayBins(SerialMode)
         bins.add(0, 1.0)
-        // Nearby uninitialised slots should not appear in snapshot
+
         val snap = bins.snapshot()
         assertEquals(setOf(0), snap.keys)
     }
@@ -107,7 +107,7 @@ class ArrayBinsTest {
     @Test
     fun `repeated resizes accumulate correctly`() {
         val bins = ArrayBins(SerialMode)
-        // Keep pushing indices outward to trigger successive resizes
+
         bins.add(0, 1.0)
         bins.add(500, 1.0)
         bins.add(5_000, 1.0)

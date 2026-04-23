@@ -105,7 +105,6 @@ private fun mergeEntry(
 abstract class StatSchema {
     internal val specs = mutableListOf<StatSpec<*, *, *>>()
 
-    // 1. Fluent helper for SeriesStat
     protected fun <R : Result, S : SeriesStat<R>> stat(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
@@ -113,7 +112,6 @@ abstract class StatSchema {
             ReadOnlyProperty { _, _ -> key }
         }
 
-    // 2. Fluent helper for PairedStat
     protected fun <R : Result, S : PairedStat<R>> pairedStat(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
@@ -121,7 +119,6 @@ abstract class StatSchema {
             ReadOnlyProperty { _, _ -> key }
         }
 
-    // 3. Fluent helper for VectorStat
     protected fun <R : Result, S : VectorStat<R>> vectorStat(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
@@ -129,7 +126,6 @@ abstract class StatSchema {
             ReadOnlyProperty { _, _ -> key }
         }
 
-    // 4. Fluent helper for nested groups!
     protected fun <T : StatSchema> group(nestedSchema: T, mode: StreamMode? = null) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, GroupStatKey<T>>> { _, property ->
             val key = GroupStatKey(property.name, nestedSchema)

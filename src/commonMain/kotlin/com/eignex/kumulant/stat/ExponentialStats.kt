@@ -14,12 +14,9 @@ import com.eignex.kumulant.core.WeightedVarianceResult
 import kotlin.math.exp
 import kotlin.time.Duration
 
-// -----------------------------------------------------------------------------
 // Time-decayed family (HalfLife weighting).
-//
 // S(t) = Σ vᵢ · wᵢ · exp(−α·(t − tᵢ)) with α = ln(2)/halfLife. Decay advances with
 // wall-clock time regardless of event frequency. See [DecayWeighting.HalfLife].
-// -----------------------------------------------------------------------------
 
 /**
  * Exponentially decaying sum driven by wall-clock elapsed time.
@@ -200,12 +197,9 @@ class DecayingVariance(
         DecayingVariance(weighting, mode ?: this.mode)
 }
 
-// -----------------------------------------------------------------------------
 // Event-weight-decayed family (Alpha weighting).
-//
 // Bias-corrected exponential moving average/variance driven by cumulative observation
 // weight rather than wall-clock time. See [DecayWeighting.Alpha].
-// -----------------------------------------------------------------------------
 
 /**
  * Exponentially weighted moving average driven by cumulative observation weight.

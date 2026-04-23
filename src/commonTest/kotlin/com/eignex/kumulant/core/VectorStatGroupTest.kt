@@ -60,7 +60,7 @@ class VectorStatGroupTest {
         val merged = target.read()
         assertEquals(6.0, merged[sumKey.first].results[0].sum, DELTA)
         assertEquals(60.0, merged[sumKey.first].results[1].sum, DELTA)
-        // means was not in merge payload, still reflects the single initial update
+
         assertEquals(1.0, merged[meanKey.first].results[0].totalWeights, DELTA)
     }
 
