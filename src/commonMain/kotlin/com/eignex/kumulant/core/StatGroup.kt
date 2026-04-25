@@ -58,40 +58,13 @@ data class GroupResult(
 }
 
 @Suppress("UNCHECKED_CAST")
-private fun toSeriesSpec(
-    key: StatKey<*>,
-    stat: SeriesStat<*>
-): StatSpec<*, out SeriesStat<*>, *> {
-    return StatSpec(key as StatKey<Result>, stat as SeriesStat<Result>)
-}
+private fun <S : Stat<*>> toSpec(key: StatKey<*>, stat: S): StatSpec<*, out S, *> =
+    StatSpec(key as StatKey<Result>, stat as Stat<Result>) as StatSpec<*, out S, *>
 
-private fun toSeriesSpecs(
+private inline fun <reified S : Stat<*>> filterSpecs(
     specs: List<StatSpec<*, *, *>>
-): List<StatSpec<*, out SeriesStat<*>, *>> {
-    return specs.mapNotNull { (key, stat) ->
-        if (stat is SeriesStat<*>) {
-            toSeriesSpec(key, stat)
-        } else {
-            null
-        }
-    }
-}
-
-@Suppress("UNCHECKED_CAST")
-private fun toPairedSpec(
-    key: StatKey<*>,
-    stat: PairedStat<*>
-): StatSpec<*, out PairedStat<*>, *> {
-    return StatSpec(key as StatKey<Result>, stat as PairedStat<Result>)
-}
-
-@Suppress("UNCHECKED_CAST")
-private fun toVectorSpec(
-    key: StatKey<*>,
-    stat: VectorStat<*>
-): StatSpec<*, out VectorStat<*>, *> {
-    return StatSpec(key as StatKey<Result>, stat as VectorStat<Result>)
-}
+): List<StatSpec<*, out S, *>> =
+    specs.mapNotNull { (key, stat) -> if (stat is S) toSpec(key, stat) else null }
 
 @Suppress("UNCHECKED_CAST")
 private fun mergeEntry(
@@ -140,181 +113,113 @@ abstract class StatSchema {
     protected fun <T : StatSchema> group(nestedSchema: T, mode: StreamMode? = null) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, GroupStatKey<T>>> { _, property ->
             val key = GroupStatKey(property.name, nestedSchema)
-            val groupStat = StatGroup(stats = toSeriesSpecs(nestedSchema.specs), mode = mode)
+            val groupStat = StatGroup(stats = filterSpecs<SeriesStat<*>>(nestedSchema.specs), mode = mode)
 
             specs.add(StatSpec(key, groupStat))
             ReadOnlyProperty { _, _ -> key }
         }
 }
 
+/**
+ * Internal base shared by [StatGroup], [PairedStatGroup], and [VectorStatGroup]. Holds the
+ * spec list and provides the modality-agnostic [read] / [merge] / [reset] implementations.
+ */
+sealed class AbstractStatGroup<S : Stat<*>>(
+    protected val stats: List<StatSpec<*, out S, *>>,
+    protected val mode: StreamMode?,
+) : GroupedStat {
+    final override fun read(timestampNanos: Long): GroupResult =
+        GroupResult(stats.associate { (key, stat) -> key.name to stat.read(timestampNanos) })
+
+    final override fun merge(values: GroupResult) {
+        for ((key, stat) in stats) mergeEntry(values, key, stat)
+    }
+
+    final override fun reset() {
+        for ((_, stat) in stats) stat.reset()
+    }
+}
+
 /** Fans each update out to a heterogeneous list of [SeriesStat]s and reports their results keyed by name. */
 class StatGroup(
-    private val stats: List<StatSpec<*, out SeriesStat<*>, *>>,
-    private val mode: StreamMode? = null
-) : SeriesStat<GroupResult>, GroupedStat {
+    stats: List<StatSpec<*, out SeriesStat<*>, *>>,
+    mode: StreamMode? = null,
+) : AbstractStatGroup<SeriesStat<*>>(stats, mode), SeriesStat<GroupResult> {
 
     constructor(
         vararg stats: StatSpec<*, out SeriesStat<*>, *>,
         mode: StreamMode? = null
-    ) : this(
-        stats = stats.asList(),
-        mode = mode
-    )
+    ) : this(stats = stats.asList(), mode = mode)
 
     constructor(
         vararg stats: Pair<StatKey<*>, SeriesStat<*>>,
         mode: StreamMode? = null
-    ) : this(
-        stats = stats.map { toSeriesSpec(it.first, it.second) },
-        mode = mode
-    )
-    constructor(schema: StatSchema, mode: StreamMode? = null) : this(
-        stats = toSeriesSpecs(schema.specs),
-        mode = mode
-    )
+    ) : this(stats = stats.map { toSpec(it.first, it.second) }, mode = mode)
+
+    constructor(schema: StatSchema, mode: StreamMode? = null) :
+        this(stats = filterSpecs<SeriesStat<*>>(schema.specs), mode = mode)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        for ((_, stat) in stats) {
-            stat.update(value, timestampNanos, weight)
-        }
-    }
-
-    override fun read(timestampNanos: Long): GroupResult {
-        val map = stats.associate { (key, stat) ->
-            key.name to stat.read(timestampNanos)
-        }
-        return GroupResult(map)
-    }
-
-    override fun merge(values: GroupResult) {
-        for ((key, stat) in stats) {
-            mergeEntry(values, key, stat)
-        }
-    }
-
-    override fun reset() {
-        for ((_, stat) in stats) {
-            stat.reset()
-        }
+        for ((_, stat) in stats) stat.update(value, timestampNanos, weight)
     }
 
     override fun create(mode: StreamMode?): SeriesStat<GroupResult> {
         val effectiveMode = mode ?: this.mode
-        val newStats = stats.map { (key, stat) ->
-            toSeriesSpec(key, stat.create(effectiveMode))
-        }
+        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveMode)) }
         return StatGroup(stats = newStats, mode = effectiveMode)
     }
 }
 
 /** [StatGroup] variant over paired (x, y) inputs. */
 class PairedStatGroup(
-    private val stats: List<StatSpec<*, out PairedStat<*>, *>>,
-    private val mode: StreamMode? = null
-) : PairedStat<GroupResult>, GroupedStat {
+    stats: List<StatSpec<*, out PairedStat<*>, *>>,
+    mode: StreamMode? = null,
+) : AbstractStatGroup<PairedStat<*>>(stats, mode), PairedStat<GroupResult> {
 
     constructor(
         vararg stats: StatSpec<*, out PairedStat<*>, *>,
         mode: StreamMode? = null
-    ) : this(
-        stats = stats.asList(),
-        mode = mode
-    )
+    ) : this(stats = stats.asList(), mode = mode)
 
     constructor(
         vararg stats: Pair<StatKey<*>, PairedStat<*>>,
         mode: StreamMode? = null
-    ) : this(
-        stats = stats.map { toPairedSpec(it.first, it.second) },
-        mode = mode
-    )
+    ) : this(stats = stats.map { toSpec(it.first, it.second) }, mode = mode)
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        for ((_, stat) in stats) {
-            stat.update(x, y, timestampNanos, weight)
-        }
-    }
-
-    override fun read(timestampNanos: Long): GroupResult {
-        val map = stats.associate { (key, stat) ->
-            key.name to stat.read(timestampNanos)
-        }
-        return GroupResult(map)
-    }
-
-    override fun merge(values: GroupResult) {
-        for ((key, stat) in stats) {
-            mergeEntry(values, key, stat)
-        }
-    }
-
-    override fun reset() {
-        for ((_, stat) in stats) {
-            stat.reset()
-        }
+        for ((_, stat) in stats) stat.update(x, y, timestampNanos, weight)
     }
 
     override fun create(mode: StreamMode?): PairedStat<GroupResult> {
         val effectiveMode = mode ?: this.mode
-        val newStats = stats.map { (key, stat) ->
-            toPairedSpec(key, stat.create(effectiveMode))
-        }
+        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveMode)) }
         return PairedStatGroup(stats = newStats, mode = effectiveMode)
     }
 }
 
 /** [StatGroup] variant over vector inputs. */
 class VectorStatGroup(
-    private val stats: List<StatSpec<*, out VectorStat<*>, *>>,
-    private val mode: StreamMode? = null
-) : VectorStat<GroupResult>, GroupedStat {
+    stats: List<StatSpec<*, out VectorStat<*>, *>>,
+    mode: StreamMode? = null,
+) : AbstractStatGroup<VectorStat<*>>(stats, mode), VectorStat<GroupResult> {
 
     constructor(
         vararg stats: StatSpec<*, out VectorStat<*>, *>,
         mode: StreamMode? = null
-    ) : this(
-        stats = stats.asList(),
-        mode = mode
-    )
+    ) : this(stats = stats.asList(), mode = mode)
 
     constructor(
         vararg stats: Pair<StatKey<*>, VectorStat<*>>,
         mode: StreamMode? = null
-    ) : this(
-        stats = stats.map { toVectorSpec(it.first, it.second) },
-        mode = mode
-    )
+    ) : this(stats = stats.map { toSpec(it.first, it.second) }, mode = mode)
 
     override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
-        for ((_, stat) in stats) {
-            stat.update(vector, timestampNanos, weight)
-        }
-    }
-
-    override fun read(timestampNanos: Long): GroupResult {
-        val map = stats.associate { (key, stat) ->
-            key.name to stat.read(timestampNanos)
-        }
-        return GroupResult(map)
-    }
-
-    override fun merge(values: GroupResult) {
-        for ((key, stat) in stats) {
-            mergeEntry(values, key, stat)
-        }
-    }
-
-    override fun reset() {
-        for ((_, stat) in stats) {
-            stat.reset()
-        }
+        for ((_, stat) in stats) stat.update(vector, timestampNanos, weight)
     }
 
     override fun create(mode: StreamMode?): VectorStat<GroupResult> {
         val effectiveMode = mode ?: this.mode
-        val newStats = stats.map { (key, stat) ->
-            toVectorSpec(key, stat.create(effectiveMode))
-        }
+        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveMode)) }
         return VectorStatGroup(stats = newStats, mode = effectiveMode)
     }
 }
@@ -341,164 +246,3 @@ inline fun <K, S> group(
     val groupKey = GroupStatKey(name, keys)
     return StatSpec(groupKey, build(keys))
 }
-
-/**
- * Heterogeneous, named-positional grouping composed into a single [SeriesStat]. The
- * result is a [ResultList] whose entries carry both position (for merge alignment) and
- * name (for `.toMap()`).
- *
- * Names default to each stat's `simpleName`; override with `Pair<String, SeriesStat>`
- * entries. Duplicate names throw at construction — disambiguate explicitly.
- *
- * Lighter than [StatGroup] when the `StatKey` / `StatSpec` apparatus isn't needed.
- */
-class ListStats<R : Result>(
-    private val entries: List<Pair<String, SeriesStat<out R>>>,
-    private val mode: StreamMode? = null,
-) : SeriesStat<ResultList<R>> {
-
-    init {
-        val names = entries.map { it.first }
-        val duplicates = names.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
-        require(duplicates.isEmpty()) {
-            "Duplicate stat names in ListStats: $duplicates — pass explicit Pair<String, ...> to disambiguate"
-        }
-    }
-
-    constructor(vararg entries: Pair<String, SeriesStat<out R>>, mode: StreamMode? = null) :
-        this(entries.toList(), mode)
-
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        for ((_, stat) in entries) stat.update(value, timestampNanos, weight)
-    }
-
-    override fun read(timestampNanos: Long): ResultList<R> =
-        ResultList(entries.map { it.first }, entries.map { it.second.read(timestampNanos) })
-
-    @Suppress("UNCHECKED_CAST")
-    override fun merge(values: ResultList<R>) {
-        entries.zip(values.results).forEach { (pair, result) ->
-            (pair.second as SeriesStat<R>).merge(result)
-        }
-    }
-
-    override fun reset() {
-        for ((_, stat) in entries) stat.reset()
-    }
-
-    override fun create(mode: StreamMode?): SeriesStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.mode
-        return ListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveMode) },
-            effectiveMode,
-        )
-    }
-}
-
-/** Auto-named [ListStats]: each stat keyed by its class `simpleName`. */
-fun <R : Result> listStats(
-    vararg stats: SeriesStat<out R>,
-    mode: StreamMode? = null,
-): ListStats<R> = ListStats(stats.map { autoName(it) to it }, mode)
-
-/** Paired-input counterpart of [ListStats]. */
-class PairedListStats<R : Result>(
-    private val entries: List<Pair<String, PairedStat<out R>>>,
-    private val mode: StreamMode? = null,
-) : PairedStat<ResultList<R>> {
-
-    init {
-        val names = entries.map { it.first }
-        val duplicates = names.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
-        require(duplicates.isEmpty()) {
-            "Duplicate stat names in PairedListStats: $duplicates"
-        }
-    }
-
-    constructor(vararg entries: Pair<String, PairedStat<out R>>, mode: StreamMode? = null) :
-        this(entries.toList(), mode)
-
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        for ((_, stat) in entries) stat.update(x, y, timestampNanos, weight)
-    }
-
-    override fun read(timestampNanos: Long): ResultList<R> =
-        ResultList(entries.map { it.first }, entries.map { it.second.read(timestampNanos) })
-
-    @Suppress("UNCHECKED_CAST")
-    override fun merge(values: ResultList<R>) {
-        entries.zip(values.results).forEach { (pair, result) ->
-            (pair.second as PairedStat<R>).merge(result)
-        }
-    }
-
-    override fun reset() {
-        for ((_, stat) in entries) stat.reset()
-    }
-
-    override fun create(mode: StreamMode?): PairedStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.mode
-        return PairedListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveMode) },
-            effectiveMode,
-        )
-    }
-}
-
-/** Auto-named [PairedListStats]: each stat keyed by its class `simpleName`. */
-fun <R : Result> pairedListStats(
-    vararg stats: PairedStat<out R>,
-    mode: StreamMode? = null,
-): PairedListStats<R> = PairedListStats(stats.map { autoName(it) to it }, mode)
-
-/** Vector-input counterpart of [ListStats]. */
-class VectorListStats<R : Result>(
-    private val entries: List<Pair<String, VectorStat<out R>>>,
-    private val mode: StreamMode? = null,
-) : VectorStat<ResultList<R>> {
-
-    init {
-        val names = entries.map { it.first }
-        val duplicates = names.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
-        require(duplicates.isEmpty()) {
-            "Duplicate stat names in VectorListStats: $duplicates"
-        }
-    }
-
-    constructor(vararg entries: Pair<String, VectorStat<out R>>, mode: StreamMode? = null) :
-        this(entries.toList(), mode)
-
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
-        for ((_, stat) in entries) stat.update(vector, timestampNanos, weight)
-    }
-
-    override fun read(timestampNanos: Long): ResultList<R> =
-        ResultList(entries.map { it.first }, entries.map { it.second.read(timestampNanos) })
-
-    @Suppress("UNCHECKED_CAST")
-    override fun merge(values: ResultList<R>) {
-        entries.zip(values.results).forEach { (pair, result) ->
-            (pair.second as VectorStat<R>).merge(result)
-        }
-    }
-
-    override fun reset() {
-        for ((_, stat) in entries) stat.reset()
-    }
-
-    override fun create(mode: StreamMode?): VectorStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.mode
-        return VectorListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveMode) },
-            effectiveMode,
-        )
-    }
-}
-
-/** Auto-named [VectorListStats]: each stat keyed by its class `simpleName`. */
-fun <R : Result> vectorListStats(
-    vararg stats: VectorStat<out R>,
-    mode: StreamMode? = null,
-): VectorListStats<R> = VectorListStats(stats.map { autoName(it) to it }, mode)
-
-private fun autoName(stat: Any): String = stat::class.simpleName ?: "Stat"
