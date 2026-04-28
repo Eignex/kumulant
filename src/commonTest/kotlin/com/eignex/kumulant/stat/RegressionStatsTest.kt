@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat
 
 import com.eignex.kumulant.concurrent.AtomicMode
 import com.eignex.kumulant.concurrent.SerialMode
+import kotlin.math.sqrt
 import kotlin.test.*
 
 private const val EPS = 1e-9
@@ -161,6 +162,39 @@ class OLSTest {
             OLS().apply { for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0) }
         val r = ols.read()
         assertEquals(11.0, r.predict(5.0), APPROX)
+    }
+
+    @Test
+    fun `mse and rmse derive from sse and totalWeights`() {
+        val ols = OLS()
+        ols.update(0.0, 10.0)
+        ols.update(1.0, -5.0)
+        ols.update(2.0, 8.0)
+        ols.update(3.0, -3.0)
+        val r = ols.read()
+        assertEquals(r.sse / r.totalWeights, r.mse, APPROX)
+        assertEquals(sqrt(r.mse), r.rmse, APPROX)
+        assertTrue(r.mse > 0.0)
+    }
+
+    @Test
+    fun `ssr plus sse equals sst`() {
+        val ols = OLS()
+        for (x in 0..9) ols.update(x.toDouble(), 2.0 * x + 1.0 + 0.1 * (x % 3 - 1))
+        val r = ols.read()
+        assertEquals(r.sst, r.ssr + r.sse, APPROX)
+    }
+
+    @Test
+    fun `regression metrics are zero for empty stat`() {
+        val r = OLS().read()
+        assertEquals(0.0, r.totalWeights, EPS)
+        assertEquals(0.0, r.sse, EPS)
+        assertEquals(0.0, r.sst, EPS)
+        assertEquals(0.0, r.mse, EPS)
+        assertEquals(0.0, r.rmse, EPS)
+        assertEquals(0.0, r.ssr, EPS)
+        assertEquals(0.0, r.rSquared, EPS)
     }
 }
 

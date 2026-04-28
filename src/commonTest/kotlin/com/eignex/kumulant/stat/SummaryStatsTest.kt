@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat
 
 import com.eignex.kumulant.core.WeightedMeanResult
+import kotlin.math.sqrt
 import kotlin.test.*
 
 private const val DELTA = 1e-12
@@ -281,5 +282,74 @@ class MomentsTest {
         assertEquals(0.0, stat.read().variance, delta)
         assertEquals(0.0, stat.read().skewness, delta)
         assertEquals(0.0, stat.read().kurtosis, delta)
+    }
+}
+
+class SampleVarianceTraitTest {
+    private val delta = 1e-9
+
+    @Test
+    fun `sampleVariance applies Bessel correction`() {
+        val stat = Moments()
+        listOf(2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0).forEach { stat.update(it, 1.0) }
+        val r = stat.read()
+        assertEquals(5.0, r.mean, delta)
+        assertEquals(4.0, r.variance, delta)
+        assertEquals(32.0 / 7.0, r.sampleVariance, delta)
+        assertEquals(sqrt(32.0 / 7.0), r.sampleStdDev, delta)
+    }
+
+    @Test
+    fun `sampleVariance is zero when totalWeights le 1`() {
+        val empty = Moments().read()
+        assertEquals(0.0, empty.sampleVariance, delta)
+        assertEquals(0.0, empty.sampleStdDev, delta)
+
+        val one = Moments().apply { update(42.0, 1.0) }.read()
+        assertEquals(0.0, one.sampleVariance, delta)
+        assertEquals(0.0, one.sampleStdDev, delta)
+    }
+
+    @Test
+    fun `unbiasedSkewness is zero with two or fewer samples`() {
+        val empty = Moments().read()
+        assertEquals(0.0, empty.unbiasedSkewness, delta)
+
+        val two = Moments().apply {
+            update(1.0, 1.0)
+            update(3.0, 1.0)
+        }.read()
+        assertEquals(0.0, two.unbiasedSkewness, delta)
+    }
+
+    @Test
+    fun `unbiasedSkewness scales biased skewness by sample-size factor`() {
+        val stat = Moments()
+        listOf(1.0, 1.0, 1.0, 2.0, 10.0).forEach { stat.update(it, 1.0) }
+        val r = stat.read()
+        val n = r.totalWeights
+        val expected = (sqrt(n * (n - 1)) / (n - 2)) * r.skewness
+        assertEquals(expected, r.unbiasedSkewness, delta)
+        assertTrue(r.unbiasedSkewness > r.skewness)
+    }
+
+    @Test
+    fun `unbiasedKurtosis is zero with three or fewer samples`() {
+        val three = Moments().apply {
+            update(1.0, 1.0)
+            update(2.0, 1.0)
+            update(3.0, 1.0)
+        }.read()
+        assertEquals(0.0, three.unbiasedKurtosis, delta)
+    }
+
+    @Test
+    fun `unbiasedKurtosis matches the algebraic definition`() {
+        val stat = Moments()
+        listOf(-2.0, -1.0, 0.0, 1.0, 2.0, 3.0).forEach { stat.update(it, 1.0) }
+        val r = stat.read()
+        val n = r.totalWeights
+        val expected = ((n - 1) / ((n - 2) * (n - 3))) * ((n + 1) * r.kurtosis + 6.0)
+        assertEquals(expected, r.unbiasedKurtosis, delta)
     }
 }

@@ -3,6 +3,8 @@ package com.eignex.kumulant.stat
 import com.eignex.kumulant.core.RateResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 private const val DELTA = 1e-9
@@ -84,6 +86,15 @@ class RateTest {
         val r = Rate().apply { update(60.0, T0) }
         val result = r.read(T1)
         assertEquals(3600.0, result.per(60.seconds), DELTA)
+    }
+
+    @Test
+    fun `per converts Hz to per-minute and per-hour`() {
+        val r = Rate().apply { update(2.0, T0) }
+        val result = r.read(T1)
+        assertEquals(2.0, result.rate, DELTA)
+        assertEquals(120.0, result.per(1.minutes), DELTA)
+        assertEquals(7200.0, result.per(1.hours), DELTA)
     }
 
     @Test
