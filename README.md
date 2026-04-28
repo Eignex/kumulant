@@ -7,10 +7,10 @@ Implement Ridge/Lasso
 histogram algos
 - [X] ddsketch
 - [X] frugal streaming
-- [ ] T digest
+- [X] T digest
 - [X] HDR
-- [ ] reservoir
-- [ ] linear
+- [X] reservoir
+- [X] linear
 
 cardinality
 - hyperloglog
