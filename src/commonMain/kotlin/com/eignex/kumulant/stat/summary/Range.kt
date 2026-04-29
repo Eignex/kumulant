@@ -3,6 +3,8 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.casMax
+import com.eignex.kumulant.stream.casMin
 import com.eignex.kumulant.stream.defaultStreamMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -26,13 +28,13 @@ class Range(
     private val max = mode.newDouble(Double.NEGATIVE_INFINITY)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (value < min.load()) min.store(value)
-        if (value > max.load()) max.store(value)
+        casMin(min, value)
+        casMax(max, value)
     }
 
     override fun merge(values: RangeResult) {
-        if (values.min < min.load()) min.store(values.min)
-        if (values.max > max.load()) max.store(values.max)
+        casMin(min, values.min)
+        casMax(max, values.max)
     }
 
     override fun reset() {

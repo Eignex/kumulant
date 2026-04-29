@@ -3,6 +3,7 @@ package com.eignex.kumulant.stream
 import com.eignex.kumulant.stat.summary.Max
 import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.Min
+import com.eignex.kumulant.stat.summary.Range
 import com.eignex.kumulant.stat.summary.Variance
 import kotlin.math.abs
 import kotlin.test.Test
@@ -86,6 +87,19 @@ class ConcurrentStreamModesTest {
             max.update((t * iters + i).toDouble())
         }
         assertEquals((threads * iters - 1).toDouble(), max.read().max, 0.0)
+    }
+
+    @Test
+    fun `Range under AtomicMode captures the true min and max under contention`() {
+        val range = Range(AtomicMode)
+        val threads = 8
+        val iters = 5_000
+        runConcurrently(threads, iters) { t, i ->
+            range.update((t * iters + i).toDouble())
+        }
+        val result = range.read()
+        assertEquals(0.0, result.min, 0.0)
+        assertEquals((threads * iters - 1).toDouble(), result.max, 0.0)
     }
 
     @Test
