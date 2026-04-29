@@ -92,7 +92,7 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  */
 class ReservoirHistogram(
     val capacity: Int = 1024,
-    val seed: Long = 0L,
+    val seed: Long = Random.Default.nextLong(),
     val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<ReservoirResult> {
 
