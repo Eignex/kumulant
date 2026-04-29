@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.casMin
 import com.eignex.kumulant.stream.defaultStreamMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -22,11 +23,11 @@ class Min(
     private val value = mode.newDouble(Double.POSITIVE_INFINITY)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (value < this.value.load()) this.value.store(value)
+        casMin(this.value, value)
     }
 
     override fun merge(values: MinResult) {
-        if (values.min < value.load()) value.store(values.min)
+        casMin(value, values.min)
     }
 
     override fun reset() {

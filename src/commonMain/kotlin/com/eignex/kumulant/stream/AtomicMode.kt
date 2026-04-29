@@ -66,6 +66,9 @@ value class AtomicDouble(val ref: KAtomicLong) : StreamDouble {
             currentBits = witness
         }
     }
+
+    override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean =
+        ref.compareAndSet(expectedValue.toRawBits(), newValue.toRawBits())
 }
 
 /** Platform-atomic [StreamLong]. */

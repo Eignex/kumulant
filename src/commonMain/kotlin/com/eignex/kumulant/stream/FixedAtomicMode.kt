@@ -53,4 +53,7 @@ class FixedAtomicDouble(
     override fun getAndAdd(delta: Double): Double {
         return ref.fetchAndAdd((delta * scaleLong).toLong()) * invScale
     }
+
+    override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean =
+        ref.compareAndSet((expectedValue * scaleLong).toLong(), (newValue * scaleLong).toLong())
 }

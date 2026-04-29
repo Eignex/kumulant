@@ -50,6 +50,12 @@ value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
         ref.add(delta)
         return ret
     }
+
+    override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean {
+        throw UnsupportedOperationException(
+            "DoubleAdder does not support compareAndSet; use AtomicMode for CAS-based stats"
+        )
+    }
 }
 
 /** [StreamLong] backed by a striped `java.util.concurrent.atomic.LongAdder`. */

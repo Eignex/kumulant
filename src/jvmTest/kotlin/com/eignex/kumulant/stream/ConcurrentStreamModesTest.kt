@@ -1,5 +1,7 @@
 package com.eignex.kumulant.stream
 
+import com.eignex.kumulant.stat.summary.Max
+import com.eignex.kumulant.stat.summary.Min
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -49,6 +51,28 @@ class ConcurrentStreamModesTest {
             check(seen >= 1L) { "addAndGet returned $seen but all prior adds should have made it >= 1" }
         }
         assertEquals((threads * iters).toLong(), l.load())
+    }
+
+    @Test
+    fun `Min under AtomicMode captures the true minimum under contention`() {
+        val min = Min(AtomicMode)
+        val threads = 8
+        val iters = 5_000
+        runConcurrently(threads, iters) { t, i ->
+            min.update((t * iters + i).toDouble())
+        }
+        assertEquals(0.0, min.read().min, 0.0)
+    }
+
+    @Test
+    fun `Max under AtomicMode captures the true maximum under contention`() {
+        val max = Max(AtomicMode)
+        val threads = 8
+        val iters = 5_000
+        runConcurrently(threads, iters) { t, i ->
+            max.update((t * iters + i).toDouble())
+        }
+        assertEquals((threads * iters - 1).toDouble(), max.read().max, 0.0)
     }
 
     @Test

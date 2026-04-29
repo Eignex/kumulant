@@ -37,6 +37,9 @@ interface StreamDouble {
 
     /** Add [delta] and return the value before the add. */
     fun getAndAdd(delta: Double): Double
+
+    /** Atomic compare-and-set on the IEEE-754 bit pattern; returns true iff the swap happened. */
+    fun compareAndSet(expectedValue: Double, newValue: Double): Boolean
 }
 
 /** Mutable `Long` cell with mode-appropriate read/write/add semantics. */

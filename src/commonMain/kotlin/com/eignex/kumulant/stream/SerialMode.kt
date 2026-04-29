@@ -61,6 +61,14 @@ class SerialDouble(var ref: Double) : StreamDouble {
         ref += delta
         return ret
     }
+
+    override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean {
+        if (ref.toRawBits() == expectedValue.toRawBits()) {
+            ref = newValue
+            return true
+        }
+        return false
+    }
 }
 
 /** Plain-`var` [StreamRef] implementation used by [SerialMode]. */

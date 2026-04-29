@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.defaultStreamMode
 import com.eignex.kumulant.stream.splitmix64
 import kotlinx.serialization.SerialName
@@ -70,14 +71,6 @@ class HyperLogLogPlus(
         val rho = (w.countLeadingZeroBits().coerceAtMost(64 - precision)) + 1
         casMax(registers[idx], rho.toLong())
         totalSeen.add(1L)
-    }
-
-    private fun casMax(cell: StreamLong, candidate: Long) {
-        while (true) {
-            val current = cell.load()
-            if (candidate <= current) return
-            if (cell.compareAndSet(current, candidate)) return
-        }
     }
 
     override fun merge(values: HyperLogLogResult) {
