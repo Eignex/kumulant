@@ -21,7 +21,7 @@ import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.stat.regression.Covariance
 
-import com.eignex.kumulant.stat.cardinality.HyperLogLogPlus
+import com.eignex.kumulant.stat.cardinality.HyperLogLog
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 
 import com.eignex.kumulant.stat.cardinality.LinearCounting
@@ -699,7 +699,7 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `update fans out to all child stats`() {
-        val hllKey = StatKey<HyperLogLogResult>("hll") to HyperLogLogPlus(precision = 10)
+        val hllKey = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
         val lcKey = StatKey<LinearCountingResult>("lc") to LinearCounting(bits = 1024)
 
         val group = DiscreteStatGroup(hllKey, lcKey)
@@ -713,7 +713,7 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `read returns GroupResult keyed by name`() {
-        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLogPlus(precision = 10)
+        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
         val group = DiscreteStatGroup(key)
         group.update(1L)
         val r = group.read()
@@ -722,11 +722,11 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `merge dispatches per stat`() {
-        val hllKey = StatKey<HyperLogLogResult>("hll") to HyperLogLogPlus(precision = 10)
+        val hllKey = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
         val target = DiscreteStatGroup(hllKey)
         target.update(1L)
 
-        val sourceKey = StatKey<HyperLogLogResult>("hll") to HyperLogLogPlus(precision = 10)
+        val sourceKey = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
         val source = DiscreteStatGroup(sourceKey)
         for (i in 100L..200L) source.update(i)
 
@@ -737,7 +737,7 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `reset clears all child stats`() {
-        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLogPlus(precision = 10)
+        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
         val group = DiscreteStatGroup(key)
         for (i in 1L..100L) group.update(i)
         group.reset()
@@ -746,7 +746,7 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `create returns an independent group`() {
-        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLogPlus(precision = 10)
+        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
         val original = DiscreteStatGroup(key)
         for (i in 1L..50L) original.update(i)
 
@@ -784,7 +784,7 @@ class DiscreteStatGroupTest {
     @Test
     fun `StatSchema discrete delegate exposes typed keys`() {
         class Schema : StatSchema() {
-            val users by discrete(HyperLogLogPlus(precision = 10))
+            val users by discrete(HyperLogLog(precision = 10))
             val sessions by discrete(LinearCounting(bits = 1024))
         }
 
@@ -806,7 +806,7 @@ class DiscreteListStatsTest {
     @Test
     fun `update forwards to all child stats`() {
         val stats = DiscreteListStats<Result>(
-            "hll" to HyperLogLogPlus(precision = 10),
+            "hll" to HyperLogLog(precision = 10),
             "lc" to LinearCounting(bits = 1024),
         )
         for (i in 1L..100L) stats.update(i)
@@ -821,8 +821,8 @@ class DiscreteListStatsTest {
     fun `duplicate names throw at construction`() {
         assertFailsWith<IllegalArgumentException> {
             DiscreteListStats<HyperLogLogResult>(
-                "a" to HyperLogLogPlus(precision = 10),
-                "a" to HyperLogLogPlus(precision = 10),
+                "a" to HyperLogLog(precision = 10),
+                "a" to HyperLogLog(precision = 10),
             )
         }
     }
@@ -830,26 +830,26 @@ class DiscreteListStatsTest {
     @Test
     fun `discreteListStats factory auto-names by simpleName`() {
         val stats = discreteListStats<Result>(
-            HyperLogLogPlus(precision = 10),
+            HyperLogLog(precision = 10),
             LinearCounting(bits = 1024),
         )
         val map = stats.read().toMap()
-        assertEquals(setOf("HyperLogLogPlus", "LinearCounting"), map.keys)
+        assertEquals(setOf("HyperLogLog", "LinearCounting"), map.keys)
     }
 
     @Test
     fun `discreteListStats factory rejects duplicate auto-names`() {
         assertFailsWith<IllegalArgumentException> {
             discreteListStats<HyperLogLogResult>(
-                HyperLogLogPlus(precision = 10),
-                HyperLogLogPlus(precision = 10),
+                HyperLogLog(precision = 10),
+                HyperLogLog(precision = 10),
             )
         }
     }
 
     @Test
     fun `reset clears all child stats`() {
-        val stats = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLogPlus(precision = 10))
+        val stats = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLog(precision = 10))
         for (i in 1L..50L) stats.update(i)
         stats.reset()
         val first = assertIs<HyperLogLogResult>(stats.read().results[0])
@@ -858,7 +858,7 @@ class DiscreteListStatsTest {
 
     @Test
     fun `create returns independent list`() {
-        val original = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLogPlus(precision = 10))
+        val original = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLog(precision = 10))
         for (i in 1L..50L) original.update(i)
 
         val clone = original.create()
@@ -872,10 +872,10 @@ class DiscreteListStatsTest {
 
     @Test
     fun `merge combines each position`() {
-        val target = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLogPlus(precision = 10))
+        val target = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLog(precision = 10))
         for (i in 1L..50L) target.update(i)
 
-        val source = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLogPlus(precision = 10))
+        val source = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLog(precision = 10))
         for (i in 100L..200L) source.update(i)
 
         target.merge(source.read())

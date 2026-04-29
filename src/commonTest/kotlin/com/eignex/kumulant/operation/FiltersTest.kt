@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stat.cardinality.HyperLogLogPlus
+import com.eignex.kumulant.stat.cardinality.HyperLogLog
 
 import com.eignex.kumulant.stat.cardinality.LinearCounting
 
@@ -55,7 +55,7 @@ class FiltersTest {
 
     @Test
     fun `discrete filter gates updates`() {
-        val stat = HyperLogLogPlus(precision = 10).filter { it >= 0L }
+        val stat = HyperLogLog(precision = 10).filter { it >= 0L }
         for (i in -50L..50L) stat.update(i)
         val seen = stat.read().estimate
         assertTrue(seen in 45.0..56.0, "estimate=$seen")

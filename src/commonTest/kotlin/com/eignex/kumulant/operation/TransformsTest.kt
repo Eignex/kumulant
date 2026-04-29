@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stat.cardinality.HyperLogLogPlus
+import com.eignex.kumulant.stat.cardinality.HyperLogLog
 
 import com.eignex.kumulant.stat.cardinality.LinearCounting
 
@@ -65,7 +65,7 @@ class TransformsTest {
 
     @Test
     fun `discrete transformValue collapses inputs into buckets`() {
-        val stat = HyperLogLogPlus(precision = 10).transformValue { it / 10L }
+        val stat = HyperLogLog(precision = 10).transformValue { it / 10L }
         for (i in 0L..99L) stat.update(i)
         val seen = stat.read().estimate
         assertTrue(seen in 8.0..12.0, "estimate=$seen")
@@ -96,7 +96,7 @@ class BridgesTest {
 
     @Test
     fun `discrete asSeries casts Double to Long via truncation`() {
-        val stat = HyperLogLogPlus(precision = 10).asSeries()
+        val stat = HyperLogLog(precision = 10).asSeries()
         // 1.5, 2.7, 2.9 truncate to 1L, 2L, 2L → 2 distinct keys
         stat.update(1.5)
         stat.update(2.7)
@@ -116,7 +116,7 @@ class BridgesTest {
 
     @Test
     fun `discrete asSeries composes with atY for paired streams`() {
-        val pairedHll = HyperLogLogPlus(precision = 10).asSeries().atY()
+        val pairedHll = HyperLogLog(precision = 10).asSeries().atY()
         for (i in 1L..50L) pairedHll.update(0.0, i.toDouble())
         // 50 distinct y values regardless of x
         assertTrue(pairedHll.read().estimate > 30.0)
@@ -124,7 +124,7 @@ class BridgesTest {
 
     @Test
     fun `discrete asSeries create produces independent stat`() {
-        val template = HyperLogLogPlus(precision = 10).asSeries()
+        val template = HyperLogLog(precision = 10).asSeries()
         val fresh = template.create()
         for (i in 1..100) fresh.update(i.toDouble())
         assertEquals(0.0, template.read().estimate)

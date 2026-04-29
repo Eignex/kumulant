@@ -8,11 +8,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-class HyperLogLogPlusTest {
+class HyperLogLogTest {
 
     @Test
     fun `empty stat estimates zero`() {
-        val hll = HyperLogLogPlus(precision = 14)
+        val hll = HyperLogLog(precision = 14)
         val r = hll.read()
         assertEquals(0.0, r.estimate)
         assertEquals(0L, r.totalSeen)
@@ -20,7 +20,7 @@ class HyperLogLogPlusTest {
 
     @Test
     fun `single key estimates near one`() {
-        val hll = HyperLogLogPlus(precision = 14)
+        val hll = HyperLogLog(precision = 14)
         hll.update(42L)
         val r = hll.read()
         assertTrue(abs(r.estimate - 1.0) < 0.5, "estimate=${r.estimate}")
@@ -28,7 +28,7 @@ class HyperLogLogPlusTest {
 
     @Test
     fun `duplicate keys do not inflate estimate`() {
-        val hll = HyperLogLogPlus(precision = 14)
+        val hll = HyperLogLog(precision = 14)
         repeat(1000) { hll.update(7L) }
         val r = hll.read()
         assertTrue(r.estimate < 2.0, "estimate=${r.estimate}")
@@ -36,7 +36,7 @@ class HyperLogLogPlusTest {
 
     @Test
     fun `1000 unique keys within expected error at precision 14`() {
-        val hll = HyperLogLogPlus(precision = 14)
+        val hll = HyperLogLog(precision = 14)
         for (i in 1..1000) hll.update(i.toLong())
         val r = hll.read()
         val rel = abs(r.estimate - 1000.0) / 1000.0
@@ -45,7 +45,7 @@ class HyperLogLogPlusTest {
 
     @Test
     fun `100000 unique keys within expected error at precision 14`() {
-        val hll = HyperLogLogPlus(precision = 14)
+        val hll = HyperLogLog(precision = 14)
         for (i in 1..100_000) hll.update(i.toLong())
         val r = hll.read()
         val rel = abs(r.estimate - 100_000.0) / 100_000.0
@@ -55,11 +55,11 @@ class HyperLogLogPlusTest {
 
     @Test
     fun `merge of two halves matches full stream`() {
-        val full = HyperLogLogPlus(precision = 12)
+        val full = HyperLogLog(precision = 12)
         for (i in 1..20_000) full.update(i.toLong())
 
-        val a = HyperLogLogPlus(precision = 12)
-        val b = HyperLogLogPlus(precision = 12)
+        val a = HyperLogLog(precision = 12)
+        val b = HyperLogLog(precision = 12)
         for (i in 1..10_000) a.update(i.toLong())
         for (i in 10_001..20_000) b.update(i.toLong())
 
@@ -72,7 +72,7 @@ class HyperLogLogPlusTest {
 
     @Test
     fun `reset clears registers and counter`() {
-        val hll = HyperLogLogPlus(precision = 8)
+        val hll = HyperLogLog(precision = 8)
         for (i in 1..500) hll.update(i.toLong())
         hll.reset()
         val r = hll.read()
@@ -82,7 +82,7 @@ class HyperLogLogPlusTest {
 
     @Test
     fun `create produces independent stat`() {
-        val hll1 = HyperLogLogPlus(precision = 10)
+        val hll1 = HyperLogLog(precision = 10)
         val hll2 = hll1.create()
         for (i in 1..100) hll2.update(i.toLong())
         assertEquals(0.0, hll1.read().estimate)
@@ -91,21 +91,21 @@ class HyperLogLogPlusTest {
 
     @Test
     fun `merge rejects mismatched precision`() {
-        val a = HyperLogLogPlus(precision = 10)
-        val b = HyperLogLogPlus(precision = 12)
+        val a = HyperLogLog(precision = 10)
+        val b = HyperLogLog(precision = 12)
         b.update(1L)
         assertFailsWith<IllegalArgumentException> { a.merge(b.read()) }
     }
 
     @Test
     fun `invalid precision throws`() {
-        assertFailsWith<IllegalArgumentException> { HyperLogLogPlus(precision = 3) }
-        assertFailsWith<IllegalArgumentException> { HyperLogLogPlus(precision = 19) }
+        assertFailsWith<IllegalArgumentException> { HyperLogLog(precision = 3) }
+        assertFailsWith<IllegalArgumentException> { HyperLogLog(precision = 19) }
     }
 
     @Test
     fun `zero weight update is ignored`() {
-        val hll = HyperLogLogPlus(precision = 8)
+        val hll = HyperLogLog(precision = 8)
         hll.update(1L, weight = 0.0)
         assertEquals(0.0, hll.read().estimate)
     }
@@ -114,8 +114,8 @@ class HyperLogLogPlusTest {
     fun `splitmix-prehashed input gives same result as raw`() {
         // Sanity check: distribution quality is good for sequential input thanks to
         // internal splitmix; pre-hashing externally still yields a valid estimate.
-        val raw = HyperLogLogPlus(precision = 12)
-        val hashed = HyperLogLogPlus(precision = 12)
+        val raw = HyperLogLog(precision = 12)
+        val hashed = HyperLogLog(precision = 12)
         for (i in 1..5000) {
             raw.update(i.toLong())
             hashed.update(splitmix64(i.toLong()))

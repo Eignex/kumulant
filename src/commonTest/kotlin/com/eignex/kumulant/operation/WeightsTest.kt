@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stat.cardinality.HyperLogLogPlus
+import com.eignex.kumulant.stat.cardinality.HyperLogLog
 
 import com.eignex.kumulant.stat.summary.Sum
 
@@ -45,14 +45,14 @@ class WeightsTest {
 
     @Test
     fun `discrete withWeight at zero drops all updates`() {
-        val stat = HyperLogLogPlus(precision = 10).withWeight(0.0)
+        val stat = HyperLogLog(precision = 10).withWeight(0.0)
         for (i in 1L..100L) stat.update(i, weight = 1.0)
         assertEquals(0.0, stat.read().estimate)
     }
 
     @Test
     fun `discrete withWeight overrides caller weight`() {
-        val stat = HyperLogLogPlus(precision = 10).withWeight(1.0)
+        val stat = HyperLogLog(precision = 10).withWeight(1.0)
         for (i in 1L..50L) stat.update(i, weight = 0.0) // caller weight ignored
         assertTrue(stat.read().estimate > 30.0)
     }

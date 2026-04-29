@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stream
 
-import com.eignex.kumulant.stat.cardinality.HyperLogLogPlus
+import com.eignex.kumulant.stat.cardinality.HyperLogLog
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -94,8 +94,8 @@ class AdderModeTest {
     }
 
     @Test
-    fun `HyperLogLogPlus on AdderMode fails fast on update`() {
-        val hll = HyperLogLogPlus(precision = 10, mode = AdderMode)
+    fun `HyperLogLog on AdderMode fails fast on update`() {
+        val hll = HyperLogLog(precision = 10, mode = AdderMode)
         assertFailsWith<UnsupportedOperationException> {
             hll.update(42L)
         }

@@ -28,22 +28,28 @@ data class HyperLogLogResult(
 ) : Result
 
 /**
- * HyperLogLog++ cardinality estimator with a small-range linear-counting fallback.
+ * HyperLogLog cardinality estimator with a small-range linear-counting fallback.
  *
  * Allocates `m = 2^precision` byte-sized registers and uses the standard
- * `α_m · m² / Σ 2^-Mj` estimator, switching to linear counting on small inputs to
- * eliminate the well-known HLL bias near zero. Inputs are run through SplitMix64
- * before bucketing so callers can pass raw IDs without worrying about hash quality.
+ * `α_m · m² / Σ 2^-Mj` estimator, switching to linear counting on small inputs
+ * (`rawE ≤ 2.5·m` with at least one empty register) to eliminate the well-known
+ * HLL bias near zero. Inputs are run through SplitMix64 before bucketing so
+ * callers can pass raw IDs without worrying about hash quality.
  *
  * Memory: `m` Longs (registers) plus a counter. Standard error is ≈ `1.04/√m`
  * (≈ 0.81% at the default `precision = 14`). 64-bit hashing makes the original
  * HLL large-range correction unnecessary.
  *
- * The full HLL++ sparse representation is not implemented — at low cardinalities
- * the linear-counting fallback already gives near-exact estimates without the
- * memory savings.
+ * This is plain HLL with the standard small-range linear-counting fix — *not*
+ * HLL++. The Heule et al. (2013) empirical bias-correction tables and tighter
+ * per-precision thresholds are not implemented (they work as a pair, and
+ * porting half makes medium-range accuracy worse). Expect 3–5% downward bias
+ * on cardinalities in the range `m … 5·m`; outside that window error stays
+ * within the asymptotic `1.04/√m`. The sparse representation is also not
+ * implemented — the linear-counting fallback already gives near-exact
+ * estimates at low cardinalities.
  */
-class HyperLogLogPlus(
+class HyperLogLog(
     val precision: Int = 14,
     val mode: StreamMode = defaultStreamMode,
 ) : DiscreteStat<HyperLogLogResult> {
@@ -113,5 +119,5 @@ class HyperLogLogPlus(
         )
     }
 
-    override fun create(mode: StreamMode?) = HyperLogLogPlus(precision, mode ?: this.mode)
+    override fun create(mode: StreamMode?) = HyperLogLog(precision, mode ?: this.mode)
 }

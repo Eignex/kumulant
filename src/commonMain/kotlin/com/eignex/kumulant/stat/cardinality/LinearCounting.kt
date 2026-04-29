@@ -32,7 +32,7 @@ data class LinearCountingResult(
  * For each input, sets one bit indexed by `splitmix64(value) mod bits`. The cardinality
  * estimate is `-bits · ln(unsetBits / bits)`. Cheap and accurate for cardinalities up to
  * roughly [bits]; degrades sharply (and saturates to infinity) when the bitset fills.
- * Prefer [HyperLogLogPlus] when the cardinality range is unknown.
+ * Prefer [HyperLogLog] when the cardinality range is unknown.
  *
  * [bits] must be a power of two and a multiple of 64. Memory is `bits / 64` Longs.
  * Mergeable via word-wise OR.
