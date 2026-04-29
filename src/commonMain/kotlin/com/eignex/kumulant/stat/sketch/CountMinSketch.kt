@@ -72,7 +72,7 @@ class CountMinSketch(
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        val w = weight.toLong()
+        val w = kotlin.math.round(weight).toLong()
         if (w <= 0L) return
         for (row in 0 until depth) {
             val idx = (splitmix64(value xor rowSalts[row]) and mask).toInt()
