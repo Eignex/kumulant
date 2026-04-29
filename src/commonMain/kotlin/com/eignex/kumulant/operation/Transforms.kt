@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
@@ -23,6 +24,12 @@ fun interface PairTransform {
 fun interface VectorTransform {
     /** Map [vector] to the vector forwarded downstream. */
     fun apply(vector: DoubleArray): DoubleArray
+}
+
+/** Long-to-Long transform applied pre-update. */
+fun interface LongTransform {
+    /** Map [value] to the Long forwarded downstream. */
+    fun apply(value: Long): Long
 }
 
 /** Adapter implementing [SeriesStat.transformValue]. */
@@ -68,6 +75,20 @@ class TransformVectorStat<R : Result>(
     }
 }
 
+/** Adapter implementing [DiscreteStat.transformValue]. */
+class TransformLongStat<R : Result>(
+    private val delegate: DiscreteStat<R>,
+    private val transform: LongTransform
+) : DiscreteStat<R>, Stat<R> by delegate {
+    override fun update(value: Long, timestampNanos: Long, weight: Double) {
+        delegate.update(transform.apply(value), timestampNanos, weight)
+    }
+
+    override fun create(mode: StreamMode?): DiscreteStat<R> {
+        return TransformLongStat(delegate.create(mode), transform)
+    }
+}
+
 /** Apply [transform] to each incoming value before update. */
 fun <R : Result> SeriesStat<R>.transformValue(transform: ValueTransform): SeriesStat<R> = TransformValueStat(
     this,
@@ -98,3 +119,12 @@ fun <R : Result> VectorStat<R>.transformVector(transform: VectorTransform): Vect
     this,
     transform
 )
+
+/** Apply [transform] to each incoming Long value before update. */
+fun <R : Result> DiscreteStat<R>.transformValue(transform: LongTransform): DiscreteStat<R> = TransformLongStat(
+    this,
+    transform
+)
+
+/** Replace the incoming Long value with the constant [value] on every update. */
+fun <R : Result> DiscreteStat<R>.withValue(value: Long): DiscreteStat<R> = transformValue { value }

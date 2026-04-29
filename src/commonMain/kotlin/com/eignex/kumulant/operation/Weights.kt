@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
@@ -15,6 +16,9 @@ fun <R : Result> PairedStat<R>.withWeight(weight: Double): PairedStat<R> = WithW
 
 /** Vector-stat counterpart of [SeriesStat.withWeight]. */
 fun <R : Result> VectorStat<R>.withWeight(weight: Double): VectorStat<R> = WithWeightVectorStat(this, weight)
+
+/** Discrete-stat counterpart of [SeriesStat.withWeight]. */
+fun <R : Result> DiscreteStat<R>.withWeight(weight: Double): DiscreteStat<R> = WithWeightDiscreteStat(this, weight)
 
 /** Adapter implementing the series variant of [withWeight]. */
 class WithWeightStat<R : Result>(
@@ -55,5 +59,19 @@ class WithWeightVectorStat<R : Result>(
 
     override fun create(mode: StreamMode?): VectorStat<R> {
         return WithWeightVectorStat(delegate.create(mode), weight)
+    }
+}
+
+/** Adapter implementing the discrete variant of [withWeight]. */
+class WithWeightDiscreteStat<R : Result>(
+    private val delegate: DiscreteStat<R>,
+    private val weight: Double
+) : DiscreteStat<R>, Stat<R> by delegate {
+    override fun update(value: Long, timestampNanos: Long, weight: Double) {
+        delegate.update(value, timestampNanos, this.weight)
+    }
+
+    override fun create(mode: StreamMode?): DiscreteStat<R> {
+        return WithWeightDiscreteStat(delegate.create(mode), weight)
     }
 }

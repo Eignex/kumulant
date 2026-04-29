@@ -71,7 +71,7 @@ class ListStats<R : Result>(
 }
 
 /** Auto-named [ListStats]: each stat keyed by its class `simpleName`. */
-fun <R : Result> listStats(
+fun <R : Result> seriesListStats(
     vararg stats: SeriesStat<out R>,
     mode: StreamMode? = null,
 ): ListStats<R> = ListStats(stats.map { autoName(it) to it }, mode)
@@ -133,5 +133,34 @@ fun <R : Result> vectorListStats(
     vararg stats: VectorStat<out R>,
     mode: StreamMode? = null,
 ): VectorListStats<R> = VectorListStats(stats.map { autoName(it) to it }, mode)
+
+/** Discrete-input counterpart of [ListStats]. */
+class DiscreteListStats<R : Result>(
+    entries: List<Pair<String, DiscreteStat<out R>>>,
+    mode: StreamMode? = null,
+) : AbstractListStats<R, DiscreteStat<out R>>(entries, mode, "DiscreteListStats"),
+    DiscreteStat<ResultList<R>> {
+
+    constructor(vararg entries: Pair<String, DiscreteStat<out R>>, mode: StreamMode? = null) :
+        this(entries.toList(), mode)
+
+    override fun update(value: Long, timestampNanos: Long, weight: Double) {
+        for ((_, stat) in entries) stat.update(value, timestampNanos, weight)
+    }
+
+    override fun create(mode: StreamMode?): DiscreteStat<ResultList<R>> {
+        val effectiveMode = mode ?: this.mode
+        return DiscreteListStats(
+            entries.map { (name, stat) -> name to stat.create(effectiveMode) },
+            effectiveMode,
+        )
+    }
+}
+
+/** Auto-named [DiscreteListStats]: each stat keyed by its class `simpleName`. */
+fun <R : Result> discreteListStats(
+    vararg stats: DiscreteStat<out R>,
+    mode: StreamMode? = null,
+): DiscreteListStats<R> = DiscreteListStats(stats.map { autoName(it) to it }, mode)
 
 private fun autoName(stat: Any): String = stat::class.simpleName ?: "Stat"

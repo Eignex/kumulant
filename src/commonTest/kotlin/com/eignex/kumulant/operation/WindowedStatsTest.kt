@@ -5,6 +5,7 @@ import com.eignex.kumulant.stat.Sum
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
@@ -150,6 +151,19 @@ class WindowedStatsTest {
         w.update(doubleArrayOf(1.0, 4.0), T3)
         w.update(doubleArrayOf(1.0, 6.0), T9)
         assertEquals(10.0, w.read(T9).sum, DELTA)
+    }
+
+    @Test
+    fun `discrete windowed only counts in-window keys`() {
+        val w = com.eignex.kumulant.stat.LinearCounting(bits = 4096)
+            .windowed(duration = 10.seconds)
+        w.update(1L, T0)         // expires before T11
+        w.update(2L, T3)
+        w.update(3L, T9)
+        w.update(4L, T10)
+        val seen = w.read(T11).estimate
+        // Only 3 keys (2L, 3L, 4L) remain in the [T1, T11] window.
+        assertTrue(seen in 2.0..4.0, "estimate=$seen")
     }
 
     @Test

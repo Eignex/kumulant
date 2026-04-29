@@ -83,27 +83,34 @@ private fun mergeEntry(
 /**
  * Declarative, typed schema for a group of stats.
  *
- * Subclass and declare stats via the [stat], [pairedStat], [vectorStat], and [group]
+ * Subclass and declare stats via the [series], [paired], [vector], [discrete], and [group]
  * delegates; each property exposes a [StatKey] for typed retrieval from a [GroupResult].
  */
 abstract class StatSchema {
     internal val specs = mutableListOf<StatSpec<*, *, *>>()
 
-    protected fun <R : Result, S : SeriesStat<R>> stat(stat: S) =
+    protected fun <R : Result, S : SeriesStat<R>> series(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
             specs.add(StatSpec(key, stat))
             ReadOnlyProperty { _, _ -> key }
         }
 
-    protected fun <R : Result, S : PairedStat<R>> pairedStat(stat: S) =
+    protected fun <R : Result, S : PairedStat<R>> paired(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
             specs.add(StatSpec(key, stat))
             ReadOnlyProperty { _, _ -> key }
         }
 
-    protected fun <R : Result, S : VectorStat<R>> vectorStat(stat: S) =
+    protected fun <R : Result, S : VectorStat<R>> vector(stat: S) =
+        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
+            val key = StatKey<R>(property.name)
+            specs.add(StatSpec(key, stat))
+            ReadOnlyProperty { _, _ -> key }
+        }
+
+    protected fun <R : Result, S : DiscreteStat<R>> discrete(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
             specs.add(StatSpec(key, stat))
@@ -221,6 +228,33 @@ class VectorStatGroup(
         val effectiveMode = mode ?: this.mode
         val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveMode)) }
         return VectorStatGroup(stats = newStats, mode = effectiveMode)
+    }
+}
+
+/** [StatGroup] variant over discrete (Long) inputs. */
+class DiscreteStatGroup(
+    stats: List<StatSpec<*, out DiscreteStat<*>, *>>,
+    mode: StreamMode? = null,
+) : AbstractStatGroup<DiscreteStat<*>>(stats, mode), DiscreteStat<GroupResult> {
+
+    constructor(
+        vararg stats: StatSpec<*, out DiscreteStat<*>, *>,
+        mode: StreamMode? = null
+    ) : this(stats = stats.asList(), mode = mode)
+
+    constructor(
+        vararg stats: Pair<StatKey<*>, DiscreteStat<*>>,
+        mode: StreamMode? = null
+    ) : this(stats = stats.map { toSpec(it.first, it.second) }, mode = mode)
+
+    override fun update(value: Long, timestampNanos: Long, weight: Double) {
+        for ((_, stat) in stats) stat.update(value, timestampNanos, weight)
+    }
+
+    override fun create(mode: StreamMode?): DiscreteStat<GroupResult> {
+        val effectiveMode = mode ?: this.mode
+        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveMode)) }
+        return DiscreteStatGroup(stats = newStats, mode = effectiveMode)
     }
 }
 

@@ -194,18 +194,18 @@ class StatGroupTest {
     @Test
     fun `stat schema helper supports namespaced composition and lifecycle operations`() {
         class HttpMetrics : StatSchema() {
-            val requests by stat(Sum().withValue(1.0).withWeight(1.0))
-            val latencyMsTotal by stat(Sum())
+            val requests by series(Sum().withValue(1.0).withWeight(1.0))
+            val latencyMsTotal by series(Sum())
         }
 
         class DbMetrics : StatSchema() {
-            val requests by stat(Sum().withValue(1.0).withWeight(1.0))
-            val latencyMsTotal by stat(Sum())
+            val requests by series(Sum().withValue(1.0).withWeight(1.0))
+            val latencyMsTotal by series(Sum())
         }
 
         class ServiceMetrics : StatSchema() {
-            val requests by stat(Sum().withValue(1.0).withWeight(1.0))
-            val billableMsTotal by stat(Sum())
+            val requests by series(Sum().withValue(1.0).withWeight(1.0))
+            val billableMsTotal by series(Sum())
             val http by group(HttpMetrics())
             val db by group(DbMetrics())
         }

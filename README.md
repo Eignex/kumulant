@@ -4,17 +4,11 @@ TODO:
 
 Implement Ridge/Lasso
 
-histogram algos
-- [X] ddsketch
-- [X] frugal streaming
-- [X] T digest
-- [X] HDR
-- [X] reservoir
-- [X] linear
-
-cardinality
-- hyperloglog
-- linear counting (bitset)
+discrete stats (DiscreteStat<R>)
+- heavy hitters (Misra-Gries / Space-Saving)
+- count-min sketch
+- bloom filter
+- minhash
 
 pgbm stuff
 - vector of variance

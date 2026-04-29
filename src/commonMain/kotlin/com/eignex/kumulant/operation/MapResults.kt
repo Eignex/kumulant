@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
@@ -28,6 +29,12 @@ fun <R1 : Result, R2 : Result> VectorStat<R1>.mapResult(
     forward: (R1) -> R2,
     reverse: (R2) -> R1
 ): VectorStat<R2> = MapResultVectorStat(this, forward, reverse)
+
+/** Discrete-stat counterpart of [SeriesStat.mapResult]. */
+fun <R1 : Result, R2 : Result> DiscreteStat<R1>.mapResult(
+    forward: (R1) -> R2,
+    reverse: (R2) -> R1
+): DiscreteStat<R2> = MapResultDiscreteStat(this, forward, reverse)
 
 /** Adapter implementing the series-stat variant of [mapResult]. */
 class MapResultSeriesStat<R1 : Result, R2 : Result>(
@@ -107,5 +114,32 @@ class MapResultVectorStat<R1 : Result, R2 : Result>(
 
     override fun create(mode: StreamMode?): VectorStat<R2> {
         return MapResultVectorStat(delegate.create(mode), forward, reverse)
+    }
+}
+
+/** Adapter implementing the discrete-stat variant of [mapResult]. */
+class MapResultDiscreteStat<R1 : Result, R2 : Result>(
+    private val delegate: DiscreteStat<R1>,
+    private val forward: (R1) -> R2,
+    private val reverse: (R2) -> R1
+) : DiscreteStat<R2> {
+    override fun update(value: Long, timestampNanos: Long, weight: Double) {
+        delegate.update(value, timestampNanos, weight)
+    }
+
+    override fun merge(values: R2) {
+        delegate.merge(reverse(values))
+    }
+
+    override fun reset() {
+        delegate.reset()
+    }
+
+    override fun read(timestampNanos: Long): R2 {
+        return forward(delegate.read(timestampNanos))
+    }
+
+    override fun create(mode: StreamMode?): DiscreteStat<R2> {
+        return MapResultDiscreteStat(delegate.create(mode), forward, reverse)
     }
 }

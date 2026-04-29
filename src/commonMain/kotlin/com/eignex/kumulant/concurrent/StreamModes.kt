@@ -62,6 +62,9 @@ interface StreamLong {
 
     /** Add [delta] and return the value before the add. */
     fun getAndAdd(delta: Long): Long
+
+    /** Atomic compare-and-set; returns true iff the swap happened. */
+    fun compareAndSet(expectedValue: Long, newValue: Long): Boolean
 }
 
 /**
@@ -153,6 +156,14 @@ class SerialLong(var ref: Long) : StreamLong {
         val ret = ref
         ref += delta
         return ret
+    }
+
+    override fun compareAndSet(expectedValue: Long, newValue: Long): Boolean {
+        if (ref == expectedValue) {
+            ref = newValue
+            return true
+        }
+        return false
     }
 }
 
@@ -309,6 +320,10 @@ value class AtomicLong(val ref: KAtomicLong) : StreamLong {
 
     override fun getAndAdd(delta: Long): Long {
         return ref.fetchAndAdd(delta)
+    }
+
+    override fun compareAndSet(expectedValue: Long, newValue: Long): Boolean {
+        return ref.compareAndSet(expectedValue, newValue)
     }
 }
 

@@ -40,6 +40,22 @@ interface SeriesStat<R : Result> : Stat<R> {
     override fun create(mode: StreamMode?): SeriesStat<R>
 }
 
+/**
+ * Accumulator over a stream of discrete `Long` values — covers both opaque keys
+ * (cardinality, heavy hitters, Bloom filters) and integer-valued measurements
+ * (Poisson counts, time deltas, integer histograms).
+ */
+interface DiscreteStat<R : Result> : Stat<R> {
+    /** Record an observation with the given [weight], stamped at the current time. */
+    fun update(value: Long, weight: Double = 1.0) =
+        update(value, currentTimeNanos(), weight)
+
+    /** Record an observation at [timestampNanos] with the given [weight]. */
+    fun update(value: Long, timestampNanos: Long, weight: Double = 1.0)
+
+    override fun create(mode: StreamMode?): DiscreteStat<R>
+}
+
 /** Accumulator over paired (x, y) observations such as a regression. */
 interface PairedStat<R : Result> : Stat<R> {
     /** Record an (x, y) observation with the given [weight] at the current time. */

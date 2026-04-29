@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
@@ -15,6 +16,9 @@ fun <R : Result> PairedStat<R>.filter(predicate: PairedPredicate): PairedStat<R>
 
 /** Drop vector observations that fail [predicate]. */
 fun <R : Result> VectorStat<R>.filter(predicate: VectorPredicate): VectorStat<R> = FilterVectorStat(this, predicate)
+
+/** Drop discrete (Long) observations that fail [predicate]. */
+fun <R : Result> DiscreteStat<R>.filter(predicate: LongPredicate): DiscreteStat<R> = FilterDiscreteStat(this, predicate)
 
 /** Predicate on a single value. */
 fun interface DoublePredicate {
@@ -32,6 +36,12 @@ fun interface PairedPredicate {
 fun interface VectorPredicate {
     /** Return true to accept the vector. */
     fun test(vector: DoubleArray): Boolean
+}
+
+/** Predicate on a single Long value. */
+fun interface LongPredicate {
+    /** Return true to accept [value]. */
+    fun test(value: Long): Boolean
 }
 
 /** Adapter that gates updates to a [SeriesStat] by a [DoublePredicate]. */
@@ -76,5 +86,20 @@ class FilterVectorStat<R : Result>(
     }
     override fun create(mode: StreamMode?): VectorStat<R> {
         return FilterVectorStat(delegate.create(mode), predicate)
+    }
+}
+
+/** Adapter that gates updates to a [DiscreteStat] by a [LongPredicate]. */
+class FilterDiscreteStat<R : Result>(
+    private val delegate: DiscreteStat<R>,
+    private val predicate: LongPredicate
+) : DiscreteStat<R>, Stat<R> by delegate {
+    override fun update(value: Long, timestampNanos: Long, weight: Double) {
+        if (predicate.test(value)) {
+            delegate.update(value, timestampNanos, weight)
+        }
+    }
+    override fun create(mode: StreamMode?): DiscreteStat<R> {
+        return FilterDiscreteStat(delegate.create(mode), predicate)
     }
 }

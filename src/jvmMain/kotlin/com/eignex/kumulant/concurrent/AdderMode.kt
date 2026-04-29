@@ -80,4 +80,10 @@ value class LongAdder(val ref: JLongAdder) : StreamLong {
         ref.add(delta)
         return ret
     }
+
+    override fun compareAndSet(expectedValue: Long, newValue: Long): Boolean {
+        throw UnsupportedOperationException(
+            "LongAdder does not support compareAndSet; use AtomicMode for CAS-based stats"
+        )
+    }
 }
