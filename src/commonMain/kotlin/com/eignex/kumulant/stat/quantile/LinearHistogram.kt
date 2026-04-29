@@ -63,13 +63,38 @@ class LinearHistogram(
             if (w <= 0.0) continue
             val lo = values.lowerBounds[i]
             val hi = values.upperBounds[i]
-            val target = when {
-                !lo.isFinite() && hi.isFinite() -> hi - binWidth / 2.0
-                lo.isFinite() && !hi.isFinite() -> lo + binWidth / 2.0
-                else -> (lo + hi) / 2.0
+            when {
+                !lo.isFinite() && hi == lowerBound -> {
+                    _totalWeights.add(w)
+                    _underflow.add(w)
+                }
+                lo == upperBound && !hi.isFinite() -> {
+                    _totalWeights.add(w)
+                    _overflow.add(w)
+                }
+                lo.isFinite() && hi.isFinite() && matchesLayout(lo, hi) -> {
+                    _totalWeights.add(w)
+                    val idx = ((lo - lowerBound) / binWidth).toInt().coerceIn(0, binCount - 1)
+                    bins.add(idx, w)
+                }
+                else -> {
+                    val target = when {
+                        !lo.isFinite() && hi.isFinite() -> hi - binWidth / 2.0
+                        lo.isFinite() && !hi.isFinite() -> lo + binWidth / 2.0
+                        else -> (lo + hi) / 2.0
+                    }
+                    update(target, w)
+                }
             }
-            update(target, w)
         }
+    }
+
+    private fun matchesLayout(lo: Double, hi: Double): Boolean {
+        val span = hi - lo
+        if (kotlin.math.abs(span - binWidth) > binWidth * 1e-12) return false
+        val ratio = (lo - lowerBound) / binWidth
+        val rounded = kotlin.math.round(ratio)
+        return kotlin.math.abs(ratio - rounded) < 1e-9 && rounded >= 0.0 && rounded < binCount
     }
 
     override fun reset() {
