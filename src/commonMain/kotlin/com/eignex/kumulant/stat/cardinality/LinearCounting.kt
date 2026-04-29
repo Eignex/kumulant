@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.casOr
 import com.eignex.kumulant.stream.defaultStreamMode
 import com.eignex.kumulant.stream.splitmix64
 import kotlinx.serialization.SerialName
@@ -60,15 +61,6 @@ class LinearCounting(
         val bitMask = 1L shl (pos and 63L).toInt()
         casOr(words[wordIdx], bitMask)
         totalSeen.add(1L)
-    }
-
-    private fun casOr(cell: StreamLong, bitMask: Long) {
-        while (true) {
-            val current = cell.load()
-            val updated = current or bitMask
-            if (current == updated) return
-            if (cell.compareAndSet(current, updated)) return
-        }
     }
 
     override fun merge(values: LinearCountingResult) {
