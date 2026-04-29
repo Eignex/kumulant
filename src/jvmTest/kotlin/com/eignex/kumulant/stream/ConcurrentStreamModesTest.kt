@@ -1,7 +1,10 @@
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.stat.summary.Max
+import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.Min
+import com.eignex.kumulant.stat.summary.Variance
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -83,6 +86,47 @@ class ConcurrentStreamModesTest {
             max.update((t * iters + i).toDouble())
         }
         assertEquals((threads * iters - 1).toDouble(), max.read().max, 0.0)
+    }
+
+    @Test
+    fun `Mean under AtomicMode preserves the Welford invariant under contention`() {
+        val mean = Mean(AtomicMode)
+        val threads = 8
+        val iters = 5_000
+        runConcurrently(threads, iters) { t, i ->
+            mean.update((t * iters + i).toDouble())
+        }
+        val result = mean.read()
+        val n = (threads * iters).toLong()
+        val expected = (n - 1).toDouble() / 2.0
+        assertEquals(n.toDouble(), result.totalWeights, 0.0)
+        kotlin.test.assertTrue(
+            abs(result.mean - expected) < 1e-6,
+            "mean drifted: got ${result.mean}, expected $expected",
+        )
+    }
+
+    @Test
+    fun `Variance under AtomicMode preserves the Welford invariant under contention`() {
+        val variance = Variance(AtomicMode)
+        val threads = 8
+        val iters = 5_000
+        runConcurrently(threads, iters) { t, i ->
+            variance.update((t * iters + i).toDouble())
+        }
+        val result = variance.read()
+        val n = (threads * iters).toLong()
+        val expectedMean = (n - 1).toDouble() / 2.0
+        val expectedVar = (n.toDouble() * n - 1.0) / 12.0
+        assertEquals(n.toDouble(), result.totalWeights, 0.0)
+        kotlin.test.assertTrue(
+            abs(result.mean - expectedMean) < 1e-6,
+            "mean drifted: got ${result.mean}, expected $expectedMean",
+        )
+        kotlin.test.assertTrue(
+            abs(result.variance - expectedVar) / expectedVar < 1e-9,
+            "variance drifted: got ${result.variance}, expected $expectedVar",
+        )
     }
 
     @Test
