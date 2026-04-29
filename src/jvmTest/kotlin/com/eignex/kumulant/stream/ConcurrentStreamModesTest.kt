@@ -54,6 +54,16 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
+    fun `AtomicDouble add to NaN cell publishes the result through CAS`() {
+        val d = AtomicMode.newDouble(Double.NaN)
+        d.add(1.0)
+        kotlin.test.assertTrue(d.load().isNaN(), "NaN + 1.0 should still be NaN")
+        val d2 = AtomicMode.newDouble(Double.POSITIVE_INFINITY)
+        d2.add(1.0)
+        kotlin.test.assertEquals(Double.POSITIVE_INFINITY, d2.load(), 0.0)
+    }
+
+    @Test
     fun `Min under AtomicMode captures the true minimum under contention`() {
         val min = Min(AtomicMode)
         val threads = 8

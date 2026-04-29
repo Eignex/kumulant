@@ -32,10 +32,8 @@ value class AtomicDouble(val ref: KAtomicLong) : StreamDouble {
         while (true) {
             val currentVal = Double.fromBits(currentBits)
             val nextBits = (currentVal + delta).toRawBits()
-            if (currentBits == nextBits) return
-
             val witness = ref.compareAndExchange(currentBits, nextBits)
-            if (witness == currentBits) break
+            if (witness == currentBits) return
             currentBits = witness
         }
     }
@@ -46,8 +44,6 @@ value class AtomicDouble(val ref: KAtomicLong) : StreamDouble {
             val currentVal = Double.fromBits(currentBits)
             val nextVal = currentVal + delta
             val nextBits = nextVal.toRawBits()
-            if (currentBits == nextBits) return nextVal
-
             val witness = ref.compareAndExchange(currentBits, nextBits)
             if (witness == currentBits) return nextVal
             currentBits = witness
@@ -59,8 +55,6 @@ value class AtomicDouble(val ref: KAtomicLong) : StreamDouble {
         while (true) {
             val currentVal = Double.fromBits(currentBits)
             val nextBits = (currentVal + delta).toRawBits()
-            if (currentBits == nextBits) return currentVal
-
             val witness = ref.compareAndExchange(currentBits, nextBits)
             if (witness == currentBits) return currentVal
             currentBits = witness
