@@ -46,7 +46,11 @@ class DecayingMean(
     override fun read(timestampNanos: Long): DecayingMeanResult {
         val sumX = sumX.read(timestampNanos).sum
         val sumW = sumW.read(timestampNanos).sum
-        val mean = if (sumW > 0.0) sumX / sumW else 0.0
+        val mean = when {
+            sumW > 0.0 -> sumX / sumW
+            sumW == 0.0 -> 0.0
+            else -> Double.NaN
+        }
         return DecayingMeanResult(mean, sumW, timestampNanos)
     }
 

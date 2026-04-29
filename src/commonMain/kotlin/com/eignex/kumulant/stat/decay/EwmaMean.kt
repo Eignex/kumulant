@@ -33,8 +33,10 @@ class EwmaMean(
     private val mean: Double
         get() {
             val biased = biasedMean.load()
-            val correction = weighting.correction(totalWeights.load())
-            return if (correction == 0.0) 0.0 else biased / correction
+            val w = totalWeights.load()
+            if (w == 0.0) return 0.0
+            val correction = weighting.correction(w)
+            return if (correction == 0.0) Double.NaN else biased / correction
         }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
