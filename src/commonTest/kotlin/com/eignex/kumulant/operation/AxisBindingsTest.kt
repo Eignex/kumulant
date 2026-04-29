@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.stat.OLS
+import com.eignex.kumulant.stat.Sum
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -64,5 +65,21 @@ class AxisBindingsTest {
 
         val result = stat.read()
         assertEquals(6.0, result.totalWeights, DELTA)
+    }
+
+    @Test
+    fun `withFixedX supplies constant x to paired stat`() {
+        val stat = Sum().atX().withFixedX(7.0)
+        stat.update(99.0)
+        stat.update(99.0)
+        assertEquals(14.0, stat.read().sum, DELTA)
+    }
+
+    @Test
+    fun `withFixedY supplies constant y to paired stat`() {
+        val stat = Sum().atY().withFixedY(3.0)
+        stat.update(99.0)
+        stat.update(99.0)
+        assertEquals(6.0, stat.read().sum, DELTA)
     }
 }

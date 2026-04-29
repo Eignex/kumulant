@@ -79,4 +79,17 @@ class MapResultsTest {
         stat.merge(MeanResult(3.0))
         assertEquals(5.0, stat.read().mean, DELTA)
     }
+
+    @Test
+    fun `discrete mapResult round-trips a SumResult through cast bridge`() {
+        // Bridge a Discrete Sum (via asDiscrete) and remap its result to MeanResult
+        // and back, verifying both forward (read) and reverse (merge) paths.
+        val stat = com.eignex.kumulant.stat.Sum().asDiscrete().mapResult(forward, reverse)
+        stat.update(2L)
+        stat.update(3L)
+        assertEquals(5.0, stat.read().mean, DELTA)
+
+        stat.merge(MeanResult(10.0))
+        assertEquals(15.0, stat.read().mean, DELTA)
+    }
 }

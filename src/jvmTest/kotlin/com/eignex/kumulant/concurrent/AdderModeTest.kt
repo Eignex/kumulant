@@ -1,7 +1,9 @@
 package com.eignex.kumulant.concurrent
 
+import com.eignex.kumulant.stat.HyperLogLogPlus
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 private const val DELTA = 1e-9
 
@@ -80,5 +82,21 @@ class AdderModeTest {
         val ref = AdderMode.newReference("a")
         check(ref.compareAndSet("a", "b"))
         assertEquals("b", ref.load())
+    }
+
+    @Test
+    fun `LongAdder compareAndSet throws UnsupportedOperationException`() {
+        val l = AdderMode.newLong(0L)
+        assertFailsWith<UnsupportedOperationException> {
+            l.compareAndSet(0L, 1L)
+        }
+    }
+
+    @Test
+    fun `HyperLogLogPlus on AdderMode fails fast on update`() {
+        val hll = HyperLogLogPlus(precision = 10, mode = AdderMode)
+        assertFailsWith<UnsupportedOperationException> {
+            hll.update(42L)
+        }
     }
 }
