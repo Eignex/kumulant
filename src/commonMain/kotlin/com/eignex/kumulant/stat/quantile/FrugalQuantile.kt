@@ -9,7 +9,12 @@ import com.eignex.kumulant.stream.defaultStreamMode
  *
  * Keeps one `Double` of state that drifts toward the target quantile [q]; the drift
  * magnitude is scaled by [stepSize]. Cheap and memory-flat but biased and noisy —
- * use [DDSketch] when accuracy matters. Not intended for merging beyond averaging.
+ * use [DDSketch] when accuracy matters.
+ *
+ * Treats observations as unweighted (one unit step per update regardless of weight);
+ * scaling the step by raw weight would let a single high-weight observation overshoot
+ * the target catastrophically. [merge] averages two estimates as a coarse approximation
+ * — frugal sketches do not admit a true associative combine.
  */
 class FrugalQuantile(
     val q: Double,
@@ -29,9 +34,9 @@ class FrugalQuantile(
 
         val m = quantile.load()
         val delta = if (value > m) {
-            stepSize * q * weight
+            stepSize * q
         } else if (value < m) {
-            -stepSize * (1.0 - q) * weight
+            -stepSize * (1.0 - q)
         } else {
             0.0
         }
