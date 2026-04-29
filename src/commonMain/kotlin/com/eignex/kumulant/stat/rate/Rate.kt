@@ -19,9 +19,8 @@ data class RateResult(
     override val rate: Double
         get() {
             val durationSeconds = (timestampNanos - startTimestampNanos) / 1e9
-            val safeDuration =
-                if (durationSeconds <= 0.0) 1e-9 else durationSeconds
-            return totalValue / safeDuration
+            if (durationSeconds <= 0.0) return 0.0
+            return totalValue / durationSeconds
         }
 }
 

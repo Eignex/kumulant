@@ -26,6 +26,14 @@ class RateTest {
     }
 
     @Test
+    fun `rate is zero when read at the same timestamp as the first update`() {
+        val r = Rate()
+        r.update(10.0, T0)
+        val result = r.read(T0)
+        assertEquals(0.0, result.rate, 0.0)
+    }
+
+    @Test
     fun `rate accumulates across updates`() {
         val r = Rate()
         r.update(3.0, T0)
