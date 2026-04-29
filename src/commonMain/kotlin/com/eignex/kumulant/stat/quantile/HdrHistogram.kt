@@ -98,7 +98,8 @@ class HdrHistogram(
     }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0 || value < 0.0) return // HDR only supports >= 0
+        if (weight <= 0.0) return
+        require(value >= 0.0) { "HdrHistogram only supports non-negative values; got $value" }
 
         // Scale the incoming floating-point value to an internal integer
         val internalValue = (value * multiplier).toLong()
@@ -136,9 +137,13 @@ class HdrHistogram(
 
     override fun reset() {
         _totalWeights.store(0.0)
-        val state = stateRef.load()
-        for (i in state.counts.indices) {
-            state.counts[i].store(0.0)
+        while (true) {
+            val state = stateRef.load()
+            val fresh = createState(
+                (initialHighestTrackableValue * multiplier).toLong(),
+                emptyArray()
+            )
+            if (stateRef.compareAndSet(state, fresh)) return
         }
     }
 

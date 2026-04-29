@@ -51,9 +51,9 @@ class HdrHistogramTest {
     }
 
     @Test
-    fun `negative values are silently ignored`() {
+    fun `negative values throw IllegalArgumentException`() {
         val h = HdrHistogram()
-        h.update(-1.0)
+        kotlin.test.assertFailsWith<IllegalArgumentException> { h.update(-1.0) }
         h.update(5.0)
         val r = h.read()
         assertEquals(1.0, r.weights.sum(), 1e-9)
