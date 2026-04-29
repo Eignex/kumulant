@@ -1,8 +1,10 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.SumResult
-import com.eignex.kumulant.stat.Sum
+import com.eignex.kumulant.stat.summary.SumResult
+
+import com.eignex.kumulant.stat.summary.Sum
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

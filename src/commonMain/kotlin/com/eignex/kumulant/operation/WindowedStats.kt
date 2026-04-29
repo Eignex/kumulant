@@ -1,10 +1,10 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.concurrent.SerialMode
-import com.eignex.kumulant.concurrent.StreamMode
-import com.eignex.kumulant.concurrent.StreamRef
-import com.eignex.kumulant.concurrent.currentTimeNanos
-import com.eignex.kumulant.concurrent.defaultStreamMode
+import com.eignex.kumulant.stream.SerialMode
+import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.StreamRef
+import com.eignex.kumulant.stream.currentTimeNanos
+import com.eignex.kumulant.stream.defaultStreamMode
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result

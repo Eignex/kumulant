@@ -1,8 +1,11 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stat.HyperLogLogPlus
-import com.eignex.kumulant.stat.LinearCounting
-import com.eignex.kumulant.stat.Sum
+import com.eignex.kumulant.stat.cardinality.HyperLogLogPlus
+
+import com.eignex.kumulant.stat.cardinality.LinearCounting
+
+import com.eignex.kumulant.stat.summary.Sum
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -132,7 +135,7 @@ class FilterEdgeCasesTest {
 
     @Test
     fun `series filter passes all when predicate always true`() {
-        val stat = com.eignex.kumulant.stat.Mean().filter { true }
+        val stat = com.eignex.kumulant.stat.summary.Mean().filter { true }
         stat.update(1.0)
         stat.update(3.0)
         assertEquals(2.0, stat.read().mean, DELTA)

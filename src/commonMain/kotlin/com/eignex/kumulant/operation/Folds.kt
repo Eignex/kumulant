@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.core.*
 
 /** Adapt a [SeriesStat] to accept vector input by folding each vector to a scalar via [transform]. */

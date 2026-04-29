@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.concurrent.StreamMode
+import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.core.*
 
 /** Lift a paired stat into a series stat that feeds its x from the event timestamp (seconds). */

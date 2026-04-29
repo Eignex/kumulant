@@ -1,0 +1,160 @@
+package com.eignex.kumulant.stat.regression
+
+import com.eignex.kumulant.core.HasLinearModel
+import com.eignex.kumulant.core.HasRegression
+import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.stat.summary.VarianceResult
+
+import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.getValue
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlin.math.sqrt
+
+/** Fitted Ordinary Least Squares regression with marginal x/y variances for merge. */
+@Serializable
+@SerialName("OLS")
+data class OLSResult(
+    override val totalWeights: Double,
+    override val slope: Double,
+    override val intercept: Double,
+    override val sse: Double,
+    val x: VarianceResult,
+    val y: VarianceResult,
+) : Result,
+    HasLinearModel,
+    HasRegression {
+
+    /**
+     * Calculated from R² and the sign of the slope.
+     * This avoids needing to store the raw covariance if not strictly necessary.
+     */
+    val correlation: Double
+        get() {
+            if (sst <= 0.0) return 0.0
+            val r2 = (1.0 - (sse / sst)).coerceAtLeast(0.0)
+            val r = sqrt(r2)
+            return if (slope >= 0) r else -r
+        }
+    override val sst: Double
+        get() = y.variance * totalWeights
+
+    /** Weighted covariance `slope * var(x)`. */
+    val covariance: Double
+        get() = slope * x.variance
+}
+
+/**
+ * Online Ordinary Least Squares (OLS) linear regression: y = slope * x + intercept.
+ *
+ * Uses Chan's parallel algorithm for numerically stable online updates and merging.
+ * Supports weighted observations.
+ *
+ * Thread safety follows the chosen [mode]; use [com.eignex.kumulant.stream.AtomicMode]
+ * or [com.eignex.kumulant.stream.FixedAtomicMode] for concurrent single-pass updates.
+ */
+class OLS(
+    val mode: StreamMode = defaultStreamMode,
+) : PairedStat<OLSResult> {
+
+    private val _w = mode.newDouble(0.0) // total weights
+    private val _mx = mode.newDouble(0.0) // mean of x
+    private val _my = mode.newDouble(0.0) // mean of y
+    private val _sxx = mode.newDouble(0.0) // sum of squared deviations in x
+    private val _syy = mode.newDouble(0.0) // sum of squared deviations in y
+    private val _sxy = mode.newDouble(0.0) // sum of cross-deviations (cov * w)
+
+    val totalWeights: Double by _w
+    val meanX: Double by _mx
+    val meanY: Double by _my
+
+    /**
+     * Update with a new (x, y) observation using Chan's online algorithm.
+     *
+     * Incremental formula (weight-aware Welford):
+     *   sXX += weight * dx * dx * oldW / nextW
+     *   sXY += weight * dx * dy * oldW / nextW
+     *   sYY += weight * dy * dy * oldW / nextW
+     */
+    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
+        if (weight <= 0.0) return
+
+        val nextW = _w.addAndGet(weight)
+        val oldW = nextW - weight
+
+        val dx = x - _mx.load()
+        val dy = y - _my.load()
+
+        _mx.add(dx * weight / nextW)
+        _my.add(dy * weight / nextW)
+
+        val factor = weight * oldW / nextW
+        _sxx.add(dx * dx * factor)
+        _syy.add(dy * dy * factor)
+        _sxy.add(dx * dy * factor)
+    }
+
+    /**
+     * Merge an [OLSResult] from another accumulator using Chan's parallel algorithm.
+     *
+     * Recovers sXX, sYY, sXY from the result's stored variances and slope.
+     */
+    override fun merge(values: OLSResult) {
+        val w2 = values.totalWeights
+        if (w2 <= 0.0) return
+
+        val w1 = _w.load()
+        val nextW = w1 + w2
+
+        val dx = values.x.mean - _mx.load()
+        val dy = values.y.mean - _my.load()
+
+        val sxx2 = values.x.variance * w2
+        val syy2 = values.y.variance * w2
+        val sxy2 = values.slope * sxx2 // slope = sxy / sxx  →  sxy = slope * sxx
+
+        val factor = w1 * w2 / nextW
+        _sxx.add(sxx2 + dx * dx * factor)
+        _syy.add(syy2 + dy * dy * factor)
+        _sxy.add(sxy2 + dx * dy * factor)
+
+        _mx.add(w2 * dx / nextW)
+        _my.add(w2 * dy / nextW)
+        _w.add(w2)
+    }
+
+    override fun reset() {
+        _w.store(0.0)
+        _mx.store(0.0)
+        _my.store(0.0)
+        _sxx.store(0.0)
+        _syy.store(0.0)
+        _sxy.store(0.0)
+    }
+
+    override fun read(timestampNanos: Long): OLSResult {
+        val w = _w.load()
+        val mx = _mx.load()
+        val my = _my.load()
+        val sxx = _sxx.load()
+        val syy = _syy.load()
+        val sxy = _sxy.load()
+
+        val slope = if (sxx > 0.0) sxy / sxx else 0.0
+        val intercept = my - slope * mx
+        val sse = (syy - slope * sxy).coerceAtLeast(0.0)
+
+        return OLSResult(
+            totalWeights = w,
+            slope = slope,
+            intercept = intercept,
+            sse = sse,
+            x = VarianceResult(mx, if (w > 0.0) sxx / w else 0.0),
+            y = VarianceResult(my, if (w > 0.0) syy / w else 0.0)
+        )
+    }
+
+    override fun create(mode: StreamMode?) = OLS(mode ?: this.mode)
+}

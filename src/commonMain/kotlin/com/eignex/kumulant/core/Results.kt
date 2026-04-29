@@ -4,8 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** Marker for a snapshot returned by a [Stat]'s read/merge pipeline. */
-@Serializable
-sealed interface Result
+interface Result
 
 /**
  * Ordered list of results with per-entry names. Produced by `ListStats` and the vector

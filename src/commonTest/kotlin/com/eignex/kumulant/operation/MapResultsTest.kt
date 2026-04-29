@@ -1,8 +1,11 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.core.MeanResult
-import com.eignex.kumulant.core.SumResult
-import com.eignex.kumulant.stat.Sum
+import com.eignex.kumulant.stat.summary.MeanResult
+
+import com.eignex.kumulant.stat.summary.SumResult
+
+import com.eignex.kumulant.stat.summary.Sum
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -84,7 +87,7 @@ class MapResultsTest {
     fun `discrete mapResult round-trips a SumResult through cast bridge`() {
         // Bridge a Discrete Sum (via asDiscrete) and remap its result to MeanResult
         // and back, verifying both forward (read) and reverse (merge) paths.
-        val stat = com.eignex.kumulant.stat.Sum().asDiscrete().mapResult(forward, reverse)
+        val stat = com.eignex.kumulant.stat.summary.Sum().asDiscrete().mapResult(forward, reverse)
         stat.update(2L)
         stat.update(3L)
         assertEquals(5.0, stat.read().mean, DELTA)

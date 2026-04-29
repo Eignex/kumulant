@@ -1,8 +1,11 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stat.HyperLogLogPlus
-import com.eignex.kumulant.stat.LinearCounting
-import com.eignex.kumulant.stat.Sum
+import com.eignex.kumulant.stat.cardinality.HyperLogLogPlus
+
+import com.eignex.kumulant.stat.cardinality.LinearCounting
+
+import com.eignex.kumulant.stat.summary.Sum
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

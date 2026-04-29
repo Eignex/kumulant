@@ -1,7 +1,7 @@
 package com.eignex.kumulant.core
 
-import com.eignex.kumulant.concurrent.StreamMode
-import com.eignex.kumulant.concurrent.currentTimeNanos
+import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.currentTimeNanos
 
 /**
  * The base interface for all statistical accumulators.

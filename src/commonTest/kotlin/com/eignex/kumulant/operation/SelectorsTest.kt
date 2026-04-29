@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stat.Sum
+import com.eignex.kumulant.stat.summary.Sum
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
