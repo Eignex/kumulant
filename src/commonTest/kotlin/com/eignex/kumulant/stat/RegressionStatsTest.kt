@@ -271,3 +271,216 @@ class CovarianceTest {
     }
 }
 
+class RidgeTest {
+
+    @Test
+    fun `lambda 0 reproduces OLS slope and intercept`() {
+        val ridge = Ridge(lambda = 0.0)
+        val ols = OLS()
+        for (x in 0..9) {
+            val y = 2.0 * x + 1.0
+            ridge.update(x.toDouble(), y)
+            ols.update(x.toDouble(), y)
+        }
+        val r = ridge.read()
+        val o = ols.read()
+        assertEquals(o.slope, r.slope, APPROX)
+        assertEquals(o.intercept, r.intercept, APPROX)
+    }
+
+    @Test
+    fun `positive lambda shrinks slope toward zero`() {
+        val unreg = Ridge(0.0).apply {
+            for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0)
+        }
+        val reg = Ridge(10.0).apply {
+            for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0)
+        }
+        val u = unreg.read().slope
+        val r = reg.read().slope
+        assertTrue(r in 0.0..u, "expected 0 < $r < $u")
+    }
+
+    @Test
+    fun `large lambda drives slope toward zero and intercept toward meanY`() {
+        val ridge = Ridge(lambda = 1e9)
+        for (x in 0..9) ridge.update(x.toDouble(), 2.0 * x + 1.0)
+        val r = ridge.read()
+        assertEquals(0.0, r.slope, 1e-6)
+        assertEquals(r.y.mean, r.intercept, 1e-6)
+    }
+
+    @Test
+    fun `sse is non-negative and at least OLS sse`() {
+        val ols = OLS()
+        val ridge = Ridge(lambda = 5.0)
+        for (x in 0..9) {
+            val y = 2.0 * x + 1.0 + (x % 3 - 1) * 0.5
+            ols.update(x.toDouble(), y)
+            ridge.update(x.toDouble(), y)
+        }
+        val r = ridge.read()
+        assertTrue(r.sse >= 0.0)
+        assertTrue(r.sse >= ols.read().sse - APPROX)
+    }
+
+    @Test
+    fun `predict uses ridge slope and intercept`() {
+        val ridge = Ridge(lambda = 1.0)
+        for (x in 0..9) ridge.update(x.toDouble(), 2.0 * x + 1.0)
+        val r = ridge.read()
+        assertEquals(r.slope * 5.0 + r.intercept, r.predict(5.0), APPROX)
+    }
+
+    @Test
+    fun `merge of two halves matches a single accumulator`() {
+        val full = Ridge(lambda = 2.0).apply {
+            for (x in 0..19) update(x.toDouble(), 3.0 * x + 2.0)
+        }
+        val left = Ridge(lambda = 2.0).apply {
+            for (x in 0..9) update(x.toDouble(), 3.0 * x + 2.0)
+        }
+        val right = Ridge(lambda = 2.0).apply {
+            for (x in 10..19) update(x.toDouble(), 3.0 * x + 2.0)
+        }
+        left.merge(right.read())
+
+        assertEquals(full.read().slope, left.read().slope, APPROX)
+        assertEquals(full.read().intercept, left.read().intercept, APPROX)
+        assertEquals(full.read().sse, left.read().sse, APPROX)
+    }
+
+    @Test
+    fun `reset clears state`() {
+        val ridge = Ridge(lambda = 1.0).apply {
+            for (x in 0..9) update(x.toDouble(), x.toDouble())
+        }
+        ridge.reset()
+        val r = ridge.read()
+        assertEquals(0.0, r.totalWeights, EPS)
+        assertEquals(0.0, r.slope, EPS)
+    }
+
+    @Test
+    fun `create produces fresh independent stat with same lambda`() {
+        val r1 = Ridge(lambda = 3.0).apply {
+            for (x in 0..4) update(x.toDouble(), x.toDouble())
+        }
+        val r2 = r1.create()
+        r2.update(100.0, 200.0)
+        assertEquals(5.0, r1.read().totalWeights, EPS)
+        assertEquals(1.0, r2.read().totalWeights, EPS)
+        assertEquals(3.0, r2.read().lambda, EPS)
+    }
+}
+
+class LassoTest {
+
+    @Test
+    fun `lambda 0 reproduces OLS slope`() {
+        val lasso = Lasso(lambda = 0.0)
+        val ols = OLS()
+        for (x in 0..9) {
+            val y = 2.0 * x + 1.0
+            lasso.update(x.toDouble(), y)
+            ols.update(x.toDouble(), y)
+        }
+        assertEquals(ols.read().slope, lasso.read().slope, APPROX)
+        assertEquals(ols.read().intercept, lasso.read().intercept, APPROX)
+    }
+
+    @Test
+    fun `small lambda shrinks slope toward zero but keeps sign`() {
+        val unreg = Lasso(0.0).apply {
+            for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0)
+        }
+        val reg = Lasso(1.0).apply {
+            for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0)
+        }
+        val u = unreg.read().slope
+        val r = reg.read().slope
+        assertTrue(u > 0.0)
+        assertTrue(r > 0.0 && r < u, "expected 0 < $r < $u")
+    }
+
+    @Test
+    fun `large lambda zeros slope and sets intercept to meanY`() {
+        val lasso = Lasso(lambda = 1e9)
+        for (x in 0..9) lasso.update(x.toDouble(), 2.0 * x + 1.0)
+        val r = lasso.read()
+        assertEquals(0.0, r.slope, EPS)
+        assertEquals(r.y.mean, r.intercept, EPS)
+    }
+
+    @Test
+    fun `predict at slope-zeroing lambda returns meanY`() {
+        val lasso = Lasso(lambda = 1e9)
+        for (x in 0..9) lasso.update(x.toDouble(), 2.0 * x + 1.0)
+        val r = lasso.read()
+        assertEquals(r.y.mean, r.predict(42.0), EPS)
+    }
+
+    @Test
+    fun `merge of two halves matches a single accumulator`() {
+        val full = Lasso(lambda = 1.0).apply {
+            for (x in 0..19) update(x.toDouble(), 3.0 * x + 2.0)
+        }
+        val left = Lasso(lambda = 1.0).apply {
+            for (x in 0..9) update(x.toDouble(), 3.0 * x + 2.0)
+        }
+        val right = Lasso(lambda = 1.0).apply {
+            for (x in 10..19) update(x.toDouble(), 3.0 * x + 2.0)
+        }
+        left.merge(right.read())
+
+        assertEquals(full.read().slope, left.read().slope, APPROX)
+        assertEquals(full.read().intercept, left.read().intercept, APPROX)
+        assertEquals(full.read().sxy, left.read().sxy, APPROX)
+    }
+
+    @Test
+    fun `merge round-trips when both halves have slope zero under lambda`() {
+        // λ huge → both halves have slope == 0 in their LassoResult, but their raw sxy is preserved.
+        val lambda = 1e6
+        val full = Lasso(lambda).apply {
+            for (x in 0..19) update(x.toDouble(), 3.0 * x + 2.0)
+        }
+        val left = Lasso(lambda).apply {
+            for (x in 0..9) update(x.toDouble(), 3.0 * x + 2.0)
+        }
+        val right = Lasso(lambda).apply {
+            for (x in 10..19) update(x.toDouble(), 3.0 * x + 2.0)
+        }
+        assertEquals(0.0, left.read().slope, EPS)
+        assertEquals(0.0, right.read().slope, EPS)
+
+        left.merge(right.read())
+        assertEquals(full.read().sxy, left.read().sxy, APPROX)
+        assertEquals(full.read().y.mean, left.read().y.mean, APPROX)
+    }
+
+    @Test
+    fun `reset clears state`() {
+        val lasso = Lasso(lambda = 1.0).apply {
+            for (x in 0..9) update(x.toDouble(), x.toDouble())
+        }
+        lasso.reset()
+        val r = lasso.read()
+        assertEquals(0.0, r.totalWeights, EPS)
+        assertEquals(0.0, r.slope, EPS)
+        assertEquals(0.0, r.sxy, EPS)
+    }
+
+    @Test
+    fun `create produces fresh independent stat with same lambda`() {
+        val l1 = Lasso(lambda = 0.5).apply {
+            for (x in 0..4) update(x.toDouble(), x.toDouble())
+        }
+        val l2 = l1.create()
+        l2.update(100.0, 200.0)
+        assertEquals(5.0, l1.read().totalWeights, EPS)
+        assertEquals(1.0, l2.read().totalWeights, EPS)
+        assertEquals(0.5, l2.read().lambda, EPS)
+    }
+}
+

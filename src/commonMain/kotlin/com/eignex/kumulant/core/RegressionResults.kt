@@ -67,3 +67,39 @@ data class CovarianceResult(
     /** Population variance of y. */
     val varY: Double get() = if (totalWeights > 0.0) syy / totalWeights else 0.0
 }
+
+/** Fitted Ridge regression (univariate, L2-shrunk slope). */
+@Serializable
+@SerialName("Ridge")
+data class RidgeResult(
+    override val totalWeights: Double,
+    val lambda: Double,
+    override val slope: Double,
+    override val intercept: Double,
+    override val sse: Double,
+    val x: VarianceResult,
+    val y: VarianceResult,
+) : Result, HasLinearModel, HasRegression {
+    override val sst: Double get() = y.variance * totalWeights
+}
+
+/** Fitted Lasso regression (univariate, soft-thresholded slope). */
+@Serializable
+@SerialName("Lasso")
+data class LassoResult(
+    override val totalWeights: Double,
+    val lambda: Double,
+    override val slope: Double,
+    override val intercept: Double,
+    override val sse: Double,
+    /**
+     * Raw weighted cross-deviation `sum((x-meanX)(y-meanY)*w)` from the underlying
+     * accumulator. Stored explicitly so merge round-trips losslessly even when the
+     * regularized [slope] has been zeroed by soft-thresholding.
+     */
+    val sxy: Double,
+    val x: VarianceResult,
+    val y: VarianceResult,
+) : Result, HasLinearModel, HasRegression {
+    override val sst: Double get() = y.variance * totalWeights
+}

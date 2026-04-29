@@ -2,8 +2,6 @@
 
 TODO:
 
-Implement Ridge/Lasso
-
 discrete stats (DiscreteStat<R>)
 - heavy hitters (Misra-Gries / Space-Saving)
 - count-min sketch
