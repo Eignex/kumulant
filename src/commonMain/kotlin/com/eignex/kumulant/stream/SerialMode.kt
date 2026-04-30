@@ -4,7 +4,10 @@ package com.eignex.kumulant.stream
 object SerialMode : StreamMode {
     override fun newDouble(initial: Double) = SerialDouble(initial)
     override fun newLong(initial: Long) = SerialLong(initial)
-    override fun <T> newReference(initial: T) = SerialRef(initial)
+    override fun <T> newReference(initial: T): SerialRef<T> {
+        rejectBoxedPrimitive(initial)
+        return SerialRef(initial)
+    }
 }
 
 /** Plain-`var` [StreamLong] implementation used by [SerialMode]. */

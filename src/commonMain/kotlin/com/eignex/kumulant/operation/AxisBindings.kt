@@ -16,7 +16,7 @@ fun <R : Result> PairedStat<R>.withFixedX(fixedX: Double): SeriesStat<R> = WithF
 fun <R : Result> PairedStat<R>.withFixedY(fixedY: Double): SeriesStat<R> = WithFixedYStat(this, fixedY)
 
 /** Series-adapter implementation for [withTimeAsX]. */
-class WithTimeAsXStat<R : Result>(
+internal class WithTimeAsXStat<R : Result>(
     private val delegate: PairedStat<R>
 ) : SeriesStat<R>, Stat<R> by delegate {
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -34,7 +34,7 @@ class WithTimeAsXStat<R : Result>(
 }
 
 /** Series-adapter implementation for [withTimeAsY]. */
-class WithTimeAsYStat<R : Result>(
+internal class WithTimeAsYStat<R : Result>(
     private val delegate: PairedStat<R>
 ) : SeriesStat<R>, Stat<R> by delegate {
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -52,7 +52,7 @@ class WithTimeAsYStat<R : Result>(
 }
 
 /** Series-adapter implementation for [withFixedX]. */
-class WithFixedXStat<R : Result>(
+internal class WithFixedXStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val fixedX: Double
 ) : SeriesStat<R>, Stat<R> by delegate {
@@ -66,7 +66,7 @@ class WithFixedXStat<R : Result>(
 }
 
 /** Series-adapter implementation for [withFixedY]. */
-class WithFixedYStat<R : Result>(
+internal class WithFixedYStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val fixedY: Double
 ) : SeriesStat<R>, Stat<R> by delegate {

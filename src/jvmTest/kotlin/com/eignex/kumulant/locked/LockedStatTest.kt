@@ -1,12 +1,14 @@
 package com.eignex.kumulant.locked
 
 import com.eignex.kumulant.operation.VectorizedStat
+import com.eignex.kumulant.stat.cardinality.LinearCounting
 import com.eignex.kumulant.stat.regression.OLS
 import com.eignex.kumulant.stat.summary.Sum
 import com.eignex.kumulant.stream.AtomicMode
 import com.eignex.kumulant.stream.runConcurrently
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 private const val DELTA = 1e-9
 
@@ -136,5 +138,39 @@ class LockedVectorStatTest {
         clone.update(doubleArrayOf(5.0, 6.0))
         assertEquals(0.0, original.read().results[0].sum, DELTA)
         assertEquals(5.0, clone.read().results[0].sum, DELTA)
+    }
+}
+
+class LockedDiscreteStatTest {
+
+    @Test
+    fun `delegates discrete updates to the wrapped stat`() {
+        val locked = LinearCounting(bits = 1024, mode = AtomicMode).locked()
+        for (i in 1L..100L) locked.update(i)
+        assertTrue(locked.read().estimate > 0.0)
+    }
+
+    @Test
+    fun `concurrent discrete updates do not lose writes`() {
+        val locked = LinearCounting(bits = 4096, mode = AtomicMode).locked()
+        val threads = 4
+        val iters = 5_000
+        runConcurrently(threads, iters) { t, i ->
+            locked.update((t.toLong() shl 32) or i.toLong())
+        }
+        assertTrue(locked.read().estimate > 0.0)
+    }
+
+    @Test
+    fun `reset and create work on the locked discrete`() {
+        val original = LinearCounting(bits = 1024, mode = AtomicMode).locked()
+        original.update(42L)
+        original.reset()
+        assertEquals(0.0, original.read().estimate, DELTA)
+
+        val clone = original.create()
+        clone.update(7L)
+        assertEquals(0.0, original.read().estimate, DELTA)
+        assertTrue(clone.read().estimate > 0.0)
     }
 }

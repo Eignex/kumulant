@@ -1,6 +1,11 @@
 package com.eignex.kumulant.stream
 
 import kotlin.reflect.KProperty
+import kotlin.time.TimeSource
+
+private val monoStart = TimeSource.Monotonic.markNow()
+
+internal fun currentTimeNanos(): Long = monoStart.elapsedNow().inWholeNanoseconds
 
 /**
  * Factory for the mutable scalar cells that back stat accumulators.
@@ -19,6 +24,18 @@ interface StreamMode {
 
     /** Allocate a [StreamRef] cell holding [initial]. */
     fun <T> newReference(initial: T): StreamRef<T>
+}
+
+/**
+ * Guard against `StreamRef<Double>` / `StreamRef<Long>`: boxed primitives break
+ * identity-based CAS (every box is a fresh instance). Callers should use
+ * [StreamMode.newDouble] / [StreamMode.newLong] instead.
+ */
+internal fun rejectBoxedPrimitive(initial: Any?) {
+    require(initial !is Double && initial !is Long) {
+        "StreamRef does not support boxed Double/Long — use newDouble/newLong instead, " +
+            "since CAS on boxed primitives compares identity, not value."
+    }
 }
 
 /** Mutable `Double` cell with mode-appropriate read/write/add semantics. */

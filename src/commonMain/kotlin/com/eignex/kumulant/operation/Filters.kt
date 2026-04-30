@@ -45,7 +45,7 @@ fun interface LongPredicate {
 }
 
 /** Adapter that gates updates to a [SeriesStat] by a [DoublePredicate]. */
-class FilterSeriesStat<R : Result>(
+internal class FilterSeriesStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val predicate: DoublePredicate
 ) : SeriesStat<R>, Stat<R> by delegate {
@@ -60,7 +60,7 @@ class FilterSeriesStat<R : Result>(
 }
 
 /** Adapter that gates updates to a [PairedStat] by a [PairedPredicate]. */
-class FilterPairedStat<R : Result>(
+internal class FilterPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val predicate: PairedPredicate
 ) : PairedStat<R>, Stat<R> by delegate {
@@ -75,7 +75,7 @@ class FilterPairedStat<R : Result>(
 }
 
 /** Adapter that gates updates to a [VectorStat] by a [VectorPredicate]. */
-class FilterVectorStat<R : Result>(
+internal class FilterVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val predicate: VectorPredicate
 ) : VectorStat<R>, Stat<R> by delegate {
@@ -90,7 +90,7 @@ class FilterVectorStat<R : Result>(
 }
 
 /** Adapter that gates updates to a [DiscreteStat] by a [LongPredicate]. */
-class FilterDiscreteStat<R : Result>(
+internal class FilterDiscreteStat<R : Result>(
     private val delegate: DiscreteStat<R>,
     private val predicate: LongPredicate
 ) : DiscreteStat<R>, Stat<R> by delegate {

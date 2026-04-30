@@ -14,7 +14,10 @@ import java.util.concurrent.atomic.LongAdder as JLongAdder
 object AdderMode : StreamMode {
     override fun newDouble(initial: Double) = DoubleAdder(initial)
     override fun newLong(initial: Long) = LongAdder(initial)
-    override fun <T> newReference(initial: T) = AtomicReference(initial)
+    override fun <T> newReference(initial: T): AtomicReference<T> {
+        rejectBoxedPrimitive(initial)
+        return AtomicReference(initial)
+    }
 }
 
 /** [StreamDouble] backed by a striped `java.util.concurrent.atomic.DoubleAdder`. */

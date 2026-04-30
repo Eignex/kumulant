@@ -11,7 +11,10 @@ import kotlin.concurrent.atomics.AtomicReference as KAtomicReference
 object AtomicMode : StreamMode {
     override fun newDouble(initial: Double) = AtomicDouble(initial)
     override fun newLong(initial: Long) = AtomicLong(initial)
-    override fun <T> newReference(initial: T) = AtomicReference<T>(initial)
+    override fun <T> newReference(initial: T): AtomicReference<T> {
+        rejectBoxedPrimitive(initial)
+        return AtomicReference(initial)
+    }
 }
 
 /** CAS-based atomic [StreamDouble] using `Double.toRawBits` encoding over an atomic `Long`. */

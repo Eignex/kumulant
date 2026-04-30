@@ -30,7 +30,7 @@ fun interface PairFold {
 }
 
 /** Adapter implementing [foldVector]. */
-class FoldVectorStat<R : Result>(
+internal class FoldVectorStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val transform: VectorFold
 ) : VectorStat<R>, Stat<R> by delegate {
@@ -48,7 +48,7 @@ class FoldVectorStat<R : Result>(
 }
 
 /** Adapter implementing [foldPaired]. */
-class FoldPairedStat<R : Result>(
+internal class FoldPairedStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val transform: PairFold
 ) : PairedStat<R>, Stat<R> by delegate {

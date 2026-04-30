@@ -21,7 +21,7 @@ fun <R : Result> VectorStat<R>.withWeight(weight: Double): VectorStat<R> = WithW
 fun <R : Result> DiscreteStat<R>.withWeight(weight: Double): DiscreteStat<R> = WithWeightDiscreteStat(this, weight)
 
 /** Adapter implementing the series variant of [withWeight]. */
-class WithWeightStat<R : Result>(
+internal class WithWeightStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val weight: Double
 ) : SeriesStat<R>, Stat<R> by delegate {
@@ -35,7 +35,7 @@ class WithWeightStat<R : Result>(
 }
 
 /** Adapter implementing the paired variant of [withWeight]. */
-class WithWeightPairedStat<R : Result>(
+internal class WithWeightPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val weight: Double
 ) : PairedStat<R>, Stat<R> by delegate {
@@ -49,7 +49,7 @@ class WithWeightPairedStat<R : Result>(
 }
 
 /** Adapter implementing the vector variant of [withWeight]. */
-class WithWeightVectorStat<R : Result>(
+internal class WithWeightVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val weight: Double
 ) : VectorStat<R>, Stat<R> by delegate {
@@ -63,7 +63,7 @@ class WithWeightVectorStat<R : Result>(
 }
 
 /** Adapter implementing the discrete variant of [withWeight]. */
-class WithWeightDiscreteStat<R : Result>(
+internal class WithWeightDiscreteStat<R : Result>(
     private val delegate: DiscreteStat<R>,
     private val weight: Double
 ) : DiscreteStat<R>, Stat<R> by delegate {

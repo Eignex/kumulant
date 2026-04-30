@@ -8,7 +8,7 @@ import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 
 /** Adapter implementing [atX]: drives a [SeriesStat] from the x coordinate of a pair. */
-class AtXStat<R : Result>(
+internal class AtXStat<R : Result>(
     private val delegate: SeriesStat<R>
 ) : PairedStat<R>, Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
@@ -21,7 +21,7 @@ class AtXStat<R : Result>(
 }
 
 /** Adapter implementing [atY]: drives a [SeriesStat] from the y coordinate of a pair. */
-class AtYStat<R : Result>(
+internal class AtYStat<R : Result>(
     private val delegate: SeriesStat<R>
 ) : PairedStat<R>, Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
@@ -34,7 +34,7 @@ class AtYStat<R : Result>(
 }
 
 /** Adapter implementing [atIndex]: drives a [SeriesStat] from one slot of a vector. */
-class AtIndexStat<R : Result>(
+internal class AtIndexStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val index: Int
 ) : VectorStat<R>, Stat<R> by delegate {
@@ -48,7 +48,7 @@ class AtIndexStat<R : Result>(
 }
 
 /** Adapter implementing [atIndices]: drives a [PairedStat] from two slots of a vector. */
-class AtIndicesStat<R : Result>(
+internal class AtIndicesStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val indexX: Int,
     private val indexY: Int

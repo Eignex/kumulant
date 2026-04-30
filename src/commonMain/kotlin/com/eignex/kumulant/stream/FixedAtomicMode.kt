@@ -24,8 +24,10 @@ class FixedAtomicMode(precision: Int) : StreamMode {
     )
 
     override fun newLong(initial: Long) = AtomicLong(initial)
-    override fun <T> newReference(initial: T): StreamRef<T> =
-        AtomicReference(initial)
+    override fun <T> newReference(initial: T): StreamRef<T> {
+        rejectBoxedPrimitive(initial)
+        return AtomicReference(initial)
+    }
 }
 
 /** Fixed-point atomic [StreamDouble] using a scaled `Long` under the hood. */

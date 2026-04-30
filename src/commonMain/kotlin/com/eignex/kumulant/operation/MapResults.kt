@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 
 /**
@@ -36,110 +37,68 @@ fun <R1 : Result, R2 : Result> DiscreteStat<R1>.mapResult(
     reverse: (R2) -> R1
 ): DiscreteStat<R2> = MapResultDiscreteStat(this, forward, reverse)
 
+/**
+ * Modality-agnostic merge/read/reset/create projection shared by the four
+ * [mapResult] adapters. The subclass overrides only [Stat.create] (to keep the
+ * modality-specific return type) and `update` (which has a different signature
+ * per modality).
+ */
+private class MappedResultCore<R1 : Result, R2 : Result>(
+    private val delegate: Stat<R1>,
+    private val forward: (R1) -> R2,
+    private val reverse: (R2) -> R1,
+) : Stat<R2> {
+    override fun merge(values: R2) = delegate.merge(reverse(values))
+    override fun reset() = delegate.reset()
+    override fun read(timestampNanos: Long): R2 = forward(delegate.read(timestampNanos))
+    override fun create(mode: StreamMode?): Stat<R2> =
+        error("MappedResultCore.create is not used; the modality adapter rebuilds itself")
+}
+
 /** Adapter implementing the series-stat variant of [mapResult]. */
-class MapResultSeriesStat<R1 : Result, R2 : Result>(
+internal class MapResultSeriesStat<R1 : Result, R2 : Result>(
     private val delegate: SeriesStat<R1>,
     private val forward: (R1) -> R2,
     private val reverse: (R2) -> R1
-) : SeriesStat<R2> {
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+) : SeriesStat<R2>, Stat<R2> by MappedResultCore(delegate, forward, reverse) {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) =
         delegate.update(value, timestampNanos, weight)
-    }
-
-    override fun merge(values: R2) {
-        delegate.merge(reverse(values))
-    }
-
-    override fun reset() {
-        delegate.reset()
-    }
-
-    override fun read(timestampNanos: Long): R2 {
-        return forward(delegate.read(timestampNanos))
-    }
-
-    override fun create(mode: StreamMode?): SeriesStat<R2> {
-        return MapResultSeriesStat(delegate.create(mode), forward, reverse)
-    }
+    override fun create(mode: StreamMode?): SeriesStat<R2> =
+        MapResultSeriesStat(delegate.create(mode), forward, reverse)
 }
 
 /** Adapter implementing the paired-stat variant of [mapResult]. */
-class MapResultPairedStat<R1 : Result, R2 : Result>(
+internal class MapResultPairedStat<R1 : Result, R2 : Result>(
     private val delegate: PairedStat<R1>,
     private val forward: (R1) -> R2,
     private val reverse: (R2) -> R1
-) : PairedStat<R2> {
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
+) : PairedStat<R2>, Stat<R2> by MappedResultCore(delegate, forward, reverse) {
+    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) =
         delegate.update(x, y, timestampNanos, weight)
-    }
-
-    override fun merge(values: R2) {
-        delegate.merge(reverse(values))
-    }
-
-    override fun reset() {
-        delegate.reset()
-    }
-
-    override fun read(timestampNanos: Long): R2 {
-        return forward(delegate.read(timestampNanos))
-    }
-
-    override fun create(mode: StreamMode?): PairedStat<R2> {
-        return MapResultPairedStat(delegate.create(mode), forward, reverse)
-    }
+    override fun create(mode: StreamMode?): PairedStat<R2> =
+        MapResultPairedStat(delegate.create(mode), forward, reverse)
 }
 
 /** Adapter implementing the vector-stat variant of [mapResult]. */
-class MapResultVectorStat<R1 : Result, R2 : Result>(
+internal class MapResultVectorStat<R1 : Result, R2 : Result>(
     private val delegate: VectorStat<R1>,
     private val forward: (R1) -> R2,
     private val reverse: (R2) -> R1
-) : VectorStat<R2> {
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
+) : VectorStat<R2>, Stat<R2> by MappedResultCore(delegate, forward, reverse) {
+    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) =
         delegate.update(vector, timestampNanos, weight)
-    }
-
-    override fun merge(values: R2) {
-        delegate.merge(reverse(values))
-    }
-
-    override fun reset() {
-        delegate.reset()
-    }
-
-    override fun read(timestampNanos: Long): R2 {
-        return forward(delegate.read(timestampNanos))
-    }
-
-    override fun create(mode: StreamMode?): VectorStat<R2> {
-        return MapResultVectorStat(delegate.create(mode), forward, reverse)
-    }
+    override fun create(mode: StreamMode?): VectorStat<R2> =
+        MapResultVectorStat(delegate.create(mode), forward, reverse)
 }
 
 /** Adapter implementing the discrete-stat variant of [mapResult]. */
-class MapResultDiscreteStat<R1 : Result, R2 : Result>(
+internal class MapResultDiscreteStat<R1 : Result, R2 : Result>(
     private val delegate: DiscreteStat<R1>,
     private val forward: (R1) -> R2,
     private val reverse: (R2) -> R1
-) : DiscreteStat<R2> {
-    override fun update(value: Long, timestampNanos: Long, weight: Double) {
+) : DiscreteStat<R2>, Stat<R2> by MappedResultCore(delegate, forward, reverse) {
+    override fun update(value: Long, timestampNanos: Long, weight: Double) =
         delegate.update(value, timestampNanos, weight)
-    }
-
-    override fun merge(values: R2) {
-        delegate.merge(reverse(values))
-    }
-
-    override fun reset() {
-        delegate.reset()
-    }
-
-    override fun read(timestampNanos: Long): R2 {
-        return forward(delegate.read(timestampNanos))
-    }
-
-    override fun create(mode: StreamMode?): DiscreteStat<R2> {
-        return MapResultDiscreteStat(delegate.create(mode), forward, reverse)
-    }
+    override fun create(mode: StreamMode?): DiscreteStat<R2> =
+        MapResultDiscreteStat(delegate.create(mode), forward, reverse)
 }

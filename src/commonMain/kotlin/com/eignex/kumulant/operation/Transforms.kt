@@ -33,7 +33,7 @@ fun interface LongTransform {
 }
 
 /** Adapter implementing [SeriesStat.transformValue]. */
-class TransformValueStat<R : Result>(
+internal class TransformValueStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val transform: DoubleTransform
 ) : SeriesStat<R>, Stat<R> by delegate {
@@ -47,7 +47,7 @@ class TransformValueStat<R : Result>(
 }
 
 /** Adapter implementing [PairedStat.transformPair]. */
-class TransformPairStat<R : Result>(
+internal class TransformPairStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val transform: PairTransform
 ) : PairedStat<R>, Stat<R> by delegate {
@@ -62,7 +62,7 @@ class TransformPairStat<R : Result>(
 }
 
 /** Adapter implementing [VectorStat.transformVector]. */
-class TransformVectorStat<R : Result>(
+internal class TransformVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val transform: VectorTransform
 ) : VectorStat<R>, Stat<R> by delegate {
@@ -76,7 +76,7 @@ class TransformVectorStat<R : Result>(
 }
 
 /** Adapter implementing [DiscreteStat.transformValue]. */
-class TransformLongStat<R : Result>(
+internal class TransformLongStat<R : Result>(
     private val delegate: DiscreteStat<R>,
     private val transform: LongTransform
 ) : DiscreteStat<R>, Stat<R> by delegate {
@@ -141,7 +141,7 @@ fun <R : Result> DiscreteStat<R>.asSeries(): SeriesStat<R> = DiscreteAsSeriesSta
 fun <R : Result> SeriesStat<R>.asDiscrete(): DiscreteStat<R> = SeriesAsDiscreteStat(this)
 
 /** Adapter implementing [DiscreteStat.asSeries]. */
-class DiscreteAsSeriesStat<R : Result>(
+internal class DiscreteAsSeriesStat<R : Result>(
     private val delegate: DiscreteStat<R>
 ) : SeriesStat<R>, Stat<R> by delegate {
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -152,7 +152,7 @@ class DiscreteAsSeriesStat<R : Result>(
 }
 
 /** Adapter implementing [SeriesStat.asDiscrete]. */
-class SeriesAsDiscreteStat<R : Result>(
+internal class SeriesAsDiscreteStat<R : Result>(
     private val delegate: SeriesStat<R>
 ) : DiscreteStat<R>, Stat<R> by delegate {
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
