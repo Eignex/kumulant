@@ -54,9 +54,9 @@ class MinHashTest {
         val numHashes = 512
         val a = MinHash(numHashes = numHashes, seed = 7L)
         val b = MinHash(numHashes = numHashes, seed = 7L)
-        // Sets [0, 1500) and [500, 2000): overlap=1000, union=2000 → true Jaccard=0.5
-        for (i in 0 until 1500) a.update(i.toLong())
-        for (i in 500 until 2000) b.update(i.toLong())
+        // Sets [0, 750) and [250, 1000): overlap=500, union=1000 → true Jaccard=0.5
+        for (i in 0 until 750) a.update(i.toLong())
+        for (i in 250 until 1000) b.update(i.toLong())
         val j = a.read().jaccard(b.read())
         // Standard error ≈ 1/sqrt(512) ≈ 0.044; allow 4σ.
         assertTrue(abs(j - 0.5) < 0.18, "Jaccard estimate=$j")
