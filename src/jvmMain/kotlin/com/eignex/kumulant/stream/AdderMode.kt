@@ -18,6 +18,18 @@ object AdderMode : StreamMode {
         rejectBoxedPrimitive(initial)
         return AtomicReference(initial)
     }
+
+    /**
+     * Falls back to the [AtomicMode] flat-array backing. A per-slot striped adder for
+     * O(N) sketches with thousands of bins would balloon memory; consistent with the
+     * scalar `compareAndSet` throwing on `DoubleAdder`/`LongAdder`, the array path
+     * just delegates to single-cell atomics.
+     */
+    override fun newLongArray(size: Int, init: (Int) -> Long): StreamLongArray =
+        AtomicMode.newLongArray(size, init)
+
+    override fun newDoubleArray(size: Int, init: (Int) -> Double): StreamDoubleArray =
+        AtomicMode.newDoubleArray(size, init)
 }
 
 /** [StreamDouble] backed by a striped `java.util.concurrent.atomic.DoubleAdder`. */

@@ -5,6 +5,7 @@ package com.eignex.kumulant.stream
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.math.pow
 import kotlin.concurrent.atomics.AtomicLong as KAtomicLong
+import kotlin.concurrent.atomics.AtomicLongArray as KAtomicLongArray
 
 /**
  * Fixed-point atomic mode: doubles are encoded as `Long` scaled by `10^[precision]`.
@@ -28,6 +29,16 @@ class FixedAtomicMode(precision: Int) : StreamMode {
         rejectBoxedPrimitive(initial)
         return AtomicReference(initial)
     }
+
+    override fun newLongArray(size: Int, init: (Int) -> Long): StreamLongArray =
+        AtomicLongCellArray(KAtomicLongArray(LongArray(size, init)))
+
+    override fun newDoubleArray(size: Int, init: (Int) -> Double): StreamDoubleArray =
+        FixedAtomicDoubleArray(
+            KAtomicLongArray(LongArray(size) { (init(it) * scaleLong).toLong() }),
+            scaleLong,
+            invScale
+        )
 }
 
 /** Fixed-point atomic [StreamDouble] using a scaled `Long` under the hood. */
@@ -58,4 +69,36 @@ class FixedAtomicDouble(
 
     override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean =
         ref.compareAndSet((expectedValue * scaleLong).toLong(), (newValue * scaleLong).toLong())
+}
+
+/** Fixed-point atomic [StreamDoubleArray] using a scaled [KAtomicLongArray]. */
+class FixedAtomicDoubleArray(
+    private val ref: KAtomicLongArray,
+    private val scaleLong: Long,
+    private val invScale: Double,
+) : StreamDoubleArray {
+    override val size: Int get() = ref.size
+
+    override fun load(index: Int): Double = ref.loadAt(index) * invScale
+
+    override fun store(index: Int, value: Double) {
+        ref.storeAt(index, (value * scaleLong).toLong())
+    }
+
+    override fun add(index: Int, delta: Double) {
+        ref.addAndFetchAt(index, (delta * scaleLong).toLong())
+    }
+
+    override fun addAndGet(index: Int, delta: Double): Double =
+        ref.addAndFetchAt(index, (delta * scaleLong).toLong()) * invScale
+
+    override fun getAndAdd(index: Int, delta: Double): Double =
+        ref.fetchAndAddAt(index, (delta * scaleLong).toLong()) * invScale
+
+    override fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean =
+        ref.compareAndSetAt(
+            index,
+            (expectedValue * scaleLong).toLong(),
+            (newValue * scaleLong).toLong()
+        )
 }

@@ -17,7 +17,8 @@ internal fun currentTimeNanos(): Long = monoStart.elapsedNow().inWholeNanosecond
  * - [AtomicMode]: each cell is individually atomic via CAS. Multi-cell accumulators with
  *   coupled recurrences (e.g. Welford `(W, mean, M2)`) may drift under contention since
  *   updates aren't serialised across cells. Bounded-array sketches (Reservoir, TDigest,
- *   SpaceSaving) are racy under concurrent updates but eventually consistent.
+ *   SpaceSaving) self-serialise internally via a private CAS spin-mutex, so concurrent
+ *   `update`/`read` is safe under any mode but throughput-bound under contention.
  * - [FixedAtomicMode]: like [AtomicMode] but stores doubles as fixed-point Longs to
  *   eliminate floating-point drift on long-running additive sums.
  * - [com.eignex.kumulant.stream.AdderMode] (JVM): striped counters for write-heavy
@@ -38,6 +39,19 @@ interface StreamMode {
 
     /** Allocate a [StreamRef] cell holding [initial]. */
     fun <T> newReference(initial: T): StreamRef<T>
+
+    /**
+     * Allocate a fixed-length array of `Long` cells, initialised by [init]. Each slot
+     * has the same atomicity guarantees as a single [StreamLong] under this mode but
+     * with a flat backing — one allocation, no per-slot object headers.
+     */
+    fun newLongArray(size: Int, init: (Int) -> Long = { 0L }): StreamLongArray
+
+    /**
+     * Allocate a fixed-length array of `Double` cells, initialised by [init]. Each slot
+     * has the same atomicity guarantees as a single [StreamDouble] under this mode.
+     */
+    fun newDoubleArray(size: Int, init: (Int) -> Double = { 0.0 }): StreamDoubleArray
 }
 
 /**
@@ -112,6 +126,62 @@ interface StreamRef<T> {
 
     /** Atomic compare-and-set; returns true iff the swap happened. */
     fun compareAndSet(expectedValue: T, newValue: T): Boolean
+}
+
+/**
+ * Fixed-length array of `Long` cells. Each slot supports the same load / store / add /
+ * CAS operations as a scalar [StreamLong] under the owning mode. Slot indices are
+ * `0..size-1`; out-of-range access throws.
+ */
+interface StreamLongArray {
+    /** Number of cells in the array. */
+    val size: Int
+
+    /** Read the value at [index]. */
+    fun load(index: Int): Long
+
+    /** Overwrite the value at [index]. */
+    fun store(index: Int, value: Long)
+
+    /** Add [delta] in place at [index]. */
+    fun add(index: Int, delta: Long)
+
+    /** Add [delta] at [index] and return the new value. */
+    fun addAndGet(index: Int, delta: Long): Long
+
+    /** Add [delta] at [index] and return the value before the add. */
+    fun getAndAdd(index: Int, delta: Long): Long
+
+    /** Atomic compare-and-set at [index]; returns true iff the swap happened. */
+    fun compareAndSet(index: Int, expectedValue: Long, newValue: Long): Boolean
+}
+
+/**
+ * Fixed-length array of `Double` cells. Each slot supports the same load / store / add /
+ * CAS operations as a scalar [StreamDouble] under the owning mode. Slot indices are
+ * `0..size-1`; out-of-range access throws.
+ */
+interface StreamDoubleArray {
+    /** Number of cells in the array. */
+    val size: Int
+
+    /** Read the value at [index]. */
+    fun load(index: Int): Double
+
+    /** Overwrite the value at [index]. */
+    fun store(index: Int, value: Double)
+
+    /** Add [delta] in place at [index]. */
+    fun add(index: Int, delta: Double)
+
+    /** Add [delta] at [index] and return the new value. */
+    fun addAndGet(index: Int, delta: Double): Double
+
+    /** Add [delta] at [index] and return the value before the add. */
+    fun getAndAdd(index: Int, delta: Double): Double
+
+    /** Atomic compare-and-set on the IEEE-754 bit pattern at [index]. */
+    fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean
 }
 
 /** Property-delegate getter for [StreamDouble] — `val x: Double by streamDouble`. */

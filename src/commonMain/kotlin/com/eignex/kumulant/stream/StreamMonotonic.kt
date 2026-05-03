@@ -38,3 +38,31 @@ fun casOr(cell: StreamLong, bitMask: Long) {
         if (cell.compareAndSet(current, updated)) return
     }
 }
+
+/** CAS-loop monotonic max on slot [index] of [arr]: store [candidate] iff strictly greater. */
+fun casMax(arr: StreamLongArray, index: Int, candidate: Long) {
+    while (true) {
+        val current = arr.load(index)
+        if (candidate <= current) return
+        if (arr.compareAndSet(index, current, candidate)) return
+    }
+}
+
+/** CAS-loop monotonic min on slot [index] of [arr]: store [candidate] iff strictly less. */
+fun casMin(arr: StreamLongArray, index: Int, candidate: Long) {
+    while (true) {
+        val current = arr.load(index)
+        if (candidate >= current) return
+        if (arr.compareAndSet(index, current, candidate)) return
+    }
+}
+
+/** CAS-loop bitwise-OR on slot [index] of [arr]. No-op if all bits already set. */
+fun casOr(arr: StreamLongArray, index: Int, bitMask: Long) {
+    while (true) {
+        val current = arr.load(index)
+        val updated = current or bitMask
+        if (current == updated) return
+        if (arr.compareAndSet(index, current, updated)) return
+    }
+}

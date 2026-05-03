@@ -8,6 +8,12 @@ object SerialMode : StreamMode {
         rejectBoxedPrimitive(initial)
         return SerialRef(initial)
     }
+
+    override fun newLongArray(size: Int, init: (Int) -> Long) =
+        SerialLongArray(LongArray(size, init))
+
+    override fun newDoubleArray(size: Int, init: (Int) -> Double) =
+        SerialDoubleArray(DoubleArray(size, init))
 }
 
 /** Plain-`var` [StreamLong] implementation used by [SerialMode]. */
@@ -68,6 +74,54 @@ class SerialDouble(var ref: Double) : StreamDouble {
     override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean {
         if (ref.toRawBits() == expectedValue.toRawBits()) {
             ref = newValue
+            return true
+        }
+        return false
+    }
+}
+
+/** Plain-array [StreamLongArray] implementation used by [SerialMode]. */
+class SerialLongArray(val ref: LongArray) : StreamLongArray {
+    override val size: Int get() = ref.size
+    override fun load(index: Int): Long = ref[index]
+    override fun store(index: Int, value: Long) { ref[index] = value }
+    override fun add(index: Int, delta: Long) { ref[index] += delta }
+    override fun addAndGet(index: Int, delta: Long): Long {
+        ref[index] += delta
+        return ref[index]
+    }
+    override fun getAndAdd(index: Int, delta: Long): Long {
+        val ret = ref[index]
+        ref[index] += delta
+        return ret
+    }
+    override fun compareAndSet(index: Int, expectedValue: Long, newValue: Long): Boolean {
+        if (ref[index] == expectedValue) {
+            ref[index] = newValue
+            return true
+        }
+        return false
+    }
+}
+
+/** Plain-array [StreamDoubleArray] implementation used by [SerialMode]. */
+class SerialDoubleArray(val ref: DoubleArray) : StreamDoubleArray {
+    override val size: Int get() = ref.size
+    override fun load(index: Int): Double = ref[index]
+    override fun store(index: Int, value: Double) { ref[index] = value }
+    override fun add(index: Int, delta: Double) { ref[index] += delta }
+    override fun addAndGet(index: Int, delta: Double): Double {
+        ref[index] += delta
+        return ref[index]
+    }
+    override fun getAndAdd(index: Int, delta: Double): Double {
+        val ret = ref[index]
+        ref[index] += delta
+        return ret
+    }
+    override fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean {
+        if (ref[index].toRawBits() == expectedValue.toRawBits()) {
+            ref[index] = newValue
             return true
         }
         return false
