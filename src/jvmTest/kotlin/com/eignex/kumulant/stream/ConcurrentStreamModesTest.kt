@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stream
 
+import com.eignex.kumulant.locked.locked
 import com.eignex.kumulant.stat.summary.Max
 import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.Min
@@ -103,8 +104,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Mean under AtomicMode preserves the Welford invariant under contention`() {
-        val mean = Mean(AtomicMode)
+    fun `Mean wrapped in locked preserves the Welford invariant under contention`() {
+        val mean = Mean(AtomicMode).locked()
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -121,8 +122,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Variance under AtomicMode preserves the Welford invariant under contention`() {
-        val variance = Variance(AtomicMode)
+    fun `Variance wrapped in locked preserves the Welford invariant under contention`() {
+        val variance = Variance(AtomicMode).locked()
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->

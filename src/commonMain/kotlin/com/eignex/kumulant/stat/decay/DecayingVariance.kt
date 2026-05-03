@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.decay
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.StreamRef
 import com.eignex.kumulant.stream.currentTimeNanos
 import com.eignex.kumulant.stream.defaultStreamMode
 import kotlinx.serialization.SerialName
@@ -47,67 +46,78 @@ class DecayingVariance(
     val halfLife: Duration get() = weighting.halfLife
     private val alpha = weighting.alpha
 
-    private data class State(
-        val timestampNanos: Long,
-        val totalWeights: Double,
-        val mean: Double,
-        val m2: Double,
-    )
+    private val landmarkNanos = mode.newLong(currentTimeNanos())
+    private val totalWeights = mode.newDouble(0.0)
+    private val mean = mode.newDouble(0.0)
+    private val m2 = mode.newDouble(0.0)
 
-    private val stateRef: StreamRef<State> =
-        mode.newReference(State(currentTimeNanos(), 0.0, 0.0, 0.0))
-
-    private fun advance(s: State, t: Long): State {
-        if (s.totalWeights == 0.0) return State(t, 0.0, s.mean, 0.0)
-        val dt = (t - s.timestampNanos).toDouble()
-        val decay = exp(-alpha * dt)
-        return State(t, s.totalWeights * decay, s.mean, s.m2 * decay)
+    private fun advanceTo(t: Long) {
+        val priorLandmark = landmarkNanos.load()
+        if (t == priorLandmark) return
+        val priorW = totalWeights.load()
+        if (priorW == 0.0) {
+            landmarkNanos.store(t)
+            return
+        }
+        val decay = exp(-alpha * (t - priorLandmark).toDouble())
+        totalWeights.store(priorW * decay)
+        m2.store(m2.load() * decay)
+        landmarkNanos.store(t)
     }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        while (true) {
-            val s = stateRef.load()
-            val advanced = advance(s, timestampNanos)
-            val delta = value - advanced.mean
-            val newW = advanced.totalWeights + weight
-            val newMean = advanced.mean + delta * weight / newW
-            val newM2 = advanced.m2 + weight * delta * (value - newMean)
-            val next = State(timestampNanos, newW, newMean, newM2)
-            if (stateRef.compareAndSet(s, next)) return
-        }
+        advanceTo(timestampNanos)
+        val priorW = totalWeights.load()
+        val nextW = priorW + weight
+        val priorMean = mean.load()
+        val delta = value - priorMean
+        val newMean = priorMean + delta * weight / nextW
+        totalWeights.store(nextW)
+        mean.store(newMean)
+        m2.add(weight * delta * (value - newMean))
     }
 
     override fun read(timestampNanos: Long): DecayingVarianceResult {
-        val s = stateRef.load()
-        val advanced = advance(s, timestampNanos)
-        val variance =
-            if (advanced.totalWeights > 0.0) advanced.m2 / advanced.totalWeights else 0.0
-        return DecayingVarianceResult(advanced.mean, variance, advanced.totalWeights, timestampNanos)
+        val landmark = landmarkNanos.load()
+        val priorW = totalWeights.load()
+        val priorM2 = m2.load()
+        val w: Double
+        val decayedM2: Double
+        if (priorW == 0.0 || timestampNanos == landmark) {
+            w = priorW
+            decayedM2 = priorM2
+        } else {
+            val decay = exp(-alpha * (timestampNanos - landmark).toDouble())
+            w = priorW * decay
+            decayedM2 = priorM2 * decay
+        }
+        val variance = if (w > 0.0) decayedM2 / w else 0.0
+        return DecayingVarianceResult(mean.load(), variance, w, timestampNanos)
     }
 
     override fun merge(values: DecayingVarianceResult) {
         if (values.totalWeights <= 0.0) return
-        while (true) {
-            val s = stateRef.load()
-            val target = maxOf(s.timestampNanos, values.timestampNanos)
-            val local = advance(s, target)
-            val remoteDecay = exp(-alpha * (target - values.timestampNanos).toDouble())
-            val remoteW = values.totalWeights * remoteDecay
-            val remoteM2 = values.variance * remoteW
-            val newW = local.totalWeights + remoteW
-            if (newW == 0.0) return
-            val delta = values.mean - local.mean
-            val newMean = local.mean + delta * remoteW / newW
-            val newM2 =
-                local.m2 + remoteM2 + delta * delta * local.totalWeights * remoteW / newW
-            val next = State(target, newW, newMean, newM2)
-            if (stateRef.compareAndSet(s, next)) return
-        }
+        val target = maxOf(landmarkNanos.load(), values.timestampNanos)
+        advanceTo(target)
+        val remoteDecay = exp(-alpha * (target - values.timestampNanos).toDouble())
+        val remoteW = values.totalWeights * remoteDecay
+        val remoteM2 = values.variance * remoteW
+        val w1 = totalWeights.load()
+        val nextW = w1 + remoteW
+        if (nextW == 0.0) return
+        val priorMean = mean.load()
+        val delta = values.mean - priorMean
+        mean.store(priorMean + delta * remoteW / nextW)
+        totalWeights.store(nextW)
+        m2.add(remoteM2 + delta * delta * w1 * remoteW / nextW)
     }
 
     override fun reset() {
-        stateRef.store(State(currentTimeNanos(), 0.0, 0.0, 0.0))
+        landmarkNanos.store(currentTimeNanos())
+        totalWeights.store(0.0)
+        mean.store(0.0)
+        m2.store(0.0)
     }
 
     override fun create(mode: StreamMode?) =
