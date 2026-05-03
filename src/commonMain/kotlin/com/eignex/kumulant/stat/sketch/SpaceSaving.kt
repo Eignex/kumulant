@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.sketch
 
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.stream.CasLock
 import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.defaultStreamMode
 import kotlinx.serialization.SerialName
@@ -32,6 +33,10 @@ data class HeavyHittersResult(
  * Reported counts are one-sided overestimates: `count >= true count` and the gap is at
  * most `error`. Memory is `O(capacity)` Longs; mergeable via the Cormode/Yi rule
  * (apply the same admission policy to incoming triples).
+ *
+ * Concurrency: all `update`/`merge`/`read`/`reset` calls are internally serialized
+ * via a private CAS spin-mutex. Safe under any [StreamMode]; throughput-bound
+ * under thread contention.
  */
 class SpaceSaving(
     val capacity: Int,
@@ -42,14 +47,16 @@ class SpaceSaving(
         require(capacity > 0) { "capacity must be > 0" }
     }
 
+    // All mutable state is accessed only under [lock].
     private val keys = LongArray(capacity)
     private val counts = LongArray(capacity)
     private val errors = LongArray(capacity)
-    private val len = mode.newLong(0L)
-    private val totalSeen = mode.newLong(0L)
+    private var len = 0
+    private var totalSeen = 0L
+    private val lock = CasLock(mode)
 
     private fun admit(key: Long, addCount: Long, addError: Long) {
-        val n = len.load().toInt()
+        val n = len
         for (i in 0 until n) {
             if (keys[i] == key) {
                 counts[i] += addCount
@@ -61,7 +68,7 @@ class SpaceSaving(
             keys[n] = key
             counts[n] = addCount
             errors[n] = addError
-            len.store((n + 1).toLong())
+            len = n + 1
             return
         }
         var minIdx = 0
@@ -81,38 +88,44 @@ class SpaceSaving(
         if (weight <= 0.0) return
         val w = weight.toLong()
         if (w <= 0L) return
-        admit(value, w, 0L)
-        totalSeen.add(1L)
+        lock.withLock {
+            admit(value, w, 0L)
+            totalSeen++
+        }
     }
 
     override fun merge(values: HeavyHittersResult) {
         require(values.capacity == capacity) {
             "Cannot merge HeavyHitters with capacity=${values.capacity} into $capacity"
         }
-        for (i in values.keys.indices) {
-            admit(values.keys[i], values.counts[i], values.errors[i])
+        lock.withLock {
+            for (i in values.keys.indices) {
+                admit(values.keys[i], values.counts[i], values.errors[i])
+            }
+            totalSeen += values.totalSeen
         }
-        totalSeen.add(values.totalSeen)
     }
 
     override fun reset() {
-        len.store(0L)
-        totalSeen.store(0L)
-        for (i in 0 until capacity) {
-            keys[i] = 0L
-            counts[i] = 0L
-            errors[i] = 0L
+        lock.withLock {
+            len = 0
+            totalSeen = 0L
+            for (i in 0 until capacity) {
+                keys[i] = 0L
+                counts[i] = 0L
+                errors[i] = 0L
+            }
         }
     }
 
-    override fun read(timestampNanos: Long): HeavyHittersResult {
-        val n = len.load().toInt().coerceAtMost(capacity)
-        return HeavyHittersResult(
+    override fun read(timestampNanos: Long): HeavyHittersResult = lock.withLock {
+        val n = len.coerceAtMost(capacity)
+        HeavyHittersResult(
             capacity = capacity,
             keys = keys.copyOf(n),
             counts = counts.copyOf(n),
             errors = errors.copyOf(n),
-            totalSeen = totalSeen.load(),
+            totalSeen = totalSeen,
         )
     }
 

@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stream.CasLock
 import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.defaultStreamMode
 import kotlinx.serialization.SerialName
@@ -85,6 +86,10 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  * Weighted reservoir sample of size [capacity] via Algorithm A-Res
  * (Efraimidis & Spirakis): each item gets a key `u^(1/w)` and the top-`k`
  * keys are retained, giving an unbiased weight-proportional sample.
+ *
+ * Concurrency: all `update`/`merge`/`read`/`reset` calls are internally serialized
+ * via a private CAS spin-mutex. Safe under any [StreamMode]; throughput-bound
+ * under thread contention.
  */
 class ReservoirHistogram(
     val capacity: Int = 1024,
@@ -96,30 +101,32 @@ class ReservoirHistogram(
         require(capacity > 0) { "capacity must be > 0" }
     }
 
+    // All mutable state is accessed only under [lock].
     private val random = Random(seed)
     private val values = DoubleArray(capacity)
     private val keys = DoubleArray(capacity)
-    private val len = mode.newLong(0L)
-    private val totalSeen = mode.newLong(0L)
-    private val totalWeight = mode.newDouble(0.0)
+    private var len = 0
+    private var totalSeen = 0L
+    private var totalWeight = 0.0
+    private val lock = CasLock(mode)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0 || value.isNaN()) return
-
-        val u = random.nextDouble()
-        val key = if (weight == 1.0) u else u.pow(1.0 / weight)
-
-        admit(value, key)
-        totalSeen.add(1L)
-        totalWeight.add(weight)
+        lock.withLock {
+            val u = random.nextDouble()
+            val key = if (weight == 1.0) u else u.pow(1.0 / weight)
+            admit(value, key)
+            totalSeen++
+            totalWeight += weight
+        }
     }
 
     private fun admit(value: Double, key: Double) {
-        val n = len.load().toInt()
+        val n = len
         if (n < capacity) {
             values[n] = value
             keys[n] = key
-            len.store((n + 1).toLong())
+            len = n + 1
             return
         }
         var minIdx = 0
@@ -146,31 +153,35 @@ class ReservoirHistogram(
         require(values.values.size == values.keys.size) {
             "ReservoirResult values/keys size mismatch"
         }
-        for (i in values.values.indices) {
-            admit(values.values[i], values.keys[i])
+        lock.withLock {
+            for (i in values.values.indices) {
+                admit(values.values[i], values.keys[i])
+            }
+            totalSeen += values.totalSeen
+            totalWeight += values.totalWeight
         }
-        totalSeen.add(values.totalSeen)
-        totalWeight.add(values.totalWeight)
     }
 
     override fun reset() {
-        len.store(0L)
-        totalSeen.store(0L)
-        totalWeight.store(0.0)
-        for (i in 0 until capacity) {
-            values[i] = 0.0
-            keys[i] = 0.0
+        lock.withLock {
+            len = 0
+            totalSeen = 0L
+            totalWeight = 0.0
+            for (i in 0 until capacity) {
+                values[i] = 0.0
+                keys[i] = 0.0
+            }
         }
     }
 
-    override fun read(timestampNanos: Long): ReservoirResult {
-        val n = len.load().toInt().coerceAtMost(capacity)
-        return ReservoirResult(
+    override fun read(timestampNanos: Long): ReservoirResult = lock.withLock {
+        val n = len.coerceAtMost(capacity)
+        ReservoirResult(
             values = values.copyOf(n),
             keys = keys.copyOf(n),
             capacity = capacity,
-            totalSeen = totalSeen.load(),
-            totalWeight = totalWeight.load()
+            totalSeen = totalSeen,
+            totalWeight = totalWeight
         )
     }
 }

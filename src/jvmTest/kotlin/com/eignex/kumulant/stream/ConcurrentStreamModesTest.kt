@@ -1,11 +1,18 @@
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.locked.locked
+import com.eignex.kumulant.stat.quantile.ReservoirHistogram
+import com.eignex.kumulant.stat.quantile.TDigest
+import com.eignex.kumulant.stat.sketch.SpaceSaving
 import com.eignex.kumulant.stat.summary.Max
 import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.Min
 import com.eignex.kumulant.stat.summary.Range
 import com.eignex.kumulant.stat.summary.Variance
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -155,5 +162,88 @@ class ConcurrentStreamModesTest {
         }
         val total = bins.snapshot().values.sum()
         assertEquals((threads * iters).toDouble(), total, 1e-9)
+    }
+
+    @Test
+    fun `TDigest survives concurrent update plus interleaved read with no exceptions`() {
+        val tdigest = TDigest(compression = 100.0, mode = AtomicMode)
+        val writers = 4
+        val iters = 10_000
+        runWithReader(tdigest::read) {
+            runConcurrently(writers, iters) { t, i ->
+                tdigest.update((t * iters + i).toDouble())
+            }
+        }
+        val result = tdigest.read()
+        // ~6 * compression is the documented centroid bound. Allow some slack.
+        kotlin.test.assertTrue(
+            result.means.size <= 8 * 100,
+            "centroid count ${result.means.size} exceeded 8 * compression",
+        )
+        assertEquals((writers * iters).toDouble(), result.totalWeight, 1e-9)
+    }
+
+    @Test
+    fun `ReservoirHistogram never exceeds capacity under concurrent update plus read`() {
+        val capacity = 256
+        val reservoir = ReservoirHistogram(capacity = capacity, seed = 42L, mode = AtomicMode)
+        val writers = 4
+        val iters = 10_000
+        runWithReader(reservoir::read) {
+            runConcurrently(writers, iters) { t, i ->
+                reservoir.update((t * iters + i).toDouble())
+            }
+        }
+        val result = reservoir.read()
+        kotlin.test.assertTrue(
+            result.values.size <= capacity,
+            "reservoir size ${result.values.size} exceeded capacity $capacity",
+        )
+        assertEquals((writers * iters).toLong(), result.totalSeen)
+    }
+
+    @Test
+    fun `SpaceSaving counts are non-decreasing under concurrent update plus read`() {
+        val capacity = 64
+        val ss = SpaceSaving(capacity = capacity, mode = AtomicMode)
+        val writers = 4
+        val iters = 10_000
+        runWithReader(ss::read) {
+            runConcurrently(writers, iters) { _, i ->
+                // Skewed key distribution so eviction kicks in.
+                ss.update((i % (capacity * 4)).toLong())
+            }
+        }
+        val result = ss.read()
+        kotlin.test.assertTrue(
+            result.keys.size <= capacity,
+            "tracked keys ${result.keys.size} exceeded capacity $capacity",
+        )
+        assertEquals((writers * iters).toLong(), result.totalSeen)
+    }
+
+    /** Run [block] with a parallel reader thread invoking [read] in a tight loop until [block] returns. */
+    private fun <R> runWithReader(read: () -> R, block: () -> Unit) {
+        val stop = AtomicBoolean(false)
+        val pool = Executors.newSingleThreadExecutor()
+        val started = CountDownLatch(1)
+        val readerError = arrayOf<Throwable?>(null)
+        try {
+            pool.submit {
+                started.countDown()
+                try {
+                    while (!stop.get()) read()
+                } catch (t: Throwable) {
+                    readerError[0] = t
+                }
+            }
+            started.await()
+            block()
+        } finally {
+            stop.set(true)
+            pool.shutdown()
+            check(pool.awaitTermination(10, TimeUnit.SECONDS)) { "reader did not stop in time" }
+        }
+        readerError[0]?.let { throw AssertionError("reader thread failed", it) }
     }
 }

@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stream.CasLock
 import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.defaultStreamMode
 import kotlinx.serialization.SerialName
@@ -55,6 +56,10 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  *
  * Updates buffer values until [bufferCap] is reached, then fold them into the
  * sorted centroid list under the `k1`-difference ≤ 1 merge rule.
+ *
+ * Concurrency: all `update`/`merge`/`read`/`reset` calls are internally serialized
+ * via a private CAS spin-mutex. Safe under any [StreamMode]; throughput-bound
+ * under thread contention.
  */
 class TDigest(
     val compression: Double = 100.0,
@@ -71,18 +76,20 @@ class TDigest(
 
     private val bufferCap: Int = max(10, (5.0 * compression).toInt())
 
+    // All mutable state is accessed only under [lock].
     private var means = DoubleArray(0)
     private var weights = DoubleArray(0)
     private val buffer = DoubleArray(bufferCap)
     private val bufferWeights = DoubleArray(bufferCap)
-    private val bufferLen = mode.newLong(0L)
-    private val totalWeight = mode.newDouble(0.0)
+    private var bufferLen = 0
+    private var totalWeight = 0.0
+    private val lock = CasLock(mode)
 
     private fun k1(q: Double): Double =
         compression / (2.0 * PI) * asin(2.0 * q.coerceIn(0.0, 1.0) - 1.0)
 
     private fun compress() {
-        val bLen = bufferLen.load().toInt()
+        val bLen = bufferLen
         if (bLen == 0 && means.isEmpty()) return
 
         val n = means.size + bLen
@@ -109,17 +116,19 @@ class TDigest(
         while (i < means.size) {
             combinedM[c] = means[i]
             combinedW[c] = weights[i]
-            i++; c++
+            i++
+            c++
         }
         while (j < bLen) {
             combinedM[c] = buffer[bufIdx[j]]
             combinedW[c] = bufferWeights[bufIdx[j]]
-            j++; c++
+            j++
+            c++
         }
 
-        bufferLen.store(0L)
+        bufferLen = 0
 
-        val total = totalWeight.load()
+        val total = totalWeight
         if (total <= 0.0) {
             means = DoubleArray(0)
             weights = DoubleArray(0)
@@ -162,14 +171,18 @@ class TDigest(
         weights = outW.copyOf(outLen)
     }
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0 || value.isNaN()) return
-        val idx = bufferLen.load().toInt()
+    private fun updateLocked(value: Double, weight: Double) {
+        val idx = bufferLen
         buffer[idx] = value
         bufferWeights[idx] = weight
-        bufferLen.store((idx + 1).toLong())
-        totalWeight.add(weight)
+        bufferLen = idx + 1
+        totalWeight += weight
         if (idx + 1 >= bufferCap) compress()
+    }
+
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight <= 0.0 || value.isNaN()) return
+        lock.withLock { updateLocked(value, weight) }
     }
 
     override fun create(mode: StreamMode?) = TDigest(
@@ -182,25 +195,32 @@ class TDigest(
         require(abs(compression - values.compression) < 1e-9) {
             "Cannot merge TDigests with different compression"
         }
-        for (i in values.means.indices) {
-            update(values.means[i], 0L, values.weights[i])
+        lock.withLock {
+            for (i in values.means.indices) {
+                val w = values.weights[i]
+                if (w > 0.0 && !values.means[i].isNaN()) {
+                    updateLocked(values.means[i], w)
+                }
+            }
         }
     }
 
     override fun reset() {
-        means = DoubleArray(0)
-        weights = DoubleArray(0)
-        bufferLen.store(0L)
-        totalWeight.store(0.0)
+        lock.withLock {
+            means = DoubleArray(0)
+            weights = DoubleArray(0)
+            bufferLen = 0
+            totalWeight = 0.0
+        }
     }
 
-    override fun read(timestampNanos: Long): TDigestResult {
-        if (bufferLen.load() > 0L) compress()
+    override fun read(timestampNanos: Long): TDigestResult = lock.withLock {
+        if (bufferLen > 0) compress()
 
-        val total = totalWeight.load()
+        val total = totalWeight
         val computed = DoubleArray(probabilities.size)
         if (means.isEmpty() || total <= 0.0) {
-            return TDigestResult(probabilities, computed, means.copyOf(), weights.copyOf(), total, compression)
+            return@withLock TDigestResult(probabilities, computed, means.copyOf(), weights.copyOf(), total, compression)
         }
 
         // Cumulative rank at each centroid's center (half-weight offsets).
@@ -223,7 +243,8 @@ class TDigest(
                 var idx = 0
                 for (i in 0 until n - 1) {
                     if (targetRank <= centers[i + 1]) {
-                        idx = i; break
+                        idx = i
+                        break
                     }
                 }
                 val span = centers[idx + 1] - centers[idx]
@@ -233,7 +254,7 @@ class TDigest(
             computed[pi] = q
         }
 
-        return TDigestResult(
+        return@withLock TDigestResult(
             probabilities = probabilities,
             quantiles = computed,
             means = means.copyOf(),
