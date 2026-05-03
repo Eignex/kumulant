@@ -32,7 +32,7 @@ data class RateResult(
  * see [DecayingRate]. Use [withValue][com.eignex.kumulant.operation.withValue] to count each update as 1.
  */
 class Rate(
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<RateResult> {
 
     private val totalValues = mode.newDouble(0.0)

@@ -26,7 +26,7 @@ class DDSketch(
         0.99,
         0.999
     ),
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<SketchResult> {
 
     init {

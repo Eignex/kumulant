@@ -20,7 +20,7 @@ class FrugalQuantile(
     val q: Double,
     val stepSize: Double = 0.01,
     val initialEstimate: Double = 0.0,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<QuantileResult> {
 
     init {

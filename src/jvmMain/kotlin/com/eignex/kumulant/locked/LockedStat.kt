@@ -36,6 +36,7 @@ private class RWLockedCore<R : Result>(
     private val delegate: Stat<R>,
 ) : Stat<R> {
     val lock = ReentrantReadWriteLock()
+    override val mode: StreamMode get() = delegate.mode
     override fun merge(values: R) = lock.write { delegate.merge(values) }
     override fun reset() = lock.write { delegate.reset() }
     override fun read(timestampNanos: Long): R = lock.read { delegate.read(timestampNanos) }

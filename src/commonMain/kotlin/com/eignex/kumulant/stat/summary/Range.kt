@@ -21,7 +21,7 @@ data class RangeResult(
  * Tracks the minimum and maximum of a stream.
  */
 class Range(
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<RangeResult> {
 
     private val min = mode.newDouble(Double.POSITIVE_INFINITY)

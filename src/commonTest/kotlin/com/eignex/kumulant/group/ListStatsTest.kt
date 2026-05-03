@@ -111,6 +111,7 @@ class ListStatsTest {
         var childCreateMode: StreamMode? = null
 
         val tracking = object : SeriesStat<SumResult> {
+            override val mode: StreamMode = SerialMode
             override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: SumResult) = Unit
             override fun reset() = Unit

@@ -27,7 +27,7 @@ data class DecayingMeanResult(
  */
 class DecayingMean(
     val weighting: DecayWeighting.HalfLife,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<DecayingMeanResult> {
 
     constructor(halfLife: Duration, mode: StreamMode = defaultStreamMode) :

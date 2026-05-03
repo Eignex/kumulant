@@ -17,7 +17,7 @@ data class MaxResult(
 
 /** Tracks the maximum of a stream. */
 class Max(
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<MaxResult> {
 
     private val value = mode.newDouble(Double.NEGATIVE_INFINITY)

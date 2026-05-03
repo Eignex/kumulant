@@ -56,7 +56,7 @@ data class OLSResult(
  * or [com.eignex.kumulant.stream.FixedAtomicMode] for concurrent single-pass updates.
  */
 class OLS(
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : PairedStat<OLSResult> {
 
     private val _w = mode.newDouble(0.0) // total weights

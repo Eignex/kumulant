@@ -15,7 +15,7 @@ import com.eignex.kumulant.stream.defaultStreamMode
  * value is counted as post-reset progress.
  */
 class CounterRate(
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
     val treatDecreaseAsReset: Boolean = true,
 ) : SeriesStat<RateResult> {
 

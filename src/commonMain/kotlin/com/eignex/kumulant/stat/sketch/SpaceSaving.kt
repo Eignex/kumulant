@@ -36,7 +36,7 @@ data class HeavyHittersResult(
  */
 class SpaceSaving(
     val capacity: Int,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : DiscreteStat<HeavyHittersResult> {
 
     init {

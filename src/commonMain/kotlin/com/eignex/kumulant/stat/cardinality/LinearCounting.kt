@@ -39,7 +39,7 @@ data class LinearCountingResult(
  */
 class LinearCounting(
     val bits: Int = 4096,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : DiscreteStat<LinearCountingResult> {
 
     init {

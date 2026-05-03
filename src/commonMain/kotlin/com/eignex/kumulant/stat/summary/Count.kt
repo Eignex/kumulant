@@ -17,5 +17,5 @@ data class CountResult(
 ) : Result
 
 /** Observation count: each update contributes 1 regardless of supplied value and weight. */
-class Count(val mode: StreamMode = defaultStreamMode) :
+class Count(mode: StreamMode = defaultStreamMode) :
     SeriesStat<SumResult> by Sum(mode).withWeight(1.0).withValue(1.0)

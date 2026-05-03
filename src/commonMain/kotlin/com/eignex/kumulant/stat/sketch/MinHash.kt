@@ -59,7 +59,7 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
 class MinHash(
     val numHashes: Int = 128,
     val seed: Long = -3724518991637283867L, // 0xcafef00dd15ea5e5
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : DiscreteStat<MinHashResult> {
 
     init {

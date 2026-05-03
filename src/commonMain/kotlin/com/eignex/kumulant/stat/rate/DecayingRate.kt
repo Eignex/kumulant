@@ -31,7 +31,7 @@ data class DecayingRateResult(
  */
 class DecayingRate(
     val halfLife: Duration,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<DecayingRateResult> by decayingRateDelegate(halfLife, mode)
 
 private fun rateScale(halfLife: Duration): Double =

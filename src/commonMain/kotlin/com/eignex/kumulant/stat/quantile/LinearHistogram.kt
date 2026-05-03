@@ -16,7 +16,7 @@ class LinearHistogram(
     val lowerBound: Double,
     val upperBound: Double,
     val binCount: Int,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<SparseHistogramResult> {
 
     init {

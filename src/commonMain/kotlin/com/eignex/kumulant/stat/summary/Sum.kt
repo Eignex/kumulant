@@ -24,7 +24,7 @@ data class SumResult(
  * the sum as `mean * totalWeights`.
  */
 class Sum(
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<SumResult> {
 
     private val value = mode.newDouble(0.0)

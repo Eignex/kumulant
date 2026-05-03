@@ -31,7 +31,7 @@ data class WeightedMeanResult(
  * so concurrent updates under [com.eignex.kumulant.stream.AtomicMode] are atomic.
  */
 class Mean(
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<WeightedMeanResult> {
 
     private data class State(val totalWeights: Double, val mean: Double)

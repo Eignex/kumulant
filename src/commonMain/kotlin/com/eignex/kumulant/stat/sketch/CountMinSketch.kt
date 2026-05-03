@@ -56,7 +56,7 @@ class CountMinSketch(
     val depth: Int = 5,
     val width: Int = 1024,
     val seed: Long = -7046029254386353133L, // 0x9e3779b97f4a7c15
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : DiscreteStat<CountMinSketchResult> {
 
     init {

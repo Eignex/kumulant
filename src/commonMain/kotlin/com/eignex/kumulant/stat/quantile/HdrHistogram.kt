@@ -17,7 +17,7 @@ class HdrHistogram(
     val lowestDiscernibleValue: Double = 0.001,
     val initialHighestTrackableValue: Double = 100.0,
     val significantDigits: Int = 3,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<SparseHistogramResult> {
 
     init {

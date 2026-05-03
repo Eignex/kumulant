@@ -10,10 +10,24 @@ internal fun currentTimeNanos(): Long = monoStart.elapsedNow().inWholeNanosecond
 /**
  * Factory for the mutable scalar cells that back stat accumulators.
  *
- * Choose based on concurrency needs: [SerialMode] for single-threaded, [AtomicMode]
- * for contended multi-writer CAS, [FixedAtomicMode] for fixed-point reduction of
- * floating-point drift, [com.eignex.kumulant.stream.AdderMode] (JVM) for
- * write-heavy counters.
+ * The chosen mode controls a stat's thread-safety semantics:
+ *
+ * - [SerialMode] (default): single-threaded, no synchronisation. Cheapest path; safe only
+ *   when one thread updates the stat at a time.
+ * - [AtomicMode]: each cell is individually atomic via CAS. Multi-cell accumulators with
+ *   coupled recurrences (e.g. Welford `(W, mean, M2)`) may drift under contention since
+ *   updates aren't serialised across cells. Bounded-array sketches (Reservoir, TDigest,
+ *   SpaceSaving) are racy under concurrent updates but eventually consistent.
+ * - [FixedAtomicMode]: like [AtomicMode] but stores doubles as fixed-point Longs to
+ *   eliminate floating-point drift on long-running additive sums.
+ * - [com.eignex.kumulant.stream.AdderMode] (JVM): striped counters for write-heavy
+ *   workloads where read frequency is low.
+ *
+ * For strict thread-safety on any stat — exact arithmetic and consistent reads under
+ * arbitrary concurrency — wrap with `.locked()` (JVM, in `com.eignex.kumulant.locked`).
+ * It serialises all `update`/`merge`/`read`/`reset` calls through a
+ * `ReentrantReadWriteLock`. Slower than [AtomicMode] under contention, but works with
+ * any stat regardless of internal concurrency support.
  */
 interface StreamMode {
     /** Allocate a [StreamDouble] cell seeded to [initial]. */

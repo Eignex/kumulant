@@ -35,7 +35,7 @@ data class WeightedVarianceResult(
  * are atomic and reads observe a consistent triple.
  */
 class Variance(
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<WeightedVarianceResult> {
 
     private data class State(val totalWeights: Double, val mean: Double, val sst: Double)

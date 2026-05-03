@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.defaultStreamMode
 
 private fun requireUniqueNames(entries: List<Pair<String, *>>, typeName: String) {
     val duplicates = entries.map { it.first }.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
@@ -22,10 +23,12 @@ private fun requireUniqueNames(entries: List<Pair<String, *>>, typeName: String)
  */
 sealed class AbstractListStats<R : Result, S : Stat<out R>>(
     protected val entries: List<Pair<String, S>>,
-    protected val mode: StreamMode?,
+    protected val modeOverride: StreamMode?,
     private val typeName: String,
 ) : Stat<ResultList<R>> {
     init { requireUniqueNames(entries, typeName) }
+
+    final override val mode: StreamMode get() = modeOverride ?: defaultStreamMode
 
     final override fun read(timestampNanos: Long): ResultList<R> =
         ResultList(entries.map { it.first }, entries.map { it.second.read(timestampNanos) })
@@ -69,7 +72,7 @@ class ListStats<R : Result>(
     }
 
     override fun create(mode: StreamMode?): SeriesStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.mode
+        val effectiveMode = mode ?: this.modeOverride
         return ListStats(
             entries.map { (name, stat) -> name to stat.create(effectiveMode) },
             effectiveMode,
@@ -98,7 +101,7 @@ class PairedListStats<R : Result>(
     }
 
     override fun create(mode: StreamMode?): PairedStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.mode
+        val effectiveMode = mode ?: this.modeOverride
         return PairedListStats(
             entries.map { (name, stat) -> name to stat.create(effectiveMode) },
             effectiveMode,
@@ -127,7 +130,7 @@ class VectorListStats<R : Result>(
     }
 
     override fun create(mode: StreamMode?): VectorStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.mode
+        val effectiveMode = mode ?: this.modeOverride
         return VectorListStats(
             entries.map { (name, stat) -> name to stat.create(effectiveMode) },
             effectiveMode,
@@ -156,7 +159,7 @@ class DiscreteListStats<R : Result>(
     }
 
     override fun create(mode: StreamMode?): DiscreteStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.mode
+        val effectiveMode = mode ?: this.modeOverride
         return DiscreteListStats(
             entries.map { (name, stat) -> name to stat.create(effectiveMode) },
             effectiveMode,

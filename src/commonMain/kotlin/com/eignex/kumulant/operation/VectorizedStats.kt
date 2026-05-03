@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.defaultStreamMode
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
@@ -22,8 +23,10 @@ fun <R : Result> ((Int) -> SeriesStat<R>).expandedToVector(
 class VectorizedStat<R : Result>(
     val dimensions: Int,
     val template: (index: Int) -> SeriesStat<R>,
-    val mode: StreamMode? = null
+    private val modeOverride: StreamMode? = null,
 ) : VectorStat<ResultList<R>> {
+
+    override val mode: StreamMode get() = modeOverride ?: defaultStreamMode
 
     private val stats: Array<SeriesStat<R>> =
         Array(dimensions) { i -> template(i) }
@@ -47,7 +50,7 @@ class VectorizedStat<R : Result>(
     }
 
     override fun create(mode: StreamMode?): VectorStat<ResultList<R>> =
-        VectorizedStat(dimensions, template, mode ?: this.mode)
+        VectorizedStat(dimensions, template, mode ?: this.modeOverride)
 
     override fun merge(values: ResultList<R>) {
         require(values.results.size == dimensions)

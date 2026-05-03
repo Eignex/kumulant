@@ -51,7 +51,7 @@ fun BloomFilterResult.contains(value: Long): Boolean {
 class BloomFilter(
     val bits: Int = 1 shl 16,
     val hashes: Int = 7,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : DiscreteStat<BloomFilterResult> {
 
     init {

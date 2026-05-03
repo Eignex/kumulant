@@ -38,7 +38,7 @@ data class DecayingVarianceResult(
  */
 class DecayingVariance(
     val weighting: DecayWeighting.HalfLife,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<DecayingVarianceResult> {
 
     constructor(halfLife: Duration, mode: StreamMode = defaultStreamMode) :

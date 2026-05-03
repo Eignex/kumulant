@@ -31,7 +31,7 @@ data class MomentsResult(
  * under [com.eignex.kumulant.stream.AtomicMode] are atomic.
  */
 class Moments(
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<MomentsResult> {
 
     private data class State(

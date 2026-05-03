@@ -31,7 +31,7 @@ data class DecayingSumResult(
  */
 class DecayingSum(
     val weighting: DecayWeighting.HalfLife,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<DecayingSumResult> {
 
     constructor(halfLife: Duration, mode: StreamMode = defaultStreamMode) :

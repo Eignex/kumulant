@@ -203,6 +203,7 @@ class StatGroupTest {
         var childCreateMode: StreamMode? = null
 
         val tracking = object : SeriesStat<SumResult> {
+            override val mode: StreamMode = SerialMode
             override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: SumResult) = Unit
             override fun reset() = Unit
@@ -378,6 +379,7 @@ class PairedStatGroupTest {
         var childCreateMode: StreamMode? = null
 
         val tracking = object : PairedStat<OLSResult> {
+            override val mode: StreamMode = SerialMode
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: OLSResult) = Unit
             override fun reset() = Unit
@@ -476,6 +478,7 @@ class PairedListStatsTest {
         var childCreateMode: StreamMode? = null
 
         val tracking = object : PairedStat<OLSResult> {
+            override val mode: StreamMode = SerialMode
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: OLSResult) = Unit
             override fun reset() = Unit
@@ -576,6 +579,7 @@ class VectorStatGroupTest {
         var childCreateMode: StreamMode? = null
 
         val tracking = object : VectorStat<ResultList<SumResult>> {
+            override val mode: StreamMode = SerialMode
             override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: ResultList<SumResult>) = Unit
             override fun reset() = Unit
@@ -680,6 +684,7 @@ class VectorListStatsTest {
         var childCreateMode: StreamMode? = null
 
         val tracking = object : VectorStat<ResultList<SumResult>> {
+            override val mode: StreamMode = SerialMode
             override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: ResultList<SumResult>) = Unit
             override fun reset() = Unit
@@ -762,6 +767,7 @@ class DiscreteStatGroupTest {
         var childCreateMode: StreamMode? = null
 
         val tracking = object : DiscreteStat<HyperLogLogResult> {
+            override val mode: StreamMode = SerialMode
             override fun update(value: Long, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: HyperLogLogResult) = Unit
             override fun reset() = Unit

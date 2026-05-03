@@ -66,7 +66,7 @@ internal class WindowedSeriesStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
     template: SeriesStat<R>,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<R> {
 
     private val template = template.create(mode = this.mode)
@@ -89,7 +89,7 @@ internal class WindowedPairedStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
     template: PairedStat<R>,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : PairedStat<R> {
 
     private val template = template.create(mode = this.mode)
@@ -112,7 +112,7 @@ internal class WindowedDiscreteStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
     template: DiscreteStat<R>,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : DiscreteStat<R> {
 
     private val template = template.create(mode = this.mode)
@@ -135,7 +135,7 @@ internal class WindowedVectorStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
     template: VectorStat<R>,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : VectorStat<R> {
 
     private val template = template.create(mode = this.mode)

@@ -17,7 +17,7 @@ data class MinResult(
 
 /** Tracks the minimum of a stream. */
 class Min(
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<MinResult> {
 
     private val value = mode.newDouble(Double.POSITIVE_INFINITY)

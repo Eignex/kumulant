@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.defaultStreamMode
 
 /**
  * Internal base shared by [StatGroup], [PairedStatGroup], and [VectorStatGroup]. Holds the
@@ -13,8 +14,10 @@ import com.eignex.kumulant.stream.StreamMode
  */
 sealed class AbstractStatGroup<S : Stat<*>>(
     protected val stats: List<StatSpec<*, out S, *>>,
-    protected val mode: StreamMode?,
+    protected val modeOverride: StreamMode?,
 ) : GroupedStat {
+    final override val mode: StreamMode get() = modeOverride ?: defaultStreamMode
+
     final override fun read(timestampNanos: Long): GroupResult =
         GroupResult(stats.associate { (key, stat) -> key.name to stat.read(timestampNanos) })
 
@@ -51,7 +54,7 @@ class StatGroup(
     }
 
     override fun create(mode: StreamMode?): SeriesStat<GroupResult> {
-        val effectiveMode = mode ?: this.mode
+        val effectiveMode = mode ?: this.modeOverride
         val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveMode)) }
         return StatGroup(stats = newStats, mode = effectiveMode)
     }
@@ -78,7 +81,7 @@ class PairedStatGroup(
     }
 
     override fun create(mode: StreamMode?): PairedStat<GroupResult> {
-        val effectiveMode = mode ?: this.mode
+        val effectiveMode = mode ?: this.modeOverride
         val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveMode)) }
         return PairedStatGroup(stats = newStats, mode = effectiveMode)
     }
@@ -105,7 +108,7 @@ class VectorStatGroup(
     }
 
     override fun create(mode: StreamMode?): VectorStat<GroupResult> {
-        val effectiveMode = mode ?: this.mode
+        val effectiveMode = mode ?: this.modeOverride
         val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveMode)) }
         return VectorStatGroup(stats = newStats, mode = effectiveMode)
     }
@@ -132,7 +135,7 @@ class DiscreteStatGroup(
     }
 
     override fun create(mode: StreamMode?): DiscreteStat<GroupResult> {
-        val effectiveMode = mode ?: this.mode
+        val effectiveMode = mode ?: this.modeOverride
         val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveMode)) }
         return DiscreteStatGroup(stats = newStats, mode = effectiveMode)
     }

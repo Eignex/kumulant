@@ -51,7 +51,7 @@ data class HyperLogLogResult(
  */
 class HyperLogLog(
     val precision: Int = 14,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : DiscreteStat<HyperLogLogResult> {
 
     init {

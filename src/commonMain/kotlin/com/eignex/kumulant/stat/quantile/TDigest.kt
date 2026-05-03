@@ -61,7 +61,7 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
 class TDigest(
     val compression: Double = 100.0,
     val probabilities: DoubleArray = doubleArrayOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<TDigestResult> {
 
     init {

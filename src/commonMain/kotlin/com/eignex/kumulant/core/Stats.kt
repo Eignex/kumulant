@@ -10,6 +10,23 @@ import com.eignex.kumulant.stream.currentTimeNanos
  */
 interface Stat<R : Result> {
     /**
+     * The [StreamMode] backing this stat's mutable state. Determines how concurrent
+     * `update`/`merge`/`read` calls behave:
+     *
+     * - [com.eignex.kumulant.stream.SerialMode]: single-threaded; no synchronisation,
+     *   cheapest path.
+     * - [com.eignex.kumulant.stream.AtomicMode] / [com.eignex.kumulant.stream.FixedAtomicMode]:
+     *   lock-free best-effort under contention. Individual cells are atomic, but multi-cell
+     *   accumulators (e.g. Welford `(W, mean, M2)`) may drift under contention since the
+     *   recurrence is coupled. Reads of bounded-array sketches (Reservoir, TDigest,
+     *   SpaceSaving) are racy but eventually consistent.
+     * - For strict thread-safety on any stat, wrap with `.locked()` (JVM extension in
+     *   `com.eignex.kumulant.locked`); it serialises all access through a
+     *   `ReentrantReadWriteLock`.
+     */
+    val mode: StreamMode
+
+    /**
      * Merge stat results from another accumulator into this.
      */
     fun merge(values: R)

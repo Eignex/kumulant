@@ -14,7 +14,7 @@ import com.eignex.kumulant.stream.defaultStreamMode
  */
 class EwmaVariance(
     val weighting: DecayWeighting.Alpha,
-    val mode: StreamMode = defaultStreamMode,
+    override val mode: StreamMode = defaultStreamMode,
 ) : SeriesStat<WeightedVarianceResult> {
 
     constructor(alpha: Double, mode: StreamMode = defaultStreamMode) :
