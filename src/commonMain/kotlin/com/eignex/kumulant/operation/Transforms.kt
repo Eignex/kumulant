@@ -1,12 +1,12 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.stream.StreamMode
 
 /** Scalar-to-scalar transform applied pre-update. */
 fun interface DoubleTransform {

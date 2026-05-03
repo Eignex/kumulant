@@ -1,9 +1,7 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.stream.AtomicMode
-
 import com.eignex.kumulant.stream.SerialMode
-
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

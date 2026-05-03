@@ -1,9 +1,5 @@
 package com.eignex.kumulant.stat.quantile
 
-import com.eignex.kumulant.stat.quantile.SketchResult
-
-import com.eignex.kumulant.stat.quantile.toSparseHistogram
-
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals

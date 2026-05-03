@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.cardinality
 
 import com.eignex.kumulant.stream.splitmix64
-
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -216,8 +215,8 @@ class LinearCountingTest {
     @Test
     fun `invalid bits throws`() {
         assertFailsWith<IllegalArgumentException> { LinearCounting(bits = 0) }
-        assertFailsWith<IllegalArgumentException> { LinearCounting(bits = 100) }       // not a power of two
-        assertFailsWith<IllegalArgumentException> { LinearCounting(bits = 32) }        // not a multiple of 64
+        assertFailsWith<IllegalArgumentException> { LinearCounting(bits = 100) } // not a power of two
+        assertFailsWith<IllegalArgumentException> { LinearCounting(bits = 32) } // not a multiple of 64
     }
 
     @Test

@@ -6,7 +6,6 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.operation.mapResult
 import com.eignex.kumulant.stat.summary.VarianceResult
-
 import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.defaultStreamMode
 import kotlinx.serialization.SerialName

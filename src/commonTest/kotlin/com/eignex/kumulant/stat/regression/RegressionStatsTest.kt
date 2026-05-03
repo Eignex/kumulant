@@ -1,9 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.stream.AtomicMode
-
 import com.eignex.kumulant.stream.SerialMode
-
 import kotlin.math.sqrt
 import kotlin.test.*
 
@@ -485,4 +483,3 @@ class LassoTest {
         assertEquals(0.5, l2.read().lambda, EPS)
     }
 }
-

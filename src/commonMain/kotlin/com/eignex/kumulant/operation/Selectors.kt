@@ -1,11 +1,11 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.stream.StreamMode
 
 /** Adapter implementing [atX]: drives a [SeriesStat] from the x coordinate of a pair. */
 internal class AtXStat<R : Result>(

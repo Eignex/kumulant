@@ -1,7 +1,5 @@
 package com.eignex.kumulant.stat.sketch
 
-import com.eignex.kumulant.stat.sketch.estimate
-
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -41,7 +39,7 @@ class CountMinSketchTest {
         }
         val r = cms.read()
         for ((k, t) in truth) {
-            assertTrue(r.estimate(k) >= t, "estimate(${k})=${r.estimate(k)} < true=$t")
+            assertTrue(r.estimate(k) >= t, "estimate($k)=${r.estimate(k)} < true=$t")
         }
     }
 

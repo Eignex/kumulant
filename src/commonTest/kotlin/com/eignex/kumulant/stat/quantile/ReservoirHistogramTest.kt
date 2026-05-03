@@ -1,7 +1,5 @@
 package com.eignex.kumulant.stat.quantile
 
-import com.eignex.kumulant.stat.quantile.quantile
-
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

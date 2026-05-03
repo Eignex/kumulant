@@ -1,7 +1,5 @@
 package com.eignex.kumulant.stat.summary
 
-import com.eignex.kumulant.stat.summary.WeightedMeanResult
-
 import kotlin.math.sqrt
 import kotlin.test.*
 

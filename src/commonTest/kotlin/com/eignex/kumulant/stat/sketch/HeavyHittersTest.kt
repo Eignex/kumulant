@@ -43,9 +43,12 @@ class SpaceSavingTest {
     @Test
     fun `fills up to capacity then evicts min`() {
         val ss = SpaceSaving(capacity = 3)
-        ss.update(1L); ss.update(1L); ss.update(1L) // 1: count=3
-        ss.update(2L); ss.update(2L)                // 2: count=2
-        ss.update(3L)                               // 3: count=1
+        ss.update(1L)
+        ss.update(1L)
+        ss.update(1L) // 1: count=3
+        ss.update(2L)
+        ss.update(2L) // 2: count=2
+        ss.update(3L) // 3: count=1
         // 4 arrives, evicts 3 (the min, count=1): 4 -> count=1+1=2, error=1
         ss.update(4L)
         val r = ss.read()
@@ -76,7 +79,7 @@ class SpaceSavingTest {
         for (i in r.keys.indices) {
             val k = r.keys[i]
             val trueCount = if (k in hot) 1000L else 1L
-            assertTrue(r.counts[i] >= trueCount, "count(${k})=${r.counts[i]} < true=$trueCount")
+            assertTrue(r.counts[i] >= trueCount, "count($k)=${r.counts[i]} < true=$trueCount")
         }
     }
 

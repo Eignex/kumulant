@@ -1,9 +1,7 @@
 package com.eignex.kumulant.stat.decay
 
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
-
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
-
 import kotlin.math.sqrt
 import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds

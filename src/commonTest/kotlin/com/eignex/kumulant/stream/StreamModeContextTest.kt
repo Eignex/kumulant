@@ -31,7 +31,6 @@ class StreamModeContextTest {
                 throw RuntimeException("boom")
             }
         } catch (_: RuntimeException) {
-
         }
         assertSame(SerialMode, defaultStreamMode)
     }

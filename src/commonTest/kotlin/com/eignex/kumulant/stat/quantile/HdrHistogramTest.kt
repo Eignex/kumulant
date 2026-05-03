@@ -1,7 +1,5 @@
 package com.eignex.kumulant.stat.quantile
 
-import com.eignex.kumulant.stat.quantile.SparseHistogramResult
-
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -25,7 +23,10 @@ class HdrHistogramTest {
         val r = h.read()
         assertEquals(1, r.weights.size)
         assertEquals(1.0, r.weights[0], 1e-9)
-        assertTrue(10.0 in r.lowerBounds[0]..r.upperBounds[0], "expected 10.0 in [${r.lowerBounds[0]}, ${r.upperBounds[0]}]")
+        assertTrue(
+            10.0 in r.lowerBounds[0]..r.upperBounds[0],
+            "expected 10.0 in [${r.lowerBounds[0]}, ${r.upperBounds[0]}]"
+        )
     }
 
     @Test

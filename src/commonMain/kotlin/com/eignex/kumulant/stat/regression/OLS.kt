@@ -5,7 +5,6 @@ import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.summary.VarianceResult
-
 import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.defaultStreamMode
 import com.eignex.kumulant.stream.getValue

@@ -1,7 +1,7 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.core.*
+import com.eignex.kumulant.stream.StreamMode
 
 /** Lift a paired stat into a series stat that feeds its x from the event timestamp (seconds). */
 fun <R : Result> PairedStat<R>.withTimeAsX(): SeriesStat<R> = WithTimeAsXStat(this)

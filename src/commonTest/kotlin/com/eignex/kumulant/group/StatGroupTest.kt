@@ -6,32 +6,24 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.operation.VectorizedStat
+import com.eignex.kumulant.operation.withValue
+import com.eignex.kumulant.operation.withWeight
+import com.eignex.kumulant.stat.cardinality.HyperLogLog
+import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
+import com.eignex.kumulant.stat.cardinality.LinearCounting
 import com.eignex.kumulant.stat.cardinality.LinearCountingResult
+import com.eignex.kumulant.stat.regression.Covariance
 import com.eignex.kumulant.stat.regression.CovarianceResult
+import com.eignex.kumulant.stat.regression.OLS
 import com.eignex.kumulant.stat.regression.OLSResult
+import com.eignex.kumulant.stat.summary.Mean
+import com.eignex.kumulant.stat.summary.Sum
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.VarianceResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stream.SerialMode
-
 import com.eignex.kumulant.stream.StreamMode
-
-import com.eignex.kumulant.operation.VectorizedStat
-import com.eignex.kumulant.operation.withValue
-import com.eignex.kumulant.operation.withWeight
-import com.eignex.kumulant.stat.regression.Covariance
-
-import com.eignex.kumulant.stat.cardinality.HyperLogLog
-import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
-
-import com.eignex.kumulant.stat.cardinality.LinearCounting
-
-import com.eignex.kumulant.stat.summary.Mean
-
-import com.eignex.kumulant.stat.regression.OLS
-
-import com.eignex.kumulant.stat.summary.Sum
-
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

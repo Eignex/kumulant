@@ -1,12 +1,12 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.stream.StreamMode
 
 /** Drop observations that fail [predicate] before forwarding to this stat. */
 fun <R : Result> SeriesStat<R>.filter(predicate: DoublePredicate): SeriesStat<R> = FilterSeriesStat(this, predicate)

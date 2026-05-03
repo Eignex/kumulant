@@ -1,7 +1,5 @@
 package com.eignex.kumulant.stat.sketch
 
-import com.eignex.kumulant.stat.sketch.contains
-
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

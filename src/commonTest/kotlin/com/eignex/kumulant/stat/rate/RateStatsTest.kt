@@ -1,7 +1,5 @@
 package com.eignex.kumulant.stat.rate
 
-import com.eignex.kumulant.stat.rate.RateResult
-
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.hours

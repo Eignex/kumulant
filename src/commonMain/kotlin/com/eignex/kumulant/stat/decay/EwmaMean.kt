@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.decay
 
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
-
 import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.defaultStreamMode
 

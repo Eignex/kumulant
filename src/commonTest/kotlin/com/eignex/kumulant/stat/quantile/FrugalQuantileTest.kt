@@ -1,7 +1,5 @@
 package com.eignex.kumulant.stat.quantile
 
-import com.eignex.kumulant.stat.quantile.QuantileResult
-
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -50,7 +48,6 @@ class FrugalQuantileTest {
 
     @Test
     fun `estimate stays near median of symmetric alternating stream`() {
-
         val fq = FrugalQuantile(q = 0.5, stepSize = 1.0, initialEstimate = 50.0)
         repeat(2000) {
             fq.update(0.0)
