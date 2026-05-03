@@ -31,18 +31,18 @@ class LinearHistogram(
 
     private val binWidth: Double = (upperBound - lowerBound) / binCount
 
-    private val _totalWeights = mode.newDouble(0.0)
-    private val _underflow = mode.newDouble(0.0)
-    private val _overflow = mode.newDouble(0.0)
+    private val totalWeights = mode.newDouble(0.0)
+    private val underflow = mode.newDouble(0.0)
+    private val overflow = mode.newDouble(0.0)
     private val bins = ArrayBins(mode)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0 || value.isNaN()) return
-        _totalWeights.add(weight)
+        totalWeights.add(weight)
 
         when {
-            value < lowerBound -> _underflow.add(weight)
-            value >= upperBound -> _overflow.add(weight)
+            value < lowerBound -> underflow.add(weight)
+            value >= upperBound -> overflow.add(weight)
             else -> {
                 val idx = ((value - lowerBound) / binWidth).toInt().coerceIn(0, binCount - 1)
                 bins.add(idx, weight)
@@ -65,15 +65,15 @@ class LinearHistogram(
             val hi = values.upperBounds[i]
             when {
                 !lo.isFinite() && hi == lowerBound -> {
-                    _totalWeights.add(w)
-                    _underflow.add(w)
+                    totalWeights.add(w)
+                    underflow.add(w)
                 }
                 lo == upperBound && !hi.isFinite() -> {
-                    _totalWeights.add(w)
-                    _overflow.add(w)
+                    totalWeights.add(w)
+                    overflow.add(w)
                 }
                 lo.isFinite() && hi.isFinite() && matchesLayout(lo, hi) -> {
-                    _totalWeights.add(w)
+                    totalWeights.add(w)
                     val idx = ((lo - lowerBound) / binWidth).toInt().coerceIn(0, binCount - 1)
                     bins.add(idx, w)
                 }
@@ -98,16 +98,16 @@ class LinearHistogram(
     }
 
     override fun reset() {
-        _totalWeights.store(0.0)
-        _underflow.store(0.0)
-        _overflow.store(0.0)
+        totalWeights.store(0.0)
+        underflow.store(0.0)
+        overflow.store(0.0)
         bins.clear()
     }
 
     override fun read(timestampNanos: Long): SparseHistogramResult {
         val snap = bins.snapshot()
-        val under = _underflow.load()
-        val over = _overflow.load()
+        val under = underflow.load()
+        val over = overflow.load()
 
         val populated = snap.size + (if (under > 0.0) 1 else 0) + (if (over > 0.0) 1 else 0)
         val lowers = DoubleArray(populated)

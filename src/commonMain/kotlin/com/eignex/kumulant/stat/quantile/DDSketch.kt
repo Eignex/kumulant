@@ -36,15 +36,15 @@ class DDSketch(
     private val gamma: Double = (1.0 + relativeError) / (1.0 - relativeError)
     private val multiplier: Double = 1.0 / ln(gamma)
 
-    private val _totalWeights = mode.newDouble(0.0)
-    private val _zeroCount = mode.newDouble(0.0)
+    private val totalWeights = mode.newDouble(0.0)
+    private val zeroCount = mode.newDouble(0.0)
 
     private val positiveBins = ArrayBins(mode)
     private val negativeBins = ArrayBins(mode)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        _totalWeights.add(weight)
+        totalWeights.add(weight)
 
         if (value > 0.0) {
             val index = ceil(ln(value) * multiplier).toInt()
@@ -53,7 +53,7 @@ class DDSketch(
             val index = ceil(ln(-value) * multiplier).toInt()
             negativeBins.add(index, weight)
         } else {
-            _zeroCount.add(weight)
+            zeroCount.add(weight)
         }
     }
 
@@ -68,8 +68,8 @@ class DDSketch(
             "Cannot merge DDSketches with different relative error targets"
         }
 
-        _totalWeights.add(values.totalWeights)
-        _zeroCount.add(values.zeroCount)
+        totalWeights.add(values.totalWeights)
+        zeroCount.add(values.zeroCount)
 
         values.positiveBins.forEach { (index, weight) ->
             if (weight > 0.0) positiveBins.add(index, weight)
@@ -80,8 +80,8 @@ class DDSketch(
     }
 
     override fun reset() {
-        _totalWeights.store(0.0)
-        _zeroCount.store(0.0)
+        totalWeights.store(0.0)
+        zeroCount.store(0.0)
         positiveBins.clear()
         negativeBins.clear()
     }
@@ -91,12 +91,12 @@ class DDSketch(
     }
 
     override fun read(timestampNanos: Long): SketchResult {
-        val total = _totalWeights.load()
+        val total = totalWeights.load()
         val computedQuantiles = DoubleArray(probabilities.size)
 
         val posSnap = positiveBins.snapshot()
         val negSnap = negativeBins.snapshot()
-        val zeroSnap = _zeroCount.load()
+        val zeroSnap = zeroCount.load()
 
         if (total == 0.0) {
             return SketchResult(

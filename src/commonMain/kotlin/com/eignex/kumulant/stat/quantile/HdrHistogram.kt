@@ -9,7 +9,7 @@ import kotlin.math.log2
 import kotlin.math.pow
 
 /**
- * A lock-free, auto-resizing High Dynamic Range (HDR) Histogram with native Double support.
+ * Auto-resizing High Dynamic Range (HDR) Histogram with native Double support.
  * By defining a lowestDiscernibleValue, it internally scales floating-point metrics
  * into integers for O(1) bitwise routing, perfectly preserving fractional precision.
  */
@@ -48,7 +48,7 @@ class HdrHistogram(
             emptyArray()
         )
     )
-    private val _totalWeights = mode.newDouble(0.0)
+    private val totalWeights = mode.newDouble(0.0)
 
     private fun createState(
         internalHighest: Long,
@@ -104,7 +104,7 @@ class HdrHistogram(
         // Scale the incoming floating-point value to an internal integer
         val internalValue = (value * multiplier).toLong()
 
-        _totalWeights.add(weight)
+        totalWeights.add(weight)
 
         while (true) {
             val state = stateRef.load()
@@ -136,7 +136,7 @@ class HdrHistogram(
     }
 
     override fun reset() {
-        _totalWeights.store(0.0)
+        totalWeights.store(0.0)
         while (true) {
             val state = stateRef.load()
             val fresh = createState(
