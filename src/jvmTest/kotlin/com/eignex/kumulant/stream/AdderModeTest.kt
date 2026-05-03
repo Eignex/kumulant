@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.stat.cardinality.HyperLogLog
-
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -94,10 +93,12 @@ class AdderModeTest {
     }
 
     @Test
-    fun `HyperLogLog on AdderMode fails fast on update`() {
+    fun `HyperLogLog runs under AdderMode via the array-cell fallback`() {
+        // HLL's registers are a StreamLongArray; AdderMode delegates array allocation
+        // to AtomicMode-style atomics, so casMax works and update() succeeds.
         val hll = HyperLogLog(precision = 10, mode = AdderMode)
-        assertFailsWith<UnsupportedOperationException> {
-            hll.update(42L)
-        }
+        for (i in 1..1000L) hll.update(i)
+        val result = hll.read()
+        assert(result.estimate > 0.0) { "expected non-zero estimate, got ${result.estimate}" }
     }
 }

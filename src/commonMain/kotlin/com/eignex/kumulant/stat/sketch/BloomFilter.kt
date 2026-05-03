@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stream.StreamLong
+import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.casOr
 import com.eignex.kumulant.stream.defaultStreamMode
@@ -63,7 +64,7 @@ class BloomFilter(
 
     private val wordCount: Int = bits / 64
     private val mask: Long = (bits - 1).toLong()
-    private val words: Array<StreamLong> = Array(wordCount) { mode.newLong(0L) }
+    private val words: StreamLongArray = mode.newLongArray(wordCount)
     private val totalSeen: StreamLong = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
@@ -74,29 +75,30 @@ class BloomFilter(
             val pos = (h1 + i.toLong() * h2) and mask
             val wordIdx = (pos ushr 6).toInt()
             val bitMask = 1L shl (pos and 63L).toInt()
-            casOr(words[wordIdx], bitMask)
+            casOr(words, wordIdx, bitMask)
         }
         totalSeen.add(1L)
     }
 
     override fun merge(values: BloomFilterResult) {
         require(values.bits == bits && values.hashes == hashes) {
-            "Cannot merge BloomFilter with (bits=${values.bits}, hashes=${values.hashes}) into (bits=$bits, hashes=$hashes)"
+            "Cannot merge BloomFilter with (bits=${values.bits}, hashes=${values.hashes}) " +
+                "into (bits=$bits, hashes=$hashes)"
         }
-        for (i in words.indices) {
+        for (i in 0 until wordCount) {
             val incoming = values.words[i]
-            if (incoming != 0L) casOr(words[i], incoming)
+            if (incoming != 0L) casOr(words, i, incoming)
         }
         totalSeen.add(values.totalSeen)
     }
 
     override fun reset() {
-        for (cell in words) cell.store(0L)
+        for (i in 0 until wordCount) words.store(i, 0L)
         totalSeen.store(0L)
     }
 
     override fun read(timestampNanos: Long): BloomFilterResult {
-        val snapshot = LongArray(wordCount) { words[it].load() }
+        val snapshot = LongArray(wordCount) { words.load(it) }
         return BloomFilterResult(
             bits = bits,
             hashes = hashes,

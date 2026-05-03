@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.cardinality
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stream.StreamLong
+import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.defaultStreamMode
@@ -66,7 +67,7 @@ class HyperLogLog(
         else -> 0.7213 / (1.0 + 1.079 / m)
     }
 
-    private val registers: Array<StreamLong> = Array(m) { mode.newLong(0L) }
+    private val registers: StreamLongArray = mode.newLongArray(m)
     private val totalSeen: StreamLong = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
@@ -75,23 +76,23 @@ class HyperLogLog(
         val idx = (hash ushr (64 - precision)).toInt() and (m - 1)
         val w = hash shl precision
         val rho = (w.countLeadingZeroBits().coerceAtMost(64 - precision)) + 1
-        casMax(registers[idx], rho.toLong())
+        casMax(registers, idx, rho.toLong())
         totalSeen.add(1L)
     }
 
     override fun merge(values: HyperLogLogResult) {
         require(values.precision == precision) {
-            "Cannot merge HyperLogLog with precision ${values.precision} into ${precision}"
+            "Cannot merge HyperLogLog with precision ${values.precision} into $precision"
         }
-        for (i in registers.indices) {
+        for (i in 0 until m) {
             val incoming = values.registers[i].toLong()
-            if (incoming > 0L) casMax(registers[i], incoming)
+            if (incoming > 0L) casMax(registers, i, incoming)
         }
         totalSeen.add(values.totalSeen)
     }
 
     override fun reset() {
-        for (cell in registers) cell.store(0L)
+        for (i in 0 until m) registers.store(i, 0L)
         totalSeen.store(0L)
     }
 
@@ -100,7 +101,7 @@ class HyperLogLog(
         var sumInv = 0.0
         var zeros = 0
         for (i in 0 until m) {
-            val r = registers[i].load().toInt()
+            val r = registers.load(i).toInt()
             snapshot[i] = r
             sumInv += 2.0.pow(-r)
             if (r == 0) zeros++

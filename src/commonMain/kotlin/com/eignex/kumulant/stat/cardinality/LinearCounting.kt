@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.cardinality
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stream.StreamLong
+import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.casOr
 import com.eignex.kumulant.stream.defaultStreamMode
@@ -50,7 +51,7 @@ class LinearCounting(
 
     private val wordCount: Int = bits / 64
     private val mask: Long = (bits - 1).toLong()
-    private val words: Array<StreamLong> = Array(wordCount) { mode.newLong(0L) }
+    private val words: StreamLongArray = mode.newLongArray(wordCount)
     private val totalSeen: StreamLong = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
@@ -59,7 +60,7 @@ class LinearCounting(
         val pos = hash and mask
         val wordIdx = (pos ushr 6).toInt()
         val bitMask = 1L shl (pos and 63L).toInt()
-        casOr(words[wordIdx], bitMask)
+        casOr(words, wordIdx, bitMask)
         totalSeen.add(1L)
     }
 
@@ -67,15 +68,15 @@ class LinearCounting(
         require(values.bits == bits) {
             "Cannot merge LinearCounting with bits=${values.bits} into $bits"
         }
-        for (i in words.indices) {
+        for (i in 0 until wordCount) {
             val incoming = values.words[i]
-            if (incoming != 0L) casOr(words[i], incoming)
+            if (incoming != 0L) casOr(words, i, incoming)
         }
         totalSeen.add(values.totalSeen)
     }
 
     override fun reset() {
-        for (cell in words) cell.store(0L)
+        for (i in 0 until wordCount) words.store(i, 0L)
         totalSeen.store(0L)
     }
 
@@ -83,7 +84,7 @@ class LinearCounting(
         val snapshot = LongArray(wordCount)
         var setBits = 0L
         for (i in 0 until wordCount) {
-            val w = words[i].load()
+            val w = words.load(i)
             snapshot[i] = w
             setBits += w.countOneBits()
         }
