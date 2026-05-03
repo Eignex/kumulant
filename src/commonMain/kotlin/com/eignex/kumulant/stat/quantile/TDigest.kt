@@ -54,9 +54,7 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  * centroids to roughly `~6·δ`.
  *
  * Updates buffer values until [bufferCap] is reached, then fold them into the
- * sorted centroid list under the `k1`-difference ≤ 1 merge rule. State is
- * CAS-swapped immutables so SerialMode is cheap and AtomicMode is correct
- * (though not lock-free under heavy contention).
+ * sorted centroid list under the `k1`-difference ≤ 1 merge rule.
  */
 class TDigest(
     val compression: Double = 100.0,
@@ -73,66 +71,60 @@ class TDigest(
 
     private val bufferCap: Int = max(10, (5.0 * compression).toInt())
 
-    private class State(
-        val means: DoubleArray,
-        val weights: DoubleArray,
-        val totalWeight: Double,
-        val buffer: DoubleArray,
-        val bufferWeights: DoubleArray,
-        val bufferLen: Int
-    )
-
-    private fun emptyState() = State(
-        DoubleArray(0),
-        DoubleArray(0),
-        0.0,
-        DoubleArray(bufferCap),
-        DoubleArray(bufferCap),
-        0
-    )
-
-    private val stateRef = mode.newReference(emptyState())
+    private var means = DoubleArray(0)
+    private var weights = DoubleArray(0)
+    private val buffer = DoubleArray(bufferCap)
+    private val bufferWeights = DoubleArray(bufferCap)
+    private val bufferLen = mode.newLong(0L)
+    private val totalWeight = mode.newDouble(0.0)
 
     private fun k1(q: Double): Double =
         compression / (2.0 * PI) * asin(2.0 * q.coerceIn(0.0, 1.0) - 1.0)
 
-    private fun compress(s: State): State {
-        if (s.bufferLen == 0 && s.means.isEmpty()) return s
+    private fun compress() {
+        val bLen = bufferLen.load().toInt()
+        if (bLen == 0 && means.isEmpty()) return
 
-        val n = s.means.size + s.bufferLen
+        val n = means.size + bLen
         val combinedM = DoubleArray(n)
         val combinedW = DoubleArray(n)
 
         var i = 0
         var j = 0
         var c = 0
-        val bufIdx = (0 until s.bufferLen).sortedBy { s.buffer[it] }
-        while (i < s.means.size && j < s.bufferLen) {
-            val bv = s.buffer[bufIdx[j]]
-            if (s.means[i] <= bv) {
-                combinedM[c] = s.means[i]
-                combinedW[c] = s.weights[i]
+        val bufIdx = (0 until bLen).sortedBy { buffer[it] }
+        while (i < means.size && j < bLen) {
+            val bv = buffer[bufIdx[j]]
+            if (means[i] <= bv) {
+                combinedM[c] = means[i]
+                combinedW[c] = weights[i]
                 i++
             } else {
                 combinedM[c] = bv
-                combinedW[c] = s.bufferWeights[bufIdx[j]]
+                combinedW[c] = bufferWeights[bufIdx[j]]
                 j++
             }
             c++
         }
-        while (i < s.means.size) {
-            combinedM[c] = s.means[i]
-            combinedW[c] = s.weights[i]
+        while (i < means.size) {
+            combinedM[c] = means[i]
+            combinedW[c] = weights[i]
             i++; c++
         }
-        while (j < s.bufferLen) {
-            combinedM[c] = s.buffer[bufIdx[j]]
-            combinedW[c] = s.bufferWeights[bufIdx[j]]
+        while (j < bLen) {
+            combinedM[c] = buffer[bufIdx[j]]
+            combinedW[c] = bufferWeights[bufIdx[j]]
             j++; c++
         }
 
-        val totalWeight = s.totalWeight
-        if (totalWeight <= 0.0) return emptyState()
+        bufferLen.store(0L)
+
+        val total = totalWeight.load()
+        if (total <= 0.0) {
+            means = DoubleArray(0)
+            weights = DoubleArray(0)
+            return
+        }
 
         val outM = DoubleArray(n)
         val outW = DoubleArray(n)
@@ -146,7 +138,7 @@ class TDigest(
         for (idx in 1 until n) {
             val nextM = combinedM[idx]
             val nextW = combinedW[idx]
-            val combinedQRight = qLeft + (curW + nextW) / totalWeight
+            val combinedQRight = qLeft + (curW + nextW) / total
             val kRight = k1(combinedQRight)
             if (kRight - kLeft <= 1.0) {
                 val mergedW = curW + nextW
@@ -156,7 +148,7 @@ class TDigest(
                 outM[outLen] = curM
                 outW[outLen] = curW
                 outLen++
-                qLeft += curW / totalWeight
+                qLeft += curW / total
                 kLeft = k1(qLeft)
                 curM = nextM
                 curW = nextW
@@ -166,36 +158,18 @@ class TDigest(
         outW[outLen] = curW
         outLen++
 
-        return State(
-            outM.copyOf(outLen),
-            outW.copyOf(outLen),
-            totalWeight,
-            DoubleArray(bufferCap),
-            DoubleArray(bufferCap),
-            0
-        )
+        means = outM.copyOf(outLen)
+        weights = outW.copyOf(outLen)
     }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0 || value.isNaN()) return
-
-        while (true) {
-            val s = stateRef.load()
-            val newBuf = s.buffer.copyOf()
-            val newBufW = s.bufferWeights.copyOf()
-            newBuf[s.bufferLen] = value
-            newBufW[s.bufferLen] = weight
-            val staged = State(
-                s.means,
-                s.weights,
-                s.totalWeight + weight,
-                newBuf,
-                newBufW,
-                s.bufferLen + 1
-            )
-            val finalState = if (staged.bufferLen >= bufferCap) compress(staged) else staged
-            if (stateRef.compareAndSet(s, finalState)) return
-        }
+        val idx = bufferLen.load().toInt()
+        buffer[idx] = value
+        bufferWeights[idx] = weight
+        bufferLen.store((idx + 1).toLong())
+        totalWeight.add(weight)
+        if (idx + 1 >= bufferCap) compress()
     }
 
     override fun create(mode: StreamMode?) = TDigest(
@@ -214,22 +188,16 @@ class TDigest(
     }
 
     override fun reset() {
-        stateRef.store(emptyState())
+        means = DoubleArray(0)
+        weights = DoubleArray(0)
+        bufferLen.store(0L)
+        totalWeight.store(0.0)
     }
 
     override fun read(timestampNanos: Long): TDigestResult {
-        while (true) {
-            val s = stateRef.load()
-            if (s.bufferLen == 0) break
-            val compressed = compress(s)
-            if (stateRef.compareAndSet(s, compressed)) break
-        }
+        if (bufferLen.load() > 0L) compress()
 
-        val s = stateRef.load()
-        val means = s.means
-        val weights = s.weights
-        val total = s.totalWeight
-
+        val total = totalWeight.load()
         val computed = DoubleArray(probabilities.size)
         if (means.isEmpty() || total <= 0.0) {
             return TDigestResult(probabilities, computed, means.copyOf(), weights.copyOf(), total, compression)

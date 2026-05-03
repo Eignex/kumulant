@@ -31,8 +31,7 @@ data class HeavyHittersResult(
  *
  * Reported counts are one-sided overestimates: `count >= true count` and the gap is at
  * most `error`. Memory is `O(capacity)` Longs; mergeable via the Cormode/Yi rule
- * (apply the same admission policy to incoming triples). State is CAS-swapped immutables
- * so SerialMode is cheap and AtomicMode is correct under contention.
+ * (apply the same admission policy to incoming triples).
  */
 class SpaceSaving(
     val capacity: Int,
@@ -43,69 +42,47 @@ class SpaceSaving(
         require(capacity > 0) { "capacity must be > 0" }
     }
 
-    private class State(
-        val keys: LongArray,
-        val counts: LongArray,
-        val errors: LongArray,
-        val len: Int,
-        val totalSeen: Long,
-    )
+    private val keys = LongArray(capacity)
+    private val counts = LongArray(capacity)
+    private val errors = LongArray(capacity)
+    private val len = mode.newLong(0L)
+    private val totalSeen = mode.newLong(0L)
 
-    private fun emptyState() = State(
-        LongArray(capacity),
-        LongArray(capacity),
-        LongArray(capacity),
-        0,
-        0L,
-    )
-
-    private val stateRef = mode.newReference(emptyState())
-
-    private fun admit(s: State, key: Long, addCount: Long, addError: Long): State {
-        for (i in 0 until s.len) {
-            if (s.keys[i] == key) {
-                val newCounts = s.counts.copyOf()
-                val newErrors = s.errors.copyOf()
-                newCounts[i] = s.counts[i] + addCount
-                newErrors[i] = s.errors[i] + addError
-                return State(s.keys, newCounts, newErrors, s.len, s.totalSeen + 1L)
+    private fun admit(key: Long, addCount: Long, addError: Long) {
+        val n = len.load().toInt()
+        for (i in 0 until n) {
+            if (keys[i] == key) {
+                counts[i] += addCount
+                errors[i] += addError
+                return
             }
         }
-        if (s.len < capacity) {
-            val newKeys = s.keys.copyOf()
-            val newCounts = s.counts.copyOf()
-            val newErrors = s.errors.copyOf()
-            newKeys[s.len] = key
-            newCounts[s.len] = addCount
-            newErrors[s.len] = addError
-            return State(newKeys, newCounts, newErrors, s.len + 1, s.totalSeen + 1L)
+        if (n < capacity) {
+            keys[n] = key
+            counts[n] = addCount
+            errors[n] = addError
+            len.store((n + 1).toLong())
+            return
         }
         var minIdx = 0
-        var minCount = s.counts[0]
-        for (i in 1 until s.len) {
-            if (s.counts[i] < minCount) {
-                minCount = s.counts[i]
+        var minCount = counts[0]
+        for (i in 1 until n) {
+            if (counts[i] < minCount) {
+                minCount = counts[i]
                 minIdx = i
             }
         }
-        val newKeys = s.keys.copyOf()
-        val newCounts = s.counts.copyOf()
-        val newErrors = s.errors.copyOf()
-        newKeys[minIdx] = key
-        newCounts[minIdx] = minCount + addCount
-        newErrors[minIdx] = minCount + addError
-        return State(newKeys, newCounts, newErrors, s.len, s.totalSeen + 1L)
+        keys[minIdx] = key
+        counts[minIdx] = minCount + addCount
+        errors[minIdx] = minCount + addError
     }
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
         val w = weight.toLong()
         if (w <= 0L) return
-        while (true) {
-            val s = stateRef.load()
-            val next = admit(s, value, w, 0L)
-            if (stateRef.compareAndSet(s, next)) return
-        }
+        admit(value, w, 0L)
+        totalSeen.add(1L)
     }
 
     override fun merge(values: HeavyHittersResult) {
@@ -113,37 +90,29 @@ class SpaceSaving(
             "Cannot merge HeavyHitters with capacity=${values.capacity} into $capacity"
         }
         for (i in values.keys.indices) {
-            val key = values.keys[i]
-            val addCount = values.counts[i]
-            val addError = values.errors[i]
-            while (true) {
-                val s = stateRef.load()
-                // Replace the +1 totalSeen bump from admit with the merged batch's totalSeen
-                // contribution, applied once at the end.
-                val next = admit(s, key, addCount, addError)
-                val withoutSeenBump = State(next.keys, next.counts, next.errors, next.len, s.totalSeen)
-                if (stateRef.compareAndSet(s, withoutSeenBump)) break
-            }
+            admit(values.keys[i], values.counts[i], values.errors[i])
         }
-        while (true) {
-            val s = stateRef.load()
-            val next = State(s.keys, s.counts, s.errors, s.len, s.totalSeen + values.totalSeen)
-            if (stateRef.compareAndSet(s, next)) return
-        }
+        totalSeen.add(values.totalSeen)
     }
 
     override fun reset() {
-        stateRef.store(emptyState())
+        len.store(0L)
+        totalSeen.store(0L)
+        for (i in 0 until capacity) {
+            keys[i] = 0L
+            counts[i] = 0L
+            errors[i] = 0L
+        }
     }
 
     override fun read(timestampNanos: Long): HeavyHittersResult {
-        val s = stateRef.load()
+        val n = len.load().toInt().coerceAtMost(capacity)
         return HeavyHittersResult(
             capacity = capacity,
-            keys = s.keys.copyOf(s.len),
-            counts = s.counts.copyOf(s.len),
-            errors = s.errors.copyOf(s.len),
-            totalSeen = s.totalSeen,
+            keys = keys.copyOf(n),
+            counts = counts.copyOf(n),
+            errors = errors.copyOf(n),
+            totalSeen = totalSeen.load(),
         )
     }
 

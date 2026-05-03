@@ -85,10 +85,6 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  * Weighted reservoir sample of size [capacity] via Algorithm A-Res
  * (Efraimidis & Spirakis): each item gets a key `u^(1/w)` and the top-`k`
  * keys are retained, giving an unbiased weight-proportional sample.
- *
- * State is held behind a CAS-swapped reference; under [com.eignex.kumulant.stream.AtomicMode]
- * concurrent updates are racy but eventually consistent. For strict
- * thread-safety, wrap in `.locked()`.
  */
 class ReservoirHistogram(
     val capacity: Int = 1024,
@@ -100,17 +96,12 @@ class ReservoirHistogram(
         require(capacity > 0) { "capacity must be > 0" }
     }
 
-    private class State(
-        val values: DoubleArray,
-        val keys: DoubleArray,
-        val totalSeen: Long,
-        val totalWeight: Double
-    )
-
     private val random = Random(seed)
-    private val stateRef = mode.newReference(
-        State(DoubleArray(0), DoubleArray(0), 0L, 0.0)
-    )
+    private val values = DoubleArray(capacity)
+    private val keys = DoubleArray(capacity)
+    private val len = mode.newLong(0L)
+    private val totalSeen = mode.newLong(0L)
+    private val totalWeight = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0 || value.isNaN()) return
@@ -118,35 +109,30 @@ class ReservoirHistogram(
         val u = random.nextDouble()
         val key = if (weight == 1.0) u else u.pow(1.0 / weight)
 
-        while (true) {
-            val s = stateRef.load()
-            val newState: State
-            if (s.values.size < capacity) {
-                val newVals = s.values.copyOf(s.values.size + 1)
-                val newKeys = s.keys.copyOf(s.keys.size + 1)
-                newVals[s.values.size] = value
-                newKeys[s.keys.size] = key
-                newState = State(newVals, newKeys, s.totalSeen + 1, s.totalWeight + weight)
-            } else {
-                var minIdx = 0
-                var minKey = s.keys[0]
-                for (i in 1 until s.keys.size) {
-                    if (s.keys[i] < minKey) {
-                        minKey = s.keys[i]
-                        minIdx = i
-                    }
-                }
-                if (key > minKey) {
-                    val newVals = s.values.copyOf()
-                    val newKeys = s.keys.copyOf()
-                    newVals[minIdx] = value
-                    newKeys[minIdx] = key
-                    newState = State(newVals, newKeys, s.totalSeen + 1, s.totalWeight + weight)
-                } else {
-                    newState = State(s.values, s.keys, s.totalSeen + 1, s.totalWeight + weight)
-                }
+        admit(value, key)
+        totalSeen.add(1L)
+        totalWeight.add(weight)
+    }
+
+    private fun admit(value: Double, key: Double) {
+        val n = len.load().toInt()
+        if (n < capacity) {
+            values[n] = value
+            keys[n] = key
+            len.store((n + 1).toLong())
+            return
+        }
+        var minIdx = 0
+        var minKey = keys[0]
+        for (i in 1 until capacity) {
+            if (keys[i] < minKey) {
+                minKey = keys[i]
+                minIdx = i
             }
-            if (stateRef.compareAndSet(s, newState)) return
+        }
+        if (key > minKey) {
+            values[minIdx] = value
+            keys[minIdx] = key
         }
     }
 
@@ -160,42 +146,31 @@ class ReservoirHistogram(
         require(values.values.size == values.keys.size) {
             "ReservoirResult values/keys size mismatch"
         }
-        while (true) {
-            val s = stateRef.load()
-            val combinedVals = s.values + values.values
-            val combinedKeys = s.keys + values.keys
-
-            val (vOut, kOut) = if (combinedVals.size <= capacity) {
-                combinedVals to combinedKeys
-            } else {
-                val indices = (combinedKeys.indices).sortedByDescending { combinedKeys[it] }
-                    .take(capacity)
-                val v = DoubleArray(capacity) { combinedVals[indices[it]] }
-                val k = DoubleArray(capacity) { combinedKeys[indices[it]] }
-                v to k
-            }
-            val newState = State(
-                vOut,
-                kOut,
-                s.totalSeen + values.totalSeen,
-                s.totalWeight + values.totalWeight
-            )
-            if (stateRef.compareAndSet(s, newState)) return
+        for (i in values.values.indices) {
+            admit(values.values[i], values.keys[i])
         }
+        totalSeen.add(values.totalSeen)
+        totalWeight.add(values.totalWeight)
     }
 
     override fun reset() {
-        stateRef.store(State(DoubleArray(0), DoubleArray(0), 0L, 0.0))
+        len.store(0L)
+        totalSeen.store(0L)
+        totalWeight.store(0.0)
+        for (i in 0 until capacity) {
+            values[i] = 0.0
+            keys[i] = 0.0
+        }
     }
 
     override fun read(timestampNanos: Long): ReservoirResult {
-        val s = stateRef.load()
+        val n = len.load().toInt().coerceAtMost(capacity)
         return ReservoirResult(
-            values = s.values.copyOf(),
-            keys = s.keys.copyOf(),
+            values = values.copyOf(n),
+            keys = keys.copyOf(n),
             capacity = capacity,
-            totalSeen = s.totalSeen,
-            totalWeight = s.totalWeight
+            totalSeen = totalSeen.load(),
+            totalWeight = totalWeight.load()
         )
     }
 }
