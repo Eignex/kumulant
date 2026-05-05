@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -34,7 +33,7 @@ data class PairedSumResult(
  * a Welford-style stat over each axis instead.
  */
 class PairedSum(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<PairedSumResult> {
 
     private val mode = concurrency.additiveMode()

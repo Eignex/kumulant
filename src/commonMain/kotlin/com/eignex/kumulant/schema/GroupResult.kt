@@ -46,35 +46,40 @@ data class GroupResult(
  *
  * Subclass and declare stats via the [series], [paired], [vector], [discrete], and [group]
  * delegates; each property exposes a [StatKey] for typed retrieval from a [GroupResult].
+ *
+ * The schema-level [concurrency] propagates to every registered stat at delegate time
+ * via `stat.create(concurrency)`. Set it on the schema to configure a coherent bag of
+ * stats with one contract; per-stat `concurrency = …` arguments inside delegates are
+ * overridden by the schema's choice.
  */
-abstract class StatSchema {
+abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) {
     internal val specs = mutableListOf<StatSpec<*, *, *>>()
 
     protected fun <R : Result, S : SeriesStat<R>> series(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
-            specs.add(StatSpec(key, stat))
+            specs.add(StatSpec(key, stat.create(concurrency)))
             ReadOnlyProperty { _, _ -> key }
         }
 
     protected fun <R : Result, S : PairedStat<R>> paired(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
-            specs.add(StatSpec(key, stat))
+            specs.add(StatSpec(key, stat.create(concurrency)))
             ReadOnlyProperty { _, _ -> key }
         }
 
     protected fun <R : Result, S : VectorStat<R>> vector(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
-            specs.add(StatSpec(key, stat))
+            specs.add(StatSpec(key, stat.create(concurrency)))
             ReadOnlyProperty { _, _ -> key }
         }
 
     protected fun <R : Result, S : DiscreteStat<R>> discrete(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
-            specs.add(StatSpec(key, stat))
+            specs.add(StatSpec(key, stat.create(concurrency)))
             ReadOnlyProperty { _, _ -> key }
         }
 

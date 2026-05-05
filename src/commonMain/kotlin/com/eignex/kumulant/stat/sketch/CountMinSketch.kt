@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.additiveMode
@@ -58,7 +57,7 @@ class CountMinSketch(
     val depth: Int = 5,
     val width: Int = 1024,
     val seed: Long = -7046029254386353133L, // 0x9e3779b97f4a7c15
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<CountMinSketchResult> {
 
     init {

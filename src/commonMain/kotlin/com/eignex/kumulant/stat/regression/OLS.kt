@@ -5,7 +5,6 @@ import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stat.summary.VarianceResult
 import com.eignex.kumulant.stream.getValue
 import com.eignex.kumulant.stream.welfordLock
@@ -54,7 +53,7 @@ data class OLSResult(
  * Supports weighted observations.
  */
 class OLS(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<OLSResult> {
 
     private val mode = concurrency.welfordMode()

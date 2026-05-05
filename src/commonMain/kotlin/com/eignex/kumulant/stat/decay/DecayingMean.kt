@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.decay
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration
@@ -27,10 +26,10 @@ data class DecayingMeanResult(
  */
 class DecayingMean(
     val weighting: DecayWeighting.HalfLife,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<DecayingMeanResult> {
 
-    constructor(halfLife: Duration, concurrency: Concurrency = defaultConcurrency) :
+    constructor(halfLife: Duration, concurrency: Concurrency = Concurrency.None) :
         this(DecayWeighting.HalfLife(halfLife), concurrency)
 
     val halfLife: Duration get() = weighting.halfLife

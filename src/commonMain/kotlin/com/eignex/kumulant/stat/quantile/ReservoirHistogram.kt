@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -94,7 +93,7 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
 class ReservoirHistogram(
     val capacity: Int = 1024,
     val seed: Long = Random.Default.nextLong(),
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<ReservoirResult> {
 
     init {

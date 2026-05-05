@@ -5,7 +5,6 @@ import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.HasShapeMoments
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -30,7 +29,7 @@ data class MomentsResult(
  * Uses the Pébay/Welford parallel recurrences; suitable for streaming and merge.
  */
 class Moments(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<MomentsResult> {
 
     private val mode = concurrency.welfordMode()

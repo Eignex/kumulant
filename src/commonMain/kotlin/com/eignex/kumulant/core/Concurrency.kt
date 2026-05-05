@@ -10,29 +10,14 @@ package com.eignex.kumulant.core
  * - [Strict]: multi-threaded; serialised when needed for full correctness.
  * - [HighWrite]: multi-threaded write-heavy. JVM uses striped adders for naively
  *   additive stats; on other platforms behaves like [Strict].
+ *
+ * Bare-stat construction defaults to [None]. To configure a coherent bag of stats
+ * with one contract, declare them inside a `StatSchema(concurrency = …)` and the
+ * schema propagates the choice to every registered stat at delegate registration.
  */
 enum class Concurrency {
     None,
     Relaxed,
     Strict,
     HighWrite,
-}
-
-/**
- * Global default [Concurrency] used by stat constructors when none is passed. Mutable
- * via [withConcurrency] or direct assignment. Not thread-isolated: in concurrent
- * contexts where different threads need different defaults, pass `concurrency =`
- * explicitly to each stat constructor instead of relying on this global.
- */
-var defaultConcurrency: Concurrency = Concurrency.None
-
-/** Temporarily overrides [defaultConcurrency] for the duration of the block. */
-inline fun <T> withConcurrency(concurrency: Concurrency, block: () -> T): T {
-    val previous = defaultConcurrency
-    defaultConcurrency = concurrency
-    return try {
-        block()
-    } finally {
-        defaultConcurrency = previous
-    }
 }

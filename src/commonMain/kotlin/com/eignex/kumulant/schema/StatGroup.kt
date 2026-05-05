@@ -6,7 +6,6 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.core.defaultConcurrency
 
 /**
  * Internal base shared by [StatGroup], [PairedStatGroup], and [VectorStatGroup]. Holds the
@@ -16,7 +15,7 @@ sealed class AbstractStatGroup<S : Stat<*>>(
     protected val stats: List<StatSpec<*, out S, *>>,
     protected val concurrencyOverride: Concurrency?,
 ) : GroupedStat {
-    final override val concurrency: Concurrency get() = concurrencyOverride ?: defaultConcurrency
+    final override val concurrency: Concurrency get() = concurrencyOverride ?: Concurrency.None
 
     final override fun read(timestampNanos: Long): GroupResult =
         GroupResult(stats.associate { (key, stat) -> key.name to stat.read(timestampNanos) })

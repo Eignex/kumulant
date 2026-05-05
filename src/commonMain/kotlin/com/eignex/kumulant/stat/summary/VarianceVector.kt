@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.operation.expandedToVector
 
 /**
@@ -15,6 +14,6 @@ import com.eignex.kumulant.operation.expandedToVector
  */
 fun varianceVector(
     dimensions: Int,
-    concurrency: Concurrency = defaultConcurrency,
+    concurrency: Concurrency = Concurrency.None,
 ): VectorStat<ResultList<WeightedVarianceResult>> =
     { _: Int -> Variance(concurrency) }.expandedToVector(dimensions)

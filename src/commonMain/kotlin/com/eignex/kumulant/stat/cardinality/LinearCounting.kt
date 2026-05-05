@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.cardinality
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casOr
@@ -41,7 +40,7 @@ data class LinearCountingResult(
  */
 class LinearCounting(
     val bits: Int = 4096,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<LinearCountingResult> {
 
     init {

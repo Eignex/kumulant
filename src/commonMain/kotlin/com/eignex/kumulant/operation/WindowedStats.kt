@@ -7,7 +7,6 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.SliceRing
 import kotlin.time.Duration
 
@@ -21,28 +20,28 @@ import kotlin.time.Duration
 fun <R : Result> SeriesStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
-    concurrency: Concurrency = defaultConcurrency
+    concurrency: Concurrency = Concurrency.None
 ): SeriesStat<R> = WindowedSeriesStat(duration, slices, this, concurrency)
 
 /** Paired-stat counterpart of [SeriesStat.windowed]. */
 fun <R : Result> PairedStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
-    concurrency: Concurrency = defaultConcurrency
+    concurrency: Concurrency = Concurrency.None
 ): PairedStat<R> = WindowedPairedStat(duration, slices, this, concurrency)
 
 /** Vector-stat counterpart of [SeriesStat.windowed]. */
 fun <R : Result> VectorStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
-    concurrency: Concurrency = defaultConcurrency
+    concurrency: Concurrency = Concurrency.None
 ): VectorStat<R> = WindowedVectorStat(duration, slices, this, concurrency)
 
 /** Discrete-stat counterpart of [SeriesStat.windowed]. */
 fun <R : Result> DiscreteStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
-    concurrency: Concurrency = defaultConcurrency
+    concurrency: Concurrency = Concurrency.None
 ): DiscreteStat<R> = WindowedDiscreteStat(duration, slices, this, concurrency)
 
 /**
@@ -65,7 +64,7 @@ internal class WindowedSeriesStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
     template: SeriesStat<R>,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<R> {
 
     private val template = template.create(concurrency = this.concurrency)
@@ -88,7 +87,7 @@ internal class WindowedPairedStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
     template: PairedStat<R>,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<R> {
 
     private val template = template.create(concurrency = this.concurrency)
@@ -111,7 +110,7 @@ internal class WindowedDiscreteStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
     template: DiscreteStat<R>,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<R> {
 
     private val template = template.create(concurrency = this.concurrency)
@@ -134,7 +133,7 @@ internal class WindowedVectorStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
     template: VectorStat<R>,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : VectorStat<R> {
 
     private val template = template.create(concurrency = this.concurrency)

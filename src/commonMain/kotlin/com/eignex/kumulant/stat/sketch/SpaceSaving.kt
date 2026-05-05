@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -40,7 +39,7 @@ data class HeavyHittersResult(
  */
 class SpaceSaving(
     val capacity: Int,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<HeavyHittersResult> {
 
     init {

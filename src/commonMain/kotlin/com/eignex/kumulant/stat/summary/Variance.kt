@@ -4,7 +4,6 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -34,7 +33,7 @@ data class WeightedVarianceResult(
  * the result for the unbiased estimator.
  */
 class Variance(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<WeightedVarianceResult> {
 
     private val mode = concurrency.welfordMode()

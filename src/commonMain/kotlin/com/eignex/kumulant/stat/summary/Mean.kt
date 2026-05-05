@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -31,7 +30,7 @@ data class WeightedMeanResult(
  * parallel algorithm.
  */
 class Mean(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<WeightedMeanResult> {
 
     private val mode = concurrency.welfordMode()

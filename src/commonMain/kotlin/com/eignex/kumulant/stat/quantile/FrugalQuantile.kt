@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 
@@ -22,7 +21,7 @@ class FrugalQuantile(
     val q: Double,
     val stepSize: Double = 0.01,
     val initialEstimate: Double = 0.0,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<QuantileResult> {
 
     init {

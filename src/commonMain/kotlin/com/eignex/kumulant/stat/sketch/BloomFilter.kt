@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casOr
@@ -53,7 +52,7 @@ fun BloomFilterResult.contains(value: Long): Boolean {
 class BloomFilter(
     val bits: Int = 1 shl 16,
     val hashes: Int = 7,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<BloomFilterResult> {
 
     init {

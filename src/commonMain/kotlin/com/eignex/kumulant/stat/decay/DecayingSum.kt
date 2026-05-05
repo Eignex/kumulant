@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.decay
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.currentTimeNanos
@@ -32,10 +31,10 @@ data class DecayingSumResult(
  */
 class DecayingSum(
     val weighting: DecayWeighting.HalfLife,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<DecayingSumResult> {
 
-    constructor(halfLife: Duration, concurrency: Concurrency = defaultConcurrency) :
+    constructor(halfLife: Duration, concurrency: Concurrency = Concurrency.None) :
         this(DecayWeighting.HalfLife(halfLife), concurrency)
 
     val halfLife: Duration get() = weighting.halfLife

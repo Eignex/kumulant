@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
 import kotlinx.serialization.SerialName
@@ -17,5 +16,5 @@ data class CountResult(
 ) : Result
 
 /** Observation count: each update contributes 1 regardless of supplied value and weight. */
-class Count(concurrency: Concurrency = defaultConcurrency) :
+class Count(concurrency: Concurrency = Concurrency.None) :
     SeriesStat<SumResult> by Sum(concurrency).withWeight(1.0).withValue(1.0)

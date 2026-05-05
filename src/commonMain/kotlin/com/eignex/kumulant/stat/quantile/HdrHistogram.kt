@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import kotlin.math.ceil
@@ -18,7 +17,7 @@ class HdrHistogram(
     val lowestDiscernibleValue: Double = 0.001,
     val initialHighestTrackableValue: Double = 100.0,
     val significantDigits: Int = 3,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<SparseHistogramResult> {
 
     private val mode = concurrency.additiveMode()

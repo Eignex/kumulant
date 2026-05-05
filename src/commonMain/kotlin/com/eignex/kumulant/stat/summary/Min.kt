@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.casMin
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
@@ -18,7 +17,7 @@ data class MinResult(
 
 /** Tracks the minimum of a stream. */
 class Min(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<MinResult> {
 
     private val mode = concurrency.monotonicMode()

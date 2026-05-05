@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.operation.mapResult
 import com.eignex.kumulant.stat.summary.VarianceResult
 import kotlinx.serialization.SerialName
@@ -48,7 +47,7 @@ data class CovarianceResult(
  * and [CovarianceResult] is projected from [OLSResult] via [mapResult].
  */
 class Covariance(
-    concurrency: Concurrency = defaultConcurrency,
+    concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<CovarianceResult> by OLS(concurrency).mapResult(
     forward = { ols ->
         val w = ols.totalWeights

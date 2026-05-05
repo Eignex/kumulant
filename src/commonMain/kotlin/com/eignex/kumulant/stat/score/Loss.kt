@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.score
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import kotlin.math.abs
@@ -15,7 +14,7 @@ private const val LOG_LOSS_EPS: Double = 1e-15
  * mean of `(prediction − truth)²`.
  */
 class MseLoss(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<WeightedMeanResult> {
 
     private val inner = Mean(concurrency)
@@ -36,7 +35,7 @@ class MseLoss(
  * mean of `|prediction − truth|`.
  */
 class MaeLoss(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<WeightedMeanResult> {
 
     private val inner = Mean(concurrency)
@@ -59,7 +58,7 @@ class MaeLoss(
  * `±∞` on perfectly confident wrong predictions.
  */
 class LogLoss(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<WeightedMeanResult> {
 
     private val inner = Mean(concurrency)

@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.rate
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 
@@ -17,7 +16,7 @@ import com.eignex.kumulant.stream.welfordMode
  * value is counted as post-reset progress.
  */
 class CounterRate(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
     val treatDecreaseAsReset: Boolean = true,
 ) : SeriesStat<RateResult> {
 

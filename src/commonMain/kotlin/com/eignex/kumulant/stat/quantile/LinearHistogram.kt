@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.ArrayBins
 import com.eignex.kumulant.stream.additiveMode
 
@@ -17,7 +16,7 @@ class LinearHistogram(
     val lowerBound: Double,
     val upperBound: Double,
     val binCount: Int,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<SparseHistogramResult> {
 
     init {

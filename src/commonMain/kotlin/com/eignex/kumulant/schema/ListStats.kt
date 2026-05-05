@@ -8,7 +8,6 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.core.defaultConcurrency
 
 private fun requireUniqueNames(entries: List<Pair<String, *>>, typeName: String) {
     val duplicates = entries.map { it.first }.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
@@ -28,7 +27,7 @@ sealed class AbstractListStats<R : Result, S : Stat<out R>>(
 ) : Stat<ResultList<R>> {
     init { requireUniqueNames(entries, typeName) }
 
-    final override val concurrency: Concurrency get() = concurrencyOverride ?: defaultConcurrency
+    final override val concurrency: Concurrency get() = concurrencyOverride ?: Concurrency.None
 
     final override fun read(timestampNanos: Long): ResultList<R> =
         ResultList(entries.map { it.first }, entries.map { it.second.read(timestampNanos) })

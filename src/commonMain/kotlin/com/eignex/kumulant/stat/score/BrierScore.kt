@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.score
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 
@@ -15,7 +14,7 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  * counterpart to Gaussian CRPS. Lower is better; the bound is `[0, 1]`.
  */
 class BrierScore(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<WeightedMeanResult> {
 
     private val inner = Mean(concurrency)

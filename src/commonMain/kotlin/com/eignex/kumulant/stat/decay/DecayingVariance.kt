@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.decay
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.currentTimeNanos
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
@@ -39,10 +38,10 @@ data class DecayingVarianceResult(
  */
 class DecayingVariance(
     val weighting: DecayWeighting.HalfLife,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<DecayingVarianceResult> {
 
-    constructor(halfLife: Duration, concurrency: Concurrency = defaultConcurrency) :
+    constructor(halfLife: Duration, concurrency: Concurrency = Concurrency.None) :
         this(DecayWeighting.HalfLife(halfLife), concurrency)
 
     val halfLife: Duration get() = weighting.halfLife

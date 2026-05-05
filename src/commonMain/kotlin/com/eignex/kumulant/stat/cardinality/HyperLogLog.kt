@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.cardinality
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casMax
@@ -53,7 +52,7 @@ data class HyperLogLogResult(
  */
 class HyperLogLog(
     val precision: Int = 14,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<HyperLogLogResult> {
 
     init {

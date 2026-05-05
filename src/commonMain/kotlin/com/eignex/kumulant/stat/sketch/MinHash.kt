@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casMin
@@ -62,7 +61,7 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
 class MinHash(
     val numHashes: Int = 128,
     val seed: Long = -3724518991637283867L, // 0xcafef00dd15ea5e5
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<MinHashResult> {
 
     init {

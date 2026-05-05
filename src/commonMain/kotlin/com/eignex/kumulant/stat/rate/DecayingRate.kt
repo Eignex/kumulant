@@ -4,7 +4,6 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.operation.mapResult
 import com.eignex.kumulant.stat.decay.DecayingSum
 import com.eignex.kumulant.stat.decay.DecayingSumResult
@@ -29,7 +28,7 @@ data class DecayingRateResult(
  */
 class DecayingRate(
     val halfLife: Duration,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<DecayingRateResult> by decayingRateDelegate(halfLife, concurrency)
 
 private fun rateScale(halfLife: Duration): Double =

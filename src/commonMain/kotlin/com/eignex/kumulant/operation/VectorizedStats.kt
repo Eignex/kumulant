@@ -5,7 +5,6 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.core.defaultConcurrency
 
 /** Expand a template factory into a [VectorStat] with one [SeriesStat] per of the [dimensions] slots. */
 fun <R : Result> ((Int) -> SeriesStat<R>).expandedToVector(
@@ -26,7 +25,7 @@ class VectorizedStat<R : Result>(
     private val concurrencyOverride: Concurrency? = null,
 ) : VectorStat<ResultList<R>> {
 
-    override val concurrency: Concurrency get() = concurrencyOverride ?: defaultConcurrency
+    override val concurrency: Concurrency get() = concurrencyOverride ?: Concurrency.None
 
     private val stats: Array<SeriesStat<R>> =
         Array(dimensions) { i -> template(i) }

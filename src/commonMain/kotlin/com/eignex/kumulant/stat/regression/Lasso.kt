@@ -5,7 +5,6 @@ import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.operation.mapResult
 import com.eignex.kumulant.stat.summary.VarianceResult
 import kotlinx.serialization.SerialName
@@ -44,7 +43,7 @@ data class LassoResult(
  */
 class Lasso(
     val lambda: Double,
-    concurrency: Concurrency = defaultConcurrency,
+    concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<LassoResult> by OLS(concurrency).mapResult(
     forward = { ols ->
         val w = ols.totalWeights

@@ -4,7 +4,6 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -33,7 +32,7 @@ data class RateResult(
  * see [DecayingRate]. Use [withValue][com.eignex.kumulant.operation.withValue] to count each update as 1.
  */
 class Rate(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<RateResult> {
 
     private val mode = concurrency.additiveMode()

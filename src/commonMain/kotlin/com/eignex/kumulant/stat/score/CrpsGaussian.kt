@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.score
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.forecast.GaussianForecast
 import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
@@ -13,7 +12,7 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  * aggregated as a [Mean]. Use to evaluate a probabilistic forecaster against truth.
  */
 class CrpsGaussian(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : VectorStat<WeightedMeanResult> {
 
     private val inner = Mean(concurrency)

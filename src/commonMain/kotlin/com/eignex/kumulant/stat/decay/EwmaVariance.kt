@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.decay
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
@@ -15,10 +14,10 @@ import com.eignex.kumulant.stream.welfordMode
  */
 class EwmaVariance(
     val weighting: DecayWeighting.Alpha,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<WeightedVarianceResult> {
 
-    constructor(alpha: Double, concurrency: Concurrency = defaultConcurrency) :
+    constructor(alpha: Double, concurrency: Concurrency = Concurrency.None) :
         this(DecayWeighting.Alpha(alpha), concurrency)
 
     val alpha: Double get() = weighting.alpha

@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
@@ -18,7 +17,7 @@ data class MaxResult(
 
 /** Tracks the maximum of a stream. */
 class Max(
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<MaxResult> {
 
     private val mode = concurrency.monotonicMode()

@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.score
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 
@@ -16,7 +15,7 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  */
 class PinballLoss(
     val tau: Double,
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<WeightedMeanResult> {
 
     init { require(tau in 0.0..1.0) { "tau must be in [0, 1]; got $tau" } }

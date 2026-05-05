@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.ArrayBins
 import com.eignex.kumulant.stream.additiveMode
 import kotlin.math.abs
@@ -27,7 +26,7 @@ class DDSketch(
         0.99,
         0.999
     ),
-    override val concurrency: Concurrency = defaultConcurrency,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<SketchResult> {
 
     init {
