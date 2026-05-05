@@ -1,8 +1,10 @@
 package com.eignex.kumulant.stat.rate
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 
 /**
  * Rate derived from a monotonic counter stream.
@@ -15,10 +17,12 @@ import com.eignex.kumulant.stream.defaultStreamMode
  * value is counted as post-reset progress.
  */
 class CounterRate(
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
     val treatDecreaseAsReset: Boolean = true,
 ) : SeriesStat<RateResult> {
 
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val totalDelta = mode.newDouble(0.0)
     private val startTimestampNanos = mode.newLong(Long.MIN_VALUE)
     private val lastCounter = mode.newDouble(Double.NaN)
@@ -28,17 +32,17 @@ class CounterRate(
         value: Double,
         timestampNanos: Long,
         weight: Double
-    ) {
+    ) = lock.withLock {
         val previousCounter = lastCounter.load()
         val previousTimestamp = lastTimestampNanos.load()
 
         if (previousTimestamp == Long.MIN_VALUE || previousCounter.isNaN()) {
             lastCounter.store(value)
             lastTimestampNanos.store(timestampNanos)
-            return
+            return@withLock
         }
 
-        if (timestampNanos <= previousTimestamp) return
+        if (timestampNanos <= previousTimestamp) return@withLock
 
         val isReset = value < previousCounter
         val rawDelta = when {
@@ -61,24 +65,24 @@ class CounterRate(
         lastTimestampNanos.store(timestampNanos)
     }
 
-    override fun create(mode: StreamMode?) =
-        CounterRate(mode ?: this.mode, treatDecreaseAsReset)
+    override fun create(concurrency: Concurrency?) =
+        CounterRate(concurrency ?: this.concurrency, treatDecreaseAsReset)
 
-    override fun read(timestampNanos: Long): RateResult {
+    override fun read(timestampNanos: Long): RateResult = lock.withLock {
         val start = if (startTimestampNanos.load() == Long.MIN_VALUE) {
             timestampNanos
         } else {
             startTimestampNanos.load()
         }
-        return RateResult(
+        RateResult(
             startTimestampNanos = start,
             totalValue = totalDelta.load(),
             timestampNanos = timestampNanos
         )
     }
 
-    override fun merge(values: RateResult) {
-        if (values.totalValue == 0.0) return
+    override fun merge(values: RateResult) = lock.withLock {
+        if (values.totalValue == 0.0) return@withLock
 
         totalDelta.add(values.totalValue)
 
@@ -88,7 +92,7 @@ class CounterRate(
         }
     }
 
-    override fun reset() {
+    override fun reset() = lock.withLock {
         totalDelta.store(0.0)
         lastCounter.store(Double.NaN)
         lastTimestampNanos.store(Long.MIN_VALUE)

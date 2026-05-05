@@ -1,11 +1,11 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
 
 /** Expand a template factory into a [VectorStat] with one [SeriesStat] per of the [dimensions] slots. */
 fun <R : Result> ((Int) -> SeriesStat<R>).expandedToVector(
@@ -23,10 +23,10 @@ fun <R : Result> ((Int) -> SeriesStat<R>).expandedToVector(
 class VectorizedStat<R : Result>(
     val dimensions: Int,
     val template: (index: Int) -> SeriesStat<R>,
-    private val modeOverride: StreamMode? = null,
+    private val concurrencyOverride: Concurrency? = null,
 ) : VectorStat<ResultList<R>> {
 
-    override val mode: StreamMode get() = modeOverride ?: defaultStreamMode
+    override val concurrency: Concurrency get() = concurrencyOverride ?: defaultConcurrency
 
     private val stats: Array<SeriesStat<R>> =
         Array(dimensions) { i -> template(i) }
@@ -49,8 +49,8 @@ class VectorizedStat<R : Result>(
         return ResultList(stats.map { it.read(timestampNanos) })
     }
 
-    override fun create(mode: StreamMode?): VectorStat<ResultList<R>> =
-        VectorizedStat(dimensions, template, mode ?: this.modeOverride)
+    override fun create(concurrency: Concurrency?): VectorStat<ResultList<R>> =
+        VectorizedStat(dimensions, template, concurrency ?: this.concurrencyOverride)
 
     override fun merge(values: ResultList<R>) {
         require(values.results.size == dimensions)

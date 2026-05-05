@@ -5,8 +5,8 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.stream.StreamMode
 
 /** Scalar-to-scalar transform applied pre-update. */
 fun interface DoubleTransform {
@@ -41,8 +41,8 @@ internal class TransformValueStat<R : Result>(
         delegate.update(transform.apply(value), timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): SeriesStat<R> {
-        return TransformValueStat(delegate.create(mode), transform)
+    override fun create(concurrency: Concurrency?): SeriesStat<R> {
+        return TransformValueStat(delegate.create(concurrency), transform)
     }
 }
 
@@ -56,8 +56,8 @@ internal class TransformPairStat<R : Result>(
         delegate.update(mappedX, mappedY, timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): PairedStat<R> {
-        return TransformPairStat(delegate.create(mode), transform)
+    override fun create(concurrency: Concurrency?): PairedStat<R> {
+        return TransformPairStat(delegate.create(concurrency), transform)
     }
 }
 
@@ -70,8 +70,8 @@ internal class TransformVectorStat<R : Result>(
         delegate.update(transform.apply(vector), timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): VectorStat<R> {
-        return TransformVectorStat(delegate.create(mode), transform)
+    override fun create(concurrency: Concurrency?): VectorStat<R> {
+        return TransformVectorStat(delegate.create(concurrency), transform)
     }
 }
 
@@ -84,8 +84,8 @@ internal class TransformLongStat<R : Result>(
         delegate.update(transform.apply(value), timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): DiscreteStat<R> {
-        return TransformLongStat(delegate.create(mode), transform)
+    override fun create(concurrency: Concurrency?): DiscreteStat<R> {
+        return TransformLongStat(delegate.create(concurrency), transform)
     }
 }
 
@@ -147,8 +147,8 @@ internal class DiscreteAsSeriesStat<R : Result>(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(value.toLong(), timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?): SeriesStat<R> =
-        DiscreteAsSeriesStat(delegate.create(mode))
+    override fun create(concurrency: Concurrency?): SeriesStat<R> =
+        DiscreteAsSeriesStat(delegate.create(concurrency))
 }
 
 /** Adapter implementing [SeriesStat.asDiscrete]. */
@@ -158,6 +158,6 @@ internal class SeriesAsDiscreteStat<R : Result>(
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         delegate.update(value.toDouble(), timestampNanos, weight)
     }
-    override fun create(mode: StreamMode?): DiscreteStat<R> =
-        SeriesAsDiscreteStat(delegate.create(mode))
+    override fun create(concurrency: Concurrency?): DiscreteStat<R> =
+        SeriesAsDiscreteStat(delegate.create(concurrency))
 }

@@ -5,8 +5,8 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.stream.StreamMode
 
 /**
  * Present a [SeriesStat]'s result as a different type via an invertible projection.
@@ -48,11 +48,11 @@ private class MappedResultCore<R1 : Result, R2 : Result>(
     private val forward: (R1) -> R2,
     private val reverse: (R2) -> R1,
 ) : Stat<R2> {
-    override val mode: StreamMode get() = delegate.mode
+    override val concurrency: Concurrency get() = delegate.concurrency
     override fun merge(values: R2) = delegate.merge(reverse(values))
     override fun reset() = delegate.reset()
     override fun read(timestampNanos: Long): R2 = forward(delegate.read(timestampNanos))
-    override fun create(mode: StreamMode?): Stat<R2> =
+    override fun create(concurrency: Concurrency?): Stat<R2> =
         error("MappedResultCore.create is not used; the modality adapter rebuilds itself")
 }
 
@@ -64,8 +64,8 @@ internal class MapResultSeriesStat<R1 : Result, R2 : Result>(
 ) : SeriesStat<R2>, Stat<R2> by MappedResultCore(delegate, forward, reverse) {
     override fun update(value: Double, timestampNanos: Long, weight: Double) =
         delegate.update(value, timestampNanos, weight)
-    override fun create(mode: StreamMode?): SeriesStat<R2> =
-        MapResultSeriesStat(delegate.create(mode), forward, reverse)
+    override fun create(concurrency: Concurrency?): SeriesStat<R2> =
+        MapResultSeriesStat(delegate.create(concurrency), forward, reverse)
 }
 
 /** Adapter implementing the paired-stat variant of [mapResult]. */
@@ -76,8 +76,8 @@ internal class MapResultPairedStat<R1 : Result, R2 : Result>(
 ) : PairedStat<R2>, Stat<R2> by MappedResultCore(delegate, forward, reverse) {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) =
         delegate.update(x, y, timestampNanos, weight)
-    override fun create(mode: StreamMode?): PairedStat<R2> =
-        MapResultPairedStat(delegate.create(mode), forward, reverse)
+    override fun create(concurrency: Concurrency?): PairedStat<R2> =
+        MapResultPairedStat(delegate.create(concurrency), forward, reverse)
 }
 
 /** Adapter implementing the vector-stat variant of [mapResult]. */
@@ -88,8 +88,8 @@ internal class MapResultVectorStat<R1 : Result, R2 : Result>(
 ) : VectorStat<R2>, Stat<R2> by MappedResultCore(delegate, forward, reverse) {
     override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) =
         delegate.update(vector, timestampNanos, weight)
-    override fun create(mode: StreamMode?): VectorStat<R2> =
-        MapResultVectorStat(delegate.create(mode), forward, reverse)
+    override fun create(concurrency: Concurrency?): VectorStat<R2> =
+        MapResultVectorStat(delegate.create(concurrency), forward, reverse)
 }
 
 /** Adapter implementing the discrete-stat variant of [mapResult]. */
@@ -100,6 +100,6 @@ internal class MapResultDiscreteStat<R1 : Result, R2 : Result>(
 ) : DiscreteStat<R2>, Stat<R2> by MappedResultCore(delegate, forward, reverse) {
     override fun update(value: Long, timestampNanos: Long, weight: Double) =
         delegate.update(value, timestampNanos, weight)
-    override fun create(mode: StreamMode?): DiscreteStat<R2> =
-        MapResultDiscreteStat(delegate.create(mode), forward, reverse)
+    override fun create(concurrency: Concurrency?): DiscreteStat<R2> =
+        MapResultDiscreteStat(delegate.create(concurrency), forward, reverse)
 }

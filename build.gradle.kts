@@ -13,6 +13,10 @@ eignexPublish {
 }
 
 kotlin {
+    applyDefaultHierarchyTemplate()
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
     jvm()
     js(IR) { browser(); nodejs() }
     wasmJs { browser(); nodejs() }
@@ -22,6 +26,13 @@ kotlin {
     iosX64(); iosArm64(); iosSimulatorArm64()
 
     sourceSets {
+        val nonJvmMain by creating {
+            dependsOn(commonMain.get())
+        }
+        nativeMain.get().dependsOn(nonJvmMain)
+        jsMain.get().dependsOn(nonJvmMain)
+        wasmJsMain.get().dependsOn(nonJvmMain)
+        wasmWasiMain.get().dependsOn(nonJvmMain)
         commonMain.dependencies {
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
         }

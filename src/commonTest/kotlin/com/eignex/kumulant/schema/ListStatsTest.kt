@@ -1,4 +1,4 @@
-package com.eignex.kumulant.group
+package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
@@ -7,8 +7,8 @@ import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.Sum
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.Variance
-import com.eignex.kumulant.stream.SerialMode
-import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.core.Concurrency
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -103,24 +103,24 @@ class ListStatsTest {
 
     @Test
     fun `create uses list mode when create mode is null`() {
-        var childCreateMode: StreamMode? = null
+        var childCreateConcurrency: Concurrency? = null
 
         val tracking = object : SeriesStat<SumResult> {
-            override val mode: StreamMode = SerialMode
+            override val concurrency: Concurrency = Concurrency.None
             override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: SumResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = SumResult(0.0)
-            override fun create(mode: StreamMode?): SeriesStat<SumResult> {
-                childCreateMode = mode
+            override fun create(concurrency: Concurrency?): SeriesStat<SumResult> {
+                childCreateConcurrency = concurrency
                 return this
             }
         }
 
-        val stats = ListStats(listOf("t" to tracking), mode = SerialMode)
+        val stats = ListStats(listOf("t" to tracking), concurrency = Concurrency.None)
         stats.create(null)
 
-        assertSame(SerialMode, childCreateMode)
+        assertSame(Concurrency.None, childCreateConcurrency)
     }
 
     @Test

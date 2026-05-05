@@ -1,10 +1,12 @@
 package com.eignex.kumulant.stat.decay
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.currentTimeNanos
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.exp
@@ -37,15 +39,17 @@ data class DecayingVarianceResult(
  */
 class DecayingVariance(
     val weighting: DecayWeighting.HalfLife,
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<DecayingVarianceResult> {
 
-    constructor(halfLife: Duration, mode: StreamMode = defaultStreamMode) :
-        this(DecayWeighting.HalfLife(halfLife), mode)
+    constructor(halfLife: Duration, concurrency: Concurrency = defaultConcurrency) :
+        this(DecayWeighting.HalfLife(halfLife), concurrency)
 
     val halfLife: Duration get() = weighting.halfLife
     private val alpha = weighting.alpha
 
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val landmarkNanos = mode.newLong(currentTimeNanos())
     private val totalWeights = mode.newDouble(0.0)
     private val mean = mode.newDouble(0.0)
@@ -65,8 +69,8 @@ class DecayingVariance(
         landmarkNanos.store(t)
     }
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+        if (weight <= 0.0) return@withLock
         advanceTo(timestampNanos)
         val priorW = totalWeights.load()
         val nextW = priorW + weight
@@ -78,7 +82,7 @@ class DecayingVariance(
         m2.add(weight * delta * (value - newMean))
     }
 
-    override fun read(timestampNanos: Long): DecayingVarianceResult {
+    override fun read(timestampNanos: Long): DecayingVarianceResult = lock.withLock {
         val landmark = landmarkNanos.load()
         val priorW = totalWeights.load()
         val priorM2 = m2.load()
@@ -93,11 +97,11 @@ class DecayingVariance(
             decayedM2 = priorM2 * decay
         }
         val variance = if (w > 0.0) decayedM2 / w else 0.0
-        return DecayingVarianceResult(mean.load(), variance, w, timestampNanos)
+        DecayingVarianceResult(mean.load(), variance, w, timestampNanos)
     }
 
-    override fun merge(values: DecayingVarianceResult) {
-        if (values.totalWeights <= 0.0) return
+    override fun merge(values: DecayingVarianceResult) = lock.withLock {
+        if (values.totalWeights <= 0.0) return@withLock
         val target = maxOf(landmarkNanos.load(), values.timestampNanos)
         advanceTo(target)
         val remoteDecay = exp(-alpha * (target - values.timestampNanos).toDouble())
@@ -105,7 +109,7 @@ class DecayingVariance(
         val remoteM2 = values.variance * remoteW
         val w1 = totalWeights.load()
         val nextW = w1 + remoteW
-        if (nextW == 0.0) return
+        if (nextW == 0.0) return@withLock
         val priorMean = mean.load()
         val delta = values.mean - priorMean
         mean.store(priorMean + delta * remoteW / nextW)
@@ -113,13 +117,13 @@ class DecayingVariance(
         m2.add(remoteM2 + delta * delta * w1 * remoteW / nextW)
     }
 
-    override fun reset() {
+    override fun reset() = lock.withLock {
         landmarkNanos.store(currentTimeNanos())
         totalWeights.store(0.0)
         mean.store(0.0)
         m2.store(0.0)
     }
 
-    override fun create(mode: StreamMode?) =
-        DecayingVariance(weighting, mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) =
+        DecayingVariance(weighting, concurrency ?: this.concurrency)
 }

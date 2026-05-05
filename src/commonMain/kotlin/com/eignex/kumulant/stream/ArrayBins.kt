@@ -9,7 +9,7 @@ import kotlin.math.min
  * Resizing creates a new array but copies the original StreamDouble instances,
  * guaranteeing zero dropped writes during concurrent access.
  */
-class ArrayBins(val mode: StreamMode) {
+internal class ArrayBins(val mode: StreamMode) {
 
     private class State(val offset: Int, val bins: Array<StreamDouble>)
 

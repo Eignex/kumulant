@@ -1,9 +1,11 @@
 package com.eignex.kumulant.stat.decay
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 
 /**
  * Exponentially weighted moving variance driven by cumulative observation weight.
@@ -13,14 +15,16 @@ import com.eignex.kumulant.stream.defaultStreamMode
  */
 class EwmaVariance(
     val weighting: DecayWeighting.Alpha,
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<WeightedVarianceResult> {
 
-    constructor(alpha: Double, mode: StreamMode = defaultStreamMode) :
-        this(DecayWeighting.Alpha(alpha), mode)
+    constructor(alpha: Double, concurrency: Concurrency = defaultConcurrency) :
+        this(DecayWeighting.Alpha(alpha), concurrency)
 
     val alpha: Double get() = weighting.alpha
 
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val biasedMean = mode.newDouble(0.0)
     private val biasedM2 = mode.newDouble(0.0)
     private val totalWeights = mode.newDouble(0.0)
@@ -39,7 +43,7 @@ class EwmaVariance(
             return if (correction == 0.0) 0.0 else biasedVar / correction
         }
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
         val a = weighting.correction(weight)
 
         val currentRawMean = biasedMean.load()
@@ -53,16 +57,16 @@ class EwmaVariance(
         totalWeights.add(weight)
     }
 
-    override fun merge(values: WeightedVarianceResult) {
+    override fun merge(values: WeightedVarianceResult) = lock.withLock {
         val remoteWeightRaw = values.totalWeights
-        if (remoteWeightRaw <= 0.0) return
+        if (remoteWeightRaw <= 0.0) return@withLock
 
         val localWeightRaw = totalWeights.load()
         val w1 = weighting.correction(localWeightRaw)
         val w2 = weighting.correction(remoteWeightRaw)
         val wSum = w1 + w2
 
-        if (wSum == 0.0) return
+        if (wSum == 0.0) return@withLock
 
         val localMean = this.mean
         val localVar = this.variance
@@ -87,11 +91,13 @@ class EwmaVariance(
         totalWeights.store(0.0)
     }
 
-    override fun read(timestampNanos: Long) = WeightedVarianceResult(
-        totalWeights.load(),
-        mean,
-        variance
-    )
+    override fun read(timestampNanos: Long) = lock.withLock {
+        WeightedVarianceResult(
+            totalWeights.load(),
+            mean,
+            variance
+        )
+    }
 
-    override fun create(mode: StreamMode?) = EwmaVariance(weighting, mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = EwmaVariance(weighting, concurrency ?: this.concurrency)
 }

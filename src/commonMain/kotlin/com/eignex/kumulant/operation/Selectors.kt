@@ -4,8 +4,8 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.stream.StreamMode
 
 /** Adapter implementing [atX]: drives a [SeriesStat] from the x coordinate of a pair. */
 internal class AtXStat<R : Result>(
@@ -15,8 +15,8 @@ internal class AtXStat<R : Result>(
         delegate.update(x, timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): PairedStat<R> {
-        return AtXStat(delegate.create(mode))
+    override fun create(concurrency: Concurrency?): PairedStat<R> {
+        return AtXStat(delegate.create(concurrency))
     }
 }
 
@@ -28,8 +28,8 @@ internal class AtYStat<R : Result>(
         delegate.update(y, timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): PairedStat<R> {
-        return AtYStat(delegate.create(mode))
+    override fun create(concurrency: Concurrency?): PairedStat<R> {
+        return AtYStat(delegate.create(concurrency))
     }
 }
 
@@ -42,8 +42,8 @@ internal class AtIndexStat<R : Result>(
         delegate.update(vector[index], timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): VectorStat<R> {
-        return AtIndexStat(delegate.create(mode), index)
+    override fun create(concurrency: Concurrency?): VectorStat<R> {
+        return AtIndexStat(delegate.create(concurrency), index)
     }
 }
 
@@ -57,8 +57,8 @@ internal class AtIndicesStat<R : Result>(
         delegate.update(vector[indexX], vector[indexY], timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): VectorStat<R> {
-        return AtIndicesStat(delegate.create(mode), indexX, indexY)
+    override fun create(concurrency: Concurrency?): VectorStat<R> {
+        return AtIndicesStat(delegate.create(concurrency), indexX, indexY)
     }
 }
 

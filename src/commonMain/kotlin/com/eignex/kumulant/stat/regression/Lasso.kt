@@ -1,13 +1,13 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.operation.mapResult
 import com.eignex.kumulant.stat.summary.VarianceResult
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -44,8 +44,8 @@ data class LassoResult(
  */
 class Lasso(
     val lambda: Double,
-    mode: StreamMode = defaultStreamMode,
-) : PairedStat<LassoResult> by OLS(mode).mapResult(
+    concurrency: Concurrency = defaultConcurrency,
+) : PairedStat<LassoResult> by OLS(concurrency).mapResult(
     forward = { ols ->
         val w = ols.totalWeights
         val sxx = ols.x.variance * w

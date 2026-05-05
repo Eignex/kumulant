@@ -1,12 +1,13 @@
 package com.eignex.kumulant.stat.sketch
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
-import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.casOr
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.splitmix64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -52,7 +53,7 @@ fun BloomFilterResult.contains(value: Long): Boolean {
 class BloomFilter(
     val bits: Int = 1 shl 16,
     val hashes: Int = 7,
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : DiscreteStat<BloomFilterResult> {
 
     init {
@@ -64,6 +65,7 @@ class BloomFilter(
 
     private val wordCount: Int = bits / 64
     private val mask: Long = (bits - 1).toLong()
+    private val mode = concurrency.monotonicMode()
     private val words: StreamLongArray = mode.newLongArray(wordCount)
     private val totalSeen: StreamLong = mode.newLong(0L)
 
@@ -107,5 +109,5 @@ class BloomFilter(
         )
     }
 
-    override fun create(mode: StreamMode?) = BloomFilter(bits, hashes, mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = BloomFilter(bits, hashes, concurrency ?: this.concurrency)
 }

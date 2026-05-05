@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.kumulant.stream.AtomicMode
-import com.eignex.kumulant.stream.SerialMode
+import com.eignex.kumulant.core.Concurrency
 import kotlin.math.sqrt
 import kotlin.test.*
 
@@ -147,10 +146,10 @@ class OLSTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val ols1 = OLS(AtomicMode).apply {
+        val ols1 = OLS(Concurrency.Relaxed).apply {
             for (x in 0..4) update(x.toDouble(), x.toDouble())
         }
-        val ols2 = ols1.create(SerialMode)
+        val ols2 = ols1.create(Concurrency.None)
         ols2.update(100.0, 200.0)
 
         assertEquals(5.0, ols1.read().totalWeights, EPS)

@@ -1,7 +1,6 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.*
-import com.eignex.kumulant.stream.StreamMode
 
 /** Adapt a [SeriesStat] to accept vector input by folding each vector to a scalar via [transform]. */
 fun <R : Result> SeriesStat<R>.foldVector(transform: VectorFold): VectorStat<R> =
@@ -42,8 +41,8 @@ internal class FoldVectorStat<R : Result>(
         delegate.update(transform.apply(vector), timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): VectorStat<R> {
-        return FoldVectorStat(delegate.create(mode), transform)
+    override fun create(concurrency: Concurrency?): VectorStat<R> {
+        return FoldVectorStat(delegate.create(concurrency), transform)
     }
 }
 
@@ -61,7 +60,7 @@ internal class FoldPairedStat<R : Result>(
         delegate.update(transform.apply(x, y), timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): PairedStat<R> {
-        return FoldPairedStat(delegate.create(mode), transform)
+    override fun create(concurrency: Concurrency?): PairedStat<R> {
+        return FoldPairedStat(delegate.create(concurrency), transform)
     }
 }

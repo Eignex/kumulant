@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stream
 
-import com.eignex.kumulant.locked.locked
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.quantile.ReservoirHistogram
 import com.eignex.kumulant.stat.quantile.TDigest
 import com.eignex.kumulant.stat.sketch.SpaceSaving
@@ -42,18 +42,6 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `FixedAtomicMode preserves exact integer-sized sums under contention`() {
-        val mode = FixedAtomicMode(precision = 3)
-        val d = mode.newDouble(0.0)
-        val threads = 8
-        val iters = 10_000
-        runConcurrently(threads, iters) { _, _ ->
-            d.add(1.0)
-        }
-        assertEquals((threads * iters).toDouble(), d.load(), 1e-6)
-    }
-
-    @Test
     fun `AtomicMode addAndGet always returns a monotonic sequence of snapshots`() {
         val l = AtomicMode.newLong(0L)
         val threads = 4
@@ -76,8 +64,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Min under AtomicMode captures the true minimum under contention`() {
-        val min = Min(AtomicMode)
+    fun `Min under Relaxed concurrency captures the true minimum under contention`() {
+        val min = Min(Concurrency.Relaxed)
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -87,8 +75,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Max under AtomicMode captures the true maximum under contention`() {
-        val max = Max(AtomicMode)
+    fun `Max under Relaxed concurrency captures the true maximum under contention`() {
+        val max = Max(Concurrency.Relaxed)
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -98,8 +86,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Range under AtomicMode captures the true min and max under contention`() {
-        val range = Range(AtomicMode)
+    fun `Range under Relaxed concurrency captures the true min and max under contention`() {
+        val range = Range(Concurrency.Relaxed)
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -111,8 +99,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Mean wrapped in locked preserves the Welford invariant under contention`() {
-        val mean = Mean(AtomicMode).locked()
+    fun `Mean under Strict concurrency preserves the Welford invariant under contention`() {
+        val mean = Mean(Concurrency.Strict)
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -129,8 +117,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Variance wrapped in locked preserves the Welford invariant under contention`() {
-        val variance = Variance(AtomicMode).locked()
+    fun `Variance under Strict concurrency preserves the Welford invariant under contention`() {
+        val variance = Variance(Concurrency.Strict)
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -166,7 +154,7 @@ class ConcurrentStreamModesTest {
 
     @Test
     fun `TDigest survives concurrent update plus interleaved read with no exceptions`() {
-        val tdigest = TDigest(compression = 100.0, mode = AtomicMode)
+        val tdigest = TDigest(compression = 100.0, concurrency = Concurrency.Strict)
         val writers = 4
         val iters = 10_000
         runWithReader(tdigest::read) {
@@ -186,7 +174,7 @@ class ConcurrentStreamModesTest {
     @Test
     fun `ReservoirHistogram never exceeds capacity under concurrent update plus read`() {
         val capacity = 256
-        val reservoir = ReservoirHistogram(capacity = capacity, seed = 42L, mode = AtomicMode)
+        val reservoir = ReservoirHistogram(capacity = capacity, seed = 42L, concurrency = Concurrency.Strict)
         val writers = 4
         val iters = 10_000
         runWithReader(reservoir::read) {
@@ -205,7 +193,7 @@ class ConcurrentStreamModesTest {
     @Test
     fun `SpaceSaving counts are non-decreasing under concurrent update plus read`() {
         val capacity = 64
-        val ss = SpaceSaving(capacity = capacity, mode = AtomicMode)
+        val ss = SpaceSaving(capacity = capacity, concurrency = Concurrency.Strict)
         val writers = 4
         val iters = 10_000
         runWithReader(ss::read) {

@@ -1,9 +1,10 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.ArrayBins
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.additiveMode
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.ln
@@ -26,7 +27,7 @@ class DDSketch(
         0.99,
         0.999
     ),
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<SketchResult> {
 
     init {
@@ -36,6 +37,7 @@ class DDSketch(
     private val gamma: Double = (1.0 + relativeError) / (1.0 - relativeError)
     private val multiplier: Double = 1.0 / ln(gamma)
 
+    private val mode = concurrency.additiveMode()
     private val totalWeights = mode.newDouble(0.0)
     private val zeroCount = mode.newDouble(0.0)
 
@@ -57,10 +59,10 @@ class DDSketch(
         }
     }
 
-    override fun create(mode: StreamMode?) = DDSketch(
+    override fun create(concurrency: Concurrency?) = DDSketch(
         relativeError,
         probabilities,
-        mode ?: this.mode
+        concurrency ?: this.concurrency
     )
 
     override fun merge(values: SketchResult) {

@@ -1,11 +1,12 @@
 package com.eignex.kumulant.stat.decay
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamDouble
-import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.currentTimeNanos
-import com.eignex.kumulant.stream.defaultStreamMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.exp
@@ -31,11 +32,11 @@ data class DecayingSumResult(
  */
 class DecayingSum(
     val weighting: DecayWeighting.HalfLife,
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<DecayingSumResult> {
 
-    constructor(halfLife: Duration, mode: StreamMode = defaultStreamMode) :
-        this(DecayWeighting.HalfLife(halfLife), mode)
+    constructor(halfLife: Duration, concurrency: Concurrency = defaultConcurrency) :
+        this(DecayWeighting.HalfLife(halfLife), concurrency)
 
     val halfLife: Duration get() = weighting.halfLife
     private val alpha = weighting.alpha
@@ -43,6 +44,7 @@ class DecayingSum(
 
     private class Epoch(val landmarkNanos: Long, val accumulator: StreamDouble)
 
+    private val mode = concurrency.additiveMode()
     private val epochRef = mode.newReference(
         Epoch(currentTimeNanos(), mode.newDouble(0.0))
     )
@@ -92,8 +94,8 @@ class DecayingSum(
         epochRef.compareAndSet(current, Epoch(currentTimeNanos(), mode.newDouble(0.0)))
     }
 
-    override fun create(mode: StreamMode?) =
-        DecayingSum(weighting, mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) =
+        DecayingSum(weighting, concurrency ?: this.concurrency)
 
     private companion object {
         const val ROTATION_HALF_LIVES = 50L

@@ -1,8 +1,10 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 
 /**
  * Frugal-streaming single-quantile estimator.
@@ -20,17 +22,19 @@ class FrugalQuantile(
     val q: Double,
     val stepSize: Double = 0.01,
     val initialEstimate: Double = 0.0,
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<QuantileResult> {
 
     init {
         require(q in 0.0..1.0) { "Quantile q must be between 0.0 and 1.0" }
     }
 
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val quantile = mode.newDouble(initialEstimate)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+        if (weight <= 0.0) return@withLock
 
         val m = quantile.load()
         val delta = if (value > m) {
@@ -46,14 +50,14 @@ class FrugalQuantile(
         }
     }
 
-    override fun create(mode: StreamMode?) = FrugalQuantile(
+    override fun create(concurrency: Concurrency?) = FrugalQuantile(
         q,
         stepSize,
         initialEstimate,
-        mode ?: this.mode
+        concurrency ?: this.concurrency
     )
 
-    override fun merge(values: QuantileResult) {
+    override fun merge(values: QuantileResult) = lock.withLock {
         val current = quantile.load()
         quantile.store((current + values.quantile) / 2.0)
     }

@@ -1,9 +1,9 @@
 package com.eignex.kumulant.stat.decay
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration
@@ -27,16 +27,16 @@ data class DecayingMeanResult(
  */
 class DecayingMean(
     val weighting: DecayWeighting.HalfLife,
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<DecayingMeanResult> {
 
-    constructor(halfLife: Duration, mode: StreamMode = defaultStreamMode) :
-        this(DecayWeighting.HalfLife(halfLife), mode)
+    constructor(halfLife: Duration, concurrency: Concurrency = defaultConcurrency) :
+        this(DecayWeighting.HalfLife(halfLife), concurrency)
 
     val halfLife: Duration get() = weighting.halfLife
 
-    private val sumX = DecayingSum(weighting, mode)
-    private val sumW = DecayingSum(weighting, mode)
+    private val sumX = DecayingSum(weighting, concurrency)
+    private val sumW = DecayingSum(weighting, concurrency)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         sumX.update(value, timestampNanos, weight)
@@ -65,6 +65,6 @@ class DecayingMean(
         sumW.reset()
     }
 
-    override fun create(mode: StreamMode?) =
-        DecayingMean(weighting, mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) =
+        DecayingMean(weighting, concurrency ?: this.concurrency)
 }

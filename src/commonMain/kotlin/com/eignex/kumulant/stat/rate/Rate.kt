@@ -1,10 +1,11 @@
 package com.eignex.kumulant.stat.rate
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
+import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -32,9 +33,10 @@ data class RateResult(
  * see [DecayingRate]. Use [withValue][com.eignex.kumulant.operation.withValue] to count each update as 1.
  */
 class Rate(
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<RateResult> {
 
+    private val mode = concurrency.additiveMode()
     private val totalValues = mode.newDouble(0.0)
     private val startTimestampNanos = mode.newLong(Long.MIN_VALUE)
 
@@ -49,7 +51,7 @@ class Rate(
         totalValues.add(value * weight)
     }
 
-    override fun create(mode: StreamMode?) = Rate(mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = Rate(concurrency ?: this.concurrency)
 
     override fun read(timestampNanos: Long): RateResult {
         val start = if (startTimestampNanos.load() == Long.MIN_VALUE) {

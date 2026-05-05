@@ -1,12 +1,13 @@
 package com.eignex.kumulant.stat.cardinality
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
-import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.casMax
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.splitmix64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -52,7 +53,7 @@ data class HyperLogLogResult(
  */
 class HyperLogLog(
     val precision: Int = 14,
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : DiscreteStat<HyperLogLogResult> {
 
     init {
@@ -67,6 +68,7 @@ class HyperLogLog(
         else -> 0.7213 / (1.0 + 1.079 / m)
     }
 
+    private val mode = concurrency.monotonicMode()
     private val registers: StreamLongArray = mode.newLongArray(m)
     private val totalSeen: StreamLong = mode.newLong(0L)
 
@@ -120,5 +122,5 @@ class HyperLogLog(
         )
     }
 
-    override fun create(mode: StreamMode?) = HyperLogLog(precision, mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = HyperLogLog(precision, concurrency ?: this.concurrency)
 }

@@ -1,13 +1,13 @@
 package com.eignex.kumulant.stat.rate
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.operation.mapResult
 import com.eignex.kumulant.stat.decay.DecayingSum
 import com.eignex.kumulant.stat.decay.DecayingSumResult
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.ln
@@ -29,18 +29,18 @@ data class DecayingRateResult(
  */
 class DecayingRate(
     val halfLife: Duration,
-    override val mode: StreamMode = defaultStreamMode,
-) : SeriesStat<DecayingRateResult> by decayingRateDelegate(halfLife, mode)
+    override val concurrency: Concurrency = defaultConcurrency,
+) : SeriesStat<DecayingRateResult> by decayingRateDelegate(halfLife, concurrency)
 
 private fun rateScale(halfLife: Duration): Double =
     (ln(2.0) / halfLife.inWholeNanoseconds.toDouble()) * 1e9
 
 private fun decayingRateDelegate(
     halfLife: Duration,
-    mode: StreamMode
+    concurrency: Concurrency
 ): SeriesStat<DecayingRateResult> {
     val scale = rateScale(halfLife)
-    return DecayingSum(halfLife, mode).mapResult(
+    return DecayingSum(halfLife, concurrency).mapResult(
         forward = { sum ->
             DecayingRateResult(sum.sum * scale, sum.timestampNanos)
         },

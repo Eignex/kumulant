@@ -1,10 +1,12 @@
 package com.eignex.kumulant.stat.summary
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -32,15 +34,17 @@ data class WeightedVarianceResult(
  * the result for the unbiased estimator.
  */
 class Variance(
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<WeightedVarianceResult> {
 
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val totalWeights = mode.newDouble(0.0)
     private val mean = mode.newDouble(0.0)
     private val sst = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0) return
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+        if (weight == 0.0) return@withLock
         val priorW = totalWeights.load()
         val nextW = totalWeights.addAndGet(weight)
         val delta = value - mean.load()
@@ -49,8 +53,8 @@ class Variance(
         sst.add(priorW * delta * r)
     }
 
-    override fun merge(values: WeightedVarianceResult) {
-        if (values.totalWeights <= 0.0) return
+    override fun merge(values: WeightedVarianceResult) = lock.withLock {
+        if (values.totalWeights <= 0.0) return@withLock
         val w1 = totalWeights.load()
         val w2 = values.totalWeights
         val nextW = totalWeights.addAndGet(w2)
@@ -59,19 +63,19 @@ class Variance(
         sst.add(values.variance * w2 + (delta * delta) * (w1 * w2 / nextW))
     }
 
-    override fun reset() {
+    override fun reset() = lock.withLock {
         totalWeights.store(0.0)
         mean.store(0.0)
         sst.store(0.0)
     }
 
-    override fun read(timestampNanos: Long): WeightedVarianceResult {
+    override fun read(timestampNanos: Long): WeightedVarianceResult = lock.withLock {
         val w = totalWeights.load()
         val m = mean.load()
         val s = sst.load()
         val variance = if (w > 0.0) s / w else 0.0
-        return WeightedVarianceResult(w, m, variance)
+        WeightedVarianceResult(w, m, variance)
     }
 
-    override fun create(mode: StreamMode?) = Variance(mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = Variance(concurrency ?: this.concurrency)
 }

@@ -1,7 +1,6 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.*
-import com.eignex.kumulant.stream.StreamMode
 
 /** Lift a paired stat into a series stat that feeds its x from the event timestamp (seconds). */
 fun <R : Result> PairedStat<R>.withTimeAsX(): SeriesStat<R> = WithTimeAsXStat(this)
@@ -28,8 +27,8 @@ internal class WithTimeAsXStat<R : Result>(
         )
     }
 
-    override fun create(mode: StreamMode?): SeriesStat<R> {
-        return WithTimeAsXStat(delegate.create(mode))
+    override fun create(concurrency: Concurrency?): SeriesStat<R> {
+        return WithTimeAsXStat(delegate.create(concurrency))
     }
 }
 
@@ -46,8 +45,8 @@ internal class WithTimeAsYStat<R : Result>(
         )
     }
 
-    override fun create(mode: StreamMode?): SeriesStat<R> {
-        return WithTimeAsYStat(delegate.create(mode))
+    override fun create(concurrency: Concurrency?): SeriesStat<R> {
+        return WithTimeAsYStat(delegate.create(concurrency))
     }
 }
 
@@ -60,8 +59,8 @@ internal class WithFixedXStat<R : Result>(
         delegate.update(x = fixedX, y = value, timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): SeriesStat<R> {
-        return WithFixedXStat(delegate.create(mode), fixedX)
+    override fun create(concurrency: Concurrency?): SeriesStat<R> {
+        return WithFixedXStat(delegate.create(concurrency), fixedX)
     }
 }
 
@@ -74,7 +73,7 @@ internal class WithFixedYStat<R : Result>(
         delegate.update(x = value, y = fixedY, timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): SeriesStat<R> {
-        return WithFixedYStat(delegate.create(mode), fixedY)
+    override fun create(concurrency: Concurrency?): SeriesStat<R> {
+        return WithFixedYStat(delegate.create(concurrency), fixedY)
     }
 }

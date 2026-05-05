@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.summary
 
-import com.eignex.kumulant.stream.AtomicMode
-import com.eignex.kumulant.stream.SerialMode
+import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -87,8 +86,8 @@ class RangeStatsTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val r1 = Range(AtomicMode).apply { update(5.0) }
-        val r2 = r1.create(SerialMode)
+        val r1 = Range(Concurrency.Relaxed).apply { update(5.0) }
+        val r2 = r1.create(Concurrency.None)
         r2.update(1.0)
 
         assertEquals(5.0, r1.read().min, DELTA)

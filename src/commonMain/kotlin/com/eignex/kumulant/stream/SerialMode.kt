@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stream
 
 /** Non-atomic, single-threaded mode; cheapest path when no concurrency is required. */
-object SerialMode : StreamMode {
+internal object SerialMode : StreamMode {
     override fun newDouble(initial: Double) = SerialDouble(initial)
     override fun newLong(initial: Long) = SerialLong(initial)
     override fun <T> newReference(initial: T): SerialRef<T> {
@@ -11,13 +11,10 @@ object SerialMode : StreamMode {
 
     override fun newLongArray(size: Int, init: (Int) -> Long) =
         SerialLongArray(LongArray(size, init))
-
-    override fun newDoubleArray(size: Int, init: (Int) -> Double) =
-        SerialDoubleArray(DoubleArray(size, init))
 }
 
 /** Plain-`var` [StreamLong] implementation used by [SerialMode]. */
-class SerialLong(var ref: Long) : StreamLong {
+internal class SerialLong(var ref: Long) : StreamLong {
     override fun load(): Long = ref
 
     override fun store(value: Long) {
@@ -49,7 +46,7 @@ class SerialLong(var ref: Long) : StreamLong {
 }
 
 /** Plain-`var` [StreamDouble] implementation used by [SerialMode]. */
-class SerialDouble(var ref: Double) : StreamDouble {
+internal class SerialDouble(var ref: Double) : StreamDouble {
     override fun load(): Double = ref
 
     override fun store(value: Double) {
@@ -81,7 +78,7 @@ class SerialDouble(var ref: Double) : StreamDouble {
 }
 
 /** Plain-array [StreamLongArray] implementation used by [SerialMode]. */
-class SerialLongArray(val ref: LongArray) : StreamLongArray {
+internal class SerialLongArray(val ref: LongArray) : StreamLongArray {
     override val size: Int get() = ref.size
     override fun load(index: Int): Long = ref[index]
     override fun store(index: Int, value: Long) { ref[index] = value }
@@ -104,32 +101,8 @@ class SerialLongArray(val ref: LongArray) : StreamLongArray {
     }
 }
 
-/** Plain-array [StreamDoubleArray] implementation used by [SerialMode]. */
-class SerialDoubleArray(val ref: DoubleArray) : StreamDoubleArray {
-    override val size: Int get() = ref.size
-    override fun load(index: Int): Double = ref[index]
-    override fun store(index: Int, value: Double) { ref[index] = value }
-    override fun add(index: Int, delta: Double) { ref[index] += delta }
-    override fun addAndGet(index: Int, delta: Double): Double {
-        ref[index] += delta
-        return ref[index]
-    }
-    override fun getAndAdd(index: Int, delta: Double): Double {
-        val ret = ref[index]
-        ref[index] += delta
-        return ret
-    }
-    override fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean {
-        if (ref[index].toRawBits() == expectedValue.toRawBits()) {
-            ref[index] = newValue
-            return true
-        }
-        return false
-    }
-}
-
 /** Plain-`var` [StreamRef] implementation used by [SerialMode]. */
-class SerialRef<T>(var ref: T) : StreamRef<T> {
+internal class SerialRef<T>(var ref: T) : StreamRef<T> {
     override fun load(): T = ref
 
     override fun store(value: T) {

@@ -1,6 +1,5 @@
 package com.eignex.kumulant.core
 
-import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.currentTimeNanos
 
 /**
@@ -10,21 +9,19 @@ import com.eignex.kumulant.stream.currentTimeNanos
  */
 interface Stat<R : Result> {
     /**
-     * The [StreamMode] backing this stat's mutable state. Determines how concurrent
-     * `update`/`merge`/`read` calls behave:
+     * The thread-safety contract this stat was constructed with. Each stat picks the
+     * cell-encoding and lock strategy honoring this contract for its mathematical
+     * structure:
      *
-     * - [com.eignex.kumulant.stream.SerialMode]: single-threaded; no synchronisation,
-     *   cheapest path.
-     * - [com.eignex.kumulant.stream.AtomicMode] / [com.eignex.kumulant.stream.FixedAtomicMode]:
-     *   lock-free best-effort under contention. Individual cells are atomic, but multi-cell
-     *   accumulators (e.g. Welford `(W, mean, M2)`) may drift under contention since the
-     *   recurrence is coupled. Reads of bounded-array sketches (Reservoir, TDigest,
-     *   SpaceSaving) are racy but eventually consistent.
-     * - For strict thread-safety on any stat, wrap with `.locked()` (JVM extension in
-     *   `com.eignex.kumulant.locked`); it serialises all access through a
-     *   `ReentrantReadWriteLock`.
+     * - [Concurrency.None]: single-threaded; no synchronisation. Cheapest path.
+     * - [Concurrency.Relaxed]: lock-free best-effort. Multi-cell stats (Welford-style
+     *   `Mean`, `Variance`, `Moments`) may drift under contention but never throw.
+     * - [Concurrency.Strict]: serialised when needed for full correctness across
+     *   coupled cells. Sketches always self-serialise; Welford stats lock per update.
+     * - [Concurrency.HighWrite]: optimised for many concurrent writers; JVM uses
+     *   striped adders for naively additive stats.
      */
-    val mode: StreamMode
+    val concurrency: Concurrency
 
     /**
      * Merge stat results from another accumulator into this.
@@ -41,8 +38,8 @@ interface Stat<R : Result> {
      */
     fun read(timestampNanos: Long = currentTimeNanos()): R
 
-    /** Returns a fresh accumulator with the same configuration, optionally overriding the [StreamMode]. */
-    fun create(mode: StreamMode? = null): Stat<R>
+    /** Returns a fresh accumulator with the same configuration, optionally overriding the [Concurrency]. */
+    fun create(concurrency: Concurrency? = null): Stat<R>
 }
 
 /** Accumulator over a single scalar time series. */
@@ -54,7 +51,7 @@ interface SeriesStat<R : Result> : Stat<R> {
     /** Record an observation at [timestampNanos] with the given [weight]. */
     fun update(value: Double, timestampNanos: Long, weight: Double = 1.0)
 
-    override fun create(mode: StreamMode?): SeriesStat<R>
+    override fun create(concurrency: Concurrency?): SeriesStat<R>
 }
 
 /**
@@ -70,7 +67,7 @@ interface DiscreteStat<R : Result> : Stat<R> {
     /** Record an observation at [timestampNanos] with the given [weight]. */
     fun update(value: Long, timestampNanos: Long, weight: Double = 1.0)
 
-    override fun create(mode: StreamMode?): DiscreteStat<R>
+    override fun create(concurrency: Concurrency?): DiscreteStat<R>
 }
 
 /** Accumulator over paired (x, y) observations such as a regression. */
@@ -82,7 +79,7 @@ interface PairedStat<R : Result> : Stat<R> {
     /** Record an (x, y) observation at [timestampNanos] with the given [weight]. */
     fun update(x: Double, y: Double, timestampNanos: Long, weight: Double = 1.0)
 
-    override fun create(mode: StreamMode?): PairedStat<R>
+    override fun create(concurrency: Concurrency?): PairedStat<R>
 }
 
 /** Accumulator over fixed-dimensional vector observations. */
@@ -94,5 +91,5 @@ interface VectorStat<R : Result> : Stat<R> {
     /** Record a [vector] observation at [timestampNanos] with the given [weight]. */
     fun update(vector: DoubleArray, timestampNanos: Long, weight: Double = 1.0)
 
-    override fun create(mode: StreamMode?): VectorStat<R>
+    override fun create(concurrency: Concurrency?): VectorStat<R>
 }

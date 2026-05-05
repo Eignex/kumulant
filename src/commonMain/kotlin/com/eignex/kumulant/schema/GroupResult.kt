@@ -1,12 +1,12 @@
-package com.eignex.kumulant.group
+package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.stream.StreamMode
 import kotlinx.serialization.Serializable
 import kotlin.properties.PropertyDelegateProvider
 import kotlin.properties.ReadOnlyProperty
@@ -78,10 +78,10 @@ abstract class StatSchema {
             ReadOnlyProperty { _, _ -> key }
         }
 
-    protected fun <T : StatSchema> group(nestedSchema: T, mode: StreamMode? = null) =
+    protected fun <T : StatSchema> group(nestedSchema: T, concurrency: Concurrency? = null) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, GroupStatKey<T>>> { _, property ->
             val key = GroupStatKey(property.name, nestedSchema)
-            val groupStat = StatGroup(stats = filterSpecs<SeriesStat<*>>(nestedSchema.specs), mode = mode)
+            val groupStat = StatGroup(stats = filterSpecs<SeriesStat<*>>(nestedSchema.specs), concurrency = concurrency)
 
             specs.add(StatSpec(key, groupStat))
             ReadOnlyProperty { _, _ -> key }

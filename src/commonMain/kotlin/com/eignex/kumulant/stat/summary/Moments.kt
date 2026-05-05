@@ -1,11 +1,13 @@
 package com.eignex.kumulant.stat.summary
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.HasShapeMoments
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -28,17 +30,19 @@ data class MomentsResult(
  * Uses the Pébay/Welford parallel recurrences; suitable for streaming and merge.
  */
 class Moments(
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<MomentsResult> {
 
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val totalWeights = mode.newDouble(0.0)
     private val mean = mode.newDouble(0.0)
     private val m2 = mode.newDouble(0.0)
     private val m3 = mode.newDouble(0.0)
     private val m4 = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+        if (weight <= 0.0) return@withLock
         val oldW = totalWeights.load()
         val nextW = totalWeights.addAndGet(weight)
 
@@ -62,8 +66,8 @@ class Moments(
         mean.add(deltaW)
     }
 
-    override fun merge(values: MomentsResult) {
-        if (values.totalWeights <= 0.0) return
+    override fun merge(values: MomentsResult) = lock.withLock {
+        if (values.totalWeights <= 0.0) return@withLock
         val w1 = totalWeights.load()
         val w2 = values.totalWeights
         val nextW = totalWeights.addAndGet(w2)
@@ -95,7 +99,7 @@ class Moments(
         mean.add(delta * (w2 / nextW))
     }
 
-    override fun reset() {
+    override fun reset() = lock.withLock {
         totalWeights.store(0.0)
         mean.store(0.0)
         m2.store(0.0)
@@ -103,8 +107,9 @@ class Moments(
         m4.store(0.0)
     }
 
-    override fun read(timestampNanos: Long): MomentsResult =
+    override fun read(timestampNanos: Long): MomentsResult = lock.withLock {
         MomentsResult(totalWeights.load(), mean.load(), m2.load(), m3.load(), m4.load())
+    }
 
-    override fun create(mode: StreamMode?) = Moments(mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = Moments(concurrency ?: this.concurrency)
 }

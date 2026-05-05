@@ -1,9 +1,11 @@
 package com.eignex.kumulant.stat.summary
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -29,33 +31,36 @@ data class WeightedMeanResult(
  * parallel algorithm.
  */
 class Mean(
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<WeightedMeanResult> {
 
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val totalWeights = mode.newDouble(0.0)
     private val mean = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0) return
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+        if (weight == 0.0) return@withLock
         val nextW = totalWeights.addAndGet(weight)
         val delta = value - mean.load()
         mean.add(delta * (weight / nextW))
     }
 
-    override fun read(timestampNanos: Long): WeightedMeanResult =
+    override fun read(timestampNanos: Long): WeightedMeanResult = lock.withLock {
         WeightedMeanResult(totalWeights.load(), mean.load())
+    }
 
-    override fun merge(values: WeightedMeanResult) {
-        if (values.totalWeights <= 0.0) return
+    override fun merge(values: WeightedMeanResult) = lock.withLock {
+        if (values.totalWeights <= 0.0) return@withLock
         val nextW = totalWeights.addAndGet(values.totalWeights)
         val delta = values.mean - mean.load()
         mean.add(delta * (values.totalWeights / nextW))
     }
 
-    override fun reset() {
+    override fun reset() = lock.withLock {
         totalWeights.store(0.0)
         mean.store(0.0)
     }
 
-    override fun create(mode: StreamMode?) = Mean(mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = Mean(concurrency ?: this.concurrency)
 }

@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.LongAdder as JLongAdder
  * `load` is non-linearizable: use [AtomicMode] if reads must observe a single update
  * atomically with subsequent writes.
  */
-object AdderMode : StreamMode {
+internal object AdderMode : StreamMode {
     override fun newDouble(initial: Double) = DoubleAdder(initial)
     override fun newLong(initial: Long) = LongAdder(initial)
     override fun <T> newReference(initial: T): AtomicReference<T> {
@@ -27,14 +27,11 @@ object AdderMode : StreamMode {
      */
     override fun newLongArray(size: Int, init: (Int) -> Long): StreamLongArray =
         AtomicMode.newLongArray(size, init)
-
-    override fun newDoubleArray(size: Int, init: (Int) -> Double): StreamDoubleArray =
-        AtomicMode.newDoubleArray(size, init)
 }
 
 /** [StreamDouble] backed by a striped `java.util.concurrent.atomic.DoubleAdder`. */
 @JvmInline
-value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
+internal value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
 
     constructor(initial: Double = 0.0) : this(
         JDoubleAdder().also {
@@ -75,7 +72,7 @@ value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
 
 /** [StreamLong] backed by a striped `java.util.concurrent.atomic.LongAdder`. */
 @JvmInline
-value class LongAdder(val ref: JLongAdder) : StreamLong {
+internal value class LongAdder(val ref: JLongAdder) : StreamLong {
     constructor(initial: Long = 0L) : this(JLongAdder().also { it.add(initial) })
 
     override fun load(): Long {

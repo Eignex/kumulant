@@ -1,9 +1,10 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamDouble
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.additiveMode
 import kotlin.math.ceil
 import kotlin.math.log2
 import kotlin.math.pow
@@ -17,8 +18,10 @@ class HdrHistogram(
     val lowestDiscernibleValue: Double = 0.001,
     val initialHighestTrackableValue: Double = 100.0,
     val significantDigits: Int = 3,
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<SparseHistogramResult> {
+
+    private val mode = concurrency.additiveMode()
 
     init {
         require(lowestDiscernibleValue > 0.0) { "Lowest discernible value must be > 0" }
@@ -119,11 +122,11 @@ class HdrHistogram(
         }
     }
 
-    override fun create(mode: StreamMode?) = HdrHistogram(
+    override fun create(concurrency: Concurrency?) = HdrHistogram(
         lowestDiscernibleValue,
         initialHighestTrackableValue,
         significantDigits,
-        mode ?: this.mode
+        concurrency ?: this.concurrency
     )
 
     override fun merge(values: SparseHistogramResult) {

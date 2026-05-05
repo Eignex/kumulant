@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stream
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.Stat
 import kotlin.time.Duration
@@ -13,14 +14,16 @@ import kotlin.time.Duration
  * Companion to [ArrayBins] for the windowed family — both are mode-agnostic
  * concurrent containers used to build higher-level stat operators.
  */
-class SliceRing<R : Result, S : Stat<R>>(
+internal class SliceRing<R : Result, S : Stat<R>>(
     windowDuration: Duration,
     slices: Int,
-    private val mode: StreamMode,
-    private val factory: (StreamMode) -> S,
+    private val concurrency: Concurrency,
+    private val factory: (Concurrency) -> S,
 ) {
     private val sliceDurationNanos: Long
     val windowDurationNanos: Long
+
+    private val ringMode: StreamMode = concurrency.additiveMode()
 
     init {
         require(slices > 0) { "SliceRing requires at least 1 slice" }
@@ -35,7 +38,7 @@ class SliceRing<R : Result, S : Stat<R>>(
     internal class Slot<R : Result, S : Stat<R>>(val startNanos: Long, val stat: S)
 
     private val buckets: Array<StreamRef<Slot<R, S>>> = Array(slices) {
-        mode.newReference(Slot(Long.MIN_VALUE, factory(mode)))
+        ringMode.newReference(Slot(Long.MIN_VALUE, factory(concurrency)))
     }
 
     private fun expectedSliceStart(timestampNanos: Long): Long =
@@ -58,7 +61,7 @@ class SliceRing<R : Result, S : Stat<R>>(
             val currentSlot = bucketRef.load()
             if (currentSlot.startNanos == expectedStart) return currentSlot.stat
             if (currentSlot.startNanos < expectedStart) {
-                val newSlot = Slot<R, S>(expectedStart, factory(mode))
+                val newSlot = Slot<R, S>(expectedStart, factory(concurrency))
                 if (bucketRef.compareAndSet(currentSlot, newSlot)) return newSlot.stat
             } else {
                 return null
@@ -72,7 +75,7 @@ class SliceRing<R : Result, S : Stat<R>>(
         val bucketRef = buckets[bucketIndex(expectedStart)]
         var currentSlot = bucketRef.load()
         if (currentSlot.startNanos < expectedStart) {
-            val newSlot = Slot<R, S>(expectedStart, factory(mode))
+            val newSlot = Slot<R, S>(expectedStart, factory(concurrency))
             currentSlot = if (bucketRef.compareAndSet(currentSlot, newSlot)) newSlot else bucketRef.load()
         }
         currentSlot.stat.merge(values)
@@ -89,7 +92,7 @@ class SliceRing<R : Result, S : Stat<R>>(
 
     fun reset() {
         for (bucketRef in buckets) {
-            bucketRef.store(Slot(Long.MIN_VALUE, factory(mode)))
+            bucketRef.store(Slot(Long.MIN_VALUE, factory(concurrency)))
         }
     }
 }

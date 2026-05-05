@@ -1,11 +1,12 @@
 package com.eignex.kumulant.stat.sketch
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.splitmix64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -57,7 +58,7 @@ class CountMinSketch(
     val depth: Int = 5,
     val width: Int = 1024,
     val seed: Long = -7046029254386353133L, // 0x9e3779b97f4a7c15
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : DiscreteStat<CountMinSketchResult> {
 
     init {
@@ -69,6 +70,7 @@ class CountMinSketch(
     private val mask: Long = (width - 1).toLong()
     private val rowSalts: LongArray = LongArray(depth) { splitmix64(seed + it.toLong()) }
     private val counterCount: Int = depth * width
+    private val mode = concurrency.additiveMode()
     private val counters: StreamLongArray = mode.newLongArray(counterCount)
     private val totalSeen: StreamLong = mode.newLong(0L)
 
@@ -112,5 +114,5 @@ class CountMinSketch(
         )
     }
 
-    override fun create(mode: StreamMode?) = CountMinSketch(depth, width, seed, mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = CountMinSketch(depth, width, seed, concurrency ?: this.concurrency)
 }

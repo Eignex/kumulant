@@ -1,11 +1,12 @@
 package com.eignex.kumulant.stat.summary
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.casMin
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -21,9 +22,10 @@ data class RangeResult(
  * Tracks the minimum and maximum of a stream.
  */
 class Range(
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<RangeResult> {
 
+    private val mode = concurrency.monotonicMode()
     private val min = mode.newDouble(Double.POSITIVE_INFINITY)
     private val max = mode.newDouble(Double.NEGATIVE_INFINITY)
 
@@ -44,5 +46,5 @@ class Range(
 
     override fun read(timestampNanos: Long) = RangeResult(min.load(), max.load())
 
-    override fun create(mode: StreamMode?) = Range(mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = Range(concurrency ?: this.concurrency)
 }

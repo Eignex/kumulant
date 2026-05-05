@@ -1,10 +1,10 @@
 package com.eignex.kumulant.stat.sketch
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.stream.CasLock
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
+import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -35,12 +35,12 @@ data class HeavyHittersResult(
  * (apply the same admission policy to incoming triples).
  *
  * Concurrency: all `update`/`merge`/`read`/`reset` calls are internally serialized
- * via a private CAS spin-mutex. Safe under any [StreamMode]; throughput-bound
- * under thread contention.
+ * via a private platform mutex when [concurrency] is anything but [Concurrency.None];
+ * under [Concurrency.None] the lock is a noop. Throughput-bound under thread contention.
  */
 class SpaceSaving(
     val capacity: Int,
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : DiscreteStat<HeavyHittersResult> {
 
     init {
@@ -53,7 +53,7 @@ class SpaceSaving(
     private val errors = LongArray(capacity)
     private var len = 0
     private var totalSeen = 0L
-    private val lock = CasLock(mode)
+    private val lock = concurrency.serializedLock()
 
     private fun admit(key: Long, addCount: Long, addError: Long) {
         val n = len
@@ -129,5 +129,5 @@ class SpaceSaving(
         )
     }
 
-    override fun create(mode: StreamMode?) = SpaceSaving(capacity, mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = SpaceSaving(capacity, concurrency ?: this.concurrency)
 }

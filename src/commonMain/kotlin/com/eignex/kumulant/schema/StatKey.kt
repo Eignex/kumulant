@@ -1,4 +1,4 @@
-package com.eignex.kumulant.group
+package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Result
 

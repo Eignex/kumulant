@@ -1,10 +1,11 @@
 package com.eignex.kumulant.stat.summary
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.casMin
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -17,9 +18,10 @@ data class MinResult(
 
 /** Tracks the minimum of a stream. */
 class Min(
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<MinResult> {
 
+    private val mode = concurrency.monotonicMode()
     private val value = mode.newDouble(Double.POSITIVE_INFINITY)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -36,5 +38,5 @@ class Min(
 
     override fun read(timestampNanos: Long) = MinResult(value.load())
 
-    override fun create(mode: StreamMode?) = Min(mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = Min(concurrency ?: this.concurrency)
 }

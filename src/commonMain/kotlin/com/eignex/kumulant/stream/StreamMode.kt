@@ -8,29 +8,11 @@ private val monoStart = TimeSource.Monotonic.markNow()
 internal fun currentTimeNanos(): Long = monoStart.elapsedNow().inWholeNanoseconds
 
 /**
- * Factory for the mutable scalar cells that back stat accumulators.
- *
- * The chosen mode controls a stat's thread-safety semantics:
- *
- * - [SerialMode] (default): single-threaded, no synchronisation. Cheapest path; safe only
- *   when one thread updates the stat at a time.
- * - [AtomicMode]: each cell is individually atomic via CAS. Multi-cell accumulators with
- *   coupled recurrences (e.g. Welford `(W, mean, M2)`) may drift under contention since
- *   updates aren't serialised across cells. Bounded-array sketches (Reservoir, TDigest,
- *   SpaceSaving) self-serialise internally via a private CAS spin-mutex, so concurrent
- *   `update`/`read` is safe under any mode but throughput-bound under contention.
- * - [FixedAtomicMode]: like [AtomicMode] but stores doubles as fixed-point Longs to
- *   eliminate floating-point drift on long-running additive sums.
- * - [com.eignex.kumulant.stream.AdderMode] (JVM): striped counters for write-heavy
- *   workloads where read frequency is low.
- *
- * For strict thread-safety on any stat — exact arithmetic and consistent reads under
- * arbitrary concurrency — wrap with `.locked()` (JVM, in `com.eignex.kumulant.locked`).
- * It serialises all `update`/`merge`/`read`/`reset` calls through a
- * `ReentrantReadWriteLock`. Slower than [AtomicMode] under contention, but works with
- * any stat regardless of internal concurrency support.
+ * Internal factory for the mutable scalar cells that back stat accumulators. Users
+ * configure stats via [com.eignex.kumulant.core.Concurrency]; each stat translates that
+ * intent into the cell encoding it needs.
  */
-interface StreamMode {
+internal interface StreamMode {
     /** Allocate a [StreamDouble] cell seeded to [initial]. */
     fun newDouble(initial: Double = 0.0): StreamDouble
 
@@ -46,12 +28,6 @@ interface StreamMode {
      * with a flat backing — one allocation, no per-slot object headers.
      */
     fun newLongArray(size: Int, init: (Int) -> Long = { 0L }): StreamLongArray
-
-    /**
-     * Allocate a fixed-length array of `Double` cells, initialised by [init]. Each slot
-     * has the same atomicity guarantees as a single [StreamDouble] under this mode.
-     */
-    fun newDoubleArray(size: Int, init: (Int) -> Double = { 0.0 }): StreamDoubleArray
 }
 
 /**
@@ -67,7 +43,7 @@ internal fun rejectBoxedPrimitive(initial: Any?) {
 }
 
 /** Mutable `Double` cell with mode-appropriate read/write/add semantics. */
-interface StreamDouble {
+internal interface StreamDouble {
     /** Read the current value. */
     fun load(): Double
 
@@ -88,7 +64,7 @@ interface StreamDouble {
 }
 
 /** Mutable `Long` cell with mode-appropriate read/write/add semantics. */
-interface StreamLong {
+internal interface StreamLong {
     /** Read the current value. */
     fun load(): Long
 
@@ -114,7 +90,7 @@ interface StreamLong {
  * Note: JVM boxing means `StreamRef<Double>` used under [AtomicMode] compares boxed
  * identities — avoid CAS loops on boxed primitives, prefer [StreamDouble] instead.
  */
-interface StreamRef<T> {
+internal interface StreamRef<T> {
     /** Read the current referent. */
     fun load(): T
 
@@ -133,7 +109,7 @@ interface StreamRef<T> {
  * CAS operations as a scalar [StreamLong] under the owning mode. Slot indices are
  * `0..size-1`; out-of-range access throws.
  */
-interface StreamLongArray {
+internal interface StreamLongArray {
     /** Number of cells in the array. */
     val size: Int
 
@@ -156,42 +132,14 @@ interface StreamLongArray {
     fun compareAndSet(index: Int, expectedValue: Long, newValue: Long): Boolean
 }
 
-/**
- * Fixed-length array of `Double` cells. Each slot supports the same load / store / add /
- * CAS operations as a scalar [StreamDouble] under the owning mode. Slot indices are
- * `0..size-1`; out-of-range access throws.
- */
-interface StreamDoubleArray {
-    /** Number of cells in the array. */
-    val size: Int
-
-    /** Read the value at [index]. */
-    fun load(index: Int): Double
-
-    /** Overwrite the value at [index]. */
-    fun store(index: Int, value: Double)
-
-    /** Add [delta] in place at [index]. */
-    fun add(index: Int, delta: Double)
-
-    /** Add [delta] at [index] and return the new value. */
-    fun addAndGet(index: Int, delta: Double): Double
-
-    /** Add [delta] at [index] and return the value before the add. */
-    fun getAndAdd(index: Int, delta: Double): Double
-
-    /** Atomic compare-and-set on the IEEE-754 bit pattern at [index]. */
-    fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean
-}
-
 /** Property-delegate getter for [StreamDouble] — `val x: Double by streamDouble`. */
-operator fun StreamDouble.getValue(
+internal operator fun StreamDouble.getValue(
     thisRef: Any?,
     property: KProperty<*>
 ): Double = load()
 
 /** Property-delegate getter for [StreamLong] — `val x: Long by streamLong`. */
-operator fun StreamLong.getValue(
+internal operator fun StreamLong.getValue(
     thisRef: Any?,
     property: KProperty<*>
 ): Long = load()

@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stream
 
 /** CAS-loop monotonic max: store [candidate] iff strictly greater than current. */
-fun casMax(cell: StreamLong, candidate: Long) {
+internal fun casMax(cell: StreamLong, candidate: Long) {
     while (true) {
         val current = cell.load()
         if (candidate <= current) return
@@ -10,7 +10,7 @@ fun casMax(cell: StreamLong, candidate: Long) {
 }
 
 /** CAS-loop monotonic max: store [candidate] iff strictly greater than current. NaN is ignored. */
-fun casMax(cell: StreamDouble, candidate: Double) {
+internal fun casMax(cell: StreamDouble, candidate: Double) {
     if (candidate.isNaN()) return
     while (true) {
         val current = cell.load()
@@ -20,7 +20,7 @@ fun casMax(cell: StreamDouble, candidate: Double) {
 }
 
 /** CAS-loop monotonic min: store [candidate] iff strictly less than current. NaN is ignored. */
-fun casMin(cell: StreamDouble, candidate: Double) {
+internal fun casMin(cell: StreamDouble, candidate: Double) {
     if (candidate.isNaN()) return
     while (true) {
         val current = cell.load()
@@ -30,7 +30,7 @@ fun casMin(cell: StreamDouble, candidate: Double) {
 }
 
 /** CAS-loop bitwise-OR: set every bit in [bitMask] on [cell]. No-op if all bits already set. */
-fun casOr(cell: StreamLong, bitMask: Long) {
+internal fun casOr(cell: StreamLong, bitMask: Long) {
     while (true) {
         val current = cell.load()
         val updated = current or bitMask
@@ -40,7 +40,7 @@ fun casOr(cell: StreamLong, bitMask: Long) {
 }
 
 /** CAS-loop monotonic max on slot [index] of [arr]: store [candidate] iff strictly greater. */
-fun casMax(arr: StreamLongArray, index: Int, candidate: Long) {
+internal fun casMax(arr: StreamLongArray, index: Int, candidate: Long) {
     while (true) {
         val current = arr.load(index)
         if (candidate <= current) return
@@ -49,7 +49,7 @@ fun casMax(arr: StreamLongArray, index: Int, candidate: Long) {
 }
 
 /** CAS-loop monotonic min on slot [index] of [arr]: store [candidate] iff strictly less. */
-fun casMin(arr: StreamLongArray, index: Int, candidate: Long) {
+internal fun casMin(arr: StreamLongArray, index: Int, candidate: Long) {
     while (true) {
         val current = arr.load(index)
         if (candidate >= current) return
@@ -58,7 +58,7 @@ fun casMin(arr: StreamLongArray, index: Int, candidate: Long) {
 }
 
 /** CAS-loop bitwise-OR on slot [index] of [arr]. No-op if all bits already set. */
-fun casOr(arr: StreamLongArray, index: Int, bitMask: Long) {
+internal fun casOr(arr: StreamLongArray, index: Int, bitMask: Long) {
     while (true) {
         val current = arr.load(index)
         val updated = current or bitMask

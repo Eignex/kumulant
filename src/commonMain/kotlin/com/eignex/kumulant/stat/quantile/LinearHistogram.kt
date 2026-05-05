@@ -1,9 +1,10 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.ArrayBins
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.additiveMode
 
 /**
  * Fixed-width binned histogram over `[lowerBound, upperBound)` split into [binCount] buckets.
@@ -16,7 +17,7 @@ class LinearHistogram(
     val lowerBound: Double,
     val upperBound: Double,
     val binCount: Int,
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<SparseHistogramResult> {
 
     init {
@@ -31,6 +32,7 @@ class LinearHistogram(
 
     private val binWidth: Double = (upperBound - lowerBound) / binCount
 
+    private val mode = concurrency.additiveMode()
     private val totalWeights = mode.newDouble(0.0)
     private val underflow = mode.newDouble(0.0)
     private val overflow = mode.newDouble(0.0)
@@ -50,11 +52,11 @@ class LinearHistogram(
         }
     }
 
-    override fun create(mode: StreamMode?) = LinearHistogram(
+    override fun create(concurrency: Concurrency?) = LinearHistogram(
         lowerBound,
         upperBound,
         binCount,
-        mode ?: this.mode
+        concurrency ?: this.concurrency
     )
 
     override fun merge(values: SparseHistogramResult) {

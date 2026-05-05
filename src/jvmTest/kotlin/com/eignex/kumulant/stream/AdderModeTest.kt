@@ -93,10 +93,10 @@ class AdderModeTest {
     }
 
     @Test
-    fun `HyperLogLog runs under AdderMode via the array-cell fallback`() {
-        // HLL's registers are a StreamLongArray; AdderMode delegates array allocation
-        // to AtomicMode-style atomics, so casMax works and update() succeeds.
-        val hll = HyperLogLog(precision = 10, mode = AdderMode)
+    fun `HyperLogLog runs under HighWrite concurrency`() {
+        // HLL resolves Concurrency.HighWrite to AtomicMode internally (Adder lacks CAS),
+        // so casMax works and update() succeeds.
+        val hll = HyperLogLog(precision = 10, concurrency = com.eignex.kumulant.core.Concurrency.HighWrite)
         for (i in 1..1000L) hll.update(i)
         val result = hll.read()
         assert(result.estimate > 0.0) { "expected non-zero estimate, got ${result.estimate}" }

@@ -1,5 +1,6 @@
-package com.eignex.kumulant.group
+package com.eignex.kumulant.schema
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
@@ -7,8 +8,7 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
 
 private fun requireUniqueNames(entries: List<Pair<String, *>>, typeName: String) {
     val duplicates = entries.map { it.first }.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
@@ -23,12 +23,12 @@ private fun requireUniqueNames(entries: List<Pair<String, *>>, typeName: String)
  */
 sealed class AbstractListStats<R : Result, S : Stat<out R>>(
     protected val entries: List<Pair<String, S>>,
-    protected val modeOverride: StreamMode?,
+    protected val concurrencyOverride: Concurrency?,
     private val typeName: String,
 ) : Stat<ResultList<R>> {
     init { requireUniqueNames(entries, typeName) }
 
-    final override val mode: StreamMode get() = modeOverride ?: defaultStreamMode
+    final override val concurrency: Concurrency get() = concurrencyOverride ?: defaultConcurrency
 
     final override fun read(timestampNanos: Long): ResultList<R> =
         ResultList(entries.map { it.first }, entries.map { it.second.read(timestampNanos) })
@@ -60,22 +60,22 @@ sealed class AbstractListStats<R : Result, S : Stat<out R>>(
  */
 class ListStats<R : Result>(
     entries: List<Pair<String, SeriesStat<out R>>>,
-    mode: StreamMode? = null,
-) : AbstractListStats<R, SeriesStat<out R>>(entries, mode, "ListStats"),
+    concurrency: Concurrency? = null,
+) : AbstractListStats<R, SeriesStat<out R>>(entries, concurrency, "ListStats"),
     SeriesStat<ResultList<R>> {
 
-    constructor(vararg entries: Pair<String, SeriesStat<out R>>, mode: StreamMode? = null) :
-        this(entries.toList(), mode)
+    constructor(vararg entries: Pair<String, SeriesStat<out R>>, concurrency: Concurrency? = null) :
+        this(entries.toList(), concurrency)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(value, timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): SeriesStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.modeOverride
+    override fun create(concurrency: Concurrency?): SeriesStat<ResultList<R>> {
+        val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         return ListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveMode) },
-            effectiveMode,
+            entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
+            effectiveConcurrency,
         )
     }
 }
@@ -83,28 +83,28 @@ class ListStats<R : Result>(
 /** Auto-named [ListStats]: each stat keyed by its class `simpleName`. */
 fun <R : Result> seriesListStats(
     vararg stats: SeriesStat<out R>,
-    mode: StreamMode? = null,
-): ListStats<R> = ListStats(stats.map { autoName(it) to it }, mode)
+    concurrency: Concurrency? = null,
+): ListStats<R> = ListStats(stats.map { autoName(it) to it }, concurrency)
 
 /** Paired-input counterpart of [ListStats]. */
 class PairedListStats<R : Result>(
     entries: List<Pair<String, PairedStat<out R>>>,
-    mode: StreamMode? = null,
-) : AbstractListStats<R, PairedStat<out R>>(entries, mode, "PairedListStats"),
+    concurrency: Concurrency? = null,
+) : AbstractListStats<R, PairedStat<out R>>(entries, concurrency, "PairedListStats"),
     PairedStat<ResultList<R>> {
 
-    constructor(vararg entries: Pair<String, PairedStat<out R>>, mode: StreamMode? = null) :
-        this(entries.toList(), mode)
+    constructor(vararg entries: Pair<String, PairedStat<out R>>, concurrency: Concurrency? = null) :
+        this(entries.toList(), concurrency)
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(x, y, timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): PairedStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.modeOverride
+    override fun create(concurrency: Concurrency?): PairedStat<ResultList<R>> {
+        val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         return PairedListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveMode) },
-            effectiveMode,
+            entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
+            effectiveConcurrency,
         )
     }
 }
@@ -112,28 +112,28 @@ class PairedListStats<R : Result>(
 /** Auto-named [PairedListStats]: each stat keyed by its class `simpleName`. */
 fun <R : Result> pairedListStats(
     vararg stats: PairedStat<out R>,
-    mode: StreamMode? = null,
-): PairedListStats<R> = PairedListStats(stats.map { autoName(it) to it }, mode)
+    concurrency: Concurrency? = null,
+): PairedListStats<R> = PairedListStats(stats.map { autoName(it) to it }, concurrency)
 
 /** Vector-input counterpart of [ListStats]. */
 class VectorListStats<R : Result>(
     entries: List<Pair<String, VectorStat<out R>>>,
-    mode: StreamMode? = null,
-) : AbstractListStats<R, VectorStat<out R>>(entries, mode, "VectorListStats"),
+    concurrency: Concurrency? = null,
+) : AbstractListStats<R, VectorStat<out R>>(entries, concurrency, "VectorListStats"),
     VectorStat<ResultList<R>> {
 
-    constructor(vararg entries: Pair<String, VectorStat<out R>>, mode: StreamMode? = null) :
-        this(entries.toList(), mode)
+    constructor(vararg entries: Pair<String, VectorStat<out R>>, concurrency: Concurrency? = null) :
+        this(entries.toList(), concurrency)
 
     override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(vector, timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): VectorStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.modeOverride
+    override fun create(concurrency: Concurrency?): VectorStat<ResultList<R>> {
+        val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         return VectorListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveMode) },
-            effectiveMode,
+            entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
+            effectiveConcurrency,
         )
     }
 }
@@ -141,28 +141,28 @@ class VectorListStats<R : Result>(
 /** Auto-named [VectorListStats]: each stat keyed by its class `simpleName`. */
 fun <R : Result> vectorListStats(
     vararg stats: VectorStat<out R>,
-    mode: StreamMode? = null,
-): VectorListStats<R> = VectorListStats(stats.map { autoName(it) to it }, mode)
+    concurrency: Concurrency? = null,
+): VectorListStats<R> = VectorListStats(stats.map { autoName(it) to it }, concurrency)
 
 /** Discrete-input counterpart of [ListStats]. */
 class DiscreteListStats<R : Result>(
     entries: List<Pair<String, DiscreteStat<out R>>>,
-    mode: StreamMode? = null,
-) : AbstractListStats<R, DiscreteStat<out R>>(entries, mode, "DiscreteListStats"),
+    concurrency: Concurrency? = null,
+) : AbstractListStats<R, DiscreteStat<out R>>(entries, concurrency, "DiscreteListStats"),
     DiscreteStat<ResultList<R>> {
 
-    constructor(vararg entries: Pair<String, DiscreteStat<out R>>, mode: StreamMode? = null) :
-        this(entries.toList(), mode)
+    constructor(vararg entries: Pair<String, DiscreteStat<out R>>, concurrency: Concurrency? = null) :
+        this(entries.toList(), concurrency)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(value, timestampNanos, weight)
     }
 
-    override fun create(mode: StreamMode?): DiscreteStat<ResultList<R>> {
-        val effectiveMode = mode ?: this.modeOverride
+    override fun create(concurrency: Concurrency?): DiscreteStat<ResultList<R>> {
+        val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         return DiscreteListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveMode) },
-            effectiveMode,
+            entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
+            effectiveConcurrency,
         )
     }
 }
@@ -170,7 +170,7 @@ class DiscreteListStats<R : Result>(
 /** Auto-named [DiscreteListStats]: each stat keyed by its class `simpleName`. */
 fun <R : Result> discreteListStats(
     vararg stats: DiscreteStat<out R>,
-    mode: StreamMode? = null,
-): DiscreteListStats<R> = DiscreteListStats(stats.map { autoName(it) to it }, mode)
+    concurrency: Concurrency? = null,
+): DiscreteListStats<R> = DiscreteListStats(stats.map { autoName(it) to it }, concurrency)
 
 private fun autoName(stat: Any): String = stat::class.simpleName ?: "Stat"

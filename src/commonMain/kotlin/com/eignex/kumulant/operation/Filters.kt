@@ -5,8 +5,8 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.stream.StreamMode
 
 /** Drop observations that fail [predicate] before forwarding to this stat. */
 fun <R : Result> SeriesStat<R>.filter(predicate: DoublePredicate): SeriesStat<R> = FilterSeriesStat(this, predicate)
@@ -54,8 +54,8 @@ internal class FilterSeriesStat<R : Result>(
             delegate.update(value, timestampNanos, weight)
         }
     }
-    override fun create(mode: StreamMode?): SeriesStat<R> {
-        return FilterSeriesStat(delegate.create(mode), predicate)
+    override fun create(concurrency: Concurrency?): SeriesStat<R> {
+        return FilterSeriesStat(delegate.create(concurrency), predicate)
     }
 }
 
@@ -69,8 +69,8 @@ internal class FilterPairedStat<R : Result>(
             delegate.update(x, y, timestampNanos, weight)
         }
     }
-    override fun create(mode: StreamMode?): PairedStat<R> {
-        return FilterPairedStat(delegate.create(mode), predicate)
+    override fun create(concurrency: Concurrency?): PairedStat<R> {
+        return FilterPairedStat(delegate.create(concurrency), predicate)
     }
 }
 
@@ -84,8 +84,8 @@ internal class FilterVectorStat<R : Result>(
             delegate.update(vector, timestampNanos, weight)
         }
     }
-    override fun create(mode: StreamMode?): VectorStat<R> {
-        return FilterVectorStat(delegate.create(mode), predicate)
+    override fun create(concurrency: Concurrency?): VectorStat<R> {
+        return FilterVectorStat(delegate.create(concurrency), predicate)
     }
 }
 
@@ -99,7 +99,7 @@ internal class FilterDiscreteStat<R : Result>(
             delegate.update(value, timestampNanos, weight)
         }
     }
-    override fun create(mode: StreamMode?): DiscreteStat<R> {
-        return FilterDiscreteStat(delegate.create(mode), predicate)
+    override fun create(concurrency: Concurrency?): DiscreteStat<R> {
+        return FilterDiscreteStat(delegate.create(concurrency), predicate)
     }
 }

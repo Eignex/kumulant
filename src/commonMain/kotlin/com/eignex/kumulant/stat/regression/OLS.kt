@@ -1,13 +1,15 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stat.summary.VarianceResult
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
 import com.eignex.kumulant.stream.getValue
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
@@ -52,9 +54,11 @@ data class OLSResult(
  * Supports weighted observations.
  */
 class OLS(
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : PairedStat<OLSResult> {
 
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val w = mode.newDouble(0.0) // total weights
     private val mx = mode.newDouble(0.0) // mean of x
     private val my = mode.newDouble(0.0) // mean of y
@@ -74,8 +78,8 @@ class OLS(
      *   sXY += weight * dx * dy * oldW / nextW
      *   sYY += weight * dy * dy * oldW / nextW
      */
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+        if (weight <= 0.0) return@withLock
 
         val nextW = w.addAndGet(weight)
         val oldW = nextW - weight
@@ -97,9 +101,9 @@ class OLS(
      *
      * Recovers sXX, sYY, sXY from the result's stored variances and slope.
      */
-    override fun merge(values: OLSResult) {
+    override fun merge(values: OLSResult) = lock.withLock {
         val w2 = values.totalWeights
-        if (w2 <= 0.0) return
+        if (w2 <= 0.0) return@withLock
 
         val w1 = w.load()
         val nextW = w1 + w2
@@ -121,7 +125,7 @@ class OLS(
         w.add(w2)
     }
 
-    override fun reset() {
+    override fun reset() = lock.withLock {
         w.store(0.0)
         mx.store(0.0)
         my.store(0.0)
@@ -130,7 +134,7 @@ class OLS(
         sxy.store(0.0)
     }
 
-    override fun read(timestampNanos: Long): OLSResult {
+    override fun read(timestampNanos: Long): OLSResult = lock.withLock {
         val totalW = w.load()
         val meanX = mx.load()
         val meanY = my.load()
@@ -142,7 +146,7 @@ class OLS(
         val intercept = meanY - slope * meanX
         val sse = (ssy - slope * ssxy).coerceAtLeast(0.0)
 
-        return OLSResult(
+        OLSResult(
             totalWeights = totalW,
             slope = slope,
             intercept = intercept,
@@ -152,5 +156,5 @@ class OLS(
         )
     }
 
-    override fun create(mode: StreamMode?) = OLS(mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = OLS(concurrency ?: this.concurrency)
 }

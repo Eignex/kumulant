@@ -1,4 +1,4 @@
-package com.eignex.kumulant.group
+package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -21,9 +21,8 @@ import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.Sum
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.VarianceResult
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
-import com.eignex.kumulant.stream.SerialMode
-import com.eignex.kumulant.stream.StreamMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -192,28 +191,28 @@ class StatGroupTest {
 
     @Test
     fun `create uses group mode when create mode is null`() {
-        var childCreateMode: StreamMode? = null
+        var childCreateConcurrency: Concurrency? = null
 
         val tracking = object : SeriesStat<SumResult> {
-            override val mode: StreamMode = SerialMode
+            override val concurrency: Concurrency = Concurrency.None
             override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: SumResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = SumResult(0.0)
-            override fun create(mode: StreamMode?): SeriesStat<SumResult> {
-                childCreateMode = mode
+            override fun create(concurrency: Concurrency?): SeriesStat<SumResult> {
+                childCreateConcurrency = concurrency
                 return this
             }
         }
 
         val group = StatGroup(
             StatKey<SumResult>("sum") to tracking,
-            mode = SerialMode
+            concurrency = Concurrency.None
         )
 
         group.create(null)
 
-        assertSame(SerialMode, childCreateMode)
+        assertSame(Concurrency.None, childCreateConcurrency)
     }
 
     @Test
@@ -368,27 +367,27 @@ class PairedStatGroupTest {
 
     @Test
     fun `create uses group mode when create mode is null`() {
-        var childCreateMode: StreamMode? = null
+        var childCreateConcurrency: Concurrency? = null
 
         val tracking = object : PairedStat<OLSResult> {
-            override val mode: StreamMode = SerialMode
+            override val concurrency: Concurrency = Concurrency.None
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: OLSResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) =
                 OLSResult(0.0, 0.0, 0.0, 0.0, VarianceResult(0.0, 0.0), VarianceResult(0.0, 0.0))
-            override fun create(mode: StreamMode?): PairedStat<OLSResult> {
-                childCreateMode = mode
+            override fun create(concurrency: Concurrency?): PairedStat<OLSResult> {
+                childCreateConcurrency = concurrency
                 return this
             }
         }
 
         val group = PairedStatGroup(
             StatKey<OLSResult>("ols") to tracking,
-            mode = SerialMode
+            concurrency = Concurrency.None
         )
         group.create(null)
-        assertSame(SerialMode, childCreateMode)
+        assertSame(Concurrency.None, childCreateConcurrency)
     }
 }
 
@@ -467,24 +466,24 @@ class PairedListStatsTest {
 
     @Test
     fun `create uses list mode when create mode is null`() {
-        var childCreateMode: StreamMode? = null
+        var childCreateConcurrency: Concurrency? = null
 
         val tracking = object : PairedStat<OLSResult> {
-            override val mode: StreamMode = SerialMode
+            override val concurrency: Concurrency = Concurrency.None
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: OLSResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) =
                 OLSResult(0.0, 0.0, 0.0, 0.0, VarianceResult(0.0, 0.0), VarianceResult(0.0, 0.0))
-            override fun create(mode: StreamMode?): PairedStat<OLSResult> {
-                childCreateMode = mode
+            override fun create(concurrency: Concurrency?): PairedStat<OLSResult> {
+                childCreateConcurrency = concurrency
                 return this
             }
         }
 
-        val stats = PairedListStats(listOf("t" to tracking), mode = SerialMode)
+        val stats = PairedListStats(listOf("t" to tracking), concurrency = Concurrency.None)
         stats.create(null)
-        assertSame(SerialMode, childCreateMode)
+        assertSame(Concurrency.None, childCreateConcurrency)
     }
 
     @Test
@@ -568,26 +567,26 @@ class VectorStatGroupTest {
 
     @Test
     fun `create uses group mode when create mode is null`() {
-        var childCreateMode: StreamMode? = null
+        var childCreateConcurrency: Concurrency? = null
 
         val tracking = object : VectorStat<ResultList<SumResult>> {
-            override val mode: StreamMode = SerialMode
+            override val concurrency: Concurrency = Concurrency.None
             override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: ResultList<SumResult>) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())
-            override fun create(mode: StreamMode?): VectorStat<ResultList<SumResult>> {
-                childCreateMode = mode
+            override fun create(concurrency: Concurrency?): VectorStat<ResultList<SumResult>> {
+                childCreateConcurrency = concurrency
                 return this
             }
         }
 
         val group = VectorStatGroup(
             StatKey<ResultList<SumResult>>("v") to tracking,
-            mode = SerialMode
+            concurrency = Concurrency.None
         )
         group.create(null)
-        assertSame(SerialMode, childCreateMode)
+        assertSame(Concurrency.None, childCreateConcurrency)
     }
 }
 
@@ -673,23 +672,23 @@ class VectorListStatsTest {
 
     @Test
     fun `create uses list mode when create mode is null`() {
-        var childCreateMode: StreamMode? = null
+        var childCreateConcurrency: Concurrency? = null
 
         val tracking = object : VectorStat<ResultList<SumResult>> {
-            override val mode: StreamMode = SerialMode
+            override val concurrency: Concurrency = Concurrency.None
             override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: ResultList<SumResult>) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())
-            override fun create(mode: StreamMode?): VectorStat<ResultList<SumResult>> {
-                childCreateMode = mode
+            override fun create(concurrency: Concurrency?): VectorStat<ResultList<SumResult>> {
+                childCreateConcurrency = concurrency
                 return this
             }
         }
 
-        val stats = VectorListStats(listOf("t" to tracking), mode = SerialMode)
+        val stats = VectorListStats(listOf("t" to tracking), concurrency = Concurrency.None)
         stats.create(null)
-        assertSame(SerialMode, childCreateMode)
+        assertSame(Concurrency.None, childCreateConcurrency)
     }
 }
 class DiscreteStatGroupTest {
@@ -756,27 +755,27 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `create uses group mode when create mode is null`() {
-        var childCreateMode: StreamMode? = null
+        var childCreateConcurrency: Concurrency? = null
 
         val tracking = object : DiscreteStat<HyperLogLogResult> {
-            override val mode: StreamMode = SerialMode
+            override val concurrency: Concurrency = Concurrency.None
             override fun update(value: Long, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: HyperLogLogResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) =
                 HyperLogLogResult(0.0, 10, IntArray(0), 0L)
-            override fun create(mode: StreamMode?): DiscreteStat<HyperLogLogResult> {
-                childCreateMode = mode
+            override fun create(concurrency: Concurrency?): DiscreteStat<HyperLogLogResult> {
+                childCreateConcurrency = concurrency
                 return this
             }
         }
 
         val group = DiscreteStatGroup(
             StatKey<HyperLogLogResult>("h") to tracking,
-            mode = SerialMode
+            concurrency = Concurrency.None
         )
         group.create(null)
-        assertSame(SerialMode, childCreateMode)
+        assertSame(Concurrency.None, childCreateConcurrency)
     }
 
     @Test

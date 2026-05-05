@@ -1,9 +1,10 @@
 package com.eignex.kumulant.stat.summary
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
+import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -18,15 +19,15 @@ data class SumResult(
  * Weighted sum `Σ value*weight` over the stream.
  *
  * Uses naive accumulation, so very long streams of mixed-magnitude values can
- * accumulate ulp drift on the order of √n. For exact integer-style sums use
- * [com.eignex.kumulant.stream.FixedAtomicMode]; for compensated floating-point
+ * accumulate ulp drift on the order of √n. For compensated floating-point
  * accumulation, prefer [Mean] or [Variance] (Welford recurrences) and recover
  * the sum as `mean * totalWeights`.
  */
 class Sum(
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<SumResult> {
 
+    private val mode = concurrency.additiveMode()
     private val value = mode.newDouble(0.0)
 
     override fun update(
@@ -47,5 +48,5 @@ class Sum(
         value.store(0.0)
     }
 
-    override fun create(mode: StreamMode?) = Sum(mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = Sum(concurrency ?: this.concurrency)
 }

@@ -1,10 +1,10 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.CasLock
-import com.eignex.kumulant.stream.StreamMode
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.core.defaultConcurrency
+import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.PI
@@ -58,13 +58,14 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  * sorted centroid list under the `k1`-difference ≤ 1 merge rule.
  *
  * Concurrency: all `update`/`merge`/`read`/`reset` calls are internally serialized
- * via a private CAS spin-mutex. Safe under any [StreamMode]; throughput-bound
+ * via a private platform mutex when the chosen [Concurrency] level is anything but
+ * [Concurrency.None]; under [Concurrency.None] the lock is a noop. Throughput-bound
  * under thread contention.
  */
 class TDigest(
     val compression: Double = 100.0,
     val probabilities: DoubleArray = doubleArrayOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : SeriesStat<TDigestResult> {
 
     init {
@@ -83,7 +84,7 @@ class TDigest(
     private val bufferWeights = DoubleArray(bufferCap)
     private var bufferLen = 0
     private var totalWeight = 0.0
-    private val lock = CasLock(mode)
+    private val lock = concurrency.serializedLock()
 
     private fun k1(q: Double): Double =
         compression / (2.0 * PI) * asin(2.0 * q.coerceIn(0.0, 1.0) - 1.0)
@@ -185,10 +186,10 @@ class TDigest(
         lock.withLock { updateLocked(value, weight) }
     }
 
-    override fun create(mode: StreamMode?) = TDigest(
+    override fun create(concurrency: Concurrency?) = TDigest(
         compression,
         probabilities,
-        mode ?: this.mode
+        concurrency ?: this.concurrency
     )
 
     override fun merge(values: TDigestResult) {

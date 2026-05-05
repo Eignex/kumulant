@@ -1,12 +1,13 @@
 package com.eignex.kumulant.stat.sketch
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.defaultConcurrency
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
-import com.eignex.kumulant.stream.StreamMode
 import com.eignex.kumulant.stream.casMin
-import com.eignex.kumulant.stream.defaultStreamMode
+import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.splitmix64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -61,7 +62,7 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
 class MinHash(
     val numHashes: Int = 128,
     val seed: Long = -3724518991637283867L, // 0xcafef00dd15ea5e5
-    override val mode: StreamMode = defaultStreamMode,
+    override val concurrency: Concurrency = defaultConcurrency,
 ) : DiscreteStat<MinHashResult> {
 
     init {
@@ -69,6 +70,7 @@ class MinHash(
     }
 
     private val salts: LongArray = LongArray(numHashes) { splitmix64(seed + it.toLong()) }
+    private val mode = concurrency.monotonicMode()
     private val signatures: StreamLongArray = mode.newLongArray(numHashes) { Long.MAX_VALUE }
     private val totalSeen: StreamLong = mode.newLong(0L)
 
@@ -107,5 +109,5 @@ class MinHash(
         )
     }
 
-    override fun create(mode: StreamMode?) = MinHash(numHashes, seed, mode ?: this.mode)
+    override fun create(concurrency: Concurrency?) = MinHash(numHashes, seed, concurrency ?: this.concurrency)
 }

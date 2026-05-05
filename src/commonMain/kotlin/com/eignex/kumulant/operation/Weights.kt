@@ -5,8 +5,8 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.stream.StreamMode
 
 /** Force every update through this stat to use a constant [weight], discarding caller weight. */
 fun <R : Result> SeriesStat<R>.withWeight(weight: Double): SeriesStat<R> = WithWeightStat(this, weight)
@@ -29,8 +29,8 @@ internal class WithWeightStat<R : Result>(
         delegate.update(value, timestampNanos, this.weight)
     }
 
-    override fun create(mode: StreamMode?): SeriesStat<R> {
-        return WithWeightStat(delegate.create(mode), weight)
+    override fun create(concurrency: Concurrency?): SeriesStat<R> {
+        return WithWeightStat(delegate.create(concurrency), weight)
     }
 }
 
@@ -43,8 +43,8 @@ internal class WithWeightPairedStat<R : Result>(
         delegate.update(x, y, timestampNanos, this.weight)
     }
 
-    override fun create(mode: StreamMode?): PairedStat<R> {
-        return WithWeightPairedStat(delegate.create(mode), weight)
+    override fun create(concurrency: Concurrency?): PairedStat<R> {
+        return WithWeightPairedStat(delegate.create(concurrency), weight)
     }
 }
 
@@ -57,8 +57,8 @@ internal class WithWeightVectorStat<R : Result>(
         delegate.update(vector, timestampNanos, this.weight)
     }
 
-    override fun create(mode: StreamMode?): VectorStat<R> {
-        return WithWeightVectorStat(delegate.create(mode), weight)
+    override fun create(concurrency: Concurrency?): VectorStat<R> {
+        return WithWeightVectorStat(delegate.create(concurrency), weight)
     }
 }
 
@@ -71,7 +71,7 @@ internal class WithWeightDiscreteStat<R : Result>(
         delegate.update(value, timestampNanos, this.weight)
     }
 
-    override fun create(mode: StreamMode?): DiscreteStat<R> {
-        return WithWeightDiscreteStat(delegate.create(mode), weight)
+    override fun create(concurrency: Concurrency?): DiscreteStat<R> {
+        return WithWeightDiscreteStat(delegate.create(concurrency), weight)
     }
 }
