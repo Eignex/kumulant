@@ -23,18 +23,17 @@ private class ServiceMetrics : StatSchema() {
 class StatSchemaDefSerializationTest {
 
     @Test
-    fun `definition encodes with @type discriminator and class names`() {
+    fun `definition encodes with $type discriminator and class names`() {
         val def = ServiceMetrics().definition()
         val encoded = SchemaJson.encodeToString(def)
 
-        // @type must be the literal Kotlin class name; defaults must be suppressed.
         assertEquals(
             """{"stats":[""" +
-                """{"name":"requests","config":{"@type":"SumConfig"}},""" +
-                """{"name":"avgWeight","config":{"@type":"MeanConfig"}},""" +
-                """{"name":"http","config":{"@type":"GroupStatConfig","stats":[""" +
-                """{"name":"requests","config":{"@type":"SumConfig"}},""" +
-                """{"name":"latencyMs","config":{"@type":"DDSketchConfig","probabilities":[0.5,0.99,0.999]}}""" +
+                """{"name":"requests","config":{"${'$'}type":"SumConfig"}},""" +
+                """{"name":"avgWeight","config":{"${'$'}type":"MeanConfig"}},""" +
+                """{"name":"http","config":{"${'$'}type":"GroupStatConfig","stats":[""" +
+                """{"name":"requests","config":{"${'$'}type":"SumConfig"}},""" +
+                """{"name":"latencyMs","config":{"${'$'}type":"DDSketchConfig","probabilities":[0.5,0.99,0.999]}}""" +
                 """]}}""" +
                 """]}""",
             encoded,
@@ -43,43 +42,33 @@ class StatSchemaDefSerializationTest {
 
     @Test
     fun `round-trip definition then materialize produces an equivalent live group`() {
-        val original = ServiceMetrics()
-        val json = SchemaJson.encodeToString(original.definition())
+        val schema = ServiceMetrics()
+        val json = SchemaJson.encodeToString(schema.definition())
 
         val def = SchemaJson.decodeFromString<StatSchemaDef>(json)
-        val specs = def.materializeSeries(Concurrency.None)
-        val rebuilt = StatGroup(stats = specs)
+        val rebuilt = StatGroup(stats = def.materializeSeries(Concurrency.None))
 
-        // Drive the same updates through both pipelines.
-        original.let { schema ->
-            val live = StatGroup(schema)
-            live.update(1.0)
-            live.update(2.0)
-            live.update(3.0)
+        val live = StatGroup(schema)
+        listOf(1.0, 2.0, 3.0).forEach { live.update(it); rebuilt.update(it) }
 
-            rebuilt.update(1.0)
-            rebuilt.update(2.0)
-            rebuilt.update(3.0)
+        val origSnap = live.read()
+        val rebuiltSnap = rebuilt.read()
 
-            val origSnap = live.read()
-            val rebuiltSnap = rebuilt.read()
+        assertEquals(
+            origSnap[schema.requests].sum,
+            (rebuiltSnap.results["requests"] as SumResult).sum,
+        )
+        assertEquals(
+            origSnap[schema.avgWeight].mean,
+            (rebuiltSnap.results["avgWeight"] as WeightedMeanResult).mean,
+        )
 
-            assertEquals(
-                origSnap[schema.requests].sum,
-                (rebuiltSnap.results["requests"] as SumResult).sum,
-            )
-            assertEquals(
-                origSnap[schema.avgWeight].mean,
-                (rebuiltSnap.results["avgWeight"] as WeightedMeanResult).mean,
-            )
-
-            val origHttp = origSnap[schema.http]
-            val rebuiltHttp = rebuiltSnap.results["http"] as GroupResult
-            assertEquals(
-                (origHttp.results["latencyMs"] as SketchResult).quantiles.toList(),
-                (rebuiltHttp.results["latencyMs"] as SketchResult).quantiles.toList(),
-            )
-        }
+        val origHttp = origSnap[schema.http]
+        val rebuiltHttp = rebuiltSnap.results["http"] as GroupResult
+        assertEquals(
+            (origHttp.results["latencyMs"] as SketchResult).quantiles.toList(),
+            (rebuiltHttp.results["latencyMs"] as SketchResult).quantiles.toList(),
+        )
     }
 
     @Test

@@ -12,10 +12,10 @@ import kotlinx.serialization.Serializable
  *
  * On the wire:
  * ```yaml
- * "@type": GroupStatConfig
+ * $type: GroupStatConfig
  * stats:
  *   - name: requests
- *     config: { "@type": SumConfig }
+ *     config: { $type: SumConfig }
  * ```
  */
 @Serializable

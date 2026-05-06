@@ -30,17 +30,12 @@ class StatSchemaSkeletonTest {
 
     @Test
     fun `skeleton mode is reentrant and restores the prior flag`() {
-        // Outer call leaves the flag false after returning.
         StatSchema.skeleton(::SkeletonHttpMetrics)
         val normal = SkeletonHttpMetrics()
-        assertEquals(2, normal.specs.size, "After skeleton block, normal construction must materialize live stats again")
+        assertEquals(2, normal.specs.size)
 
-        // Nested skeleton: inner call doesn't leak when outer factory also constructs nested schemas.
         val outer = StatSchema.skeleton(::SkeletonNested)
-        assertEquals(0, outer.specs.size, "Outer skeleton schema has no live stats")
-        // The inner SkeletonHttpMetrics() inside SkeletonNested's `group(...)` is constructed
-        // *before* SkeletonNested's own delegates run; the skeleton flag is already true so
-        // the inner is also skeleton.
+        assertEquals(0, outer.specs.size)
     }
 
     @Test
@@ -55,9 +50,8 @@ class StatSchemaSkeletonTest {
         val def = SkeletonHttpMetrics().definition()
         val (typed, group) = def.bindTo(::SkeletonHttpMetrics, Concurrency.Strict)
 
-        // Typed-key schema has no live stats; only the wire-materialized group does.
         assertEquals(0, typed.specs.size)
-        assertTrue(group.read().results.isEmpty().not())  // group is alive, even before update
+        assertTrue(group.read().results.isEmpty().not())
 
         group.update(10.0)
         group.update(20.0)
@@ -65,17 +59,16 @@ class StatSchemaSkeletonTest {
         assertEquals(30.0, snap[typed.requests].sum)
     }
 
+    // Live-stat overload always materializes regardless of skeleton mode (it doesn't
+    // populate def at all, so a schema using only live-stat delegates fails to serialize).
     @Test
-    fun `live-stat overload is unaffected by skeleton mode and ignores the flag`() {
-        // Build a schema that uses the legacy live-stat overload while the flag is set;
-        // the live stats must still be materialized (skeleton flag only gates config-taking
-        // delegates). definition() then fails because no def entries were collected.
+    fun `live-stat overload ignores the skeleton flag`() {
         val schema = StatSchema.skeleton {
             object : StatSchema() {
                 val s by series(com.eignex.kumulant.stat.summary.Sum())
             }
         }
-        assertEquals(1, schema.specs.size, "live-stat overload must materialize regardless of skeleton flag")
+        assertEquals(1, schema.specs.size)
         val ex = runCatching { schema.definition() }.exceptionOrNull()
         assertTrue(ex is IllegalArgumentException)
         assertFalse(ex.message.isNullOrEmpty())

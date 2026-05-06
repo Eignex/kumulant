@@ -28,19 +28,15 @@ class StatSchemaDefBindToTest {
 
     @Test
     fun `bindTo round-trips JSON into a typed schema with a live StatGroup`() {
-        // Producer: serialize the schema definition.
         val producerJson = SchemaJson.encodeToString(SharedHttpMetrics().definition())
 
-        // Consumer: deserialize, bind back to the shared SharedHttpMetrics class.
         val def = SchemaJson.decodeFromString<StatSchemaDef>(producerJson)
         val (schema, group) = def.bindTo(::SharedHttpMetrics, Concurrency.Strict)
 
-        // Drive the live group.
         group.update(120.0)
         group.update(80.0)
         group.update(200.0)
 
-        // Read back through *typed* keys taken from the local SharedHttpMetrics instance.
         val snap = group.read()
         val sum = snap[schema.requests].sum
         val quantiles = snap[schema.latencyMs].quantiles
@@ -52,7 +48,6 @@ class StatSchemaDefBindToTest {
 
     @Test
     fun `bindTo fails loudly when the wire schema diverges from the local class`() {
-        // Wire is SharedHttpMetrics; consumer tries to bind to SharedHttpMetricsWithExtra (extra entry).
         val wireJson = SchemaJson.encodeToString(SharedHttpMetrics().definition())
         val def = SchemaJson.decodeFromString<StatSchemaDef>(wireJson)
 
@@ -63,12 +58,11 @@ class StatSchemaDefBindToTest {
         assertTrue(ex.message!!.contains("extra"))
     }
 
+    // Concurrency is a runtime knob set by the consumer, not encoded on the wire.
     @Test
-    fun `bindTo works with strict concurrency propagating to materialized stats`() {
+    fun `bindTo's concurrency arg, not the producer's, is what propagates`() {
         val def = SharedHttpMetrics().definition()
         val (_, group) = def.bindTo(::SharedHttpMetrics, Concurrency.Strict)
-        // Concurrency on the wire-materialized group propagates from the bindTo argument,
-        // not from the producer's local schema (which was Concurrency.None).
         assertEquals(Concurrency.Strict, group.concurrency)
     }
 }

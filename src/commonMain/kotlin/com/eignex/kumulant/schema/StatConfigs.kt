@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
  * live in the same package as the interface.
  *
  * Each variant uses `@SerialName` matching its Kotlin class name, so the wire
- * `@type` value mirrors what a Kotlin reader would type. Defaults match the
+ * `$type` value mirrors what a Kotlin reader would type. Defaults match the
  * underlying stat's primary constructor so authored payloads stay terse under
  * `encodeDefaults = false`.
  */

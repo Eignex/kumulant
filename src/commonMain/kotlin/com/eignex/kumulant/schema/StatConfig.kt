@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * `data object` for parameter-less stats) whose fields are exactly the stat's
  * configuration surface — no live cells, no locks, no [Concurrency].
  *
- * The wire form uses `@type` as the polymorphic discriminator and the simple
+ * The wire form uses `$type` as the polymorphic discriminator and the simple
  * Kotlin class name as its value (see [SchemaJson]). Defaults on each Config
  * variant match the corresponding stat's constructor defaults so authored
  * YAML stays terse under `encodeDefaults = false`.
