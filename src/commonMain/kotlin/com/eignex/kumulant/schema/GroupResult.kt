@@ -55,10 +55,41 @@ data class GroupResult(
 abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) {
     internal val specs = mutableListOf<StatSpec<*, *, *>>()
 
+    /**
+     * Parallel pure-data record collected when delegates are given a [StatConfig].
+     * Stays empty for entries built from a live [Stat], which is why [definition]
+     * requires every entry to have provided a config — schemas that mix the two
+     * paths can't be losslessly serialized.
+     */
+    private val def = mutableListOf<NamedStatConfig>()
+
+    /**
+     * Pure-data, serializable view of this schema. Throws if any entry was
+     * declared via the live-[Stat] delegate (without a [StatConfig]); switch
+     * those entries to a config-taking overload to make the schema serializable.
+     */
+    fun definition(): StatSchemaDef {
+        require(def.size == specs.size) {
+            val declared = def.map { it.name }.toSet()
+            val missing = specs.map { it.key.name }.filter { it !in declared }
+            "StatSchema cannot serialize: ${missing.size} entries lack a StatConfig " +
+                "(${missing.joinToString(", ")}). Switch them to the config-taking delegate overload."
+        }
+        return StatSchemaDef(def.toList())
+    }
+
     protected fun <R : Result, S : SeriesStat<R>> series(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
             specs.add(StatSpec(key, stat.create(concurrency)))
+            ReadOnlyProperty { _, _ -> key }
+        }
+
+    protected fun <R : Result> series(config: SeriesStatConfig<R>) =
+        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
+            val key = StatKey<R>(property.name)
+            specs.add(StatSpec(key, config.materialize(concurrency)))
+            def.add(NamedStatConfig(property.name, config))
             ReadOnlyProperty { _, _ -> key }
         }
 
@@ -69,10 +100,26 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) {
             ReadOnlyProperty { _, _ -> key }
         }
 
+    protected fun <R : Result> paired(config: PairedStatConfig<R>) =
+        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
+            val key = StatKey<R>(property.name)
+            specs.add(StatSpec(key, config.materialize(concurrency)))
+            def.add(NamedStatConfig(property.name, config))
+            ReadOnlyProperty { _, _ -> key }
+        }
+
     protected fun <R : Result, S : VectorStat<R>> vector(stat: S) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
             specs.add(StatSpec(key, stat.create(concurrency)))
+            ReadOnlyProperty { _, _ -> key }
+        }
+
+    protected fun <R : Result> vector(config: VectorStatConfig<R>) =
+        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
+            val key = StatKey<R>(property.name)
+            specs.add(StatSpec(key, config.materialize(concurrency)))
+            def.add(NamedStatConfig(property.name, config))
             ReadOnlyProperty { _, _ -> key }
         }
 
@@ -83,12 +130,24 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) {
             ReadOnlyProperty { _, _ -> key }
         }
 
+    protected fun <R : Result> discrete(config: DiscreteStatConfig<R>) =
+        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
+            val key = StatKey<R>(property.name)
+            specs.add(StatSpec(key, config.materialize(concurrency)))
+            def.add(NamedStatConfig(property.name, config))
+            ReadOnlyProperty { _, _ -> key }
+        }
+
     protected fun <T : StatSchema> group(nestedSchema: T, concurrency: Concurrency? = null) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, GroupStatKey<T>>> { _, property ->
             val key = GroupStatKey(property.name, nestedSchema)
             val groupStat = StatGroup(stats = filterSpecs<SeriesStat<*>>(nestedSchema.specs), concurrency = concurrency)
 
             specs.add(StatSpec(key, groupStat))
+            // If the nested schema is fully config-defined, capture it on the wire too.
+            runCatching { nestedSchema.definition() }.onSuccess { nestedDef ->
+                def.add(NamedStatConfig(property.name, GroupStatConfig(nestedDef.stats)))
+            }
             ReadOnlyProperty { _, _ -> key }
         }
 }

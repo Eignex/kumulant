@@ -35,6 +35,7 @@ kotlin {
         wasmWasiMain.get().dependsOn(nonJvmMain)
         commonMain.dependencies {
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
+            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
         }
         jvmMain.dependencies {
             implementation(kotlin("reflect"))
