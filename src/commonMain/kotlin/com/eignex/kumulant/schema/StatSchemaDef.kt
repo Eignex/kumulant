@@ -74,16 +74,16 @@ data class StatSchemaDef(val stats: List<NamedStatConfig>) {
      * (renamed/missing/added entries, changed config defaults) fails here at
      * hydration time, not later at use site.
      *
-     * Note: [factory] runs the schema's delegates, which incidentally
-     * materialize a parallel set of live stats that this helper discards (the
-     * returned [StatGroup] uses the wire-materialized ones). Fine for one-shot
-     * startup hydration; revisit if hot-path use becomes a thing.
+     * The [factory] runs in [StatSchema.skeleton] mode so its delegates
+     * collect typed keys + the schema definition without allocating a
+     * parallel set of unused live stats — only the wire-materialized
+     * [StatGroup] in the returned [TypedSchema] carries live state.
      */
     fun <T : StatSchema> bindTo(
         factory: () -> T,
         concurrency: Concurrency = Concurrency.None,
     ): TypedSchema<T> {
-        val schema = factory()
+        val schema = StatSchema.skeleton(factory)
         val expected = schema.definition()
         require(this == expected) {
             "Wire schema differs from ${schema::class.simpleName}: expected $expected, got $this"
