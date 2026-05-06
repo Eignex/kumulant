@@ -23,7 +23,7 @@ private class ServiceMetrics : StatSchema() {
 class StatSchemaDefSerializationTest {
 
     @Test
-    fun `definition encodes with $type discriminator and class names`() {
+    fun `definition encodes with the discriminator and class names`() {
         val def = ServiceMetrics().definition()
         val encoded = SchemaJson.encodeToString(def)
 
