@@ -51,7 +51,10 @@ class CrpsEnsembleTest {
             update(f, 0.9)
         }
         val ref = CrpsEnsemble().apply {
-            update(f, 0.5); update(f, 0.7); update(f, 0.2); update(f, 0.9)
+            update(f, 0.5)
+            update(f, 0.7)
+            update(f, 0.2)
+            update(f, 0.9)
         }
         a.merge(b.read(0L))
         assertEquals(ref.read(0L).mean, a.read(0L).mean, DELTA)

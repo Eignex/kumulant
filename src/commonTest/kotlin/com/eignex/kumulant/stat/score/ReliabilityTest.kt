@@ -12,10 +12,10 @@ class ReliabilityTest {
     fun `bins by predicted probability`() {
         val r = Reliability(numBins = 4).apply {
             // numBins = 4 → bin width 0.25
-            update(x = 0.1, y = 0.0)  // bin 0
-            update(x = 0.3, y = 1.0)  // bin 1
-            update(x = 0.6, y = 1.0)  // bin 2
-            update(x = 0.9, y = 1.0)  // bin 3
+            update(x = 0.1, y = 0.0) // bin 0
+            update(x = 0.3, y = 1.0) // bin 1
+            update(x = 0.6, y = 1.0) // bin 2
+            update(x = 0.9, y = 1.0) // bin 3
         }
         val res = r.read(0L)
         assertEquals(1.0, res.totalWeights[0], DELTA)
@@ -58,8 +58,14 @@ class ReliabilityTest {
     fun `perfectly calibrated stream gives ECE 0`() {
         // Each bin's mean prob equals its outcome rate.
         val r = Reliability(2).apply {
-            update(0.2, 0.0); update(0.2, 0.0); update(0.2, 1.0); update(0.2, 1.0)
-            update(0.8, 1.0); update(0.8, 1.0); update(0.8, 1.0); update(0.8, 0.0)
+            update(0.2, 0.0)
+            update(0.2, 0.0)
+            update(0.2, 1.0)
+            update(0.2, 1.0)
+            update(0.8, 1.0)
+            update(0.8, 1.0)
+            update(0.8, 1.0)
+            update(0.8, 0.0)
         }
         val res = r.read(0L)
         // Bin 0: meanP=0.2, rate=0.5 → gap=0.3.
@@ -81,10 +87,12 @@ class ReliabilityTest {
     @Test
     fun `merge adds bin sums`() {
         val a = Reliability(3).apply {
-            update(0.1, 1.0); update(0.5, 0.0)
+            update(0.1, 1.0)
+            update(0.5, 0.0)
         }
         val b = Reliability(3).apply {
-            update(0.1, 0.0); update(0.9, 1.0)
+            update(0.1, 0.0)
+            update(0.9, 1.0)
         }
         a.merge(b.read(0L))
         val res = a.read(0L)

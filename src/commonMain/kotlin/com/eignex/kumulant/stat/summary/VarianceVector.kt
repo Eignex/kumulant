@@ -15,5 +15,4 @@ import com.eignex.kumulant.operation.expandedToVector
 fun varianceVector(
     dimensions: Int,
     concurrency: Concurrency = Concurrency.None,
-): VectorStat<ResultList<WeightedVarianceResult>> =
-    { _: Int -> Variance(concurrency) }.expandedToVector(dimensions)
+): VectorStat<ResultList<WeightedVarianceResult>> = { _: Int -> Variance(concurrency) }.expandedToVector(dimensions)

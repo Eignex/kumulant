@@ -50,10 +50,12 @@ class ClassHistogramTest {
     @Test
     fun `merge adds component wise`() {
         val a = ClassHistogram(2, 2).apply {
-            update(0, 0); update(1, 1)
+            update(0, 0)
+            update(1, 1)
         }
         val b = ClassHistogram(2, 2).apply {
-            update(0, 0, weight = 3.0); update(0, 1, weight = 2.0)
+            update(0, 0, weight = 3.0)
+            update(0, 1, weight = 2.0)
         }
         a.merge(b.read(0L))
         val r = a.read(0L)

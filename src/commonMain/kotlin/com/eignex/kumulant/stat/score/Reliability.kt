@@ -5,9 +5,9 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
-import kotlin.math.abs
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.math.abs
 
 /**
  * Per-bin reliability snapshot for a binary probabilistic classifier.
@@ -68,8 +68,10 @@ data class ReliabilityResult(
         totalWeights.contentEquals(other.totalWeights)
 
     override fun hashCode(): Int =
-        31 * (31 * (31 * numBins + sumProbability.contentHashCode()) +
-            sumOutcome.contentHashCode()) + totalWeights.contentHashCode()
+        31 * (
+            31 * (31 * numBins + sumProbability.contentHashCode()) +
+                sumOutcome.contentHashCode()
+            ) + totalWeights.contentHashCode()
 }
 
 /**
@@ -121,7 +123,9 @@ class Reliability(
 
     override fun reset() {
         for (i in 0 until numBins) {
-            sumP[i].store(0.0); sumO[i].store(0.0); sumW[i].store(0.0)
+            sumP[i].store(0.0)
+            sumO[i].store(0.0)
+            sumW[i].store(0.0)
         }
     }
 

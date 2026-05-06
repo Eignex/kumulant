@@ -27,7 +27,7 @@ class PitTestsTest {
     fun `concentrated pit gives high chi squared and ks`() {
         val numBins = 4
         val h = pitHistogram(numBins)
-        repeat(100) { h.update(0.05) }   // bin 0
+        repeat(100) { h.update(0.05) } // bin 0
         val res = h.read(0L)
         // Expected per bin = 25; observed = (100, 0, 0, 0). Chi^2 = 75^2/25 + 3*25^2/25 = 225+75 = 300.
         assertEquals(300.0, res.pitChiSquared(numBins), DELTA)

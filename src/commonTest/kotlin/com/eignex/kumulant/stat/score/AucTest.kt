@@ -62,8 +62,8 @@ class AucTest {
     @Test
     fun `out of range scores clamp to edge bins`() {
         val auc = Auc(numBins = 4, lowerBound = 0.0, upperBound = 1.0).apply {
-            update(x = -0.5, y = 0.0)  // clamps to bin 0
-            update(x = 1.5, y = 1.0)   // clamps to bin 3
+            update(x = -0.5, y = 0.0) // clamps to bin 0
+            update(x = 1.5, y = 1.0) // clamps to bin 3
         }
         // Equivalent to perfectly-separated streams in bin 0 (negatives) vs bin 3 (positives).
         assertEquals(1.0, auc.read(0L).auc, DELTA)

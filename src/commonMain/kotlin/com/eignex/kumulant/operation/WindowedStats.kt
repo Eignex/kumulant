@@ -114,7 +114,11 @@ internal class WindowedDiscreteStat<R : Result>(
 ) : DiscreteStat<R> {
 
     private val template = template.create(concurrency = this.concurrency)
-    private val ring = SliceRing<R, DiscreteStat<R>>(windowDuration, slices, concurrency) { c -> this.template.create(c) }
+    private val ring = SliceRing<R, DiscreteStat<R>>(
+        windowDuration,
+        slices,
+        concurrency
+    ) { c -> this.template.create(c) }
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         ring.slotFor(timestampNanos)?.update(value, timestampNanos, weight)

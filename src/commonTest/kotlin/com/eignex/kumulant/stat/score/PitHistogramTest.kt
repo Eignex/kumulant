@@ -31,12 +31,15 @@ class PitHistogramTest {
     @Test
     fun `concentrated PIT input concentrates mass`() {
         val h = pitHistogram(4)
-        repeat(100) { h.update(0.05) }  // bin 0
-        repeat(10) { h.update(0.95) }   // bin 3
+        repeat(100) { h.update(0.05) } // bin 0
+        repeat(10) { h.update(0.95) } // bin 3
         val res = h.read(0L)
         var zeroBin = -1.0
         for (i in res.lowerBounds.indices) {
-            if (abs(res.lowerBounds[i] - 0.0) < DELTA) { zeroBin = res.weights[i]; break }
+            if (abs(res.lowerBounds[i] - 0.0) < DELTA) {
+                zeroBin = res.weights[i]
+                break
+            }
         }
         assertTrue(zeroBin >= 100.0 - DELTA)
     }
@@ -44,8 +47,8 @@ class PitHistogramTest {
     @Test
     fun `out of range pit values flow to underflow or overflow`() {
         val h = pitHistogram(4)
-        h.update(-0.1)  // underflow
-        h.update(1.5)   // overflow
+        h.update(-0.1) // underflow
+        h.update(1.5) // overflow
         val res = h.read(0L)
         var underWeight = -1.0
         var overWeight = -1.0

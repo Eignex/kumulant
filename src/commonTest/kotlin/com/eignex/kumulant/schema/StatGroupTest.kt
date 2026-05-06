@@ -1,5 +1,6 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
@@ -21,7 +22,6 @@ import com.eignex.kumulant.stat.summary.Mean
 import com.eignex.kumulant.stat.summary.Sum
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.VarianceResult
-import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import kotlin.test.Test
 import kotlin.test.assertEquals

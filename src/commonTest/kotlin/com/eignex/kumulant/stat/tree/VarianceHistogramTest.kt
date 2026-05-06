@@ -44,14 +44,22 @@ class VarianceHistogramTest {
     @Test
     fun `merge two halves equals one accumulator`() {
         val a = VarianceHistogram(2).apply {
-            update(0, 1.0); update(0, 2.0); update(1, 5.0)
+            update(0, 1.0)
+            update(0, 2.0)
+            update(1, 5.0)
         }
         val b = VarianceHistogram(2).apply {
-            update(0, 3.0); update(1, 7.0); update(1, 9.0)
+            update(0, 3.0)
+            update(1, 7.0)
+            update(1, 9.0)
         }
         val ref = VarianceHistogram(2).apply {
-            update(0, 1.0); update(0, 2.0); update(0, 3.0)
-            update(1, 5.0); update(1, 7.0); update(1, 9.0)
+            update(0, 1.0)
+            update(0, 2.0)
+            update(0, 3.0)
+            update(1, 5.0)
+            update(1, 7.0)
+            update(1, 9.0)
         }
         a.merge(b.read(0L))
         val merged = a.read(0L)
@@ -66,7 +74,8 @@ class VarianceHistogramTest {
     @Test
     fun `reset clears all bins`() {
         val h = VarianceHistogram(2).apply {
-            update(0, 1.0); update(1, 2.0)
+            update(0, 1.0)
+            update(1, 2.0)
             reset()
         }
         val r = h.read(0L)

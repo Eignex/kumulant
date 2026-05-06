@@ -111,7 +111,9 @@ class EnsembleForecastTest {
 
     private fun ln(x: Double) = kotlin.math.ln(x)
     private fun cos(x: Double) = kotlin.math.cos(x)
-    @Suppress("unused") private fun ensureUsed() { exp(0.0) }
+
+    @Suppress("unused")
+    private fun ensureUsed() { exp(0.0) }
 }
 
 class StdNormalTest {
