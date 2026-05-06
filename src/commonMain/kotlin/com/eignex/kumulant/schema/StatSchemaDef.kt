@@ -63,38 +63,7 @@ data class StatSchemaDef(val stats: List<NamedStatConfig>) {
             }
             bindDiscrete(name, config.materialize(concurrency))
         }
-
-    /**
-     * Bind this wire definition back to a typed [StatSchema] subclass [T] that
-     * both producer and consumer share as code. Returns the typed [schema]
-     * (for `snap[schema.someProperty]`-style typed lookups) paired with a live
-     * [StatGroup] materialized from the wire data.
-     *
-     * Verifies that the wire definition matches what [factory] produces — drift
-     * (renamed/missing/added entries, changed config defaults) fails here at
-     * hydration time, not later at use site.
-     *
-     * The [factory] runs in [StatSchema.skeleton] mode so its delegates
-     * collect typed keys + the schema definition without allocating a
-     * parallel set of unused live stats — only the wire-materialized
-     * [StatGroup] in the returned [TypedSchema] carries live state.
-     */
-    fun <T : StatSchema> bindTo(
-        factory: () -> T,
-        concurrency: Concurrency = Concurrency.None,
-    ): TypedSchema<T> {
-        val schema = StatSchema.skeleton(factory)
-        val expected = schema.definition()
-        require(this == expected) {
-            "Wire schema differs from ${schema::class.simpleName}: expected $expected, got $this"
-        }
-        val group = StatGroup(stats = materializeSeries(concurrency), concurrency = concurrency)
-        return TypedSchema(schema, group)
-    }
 }
-
-/** Result of [StatSchemaDef.bindTo]: a typed [StatSchema] paired with its live [StatGroup]. */
-data class TypedSchema<T : StatSchema>(val schema: T, val group: StatGroup)
 
 @Suppress("UNCHECKED_CAST")
 private fun bind(name: String, stat: Stat<*>): StatSpec<*, *, *> =

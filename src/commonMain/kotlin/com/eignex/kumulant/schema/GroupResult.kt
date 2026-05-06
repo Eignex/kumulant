@@ -64,40 +64,16 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) {
     private val def = mutableListOf<NamedStatConfig>()
 
     /**
-     * Captured at construction time from [currentSkeletonMode]. When `true`,
-     * the config-taking delegates skip building a live [Stat] — the schema
-     * collects only [def] entries, leaving [specs] empty. Used by [bindTo] to
-     * recover typed [StatKey]s from a class without paying for a parallel
-     * unused live-stat set; the *actual* live group is built from the
-     * wire-decoded [StatSchemaDef].
-     */
-    @PublishedApi internal val skeleton: Boolean = currentSkeletonMode
-
-    /**
      * Pure-data, serializable view of this schema. Throws if any entry was
      * declared via the live-[Stat] delegate (without a [StatConfig]); switch
      * those entries to a config-taking overload to make the schema serializable.
-     *
-     * In [skeleton] mode the parity check is skipped — `specs` is
-     * intentionally empty, and only entries that came through a config-taking
-     * delegate populate `def`. A schema that uses live-stat overloads while
-     * skeleton mode is on still fails here, because those entries appear in
-     * `specs` but not `def`.
      */
     fun definition(): StatSchemaDef {
-        if (!skeleton) {
-            require(def.size == specs.size) {
-                val declared = def.map { it.name }.toSet()
-                val missing = specs.map { it.key.name }.filter { it !in declared }
-                "StatSchema cannot serialize: ${missing.size} entries lack a StatConfig " +
-                    "(${missing.joinToString(", ")}). Switch them to the config-taking delegate overload."
-            }
-        } else {
-            require(specs.isEmpty()) {
-                val missing = specs.map { it.key.name }
-                "StatSchema cannot serialize: ${missing.size} entries used a live-stat delegate " +
-                    "(${missing.joinToString(", ")}). Switch them to the config-taking delegate overload."
-            }
+        require(def.size == specs.size) {
+            val declared = def.map { it.name }.toSet()
+            val missing = specs.map { it.key.name }.filter { it !in declared }
+            "StatSchema cannot serialize: ${missing.size} entries lack a StatConfig " +
+                "(${missing.joinToString(", ")}). Switch them to the config-taking delegate overload."
         }
         return StatSchemaDef(def.toList())
     }
@@ -112,7 +88,7 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) {
     protected fun <R : Result> series(config: SeriesStatConfig<R>) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
-            if (!skeleton) specs.add(StatSpec(key, config.materialize(concurrency)))
+            specs.add(StatSpec(key, config.materialize(concurrency)))
             def.add(NamedStatConfig(property.name, config))
             ReadOnlyProperty { _, _ -> key }
         }
@@ -127,7 +103,7 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) {
     protected fun <R : Result> paired(config: PairedStatConfig<R>) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
-            if (!skeleton) specs.add(StatSpec(key, config.materialize(concurrency)))
+            specs.add(StatSpec(key, config.materialize(concurrency)))
             def.add(NamedStatConfig(property.name, config))
             ReadOnlyProperty { _, _ -> key }
         }
@@ -142,7 +118,7 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) {
     protected fun <R : Result> vector(config: VectorStatConfig<R>) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
-            if (!skeleton) specs.add(StatSpec(key, config.materialize(concurrency)))
+            specs.add(StatSpec(key, config.materialize(concurrency)))
             def.add(NamedStatConfig(property.name, config))
             ReadOnlyProperty { _, _ -> key }
         }
@@ -157,7 +133,7 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) {
     protected fun <R : Result> discrete(config: DiscreteStatConfig<R>) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
             val key = StatKey<R>(property.name)
-            if (!skeleton) specs.add(StatSpec(key, config.materialize(concurrency)))
+            specs.add(StatSpec(key, config.materialize(concurrency)))
             def.add(NamedStatConfig(property.name, config))
             ReadOnlyProperty { _, _ -> key }
         }
@@ -165,44 +141,14 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) {
     protected fun <T : StatSchema> group(nestedSchema: T, concurrency: Concurrency? = null) =
         PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, GroupStatKey<T>>> { _, property ->
             val key = GroupStatKey(property.name, nestedSchema)
-            if (!skeleton) {
-                val groupStat = StatGroup(stats = filterSpecs<SeriesStat<*>>(nestedSchema.specs), concurrency = concurrency)
-                specs.add(StatSpec(key, groupStat))
-            }
+            val groupStat = StatGroup(stats = filterSpecs<SeriesStat<*>>(nestedSchema.specs), concurrency = concurrency)
+            specs.add(StatSpec(key, groupStat))
             // If the nested schema is fully config-defined, capture it on the wire too.
             runCatching { nestedSchema.definition() }.onSuccess { nestedDef ->
                 def.add(NamedStatConfig(property.name, GroupStatConfig(nestedDef.stats)))
             }
             ReadOnlyProperty { _, _ -> key }
         }
-
-    companion object {
-        /**
-         * When `true`, [StatSchema] subclasses constructed *during this call*
-         * skip materializing live stats — they collect [def] entries only.
-         * Set via [skeleton]; do not flip directly. Single-threaded (KMP-common
-         * `var`). The realistic use case is startup-time hydration in
-         * [StatSchemaDef.bindTo] where a parallel set of unused live stats
-         * would otherwise be allocated and discarded.
-         */
-        @PublishedApi internal var currentSkeletonMode: Boolean = false
-
-        /**
-         * Run [factory] in skeleton mode — the returned schema has empty
-         * [specs] but a fully populated [def] (and thus working [definition]
-         * and typed [StatKey] properties). Reentrant; nested calls preserve
-         * the prior flag value.
-         */
-        fun <T : StatSchema> skeleton(factory: () -> T): T {
-            val prev = currentSkeletonMode
-            currentSkeletonMode = true
-            try {
-                return factory()
-            } finally {
-                currentSkeletonMode = prev
-            }
-        }
-    }
 }
 
 @Suppress("UNCHECKED_CAST")
