@@ -30,12 +30,6 @@ internal class SerialLong(var ref: Long) : StreamLong {
         return ref
     }
 
-    override fun getAndAdd(delta: Long): Long {
-        val ret = ref
-        ref += delta
-        return ret
-    }
-
     override fun compareAndSet(expectedValue: Long, newValue: Long): Boolean {
         if (ref == expectedValue) {
             ref = newValue
@@ -62,12 +56,6 @@ internal class SerialDouble(var ref: Double) : StreamDouble {
         return ref
     }
 
-    override fun getAndAdd(delta: Double): Double {
-        val ret = ref
-        ref += delta
-        return ret
-    }
-
     override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean {
         if (ref.toRawBits() == expectedValue.toRawBits()) {
             ref = newValue
@@ -86,11 +74,6 @@ internal class SerialLongArray(val ref: LongArray) : StreamLongArray {
     override fun addAndGet(index: Int, delta: Long): Long {
         ref[index] += delta
         return ref[index]
-    }
-    override fun getAndAdd(index: Int, delta: Long): Long {
-        val ret = ref[index]
-        ref[index] += delta
-        return ret
     }
     override fun compareAndSet(index: Int, expectedValue: Long, newValue: Long): Boolean {
         if (ref[index] == expectedValue) {

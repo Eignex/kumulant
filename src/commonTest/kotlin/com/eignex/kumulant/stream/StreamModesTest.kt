@@ -32,14 +32,6 @@ class SerialLongTest {
         assertEquals(15L, returned)
         assertEquals(15L, v.load())
     }
-
-    @Test
-    fun `getAndAdd returns the previous value`() {
-        val v = SerialLong(10L)
-        val returned = v.getAndAdd(5L)
-        assertEquals(10L, returned)
-        assertEquals(15L, v.load())
-    }
 }
 
 class SerialDoubleTest {
@@ -62,13 +54,6 @@ class SerialDoubleTest {
     fun `addAndGet returns the updated value`() {
         val v = SerialDouble(1.0)
         assertEquals(3.5, v.addAndGet(2.5), DELTA)
-        assertEquals(3.5, v.load(), DELTA)
-    }
-
-    @Test
-    fun `getAndAdd returns the previous value`() {
-        val v = SerialDouble(1.0)
-        assertEquals(1.0, v.getAndAdd(2.5), DELTA)
         assertEquals(3.5, v.load(), DELTA)
     }
 }
@@ -125,13 +110,6 @@ class AtomicModeTest {
     }
 
     @Test
-    fun `AtomicDouble getAndAdd returns previous value`() {
-        val d = AtomicMode.newDouble(1.0)
-        assertEquals(1.0, d.getAndAdd(2.5), DELTA)
-        assertEquals(3.5, d.load(), DELTA)
-    }
-
-    @Test
     fun `AtomicDouble zero delta add is a no-op`() {
         val d = AtomicMode.newDouble(1.0)
         d.add(0.0)
@@ -142,13 +120,6 @@ class AtomicModeTest {
     fun `AtomicLong addAndGet returns updated value`() {
         val l = AtomicMode.newLong(10L)
         assertEquals(13L, l.addAndGet(3L))
-        assertEquals(13L, l.load())
-    }
-
-    @Test
-    fun `AtomicLong getAndAdd returns previous value`() {
-        val l = AtomicMode.newLong(10L)
-        assertEquals(10L, l.getAndAdd(3L))
         assertEquals(13L, l.load())
     }
 

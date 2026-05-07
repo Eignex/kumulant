@@ -57,12 +57,6 @@ internal value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
         return ref.sum()
     }
 
-    override fun getAndAdd(delta: Double): Double {
-        val ret = ref.sum()
-        ref.add(delta)
-        return ret
-    }
-
     override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean {
         throw UnsupportedOperationException(
             "DoubleAdder does not support compareAndSet; use AtomicMode for CAS-based stats"
@@ -91,12 +85,6 @@ internal value class LongAdder(val ref: JLongAdder) : StreamLong {
     override fun addAndGet(delta: Long): Long {
         ref.add(delta)
         return ref.sum()
-    }
-
-    override fun getAndAdd(delta: Long): Long {
-        val ret = ref.sum()
-        ref.add(delta)
-        return ret
     }
 
     override fun compareAndSet(expectedValue: Long, newValue: Long): Boolean {

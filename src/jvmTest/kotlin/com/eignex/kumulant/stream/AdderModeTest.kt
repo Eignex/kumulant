@@ -32,13 +32,6 @@ class AdderModeTest {
     }
 
     @Test
-    fun `DoubleAdder getAndAdd returns previous value`() {
-        val d = AdderMode.newDouble(1.0)
-        assertEquals(1.0, d.getAndAdd(2.5), DELTA)
-        assertEquals(3.5, d.load(), DELTA)
-    }
-
-    @Test
     fun `DoubleAdder store resets then assigns`() {
         val d = AdderMode.newDouble(100.0)
         d.store(7.0)
@@ -52,7 +45,6 @@ class AdderModeTest {
         l.add(7L)
         assertEquals(10L, l.load())
         assertEquals(15L, l.addAndGet(5L))
-        assertEquals(15L, l.getAndAdd(0L))
     }
 
     @Test

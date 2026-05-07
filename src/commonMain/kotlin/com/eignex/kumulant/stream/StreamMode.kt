@@ -56,9 +56,6 @@ internal interface StreamDouble {
     /** Add [delta] and return the new value. */
     fun addAndGet(delta: Double): Double
 
-    /** Add [delta] and return the value before the add. */
-    fun getAndAdd(delta: Double): Double
-
     /** Atomic compare-and-set on the IEEE-754 bit pattern; returns true iff the swap happened. */
     fun compareAndSet(expectedValue: Double, newValue: Double): Boolean
 }
@@ -76,9 +73,6 @@ internal interface StreamLong {
 
     /** Add [delta] and return the new value. */
     fun addAndGet(delta: Long): Long
-
-    /** Add [delta] and return the value before the add. */
-    fun getAndAdd(delta: Long): Long
 
     /** Atomic compare-and-set; returns true iff the swap happened. */
     fun compareAndSet(expectedValue: Long, newValue: Long): Boolean
@@ -124,9 +118,6 @@ internal interface StreamLongArray {
 
     /** Add [delta] at [index] and return the new value. */
     fun addAndGet(index: Int, delta: Long): Long
-
-    /** Add [delta] at [index] and return the value before the add. */
-    fun getAndAdd(index: Int, delta: Long): Long
 
     /** Atomic compare-and-set at [index]; returns true iff the swap happened. */
     fun compareAndSet(index: Int, expectedValue: Long, newValue: Long): Boolean

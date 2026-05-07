@@ -57,17 +57,6 @@ internal value class AtomicDouble(val ref: KAtomicLong) : StreamDouble {
         }
     }
 
-    override fun getAndAdd(delta: Double): Double {
-        var currentBits = ref.load()
-        while (true) {
-            val currentVal = Double.fromBits(currentBits)
-            val nextBits = (currentVal + delta).toRawBits()
-            val witness = ref.compareAndExchange(currentBits, nextBits)
-            if (witness == currentBits) return currentVal
-            currentBits = witness
-        }
-    }
-
     override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean =
         ref.compareAndSet(expectedValue.toRawBits(), newValue.toRawBits())
 }
@@ -91,10 +80,6 @@ internal value class AtomicLong(val ref: KAtomicLong) : StreamLong {
         return ref.addAndFetch(delta)
     }
 
-    override fun getAndAdd(delta: Long): Long {
-        return ref.fetchAndAdd(delta)
-    }
-
     override fun compareAndSet(expectedValue: Long, newValue: Long): Boolean {
         return ref.compareAndSet(expectedValue, newValue)
     }
@@ -108,7 +93,6 @@ internal value class AtomicLongCellArray(val ref: KAtomicLongArray) : StreamLong
     override fun store(index: Int, value: Long) = ref.storeAt(index, value)
     override fun add(index: Int, delta: Long) { ref.addAndFetchAt(index, delta) }
     override fun addAndGet(index: Int, delta: Long): Long = ref.addAndFetchAt(index, delta)
-    override fun getAndAdd(index: Int, delta: Long): Long = ref.fetchAndAddAt(index, delta)
     override fun compareAndSet(index: Int, expectedValue: Long, newValue: Long): Boolean =
         ref.compareAndSetAt(index, expectedValue, newValue)
 }
