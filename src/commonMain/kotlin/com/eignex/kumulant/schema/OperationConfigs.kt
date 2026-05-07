@@ -14,6 +14,8 @@ import com.eignex.kumulant.operation.atIndex
 import com.eignex.kumulant.operation.atIndices
 import com.eignex.kumulant.operation.atX
 import com.eignex.kumulant.operation.atY
+import com.eignex.kumulant.operation.filter
+import com.eignex.kumulant.operation.transformValue
 import com.eignex.kumulant.operation.windowed
 import com.eignex.kumulant.operation.withFixedX
 import com.eignex.kumulant.operation.withFixedY
@@ -380,3 +382,63 @@ data class VectorizedStatConfig(val dimensions: Int, val template: StatConfig) :
 @Suppress("UNCHECKED_CAST")
 fun <R : Result> SeriesStatConfig<R>.vectorized(dimensions: Int): VectorStatConfig<ResultList<R>> =
     VectorizedStatConfig(dimensions, this) as VectorStatConfig<ResultList<R>>
+
+// ========== Transform / Filter via expression AST ==========
+
+/**
+ * Apply [expr] as the value transform on every update — wire-friendly
+ * counterpart of `SeriesStat<R>.transformValue { … }`. The Kotlin lambda is
+ * built at materialize time and forwards every input through `expr.eval`;
+ * the AST itself ([ScalarExpr]) is what travels on the wire.
+ */
+@Serializable @SerialName("TransformValueSeries")
+data class TransformValueSeriesConfig(val inner: StatConfig, val expr: ScalarExpr) : SeriesStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requireSeries(inner, "TransformValueSeries").materialize(concurrency) as SeriesStat<Result>
+        return materialized.transformValue { expr.eval(it) }
+    }
+}
+
+@Serializable @SerialName("TransformValueDiscrete")
+data class TransformValueDiscreteConfig(val inner: StatConfig, val expr: ScalarExpr) : DiscreteStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requireDiscrete(inner, "TransformValueDiscrete").materialize(concurrency) as DiscreteStat<Result>
+        return materialized.transformValue { expr.eval(it.toDouble()).toLong() }
+    }
+}
+
+@Serializable @SerialName("FilterValueSeries")
+data class FilterValueSeriesConfig(val inner: StatConfig, val pred: BoolExpr) : SeriesStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requireSeries(inner, "FilterValueSeries").materialize(concurrency) as SeriesStat<Result>
+        return materialized.filter { pred.eval(it) }
+    }
+}
+
+@Serializable @SerialName("FilterValueDiscrete")
+data class FilterValueDiscreteConfig(val inner: StatConfig, val pred: BoolExpr) : DiscreteStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requireDiscrete(inner, "FilterValueDiscrete").materialize(concurrency) as DiscreteStat<Result>
+        return materialized.filter { pred.eval(it.toDouble()) }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> SeriesStatConfig<R>.transform(expr: ScalarExpr): SeriesStatConfig<R> =
+    TransformValueSeriesConfig(this, expr) as SeriesStatConfig<R>
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> DiscreteStatConfig<R>.transform(expr: ScalarExpr): DiscreteStatConfig<R> =
+    TransformValueDiscreteConfig(this, expr) as DiscreteStatConfig<R>
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> SeriesStatConfig<R>.filter(pred: BoolExpr): SeriesStatConfig<R> =
+    FilterValueSeriesConfig(this, pred) as SeriesStatConfig<R>
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> DiscreteStatConfig<R>.filter(pred: BoolExpr): DiscreteStatConfig<R> =
+    FilterValueDiscreteConfig(this, pred) as DiscreteStatConfig<R>
