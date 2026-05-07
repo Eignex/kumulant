@@ -16,19 +16,19 @@ import kotlinx.serialization.Serializable
  * [materializeSeries] (or one of the modality-specific variants).
  */
 @Serializable
-data class StatSchemaDef(val stats: Map<String, StatConfig>)
+data class StatSchemaDef(val stats: Map<String, StatSpec>)
 
 /** Materialize every entry, regardless of modality. Caller filters by stat type. */
-fun StatSchemaDef.materialize(concurrency: Concurrency = Concurrency.None): List<StatSpec<*, *, *>> =
+fun StatSchemaDef.materialize(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, *, *>> =
     stats.map { (name, config) -> bind(name, config.materialize(concurrency)) }
 
 /** Materialize series-modality entries only; throws if any entry isn't series. */
 fun StatSchemaDef.materializeSeries(
     concurrency: Concurrency = Concurrency.None,
-): List<StatSpec<*, out SeriesStat<*>, *>> =
+): List<BoundStat<*, out SeriesStat<*>, *>> =
     stats.map { (name, config) ->
-        require(config is SeriesStatConfig<*>) {
-            "Entry '$name' has config ${config::class.simpleName}, expected a SeriesStatConfig"
+        require(config is SeriesStatSpec<*>) {
+            "Entry '$name' has config ${config::class.simpleName}, expected a SeriesStatSpec"
         }
         bindSeries(name, config.materialize(concurrency))
     }
@@ -36,10 +36,10 @@ fun StatSchemaDef.materializeSeries(
 /** Materialize paired-modality entries only; throws if any entry isn't paired. */
 fun StatSchemaDef.materializePaired(
     concurrency: Concurrency = Concurrency.None,
-): List<StatSpec<*, out PairedStat<*>, *>> =
+): List<BoundStat<*, out PairedStat<*>, *>> =
     stats.map { (name, config) ->
-        require(config is PairedStatConfig<*>) {
-            "Entry '$name' has config ${config::class.simpleName}, expected a PairedStatConfig"
+        require(config is PairedStatSpec<*>) {
+            "Entry '$name' has config ${config::class.simpleName}, expected a PairedStatSpec"
         }
         bindPaired(name, config.materialize(concurrency))
     }
@@ -47,10 +47,10 @@ fun StatSchemaDef.materializePaired(
 /** Materialize vector-modality entries only; throws if any entry isn't vector. */
 fun StatSchemaDef.materializeVector(
     concurrency: Concurrency = Concurrency.None,
-): List<StatSpec<*, out VectorStat<*>, *>> =
+): List<BoundStat<*, out VectorStat<*>, *>> =
     stats.map { (name, config) ->
-        require(config is VectorStatConfig<*>) {
-            "Entry '$name' has config ${config::class.simpleName}, expected a VectorStatConfig"
+        require(config is VectorStatSpec<*>) {
+            "Entry '$name' has config ${config::class.simpleName}, expected a VectorStatSpec"
         }
         bindVector(name, config.materialize(concurrency))
     }
@@ -58,30 +58,30 @@ fun StatSchemaDef.materializeVector(
 /** Materialize discrete-modality entries only; throws if any entry isn't discrete. */
 fun StatSchemaDef.materializeDiscrete(
     concurrency: Concurrency = Concurrency.None,
-): List<StatSpec<*, out DiscreteStat<*>, *>> =
+): List<BoundStat<*, out DiscreteStat<*>, *>> =
     stats.map { (name, config) ->
-        require(config is DiscreteStatConfig<*>) {
-            "Entry '$name' has config ${config::class.simpleName}, expected a DiscreteStatConfig"
+        require(config is DiscreteStatSpec<*>) {
+            "Entry '$name' has config ${config::class.simpleName}, expected a DiscreteStatSpec"
         }
         bindDiscrete(name, config.materialize(concurrency))
     }
 
 @Suppress("UNCHECKED_CAST")
-private fun bind(name: String, stat: Stat<*>): StatSpec<*, *, *> =
-    StatSpec(StatKey<Result>(name), stat as Stat<Result>) as StatSpec<*, *, *>
+private fun bind(name: String, stat: Stat<*>): BoundStat<*, *, *> =
+    BoundStat(StatKey<Result>(name), stat as Stat<Result>) as BoundStat<*, *, *>
 
 @Suppress("UNCHECKED_CAST")
-private fun bindSeries(name: String, stat: SeriesStat<*>): StatSpec<*, out SeriesStat<*>, *> =
-    StatSpec(StatKey<Result>(name), stat as SeriesStat<Result>) as StatSpec<*, out SeriesStat<*>, *>
+private fun bindSeries(name: String, stat: SeriesStat<*>): BoundStat<*, out SeriesStat<*>, *> =
+    BoundStat(StatKey<Result>(name), stat as SeriesStat<Result>) as BoundStat<*, out SeriesStat<*>, *>
 
 @Suppress("UNCHECKED_CAST")
-private fun bindPaired(name: String, stat: PairedStat<*>): StatSpec<*, out PairedStat<*>, *> =
-    StatSpec(StatKey<Result>(name), stat as PairedStat<Result>) as StatSpec<*, out PairedStat<*>, *>
+private fun bindPaired(name: String, stat: PairedStat<*>): BoundStat<*, out PairedStat<*>, *> =
+    BoundStat(StatKey<Result>(name), stat as PairedStat<Result>) as BoundStat<*, out PairedStat<*>, *>
 
 @Suppress("UNCHECKED_CAST")
-private fun bindVector(name: String, stat: VectorStat<*>): StatSpec<*, out VectorStat<*>, *> =
-    StatSpec(StatKey<Result>(name), stat as VectorStat<Result>) as StatSpec<*, out VectorStat<*>, *>
+private fun bindVector(name: String, stat: VectorStat<*>): BoundStat<*, out VectorStat<*>, *> =
+    BoundStat(StatKey<Result>(name), stat as VectorStat<Result>) as BoundStat<*, out VectorStat<*>, *>
 
 @Suppress("UNCHECKED_CAST")
-private fun bindDiscrete(name: String, stat: DiscreteStat<*>): StatSpec<*, out DiscreteStat<*>, *> =
-    StatSpec(StatKey<Result>(name), stat as DiscreteStat<Result>) as StatSpec<*, out DiscreteStat<*>, *>
+private fun bindDiscrete(name: String, stat: DiscreteStat<*>): BoundStat<*, out DiscreteStat<*>, *> =
+    BoundStat(StatKey<Result>(name), stat as DiscreteStat<Result>) as BoundStat<*, out DiscreteStat<*>, *>

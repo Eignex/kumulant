@@ -12,7 +12,7 @@ import com.eignex.kumulant.core.VectorStat
  * spec list and provides the modality-agnostic [read] / [merge] / [reset] implementations.
  */
 sealed class AbstractStatGroup<S : Stat<*>>(
-    protected val stats: List<StatSpec<*, out S, *>>,
+    protected val stats: List<BoundStat<*, out S, *>>,
     protected val concurrencyOverride: Concurrency?,
 ) : GroupedStat {
     final override val concurrency: Concurrency get() = concurrencyOverride ?: Concurrency.None
@@ -31,12 +31,12 @@ sealed class AbstractStatGroup<S : Stat<*>>(
 
 /** Fans each update out to a heterogeneous list of [SeriesStat]s and reports their results keyed by name. */
 class StatGroup(
-    stats: List<StatSpec<*, out SeriesStat<*>, *>>,
+    stats: List<BoundStat<*, out SeriesStat<*>, *>>,
     concurrency: Concurrency? = null,
 ) : AbstractStatGroup<SeriesStat<*>>(stats, concurrency), SeriesStat<GroupResult> {
 
     constructor(
-        vararg stats: StatSpec<*, out SeriesStat<*>, *>,
+        vararg stats: BoundStat<*, out SeriesStat<*>, *>,
         concurrency: Concurrency? = null
     ) : this(stats = stats.asList(), concurrency = concurrency)
 
@@ -61,12 +61,12 @@ class StatGroup(
 
 /** [StatGroup] variant over paired (x, y) inputs. */
 class PairedStatGroup(
-    stats: List<StatSpec<*, out PairedStat<*>, *>>,
+    stats: List<BoundStat<*, out PairedStat<*>, *>>,
     concurrency: Concurrency? = null,
 ) : AbstractStatGroup<PairedStat<*>>(stats, concurrency), PairedStat<GroupResult> {
 
     constructor(
-        vararg stats: StatSpec<*, out PairedStat<*>, *>,
+        vararg stats: BoundStat<*, out PairedStat<*>, *>,
         concurrency: Concurrency? = null
     ) : this(stats = stats.asList(), concurrency = concurrency)
 
@@ -91,12 +91,12 @@ class PairedStatGroup(
 
 /** [StatGroup] variant over vector inputs. */
 class VectorStatGroup(
-    stats: List<StatSpec<*, out VectorStat<*>, *>>,
+    stats: List<BoundStat<*, out VectorStat<*>, *>>,
     concurrency: Concurrency? = null,
 ) : AbstractStatGroup<VectorStat<*>>(stats, concurrency), VectorStat<GroupResult> {
 
     constructor(
-        vararg stats: StatSpec<*, out VectorStat<*>, *>,
+        vararg stats: BoundStat<*, out VectorStat<*>, *>,
         concurrency: Concurrency? = null
     ) : this(stats = stats.asList(), concurrency = concurrency)
 
@@ -121,12 +121,12 @@ class VectorStatGroup(
 
 /** [StatGroup] variant over discrete (Long) inputs. */
 class DiscreteStatGroup(
-    stats: List<StatSpec<*, out DiscreteStat<*>, *>>,
+    stats: List<BoundStat<*, out DiscreteStat<*>, *>>,
     concurrency: Concurrency? = null,
 ) : AbstractStatGroup<DiscreteStat<*>>(stats, concurrency), DiscreteStat<GroupResult> {
 
     constructor(
-        vararg stats: StatSpec<*, out DiscreteStat<*>, *>,
+        vararg stats: BoundStat<*, out DiscreteStat<*>, *>,
         concurrency: Concurrency? = null
     ) : this(stats = stats.asList(), concurrency = concurrency)
 

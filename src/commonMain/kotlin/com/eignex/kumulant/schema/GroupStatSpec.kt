@@ -7,24 +7,24 @@ import kotlinx.serialization.Serializable
 
 /**
  * Serializable configuration for a nested series-modality [StatGroup]. Holds a
- * recursive map of [StatConfig] entries keyed by name; every entry must itself
- * be a [SeriesStatConfig].
+ * recursive map of [StatSpec] entries keyed by name; every entry must itself
+ * be a [SeriesStatSpec].
  *
  * On the wire:
  * ```yaml
- * $type: GroupStatConfig
+ * $type: GroupStatSpec
  * stats:
  *   requests: { $type: Sum }
  * ```
  */
 @Serializable
-@SerialName("GroupStatConfig")
-data class GroupStatConfig(val stats: Map<String, StatConfig>) : SeriesStatConfig<GroupResult> {
+@SerialName("GroupStatSpec")
+data class GroupStatSpec(val stats: Map<String, StatSpec>) : SeriesStatSpec<GroupResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<GroupResult> {
         val materialized = stats.map { (name, config) ->
-            require(config is SeriesStatConfig<*>) {
-                "GroupStatConfig entry '$name' has config ${config::class.simpleName}, " +
-                    "expected a SeriesStatConfig"
+            require(config is SeriesStatSpec<*>) {
+                "GroupStatSpec entry '$name' has config ${config::class.simpleName}, " +
+                    "expected a SeriesStatSpec"
             }
             toSpec(StatKey<com.eignex.kumulant.core.Result>(name), config.materialize(concurrency))
         }

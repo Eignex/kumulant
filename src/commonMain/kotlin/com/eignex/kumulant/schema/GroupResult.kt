@@ -42,11 +42,11 @@ data class GroupResult(
 
 /**
  * Declarative, typed schema for a group of stats, layered on top of
- * `com.eignex.skema.Schema<StatConfig>` so the entries map is wire-serializable.
+ * `com.eignex.skema.Schema<StatSpec>` so the entries map is wire-serializable.
  *
  * Subclass and declare stats via the [series], [paired], [vector], [discrete], [raw],
  * and [group] delegates; each property exposes a [StatKey] for typed retrieval from a
- * [GroupResult]. Every entry is a [StatConfig], which means the schema always
+ * [GroupResult]. Every entry is a [StatSpec], which means the schema always
  * round-trips through the wire — no live-stat back-door.
  *
  * If you need an aggregation that isn't wire-expressible (e.g. a `filter`-wrapped
@@ -57,63 +57,63 @@ data class GroupResult(
  * via `config.materialize(concurrency)` inside the [StatGroup] / `*ListStats`
  * constructor.
  */
-abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) : Schema<StatConfig>() {
+abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) : Schema<StatSpec>() {
 
     /** Pure-data, serializable view of this schema using kumulant's wire field `stats`. */
     fun statSchemaDef(): StatSchemaDef = StatSchemaDef(definition().entries)
 
-    protected fun <R : Result> series(config: SeriesStatConfig<R>) =
+    protected fun <R : Result> series(config: SeriesStatSpec<R>) =
         register(config) { StatKey<R>(it) }
 
-    protected fun <R : Result> paired(config: PairedStatConfig<R>) =
+    protected fun <R : Result> paired(config: PairedStatSpec<R>) =
         register(config) { StatKey<R>(it) }
 
-    protected fun <R : Result> vector(config: VectorStatConfig<R>) =
+    protected fun <R : Result> vector(config: VectorStatSpec<R>) =
         register(config) { StatKey<R>(it) }
 
-    protected fun <R : Result> discrete(config: DiscreteStatConfig<R>) =
+    protected fun <R : Result> discrete(config: DiscreteStatSpec<R>) =
         register(config) { StatKey<R>(it) }
 
-    /** Nest a sub-schema as a [GroupStatConfig]; materialization recurses at the parent's group construction. */
+    /** Nest a sub-schema as a [GroupStatSpec]; materialization recurses at the parent's group construction. */
     protected fun <T : StatSchema> group(nestedSchema: T) =
-        register(GroupStatConfig(nestedSchema.statSchemaDef().stats)) { GroupStatKey(it, nestedSchema) }
+        register(GroupStatSpec(nestedSchema.statSchemaDef().stats)) { GroupStatKey(it, nestedSchema) }
 }
 
 /** Series-modality specs from a schema, materialized at the schema's [concurrency][StatSchema.concurrency]. */
-internal fun seriesSpecs(schema: StatSchema): List<StatSpec<*, out SeriesStat<*>, *>> =
+internal fun seriesSpecs(schema: StatSchema): List<BoundStat<*, out SeriesStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
-        if (config !is SeriesStatConfig<*>) return@mapNotNull null
+        if (config !is SeriesStatSpec<*>) return@mapNotNull null
         toSpec<SeriesStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
 
 /** Paired-modality specs from a schema. */
-internal fun pairedSpecs(schema: StatSchema): List<StatSpec<*, out PairedStat<*>, *>> =
+internal fun pairedSpecs(schema: StatSchema): List<BoundStat<*, out PairedStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
-        if (config !is PairedStatConfig<*>) return@mapNotNull null
+        if (config !is PairedStatSpec<*>) return@mapNotNull null
         toSpec<PairedStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
 
 /** Vector-modality specs from a schema. */
-internal fun vectorSpecs(schema: StatSchema): List<StatSpec<*, out VectorStat<*>, *>> =
+internal fun vectorSpecs(schema: StatSchema): List<BoundStat<*, out VectorStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
-        if (config !is VectorStatConfig<*>) return@mapNotNull null
+        if (config !is VectorStatSpec<*>) return@mapNotNull null
         toSpec<VectorStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
 
 /** Discrete-modality specs from a schema. */
-internal fun discreteSpecs(schema: StatSchema): List<StatSpec<*, out DiscreteStat<*>, *>> =
+internal fun discreteSpecs(schema: StatSchema): List<BoundStat<*, out DiscreteStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
-        if (config !is DiscreteStatConfig<*>) return@mapNotNull null
+        if (config !is DiscreteStatSpec<*>) return@mapNotNull null
         toSpec<DiscreteStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
 
 @Suppress("UNCHECKED_CAST")
-internal fun <S : Stat<*>> toSpec(key: StatKey<*>, stat: S): StatSpec<*, out S, *> =
-    StatSpec(key as StatKey<Result>, stat as Stat<Result>) as StatSpec<*, out S, *>
+internal fun <S : Stat<*>> toSpec(key: StatKey<*>, stat: S): BoundStat<*, out S, *> =
+    BoundStat(key as StatKey<Result>, stat as Stat<Result>) as BoundStat<*, out S, *>
 
 internal inline fun <reified S : Stat<*>> filterSpecs(
-    specs: List<StatSpec<*, *, *>>
-): List<StatSpec<*, out S, *>> =
+    specs: List<BoundStat<*, *, *>>
+): List<BoundStat<*, out S, *>> =
     specs.mapNotNull { (key, stat) -> if (stat is S) toSpec(key, stat) else null }
 
 @Suppress("UNCHECKED_CAST")

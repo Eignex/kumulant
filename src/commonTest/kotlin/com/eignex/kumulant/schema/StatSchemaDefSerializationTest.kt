@@ -31,7 +31,7 @@ class StatSchemaDefSerializationTest {
             """{"stats":{""" +
                 """"requests":{"${'$'}type":"Sum"},""" +
                 """"avgWeight":{"${'$'}type":"Mean"},""" +
-                """"http":{"${'$'}type":"GroupStatConfig","stats":{""" +
+                """"http":{"${'$'}type":"GroupStatSpec","stats":{""" +
                 """"requests":{"${'$'}type":"Sum"},""" +
                 """"latencyMs":{"${'$'}type":"DDSketch","probabilities":[0.5,0.99,0.999]}""" +
                 """}}""" +

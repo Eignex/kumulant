@@ -75,7 +75,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * [StatConfig] variants for kumulant's stats. Co-located here (rather than next to each
+ * [StatSpec] variants for kumulant's stats. Co-located here (rather than next to each
  * stat) because Kotlin requires direct subclasses of a sealed interface to live in the
  * same package as the interface.
  *
@@ -88,67 +88,67 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @SerialName("Mean")
-data object Mean : SeriesStatConfig<WeightedMeanResult> {
+data object Mean : SeriesStatSpec<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<WeightedMeanResult> = MeanStat(concurrency)
 }
 
 @Serializable
 @SerialName("Sum")
-data object Sum : SeriesStatConfig<SumResult> {
+data object Sum : SeriesStatSpec<SumResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SumResult> = SumStat(concurrency)
 }
 
 @Serializable
 @SerialName("Min")
-data object Min : SeriesStatConfig<MinResult> {
+data object Min : SeriesStatSpec<MinResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<MinResult> = MinStat(concurrency)
 }
 
 @Serializable
 @SerialName("Max")
-data object Max : SeriesStatConfig<MaxResult> {
+data object Max : SeriesStatSpec<MaxResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<MaxResult> = MaxStat(concurrency)
 }
 
 @Serializable
 @SerialName("Range")
-data object Range : SeriesStatConfig<RangeResult> {
+data object Range : SeriesStatSpec<RangeResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<RangeResult> = RangeStat(concurrency)
 }
 
 @Serializable
 @SerialName("Variance")
-data object Variance : SeriesStatConfig<WeightedVarianceResult> {
+data object Variance : SeriesStatSpec<WeightedVarianceResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<WeightedVarianceResult> = VarianceStat(concurrency)
 }
 
 @Serializable
 @SerialName("Moments")
-data object Moments : SeriesStatConfig<MomentsResult> {
+data object Moments : SeriesStatSpec<MomentsResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<MomentsResult> = MomentsStat(concurrency)
 }
 
 @Serializable
 @SerialName("BernoulliSum")
-data object BernoulliSum : SeriesStatConfig<BernoulliSumResult> {
+data object BernoulliSum : SeriesStatSpec<BernoulliSumResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<BernoulliSumResult> = BernoulliSumStat(concurrency)
 }
 
 @Serializable
 @SerialName("TotalWeights")
-data object TotalWeights : SeriesStatConfig<SumResult> {
+data object TotalWeights : SeriesStatSpec<SumResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SumResult> = TotalWeightsStat(concurrency)
 }
 
 @Serializable
 @SerialName("Count")
-data object Count : SeriesStatConfig<SumResult> {
+data object Count : SeriesStatSpec<SumResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SumResult> = CountStat(concurrency)
 }
 
 @Serializable
 @SerialName("Rate")
-data object Rate : SeriesStatConfig<RateResult> {
+data object Rate : SeriesStatSpec<RateResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<RateResult> = RateStat(concurrency)
 }
 
@@ -156,7 +156,7 @@ data object Rate : SeriesStatConfig<RateResult> {
 @SerialName("CounterRate")
 data class CounterRate(
     val treatDecreaseAsReset: Boolean = true,
-) : SeriesStatConfig<RateResult> {
+) : SeriesStatSpec<RateResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<RateResult> =
         CounterRateStat(concurrency, treatDecreaseAsReset)
 }
@@ -171,7 +171,7 @@ data class CounterRate(
 data class DDSketch(
     val relativeError: Double = 0.01,
     val probabilities: List<Double> = listOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
-) : SeriesStatConfig<SketchResult> {
+) : SeriesStatSpec<SketchResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SketchResult> =
         DDSketchStat(relativeError, probabilities.toDoubleArray(), concurrency)
 }
@@ -182,7 +182,7 @@ data class FrugalQuantile(
     val q: Double,
     val stepSize: Double = 0.01,
     val initialEstimate: Double = 0.0,
-) : SeriesStatConfig<QuantileResult> {
+) : SeriesStatSpec<QuantileResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<QuantileResult> =
         FrugalQuantileStat(q, stepSize, initialEstimate, concurrency)
 }
@@ -193,7 +193,7 @@ data class HdrHistogram(
     val lowestDiscernibleValue: Double = 0.001,
     val initialHighestTrackableValue: Double = 100.0,
     val significantDigits: Int = 3,
-) : SeriesStatConfig<SparseHistogramResult> {
+) : SeriesStatSpec<SparseHistogramResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SparseHistogramResult> =
         HdrHistogramStat(lowestDiscernibleValue, initialHighestTrackableValue, significantDigits, concurrency)
 }
@@ -204,7 +204,7 @@ data class LinearHistogram(
     val lowerBound: Double,
     val upperBound: Double,
     val binCount: Int,
-) : SeriesStatConfig<SparseHistogramResult> {
+) : SeriesStatSpec<SparseHistogramResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SparseHistogramResult> =
         LinearHistogramStat(lowerBound, upperBound, binCount, concurrency)
 }
@@ -219,7 +219,7 @@ data class LinearHistogram(
 data class ReservoirHistogram(
     val capacity: Int = 1024,
     val seed: Long,
-) : SeriesStatConfig<ReservoirResult> {
+) : SeriesStatSpec<ReservoirResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<ReservoirResult> =
         ReservoirHistogramStat(capacity, seed, concurrency)
 }
@@ -229,14 +229,14 @@ data class ReservoirHistogram(
 data class TDigest(
     val compression: Double = 100.0,
     val probabilities: List<Double> = listOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
-) : SeriesStatConfig<TDigestResult> {
+) : SeriesStatSpec<TDigestResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<TDigestResult> =
         TDigestStat(compression, probabilities.toDoubleArray(), concurrency)
 }
 
 @Serializable
 @SerialName("PitHistogram")
-data class PitHistogram(val numBins: Int) : SeriesStatConfig<SparseHistogramResult> {
+data class PitHistogram(val numBins: Int) : SeriesStatSpec<SparseHistogramResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SparseHistogramResult> =
         pitHistogram(numBins, concurrency)
 }
@@ -245,61 +245,61 @@ data class PitHistogram(val numBins: Int) : SeriesStatConfig<SparseHistogramResu
 
 @Serializable
 @SerialName("PairedSum")
-data object PairedSum : PairedStatConfig<PairedSumResult> {
+data object PairedSum : PairedStatSpec<PairedSumResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<PairedSumResult> = PairedSumStat(concurrency)
 }
 
 @Serializable
 @SerialName("OLS")
-data object OLS : PairedStatConfig<OLSResult> {
+data object OLS : PairedStatSpec<OLSResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<OLSResult> = OLSStat(concurrency)
 }
 
 @Serializable
 @SerialName("Covariance")
-data object Covariance : PairedStatConfig<CovarianceResult> {
+data object Covariance : PairedStatSpec<CovarianceResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<CovarianceResult> = CovarianceStat(concurrency)
 }
 
 @Serializable
 @SerialName("Lasso")
-data class Lasso(val lambda: Double) : PairedStatConfig<LassoResult> {
+data class Lasso(val lambda: Double) : PairedStatSpec<LassoResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<LassoResult> = LassoStat(lambda, concurrency)
 }
 
 @Serializable
 @SerialName("Ridge")
-data class Ridge(val lambda: Double) : PairedStatConfig<RidgeResult> {
+data class Ridge(val lambda: Double) : PairedStatSpec<RidgeResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<RidgeResult> = RidgeStat(lambda, concurrency)
 }
 
 @Serializable
 @SerialName("BrierScore")
-data object BrierScore : PairedStatConfig<WeightedMeanResult> {
+data object BrierScore : PairedStatSpec<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<WeightedMeanResult> = BrierScoreStat(concurrency)
 }
 
 @Serializable
 @SerialName("MseLoss")
-data object MseLoss : PairedStatConfig<WeightedMeanResult> {
+data object MseLoss : PairedStatSpec<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<WeightedMeanResult> = MseLossStat(concurrency)
 }
 
 @Serializable
 @SerialName("MaeLoss")
-data object MaeLoss : PairedStatConfig<WeightedMeanResult> {
+data object MaeLoss : PairedStatSpec<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<WeightedMeanResult> = MaeLossStat(concurrency)
 }
 
 @Serializable
 @SerialName("LogLoss")
-data object LogLoss : PairedStatConfig<WeightedMeanResult> {
+data object LogLoss : PairedStatSpec<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<WeightedMeanResult> = LogLossStat(concurrency)
 }
 
 @Serializable
 @SerialName("PinballLoss")
-data class PinballLoss(val tau: Double) : PairedStatConfig<WeightedMeanResult> {
+data class PinballLoss(val tau: Double) : PairedStatSpec<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<WeightedMeanResult> =
         PinballLossStat(tau, concurrency)
 }
@@ -310,14 +310,14 @@ data class Auc(
     val numBins: Int = 256,
     val lowerBound: Double = 0.0,
     val upperBound: Double = 1.0,
-) : PairedStatConfig<AucResult> {
+) : PairedStatSpec<AucResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<AucResult> =
         AucStat(numBins, lowerBound, upperBound, concurrency)
 }
 
 @Serializable
 @SerialName("Reliability")
-data class Reliability(val numBins: Int) : PairedStatConfig<ReliabilityResult> {
+data class Reliability(val numBins: Int) : PairedStatSpec<ReliabilityResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<ReliabilityResult> =
         ReliabilityStat(numBins, concurrency)
 }
@@ -326,7 +326,7 @@ data class Reliability(val numBins: Int) : PairedStatConfig<ReliabilityResult> {
 
 @Serializable
 @SerialName("VarianceVector")
-data class VarianceVector(val dimensions: Int) : VectorStatConfig<ResultList<WeightedVarianceResult>> {
+data class VarianceVector(val dimensions: Int) : VectorStatSpec<ResultList<WeightedVarianceResult>> {
     override fun materialize(concurrency: Concurrency): VectorStat<ResultList<WeightedVarianceResult>> =
         varianceVector(dimensions, concurrency)
 }
@@ -335,14 +335,14 @@ data class VarianceVector(val dimensions: Int) : VectorStatConfig<ResultList<Wei
 
 @Serializable
 @SerialName("HyperLogLog")
-data class HyperLogLog(val precision: Int = 14) : DiscreteStatConfig<HyperLogLogResult> {
+data class HyperLogLog(val precision: Int = 14) : DiscreteStatSpec<HyperLogLogResult> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<HyperLogLogResult> =
         HyperLogLogStat(precision, concurrency)
 }
 
 @Serializable
 @SerialName("LinearCounting")
-data class LinearCounting(val bits: Int = 4096) : DiscreteStatConfig<LinearCountingResult> {
+data class LinearCounting(val bits: Int = 4096) : DiscreteStatSpec<LinearCountingResult> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<LinearCountingResult> =
         LinearCountingStat(bits, concurrency)
 }
@@ -352,7 +352,7 @@ data class LinearCounting(val bits: Int = 4096) : DiscreteStatConfig<LinearCount
 data class BloomFilter(
     val bits: Int = 1 shl 16,
     val hashes: Int = 7,
-) : DiscreteStatConfig<BloomFilterResult> {
+) : DiscreteStatSpec<BloomFilterResult> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<BloomFilterResult> =
         BloomFilterStat(bits, hashes, concurrency)
 }
@@ -363,7 +363,7 @@ data class CountMinSketch(
     val depth: Int = 5,
     val width: Int = 1024,
     val seed: Long = -7046029254386353133L,
-) : DiscreteStatConfig<CountMinSketchResult> {
+) : DiscreteStatSpec<CountMinSketchResult> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<CountMinSketchResult> =
         CountMinSketchStat(depth, width, seed, concurrency)
 }
@@ -373,14 +373,14 @@ data class CountMinSketch(
 data class MinHash(
     val numHashes: Int = 128,
     val seed: Long = -3724518991637283867L,
-) : DiscreteStatConfig<MinHashResult> {
+) : DiscreteStatSpec<MinHashResult> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<MinHashResult> =
         MinHashStat(numHashes, seed, concurrency)
 }
 
 @Serializable
 @SerialName("SpaceSaving")
-data class SpaceSaving(val capacity: Int) : DiscreteStatConfig<HeavyHittersResult> {
+data class SpaceSaving(val capacity: Int) : DiscreteStatSpec<HeavyHittersResult> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<HeavyHittersResult> =
         SpaceSavingStat(capacity, concurrency)
 }

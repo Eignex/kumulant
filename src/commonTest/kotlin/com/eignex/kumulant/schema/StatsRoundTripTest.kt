@@ -7,7 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * Round-trip tests for every [StatConfig]. For each modality, build a schema
+ * Round-trip tests for every [StatSpec]. For each modality, build a schema
  * with a config-only entry, encode, decode, materialize, drive a small fixed
  * input through both the original live stat and the rehydrated stat, and
  * compare results.
@@ -15,11 +15,11 @@ import kotlin.test.assertEquals
  * Test-name convention: plain prose, no `()` or `$` in backticked identifiers
  * (Kotlin/Native rejects those).
  */
-class StatConfigsRoundTripTest {
+class StatsRoundTripTest {
 
-    private inline fun <reified C : StatConfig> roundTrip(config: C): C {
-        val json = SchemaJson.encodeToString<StatConfig>(config)
-        return SchemaJson.decodeFromString<StatConfig>(json) as C
+    private inline fun <reified C : StatSpec> roundTrip(config: C): C {
+        val json = SchemaJson.encodeToString<StatSpec>(config)
+        return SchemaJson.decodeFromString<StatSpec>(json) as C
     }
 
     // ===== Series — trivial =====

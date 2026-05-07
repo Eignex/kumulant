@@ -55,7 +55,7 @@ sealed class AbstractListStats<R : Result, S : Stat<out R>>(
  * Names default to each stat's `simpleName`; override with `Pair<String, SeriesStat>`
  * entries. Duplicate names throw at construction — disambiguate explicitly.
  *
- * Lighter than [StatGroup] when the `StatKey` / `StatSpec` apparatus isn't needed.
+ * Lighter than [StatGroup] when the `StatKey` / `BoundStat` apparatus isn't needed.
  */
 class ListStats<R : Result>(
     entries: List<Pair<String, SeriesStat<out R>>>,
