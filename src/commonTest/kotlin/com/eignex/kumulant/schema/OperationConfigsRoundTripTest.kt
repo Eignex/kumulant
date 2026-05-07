@@ -1,8 +1,8 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.SumResult
+import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,9 +17,9 @@ import com.eignex.kumulant.operation.withWeight as liveWithWeight
  * decode, materialize, drive a small fixed input through both the rehydrated
  * config and the live composition, and compare results.
  */
-class OperationConfigsRoundTripTest {
+private const val DELTA = 1e-12
 
-    private val DELTA = 1e-12
+class OperationConfigsRoundTripTest {
 
     @Test fun withWeight_series_matches_live_composition() {
         val cfg: SeriesStatConfig<SumResult> = Sum.withWeight(2.0)

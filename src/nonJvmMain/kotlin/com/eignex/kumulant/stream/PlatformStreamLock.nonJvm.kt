@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalAtomicApi::class)
+@file:Suppress("MatchingDeclarationName", "Filename")
 
 package com.eignex.kumulant.stream
 

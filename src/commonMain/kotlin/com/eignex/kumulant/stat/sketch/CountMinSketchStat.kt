@@ -113,5 +113,10 @@ class CountMinSketchStat(
         )
     }
 
-    override fun create(concurrency: Concurrency?) = CountMinSketchStat(depth, width, seed, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = CountMinSketchStat(
+        depth,
+        width,
+        seed,
+        concurrency ?: this.concurrency
+    )
 }

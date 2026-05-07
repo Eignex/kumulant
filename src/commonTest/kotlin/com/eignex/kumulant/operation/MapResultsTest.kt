@@ -1,8 +1,8 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.stat.summary.MeanResult
-import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.SumResult
+import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

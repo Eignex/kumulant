@@ -5,8 +5,8 @@ import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.operation.mapResult
-import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingSumResult
+import com.eignex.kumulant.stat.decay.DecayingSumStat
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.ln

@@ -5,7 +5,6 @@ import com.eignex.skema.SchemaJson
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * Round-trip tests for every [StatConfig]. For each modality, build a schema
@@ -252,7 +251,7 @@ class StatConfigsRoundTripTest {
         val live = StatGroup(schema)
 
         listOf(1.0, 2.5, 0.5, 7.0).forEach {
-            live.update(it);
+            live.update(it)
             rebuilt.update(it)
         }
 

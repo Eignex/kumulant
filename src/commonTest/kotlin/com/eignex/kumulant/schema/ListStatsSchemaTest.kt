@@ -12,9 +12,9 @@ import kotlin.test.assertEquals
  * matching modality helper (`seriesSpecs`/`pairedSpecs`/...) and turn it into
  * positional `(name, stat)` entries.
  */
-class ListStatsSchemaTest {
+private const val DELTA = 1e-12
 
-    private val DELTA = 1e-12
+class ListStatsSchemaTest {
 
     @Test fun seriesListStats_from_schema_preserves_order_and_results() {
         val schema = object : StatSchema() {
@@ -22,7 +22,7 @@ class ListStatsSchemaTest {
             val b by series(Mean)
         }
         val list = ListStats<Result>(schema)
-        list.update(2.0);
+        list.update(2.0)
         list.update(4.0)
         val r = list.read()
         assertEquals(listOf("a", "b"), r.names)
@@ -35,7 +35,7 @@ class ListStatsSchemaTest {
             val b by paired(Covariance)
         }
         val list = PairedListStats<Result>(schema)
-        list.update(1.0, 2.0);
+        list.update(1.0, 2.0)
         list.update(2.0, 4.0)
         val r = list.read()
         assertEquals(listOf("a", "b"), r.names)

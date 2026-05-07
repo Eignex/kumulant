@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName", "Filename")
+
 package com.eignex.kumulant.stream
 
 import java.util.concurrent.locks.ReentrantLock

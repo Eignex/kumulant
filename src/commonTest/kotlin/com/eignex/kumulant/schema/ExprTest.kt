@@ -6,9 +6,9 @@ import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ExprTest {
+private const val DELTA = 1e-12
 
-    private val DELTA = 1e-12
+class ExprTest {
 
     // ===== ScalarExpr eval =====
 
