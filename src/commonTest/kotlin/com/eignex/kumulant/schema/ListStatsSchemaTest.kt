@@ -16,7 +16,7 @@ private const val DELTA = 1e-12
 
 class ListStatsSchemaTest {
 
-    @Test fun seriesListStats_from_schema_preserves_order_and_results() {
+    @Test fun `seriesListStats from schema preserves order and results`() {
         val schema = object : StatSchema() {
             val a by series(Sum)
             val b by series(Mean)
@@ -29,7 +29,7 @@ class ListStatsSchemaTest {
         assertEquals(6.0, (r.results[0] as SumResult).sum, DELTA)
     }
 
-    @Test fun pairedListStats_from_schema_preserves_order() {
+    @Test fun `pairedListStats from schema preserves order`() {
         val schema = object : StatSchema() {
             val a by paired(OLS)
             val b by paired(Covariance)
@@ -42,7 +42,7 @@ class ListStatsSchemaTest {
         assertEquals(2.0, (r.results[0] as OLSResult).slope, DELTA)
     }
 
-    @Test fun discreteListStats_from_schema_preserves_order() {
+    @Test fun `discreteListStats from schema preserves order`() {
         val schema = object : StatSchema() {
             val a by discrete(HyperLogLog(precision = 10))
             val b by discrete(LinearCounting(bits = 1024))
@@ -54,7 +54,7 @@ class ListStatsSchemaTest {
         kotlin.test.assertTrue((r.results[0] as HyperLogLogResult).estimate > 30.0)
     }
 
-    @Test fun vectorListStats_from_schema_preserves_order() {
+    @Test fun `vectorListStats from schema preserves order`() {
         val schema = object : StatSchema() {
             val a by vector(VarianceVector(dimensions = 2))
             val b by vector(VarianceVector(dimensions = 2))

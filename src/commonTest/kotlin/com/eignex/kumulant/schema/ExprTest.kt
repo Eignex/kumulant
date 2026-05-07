@@ -12,50 +12,50 @@ class ExprTest {
 
     // ===== ScalarExpr eval =====
 
-    @Test fun x_returns_input() {
+    @Test fun `x returns input`() {
         assertEquals(3.0, X.eval(3.0), DELTA)
     }
 
-    @Test fun const_ignores_input() {
+    @Test fun `const ignores input`() {
         assertEquals(7.0, Const(7.0).eval(99.0), DELTA)
     }
 
-    @Test fun add_sub_mul_div() {
+    @Test fun `add sub mul div`() {
         assertEquals(5.0, Add(X, Const(2.0)).eval(3.0), DELTA)
         assertEquals(1.0, Sub(X, Const(2.0)).eval(3.0), DELTA)
         assertEquals(6.0, Mul(X, Const(2.0)).eval(3.0), DELTA)
         assertEquals(1.5, Div(X, Const(2.0)).eval(3.0), DELTA)
     }
 
-    @Test fun neg_abs() {
+    @Test fun `neg abs`() {
         assertEquals(-3.0, Neg(X).eval(3.0), DELTA)
         assertEquals(3.0, Abs(X).eval(-3.0), DELTA)
     }
 
-    @Test fun log_exp_sqrt_pow() {
+    @Test fun `log exp sqrt pow`() {
         assertEquals(0.0, Log(Const(1.0)).eval(99.0), DELTA)
         assertEquals(1.0, Exp(Const(0.0)).eval(99.0), DELTA)
         assertEquals(3.0, Sqrt(Const(9.0)).eval(99.0), DELTA)
         assertEquals(8.0, Pow(Const(2.0), Const(3.0)).eval(99.0), DELTA)
     }
 
-    @Test fun min_max() {
+    @Test fun `min max`() {
         assertEquals(2.0, MinExpr(X, Const(2.0)).eval(5.0), DELTA)
         assertEquals(5.0, MaxExpr(X, Const(2.0)).eval(5.0), DELTA)
     }
 
-    @Test fun if_branches() {
+    @Test fun `if branches`() {
         val expr = IfExpr(Gt(X, Const(0.0)), Const(1.0), Const(-1.0))
         assertEquals(1.0, expr.eval(0.5), DELTA)
         assertEquals(-1.0, expr.eval(-0.5), DELTA)
     }
 
-    @Test fun composed_2x_plus_1() {
+    @Test fun `composed 2x plus 1`() {
         val expr = Add(Mul(Const(2.0), X), Const(1.0))
         assertEquals(7.0, expr.eval(3.0), DELTA)
     }
 
-    @Test fun clip_via_min_max() {
+    @Test fun `clip via min max`() {
         val clip = MinExpr(Const(10.0), MaxExpr(Const(0.0), X))
         assertEquals(0.0, clip.eval(-5.0), DELTA)
         assertEquals(5.0, clip.eval(5.0), DELTA)
@@ -64,7 +64,7 @@ class ExprTest {
 
     // ===== BoolExpr eval =====
 
-    @Test fun gt_lt_ge_le_eq() {
+    @Test fun `gt lt ge le eq`() {
         assertEquals(true, Gt(X, Const(0.0)).eval(1.0))
         assertEquals(false, Gt(X, Const(0.0)).eval(0.0))
         assertEquals(true, Ge(X, Const(0.0)).eval(0.0))
@@ -73,7 +73,7 @@ class ExprTest {
         assertEquals(true, Eq(X, Const(5.0)).eval(5.0))
     }
 
-    @Test fun and_or_not() {
+    @Test fun `and or not`() {
         val a = Gt(X, Const(0.0))
         val b = Lt(X, Const(10.0))
         assertEquals(true, And(a, b).eval(5.0))
@@ -82,7 +82,7 @@ class ExprTest {
         assertEquals(false, Not(a).eval(5.0))
     }
 
-    @Test fun in_range_inclusive() {
+    @Test fun `in range inclusive`() {
         val r = InRange(X, 0.0, 10.0)
         assertEquals(true, r.eval(0.0))
         assertEquals(true, r.eval(10.0))
@@ -93,7 +93,7 @@ class ExprTest {
 
     // ===== Round-trip via SchemaJson =====
 
-    @Test fun scalar_expr_round_trips() {
+    @Test fun `scalar expr round trips`() {
         val expr: ScalarExpr = Add(Mul(Const(2.0), X), Const(1.0))
         val json = SchemaJson.encodeToString(ScalarExpr.serializer(), expr)
         val decoded = SchemaJson.decodeFromString(ScalarExpr.serializer(), json)
@@ -101,7 +101,7 @@ class ExprTest {
         assertEquals(7.0, decoded.eval(3.0), DELTA)
     }
 
-    @Test fun bool_expr_round_trips() {
+    @Test fun `bool expr round trips`() {
         val pred: BoolExpr = And(Gt(X, Const(0.0)), Lt(X, Const(1.0)))
         val json = SchemaJson.encodeToString(BoolExpr.serializer(), pred)
         val decoded = SchemaJson.decodeFromString(BoolExpr.serializer(), json)
@@ -110,7 +110,7 @@ class ExprTest {
         assertEquals(false, decoded.eval(2.0))
     }
 
-    @Test fun if_with_bool_round_trips() {
+    @Test fun `if with bool round trips`() {
         val expr: ScalarExpr = IfExpr(InRange(X, 0.0, 1.0), X, Const(0.0))
         val json = SchemaJson.encodeToString(ScalarExpr.serializer(), expr)
         val decoded = SchemaJson.decodeFromString(ScalarExpr.serializer(), json)
@@ -121,7 +121,7 @@ class ExprTest {
 
     // ===== Transform / Filter configs =====
 
-    @Test fun transform_series_applies_expr_per_update() {
+    @Test fun `transform series applies expr per update`() {
         val cfg: SeriesStatSpec<SumResult> =
             Sum.transform(Add(Mul(Const(2.0), X), Const(1.0))) // 2x + 1
         val live = cfg.materialize(Concurrency.None)
@@ -132,7 +132,7 @@ class ExprTest {
         assertEquals(15.0, live.read().sum, DELTA)
     }
 
-    @Test fun filter_series_drops_non_matching_updates() {
+    @Test fun `filter series drops non matching updates`() {
         val cfg: SeriesStatSpec<SumResult> = Sum.filter(Gt(X, Const(0.0)))
         val live = cfg.materialize(Concurrency.None)
         live.update(-1.0)
@@ -142,7 +142,7 @@ class ExprTest {
         assertEquals(6.0, live.read().sum, DELTA)
     }
 
-    @Test fun transform_chained_with_other_ops() {
+    @Test fun `transform chained with other ops`() {
         val cfg: SeriesStatSpec<SumResult> =
             Sum.transform(MinExpr(Const(10.0), MaxExpr(Const(0.0), X))) // clip 0..10
                 .withWeight(2.0)
@@ -154,7 +154,7 @@ class ExprTest {
         assertEquals(30.0, live.read().sum, DELTA)
     }
 
-    @Test fun transform_config_round_trips() {
+    @Test fun `transform config round trips`() {
         val cfg: SeriesStatSpec<SumResult> =
             Sum.transform(MinExpr(Const(10.0), MaxExpr(Const(0.0), X)))
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
@@ -167,7 +167,7 @@ class ExprTest {
         assertEquals(15.0, sum, DELTA)
     }
 
-    @Test fun filter_discrete_drops_non_matching_long_updates() {
+    @Test fun `filter discrete drops non matching long updates`() {
         val cfg: DiscreteStatSpec<*> = HyperLogLog(precision = 10).filter(Ge(X, Const(0.0)))
         val live = cfg.materialize(Concurrency.None)
         for (i in -50L..50L) live.update(i)
@@ -178,7 +178,7 @@ class ExprTest {
 
     // ===== DSL operator overloads =====
 
-    @Test fun arithmetic_operators_build_expected_ast() {
+    @Test fun `arithmetic operators build expected ast`() {
         val a: ScalarExpr = 2.0 * X + 1.0
         assertEquals(Add(Mul(Const(2.0), X), Const(1.0)), a)
         val b: ScalarExpr = X / 2.0 - 0.5
@@ -187,7 +187,7 @@ class ExprTest {
         assertEquals(Neg(X), c)
     }
 
-    @Test fun comparison_infix_builds_BoolExpr() {
+    @Test fun `comparison infix builds BoolExpr`() {
         val p = X gt 0.0
         assertEquals(Gt(X, Const(0.0)), p)
         val q = (X gt 0.0) and (X lt 1.0)
@@ -196,7 +196,7 @@ class ExprTest {
         assertEquals(Not(Gt(X, Const(10.0))), r)
     }
 
-    @Test fun dsl_round_trips_via_SchemaJson() {
+    @Test fun `dsl round trips via SchemaJson`() {
         val expr: ScalarExpr = 2.0 * X + 1.0
         val json = SchemaJson.encodeToString(ScalarExpr.serializer(), expr)
         val decoded = SchemaJson.decodeFromString(ScalarExpr.serializer(), json)
@@ -205,7 +205,7 @@ class ExprTest {
 
     // ===== Paired transforms =====
 
-    @Test fun transformPair_swaps_x_and_y() {
+    @Test fun `transformPair swaps x and y`() {
         val cfg: PairedStatSpec<*> = OLS.transformPair(xExpr = Y, yExpr = X)
         val live = cfg.materialize(Concurrency.None)
         // After swap, slope between (originally x=1,y=2),(2,4),(3,6) becomes y/x → 0.5
@@ -216,7 +216,7 @@ class ExprTest {
         assertEquals(0.5, r.slope, DELTA)
     }
 
-    @Test fun transformX_only_remaps_x() {
+    @Test fun `transformX only remaps x`() {
         val cfg: PairedStatSpec<*> = OLS.transformX(2.0 * X)
         val live = cfg.materialize(Concurrency.None)
         // Original: y = 2x; after x' = 2x: pairs (2,2),(4,4),(6,6) → slope 1.
@@ -227,7 +227,7 @@ class ExprTest {
         assertEquals(1.0, r.slope, DELTA)
     }
 
-    @Test fun filter_paired_drops_by_predicate_over_x_and_y() {
+    @Test fun `filter paired drops by predicate over x and y`() {
         val cfg: PairedStatSpec<*> = OLS.filter((X gt 0.0) and (Y gt 0.0))
         val live = cfg.materialize(Concurrency.None)
         live.update(-1.0, 5.0) // dropped (x <= 0)
@@ -241,7 +241,7 @@ class ExprTest {
 
     // ===== Vector transforms =====
 
-    @Test fun transformElement_applies_expr_per_index() {
+    @Test fun `transformElement applies expr per index`() {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 3)
             .transformElement(2.0 * X + 1.0)
         val live = cfg.materialize(Concurrency.None)
@@ -255,7 +255,7 @@ class ExprTest {
         assertEquals(20.0, rl.results[2].sum, DELTA)
     }
 
-    @Test fun transformElement_can_reference_other_indices() {
+    @Test fun `transformElement can reference other indices`() {
         // L1-ish normalization: each element divided by index 0.
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2)
             .transformElement(X / V(0))
@@ -268,7 +268,7 @@ class ExprTest {
         assertEquals(4.0, rl.results[1].sum, DELTA)
     }
 
-    @Test fun filter_vector_drops_by_index_predicate() {
+    @Test fun `filter vector drops by index predicate`() {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2)
             .filter(V(0) gt 0.0)
         val live = cfg.materialize(Concurrency.None)
@@ -283,7 +283,7 @@ class ExprTest {
 
     // ===== VFold / VDot reduction nodes =====
 
-    @Test fun vfold_sum_product_mean_min_max_norm2() {
+    @Test fun `vfold sum product mean min max norm2`() {
         val v = doubleArrayOf(3.0, -4.0, 0.0)
         assertEquals(-1.0, VFold(VFoldOp.Sum).eval(0.0, 0.0, v), DELTA)
         assertEquals(0.0, VFold(VFoldOp.Product).eval(0.0, 0.0, v), DELTA)
@@ -293,13 +293,13 @@ class ExprTest {
         assertEquals(5.0, VFold(VFoldOp.Norm2).eval(0.0, 0.0, v), DELTA) // sqrt(9 + 16)
     }
 
-    @Test fun vdot_weighted_dot_product() {
+    @Test fun `vdot weighted dot product`() {
         val v = doubleArrayOf(2.0, 3.0, 4.0)
         val expr = VDot(weights = listOf(1.0, 0.0, -1.0))
         assertEquals(-2.0, expr.eval(0.0, 0.0, v), DELTA)
     }
 
-    @Test fun vdot_length_mismatch_throws() {
+    @Test fun `vdot length mismatch throws`() {
         kotlin.test.assertFailsWith<IllegalArgumentException> {
             VDot(weights = listOf(1.0, 1.0)).eval(0.0, 0.0, doubleArrayOf(1.0, 2.0, 3.0))
         }
@@ -307,7 +307,7 @@ class ExprTest {
 
     // ===== FoldPaired / FoldVector configs =====
 
-    @Test fun foldPaired_lifts_series_to_paired_with_xy_expression() {
+    @Test fun `foldPaired lifts series to paired with xy expression`() {
         val cfg: PairedStatSpec<*> = Sum.foldPaired(X * Y)
         val live = cfg.materialize(Concurrency.None)
         live.update(1.0, 2.0) // 2
@@ -317,7 +317,7 @@ class ExprTest {
         assertEquals(44.0, r.sum, DELTA)
     }
 
-    @Test fun foldVector_with_vfold_sum() {
+    @Test fun `foldVector with vfold sum`() {
         val cfg: VectorStatSpec<*> = Sum.foldVector(VFold(VFoldOp.Sum))
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(1.0, 2.0, 3.0)) // sum = 6
@@ -326,7 +326,7 @@ class ExprTest {
         assertEquals(21.0, r.sum, DELTA)
     }
 
-    @Test fun foldVector_with_vdot_weighted() {
+    @Test fun `foldVector with vdot weighted`() {
         val cfg: VectorStatSpec<*> = Sum.foldVector(VDot(listOf(1.0, 2.0, 3.0)))
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(1.0, 1.0, 1.0)) // 1+2+3 = 6
@@ -335,7 +335,7 @@ class ExprTest {
         assertEquals(11.0, r.sum, DELTA)
     }
 
-    @Test fun foldVector_norm2_drives_inner_mean() {
+    @Test fun `foldVector norm2 drives inner mean`() {
         val cfg: VectorStatSpec<*> = Mean.foldVector(VFold(VFoldOp.Norm2))
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(3.0, 4.0)) // norm = 5
@@ -344,7 +344,7 @@ class ExprTest {
         assertEquals(2.5, r.mean, DELTA)
     }
 
-    @Test fun fold_configs_round_trip_via_wire() {
+    @Test fun `fold configs round trip via wire`() {
         val a: PairedStatSpec<*> = Sum.foldPaired(X * Y)
         val ja = SchemaJson.encodeToString(StatSpec.serializer(), a)
         val da = SchemaJson.decodeFromString(StatSpec.serializer(), ja) as FoldPaired
@@ -363,19 +363,19 @@ class ExprTest {
 
     // ===== VectorExpr — vector→vector transforms =====
 
-    @Test fun vElements_evaluates_each_in_order() {
+    @Test fun `vElements evaluates each in order`() {
         val expr = VElements(listOf(V(2), V(0), V(1))) // permute
         val out = expr.eval(0.0, 0.0, doubleArrayOf(10.0, 20.0, 30.0))
         kotlin.test.assertEquals(listOf(30.0, 10.0, 20.0), out.toList())
     }
 
-    @Test fun vElements_pools_pairs_into_means() {
+    @Test fun `vElements pools pairs into means`() {
         val expr = VElements(listOf((V(0) + V(1)) / 2.0, (V(2) + V(3)) / 2.0))
         val out = expr.eval(0.0, 0.0, doubleArrayOf(2.0, 4.0, 10.0, 30.0))
         kotlin.test.assertEquals(listOf(3.0, 20.0), out.toList())
     }
 
-    @Test fun transformVector_changes_dimensionality_via_VElements() {
+    @Test fun `transformVector changes dimensionality via VElements`() {
         // Input dim 4 → pooled output dim 2. Inner is sized for the output.
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2)
             .transformVector(VElements(listOf((V(0) + V(1)) / 2.0, (V(2) + V(3)) / 2.0)))
@@ -388,7 +388,7 @@ class ExprTest {
         assertEquals(25.0, rl.results[1].sum, DELTA)
     }
 
-    @Test fun transformVector_permutes() {
+    @Test fun `transformVector permutes`() {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 3)
             .transformVector(VElements(listOf(V(2), V(0), V(1))))
         val live = cfg.materialize(Concurrency.None)
@@ -401,7 +401,7 @@ class ExprTest {
         assertEquals(30.0, rl.results[2].sum, DELTA) // was V(1)
     }
 
-    @Test fun transformVector_round_trips_via_wire() {
+    @Test fun `transformVector round trips via wire`() {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2)
             .transformVector(VElements(listOf(V(0) + V(1), V(0) - V(1))))
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
@@ -414,7 +414,7 @@ class ExprTest {
         assertEquals(2.0, rl.results[1].sum, DELTA)
     }
 
-    @Test fun paired_and_vector_configs_round_trip_via_wire() {
+    @Test fun `paired and vector configs round trip via wire`() {
         val cfg: PairedStatSpec<*> = OLS.transformPair(xExpr = Y, yExpr = X)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as TransformPair

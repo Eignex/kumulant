@@ -21,7 +21,7 @@ private const val DELTA = 1e-12
 
 class OperationsRoundTripTest {
 
-    @Test fun withWeight_series_matches_live_composition() {
+    @Test fun `withWeight series matches live composition`() {
         val cfg: SeriesStatSpec<SumResult> = Sum.withWeight(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -37,7 +37,7 @@ class OperationsRoundTripTest {
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun withValue_series_matches_live_composition() {
+    @Test fun `withValue series matches live composition`() {
         val cfg: SeriesStatSpec<SumResult> = Sum.withValue(7.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -53,7 +53,7 @@ class OperationsRoundTripTest {
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun composed_chain_with_value_then_with_weight_matches_live() {
+    @Test fun `composed chain with value then with weight matches live`() {
         val cfg: SeriesStatSpec<SumResult> = Sum.withValue(1.0).withWeight(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -71,7 +71,7 @@ class OperationsRoundTripTest {
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun atIndex_lifts_series_to_vector() {
+    @Test fun `atIndex lifts series to vector`() {
         val cfg: VectorStatSpec<SumResult> = Sum.atIndex(1)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -88,7 +88,7 @@ class OperationsRoundTripTest {
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun withFixedX_lifts_paired_to_series() {
+    @Test fun `withFixedX lifts paired to series`() {
         val cfg: SeriesStatSpec<com.eignex.kumulant.stat.regression.OLSResult> =
             OLS.withFixedX(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
@@ -105,7 +105,7 @@ class OperationsRoundTripTest {
         assertEquals(l.totalWeights, r.totalWeights, DELTA)
     }
 
-    @Test fun windowed_series_round_trips_at_least_structurally() {
+    @Test fun `windowed series round trips at least structurally`() {
         val cfg: SeriesStatSpec<SumResult> = Sum.windowed(durationMillis = 1000L, slices = 4)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as WindowedSeries
@@ -115,7 +115,7 @@ class OperationsRoundTripTest {
         decoded.materialize(Concurrency.None)
     }
 
-    @Test fun vectorized_replicates_template_per_dimension() {
+    @Test fun `vectorized replicates template per dimension`() {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 3)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as VectorizedStat
@@ -131,7 +131,7 @@ class OperationsRoundTripTest {
         assertEquals(9.0, rl.results[2].sum, DELTA)
     }
 
-    @Test fun asSeries_lifts_discrete() {
+    @Test fun `asSeries lifts discrete`() {
         val cfg: SeriesStatSpec<*> = HyperLogLog(precision = 10).asSeries()
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -143,7 +143,7 @@ class OperationsRoundTripTest {
         kotlin.test.assertTrue(r.estimate > 30.0)
     }
 
-    @Test fun rejects_inner_with_wrong_modality() {
+    @Test fun `rejects inner with wrong modality`() {
         // Sum is Series, but AtIndices expects Paired.
         val bad = AtIndices(Sum, indexX = 0, indexY = 1)
         kotlin.test.assertFailsWith<IllegalArgumentException> {
