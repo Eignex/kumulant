@@ -172,10 +172,6 @@ class StatConfigsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
-    @Test fun crpsGaussianConfig_round_trips() {
-        assertEquals(CrpsGaussianConfig, roundTrip(CrpsGaussianConfig))
-    }
-
     // ===== Discrete =====
 
     @Test fun hyperLogLogConfig_round_trips() {
@@ -240,32 +236,6 @@ class StatConfigsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
-    // ===== Raw =====
-
-    @Test fun classHistogramConfig_round_trips() {
-        val cfg = ClassHistogramConfig(numBins = 10, numClasses = 3)
-        assertEquals(cfg, roundTrip(cfg))
-    }
-
-    @Test fun gradientHistogramConfig_round_trips() {
-        val cfg = GradientHistogramConfig(numBins = 16)
-        assertEquals(cfg, roundTrip(cfg))
-    }
-
-    @Test fun multiGradientHistogramConfig_round_trips() {
-        val cfg = MultiGradientHistogramConfig(numFeatures = 4, numBins = 8)
-        assertEquals(cfg, roundTrip(cfg))
-    }
-
-    @Test fun varianceHistogramConfig_round_trips() {
-        val cfg = VarianceHistogramConfig(numBins = 8)
-        assertEquals(cfg, roundTrip(cfg))
-    }
-
-    @Test fun crpsEnsembleConfig_round_trips() {
-        assertEquals(CrpsEnsembleConfig, roundTrip(CrpsEnsembleConfig))
-    }
-
     // ===== Decode-then-materialize sanity check =====
 
     @Test fun materializeSeries_after_round_trip_matches_live_for_sum_mean_min_max() {
@@ -295,14 +265,5 @@ class StatConfigsRoundTripTest {
         )
         assertEquals(live0[schema.min].min, rebuilt0[StatKey<com.eignex.kumulant.stat.summary.MinResult>("min")].min)
         assertEquals(live0[schema.max].max, rebuilt0[StatKey<com.eignex.kumulant.stat.summary.MaxResult>("max")].max)
-    }
-
-    @Test fun materializeRaw_decodes_class_histogram() {
-        val cfg = ClassHistogramConfig(numBins = 5, numClasses = 2)
-        val def = StatSchemaDef(stats = mapOf("hist" to cfg))
-        val specs = def.materializeRaw(Concurrency.None)
-        assertEquals(1, specs.size)
-        assertEquals("hist", specs.single().key.name)
-        assertTrue(specs.single().stat is com.eignex.kumulant.stat.tree.ClassHistogram)
     }
 }

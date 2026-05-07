@@ -66,21 +66,6 @@ fun StatSchemaDef.materializeDiscrete(
         bindDiscrete(name, config.materialize(concurrency))
     }
 
-/**
- * Materialize raw-modality entries only — tree histograms and CRPS-ensemble
- * configs that don't fit any of Series/Paired/Vector/Discrete. Throws if any
- * entry isn't a [RawStatConfig].
- */
-fun StatSchemaDef.materializeRaw(
-    concurrency: Concurrency = Concurrency.None,
-): List<StatSpec<*, *, *>> =
-    stats.map { (name, config) ->
-        require(config is RawStatConfig<*>) {
-            "Entry '$name' has config ${config::class.simpleName}, expected a RawStatConfig"
-        }
-        bind(name, config.materialize(concurrency))
-    }
-
 @Suppress("UNCHECKED_CAST")
 private fun bind(name: String, stat: Stat<*>): StatSpec<*, *, *> =
     StatSpec(StatKey<Result>(name), stat as Stat<Result>) as StatSpec<*, *, *>

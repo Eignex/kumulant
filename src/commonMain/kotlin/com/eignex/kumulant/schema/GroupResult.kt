@@ -74,9 +74,6 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) : Sch
     protected fun <R : Result> discrete(config: DiscreteStatConfig<R>) =
         register(config) { StatKey<R>(it) }
 
-    protected fun <R : Result> raw(config: RawStatConfig<R>) =
-        register(config) { StatKey<R>(it) }
-
     /** Nest a sub-schema as a [GroupStatConfig]; materialization recurses at the parent's group construction. */
     protected fun <T : StatSchema> group(nestedSchema: T) =
         register(GroupStatConfig(nestedSchema.statSchemaDef().stats)) { GroupStatKey(it, nestedSchema) }
@@ -108,13 +105,6 @@ internal fun discreteSpecs(schema: StatSchema): List<StatSpec<*, out DiscreteSta
     schema.entries.mapNotNull { (name, config) ->
         if (config !is DiscreteStatConfig<*>) return@mapNotNull null
         toSpec<DiscreteStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
-    }
-
-/** Raw-modality specs from a schema (tree histograms, CrpsEnsemble — no fan-out group). */
-internal fun rawSpecs(schema: StatSchema): List<StatSpec<*, *, *>> =
-    schema.entries.mapNotNull { (name, config) ->
-        if (config !is RawStatConfig<*>) return@mapNotNull null
-        toSpec<Stat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
 
 @Suppress("UNCHECKED_CAST")

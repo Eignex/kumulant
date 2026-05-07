@@ -5,7 +5,6 @@ import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLog
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
@@ -36,8 +35,6 @@ import com.eignex.kumulant.stat.regression.RidgeResult
 import com.eignex.kumulant.stat.score.Auc
 import com.eignex.kumulant.stat.score.AucResult
 import com.eignex.kumulant.stat.score.BrierScore
-import com.eignex.kumulant.stat.score.CrpsEnsemble
-import com.eignex.kumulant.stat.score.CrpsGaussian
 import com.eignex.kumulant.stat.score.LogLoss
 import com.eignex.kumulant.stat.score.MaeLoss
 import com.eignex.kumulant.stat.score.MseLoss
@@ -74,14 +71,6 @@ import com.eignex.kumulant.stat.summary.Variance
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import com.eignex.kumulant.stat.summary.varianceVector
-import com.eignex.kumulant.stat.tree.ClassHistogram
-import com.eignex.kumulant.stat.tree.ClassHistogramResult
-import com.eignex.kumulant.stat.tree.GradientHistogram
-import com.eignex.kumulant.stat.tree.GradientHistogramResult
-import com.eignex.kumulant.stat.tree.MultiGradientHistogram
-import com.eignex.kumulant.stat.tree.MultiGradientHistogramResult
-import com.eignex.kumulant.stat.tree.VarianceHistogram
-import com.eignex.kumulant.stat.tree.VarianceHistogramResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -342,12 +331,6 @@ data class VarianceVectorConfig(val dimensions: Int) : VectorStatConfig<ResultLi
         varianceVector(dimensions, concurrency)
 }
 
-@Serializable
-@SerialName("CrpsGaussianConfig")
-data object CrpsGaussianConfig : VectorStatConfig<WeightedMeanResult> {
-    override fun materialize(concurrency: Concurrency): VectorStat<WeightedMeanResult> = CrpsGaussian(concurrency)
-}
-
 // ========== Discrete ==========
 
 @Serializable
@@ -400,46 +383,4 @@ data class MinHashConfig(
 data class SpaceSavingConfig(val capacity: Int) : DiscreteStatConfig<HeavyHittersResult> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<HeavyHittersResult> =
         SpaceSaving(capacity, concurrency)
-}
-
-// ========== Raw (custom update signatures, no fan-out group) ==========
-
-@Serializable
-@SerialName("ClassHistogramConfig")
-data class ClassHistogramConfig(
-    val numBins: Int,
-    val numClasses: Int,
-) : RawStatConfig<ClassHistogramResult> {
-    override fun materialize(concurrency: Concurrency): Stat<ClassHistogramResult> =
-        ClassHistogram(numBins, numClasses, concurrency)
-}
-
-@Serializable
-@SerialName("GradientHistogramConfig")
-data class GradientHistogramConfig(val numBins: Int) : RawStatConfig<GradientHistogramResult> {
-    override fun materialize(concurrency: Concurrency): Stat<GradientHistogramResult> =
-        GradientHistogram(numBins, concurrency)
-}
-
-@Serializable
-@SerialName("MultiGradientHistogramConfig")
-data class MultiGradientHistogramConfig(
-    val numFeatures: Int,
-    val numBins: Int,
-) : RawStatConfig<MultiGradientHistogramResult> {
-    override fun materialize(concurrency: Concurrency): Stat<MultiGradientHistogramResult> =
-        MultiGradientHistogram(numFeatures, numBins, concurrency)
-}
-
-@Serializable
-@SerialName("VarianceHistogramConfig")
-data class VarianceHistogramConfig(val numBins: Int) : RawStatConfig<VarianceHistogramResult> {
-    override fun materialize(concurrency: Concurrency): Stat<VarianceHistogramResult> =
-        VarianceHistogram(numBins, concurrency)
-}
-
-@Serializable
-@SerialName("CrpsEnsembleConfig")
-data object CrpsEnsembleConfig : RawStatConfig<WeightedMeanResult> {
-    override fun materialize(concurrency: Concurrency): Stat<WeightedMeanResult> = CrpsEnsemble(concurrency)
 }

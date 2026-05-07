@@ -75,7 +75,7 @@ class StatSchemaDefSerializationTest {
     }
 
     @Test
-    fun `complex schema mixing modalities operations and raw round-trips byte-identically`() {
+    fun `complex schema mixing modalities and operations round-trips byte-identically`() {
         val schema = object : StatSchema() {
             val requests by series(SumConfig)
             val weightedSum by series(SumConfig.withWeight(2.0))
@@ -83,7 +83,6 @@ class StatSchemaDefSerializationTest {
             val ols by paired(OLSConfig)
             val olsAtFixedX by series(OLSConfig.withFixedX(0.5))
             val users by discrete(HyperLogLogConfig(precision = 10))
-            val hist by raw(GradientHistogramConfig(numBins = 8))
         }
 
         val encoded = SchemaJson.encodeToString(schema.statSchemaDef())
@@ -99,6 +98,5 @@ class StatSchemaDefSerializationTest {
         assertEquals(true, encoded.contains("\"\$type\":\"WithWeightSeries\""))
         assertEquals(true, encoded.contains("\"\$type\":\"WithValueSeries\""))
         assertEquals(true, encoded.contains("\"\$type\":\"WithFixedX\""))
-        assertEquals(true, encoded.contains("\"\$type\":\"GradientHistogramConfig\""))
     }
 }
