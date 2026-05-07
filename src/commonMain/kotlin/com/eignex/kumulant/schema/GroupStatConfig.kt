@@ -7,20 +7,19 @@ import kotlinx.serialization.Serializable
 
 /**
  * Serializable configuration for a nested series-modality [StatGroup]. Holds a
- * recursive list of [NamedStatConfig] entries; every entry must itself be a
- * [SeriesStatConfig].
+ * recursive map of [StatConfig] entries keyed by name; every entry must itself
+ * be a [SeriesStatConfig].
  *
  * On the wire:
  * ```yaml
  * $type: GroupStatConfig
  * stats:
- *   - name: requests
- *     config: { $type: SumConfig }
+ *   requests: { $type: SumConfig }
  * ```
  */
 @Serializable
 @SerialName("GroupStatConfig")
-data class GroupStatConfig(val stats: List<NamedStatConfig>) : SeriesStatConfig<GroupResult> {
+data class GroupStatConfig(val stats: Map<String, StatConfig>) : SeriesStatConfig<GroupResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<GroupResult> {
         val materialized = stats.map { (name, config) ->
             require(config is SeriesStatConfig<*>) {

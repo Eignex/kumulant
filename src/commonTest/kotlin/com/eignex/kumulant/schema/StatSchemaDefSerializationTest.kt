@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.quantile.SketchResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
+import com.eignex.skema.SchemaJson
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -24,18 +25,18 @@ class StatSchemaDefSerializationTest {
 
     @Test
     fun `definition encodes with the discriminator and class names`() {
-        val def = ServiceMetrics().definition()
+        val def = ServiceMetrics().statSchemaDef()
         val encoded = SchemaJson.encodeToString(def)
 
         assertEquals(
-            """{"stats":[""" +
-                """{"name":"requests","config":{"${'$'}type":"SumConfig"}},""" +
-                """{"name":"avgWeight","config":{"${'$'}type":"MeanConfig"}},""" +
-                """{"name":"http","config":{"${'$'}type":"GroupStatConfig","stats":[""" +
-                """{"name":"requests","config":{"${'$'}type":"SumConfig"}},""" +
-                """{"name":"latencyMs","config":{"${'$'}type":"DDSketchConfig","probabilities":[0.5,0.99,0.999]}}""" +
-                """]}}""" +
-                """]}""",
+            """{"stats":{""" +
+                """"requests":{"${'$'}type":"SumConfig"},""" +
+                """"avgWeight":{"${'$'}type":"MeanConfig"},""" +
+                """"http":{"${'$'}type":"GroupStatConfig","stats":{""" +
+                """"requests":{"${'$'}type":"SumConfig"},""" +
+                """"latencyMs":{"${'$'}type":"DDSketchConfig","probabilities":[0.5,0.99,0.999]}""" +
+                """}}""" +
+                """}}""",
             encoded,
         )
     }
@@ -43,7 +44,7 @@ class StatSchemaDefSerializationTest {
     @Test
     fun `round-trip definition then materialize produces an equivalent live group`() {
         val schema = ServiceMetrics()
-        val json = SchemaJson.encodeToString(schema.definition())
+        val json = SchemaJson.encodeToString(schema.statSchemaDef())
 
         val def = SchemaJson.decodeFromString<StatSchemaDef>(json)
         val rebuilt = StatGroup(stats = def.materializeSeries(Concurrency.None))
@@ -72,12 +73,12 @@ class StatSchemaDefSerializationTest {
     }
 
     @Test
-    fun `definition fails loudly when entries lack a config`() {
+    fun `statSchemaDef fails loudly when entries lack a config`() {
         val mixed = object : StatSchema() {
             val good by series(SumConfig)
             val bad by series(com.eignex.kumulant.stat.summary.Sum())
         }
-        val ex = assertFailsWith<IllegalArgumentException> { mixed.definition() }
+        val ex = assertFailsWith<IllegalArgumentException> { mixed.statSchemaDef() }
         assertEquals(true, ex.message!!.contains("bad"))
     }
 }
