@@ -561,3 +561,22 @@ fun <R : Result> SeriesStatConfig<R>.foldPaired(expr: ScalarExpr): PairedStatCon
 @Suppress("UNCHECKED_CAST")
 fun <R : Result> SeriesStatConfig<R>.foldVector(expr: ScalarExpr): VectorStatConfig<R> =
     FoldVectorConfig(this, expr) as VectorStatConfig<R>
+
+/**
+ * Apply a [VectorExpr] to remap each incoming vector before update — wire
+ * counterpart of `VectorStat<R>.transformVector { … }`. Output length and
+ * input length need not match; the inner stat must be parameterised for the
+ * output dim.
+ */
+@Serializable @SerialName("TransformVector")
+data class TransformVectorConfig(val inner: StatConfig, val expr: VectorExpr) : VectorStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requireVector(inner, "TransformVector").materialize(concurrency) as VectorStat<Result>
+        return materialized.transformVector { vec -> expr.eval(0.0, 0.0, vec) }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> VectorStatConfig<R>.transformVector(expr: VectorExpr): VectorStatConfig<R> =
+    TransformVectorConfig(this, expr) as VectorStatConfig<R>

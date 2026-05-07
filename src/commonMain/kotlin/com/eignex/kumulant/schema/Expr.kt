@@ -221,6 +221,31 @@ data class InRange(val a: ScalarExpr, val min: Double, val max: Double) : BoolEx
     }
 }
 
+/**
+ * Wire-serializable AST for vector-valued expressions over the same input env
+ * as [ScalarExpr] / [BoolExpr]. The output length need not match the input —
+ * use this for permutations, dimensionality changes, pooling, feature
+ * augmentation, etc. For same-length per-element transforms, the simpler
+ * `transformElement(ScalarExpr)` config is more direct.
+ */
+@Serializable
+sealed interface VectorExpr {
+    fun eval(x: Double = 0.0, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR): DoubleArray
+}
+
+/**
+ * Build an output vector by evaluating each [ScalarExpr] in order. Output
+ * length = `exprs.size`. The exprs can reference any input element via
+ * [V]`(i)` — sufficient for permutations (`VElements(listOf(V(2), V(0), V(1)))`),
+ * pooling (`VElements(listOf((V(0)+V(1))/2.0, (V(2)+V(3))/2.0))`),
+ * dimensionality reduction, and feature augmentation.
+ */
+@Serializable @SerialName("VElements")
+data class VElements(val exprs: List<ScalarExpr>) : VectorExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray): DoubleArray =
+        DoubleArray(exprs.size) { i -> exprs[i].eval(x, y, v) }
+}
+
 // ========== DSL: arithmetic operators ==========
 
 operator fun ScalarExpr.plus(rhs: ScalarExpr): ScalarExpr = Add(this, rhs)

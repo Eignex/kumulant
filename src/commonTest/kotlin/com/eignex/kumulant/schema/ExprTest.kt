@@ -334,6 +334,59 @@ class ExprTest {
         assertEquals(c, dc)
     }
 
+    // ===== VectorExpr — vector→vector transforms =====
+
+    @Test fun vElements_evaluates_each_in_order() {
+        val expr = VElements(listOf(V(2), V(0), V(1)))  // permute
+        val out = expr.eval(0.0, 0.0, doubleArrayOf(10.0, 20.0, 30.0))
+        kotlin.test.assertEquals(listOf(30.0, 10.0, 20.0), out.toList())
+    }
+
+    @Test fun vElements_pools_pairs_into_means() {
+        val expr = VElements(listOf((V(0) + V(1)) / 2.0, (V(2) + V(3)) / 2.0))
+        val out = expr.eval(0.0, 0.0, doubleArrayOf(2.0, 4.0, 10.0, 30.0))
+        kotlin.test.assertEquals(listOf(3.0, 20.0), out.toList())
+    }
+
+    @Test fun transformVector_changes_dimensionality_via_VElements() {
+        // Input dim 4 → pooled output dim 2. Inner is sized for the output.
+        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 2)
+            .transformVector(VElements(listOf((V(0) + V(1)) / 2.0, (V(2) + V(3)) / 2.0)))
+        val live = cfg.materialize(Concurrency.None)
+        live.update(doubleArrayOf(2.0, 4.0, 10.0, 30.0))   // → (3, 20)
+        live.update(doubleArrayOf(0.0, 0.0, 4.0, 6.0))     // → (0, 5)
+        @Suppress("UNCHECKED_CAST")
+        val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        assertEquals(3.0, rl.results[0].sum, DELTA)
+        assertEquals(25.0, rl.results[1].sum, DELTA)
+    }
+
+    @Test fun transformVector_permutes() {
+        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 3)
+            .transformVector(VElements(listOf(V(2), V(0), V(1))))
+        val live = cfg.materialize(Concurrency.None)
+        live.update(doubleArrayOf(1.0, 10.0, 100.0))
+        live.update(doubleArrayOf(2.0, 20.0, 200.0))
+        @Suppress("UNCHECKED_CAST")
+        val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        assertEquals(300.0, rl.results[0].sum, DELTA)  // was V(2)
+        assertEquals(3.0, rl.results[1].sum, DELTA)    // was V(0)
+        assertEquals(30.0, rl.results[2].sum, DELTA)   // was V(1)
+    }
+
+    @Test fun transformVector_round_trips_via_wire() {
+        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 2)
+            .transformVector(VElements(listOf(V(0) + V(1), V(0) - V(1))))
+        val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json) as TransformVectorConfig
+        val materialized = decoded.materialize(Concurrency.None)
+        materialized.update(doubleArrayOf(3.0, 1.0))   // → (4, 2)
+        @Suppress("UNCHECKED_CAST")
+        val rl = materialized.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        assertEquals(4.0, rl.results[0].sum, DELTA)
+        assertEquals(2.0, rl.results[1].sum, DELTA)
+    }
+
     @Test fun paired_and_vector_configs_round_trip_via_wire() {
         val cfg: PairedStatConfig<*> = OLSConfig.transformPair(xExpr = Y, yExpr = X)
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
