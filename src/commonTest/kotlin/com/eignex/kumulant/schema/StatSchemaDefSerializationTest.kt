@@ -81,4 +81,32 @@ class StatSchemaDefSerializationTest {
         val ex = assertFailsWith<IllegalArgumentException> { mixed.statSchemaDef() }
         assertEquals(true, ex.message!!.contains("bad"))
     }
+
+    @Test
+    fun `complex schema mixing modalities operations and raw round-trips byte-identically`() {
+        val schema = object : StatSchema() {
+            val requests by series(SumConfig)
+            val weightedSum by series(SumConfig.withWeight(2.0))
+            val count by series(SumConfig.withValue(1.0).withWeight(1.0))
+            val ols by paired(OLSConfig)
+            val olsAtFixedX by series(OLSConfig.withFixedX(0.5))
+            val users by discrete(HyperLogLogConfig(precision = 10))
+            val hist by raw(GradientHistogramConfig(numBins = 8))
+        }
+
+        val encoded = SchemaJson.encodeToString(schema.statSchemaDef())
+        val decoded = SchemaJson.decodeFromString<StatSchemaDef>(encoded)
+        val reEncoded = SchemaJson.encodeToString(decoded)
+
+        // Round-trip is byte-identical: same field order (LinkedHashMap declaration order),
+        // same defaults suppression, same discriminator placement.
+        assertEquals(encoded, reEncoded)
+
+        // Spot-check a few entries are present with the right discriminators.
+        assertEquals(true, encoded.contains("\"requests\":{\"\$type\":\"SumConfig\"}"))
+        assertEquals(true, encoded.contains("\"\$type\":\"WithWeightSeries\""))
+        assertEquals(true, encoded.contains("\"\$type\":\"WithValueSeries\""))
+        assertEquals(true, encoded.contains("\"\$type\":\"WithFixedX\""))
+        assertEquals(true, encoded.contains("\"\$type\":\"GradientHistogramConfig\""))
+    }
 }

@@ -96,7 +96,23 @@ fun <R : Result> SeriesStat<R>.transformValue(transform: DoubleTransform): Serie
 )
 
 /** Replace the incoming value with the constant [value] on every update. */
-fun <R : Result> SeriesStat<R>.withValue(value: Double): SeriesStat<R> = transformValue { value }
+fun <R : Result> SeriesStat<R>.withValue(value: Double): SeriesStat<R> = ConstantValueStat(this, value)
+
+/**
+ * Wire-friendly counterpart of `transformValue { value }`: holds the constant
+ * as a primitive instead of a captured lambda, so a config layer can record
+ * and replay it.
+ */
+internal class ConstantValueStat<R : Result>(
+    private val delegate: SeriesStat<R>,
+    private val value: Double,
+) : SeriesStat<R>, Stat<R> by delegate {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        delegate.update(this.value, timestampNanos, weight)
+    }
+    override fun create(concurrency: Concurrency?): SeriesStat<R> =
+        ConstantValueStat(delegate.create(concurrency), value)
+}
 
 /** Apply [transform] to each incoming (x, y) pair before update. */
 fun <R : Result> PairedStat<R>.transformPair(transform: PairTransform): PairedStat<R> = TransformPairStat(
@@ -127,7 +143,19 @@ fun <R : Result> DiscreteStat<R>.transformValue(transform: LongTransform): Discr
 )
 
 /** Replace the incoming Long value with the constant [value] on every update. */
-fun <R : Result> DiscreteStat<R>.withValue(value: Long): DiscreteStat<R> = transformValue { value }
+fun <R : Result> DiscreteStat<R>.withValue(value: Long): DiscreteStat<R> = ConstantValueDiscreteStat(this, value)
+
+/** Discrete counterpart of [ConstantValueStat]. */
+internal class ConstantValueDiscreteStat<R : Result>(
+    private val delegate: DiscreteStat<R>,
+    private val value: Long,
+) : DiscreteStat<R>, Stat<R> by delegate {
+    override fun update(value: Long, timestampNanos: Long, weight: Double) {
+        delegate.update(this.value, timestampNanos, weight)
+    }
+    override fun create(concurrency: Concurrency?): DiscreteStat<R> =
+        ConstantValueDiscreteStat(delegate.create(concurrency), value)
+}
 
 /**
  * View this [DiscreteStat] as a [SeriesStat] that accepts `Double`. Each Double input

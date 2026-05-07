@@ -75,6 +75,9 @@ class PairedStatGroup(
         concurrency: Concurrency? = null
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
+    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+        this(stats = pairedSpecs(schema), concurrency = concurrency)
+
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(x, y, timestampNanos, weight)
     }
@@ -102,6 +105,9 @@ class VectorStatGroup(
         concurrency: Concurrency? = null
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
+    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+        this(stats = vectorSpecs(schema), concurrency = concurrency)
+
     override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(vector, timestampNanos, weight)
     }
@@ -128,6 +134,9 @@ class DiscreteStatGroup(
         vararg stats: Pair<StatKey<*>, DiscreteStat<*>>,
         concurrency: Concurrency? = null
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
+
+    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+        this(stats = discreteSpecs(schema), concurrency = concurrency)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(value, timestampNanos, weight)

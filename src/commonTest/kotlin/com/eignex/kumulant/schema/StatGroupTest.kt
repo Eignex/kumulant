@@ -389,6 +389,19 @@ class PairedStatGroupTest {
         group.create(null)
         assertSame(Concurrency.None, childCreateConcurrency)
     }
+
+    @Test
+    fun `paired schema constructor materializes config entries`() {
+        val schema = object : StatSchema() {
+            val olsKey by paired(OLSConfig)
+            val covKey by paired(CovarianceConfig)
+        }
+        val group = PairedStatGroup(schema)
+        group.update(1.0, 2.0)
+        group.update(2.0, 4.0)
+        val r = group.read()
+        assertEquals(2.0, r[schema.olsKey].slope, DELTA)
+    }
 }
 
 class PairedListStatsTest {
@@ -588,6 +601,18 @@ class VectorStatGroupTest {
         group.create(null)
         assertSame(Concurrency.None, childCreateConcurrency)
     }
+
+    @Test
+    fun `vector schema constructor materializes config entries`() {
+        val schema = object : StatSchema() {
+            val vsumKey by vector(VarianceVectorConfig(dimensions = 2))
+        }
+        val group = VectorStatGroup(schema)
+        group.update(doubleArrayOf(1.0, 10.0))
+        group.update(doubleArrayOf(3.0, 30.0))
+        val r = group.read()
+        kotlin.test.assertTrue(r.results.containsKey("vsumKey"))
+    }
 }
 
 class VectorListStatsTest {
@@ -786,12 +811,7 @@ class DiscreteStatGroupTest {
         }
 
         val schema = Schema()
-        val group = DiscreteStatGroup(
-            stats = schema.specs.map {
-                @Suppress("UNCHECKED_CAST")
-                StatSpec(it.key as StatKey<Result>, it.stat as DiscreteStat<Result>)
-            }
-        )
+        val group = DiscreteStatGroup(schema)
         for (i in 1L..50L) group.update(i)
         assertTrue(group.read()[schema.users].estimate > 30.0)
         assertTrue(group.read()[schema.sessions].estimate > 30.0)

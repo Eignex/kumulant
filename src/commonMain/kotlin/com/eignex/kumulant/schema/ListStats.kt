@@ -66,6 +66,13 @@ class ListStats<R : Result>(
     constructor(vararg entries: Pair<String, SeriesStat<out R>>, concurrency: Concurrency? = null) :
         this(entries.toList(), concurrency)
 
+    @Suppress("UNCHECKED_CAST")
+    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+        this(
+            entries = seriesSpecs(schema).map { it.key.name to (it.stat as SeriesStat<out R>) },
+            concurrency = concurrency,
+        )
+
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(value, timestampNanos, weight)
     }
@@ -94,6 +101,13 @@ class PairedListStats<R : Result>(
 
     constructor(vararg entries: Pair<String, PairedStat<out R>>, concurrency: Concurrency? = null) :
         this(entries.toList(), concurrency)
+
+    @Suppress("UNCHECKED_CAST")
+    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+        this(
+            entries = pairedSpecs(schema).map { it.key.name to (it.stat as PairedStat<out R>) },
+            concurrency = concurrency,
+        )
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(x, y, timestampNanos, weight)
@@ -124,6 +138,13 @@ class VectorListStats<R : Result>(
     constructor(vararg entries: Pair<String, VectorStat<out R>>, concurrency: Concurrency? = null) :
         this(entries.toList(), concurrency)
 
+    @Suppress("UNCHECKED_CAST")
+    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+        this(
+            entries = vectorSpecs(schema).map { it.key.name to (it.stat as VectorStat<out R>) },
+            concurrency = concurrency,
+        )
+
     override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(vector, timestampNanos, weight)
     }
@@ -152,6 +173,13 @@ class DiscreteListStats<R : Result>(
 
     constructor(vararg entries: Pair<String, DiscreteStat<out R>>, concurrency: Concurrency? = null) :
         this(entries.toList(), concurrency)
+
+    @Suppress("UNCHECKED_CAST")
+    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+        this(
+            entries = discreteSpecs(schema).map { it.key.name to (it.stat as DiscreteStat<out R>) },
+            concurrency = concurrency,
+        )
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(value, timestampNanos, weight)

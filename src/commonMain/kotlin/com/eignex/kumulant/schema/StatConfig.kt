@@ -50,3 +50,15 @@ sealed interface VectorStatConfig<R : Result> : StatConfig {
 sealed interface DiscreteStatConfig<R : Result> : StatConfig {
     override fun materialize(concurrency: Concurrency): DiscreteStat<R>
 }
+
+/**
+ * [StatConfig] for stats that don't fit any of the four standard modalities —
+ * tree histograms and CRPS-ensemble take heterogeneous custom `update`
+ * signatures. Materialized raw stats can't fan out through a [StatGroup]; the
+ * schema-aware group constructors skip them. Construct directly from a
+ * wire-decoded [StatSchemaDef] via `materializeRaw`.
+ */
+@Serializable
+sealed interface RawStatConfig<R : Result> : StatConfig {
+    override fun materialize(concurrency: Concurrency): Stat<R>
+}

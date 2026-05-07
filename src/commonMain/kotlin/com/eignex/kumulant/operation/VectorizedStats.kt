@@ -48,6 +48,21 @@ class VectorizedStat<R : Result>(
         return ResultList(stats.map { it.read(timestampNanos) })
     }
 
+    /**
+     * Build a [VectorizedStat] by replicating a single [template] stat across
+     * every dimension via [SeriesStat.create]. Wire-friendly counterpart of the
+     * lambda-factory primary constructor.
+     */
+    constructor(
+        dimensions: Int,
+        template: SeriesStat<R>,
+        concurrency: Concurrency? = null,
+    ) : this(
+        dimensions = dimensions,
+        template = { _: Int -> template.create(concurrency) },
+        concurrencyOverride = concurrency,
+    )
+
     override fun create(concurrency: Concurrency?): VectorStat<ResultList<R>> =
         VectorizedStat(dimensions, template, concurrency ?: this.concurrencyOverride)
 
