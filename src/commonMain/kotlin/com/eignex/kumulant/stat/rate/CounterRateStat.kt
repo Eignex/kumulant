@@ -6,7 +6,7 @@ import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 
 /**
- * RateStat derived from a monotonic counter stream.
+ * Rate derived from a monotonic counter stream.
  *
  * Each update is interpreted as an absolute counter sample (for example
  * requests_total). The stat accumulates positive deltas between successive

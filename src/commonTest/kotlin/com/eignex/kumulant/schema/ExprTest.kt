@@ -249,7 +249,7 @@ class ExprTest {
         live.update(doubleArrayOf(4.0, 5.0, 6.0))
         @Suppress("UNCHECKED_CAST")
         val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
-        // After transform: (3, 5, 7) and (9, 11, 13). SumStat per dim: 12, 16, 20.
+        // After transform: (3, 5, 7) and (9, 11, 13). Sum per dim: 12, 16, 20.
         assertEquals(12.0, rl.results[0].sum, DELTA)
         assertEquals(16.0, rl.results[1].sum, DELTA)
         assertEquals(20.0, rl.results[2].sum, DELTA)
@@ -285,11 +285,11 @@ class ExprTest {
 
     @Test fun vfold_sum_product_mean_min_max_norm2() {
         val v = doubleArrayOf(3.0, -4.0, 0.0)
-        assertEquals(-1.0, VFold(VFoldOp.SumStat).eval(0.0, 0.0, v), DELTA)
+        assertEquals(-1.0, VFold(VFoldOp.Sum).eval(0.0, 0.0, v), DELTA)
         assertEquals(0.0, VFold(VFoldOp.Product).eval(0.0, 0.0, v), DELTA)
-        assertEquals(-1.0 / 3.0, VFold(VFoldOp.MeanStat).eval(0.0, 0.0, v), DELTA)
-        assertEquals(-4.0, VFold(VFoldOp.MinStat).eval(0.0, 0.0, v), DELTA)
-        assertEquals(3.0, VFold(VFoldOp.MaxStat).eval(0.0, 0.0, v), DELTA)
+        assertEquals(-1.0 / 3.0, VFold(VFoldOp.Mean).eval(0.0, 0.0, v), DELTA)
+        assertEquals(-4.0, VFold(VFoldOp.Min).eval(0.0, 0.0, v), DELTA)
+        assertEquals(3.0, VFold(VFoldOp.Max).eval(0.0, 0.0, v), DELTA)
         assertEquals(5.0, VFold(VFoldOp.Norm2).eval(0.0, 0.0, v), DELTA) // sqrt(9 + 16)
     }
 
@@ -318,7 +318,7 @@ class ExprTest {
     }
 
     @Test fun foldVector_with_vfold_sum() {
-        val cfg: VectorStatSpec<*> = Sum.foldVector(VFold(VFoldOp.SumStat))
+        val cfg: VectorStatSpec<*> = Sum.foldVector(VFold(VFoldOp.Sum))
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(1.0, 2.0, 3.0)) // sum = 6
         live.update(doubleArrayOf(4.0, 5.0, 6.0)) // sum = 15
@@ -350,10 +350,10 @@ class ExprTest {
         val da = SchemaJson.decodeFromString(StatSpec.serializer(), ja) as FoldPaired
         assertEquals(Mul(X, Y), da.expr)
 
-        val b: VectorStatSpec<*> = Sum.foldVector(VFold(VFoldOp.SumStat))
+        val b: VectorStatSpec<*> = Sum.foldVector(VFold(VFoldOp.Sum))
         val jb = SchemaJson.encodeToString(StatSpec.serializer(), b)
         val db = SchemaJson.decodeFromString(StatSpec.serializer(), jb) as FoldVector
-        assertEquals(VFold(VFoldOp.SumStat), db.expr)
+        assertEquals(VFold(VFoldOp.Sum), db.expr)
 
         val c: ScalarExpr = VDot(listOf(1.0, 2.0, 3.0))
         val jc = SchemaJson.encodeToString(ScalarExpr.serializer(), c)

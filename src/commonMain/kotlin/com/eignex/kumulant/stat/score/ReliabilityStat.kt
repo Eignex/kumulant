@@ -33,7 +33,7 @@ data class ReliabilityResult(
         }
     }
 
-    /** MeanStat predicted probability per bin (NaN where the bin is empty). */
+    /** Mean predicted probability per bin (NaN where the bin is empty). */
     val meanProbability: DoubleArray get() = DoubleArray(numBins) { i ->
         if (totalWeights[i] > 0.0) sumProbability[i] / totalWeights[i] else Double.NaN
     }
@@ -75,7 +75,7 @@ data class ReliabilityResult(
 }
 
 /**
- * ReliabilityStat diagram primitive for binary probabilistic forecasts. Paired
+ * Reliability diagram primitive for binary probabilistic forecasts. Paired
  * input is `(predictedProbability, outcome)`; predictions are bucketed into
  * [numBins] equal-width bins across `[0, 1]`. Outcomes are typically `{0, 1}`
  * but soft labels and weighted updates work uniformly.

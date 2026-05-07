@@ -135,13 +135,13 @@ data class IfExpr(val cond: BoolExpr, val then: ScalarExpr, val otherwise: Scala
  * length to a single scalar via the chosen operation.
  */
 @Serializable
-enum class VFoldOp { SumStat, Product, MeanStat, MinStat, MaxStat, Norm2 }
+enum class VFoldOp { Sum, Product, Mean, Min, Max, Norm2 }
 
 @Serializable
 @SerialName("VFold")
 data class VFold(val op: VFoldOp) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray): Double = when (op) {
-        VFoldOp.SumStat -> {
+        VFoldOp.Sum -> {
             var s = 0.0
             for (e in v) s += e
             s
@@ -151,20 +151,20 @@ data class VFold(val op: VFoldOp) : ScalarExpr {
             for (e in v) p *= e
             p
         }
-        VFoldOp.MeanStat -> {
-            require(v.isNotEmpty()) { "VFold.MeanStat on empty vector" }
+        VFoldOp.Mean -> {
+            require(v.isNotEmpty()) { "VFold.Mean on empty vector" }
             var s = 0.0
             for (e in v) s += e
             s / v.size
         }
-        VFoldOp.MinStat -> {
-            require(v.isNotEmpty()) { "VFold.MinStat on empty vector" }
+        VFoldOp.Min -> {
+            require(v.isNotEmpty()) { "VFold.Min on empty vector" }
             var m = v[0]
             for (i in 1 until v.size) if (v[i] < m) m = v[i]
             m
         }
-        VFoldOp.MaxStat -> {
-            require(v.isNotEmpty()) { "VFold.MaxStat on empty vector" }
+        VFoldOp.Max -> {
+            require(v.isNotEmpty()) { "VFold.Max on empty vector" }
             var m = v[0]
             for (i in 1 until v.size) if (v[i] > m) m = v[i]
             m

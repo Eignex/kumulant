@@ -9,7 +9,7 @@ import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** MeanStat and population variance. */
+/** Mean and population variance. */
 @Serializable
 @SerialName("VarianceStat")
 data class VarianceResult(

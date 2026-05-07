@@ -113,13 +113,13 @@ interface HasLinearModel : Result {
  * Extends HasSampleVariance because R^2 requires SST.
  */
 interface HasRegression : HasSampleVariance {
-    /** SumStat of Squared Errors (Residuals) */
+    /** Sum of Squared Errors (Residuals) */
     val sse: Double
 
-    /** SumStat of squares due to regression */
+    /** Sum of squares due to regression */
     val ssr: Double get() = sst - sse
 
-    /** MeanStat squared error. */
+    /** Mean squared error. */
     val mse: Double
         get() = if (totalWeights > 0) sse / totalWeights else 0.0
 

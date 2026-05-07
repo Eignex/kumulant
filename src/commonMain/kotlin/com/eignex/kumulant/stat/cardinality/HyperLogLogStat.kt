@@ -14,7 +14,7 @@ import kotlin.math.ln
 import kotlin.math.pow
 
 /**
- * HyperLogLogStat snapshot. [estimate] is the corrected cardinality (linear counting at the
+ * HyperLogLog snapshot. [estimate] is the corrected cardinality (linear counting at the
  * small-range, raw HLL elsewhere). [registers] are the dense `rho` values per bucket and
  * are required to merge two snapshots without loss; [precision] selects bucket count
  * `m = 2^precision`. [totalSeen] is the unweighted update count.
@@ -29,7 +29,7 @@ data class HyperLogLogResult(
 ) : Result
 
 /**
- * HyperLogLogStat cardinality estimator with a small-range linear-counting fallback.
+ * HyperLogLog cardinality estimator with a small-range linear-counting fallback.
  *
  * Allocates `m = 2^precision` byte-sized registers and uses the standard
  * `α_m · m² / Σ 2^-Mj` estimator, switching to linear counting on small inputs

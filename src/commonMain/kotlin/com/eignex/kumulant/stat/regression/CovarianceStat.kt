@@ -16,11 +16,11 @@ data class CovarianceResult(
     val totalWeights: Double,
     val meanX: Double,
     val meanY: Double,
-    /** SumStat of cross-deviations: sum((x - meanX)(y - meanY) * w) */
+    /** Sum of cross-deviations: sum((x - meanX)(y - meanY) * w) */
     val sxy: Double,
-    /** SumStat of squared deviations in x: sum((x - meanX)^2 * w) */
+    /** Sum of squared deviations in x: sum((x - meanX)^2 * w) */
     val sxx: Double,
-    /** SumStat of squared deviations in y: sum((y - meanY)^2 * w) */
+    /** Sum of squared deviations in y: sum((y - meanY)^2 * w) */
     val syy: Double,
 ) : Result {
     /** Sample covariance `sxy / totalWeights`. */

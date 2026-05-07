@@ -47,7 +47,7 @@ data class OLSResult(
 }
 
 /**
- * Online Ordinary Least Squares (OLSStat) linear regression: y = slope * x + intercept.
+ * Online Ordinary Least Squares (OLS) linear regression: y = slope * x + intercept.
  *
  * Uses Chan's parallel algorithm for numerically stable online updates and merging.
  * Supports weighted observations.

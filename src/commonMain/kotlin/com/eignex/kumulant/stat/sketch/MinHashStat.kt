@@ -12,7 +12,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * MinHashStat signature snapshot. [signatures] is the per-hash running minimum of
+ * MinHash signature snapshot. [signatures] is the per-hash running minimum of
  * `splitmix64(value xor splitmix64(seed + i))` over all updates; merging two snapshots
  * takes element-wise min and requires identical [numHashes] and [seed].
  */
@@ -50,7 +50,7 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
 }
 
 /**
- * MinHashStat signature — for each of [numHashes] independent hash functions (salted by
+ * MinHash signature — for each of [numHashes] independent hash functions (salted by
  * `splitmix64(seed + i)`), maintain the running minimum hash over all inserted values.
  * The Jaccard similarity between two sets is estimated by the fraction of slots whose
  * signatures agree (see [jaccard]).
