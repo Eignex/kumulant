@@ -15,6 +15,8 @@ import com.eignex.kumulant.operation.atIndices
 import com.eignex.kumulant.operation.atX
 import com.eignex.kumulant.operation.atY
 import com.eignex.kumulant.operation.filter
+import com.eignex.kumulant.operation.foldPaired
+import com.eignex.kumulant.operation.foldVector
 import com.eignex.kumulant.operation.transformPair
 import com.eignex.kumulant.operation.transformValue
 import com.eignex.kumulant.operation.transformVector
@@ -523,3 +525,39 @@ fun <R : Result> VectorStatConfig<R>.transformElement(expr: ScalarExpr): VectorS
 @Suppress("UNCHECKED_CAST")
 fun <R : Result> VectorStatConfig<R>.filter(pred: BoolExpr): VectorStatConfig<R> =
     FilterVectorConfig(this, pred) as VectorStatConfig<R>
+
+/**
+ * Lift a [SeriesStatConfig] to a [PairedStatConfig] by reducing each `(x, y)`
+ * pair to a scalar via [expr] before driving the inner stat. The expression
+ * is free to reference both [X] and [Y].
+ */
+@Serializable @SerialName("FoldPaired")
+data class FoldPairedConfig(val inner: StatConfig, val expr: ScalarExpr) : PairedStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): PairedStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requireSeries(inner, "FoldPaired").materialize(concurrency) as SeriesStat<Result>
+        return materialized.foldPaired { xv, yv -> expr.eval(xv, yv) }
+    }
+}
+
+/**
+ * Lift a [SeriesStatConfig] to a [VectorStatConfig] by reducing each vector to
+ * a scalar via [expr] before driving the inner stat. The expression typically
+ * uses [VFold] / [VDot] / [V] to consume the vector.
+ */
+@Serializable @SerialName("FoldVector")
+data class FoldVectorConfig(val inner: StatConfig, val expr: ScalarExpr) : VectorStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requireSeries(inner, "FoldVector").materialize(concurrency) as SeriesStat<Result>
+        return materialized.foldVector { vec -> expr.eval(0.0, 0.0, vec) }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> SeriesStatConfig<R>.foldPaired(expr: ScalarExpr): PairedStatConfig<R> =
+    FoldPairedConfig(this, expr) as PairedStatConfig<R>
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> SeriesStatConfig<R>.foldVector(expr: ScalarExpr): VectorStatConfig<R> =
+    FoldVectorConfig(this, expr) as VectorStatConfig<R>

@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 private const val DELTA = 1e-12
-private fun sumVector(d: Int) = VectorizedStat(d, template = { Sum() })
+private fun sumVector(d: Int) = VectorizedStat(d, Sum())
 
 class WeightsTest {
 

@@ -113,6 +113,57 @@ data class IfExpr(val cond: BoolExpr, val then: ScalarExpr, val otherwise: Scala
 }
 
 /**
+ * Reduction over the entire vector input. Distinct from element-level
+ * arithmetic ([Add], [Mul]) — this collapses a `DoubleArray` of arbitrary
+ * length to a single scalar via the chosen operation.
+ */
+@Serializable
+enum class VFoldOp { Sum, Product, Mean, Min, Max, Norm2 }
+
+@Serializable @SerialName("VFold")
+data class VFold(val op: VFoldOp) : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = when (op) {
+        VFoldOp.Sum -> {
+            var s = 0.0; for (e in v) s += e; s
+        }
+        VFoldOp.Product -> {
+            var p = 1.0; for (e in v) p *= e; p
+        }
+        VFoldOp.Mean -> {
+            require(v.isNotEmpty()) { "VFold.Mean on empty vector" }
+            var s = 0.0; for (e in v) s += e; s / v.size
+        }
+        VFoldOp.Min -> {
+            require(v.isNotEmpty()) { "VFold.Min on empty vector" }
+            var m = v[0]; for (i in 1 until v.size) if (v[i] < m) m = v[i]; m
+        }
+        VFoldOp.Max -> {
+            require(v.isNotEmpty()) { "VFold.Max on empty vector" }
+            var m = v[0]; for (i in 1 until v.size) if (v[i] > m) m = v[i]; m
+        }
+        VFoldOp.Norm2 -> {
+            var s = 0.0; for (e in v) s += e * e; sqrt(s)
+        }
+    }
+}
+
+/**
+ * Weighted dot product `Σ weights[i] * v[i]`. Length must match the incoming
+ * vector at eval time. Wire form is a primitive list — encodes cleanly.
+ */
+@Serializable @SerialName("VDot")
+data class VDot(val weights: List<Double>) : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double {
+        require(v.size == weights.size) {
+            "VDot length mismatch: weights=${weights.size}, v=${v.size}"
+        }
+        var s = 0.0
+        for (i in 0 until v.size) s += weights[i] * v[i]
+        return s
+    }
+}
+
+/**
  * Wire-serializable AST for boolean expressions over the same input env as
  * [ScalarExpr]. Used by filter-config wrappers and as the condition of [IfExpr].
  */

@@ -1,6 +1,5 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.summary.Sum
 import com.eignex.kumulant.stat.summary.SumResult
 import kotlin.test.Test
@@ -10,7 +9,7 @@ import kotlin.test.assertFailsWith
 private const val DELTA = 1e-12
 
 private fun sumVector(dimensions: Int): VectorizedStat<SumResult> =
-    VectorizedStat(dimensions, template = { Sum() })
+    VectorizedStat(dimensions, Sum())
 
 class VectorizedStatTest {
 
@@ -51,14 +50,6 @@ class VectorizedStatTest {
         val r = stat.read()
         assertEquals(0.0, r.results[0].sum, DELTA)
         assertEquals(0.0, r.results[1].sum, DELTA)
-    }
-
-    @Test
-    fun `expandedToVector factory produces correct dimensions`() {
-        val factory: (Int) -> SeriesStat<SumResult> = { Sum() }
-        val stat = factory.expandedToVector(4)
-        stat.update(doubleArrayOf(1.0, 2.0, 3.0, 4.0))
-        assertEquals(4, stat.read().results.size)
     }
 
     @Test

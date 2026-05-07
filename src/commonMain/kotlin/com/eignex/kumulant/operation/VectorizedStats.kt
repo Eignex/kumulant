@@ -6,62 +6,40 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
 
-/** Expand a template factory into a [VectorStat] with one [SeriesStat] per of the [dimensions] slots. */
-fun <R : Result> ((Int) -> SeriesStat<R>).expandedToVector(
-    dimensions: Int
-): VectorStat<ResultList<R>> {
-    return VectorizedStat(dimensions, this)
-}
-
 /**
  * Fans each vector observation out to one [SeriesStat] per dimension.
  *
- * Produces a [ResultList] with positional entries. Incoming vectors must match the
- * declared [dimensions] exactly.
+ * Constructed from a single [template] stat replicated across [dimensions]
+ * via `template.create(concurrency)`. Produces a [ResultList] with positional
+ * entries; incoming vectors must match [dimensions] exactly.
  */
 class VectorizedStat<R : Result>(
     val dimensions: Int,
-    val template: (index: Int) -> SeriesStat<R>,
+    template: SeriesStat<R>,
     private val concurrencyOverride: Concurrency? = null,
 ) : VectorStat<ResultList<R>> {
 
     override val concurrency: Concurrency get() = concurrencyOverride ?: Concurrency.None
 
+    private val template: SeriesStat<R> = template.create(concurrencyOverride)
     private val stats: Array<SeriesStat<R>> =
-        Array(dimensions) { i -> template(i) }
+        Array(dimensions) { this.template.create(concurrencyOverride) }
 
     override fun update(
         vector: DoubleArray,
         timestampNanos: Long,
-        weight: Double
+        weight: Double,
     ) {
         require(vector.size == dimensions) {
             "Vector size ${vector.size} does not match expected dimensions $dimensions"
         }
-
         for (i in 0 until dimensions) {
             stats[i].update(vector[i], timestampNanos, weight)
         }
     }
 
-    override fun read(timestampNanos: Long): ResultList<R> {
-        return ResultList(stats.map { it.read(timestampNanos) })
-    }
-
-    /**
-     * Build a [VectorizedStat] by replicating a single [template] stat across
-     * every dimension via [SeriesStat.create]. Wire-friendly counterpart of the
-     * lambda-factory primary constructor.
-     */
-    constructor(
-        dimensions: Int,
-        template: SeriesStat<R>,
-        concurrency: Concurrency? = null,
-    ) : this(
-        dimensions = dimensions,
-        template = { _: Int -> template.create(concurrency) },
-        concurrencyOverride = concurrency,
-    )
+    override fun read(timestampNanos: Long): ResultList<R> =
+        ResultList(stats.map { it.read(timestampNanos) })
 
     override fun create(concurrency: Concurrency?): VectorStat<ResultList<R>> =
         VectorizedStat(dimensions, template, concurrency ?: this.concurrencyOverride)

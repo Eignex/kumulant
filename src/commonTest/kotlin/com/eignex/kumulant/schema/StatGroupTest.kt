@@ -32,8 +32,8 @@ import kotlin.test.assertTrue
 
 private const val DELTA = 1e-12
 
-private fun sumVector(d: Int) = VectorizedStat<SumResult>(d, template = { Sum() })
-private fun meanVector(d: Int) = VectorizedStat<WeightedMeanResult>(d, template = { Mean() })
+private fun sumVector(d: Int) = VectorizedStat(d, Sum())
+private fun meanVector(d: Int) = VectorizedStat(d, Mean())
 
 class StatGroupTest {
 

@@ -254,6 +254,86 @@ class ExprTest {
         assertEquals(30.0, rl.results[1].sum, DELTA)
     }
 
+    // ===== VFold / VDot reduction nodes =====
+
+    @Test fun vfold_sum_product_mean_min_max_norm2() {
+        val v = doubleArrayOf(3.0, -4.0, 0.0)
+        assertEquals(-1.0, VFold(VFoldOp.Sum).eval(0.0, 0.0, v), DELTA)
+        assertEquals(0.0, VFold(VFoldOp.Product).eval(0.0, 0.0, v), DELTA)
+        assertEquals(-1.0 / 3.0, VFold(VFoldOp.Mean).eval(0.0, 0.0, v), DELTA)
+        assertEquals(-4.0, VFold(VFoldOp.Min).eval(0.0, 0.0, v), DELTA)
+        assertEquals(3.0, VFold(VFoldOp.Max).eval(0.0, 0.0, v), DELTA)
+        assertEquals(5.0, VFold(VFoldOp.Norm2).eval(0.0, 0.0, v), DELTA)  // sqrt(9 + 16)
+    }
+
+    @Test fun vdot_weighted_dot_product() {
+        val v = doubleArrayOf(2.0, 3.0, 4.0)
+        val expr = VDot(weights = listOf(1.0, 0.0, -1.0))
+        assertEquals(-2.0, expr.eval(0.0, 0.0, v), DELTA)
+    }
+
+    @Test fun vdot_length_mismatch_throws() {
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            VDot(weights = listOf(1.0, 1.0)).eval(0.0, 0.0, doubleArrayOf(1.0, 2.0, 3.0))
+        }
+    }
+
+    // ===== FoldPaired / FoldVector configs =====
+
+    @Test fun foldPaired_lifts_series_to_paired_with_xy_expression() {
+        val cfg: PairedStatConfig<*> = SumConfig.foldPaired(X * Y)
+        val live = cfg.materialize(Concurrency.None)
+        live.update(1.0, 2.0)  // 2
+        live.update(3.0, 4.0)  // 12
+        live.update(5.0, 6.0)  // 30
+        val r = live.read() as SumResult
+        assertEquals(44.0, r.sum, DELTA)
+    }
+
+    @Test fun foldVector_with_vfold_sum() {
+        val cfg: VectorStatConfig<*> = SumConfig.foldVector(VFold(VFoldOp.Sum))
+        val live = cfg.materialize(Concurrency.None)
+        live.update(doubleArrayOf(1.0, 2.0, 3.0))  // sum = 6
+        live.update(doubleArrayOf(4.0, 5.0, 6.0))  // sum = 15
+        val r = live.read() as SumResult
+        assertEquals(21.0, r.sum, DELTA)
+    }
+
+    @Test fun foldVector_with_vdot_weighted() {
+        val cfg: VectorStatConfig<*> = SumConfig.foldVector(VDot(listOf(1.0, 2.0, 3.0)))
+        val live = cfg.materialize(Concurrency.None)
+        live.update(doubleArrayOf(1.0, 1.0, 1.0))  // 1+2+3 = 6
+        live.update(doubleArrayOf(2.0, 0.0, 1.0))  // 2+0+3 = 5
+        val r = live.read() as SumResult
+        assertEquals(11.0, r.sum, DELTA)
+    }
+
+    @Test fun foldVector_norm2_drives_inner_mean() {
+        val cfg: VectorStatConfig<*> = MeanConfig.foldVector(VFold(VFoldOp.Norm2))
+        val live = cfg.materialize(Concurrency.None)
+        live.update(doubleArrayOf(3.0, 4.0))   // norm = 5
+        live.update(doubleArrayOf(0.0, 0.0))   // norm = 0
+        val r = live.read() as com.eignex.kumulant.stat.summary.WeightedMeanResult
+        assertEquals(2.5, r.mean, DELTA)
+    }
+
+    @Test fun fold_configs_round_trip_via_wire() {
+        val a: PairedStatConfig<*> = SumConfig.foldPaired(X * Y)
+        val ja = SchemaJson.encodeToString(StatConfig.serializer(), a)
+        val da = SchemaJson.decodeFromString(StatConfig.serializer(), ja) as FoldPairedConfig
+        assertEquals(Mul(X, Y), da.expr)
+
+        val b: VectorStatConfig<*> = SumConfig.foldVector(VFold(VFoldOp.Sum))
+        val jb = SchemaJson.encodeToString(StatConfig.serializer(), b)
+        val db = SchemaJson.decodeFromString(StatConfig.serializer(), jb) as FoldVectorConfig
+        assertEquals(VFold(VFoldOp.Sum), db.expr)
+
+        val c: ScalarExpr = VDot(listOf(1.0, 2.0, 3.0))
+        val jc = SchemaJson.encodeToString(ScalarExpr.serializer(), c)
+        val dc = SchemaJson.decodeFromString(ScalarExpr.serializer(), jc)
+        assertEquals(c, dc)
+    }
+
     @Test fun paired_and_vector_configs_round_trip_via_wire() {
         val cfg: PairedStatConfig<*> = OLSConfig.transformPair(xExpr = Y, yExpr = X)
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
