@@ -1,7 +1,7 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stat.summary.Mean
-import com.eignex.kumulant.stat.summary.Sum
+import com.eignex.kumulant.stat.summary.MeanStat
+import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -22,7 +22,7 @@ private const val T20 = 20_000_000_000L
 class WindowedStatsTest {
 
     private fun sumWindowed(slices: Int = 10) =
-        Sum().windowed(duration = 10.seconds, slices = slices)
+        SumStat().windowed(duration = 10.seconds, slices = slices)
 
     @Test
     fun `update within window is included in read`() {
@@ -101,8 +101,8 @@ class WindowedStatsTest {
     }
 
     @Test
-    fun `works with Mean stat`() {
-        val w = Mean().windowed(duration = 10.seconds)
+    fun `works with MeanStat stat`() {
+        val w = MeanStat().windowed(duration = 10.seconds)
         w.update(4.0, T3)
         w.update(6.0, T9)
         assertEquals(5.0, w.read(T9).mean, DELTA)
@@ -110,7 +110,7 @@ class WindowedStatsTest {
 
     @Test
     fun `single slice covers entire window`() {
-        val w = Sum().windowed(duration = 10.seconds, slices = 1)
+        val w = SumStat().windowed(duration = 10.seconds, slices = 1)
         w.update(3.0, T0)
         w.update(4.0, T3)
         assertEquals(7.0, w.read(T9).sum, DELTA)
@@ -139,7 +139,7 @@ class WindowedStatsTest {
 
     @Test
     fun `paired windowed works with axis selection`() {
-        val w = Sum().atX().windowed(duration = 10.seconds, slices = 10)
+        val w = SumStat().atX().windowed(duration = 10.seconds, slices = 10)
         w.update(2.0, 100.0, T3)
         w.update(3.0, 200.0, T9)
         assertEquals(5.0, w.read(T9).sum, DELTA)
@@ -147,7 +147,7 @@ class WindowedStatsTest {
 
     @Test
     fun `vector windowed works with index selection`() {
-        val w = Sum().atIndex(1).windowed(duration = 10.seconds, slices = 10)
+        val w = SumStat().atIndex(1).windowed(duration = 10.seconds, slices = 10)
         w.update(doubleArrayOf(1.0, 4.0), T3)
         w.update(doubleArrayOf(1.0, 6.0), T9)
         assertEquals(10.0, w.read(T9).sum, DELTA)
@@ -155,7 +155,7 @@ class WindowedStatsTest {
 
     @Test
     fun `discrete windowed only counts in-window keys`() {
-        val w = com.eignex.kumulant.stat.cardinality.LinearCounting(bits = 4096)
+        val w = com.eignex.kumulant.stat.cardinality.LinearCountingStat(bits = 4096)
             .windowed(duration = 10.seconds)
         w.update(1L, T0) // expires before T11
         w.update(2L, T3)
@@ -169,16 +169,16 @@ class WindowedStatsTest {
     @Test
     fun `windowed rejects invalid configuration`() {
         assertFailsWith<IllegalArgumentException> {
-            Sum().windowed(duration = Duration.ZERO)
+            SumStat().windowed(duration = Duration.ZERO)
         }
         assertFailsWith<IllegalArgumentException> {
-            Sum().windowed(duration = (-1).nanoseconds)
+            SumStat().windowed(duration = (-1).nanoseconds)
         }
         assertFailsWith<IllegalArgumentException> {
-            Sum().windowed(duration = 10.seconds, slices = 0)
+            SumStat().windowed(duration = 10.seconds, slices = 0)
         }
         assertFailsWith<IllegalArgumentException> {
-            Sum().windowed(duration = 1.nanoseconds, slices = 2)
+            SumStat().windowed(duration = 1.nanoseconds, slices = 2)
         }
     }
 }

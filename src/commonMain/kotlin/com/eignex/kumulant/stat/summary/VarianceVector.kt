@@ -14,4 +14,4 @@ fun varianceVector(
     dimensions: Int,
     concurrency: Concurrency = Concurrency.None,
 ): VectorStat<ResultList<WeightedVarianceResult>> =
-    VectorizedStat(dimensions, Variance(concurrency), concurrency)
+    VectorizedStat(dimensions, VarianceStat(concurrency), concurrency)

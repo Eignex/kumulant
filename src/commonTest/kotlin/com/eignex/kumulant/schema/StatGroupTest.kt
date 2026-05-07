@@ -10,16 +10,16 @@ import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.operation.VectorizedStat
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
-import com.eignex.kumulant.stat.cardinality.HyperLogLog
+import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
-import com.eignex.kumulant.stat.cardinality.LinearCounting
+import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.cardinality.LinearCountingResult
-import com.eignex.kumulant.stat.regression.Covariance
+import com.eignex.kumulant.stat.regression.CovarianceStat
 import com.eignex.kumulant.stat.regression.CovarianceResult
-import com.eignex.kumulant.stat.regression.OLS
+import com.eignex.kumulant.stat.regression.OLSStat
 import com.eignex.kumulant.stat.regression.OLSResult
-import com.eignex.kumulant.stat.summary.Mean
-import com.eignex.kumulant.stat.summary.Sum
+import com.eignex.kumulant.stat.summary.MeanStat
+import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.VarianceResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
@@ -32,15 +32,15 @@ import kotlin.test.assertTrue
 
 private const val DELTA = 1e-12
 
-private fun sumVector(d: Int) = VectorizedStat(d, Sum())
-private fun meanVector(d: Int) = VectorizedStat(d, Mean())
+private fun sumVector(d: Int) = VectorizedStat(d, SumStat())
+private fun meanVector(d: Int) = VectorizedStat(d, MeanStat())
 
 class StatGroupTest {
 
     @Test
     fun `update forwards values to all child stats and read returns grouped result`() {
-        val sum = StatKey<SumResult>("sum") to Sum()
-        val count = StatKey<SumResult>("count") to Sum().withValue(1.0).withWeight(1.0)
+        val sum = StatKey<SumResult>("sum") to SumStat()
+        val count = StatKey<SumResult>("count") to SumStat().withValue(1.0).withWeight(1.0)
 
         val group = StatGroup(sum, count)
 
@@ -57,15 +57,15 @@ class StatGroupTest {
 
     @Test
     fun `merge merges only keys present in incoming grouped result`() {
-        val sum = StatKey<SumResult>("sum") to Sum()
-        val count = StatKey<SumResult>("count") to Sum().withValue(1.0).withWeight(1.0)
+        val sum = StatKey<SumResult>("sum") to SumStat()
+        val count = StatKey<SumResult>("count") to SumStat().withValue(1.0).withWeight(1.0)
 
         val target = StatGroup(sum, count)
         target.update(10.0)
 
         val source = StatGroup(
-            StatKey<SumResult>("sum") to Sum(),
-            StatKey<SumResult>("count") to Sum().withValue(1.0).withWeight(1.0)
+            StatKey<SumResult>("sum") to SumStat(),
+            StatKey<SumResult>("count") to SumStat().withValue(1.0).withWeight(1.0)
         )
         source.update(2.0)
         source.update(3.0)
@@ -81,8 +81,8 @@ class StatGroupTest {
 
     @Test
     fun `reset resets all child stats`() {
-        val sum = StatKey<SumResult>("sum") to Sum()
-        val count = StatKey<SumResult>("count") to Sum().withValue(1.0).withWeight(1.0)
+        val sum = StatKey<SumResult>("sum") to SumStat()
+        val count = StatKey<SumResult>("count") to SumStat().withValue(1.0).withWeight(1.0)
 
         val group = StatGroup(sum, count)
         group.update(5.0)
@@ -97,8 +97,8 @@ class StatGroupTest {
 
     @Test
     fun `create returns independent group`() {
-        val sum = StatKey<SumResult>("sum") to Sum()
-        val count = StatKey<SumResult>("count") to Sum().withValue(1.0).withWeight(1.0)
+        val sum = StatKey<SumResult>("sum") to SumStat()
+        val count = StatKey<SumResult>("count") to SumStat().withValue(1.0).withWeight(1.0)
 
         val original = StatGroup(sum, count)
         original.update(2.0)
@@ -116,10 +116,10 @@ class StatGroupTest {
 
     @Test
     fun `supports hierarchical stat groups`() {
-        val nestedSum = StatKey<SumResult>("leafSum") to Sum()
-        val nestedCount = StatKey<SumResult>("leafCount") to Sum().withValue(1.0).withWeight(1.0)
+        val nestedSum = StatKey<SumResult>("leafSum") to SumStat()
+        val nestedCount = StatKey<SumResult>("leafCount") to SumStat().withValue(1.0).withWeight(1.0)
         val nested = StatKey<GroupResult>("nested") to StatGroup(nestedSum, nestedCount)
-        val topSum = StatKey<SumResult>("topSum") to Sum()
+        val topSum = StatKey<SumResult>("topSum") to SumStat()
 
         val target = StatGroup(nested, topSum)
 
@@ -133,10 +133,10 @@ class StatGroupTest {
 
         val source = StatGroup(
             StatKey<GroupResult>("nested") to StatGroup(
-                StatKey<SumResult>("leafSum") to Sum(),
-                StatKey<SumResult>("leafCount") to Sum().withValue(1.0).withWeight(1.0)
+                StatKey<SumResult>("leafSum") to SumStat(),
+                StatKey<SumResult>("leafCount") to SumStat().withValue(1.0).withWeight(1.0)
             ),
-            StatKey<SumResult>("topSum") to Sum()
+            StatKey<SumResult>("topSum") to SumStat()
         )
         source.update(5.0)
 
@@ -149,8 +149,8 @@ class StatGroupTest {
 
     @Test
     fun `nested keys remain independent while avoiding top-level conflicts`() {
-        val topSum = StatKey<SumResult>("sum") to Sum()
-        val nestedSum = StatKey<SumResult>("sum") to Sum()
+        val topSum = StatKey<SumResult>("sum") to SumStat()
+        val nestedSum = StatKey<SumResult>("sum") to SumStat()
         val nested = StatKey<GroupResult>("nested") to StatGroup(nestedSum)
 
         val group = StatGroup(topSum, nested)
@@ -166,15 +166,15 @@ class StatGroupTest {
 
     @Test
     fun `hierarchical composition can declare keys and stats together`() {
-        val httpCount = StatKey<SumResult>("count") to Sum().withValue(1.0).withWeight(1.0)
-        val httpTotalMs = StatKey<SumResult>("totalMs") to Sum()
+        val httpCount = StatKey<SumResult>("count") to SumStat().withValue(1.0).withWeight(1.0)
+        val httpTotalMs = StatKey<SumResult>("totalMs") to SumStat()
         val http = StatKey<GroupResult>("http") to StatGroup(httpCount, httpTotalMs)
 
-        val dbCount = StatKey<SumResult>("count") to Sum().withValue(1.0).withWeight(1.0)
-        val dbTotalMs = StatKey<SumResult>("totalMs") to Sum()
+        val dbCount = StatKey<SumResult>("count") to SumStat().withValue(1.0).withWeight(1.0)
+        val dbTotalMs = StatKey<SumResult>("totalMs") to SumStat()
         val db = StatKey<GroupResult>("db") to StatGroup(dbCount, dbTotalMs)
 
-        val requests = StatKey<SumResult>("requests") to Sum().withValue(1.0).withWeight(1.0)
+        val requests = StatKey<SumResult>("requests") to SumStat().withValue(1.0).withWeight(1.0)
 
         val service = StatGroup(http, db, requests)
 
@@ -218,18 +218,18 @@ class StatGroupTest {
     @Test
     fun `stat schema helper supports namespaced composition and lifecycle operations`() {
         class HttpMetrics : StatSchema() {
-            val requests by series(SumConfig.withValue(1.0).withWeight(1.0))
-            val latencyMsTotal by series(SumConfig)
+            val requests by series(Sum.withValue(1.0).withWeight(1.0))
+            val latencyMsTotal by series(Sum)
         }
 
         class DbMetrics : StatSchema() {
-            val requests by series(SumConfig.withValue(1.0).withWeight(1.0))
-            val latencyMsTotal by series(SumConfig)
+            val requests by series(Sum.withValue(1.0).withWeight(1.0))
+            val latencyMsTotal by series(Sum)
         }
 
         class ServiceMetrics : StatSchema() {
-            val requests by series(SumConfig.withValue(1.0).withWeight(1.0))
-            val billableMsTotal by series(SumConfig)
+            val requests by series(Sum.withValue(1.0).withWeight(1.0))
+            val billableMsTotal by series(Sum)
             val http by group(HttpMetrics())
             val db by group(DbMetrics())
         }
@@ -300,8 +300,8 @@ class PairedStatGroupTest {
 
     @Test
     fun `update forwards x and y pairs to all child stats`() {
-        val ols = StatKey<OLSResult>("ols") to OLS()
-        val cov = StatKey<CovarianceResult>("cov") to Covariance()
+        val ols = StatKey<OLSResult>("ols") to OLSStat()
+        val cov = StatKey<CovarianceResult>("cov") to CovarianceStat()
 
         val group = PairedStatGroup(ols, cov)
         group.update(1.0, 2.0)
@@ -320,15 +320,15 @@ class PairedStatGroupTest {
 
     @Test
     fun `merge delegates only to keys present in incoming result`() {
-        val olsKey = StatKey<OLSResult>("ols") to OLS()
-        val covKey = StatKey<CovarianceResult>("cov") to Covariance()
+        val olsKey = StatKey<OLSResult>("ols") to OLSStat()
+        val covKey = StatKey<CovarianceResult>("cov") to CovarianceStat()
 
         val target = PairedStatGroup(olsKey, covKey)
         target.update(1.0, 2.0)
 
         val source = PairedStatGroup(
-            StatKey<OLSResult>("ols") to OLS(),
-            StatKey<CovarianceResult>("cov") to Covariance()
+            StatKey<OLSResult>("ols") to OLSStat(),
+            StatKey<CovarianceResult>("cov") to CovarianceStat()
         )
         source.update(2.0, 4.0)
         source.update(3.0, 6.0)
@@ -344,7 +344,7 @@ class PairedStatGroupTest {
 
     @Test
     fun `reset clears all child stats`() {
-        val olsKey = StatKey<OLSResult>("ols") to OLS()
+        val olsKey = StatKey<OLSResult>("ols") to OLSStat()
         val group = PairedStatGroup(olsKey)
         group.update(1.0, 2.0)
         group.update(2.0, 4.0)
@@ -354,7 +354,7 @@ class PairedStatGroupTest {
 
     @Test
     fun `create returns an independent group`() {
-        val olsKey = StatKey<OLSResult>("ols") to OLS()
+        val olsKey = StatKey<OLSResult>("ols") to OLSStat()
         val original = PairedStatGroup(olsKey)
         original.update(1.0, 2.0)
 
@@ -393,8 +393,8 @@ class PairedStatGroupTest {
     @Test
     fun `paired schema constructor materializes config entries`() {
         val schema = object : StatSchema() {
-            val olsKey by paired(OLSConfig)
-            val covKey by paired(CovarianceConfig)
+            val olsKey by paired(OLS)
+            val covKey by paired(Covariance)
         }
         val group = PairedStatGroup(schema)
         group.update(1.0, 2.0)
@@ -408,7 +408,7 @@ class PairedListStatsTest {
 
     @Test
     fun `update forwards to all child stats`() {
-        val stats = PairedListStats<Result>("ols" to OLS(), "cov" to Covariance())
+        val stats = PairedListStats<Result>("ols" to OLSStat(), "cov" to CovarianceStat())
         stats.update(1.0, 2.0)
         stats.update(2.0, 4.0)
 
@@ -421,27 +421,27 @@ class PairedListStatsTest {
     @Test
     fun `duplicate names throw at construction`() {
         assertFailsWith<IllegalArgumentException> {
-            PairedListStats<OLSResult>("a" to OLS(), "a" to OLS())
+            PairedListStats<OLSResult>("a" to OLSStat(), "a" to OLSStat())
         }
     }
 
     @Test
     fun `pairedListStats factory auto-names by simpleName`() {
-        val stats = pairedListStats<Result>(OLS(), Covariance())
+        val stats = pairedListStats<Result>(OLSStat(), CovarianceStat())
         val map = stats.read().toMap()
-        assertEquals(setOf("OLS", "Covariance"), map.keys)
+        assertEquals(setOf("OLSStat", "CovarianceStat"), map.keys)
     }
 
     @Test
     fun `pairedListStats factory rejects duplicate auto-names`() {
         assertFailsWith<IllegalArgumentException> {
-            pairedListStats<OLSResult>(OLS(), OLS())
+            pairedListStats<OLSResult>(OLSStat(), OLSStat())
         }
     }
 
     @Test
     fun `reset clears all child stats`() {
-        val stats = PairedListStats<OLSResult>("ols" to OLS())
+        val stats = PairedListStats<OLSResult>("ols" to OLSStat())
         stats.update(1.0, 2.0)
         stats.update(3.0, 6.0)
         stats.reset()
@@ -452,7 +452,7 @@ class PairedListStatsTest {
 
     @Test
     fun `create returns independent list`() {
-        val original = PairedListStats<OLSResult>("ols" to OLS())
+        val original = PairedListStats<OLSResult>("ols" to OLSStat())
         original.update(1.0, 2.0)
         val clone = original.create()
         clone.update(3.0, 6.0)
@@ -465,10 +465,10 @@ class PairedListStatsTest {
 
     @Test
     fun `merge combines each position`() {
-        val target = PairedListStats<OLSResult>("ols" to OLS())
+        val target = PairedListStats<OLSResult>("ols" to OLSStat())
         target.update(1.0, 2.0)
 
-        val source = PairedListStats<OLSResult>("ols" to OLS())
+        val source = PairedListStats<OLSResult>("ols" to OLSStat())
         source.update(2.0, 4.0)
         source.update(3.0, 6.0)
 
@@ -501,7 +501,7 @@ class PairedListStatsTest {
 
     @Test
     fun `input x and y are forwarded in order`() {
-        val stats = PairedListStats<OLSResult>("ols" to OLS())
+        val stats = PairedListStats<OLSResult>("ols" to OLSStat())
         stats.update(1.0, 2.0)
         stats.update(2.0, 4.0)
         stats.update(3.0, 6.0)
@@ -605,7 +605,7 @@ class VectorStatGroupTest {
     @Test
     fun `vector schema constructor materializes config entries`() {
         val schema = object : StatSchema() {
-            val vsumKey by vector(VarianceVectorConfig(dimensions = 2))
+            val vsumKey by vector(VarianceVector(dimensions = 2))
         }
         val group = VectorStatGroup(schema)
         group.update(doubleArrayOf(1.0, 10.0))
@@ -720,8 +720,8 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `update fans out to all child stats`() {
-        val hllKey = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
-        val lcKey = StatKey<LinearCountingResult>("lc") to LinearCounting(bits = 1024)
+        val hllKey = StatKey<HyperLogLogResult>("hll") to HyperLogLogStat(precision = 10)
+        val lcKey = StatKey<LinearCountingResult>("lc") to LinearCountingStat(bits = 1024)
 
         val group = DiscreteStatGroup(hllKey, lcKey)
         for (i in 1L..100L) group.update(i)
@@ -734,7 +734,7 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `read returns GroupResult keyed by name`() {
-        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
+        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLogStat(precision = 10)
         val group = DiscreteStatGroup(key)
         group.update(1L)
         val r = group.read()
@@ -743,11 +743,11 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `merge dispatches per stat`() {
-        val hllKey = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
+        val hllKey = StatKey<HyperLogLogResult>("hll") to HyperLogLogStat(precision = 10)
         val target = DiscreteStatGroup(hllKey)
         target.update(1L)
 
-        val sourceKey = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
+        val sourceKey = StatKey<HyperLogLogResult>("hll") to HyperLogLogStat(precision = 10)
         val source = DiscreteStatGroup(sourceKey)
         for (i in 100L..200L) source.update(i)
 
@@ -758,7 +758,7 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `reset clears all child stats`() {
-        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
+        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLogStat(precision = 10)
         val group = DiscreteStatGroup(key)
         for (i in 1L..100L) group.update(i)
         group.reset()
@@ -767,7 +767,7 @@ class DiscreteStatGroupTest {
 
     @Test
     fun `create returns an independent group`() {
-        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLog(precision = 10)
+        val key = StatKey<HyperLogLogResult>("hll") to HyperLogLogStat(precision = 10)
         val original = DiscreteStatGroup(key)
         for (i in 1L..50L) original.update(i)
 
@@ -806,8 +806,8 @@ class DiscreteStatGroupTest {
     @Test
     fun `StatSchema discrete delegate exposes typed keys`() {
         class Schema : StatSchema() {
-            val users by discrete(HyperLogLogConfig(precision = 10))
-            val sessions by discrete(LinearCountingConfig(bits = 1024))
+            val users by discrete(HyperLogLog(precision = 10))
+            val sessions by discrete(LinearCounting(bits = 1024))
         }
 
         val schema = Schema()
@@ -823,8 +823,8 @@ class DiscreteListStatsTest {
     @Test
     fun `update forwards to all child stats`() {
         val stats = DiscreteListStats<Result>(
-            "hll" to HyperLogLog(precision = 10),
-            "lc" to LinearCounting(bits = 1024),
+            "hll" to HyperLogLogStat(precision = 10),
+            "lc" to LinearCountingStat(bits = 1024),
         )
         for (i in 1L..100L) stats.update(i)
 
@@ -838,8 +838,8 @@ class DiscreteListStatsTest {
     fun `duplicate names throw at construction`() {
         assertFailsWith<IllegalArgumentException> {
             DiscreteListStats<HyperLogLogResult>(
-                "a" to HyperLogLog(precision = 10),
-                "a" to HyperLogLog(precision = 10),
+                "a" to HyperLogLogStat(precision = 10),
+                "a" to HyperLogLogStat(precision = 10),
             )
         }
     }
@@ -847,26 +847,26 @@ class DiscreteListStatsTest {
     @Test
     fun `discreteListStats factory auto-names by simpleName`() {
         val stats = discreteListStats<Result>(
-            HyperLogLog(precision = 10),
-            LinearCounting(bits = 1024),
+            HyperLogLogStat(precision = 10),
+            LinearCountingStat(bits = 1024),
         )
         val map = stats.read().toMap()
-        assertEquals(setOf("HyperLogLog", "LinearCounting"), map.keys)
+        assertEquals(setOf("HyperLogLogStat", "LinearCountingStat"), map.keys)
     }
 
     @Test
     fun `discreteListStats factory rejects duplicate auto-names`() {
         assertFailsWith<IllegalArgumentException> {
             discreteListStats<HyperLogLogResult>(
-                HyperLogLog(precision = 10),
-                HyperLogLog(precision = 10),
+                HyperLogLogStat(precision = 10),
+                HyperLogLogStat(precision = 10),
             )
         }
     }
 
     @Test
     fun `reset clears all child stats`() {
-        val stats = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLog(precision = 10))
+        val stats = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLogStat(precision = 10))
         for (i in 1L..50L) stats.update(i)
         stats.reset()
         val first = assertIs<HyperLogLogResult>(stats.read().results[0])
@@ -875,7 +875,7 @@ class DiscreteListStatsTest {
 
     @Test
     fun `create returns independent list`() {
-        val original = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLog(precision = 10))
+        val original = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLogStat(precision = 10))
         for (i in 1L..50L) original.update(i)
 
         val clone = original.create()
@@ -889,10 +889,10 @@ class DiscreteListStatsTest {
 
     @Test
     fun `merge combines each position`() {
-        val target = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLog(precision = 10))
+        val target = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLogStat(precision = 10))
         for (i in 1L..50L) target.update(i)
 
-        val source = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLog(precision = 10))
+        val source = DiscreteListStats<HyperLogLogResult>("h" to HyperLogLogStat(precision = 10))
         for (i in 100L..200L) source.update(i)
 
         target.merge(source.read())

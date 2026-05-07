@@ -10,7 +10,7 @@ class PinballLossTest {
 
     @Test
     fun `tau equals one half reduces to half MAE`() {
-        val stat = PinballLoss(0.5).apply {
+        val stat = PinballLossStat(0.5).apply {
             update(x = 1.0, y = 3.0, timestampNanos = 0L, weight = 1.0) // diff = 2 → 0.5*2 = 1
             update(x = 4.0, y = 1.0, timestampNanos = 0L, weight = 1.0) // diff = -3 → -0.5 * -3 = 1.5
         }
@@ -20,7 +20,7 @@ class PinballLossTest {
     @Test
     fun `tau equals 0_9 penalizes under-prediction more`() {
         val tau = 0.9
-        val stat = PinballLoss(tau).apply {
+        val stat = PinballLossStat(tau).apply {
             // y > forecast (under-prediction): loss = tau * |diff|
             update(x = 0.0, y = 1.0, timestampNanos = 0L, weight = 1.0)
             // y < forecast (over-prediction): loss = (1-tau) * |diff|
@@ -32,14 +32,14 @@ class PinballLossTest {
 
     @Test
     fun `tau outside unit interval rejected`() {
-        assertFailsWith<IllegalArgumentException> { PinballLoss(-0.1) }
-        assertFailsWith<IllegalArgumentException> { PinballLoss(1.1) }
+        assertFailsWith<IllegalArgumentException> { PinballLossStat(-0.1) }
+        assertFailsWith<IllegalArgumentException> { PinballLossStat(1.1) }
     }
 
     @Test
     fun `zero residual gives zero loss for any tau`() {
         for (tau in listOf(0.05, 0.5, 0.95)) {
-            val stat = PinballLoss(tau).apply { update(2.0, 2.0, 0L, 1.0) }
+            val stat = PinballLossStat(tau).apply { update(2.0, 2.0, 0L, 1.0) }
             assertEquals(0.0, stat.read(0L).mean, DELTA)
         }
     }

@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * ```yaml
  * $type: GroupStatConfig
  * stats:
- *   requests: { $type: SumConfig }
+ *   requests: { $type: Sum }
  * ```
  */
 @Serializable

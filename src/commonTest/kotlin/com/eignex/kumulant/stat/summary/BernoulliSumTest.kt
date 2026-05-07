@@ -9,7 +9,7 @@ class BernoulliSumTest {
 
     @Test
     fun `unit-weight binary updates count successes and trials`() {
-        val stat = BernoulliSum().apply {
+        val stat = BernoulliSumStat().apply {
             update(value = 1.0, timestampNanos = 0L, weight = 1.0)
             update(value = 0.0, timestampNanos = 0L, weight = 1.0)
             update(value = 1.0, timestampNanos = 0L, weight = 1.0)
@@ -21,7 +21,7 @@ class BernoulliSumTest {
 
     @Test
     fun `weighted updates accumulate fractional successes`() {
-        val stat = BernoulliSum().apply {
+        val stat = BernoulliSumStat().apply {
             update(value = 1.0, timestampNanos = 0L, weight = 0.5)
             update(value = 1.0, timestampNanos = 0L, weight = 1.5)
         }
@@ -32,7 +32,7 @@ class BernoulliSumTest {
 
     @Test
     fun `zero weight is a noop`() {
-        val stat = BernoulliSum().apply { update(1.0, 0L, 0.0) }
+        val stat = BernoulliSumStat().apply { update(1.0, 0L, 0.0) }
         val r = stat.read(0L)
         assertEquals(0.0, r.successes, DELTA)
         assertEquals(0.0, r.trials, DELTA)
@@ -40,8 +40,8 @@ class BernoulliSumTest {
 
     @Test
     fun `merge adds component-wise`() {
-        val a = BernoulliSum().apply { update(1.0, 0L, 1.0) }
-        val b = BernoulliSum().apply {
+        val a = BernoulliSumStat().apply { update(1.0, 0L, 1.0) }
+        val b = BernoulliSumStat().apply {
             update(0.0, 0L, 1.0)
             update(1.0, 0L, 1.0)
         }
@@ -53,7 +53,7 @@ class BernoulliSumTest {
 
     @Test
     fun `reset clears state`() {
-        val stat = BernoulliSum().apply {
+        val stat = BernoulliSumStat().apply {
             update(1.0, 0L, 1.0)
             reset()
         }

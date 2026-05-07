@@ -4,10 +4,10 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stat.summary.Mean
-import com.eignex.kumulant.stat.summary.Sum
+import com.eignex.kumulant.stat.summary.MeanStat
+import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.SumResult
-import com.eignex.kumulant.stat.summary.Variance
+import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -20,7 +20,7 @@ class ListStatsTest {
 
     @Test
     fun `update forwards to all child stats and read returns positional results`() {
-        val stats = ListStats("a" to Sum(), "b" to Sum())
+        val stats = ListStats("a" to SumStat(), "b" to SumStat())
 
         stats.update(2.0, timestampNanos = 10L, weight = 3.0)
         stats.update(4.0, timestampNanos = 20L, weight = 0.5)
@@ -34,22 +34,22 @@ class ListStatsTest {
 
     @Test
     fun `auto-names entries by class simpleName`() {
-        val stats = seriesListStats<Result>(Mean(), Sum())
+        val stats = seriesListStats<Result>(MeanStat(), SumStat())
         val map = stats.read().toMap()
-        assertEquals(setOf("Mean", "Sum"), map.keys)
+        assertEquals(setOf("MeanStat", "SumStat"), map.keys)
     }
 
     @Test
     fun `duplicate auto-names throw`() {
         val ex = assertFailsWith<IllegalArgumentException> {
-            seriesListStats<SumResult>(Sum(), Sum())
+            seriesListStats<SumResult>(SumStat(), SumStat())
         }
         check("Duplicate" in (ex.message ?: "")) { "got: ${ex.message}" }
     }
 
     @Test
     fun `explicit names disambiguate same-type stats`() {
-        val stats = ListStats("in" to Mean(), "out" to Mean())
+        val stats = ListStats("in" to MeanStat(), "out" to MeanStat())
         stats.update(5.0)
         val map = stats.read().toMap()
         assertEquals(setOf("in", "out"), map.keys)
@@ -57,10 +57,10 @@ class ListStatsTest {
 
     @Test
     fun `merge combines by position`() {
-        val target = ListStats("a" to Sum(), "b" to Sum())
+        val target = ListStats("a" to SumStat(), "b" to SumStat())
         target.update(10.0)
 
-        val source = ListStats("a" to Sum(), "b" to Sum())
+        val source = ListStats("a" to SumStat(), "b" to SumStat())
         source.update(2.0)
         source.update(3.0)
 
@@ -73,7 +73,7 @@ class ListStatsTest {
 
     @Test
     fun `reset clears all child stats`() {
-        val stats = ListStats("a" to Sum(), "b" to Sum())
+        val stats = ListStats("a" to SumStat(), "b" to SumStat())
         stats.update(5.0)
         stats.update(1.0)
 
@@ -86,7 +86,7 @@ class ListStatsTest {
 
     @Test
     fun `create returns independent list`() {
-        val original = ListStats("a" to Sum(), "b" to Sum())
+        val original = ListStats("a" to SumStat(), "b" to SumStat())
         original.update(2.0)
 
         val created = original.create()
@@ -125,8 +125,8 @@ class ListStatsTest {
     @Test
     fun `nested ListStats reflects nesting in toMap`() {
         val stats = ListStats<Result>(
-            "top" to Mean(),
-            "nested" to seriesListStats<Result>(Mean(), Variance()),
+            "top" to MeanStat(),
+            "nested" to seriesListStats<Result>(MeanStat(), VarianceStat()),
         )
         stats.update(2.0)
         stats.update(4.0)
@@ -136,7 +136,7 @@ class ListStatsTest {
 
         val nested = assertIs<ResultList<*>>(map["nested"])
         val nestedMap = nested.toMap()
-        assertEquals(setOf("Mean", "Variance"), nestedMap.keys)
+        assertEquals(setOf("MeanStat", "VarianceStat"), nestedMap.keys)
     }
 
     @Test

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.summary
 
-import com.eignex.kumulant.stat.rate.DecayingRate
+import com.eignex.kumulant.stat.rate.DecayingRateStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -15,16 +15,16 @@ private const val T3 = 11_000_000_000L
 class DerivedStatsTest {
 
     @Test
-    fun `Count ignores incoming weights and counts updates`() {
-        val count = Count()
+    fun `CountStat ignores incoming weights and counts updates`() {
+        val count = CountStat()
         count.update(10.0, weight = 2.5)
         count.update(20.0, weight = 7.5)
         assertEquals(2.0, count.read().sum, DELTA)
     }
 
     @Test
-    fun `TotalWeights sums incoming weights`() {
-        val count = TotalWeights()
+    fun `TotalWeightsStat sums incoming weights`() {
+        val count = TotalWeightsStat()
         count.update(10.0, weight = 2.5)
         count.update(20.0, weight = 7.5)
         assertEquals(10.0, count.read().sum, DELTA)
@@ -35,7 +35,7 @@ class DecayingRateTest {
 
     @Test
     fun `rate is positive after updates`() {
-        val r = DecayingRate(halfLife = 1.seconds)
+        val r = DecayingRateStat(halfLife = 1.seconds)
         r.update(1.0, T0)
         r.update(1.0, T1)
         assertTrue(r.read(T2).rate > 0.0)
@@ -43,7 +43,7 @@ class DecayingRateTest {
 
     @Test
     fun `rate decays toward zero far in the future`() {
-        val r = DecayingRate(halfLife = 1.seconds)
+        val r = DecayingRateStat(halfLife = 1.seconds)
         r.update(1.0, T0)
         val rateNear = r.read(T1).rate
         val rateFar = r.read(T3).rate
@@ -52,7 +52,7 @@ class DecayingRateTest {
 
     @Test
     fun `reset yields zero rate`() {
-        val r = DecayingRate(halfLife = 1.seconds)
+        val r = DecayingRateStat(halfLife = 1.seconds)
         r.update(1.0, T0)
         r.reset()
         assertEquals(0.0, r.read(T1).rate, DELTA)
@@ -60,7 +60,7 @@ class DecayingRateTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val r1 = DecayingRate(halfLife = 1.seconds)
+        val r1 = DecayingRateStat(halfLife = 1.seconds)
         r1.update(10.0, T0)
         val r2 = r1.create()
         r2.update(100.0, T1)

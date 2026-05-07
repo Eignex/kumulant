@@ -10,7 +10,7 @@ class DDSketchTest {
 
     @Test
     fun `empty sketch returns zero quantiles`() {
-        val sketch = DDSketch(probabilities = doubleArrayOf(0.5, 0.9))
+        val sketch = DDSketchStat(probabilities = doubleArrayOf(0.5, 0.9))
         val r = sketch.read()
         assertEquals(0.0, r.quantiles[0])
         assertEquals(0.0, r.quantiles[1])
@@ -19,7 +19,7 @@ class DDSketchTest {
 
     @Test
     fun `single value returns that value as all quantiles`() {
-        val sketch = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.1, 0.5, 0.9))
+        val sketch = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.1, 0.5, 0.9))
         sketch.update(42.0)
         val r = sketch.read()
 
@@ -30,7 +30,7 @@ class DDSketchTest {
 
     @Test
     fun `p50 of 1 to 100 is near 50`() {
-        val sketch = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
+        val sketch = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
         for (i in 1..100) sketch.update(i.toDouble())
         val q50 = sketch.read().quantiles[0]
         assertTrue(q50 in 45.0..56.0, "p50=$q50")
@@ -38,7 +38,7 @@ class DDSketchTest {
 
     @Test
     fun `p90 of 1 to 100 is near 90`() {
-        val sketch = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.9))
+        val sketch = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.9))
         for (i in 1..100) sketch.update(i.toDouble())
         val q90 = sketch.read().quantiles[0]
         assertTrue(q90 in 85.0..96.0, "p90=$q90")
@@ -46,7 +46,7 @@ class DDSketchTest {
 
     @Test
     fun `quantiles are monotonically non-decreasing`() {
-        val sketch = DDSketch(
+        val sketch = DDSketchStat(
             relativeError = 0.01,
             probabilities = doubleArrayOf(0.25, 0.5, 0.75, 0.9, 0.99)
         )
@@ -59,7 +59,7 @@ class DDSketchTest {
 
     @Test
     fun `handles zero values`() {
-        val sketch = DDSketch(probabilities = doubleArrayOf(0.5))
+        val sketch = DDSketchStat(probabilities = doubleArrayOf(0.5))
         repeat(50) { sketch.update(0.0) }
         repeat(50) { sketch.update(10.0) }
         val r = sketch.read()
@@ -71,7 +71,7 @@ class DDSketchTest {
 
     @Test
     fun `handles negative values`() {
-        val sketch = DDSketch(probabilities = doubleArrayOf(0.5))
+        val sketch = DDSketchStat(probabilities = doubleArrayOf(0.5))
         for (i in -50..-1) sketch.update(i.toDouble())
         for (i in 1..50) sketch.update(i.toDouble())
         val q50 = sketch.read().quantiles[0]
@@ -81,7 +81,7 @@ class DDSketchTest {
 
     @Test
     fun `total weights accumulate correctly`() {
-        val sketch = DDSketch()
+        val sketch = DDSketchStat()
         repeat(10) { sketch.update(1.0) }
         repeat(10) { sketch.update(1.0, weight = 2.0) }
         assertEquals(30.0, sketch.read().totalWeights)
@@ -89,15 +89,15 @@ class DDSketchTest {
 
     @Test
     fun `zero weight update is ignored`() {
-        val sketch = DDSketch(probabilities = doubleArrayOf(0.5))
+        val sketch = DDSketchStat(probabilities = doubleArrayOf(0.5))
         sketch.update(100.0, weight = 0.0)
         assertEquals(0.0, sketch.read().totalWeights)
     }
 
     @Test
     fun `merge combines two distributions`() {
-        val s1 = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
-        val s2 = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
+        val s1 = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
+        val s2 = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
         for (i in 1..50) s1.update(i.toDouble())
         for (i in 51..100) s2.update(i.toDouble())
         s1.merge(s2.read())
@@ -108,7 +108,7 @@ class DDSketchTest {
 
     @Test
     fun `reset clears all state`() {
-        val sketch = DDSketch(probabilities = doubleArrayOf(0.5))
+        val sketch = DDSketchStat(probabilities = doubleArrayOf(0.5))
         for (i in 1..100) sketch.update(i.toDouble())
         sketch.reset()
         val r = sketch.read()
@@ -118,7 +118,7 @@ class DDSketchTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val s1 = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
+        val s1 = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
         for (i in 1..10) s1.update(i.toDouble())
         val s2 = s1.create()
         for (i in 1..1000) s2.update(i.toDouble())
@@ -128,13 +128,13 @@ class DDSketchTest {
 
     @Test
     fun `invalid relative error throws`() {
-        assertFailsWith<IllegalArgumentException> { DDSketch(relativeError = -0.01) }
-        assertFailsWith<IllegalArgumentException> { DDSketch(relativeError = 1.1) }
+        assertFailsWith<IllegalArgumentException> { DDSketchStat(relativeError = -0.01) }
+        assertFailsWith<IllegalArgumentException> { DDSketchStat(relativeError = 1.1) }
     }
 
     @Test
     fun `toSparseHistogram has matching bounds and weights`() {
-        val sketch = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
+        val sketch = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
         for (i in 1..10) sketch.update(i.toDouble())
         val hist = sketch.read().toSparseHistogram()
         assertEquals(hist.lowerBounds.size, hist.upperBounds.size)
@@ -149,10 +149,10 @@ class DDSketchEdgeCasesTest {
 
     @Test
     fun `merge with incompatible relative error throws`() {
-        val a = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
+        val a = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
         a.update(10.0)
 
-        val b = DDSketch(relativeError = 0.05, probabilities = doubleArrayOf(0.5))
+        val b = DDSketchStat(relativeError = 0.05, probabilities = doubleArrayOf(0.5))
         b.update(20.0)
 
         assertFailsWith<IllegalArgumentException> {
@@ -162,10 +162,10 @@ class DDSketchEdgeCasesTest {
 
     @Test
     fun `merge with identical relative error succeeds`() {
-        val a = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
+        val a = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
         a.update(10.0)
 
-        val b = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
+        val b = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
         b.update(20.0)
 
         a.merge(b.read())
@@ -174,7 +174,7 @@ class DDSketchEdgeCasesTest {
 
     @Test
     fun `merge with empty sketch is a no-op on existing data`() {
-        val a = DDSketch(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
+        val a = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
         repeat(10) { a.update(5.0) }
         val before = a.read()
 

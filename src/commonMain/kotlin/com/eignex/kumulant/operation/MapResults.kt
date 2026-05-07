@@ -14,10 +14,10 @@ import com.eignex.kumulant.core.VectorStat
  * [forward] produces the exposed result on read; [reverse] reconstructs the underlying
  * result on merge. Both must round-trip for merge semantics to hold.
  *
- * Internal-only: lambda-based and not wire-expressible. Used by [com.eignex.kumulant.stat.regression.Lasso],
- * [com.eignex.kumulant.stat.regression.Ridge], [com.eignex.kumulant.stat.regression.Covariance], and
- * [com.eignex.kumulant.stat.rate.DecayingRate] to project an inner stat's result; the
- * user-facing API for those is the dedicated stat constructor (`Lasso(lambda)` etc.).
+ * Internal-only: lambda-based and not wire-expressible. Used by [com.eignex.kumulant.stat.regression.LassoStat],
+ * [com.eignex.kumulant.stat.regression.RidgeStat], [com.eignex.kumulant.stat.regression.CovarianceStat], and
+ * [com.eignex.kumulant.stat.rate.DecayingRateStat] to project an inner stat's result; the
+ * user-facing API for those is the dedicated stat constructor (`LassoStat(lambda)` etc.).
  */
 internal fun <R1 : Result, R2 : Result> SeriesStat<R1>.mapResult(
     forward: (R1) -> R2,

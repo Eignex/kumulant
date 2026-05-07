@@ -26,213 +26,213 @@ class StatConfigsRoundTripTest {
     // ===== Series — trivial =====
 
     @Test fun sumConfig_round_trips() {
-        assertEquals(SumConfig, roundTrip(SumConfig))
+        assertEquals(Sum, roundTrip(Sum))
     }
 
     @Test fun meanConfig_round_trips() {
-        assertEquals(MeanConfig, roundTrip(MeanConfig))
+        assertEquals(Mean, roundTrip(Mean))
     }
 
     @Test fun minConfig_round_trips() {
-        assertEquals(MinConfig, roundTrip(MinConfig))
+        assertEquals(Min, roundTrip(Min))
     }
 
     @Test fun maxConfig_round_trips() {
-        assertEquals(MaxConfig, roundTrip(MaxConfig))
+        assertEquals(Max, roundTrip(Max))
     }
 
     @Test fun rangeConfig_round_trips() {
-        assertEquals(RangeConfig, roundTrip(RangeConfig))
+        assertEquals(Range, roundTrip(Range))
     }
 
     @Test fun varianceConfig_round_trips() {
-        assertEquals(VarianceConfig, roundTrip(VarianceConfig))
+        assertEquals(Variance, roundTrip(Variance))
     }
 
     @Test fun momentsConfig_round_trips() {
-        assertEquals(MomentsConfig, roundTrip(MomentsConfig))
+        assertEquals(Moments, roundTrip(Moments))
     }
 
     @Test fun bernoulliSumConfig_round_trips() {
-        assertEquals(BernoulliSumConfig, roundTrip(BernoulliSumConfig))
+        assertEquals(BernoulliSum, roundTrip(BernoulliSum))
     }
 
     @Test fun totalWeightsConfig_round_trips() {
-        assertEquals(TotalWeightsConfig, roundTrip(TotalWeightsConfig))
+        assertEquals(TotalWeights, roundTrip(TotalWeights))
     }
 
     @Test fun countConfig_round_trips() {
-        assertEquals(CountConfig, roundTrip(CountConfig))
+        assertEquals(Count, roundTrip(Count))
     }
 
     @Test fun rateConfig_round_trips() {
-        assertEquals(RateConfig, roundTrip(RateConfig))
+        assertEquals(Rate, roundTrip(Rate))
     }
 
     @Test fun counterRateConfig_round_trips() {
-        assertEquals(CounterRateConfig(false), roundTrip(CounterRateConfig(false)))
+        assertEquals(CounterRate(false), roundTrip(CounterRate(false)))
     }
 
     // ===== Series — primitive params =====
 
     @Test fun ddSketchConfig_round_trips() {
-        val cfg = DDSketchConfig(relativeError = 0.02, probabilities = listOf(0.5, 0.99))
+        val cfg = DDSketch(relativeError = 0.02, probabilities = listOf(0.5, 0.99))
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun frugalQuantileConfig_round_trips() {
-        val cfg = FrugalQuantileConfig(q = 0.5, stepSize = 0.02, initialEstimate = 1.0)
+        val cfg = FrugalQuantile(q = 0.5, stepSize = 0.02, initialEstimate = 1.0)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun hdrHistogramConfig_round_trips() {
-        val cfg = HdrHistogramConfig(0.001, 1000.0, 4)
+        val cfg = HdrHistogram(0.001, 1000.0, 4)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun linearHistogramConfig_round_trips() {
-        val cfg = LinearHistogramConfig(0.0, 100.0, 50)
+        val cfg = LinearHistogram(0.0, 100.0, 50)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun reservoirHistogramConfig_round_trips() {
-        val cfg = ReservoirHistogramConfig(capacity = 256, seed = 42L)
+        val cfg = ReservoirHistogram(capacity = 256, seed = 42L)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun tDigestConfig_round_trips() {
-        val cfg = TDigestConfig(compression = 200.0, probabilities = listOf(0.5, 0.95))
+        val cfg = TDigest(compression = 200.0, probabilities = listOf(0.5, 0.95))
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun pitHistogramConfig_round_trips() {
-        val cfg = PitHistogramConfig(numBins = 20)
+        val cfg = PitHistogram(numBins = 20)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     // ===== Paired =====
 
     @Test fun pairedSumConfig_round_trips() {
-        assertEquals(PairedSumConfig, roundTrip(PairedSumConfig))
+        assertEquals(PairedSum, roundTrip(PairedSum))
     }
 
     @Test fun olsConfig_round_trips() {
-        assertEquals(OLSConfig, roundTrip(OLSConfig))
+        assertEquals(OLS, roundTrip(OLS))
     }
 
     @Test fun covarianceConfig_round_trips() {
-        assertEquals(CovarianceConfig, roundTrip(CovarianceConfig))
+        assertEquals(Covariance, roundTrip(Covariance))
     }
 
     @Test fun lassoConfig_round_trips() {
-        val cfg = LassoConfig(lambda = 0.1)
+        val cfg = Lasso(lambda = 0.1)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun ridgeConfig_round_trips() {
-        val cfg = RidgeConfig(lambda = 0.5)
+        val cfg = Ridge(lambda = 0.5)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun brierScoreConfig_round_trips() {
-        assertEquals(BrierScoreConfig, roundTrip(BrierScoreConfig))
+        assertEquals(BrierScore, roundTrip(BrierScore))
     }
 
     @Test fun mseLossConfig_round_trips() {
-        assertEquals(MseLossConfig, roundTrip(MseLossConfig))
+        assertEquals(MseLoss, roundTrip(MseLoss))
     }
 
     @Test fun maeLossConfig_round_trips() {
-        assertEquals(MaeLossConfig, roundTrip(MaeLossConfig))
+        assertEquals(MaeLoss, roundTrip(MaeLoss))
     }
 
     @Test fun logLossConfig_round_trips() {
-        assertEquals(LogLossConfig, roundTrip(LogLossConfig))
+        assertEquals(LogLoss, roundTrip(LogLoss))
     }
 
     @Test fun pinballLossConfig_round_trips() {
-        val cfg = PinballLossConfig(tau = 0.9)
+        val cfg = PinballLoss(tau = 0.9)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun aucConfig_round_trips() {
-        val cfg = AucConfig(numBins = 128, lowerBound = -1.0, upperBound = 1.0)
+        val cfg = Auc(numBins = 128, lowerBound = -1.0, upperBound = 1.0)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun reliabilityConfig_round_trips() {
-        val cfg = ReliabilityConfig(numBins = 16)
+        val cfg = Reliability(numBins = 16)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     // ===== Vector =====
 
     @Test fun varianceVectorConfig_round_trips() {
-        val cfg = VarianceVectorConfig(dimensions = 4)
+        val cfg = VarianceVector(dimensions = 4)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     // ===== Discrete =====
 
     @Test fun hyperLogLogConfig_round_trips() {
-        val cfg = HyperLogLogConfig(precision = 12)
+        val cfg = HyperLogLog(precision = 12)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun linearCountingConfig_round_trips() {
-        val cfg = LinearCountingConfig(bits = 2048)
+        val cfg = LinearCounting(bits = 2048)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun bloomFilterConfig_round_trips() {
-        val cfg = BloomFilterConfig(bits = 1024, hashes = 4)
+        val cfg = BloomFilter(bits = 1024, hashes = 4)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun countMinSketchConfig_round_trips() {
-        val cfg = CountMinSketchConfig(depth = 4, width = 512, seed = 123L)
+        val cfg = CountMinSketch(depth = 4, width = 512, seed = 123L)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun minHashConfig_round_trips() {
-        val cfg = MinHashConfig(numHashes = 64, seed = 99L)
+        val cfg = MinHash(numHashes = 64, seed = 99L)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun spaceSavingConfig_round_trips() {
-        val cfg = SpaceSavingConfig(capacity = 32)
+        val cfg = SpaceSaving(capacity = 32)
         assertEquals(cfg, roundTrip(cfg))
     }
 
     // ===== Decay family =====
 
     @Test fun decayingSumConfig_round_trips() {
-        val cfg = DecayingSumConfig(HalfLifeConfig(60_000L))
+        val cfg = DecayingSum(HalfLife(60_000L))
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun decayingMeanConfig_round_trips() {
-        val cfg = DecayingMeanConfig(HalfLifeConfig(120_000L))
+        val cfg = DecayingMean(HalfLife(120_000L))
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun decayingVarianceConfig_round_trips() {
-        val cfg = DecayingVarianceConfig(HalfLifeConfig(60_000L))
+        val cfg = DecayingVariance(HalfLife(60_000L))
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun ewmaMeanConfig_round_trips() {
-        val cfg = EwmaMeanConfig(AlphaConfig(0.1))
+        val cfg = EwmaMean(Alpha(0.1))
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun ewmaVarianceConfig_round_trips() {
-        val cfg = EwmaVarianceConfig(AlphaConfig(0.05))
+        val cfg = EwmaVariance(Alpha(0.05))
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun decayingRateConfig_round_trips() {
-        val cfg = DecayingRateConfig(halfLifeMillis = 5_000L)
+        val cfg = DecayingRate(halfLifeMillis = 5_000L)
         assertEquals(cfg, roundTrip(cfg))
     }
 
@@ -240,10 +240,10 @@ class StatConfigsRoundTripTest {
 
     @Test fun materializeSeries_after_round_trip_matches_live_for_sum_mean_min_max() {
         val schema = object : StatSchema() {
-            val sum by series(SumConfig)
-            val mean by series(MeanConfig)
-            val min by series(MinConfig)
-            val max by series(MaxConfig)
+            val sum by series(Sum)
+            val mean by series(Mean)
+            val min by series(Min)
+            val max by series(Max)
         }
         val def = SchemaJson.decodeFromString<StatSchemaDef>(
             SchemaJson.encodeToString(schema.statSchemaDef())

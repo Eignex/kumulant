@@ -3,15 +3,15 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.decay.DecayWeighting
-import com.eignex.kumulant.stat.decay.DecayingMean
+import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingMeanResult
-import com.eignex.kumulant.stat.decay.DecayingSum
+import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingSumResult
-import com.eignex.kumulant.stat.decay.DecayingVariance
+import com.eignex.kumulant.stat.decay.DecayingVarianceStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceResult
-import com.eignex.kumulant.stat.decay.EwmaMean
-import com.eignex.kumulant.stat.decay.EwmaVariance
-import com.eignex.kumulant.stat.rate.DecayingRate
+import com.eignex.kumulant.stat.decay.EwmaMeanStat
+import com.eignex.kumulant.stat.decay.EwmaVarianceStat
+import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.DecayingRateResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -22,8 +22,8 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * Wire-friendly counterpart of [DecayWeighting]. The two strategies are split
  * by field type rather than discriminated union so each decay-stat config can
- * statically constrain itself to the right strategy (e.g. [DecayingSumConfig]
- * only accepts [HalfLifeConfig]).
+ * statically constrain itself to the right strategy (e.g. [DecayingSum]
+ * only accepts [HalfLife]).
  *
  * Wall-clock durations travel as `Long` milliseconds rather than
  * `kotlin.time.Duration` to avoid the experimental `Duration` serializer and
@@ -34,54 +34,54 @@ sealed interface DecayWeightingConfig
 
 @Serializable
 @SerialName("HalfLife")
-data class HalfLifeConfig(val durationMillis: Long) : DecayWeightingConfig {
+data class HalfLife(val durationMillis: Long) : DecayWeightingConfig {
     fun toDecayWeighting(): DecayWeighting.HalfLife = DecayWeighting.HalfLife(durationMillis.milliseconds)
 }
 
 @Serializable
 @SerialName("Alpha")
-data class AlphaConfig(val alpha: Double) : DecayWeightingConfig {
+data class Alpha(val alpha: Double) : DecayWeightingConfig {
     fun toDecayWeighting(): DecayWeighting.Alpha = DecayWeighting.Alpha(alpha)
 }
 
 @Serializable
-@SerialName("DecayingSumConfig")
-data class DecayingSumConfig(val weighting: HalfLifeConfig) : SeriesStatConfig<DecayingSumResult> {
+@SerialName("DecayingSum")
+data class DecayingSum(val weighting: HalfLife) : SeriesStatConfig<DecayingSumResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<DecayingSumResult> =
-        DecayingSum(weighting.toDecayWeighting(), concurrency)
+        DecayingSumStat(weighting.toDecayWeighting(), concurrency)
 }
 
 @Serializable
-@SerialName("DecayingMeanConfig")
-data class DecayingMeanConfig(val weighting: HalfLifeConfig) : SeriesStatConfig<DecayingMeanResult> {
+@SerialName("DecayingMean")
+data class DecayingMean(val weighting: HalfLife) : SeriesStatConfig<DecayingMeanResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<DecayingMeanResult> =
-        DecayingMean(weighting.toDecayWeighting(), concurrency)
+        DecayingMeanStat(weighting.toDecayWeighting(), concurrency)
 }
 
 @Serializable
-@SerialName("DecayingVarianceConfig")
-data class DecayingVarianceConfig(val weighting: HalfLifeConfig) : SeriesStatConfig<DecayingVarianceResult> {
+@SerialName("DecayingVariance")
+data class DecayingVariance(val weighting: HalfLife) : SeriesStatConfig<DecayingVarianceResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<DecayingVarianceResult> =
-        DecayingVariance(weighting.toDecayWeighting(), concurrency)
+        DecayingVarianceStat(weighting.toDecayWeighting(), concurrency)
 }
 
 @Serializable
-@SerialName("EwmaMeanConfig")
-data class EwmaMeanConfig(val weighting: AlphaConfig) : SeriesStatConfig<WeightedMeanResult> {
+@SerialName("EwmaMean")
+data class EwmaMean(val weighting: Alpha) : SeriesStatConfig<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<WeightedMeanResult> =
-        EwmaMean(weighting.toDecayWeighting(), concurrency)
+        EwmaMeanStat(weighting.toDecayWeighting(), concurrency)
 }
 
 @Serializable
-@SerialName("EwmaVarianceConfig")
-data class EwmaVarianceConfig(val weighting: AlphaConfig) : SeriesStatConfig<WeightedVarianceResult> {
+@SerialName("EwmaVariance")
+data class EwmaVariance(val weighting: Alpha) : SeriesStatConfig<WeightedVarianceResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<WeightedVarianceResult> =
-        EwmaVariance(weighting.toDecayWeighting(), concurrency)
+        EwmaVarianceStat(weighting.toDecayWeighting(), concurrency)
 }
 
 @Serializable
-@SerialName("DecayingRateConfig")
-data class DecayingRateConfig(val halfLifeMillis: Long) : SeriesStatConfig<DecayingRateResult> {
+@SerialName("DecayingRate")
+data class DecayingRate(val halfLifeMillis: Long) : SeriesStatConfig<DecayingRateResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<DecayingRateResult> =
-        DecayingRate(halfLifeMillis.milliseconds, concurrency)
+        DecayingRateStat(halfLifeMillis.milliseconds, concurrency)
 }

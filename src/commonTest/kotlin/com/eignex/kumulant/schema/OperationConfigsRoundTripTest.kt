@@ -1,7 +1,7 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.stat.summary.Sum
+import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
@@ -22,11 +22,11 @@ class OperationConfigsRoundTripTest {
     private val DELTA = 1e-12
 
     @Test fun withWeight_series_matches_live_composition() {
-        val cfg: SeriesStatConfig<SumResult> = SumConfig.withWeight(2.0)
+        val cfg: SeriesStatConfig<SumResult> = Sum.withWeight(2.0)
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json)
         val rebuilt = (decoded as SeriesStatConfig<*>).materialize(Concurrency.None)
-        val live = Sum().liveWithWeight(2.0)
+        val live = SumStat().liveWithWeight(2.0)
 
         listOf(1.0, 3.0, 5.0).forEach {
             rebuilt.update(it)
@@ -38,11 +38,11 @@ class OperationConfigsRoundTripTest {
     }
 
     @Test fun withValue_series_matches_live_composition() {
-        val cfg: SeriesStatConfig<SumResult> = SumConfig.withValue(7.0)
+        val cfg: SeriesStatConfig<SumResult> = Sum.withValue(7.0)
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json)
         val rebuilt = (decoded as SeriesStatConfig<*>).materialize(Concurrency.None)
-        val live = Sum().liveWithValue(7.0)
+        val live = SumStat().liveWithValue(7.0)
 
         listOf(1.0, 2.0, 3.0, 4.0).forEach {
             rebuilt.update(it)
@@ -54,11 +54,11 @@ class OperationConfigsRoundTripTest {
     }
 
     @Test fun composed_chain_with_value_then_with_weight_matches_live() {
-        val cfg: SeriesStatConfig<SumResult> = SumConfig.withValue(1.0).withWeight(2.0)
+        val cfg: SeriesStatConfig<SumResult> = Sum.withValue(1.0).withWeight(2.0)
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json)
         val rebuilt = (decoded as SeriesStatConfig<*>).materialize(Concurrency.None)
-        val live = Sum().liveWithValue(1.0).liveWithWeight(2.0)
+        val live = SumStat().liveWithValue(1.0).liveWithWeight(2.0)
 
         listOf(10.0, 20.0, 30.0).forEach {
             rebuilt.update(it)
@@ -72,11 +72,11 @@ class OperationConfigsRoundTripTest {
     }
 
     @Test fun atIndex_lifts_series_to_vector() {
-        val cfg: VectorStatConfig<SumResult> = SumConfig.atIndex(1)
+        val cfg: VectorStatConfig<SumResult> = Sum.atIndex(1)
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json)
         val rebuilt = (decoded as VectorStatConfig<*>).materialize(Concurrency.None)
-        val live = Sum().liveAtIndex(1)
+        val live = SumStat().liveAtIndex(1)
 
         listOf(doubleArrayOf(1.0, 10.0), doubleArrayOf(2.0, 20.0), doubleArrayOf(3.0, 30.0)).forEach {
             rebuilt.update(it)
@@ -90,11 +90,11 @@ class OperationConfigsRoundTripTest {
 
     @Test fun withFixedX_lifts_paired_to_series() {
         val cfg: SeriesStatConfig<com.eignex.kumulant.stat.regression.OLSResult> =
-            OLSConfig.withFixedX(2.0)
+            OLS.withFixedX(2.0)
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json)
         val rebuilt = (decoded as SeriesStatConfig<*>).materialize(Concurrency.None)
-        val live = com.eignex.kumulant.stat.regression.OLS().liveWithFixedX(2.0)
+        val live = com.eignex.kumulant.stat.regression.OLSStat().liveWithFixedX(2.0)
 
         listOf(4.0, 6.0, 8.0).forEach {
             rebuilt.update(it)
@@ -106,9 +106,9 @@ class OperationConfigsRoundTripTest {
     }
 
     @Test fun windowed_series_round_trips_at_least_structurally() {
-        val cfg: SeriesStatConfig<SumResult> = SumConfig.windowed(durationMillis = 1000L, slices = 4)
+        val cfg: SeriesStatConfig<SumResult> = Sum.windowed(durationMillis = 1000L, slices = 4)
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
-        val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json) as WindowedSeriesConfig
+        val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json) as WindowedSeries
         assertEquals(1000L, decoded.durationMillis)
         assertEquals(4, decoded.slices)
         // Just ensure materialize doesn't throw — windowed semantics are exercised in WindowedStats own tests.
@@ -116,9 +116,9 @@ class OperationConfigsRoundTripTest {
     }
 
     @Test fun vectorized_replicates_template_per_dimension() {
-        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 3)
+        val cfg: VectorStatConfig<*> = Sum.vectorized(dimensions = 3)
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
-        val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json) as VectorizedStatConfig
+        val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json) as VectorizedStat
         assertEquals(3, decoded.dimensions)
         val materialized = decoded.materialize(Concurrency.None)
         materialized.update(doubleArrayOf(1.0, 2.0, 3.0))
@@ -132,10 +132,10 @@ class OperationConfigsRoundTripTest {
     }
 
     @Test fun asSeries_lifts_discrete() {
-        val cfg: SeriesStatConfig<*> = HyperLogLogConfig(precision = 10).asSeries()
+        val cfg: SeriesStatConfig<*> = HyperLogLog(precision = 10).asSeries()
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json)
-        assertIs<AsSeriesConfig>(decoded)
+        assertIs<AsSeries>(decoded)
         val materialized = (decoded as SeriesStatConfig<*>).materialize(Concurrency.None)
         // Truncates 1.7 → 1L
         for (i in 1..50) materialized.update(i.toDouble())
@@ -144,8 +144,8 @@ class OperationConfigsRoundTripTest {
     }
 
     @Test fun rejects_inner_with_wrong_modality() {
-        // SumConfig is Series, but AtIndices expects Paired.
-        val bad = AtIndicesConfig(SumConfig, indexX = 0, indexY = 1)
+        // Sum is Series, but AtIndices expects Paired.
+        val bad = AtIndices(Sum, indexX = 0, indexY = 1)
         kotlin.test.assertFailsWith<IllegalArgumentException> {
             bad.materialize(Concurrency.None)
         }

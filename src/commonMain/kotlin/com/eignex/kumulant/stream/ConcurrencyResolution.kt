@@ -8,11 +8,11 @@ import com.eignex.kumulant.core.Concurrency
  * category.
  *
  * The categories mirror the design plan:
- * - **Additive** (`Sum`, `Count`): single atomic add, no coupling.
- * - **Monotonic** (`Min`, `Max`): single-cell CAS loop, naturally correct.
- * - **Welford-coupled** (`Mean`, `Variance`, `Moments`): multi-cell recurrence;
+ * - **Additive** (`SumStat`, `CountStat`): single atomic add, no coupling.
+ * - **Monotonic** (`MinStat`, `MaxStat`): single-cell CAS loop, naturally correct.
+ * - **Welford-coupled** (`MeanStat`, `VarianceStat`, `MomentsStat`): multi-cell recurrence;
  *   needs a lock under Strict/HighWrite (cells then drop atomic overhead).
- * - **Self-serialized** sketches (`TDigest`, `SpaceSaving`, `ReservoirHistogram`,
+ * - **Self-serialized** sketches (`TDigestStat`, `SpaceSavingStat`, `ReservoirHistogramStat`,
  *   etc.): always under a lock when concurrent; cells are plain `SerialMode`.
  */
 

@@ -10,7 +10,7 @@ class BloomFilterTest {
 
     @Test
     fun `empty filter contains nothing`() {
-        val bf = BloomFilter(bits = 4096, hashes = 4)
+        val bf = BloomFilterStat(bits = 4096, hashes = 4)
         val r = bf.read()
         assertEquals(0L, r.totalSeen)
         assertFalse(r.contains(0L))
@@ -19,7 +19,7 @@ class BloomFilterTest {
 
     @Test
     fun `inserted key is contained`() {
-        val bf = BloomFilter(bits = 4096, hashes = 4)
+        val bf = BloomFilterStat(bits = 4096, hashes = 4)
         bf.update(42L)
         val r = bf.read()
         assertTrue(r.contains(42L))
@@ -28,7 +28,7 @@ class BloomFilterTest {
 
     @Test
     fun `no false negatives across many inserts`() {
-        val bf = BloomFilter(bits = 1 shl 14, hashes = 7)
+        val bf = BloomFilterStat(bits = 1 shl 14, hashes = 7)
         for (i in 0 until 1000) bf.update(i.toLong())
         val r = bf.read()
         for (i in 0 until 1000) {
@@ -40,7 +40,7 @@ class BloomFilterTest {
     fun `false positive rate is below the theoretical bound`() {
         val bits = 4096
         val hashes = 4
-        val bf = BloomFilter(bits = bits, hashes = hashes)
+        val bf = BloomFilterStat(bits = bits, hashes = hashes)
         for (i in 0 until 1000) bf.update(i.toLong())
         val r = bf.read()
         var fps = 0
@@ -55,7 +55,7 @@ class BloomFilterTest {
 
     @Test
     fun `zero or negative weight is ignored`() {
-        val bf = BloomFilter(bits = 4096, hashes = 4)
+        val bf = BloomFilterStat(bits = 4096, hashes = 4)
         bf.update(1L, weight = 0.0)
         bf.update(2L, weight = -1.0)
         val r = bf.read()
@@ -66,8 +66,8 @@ class BloomFilterTest {
 
     @Test
     fun `merge combines two filters`() {
-        val a = BloomFilter(bits = 4096, hashes = 4)
-        val b = BloomFilter(bits = 4096, hashes = 4)
+        val a = BloomFilterStat(bits = 4096, hashes = 4)
+        val b = BloomFilterStat(bits = 4096, hashes = 4)
         for (i in 0 until 100) a.update(i.toLong())
         for (i in 100 until 200) b.update(i.toLong())
         a.merge(b.read())
@@ -78,16 +78,16 @@ class BloomFilterTest {
 
     @Test
     fun `merge requires matching shape`() {
-        val a = BloomFilter(bits = 4096, hashes = 4)
-        val bResult = BloomFilter(bits = 8192, hashes = 4).read()
+        val a = BloomFilterStat(bits = 4096, hashes = 4)
+        val bResult = BloomFilterStat(bits = 8192, hashes = 4).read()
         assertFailsWith<IllegalArgumentException> { a.merge(bResult) }
-        val cResult = BloomFilter(bits = 4096, hashes = 5).read()
+        val cResult = BloomFilterStat(bits = 4096, hashes = 5).read()
         assertFailsWith<IllegalArgumentException> { a.merge(cResult) }
     }
 
     @Test
     fun `reset clears state`() {
-        val bf = BloomFilter(bits = 4096, hashes = 4)
+        val bf = BloomFilterStat(bits = 4096, hashes = 4)
         for (i in 0 until 100) bf.update(i.toLong())
         bf.reset()
         val r = bf.read()
@@ -97,7 +97,7 @@ class BloomFilterTest {
 
     @Test
     fun `create produces independent stat`() {
-        val a = BloomFilter(bits = 4096, hashes = 4)
+        val a = BloomFilterStat(bits = 4096, hashes = 4)
         a.update(7L)
         val b = a.create()
         b.update(8L)
@@ -109,9 +109,9 @@ class BloomFilterTest {
 
     @Test
     fun `invalid args throw`() {
-        assertFailsWith<IllegalArgumentException> { BloomFilter(bits = 0, hashes = 4) }
-        assertFailsWith<IllegalArgumentException> { BloomFilter(bits = 1000, hashes = 4) }
-        assertFailsWith<IllegalArgumentException> { BloomFilter(bits = 32, hashes = 4) }
-        assertFailsWith<IllegalArgumentException> { BloomFilter(bits = 4096, hashes = 0) }
+        assertFailsWith<IllegalArgumentException> { BloomFilterStat(bits = 0, hashes = 4) }
+        assertFailsWith<IllegalArgumentException> { BloomFilterStat(bits = 1000, hashes = 4) }
+        assertFailsWith<IllegalArgumentException> { BloomFilterStat(bits = 32, hashes = 4) }
+        assertFailsWith<IllegalArgumentException> { BloomFilterStat(bits = 4096, hashes = 0) }
     }
 }

@@ -9,7 +9,7 @@ import kotlin.math.abs
  * sums `(observed − expected)² / expected` over all [numBins] bins.
  *
  * The histogram is the sparse output of `pitHistogram(numBins)` (or any
- * equal-width LinearHistogram over `[0, 1]`); pass the same [numBins] used to
+ * equal-width LinearHistogramStat over `[0, 1]`); pass the same [numBins] used to
  * configure it so empty bins are accounted for. Underflow / overflow rows are
  * excluded — observations outside `[0, 1]` shouldn't count toward a uniformity
  * test on `[0, 1]`. Returns 0 if total finite weight is non-positive.

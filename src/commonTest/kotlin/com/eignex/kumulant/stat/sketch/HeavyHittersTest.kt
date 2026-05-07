@@ -9,7 +9,7 @@ class SpaceSavingTest {
 
     @Test
     fun `empty snapshot is well-formed`() {
-        val ss = SpaceSaving(capacity = 10)
+        val ss = SpaceSavingStat(capacity = 10)
         val r = ss.read()
         assertEquals(10, r.capacity)
         assertEquals(0, r.keys.size)
@@ -20,7 +20,7 @@ class SpaceSavingTest {
 
     @Test
     fun `single update populates one slot`() {
-        val ss = SpaceSaving(capacity = 10)
+        val ss = SpaceSavingStat(capacity = 10)
         ss.update(42L)
         val r = ss.read()
         assertEquals(1, r.keys.size)
@@ -32,7 +32,7 @@ class SpaceSavingTest {
 
     @Test
     fun `repeated key accumulates count without error`() {
-        val ss = SpaceSaving(capacity = 10)
+        val ss = SpaceSavingStat(capacity = 10)
         repeat(7) { ss.update(42L) }
         val r = ss.read()
         assertEquals(1, r.keys.size)
@@ -42,7 +42,7 @@ class SpaceSavingTest {
 
     @Test
     fun `fills up to capacity then evicts min`() {
-        val ss = SpaceSaving(capacity = 3)
+        val ss = SpaceSavingStat(capacity = 3)
         ss.update(1L)
         ss.update(1L)
         ss.update(1L) // 1: count=3
@@ -67,7 +67,7 @@ class SpaceSavingTest {
 
     @Test
     fun `recovers heavy hitters of a skewed stream`() {
-        val ss = SpaceSaving(capacity = 16)
+        val ss = SpaceSavingStat(capacity = 16)
         // Hot keys 0..3 each occur 1000 times; cold keys 100..1099 each occur once.
         val hot = (0L..3L).toList()
         for (k in hot) repeat(1000) { ss.update(k) }
@@ -85,7 +85,7 @@ class SpaceSavingTest {
 
     @Test
     fun `weighted update accumulates`() {
-        val ss = SpaceSaving(capacity = 5)
+        val ss = SpaceSavingStat(capacity = 5)
         ss.update(7L, weight = 5.0)
         ss.update(7L, weight = 3.0)
         val r = ss.read()
@@ -94,7 +94,7 @@ class SpaceSavingTest {
 
     @Test
     fun `zero or negative weight is ignored`() {
-        val ss = SpaceSaving(capacity = 5)
+        val ss = SpaceSavingStat(capacity = 5)
         ss.update(1L, weight = 0.0)
         ss.update(1L, weight = -1.0)
         val r = ss.read()
@@ -104,8 +104,8 @@ class SpaceSavingTest {
 
     @Test
     fun `merge combines two summaries`() {
-        val a = SpaceSaving(capacity = 10)
-        val b = SpaceSaving(capacity = 10)
+        val a = SpaceSavingStat(capacity = 10)
+        val b = SpaceSavingStat(capacity = 10)
         repeat(5) { a.update(1L) }
         repeat(3) { a.update(2L) }
         repeat(7) { b.update(2L) }
@@ -121,14 +121,14 @@ class SpaceSavingTest {
 
     @Test
     fun `merge requires matching capacity`() {
-        val a = SpaceSaving(capacity = 5)
-        val bResult = SpaceSaving(capacity = 10).read()
+        val a = SpaceSavingStat(capacity = 5)
+        val bResult = SpaceSavingStat(capacity = 10).read()
         assertFailsWith<IllegalArgumentException> { a.merge(bResult) }
     }
 
     @Test
     fun `reset clears state`() {
-        val ss = SpaceSaving(capacity = 10)
+        val ss = SpaceSavingStat(capacity = 10)
         for (i in 1..100) ss.update(i.toLong())
         ss.reset()
         val r = ss.read()
@@ -138,7 +138,7 @@ class SpaceSavingTest {
 
     @Test
     fun `create produces independent stat`() {
-        val a = SpaceSaving(capacity = 5)
+        val a = SpaceSavingStat(capacity = 5)
         a.update(1L)
         val b = a.create()
         b.update(2L)
@@ -150,7 +150,7 @@ class SpaceSavingTest {
 
     @Test
     fun `invalid args throw`() {
-        assertFailsWith<IllegalArgumentException> { SpaceSaving(capacity = 0) }
-        assertFailsWith<IllegalArgumentException> { SpaceSaving(capacity = -1) }
+        assertFailsWith<IllegalArgumentException> { SpaceSavingStat(capacity = 0) }
+        assertFailsWith<IllegalArgumentException> { SpaceSavingStat(capacity = -1) }
     }
 }

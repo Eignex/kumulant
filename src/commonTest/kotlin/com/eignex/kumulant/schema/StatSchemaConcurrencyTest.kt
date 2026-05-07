@@ -16,8 +16,8 @@ class StatSchemaConcurrencyTest {
     @Test
     fun `default schema materializes stats at None`() {
         val schema = object : StatSchema() {
-            val sum by series(SumConfig)
-            val mean by series(MeanConfig)
+            val sum by series(Sum)
+            val mean by series(Mean)
         }
         for (spec in seriesSpecs(schema)) {
             assertEquals(Concurrency.None, spec.stat.concurrency)
@@ -27,9 +27,9 @@ class StatSchemaConcurrencyTest {
     @Test
     fun `schema concurrency propagates to every materialized stat`() {
         val schema = object : StatSchema(Concurrency.Strict) {
-            val sum by series(SumConfig)
-            val mean by series(MeanConfig)
-            val variance by series(VarianceConfig)
+            val sum by series(Sum)
+            val mean by series(Mean)
+            val variance by series(Variance)
         }
         for (spec in seriesSpecs(schema)) {
             assertEquals(Concurrency.Strict, spec.stat.concurrency)
@@ -39,7 +39,7 @@ class StatSchemaConcurrencyTest {
     @Test
     fun `schema concurrency flows into the live StatGroup`() {
         val schema = object : StatSchema(Concurrency.Strict) {
-            val sum by series(SumConfig)
+            val sum by series(Sum)
         }
         val group = StatGroup(schema)
         group.update(1.0)
@@ -50,7 +50,7 @@ class StatSchemaConcurrencyTest {
     @Test
     fun `nested schema keeps its own concurrency independent of parent`() {
         val inner = object : StatSchema(Concurrency.Strict) {
-            val mean by series(MeanConfig)
+            val mean by series(Mean)
         }
         val parent = object : StatSchema(Concurrency.None) {
             val nested by group(inner)

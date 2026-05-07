@@ -9,14 +9,14 @@ class ReservoirHistogramTest {
 
     @Test
     fun `empty reservoir`() {
-        val r = ReservoirHistogram(capacity = 100).read()
+        val r = ReservoirHistogramStat(capacity = 100).read()
         assertEquals(0, r.values.size)
         assertEquals(0L, r.totalSeen)
     }
 
     @Test
     fun `fills up to capacity then stays at capacity`() {
-        val res = ReservoirHistogram(capacity = 10, seed = 42)
+        val res = ReservoirHistogramStat(capacity = 10, seed = 42)
         for (i in 1..5) res.update(i.toDouble())
         assertEquals(5, res.read().values.size)
         for (i in 6..1000) res.update(i.toDouble())
@@ -27,7 +27,7 @@ class ReservoirHistogramTest {
 
     @Test
     fun `uniform stream sample median near population median`() {
-        val res = ReservoirHistogram(capacity = 500, seed = 7)
+        val res = ReservoirHistogramStat(capacity = 500, seed = 7)
         for (i in 1..10000) res.update(i.toDouble())
         val q = res.read().quantile(0.5)
         assertTrue(q in 4000.0..6000.0, "median=$q")
@@ -35,7 +35,7 @@ class ReservoirHistogramTest {
 
     @Test
     fun `weighted sampling biases toward heavy weight`() {
-        val res = ReservoirHistogram(capacity = 50, seed = 11)
+        val res = ReservoirHistogramStat(capacity = 50, seed = 11)
         for (i in 1..1000) res.update(0.0, weight = 1.0)
         for (i in 1..1000) res.update(100.0, weight = 50.0)
         val mean = res.read().values.average()
@@ -44,7 +44,7 @@ class ReservoirHistogramTest {
 
     @Test
     fun `zero negative or NaN ignored`() {
-        val res = ReservoirHistogram(capacity = 10, seed = 1)
+        val res = ReservoirHistogramStat(capacity = 10, seed = 1)
         res.update(1.0, weight = 0.0)
         res.update(1.0, weight = -1.0)
         res.update(Double.NaN)
@@ -54,7 +54,7 @@ class ReservoirHistogramTest {
 
     @Test
     fun `reset clears state`() {
-        val res = ReservoirHistogram(capacity = 10, seed = 0)
+        val res = ReservoirHistogramStat(capacity = 10, seed = 0)
         for (i in 1..100) res.update(i.toDouble())
         res.reset()
         val r = res.read()
@@ -64,7 +64,7 @@ class ReservoirHistogramTest {
 
     @Test
     fun `create produces independent stat`() {
-        val a = ReservoirHistogram(capacity = 10, seed = 5)
+        val a = ReservoirHistogramStat(capacity = 10, seed = 5)
         for (i in 1..100) a.update(i.toDouble())
         val b = a.create()
         assertEquals(0, b.read().values.size)
@@ -73,8 +73,8 @@ class ReservoirHistogramTest {
 
     @Test
     fun `deterministic with fixed seed`() {
-        val a = ReservoirHistogram(capacity = 20, seed = 1234)
-        val b = ReservoirHistogram(capacity = 20, seed = 1234)
+        val a = ReservoirHistogramStat(capacity = 20, seed = 1234)
+        val b = ReservoirHistogramStat(capacity = 20, seed = 1234)
         for (i in 1..500) {
             a.update(i.toDouble())
             b.update(i.toDouble())
@@ -84,8 +84,8 @@ class ReservoirHistogramTest {
 
     @Test
     fun `merge combines two reservoirs`() {
-        val a = ReservoirHistogram(capacity = 50, seed = 1)
-        val b = ReservoirHistogram(capacity = 50, seed = 2)
+        val a = ReservoirHistogramStat(capacity = 50, seed = 1)
+        val b = ReservoirHistogramStat(capacity = 50, seed = 2)
         for (i in 1..200) a.update(i.toDouble())
         for (i in 201..400) b.update(i.toDouble())
         a.merge(b.read())
@@ -97,7 +97,7 @@ class ReservoirHistogramTest {
 
     @Test
     fun `invalid capacity throws`() {
-        assertFailsWith<IllegalArgumentException> { ReservoirHistogram(capacity = 0) }
-        assertFailsWith<IllegalArgumentException> { ReservoirHistogram(capacity = -1) }
+        assertFailsWith<IllegalArgumentException> { ReservoirHistogramStat(capacity = 0) }
+        assertFailsWith<IllegalArgumentException> { ReservoirHistogramStat(capacity = -1) }
     }
 }

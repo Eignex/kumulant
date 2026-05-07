@@ -16,7 +16,7 @@ class RateTest {
 
     @Test
     fun `rate over one second with value 10`() {
-        val r = Rate()
+        val r = RateStat()
         r.update(10.0, T0)
         val result = r.read(T1)
 
@@ -25,7 +25,7 @@ class RateTest {
 
     @Test
     fun `rate is zero when read at the same timestamp as the first update`() {
-        val r = Rate()
+        val r = RateStat()
         r.update(10.0, T0)
         val result = r.read(T0)
         assertEquals(0.0, result.rate, 0.0)
@@ -33,7 +33,7 @@ class RateTest {
 
     @Test
     fun `rate accumulates across updates`() {
-        val r = Rate()
+        val r = RateStat()
         r.update(3.0, T0)
         r.update(7.0, T0)
         val result = r.read(T1)
@@ -42,7 +42,7 @@ class RateTest {
 
     @Test
     fun `rate over two seconds`() {
-        val r = Rate()
+        val r = RateStat()
         r.update(20.0, T0)
         val result = r.read(T2)
         assertEquals(10.0, result.rate, DELTA)
@@ -50,7 +50,7 @@ class RateTest {
 
     @Test
     fun `weighted update scales value`() {
-        val r = Rate()
+        val r = RateStat()
         r.update(1.0, T0, weight = 5.0)
         val result = r.read(T1)
         assertEquals(5.0, result.rate, DELTA)
@@ -58,14 +58,14 @@ class RateTest {
 
     @Test
     fun `empty read before any update has zero total`() {
-        val r = Rate()
+        val r = RateStat()
         assertEquals(0.0, r.read(T1).totalValue, DELTA)
     }
 
     @Test
     fun `merge takes earliest start and sums totals`() {
-        val r1 = Rate().apply { update(10.0, T0) }
-        val r2 = Rate().apply { update(5.0, T1) }
+        val r1 = RateStat().apply { update(10.0, T0) }
+        val r2 = RateStat().apply { update(5.0, T1) }
         r1.merge(r2.read())
         val result = r1.read(T2)
         assertEquals(15.0, result.totalValue, DELTA)
@@ -75,7 +75,7 @@ class RateTest {
 
     @Test
     fun `merge with zero total is no-op`() {
-        val r1 = Rate().apply { update(10.0, T0) }
+        val r1 = RateStat().apply { update(10.0, T0) }
         val before = r1.read(T1)
         r1.merge(RateResult(Long.MIN_VALUE, 0.0, T1))
         assertEquals(before.totalValue, r1.read(T1).totalValue, DELTA)
@@ -83,21 +83,21 @@ class RateTest {
 
     @Test
     fun `reset clears start and total`() {
-        val r = Rate().apply { update(10.0, T0) }
+        val r = RateStat().apply { update(10.0, T0) }
         r.reset()
         assertEquals(0.0, r.read(T1).totalValue, DELTA)
     }
 
     @Test
     fun `per extension rescales to per-minute`() {
-        val r = Rate().apply { update(60.0, T0) }
+        val r = RateStat().apply { update(60.0, T0) }
         val result = r.read(T1)
         assertEquals(3600.0, result.per(60.seconds), DELTA)
     }
 
     @Test
     fun `per converts Hz to per-minute and per-hour`() {
-        val r = Rate().apply { update(2.0, T0) }
+        val r = RateStat().apply { update(2.0, T0) }
         val result = r.read(T1)
         assertEquals(2.0, result.rate, DELTA)
         assertEquals(120.0, result.per(1.minutes), DELTA)
@@ -106,7 +106,7 @@ class RateTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val r1 = Rate().apply { update(10.0, T0) }
+        val r1 = RateStat().apply { update(10.0, T0) }
         val r2 = r1.create()
         r2.update(5.0, T1)
         assertEquals(10.0, r1.read(T1).totalValue, DELTA)
@@ -117,7 +117,7 @@ class CounterRateTest {
 
     @Test
     fun `derives rate from counter deltas`() {
-        val r = CounterRate()
+        val r = CounterRateStat()
         r.update(100.0, T0)
         r.update(130.0, T1)
         val result = r.read(T1)
@@ -127,7 +127,7 @@ class CounterRateTest {
 
     @Test
     fun `accumulates deltas across intervals`() {
-        val r = CounterRate()
+        val r = CounterRateStat()
         r.update(100.0, T0)
         r.update(130.0, T1)
         r.update(160.0, T2)
@@ -138,14 +138,14 @@ class CounterRateTest {
 
     @Test
     fun `single sample has zero derived total`() {
-        val r = CounterRate()
+        val r = CounterRateStat()
         r.update(100.0, T0)
         assertEquals(0.0, r.read(T1).totalValue, DELTA)
     }
 
     @Test
     fun `counter decrease is treated as reset by default`() {
-        val r = CounterRate()
+        val r = CounterRateStat()
         r.update(100.0, T0)
         r.update(10.0, T1)
         val result = r.read(T2)
@@ -156,7 +156,7 @@ class CounterRateTest {
 
     @Test
     fun `counter decrease can be ignored`() {
-        val r = CounterRate(treatDecreaseAsReset = false)
+        val r = CounterRateStat(treatDecreaseAsReset = false)
         r.update(100.0, T0)
         r.update(10.0, T1)
         assertEquals(0.0, r.read(T2).totalValue, DELTA)
@@ -164,7 +164,7 @@ class CounterRateTest {
 
     @Test
     fun `out of order timestamp is ignored`() {
-        val r = CounterRate()
+        val r = CounterRateStat()
         r.update(100.0, T1)
         r.update(120.0, T0)
         r.update(130.0, T2)
@@ -175,11 +175,11 @@ class CounterRateTest {
 
     @Test
     fun `merge sums totals and keeps earliest start`() {
-        val r1 = CounterRate().apply {
+        val r1 = CounterRateStat().apply {
             update(100.0, T0)
             update(150.0, T1)
         }
-        val r2 = CounterRate().apply {
+        val r2 = CounterRateStat().apply {
             update(10.0, T1)
             update(40.0, T2)
         }
@@ -192,7 +192,7 @@ class CounterRateTest {
 
     @Test
     fun `reset clears derived state`() {
-        val r = CounterRate().apply {
+        val r = CounterRateStat().apply {
             update(100.0, T0)
             update(130.0, T1)
         }

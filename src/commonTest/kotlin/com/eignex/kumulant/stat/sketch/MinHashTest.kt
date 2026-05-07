@@ -10,7 +10,7 @@ class MinHashTest {
 
     @Test
     fun `empty signature is all sentinels`() {
-        val mh = MinHash(numHashes = 64)
+        val mh = MinHashStat(numHashes = 64)
         val r = mh.read()
         assertEquals(64, r.signatures.size)
         assertTrue(r.signatures.all { it == Long.MAX_VALUE })
@@ -19,7 +19,7 @@ class MinHashTest {
 
     @Test
     fun `single update populates every slot`() {
-        val mh = MinHash(numHashes = 64)
+        val mh = MinHashStat(numHashes = 64)
         mh.update(42L)
         val r = mh.read()
         assertTrue(r.signatures.all { it != Long.MAX_VALUE })
@@ -28,8 +28,8 @@ class MinHashTest {
 
     @Test
     fun `identical sets give Jaccard 1`() {
-        val a = MinHash(numHashes = 256, seed = 13L)
-        val b = MinHash(numHashes = 256, seed = 13L)
+        val a = MinHashStat(numHashes = 256, seed = 13L)
+        val b = MinHashStat(numHashes = 256, seed = 13L)
         for (i in 0 until 1000) {
             a.update(i.toLong())
             b.update(i.toLong())
@@ -39,8 +39,8 @@ class MinHashTest {
 
     @Test
     fun `disjoint sets give Jaccard near zero`() {
-        val a = MinHash(numHashes = 256, seed = 21L)
-        val b = MinHash(numHashes = 256, seed = 21L)
+        val a = MinHashStat(numHashes = 256, seed = 21L)
+        val b = MinHashStat(numHashes = 256, seed = 21L)
         for (i in 0 until 1000) a.update(i.toLong())
         for (i in 10_000 until 11_000) b.update(i.toLong())
         val j = a.read().jaccard(b.read())
@@ -50,8 +50,8 @@ class MinHashTest {
     @Test
     fun `Jaccard estimate is close to true value`() {
         val numHashes = 512
-        val a = MinHash(numHashes = numHashes, seed = 7L)
-        val b = MinHash(numHashes = numHashes, seed = 7L)
+        val a = MinHashStat(numHashes = numHashes, seed = 7L)
+        val b = MinHashStat(numHashes = numHashes, seed = 7L)
         // Sets [0, 750) and [250, 1000): overlap=500, union=1000 → true Jaccard=0.5
         for (i in 0 until 750) a.update(i.toLong())
         for (i in 250 until 1000) b.update(i.toLong())
@@ -62,7 +62,7 @@ class MinHashTest {
 
     @Test
     fun `zero or negative weight is ignored`() {
-        val mh = MinHash(numHashes = 16)
+        val mh = MinHashStat(numHashes = 16)
         mh.update(1L, weight = 0.0)
         mh.update(2L, weight = -1.0)
         val r = mh.read()
@@ -72,13 +72,13 @@ class MinHashTest {
 
     @Test
     fun `merge combines two minhashes`() {
-        val a = MinHash(numHashes = 128, seed = 5L)
-        val b = MinHash(numHashes = 128, seed = 5L)
+        val a = MinHashStat(numHashes = 128, seed = 5L)
+        val b = MinHashStat(numHashes = 128, seed = 5L)
         for (i in 0 until 500) a.update(i.toLong())
         for (i in 500 until 1000) b.update(i.toLong())
         a.merge(b.read())
 
-        val full = MinHash(numHashes = 128, seed = 5L)
+        val full = MinHashStat(numHashes = 128, seed = 5L)
         for (i in 0 until 1000) full.update(i.toLong())
 
         // Merge of disjoint streams is the elementwise min of two independent minhashes,
@@ -89,16 +89,16 @@ class MinHashTest {
 
     @Test
     fun `merge requires matching shape`() {
-        val a = MinHash(numHashes = 64, seed = 1L)
-        val bResult = MinHash(numHashes = 128, seed = 1L).read()
+        val a = MinHashStat(numHashes = 64, seed = 1L)
+        val bResult = MinHashStat(numHashes = 128, seed = 1L).read()
         assertFailsWith<IllegalArgumentException> { a.merge(bResult) }
-        val cResult = MinHash(numHashes = 64, seed = 2L).read()
+        val cResult = MinHashStat(numHashes = 64, seed = 2L).read()
         assertFailsWith<IllegalArgumentException> { a.merge(cResult) }
     }
 
     @Test
     fun `reset clears state`() {
-        val mh = MinHash(numHashes = 32)
+        val mh = MinHashStat(numHashes = 32)
         for (i in 1..100) mh.update(i.toLong())
         mh.reset()
         val r = mh.read()
@@ -108,7 +108,7 @@ class MinHashTest {
 
     @Test
     fun `create produces independent stat`() {
-        val a = MinHash(numHashes = 32, seed = 99L)
+        val a = MinHashStat(numHashes = 32, seed = 99L)
         for (i in 1..100) a.update(i.toLong())
         val b = a.create()
         assertEquals(0L, b.read().totalSeen)
@@ -118,7 +118,7 @@ class MinHashTest {
 
     @Test
     fun `invalid args throw`() {
-        assertFailsWith<IllegalArgumentException> { MinHash(numHashes = 0) }
-        assertFailsWith<IllegalArgumentException> { MinHash(numHashes = -1) }
+        assertFailsWith<IllegalArgumentException> { MinHashStat(numHashes = 0) }
+        assertFailsWith<IllegalArgumentException> { MinHashStat(numHashes = -1) }
     }
 }

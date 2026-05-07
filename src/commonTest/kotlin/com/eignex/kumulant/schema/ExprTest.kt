@@ -123,7 +123,7 @@ class ExprTest {
 
     @Test fun transform_series_applies_expr_per_update() {
         val cfg: SeriesStatConfig<SumResult> =
-            SumConfig.transform(Add(Mul(Const(2.0), X), Const(1.0))) // 2x + 1
+            Sum.transform(Add(Mul(Const(2.0), X), Const(1.0))) // 2x + 1
         val live = cfg.materialize(Concurrency.None)
         live.update(1.0)
         live.update(2.0)
@@ -133,7 +133,7 @@ class ExprTest {
     }
 
     @Test fun filter_series_drops_non_matching_updates() {
-        val cfg: SeriesStatConfig<SumResult> = SumConfig.filter(Gt(X, Const(0.0)))
+        val cfg: SeriesStatConfig<SumResult> = Sum.filter(Gt(X, Const(0.0)))
         val live = cfg.materialize(Concurrency.None)
         live.update(-1.0)
         live.update(2.0)
@@ -144,7 +144,7 @@ class ExprTest {
 
     @Test fun transform_chained_with_other_ops() {
         val cfg: SeriesStatConfig<SumResult> =
-            SumConfig.transform(MinExpr(Const(10.0), MaxExpr(Const(0.0), X))) // clip 0..10
+            Sum.transform(MinExpr(Const(10.0), MaxExpr(Const(0.0), X))) // clip 0..10
                 .withWeight(2.0)
         val live = cfg.materialize(Concurrency.None)
         live.update(-5.0)
@@ -156,7 +156,7 @@ class ExprTest {
 
     @Test fun transform_config_round_trips() {
         val cfg: SeriesStatConfig<SumResult> =
-            SumConfig.transform(MinExpr(Const(10.0), MaxExpr(Const(0.0), X)))
+            Sum.transform(MinExpr(Const(10.0), MaxExpr(Const(0.0), X)))
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json)
         val live = (decoded as SeriesStatConfig<*>).materialize(Concurrency.None)
@@ -168,7 +168,7 @@ class ExprTest {
     }
 
     @Test fun filter_discrete_drops_non_matching_long_updates() {
-        val cfg: DiscreteStatConfig<*> = HyperLogLogConfig(precision = 10).filter(Ge(X, Const(0.0)))
+        val cfg: DiscreteStatConfig<*> = HyperLogLog(precision = 10).filter(Ge(X, Const(0.0)))
         val live = cfg.materialize(Concurrency.None)
         for (i in -50L..50L) live.update(i)
         // Only non-negative survive — 51 distinct values; HLL estimate should reflect that scale.
@@ -206,7 +206,7 @@ class ExprTest {
     // ===== Paired transforms =====
 
     @Test fun transformPair_swaps_x_and_y() {
-        val cfg: PairedStatConfig<*> = OLSConfig.transformPair(xExpr = Y, yExpr = X)
+        val cfg: PairedStatConfig<*> = OLS.transformPair(xExpr = Y, yExpr = X)
         val live = cfg.materialize(Concurrency.None)
         // After swap, slope between (originally x=1,y=2),(2,4),(3,6) becomes y/x → 0.5
         live.update(1.0, 2.0)
@@ -217,7 +217,7 @@ class ExprTest {
     }
 
     @Test fun transformX_only_remaps_x() {
-        val cfg: PairedStatConfig<*> = OLSConfig.transformX(2.0 * X)
+        val cfg: PairedStatConfig<*> = OLS.transformX(2.0 * X)
         val live = cfg.materialize(Concurrency.None)
         // Original: y = 2x; after x' = 2x: pairs (2,2),(4,4),(6,6) → slope 1.
         live.update(1.0, 2.0)
@@ -228,7 +228,7 @@ class ExprTest {
     }
 
     @Test fun filter_paired_drops_by_predicate_over_x_and_y() {
-        val cfg: PairedStatConfig<*> = OLSConfig.filter((X gt 0.0) and (Y gt 0.0))
+        val cfg: PairedStatConfig<*> = OLS.filter((X gt 0.0) and (Y gt 0.0))
         val live = cfg.materialize(Concurrency.None)
         live.update(-1.0, 5.0) // dropped (x <= 0)
         live.update(1.0, -5.0) // dropped (y <= 0)
@@ -242,14 +242,14 @@ class ExprTest {
     // ===== Vector transforms =====
 
     @Test fun transformElement_applies_expr_per_index() {
-        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 3)
+        val cfg: VectorStatConfig<*> = Sum.vectorized(dimensions = 3)
             .transformElement(2.0 * X + 1.0)
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(1.0, 2.0, 3.0))
         live.update(doubleArrayOf(4.0, 5.0, 6.0))
         @Suppress("UNCHECKED_CAST")
         val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
-        // After transform: (3, 5, 7) and (9, 11, 13). Sum per dim: 12, 16, 20.
+        // After transform: (3, 5, 7) and (9, 11, 13). SumStat per dim: 12, 16, 20.
         assertEquals(12.0, rl.results[0].sum, DELTA)
         assertEquals(16.0, rl.results[1].sum, DELTA)
         assertEquals(20.0, rl.results[2].sum, DELTA)
@@ -257,7 +257,7 @@ class ExprTest {
 
     @Test fun transformElement_can_reference_other_indices() {
         // L1-ish normalization: each element divided by index 0.
-        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 2)
+        val cfg: VectorStatConfig<*> = Sum.vectorized(dimensions = 2)
             .transformElement(X / V(0))
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(2.0, 4.0)) // -> 1.0, 2.0
@@ -269,7 +269,7 @@ class ExprTest {
     }
 
     @Test fun filter_vector_drops_by_index_predicate() {
-        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 2)
+        val cfg: VectorStatConfig<*> = Sum.vectorized(dimensions = 2)
             .filter(V(0) gt 0.0)
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(-1.0, 100.0)) // dropped
@@ -285,11 +285,11 @@ class ExprTest {
 
     @Test fun vfold_sum_product_mean_min_max_norm2() {
         val v = doubleArrayOf(3.0, -4.0, 0.0)
-        assertEquals(-1.0, VFold(VFoldOp.Sum).eval(0.0, 0.0, v), DELTA)
+        assertEquals(-1.0, VFold(VFoldOp.SumStat).eval(0.0, 0.0, v), DELTA)
         assertEquals(0.0, VFold(VFoldOp.Product).eval(0.0, 0.0, v), DELTA)
-        assertEquals(-1.0 / 3.0, VFold(VFoldOp.Mean).eval(0.0, 0.0, v), DELTA)
-        assertEquals(-4.0, VFold(VFoldOp.Min).eval(0.0, 0.0, v), DELTA)
-        assertEquals(3.0, VFold(VFoldOp.Max).eval(0.0, 0.0, v), DELTA)
+        assertEquals(-1.0 / 3.0, VFold(VFoldOp.MeanStat).eval(0.0, 0.0, v), DELTA)
+        assertEquals(-4.0, VFold(VFoldOp.MinStat).eval(0.0, 0.0, v), DELTA)
+        assertEquals(3.0, VFold(VFoldOp.MaxStat).eval(0.0, 0.0, v), DELTA)
         assertEquals(5.0, VFold(VFoldOp.Norm2).eval(0.0, 0.0, v), DELTA) // sqrt(9 + 16)
     }
 
@@ -308,7 +308,7 @@ class ExprTest {
     // ===== FoldPaired / FoldVector configs =====
 
     @Test fun foldPaired_lifts_series_to_paired_with_xy_expression() {
-        val cfg: PairedStatConfig<*> = SumConfig.foldPaired(X * Y)
+        val cfg: PairedStatConfig<*> = Sum.foldPaired(X * Y)
         val live = cfg.materialize(Concurrency.None)
         live.update(1.0, 2.0) // 2
         live.update(3.0, 4.0) // 12
@@ -318,7 +318,7 @@ class ExprTest {
     }
 
     @Test fun foldVector_with_vfold_sum() {
-        val cfg: VectorStatConfig<*> = SumConfig.foldVector(VFold(VFoldOp.Sum))
+        val cfg: VectorStatConfig<*> = Sum.foldVector(VFold(VFoldOp.SumStat))
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(1.0, 2.0, 3.0)) // sum = 6
         live.update(doubleArrayOf(4.0, 5.0, 6.0)) // sum = 15
@@ -327,7 +327,7 @@ class ExprTest {
     }
 
     @Test fun foldVector_with_vdot_weighted() {
-        val cfg: VectorStatConfig<*> = SumConfig.foldVector(VDot(listOf(1.0, 2.0, 3.0)))
+        val cfg: VectorStatConfig<*> = Sum.foldVector(VDot(listOf(1.0, 2.0, 3.0)))
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(1.0, 1.0, 1.0)) // 1+2+3 = 6
         live.update(doubleArrayOf(2.0, 0.0, 1.0)) // 2+0+3 = 5
@@ -336,7 +336,7 @@ class ExprTest {
     }
 
     @Test fun foldVector_norm2_drives_inner_mean() {
-        val cfg: VectorStatConfig<*> = MeanConfig.foldVector(VFold(VFoldOp.Norm2))
+        val cfg: VectorStatConfig<*> = Mean.foldVector(VFold(VFoldOp.Norm2))
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(3.0, 4.0)) // norm = 5
         live.update(doubleArrayOf(0.0, 0.0)) // norm = 0
@@ -345,15 +345,15 @@ class ExprTest {
     }
 
     @Test fun fold_configs_round_trip_via_wire() {
-        val a: PairedStatConfig<*> = SumConfig.foldPaired(X * Y)
+        val a: PairedStatConfig<*> = Sum.foldPaired(X * Y)
         val ja = SchemaJson.encodeToString(StatConfig.serializer(), a)
-        val da = SchemaJson.decodeFromString(StatConfig.serializer(), ja) as FoldPairedConfig
+        val da = SchemaJson.decodeFromString(StatConfig.serializer(), ja) as FoldPaired
         assertEquals(Mul(X, Y), da.expr)
 
-        val b: VectorStatConfig<*> = SumConfig.foldVector(VFold(VFoldOp.Sum))
+        val b: VectorStatConfig<*> = Sum.foldVector(VFold(VFoldOp.SumStat))
         val jb = SchemaJson.encodeToString(StatConfig.serializer(), b)
-        val db = SchemaJson.decodeFromString(StatConfig.serializer(), jb) as FoldVectorConfig
-        assertEquals(VFold(VFoldOp.Sum), db.expr)
+        val db = SchemaJson.decodeFromString(StatConfig.serializer(), jb) as FoldVector
+        assertEquals(VFold(VFoldOp.SumStat), db.expr)
 
         val c: ScalarExpr = VDot(listOf(1.0, 2.0, 3.0))
         val jc = SchemaJson.encodeToString(ScalarExpr.serializer(), c)
@@ -377,7 +377,7 @@ class ExprTest {
 
     @Test fun transformVector_changes_dimensionality_via_VElements() {
         // Input dim 4 → pooled output dim 2. Inner is sized for the output.
-        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 2)
+        val cfg: VectorStatConfig<*> = Sum.vectorized(dimensions = 2)
             .transformVector(VElements(listOf((V(0) + V(1)) / 2.0, (V(2) + V(3)) / 2.0)))
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(2.0, 4.0, 10.0, 30.0)) // → (3, 20)
@@ -389,7 +389,7 @@ class ExprTest {
     }
 
     @Test fun transformVector_permutes() {
-        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 3)
+        val cfg: VectorStatConfig<*> = Sum.vectorized(dimensions = 3)
             .transformVector(VElements(listOf(V(2), V(0), V(1))))
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(1.0, 10.0, 100.0))
@@ -402,10 +402,10 @@ class ExprTest {
     }
 
     @Test fun transformVector_round_trips_via_wire() {
-        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 2)
+        val cfg: VectorStatConfig<*> = Sum.vectorized(dimensions = 2)
             .transformVector(VElements(listOf(V(0) + V(1), V(0) - V(1))))
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
-        val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json) as TransformVectorConfig
+        val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json) as TransformVector
         val materialized = decoded.materialize(Concurrency.None)
         materialized.update(doubleArrayOf(3.0, 1.0)) // → (4, 2)
         @Suppress("UNCHECKED_CAST")
@@ -415,15 +415,15 @@ class ExprTest {
     }
 
     @Test fun paired_and_vector_configs_round_trip_via_wire() {
-        val cfg: PairedStatConfig<*> = OLSConfig.transformPair(xExpr = Y, yExpr = X)
+        val cfg: PairedStatConfig<*> = OLS.transformPair(xExpr = Y, yExpr = X)
         val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
-        val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json) as TransformPairConfig
+        val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json) as TransformPair
         assertEquals(Y, decoded.xExpr)
         assertEquals(X, decoded.yExpr)
 
-        val v: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 3).filter(V(0) gt 0.0)
+        val v: VectorStatConfig<*> = Sum.vectorized(dimensions = 3).filter(V(0) gt 0.0)
         val vJson = SchemaJson.encodeToString(StatConfig.serializer(), v)
-        val vDecoded = SchemaJson.decodeFromString(StatConfig.serializer(), vJson) as FilterVectorConfig
+        val vDecoded = SchemaJson.decodeFromString(StatConfig.serializer(), vJson) as FilterVector
         assertEquals(Gt(V(0), Const(0.0)), vDecoded.pred)
     }
 }

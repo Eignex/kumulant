@@ -10,13 +10,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 private class HttpMetrics : StatSchema() {
-    val requests by series(SumConfig)
-    val latencyMs by series(DDSketchConfig(probabilities = listOf(0.5, 0.99, 0.999)))
+    val requests by series(Sum)
+    val latencyMs by series(DDSketch(probabilities = listOf(0.5, 0.99, 0.999)))
 }
 
 private class ServiceMetrics : StatSchema() {
-    val requests by series(SumConfig)
-    val avgWeight by series(MeanConfig)
+    val requests by series(Sum)
+    val avgWeight by series(Mean)
     val http by group(HttpMetrics())
 }
 
@@ -29,11 +29,11 @@ class StatSchemaDefSerializationTest {
 
         assertEquals(
             """{"stats":{""" +
-                """"requests":{"${'$'}type":"SumConfig"},""" +
-                """"avgWeight":{"${'$'}type":"MeanConfig"},""" +
+                """"requests":{"${'$'}type":"Sum"},""" +
+                """"avgWeight":{"${'$'}type":"Mean"},""" +
                 """"http":{"${'$'}type":"GroupStatConfig","stats":{""" +
-                """"requests":{"${'$'}type":"SumConfig"},""" +
-                """"latencyMs":{"${'$'}type":"DDSketchConfig","probabilities":[0.5,0.99,0.999]}""" +
+                """"requests":{"${'$'}type":"Sum"},""" +
+                """"latencyMs":{"${'$'}type":"DDSketch","probabilities":[0.5,0.99,0.999]}""" +
                 """}}""" +
                 """}}""",
             encoded,
@@ -77,12 +77,12 @@ class StatSchemaDefSerializationTest {
     @Test
     fun `complex schema mixing modalities and operations round-trips byte-identically`() {
         val schema = object : StatSchema() {
-            val requests by series(SumConfig)
-            val weightedSum by series(SumConfig.withWeight(2.0))
-            val count by series(SumConfig.withValue(1.0).withWeight(1.0))
-            val ols by paired(OLSConfig)
-            val olsAtFixedX by series(OLSConfig.withFixedX(0.5))
-            val users by discrete(HyperLogLogConfig(precision = 10))
+            val requests by series(Sum)
+            val weightedSum by series(Sum.withWeight(2.0))
+            val count by series(Sum.withValue(1.0).withWeight(1.0))
+            val ols by paired(OLS)
+            val olsAtFixedX by series(OLS.withFixedX(0.5))
+            val users by discrete(HyperLogLog(precision = 10))
         }
 
         val encoded = SchemaJson.encodeToString(schema.statSchemaDef())
@@ -94,7 +94,7 @@ class StatSchemaDefSerializationTest {
         assertEquals(encoded, reEncoded)
 
         // Spot-check a few entries are present with the right discriminators.
-        assertEquals(true, encoded.contains("\"requests\":{\"\$type\":\"SumConfig\"}"))
+        assertEquals(true, encoded.contains("\"requests\":{\"\$type\":\"Sum\"}"))
         assertEquals(true, encoded.contains("\"\$type\":\"WithWeightSeries\""))
         assertEquals(true, encoded.contains("\"\$type\":\"WithValueSeries\""))
         assertEquals(true, encoded.contains("\"\$type\":\"WithFixedX\""))

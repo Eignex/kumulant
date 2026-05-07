@@ -8,7 +8,7 @@ private const val DELTA = 1e-12
 class SumTest {
     @Test
     fun `create produces fresh independent stat`() {
-        val s1 = Sum().apply { update(10.0) }
+        val s1 = SumStat().apply { update(10.0) }
         val s2 = s1.create()
         s1.update(5.0)
         assertEquals(15.0, s1.read().sum, DELTA)
@@ -17,7 +17,7 @@ class SumTest {
 
     @Test
     fun `test extreme values`() {
-        val sum = Sum()
+        val sum = SumStat()
         sum.update(1e15, 1.0)
         sum.update(1.0, 1.0)
         assertEquals(1000000000000001.0, sum.read().sum, 0.1)
@@ -25,7 +25,7 @@ class SumTest {
 
     @Test
     fun `test negative weights and values`() {
-        val sum = Sum()
+        val sum = SumStat()
         sum.update(-10.0, 1.0)
         sum.update(10.0, -1.0)
         assertEquals(-20.0, sum.read().sum, DELTA)
@@ -33,15 +33,15 @@ class SumTest {
 
     @Test
     fun `test merge logic`() {
-        val s1 = Sum().apply { update(10.0, 1.0) }
-        val s2 = Sum().apply { update(20.0, 1.0) }
+        val s1 = SumStat().apply { update(10.0, 1.0) }
+        val s2 = SumStat().apply { update(20.0, 1.0) }
         s1.merge(s2.read())
         assertEquals(30.0, s1.read().sum, DELTA)
     }
 
     @Test
     fun `test reset`() {
-        val sum = Sum()
+        val sum = SumStat()
         sum.update(100.0)
         sum.reset()
         assertEquals(0.0, sum.read().sum, DELTA)
@@ -51,7 +51,7 @@ class SumTest {
 class MeanTest {
     @Test
     fun `create produces fresh independent stat`() {
-        val m1 = Mean().apply { update(10.0) }
+        val m1 = MeanStat().apply { update(10.0) }
         val m2 = m1.create()
         m1.update(20.0)
         assertEquals(15.0, m1.read().mean, DELTA)
@@ -60,7 +60,7 @@ class MeanTest {
 
     @Test
     fun `test stability with large offset`() {
-        val mean = Mean()
+        val mean = MeanStat()
         val offset = 1e9
 
         mean.update(offset + 1, 1.0)
@@ -71,7 +71,7 @@ class MeanTest {
 
     @Test
     fun `test zero weight updates`() {
-        val mean = Mean()
+        val mean = MeanStat()
         mean.update(10.0, 1.0)
         mean.update(100.0, 0.0)
         assertEquals(10.0, mean.read().mean, DELTA)
@@ -80,7 +80,7 @@ class MeanTest {
 
     @Test
     fun `test weighted balance`() {
-        val mean = Mean()
+        val mean = MeanStat()
         mean.update(10.0, 90.0)
         mean.update(100.0, 10.0)
         assertEquals(19.0, mean.read().mean, DELTA)
@@ -88,7 +88,7 @@ class MeanTest {
 
     @Test
     fun `test empty merge`() {
-        val mean = Mean()
+        val mean = MeanStat()
         mean.update(5.0, 1.0)
         mean.merge(WeightedMeanResult(0.0, 100.0))
         assertEquals(5.0, mean.read().mean, DELTA)
@@ -96,7 +96,7 @@ class MeanTest {
 
     @Test
     fun `test negative values`() {
-        val mean = Mean()
+        val mean = MeanStat()
         mean.update(-10.0)
         mean.update(-20.0)
         assertEquals(-15.0, mean.read().mean, DELTA)
@@ -104,7 +104,7 @@ class MeanTest {
 
     @Test
     fun `test reset`() {
-        val mean = Mean()
+        val mean = MeanStat()
         mean.update(50.0)
         mean.reset()
         assertEquals(0.0, mean.read().mean, DELTA)
@@ -115,7 +115,7 @@ class MeanTest {
 class VarianceTest {
     @Test
     fun `create produces fresh independent stat`() {
-        val v1 = Variance().apply {
+        val v1 = VarianceStat().apply {
             update(10.0)
             update(20.0)
         }
@@ -127,14 +127,14 @@ class VarianceTest {
 
     @Test
     fun `test variance sequence`() {
-        val vari = Variance()
+        val vari = VarianceStat()
         (1..10).forEach { vari.update(it.toDouble(), 1.0) }
         assertEquals(8.25, vari.read().variance, DELTA)
     }
 
     @Test
     fun `test variance methods`() {
-        val vari = Variance()
+        val vari = VarianceStat()
         vari.update(10.0, 1.0)
         vari.update(20.0, 1.0)
         val result = vari.read()
@@ -147,14 +147,14 @@ class VarianceTest {
 
     @Test
     fun `test single value variance`() {
-        val vari = Variance()
+        val vari = VarianceStat()
         vari.update(10.0, 1.0)
         assertTrue(vari.read().variance.isNaN() || vari.read().variance == 0.0)
     }
 
     @Test
     fun `test zero variance`() {
-        val vari = Variance()
+        val vari = VarianceStat()
         repeat(10) { vari.update(5.0) }
         assertEquals(5.0, vari.read().mean, DELTA)
         assertEquals(0.0, vari.read().variance, DELTA)
@@ -163,9 +163,9 @@ class VarianceTest {
     @Test
     fun `test merge`() {
         val v1 =
-            Variance().apply { (1..5).forEach { update(it.toDouble(), 1.0) } }
+            VarianceStat().apply { (1..5).forEach { update(it.toDouble(), 1.0) } }
         val v2 =
-            Variance().apply { (6..10).forEach { update(it.toDouble(), 1.0) } }
+            VarianceStat().apply { (6..10).forEach { update(it.toDouble(), 1.0) } }
 
         v1.merge(v2.read())
         assertEquals(8.25, v1.read().variance, DELTA)
@@ -174,15 +174,15 @@ class VarianceTest {
 
     @Test
     fun `test empty merge`() {
-        val v1 = Variance()
+        val v1 = VarianceStat()
         v1.update(1.0)
-        v1.merge(Variance().read())
+        v1.merge(VarianceStat().read())
         assertEquals(1.0, v1.read().totalWeights, DELTA)
     }
 
     @Test
     fun `test reset`() {
-        val vari = Variance()
+        val vari = VarianceStat()
         vari.update(10.0)
         vari.update(20.0)
         vari.reset()
@@ -197,7 +197,7 @@ class MomentsTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val m1 = Moments().apply {
+        val m1 = MomentsStat().apply {
             update(1.0)
             update(2.0)
             update(3.0)
@@ -210,7 +210,7 @@ class MomentsTest {
 
     @Test
     fun `test skewness for symmetric distribution`() {
-        val stat = Moments()
+        val stat = MomentsStat()
 
         val data = listOf(1.0, 2.0, 3.0, 4.0, 5.0)
         data.forEach { stat.update(it, 1.0) }
@@ -221,7 +221,7 @@ class MomentsTest {
 
     @Test
     fun `test positive skewness`() {
-        val stat = Moments()
+        val stat = MomentsStat()
 
         val data = listOf(1.0, 1.0, 1.0, 2.0, 10.0)
         data.forEach { stat.update(it, 1.0) }
@@ -230,7 +230,7 @@ class MomentsTest {
 
     @Test
     fun `test negative skewness`() {
-        val stat = Moments()
+        val stat = MomentsStat()
 
         val data = listOf(10.0, 10.0, 10.0, 9.0, 1.0)
         data.forEach { stat.update(it, 1.0) }
@@ -239,7 +239,7 @@ class MomentsTest {
 
     @Test
     fun `test kurtosis of normal-ish distribution`() {
-        val stat = Moments()
+        val stat = MomentsStat()
         val data = listOf(-2.0, -1.0, 0.0, 1.0, 2.0)
         data.forEach { stat.update(it, 1.0) }
 
@@ -248,7 +248,7 @@ class MomentsTest {
 
     @Test
     fun `test leptokurtic distribution`() {
-        val stat = Moments()
+        val stat = MomentsStat()
 
         repeat(100) { stat.update(0.0, 1.0) }
         stat.update(100.0, 1.0)
@@ -259,9 +259,9 @@ class MomentsTest {
     @Test
     fun `test complex merge`() {
         val m1 =
-            Moments().apply { listOf(10.0, 12.0).forEach { update(it, 1.0) } }
+            MomentsStat().apply { listOf(10.0, 12.0).forEach { update(it, 1.0) } }
         val m2 =
-            Moments().apply { listOf(100.0, 120.0).forEach { update(it, 1.0) } }
+            MomentsStat().apply { listOf(100.0, 120.0).forEach { update(it, 1.0) } }
 
         m1.merge(m2.read())
 
@@ -271,7 +271,7 @@ class MomentsTest {
 
     @Test
     fun `test reset`() {
-        val stat = Moments()
+        val stat = MomentsStat()
         stat.update(10.0)
         stat.update(20.0)
         stat.reset()
@@ -289,7 +289,7 @@ class SampleVarianceTraitTest {
 
     @Test
     fun `sampleVariance applies Bessel correction`() {
-        val stat = Moments()
+        val stat = MomentsStat()
         listOf(2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0).forEach { stat.update(it, 1.0) }
         val r = stat.read()
         assertEquals(5.0, r.mean, delta)
@@ -300,21 +300,21 @@ class SampleVarianceTraitTest {
 
     @Test
     fun `sampleVariance is zero when totalWeights le 1`() {
-        val empty = Moments().read()
+        val empty = MomentsStat().read()
         assertEquals(0.0, empty.sampleVariance, delta)
         assertEquals(0.0, empty.sampleStdDev, delta)
 
-        val one = Moments().apply { update(42.0, 1.0) }.read()
+        val one = MomentsStat().apply { update(42.0, 1.0) }.read()
         assertEquals(0.0, one.sampleVariance, delta)
         assertEquals(0.0, one.sampleStdDev, delta)
     }
 
     @Test
     fun `unbiasedSkewness is zero with two or fewer samples`() {
-        val empty = Moments().read()
+        val empty = MomentsStat().read()
         assertEquals(0.0, empty.unbiasedSkewness, delta)
 
-        val two = Moments().apply {
+        val two = MomentsStat().apply {
             update(1.0, 1.0)
             update(3.0, 1.0)
         }.read()
@@ -323,7 +323,7 @@ class SampleVarianceTraitTest {
 
     @Test
     fun `unbiasedSkewness scales biased skewness by sample-size factor`() {
-        val stat = Moments()
+        val stat = MomentsStat()
         listOf(1.0, 1.0, 1.0, 2.0, 10.0).forEach { stat.update(it, 1.0) }
         val r = stat.read()
         val n = r.totalWeights
@@ -334,7 +334,7 @@ class SampleVarianceTraitTest {
 
     @Test
     fun `unbiasedKurtosis is zero with three or fewer samples`() {
-        val three = Moments().apply {
+        val three = MomentsStat().apply {
             update(1.0, 1.0)
             update(2.0, 1.0)
             update(3.0, 1.0)
@@ -344,7 +344,7 @@ class SampleVarianceTraitTest {
 
     @Test
     fun `unbiasedKurtosis matches the algebraic definition`() {
-        val stat = Moments()
+        val stat = MomentsStat()
         listOf(-2.0, -1.0, 0.0, 1.0, 2.0, 3.0).forEach { stat.update(it, 1.0) }
         val r = stat.read()
         val n = r.totalWeights
@@ -357,7 +357,7 @@ class VarianceEdgeCasesTest {
 
     @Test
     fun `read before any update returns zero variance and zero mean`() {
-        val v = Variance().read()
+        val v = VarianceStat().read()
         assertEquals(0.0, v.totalWeights, DELTA)
         assertEquals(0.0, v.mean, DELTA)
         assertEquals(0.0, v.variance, DELTA)
@@ -365,14 +365,14 @@ class VarianceEdgeCasesTest {
 
     @Test
     fun `variance over constant stream is zero`() {
-        val v = Variance()
+        val v = VarianceStat()
         repeat(100) { v.update(7.0) }
         assertEquals(0.0, v.read().variance, 1e-6)
     }
 
     @Test
     fun `handles large magnitudes without overflow`() {
-        val v = Variance()
+        val v = VarianceStat()
         val large = 1e9
         v.update(large)
         v.update(-large)

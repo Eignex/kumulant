@@ -15,7 +15,7 @@ interface Stat<R : Result> {
      *
      * - [Concurrency.None]: single-threaded; no synchronisation. Cheapest path.
      * - [Concurrency.Relaxed]: lock-free best-effort. Multi-cell stats (Welford-style
-     *   `Mean`, `Variance`, `Moments`) may drift under contention but never throw.
+     *   `MeanStat`, `VarianceStat`, `MomentsStat`) may drift under contention but never throw.
      * - [Concurrency.Strict]: serialised when needed for full correctness across
      *   coupled cells. Sketches always self-serialise; Welford stats lock per update.
      * - [Concurrency.HighWrite]: optimised for many concurrent writers; JVM uses

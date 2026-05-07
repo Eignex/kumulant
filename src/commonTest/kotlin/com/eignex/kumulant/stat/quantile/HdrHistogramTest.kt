@@ -9,7 +9,7 @@ class HdrHistogramTest {
 
     @Test
     fun `empty histogram has no populated buckets`() {
-        val h = HdrHistogram()
+        val h = HdrHistogramStat()
         val r = h.read()
         assertEquals(0, r.lowerBounds.size)
         assertEquals(0, r.upperBounds.size)
@@ -18,7 +18,7 @@ class HdrHistogramTest {
 
     @Test
     fun `single value produces a single bucket whose range covers the input`() {
-        val h = HdrHistogram(lowestDiscernibleValue = 0.001, initialHighestTrackableValue = 100.0)
+        val h = HdrHistogramStat(lowestDiscernibleValue = 0.001, initialHighestTrackableValue = 100.0)
         h.update(10.0)
         val r = h.read()
         assertEquals(1, r.weights.size)
@@ -31,7 +31,7 @@ class HdrHistogramTest {
 
     @Test
     fun `multiple values at the same fine bucket accumulate in one bucket`() {
-        val h = HdrHistogram(
+        val h = HdrHistogramStat(
             lowestDiscernibleValue = 0.001,
             initialHighestTrackableValue = 100.0,
             significantDigits = 2
@@ -44,7 +44,7 @@ class HdrHistogramTest {
 
     @Test
     fun `weights accumulate correctly`() {
-        val h = HdrHistogram()
+        val h = HdrHistogramStat()
         h.update(5.0, weight = 2.0)
         h.update(5.0, weight = 3.0)
         val r = h.read()
@@ -53,7 +53,7 @@ class HdrHistogramTest {
 
     @Test
     fun `negative values throw IllegalArgumentException`() {
-        val h = HdrHistogram()
+        val h = HdrHistogramStat()
         kotlin.test.assertFailsWith<IllegalArgumentException> { h.update(-1.0) }
         h.update(5.0)
         val r = h.read()
@@ -62,7 +62,7 @@ class HdrHistogramTest {
 
     @Test
     fun `zero weight update is ignored`() {
-        val h = HdrHistogram()
+        val h = HdrHistogramStat()
         h.update(5.0, weight = 0.0)
         val r = h.read()
         assertEquals(0, r.weights.size)
@@ -70,7 +70,7 @@ class HdrHistogramTest {
 
     @Test
     fun `histogram auto-resizes to accept values beyond initialHighestTrackableValue`() {
-        val h = HdrHistogram(
+        val h = HdrHistogramStat(
             lowestDiscernibleValue = 0.001,
             initialHighestTrackableValue = 10.0
         )
@@ -84,7 +84,7 @@ class HdrHistogramTest {
 
     @Test
     fun `reset clears counts`() {
-        val h = HdrHistogram()
+        val h = HdrHistogramStat()
         repeat(100) { h.update(5.0) }
         h.reset()
         assertEquals(0, h.read().weights.size)
@@ -92,11 +92,11 @@ class HdrHistogramTest {
 
     @Test
     fun `merge re-adds each bucket from incoming result`() {
-        val h1 = HdrHistogram()
+        val h1 = HdrHistogramStat()
         h1.update(1.0)
         h1.update(10.0)
 
-        val h2 = HdrHistogram()
+        val h2 = HdrHistogramStat()
         h2.update(1.0)
         h2.update(100.0)
 
@@ -107,7 +107,7 @@ class HdrHistogramTest {
 
     @Test
     fun `merge with empty source is a no-op`() {
-        val h1 = HdrHistogram()
+        val h1 = HdrHistogramStat()
         h1.update(5.0)
         val before = h1.read().weights.sum()
 
@@ -117,7 +117,7 @@ class HdrHistogramTest {
 
     @Test
     fun `create returns an independent histogram`() {
-        val h1 = HdrHistogram()
+        val h1 = HdrHistogramStat()
         h1.update(5.0)
         val h2 = h1.create()
         repeat(10) { h2.update(5.0) }
@@ -127,7 +127,7 @@ class HdrHistogramTest {
 
     @Test
     fun `buckets are sorted by lower bound`() {
-        val h = HdrHistogram()
+        val h = HdrHistogramStat()
         for (v in listOf(50.0, 1.0, 10.0, 100.0, 5.0)) h.update(v)
         val r = h.read()
         for (i in 1 until r.lowerBounds.size) {
@@ -140,7 +140,7 @@ class HdrHistogramTest {
 
     @Test
     fun `each bucket's lower bound does not exceed its upper bound`() {
-        val h = HdrHistogram()
+        val h = HdrHistogramStat()
         for (v in listOf(0.01, 1.0, 10.0, 100.0, 1000.0)) h.update(v)
         val r = h.read()
         for (i in r.lowerBounds.indices) {
@@ -151,17 +151,17 @@ class HdrHistogramTest {
     @Test
     fun `invalid lowestDiscernibleValue throws`() {
         assertFailsWith<IllegalArgumentException> {
-            HdrHistogram(lowestDiscernibleValue = 0.0)
+            HdrHistogramStat(lowestDiscernibleValue = 0.0)
         }
         assertFailsWith<IllegalArgumentException> {
-            HdrHistogram(lowestDiscernibleValue = -0.1)
+            HdrHistogramStat(lowestDiscernibleValue = -0.1)
         }
     }
 
     @Test
     fun `invalid initialHighestTrackableValue throws`() {
         assertFailsWith<IllegalArgumentException> {
-            HdrHistogram(
+            HdrHistogramStat(
                 lowestDiscernibleValue = 1.0,
                 initialHighestTrackableValue = 1.5
             )
@@ -170,13 +170,13 @@ class HdrHistogramTest {
 
     @Test
     fun `invalid significantDigits throws`() {
-        assertFailsWith<IllegalArgumentException> { HdrHistogram(significantDigits = 0) }
-        assertFailsWith<IllegalArgumentException> { HdrHistogram(significantDigits = 6) }
+        assertFailsWith<IllegalArgumentException> { HdrHistogramStat(significantDigits = 0) }
+        assertFailsWith<IllegalArgumentException> { HdrHistogramStat(significantDigits = 6) }
     }
 
     @Test
     fun `value zero is trackable`() {
-        val h = HdrHistogram()
+        val h = HdrHistogramStat()
         h.update(0.0)
         val r = h.read()
         assertEquals(1.0, r.weights.sum(), 1e-9)

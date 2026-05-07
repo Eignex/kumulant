@@ -8,14 +8,14 @@ class LinearHistogramTest {
 
     @Test
     fun `empty histogram has no rows`() {
-        val h = LinearHistogram(0.0, 10.0, 10)
+        val h = LinearHistogramStat(0.0, 10.0, 10)
         val r = h.read()
         assertEquals(0, r.weights.size)
     }
 
     @Test
     fun `single value lands in correct bin`() {
-        val h = LinearHistogram(0.0, 10.0, 10)
+        val h = LinearHistogramStat(0.0, 10.0, 10)
         h.update(3.5)
         val r = h.read()
         assertEquals(1, r.weights.size)
@@ -26,7 +26,7 @@ class LinearHistogramTest {
 
     @Test
     fun `uniform spread across bins`() {
-        val h = LinearHistogram(0.0, 100.0, 10)
+        val h = LinearHistogramStat(0.0, 100.0, 10)
         for (i in 0..99) h.update(i.toDouble())
         val r = h.read()
         assertEquals(10, r.weights.size)
@@ -35,7 +35,7 @@ class LinearHistogramTest {
 
     @Test
     fun `value below lower goes to underflow`() {
-        val h = LinearHistogram(0.0, 10.0, 10)
+        val h = LinearHistogramStat(0.0, 10.0, 10)
         h.update(-1.0, weight = 3.0)
         val r = h.read()
         assertEquals(1, r.weights.size)
@@ -46,7 +46,7 @@ class LinearHistogramTest {
 
     @Test
     fun `value at or above upper goes to overflow`() {
-        val h = LinearHistogram(0.0, 10.0, 10)
+        val h = LinearHistogramStat(0.0, 10.0, 10)
         h.update(10.0)
         h.update(15.0, weight = 2.0)
         val r = h.read()
@@ -58,7 +58,7 @@ class LinearHistogramTest {
 
     @Test
     fun `weighted updates accumulate`() {
-        val h = LinearHistogram(0.0, 10.0, 10)
+        val h = LinearHistogramStat(0.0, 10.0, 10)
         h.update(5.0, weight = 4.0)
         h.update(5.0, weight = 6.0)
         val r = h.read()
@@ -68,7 +68,7 @@ class LinearHistogramTest {
 
     @Test
     fun `zero weight ignored`() {
-        val h = LinearHistogram(0.0, 10.0, 10)
+        val h = LinearHistogramStat(0.0, 10.0, 10)
         h.update(5.0, weight = 0.0)
         h.update(5.0, weight = -1.0)
         assertEquals(0, h.read().weights.size)
@@ -76,8 +76,8 @@ class LinearHistogramTest {
 
     @Test
     fun `merge combines distributions`() {
-        val a = LinearHistogram(0.0, 100.0, 10)
-        val b = LinearHistogram(0.0, 100.0, 10)
+        val a = LinearHistogramStat(0.0, 100.0, 10)
+        val b = LinearHistogramStat(0.0, 100.0, 10)
         for (i in 0..49) a.update(i.toDouble())
         for (i in 50..99) b.update(i.toDouble())
         a.merge(b.read())
@@ -86,7 +86,7 @@ class LinearHistogramTest {
 
     @Test
     fun `reset clears state`() {
-        val h = LinearHistogram(0.0, 10.0, 10)
+        val h = LinearHistogramStat(0.0, 10.0, 10)
         for (i in 0..9) h.update(i.toDouble())
         h.reset()
         assertEquals(0, h.read().weights.size)
@@ -94,7 +94,7 @@ class LinearHistogramTest {
 
     @Test
     fun `create produces independent stat`() {
-        val a = LinearHistogram(0.0, 10.0, 10)
+        val a = LinearHistogramStat(0.0, 10.0, 10)
         a.update(1.0)
         val b = a.create()
         b.update(2.0)
@@ -105,8 +105,8 @@ class LinearHistogramTest {
 
     @Test
     fun `invalid args throw`() {
-        assertFailsWith<IllegalArgumentException> { LinearHistogram(10.0, 0.0, 5) }
-        assertFailsWith<IllegalArgumentException> { LinearHistogram(0.0, 10.0, 0) }
-        assertFailsWith<IllegalArgumentException> { LinearHistogram(0.0, 10.0, -1) }
+        assertFailsWith<IllegalArgumentException> { LinearHistogramStat(10.0, 0.0, 5) }
+        assertFailsWith<IllegalArgumentException> { LinearHistogramStat(0.0, 10.0, 0) }
+        assertFailsWith<IllegalArgumentException> { LinearHistogramStat(0.0, 10.0, -1) }
     }
 }

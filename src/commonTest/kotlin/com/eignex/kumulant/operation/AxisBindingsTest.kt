@@ -1,7 +1,7 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stat.regression.OLS
-import com.eignex.kumulant.stat.summary.Sum
+import com.eignex.kumulant.stat.regression.OLSStat
+import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -11,7 +11,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withTimeAsX feeds timestamp-in-seconds into x and value into y`() {
-        val stat = OLS().withTimeAsX()
+        val stat = OLSStat().withTimeAsX()
         stat.update(value = 10.0, timestampNanos = 1_000_000_000L)
         stat.update(value = 12.0, timestampNanos = 2_000_000_000L)
         stat.update(value = 14.0, timestampNanos = 3_000_000_000L)
@@ -25,7 +25,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withTimeAsY feeds value into x and timestamp-in-seconds into y`() {
-        val stat = OLS().withTimeAsY()
+        val stat = OLSStat().withTimeAsY()
         stat.update(value = 10.0, timestampNanos = 1_000_000_000L)
         stat.update(value = 12.0, timestampNanos = 2_000_000_000L)
         stat.update(value = 14.0, timestampNanos = 3_000_000_000L)
@@ -37,7 +37,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withTimeAsX create preserves the time-axis binding`() {
-        val original = OLS().withTimeAsX()
+        val original = OLSStat().withTimeAsX()
         val clone = original.create()
         clone.update(value = 10.0, timestampNanos = 1_000_000_000L)
         clone.update(value = 20.0, timestampNanos = 2_000_000_000L)
@@ -48,7 +48,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withTimeAsY create preserves the time-axis binding`() {
-        val original = OLS().withTimeAsY()
+        val original = OLSStat().withTimeAsY()
         val clone = original.create()
         clone.update(value = 10.0, timestampNanos = 1_000_000_000L)
         clone.update(value = 20.0, timestampNanos = 2_000_000_000L)
@@ -59,7 +59,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withTimeAsX respects weight`() {
-        val stat = OLS().withTimeAsX()
+        val stat = OLSStat().withTimeAsX()
         stat.update(value = 10.0, timestampNanos = 1_000_000_000L, weight = 3.0)
         stat.update(value = 20.0, timestampNanos = 2_000_000_000L, weight = 3.0)
 
@@ -69,7 +69,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withFixedX supplies constant x to paired stat`() {
-        val stat = Sum().atX().withFixedX(7.0)
+        val stat = SumStat().atX().withFixedX(7.0)
         stat.update(99.0)
         stat.update(99.0)
         assertEquals(14.0, stat.read().sum, DELTA)
@@ -77,7 +77,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withFixedY supplies constant y to paired stat`() {
-        val stat = Sum().atY().withFixedY(3.0)
+        val stat = SumStat().atY().withFixedY(3.0)
         stat.update(99.0)
         stat.update(99.0)
         assertEquals(6.0, stat.read().sum, DELTA)

@@ -10,7 +10,7 @@ class ReliabilityTest {
 
     @Test
     fun `bins by predicted probability`() {
-        val r = Reliability(numBins = 4).apply {
+        val r = ReliabilityStat(numBins = 4).apply {
             // numBins = 4 → bin width 0.25
             update(x = 0.1, y = 0.0) // bin 0
             update(x = 0.3, y = 1.0) // bin 1
@@ -34,7 +34,7 @@ class ReliabilityTest {
 
     @Test
     fun `empty bins read NaN`() {
-        val r = Reliability(numBins = 3)
+        val r = ReliabilityStat(numBins = 3)
         val res = r.read(0L)
         for (i in 0 until 3) {
             assertTrue(res.meanProbability[i].isNaN())
@@ -44,7 +44,7 @@ class ReliabilityTest {
 
     @Test
     fun `out of range probability clamps to edge bin`() {
-        val r = Reliability(2).apply {
+        val r = ReliabilityStat(2).apply {
             update(-0.5, 0.0)
             update(1.5, 1.0)
         }
@@ -57,7 +57,7 @@ class ReliabilityTest {
     @Test
     fun `perfectly calibrated stream gives ECE 0`() {
         // Each bin's mean prob equals its outcome rate.
-        val r = Reliability(2).apply {
+        val r = ReliabilityStat(2).apply {
             update(0.2, 0.0)
             update(0.2, 0.0)
             update(0.2, 1.0)
@@ -77,7 +77,7 @@ class ReliabilityTest {
     @Test
     fun `exact-match stream gives ECE 0`() {
         // meanP == rate in each bin.
-        val r = Reliability(2).apply {
+        val r = ReliabilityStat(2).apply {
             update(0.25, 0.25)
             update(0.75, 0.75)
         }
@@ -86,11 +86,11 @@ class ReliabilityTest {
 
     @Test
     fun `merge adds bin sums`() {
-        val a = Reliability(3).apply {
+        val a = ReliabilityStat(3).apply {
             update(0.1, 1.0)
             update(0.5, 0.0)
         }
-        val b = Reliability(3).apply {
+        val b = ReliabilityStat(3).apply {
             update(0.1, 0.0)
             update(0.9, 1.0)
         }

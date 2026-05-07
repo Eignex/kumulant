@@ -34,7 +34,7 @@ interface HasSampleVariance : Result {
     val stdDev: Double get() = sqrt(variance)
 
     /** *
-     * Unbiased Sample Variance.
+     * Unbiased Sample VarianceStat.
      */
     val sampleVariance: Double
         get() = if (totalWeights > 1.0) {
@@ -113,13 +113,13 @@ interface HasLinearModel : Result {
  * Extends HasSampleVariance because R^2 requires SST.
  */
 interface HasRegression : HasSampleVariance {
-    /** Sum of Squared Errors (Residuals) */
+    /** SumStat of Squared Errors (Residuals) */
     val sse: Double
 
-    /** Sum of squares due to regression */
+    /** SumStat of squares due to regression */
     val ssr: Double get() = sst - sse
 
-    /** Mean squared error. */
+    /** MeanStat squared error. */
     val mse: Double
         get() = if (totalWeights > 0) sse / totalWeights else 0.0
 

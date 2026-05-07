@@ -13,7 +13,7 @@ data class QuantileResult(
     val quantile: Double
 ) : Result
 
-/** DDSketch snapshot: logarithmic bins plus precomputed [quantiles] for [probabilities]. */
+/** DDSketchStat snapshot: logarithmic bins plus precomputed [quantiles] for [probabilities]. */
 @Serializable
 @SerialName("Sketch")
 data class SketchResult(

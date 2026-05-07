@@ -1,14 +1,14 @@
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.stat.quantile.ReservoirHistogram
-import com.eignex.kumulant.stat.quantile.TDigest
-import com.eignex.kumulant.stat.sketch.SpaceSaving
-import com.eignex.kumulant.stat.summary.Max
-import com.eignex.kumulant.stat.summary.Mean
-import com.eignex.kumulant.stat.summary.Min
-import com.eignex.kumulant.stat.summary.Range
-import com.eignex.kumulant.stat.summary.Variance
+import com.eignex.kumulant.stat.quantile.ReservoirHistogramStat
+import com.eignex.kumulant.stat.quantile.TDigestStat
+import com.eignex.kumulant.stat.sketch.SpaceSavingStat
+import com.eignex.kumulant.stat.summary.MaxStat
+import com.eignex.kumulant.stat.summary.MeanStat
+import com.eignex.kumulant.stat.summary.MinStat
+import com.eignex.kumulant.stat.summary.RangeStat
+import com.eignex.kumulant.stat.summary.VarianceStat
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -64,8 +64,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Min under Relaxed concurrency captures the true minimum under contention`() {
-        val min = Min(Concurrency.Relaxed)
+    fun `MinStat under Relaxed concurrency captures the true minimum under contention`() {
+        val min = MinStat(Concurrency.Relaxed)
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -75,8 +75,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Max under Relaxed concurrency captures the true maximum under contention`() {
-        val max = Max(Concurrency.Relaxed)
+    fun `MaxStat under Relaxed concurrency captures the true maximum under contention`() {
+        val max = MaxStat(Concurrency.Relaxed)
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -86,8 +86,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Range under Relaxed concurrency captures the true min and max under contention`() {
-        val range = Range(Concurrency.Relaxed)
+    fun `RangeStat under Relaxed concurrency captures the true min and max under contention`() {
+        val range = RangeStat(Concurrency.Relaxed)
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -99,8 +99,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Mean under Strict concurrency preserves the Welford invariant under contention`() {
-        val mean = Mean(Concurrency.Strict)
+    fun `MeanStat under Strict concurrency preserves the Welford invariant under contention`() {
+        val mean = MeanStat(Concurrency.Strict)
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -117,8 +117,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `Variance under Strict concurrency preserves the Welford invariant under contention`() {
-        val variance = Variance(Concurrency.Strict)
+    fun `VarianceStat under Strict concurrency preserves the Welford invariant under contention`() {
+        val variance = VarianceStat(Concurrency.Strict)
         val threads = 8
         val iters = 5_000
         runConcurrently(threads, iters) { t, i ->
@@ -153,8 +153,8 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `TDigest survives concurrent update plus interleaved read with no exceptions`() {
-        val tdigest = TDigest(compression = 100.0, concurrency = Concurrency.Strict)
+    fun `TDigestStat survives concurrent update plus interleaved read with no exceptions`() {
+        val tdigest = TDigestStat(compression = 100.0, concurrency = Concurrency.Strict)
         val writers = 4
         val iters = 10_000
         runWithReader(tdigest::read) {
@@ -172,9 +172,9 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `ReservoirHistogram never exceeds capacity under concurrent update plus read`() {
+    fun `ReservoirHistogramStat never exceeds capacity under concurrent update plus read`() {
         val capacity = 256
-        val reservoir = ReservoirHistogram(capacity = capacity, seed = 42L, concurrency = Concurrency.Strict)
+        val reservoir = ReservoirHistogramStat(capacity = capacity, seed = 42L, concurrency = Concurrency.Strict)
         val writers = 4
         val iters = 10_000
         runWithReader(reservoir::read) {
@@ -191,9 +191,9 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
-    fun `SpaceSaving counts are non-decreasing under concurrent update plus read`() {
+    fun `SpaceSavingStat counts are non-decreasing under concurrent update plus read`() {
         val capacity = 64
-        val ss = SpaceSaving(capacity = capacity, concurrency = Concurrency.Strict)
+        val ss = SpaceSavingStat(capacity = capacity, concurrency = Concurrency.Strict)
         val writers = 4
         val iters = 10_000
         runWithReader(ss::read) {

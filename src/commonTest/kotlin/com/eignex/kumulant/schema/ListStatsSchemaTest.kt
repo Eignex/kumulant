@@ -18,8 +18,8 @@ class ListStatsSchemaTest {
 
     @Test fun seriesListStats_from_schema_preserves_order_and_results() {
         val schema = object : StatSchema() {
-            val a by series(SumConfig)
-            val b by series(MeanConfig)
+            val a by series(Sum)
+            val b by series(Mean)
         }
         val list = ListStats<Result>(schema)
         list.update(2.0);
@@ -31,8 +31,8 @@ class ListStatsSchemaTest {
 
     @Test fun pairedListStats_from_schema_preserves_order() {
         val schema = object : StatSchema() {
-            val a by paired(OLSConfig)
-            val b by paired(CovarianceConfig)
+            val a by paired(OLS)
+            val b by paired(Covariance)
         }
         val list = PairedListStats<Result>(schema)
         list.update(1.0, 2.0);
@@ -44,8 +44,8 @@ class ListStatsSchemaTest {
 
     @Test fun discreteListStats_from_schema_preserves_order() {
         val schema = object : StatSchema() {
-            val a by discrete(HyperLogLogConfig(precision = 10))
-            val b by discrete(LinearCountingConfig(bits = 1024))
+            val a by discrete(HyperLogLog(precision = 10))
+            val b by discrete(LinearCounting(bits = 1024))
         }
         val list = DiscreteListStats<Result>(schema)
         for (i in 1L..50L) list.update(i)
@@ -56,8 +56,8 @@ class ListStatsSchemaTest {
 
     @Test fun vectorListStats_from_schema_preserves_order() {
         val schema = object : StatSchema() {
-            val a by vector(VarianceVectorConfig(dimensions = 2))
-            val b by vector(VarianceVectorConfig(dimensions = 2))
+            val a by vector(VarianceVector(dimensions = 2))
+            val b by vector(VarianceVector(dimensions = 2))
         }
         val list = VectorListStats<Result>(schema)
         list.update(doubleArrayOf(1.0, 10.0))

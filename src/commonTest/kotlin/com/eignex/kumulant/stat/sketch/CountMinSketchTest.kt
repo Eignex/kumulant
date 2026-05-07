@@ -9,7 +9,7 @@ class CountMinSketchTest {
 
     @Test
     fun `empty snapshot is well-formed`() {
-        val cms = CountMinSketch(depth = 5, width = 1024)
+        val cms = CountMinSketchStat(depth = 5, width = 1024)
         val r = cms.read()
         assertEquals(5, r.depth)
         assertEquals(1024, r.width)
@@ -21,7 +21,7 @@ class CountMinSketchTest {
 
     @Test
     fun `single update is reflected in estimate`() {
-        val cms = CountMinSketch(depth = 5, width = 1024)
+        val cms = CountMinSketchStat(depth = 5, width = 1024)
         cms.update(42L)
         val r = cms.read()
         assertEquals(1L, r.estimate(42L))
@@ -30,7 +30,7 @@ class CountMinSketchTest {
 
     @Test
     fun `estimate is a one-sided overestimate of true counts`() {
-        val cms = CountMinSketch(depth = 5, width = 1024, seed = 17L)
+        val cms = CountMinSketchStat(depth = 5, width = 1024, seed = 17L)
         val truth = mutableMapOf<Long, Long>()
         for (i in 0 until 10_000) {
             val v = (i % 100).toLong()
@@ -46,7 +46,7 @@ class CountMinSketchTest {
     @Test
     fun `mean overestimate is small relative to total seen on uniform stream`() {
         val width = 4096
-        val cms = CountMinSketch(depth = 5, width = width, seed = 31L)
+        val cms = CountMinSketchStat(depth = 5, width = width, seed = 31L)
         val n = 100_000
         for (i in 0 until n) cms.update((i % 1000).toLong())
         val r = cms.read()
@@ -65,7 +65,7 @@ class CountMinSketchTest {
 
     @Test
     fun `weighted update accumulates`() {
-        val cms = CountMinSketch(depth = 5, width = 1024)
+        val cms = CountMinSketchStat(depth = 5, width = 1024)
         cms.update(7L, weight = 5.0)
         cms.update(7L, weight = 2.0)
         assertEquals(7L, cms.read().estimate(7L))
@@ -73,7 +73,7 @@ class CountMinSketchTest {
 
     @Test
     fun `zero or negative weight is ignored`() {
-        val cms = CountMinSketch(depth = 5, width = 1024)
+        val cms = CountMinSketchStat(depth = 5, width = 1024)
         cms.update(1L, weight = 0.0)
         cms.update(1L, weight = -1.0)
         val r = cms.read()
@@ -83,8 +83,8 @@ class CountMinSketchTest {
 
     @Test
     fun `merge combines two sketches`() {
-        val a = CountMinSketch(depth = 5, width = 1024, seed = 9L)
-        val b = CountMinSketch(depth = 5, width = 1024, seed = 9L)
+        val a = CountMinSketchStat(depth = 5, width = 1024, seed = 9L)
+        val b = CountMinSketchStat(depth = 5, width = 1024, seed = 9L)
         for (i in 0 until 1000) a.update((i % 50).toLong())
         for (i in 0 until 1000) b.update((i % 50).toLong())
         a.merge(b.read())
@@ -97,20 +97,20 @@ class CountMinSketchTest {
 
     @Test
     fun `merge requires matching shape`() {
-        val a = CountMinSketch(depth = 5, width = 1024, seed = 1L)
-        val bResult = CountMinSketch(depth = 5, width = 1024, seed = 2L).read()
+        val a = CountMinSketchStat(depth = 5, width = 1024, seed = 1L)
+        val bResult = CountMinSketchStat(depth = 5, width = 1024, seed = 2L).read()
         assertFailsWith<IllegalArgumentException> { a.merge(bResult) }
 
-        val cResult = CountMinSketch(depth = 4, width = 1024, seed = 1L).read()
+        val cResult = CountMinSketchStat(depth = 4, width = 1024, seed = 1L).read()
         assertFailsWith<IllegalArgumentException> { a.merge(cResult) }
 
-        val dResult = CountMinSketch(depth = 5, width = 512, seed = 1L).read()
+        val dResult = CountMinSketchStat(depth = 5, width = 512, seed = 1L).read()
         assertFailsWith<IllegalArgumentException> { a.merge(dResult) }
     }
 
     @Test
     fun `reset clears state`() {
-        val cms = CountMinSketch(depth = 5, width = 1024)
+        val cms = CountMinSketchStat(depth = 5, width = 1024)
         for (i in 1..100) cms.update(i.toLong())
         cms.reset()
         val r = cms.read()
@@ -120,7 +120,7 @@ class CountMinSketchTest {
 
     @Test
     fun `create produces independent stat with same shape`() {
-        val a = CountMinSketch(depth = 5, width = 1024, seed = 99L)
+        val a = CountMinSketchStat(depth = 5, width = 1024, seed = 99L)
         a.update(7L)
         val b = a.create()
         b.update(8L)
@@ -131,8 +131,8 @@ class CountMinSketchTest {
 
     @Test
     fun `invalid args throw`() {
-        assertFailsWith<IllegalArgumentException> { CountMinSketch(depth = 0, width = 1024) }
-        assertFailsWith<IllegalArgumentException> { CountMinSketch(depth = 5, width = 0) }
-        assertFailsWith<IllegalArgumentException> { CountMinSketch(depth = 5, width = 1000) }
+        assertFailsWith<IllegalArgumentException> { CountMinSketchStat(depth = 0, width = 1024) }
+        assertFailsWith<IllegalArgumentException> { CountMinSketchStat(depth = 5, width = 0) }
+        assertFailsWith<IllegalArgumentException> { CountMinSketchStat(depth = 5, width = 1000) }
     }
 }
