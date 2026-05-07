@@ -154,4 +154,116 @@ class ExprTest {
         val r = live.read() as com.eignex.kumulant.stat.cardinality.HyperLogLogResult
         kotlin.test.assertTrue(r.estimate in 30.0..70.0, "estimate=${r.estimate}")
     }
+
+    // ===== DSL operator overloads =====
+
+    @Test fun arithmetic_operators_build_expected_ast() {
+        val a: ScalarExpr = 2.0 * X + 1.0
+        assertEquals(Add(Mul(Const(2.0), X), Const(1.0)), a)
+        val b: ScalarExpr = X / 2.0 - 0.5
+        assertEquals(Sub(Div(X, Const(2.0)), Const(0.5)), b)
+        val c: ScalarExpr = -X
+        assertEquals(Neg(X), c)
+    }
+
+    @Test fun comparison_infix_builds_BoolExpr() {
+        val p = X gt 0.0
+        assertEquals(Gt(X, Const(0.0)), p)
+        val q = (X gt 0.0) and (X lt 1.0)
+        assertEquals(And(Gt(X, Const(0.0)), Lt(X, Const(1.0))), q)
+        val r = !(X gt 10.0)
+        assertEquals(Not(Gt(X, Const(10.0))), r)
+    }
+
+    @Test fun dsl_round_trips_via_SchemaJson() {
+        val expr: ScalarExpr = 2.0 * X + 1.0
+        val json = SchemaJson.encodeToString(ScalarExpr.serializer(), expr)
+        val decoded = SchemaJson.decodeFromString(ScalarExpr.serializer(), json)
+        assertEquals(7.0, decoded.eval(3.0), DELTA)
+    }
+
+    // ===== Paired transforms =====
+
+    @Test fun transformPair_swaps_x_and_y() {
+        val cfg: PairedStatConfig<*> = OLSConfig.transformPair(xExpr = Y, yExpr = X)
+        val live = cfg.materialize(Concurrency.None)
+        // After swap, slope between (originally x=1,y=2),(2,4),(3,6) becomes y/x → 0.5
+        live.update(1.0, 2.0); live.update(2.0, 4.0); live.update(3.0, 6.0)
+        val r = live.read() as com.eignex.kumulant.stat.regression.OLSResult
+        assertEquals(0.5, r.slope, DELTA)
+    }
+
+    @Test fun transformX_only_remaps_x() {
+        val cfg: PairedStatConfig<*> = OLSConfig.transformX(2.0 * X)
+        val live = cfg.materialize(Concurrency.None)
+        // Original: y = 2x; after x' = 2x: pairs (2,2),(4,4),(6,6) → slope 1.
+        live.update(1.0, 2.0); live.update(2.0, 4.0); live.update(3.0, 6.0)
+        val r = live.read() as com.eignex.kumulant.stat.regression.OLSResult
+        assertEquals(1.0, r.slope, DELTA)
+    }
+
+    @Test fun filter_paired_drops_by_predicate_over_x_and_y() {
+        val cfg: PairedStatConfig<*> = OLSConfig.filter((X gt 0.0) and (Y gt 0.0))
+        val live = cfg.materialize(Concurrency.None)
+        live.update(-1.0, 5.0)  // dropped (x <= 0)
+        live.update(1.0, -5.0)  // dropped (y <= 0)
+        live.update(1.0, 2.0); live.update(2.0, 4.0); live.update(3.0, 6.0)
+        val r = live.read() as com.eignex.kumulant.stat.regression.OLSResult
+        assertEquals(2.0, r.slope, DELTA)
+    }
+
+    // ===== Vector transforms =====
+
+    @Test fun transformElement_applies_expr_per_index() {
+        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 3)
+            .transformElement(2.0 * X + 1.0)
+        val live = cfg.materialize(Concurrency.None)
+        live.update(doubleArrayOf(1.0, 2.0, 3.0))
+        live.update(doubleArrayOf(4.0, 5.0, 6.0))
+        @Suppress("UNCHECKED_CAST")
+        val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        // After transform: (3, 5, 7) and (9, 11, 13). Sum per dim: 12, 16, 20.
+        assertEquals(12.0, rl.results[0].sum, DELTA)
+        assertEquals(16.0, rl.results[1].sum, DELTA)
+        assertEquals(20.0, rl.results[2].sum, DELTA)
+    }
+
+    @Test fun transformElement_can_reference_other_indices() {
+        // L1-ish normalization: each element divided by index 0.
+        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 2)
+            .transformElement(X / V(0))
+        val live = cfg.materialize(Concurrency.None)
+        live.update(doubleArrayOf(2.0, 4.0))   // -> 1.0, 2.0
+        live.update(doubleArrayOf(5.0, 10.0))  // -> 1.0, 2.0
+        @Suppress("UNCHECKED_CAST")
+        val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        assertEquals(2.0, rl.results[0].sum, DELTA)
+        assertEquals(4.0, rl.results[1].sum, DELTA)
+    }
+
+    @Test fun filter_vector_drops_by_index_predicate() {
+        val cfg: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 2)
+            .filter(V(0) gt 0.0)
+        val live = cfg.materialize(Concurrency.None)
+        live.update(doubleArrayOf(-1.0, 100.0))  // dropped
+        live.update(doubleArrayOf(1.0, 10.0))
+        live.update(doubleArrayOf(2.0, 20.0))
+        @Suppress("UNCHECKED_CAST")
+        val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        assertEquals(3.0, rl.results[0].sum, DELTA)
+        assertEquals(30.0, rl.results[1].sum, DELTA)
+    }
+
+    @Test fun paired_and_vector_configs_round_trip_via_wire() {
+        val cfg: PairedStatConfig<*> = OLSConfig.transformPair(xExpr = Y, yExpr = X)
+        val json = SchemaJson.encodeToString(StatConfig.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatConfig.serializer(), json) as TransformPairConfig
+        assertEquals(Y, decoded.xExpr)
+        assertEquals(X, decoded.yExpr)
+
+        val v: VectorStatConfig<*> = SumConfig.vectorized(dimensions = 3).filter(V(0) gt 0.0)
+        val vJson = SchemaJson.encodeToString(StatConfig.serializer(), v)
+        val vDecoded = SchemaJson.decodeFromString(StatConfig.serializer(), vJson) as FilterVectorConfig
+        assertEquals(Gt(V(0), Const(0.0)), vDecoded.pred)
+    }
 }

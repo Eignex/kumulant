@@ -8,153 +8,201 @@ import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+private val EMPTY_VECTOR = DoubleArray(0)
+
 /**
- * Wire-serializable AST for single-variable scalar expressions over the
- * incoming `Double` value. Used by the transform-config wrappers in
- * [OperationConfigs.kt] to encode value-mapping behavior that would otherwise
- * require a Kotlin lambda. Nodes are pure data; evaluation is straightforward
- * recursive interpretation.
+ * Wire-serializable AST for scalar expressions over the input env: a primary
+ * [x], an optional [y] (paired stats), and an optional [v] (vector stats).
+ * Nodes are pure data; evaluation is recursive interpretation.
  *
- * Polymorphic via skema's `$type` discriminator. Authoring form is direct AST
- * construction: `Add(Mul(Const(2.0), X), Const(1.0))` for `2*x + 1`.
+ * Polymorphic via skema's `$type` discriminator. The DSL extensions in this
+ * file ([Double.times], `infix gt`, etc.) make construction more readable.
  */
 @Serializable
 sealed interface ScalarExpr {
-    fun eval(x: Double): Double
+    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR): Double
 }
 
 @Serializable @SerialName("X")
 data object X : ScalarExpr {
-    override fun eval(x: Double): Double = x
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = x
+}
+
+@Serializable @SerialName("Y")
+data object Y : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = y
+}
+
+/** `v[index]` — out-of-bounds throws at eval time. */
+@Serializable @SerialName("V")
+data class V(val index: Int) : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = v[index]
 }
 
 @Serializable @SerialName("Const")
 data class Const(val v: Double) : ScalarExpr {
-    override fun eval(x: Double): Double = v
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = this.v
 }
 
 @Serializable @SerialName("Add")
 data class Add(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = l.eval(x) + r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = l.eval(x, y, v) + r.eval(x, y, v)
 }
 
 @Serializable @SerialName("Sub")
 data class Sub(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = l.eval(x) - r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = l.eval(x, y, v) - r.eval(x, y, v)
 }
 
 @Serializable @SerialName("Mul")
 data class Mul(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = l.eval(x) * r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = l.eval(x, y, v) * r.eval(x, y, v)
 }
 
 @Serializable @SerialName("Div")
 data class Div(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = l.eval(x) / r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = l.eval(x, y, v) / r.eval(x, y, v)
 }
 
 @Serializable @SerialName("Neg")
 data class Neg(val a: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = -a.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = -a.eval(x, y, v)
 }
 
 @Serializable @SerialName("Abs")
 data class Abs(val a: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = abs(a.eval(x))
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = abs(a.eval(x, y, v))
 }
 
 @Serializable @SerialName("Log")
 data class Log(val a: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = ln(a.eval(x))
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = ln(a.eval(x, y, v))
 }
 
 @Serializable @SerialName("Exp")
 data class Exp(val a: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = exp(a.eval(x))
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = exp(a.eval(x, y, v))
 }
 
 @Serializable @SerialName("Sqrt")
 data class Sqrt(val a: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = sqrt(a.eval(x))
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = sqrt(a.eval(x, y, v))
 }
 
 @Serializable @SerialName("Pow")
 data class Pow(val a: ScalarExpr, val b: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = a.eval(x).pow(b.eval(x))
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = a.eval(x, y, v).pow(b.eval(x, y, v))
 }
 
 @Serializable @SerialName("MinExpr")
 data class MinExpr(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = kotlin.math.min(l.eval(x), r.eval(x))
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double =
+        kotlin.math.min(l.eval(x, y, v), r.eval(x, y, v))
 }
 
 @Serializable @SerialName("MaxExpr")
 data class MaxExpr(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = kotlin.math.max(l.eval(x), r.eval(x))
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double =
+        kotlin.math.max(l.eval(x, y, v), r.eval(x, y, v))
 }
 
 @Serializable @SerialName("IfExpr")
 data class IfExpr(val cond: BoolExpr, val then: ScalarExpr, val otherwise: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double): Double = if (cond.eval(x)) then.eval(x) else otherwise.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double =
+        if (cond.eval(x, y, v)) then.eval(x, y, v) else otherwise.eval(x, y, v)
 }
 
 /**
- * Wire-serializable AST for single-variable boolean expressions over the
- * incoming `Double` value. Used by filter-config wrappers and as the
- * condition of [IfExpr].
+ * Wire-serializable AST for boolean expressions over the same input env as
+ * [ScalarExpr]. Used by filter-config wrappers and as the condition of [IfExpr].
  */
 @Serializable
 sealed interface BoolExpr {
-    fun eval(x: Double): Boolean
+    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR): Boolean
 }
 
 @Serializable @SerialName("Gt")
 data class Gt(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double): Boolean = l.eval(x) > r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) > r.eval(x, y, v)
 }
 
 @Serializable @SerialName("Ge")
 data class Ge(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double): Boolean = l.eval(x) >= r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) >= r.eval(x, y, v)
 }
 
 @Serializable @SerialName("Lt")
 data class Lt(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double): Boolean = l.eval(x) < r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) < r.eval(x, y, v)
 }
 
 @Serializable @SerialName("Le")
 data class Le(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double): Boolean = l.eval(x) <= r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) <= r.eval(x, y, v)
 }
 
 @Serializable @SerialName("Eq")
 data class Eq(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double): Boolean = l.eval(x) == r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) == r.eval(x, y, v)
 }
 
 @Serializable @SerialName("And")
 data class And(val l: BoolExpr, val r: BoolExpr) : BoolExpr {
-    override fun eval(x: Double): Boolean = l.eval(x) && r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) && r.eval(x, y, v)
 }
 
 @Serializable @SerialName("Or")
 data class Or(val l: BoolExpr, val r: BoolExpr) : BoolExpr {
-    override fun eval(x: Double): Boolean = l.eval(x) || r.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) || r.eval(x, y, v)
 }
 
 @Serializable @SerialName("Not")
 data class Not(val a: BoolExpr) : BoolExpr {
-    override fun eval(x: Double): Boolean = !a.eval(x)
+    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = !a.eval(x, y, v)
 }
 
-/**
- * `min <= a <= max` (inclusive). Wire-compact form of `And(Ge(a, min), Le(a, max))`.
- */
+/** `min <= a <= max` (inclusive). Wire-compact form of `And(Ge(a, min), Le(a, max))`. */
 @Serializable @SerialName("InRange")
 data class InRange(val a: ScalarExpr, val min: Double, val max: Double) : BoolExpr {
-    override fun eval(x: Double): Boolean {
-        val v = a.eval(x)
-        return v in min..max
+    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean {
+        val value = a.eval(x, y, v)
+        return value in min..max
     }
 }
+
+// ========== DSL: arithmetic operators ==========
+
+operator fun ScalarExpr.plus(rhs: ScalarExpr): ScalarExpr = Add(this, rhs)
+operator fun ScalarExpr.plus(rhs: Double): ScalarExpr = Add(this, Const(rhs))
+operator fun Double.plus(rhs: ScalarExpr): ScalarExpr = Add(Const(this), rhs)
+
+operator fun ScalarExpr.minus(rhs: ScalarExpr): ScalarExpr = Sub(this, rhs)
+operator fun ScalarExpr.minus(rhs: Double): ScalarExpr = Sub(this, Const(rhs))
+operator fun Double.minus(rhs: ScalarExpr): ScalarExpr = Sub(Const(this), rhs)
+
+operator fun ScalarExpr.times(rhs: ScalarExpr): ScalarExpr = Mul(this, rhs)
+operator fun ScalarExpr.times(rhs: Double): ScalarExpr = Mul(this, Const(rhs))
+operator fun Double.times(rhs: ScalarExpr): ScalarExpr = Mul(Const(this), rhs)
+
+operator fun ScalarExpr.div(rhs: ScalarExpr): ScalarExpr = Div(this, rhs)
+operator fun ScalarExpr.div(rhs: Double): ScalarExpr = Div(this, Const(rhs))
+operator fun Double.div(rhs: ScalarExpr): ScalarExpr = Div(Const(this), rhs)
+
+operator fun ScalarExpr.unaryMinus(): ScalarExpr = Neg(this)
+
+// ========== DSL: comparison and boolean ==========
+
+infix fun ScalarExpr.gt(rhs: ScalarExpr): BoolExpr = Gt(this, rhs)
+infix fun ScalarExpr.gt(rhs: Double): BoolExpr = Gt(this, Const(rhs))
+infix fun ScalarExpr.ge(rhs: ScalarExpr): BoolExpr = Ge(this, rhs)
+infix fun ScalarExpr.ge(rhs: Double): BoolExpr = Ge(this, Const(rhs))
+infix fun ScalarExpr.lt(rhs: ScalarExpr): BoolExpr = Lt(this, rhs)
+infix fun ScalarExpr.lt(rhs: Double): BoolExpr = Lt(this, Const(rhs))
+infix fun ScalarExpr.le(rhs: ScalarExpr): BoolExpr = Le(this, rhs)
+infix fun ScalarExpr.le(rhs: Double): BoolExpr = Le(this, Const(rhs))
+infix fun ScalarExpr.eq(rhs: ScalarExpr): BoolExpr = Eq(this, rhs)
+infix fun ScalarExpr.eq(rhs: Double): BoolExpr = Eq(this, Const(rhs))
+
+infix fun BoolExpr.and(rhs: BoolExpr): BoolExpr = And(this, rhs)
+infix fun BoolExpr.or(rhs: BoolExpr): BoolExpr = Or(this, rhs)
+operator fun BoolExpr.not(): BoolExpr = Not(this)

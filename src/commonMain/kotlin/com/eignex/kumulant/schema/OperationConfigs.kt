@@ -15,7 +15,9 @@ import com.eignex.kumulant.operation.atIndices
 import com.eignex.kumulant.operation.atX
 import com.eignex.kumulant.operation.atY
 import com.eignex.kumulant.operation.filter
+import com.eignex.kumulant.operation.transformPair
 import com.eignex.kumulant.operation.transformValue
+import com.eignex.kumulant.operation.transformVector
 import com.eignex.kumulant.operation.windowed
 import com.eignex.kumulant.operation.withFixedX
 import com.eignex.kumulant.operation.withFixedY
@@ -442,3 +444,82 @@ fun <R : Result> SeriesStatConfig<R>.filter(pred: BoolExpr): SeriesStatConfig<R>
 @Suppress("UNCHECKED_CAST")
 fun <R : Result> DiscreteStatConfig<R>.filter(pred: BoolExpr): DiscreteStatConfig<R> =
     FilterValueDiscreteConfig(this, pred) as DiscreteStatConfig<R>
+
+/**
+ * Apply [xExpr] / [yExpr] to map each `(x, y)` pair before update — wire-friendly
+ * counterpart of `PairedStat<R>.transformPair { x, y -> … }`. Each expr can
+ * reference both [X] and [Y] of the original input.
+ */
+@Serializable @SerialName("TransformPair")
+data class TransformPairConfig(
+    val inner: StatConfig,
+    val xExpr: ScalarExpr,
+    val yExpr: ScalarExpr,
+) : PairedStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): PairedStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requirePaired(inner, "TransformPair").materialize(concurrency) as PairedStat<Result>
+        return materialized.transformPair { xv, yv -> xExpr.eval(xv, yv) to yExpr.eval(xv, yv) }
+    }
+}
+
+@Serializable @SerialName("FilterPaired")
+data class FilterPairedConfig(val inner: StatConfig, val pred: BoolExpr) : PairedStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): PairedStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requirePaired(inner, "FilterPaired").materialize(concurrency) as PairedStat<Result>
+        return materialized.filter { xv, yv -> pred.eval(xv, yv) }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> PairedStatConfig<R>.transformPair(xExpr: ScalarExpr, yExpr: ScalarExpr): PairedStatConfig<R> =
+    TransformPairConfig(this, xExpr, yExpr) as PairedStatConfig<R>
+
+/** Map only the x coordinate; y stays as-is. */
+fun <R : Result> PairedStatConfig<R>.transformX(expr: ScalarExpr): PairedStatConfig<R> =
+    transformPair(expr, Y)
+
+/** Map only the y coordinate; x stays as-is. */
+fun <R : Result> PairedStatConfig<R>.transformY(expr: ScalarExpr): PairedStatConfig<R> =
+    transformPair(X, expr)
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> PairedStatConfig<R>.filter(pred: BoolExpr): PairedStatConfig<R> =
+    FilterPairedConfig(this, pred) as PairedStatConfig<R>
+
+/**
+ * Apply [expr] element-wise to every entry of the incoming vector before
+ * update. The expression sees the current element as [X] and can reference
+ * any other element via [V]`(j)` — sufficient for normalization,
+ * standardization, masking, etc. For arbitrary cross-element vector→vector
+ * transforms beyond per-element evaluation, use the live `transformVector`
+ * with a Kotlin lambda.
+ */
+@Serializable @SerialName("TransformVectorElement")
+data class TransformVectorElementConfig(val inner: StatConfig, val expr: ScalarExpr) : VectorStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requireVector(inner, "TransformVectorElement").materialize(concurrency) as VectorStat<Result>
+        return materialized.transformVector { vec ->
+            DoubleArray(vec.size) { i -> expr.eval(vec[i], 0.0, vec) }
+        }
+    }
+}
+
+@Serializable @SerialName("FilterVector")
+data class FilterVectorConfig(val inner: StatConfig, val pred: BoolExpr) : VectorStatConfig<Result> {
+    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
+        @Suppress("UNCHECKED_CAST")
+        val materialized = requireVector(inner, "FilterVector").materialize(concurrency) as VectorStat<Result>
+        return materialized.filter { vec -> pred.eval(0.0, 0.0, vec) }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> VectorStatConfig<R>.transformElement(expr: ScalarExpr): VectorStatConfig<R> =
+    TransformVectorElementConfig(this, expr) as VectorStatConfig<R>
+
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> VectorStatConfig<R>.filter(pred: BoolExpr): VectorStatConfig<R> =
+    FilterVectorConfig(this, pred) as VectorStatConfig<R>

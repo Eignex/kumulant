@@ -13,26 +13,28 @@ import com.eignex.kumulant.core.VectorStat
  *
  * [forward] produces the exposed result on read; [reverse] reconstructs the underlying
  * result on merge. Both must round-trip for merge semantics to hold.
+ *
+ * Internal-only: lambda-based and not wire-expressible. Used by [com.eignex.kumulant.stat.regression.Lasso],
+ * [com.eignex.kumulant.stat.regression.Ridge], [com.eignex.kumulant.stat.regression.Covariance], and
+ * [com.eignex.kumulant.stat.rate.DecayingRate] to project an inner stat's result; the
+ * user-facing API for those is the dedicated stat constructor (`Lasso(lambda)` etc.).
  */
-fun <R1 : Result, R2 : Result> SeriesStat<R1>.mapResult(
+internal fun <R1 : Result, R2 : Result> SeriesStat<R1>.mapResult(
     forward: (R1) -> R2,
     reverse: (R2) -> R1
 ): SeriesStat<R2> = MapResultSeriesStat(this, forward, reverse)
 
-/** Paired-stat counterpart of [SeriesStat.mapResult]. */
-fun <R1 : Result, R2 : Result> PairedStat<R1>.mapResult(
+internal fun <R1 : Result, R2 : Result> PairedStat<R1>.mapResult(
     forward: (R1) -> R2,
     reverse: (R2) -> R1
 ): PairedStat<R2> = MapResultPairedStat(this, forward, reverse)
 
-/** Vector-stat counterpart of [SeriesStat.mapResult]. */
-fun <R1 : Result, R2 : Result> VectorStat<R1>.mapResult(
+internal fun <R1 : Result, R2 : Result> VectorStat<R1>.mapResult(
     forward: (R1) -> R2,
     reverse: (R2) -> R1
 ): VectorStat<R2> = MapResultVectorStat(this, forward, reverse)
 
-/** Discrete-stat counterpart of [SeriesStat.mapResult]. */
-fun <R1 : Result, R2 : Result> DiscreteStat<R1>.mapResult(
+internal fun <R1 : Result, R2 : Result> DiscreteStat<R1>.mapResult(
     forward: (R1) -> R2,
     reverse: (R2) -> R1
 ): DiscreteStat<R2> = MapResultDiscreteStat(this, forward, reverse)
