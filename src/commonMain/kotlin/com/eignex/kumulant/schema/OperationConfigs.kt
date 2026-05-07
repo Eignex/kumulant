@@ -79,7 +79,8 @@ private fun requireDiscrete(inner: StatConfig, op: String): DiscreteStatConfig<*
 
 // ========== withWeight ==========
 
-@Serializable @SerialName("WithWeightSeries")
+@Serializable
+@SerialName("WithWeightSeries")
 data class WithWeightSeriesConfig(val inner: StatConfig, val weight: Double) : SeriesStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -88,7 +89,8 @@ data class WithWeightSeriesConfig(val inner: StatConfig, val weight: Double) : S
     }
 }
 
-@Serializable @SerialName("WithWeightPaired")
+@Serializable
+@SerialName("WithWeightPaired")
 data class WithWeightPairedConfig(val inner: StatConfig, val weight: Double) : PairedStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): PairedStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -97,7 +99,8 @@ data class WithWeightPairedConfig(val inner: StatConfig, val weight: Double) : P
     }
 }
 
-@Serializable @SerialName("WithWeightVector")
+@Serializable
+@SerialName("WithWeightVector")
 data class WithWeightVectorConfig(val inner: StatConfig, val weight: Double) : VectorStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -106,7 +109,8 @@ data class WithWeightVectorConfig(val inner: StatConfig, val weight: Double) : V
     }
 }
 
-@Serializable @SerialName("WithWeightDiscrete")
+@Serializable
+@SerialName("WithWeightDiscrete")
 data class WithWeightDiscreteConfig(val inner: StatConfig, val weight: Double) : DiscreteStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -133,7 +137,8 @@ fun <R : Result> DiscreteStatConfig<R>.withWeight(weight: Double): DiscreteStatC
 
 // ========== withValue (Series, Discrete) ==========
 
-@Serializable @SerialName("WithValueSeries")
+@Serializable
+@SerialName("WithValueSeries")
 data class WithValueSeriesConfig(val inner: StatConfig, val value: Double) : SeriesStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -142,7 +147,8 @@ data class WithValueSeriesConfig(val inner: StatConfig, val value: Double) : Ser
     }
 }
 
-@Serializable @SerialName("WithValueDiscrete")
+@Serializable
+@SerialName("WithValueDiscrete")
 data class WithValueDiscreteConfig(val inner: StatConfig, val value: Long) : DiscreteStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -161,7 +167,8 @@ fun <R : Result> DiscreteStatConfig<R>.withValue(value: Long): DiscreteStatConfi
 
 // ========== Type adapters: asSeries / asDiscrete ==========
 
-@Serializable @SerialName("AsSeries")
+@Serializable
+@SerialName("AsSeries")
 data class AsSeriesConfig(val inner: StatConfig) : SeriesStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -170,7 +177,8 @@ data class AsSeriesConfig(val inner: StatConfig) : SeriesStatConfig<Result> {
     }
 }
 
-@Serializable @SerialName("AsDiscrete")
+@Serializable
+@SerialName("AsDiscrete")
 data class AsDiscreteConfig(val inner: StatConfig) : DiscreteStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -189,7 +197,8 @@ fun <R : Result> SeriesStatConfig<R>.asDiscrete(): DiscreteStatConfig<R> =
 
 // ========== Selectors: atX / atY / atIndex / atIndices ==========
 
-@Serializable @SerialName("AtX")
+@Serializable
+@SerialName("AtX")
 data class AtXConfig(val inner: StatConfig) : PairedStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): PairedStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -198,7 +207,8 @@ data class AtXConfig(val inner: StatConfig) : PairedStatConfig<Result> {
     }
 }
 
-@Serializable @SerialName("AtY")
+@Serializable
+@SerialName("AtY")
 data class AtYConfig(val inner: StatConfig) : PairedStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): PairedStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -207,7 +217,8 @@ data class AtYConfig(val inner: StatConfig) : PairedStatConfig<Result> {
     }
 }
 
-@Serializable @SerialName("AtIndex")
+@Serializable
+@SerialName("AtIndex")
 data class AtIndexConfig(val inner: StatConfig, val index: Int) : VectorStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -216,7 +227,8 @@ data class AtIndexConfig(val inner: StatConfig, val index: Int) : VectorStatConf
     }
 }
 
-@Serializable @SerialName("AtIndices")
+@Serializable
+@SerialName("AtIndices")
 data class AtIndicesConfig(val inner: StatConfig, val indexX: Int, val indexY: Int) : VectorStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -241,7 +253,8 @@ fun <R : Result> PairedStatConfig<R>.atIndices(indexX: Int, indexY: Int): Vector
 
 // ========== Axis bindings: withFixedX/Y, withTimeAsX/Y ==========
 
-@Serializable @SerialName("WithFixedX")
+@Serializable
+@SerialName("WithFixedX")
 data class WithFixedXConfig(val inner: StatConfig, val fixedX: Double) : SeriesStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -250,7 +263,8 @@ data class WithFixedXConfig(val inner: StatConfig, val fixedX: Double) : SeriesS
     }
 }
 
-@Serializable @SerialName("WithFixedY")
+@Serializable
+@SerialName("WithFixedY")
 data class WithFixedYConfig(val inner: StatConfig, val fixedY: Double) : SeriesStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -259,7 +273,8 @@ data class WithFixedYConfig(val inner: StatConfig, val fixedY: Double) : SeriesS
     }
 }
 
-@Serializable @SerialName("WithTimeAsX")
+@Serializable
+@SerialName("WithTimeAsX")
 data class WithTimeAsXConfig(val inner: StatConfig) : SeriesStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -268,7 +283,8 @@ data class WithTimeAsXConfig(val inner: StatConfig) : SeriesStatConfig<Result> {
     }
 }
 
-@Serializable @SerialName("WithTimeAsY")
+@Serializable
+@SerialName("WithTimeAsY")
 data class WithTimeAsYConfig(val inner: StatConfig) : SeriesStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -295,7 +311,8 @@ fun <R : Result> PairedStatConfig<R>.withTimeAsY(): SeriesStatConfig<R> =
 
 // ========== Windowed ==========
 
-@Serializable @SerialName("WindowedSeries")
+@Serializable
+@SerialName("WindowedSeries")
 data class WindowedSeriesConfig(
     val inner: StatConfig,
     val durationMillis: Long,
@@ -308,7 +325,8 @@ data class WindowedSeriesConfig(
     }
 }
 
-@Serializable @SerialName("WindowedPaired")
+@Serializable
+@SerialName("WindowedPaired")
 data class WindowedPairedConfig(
     val inner: StatConfig,
     val durationMillis: Long,
@@ -321,7 +339,8 @@ data class WindowedPairedConfig(
     }
 }
 
-@Serializable @SerialName("WindowedVector")
+@Serializable
+@SerialName("WindowedVector")
 data class WindowedVectorConfig(
     val inner: StatConfig,
     val durationMillis: Long,
@@ -334,7 +353,8 @@ data class WindowedVectorConfig(
     }
 }
 
-@Serializable @SerialName("WindowedDiscrete")
+@Serializable
+@SerialName("WindowedDiscrete")
 data class WindowedDiscreteConfig(
     val inner: StatConfig,
     val durationMillis: Long,
@@ -373,7 +393,8 @@ fun <R : Result> DiscreteStatConfig<R>.windowed(
 
 // ========== Vectorized (Series template replicated per dimension) ==========
 
-@Serializable @SerialName("Vectorized")
+@Serializable
+@SerialName("Vectorized")
 data class VectorizedStatConfig(val dimensions: Int, val template: StatConfig) :
     VectorStatConfig<ResultList<Result>> {
     override fun materialize(concurrency: Concurrency): VectorStat<ResultList<Result>> {
@@ -395,7 +416,8 @@ fun <R : Result> SeriesStatConfig<R>.vectorized(dimensions: Int): VectorStatConf
  * built at materialize time and forwards every input through `expr.eval`;
  * the AST itself ([ScalarExpr]) is what travels on the wire.
  */
-@Serializable @SerialName("TransformValueSeries")
+@Serializable
+@SerialName("TransformValueSeries")
 data class TransformValueSeriesConfig(val inner: StatConfig, val expr: ScalarExpr) : SeriesStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -404,16 +426,21 @@ data class TransformValueSeriesConfig(val inner: StatConfig, val expr: ScalarExp
     }
 }
 
-@Serializable @SerialName("TransformValueDiscrete")
+@Serializable
+@SerialName("TransformValueDiscrete")
 data class TransformValueDiscreteConfig(val inner: StatConfig, val expr: ScalarExpr) : DiscreteStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
         @Suppress("UNCHECKED_CAST")
-        val materialized = requireDiscrete(inner, "TransformValueDiscrete").materialize(concurrency) as DiscreteStat<Result>
+        val materialized = requireDiscrete(
+            inner,
+            "TransformValueDiscrete"
+        ).materialize(concurrency) as DiscreteStat<Result>
         return materialized.transformValue { expr.eval(it.toDouble()).toLong() }
     }
 }
 
-@Serializable @SerialName("FilterValueSeries")
+@Serializable
+@SerialName("FilterValueSeries")
 data class FilterValueSeriesConfig(val inner: StatConfig, val pred: BoolExpr) : SeriesStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -422,11 +449,15 @@ data class FilterValueSeriesConfig(val inner: StatConfig, val pred: BoolExpr) : 
     }
 }
 
-@Serializable @SerialName("FilterValueDiscrete")
+@Serializable
+@SerialName("FilterValueDiscrete")
 data class FilterValueDiscreteConfig(val inner: StatConfig, val pred: BoolExpr) : DiscreteStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
         @Suppress("UNCHECKED_CAST")
-        val materialized = requireDiscrete(inner, "FilterValueDiscrete").materialize(concurrency) as DiscreteStat<Result>
+        val materialized = requireDiscrete(
+            inner,
+            "FilterValueDiscrete"
+        ).materialize(concurrency) as DiscreteStat<Result>
         return materialized.filter { pred.eval(it.toDouble()) }
     }
 }
@@ -452,7 +483,8 @@ fun <R : Result> DiscreteStatConfig<R>.filter(pred: BoolExpr): DiscreteStatConfi
  * counterpart of `PairedStat<R>.transformPair { x, y -> … }`. Each expr can
  * reference both [X] and [Y] of the original input.
  */
-@Serializable @SerialName("TransformPair")
+@Serializable
+@SerialName("TransformPair")
 data class TransformPairConfig(
     val inner: StatConfig,
     val xExpr: ScalarExpr,
@@ -465,7 +497,8 @@ data class TransformPairConfig(
     }
 }
 
-@Serializable @SerialName("FilterPaired")
+@Serializable
+@SerialName("FilterPaired")
 data class FilterPairedConfig(val inner: StatConfig, val pred: BoolExpr) : PairedStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): PairedStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -498,7 +531,8 @@ fun <R : Result> PairedStatConfig<R>.filter(pred: BoolExpr): PairedStatConfig<R>
  * transforms beyond per-element evaluation, use the live `transformVector`
  * with a Kotlin lambda.
  */
-@Serializable @SerialName("TransformVectorElement")
+@Serializable
+@SerialName("TransformVectorElement")
 data class TransformVectorElementConfig(val inner: StatConfig, val expr: ScalarExpr) : VectorStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -509,7 +543,8 @@ data class TransformVectorElementConfig(val inner: StatConfig, val expr: ScalarE
     }
 }
 
-@Serializable @SerialName("FilterVector")
+@Serializable
+@SerialName("FilterVector")
 data class FilterVectorConfig(val inner: StatConfig, val pred: BoolExpr) : VectorStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -531,7 +566,8 @@ fun <R : Result> VectorStatConfig<R>.filter(pred: BoolExpr): VectorStatConfig<R>
  * pair to a scalar via [expr] before driving the inner stat. The expression
  * is free to reference both [X] and [Y].
  */
-@Serializable @SerialName("FoldPaired")
+@Serializable
+@SerialName("FoldPaired")
 data class FoldPairedConfig(val inner: StatConfig, val expr: ScalarExpr) : PairedStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): PairedStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -545,7 +581,8 @@ data class FoldPairedConfig(val inner: StatConfig, val expr: ScalarExpr) : Paire
  * a scalar via [expr] before driving the inner stat. The expression typically
  * uses [VFold] / [VDot] / [V] to consume the vector.
  */
-@Serializable @SerialName("FoldVector")
+@Serializable
+@SerialName("FoldVector")
 data class FoldVectorConfig(val inner: StatConfig, val expr: ScalarExpr) : VectorStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         @Suppress("UNCHECKED_CAST")
@@ -568,7 +605,8 @@ fun <R : Result> SeriesStatConfig<R>.foldVector(expr: ScalarExpr): VectorStatCon
  * input length need not match; the inner stat must be parameterised for the
  * output dim.
  */
-@Serializable @SerialName("TransformVector")
+@Serializable
+@SerialName("TransformVector")
 data class TransformVectorConfig(val inner: StatConfig, val expr: VectorExpr) : VectorStatConfig<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         @Suppress("UNCHECKED_CAST")

@@ -8,7 +8,6 @@ import com.eignex.skema.SchemaJson
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 private class HttpMetrics : StatSchema() {
     val requests by series(SumConfig)
@@ -50,7 +49,10 @@ class StatSchemaDefSerializationTest {
         val rebuilt = StatGroup(stats = def.materializeSeries(Concurrency.None))
 
         val live = StatGroup(schema)
-        listOf(1.0, 2.0, 3.0).forEach { live.update(it); rebuilt.update(it) }
+        listOf(1.0, 2.0, 3.0).forEach {
+            live.update(it)
+            rebuilt.update(it)
+        }
 
         val origSnap = live.read()
         val rebuiltSnap = rebuilt.read()

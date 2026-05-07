@@ -44,37 +44,43 @@ data class AlphaConfig(val alpha: Double) : DecayWeightingConfig {
     fun toDecayWeighting(): DecayWeighting.Alpha = DecayWeighting.Alpha(alpha)
 }
 
-@Serializable @SerialName("DecayingSumConfig")
+@Serializable
+@SerialName("DecayingSumConfig")
 data class DecayingSumConfig(val weighting: HalfLifeConfig) : SeriesStatConfig<DecayingSumResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<DecayingSumResult> =
         DecayingSum(weighting.toDecayWeighting(), concurrency)
 }
 
-@Serializable @SerialName("DecayingMeanConfig")
+@Serializable
+@SerialName("DecayingMeanConfig")
 data class DecayingMeanConfig(val weighting: HalfLifeConfig) : SeriesStatConfig<DecayingMeanResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<DecayingMeanResult> =
         DecayingMean(weighting.toDecayWeighting(), concurrency)
 }
 
-@Serializable @SerialName("DecayingVarianceConfig")
+@Serializable
+@SerialName("DecayingVarianceConfig")
 data class DecayingVarianceConfig(val weighting: HalfLifeConfig) : SeriesStatConfig<DecayingVarianceResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<DecayingVarianceResult> =
         DecayingVariance(weighting.toDecayWeighting(), concurrency)
 }
 
-@Serializable @SerialName("EwmaMeanConfig")
+@Serializable
+@SerialName("EwmaMeanConfig")
 data class EwmaMeanConfig(val weighting: AlphaConfig) : SeriesStatConfig<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<WeightedMeanResult> =
         EwmaMean(weighting.toDecayWeighting(), concurrency)
 }
 
-@Serializable @SerialName("EwmaVarianceConfig")
+@Serializable
+@SerialName("EwmaVarianceConfig")
 data class EwmaVarianceConfig(val weighting: AlphaConfig) : SeriesStatConfig<WeightedVarianceResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<WeightedVarianceResult> =
         EwmaVariance(weighting.toDecayWeighting(), concurrency)
 }
 
-@Serializable @SerialName("DecayingRateConfig")
+@Serializable
+@SerialName("DecayingRateConfig")
 data class DecayingRateConfig(val halfLifeMillis: Long) : SeriesStatConfig<DecayingRateResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<DecayingRateResult> =
         DecayingRate(halfLifeMillis.milliseconds, concurrency)

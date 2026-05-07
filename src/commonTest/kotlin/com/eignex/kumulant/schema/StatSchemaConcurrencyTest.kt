@@ -42,7 +42,8 @@ class StatSchemaConcurrencyTest {
             val sum by series(SumConfig)
         }
         val group = StatGroup(schema)
-        group.update(1.0); group.update(2.0)
+        group.update(1.0)
+        group.update(2.0)
         assertEquals(3.0, group.read()[schema.sum].sum)
     }
 

@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLog
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
@@ -35,24 +36,15 @@ import com.eignex.kumulant.stat.regression.RidgeResult
 import com.eignex.kumulant.stat.score.Auc
 import com.eignex.kumulant.stat.score.AucResult
 import com.eignex.kumulant.stat.score.BrierScore
+import com.eignex.kumulant.stat.score.CrpsEnsemble
 import com.eignex.kumulant.stat.score.CrpsGaussian
 import com.eignex.kumulant.stat.score.LogLoss
 import com.eignex.kumulant.stat.score.MaeLoss
 import com.eignex.kumulant.stat.score.MseLoss
 import com.eignex.kumulant.stat.score.PinballLoss
-import com.eignex.kumulant.stat.score.CrpsEnsemble
 import com.eignex.kumulant.stat.score.Reliability
 import com.eignex.kumulant.stat.score.ReliabilityResult
 import com.eignex.kumulant.stat.score.pitHistogram
-import com.eignex.kumulant.stat.tree.ClassHistogram
-import com.eignex.kumulant.stat.tree.ClassHistogramResult
-import com.eignex.kumulant.stat.tree.GradientHistogram
-import com.eignex.kumulant.stat.tree.GradientHistogramResult
-import com.eignex.kumulant.stat.tree.MultiGradientHistogram
-import com.eignex.kumulant.stat.tree.MultiGradientHistogramResult
-import com.eignex.kumulant.stat.tree.VarianceHistogram
-import com.eignex.kumulant.stat.tree.VarianceHistogramResult
-import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.stat.sketch.BloomFilter
 import com.eignex.kumulant.stat.sketch.BloomFilterResult
 import com.eignex.kumulant.stat.sketch.CountMinSketch
@@ -82,6 +74,14 @@ import com.eignex.kumulant.stat.summary.Variance
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import com.eignex.kumulant.stat.summary.varianceVector
+import com.eignex.kumulant.stat.tree.ClassHistogram
+import com.eignex.kumulant.stat.tree.ClassHistogramResult
+import com.eignex.kumulant.stat.tree.GradientHistogram
+import com.eignex.kumulant.stat.tree.GradientHistogramResult
+import com.eignex.kumulant.stat.tree.MultiGradientHistogram
+import com.eignex.kumulant.stat.tree.MultiGradientHistogramResult
+import com.eignex.kumulant.stat.tree.VarianceHistogram
+import com.eignex.kumulant.stat.tree.VarianceHistogramResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -97,62 +97,74 @@ import kotlinx.serialization.Serializable
 
 // ========== Series ==========
 
-@Serializable @SerialName("MeanConfig")
+@Serializable
+@SerialName("MeanConfig")
 data object MeanConfig : SeriesStatConfig<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<WeightedMeanResult> = Mean(concurrency)
 }
 
-@Serializable @SerialName("SumConfig")
+@Serializable
+@SerialName("SumConfig")
 data object SumConfig : SeriesStatConfig<SumResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SumResult> = Sum(concurrency)
 }
 
-@Serializable @SerialName("MinConfig")
+@Serializable
+@SerialName("MinConfig")
 data object MinConfig : SeriesStatConfig<MinResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<MinResult> = Min(concurrency)
 }
 
-@Serializable @SerialName("MaxConfig")
+@Serializable
+@SerialName("MaxConfig")
 data object MaxConfig : SeriesStatConfig<MaxResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<MaxResult> = Max(concurrency)
 }
 
-@Serializable @SerialName("RangeConfig")
+@Serializable
+@SerialName("RangeConfig")
 data object RangeConfig : SeriesStatConfig<RangeResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<RangeResult> = Range(concurrency)
 }
 
-@Serializable @SerialName("VarianceConfig")
+@Serializable
+@SerialName("VarianceConfig")
 data object VarianceConfig : SeriesStatConfig<WeightedVarianceResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<WeightedVarianceResult> = Variance(concurrency)
 }
 
-@Serializable @SerialName("MomentsConfig")
+@Serializable
+@SerialName("MomentsConfig")
 data object MomentsConfig : SeriesStatConfig<MomentsResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<MomentsResult> = Moments(concurrency)
 }
 
-@Serializable @SerialName("BernoulliSumConfig")
+@Serializable
+@SerialName("BernoulliSumConfig")
 data object BernoulliSumConfig : SeriesStatConfig<BernoulliSumResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<BernoulliSumResult> = BernoulliSum(concurrency)
 }
 
-@Serializable @SerialName("TotalWeightsConfig")
+@Serializable
+@SerialName("TotalWeightsConfig")
 data object TotalWeightsConfig : SeriesStatConfig<SumResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SumResult> = TotalWeights(concurrency)
 }
 
-@Serializable @SerialName("CountConfig")
+@Serializable
+@SerialName("CountConfig")
 data object CountConfig : SeriesStatConfig<SumResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SumResult> = Count(concurrency)
 }
 
-@Serializable @SerialName("RateConfig")
+@Serializable
+@SerialName("RateConfig")
 data object RateConfig : SeriesStatConfig<RateResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<RateResult> = Rate(concurrency)
 }
 
-@Serializable @SerialName("CounterRateConfig")
+@Serializable
+@SerialName("CounterRateConfig")
 data class CounterRateConfig(
     val treatDecreaseAsReset: Boolean = true,
 ) : SeriesStatConfig<RateResult> {
@@ -165,7 +177,8 @@ data class CounterRateConfig(
  * renders lists more cleanly than primitive arrays; converted to a `DoubleArray` at
  * [materialize] time.
  */
-@Serializable @SerialName("DDSketchConfig")
+@Serializable
+@SerialName("DDSketchConfig")
 data class DDSketchConfig(
     val relativeError: Double = 0.01,
     val probabilities: List<Double> = listOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
@@ -174,7 +187,8 @@ data class DDSketchConfig(
         DDSketch(relativeError, probabilities.toDoubleArray(), concurrency)
 }
 
-@Serializable @SerialName("FrugalQuantileConfig")
+@Serializable
+@SerialName("FrugalQuantileConfig")
 data class FrugalQuantileConfig(
     val q: Double,
     val stepSize: Double = 0.01,
@@ -184,7 +198,8 @@ data class FrugalQuantileConfig(
         FrugalQuantile(q, stepSize, initialEstimate, concurrency)
 }
 
-@Serializable @SerialName("HdrHistogramConfig")
+@Serializable
+@SerialName("HdrHistogramConfig")
 data class HdrHistogramConfig(
     val lowestDiscernibleValue: Double = 0.001,
     val initialHighestTrackableValue: Double = 100.0,
@@ -194,7 +209,8 @@ data class HdrHistogramConfig(
         HdrHistogram(lowestDiscernibleValue, initialHighestTrackableValue, significantDigits, concurrency)
 }
 
-@Serializable @SerialName("LinearHistogramConfig")
+@Serializable
+@SerialName("LinearHistogramConfig")
 data class LinearHistogramConfig(
     val lowerBound: Double,
     val upperBound: Double,
@@ -209,7 +225,8 @@ data class LinearHistogramConfig(
  * `Random.Default.nextLong()` is non-deterministic, which would silently produce
  * different goldens on each instantiation if mirrored here.
  */
-@Serializable @SerialName("ReservoirHistogramConfig")
+@Serializable
+@SerialName("ReservoirHistogramConfig")
 data class ReservoirHistogramConfig(
     val capacity: Int = 1024,
     val seed: Long,
@@ -218,7 +235,8 @@ data class ReservoirHistogramConfig(
         ReservoirHistogram(capacity, seed, concurrency)
 }
 
-@Serializable @SerialName("TDigestConfig")
+@Serializable
+@SerialName("TDigestConfig")
 data class TDigestConfig(
     val compression: Double = 100.0,
     val probabilities: List<Double> = listOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
@@ -227,7 +245,8 @@ data class TDigestConfig(
         TDigest(compression, probabilities.toDoubleArray(), concurrency)
 }
 
-@Serializable @SerialName("PitHistogramConfig")
+@Serializable
+@SerialName("PitHistogramConfig")
 data class PitHistogramConfig(val numBins: Int) : SeriesStatConfig<SparseHistogramResult> {
     override fun materialize(concurrency: Concurrency): SeriesStat<SparseHistogramResult> =
         pitHistogram(numBins, concurrency)
@@ -235,58 +254,69 @@ data class PitHistogramConfig(val numBins: Int) : SeriesStatConfig<SparseHistogr
 
 // ========== Paired ==========
 
-@Serializable @SerialName("PairedSumConfig")
+@Serializable
+@SerialName("PairedSumConfig")
 data object PairedSumConfig : PairedStatConfig<PairedSumResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<PairedSumResult> = PairedSum(concurrency)
 }
 
-@Serializable @SerialName("OLSConfig")
+@Serializable
+@SerialName("OLSConfig")
 data object OLSConfig : PairedStatConfig<OLSResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<OLSResult> = OLS(concurrency)
 }
 
-@Serializable @SerialName("CovarianceConfig")
+@Serializable
+@SerialName("CovarianceConfig")
 data object CovarianceConfig : PairedStatConfig<CovarianceResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<CovarianceResult> = Covariance(concurrency)
 }
 
-@Serializable @SerialName("LassoConfig")
+@Serializable
+@SerialName("LassoConfig")
 data class LassoConfig(val lambda: Double) : PairedStatConfig<LassoResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<LassoResult> = Lasso(lambda, concurrency)
 }
 
-@Serializable @SerialName("RidgeConfig")
+@Serializable
+@SerialName("RidgeConfig")
 data class RidgeConfig(val lambda: Double) : PairedStatConfig<RidgeResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<RidgeResult> = Ridge(lambda, concurrency)
 }
 
-@Serializable @SerialName("BrierScoreConfig")
+@Serializable
+@SerialName("BrierScoreConfig")
 data object BrierScoreConfig : PairedStatConfig<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<WeightedMeanResult> = BrierScore(concurrency)
 }
 
-@Serializable @SerialName("MseLossConfig")
+@Serializable
+@SerialName("MseLossConfig")
 data object MseLossConfig : PairedStatConfig<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<WeightedMeanResult> = MseLoss(concurrency)
 }
 
-@Serializable @SerialName("MaeLossConfig")
+@Serializable
+@SerialName("MaeLossConfig")
 data object MaeLossConfig : PairedStatConfig<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<WeightedMeanResult> = MaeLoss(concurrency)
 }
 
-@Serializable @SerialName("LogLossConfig")
+@Serializable
+@SerialName("LogLossConfig")
 data object LogLossConfig : PairedStatConfig<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<WeightedMeanResult> = LogLoss(concurrency)
 }
 
-@Serializable @SerialName("PinballLossConfig")
+@Serializable
+@SerialName("PinballLossConfig")
 data class PinballLossConfig(val tau: Double) : PairedStatConfig<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<WeightedMeanResult> =
         PinballLoss(tau, concurrency)
 }
 
-@Serializable @SerialName("AucConfig")
+@Serializable
+@SerialName("AucConfig")
 data class AucConfig(
     val numBins: Int = 256,
     val lowerBound: Double = 0.0,
@@ -296,7 +326,8 @@ data class AucConfig(
         Auc(numBins, lowerBound, upperBound, concurrency)
 }
 
-@Serializable @SerialName("ReliabilityConfig")
+@Serializable
+@SerialName("ReliabilityConfig")
 data class ReliabilityConfig(val numBins: Int) : PairedStatConfig<ReliabilityResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<ReliabilityResult> =
         Reliability(numBins, concurrency)
@@ -304,32 +335,37 @@ data class ReliabilityConfig(val numBins: Int) : PairedStatConfig<ReliabilityRes
 
 // ========== Vector ==========
 
-@Serializable @SerialName("VarianceVectorConfig")
+@Serializable
+@SerialName("VarianceVectorConfig")
 data class VarianceVectorConfig(val dimensions: Int) : VectorStatConfig<ResultList<WeightedVarianceResult>> {
     override fun materialize(concurrency: Concurrency): VectorStat<ResultList<WeightedVarianceResult>> =
         varianceVector(dimensions, concurrency)
 }
 
-@Serializable @SerialName("CrpsGaussianConfig")
+@Serializable
+@SerialName("CrpsGaussianConfig")
 data object CrpsGaussianConfig : VectorStatConfig<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): VectorStat<WeightedMeanResult> = CrpsGaussian(concurrency)
 }
 
 // ========== Discrete ==========
 
-@Serializable @SerialName("HyperLogLogConfig")
+@Serializable
+@SerialName("HyperLogLogConfig")
 data class HyperLogLogConfig(val precision: Int = 14) : DiscreteStatConfig<HyperLogLogResult> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<HyperLogLogResult> =
         HyperLogLog(precision, concurrency)
 }
 
-@Serializable @SerialName("LinearCountingConfig")
+@Serializable
+@SerialName("LinearCountingConfig")
 data class LinearCountingConfig(val bits: Int = 4096) : DiscreteStatConfig<LinearCountingResult> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<LinearCountingResult> =
         LinearCounting(bits, concurrency)
 }
 
-@Serializable @SerialName("BloomFilterConfig")
+@Serializable
+@SerialName("BloomFilterConfig")
 data class BloomFilterConfig(
     val bits: Int = 1 shl 16,
     val hashes: Int = 7,
@@ -338,7 +374,8 @@ data class BloomFilterConfig(
         BloomFilter(bits, hashes, concurrency)
 }
 
-@Serializable @SerialName("CountMinSketchConfig")
+@Serializable
+@SerialName("CountMinSketchConfig")
 data class CountMinSketchConfig(
     val depth: Int = 5,
     val width: Int = 1024,
@@ -348,7 +385,8 @@ data class CountMinSketchConfig(
         CountMinSketch(depth, width, seed, concurrency)
 }
 
-@Serializable @SerialName("MinHashConfig")
+@Serializable
+@SerialName("MinHashConfig")
 data class MinHashConfig(
     val numHashes: Int = 128,
     val seed: Long = -3724518991637283867L,
@@ -357,7 +395,8 @@ data class MinHashConfig(
         MinHash(numHashes, seed, concurrency)
 }
 
-@Serializable @SerialName("SpaceSavingConfig")
+@Serializable
+@SerialName("SpaceSavingConfig")
 data class SpaceSavingConfig(val capacity: Int) : DiscreteStatConfig<HeavyHittersResult> {
     override fun materialize(concurrency: Concurrency): DiscreteStat<HeavyHittersResult> =
         SpaceSaving(capacity, concurrency)
@@ -365,7 +404,8 @@ data class SpaceSavingConfig(val capacity: Int) : DiscreteStatConfig<HeavyHitter
 
 // ========== Raw (custom update signatures, no fan-out group) ==========
 
-@Serializable @SerialName("ClassHistogramConfig")
+@Serializable
+@SerialName("ClassHistogramConfig")
 data class ClassHistogramConfig(
     val numBins: Int,
     val numClasses: Int,
@@ -374,13 +414,15 @@ data class ClassHistogramConfig(
         ClassHistogram(numBins, numClasses, concurrency)
 }
 
-@Serializable @SerialName("GradientHistogramConfig")
+@Serializable
+@SerialName("GradientHistogramConfig")
 data class GradientHistogramConfig(val numBins: Int) : RawStatConfig<GradientHistogramResult> {
     override fun materialize(concurrency: Concurrency): Stat<GradientHistogramResult> =
         GradientHistogram(numBins, concurrency)
 }
 
-@Serializable @SerialName("MultiGradientHistogramConfig")
+@Serializable
+@SerialName("MultiGradientHistogramConfig")
 data class MultiGradientHistogramConfig(
     val numFeatures: Int,
     val numBins: Int,
@@ -389,13 +431,15 @@ data class MultiGradientHistogramConfig(
         MultiGradientHistogram(numFeatures, numBins, concurrency)
 }
 
-@Serializable @SerialName("VarianceHistogramConfig")
+@Serializable
+@SerialName("VarianceHistogramConfig")
 data class VarianceHistogramConfig(val numBins: Int) : RawStatConfig<VarianceHistogramResult> {
     override fun materialize(concurrency: Concurrency): Stat<VarianceHistogramResult> =
         VarianceHistogram(numBins, concurrency)
 }
 
-@Serializable @SerialName("CrpsEnsembleConfig")
+@Serializable
+@SerialName("CrpsEnsembleConfig")
 data object CrpsEnsembleConfig : RawStatConfig<WeightedMeanResult> {
     override fun materialize(concurrency: Concurrency): Stat<WeightedMeanResult> = CrpsEnsemble(concurrency)
 }

@@ -22,7 +22,8 @@ class ListStatsSchemaTest {
             val b by series(MeanConfig)
         }
         val list = ListStats<Result>(schema)
-        list.update(2.0); list.update(4.0)
+        list.update(2.0);
+        list.update(4.0)
         val r = list.read()
         assertEquals(listOf("a", "b"), r.names)
         assertEquals(6.0, (r.results[0] as SumResult).sum, DELTA)
@@ -34,7 +35,8 @@ class ListStatsSchemaTest {
             val b by paired(CovarianceConfig)
         }
         val list = PairedListStats<Result>(schema)
-        list.update(1.0, 2.0); list.update(2.0, 4.0)
+        list.update(1.0, 2.0);
+        list.update(2.0, 4.0)
         val r = list.read()
         assertEquals(listOf("a", "b"), r.names)
         assertEquals(2.0, (r.results[0] as OLSResult).slope, DELTA)

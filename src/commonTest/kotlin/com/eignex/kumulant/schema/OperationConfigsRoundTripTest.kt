@@ -3,15 +3,14 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.summary.Sum
 import com.eignex.kumulant.stat.summary.SumResult
-import com.eignex.kumulant.stat.summary.WeightedMeanResult
-import com.eignex.kumulant.operation.atIndex as liveAtIndex
-import com.eignex.kumulant.operation.withFixedX as liveWithFixedX
-import com.eignex.kumulant.operation.withValue as liveWithValue
-import com.eignex.kumulant.operation.withWeight as liveWithWeight
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import com.eignex.kumulant.operation.atIndex as liveAtIndex
+import com.eignex.kumulant.operation.withFixedX as liveWithFixedX
+import com.eignex.kumulant.operation.withValue as liveWithValue
+import com.eignex.kumulant.operation.withWeight as liveWithWeight
 
 /**
  * Round-trip tests for the operation configs in [OperationConfigs.kt]. Encode,
@@ -30,7 +29,8 @@ class OperationConfigsRoundTripTest {
         val live = Sum().liveWithWeight(2.0)
 
         listOf(1.0, 3.0, 5.0).forEach {
-            rebuilt.update(it); live.update(it)
+            rebuilt.update(it)
+            live.update(it)
         }
         val r = rebuilt.read() as SumResult
         val l = live.read()
@@ -45,7 +45,8 @@ class OperationConfigsRoundTripTest {
         val live = Sum().liveWithValue(7.0)
 
         listOf(1.0, 2.0, 3.0, 4.0).forEach {
-            rebuilt.update(it); live.update(it)
+            rebuilt.update(it)
+            live.update(it)
         }
         val r = rebuilt.read() as SumResult
         val l = live.read()
@@ -60,7 +61,8 @@ class OperationConfigsRoundTripTest {
         val live = Sum().liveWithValue(1.0).liveWithWeight(2.0)
 
         listOf(10.0, 20.0, 30.0).forEach {
-            rebuilt.update(it); live.update(it)
+            rebuilt.update(it)
+            live.update(it)
         }
         val r = rebuilt.read() as SumResult
         val l = live.read()
@@ -77,7 +79,8 @@ class OperationConfigsRoundTripTest {
         val live = Sum().liveAtIndex(1)
 
         listOf(doubleArrayOf(1.0, 10.0), doubleArrayOf(2.0, 20.0), doubleArrayOf(3.0, 30.0)).forEach {
-            rebuilt.update(it); live.update(it)
+            rebuilt.update(it)
+            live.update(it)
         }
         val r = rebuilt.read() as SumResult
         val l = live.read()
@@ -94,7 +97,8 @@ class OperationConfigsRoundTripTest {
         val live = com.eignex.kumulant.stat.regression.OLS().liveWithFixedX(2.0)
 
         listOf(4.0, 6.0, 8.0).forEach {
-            rebuilt.update(it); live.update(it)
+            rebuilt.update(it)
+            live.update(it)
         }
         val r = rebuilt.read() as com.eignex.kumulant.stat.regression.OLSResult
         val l = live.read()
