@@ -8,12 +8,18 @@ import com.eignex.kumulant.core.Concurrency
  * category.
  *
  * The categories mirror the design plan:
- * - **Additive** (`SumStat`, `CountStat`): single atomic add, no coupling.
- * - **Monotonic** (`MinStat`, `MaxStat`): single-cell CAS loop, naturally correct.
- * - **Welford-coupled** (`MeanStat`, `VarianceStat`, `MomentsStat`): multi-cell recurrence;
+ * - **Additive** ([SumStat][com.eignex.kumulant.stat.summary.SumStat],
+ *   [CountStat][com.eignex.kumulant.stat.summary.CountStat]): single atomic add, no coupling.
+ * - **Monotonic** ([MinStat][com.eignex.kumulant.stat.summary.MinStat],
+ *   [MaxStat][com.eignex.kumulant.stat.summary.MaxStat]): single-cell CAS loop, naturally correct.
+ * - **Welford-coupled** ([MeanStat][com.eignex.kumulant.stat.summary.MeanStat],
+ *   [VarianceStat][com.eignex.kumulant.stat.summary.VarianceStat],
+ *   [MomentsStat][com.eignex.kumulant.stat.summary.MomentsStat]): multi-cell recurrence;
  *   needs a lock under Strict/HighWrite (cells then drop atomic overhead).
- * - **Self-serialized** sketches (`TDigestStat`, `SpaceSavingStat`, `ReservoirHistogramStat`,
- *   etc.): always under a lock when concurrent; cells are plain `SerialMode`.
+ * - **Self-serialized** sketches ([TDigestStat][com.eignex.kumulant.stat.quantile.TDigestStat],
+ *   [SpaceSavingStat][com.eignex.kumulant.stat.sketch.SpaceSavingStat],
+ *   [ReservoirHistogramStat][com.eignex.kumulant.stat.quantile.ReservoirHistogramStat], etc.):
+ *   always under a lock when concurrent; cells are plain [SerialMode].
  */
 
 internal fun Concurrency.additiveMode(): StreamMode = when (this) {

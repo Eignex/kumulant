@@ -29,9 +29,11 @@ fun splitmix64(value: Long): Long {
  * delegates to [SplitMixChunkHasher] — pin to that hasher directly if you need a
  * stable byte stream across library versions.
  *
- * Prefer this over `value.hashCode().toLong()` when feeding HLL, MinHashStat, BloomFilterStat,
- * or CountMinSketchStat — those rely on uniform 64-bit entropy, and JVM `hashCode` only
- * provides 32 bits.
+ * Prefer this over `value.hashCode().toLong()` when feeding HLL,
+ * [MinHashStat][com.eignex.kumulant.stat.sketch.MinHashStat],
+ * [BloomFilterStat][com.eignex.kumulant.stat.sketch.BloomFilterStat], or
+ * [CountMinSketchStat][com.eignex.kumulant.stat.sketch.CountMinSketchStat] — those rely on
+ * uniform 64-bit entropy, and JVM `hashCode` only provides 32 bits.
  *
  * Not collision-resistant. Use a cryptographic hash for adversarial input.
  */

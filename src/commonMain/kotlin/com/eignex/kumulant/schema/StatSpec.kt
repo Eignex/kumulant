@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
  * corresponding stat's constructor defaults so encoded payloads stay terse
  * when the format is configured with `encodeDefaults = false`.
  *
- * `Concurrency` is *not* on the wire — it's a deployment knob passed to
+ * [Concurrency] is *not* on the wire — it's a deployment knob passed to
  * [materialize] when the schema is rehydrated.
  */
 @Serializable
