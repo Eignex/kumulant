@@ -46,7 +46,7 @@ class StatGroup(
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
     constructor(schema: StatSchema, concurrency: Concurrency? = null) :
-        this(stats = filterSpecs<SeriesStat<*>>(schema.specs), concurrency = concurrency)
+        this(stats = seriesSpecs(schema), concurrency = concurrency)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(value, timestampNanos, weight)
