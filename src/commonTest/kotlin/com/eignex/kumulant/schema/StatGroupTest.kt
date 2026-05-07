@@ -218,18 +218,18 @@ class StatGroupTest {
     @Test
     fun `stat schema helper supports namespaced composition and lifecycle operations`() {
         class HttpMetrics : StatSchema() {
-            val requests by series(Sum().withValue(1.0).withWeight(1.0))
-            val latencyMsTotal by series(Sum())
+            val requests by series(SumConfig.withValue(1.0).withWeight(1.0))
+            val latencyMsTotal by series(SumConfig)
         }
 
         class DbMetrics : StatSchema() {
-            val requests by series(Sum().withValue(1.0).withWeight(1.0))
-            val latencyMsTotal by series(Sum())
+            val requests by series(SumConfig.withValue(1.0).withWeight(1.0))
+            val latencyMsTotal by series(SumConfig)
         }
 
         class ServiceMetrics : StatSchema() {
-            val requests by series(Sum().withValue(1.0).withWeight(1.0))
-            val billableMsTotal by series(Sum())
+            val requests by series(SumConfig.withValue(1.0).withWeight(1.0))
+            val billableMsTotal by series(SumConfig)
             val http by group(HttpMetrics())
             val db by group(DbMetrics())
         }
@@ -806,8 +806,8 @@ class DiscreteStatGroupTest {
     @Test
     fun `StatSchema discrete delegate exposes typed keys`() {
         class Schema : StatSchema() {
-            val users by discrete(HyperLogLog(precision = 10))
-            val sessions by discrete(LinearCounting(bits = 1024))
+            val users by discrete(HyperLogLogConfig(precision = 10))
+            val sessions by discrete(LinearCountingConfig(bits = 1024))
         }
 
         val schema = Schema()

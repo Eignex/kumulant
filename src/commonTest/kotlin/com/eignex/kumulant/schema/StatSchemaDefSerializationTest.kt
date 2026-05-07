@@ -73,16 +73,6 @@ class StatSchemaDefSerializationTest {
     }
 
     @Test
-    fun `statSchemaDef fails loudly when entries lack a config`() {
-        val mixed = object : StatSchema() {
-            val good by series(SumConfig)
-            val bad by series(com.eignex.kumulant.stat.summary.Sum())
-        }
-        val ex = assertFailsWith<IllegalArgumentException> { mixed.statSchemaDef() }
-        assertEquals(true, ex.message!!.contains("bad"))
-    }
-
-    @Test
     fun `complex schema mixing modalities operations and raw round-trips byte-identically`() {
         val schema = object : StatSchema() {
             val requests by series(SumConfig)

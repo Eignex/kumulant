@@ -8,10 +8,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.skema.Schema
-import com.eignex.skema.SchemaDef
 import kotlinx.serialization.Serializable
-import kotlin.properties.PropertyDelegateProvider
-import kotlin.properties.ReadOnlyProperty
 
 /** Aggregated snapshot keyed by [StatKey.name]; use `get` operators for typed lookup. */
 @Serializable
@@ -47,181 +44,78 @@ data class GroupResult(
  * Declarative, typed schema for a group of stats, layered on top of
  * `com.eignex.skema.Schema<StatConfig>` so the entries map is wire-serializable.
  *
- * Subclass and declare stats via the [series], [paired], [vector], [discrete], and [group]
- * delegates; each property exposes a [StatKey] for typed retrieval from a [GroupResult].
+ * Subclass and declare stats via the [series], [paired], [vector], [discrete], [raw],
+ * and [group] delegates; each property exposes a [StatKey] for typed retrieval from a
+ * [GroupResult]. Every entry is a [StatConfig], which means the schema always
+ * round-trips through the wire — no live-stat back-door.
  *
- * Two delegate forms exist for each modality:
- *  - **Config form**: `series(SumConfig)` — registers a serializable [StatConfig] in the
- *    inherited `entries` map. The schema is pure description; live materialization happens
- *    when a [StatGroup] (or paired/vector/discrete variant) is constructed from the schema.
- *  - **Live-stat form**: `series(Sum().withValue(1.0))` — back-door for stats whose
- *    configuration cannot be expressed as a [StatConfig] yet (e.g. operations like
- *    `withValue`/`withWeight`). Stored eagerly in [specs]; [definition] and
- *    [statSchemaDef] both throw if any entry was declared this way, since live entries
- *    cannot round-trip through the wire.
+ * If you need an aggregation that isn't wire-expressible (e.g. a `filter`-wrapped
+ * stat), build a [StatGroup] / `*ListStats` directly with the vararg `Pair`
+ * constructor — bypass the schema layer entirely.
  *
- * The schema-level [concurrency] is the deployment knob: it propagates to every
- * registered stat at materialization time, both for the live form (via
- * `stat.create(concurrency)` at delegate time) and the config form (via
- * `config.materialize(concurrency)` inside the [StatGroup] constructor).
+ * The schema-level [concurrency] is the deployment knob: every config materializes
+ * via `config.materialize(concurrency)` inside the [StatGroup] / `*ListStats`
+ * constructor.
  */
 abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) : Schema<StatConfig>() {
-    /**
-     * Live entries declared via the live-stat overloads. Empty for fully
-     * config-defined schemas. Configs go into the inherited [entries] map and
-     * are materialized lazily by the schema-aware [StatGroup] constructors.
-     */
-    internal val specs = mutableListOf<StatSpec<*, *, *>>()
 
-    /**
-     * Pure-data, serializable view of this schema. Throws if any entry was
-     * declared via the live-[Stat] delegate (without a [StatConfig]); switch
-     * those entries to a config-taking overload to make the schema serializable.
-     */
-    override fun definition(): SchemaDef<StatConfig> {
-        requireNoLiveEntries()
-        return super.definition()
-    }
-
-    /**
-     * Pure-data, serializable view of this schema using kumulant's wire field
-     * `stats` (instead of skema's default `entries`). Routes through
-     * [definition] so any [validate] override and the live-entry check both
-     * run on the canonical wire path.
-     */
+    /** Pure-data, serializable view of this schema using kumulant's wire field `stats`. */
     fun statSchemaDef(): StatSchemaDef = StatSchemaDef(definition().entries)
-
-    private fun requireNoLiveEntries() {
-        require(specs.isEmpty()) {
-            val names = specs.map { it.key.name }
-            "StatSchema cannot serialize: ${names.size} entries lack a StatConfig " +
-                "(${names.joinToString(", ")}). Switch them to the config-taking delegate overload."
-        }
-    }
-
-    protected fun <R : Result, S : SeriesStat<R>> series(stat: S) =
-        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
-            val key = StatKey<R>(property.name)
-            specs.add(toSpec(key, stat.create(concurrency)))
-            ReadOnlyProperty { _, _ -> key }
-        }
 
     protected fun <R : Result> series(config: SeriesStatConfig<R>) =
         register(config) { StatKey<R>(it) }
 
-    protected fun <R : Result, S : PairedStat<R>> paired(stat: S) =
-        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
-            val key = StatKey<R>(property.name)
-            specs.add(toSpec(key, stat.create(concurrency)))
-            ReadOnlyProperty { _, _ -> key }
-        }
-
     protected fun <R : Result> paired(config: PairedStatConfig<R>) =
         register(config) { StatKey<R>(it) }
-
-    protected fun <R : Result, S : VectorStat<R>> vector(stat: S) =
-        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
-            val key = StatKey<R>(property.name)
-            specs.add(toSpec(key, stat.create(concurrency)))
-            ReadOnlyProperty { _, _ -> key }
-        }
 
     protected fun <R : Result> vector(config: VectorStatConfig<R>) =
         register(config) { StatKey<R>(it) }
 
-    protected fun <R : Result, S : DiscreteStat<R>> discrete(stat: S) =
-        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
-            val key = StatKey<R>(property.name)
-            specs.add(toSpec(key, stat.create(concurrency)))
-            ReadOnlyProperty { _, _ -> key }
-        }
-
     protected fun <R : Result> discrete(config: DiscreteStatConfig<R>) =
         register(config) { StatKey<R>(it) }
-
-    protected fun <R : Result, S : Stat<R>> raw(stat: S) =
-        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, StatKey<R>>> { _, property ->
-            val key = StatKey<R>(property.name)
-            specs.add(toSpec(key, stat.create(concurrency)))
-            ReadOnlyProperty { _, _ -> key }
-        }
 
     protected fun <R : Result> raw(config: RawStatConfig<R>) =
         register(config) { StatKey<R>(it) }
 
-    /**
-     * Nest a sub-schema. If [nestedSchema] is fully config-defined, the entry
-     * is captured on the wire as a [GroupStatConfig] and materialized lazily by
-     * the parent's [StatGroup] constructor. Otherwise (nested has live-only
-     * entries) a live [StatGroup] is built eagerly and stored in [specs] —
-     * the parent can't be wire-serialized either, but it still works at runtime.
-     */
-    protected fun <T : StatSchema> group(nestedSchema: T, concurrency: Concurrency? = null) =
-        PropertyDelegateProvider<StatSchema, ReadOnlyProperty<StatSchema, GroupStatKey<T>>> { _, property ->
-            val key = GroupStatKey(property.name, nestedSchema)
-            val nestedDef = runCatching { nestedSchema.statSchemaDef() }.getOrNull()
-            if (nestedDef != null) {
-                add(property.name, GroupStatConfig(nestedDef.stats))
-            } else {
-                specs.add(StatSpec(key, StatGroup(nestedSchema, concurrency)))
-            }
-            ReadOnlyProperty { _, _ -> key }
-        }
+    /** Nest a sub-schema as a [GroupStatConfig]; materialization recurses at the parent's group construction. */
+    protected fun <T : StatSchema> group(nestedSchema: T) =
+        register(GroupStatConfig(nestedSchema.statSchemaDef().stats)) { GroupStatKey(it, nestedSchema) }
 }
 
-/** All series-modality specs from a schema: configs materialized + live specs. */
-internal fun seriesSpecs(schema: StatSchema): List<StatSpec<*, out SeriesStat<*>, *>> {
-    val fromConfigs = schema.entries.mapNotNull { (name, config) ->
+/** Series-modality specs from a schema, materialized at the schema's [concurrency][StatSchema.concurrency]. */
+internal fun seriesSpecs(schema: StatSchema): List<StatSpec<*, out SeriesStat<*>, *>> =
+    schema.entries.mapNotNull { (name, config) ->
         if (config !is SeriesStatConfig<*>) return@mapNotNull null
         toSpec<SeriesStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
-    return fromConfigs + filterSpecs<SeriesStat<*>>(schema.specs)
-}
 
-/** All paired-modality specs from a schema: configs materialized + live specs. */
-internal fun pairedSpecs(schema: StatSchema): List<StatSpec<*, out PairedStat<*>, *>> {
-    val fromConfigs = schema.entries.mapNotNull { (name, config) ->
+/** Paired-modality specs from a schema. */
+internal fun pairedSpecs(schema: StatSchema): List<StatSpec<*, out PairedStat<*>, *>> =
+    schema.entries.mapNotNull { (name, config) ->
         if (config !is PairedStatConfig<*>) return@mapNotNull null
         toSpec<PairedStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
-    return fromConfigs + filterSpecs<PairedStat<*>>(schema.specs)
-}
 
-/** All vector-modality specs from a schema: configs materialized + live specs. */
-internal fun vectorSpecs(schema: StatSchema): List<StatSpec<*, out VectorStat<*>, *>> {
-    val fromConfigs = schema.entries.mapNotNull { (name, config) ->
+/** Vector-modality specs from a schema. */
+internal fun vectorSpecs(schema: StatSchema): List<StatSpec<*, out VectorStat<*>, *>> =
+    schema.entries.mapNotNull { (name, config) ->
         if (config !is VectorStatConfig<*>) return@mapNotNull null
         toSpec<VectorStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
-    return fromConfigs + filterSpecs<VectorStat<*>>(schema.specs)
-}
 
-/** All discrete-modality specs from a schema: configs materialized + live specs. */
-internal fun discreteSpecs(schema: StatSchema): List<StatSpec<*, out DiscreteStat<*>, *>> {
-    val fromConfigs = schema.entries.mapNotNull { (name, config) ->
+/** Discrete-modality specs from a schema. */
+internal fun discreteSpecs(schema: StatSchema): List<StatSpec<*, out DiscreteStat<*>, *>> =
+    schema.entries.mapNotNull { (name, config) ->
         if (config !is DiscreteStatConfig<*>) return@mapNotNull null
         toSpec<DiscreteStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
-    return fromConfigs + filterSpecs<DiscreteStat<*>>(schema.specs)
-}
 
-/**
- * All raw-modality specs from a schema: configs materialized + live specs whose
- * stat doesn't fit any of Series/Paired/Vector/Discrete (tree histograms,
- * CrpsEnsemble). Schema-aware [StatGroup] / [PairedStatGroup] / etc.
- * constructors skip these — raw stats have heterogeneous custom update
- * signatures and don't fan out cleanly.
- */
-internal fun rawSpecs(schema: StatSchema): List<StatSpec<*, *, *>> {
-    val fromConfigs = schema.entries.mapNotNull { (name, config) ->
+/** Raw-modality specs from a schema (tree histograms, CrpsEnsemble — no fan-out group). */
+internal fun rawSpecs(schema: StatSchema): List<StatSpec<*, *, *>> =
+    schema.entries.mapNotNull { (name, config) ->
         if (config !is RawStatConfig<*>) return@mapNotNull null
         toSpec<Stat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
-    val fromLive = schema.specs.filter { (_, stat) ->
-        stat !is SeriesStat<*> && stat !is PairedStat<*> && stat !is VectorStat<*> && stat !is DiscreteStat<*>
-    }
-    return fromConfigs + fromLive
-}
 
 @Suppress("UNCHECKED_CAST")
 internal fun <S : Stat<*>> toSpec(key: StatKey<*>, stat: S): StatSpec<*, out S, *> =
