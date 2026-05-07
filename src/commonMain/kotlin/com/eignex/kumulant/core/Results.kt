@@ -17,7 +17,7 @@ interface Result
  * which auto-assigns index-based names ("0", "1", ...).
  */
 @Serializable
-@SerialName("List")
+@SerialName("ResultList")
 data class ResultList<R : Result>(
     val names: List<String>,
     val results: List<R>,

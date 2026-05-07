@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * [totalPositives] / [totalNegatives] to detect that case.
  */
 @Serializable
-@SerialName("AucStat")
+@SerialName("AucResult")
 data class AucResult(
     val auc: Double,
     val totalPositives: Double,

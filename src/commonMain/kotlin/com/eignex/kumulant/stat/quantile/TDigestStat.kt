@@ -16,7 +16,7 @@ import kotlin.math.max
  * with [quantiles] precomputed for [probabilities] via CDF inversion.
  */
 @Serializable
-@SerialName("TDigestStat")
+@SerialName("TDigestResult")
 data class TDigestResult(
     val probabilities: DoubleArray,
     val quantiles: DoubleArray,

@@ -7,7 +7,7 @@ import kotlin.math.pow
 
 /** Single estimated quantile with the [probability] it targets. */
 @Serializable
-@SerialName("Quantile")
+@SerialName("QuantileResult")
 data class QuantileResult(
     val probability: Double,
     val quantile: Double
@@ -15,7 +15,7 @@ data class QuantileResult(
 
 /** DDSketch snapshot: logarithmic bins plus precomputed [quantiles] for [probabilities]. */
 @Serializable
-@SerialName("Sketch")
+@SerialName("SketchResult")
 data class SketchResult(
     val probabilities: DoubleArray,
     val quantiles: DoubleArray,
@@ -28,7 +28,7 @@ data class SketchResult(
 
 /** Histogram as parallel `[lowerBounds, upperBounds)` bucket arrays with [weights]. */
 @Serializable
-@SerialName("SparseHistogram")
+@SerialName("SparseHistogramResult")
 data class SparseHistogramResult(
     val lowerBounds: DoubleArray,
     val upperBounds: DoubleArray,

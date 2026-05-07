@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * accumulates `(Σg, Σh, n)` to score splits.
  */
 @Serializable
-@SerialName("PairedSumStat")
+@SerialName("PairedSumResult")
 data class PairedSumResult(
     val totalWeights: Double,
     val sumX: Double,

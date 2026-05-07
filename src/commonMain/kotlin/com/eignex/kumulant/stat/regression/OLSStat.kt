@@ -15,7 +15,7 @@ import kotlin.math.sqrt
 
 /** Fitted Ordinary Least Squares regression with marginal x/y variances for merge. */
 @Serializable
-@SerialName("OLSStat")
+@SerialName("OLSResult")
 data class OLSResult(
     override val totalWeights: Double,
     override val slope: Double,

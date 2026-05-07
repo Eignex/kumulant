@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 
 /** Unweighted event count. */
 @Serializable
-@SerialName("CountStat")
+@SerialName("CountResult")
 data class CountResult(
     val count: Long
 ) : Result

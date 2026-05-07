@@ -33,13 +33,13 @@ import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Wire-friendly counterparts of the composable operations in
- * `com.eignex.kumulant.operation.*`. Each config holds an inner [StatSpec]
- * (polymorphic via `$type`) plus the operation's primitive parameters.
+ * `com.eignex.kumulant.operation.*`. Each spec holds an inner [StatSpec]
+ * (polymorphic by `@SerialName`) plus the operation's primitive parameters.
  *
  * The inner field is typed at the base [StatSpec] interface so the
  * polymorphic decoder doesn't need a generic argument; `materialize` runtime-
  * checks the inner's modality and casts it. The user-facing typed surface is
- * the inline extension functions on the modality-specific config interfaces
+ * the inline extension functions on the modality-specific spec interfaces
  * (`SeriesStatSpec<R>.withWeight(...)`, etc.) — the unsafe cast there is
  * correct because the wrapper is parametric in `R` only at the type level.
  *

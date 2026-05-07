@@ -162,9 +162,9 @@ data class CounterRate(
 }
 
 /**
- * Configuration for [DDSketchStat]. `probabilities` is a [List] on the wire because YAML
- * renders lists more cleanly than primitive arrays; converted to a `DoubleArray` at
- * [materialize] time.
+ * Spec for [DDSketchStat]. `probabilities` is a [List] on the wire because most
+ * formats serialize lists more cleanly than primitive arrays; converted to a
+ * `DoubleArray` at [materialize] time.
  */
 @Serializable
 @SerialName("DDSketch")

@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * much above the true count). [totalSeen] is the unweighted update count.
  */
 @Serializable
-@SerialName("HeavyHitters")
+@SerialName("HeavyHittersResult")
 data class HeavyHittersResult(
     val capacity: Int,
     val keys: LongArray,

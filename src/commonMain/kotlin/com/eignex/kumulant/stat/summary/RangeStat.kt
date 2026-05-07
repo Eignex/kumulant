@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 
 /** Running min/max pair of a stream. */
 @Serializable
-@SerialName("RangeStat")
+@SerialName("RangeResult")
 data class RangeResult(
     val min: Double,
     val max: Double

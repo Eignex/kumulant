@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 
 /** Running maximum of a stream. */
 @Serializable
-@SerialName("MaxStat")
+@SerialName("MaxResult")
 data class MaxResult(
     val max: Double
 ) : Result

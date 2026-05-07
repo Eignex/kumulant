@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 
 /** Mean and population variance. */
 @Serializable
-@SerialName("VarianceStat")
+@SerialName("VarianceResult")
 data class VarianceResult(
     val mean: Double,
     val variance: Double
@@ -19,7 +19,7 @@ data class VarianceResult(
 
 /** Weighted mean and variance with [totalWeights] for merge arithmetic. */
 @Serializable
-@SerialName("WeightedVariance")
+@SerialName("WeightedVarianceResult")
 data class WeightedVarianceResult(
     override val totalWeights: Double,
     val mean: Double,

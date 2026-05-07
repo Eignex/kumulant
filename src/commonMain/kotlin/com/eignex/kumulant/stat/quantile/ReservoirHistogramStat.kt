@@ -17,7 +17,7 @@ import kotlin.random.Random
  * [totalWeight] count every observed update, not just retained ones.
  */
 @Serializable
-@SerialName("Reservoir")
+@SerialName("ReservoirResult")
 data class ReservoirResult(
     val values: DoubleArray,
     val keys: DoubleArray,

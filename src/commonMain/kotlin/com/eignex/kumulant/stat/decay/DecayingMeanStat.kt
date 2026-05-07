@@ -9,7 +9,7 @@ import kotlin.time.Duration
 
 /** Snapshot of an exponentially time-decayed weighted mean at [timestampNanos]. */
 @Serializable
-@SerialName("DecayingMeanStat")
+@SerialName("DecayingMeanResult")
 data class DecayingMeanResult(
     val mean: Double,
     /** Effective weight of observations still contributing (decays with time). */

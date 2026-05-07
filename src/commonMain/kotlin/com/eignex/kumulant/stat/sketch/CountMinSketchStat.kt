@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
  * count.
  */
 @Serializable
-@SerialName("CountMinSketchStat")
+@SerialName("CountMinSketchResult")
 data class CountMinSketchResult(
     val depth: Int,
     val width: Int,

@@ -6,16 +6,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Serializable configuration for a nested series-modality [StatGroup]. Holds a
+ * Serializable spec for a nested series-modality [StatGroup]. Holds a
  * recursive map of [StatSpec] entries keyed by name; every entry must itself
  * be a [SeriesStatSpec].
- *
- * On the wire:
- * ```yaml
- * $type: GroupStatSpec
- * stats:
- *   requests: { $type: Sum }
- * ```
  */
 @Serializable
 @SerialName("GroupStatSpec")

@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 
 /** Fitted LassoStat regression (univariate, soft-thresholded slope). */
 @Serializable
-@SerialName("LassoStat")
+@SerialName("LassoResult")
 data class LassoResult(
     override val totalWeights: Double,
     val lambda: Double,

@@ -14,10 +14,11 @@ import kotlinx.serialization.Serializable
  * `data object` for parameter-less stats) whose fields are exactly the stat's
  * configuration surface — no live cells, no locks, no [Concurrency].
  *
- * The wire form uses `$type` as the polymorphic discriminator and the simple
- * Kotlin class name as its value (see [SchemaJson]). Defaults on each spec
- * match the corresponding stat's constructor defaults so authored JSON stays
- * terse under `encodeDefaults = false`.
+ * Polymorphism is by `@SerialName` on each variant, so any
+ * [kotlinx.serialization][kotlinx.serialization.KSerializer] format that
+ * supports open polymorphism works. Defaults on each spec match the
+ * corresponding stat's constructor defaults so encoded payloads stay terse
+ * when the format is configured with `encodeDefaults = false`.
  *
  * `Concurrency` is *not* on the wire — it's a deployment knob passed to
  * [materialize] when the schema is rehydrated.

@@ -14,7 +14,7 @@ import kotlin.time.Duration
 
 /** Snapshot of an exponentially time-decayed weighted variance at [timestampNanos]. */
 @Serializable
-@SerialName("DecayingVarianceStat")
+@SerialName("DecayingVarianceResult")
 data class DecayingVarianceResult(
     val mean: Double,
     val variance: Double,

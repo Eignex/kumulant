@@ -8,10 +8,12 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.skema.Schema
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /** Aggregated snapshot keyed by [StatKey.name]; use `get` operators for typed lookup. */
 @Serializable
+@SerialName("GroupResult")
 data class GroupResult(
     val results: Map<String, Result>,
 ) : Result {

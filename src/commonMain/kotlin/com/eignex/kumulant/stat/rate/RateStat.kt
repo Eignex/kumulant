@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 
 /** Cumulative rate: [totalValue] accumulated from [startTimestampNanos] to [timestampNanos]. */
 @Serializable
-@SerialName("RateStat")
+@SerialName("RateResult")
 data class RateResult(
     val startTimestampNanos: Long,
     val totalValue: Double,

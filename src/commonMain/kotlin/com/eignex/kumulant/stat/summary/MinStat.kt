@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 
 /** Running minimum of a stream. */
 @Serializable
-@SerialName("MinStat")
+@SerialName("MinResult")
 data class MinResult(
     val min: Double
 ) : Result

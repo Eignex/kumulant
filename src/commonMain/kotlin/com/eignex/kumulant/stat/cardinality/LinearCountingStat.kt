@@ -18,7 +18,7 @@ import kotlin.math.ln
  * lossless merging.
  */
 @Serializable
-@SerialName("LinearCountingStat")
+@SerialName("LinearCountingResult")
 data class LinearCountingResult(
     val estimate: Double,
     val bits: Int,

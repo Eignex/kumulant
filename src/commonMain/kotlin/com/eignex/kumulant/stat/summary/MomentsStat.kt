@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 
 /** First four central moments (m2..m4) plus mean and total weight. */
 @Serializable
-@SerialName("MomentsStat")
+@SerialName("MomentsResult")
 data class MomentsResult(
     override val totalWeights: Double,
     val mean: Double,

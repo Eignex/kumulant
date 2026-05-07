@@ -11,7 +11,7 @@ import kotlin.math.sqrt
 
 /** Weighted covariance snapshot with second-moment sums usable for merging. */
 @Serializable
-@SerialName("CovarianceStat")
+@SerialName("CovarianceResult")
 data class CovarianceResult(
     val totalWeights: Double,
     val meanX: Double,

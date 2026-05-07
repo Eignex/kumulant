@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 
 /** Fitted RidgeStat regression (univariate, L2-shrunk slope). */
 @Serializable
-@SerialName("RidgeStat")
+@SerialName("RidgeResult")
 data class RidgeResult(
     override val totalWeights: Double,
     val lambda: Double,

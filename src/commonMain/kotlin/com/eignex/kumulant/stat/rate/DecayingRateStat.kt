@@ -14,7 +14,7 @@ import kotlin.time.Duration
 
 /** Exponentially time-decayed rate snapshot. */
 @Serializable
-@SerialName("DecayingRateStat")
+@SerialName("DecayingRateResult")
 data class DecayingRateResult(
     override val rate: Double,
     val timestampNanos: Long,

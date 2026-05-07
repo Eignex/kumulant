@@ -17,7 +17,7 @@ import kotlinx.serialization.Serializable
  * takes element-wise min and requires identical [numHashes] and [seed].
  */
 @Serializable
-@SerialName("MinHashStat")
+@SerialName("MinHashResult")
 data class MinHashResult(
     val numHashes: Int,
     val seed: Long,

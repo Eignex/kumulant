@@ -20,7 +20,7 @@ import kotlin.math.pow
  * `m = 2^precision`. [totalSeen] is the unweighted update count.
  */
 @Serializable
-@SerialName("HyperLogLogStat")
+@SerialName("HyperLogLogResult")
 data class HyperLogLogResult(
     val estimate: Double,
     val precision: Int,

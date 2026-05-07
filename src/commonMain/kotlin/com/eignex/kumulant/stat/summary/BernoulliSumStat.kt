@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
  * `α = successes + α₀`, `β = trials − successes + β₀`.
  */
 @Serializable
-@SerialName("BernoulliSumStat")
+@SerialName("BernoulliSumResult")
 data class BernoulliSumResult(
     val successes: Double,
     val trials: Double,

@@ -13,7 +13,7 @@ import kotlin.time.Duration
 
 /** Snapshot of an exponentially time-decayed sum at [timestampNanos]. */
 @Serializable
-@SerialName("DecayingSumStat")
+@SerialName("DecayingSumResult")
 data class DecayingSumResult(
     val sum: Double,
     val timestampNanos: Long,

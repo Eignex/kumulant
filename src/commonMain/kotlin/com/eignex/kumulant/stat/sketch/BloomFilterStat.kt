@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
  * snapshots requires identical [bits] and [hashes].
  */
 @Serializable
-@SerialName("BloomFilterStat")
+@SerialName("BloomFilterResult")
 data class BloomFilterResult(
     val bits: Int,
     val hashes: Int,

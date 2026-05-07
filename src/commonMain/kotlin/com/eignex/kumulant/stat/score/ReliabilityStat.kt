@@ -16,7 +16,7 @@ import kotlin.math.abs
  * compose correctly.
  */
 @Serializable
-@SerialName("ReliabilityStat")
+@SerialName("ReliabilityResult")
 data class ReliabilityResult(
     val numBins: Int,
     /** `Σ wᵢ·probᵢ` per bin. */

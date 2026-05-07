@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 
 /** Weighted sum snapshot. */
 @Serializable
-@SerialName("SumStat")
+@SerialName("SumResult")
 data class SumResult(
     val sum: Double
 ) : Result
