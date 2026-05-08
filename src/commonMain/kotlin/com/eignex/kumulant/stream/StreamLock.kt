@@ -20,11 +20,10 @@ object NoopStreamLock : StreamLock {
  * Platform-provided mutual-exclusion lock.
  *
  * - JVM: backed by `java.util.concurrent.locks.ReentrantLock`.
- * - Native / JS / Wasm: backed by a CAS spin-mutex on a [kotlin.concurrent.atomics.AtomicLong].
- *   Single-threaded JS/Wasm targets pay only one uncontested CAS per acquire.
- *
- * Replace the non-JVM actual with a yielding lock once one becomes available
- * (atomicfu's `SynchronizedObject`, or stdlib equivalent).
+ * - Apple / Linux native: backed by a `pthread_mutex_t` allocated via cinterop;
+ *   the native handle is freed on GC via `kotlin.native.ref.createCleaner`.
+ * - mingwX64: backed by a Win32 `CRITICAL_SECTION`, similarly cleanered.
+ * - JS / Wasm: noop — these runtimes are single-threaded.
  */
 expect class PlatformStreamLock() : StreamLock {
     override fun <R> withLock(block: () -> R): R

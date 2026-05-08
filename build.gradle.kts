@@ -33,6 +33,12 @@ kotlin {
         jsMain.get().dependsOn(nonJvmMain)
         wasmJsMain.get().dependsOn(nonJvmMain)
         wasmWasiMain.get().dependsOn(nonJvmMain)
+
+        val posixMain by creating { dependsOn(nativeMain.get()) }
+        appleMain.get().dependsOn(posixMain)
+        linuxMain.get().dependsOn(posixMain)
+        webMain.get().dependsOn(nonJvmMain)
+        wasmWasiMain.get().dependsOn(webMain.get())
         commonMain.dependencies {
             api("com.eignex:skema:0.1.1")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
