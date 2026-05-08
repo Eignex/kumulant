@@ -7,32 +7,32 @@ import kotlinx.cinterop.Arena
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.ptr
-import platform.posix.pthread_mutex_destroy
-import platform.posix.pthread_mutex_init
-import platform.posix.pthread_mutex_lock
-import platform.posix.pthread_mutex_t
-import platform.posix.pthread_mutex_unlock
+import platform.windows.CRITICAL_SECTION
+import platform.windows.DeleteCriticalSection
+import platform.windows.EnterCriticalSection
+import platform.windows.InitializeCriticalSection
+import platform.windows.LeaveCriticalSection
 import kotlin.experimental.ExperimentalNativeApi
 import kotlin.native.ref.createCleaner
 
-actual class PlatformStreamLock actual constructor() : StreamLock {
+actual class PlatformMutex actual constructor() : Mutex {
     private val arena = Arena()
-    private val mutex = arena.alloc<pthread_mutex_t>().also {
-        pthread_mutex_init(it.ptr, null)
+    private val cs = arena.alloc<CRITICAL_SECTION>().also {
+        InitializeCriticalSection(it.ptr)
     }
 
     @Suppress("unused")
-    private val cleaner = createCleaner(arena to mutex.ptr) { (a, p) ->
-        pthread_mutex_destroy(p)
+    private val cleaner = createCleaner(arena to cs.ptr) { (a, p) ->
+        DeleteCriticalSection(p)
         a.clear()
     }
 
     actual override fun <R> withLock(block: () -> R): R {
-        pthread_mutex_lock(mutex.ptr)
+        EnterCriticalSection(cs.ptr)
         try {
             return block()
         } finally {
-            pthread_mutex_unlock(mutex.ptr)
+            LeaveCriticalSection(cs.ptr)
         }
     }
 }

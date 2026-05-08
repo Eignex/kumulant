@@ -4,7 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 
 /**
  * Helpers that translate a user-facing [Concurrency] level into the internal cell
- * encoding ([StreamMode]) and lock ([StreamLock]) that honor it for a given stat
+ * encoding ([StreamMode]) and lock ([Mutex]) that honor it for a given stat
  * category.
  *
  * The categories mirror the design plan:
@@ -38,12 +38,12 @@ internal fun Concurrency.welfordMode(): StreamMode = when (this) {
     else -> SerialMode
 }
 
-internal fun Concurrency.welfordLock(): StreamLock = when (this) {
-    Concurrency.Strict, Concurrency.HighWrite -> PlatformStreamLock()
-    else -> NoopStreamLock
+internal fun Concurrency.welfordLock(): Mutex = when (this) {
+    Concurrency.Strict, Concurrency.HighWrite -> PlatformMutex()
+    else -> NoopMutex
 }
 
-internal fun Concurrency.serializedLock(): StreamLock = when (this) {
-    Concurrency.None -> NoopStreamLock
-    else -> PlatformStreamLock()
+internal fun Concurrency.serializedLock(): Mutex = when (this) {
+    Concurrency.None -> NoopMutex
+    else -> PlatformMutex()
 }
