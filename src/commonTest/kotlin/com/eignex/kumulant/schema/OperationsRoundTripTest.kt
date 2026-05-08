@@ -18,15 +18,14 @@ import com.eignex.kumulant.operation.withValue as liveWithValue
 import com.eignex.kumulant.operation.withWeight as liveWithWeight
 
 /**
- * Round-trip tests for the operation configs in [Operations.kt]. Encode,
- * decode, materialize, drive a small fixed input through both the rehydrated
- * config and the live composition, and compare results.
+ * Round-trip tests for the operation specs in [Operations.kt]: encode, decode,
+ * materialize, drive a small fixed input, compare against a live composition.
  */
 private const val DELTA = 1e-12
 
 class OperationsRoundTripTest {
 
-    @Test fun `withWeight series matches live composition`() {
+    @Test fun `withWeight series should match live composition`() {
         val cfg: SeriesStatSpec<SumResult> = Sum.withWeight(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -42,7 +41,7 @@ class OperationsRoundTripTest {
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun `withValue series matches live composition`() {
+    @Test fun `withValue series should match live composition`() {
         val cfg: SeriesStatSpec<SumResult> = Sum.withValue(7.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -58,7 +57,7 @@ class OperationsRoundTripTest {
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun `composed chain with value then with weight matches live`() {
+    @Test fun `withValue then withWeight should compose`() {
         val cfg: SeriesStatSpec<SumResult> = Sum.withValue(1.0).withWeight(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -71,12 +70,11 @@ class OperationsRoundTripTest {
         }
         val r = rebuilt.read() as SumResult
         val l = live.read()
-        // Three updates, each adds 1.0 * 2.0 = 2.0 → sum = 6.0.
         assertEquals(6.0, r.sum, DELTA)
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun `atIndex lifts series to vector`() {
+    @Test fun `atIndex should lift series to vector`() {
         val cfg: VectorStatSpec<SumResult> = Sum.atIndex(1)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -93,7 +91,7 @@ class OperationsRoundTripTest {
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun `withFixedX lifts paired to series`() {
+    @Test fun `withFixedX should lift paired to series`() {
         val cfg: SeriesStatSpec<com.eignex.kumulant.stat.regression.OLSResult> =
             OLS.withFixedX(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
@@ -110,17 +108,16 @@ class OperationsRoundTripTest {
         assertEquals(l.totalWeights, r.totalWeights, DELTA)
     }
 
-    @Test fun `windowed series round trips at least structurally`() {
+    @Test fun `windowed series should round trip structurally`() {
         val cfg: SeriesStatSpec<SumResult> = Sum.windowed(durationMillis = 1000L, slices = 4)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as WindowedSeries
         assertEquals(1000L, decoded.durationMillis)
         assertEquals(4, decoded.slices)
-        // Just ensure materialize doesn't throw — windowed semantics are exercised in WindowedStats own tests.
         decoded.materialize(Concurrency.None)
     }
 
-    @Test fun `vectorized replicates template per dimension`() {
+    @Test fun `vectorized should replicate template per dimension`() {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 3)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as VectorizedStat
@@ -136,27 +133,25 @@ class OperationsRoundTripTest {
         assertEquals(9.0, rl.results[2].sum, DELTA)
     }
 
-    @Test fun `asSeries lifts discrete`() {
+    @Test fun `asSeries should lift discrete`() {
         val cfg: SeriesStatSpec<*> = HyperLogLog(precision = 10).asSeries()
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         assertIs<AsSeries>(decoded)
         val materialized = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        // Truncates 1.7 → 1L
         for (i in 1..50) materialized.update(i.toDouble())
         val r = materialized.read() as com.eignex.kumulant.stat.cardinality.HyperLogLogResult
         kotlin.test.assertTrue(r.estimate > 30.0)
     }
 
-    @Test fun `rejects inner with wrong modality`() {
-        // Sum is Series, but AtIndices expects Paired.
+    @Test fun `materialize should reject inner with wrong modality`() {
         val bad = AtIndices(Sum, indexX = 0, indexY = 1)
         kotlin.test.assertFailsWith<IllegalArgumentException> {
             bad.materialize(Concurrency.None)
         }
     }
 
-    @Test fun `withWeight paired matches live composition`() {
+    @Test fun `withWeight paired should match live composition`() {
         val cfg: PairedStatSpec<com.eignex.kumulant.stat.regression.OLSResult> = OLS.withWeight(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -173,7 +168,7 @@ class OperationsRoundTripTest {
         assertEquals(l.totalWeights, r.totalWeights, DELTA)
     }
 
-    @Test fun `withWeight vector matches live composition`() {
+    @Test fun `withWeight vector should match live composition`() {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2).withWeight(3.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -182,12 +177,11 @@ class OperationsRoundTripTest {
         rebuilt.update(doubleArrayOf(2.0, 20.0))
         @Suppress("UNCHECKED_CAST")
         val rl = rebuilt.read() as com.eignex.kumulant.core.ResultList<SumResult>
-        // Each update weighted x3 → sums = 3*(1+2)=9, 3*(10+20)=90.
         assertEquals(9.0, rl.results[0].sum, DELTA)
         assertEquals(90.0, rl.results[1].sum, DELTA)
     }
 
-    @Test fun `withWeight discrete drops updates when weight is zero`() {
+    @Test fun `withWeight discrete should drop updates when weight is zero`() {
         val cfg: DiscreteStatSpec<*> = HyperLogLog(precision = 10).withWeight(0.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -197,18 +191,17 @@ class OperationsRoundTripTest {
         assertEquals(0.0, r.estimate)
     }
 
-    @Test fun `withValue discrete replaces every input with constant`() {
+    @Test fun `withValue discrete should replace every input with constant`() {
         val cfg: DiscreteStatSpec<*> = HyperLogLog(precision = 10).withValue(7L)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as DiscreteStatSpec<*>).materialize(Concurrency.None)
         for (i in 1L..100L) rebuilt.update(i)
         val r = rebuilt.read() as com.eignex.kumulant.stat.cardinality.HyperLogLogResult
-        // Every input replaced with 7L → exactly 1 distinct value.
         kotlin.test.assertTrue(r.estimate in 0.5..2.0, "estimate=${r.estimate}")
     }
 
-    @Test fun `asDiscrete lifts series`() {
+    @Test fun `asDiscrete should lift series`() {
         val cfg: DiscreteStatSpec<SumResult> = Sum.asDiscrete()
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -226,7 +219,7 @@ class OperationsRoundTripTest {
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun `atX lifts series to paired and ignores y`() {
+    @Test fun `atX should lift series to paired and ignore y`() {
         val cfg: PairedStatSpec<SumResult> = Sum.atX()
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -243,7 +236,7 @@ class OperationsRoundTripTest {
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun `atY lifts series to paired and ignores x`() {
+    @Test fun `atY should lift series to paired and ignore x`() {
         val cfg: PairedStatSpec<SumResult> = Sum.atY()
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -260,7 +253,7 @@ class OperationsRoundTripTest {
         assertEquals(l.sum, r.sum, DELTA)
     }
 
-    @Test fun `atIndices lifts paired to vector`() {
+    @Test fun `atIndices should lift paired to vector`() {
         val cfg: VectorStatSpec<com.eignex.kumulant.stat.regression.OLSResult> =
             OLS.atIndices(indexX = 0, indexY = 2)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
@@ -268,7 +261,7 @@ class OperationsRoundTripTest {
         val rebuilt = (decoded as VectorStatSpec<*>).materialize(Concurrency.None)
         val live = com.eignex.kumulant.stat.regression.OLSStat().liveAtIndices(0, 2)
 
-        // Vector slots: idx 0 is x, idx 1 ignored, idx 2 is y. Slope should be 2 (y = 2x).
+        // Vector slots: idx 0 is x, idx 1 ignored, idx 2 is y; y = 2x → slope 2.
         listOf(
             doubleArrayOf(1.0, 99.0, 2.0),
             doubleArrayOf(2.0, 99.0, 4.0),
@@ -283,7 +276,7 @@ class OperationsRoundTripTest {
         assertEquals(l.slope, r.slope, DELTA)
     }
 
-    @Test fun `withFixedY lifts paired to series`() {
+    @Test fun `withFixedY should lift paired to series`() {
         val cfg: SeriesStatSpec<com.eignex.kumulant.stat.regression.OLSResult> =
             OLS.withFixedY(5.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
@@ -300,16 +293,15 @@ class OperationsRoundTripTest {
         assertEquals(l.totalWeights, r.totalWeights, DELTA)
     }
 
-    @Test fun `withTimeAsX round trips structurally`() {
+    @Test fun `withTimeAsX should round trip structurally`() {
         val cfg: SeriesStatSpec<*> = OLS.withTimeAsX()
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         assertIs<WithTimeAsX>(decoded)
-        // Materialize must not throw.
         decoded.materialize(Concurrency.None)
     }
 
-    @Test fun `withTimeAsY round trips structurally`() {
+    @Test fun `withTimeAsY should round trip structurally`() {
         val cfg: SeriesStatSpec<*> = OLS.withTimeAsY()
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -317,7 +309,7 @@ class OperationsRoundTripTest {
         decoded.materialize(Concurrency.None)
     }
 
-    @Test fun `windowed paired round trips structurally`() {
+    @Test fun `windowed paired should round trip structurally`() {
         val cfg: PairedStatSpec<*> = OLS.windowed(durationMillis = 2000L, slices = 5)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as WindowedPaired
@@ -326,7 +318,7 @@ class OperationsRoundTripTest {
         decoded.materialize(Concurrency.None)
     }
 
-    @Test fun `windowed vector round trips structurally`() {
+    @Test fun `windowed vector should round trip structurally`() {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2).windowed(durationMillis = 500L, slices = 4)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as WindowedVector
@@ -335,7 +327,7 @@ class OperationsRoundTripTest {
         decoded.materialize(Concurrency.None)
     }
 
-    @Test fun `windowed discrete round trips structurally`() {
+    @Test fun `windowed discrete should round trip structurally`() {
         val cfg: DiscreteStatSpec<*> = HyperLogLog(precision = 10).windowed(durationMillis = 750L, slices = 3)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as WindowedDiscrete

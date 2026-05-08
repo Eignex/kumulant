@@ -8,28 +8,28 @@ private const val DELTA = 1e-12
 class CasMaxLongTest {
 
     @Test
-    fun `accepts strictly higher value`() {
+    fun `casMax should accept strictly higher value`() {
         val cell = SerialLong(5L)
         casMax(cell, 10L)
         assertEquals(10L, cell.load())
     }
 
     @Test
-    fun `rejects equal value`() {
+    fun `casMax should reject equal value`() {
         val cell = SerialLong(7L)
         casMax(cell, 7L)
         assertEquals(7L, cell.load())
     }
 
     @Test
-    fun `rejects lower value`() {
+    fun `casMax should reject lower value`() {
         val cell = SerialLong(20L)
         casMax(cell, 3L)
         assertEquals(20L, cell.load())
     }
 
     @Test
-    fun `accumulates running max across calls`() {
+    fun `casMax should accumulate running max across calls`() {
         val cell = SerialLong(0L)
         listOf(3L, 1L, 7L, 2L, 5L).forEach { casMax(cell, it) }
         assertEquals(7L, cell.load())
@@ -39,28 +39,28 @@ class CasMaxLongTest {
 class CasMaxDoubleTest {
 
     @Test
-    fun `accepts strictly higher value`() {
+    fun `casMax should accept strictly higher value`() {
         val cell = SerialDouble(1.0)
         casMax(cell, 2.5)
         assertEquals(2.5, cell.load(), DELTA)
     }
 
     @Test
-    fun `rejects equal value`() {
+    fun `casMax should reject equal value`() {
         val cell = SerialDouble(2.0)
         casMax(cell, 2.0)
         assertEquals(2.0, cell.load(), DELTA)
     }
 
     @Test
-    fun `ignores NaN candidate`() {
+    fun `casMax should ignore NaN candidate`() {
         val cell = SerialDouble(1.0)
         casMax(cell, Double.NaN)
         assertEquals(1.0, cell.load(), DELTA)
     }
 
     @Test
-    fun `accepts positive infinity`() {
+    fun `casMax should accept positive infinity`() {
         val cell = SerialDouble(1e300)
         casMax(cell, Double.POSITIVE_INFINITY)
         assertEquals(Double.POSITIVE_INFINITY, cell.load())
@@ -70,28 +70,28 @@ class CasMaxDoubleTest {
 class CasMinDoubleTest {
 
     @Test
-    fun `accepts strictly lower value`() {
+    fun `casMin should accept strictly lower value`() {
         val cell = SerialDouble(5.0)
         casMin(cell, 2.0)
         assertEquals(2.0, cell.load(), DELTA)
     }
 
     @Test
-    fun `rejects equal value`() {
+    fun `casMin should reject equal value`() {
         val cell = SerialDouble(3.0)
         casMin(cell, 3.0)
         assertEquals(3.0, cell.load(), DELTA)
     }
 
     @Test
-    fun `ignores NaN candidate`() {
+    fun `casMin should ignore NaN candidate`() {
         val cell = SerialDouble(1.0)
         casMin(cell, Double.NaN)
         assertEquals(1.0, cell.load(), DELTA)
     }
 
     @Test
-    fun `accepts negative infinity`() {
+    fun `casMin should accept negative infinity`() {
         val cell = SerialDouble(-1e300)
         casMin(cell, Double.NEGATIVE_INFINITY)
         assertEquals(Double.NEGATIVE_INFINITY, cell.load())
@@ -101,14 +101,14 @@ class CasMinDoubleTest {
 class CasOrLongTest {
 
     @Test
-    fun `sets bits in empty cell`() {
+    fun `casOr should set bits in empty cell`() {
         val cell = SerialLong(0L)
         casOr(cell, 0b0101L)
         assertEquals(0b0101L, cell.load())
     }
 
     @Test
-    fun `accumulates bits across calls`() {
+    fun `casOr should accumulate bits across calls`() {
         val cell = SerialLong(0L)
         casOr(cell, 0b0001L)
         casOr(cell, 0b0010L)
@@ -117,7 +117,7 @@ class CasOrLongTest {
     }
 
     @Test
-    fun `is no-op when all requested bits already set`() {
+    fun `casOr should be no-op when all requested bits are already set`() {
         val cell = SerialLong(0b1111L)
         casOr(cell, 0b0101L)
         assertEquals(0b1111L, cell.load())
@@ -127,12 +127,11 @@ class CasOrLongTest {
 class CasMaxLongArrayTest {
 
     @Test
-    fun `acts per slot`() {
+    fun `casMax on array should act per slot`() {
         val arr = SerialLongArray(longArrayOf(0L, 0L, 0L))
         casMax(arr, 0, 5L)
         casMax(arr, 1, 7L)
         casMax(arr, 2, 1L)
-        // Updates affect only their own slot.
         casMax(arr, 1, 3L)
         assertEquals(5L, arr.load(0))
         assertEquals(7L, arr.load(1))
@@ -143,7 +142,7 @@ class CasMaxLongArrayTest {
 class CasMinLongArrayTest {
 
     @Test
-    fun `acts per slot`() {
+    fun `casMin on array should act per slot`() {
         val arr = SerialLongArray(longArrayOf(100L, 100L, 100L))
         casMin(arr, 0, 50L)
         casMin(arr, 1, 25L)
@@ -157,7 +156,7 @@ class CasMinLongArrayTest {
 class CasOrLongArrayTest {
 
     @Test
-    fun `acts per slot`() {
+    fun `casOr on array should act per slot`() {
         val arr = SerialLongArray(longArrayOf(0L, 0L))
         casOr(arr, 0, 0b0001L)
         casOr(arr, 0, 0b0010L)

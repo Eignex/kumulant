@@ -8,24 +8,24 @@ import kotlin.test.assertSame
 class AdditiveModeTest {
 
     @Test
-    fun `None returns SerialMode`() {
+    fun `additiveMode should return SerialMode for None`() {
         assertSame(SerialMode, Concurrency.None.additiveMode())
     }
 
     @Test
-    fun `Relaxed returns AtomicMode`() {
+    fun `additiveMode should return AtomicMode for Relaxed`() {
         assertSame(AtomicMode, Concurrency.Relaxed.additiveMode())
     }
 
     @Test
-    fun `Strict returns AtomicMode`() {
+    fun `additiveMode should return AtomicMode for Strict`() {
         assertSame(AtomicMode, Concurrency.Strict.additiveMode())
     }
 
     @Test
-    fun `HighWrite is striped not Serial`() {
+    fun `additiveMode should pick striped not Serial for HighWrite`() {
         // JVM picks AdderMode (in jvmMain, not visible here); other targets
-        // fall back to AtomicMode. Either way, it's not SerialMode.
+        // fall back to AtomicMode. Either way it's not SerialMode.
         assertNotSame(SerialMode, Concurrency.HighWrite.additiveMode())
     }
 }
@@ -33,22 +33,22 @@ class AdditiveModeTest {
 class MonotonicModeTest {
 
     @Test
-    fun `None returns SerialMode`() {
+    fun `monotonicMode should return SerialMode for None`() {
         assertSame(SerialMode, Concurrency.None.monotonicMode())
     }
 
     @Test
-    fun `Relaxed returns AtomicMode`() {
+    fun `monotonicMode should return AtomicMode for Relaxed`() {
         assertSame(AtomicMode, Concurrency.Relaxed.monotonicMode())
     }
 
     @Test
-    fun `Strict returns AtomicMode`() {
+    fun `monotonicMode should return AtomicMode for Strict`() {
         assertSame(AtomicMode, Concurrency.Strict.monotonicMode())
     }
 
     @Test
-    fun `HighWrite returns AtomicMode`() {
+    fun `monotonicMode should return AtomicMode for HighWrite`() {
         assertSame(AtomicMode, Concurrency.HighWrite.monotonicMode())
     }
 }
@@ -56,23 +56,22 @@ class MonotonicModeTest {
 class WelfordModeTest {
 
     @Test
-    fun `None returns SerialMode`() {
+    fun `welfordMode should return SerialMode for None`() {
         assertSame(SerialMode, Concurrency.None.welfordMode())
     }
 
     @Test
-    fun `Relaxed returns AtomicMode`() {
+    fun `welfordMode should return AtomicMode for Relaxed`() {
         assertSame(AtomicMode, Concurrency.Relaxed.welfordMode())
     }
 
     @Test
-    fun `Strict returns SerialMode`() {
-        // Strict locks at the stat level — cells then drop atomic overhead.
+    fun `welfordMode should return SerialMode for Strict`() {
         assertSame(SerialMode, Concurrency.Strict.welfordMode())
     }
 
     @Test
-    fun `HighWrite returns SerialMode`() {
+    fun `welfordMode should return SerialMode for HighWrite`() {
         assertSame(SerialMode, Concurrency.HighWrite.welfordMode())
     }
 }
@@ -80,51 +79,45 @@ class WelfordModeTest {
 class WelfordLockTest {
 
     @Test
-    fun `None returns NoopMutex`() {
+    fun `welfordLock should return NoopMutex for None`() {
         assertSame(NoopMutex, Concurrency.None.welfordLock())
     }
 
     @Test
-    fun `Relaxed returns NoopMutex`() {
+    fun `welfordLock should return NoopMutex for Relaxed`() {
         assertSame(NoopMutex, Concurrency.Relaxed.welfordLock())
     }
 
     @Test
-    fun `Strict returns PlatformMutex`() {
-        val lock = Concurrency.Strict.welfordLock()
-        assertNotSame(NoopMutex, lock)
-        kotlin.test.assertTrue(lock is PlatformMutex)
+    fun `welfordLock should return PlatformMutex for Strict`() {
+        kotlin.test.assertTrue(Concurrency.Strict.welfordLock() is PlatformMutex)
     }
 
     @Test
-    fun `HighWrite returns PlatformMutex`() {
-        val lock = Concurrency.HighWrite.welfordLock()
-        kotlin.test.assertTrue(lock is PlatformMutex)
+    fun `welfordLock should return PlatformMutex for HighWrite`() {
+        kotlin.test.assertTrue(Concurrency.HighWrite.welfordLock() is PlatformMutex)
     }
 }
 
 class SerializedLockTest {
 
     @Test
-    fun `None returns NoopMutex`() {
+    fun `serializedLock should return NoopMutex for None`() {
         assertSame(NoopMutex, Concurrency.None.serializedLock())
     }
 
     @Test
-    fun `Relaxed returns PlatformMutex`() {
-        val lock = Concurrency.Relaxed.serializedLock()
-        kotlin.test.assertTrue(lock is PlatformMutex)
+    fun `serializedLock should return PlatformMutex for Relaxed`() {
+        kotlin.test.assertTrue(Concurrency.Relaxed.serializedLock() is PlatformMutex)
     }
 
     @Test
-    fun `Strict returns PlatformMutex`() {
-        val lock = Concurrency.Strict.serializedLock()
-        kotlin.test.assertTrue(lock is PlatformMutex)
+    fun `serializedLock should return PlatformMutex for Strict`() {
+        kotlin.test.assertTrue(Concurrency.Strict.serializedLock() is PlatformMutex)
     }
 
     @Test
-    fun `HighWrite returns PlatformMutex`() {
-        val lock = Concurrency.HighWrite.serializedLock()
-        kotlin.test.assertTrue(lock is PlatformMutex)
+    fun `serializedLock should return PlatformMutex for HighWrite`() {
+        kotlin.test.assertTrue(Concurrency.HighWrite.serializedLock() is PlatformMutex)
     }
 }
