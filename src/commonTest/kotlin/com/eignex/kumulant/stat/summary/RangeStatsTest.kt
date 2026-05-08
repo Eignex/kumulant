@@ -99,6 +99,43 @@ class RangeStatsTest {
         val r = RangeStat()
         r.update(10.0)
     }
+
+    @Test
+    fun `positive infinity sets max`() {
+        val r = RangeStat()
+        r.update(1.0)
+        r.update(Double.POSITIVE_INFINITY)
+        val result = r.read()
+        assertEquals(1.0, result.min, DELTA)
+        assertTrue(result.max.isInfinite() && result.max > 0.0)
+    }
+
+    @Test
+    fun `negative infinity sets min`() {
+        val r = RangeStat()
+        r.update(1.0)
+        r.update(Double.NEGATIVE_INFINITY)
+        val result = r.read()
+        assertTrue(result.min.isInfinite() && result.min < 0.0)
+        assertEquals(1.0, result.max, DELTA)
+    }
+
+    @Test
+    fun `NaN is ignored by the less-than and greater-than comparisons`() {
+        val r = RangeStat()
+        r.update(5.0)
+        r.update(Double.NaN)
+        val result = r.read()
+        assertEquals(5.0, result.min, DELTA)
+        assertEquals(5.0, result.max, DELTA)
+    }
+
+    @Test
+    fun `read before any update returns infinities`() {
+        val result = RangeStat().read()
+        assertTrue(result.min.isInfinite() && result.min > 0.0)
+        assertTrue(result.max.isInfinite() && result.max < 0.0)
+    }
 }
 
 class MinStatsTest {
@@ -139,6 +176,22 @@ class MinStatsTest {
         m2.update(1.0)
         assertEquals(5.0, m1.read().min, DELTA)
         assertEquals(1.0, m2.read().min, DELTA)
+    }
+
+    @Test
+    fun `MinStat ignores NaN inputs`() {
+        val m = MinStat()
+        m.update(5.0)
+        m.update(Double.NaN)
+        assertEquals(5.0, m.read().min, DELTA)
+    }
+
+    @Test
+    fun `MinStat accepts negative infinity`() {
+        val m = MinStat()
+        m.update(0.0)
+        m.update(Double.NEGATIVE_INFINITY)
+        assertTrue(m.read().min.isInfinite() && m.read().min < 0.0)
     }
 }
 
@@ -181,57 +234,6 @@ class MaxStatsTest {
         assertEquals(5.0, m1.read().max, DELTA)
         assertEquals(10.0, m2.read().max, DELTA)
     }
-}
-
-class RangeEdgeCasesTest {
-
-    @Test
-    fun `positive infinity sets max`() {
-        val r = RangeStat()
-        r.update(1.0)
-        r.update(Double.POSITIVE_INFINITY)
-        val result = r.read()
-        assertEquals(1.0, result.min, DELTA)
-        assertTrue(result.max.isInfinite() && result.max > 0.0)
-    }
-
-    @Test
-    fun `negative infinity sets min`() {
-        val r = RangeStat()
-        r.update(1.0)
-        r.update(Double.NEGATIVE_INFINITY)
-        val result = r.read()
-        assertTrue(result.min.isInfinite() && result.min < 0.0)
-        assertEquals(1.0, result.max, DELTA)
-    }
-
-    @Test
-    fun `NaN is ignored by the less-than and greater-than comparisons`() {
-        val r = RangeStat()
-        r.update(5.0)
-        r.update(Double.NaN)
-        val result = r.read()
-        assertEquals(5.0, result.min, DELTA)
-        assertEquals(5.0, result.max, DELTA)
-    }
-
-    @Test
-    fun `read before any update returns infinities`() {
-        val result = RangeStat().read()
-        assertTrue(result.min.isInfinite() && result.min > 0.0)
-        assertTrue(result.max.isInfinite() && result.max < 0.0)
-    }
-}
-
-class MinMaxEdgeCasesTest {
-
-    @Test
-    fun `MinStat ignores NaN inputs`() {
-        val m = MinStat()
-        m.update(5.0)
-        m.update(Double.NaN)
-        assertEquals(5.0, m.read().min, DELTA)
-    }
 
     @Test
     fun `MaxStat ignores NaN inputs`() {
@@ -239,14 +241,6 @@ class MinMaxEdgeCasesTest {
         m.update(5.0)
         m.update(Double.NaN)
         assertEquals(5.0, m.read().max, DELTA)
-    }
-
-    @Test
-    fun `MinStat accepts negative infinity`() {
-        val m = MinStat()
-        m.update(0.0)
-        m.update(Double.NEGATIVE_INFINITY)
-        assertTrue(m.read().min.isInfinite() && m.read().min < 0.0)
     }
 
     @Test

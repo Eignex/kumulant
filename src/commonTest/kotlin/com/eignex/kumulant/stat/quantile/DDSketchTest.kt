@@ -143,9 +143,6 @@ class DDSketchTest {
 
         assertEquals(10.0, hist.weights.sum(), 1e-9)
     }
-}
-
-class DDSketchEdgeCasesTest {
 
     @Test
     fun `merge with incompatible relative error throws`() {

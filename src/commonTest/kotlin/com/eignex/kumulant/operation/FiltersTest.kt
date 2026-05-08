@@ -73,9 +73,6 @@ class FiltersTest {
         assertEquals(true, pred.test(10L))
         assertEquals(false, pred.test(3L))
     }
-}
-
-class FilterEdgeCasesTest {
 
     @Test
     fun `series filter rejecting all leaves stat in zero state`() {

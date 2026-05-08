@@ -190,6 +190,33 @@ class VarianceTest {
         assertEquals(0.0, vari.read().mean, DELTA)
         assertEquals(0.0, vari.read().variance, DELTA)
     }
+
+    @Test
+    fun `read before any update returns zero variance and zero mean`() {
+        val v = VarianceStat().read()
+        assertEquals(0.0, v.totalWeights, DELTA)
+        assertEquals(0.0, v.mean, DELTA)
+        assertEquals(0.0, v.variance, DELTA)
+    }
+
+    @Test
+    fun `variance over constant stream is zero`() {
+        val v = VarianceStat()
+        repeat(100) { v.update(7.0) }
+        assertEquals(0.0, v.read().variance, 1e-6)
+    }
+
+    @Test
+    fun `handles large magnitudes without overflow`() {
+        val v = VarianceStat()
+        val large = 1e9
+        v.update(large)
+        v.update(-large)
+        val result = v.read()
+        assertFalse(result.variance.isNaN())
+        assertFalse(result.variance.isInfinite())
+        assertEquals(1e18, result.variance, 1e12)
+    }
 }
 
 class MomentsTest {
@@ -350,35 +377,5 @@ class SampleVarianceTraitTest {
         val n = r.totalWeights
         val expected = ((n - 1) / ((n - 2) * (n - 3))) * ((n + 1) * r.kurtosis + 6.0)
         assertEquals(expected, r.unbiasedKurtosis, delta)
-    }
-}
-
-class VarianceEdgeCasesTest {
-
-    @Test
-    fun `read before any update returns zero variance and zero mean`() {
-        val v = VarianceStat().read()
-        assertEquals(0.0, v.totalWeights, DELTA)
-        assertEquals(0.0, v.mean, DELTA)
-        assertEquals(0.0, v.variance, DELTA)
-    }
-
-    @Test
-    fun `variance over constant stream is zero`() {
-        val v = VarianceStat()
-        repeat(100) { v.update(7.0) }
-        assertEquals(0.0, v.read().variance, 1e-6)
-    }
-
-    @Test
-    fun `handles large magnitudes without overflow`() {
-        val v = VarianceStat()
-        val large = 1e9
-        v.update(large)
-        v.update(-large)
-        val result = v.read()
-        assertFalse(result.variance.isNaN())
-        assertFalse(result.variance.isInfinite())
-        assertEquals(1e18, result.variance, 1e12)
     }
 }
