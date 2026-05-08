@@ -161,13 +161,6 @@ class StatsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
-    // ===== Vector =====
-
-    @Test fun `varianceVectorConfig round trips`() {
-        val cfg = VarianceVector(dimensions = 4)
-        assertEquals(cfg, roundTrip(cfg))
-    }
-
     // ===== Discrete =====
 
     @Test fun `hyperLogLogConfig round trips`() {

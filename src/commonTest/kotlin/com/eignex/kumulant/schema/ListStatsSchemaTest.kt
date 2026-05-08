@@ -56,8 +56,8 @@ class ListStatsSchemaTest {
 
     @Test fun `vectorListStats from schema preserves order`() {
         val schema = object : StatSchema() {
-            val a by vector(VarianceVector(dimensions = 2))
-            val b by vector(VarianceVector(dimensions = 2))
+            val a by vector(Sum.vectorized(dimensions = 2))
+            val b by vector(Sum.vectorized(dimensions = 2))
         }
         val list = VectorListStats<Result>(schema)
         list.update(doubleArrayOf(1.0, 10.0))

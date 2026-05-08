@@ -605,7 +605,7 @@ class VectorStatGroupTest {
     @Test
     fun `vector schema constructor materializes config entries`() {
         val schema = object : StatSchema() {
-            val vsumKey by vector(VarianceVector(dimensions = 2))
+            val vsumKey by vector(Sum.vectorized(dimensions = 2))
         }
         val group = VectorStatGroup(schema)
         group.update(doubleArrayOf(1.0, 10.0))

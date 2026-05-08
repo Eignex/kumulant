@@ -3,9 +3,7 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
-import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.cardinality.LinearCountingResult
@@ -70,7 +68,6 @@ import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
-import com.eignex.kumulant.stat.summary.varianceVector
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -320,15 +317,6 @@ data class Auc(
 data class Reliability(val numBins: Int) : PairedStatSpec<ReliabilityResult> {
     override fun materialize(concurrency: Concurrency): PairedStat<ReliabilityResult> =
         ReliabilityStat(numBins, concurrency)
-}
-
-// ========== Vector ==========
-
-@Serializable
-@SerialName("VarianceVector")
-data class VarianceVector(val dimensions: Int) : VectorStatSpec<ResultList<WeightedVarianceResult>> {
-    override fun materialize(concurrency: Concurrency): VectorStat<ResultList<WeightedVarianceResult>> =
-        varianceVector(dimensions, concurrency)
 }
 
 // ========== Discrete ==========
