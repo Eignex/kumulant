@@ -24,7 +24,7 @@ observations.
 * Single-pass, mergeable, constant-memory accumulators for sums, means, variances, higher moments, quantiles, cardinality, heavy hitters, rates, regression, and scoring losses.
 * Composable operations: time-windowed aggregation, weighted updates, pre-update transforms, predicate filtering, and adapters between scalar, paired, vector, and discrete input streams.
 * Serializable stat schemas via kotlinx.serialization that round-trip through JSON or protobuf and rehydrate into live stat groups on the other side.
-* Wire-expressible transforms and filters via a serializable expression AST — operations travel without lambdas.
+* Wire-expressible transforms and filters via a serializable expression AST, so operations travel without lambdas.
 * Concurrency selectable per stat: single-threaded, lock-free relaxed, fully serialized, or striped adders for write-heavy paths on the JVM.
 * Pure Kotlin Multiplatform: JVM, JS (IR), wasmJs, wasmWasi, Linux x64/Arm64, macOS x64/Arm64, mingwX64, iOS x64/Arm64/SimulatorArm64.
 
@@ -37,21 +37,21 @@ counters, parallel workers folding into a single estimate, and distributed
 aggregation over a queue.
 
 There are three layers stacked on each other; pick the lowest one that fits.
-The bottom layer is the live stats — concrete classes like MeanStat, OLSStat,
-HyperLogLogStat. Construct, feed observations, read the result. Use these
+The bottom layer is the live stats: concrete classes like MeanStat, OLSStat,
+and HyperLogLogStat. Construct, feed observations, read the result. Use these
 directly when the choice of stat is fixed at compile time.
 
-The middle layer is composable operations — extension functions on the live
+The middle layer is composable operations: extension functions on the live
 stat interfaces such as withWeight, atX, windowed, transformValue, filter,
-foldVector. Each preserves the inner stat's result type and merge semantics,
-so wrapped stats remain ordinary stats.
+and foldVector. Each preserves the inner stat's result type and merge
+semantics, so wrapped stats remain ordinary stats.
 
-The top layer is the wire schema — pure-data StatSpec variants (Mean, OLS,
-DDSketch, …) under kotlinx.serialization polymorphism. A StatSchema is a
-declared bag of specs that round-trips through JSON or protobuf and rehydrates
-into a live StatGroup on the other side. Reach for it when the choice of
-stats has to travel — for instance, a UI declaring what to track over a
-stream of events processed elsewhere.
+The top layer is the wire schema: pure-data StatSpec variants (Mean, OLS,
+DDSketch, and so on) under kotlinx.serialization polymorphism. A StatSchema
+is a declared bag of specs that round-trips through JSON or protobuf and
+rehydrates into a live StatGroup on the other side. Reach for it when the
+choice of stats has to travel, for instance a UI declaring what to track over
+a stream of events processed elsewhere.
 
 ## Installation
 
@@ -68,10 +68,10 @@ format such as kotlinx-serialization-json.
 
 ## Live stats
 
-Every stat implements one of four modality interfaces — SeriesStat (scalar
+Every stat implements one of four modality interfaces: SeriesStat (scalar
 input), PairedStat (x/y input), VectorStat (fixed-dim vector input), or
-DiscreteStat (Long input) — and exposes the same update, read, merge, reset,
-create surface.
+DiscreteStat (Long input). All four expose the same update, read, merge,
+reset, and create surface.
 
 ```kotlin
 val mean = MeanStat()
@@ -97,16 +97,16 @@ val b = MeanStat().apply { repeat(100) { update((it + 100).toDouble()) } }
 a.merge(b.read()) // a is now the mean of 0..199
 ```
 
-| Family       | Stats                                                                                  |
-|--------------|----------------------------------------------------------------------------------------|
-| Summary      | `Sum`, `Mean`, `Min`, `Max`, `Range`, `Variance`, `Moments`, `BernoulliSum`, `Count`   |
-| Quantile     | `DDSketch`, `TDigest`, `HdrHistogram`, `LinearHistogram`, `ReservoirHistogram`, `FrugalQuantile` |
-| Cardinality  | `HyperLogLog`, `LinearCounting`                                                        |
-| Sketch       | `BloomFilter`, `CountMinSketch`, `MinHash`, `SpaceSaving`                              |
-| Rate         | `Rate`, `CounterRate`, `DecayingRate`                                                  |
-| Regression   | `OLS`, `Covariance`, `Ridge`, `Lasso`                                                  |
-| Decay        | `DecayingSum`, `DecayingMean`, `DecayingVariance`, `EwmaMean`, `EwmaVariance`          |
-| Score        | `MseLoss`, `MaeLoss`, `LogLoss`, `PinballLoss`, `BrierScore`, `Auc`, `Reliability`, `PitHistogram` |
+| Family       | Stats                                                                          |
+|--------------|--------------------------------------------------------------------------------|
+| Summary      | Sum, Mean, Min, Max, Range, Variance, Moments, BernoulliSum, Count             |
+| Quantile     | DDSketch, TDigest, HdrHistogram, LinearHistogram, ReservoirHistogram, FrugalQuantile |
+| Cardinality  | HyperLogLog, LinearCounting                                                    |
+| Sketch       | BloomFilter, CountMinSketch, MinHash, SpaceSaving                              |
+| Rate         | Rate, CounterRate, DecayingRate                                                |
+| Regression   | OLS, Covariance, Ridge, Lasso                                                  |
+| Decay        | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance            |
+| Score        | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
 
 ---
 
@@ -147,9 +147,9 @@ val positiveMean = MeanStat().filter { it > 0.0 }
 
 ## Wire schema
 
-StatSpec is the pure-data counterpart of every live stat — a @Serializable
+StatSpec is the pure-data counterpart of every live stat: a @Serializable
 sealed hierarchy whose subclasses are the parameter records (Mean, Sum,
-DDSketch, OLS, HyperLogLog, DecayingMean, …). StatSchema is a typed bag of
+DDSketch, OLS, HyperLogLog, DecayingMean, and so on). StatSchema is a typed bag of
 specs that you declare once, then either materialize directly or send over the
 wire and rehydrate on the other side.
 
@@ -181,7 +181,7 @@ val rehydrated = StatGroup(stats = decoded.materializeSeries(Concurrency.Strict)
 
 Composable operations are mirrored on the spec layer as wire-friendly
 counterparts. `Mean.windowed(60_000, slices = 10).withWeight(0.5)` serializes
-verbatim. Lambdas are not on the wire — filter, transformValue, transformPair,
+verbatim. Lambdas are not on the wire: filter, transformValue, transformPair,
 and the fold operations all use ScalarExpr, BoolExpr, and VectorExpr
 expression ASTs instead:
 
