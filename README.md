@@ -15,42 +15,16 @@
 [![codecov](https://codecov.io/gh/eignex/kumulant/branch/main/graph/badge.svg)](https://codecov.io/gh/eignex/kumulant)
 [![License](https://img.shields.io/github/license/eignex/kumulant)](https://github.com/eignex/kumulant/blob/main/LICENSE)
 
-Kumulant is a pure Kotlin multiplatform library of streaming statistical
-accumulators: single-pass, mergeable, and constant-memory in the number of
-observations.
+Kumulant is a Kotlin multiplatform library of streaming statistical
+accumulators. Every stat is single-pass, mergeable, and constant-memory
+in the number of observations. Targets: JVM, JS (IR), wasmJs, wasmWasi,
+Linux x64/Arm64, macOS x64/Arm64, mingwX64, iOS x64/Arm64/SimulatorArm64.
 
-## Features
-
-* Single-pass, mergeable, constant-memory accumulators for sums, means, variances, higher moments, quantiles, cardinality, heavy hitters, rates, regression, and scoring losses.
-* Composable operations: time-windowed aggregation, weighted updates, pre-update transforms, predicate filtering, and adapters between scalar, paired, vector, and discrete input streams.
-* Serializable stat schemas via kotlinx.serialization that round-trip through JSON or protobuf and rehydrate into live stat groups on the other side.
-* Transforms and filters expressed via a serializable expression AST, so every operation travels on the wire (no lambda escape hatch).
-* Concurrency selectable per stat: single-threaded, lock-free relaxed, fully serialized, or striped adders for write-heavy paths on the JVM.
-* Pure Kotlin Multiplatform: JVM, JS (IR), wasmJs, wasmWasi, Linux x64/Arm64, macOS x64/Arm64, mingwX64, iOS x64/Arm64/SimulatorArm64.
-
-## Overview
-
-Every stat takes one observation at a time, holds bounded state, and produces a
-result that can be merged with the result of another instance running on a
-different machine. That makes the same primitives usable for in-process
-counters, parallel workers folding into a single estimate, and distributed
-aggregation over a queue.
-
-Three layers stack on each other; pick the lowest one that fits.
-
-1. **Live stats** — concrete classes like `MeanStat`, `OLSStat`, `HyperLogLogStat`.
-   Construct, feed observations, read the result. Reach for these when the
-   choice of stat is fixed at compile time.
-2. **Composable operations** — parameter-only extensions on live stats
-   (`withWeight`, `windowed`, `atX/Y`, `vectorized`, …) plus AST-driven
-   operations on specs (`filter`, `transform`, `foldPaired`, …). Lambda-bound
-   operations exist only on the spec layer where the lambda is an
-   expression-AST; live stats have no public lambda filter/transform/fold.
-3. **Wire schema** — pure-data `StatSpec` variants (`Mean`, `OLS`, `DDSketch`,
-   …) under kotlinx.serialization polymorphism. A `StatSchema` is a declared
-   bag of specs that round-trips through JSON or protobuf and rehydrates into
-   a live `StatGroup` on the other side. Reach for it when the choice of
-   stats has to travel.
+The API stacks in three layers and you pick the lowest one that fits:
+live stats (`MeanStat`, `OLSStat`, …) for compile-time-fixed code,
+composable operations (`windowed`, `filter`, `withWeight`, …) for
+declarative pipelines, and a serializable wire schema (`StatSchema` /
+`StatSpec`) when the choice of stats has to travel across processes.
 
 ## Installation
 
@@ -60,15 +34,15 @@ dependencies {
 }
 ```
 
-The wire schema layer additionally requires kotlinx-serialization-core and a
-format such as kotlinx-serialization-json.
+The wire schema layer additionally requires `kotlinx-serialization-core`
+and a format such as `kotlinx-serialization-json`.
 
 ## Live stats
 
-Every stat implements one of four modality interfaces: SeriesStat (scalar
-input), PairedStat (x/y input), VectorStat (fixed-dim vector input), or
-DiscreteStat (Long input). All four expose the same update, read, merge,
-reset, and create surface.
+Every stat implements one of four modality interfaces — `SeriesStat` (scalar
+input), `PairedStat` (x/y input), `VectorStat` (fixed-dim vector input), or
+`DiscreteStat` (Long input) — all with the same `update`, `read`, `merge`,
+`reset`, and `create` surface.
 
 ```kotlin
 val mean = MeanStat()
@@ -85,8 +59,8 @@ val fit = ols.read()
 val yHat = fit.slope * 7.0 + fit.intercept
 ```
 
-Results are immutable data classes annotated @Serializable. Two stats of the
-same type merge by feeding one's result into the other's merge:
+Results are `@Serializable` data classes. Merge two stats of the same type by
+feeding one's result into the other:
 
 ```kotlin
 val a = MeanStat().apply { repeat(100) { update(it.toDouble()) } }
@@ -108,21 +82,13 @@ a.merge(b.read()) // a is now the mean of 0..199
 ## Composable operations
 
 Parameter-only operations are extension functions on the live stat interfaces.
-Anything that would take a lambda is exposed only on the spec layer, where it
-takes a serializable expression AST instead, so an operation never has the
-choice of being non-portable.
+Anything that would take a lambda lives on the spec layer and takes a
+serializable expression AST, so every operation can travel on the wire.
 
 ```kotlin
-// Time-windowed mean over 1 minute, with 10 slices.
 val recentMean = MeanStat().windowed(1.minutes, slices = 10)
-
-// Drive a SumStat from the y-coordinate of (x, y) inputs.
 val sumY = SumStat().atY()
-
-// Drop non-positive samples before aggregating.
 val positiveMean = Mean.filter(X gt 0.0).materialize()
-
-// Mean of x*y, computed by folding the pair before update.
 val meanXY = Mean.foldPaired(X * Y).materialize()
 ```
 
@@ -143,19 +109,15 @@ val meanXY = Mean.foldPaired(X * Y).materialize()
 
 ## Wire schema
 
-Two distinct things travel on the wire, and keeping them apart matters:
+A **schema** (`StatSchema` / `StatSchemaDef`) is definition only: which stats
+exist, their parameters, how they compose. Specs are pure data classes;
+construction of the live stat lives in `StatFactory.kt`. A **result** (the
+type returned by `stat.read()`) is data only: the current snapshot. Each stat
+has its own `@Serializable` Result type (`SumResult`, `WeightedMeanResult`,
+`SketchResult`, …); the receiver feeds it into a stat of the matching spec
+via `merge()`.
 
-1. A **schema** (`StatSchema` / `StatSchemaDef`) is *definition only*: which
-   stats exist, their parameters, and how they compose. Specs are pure data
-   classes — no observations, no accumulator state, no behavior. Construction
-   of the live stat lives separately in `StatFactory.kt`.
-2. A **result** (the `Result` returned by `stat.read()`) is *data only*: the
-   current snapshot. Each stat has its own `@Serializable` Result type
-   (`SumResult`, `WeightedMeanResult`, `SketchResult`, …). The receiver feeds
-   it into a stat of the matching spec via `merge()` to reconstitute state.
-
-Declare a schema, build a live group from it, feed observations, read
-snapshots, send those snapshots to whoever aggregates them:
+Declare a schema, build a group, feed observations, read snapshots:
 
 ```kotlin
 object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
@@ -167,54 +129,34 @@ object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
 
 val group = StatGroup(Telemetry)
 group.update(value = 12.7)
-
-val snapshot: GroupResult = group.read()          // data: the current accumulator state
-val p99 = snapshot[Telemetry.latencyP99]
+val p99 = group.read()[Telemetry.latencyP99]
 ```
 
-The schema itself is its own wire payload, separate from any snapshot:
+The schema and snapshots ship separately:
 
 ```kotlin
-// Producer side: ship the recipe.
-val def: StatSchemaDef = Telemetry.statSchemaDef()
-val schemaPayload = Json.encodeToString(def)
-
-// Consumer side: decode and build an empty live group.
-val decoded = Json.decodeFromString<StatSchemaDef>(schemaPayload)
-val rehydrated = StatGroup(stats = decoded.materializeSeries(Concurrency.Strict))
-```
-
-The rehydrated group starts empty; it has no observations. To populate it with
-state from elsewhere, encode a snapshot and merge it in:
-
-```kotlin
-// Producer side: read a snapshot and ship it.
+// Producer: schema once, then snapshots continuously.
+val schemaPayload = Json.encodeToString(Telemetry.statSchemaDef())
 val resultPayload = Json.encodeToString(group.read())
 
-// Consumer side: merge into the live group built from the same schema.
-val incoming = Json.decodeFromString<GroupResult>(resultPayload)
-rehydrated.merge(incoming)
+// Consumer: rebuild a live group from the schema, then merge in snapshots.
+val def = Json.decodeFromString<StatSchemaDef>(schemaPayload)
+val rehydrated = StatGroup(stats = def.materializeSeries(Concurrency.Strict))
+rehydrated.merge(Json.decodeFromString<GroupResult>(resultPayload))
 ```
 
-Schemas and snapshots are decoupled on purpose: the schema travels once at
-configuration time, and snapshots flow continuously as workers fold their
-partial state up to an aggregator.
-
-All operations are spec-friendly. `Mean.windowed(60_000, slices = 10).withWeight(0.5)`
-serializes verbatim. Operations that need a predicate or transform take a
-ScalarExpr, BoolExpr, or VectorExpr from the AST in schema/Expr.kt:
+Operations carry over to specs without ceremony — `Mean.windowed(60_000, slices = 10).withWeight(0.5)`
+serializes verbatim. Predicates and transforms take a `ScalarExpr`, `BoolExpr`,
+or `VectorExpr` from `schema/Expr.kt`:
 
 ```kotlin
-// Ignore non-positive samples, square the rest.
-val spec = Mean
-    .filter(X gt 0.0)
-    .transform(X * X)
+val spec = Mean.filter(X gt 0.0).transform(X * X)
 ```
 
 ## Concurrency
 
-Every stat constructor takes a Concurrency argument that controls the
-cell-encoding and locking strategy chosen for that stat:
+Every stat constructor takes a `Concurrency` argument controlling its
+cell-encoding and locking strategy:
 
 | Level         | Behavior                                                                                   |
 |---------------|--------------------------------------------------------------------------------------------|
@@ -223,9 +165,8 @@ cell-encoding and locking strategy chosen for that stat:
 | `Strict`      | Multi-threaded, serialised where coupling demands it. Full correctness.                    |
 | `HighWrite`   | Multi-threaded write-heavy. On JVM, striped adders for naively additive stats.             |
 
-For bag-of-stats deployments, set Concurrency once on the StatSchema and it
-propagates to every stat in the group. For ad-hoc construction, pass it to
-the stat constructor directly:
+Set it once on the `StatSchema` and it propagates to every stat in the group,
+or pass it directly to a stat constructor for ad-hoc use:
 
 ```kotlin
 val hits = SumStat(concurrency = Concurrency.HighWrite)
