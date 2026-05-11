@@ -36,25 +36,21 @@ different machine. That makes the same primitives usable for in-process
 counters, parallel workers folding into a single estimate, and distributed
 aggregation over a queue.
 
-There are three layers stacked on each other; pick the lowest one that fits.
-The bottom layer is the live stats: concrete classes like MeanStat, OLSStat,
-and HyperLogLogStat. Construct, feed observations, read the result. Use these
-directly when the choice of stat is fixed at compile time.
+Three layers stack on each other; pick the lowest one that fits.
 
-The middle layer is composable operations: parameter-only extensions on live
-stats (withWeight, withValue, atX/Y, atIndex, withFixedX/Y, withTimeAsX/Y,
-windowed, asSeries, asDiscrete, vectorized) plus the larger set of operations
-on stat specs that take expression-AST arguments (filter, transform,
-transformPair, transformElement, transformVector, foldPaired, foldVector).
-Lambda-bound operations are wire-internal: there is no public lambda
-filter/transform/fold on a live stat. The AST is the only path.
-
-The top layer is the wire schema: pure-data StatSpec variants (Mean, OLS,
-DDSketch, and so on) under kotlinx.serialization polymorphism. A StatSchema
-is a declared bag of specs that round-trips through JSON or protobuf and
-rehydrates into a live StatGroup on the other side. Reach for it when the
-choice of stats has to travel, for instance a UI declaring what to track over
-a stream of events processed elsewhere.
+1. **Live stats** — concrete classes like `MeanStat`, `OLSStat`, `HyperLogLogStat`.
+   Construct, feed observations, read the result. Reach for these when the
+   choice of stat is fixed at compile time.
+2. **Composable operations** — parameter-only extensions on live stats
+   (`withWeight`, `windowed`, `atX/Y`, `vectorized`, …) plus AST-driven
+   operations on specs (`filter`, `transform`, `foldPaired`, …). Lambda-bound
+   operations exist only on the spec layer where the lambda is an
+   expression-AST; live stats have no public lambda filter/transform/fold.
+3. **Wire schema** — pure-data `StatSpec` variants (`Mean`, `OLS`, `DDSketch`,
+   …) under kotlinx.serialization polymorphism. A `StatSchema` is a declared
+   bag of specs that round-trips through JSON or protobuf and rehydrates into
+   a live `StatGroup` on the other side. Reach for it when the choice of
+   stats has to travel.
 
 ## Installation
 
@@ -123,10 +119,10 @@ val recentMean = MeanStat().windowed(1.minutes, slices = 10)
 // Drive a SumStat from the y-coordinate of (x, y) inputs.
 val sumY = SumStat().atY()
 
-// Drop non-positive samples before aggregating (spec → materialize).
+// Drop non-positive samples before aggregating.
 val positiveMean = Mean.filter(X gt 0.0).materialize()
 
-// Mean of x*y, computed by folding the pair before update (spec → materialize).
+// Mean of x*y, computed by folding the pair before update.
 val meanXY = Mean.foldPaired(X * Y).materialize()
 ```
 
@@ -149,15 +145,14 @@ val meanXY = Mean.foldPaired(X * Y).materialize()
 
 Two distinct things travel on the wire, and keeping them apart matters:
 
-1. A **schema** (StatSchema / StatSchemaDef) is *definition only*: which stats
-   exist, their parameters, and how they compose. No observations, no
-   accumulator state, no counters. Encoding a schema produces the recipe, not
-   a snapshot.
-2. A **result** (the Result data class returned by `stat.read()`) is *data
-   only*: the current snapshot of an accumulator's state. Each stat has its
-   own @Serializable Result type (SumResult, WeightedMeanResult, SketchResult,
-   …). Encoding a result transmits the numbers; the receiver feeds them back
-   into a stat of the matching spec via `merge()` to reconstitute state.
+1. A **schema** (`StatSchema` / `StatSchemaDef`) is *definition only*: which
+   stats exist, their parameters, and how they compose. Specs are pure data —
+   no observations, no accumulator state. Live-stat construction happens
+   externally in `StatFactory.kt`, called via `spec.materialize(concurrency)`.
+2. A **result** (the `Result` returned by `stat.read()`) is *data only*: the
+   current snapshot. Each stat has its own `@Serializable` Result type
+   (`SumResult`, `WeightedMeanResult`, `SketchResult`, …). The receiver feeds
+   it into a stat of the matching spec via `merge()` to reconstitute state.
 
 Declare a schema once, materialize it into a live group, feed observations,
 read snapshots, send those snapshots to whoever aggregates them:
