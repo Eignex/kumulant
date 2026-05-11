@@ -15,7 +15,7 @@ import platform.windows.LeaveCriticalSection
 import kotlin.experimental.ExperimentalNativeApi
 import kotlin.native.ref.createCleaner
 
-actual class PlatformMutex actual constructor() : Mutex {
+internal actual class PlatformMutex actual constructor() : Mutex {
     private val arena = Arena()
     private val cs = arena.alloc<CRITICAL_SECTION>().also {
         InitializeCriticalSection(it.ptr)

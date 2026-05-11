@@ -15,7 +15,7 @@ import platform.posix.pthread_mutex_unlock
 import kotlin.experimental.ExperimentalNativeApi
 import kotlin.native.ref.createCleaner
 
-actual class PlatformMutex actual constructor() : Mutex {
+internal actual class PlatformMutex actual constructor() : Mutex {
     private val arena = Arena()
     private val mutex = arena.alloc<pthread_mutex_t>().also {
         pthread_mutex_init(it.ptr, null)

@@ -6,13 +6,13 @@ package com.eignex.kumulant.stream
  * stat instance via [PlatformMutex] (or [NoopMutex] when no lock is
  * needed).
  */
-interface Mutex {
+internal interface Mutex {
     fun <R> withLock(block: () -> R): R
 }
 
 /** No-op lock used under [com.eignex.kumulant.core.Concurrency.None] and on
  *  drift-tolerant paths. Avoids any synchronization cost. */
-object NoopMutex : Mutex {
+internal object NoopMutex : Mutex {
     override fun <R> withLock(block: () -> R): R = block()
 }
 
@@ -25,6 +25,6 @@ object NoopMutex : Mutex {
  * - mingwX64: backed by a Win32 `CRITICAL_SECTION`, similarly cleanered.
  * - JS / Wasm: noop — these runtimes are single-threaded.
  */
-expect class PlatformMutex() : Mutex {
+internal expect class PlatformMutex() : Mutex {
     override fun <R> withLock(block: () -> R): R
 }
