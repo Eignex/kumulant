@@ -15,16 +15,19 @@
 [![codecov](https://codecov.io/gh/eignex/kumulant/branch/main/graph/badge.svg)](https://codecov.io/gh/eignex/kumulant)
 [![License](https://img.shields.io/github/license/eignex/kumulant)](https://github.com/eignex/kumulant/blob/main/LICENSE)
 
-Kumulant is a Kotlin multiplatform library of streaming statistical
-accumulators. Every stat is single-pass, mergeable, and constant-memory
-in the number of observations. Targets: JVM, JS (IR), wasmJs, wasmWasi,
-Linux x64/Arm64, macOS x64/Arm64, mingwX64, iOS x64/Arm64/SimulatorArm64.
+Kumulant is a Kotlin multiplatform library for computing statistics over
+data that arrives one observation at a time. You feed values in as you
+see them, ask for a result whenever you want one, and the memory it
+uses stays the same no matter how long the stream runs. Two instances
+of the same statistic can be combined into one, so you can compute in
+parallel and stitch the partial results back together.
 
-The API stacks in three layers and you pick the lowest one that fits:
-live stats (`MeanStat`, `OLSStat`, …) for compile-time-fixed code,
-composable operations (`windowed`, `filter`, `withWeight`, …) for
-declarative pipelines, and a serializable wire schema (`StatSchema` /
-`StatSpec`) when the choice of stats has to travel across processes.
+It covers the usual summaries like mean and variance, quantile sketches
+for percentiles, cardinality estimators for counting distinct items,
+sketches for set membership and heavy hitters, time-decayed averages,
+online regression, and a handful of scoring metrics for evaluating
+predictions as they come in. Everything runs on the JVM, in the browser,
+in WebAssembly, and on native Linux, macOS, Windows, and iOS.
 
 ## Installation
 
@@ -34,15 +37,7 @@ dependencies {
 }
 ```
 
-The wire schema layer additionally requires `kotlinx-serialization-core`
-and a format such as `kotlinx-serialization-json`.
-
-## Live stats
-
-Every stat implements one of four modality interfaces — `SeriesStat` (scalar
-input), `PairedStat` (x/y input), `VectorStat` (fixed-dim vector input), or
-`DiscreteStat` (Long input) — all with the same `update`, `read`, `merge`,
-`reset`, and `create` surface.
+## A quick taste
 
 ```kotlin
 val mean = MeanStat()
@@ -59,15 +54,6 @@ val fit = ols.read()
 val yHat = fit.slope * 7.0 + fit.intercept
 ```
 
-Results are `@Serializable` data classes. Merge two stats of the same type by
-feeding one's result into the other:
-
-```kotlin
-val a = MeanStat().apply { repeat(100) { update(it.toDouble()) } }
-val b = MeanStat().apply { repeat(100) { update((it + 100).toDouble()) } }
-a.merge(b.read()) // a is now the mean of 0..199
-```
-
 | Family       | Stats                                                                          |
 |--------------|--------------------------------------------------------------------------------|
 | Summary      | Sum, Mean, Min, Max, Range, Variance, Moments, BernoulliSum, Count             |
@@ -79,45 +65,23 @@ a.merge(b.read()) // a is now the mean of 0..199
 | Decay        | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance            |
 | Score        | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
 
-## Composable operations
+## Composing stats
 
-Parameter-only operations are extension functions on the live stat interfaces.
-Anything that would take a lambda lives on the spec layer and takes a
-serializable expression AST, so every operation can travel on the wire.
+You can wrap a stat to change how it sees its input. Time-windowing,
+weighting, filtering, and pre-update transforms all stack on top of
+any stat.
 
 ```kotlin
 val recentMean = MeanStat().windowed(1.minutes, slices = 10)
-val sumY = SumStat().atY()
 val positiveMean = Mean.filter(X gt 0.0).materialize()
-val meanXY = Mean.foldPaired(X * Y).materialize()
 ```
 
-| Operation                                            | Surface | Argument                  | Effect                                                            |
-|------------------------------------------------------|---------|---------------------------|-------------------------------------------------------------------|
-| withWeight(w)                                        | Live    | Double                    | Multiplies the per-update weight (all four modalities).           |
-| withValue(v)                                         | Live    | Double or Long            | Replaces the incoming value with a constant.                      |
-| windowed(duration, slices)                           | Live    | Duration, Int             | Sliding ring of sub-windows over a time duration.                 |
-| atX, atY, atIndex, atIndices                         | Live    | none / Int                | Drive a series/paired stat from a paired/vector stream.           |
-| withFixedX/Y, withTimeAsX/Y                          | Live    | Double / none             | Pin one axis of a paired stat to a constant or the timestamp.     |
-| vectorized(dimensions)                               | Live    | Int                       | Replicate a series stat per coordinate of a vector input.         |
-| asSeries, asDiscrete                                 | Live    | none                      | Cast a discrete stat to series surface or vice versa.             |
-| filter                                               | Spec    | BoolExpr                  | Drops updates the predicate rejects.                              |
-| transform                                            | Spec    | ScalarExpr                | Pre-update transform on series or discrete inputs.                |
-| transformPair, transformX, transformY                | Spec    | ScalarExpr                | Per-axis pre-update transform on paired inputs.                   |
-| transformElement, transformVector                    | Spec    | ScalarExpr / VectorExpr   | Element-wise or whole-vector transform.                           |
-| foldPaired, foldVector                               | Spec    | ScalarExpr                | Lift a series stat to consume paired or vector input.             |
+## Sending stats over the wire
 
-## Wire schema
-
-A **schema** (`StatSchema` / `StatSchemaDef`) is definition only: which stats
-exist, their parameters, how they compose. Specs are pure data classes;
-construction of the live stat lives in `StatFactory.kt`. A **result** (the
-type returned by `stat.read()`) is data only: the current snapshot. Each stat
-has its own `@Serializable` Result type (`SumResult`, `WeightedMeanResult`,
-`SketchResult`, …); the receiver feeds it into a stat of the matching spec
-via `merge()`.
-
-Declare a schema, build a group, feed observations, read snapshots:
+You can also describe a whole collection of stats as data, ship that
+description to another process, and start sending partial results
+across. The receiver rebuilds the same shape of accumulator and merges
+the snapshots in as they arrive.
 
 ```kotlin
 object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
@@ -132,41 +96,12 @@ group.update(value = 12.7)
 val p99 = group.read()[Telemetry.latencyP99]
 ```
 
-The schema and snapshots ship separately:
-
-```kotlin
-// Producer: schema once, then snapshots continuously.
-val schemaPayload = Json.encodeToString(Telemetry.statSchemaDef())
-val resultPayload = Json.encodeToString(group.read())
-
-// Consumer: rebuild a live group from the schema, then merge in snapshots.
-val def = Json.decodeFromString<StatSchemaDef>(schemaPayload)
-val rehydrated = StatGroup(stats = def.materializeSeries(Concurrency.Strict))
-rehydrated.merge(Json.decodeFromString<GroupResult>(resultPayload))
-```
-
-Operations carry over to specs without ceremony — `Mean.windowed(60_000, slices = 10).withWeight(0.5)`
-serializes verbatim. Predicates and transforms take a `ScalarExpr`, `BoolExpr`,
-or `VectorExpr` from `schema/Expr.kt`:
-
-```kotlin
-val spec = Mean.filter(X gt 0.0).transform(X * X)
-```
-
 ## Concurrency
 
-Every stat constructor takes a `Concurrency` argument controlling its
-cell-encoding and locking strategy:
-
-| Level         | Behavior                                                                                   |
-|---------------|--------------------------------------------------------------------------------------------|
-| `None`        | Single-threaded; no synchronisation. Default. Cheapest path.                               |
-| `Relaxed`     | Multi-threaded, lock-free. Coupled-state stats (Welford-style) may drift slightly, but never throw. |
-| `Strict`      | Multi-threaded, serialised where coupling demands it. Full correctness.                    |
-| `HighWrite`   | Multi-threaded write-heavy. On JVM, striped adders for naively additive stats.             |
-
-Set it once on the `StatSchema` and it propagates to every stat in the group,
-or pass it directly to a stat constructor for ad-hoc use:
+Each stat picks a concurrency mode at construction. The default is
+single-threaded and the cheapest. Other modes let many threads write
+to the same accumulator, trading a little accuracy or some locking
+overhead for the ability to share state across producers.
 
 ```kotlin
 val hits = SumStat(concurrency = Concurrency.HighWrite)
