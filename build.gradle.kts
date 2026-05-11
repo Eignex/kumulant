@@ -18,7 +18,14 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
     jvm()
-    js(IR) { browser(); nodejs() }
+    js(IR) {
+        browser {
+            testTask { useMocha { timeout = "30s" } }
+        }
+        nodejs {
+            testTask { useMocha { timeout = "30s" } }
+        }
+    }
     wasmJs { browser(); nodejs() }
     wasmWasi { nodejs() }
     linuxX64(); linuxArm64()
