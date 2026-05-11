@@ -67,8 +67,6 @@ dependencies {
 The wire schema layer additionally requires kotlinx-serialization-core and a
 format such as kotlinx-serialization-json.
 
----
-
 ## Live stats
 
 Every stat implements one of four modality interfaces: SeriesStat (scalar
@@ -111,8 +109,6 @@ a.merge(b.read()) // a is now the mean of 0..199
 | Decay        | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance            |
 | Score        | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
 
----
-
 ## Composable operations
 
 Parameter-only operations are extension functions on the live stat interfaces.
@@ -148,8 +144,6 @@ val meanXY = Mean.foldPaired(X * Y).materialize()
 | transformPair, transformX, transformY                | Spec    | ScalarExpr                | Per-axis pre-update transform on paired inputs.                   |
 | transformElement, transformVector                    | Spec    | ScalarExpr / VectorExpr   | Element-wise or whole-vector transform.                           |
 | foldPaired, foldVector                               | Spec    | ScalarExpr                | Lift a series stat to consume paired or vector input.             |
-
----
 
 ## Wire schema
 
@@ -221,8 +215,6 @@ val spec = Mean
     .filter(X gt 0.0)
     .transform(X * X)
 ```
-
----
 
 ## Concurrency
 
