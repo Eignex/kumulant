@@ -9,6 +9,16 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.operation.FilterDiscreteStat
+import com.eignex.kumulant.operation.FilterPairedStat
+import com.eignex.kumulant.operation.FilterSeriesStat
+import com.eignex.kumulant.operation.FilterVectorStat
+import com.eignex.kumulant.operation.FoldPairedStat
+import com.eignex.kumulant.operation.FoldVectorStat
+import com.eignex.kumulant.operation.TransformLongStat
+import com.eignex.kumulant.operation.TransformPairStat
+import com.eignex.kumulant.operation.TransformValueStat
+import com.eignex.kumulant.operation.TransformVectorStat
 import com.eignex.kumulant.operation.VectorizedStat
 import com.eignex.kumulant.operation.asDiscrete
 import com.eignex.kumulant.operation.asSeries
@@ -16,12 +26,6 @@ import com.eignex.kumulant.operation.atIndex
 import com.eignex.kumulant.operation.atIndices
 import com.eignex.kumulant.operation.atX
 import com.eignex.kumulant.operation.atY
-import com.eignex.kumulant.operation.filter
-import com.eignex.kumulant.operation.foldPaired
-import com.eignex.kumulant.operation.foldVector
-import com.eignex.kumulant.operation.transformPair
-import com.eignex.kumulant.operation.transformValue
-import com.eignex.kumulant.operation.transformVector
 import com.eignex.kumulant.operation.windowed
 import com.eignex.kumulant.operation.withFixedX
 import com.eignex.kumulant.operation.withFixedY
@@ -381,7 +385,7 @@ fun <R : Result> SeriesStatSpec<R>.vectorized(dimensions: Int): VectorStatSpec<R
 data class TransformValueSeries(val inner: StatSpec, val expr: ScalarExpr) : SeriesStatSpec<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         val materialized = requireSeries(inner, "TransformValueSeries").materialize(concurrency) as SeriesStat<Result>
-        return materialized.transformValue { expr.eval(it) }
+        return TransformValueStat(materialized) { expr.eval(it) }
     }
 }
 
@@ -393,7 +397,7 @@ data class TransformValueDiscrete(val inner: StatSpec, val expr: ScalarExpr) : D
             inner,
             "TransformValueDiscrete"
         ).materialize(concurrency) as DiscreteStat<Result>
-        return materialized.transformValue { expr.eval(it.toDouble()).toLong() }
+        return TransformLongStat(materialized) { expr.eval(it.toDouble()).toLong() }
     }
 }
 
@@ -402,7 +406,7 @@ data class TransformValueDiscrete(val inner: StatSpec, val expr: ScalarExpr) : D
 data class FilterValueSeries(val inner: StatSpec, val pred: BoolExpr) : SeriesStatSpec<Result> {
     override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
         val materialized = requireSeries(inner, "FilterValueSeries").materialize(concurrency) as SeriesStat<Result>
-        return materialized.filter { pred.eval(it) }
+        return FilterSeriesStat(materialized) { pred.eval(it) }
     }
 }
 
@@ -414,7 +418,7 @@ data class FilterValueDiscrete(val inner: StatSpec, val pred: BoolExpr) : Discre
             inner,
             "FilterValueDiscrete"
         ).materialize(concurrency) as DiscreteStat<Result>
-        return materialized.filter { pred.eval(it.toDouble()) }
+        return FilterDiscreteStat(materialized) { pred.eval(it.toDouble()) }
     }
 }
 
@@ -444,7 +448,7 @@ data class TransformPair(
 ) : PairedStatSpec<Result> {
     override fun materialize(concurrency: Concurrency): PairedStat<Result> {
         val materialized = requirePaired(inner, "TransformPair").materialize(concurrency) as PairedStat<Result>
-        return materialized.transformPair { xv, yv -> xExpr.eval(xv, yv) to yExpr.eval(xv, yv) }
+        return TransformPairStat(materialized) { xv, yv -> xExpr.eval(xv, yv) to yExpr.eval(xv, yv) }
     }
 }
 
@@ -453,7 +457,7 @@ data class TransformPair(
 data class FilterPaired(val inner: StatSpec, val pred: BoolExpr) : PairedStatSpec<Result> {
     override fun materialize(concurrency: Concurrency): PairedStat<Result> {
         val materialized = requirePaired(inner, "FilterPaired").materialize(concurrency) as PairedStat<Result>
-        return materialized.filter { xv, yv -> pred.eval(xv, yv) }
+        return FilterPairedStat(materialized) { xv, yv -> pred.eval(xv, yv) }
     }
 }
 
@@ -484,7 +488,7 @@ fun <R : Result> PairedStatSpec<R>.filter(pred: BoolExpr): PairedStatSpec<R> =
 data class TransformVectorElement(val inner: StatSpec, val expr: ScalarExpr) : VectorStatSpec<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         val materialized = requireVector(inner, "TransformVectorElement").materialize(concurrency) as VectorStat<Result>
-        return materialized.transformVector { vec ->
+        return TransformVectorStat(materialized) { vec ->
             DoubleArray(vec.size) { i -> expr.eval(vec[i], 0.0, vec) }
         }
     }
@@ -495,7 +499,7 @@ data class TransformVectorElement(val inner: StatSpec, val expr: ScalarExpr) : V
 data class FilterVector(val inner: StatSpec, val pred: BoolExpr) : VectorStatSpec<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         val materialized = requireVector(inner, "FilterVector").materialize(concurrency) as VectorStat<Result>
-        return materialized.filter { vec -> pred.eval(0.0, 0.0, vec) }
+        return FilterVectorStat(materialized) { vec -> pred.eval(0.0, 0.0, vec) }
     }
 }
 
@@ -515,7 +519,7 @@ fun <R : Result> VectorStatSpec<R>.filter(pred: BoolExpr): VectorStatSpec<R> =
 data class FoldPaired(val inner: StatSpec, val expr: ScalarExpr) : PairedStatSpec<Result> {
     override fun materialize(concurrency: Concurrency): PairedStat<Result> {
         val materialized = requireSeries(inner, "FoldPaired").materialize(concurrency) as SeriesStat<Result>
-        return materialized.foldPaired { xv, yv -> expr.eval(xv, yv) }
+        return FoldPairedStat(materialized) { xv, yv -> expr.eval(xv, yv) }
     }
 }
 
@@ -529,7 +533,7 @@ data class FoldPaired(val inner: StatSpec, val expr: ScalarExpr) : PairedStatSpe
 data class FoldVector(val inner: StatSpec, val expr: ScalarExpr) : VectorStatSpec<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         val materialized = requireSeries(inner, "FoldVector").materialize(concurrency) as SeriesStat<Result>
-        return materialized.foldVector { vec -> expr.eval(0.0, 0.0, vec) }
+        return FoldVectorStat(materialized) { vec -> expr.eval(0.0, 0.0, vec) }
     }
 }
 
@@ -550,7 +554,7 @@ fun <R : Result> SeriesStatSpec<R>.foldVector(expr: ScalarExpr): VectorStatSpec<
 data class TransformVector(val inner: StatSpec, val expr: VectorExpr) : VectorStatSpec<Result> {
     override fun materialize(concurrency: Concurrency): VectorStat<Result> {
         val materialized = requireVector(inner, "TransformVector").materialize(concurrency) as VectorStat<Result>
-        return materialized.transformVector { vec -> expr.eval(0.0, 0.0, vec) }
+        return TransformVectorStat(materialized) { vec -> expr.eval(0.0, 0.0, vec) }
     }
 }
 

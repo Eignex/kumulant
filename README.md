@@ -24,7 +24,7 @@ observations.
 * Single-pass, mergeable, constant-memory accumulators for sums, means, variances, higher moments, quantiles, cardinality, heavy hitters, rates, regression, and scoring losses.
 * Composable operations: time-windowed aggregation, weighted updates, pre-update transforms, predicate filtering, and adapters between scalar, paired, vector, and discrete input streams.
 * Serializable stat schemas via kotlinx.serialization that round-trip through JSON or protobuf and rehydrate into live stat groups on the other side.
-* Wire-expressible transforms and filters via a serializable expression AST, so operations travel without lambdas.
+* Transforms and filters expressed via a serializable expression AST, so every operation travels on the wire (no lambda escape hatch).
 * Concurrency selectable per stat: single-threaded, lock-free relaxed, fully serialized, or striped adders for write-heavy paths on the JVM.
 * Pure Kotlin Multiplatform: JVM, JS (IR), wasmJs, wasmWasi, Linux x64/Arm64, macOS x64/Arm64, mingwX64, iOS x64/Arm64/SimulatorArm64.
 
@@ -41,10 +41,13 @@ The bottom layer is the live stats: concrete classes like MeanStat, OLSStat,
 and HyperLogLogStat. Construct, feed observations, read the result. Use these
 directly when the choice of stat is fixed at compile time.
 
-The middle layer is composable operations: extension functions on the live
-stat interfaces such as withWeight, atX, windowed, transformValue, filter,
-and foldVector. Each preserves the inner stat's result type and merge
-semantics, so wrapped stats remain ordinary stats.
+The middle layer is composable operations: parameter-only extensions on live
+stats (withWeight, withValue, atX/Y, atIndex, withFixedX/Y, withTimeAsX/Y,
+windowed, asSeries, asDiscrete, vectorized) plus the larger set of operations
+on stat specs that take expression-AST arguments (filter, transform,
+transformPair, transformElement, transformVector, foldPaired, foldVector).
+Lambda-bound operations are wire-internal: there is no public lambda
+filter/transform/fold on a live stat. The AST is the only path.
 
 The top layer is the wire schema: pure-data StatSpec variants (Mean, OLS,
 DDSketch, and so on) under kotlinx.serialization polymorphism. A StatSchema
@@ -112,9 +115,10 @@ a.merge(b.read()) // a is now the mean of 0..199
 
 ## Composable operations
 
-Operations are extension functions on the live stat interfaces that produce
-another stat of the same modality (or a different modality, for adapters like
-atX or foldVector).
+Parameter-only operations are extension functions on the live stat interfaces.
+Anything that would take a lambda is exposed only on the spec layer, where it
+takes a serializable expression AST instead, so an operation never has the
+choice of being non-portable.
 
 ```kotlin
 // Time-windowed mean over 1 minute, with 10 slices.
@@ -123,25 +127,27 @@ val recentMean = MeanStat().windowed(1.minutes, slices = 10)
 // Drive a SumStat from the y-coordinate of (x, y) inputs.
 val sumY = SumStat().atY()
 
-// Mean of x*y, computed by folding the pair before update.
-val meanXY = MeanStat().foldPaired { x, y -> x * y }
+// Drop non-positive samples before aggregating (spec → materialize).
+val positiveMean = Mean.filter(X gt 0.0).materialize()
 
-// Drop non-positive samples before aggregating.
-val positiveMean = MeanStat().filter { it > 0.0 }
+// Mean of x*y, computed by folding the pair before update (spec → materialize).
+val meanXY = Mean.foldPaired(X * Y).materialize()
 ```
 
-| Operation                                            | Effect                                                              |
-|------------------------------------------------------|---------------------------------------------------------------------|
-| `withWeight(w)`                                      | Multiplies the per-update weight (all four modalities).             |
-| `withValue(v)`                                       | Replaces the incoming value with a constant.                        |
-| `transformValue`, `transformPair`, `transformX/Y`    | Pre-update lambda transform on series / paired / discrete inputs.   |
-| `filter { … }`                                       | Drops updates the predicate rejects.                                |
-| `windowed(duration, slices)`                         | Sliding ring of sub-windows over a time duration.                   |
-| `atX`, `atY`, `atIndex`, `atIndices`                 | Drive a series/paired stat from a paired/vector stream.             |
-| `withFixedX/Y`, `withTimeAsX/Y`                      | Pin one axis of a paired stat to a constant or the timestamp.       |
-| `foldPaired`, `foldVector`                           | Lift a series stat to consume paired or vector input.               |
-| `vectorized(dimensions)`                             | Replicate a series stat per coordinate of a vector input.           |
-| `asSeries`, `asDiscrete`                             | Cast a discrete stat to series surface or vice versa.               |
+| Operation                                            | Surface | Argument                  | Effect                                                            |
+|------------------------------------------------------|---------|---------------------------|-------------------------------------------------------------------|
+| withWeight(w)                                        | Live    | Double                    | Multiplies the per-update weight (all four modalities).           |
+| withValue(v)                                         | Live    | Double or Long            | Replaces the incoming value with a constant.                      |
+| windowed(duration, slices)                           | Live    | Duration, Int             | Sliding ring of sub-windows over a time duration.                 |
+| atX, atY, atIndex, atIndices                         | Live    | none / Int                | Drive a series/paired stat from a paired/vector stream.           |
+| withFixedX/Y, withTimeAsX/Y                          | Live    | Double / none             | Pin one axis of a paired stat to a constant or the timestamp.     |
+| vectorized(dimensions)                               | Live    | Int                       | Replicate a series stat per coordinate of a vector input.         |
+| asSeries, asDiscrete                                 | Live    | none                      | Cast a discrete stat to series surface or vice versa.             |
+| filter                                               | Spec    | BoolExpr                  | Drops updates the predicate rejects.                              |
+| transform                                            | Spec    | ScalarExpr                | Pre-update transform on series or discrete inputs.                |
+| transformPair, transformX, transformY                | Spec    | ScalarExpr                | Per-axis pre-update transform on paired inputs.                   |
+| transformElement, transformVector                    | Spec    | ScalarExpr / VectorExpr   | Element-wise or whole-vector transform.                           |
+| foldPaired, foldVector                               | Spec    | ScalarExpr                | Lift a series stat to consume paired or vector input.             |
 
 ---
 
@@ -179,14 +185,12 @@ val decoded = Json.decodeFromString<StatSchemaDef>(payload)
 val rehydrated = StatGroup(stats = decoded.materializeSeries(Concurrency.Strict))
 ```
 
-Composable operations are mirrored on the spec layer as wire-friendly
-counterparts. `Mean.windowed(60_000, slices = 10).withWeight(0.5)` serializes
-verbatim. Lambdas are not on the wire: filter, transformValue, transformPair,
-and the fold operations all use ScalarExpr, BoolExpr, and VectorExpr
-expression ASTs instead:
+All operations are spec-friendly. `Mean.windowed(60_000, slices = 10).withWeight(0.5)`
+serializes verbatim. Operations that need a predicate or transform take a
+ScalarExpr, BoolExpr, or VectorExpr from the AST in schema/Expr.kt:
 
 ```kotlin
-// Wire-expressible: ignore non-positive samples, square the rest.
+// Ignore non-positive samples, square the rest.
 val spec = Mean
     .filter(X gt 0.0)
     .transform(X * X)

@@ -1,66 +1,36 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.core.*
+import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.VectorStat
 
-/** Adapt a [SeriesStat] to accept vector input by folding each vector to a scalar via [transform]. */
-fun <R : Result> SeriesStat<R>.foldVector(transform: VectorFold): VectorStat<R> =
-    FoldVectorStat(
-        this,
-        transform
-    )
+/**
+ * Fold adapters. Constructed by the spec layer's `foldPaired(ScalarExpr)` /
+ * `foldVector(ScalarExpr)` materialization in
+ * [com.eignex.kumulant.schema.Operations.kt].
+ */
 
-/** Adapt a [SeriesStat] to accept paired input by folding each (x, y) to a scalar via [transform]. */
-fun <R : Result> SeriesStat<R>.foldPaired(transform: PairFold): PairedStat<R> =
-    FoldPairedStat(
-        this,
-        transform
-    )
-
-/** Reduces a vector to a single scalar. */
-fun interface VectorFold {
-    /** Return the scalar to forward downstream. */
-    fun apply(vector: DoubleArray): Double
-}
-
-/** Reduces an (x, y) pair to a single scalar. */
-fun interface PairFold {
-    /** Return the scalar to forward downstream. */
-    fun apply(x: Double, y: Double): Double
-}
-
-/** Adapter implementing [foldVector]. */
 internal class FoldVectorStat<R : Result>(
     private val delegate: SeriesStat<R>,
-    private val transform: VectorFold
+    private val transform: (DoubleArray) -> Double
 ) : VectorStat<R>, Stat<R> by delegate {
-    override fun update(
-        vector: DoubleArray,
-        timestampNanos: Long,
-        weight: Double
-    ) {
-        delegate.update(transform.apply(vector), timestampNanos, weight)
+    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
+        delegate.update(transform(vector), timestampNanos, weight)
     }
-
-    override fun create(concurrency: Concurrency?): VectorStat<R> {
-        return FoldVectorStat(delegate.create(concurrency), transform)
-    }
+    override fun create(concurrency: Concurrency?): VectorStat<R> =
+        FoldVectorStat(delegate.create(concurrency), transform)
 }
 
-/** Adapter implementing [foldPaired]. */
 internal class FoldPairedStat<R : Result>(
     private val delegate: SeriesStat<R>,
-    private val transform: PairFold
+    private val transform: (Double, Double) -> Double
 ) : PairedStat<R>, Stat<R> by delegate {
-    override fun update(
-        x: Double,
-        y: Double,
-        timestampNanos: Long,
-        weight: Double
-    ) {
-        delegate.update(transform.apply(x, y), timestampNanos, weight)
+    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
+        delegate.update(transform(x, y), timestampNanos, weight)
     }
-
-    override fun create(concurrency: Concurrency?): PairedStat<R> {
-        return FoldPairedStat(delegate.create(concurrency), transform)
-    }
+    override fun create(concurrency: Concurrency?): PairedStat<R> =
+        FoldPairedStat(delegate.create(concurrency), transform)
 }
