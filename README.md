@@ -99,9 +99,14 @@ val p99 = group.read()[Telemetry.latencyP99]
 ## Concurrency
 
 Each stat picks a concurrency mode at construction. The default is
-single-threaded and the cheapest. Other modes let many threads write
-to the same accumulator, trading a little accuracy or some locking
-overhead for the ability to share state across producers.
+single-threaded and the cheapest. Relaxed mode lets many threads
+update the same accumulator without any locks, using atomic operations
+on every cell. Coupled-state stats may drift by a tiny amount under
+heavy contention but never throw or corrupt their state, which makes
+it a good fit for hot paths where a strict lock would dominate the
+cost. Strict mode adds the locking needed to keep coupled state exact,
+and HighWrite swaps in striped adders on the JVM for additive stats
+under write-heavy load.
 
 ```kotlin
 val hits = SumStat(concurrency = Concurrency.HighWrite)
