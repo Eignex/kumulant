@@ -232,7 +232,7 @@ cell-encoding and locking strategy chosen for that stat:
 | Level         | Behavior                                                                                   |
 |---------------|--------------------------------------------------------------------------------------------|
 | `None`        | Single-threaded; no synchronisation. Default. Cheapest path.                               |
-| `Relaxed`     | Multi-threaded, lock-free. Coupled-state stats (Welford-style) may drift, but never throw. |
+| `Relaxed`     | Multi-threaded, lock-free. Coupled-state stats (Welford-style) may drift slightly, but never throw. |
 | `Strict`      | Multi-threaded, serialised where coupling demands it. Full correctness.                    |
 | `HighWrite`   | Multi-threaded write-heavy. On JVM, striped adders for naively additive stats.             |
 
