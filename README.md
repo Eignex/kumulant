@@ -146,16 +146,16 @@ val meanXY = Mean.foldPaired(X * Y).materialize()
 Two distinct things travel on the wire, and keeping them apart matters:
 
 1. A **schema** (`StatSchema` / `StatSchemaDef`) is *definition only*: which
-   stats exist, their parameters, and how they compose. Specs are pure data —
-   no observations, no accumulator state. Live-stat construction happens
-   externally in `StatFactory.kt`, called via `spec.materialize(concurrency)`.
+   stats exist, their parameters, and how they compose. Specs are pure data
+   classes — no observations, no accumulator state, no behavior. Construction
+   of the live stat lives separately in `StatFactory.kt`.
 2. A **result** (the `Result` returned by `stat.read()`) is *data only*: the
    current snapshot. Each stat has its own `@Serializable` Result type
    (`SumResult`, `WeightedMeanResult`, `SketchResult`, …). The receiver feeds
    it into a stat of the matching spec via `merge()` to reconstitute state.
 
-Declare a schema once, materialize it into a live group, feed observations,
-read snapshots, send those snapshots to whoever aggregates them:
+Declare a schema, build a live group from it, feed observations, read
+snapshots, send those snapshots to whoever aggregates them:
 
 ```kotlin
 object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
@@ -179,7 +179,7 @@ The schema itself is its own wire payload, separate from any snapshot:
 val def: StatSchemaDef = Telemetry.statSchemaDef()
 val schemaPayload = Json.encodeToString(def)
 
-// Consumer side: decode and materialize an empty live group.
+// Consumer side: decode and build an empty live group.
 val decoded = Json.decodeFromString<StatSchemaDef>(schemaPayload)
 val rehydrated = StatGroup(stats = decoded.materializeSeries(Concurrency.Strict))
 ```
@@ -224,8 +224,8 @@ cell-encoding and locking strategy chosen for that stat:
 | `HighWrite`   | Multi-threaded write-heavy. On JVM, striped adders for naively additive stats.             |
 
 For bag-of-stats deployments, set Concurrency once on the StatSchema and it
-propagates to every materialized stat. For ad-hoc construction, pass it to the
-stat constructor directly:
+propagates to every stat in the group. For ad-hoc construction, pass it to
+the stat constructor directly:
 
 ```kotlin
 val hits = SumStat(concurrency = Concurrency.HighWrite)
