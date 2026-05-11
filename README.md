@@ -42,7 +42,7 @@ There are three layers stacked on each other; pick the lowest one that fits.
    live `StatGroup` on the other side. Use this when configuration is on the
    wire — for instance, a UI declaring which stats to track over a stream.
 
-### Installation
+## Installation
 
 ```kotlin
 dependencies {
@@ -86,8 +86,6 @@ val b = MeanStat().apply { repeat(100) { update((it + 100).toDouble()) } }
 a.merge(b.read()) // a is now the mean of 0..199
 ```
 
-### Available stats
-
 | Family       | Stats                                                                                  |
 |--------------|----------------------------------------------------------------------------------------|
 | Summary      | `Sum`, `Mean`, `Min`, `Max`, `Range`, `Variance`, `Moments`, `BernoulliSum`, `Count`   |
@@ -121,25 +119,18 @@ val meanXY = MeanStat().foldPaired { x, y -> x * y }
 val positiveMean = MeanStat().filter { it > 0.0 }
 ```
 
-Operations available across modalities (with modality constraints noted):
-
-- `withWeight(w)` — multiplies the per-update weight on `SeriesStat`,
-  `PairedStat`, `VectorStat`, `DiscreteStat`.
-- `withValue(v)` — replaces the incoming value with a constant.
-- `transformValue { … }`, `transformPair { x, y -> … }`, `transformX`,
-  `transformY` — pre-update lambda transform.
-- `filter { … }` — drops updates the predicate rejects.
-- `windowed(duration, slices)` — sliding ring of sub-windows.
-- `atX()`, `atY()`, `atIndex(i)`, `atIndices(ix, iy)` — drive a series/paired
-  stat from a paired/vector stream.
-- `withFixedX(x0)`, `withFixedY(y0)`, `withTimeAsX()`, `withTimeAsY()` — pin
-  one axis of a paired stat to a constant or to the observation timestamp.
-- `foldPaired { x, y -> … }`, `foldVector { vec -> … }` — lift a series stat
-  to consume paired or vector input.
-- `vectorized(dimensions)` — replicate a series stat per coordinate of a
-  vector input.
-- `asSeries()`, `asDiscrete()` — cast a discrete stat into the series surface
-  or vice versa.
+| Operation                                            | Effect                                                              |
+|------------------------------------------------------|---------------------------------------------------------------------|
+| `withWeight(w)`                                      | Multiplies the per-update weight (all four modalities).             |
+| `withValue(v)`                                       | Replaces the incoming value with a constant.                        |
+| `transformValue`, `transformPair`, `transformX/Y`    | Pre-update lambda transform on series / paired / discrete inputs.   |
+| `filter { … }`                                       | Drops updates the predicate rejects.                                |
+| `windowed(duration, slices)`                         | Sliding ring of sub-windows over a time duration.                   |
+| `atX`, `atY`, `atIndex`, `atIndices`                 | Drive a series/paired stat from a paired/vector stream.             |
+| `withFixedX/Y`, `withTimeAsX/Y`                      | Pin one axis of a paired stat to a constant or the timestamp.       |
+| `foldPaired`, `foldVector`                           | Lift a series stat to consume paired or vector input.               |
+| `vectorized(dimensions)`                             | Replicate a series stat per coordinate of a vector input.           |
+| `asSeries`, `asDiscrete`                             | Cast a discrete stat to series surface or vice versa.               |
 
 ---
 
