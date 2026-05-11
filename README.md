@@ -28,19 +28,22 @@ counters, parallel workers folding into a single estimate, and distributed
 aggregation over a queue.
 
 There are three layers stacked on each other; pick the lowest one that fits.
+The bottom layer is the live stats — concrete classes like `MeanStat`,
+`OLSStat`, `HyperLogLogStat`. Construct, feed observations, read the result.
+Use these directly when the choice of stat is fixed at compile time.
 
-1. **Live stats** — concrete classes like `MeanStat`, `OLSStat`,
-   `HyperLogLogStat`. Construct, feed observations, read the result. Built for
-   direct use when you know what you want at compile time.
-2. **Composable operations** — extension functions that wrap a live stat:
-   `.withWeight(w)`, `.atX()`, `.windowed(1.minutes)`, `.transformValue { … }`,
-   `.filter { … }`, `.foldVector { … }`. Each preserves the inner stat's
-   result type and merge semantics.
-3. **Wire schema** — pure-data `StatSpec` variants (`Mean`, `OLS`, `DDSketch`,
-   …) under `kotlinx.serialization` polymorphism. A `StatSchema` is a declared
-   bag of specs that round-trips through JSON/protobuf and rehydrates into a
-   live `StatGroup` on the other side. Use this when configuration is on the
-   wire — for instance, a UI declaring which stats to track over a stream.
+The middle layer is composable operations — extension functions on the live
+stat interfaces such as `.withWeight(w)`, `.atX()`, `.windowed(1.minutes)`,
+`.transformValue { … }`, `.filter { … }`, `.foldVector { … }`. Each preserves
+the inner stat's result type and merge semantics, so wrapped stats remain
+ordinary `SeriesStat` / `PairedStat` / `VectorStat` / `DiscreteStat`.
+
+The top layer is the wire schema — pure-data `StatSpec` variants (`Mean`,
+`OLS`, `DDSketch`, …) under `kotlinx.serialization` polymorphism. A
+`StatSchema` is a declared bag of specs that round-trips through JSON or
+protobuf and rehydrates into a live `StatGroup` on the other side. Reach for
+it when the choice of stats has to travel — for instance, a UI declaring what
+to track over a stream of events processed elsewhere.
 
 ## Installation
 
