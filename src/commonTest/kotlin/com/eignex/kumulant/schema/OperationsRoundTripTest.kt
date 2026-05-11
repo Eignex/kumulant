@@ -120,7 +120,7 @@ class OperationsRoundTripTest {
     @Test fun `vectorized should replicate template per dimension`() {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 3)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
-        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as VectorizedStat
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as Vectorized
         assertEquals(3, decoded.dimensions)
         val materialized = decoded.materialize(Concurrency.None)
         materialized.update(doubleArrayOf(1.0, 2.0, 3.0))

@@ -2,40 +2,10 @@
 
 package com.eignex.kumulant.schema
 
-import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.DiscreteStat
-import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
-import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.operation.FilterDiscreteStat
-import com.eignex.kumulant.operation.FilterPairedStat
-import com.eignex.kumulant.operation.FilterSeriesStat
-import com.eignex.kumulant.operation.FilterVectorStat
-import com.eignex.kumulant.operation.FoldPairedStat
-import com.eignex.kumulant.operation.FoldVectorStat
-import com.eignex.kumulant.operation.TransformLongStat
-import com.eignex.kumulant.operation.TransformPairStat
-import com.eignex.kumulant.operation.TransformValueStat
-import com.eignex.kumulant.operation.TransformVectorStat
-import com.eignex.kumulant.operation.VectorizedStat
-import com.eignex.kumulant.operation.asDiscrete
-import com.eignex.kumulant.operation.asSeries
-import com.eignex.kumulant.operation.atIndex
-import com.eignex.kumulant.operation.atIndices
-import com.eignex.kumulant.operation.atX
-import com.eignex.kumulant.operation.atY
-import com.eignex.kumulant.operation.windowed
-import com.eignex.kumulant.operation.withFixedX
-import com.eignex.kumulant.operation.withFixedY
-import com.eignex.kumulant.operation.withTimeAsX
-import com.eignex.kumulant.operation.withTimeAsY
-import com.eignex.kumulant.operation.withValue
-import com.eignex.kumulant.operation.withWeight
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Wire-friendly counterparts of the composable operations in
@@ -43,11 +13,12 @@ import kotlin.time.Duration.Companion.milliseconds
  * (polymorphic by `@SerialName`) plus the operation's primitive parameters.
  *
  * The inner field is typed at the base [StatSpec] interface so the
- * polymorphic decoder doesn't need a generic argument; `materialize` runtime-
- * checks the inner's modality and casts it. The user-facing typed surface is
- * the inline extension functions on the modality-specific spec interfaces
- * (`SeriesStatSpec<R>.withWeight(...)`, etc.) — the unsafe cast there is
- * correct because the wrapper is parametric in `R` only at the type level.
+ * polymorphic decoder doesn't need a generic argument; construction
+ * (`StatFactory.kt`) runtime-checks the inner's modality and casts it. The
+ * user-facing typed surface is the extension functions below on the
+ * modality-specific spec interfaces (`SeriesStatSpec<R>.withWeight(...)`,
+ * etc.) — the unsafe cast there is correct because the wrapper is
+ * parametric in `R` only at the type level.
  *
  * Lambda-bound operations (`filter`, `mapResult`, `transformValue`/`Pair`/`Vector`/`Long`,
  * `foldVector`/`Paired`) do not appear here — their behavior cannot be
@@ -55,71 +26,23 @@ import kotlin.time.Duration.Companion.milliseconds
  * those.
  */
 
-private fun requireSeries(inner: StatSpec, op: String): SeriesStatSpec<*> {
-    require(inner is SeriesStatSpec<*>) {
-        "$op expects a SeriesStatSpec inner; got ${inner::class.simpleName}"
-    }
-    return inner
-}
-
-private fun requirePaired(inner: StatSpec, op: String): PairedStatSpec<*> {
-    require(inner is PairedStatSpec<*>) {
-        "$op expects a PairedStatSpec inner; got ${inner::class.simpleName}"
-    }
-    return inner
-}
-
-private fun requireVector(inner: StatSpec, op: String): VectorStatSpec<*> {
-    require(inner is VectorStatSpec<*>) {
-        "$op expects a VectorStatSpec inner; got ${inner::class.simpleName}"
-    }
-    return inner
-}
-
-private fun requireDiscrete(inner: StatSpec, op: String): DiscreteStatSpec<*> {
-    require(inner is DiscreteStatSpec<*>) {
-        "$op expects a DiscreteStatSpec inner; got ${inner::class.simpleName}"
-    }
-    return inner
-}
-
 // ========== withWeight ==========
 
 @Serializable
 @SerialName("WithWeightSeries")
-data class WithWeightSeries(val inner: StatSpec, val weight: Double) : SeriesStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
-        val materialized = requireSeries(inner, "WithWeightSeries").materialize(concurrency) as SeriesStat<Result>
-        return materialized.withWeight(weight)
-    }
-}
+data class WithWeightSeries(val inner: StatSpec, val weight: Double) : SeriesStatSpec<Result>
 
 @Serializable
 @SerialName("WithWeightPaired")
-data class WithWeightPaired(val inner: StatSpec, val weight: Double) : PairedStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): PairedStat<Result> {
-        val materialized = requirePaired(inner, "WithWeightPaired").materialize(concurrency) as PairedStat<Result>
-        return materialized.withWeight(weight)
-    }
-}
+data class WithWeightPaired(val inner: StatSpec, val weight: Double) : PairedStatSpec<Result>
 
 @Serializable
 @SerialName("WithWeightVector")
-data class WithWeightVector(val inner: StatSpec, val weight: Double) : VectorStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
-        val materialized = requireVector(inner, "WithWeightVector").materialize(concurrency) as VectorStat<Result>
-        return materialized.withWeight(weight)
-    }
-}
+data class WithWeightVector(val inner: StatSpec, val weight: Double) : VectorStatSpec<Result>
 
 @Serializable
 @SerialName("WithWeightDiscrete")
-data class WithWeightDiscrete(val inner: StatSpec, val weight: Double) : DiscreteStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
-        val materialized = requireDiscrete(inner, "WithWeightDiscrete").materialize(concurrency) as DiscreteStat<Result>
-        return materialized.withWeight(weight)
-    }
-}
+data class WithWeightDiscrete(val inner: StatSpec, val weight: Double) : DiscreteStatSpec<Result>
 
 fun <R : Result> SeriesStatSpec<R>.withWeight(weight: Double): SeriesStatSpec<R> =
     WithWeightSeries(this, weight) as SeriesStatSpec<R>
@@ -137,21 +60,11 @@ fun <R : Result> DiscreteStatSpec<R>.withWeight(weight: Double): DiscreteStatSpe
 
 @Serializable
 @SerialName("WithValueSeries")
-data class WithValueSeries(val inner: StatSpec, val value: Double) : SeriesStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
-        val materialized = requireSeries(inner, "WithValueSeries").materialize(concurrency) as SeriesStat<Result>
-        return materialized.withValue(value)
-    }
-}
+data class WithValueSeries(val inner: StatSpec, val value: Double) : SeriesStatSpec<Result>
 
 @Serializable
 @SerialName("WithValueDiscrete")
-data class WithValueDiscrete(val inner: StatSpec, val value: Long) : DiscreteStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
-        val materialized = requireDiscrete(inner, "WithValueDiscrete").materialize(concurrency) as DiscreteStat<Result>
-        return materialized.withValue(value)
-    }
-}
+data class WithValueDiscrete(val inner: StatSpec, val value: Long) : DiscreteStatSpec<Result>
 
 fun <R : Result> SeriesStatSpec<R>.withValue(value: Double): SeriesStatSpec<R> =
     WithValueSeries(this, value) as SeriesStatSpec<R>
@@ -163,21 +76,11 @@ fun <R : Result> DiscreteStatSpec<R>.withValue(value: Long): DiscreteStatSpec<R>
 
 @Serializable
 @SerialName("AsSeries")
-data class AsSeries(val inner: StatSpec) : SeriesStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
-        val materialized = requireDiscrete(inner, "AsSeries").materialize(concurrency) as DiscreteStat<Result>
-        return materialized.asSeries()
-    }
-}
+data class AsSeries(val inner: StatSpec) : SeriesStatSpec<Result>
 
 @Serializable
 @SerialName("AsDiscrete")
-data class AsDiscrete(val inner: StatSpec) : DiscreteStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
-        val materialized = requireSeries(inner, "AsDiscrete").materialize(concurrency) as SeriesStat<Result>
-        return materialized.asDiscrete()
-    }
-}
+data class AsDiscrete(val inner: StatSpec) : DiscreteStatSpec<Result>
 
 fun <R : Result> DiscreteStatSpec<R>.asSeries(): SeriesStatSpec<R> =
     AsSeries(this) as SeriesStatSpec<R>
@@ -189,39 +92,19 @@ fun <R : Result> SeriesStatSpec<R>.asDiscrete(): DiscreteStatSpec<R> =
 
 @Serializable
 @SerialName("AtX")
-data class AtX(val inner: StatSpec) : PairedStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): PairedStat<Result> {
-        val materialized = requireSeries(inner, "AtX").materialize(concurrency) as SeriesStat<Result>
-        return materialized.atX()
-    }
-}
+data class AtX(val inner: StatSpec) : PairedStatSpec<Result>
 
 @Serializable
 @SerialName("AtY")
-data class AtY(val inner: StatSpec) : PairedStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): PairedStat<Result> {
-        val materialized = requireSeries(inner, "AtY").materialize(concurrency) as SeriesStat<Result>
-        return materialized.atY()
-    }
-}
+data class AtY(val inner: StatSpec) : PairedStatSpec<Result>
 
 @Serializable
 @SerialName("AtIndex")
-data class AtIndex(val inner: StatSpec, val index: Int) : VectorStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
-        val materialized = requireSeries(inner, "AtIndex").materialize(concurrency) as SeriesStat<Result>
-        return materialized.atIndex(index)
-    }
-}
+data class AtIndex(val inner: StatSpec, val index: Int) : VectorStatSpec<Result>
 
 @Serializable
 @SerialName("AtIndices")
-data class AtIndices(val inner: StatSpec, val indexX: Int, val indexY: Int) : VectorStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
-        val materialized = requirePaired(inner, "AtIndices").materialize(concurrency) as PairedStat<Result>
-        return materialized.atIndices(indexX, indexY)
-    }
-}
+data class AtIndices(val inner: StatSpec, val indexX: Int, val indexY: Int) : VectorStatSpec<Result>
 
 fun <R : Result> SeriesStatSpec<R>.atX(): PairedStatSpec<R> = AtX(this) as PairedStatSpec<R>
 
@@ -237,39 +120,19 @@ fun <R : Result> PairedStatSpec<R>.atIndices(indexX: Int, indexY: Int): VectorSt
 
 @Serializable
 @SerialName("WithFixedX")
-data class WithFixedX(val inner: StatSpec, val fixedX: Double) : SeriesStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
-        val materialized = requirePaired(inner, "WithFixedX").materialize(concurrency) as PairedStat<Result>
-        return materialized.withFixedX(fixedX)
-    }
-}
+data class WithFixedX(val inner: StatSpec, val fixedX: Double) : SeriesStatSpec<Result>
 
 @Serializable
 @SerialName("WithFixedY")
-data class WithFixedY(val inner: StatSpec, val fixedY: Double) : SeriesStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
-        val materialized = requirePaired(inner, "WithFixedY").materialize(concurrency) as PairedStat<Result>
-        return materialized.withFixedY(fixedY)
-    }
-}
+data class WithFixedY(val inner: StatSpec, val fixedY: Double) : SeriesStatSpec<Result>
 
 @Serializable
 @SerialName("WithTimeAsX")
-data class WithTimeAsX(val inner: StatSpec) : SeriesStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
-        val materialized = requirePaired(inner, "WithTimeAsX").materialize(concurrency) as PairedStat<Result>
-        return materialized.withTimeAsX()
-    }
-}
+data class WithTimeAsX(val inner: StatSpec) : SeriesStatSpec<Result>
 
 @Serializable
 @SerialName("WithTimeAsY")
-data class WithTimeAsY(val inner: StatSpec) : SeriesStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
-        val materialized = requirePaired(inner, "WithTimeAsY").materialize(concurrency) as PairedStat<Result>
-        return materialized.withTimeAsY()
-    }
-}
+data class WithTimeAsY(val inner: StatSpec) : SeriesStatSpec<Result>
 
 fun <R : Result> PairedStatSpec<R>.withFixedX(fixedX: Double): SeriesStatSpec<R> =
     WithFixedX(this, fixedX) as SeriesStatSpec<R>
@@ -291,12 +154,7 @@ data class WindowedSeries(
     val inner: StatSpec,
     val durationMillis: Long,
     val slices: Int = 10,
-) : SeriesStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
-        val materialized = requireSeries(inner, "WindowedSeries").materialize(concurrency) as SeriesStat<Result>
-        return materialized.windowed(durationMillis.milliseconds, slices, concurrency)
-    }
-}
+) : SeriesStatSpec<Result>
 
 @Serializable
 @SerialName("WindowedPaired")
@@ -304,12 +162,7 @@ data class WindowedPaired(
     val inner: StatSpec,
     val durationMillis: Long,
     val slices: Int = 10,
-) : PairedStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): PairedStat<Result> {
-        val materialized = requirePaired(inner, "WindowedPaired").materialize(concurrency) as PairedStat<Result>
-        return materialized.windowed(durationMillis.milliseconds, slices, concurrency)
-    }
-}
+) : PairedStatSpec<Result>
 
 @Serializable
 @SerialName("WindowedVector")
@@ -317,12 +170,7 @@ data class WindowedVector(
     val inner: StatSpec,
     val durationMillis: Long,
     val slices: Int = 10,
-) : VectorStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
-        val materialized = requireVector(inner, "WindowedVector").materialize(concurrency) as VectorStat<Result>
-        return materialized.windowed(durationMillis.milliseconds, slices, concurrency)
-    }
-}
+) : VectorStatSpec<Result>
 
 @Serializable
 @SerialName("WindowedDiscrete")
@@ -330,12 +178,7 @@ data class WindowedDiscrete(
     val inner: StatSpec,
     val durationMillis: Long,
     val slices: Int = 10,
-) : DiscreteStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
-        val materialized = requireDiscrete(inner, "WindowedDiscrete").materialize(concurrency) as DiscreteStat<Result>
-        return materialized.windowed(durationMillis.milliseconds, slices, concurrency)
-    }
-}
+) : DiscreteStatSpec<Result>
 
 fun <R : Result> SeriesStatSpec<R>.windowed(
     durationMillis: Long,
@@ -361,16 +204,11 @@ fun <R : Result> DiscreteStatSpec<R>.windowed(
 
 @Serializable
 @SerialName("Vectorized")
-data class VectorizedStat(val dimensions: Int, val template: StatSpec) :
-    VectorStatSpec<ResultList<Result>> {
-    override fun materialize(concurrency: Concurrency): VectorStat<ResultList<Result>> {
-        val tpl = requireSeries(template, "Vectorized").materialize(concurrency) as SeriesStat<Result>
-        return VectorizedStat(dimensions, tpl, concurrency)
-    }
-}
+data class Vectorized(val dimensions: Int, val template: StatSpec) :
+    VectorStatSpec<ResultList<Result>>
 
 fun <R : Result> SeriesStatSpec<R>.vectorized(dimensions: Int): VectorStatSpec<ResultList<R>> =
-    VectorizedStat(dimensions, this) as VectorStatSpec<ResultList<R>>
+    Vectorized(dimensions, this) as VectorStatSpec<ResultList<R>>
 
 // ========== Transform / Filter via expression AST ==========
 
@@ -382,45 +220,19 @@ fun <R : Result> SeriesStatSpec<R>.vectorized(dimensions: Int): VectorStatSpec<R
  */
 @Serializable
 @SerialName("TransformValueSeries")
-data class TransformValueSeries(val inner: StatSpec, val expr: ScalarExpr) : SeriesStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
-        val materialized = requireSeries(inner, "TransformValueSeries").materialize(concurrency) as SeriesStat<Result>
-        return TransformValueStat(materialized) { expr.eval(it) }
-    }
-}
+data class TransformValueSeries(val inner: StatSpec, val expr: ScalarExpr) : SeriesStatSpec<Result>
 
 @Serializable
 @SerialName("TransformValueDiscrete")
-data class TransformValueDiscrete(val inner: StatSpec, val expr: ScalarExpr) : DiscreteStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
-        val materialized = requireDiscrete(
-            inner,
-            "TransformValueDiscrete"
-        ).materialize(concurrency) as DiscreteStat<Result>
-        return TransformLongStat(materialized) { expr.eval(it.toDouble()).toLong() }
-    }
-}
+data class TransformValueDiscrete(val inner: StatSpec, val expr: ScalarExpr) : DiscreteStatSpec<Result>
 
 @Serializable
 @SerialName("FilterValueSeries")
-data class FilterValueSeries(val inner: StatSpec, val pred: BoolExpr) : SeriesStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<Result> {
-        val materialized = requireSeries(inner, "FilterValueSeries").materialize(concurrency) as SeriesStat<Result>
-        return FilterSeriesStat(materialized) { pred.eval(it) }
-    }
-}
+data class FilterValueSeries(val inner: StatSpec, val pred: BoolExpr) : SeriesStatSpec<Result>
 
 @Serializable
 @SerialName("FilterValueDiscrete")
-data class FilterValueDiscrete(val inner: StatSpec, val pred: BoolExpr) : DiscreteStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): DiscreteStat<Result> {
-        val materialized = requireDiscrete(
-            inner,
-            "FilterValueDiscrete"
-        ).materialize(concurrency) as DiscreteStat<Result>
-        return FilterDiscreteStat(materialized) { pred.eval(it.toDouble()) }
-    }
-}
+data class FilterValueDiscrete(val inner: StatSpec, val pred: BoolExpr) : DiscreteStatSpec<Result>
 
 fun <R : Result> SeriesStatSpec<R>.transform(expr: ScalarExpr): SeriesStatSpec<R> =
     TransformValueSeries(this, expr) as SeriesStatSpec<R>
@@ -445,21 +257,11 @@ data class TransformPair(
     val inner: StatSpec,
     val xExpr: ScalarExpr,
     val yExpr: ScalarExpr,
-) : PairedStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): PairedStat<Result> {
-        val materialized = requirePaired(inner, "TransformPair").materialize(concurrency) as PairedStat<Result>
-        return TransformPairStat(materialized) { xv, yv -> xExpr.eval(xv, yv) to yExpr.eval(xv, yv) }
-    }
-}
+) : PairedStatSpec<Result>
 
 @Serializable
 @SerialName("FilterPaired")
-data class FilterPaired(val inner: StatSpec, val pred: BoolExpr) : PairedStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): PairedStat<Result> {
-        val materialized = requirePaired(inner, "FilterPaired").materialize(concurrency) as PairedStat<Result>
-        return FilterPairedStat(materialized) { xv, yv -> pred.eval(xv, yv) }
-    }
-}
+data class FilterPaired(val inner: StatSpec, val pred: BoolExpr) : PairedStatSpec<Result>
 
 fun <R : Result> PairedStatSpec<R>.transformPair(xExpr: ScalarExpr, yExpr: ScalarExpr): PairedStatSpec<R> =
     TransformPair(this, xExpr, yExpr) as PairedStatSpec<R>
@@ -485,23 +287,11 @@ fun <R : Result> PairedStatSpec<R>.filter(pred: BoolExpr): PairedStatSpec<R> =
  */
 @Serializable
 @SerialName("TransformVectorElement")
-data class TransformVectorElement(val inner: StatSpec, val expr: ScalarExpr) : VectorStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
-        val materialized = requireVector(inner, "TransformVectorElement").materialize(concurrency) as VectorStat<Result>
-        return TransformVectorStat(materialized) { vec ->
-            DoubleArray(vec.size) { i -> expr.eval(vec[i], 0.0, vec) }
-        }
-    }
-}
+data class TransformVectorElement(val inner: StatSpec, val expr: ScalarExpr) : VectorStatSpec<Result>
 
 @Serializable
 @SerialName("FilterVector")
-data class FilterVector(val inner: StatSpec, val pred: BoolExpr) : VectorStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
-        val materialized = requireVector(inner, "FilterVector").materialize(concurrency) as VectorStat<Result>
-        return FilterVectorStat(materialized) { vec -> pred.eval(0.0, 0.0, vec) }
-    }
-}
+data class FilterVector(val inner: StatSpec, val pred: BoolExpr) : VectorStatSpec<Result>
 
 fun <R : Result> VectorStatSpec<R>.transformElement(expr: ScalarExpr): VectorStatSpec<R> =
     TransformVectorElement(this, expr) as VectorStatSpec<R>
@@ -516,12 +306,7 @@ fun <R : Result> VectorStatSpec<R>.filter(pred: BoolExpr): VectorStatSpec<R> =
  */
 @Serializable
 @SerialName("FoldPaired")
-data class FoldPaired(val inner: StatSpec, val expr: ScalarExpr) : PairedStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): PairedStat<Result> {
-        val materialized = requireSeries(inner, "FoldPaired").materialize(concurrency) as SeriesStat<Result>
-        return FoldPairedStat(materialized) { xv, yv -> expr.eval(xv, yv) }
-    }
-}
+data class FoldPaired(val inner: StatSpec, val expr: ScalarExpr) : PairedStatSpec<Result>
 
 /**
  * Lift a [SeriesStatSpec] to a [VectorStatSpec] by reducing each vector to
@@ -530,12 +315,7 @@ data class FoldPaired(val inner: StatSpec, val expr: ScalarExpr) : PairedStatSpe
  */
 @Serializable
 @SerialName("FoldVector")
-data class FoldVector(val inner: StatSpec, val expr: ScalarExpr) : VectorStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
-        val materialized = requireSeries(inner, "FoldVector").materialize(concurrency) as SeriesStat<Result>
-        return FoldVectorStat(materialized) { vec -> expr.eval(0.0, 0.0, vec) }
-    }
-}
+data class FoldVector(val inner: StatSpec, val expr: ScalarExpr) : VectorStatSpec<Result>
 
 fun <R : Result> SeriesStatSpec<R>.foldPaired(expr: ScalarExpr): PairedStatSpec<R> =
     FoldPaired(this, expr) as PairedStatSpec<R>
@@ -551,12 +331,7 @@ fun <R : Result> SeriesStatSpec<R>.foldVector(expr: ScalarExpr): VectorStatSpec<
  */
 @Serializable
 @SerialName("TransformVector")
-data class TransformVector(val inner: StatSpec, val expr: VectorExpr) : VectorStatSpec<Result> {
-    override fun materialize(concurrency: Concurrency): VectorStat<Result> {
-        val materialized = requireVector(inner, "TransformVector").materialize(concurrency) as VectorStat<Result>
-        return TransformVectorStat(materialized) { vec -> expr.eval(0.0, 0.0, vec) }
-    }
-}
+data class TransformVector(val inner: StatSpec, val expr: VectorExpr) : VectorStatSpec<Result>
 
 fun <R : Result> VectorStatSpec<R>.transformVector(expr: VectorExpr): VectorStatSpec<R> =
     TransformVector(this, expr) as VectorStatSpec<R>

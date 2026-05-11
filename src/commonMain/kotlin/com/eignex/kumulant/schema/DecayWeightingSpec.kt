@@ -1,18 +1,10 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingMeanResult
-import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumResult
-import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceResult
-import com.eignex.kumulant.stat.decay.DecayingVarianceStat
-import com.eignex.kumulant.stat.decay.EwmaMeanStat
-import com.eignex.kumulant.stat.decay.EwmaVarianceStat
 import com.eignex.kumulant.stat.rate.DecayingRateResult
-import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName
@@ -46,42 +38,24 @@ data class Alpha(val alpha: Double) : DecayWeightingSpec {
 
 @Serializable
 @SerialName("DecayingSum")
-data class DecayingSum(val weighting: HalfLife) : SeriesStatSpec<DecayingSumResult> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<DecayingSumResult> =
-        DecayingSumStat(weighting.toDecayWeighting(), concurrency)
-}
+data class DecayingSum(val weighting: HalfLife) : SeriesStatSpec<DecayingSumResult>
 
 @Serializable
 @SerialName("DecayingMean")
-data class DecayingMean(val weighting: HalfLife) : SeriesStatSpec<DecayingMeanResult> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<DecayingMeanResult> =
-        DecayingMeanStat(weighting.toDecayWeighting(), concurrency)
-}
+data class DecayingMean(val weighting: HalfLife) : SeriesStatSpec<DecayingMeanResult>
 
 @Serializable
 @SerialName("DecayingVariance")
-data class DecayingVariance(val weighting: HalfLife) : SeriesStatSpec<DecayingVarianceResult> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<DecayingVarianceResult> =
-        DecayingVarianceStat(weighting.toDecayWeighting(), concurrency)
-}
+data class DecayingVariance(val weighting: HalfLife) : SeriesStatSpec<DecayingVarianceResult>
 
 @Serializable
 @SerialName("EwmaMean")
-data class EwmaMean(val weighting: Alpha) : SeriesStatSpec<WeightedMeanResult> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<WeightedMeanResult> =
-        EwmaMeanStat(weighting.toDecayWeighting(), concurrency)
-}
+data class EwmaMean(val weighting: Alpha) : SeriesStatSpec<WeightedMeanResult>
 
 @Serializable
 @SerialName("EwmaVariance")
-data class EwmaVariance(val weighting: Alpha) : SeriesStatSpec<WeightedVarianceResult> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<WeightedVarianceResult> =
-        EwmaVarianceStat(weighting.toDecayWeighting(), concurrency)
-}
+data class EwmaVariance(val weighting: Alpha) : SeriesStatSpec<WeightedVarianceResult>
 
 @Serializable
 @SerialName("DecayingRate")
-data class DecayingRate(val halfLifeMillis: Long) : SeriesStatSpec<DecayingRateResult> {
-    override fun materialize(concurrency: Concurrency): SeriesStat<DecayingRateResult> =
-        DecayingRateStat(halfLifeMillis.milliseconds, concurrency)
-}
+data class DecayingRate(val halfLifeMillis: Long) : SeriesStatSpec<DecayingRateResult>
