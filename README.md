@@ -244,13 +244,3 @@ stat constructor directly:
 val hits = SumStat(concurrency = Concurrency.HighWrite)
 val ols = OLSStat(concurrency = Concurrency.Strict)
 ```
-
----
-
-## Platforms
-
-Kumulant compiles for every standard Kotlin Multiplatform target: JVM, JS (IR,
-browser + node), wasmJs, wasmWasi, Linux x64/Arm64, macOS x64/Arm64, Windows
-(mingwX64), iOS x64/Arm64/SimulatorArm64. The JVM target additionally backs
-Concurrency.HighWrite with java.util.concurrent.atomic.LongAdder / DoubleAdder
-for naively additive stats.
