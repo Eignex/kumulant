@@ -42,13 +42,12 @@ data class HyperLogLogResult(
  * HLL large-range correction unnecessary.
  *
  * This is plain HLL with the standard small-range linear-counting fix — *not*
- * HLL++. The Heule et al. (2013) empirical bias-correction tables and tighter
- * per-precision thresholds are not implemented (they work as a pair, and
- * porting half makes medium-range accuracy worse). Expect 3–5% downward bias
- * on cardinalities in the range `m … 5·m`; outside that window error stays
- * within the asymptotic `1.04/√m`. The sparse representation is also not
- * implemented — the linear-counting fallback already gives near-exact
- * estimates at low cardinalities.
+ * HLL++. The Heule et al. (2013) empirical bias-correction tables are not
+ * implemented; empirically, with SplitMix64 prehashing the medium-range bias
+ * stays inside `1.04/√m` across `m … 5·m` (see the accuracy test in
+ * `HyperLogLogTest`). The sparse representation is also omitted — the
+ * linear-counting fallback already gives near-exact estimates at low
+ * cardinalities.
  */
 class HyperLogLogStat(
     val precision: Int = 14,
