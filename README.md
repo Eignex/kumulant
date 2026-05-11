@@ -19,6 +19,15 @@ Kumulant is a pure Kotlin multiplatform library of streaming statistical
 accumulators: single-pass, mergeable, and constant-memory in the number of
 observations.
 
+## Features
+
+* Single-pass, mergeable, constant-memory accumulators for sums, means, variances, higher moments, quantiles, cardinality, heavy hitters, rates, regression, and scoring losses.
+* Composable operations: time-windowed aggregation, weighted updates, pre-update transforms, predicate filtering, and adapters between scalar, paired, vector, and discrete input streams.
+* Serializable stat schemas via kotlinx.serialization that round-trip through JSON or protobuf and rehydrate into live stat groups on the other side.
+* Wire-expressible transforms and filters via a serializable expression AST — operations travel without lambdas.
+* Concurrency selectable per stat: single-threaded, lock-free relaxed, fully serialized, or striped adders for write-heavy paths on the JVM.
+* Pure Kotlin Multiplatform: JVM, JS (IR), wasmJs, wasmWasi, Linux x64/Arm64, macOS x64/Arm64, mingwX64, iOS x64/Arm64/SimulatorArm64.
+
 ## Overview
 
 Every stat takes one observation at a time, holds bounded state, and produces a
@@ -28,22 +37,21 @@ counters, parallel workers folding into a single estimate, and distributed
 aggregation over a queue.
 
 There are three layers stacked on each other; pick the lowest one that fits.
-The bottom layer is the live stats — concrete classes like `MeanStat`,
-`OLSStat`, `HyperLogLogStat`. Construct, feed observations, read the result.
-Use these directly when the choice of stat is fixed at compile time.
+The bottom layer is the live stats — concrete classes like MeanStat, OLSStat,
+HyperLogLogStat. Construct, feed observations, read the result. Use these
+directly when the choice of stat is fixed at compile time.
 
 The middle layer is composable operations — extension functions on the live
-stat interfaces such as `.withWeight(w)`, `.atX()`, `.windowed(1.minutes)`,
-`.transformValue { … }`, `.filter { … }`, `.foldVector { … }`. Each preserves
-the inner stat's result type and merge semantics, so wrapped stats remain
-ordinary `SeriesStat` / `PairedStat` / `VectorStat` / `DiscreteStat`.
+stat interfaces such as withWeight, atX, windowed, transformValue, filter,
+foldVector. Each preserves the inner stat's result type and merge semantics,
+so wrapped stats remain ordinary stats.
 
-The top layer is the wire schema — pure-data `StatSpec` variants (`Mean`,
-`OLS`, `DDSketch`, …) under `kotlinx.serialization` polymorphism. A
-`StatSchema` is a declared bag of specs that round-trips through JSON or
-protobuf and rehydrates into a live `StatGroup` on the other side. Reach for
-it when the choice of stats has to travel — for instance, a UI declaring what
-to track over a stream of events processed elsewhere.
+The top layer is the wire schema — pure-data StatSpec variants (Mean, OLS,
+DDSketch, …) under kotlinx.serialization polymorphism. A StatSchema is a
+declared bag of specs that round-trips through JSON or protobuf and rehydrates
+into a live StatGroup on the other side. Reach for it when the choice of
+stats has to travel — for instance, a UI declaring what to track over a
+stream of events processed elsewhere.
 
 ## Installation
 
@@ -53,17 +61,17 @@ dependencies {
 }
 ```
 
-The wire schema layer additionally requires `kotlinx.serialization-core` and a
-format such as `kotlinx-serialization-json`.
+The wire schema layer additionally requires kotlinx-serialization-core and a
+format such as kotlinx-serialization-json.
 
 ---
 
 ## Live stats
 
-Every stat implements one of four modality interfaces — `SeriesStat<R>` (scalar
-input), `PairedStat<R>` (x/y input), `VectorStat<R>` (fixed-dim vector input),
-or `DiscreteStat<R>` (Long input) — and exposes the same `update`, `read`,
-`merge`, `reset`, `create` surface.
+Every stat implements one of four modality interfaces — SeriesStat (scalar
+input), PairedStat (x/y input), VectorStat (fixed-dim vector input), or
+DiscreteStat (Long input) — and exposes the same update, read, merge, reset,
+create surface.
 
 ```kotlin
 val mean = MeanStat()
@@ -80,8 +88,8 @@ val fit = ols.read()
 val yHat = fit.slope * 7.0 + fit.intercept
 ```
 
-Results are immutable data classes annotated `@Serializable`. Two stats of the
-same type merge by feeding one's result into the other's `merge`:
+Results are immutable data classes annotated @Serializable. Two stats of the
+same type merge by feeding one's result into the other's merge:
 
 ```kotlin
 val a = MeanStat().apply { repeat(100) { update(it.toDouble()) } }
@@ -106,7 +114,7 @@ a.merge(b.read()) // a is now the mean of 0..199
 
 Operations are extension functions on the live stat interfaces that produce
 another stat of the same modality (or a different modality, for adapters like
-`atX` / `foldVector`).
+atX or foldVector).
 
 ```kotlin
 // Time-windowed mean over 1 minute, with 10 slices.
@@ -139,11 +147,11 @@ val positiveMean = MeanStat().filter { it > 0.0 }
 
 ## Wire schema
 
-`StatSpec` is the pure-data counterpart of every live stat — a `@Serializable`
-sealed hierarchy whose subclasses are the parameter records (`Mean`, `Sum`,
-`DDSketch`, `OLS`, `HyperLogLog`, `DecayingMean`, …). `StatSchema` is a typed
-bag of specs that you declare once, then either materialize directly or send
-over the wire and rehydrate on the other side.
+StatSpec is the pure-data counterpart of every live stat — a @Serializable
+sealed hierarchy whose subclasses are the parameter records (Mean, Sum,
+DDSketch, OLS, HyperLogLog, DecayingMean, …). StatSchema is a typed bag of
+specs that you declare once, then either materialize directly or send over the
+wire and rehydrate on the other side.
 
 ```kotlin
 object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
@@ -172,11 +180,10 @@ val rehydrated = StatGroup(stats = decoded.materializeSeries(Concurrency.Strict)
 ```
 
 Composable operations are mirrored on the spec layer as wire-friendly
-counterparts. `Mean.windowed(60_000, slices = 10).withWeight(0.5)` produces a
-`WithWeightSeries(WindowedSeries(Mean, …))` that serializes verbatim. Lambdas
-are not on the wire — `filter`, `transformValue`, `transformPair`, and the
-fold operations all use `ScalarExpr` / `BoolExpr` / `VectorExpr` expression
-ASTs instead:
+counterparts. `Mean.windowed(60_000, slices = 10).withWeight(0.5)` serializes
+verbatim. Lambdas are not on the wire — filter, transformValue, transformPair,
+and the fold operations all use ScalarExpr, BoolExpr, and VectorExpr
+expression ASTs instead:
 
 ```kotlin
 // Wire-expressible: ignore non-positive samples, square the rest.
@@ -189,7 +196,7 @@ val spec = Mean
 
 ## Concurrency
 
-Every stat constructor takes a `Concurrency` argument that controls the
+Every stat constructor takes a Concurrency argument that controls the
 cell-encoding and locking strategy chosen for that stat:
 
 | Level         | Behavior                                                                                   |
@@ -199,7 +206,7 @@ cell-encoding and locking strategy chosen for that stat:
 | `Strict`      | Multi-threaded, serialised where coupling demands it. Full correctness.                    |
 | `HighWrite`   | Multi-threaded write-heavy. On JVM, striped adders for naively additive stats.             |
 
-For bag-of-stats deployments, set `Concurrency` once on the `StatSchema` and it
+For bag-of-stats deployments, set Concurrency once on the StatSchema and it
 propagates to every materialized stat. For ad-hoc construction, pass it to the
 stat constructor directly:
 
@@ -215,5 +222,5 @@ val ols = OLSStat(concurrency = Concurrency.Strict)
 Kumulant compiles for every standard Kotlin Multiplatform target: JVM, JS (IR,
 browser + node), wasmJs, wasmWasi, Linux x64/Arm64, macOS x64/Arm64, Windows
 (mingwX64), iOS x64/Arm64/SimulatorArm64. The JVM target additionally backs
-`Concurrency.HighWrite` with `java.util.concurrent.atomic.LongAdder` /
-`DoubleAdder` for naively additive stats.
+Concurrency.HighWrite with java.util.concurrent.atomic.LongAdder / DoubleAdder
+for naively additive stats.
