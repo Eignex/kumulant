@@ -8,7 +8,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 private const val DELTA = 1e-12
-private fun sumVector(d: Int) = VectorizedStat(d, SumStat())
 
 class TransformsTest {
 
@@ -50,14 +49,6 @@ class TransformsTest {
         stat.update(99.0, 2.0)
         stat.update(99.0, 3.0)
         assertEquals(50.0, stat.read().sum, DELTA)
-    }
-
-    @Test
-    fun `vector transformVector replaces vector pre-update`() {
-        val stat = sumVector(2).transformVector { doubleArrayOf(it[0] * 2.0, it[1] * 2.0) }
-        stat.update(doubleArrayOf(3.0, 5.0))
-        assertEquals(6.0, stat.read().results[0].sum, DELTA)
-        assertEquals(10.0, stat.read().results[1].sum, DELTA)
     }
 
     @Test

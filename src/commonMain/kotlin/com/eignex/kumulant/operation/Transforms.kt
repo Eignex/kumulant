@@ -20,12 +20,6 @@ fun interface PairTransform {
     fun apply(x: Double, y: Double): Pair<Double, Double>
 }
 
-/** Vector-to-vector transform applied pre-update. */
-fun interface VectorTransform {
-    /** Map [vector] to the vector forwarded downstream. */
-    fun apply(vector: DoubleArray): DoubleArray
-}
-
 /** Long-to-Long transform applied pre-update. */
 fun interface LongTransform {
     /** Map [value] to the Long forwarded downstream. */
@@ -61,13 +55,18 @@ internal class TransformPairStat<R : Result>(
     }
 }
 
-/** Adapter implementing [VectorStat.transformVector]. */
+/**
+ * Adapter that applies [transform] to each incoming vector before update.
+ * Wire-internal: reachable only from [com.eignex.kumulant.schema.TransformVector] /
+ * [com.eignex.kumulant.schema.TransformVectorElement] materialization, which
+ * builds the closure from a `VectorExpr`. The user-facing path is the wire AST.
+ */
 internal class TransformVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
-    private val transform: VectorTransform
+    private val transform: (DoubleArray) -> DoubleArray
 ) : VectorStat<R>, Stat<R> by delegate {
     override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
-        delegate.update(transform.apply(vector), timestampNanos, weight)
+        delegate.update(transform(vector), timestampNanos, weight)
     }
 
     override fun create(concurrency: Concurrency?): VectorStat<R> {
@@ -130,11 +129,9 @@ fun <R : Result> PairedStat<R>.transformY(transform: DoubleTransform): PairedSta
     x to transform.apply(y)
 }
 
-/** Apply [transform] to each incoming vector before update. */
-fun <R : Result> VectorStat<R>.transformVector(transform: VectorTransform): VectorStat<R> = TransformVectorStat(
-    this,
-    transform
-)
+internal fun <R : Result> VectorStat<R>.transformVector(
+    transform: (DoubleArray) -> DoubleArray
+): VectorStat<R> = TransformVectorStat(this, transform)
 
 /** Apply [transform] to each incoming Long value before update. */
 fun <R : Result> DiscreteStat<R>.transformValue(transform: LongTransform): DiscreteStat<R> = TransformLongStat(
