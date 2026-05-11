@@ -153,11 +153,20 @@ val meanXY = Mean.foldPaired(X * Y).materialize()
 
 ## Wire schema
 
-StatSpec is the pure-data counterpart of every live stat: a @Serializable
-sealed hierarchy whose subclasses are the parameter records (Mean, Sum,
-DDSketch, OLS, HyperLogLog, DecayingMean, and so on). StatSchema is a typed bag of
-specs that you declare once, then either materialize directly or send over the
-wire and rehydrate on the other side.
+Two distinct things travel on the wire, and keeping them apart matters:
+
+1. A **schema** (StatSchema / StatSchemaDef) is *definition only*: which stats
+   exist, their parameters, and how they compose. No observations, no
+   accumulator state, no counters. Encoding a schema produces the recipe, not
+   a snapshot.
+2. A **result** (the Result data class returned by `stat.read()`) is *data
+   only*: the current snapshot of an accumulator's state. Each stat has its
+   own @Serializable Result type (SumResult, WeightedMeanResult, SketchResult,
+   …). Encoding a result transmits the numbers; the receiver feeds them back
+   into a stat of the matching spec via `merge()` to reconstitute state.
+
+Declare a schema once, materialize it into a live group, feed observations,
+read snapshots, send those snapshots to whoever aggregates them:
 
 ```kotlin
 object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
@@ -170,20 +179,37 @@ object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
 val group = StatGroup(Telemetry)
 group.update(value = 12.7)
 
-val snapshot = group.read()
+val snapshot: GroupResult = group.read()          // data: the current accumulator state
 val p99 = snapshot[Telemetry.latencyP99]
 ```
 
-The schema is its own wire payload:
+The schema itself is its own wire payload, separate from any snapshot:
 
 ```kotlin
+// Producer side: ship the recipe.
 val def: StatSchemaDef = Telemetry.statSchemaDef()
-val payload = Json.encodeToString(def)
+val schemaPayload = Json.encodeToString(def)
 
-// On a different machine / process:
-val decoded = Json.decodeFromString<StatSchemaDef>(payload)
+// Consumer side: decode and materialize an empty live group.
+val decoded = Json.decodeFromString<StatSchemaDef>(schemaPayload)
 val rehydrated = StatGroup(stats = decoded.materializeSeries(Concurrency.Strict))
 ```
+
+The rehydrated group starts empty; it has no observations. To populate it with
+state from elsewhere, encode a snapshot and merge it in:
+
+```kotlin
+// Producer side: read a snapshot and ship it.
+val resultPayload = Json.encodeToString(group.read())
+
+// Consumer side: merge into the live group built from the same schema.
+val incoming = Json.decodeFromString<GroupResult>(resultPayload)
+rehydrated.merge(incoming)
+```
+
+Schemas and snapshots are decoupled on purpose: the schema travels once at
+configuration time, and snapshots flow continuously as workers fold their
+partial state up to an aggregator.
 
 All operations are spec-friendly. `Mean.windowed(60_000, slices = 10).withWeight(0.5)`
 serializes verbatim. Operations that need a predicate or transform take a
