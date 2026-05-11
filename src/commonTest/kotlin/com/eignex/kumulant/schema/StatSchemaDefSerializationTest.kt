@@ -1,6 +1,10 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.DiscreteStat
+import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.stat.quantile.SketchResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
@@ -8,6 +12,8 @@ import com.eignex.skema.SchemaJson
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 private class HttpMetrics : StatSchema() {
     val requests by series(Sum)
@@ -98,5 +104,69 @@ class StatSchemaDefSerializationTest {
         assertEquals(true, encoded.contains("\"\$type\":\"WithWeightSeries\""))
         assertEquals(true, encoded.contains("\"\$type\":\"WithValueSeries\""))
         assertEquals(true, encoded.contains("\"\$type\":\"WithFixedX\""))
+    }
+
+    @Test
+    fun `materialize binds every entry regardless of modality`() {
+        val def = StatSchemaDef(
+            mapOf(
+                "sum" to Sum,
+                "ols" to OLS,
+                "users" to HyperLogLog(precision = 10),
+                "perDim" to Sum.vectorized(3),
+            )
+        )
+        val bound = def.materialize(Concurrency.None)
+        assertEquals(4, bound.size)
+        val byKind = bound.groupBy { it.stat::class.simpleName!! }
+        assertTrue(bound.any { it.stat is SeriesStat<*> }, "missing series: $byKind")
+        assertTrue(bound.any { it.stat is PairedStat<*> }, "missing paired: $byKind")
+        assertTrue(bound.any { it.stat is DiscreteStat<*> }, "missing discrete: $byKind")
+        assertTrue(bound.any { it.stat is VectorStat<*> }, "missing vector: $byKind")
+    }
+
+    @Test
+    fun `materializePaired rejects non-paired entries`() {
+        val def = StatSchemaDef(mapOf("sum" to Sum))
+        assertFailsWith<IllegalArgumentException> { def.materializePaired() }
+    }
+
+    @Test
+    fun `materializePaired binds paired entries`() {
+        val def = StatSchemaDef(mapOf("ols" to OLS))
+        val bound = def.materializePaired()
+        assertEquals(1, bound.size)
+    }
+
+    @Test
+    fun `materializeVector rejects non-vector entries`() {
+        val def = StatSchemaDef(mapOf("sum" to Sum))
+        assertFailsWith<IllegalArgumentException> { def.materializeVector() }
+    }
+
+    @Test
+    fun `materializeVector binds vector entries`() {
+        val def = StatSchemaDef(mapOf("perDim" to Sum.vectorized(3)))
+        val bound = def.materializeVector()
+        assertEquals(1, bound.size)
+    }
+
+    @Test
+    fun `materializeDiscrete rejects non-discrete entries`() {
+        val def = StatSchemaDef(mapOf("sum" to Sum))
+        assertFailsWith<IllegalArgumentException> { def.materializeDiscrete() }
+    }
+
+    @Test
+    fun `materializeDiscrete binds discrete entries`() {
+        val def = StatSchemaDef(mapOf("users" to HyperLogLog(precision = 10)))
+        val bound = def.materializeDiscrete()
+        assertEquals(1, bound.size)
+    }
+
+    @Test
+    fun `materializeSeries rejects non-series entries`() {
+        val def = StatSchemaDef(mapOf("ols" to OLS))
+        assertFailsWith<IllegalArgumentException> { def.materializeSeries() }
     }
 }

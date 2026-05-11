@@ -100,4 +100,60 @@ class ReservoirHistogramTest {
         assertFailsWith<IllegalArgumentException> { ReservoirHistogramStat(capacity = 0) }
         assertFailsWith<IllegalArgumentException> { ReservoirHistogramStat(capacity = -1) }
     }
+
+    @Test
+    fun `toSparseHistogram on empty reservoir returns empty arrays`() {
+        val r = ReservoirHistogramStat(capacity = 10).read()
+        val h = r.toSparseHistogram(binCount = 5)
+        assertEquals(0, h.lowerBounds.size)
+        assertEquals(0, h.upperBounds.size)
+        assertEquals(0, h.weights.size)
+    }
+
+    @Test
+    fun `toSparseHistogram with a single distinct value collapses to one bin`() {
+        val res = ReservoirHistogramStat(capacity = 10, seed = 1)
+        repeat(5) { res.update(7.0) }
+        val h = res.read().toSparseHistogram(binCount = 4)
+        assertEquals(1, h.lowerBounds.size)
+        assertEquals(7.0, h.lowerBounds[0])
+        assertEquals(7.0, h.upperBounds[0])
+        assertEquals(5.0, h.weights[0])
+    }
+
+    @Test
+    fun `toSparseHistogram buckets distinct values into populated bins only`() {
+        val res = ReservoirHistogramStat(capacity = 10, seed = 1)
+        listOf(0.0, 1.0, 2.0, 3.0).forEach { res.update(it) }
+        val h = res.read().toSparseHistogram(binCount = 4)
+        // 4 values spread across [0, 3] into 4 bins of width 0.75 — every bin populated.
+        assertEquals(4, h.weights.size)
+        assertEquals(4.0, h.weights.sum())
+    }
+
+    @Test
+    fun `toSparseHistogram rejects non-positive bin count`() {
+        val r = ReservoirHistogramStat(capacity = 10).read()
+        assertFailsWith<IllegalArgumentException> { r.toSparseHistogram(binCount = 0) }
+    }
+
+    @Test
+    fun `quantile rejects out-of-range probability`() {
+        val r = ReservoirHistogramStat(capacity = 10).read()
+        assertFailsWith<IllegalArgumentException> { r.quantile(-0.1) }
+        assertFailsWith<IllegalArgumentException> { r.quantile(1.1) }
+    }
+
+    @Test
+    fun `quantile on empty reservoir returns NaN`() {
+        val r = ReservoirHistogramStat(capacity = 10).read()
+        assertTrue(r.quantile(0.5).isNaN())
+    }
+
+    @Test
+    fun `quantile on a single-value reservoir returns that value`() {
+        val res = ReservoirHistogramStat(capacity = 10, seed = 1)
+        res.update(42.0)
+        assertEquals(42.0, res.read().quantile(0.5))
+    }
 }

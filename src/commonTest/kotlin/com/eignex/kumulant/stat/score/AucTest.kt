@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.score
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 private const val DELTA = 1e-6
@@ -99,5 +100,26 @@ class AucTest {
         assertEquals(2.0, r.totalNegatives, DELTA)
         assertEquals(3.0, r.totalPositives, DELTA)
         assertEquals(1.0, r.auc, DELTA)
+    }
+
+    @Test
+    fun `result equality and hash are content-based`() {
+        val a = AucStat(numBins = 8).apply {
+            update(x = 0.2, y = 0.0)
+            update(x = 0.9, y = 1.0)
+        }.read()
+        val b = AucStat(numBins = 8).apply {
+            update(x = 0.2, y = 0.0)
+            update(x = 0.9, y = 1.0)
+        }.read()
+        val c = AucStat(numBins = 8).apply {
+            update(x = 0.2, y = 0.0)
+            update(x = 0.5, y = 1.0)
+        }.read()
+
+        assertEquals(a, b)
+        assertEquals(a.hashCode(), b.hashCode())
+        assertNotEquals(a, c)
+        assertNotEquals<Any?>(a, "not an AucResult")
     }
 }
