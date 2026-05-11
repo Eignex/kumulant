@@ -32,14 +32,13 @@ import com.eignex.kumulant.operation.withTimeAsX
 import com.eignex.kumulant.operation.withTimeAsY
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
+import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
+import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceStat
 import com.eignex.kumulant.stat.decay.EwmaMeanStat
 import com.eignex.kumulant.stat.decay.EwmaVarianceStat
-import com.eignex.kumulant.stat.rate.DecayingRateStat
-import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
-import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.quantile.FrugalQuantileStat
 import com.eignex.kumulant.stat.quantile.HdrHistogramStat
@@ -47,6 +46,7 @@ import com.eignex.kumulant.stat.quantile.LinearHistogramStat
 import com.eignex.kumulant.stat.quantile.ReservoirHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
+import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
 import com.eignex.kumulant.stat.regression.CovarianceStat
 import com.eignex.kumulant.stat.regression.LassoStat
@@ -102,7 +102,12 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is CounterRate -> CounterRateStat(concurrency, treatDecreaseAsReset)
         is DDSketch -> DDSketchStat(relativeError, probabilities.toDoubleArray(), concurrency)
         is FrugalQuantile -> FrugalQuantileStat(q, stepSize, initialEstimate, concurrency)
-        is HdrHistogram -> HdrHistogramStat(lowestDiscernibleValue, initialHighestTrackableValue, significantDigits, concurrency)
+        is HdrHistogram -> HdrHistogramStat(
+            lowestDiscernibleValue,
+            initialHighestTrackableValue,
+            significantDigits,
+            concurrency,
+        )
         is LinearHistogram -> LinearHistogramStat(lowerBound, upperBound, binCount, concurrency)
         is ReservoirHistogram -> ReservoirHistogramStat(capacity, seed, concurrency)
         is TDigest -> TDigestStat(compression, probabilities.toDoubleArray(), concurrency)
