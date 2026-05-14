@@ -65,16 +65,16 @@ object SplitMixChunkHasher : Hasher64 {
             h = splitmix64(h xor chunk)
             i += 8
         }
-        if (i < bytes.size) {
-            var tail = 0L
-            var shift = 0
-            while (i < bytes.size) {
-                tail = tail or ((bytes[i].toLong() and 0xFF) shl shift)
-                shift += 8
-                i++
-            }
-            h = splitmix64(h xor tail)
+        // Always finalize with a tail mix — even when bytes.size is a multiple of 8 —
+        // so chunk-aligned and unaligned inputs that happen to reach the same
+        // intermediate state cannot collide.
+        var tail = 0L
+        var shift = 0
+        while (i < bytes.size) {
+            tail = tail or ((bytes[i].toLong() and 0xFF) shl shift)
+            shift += 8
+            i++
         }
-        return h
+        return splitmix64(h xor tail)
     }
 }
