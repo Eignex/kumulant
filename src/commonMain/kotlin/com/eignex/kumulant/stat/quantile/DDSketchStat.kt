@@ -30,7 +30,9 @@ class DDSketchStat(
 ) : SeriesStat<SketchResult> {
 
     init {
-        require(relativeError in 0.0..1.0) { "Relative error must be between 0.0 and 1.0" }
+        require(relativeError > 0.0 && relativeError < 1.0) {
+            "Relative error must be strictly between 0.0 and 1.0; got $relativeError"
+        }
     }
 
     private val gamma: Double = (1.0 + relativeError) / (1.0 - relativeError)
