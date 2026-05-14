@@ -85,7 +85,7 @@ class SpaceSavingStat(
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        val w = weight.toLong()
+        val w = kotlin.math.round(weight).toLong()
         if (w <= 0L) return
         lock.withLock {
             admit(value, w, 0L)

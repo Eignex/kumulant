@@ -103,6 +103,20 @@ class SpaceSavingTest {
     }
 
     @Test
+    fun `fractional weight rounds rather than truncating`() {
+        // Mirrors CountMinSketchStat: weights are rounded so a stream of fractional
+        // weights accumulates into the count instead of being silently dropped.
+        val ss = SpaceSavingStat(capacity = 5)
+        ss.update(7L, weight = 1.7) // rounds to 2
+        ss.update(7L, weight = 0.6) // rounds to 1
+        ss.update(8L, weight = 0.4) // rounds to 0 — dropped, but totalSeen still advances
+        val r = ss.read()
+        val kv = r.keys.zip(r.counts.toList()).toMap()
+        assertEquals(3L, kv[7L])
+        assertTrue(8L !in kv.keys)
+    }
+
+    @Test
     fun `merge combines two summaries`() {
         val a = SpaceSavingStat(capacity = 10)
         val b = SpaceSavingStat(capacity = 10)
