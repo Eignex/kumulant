@@ -15,13 +15,11 @@ import com.eignex.kumulant.core.VectorStat
  */
 class VectorizedStat<R : Result>(
     val dimensions: Int,
-    template: SeriesStat<R>,
-    private val concurrencyOverride: Concurrency? = null,
+    private val template: SeriesStat<R>,
 ) : VectorStat<ResultList<R>> {
 
-    private val template: SeriesStat<R> = template.create(concurrencyOverride)
     private val stats: Array<SeriesStat<R>> =
-        Array(dimensions) { this.template.create(concurrencyOverride) }
+        Array(dimensions) { template.create(null) }
 
     override val concurrency: Concurrency get() = template.concurrency
 
@@ -42,7 +40,7 @@ class VectorizedStat<R : Result>(
         ResultList(stats.map { it.read(timestampNanos) })
 
     override fun create(concurrency: Concurrency?): VectorStat<ResultList<R>> =
-        VectorizedStat(dimensions, template, concurrency ?: this.concurrencyOverride)
+        VectorizedStat(dimensions, template.create(concurrency))
 
     override fun merge(values: ResultList<R>) {
         require(values.results.size == dimensions)
