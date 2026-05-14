@@ -42,10 +42,10 @@ internal class SliceRing<R : Result, S : Stat<R>>(
     }
 
     private fun expectedSliceStart(timestampNanos: Long): Long =
-        (timestampNanos / sliceDurationNanos) * sliceDurationNanos
+        timestampNanos.floorDiv(sliceDurationNanos) * sliceDurationNanos
 
     private fun bucketIndex(expectedStart: Long): Int {
-        val raw = ((expectedStart / sliceDurationNanos) % buckets.size).toInt()
+        val raw = (expectedStart.floorDiv(sliceDurationNanos) % buckets.size).toInt()
         return if (raw < 0) raw + buckets.size else raw
     }
 
