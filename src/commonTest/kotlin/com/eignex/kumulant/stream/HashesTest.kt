@@ -67,13 +67,25 @@ class Hash64Test {
     fun `hash64 ByteArray matches reference vectors across platforms`() {
         // Locked-in outputs from SplitMixChunkHasher. Platform-stable; guards against
         // accidental endianness or chunking changes.
-        assertEquals(0L, hash64(ByteArray(0)))
+        assertEquals(4553024054441242788L, hash64(ByteArray(0)))
         assertEquals(6023229995862221380L, hash64("hello"))
         assertEquals(4208025021734807446L, hash64("the quick brown fox jumps over the lazy dog"))
         assertEquals(
-            -9112064343569154153L,
+            4469830170794531066L,
             hash64(byteArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)),
         )
+    }
+
+    @Test
+    fun `hash64 does not collide across the chunk boundary`() {
+        // [0x01] and [8, 0, 0, 0, 0, 0, 0, 0] both reach state splitmix64(0) at the
+        // moment the chunk-aligned input runs out of input: the 1-byte input mixes a
+        // tail of 1 against initial state 1, and the 8-byte input mixes a chunk of 8
+        // against initial state 8. Without a finalization step that runs on
+        // chunk-aligned inputs, both return splitmix64(0).
+        val unaligned = byteArrayOf(0x01)
+        val aligned = byteArrayOf(8, 0, 0, 0, 0, 0, 0, 0)
+        assertNotEquals(hash64(unaligned), hash64(aligned))
     }
 
     @Test
