@@ -28,8 +28,8 @@ class BrierScoreTest {
     @Test
     fun `mean of squared probability errors`() {
         val stat = BrierScoreStat().apply {
-            update(0.7, 1.0, 0L, 1.0) // 0.09
-            update(0.4, 0.0, 0L, 1.0) // 0.16
+            update(0.7, 1.0, 0L, 1.0)
+            update(0.4, 0.0, 0L, 1.0)
         }
         assertEquals(0.125, stat.read(0L).mean, DELTA)
     }

@@ -155,7 +155,6 @@ class TDigestTest {
         val td = TDigestStat()
         td.update(5.0)
         val r = td.read()
-        // Sanity: exactly one centroid after one update.
         assertEquals(1, r.means.size)
         val h = r.toSparseHistogram()
         assertEquals(1, h.lowerBounds.size)

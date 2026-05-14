@@ -19,12 +19,10 @@ data class DecayingSumResult(
     val timestampNanos: Long,
 ) : Result
 
-// Time-decayed family (HalfLife weighting).
-// S(t) = Σ vᵢ · wᵢ · exp(−α·(t − tᵢ)) with α = ln(2)/halfLife. Decay advances with
-// wall-clock time regardless of event frequency. See [DecayWeighting.HalfLife].
-
 /**
  * Exponentially decaying sum driven by wall-clock elapsed time.
+ *
+ * `S(t) = Σ vᵢ · wᵢ · exp(−α·(t − tᵢ))` with `α = ln(2)/halfLife`.
  *
  * The core time-decay primitive. Internally uses landmark-rotation to keep the stored
  * accumulator in a bounded numerical range even after many half-lives of activity.

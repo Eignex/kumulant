@@ -46,7 +46,7 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
 
     var cursor = 0
 
-    // 1. Process Negative Bins (Sorted highest index to lowest index -> most negative to closest to zero)
+    // Negative bins: most-negative first (descending index) so the output remains ordered low-to-high.
     negativeBins.entries.sortedByDescending { it.key }.forEach { (index, weight) ->
         lowers[cursor] = -(gamma.pow(index))
         uppers[cursor] = -(gamma.pow(index - 1))
@@ -54,7 +54,6 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
         cursor++
     }
 
-    // 2. Process Zero Bin
     if (hasZero) {
         lowers[cursor] = 0.0
         uppers[cursor] = 0.0
@@ -62,7 +61,6 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
         cursor++
     }
 
-    // 3. Process Positive Bins (Sorted lowest index to highest index -> closest to zero to most positive)
     positiveBins.entries.sortedBy { it.key }.forEach { (index, weight) ->
         lowers[cursor] = gamma.pow(index - 1)
         uppers[cursor] = gamma.pow(index)

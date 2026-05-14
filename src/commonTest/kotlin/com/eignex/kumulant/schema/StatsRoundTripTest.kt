@@ -19,8 +19,6 @@ class StatsRoundTripTest {
         return SchemaJson.decodeFromString<StatSpec>(json) as C
     }
 
-    // ===== Series — trivial =====
-
     @Test fun `sumConfig round trips`() {
         assertEquals(Sum, roundTrip(Sum))
     }
@@ -69,8 +67,6 @@ class StatsRoundTripTest {
         assertEquals(CounterRate(false), roundTrip(CounterRate(false)))
     }
 
-    // ===== Series — primitive params =====
-
     @Test fun `ddSketchConfig round trips`() {
         val cfg = DDSketch(relativeError = 0.02, probabilities = listOf(0.5, 0.99))
         assertEquals(cfg, roundTrip(cfg))
@@ -105,8 +101,6 @@ class StatsRoundTripTest {
         val cfg = PitHistogram(numBins = 20)
         assertEquals(cfg, roundTrip(cfg))
     }
-
-    // ===== Paired =====
 
     @Test fun `pairedSumConfig round trips`() {
         assertEquals(PairedSum, roundTrip(PairedSum))
@@ -161,8 +155,6 @@ class StatsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
-    // ===== Discrete =====
-
     @Test fun `hyperLogLogConfig round trips`() {
         val cfg = HyperLogLog(precision = 12)
         assertEquals(cfg, roundTrip(cfg))
@@ -193,8 +185,6 @@ class StatsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
-    // ===== Decay family =====
-
     @Test fun `decayingSumConfig round trips`() {
         val cfg = DecayingSum(HalfLife(60_000L))
         assertEquals(cfg, roundTrip(cfg))
@@ -224,8 +214,6 @@ class StatsRoundTripTest {
         val cfg = DecayingRate(halfLifeMillis = 5_000L)
         assertEquals(cfg, roundTrip(cfg))
     }
-
-    // ===== Decode-then-materialize sanity check =====
 
     @Test fun `materializeSeries after round trip matches live for sum mean min max`() {
         val schema = object : StatSchema() {

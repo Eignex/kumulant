@@ -11,8 +11,8 @@ class PinballLossTest {
     @Test
     fun `tau equals one half reduces to half MAE`() {
         val stat = PinballLossStat(0.5).apply {
-            update(x = 1.0, y = 3.0, timestampNanos = 0L, weight = 1.0) // diff = 2 → 0.5*2 = 1
-            update(x = 4.0, y = 1.0, timestampNanos = 0L, weight = 1.0) // diff = -3 → -0.5 * -3 = 1.5
+            update(x = 1.0, y = 3.0, timestampNanos = 0L, weight = 1.0)
+            update(x = 4.0, y = 1.0, timestampNanos = 0L, weight = 1.0)
         }
         assertEquals(1.25, stat.read(0L).mean, DELTA)
     }

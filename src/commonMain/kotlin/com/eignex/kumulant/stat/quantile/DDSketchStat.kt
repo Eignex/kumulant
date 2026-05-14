@@ -113,7 +113,6 @@ class DDSketchStat(
             )
         }
 
-        // Sort bins: negative bins descending (most negative to 0), positive ascending (0 to max)
         val sortedNeg = negSnap.entries.sortedByDescending { it.key }
         val sortedPos = posSnap.entries.sortedBy { it.key }
 

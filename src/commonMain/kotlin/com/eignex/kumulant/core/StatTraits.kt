@@ -33,9 +33,7 @@ interface HasSampleVariance : Result {
     /** Population standard deviation. */
     val stdDev: Double get() = sqrt(variance)
 
-    /** *
-     * Unbiased Sample VarianceStat.
-     */
+    /** Unbiased sample variance. */
     val sampleVariance: Double
         get() = if (totalWeights > 1.0) {
             sst / (totalWeights - 1.0)
@@ -63,7 +61,6 @@ interface HasShapeMoments : HasSampleVariance {
         get() {
             val v = variance
             val w = totalWeights
-            // skew = (m3 / w) / (variance^1.5)
             return if (v > 0 && w > 0) (m3 / w) / v.pow(1.5) else 0.0
         }
 
@@ -72,7 +69,6 @@ interface HasShapeMoments : HasSampleVariance {
         get() {
             val v = variance
             val w = totalWeights
-            // kurtosis = (m4 / w) / (variance^2) - 3.0
             return if (v > 0 && w > 0) (m4 / w) / v.pow(2.0) - 3.0 else 0.0
         }
 

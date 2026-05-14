@@ -21,7 +21,6 @@ class PitHistogramTest {
             h.update(pit)
         }
         val res = h.read(0L)
-        // numBins finite buckets, no under/overflow with values in (0,1).
         assertEquals(numBins, res.weights.size)
         for (w in res.weights) {
             assertEquals(perBin.toDouble(), w, DELTA)
@@ -31,8 +30,8 @@ class PitHistogramTest {
     @Test
     fun `concentrated PIT input concentrates mass`() {
         val h = pitHistogram(4)
-        repeat(100) { h.update(0.05) } // bin 0
-        repeat(10) { h.update(0.95) } // bin 3
+        repeat(100) { h.update(0.05) }
+        repeat(10) { h.update(0.95) }
         val res = h.read(0L)
         var zeroBin = -1.0
         for (i in res.lowerBounds.indices) {
@@ -47,8 +46,8 @@ class PitHistogramTest {
     @Test
     fun `out of range pit values flow to underflow or overflow`() {
         val h = pitHistogram(4)
-        h.update(-0.1) // underflow
-        h.update(1.5) // overflow
+        h.update(-0.1)
+        h.update(1.5)
         val res = h.read(0L)
         var underWeight = -1.0
         var overWeight = -1.0

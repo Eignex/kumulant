@@ -45,11 +45,11 @@ class SpaceSavingTest {
         val ss = SpaceSavingStat(capacity = 3)
         ss.update(1L)
         ss.update(1L)
-        ss.update(1L) // 1: count=3
+        ss.update(1L)
         ss.update(2L)
-        ss.update(2L) // 2: count=2
-        ss.update(3L) // 3: count=1
-        // 4 arrives, evicts 3 (the min, count=1): 4 -> count=1+1=2, error=1
+        ss.update(2L)
+        ss.update(3L)
+        // 4 evicts 3 (min count 1): 4 inherits count=2, error=1
         ss.update(4L)
         val r = ss.read()
         val kv = r.keys.zip(r.counts.toList()).toMap()
@@ -75,7 +75,6 @@ class SpaceSavingTest {
         val r = ss.read()
         val keys = r.keys.toSet()
         for (k in hot) assertTrue(k in keys, "hot key $k missing")
-        // Reported counts never undershoot true counts.
         for (i in r.keys.indices) {
             val k = r.keys[i]
             val trueCount = if (k in hot) 1000L else 1L
@@ -107,9 +106,9 @@ class SpaceSavingTest {
         // Mirrors CountMinSketchStat: weights are rounded so a stream of fractional
         // weights accumulates into the count instead of being silently dropped.
         val ss = SpaceSavingStat(capacity = 5)
-        ss.update(7L, weight = 1.7) // rounds to 2
-        ss.update(7L, weight = 0.6) // rounds to 1
-        ss.update(8L, weight = 0.4) // rounds to 0 — dropped, but totalSeen still advances
+        ss.update(7L, weight = 1.7)
+        ss.update(7L, weight = 0.6)
+        ss.update(8L, weight = 0.4) // rounds to 0; dropped but totalSeen still advances
         val r = ss.read()
         val kv = r.keys.zip(r.counts.toList()).toMap()
         assertEquals(3L, kv[7L])

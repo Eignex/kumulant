@@ -27,11 +27,11 @@ class PitTestsTest {
     fun `concentrated pit gives high chi squared and ks`() {
         val numBins = 4
         val h = pitHistogram(numBins)
-        repeat(100) { h.update(0.05) } // bin 0
+        repeat(100) { h.update(0.05) }
         val res = h.read(0L)
-        // Expected per bin = 25; observed = (100, 0, 0, 0). Chi^2 = 75^2/25 + 3*25^2/25 = 225+75 = 300.
+        // Expected per bin = 25; observed = (100, 0, 0, 0). Chi^2 = 75^2/25 + 3*25^2/25 = 300.
         assertEquals(300.0, res.pitChiSquared(numBins), DELTA)
-        // KS at upper-bound 0.25: empCdf=1, uniform=0.25 → gap=0.75.
+        // KS at upper-bound 0.25: empCdf=1, uniform=0.25, gap=0.75.
         assertEquals(0.75, res.pitKsDistance(numBins), DELTA)
     }
 
@@ -44,15 +44,14 @@ class PitTestsTest {
 
     @Test
     fun `under and overflow rows are excluded`() {
-        // Synthesize a histogram with one finite bin plus underflow/overflow rows.
+        // Histogram with one finite bin plus underflow/overflow rows; the under/over
+        // counts must not influence the PIT statistics.
         val res = SparseHistogramResult(
             lowerBounds = doubleArrayOf(Double.NEGATIVE_INFINITY, 0.0, 1.0),
             upperBounds = doubleArrayOf(0.0, 1.0, Double.POSITIVE_INFINITY),
             weights = doubleArrayOf(99.0, 10.0, 99.0),
         )
-        // numBins = 1 → expected per bin = 10, no deviation, chi^2 = 0.
         assertEquals(0.0, res.pitChiSquared(numBins = 1), DELTA)
-        // KS at upper-bound 1.0: empCdf = 10/10 = 1, uniform = 1 → gap = 0.
         assertEquals(0.0, res.pitKsDistance(numBins = 1), DELTA)
     }
 }

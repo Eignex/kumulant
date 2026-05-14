@@ -12,7 +12,6 @@ class AucTest {
     @Test
     fun `perfect classifier scores 1`() {
         val auc = AucStat(numBins = 256).apply {
-            // Negatives at 0.1, positives at 0.9 — fully separated.
             repeat(50) { update(x = 0.1, y = 0.0) }
             repeat(50) { update(x = 0.9, y = 1.0) }
         }
@@ -31,7 +30,6 @@ class AucTest {
     @Test
     fun `random equal-distribution classifier scores about 0_5`() {
         val auc = AucStat(numBins = 64).apply {
-            // Same score distribution for both classes → AUC = 0.5.
             for (i in 0..99) {
                 val score = i / 100.0
                 update(x = score, y = 0.0)
@@ -63,10 +61,10 @@ class AucTest {
     @Test
     fun `out of range scores clamp to edge bins`() {
         val auc = AucStat(numBins = 4, lowerBound = 0.0, upperBound = 1.0).apply {
-            update(x = -0.5, y = 0.0) // clamps to bin 0
-            update(x = 1.5, y = 1.0) // clamps to bin 3
+            update(x = -0.5, y = 0.0)
+            update(x = 1.5, y = 1.0)
         }
-        // Equivalent to perfectly-separated streams in bin 0 (negatives) vs bin 3 (positives).
+        // After clamp the streams are perfectly separated (bin 0 vs bin 3).
         assertEquals(1.0, auc.read(0L).auc, DELTA)
     }
 

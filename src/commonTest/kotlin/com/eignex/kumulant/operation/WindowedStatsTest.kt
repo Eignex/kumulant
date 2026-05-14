@@ -157,7 +157,7 @@ class WindowedStatsTest {
     fun `discrete windowed only counts in-window keys`() {
         val w = com.eignex.kumulant.stat.cardinality.LinearCountingStat(bits = 4096)
             .windowed(duration = 10.seconds)
-        w.update(1L, T0) // expires before T11
+        w.update(1L, T0)
         w.update(2L, T3)
         w.update(3L, T9)
         w.update(4L, T10)

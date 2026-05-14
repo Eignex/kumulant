@@ -14,7 +14,7 @@ class WeightsTest {
     @Test
     fun `series withWeight overrides caller weight`() {
         val stat = SumStat().withWeight(2.0)
-        stat.update(3.0, weight = 100.0) // caller weight ignored
+        stat.update(3.0, weight = 100.0)
         assertEquals(6.0, stat.read().sum, DELTA)
     }
 
@@ -51,7 +51,7 @@ class WeightsTest {
     @Test
     fun `discrete withWeight overrides caller weight`() {
         val stat = HyperLogLogStat(precision = 10).withWeight(1.0)
-        for (i in 1L..50L) stat.update(i, weight = 0.0) // caller weight ignored
+        for (i in 1L..50L) stat.update(i, weight = 0.0)
         assertTrue(stat.read().estimate > 30.0)
     }
 }

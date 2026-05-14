@@ -6,10 +6,6 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 
-// Event-weight-decayed family (Alpha weighting).
-// Bias-corrected exponential moving average/variance driven by cumulative observation
-// weight rather than wall-clock time. See [DecayWeighting.Alpha].
-
 /**
  * Exponentially weighted moving average driven by cumulative observation weight.
  *

@@ -95,11 +95,10 @@ class StatSchemaDefSerializationTest {
         val decoded = SchemaJson.decodeFromString<StatSchemaDef>(encoded)
         val reEncoded = SchemaJson.encodeToString(decoded)
 
-        // Round-trip is byte-identical: same field order (LinkedHashMap declaration order),
-        // same defaults suppression, same discriminator placement.
+        // Byte-identical round-trip: declaration order, defaults suppression, discriminator
+        // placement must all be preserved.
         assertEquals(encoded, reEncoded)
 
-        // Spot-check a few entries are present with the right discriminators.
         assertEquals(true, encoded.contains("\"requests\":{\"\$type\":\"Sum\"}"))
         assertEquals(true, encoded.contains("\"\$type\":\"WithWeightSeries\""))
         assertEquals(true, encoded.contains("\"\$type\":\"WithValueSeries\""))

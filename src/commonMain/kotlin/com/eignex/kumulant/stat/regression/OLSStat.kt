@@ -58,12 +58,12 @@ class OLSStat(
 
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
-    private val w = mode.newDouble(0.0) // total weights
-    private val mx = mode.newDouble(0.0) // mean of x
-    private val my = mode.newDouble(0.0) // mean of y
-    private val sxx = mode.newDouble(0.0) // sum of squared deviations in x
-    private val syy = mode.newDouble(0.0) // sum of squared deviations in y
-    private val sxy = mode.newDouble(0.0) // sum of cross-deviations (cov * w)
+    private val w = mode.newDouble(0.0)
+    private val mx = mode.newDouble(0.0)
+    private val my = mode.newDouble(0.0)
+    private val sxx = mode.newDouble(0.0)
+    private val syy = mode.newDouble(0.0)
+    private val sxy = mode.newDouble(0.0)
 
     val totalWeights: Double by w
     val meanX: Double by mx

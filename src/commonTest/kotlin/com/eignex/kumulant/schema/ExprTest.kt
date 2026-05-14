@@ -10,8 +10,6 @@ private const val DELTA = 1e-12
 
 class ExprTest {
 
-    // ===== ScalarExpr eval =====
-
     @Test fun `x returns input`() {
         assertEquals(3.0, X.eval(3.0), DELTA)
     }
@@ -62,8 +60,6 @@ class ExprTest {
         assertEquals(10.0, clip.eval(20.0), DELTA)
     }
 
-    // ===== BoolExpr eval =====
-
     @Test fun `gt lt ge le eq`() {
         assertEquals(true, Gt(X, Const(0.0)).eval(1.0))
         assertEquals(false, Gt(X, Const(0.0)).eval(0.0))
@@ -91,8 +87,6 @@ class ExprTest {
         assertEquals(false, r.eval(10.001))
     }
 
-    // ===== Round-trip via SchemaJson =====
-
     @Test fun `scalar expr round trips`() {
         val expr: ScalarExpr = Add(Mul(Const(2.0), X), Const(1.0))
         val json = SchemaJson.encodeToString(ScalarExpr.serializer(), expr)
@@ -119,16 +113,14 @@ class ExprTest {
         assertEquals(0.0, decoded.eval(2.0), DELTA)
     }
 
-    // ===== Transform / Filter configs =====
-
     @Test fun `transform series applies expr per update`() {
         val cfg: SeriesStatSpec<SumResult> =
-            Sum.transform(Add(Mul(Const(2.0), X), Const(1.0))) // 2x + 1
+            Sum.transform(Add(Mul(Const(2.0), X), Const(1.0)))
         val live = cfg.materialize(Concurrency.None)
         live.update(1.0)
         live.update(2.0)
         live.update(3.0)
-        // (2*1+1) + (2*2+1) + (2*3+1) = 3 + 5 + 7 = 15
+        // (2*1+1) + (2*2+1) + (2*3+1) = 15
         assertEquals(15.0, live.read().sum, DELTA)
     }
 
@@ -144,13 +136,13 @@ class ExprTest {
 
     @Test fun `transform chained with other ops`() {
         val cfg: SeriesStatSpec<SumResult> =
-            Sum.transform(MinExpr(Const(10.0), MaxExpr(Const(0.0), X))) // clip 0..10
+            Sum.transform(MinExpr(Const(10.0), MaxExpr(Const(0.0), X)))
                 .withWeight(2.0)
         val live = cfg.materialize(Concurrency.None)
         live.update(-5.0)
         live.update(5.0)
         live.update(20.0)
-        // clipped: 0, 5, 10 → weights 2 each → sum = 0+10+20 = 30
+        // clipped 0,5,10 with weight 2 each: sum = 30
         assertEquals(30.0, live.read().sum, DELTA)
     }
 
@@ -171,12 +163,10 @@ class ExprTest {
         val cfg: DiscreteStatSpec<*> = HyperLogLog(precision = 10).filter(Ge(X, Const(0.0)))
         val live = cfg.materialize(Concurrency.None)
         for (i in -50L..50L) live.update(i)
-        // Only non-negative survive — 51 distinct values; HLL estimate should reflect that scale.
+        // 51 non-negative values survive; HLL estimate should reflect that scale.
         val r = live.read() as com.eignex.kumulant.stat.cardinality.HyperLogLogResult
         kotlin.test.assertTrue(r.estimate in 30.0..70.0, "estimate=${r.estimate}")
     }
-
-    // ===== DSL operator overloads =====
 
     @Test fun `arithmetic operators build expected ast`() {
         val a: ScalarExpr = 2.0 * X + 1.0
@@ -203,12 +193,10 @@ class ExprTest {
         assertEquals(7.0, decoded.eval(3.0), DELTA)
     }
 
-    // ===== Paired transforms =====
-
     @Test fun `transformPair swaps x and y`() {
         val cfg: PairedStatSpec<*> = OLS.transformPair(xExpr = Y, yExpr = X)
         val live = cfg.materialize(Concurrency.None)
-        // After swap, slope between (originally x=1,y=2),(2,4),(3,6) becomes y/x → 0.5
+        // After swap of (1,2),(2,4),(3,6): slope x/y = 0.5
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
@@ -219,7 +207,7 @@ class ExprTest {
     @Test fun `transformX only remaps x`() {
         val cfg: PairedStatSpec<*> = OLS.transformX(2.0 * X)
         val live = cfg.materialize(Concurrency.None)
-        // Original: y = 2x; after x' = 2x: pairs (2,2),(4,4),(6,6) → slope 1.
+        // y=2x with x'=2x gives pairs (2,2),(4,4),(6,6) → slope 1
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
@@ -230,16 +218,14 @@ class ExprTest {
     @Test fun `filter paired drops by predicate over x and y`() {
         val cfg: PairedStatSpec<*> = OLS.filter((X gt 0.0) and (Y gt 0.0))
         val live = cfg.materialize(Concurrency.None)
-        live.update(-1.0, 5.0) // dropped (x <= 0)
-        live.update(1.0, -5.0) // dropped (y <= 0)
+        live.update(-1.0, 5.0)
+        live.update(1.0, -5.0)
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
         val r = live.read() as com.eignex.kumulant.stat.regression.OLSResult
         assertEquals(2.0, r.slope, DELTA)
     }
-
-    // ===== Vector transforms =====
 
     @Test fun `transformElement applies expr per index`() {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 3)
@@ -249,19 +235,18 @@ class ExprTest {
         live.update(doubleArrayOf(4.0, 5.0, 6.0))
         @Suppress("UNCHECKED_CAST")
         val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
-        // After transform: (3, 5, 7) and (9, 11, 13). Sum per dim: 12, 16, 20.
         assertEquals(12.0, rl.results[0].sum, DELTA)
         assertEquals(16.0, rl.results[1].sum, DELTA)
         assertEquals(20.0, rl.results[2].sum, DELTA)
     }
 
     @Test fun `transformElement can reference other indices`() {
-        // L1-ish normalization: each element divided by index 0.
+        // Each element divided by index 0.
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2)
             .transformElement(X / V(0))
         val live = cfg.materialize(Concurrency.None)
-        live.update(doubleArrayOf(2.0, 4.0)) // -> 1.0, 2.0
-        live.update(doubleArrayOf(5.0, 10.0)) // -> 1.0, 2.0
+        live.update(doubleArrayOf(2.0, 4.0))
+        live.update(doubleArrayOf(5.0, 10.0))
         @Suppress("UNCHECKED_CAST")
         val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
         assertEquals(2.0, rl.results[0].sum, DELTA)
@@ -272,7 +257,7 @@ class ExprTest {
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2)
             .filter(V(0) gt 0.0)
         val live = cfg.materialize(Concurrency.None)
-        live.update(doubleArrayOf(-1.0, 100.0)) // dropped
+        live.update(doubleArrayOf(-1.0, 100.0))
         live.update(doubleArrayOf(1.0, 10.0))
         live.update(doubleArrayOf(2.0, 20.0))
         @Suppress("UNCHECKED_CAST")
@@ -281,8 +266,6 @@ class ExprTest {
         assertEquals(30.0, rl.results[1].sum, DELTA)
     }
 
-    // ===== VFold / VDot reduction nodes =====
-
     @Test fun `vfold sum product mean min max norm2`() {
         val v = doubleArrayOf(3.0, -4.0, 0.0)
         assertEquals(-1.0, VFold(VFoldOp.Sum).eval(0.0, 0.0, v), DELTA)
@@ -290,7 +273,7 @@ class ExprTest {
         assertEquals(-1.0 / 3.0, VFold(VFoldOp.Mean).eval(0.0, 0.0, v), DELTA)
         assertEquals(-4.0, VFold(VFoldOp.Min).eval(0.0, 0.0, v), DELTA)
         assertEquals(3.0, VFold(VFoldOp.Max).eval(0.0, 0.0, v), DELTA)
-        assertEquals(5.0, VFold(VFoldOp.Norm2).eval(0.0, 0.0, v), DELTA) // sqrt(9 + 16)
+        assertEquals(5.0, VFold(VFoldOp.Norm2).eval(0.0, 0.0, v), DELTA)
     }
 
     @Test fun `vdot weighted dot product`() {
@@ -305,14 +288,12 @@ class ExprTest {
         }
     }
 
-    // ===== FoldPaired / FoldVector configs =====
-
     @Test fun `foldPaired lifts series to paired with xy expression`() {
         val cfg: PairedStatSpec<*> = Sum.foldPaired(X * Y)
         val live = cfg.materialize(Concurrency.None)
-        live.update(1.0, 2.0) // 2
-        live.update(3.0, 4.0) // 12
-        live.update(5.0, 6.0) // 30
+        live.update(1.0, 2.0)
+        live.update(3.0, 4.0)
+        live.update(5.0, 6.0)
         val r = live.read() as SumResult
         assertEquals(44.0, r.sum, DELTA)
     }
@@ -320,8 +301,8 @@ class ExprTest {
     @Test fun `foldVector with vfold sum`() {
         val cfg: VectorStatSpec<*> = Sum.foldVector(VFold(VFoldOp.Sum))
         val live = cfg.materialize(Concurrency.None)
-        live.update(doubleArrayOf(1.0, 2.0, 3.0)) // sum = 6
-        live.update(doubleArrayOf(4.0, 5.0, 6.0)) // sum = 15
+        live.update(doubleArrayOf(1.0, 2.0, 3.0))
+        live.update(doubleArrayOf(4.0, 5.0, 6.0))
         val r = live.read() as SumResult
         assertEquals(21.0, r.sum, DELTA)
     }
@@ -329,8 +310,8 @@ class ExprTest {
     @Test fun `foldVector with vdot weighted`() {
         val cfg: VectorStatSpec<*> = Sum.foldVector(VDot(listOf(1.0, 2.0, 3.0)))
         val live = cfg.materialize(Concurrency.None)
-        live.update(doubleArrayOf(1.0, 1.0, 1.0)) // 1+2+3 = 6
-        live.update(doubleArrayOf(2.0, 0.0, 1.0)) // 2+0+3 = 5
+        live.update(doubleArrayOf(1.0, 1.0, 1.0))
+        live.update(doubleArrayOf(2.0, 0.0, 1.0))
         val r = live.read() as SumResult
         assertEquals(11.0, r.sum, DELTA)
     }
@@ -338,8 +319,8 @@ class ExprTest {
     @Test fun `foldVector norm2 drives inner mean`() {
         val cfg: VectorStatSpec<*> = Mean.foldVector(VFold(VFoldOp.Norm2))
         val live = cfg.materialize(Concurrency.None)
-        live.update(doubleArrayOf(3.0, 4.0)) // norm = 5
-        live.update(doubleArrayOf(0.0, 0.0)) // norm = 0
+        live.update(doubleArrayOf(3.0, 4.0))
+        live.update(doubleArrayOf(0.0, 0.0))
         val r = live.read() as com.eignex.kumulant.stat.summary.WeightedMeanResult
         assertEquals(2.5, r.mean, DELTA)
     }
@@ -361,10 +342,8 @@ class ExprTest {
         assertEquals(c, dc)
     }
 
-    // ===== VectorExpr — vector→vector transforms =====
-
     @Test fun `vElements evaluates each in order`() {
-        val expr = VElements(listOf(V(2), V(0), V(1))) // permute
+        val expr = VElements(listOf(V(2), V(0), V(1)))
         val out = expr.eval(0.0, 0.0, doubleArrayOf(10.0, 20.0, 30.0))
         kotlin.test.assertEquals(listOf(30.0, 10.0, 20.0), out.toList())
     }
@@ -376,12 +355,12 @@ class ExprTest {
     }
 
     @Test fun `transformVector changes dimensionality via VElements`() {
-        // Input dim 4 → pooled output dim 2. Inner is sized for the output.
+        // Input dim 4 pooled to output dim 2; inner is sized for the output.
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2)
             .transformVector(VElements(listOf((V(0) + V(1)) / 2.0, (V(2) + V(3)) / 2.0)))
         val live = cfg.materialize(Concurrency.None)
-        live.update(doubleArrayOf(2.0, 4.0, 10.0, 30.0)) // → (3, 20)
-        live.update(doubleArrayOf(0.0, 0.0, 4.0, 6.0)) // → (0, 5)
+        live.update(doubleArrayOf(2.0, 4.0, 10.0, 30.0))
+        live.update(doubleArrayOf(0.0, 0.0, 4.0, 6.0))
         @Suppress("UNCHECKED_CAST")
         val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
         assertEquals(3.0, rl.results[0].sum, DELTA)
@@ -396,9 +375,9 @@ class ExprTest {
         live.update(doubleArrayOf(2.0, 20.0, 200.0))
         @Suppress("UNCHECKED_CAST")
         val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
-        assertEquals(300.0, rl.results[0].sum, DELTA) // was V(2)
-        assertEquals(3.0, rl.results[1].sum, DELTA) // was V(0)
-        assertEquals(30.0, rl.results[2].sum, DELTA) // was V(1)
+        assertEquals(300.0, rl.results[0].sum, DELTA)
+        assertEquals(3.0, rl.results[1].sum, DELTA)
+        assertEquals(30.0, rl.results[2].sum, DELTA)
     }
 
     @Test fun `transformVector round trips via wire`() {
@@ -407,7 +386,7 @@ class ExprTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as TransformVector
         val materialized = decoded.materialize(Concurrency.None)
-        materialized.update(doubleArrayOf(3.0, 1.0)) // → (4, 2)
+        materialized.update(doubleArrayOf(3.0, 1.0))
         @Suppress("UNCHECKED_CAST")
         val rl = materialized.read() as com.eignex.kumulant.core.ResultList<SumResult>
         assertEquals(4.0, rl.results[0].sum, DELTA)
