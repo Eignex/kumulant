@@ -1,11 +1,12 @@
 ## What changed
 
-<!-- Short prose: what was wrong / what this does. -->
+<!-- Bullet list of changes. Simple sentences, no special formatting. -->
+-
 
 ## Why
 
-<!-- Motivation, linked issue, or context that won't be obvious from the diff. -->
+<!-- Simple sentences. No headers, bullets, or code blocks unless load-bearing. -->
 
 ## Testing
 
-<!-- How you verified it. -->
+<!-- Simple sentences. How you verified it. -->
