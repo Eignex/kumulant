@@ -19,11 +19,11 @@ class VectorizedStat<R : Result>(
     private val concurrencyOverride: Concurrency? = null,
 ) : VectorStat<ResultList<R>> {
 
-    override val concurrency: Concurrency get() = concurrencyOverride ?: Concurrency.None
-
     private val template: SeriesStat<R> = template.create(concurrencyOverride)
     private val stats: Array<SeriesStat<R>> =
         Array(dimensions) { this.template.create(concurrencyOverride) }
+
+    override val concurrency: Concurrency get() = template.concurrency
 
     override fun update(
         vector: DoubleArray,

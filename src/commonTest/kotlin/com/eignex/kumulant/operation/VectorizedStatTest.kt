@@ -1,5 +1,6 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
@@ -50,6 +51,25 @@ class VectorizedStatTest {
         val r = stat.read()
         assertEquals(0.0, r.results[0].sum, DELTA)
         assertEquals(0.0, r.results[1].sum, DELTA)
+    }
+
+    @Test
+    fun `concurrency reflects template when no override is given`() {
+        // Without an explicit override the wrapper must report the template's mode,
+        // not Concurrency.None — children are built from the template and inherit
+        // its mode, so the trait would otherwise lie.
+        val stat = VectorizedStat(2, SumStat(concurrency = Concurrency.Relaxed))
+        assertEquals(Concurrency.Relaxed, stat.concurrency)
+    }
+
+    @Test
+    fun `concurrency override wins over template`() {
+        val stat = VectorizedStat(
+            2,
+            SumStat(concurrency = Concurrency.Relaxed),
+            concurrencyOverride = Concurrency.Strict,
+        )
+        assertEquals(Concurrency.Strict, stat.concurrency)
     }
 
     @Test
