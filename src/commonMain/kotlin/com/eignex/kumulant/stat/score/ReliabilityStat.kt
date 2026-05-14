@@ -98,7 +98,7 @@ class ReliabilityStat(
         if (weight == 0.0) return
         val clamped = x.coerceIn(0.0, 1.0)
         val bin = (clamped * numBins).toInt().coerceIn(0, numBins - 1)
-        sumP[bin].add(x * weight)
+        sumP[bin].add(clamped * weight)
         sumO[bin].add(y * weight)
         sumW[bin].add(weight)
     }
