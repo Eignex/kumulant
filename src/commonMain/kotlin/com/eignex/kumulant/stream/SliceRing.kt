@@ -71,7 +71,16 @@ internal class SliceRing<R : Result, S : Stat<R>>(
 
     /** Merge [values] into the slot at "now", rotating the bucket first if needed. */
     fun mergeNow(values: R) {
-        val expectedStart = expectedSliceStart(currentTimeNanos())
+        mergeAt(currentTimeNanos(), values)
+    }
+
+    /**
+     * Merge [values] into the slot that owns [timestampNanos], rotating the bucket
+     * first if needed. Exposed for deterministic time-driven tests; `mergeNow` is
+     * the production entry point.
+     */
+    fun mergeAt(timestampNanos: Long, values: R) {
+        val expectedStart = expectedSliceStart(timestampNanos)
         val bucketRef = buckets[bucketIndex(expectedStart)]
         var currentSlot = bucketRef.load()
         if (currentSlot.startNanos < expectedStart) {
