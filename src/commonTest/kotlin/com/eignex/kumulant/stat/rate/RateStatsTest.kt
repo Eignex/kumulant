@@ -231,6 +231,20 @@ class DecayingRateTest {
     }
 
     @Test
+    fun `merge preserves negative rates`() {
+        // DecayingSumStat (the underlying primitive) accepts negative values; the rate
+        // projection must round-trip them through merge instead of clamping to zero.
+        val source = DecayingRateStat(halfLife = 1.seconds)
+        source.update(-1.0, T0)
+        val negative = source.read(T0)
+        assertTrue(negative.rate < 0.0)
+
+        val target = DecayingRateStat(halfLife = 1.seconds)
+        target.merge(negative)
+        assertEquals(negative.rate, target.read(T0).rate, DELTA)
+    }
+
+    @Test
     fun `create produces fresh independent stat`() {
         val r1 = DecayingRateStat(halfLife = 1.seconds)
         r1.update(10.0, T0)

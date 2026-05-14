@@ -44,8 +44,7 @@ private fun decayingRateDelegate(
             DecayingRateResult(sum.sum * scale, sum.timestampNanos)
         },
         reverse = { rate ->
-            val sum = if (rate.rate <= 0.0) 0.0 else rate.rate / scale
-            DecayingSumResult(sum, rate.timestampNanos)
+            DecayingSumResult(rate.rate / scale, rate.timestampNanos)
         }
     )
 }
