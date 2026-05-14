@@ -82,12 +82,23 @@ internal class SliceRing<R : Result, S : Stat<R>>(
     fun mergeAt(timestampNanos: Long, values: R) {
         val expectedStart = expectedSliceStart(timestampNanos)
         val bucketRef = buckets[bucketIndex(expectedStart)]
-        var currentSlot = bucketRef.load()
-        if (currentSlot.startNanos < expectedStart) {
+        while (true) {
+            val currentSlot = bucketRef.load()
+            if (currentSlot.startNanos == expectedStart) {
+                currentSlot.stat.merge(values)
+                return
+            }
+            if (currentSlot.startNanos > expectedStart) {
+                // Bucket already advanced past us — the slot we'd want has been recycled.
+                return
+            }
             val newSlot = Slot<R, S>(expectedStart, factory(concurrency))
-            currentSlot = if (bucketRef.compareAndSet(currentSlot, newSlot)) newSlot else bucketRef.load()
+            if (bucketRef.compareAndSet(currentSlot, newSlot)) {
+                newSlot.stat.merge(values)
+                return
+            }
+            // Lost CAS — retry; another thread may have installed the same or a newer slot.
         }
-        currentSlot.stat.merge(values)
     }
 
     /** Invoke [action] on each slot stat whose start lies in `[timestampNanos - window, timestampNanos]`. */
