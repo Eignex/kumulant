@@ -52,6 +52,11 @@ class ReliabilityTest {
         // Bin 0 picks up the negative; bin 1 picks up the > 1.
         assertEquals(1.0, res.totalWeights[0], DELTA)
         assertEquals(1.0, res.totalWeights[1], DELTA)
+        // Clamping must apply to the accumulated probability too, otherwise meanProbability
+        // can drift outside [0, 1] and corrupt ECE.
+        assertEquals(0.0, res.meanProbability[0], DELTA)
+        assertEquals(1.0, res.meanProbability[1], DELTA)
+        assertTrue(res.expectedCalibrationError() in 0.0..1.0)
     }
 
     @Test
