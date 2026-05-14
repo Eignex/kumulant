@@ -39,6 +39,13 @@ fun ReservoirResult.quantile(probability: Double): Double {
     return sorted[lo] + frac * (sorted[hi] - sorted[lo])
 }
 
+private fun nextUp(d: Double): Double {
+    if (d.isNaN() || d == Double.POSITIVE_INFINITY) return d
+    if (d == 0.0) return Double.MIN_VALUE
+    val bits = d.toRawBits()
+    return Double.fromBits(if (d > 0.0) bits + 1 else bits - 1)
+}
+
 /** Bucket the retained sample into [binCount] equal-width bins between min and max. */
 fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
     require(binCount > 0) { "binCount must be > 0" }
@@ -52,9 +59,11 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
         if (v > hi) hi = v
     }
     if (lo == hi) {
+        // Preserve the [lower, upper) contract by widening the single-point bucket
+        // by one ULP. Empty intervals would be unbucketed by consumers.
         return SparseHistogramResult(
             doubleArrayOf(lo),
-            doubleArrayOf(lo),
+            doubleArrayOf(nextUp(lo)),
             doubleArrayOf(values.size.toDouble())
         )
     }

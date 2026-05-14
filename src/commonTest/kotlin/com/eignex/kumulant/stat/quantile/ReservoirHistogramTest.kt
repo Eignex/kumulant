@@ -117,7 +117,9 @@ class ReservoirHistogramTest {
         val h = res.read().toSparseHistogram(binCount = 4)
         assertEquals(1, h.lowerBounds.size)
         assertEquals(7.0, h.lowerBounds[0])
-        assertEquals(7.0, h.upperBounds[0])
+        // upper must be strictly greater than lower so the half-open [lower, upper)
+        // interval actually contains the sampled value.
+        assertTrue(h.upperBounds[0] > h.lowerBounds[0])
         assertEquals(5.0, h.weights[0])
     }
 
