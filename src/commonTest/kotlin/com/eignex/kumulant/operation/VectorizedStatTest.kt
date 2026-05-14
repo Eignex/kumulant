@@ -63,13 +63,10 @@ class VectorizedStatTest {
     }
 
     @Test
-    fun `concurrency override wins over template`() {
-        val stat = VectorizedStat(
-            2,
-            SumStat(concurrency = Concurrency.Relaxed),
-            concurrencyOverride = Concurrency.Strict,
-        )
-        assertEquals(Concurrency.Strict, stat.concurrency)
+    fun `create propagates a new concurrency mode through the template`() {
+        val original = VectorizedStat(2, SumStat(concurrency = Concurrency.Relaxed))
+        val derived = original.create(Concurrency.Strict)
+        assertEquals(Concurrency.Strict, derived.concurrency)
     }
 
     @Test
