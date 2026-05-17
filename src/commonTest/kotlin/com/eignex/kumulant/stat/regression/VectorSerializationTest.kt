@@ -1,0 +1,96 @@
+package com.eignex.kumulant.stat.regression
+
+import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.math.SparseVector
+import com.eignex.kumulant.math.VectorView
+import com.eignex.kumulant.schema.ScalarExpr
+import kotlinx.serialization.json.Json
+import kotlin.math.abs
+import kotlin.random.Random
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+/**
+ * End-to-end checks for the new sealed VectorView abstraction: sparse inputs flow
+ * through regression-stat updates without materialisation, and snapshots round-trip
+ * through kotlinx.serialization preserving the concrete dense/sparse subtype.
+ */
+class VectorSerializationTest {
+
+    private val json = Json { encodeDefaults = false }
+
+    @Test
+    fun `sparse and dense inputs converge to the same fit`() {
+        val truth = doubleArrayOf(1.5, 0.0, 0.0, -2.0, 0.0)
+        val dense = DiagonalRegression(featureSize = 5, priorPrecision = 0.01)
+        val sparse = DiagonalRegression(featureSize = 5, priorPrecision = 0.01)
+        val rng = Random(13)
+        // Each observation activates a handful of features → naturally sparse.
+        repeat(3000) {
+            val active = listOf(0, 3, rng.nextInt(5))
+            val xArr = DoubleArray(5).also { for (i in active.distinct()) it[i] = rng.nextDouble() * 2 - 1 }
+            var y = 0.0
+            for (i in 0 until 5) y += truth[i] * xArr[i]
+            y += rng.nextDouble() * 0.02 - 0.01
+            dense.update(DenseVector.of(xArr), y, 1.0)
+            val nz = (0 until 5).filter { xArr[it] != 0.0 }
+            val xs = SparseVector.of(5, nz.toIntArray(), nz.map { xArr[it] }.toDoubleArray())
+            sparse.update(xs, y, 1.0)
+        }
+        val rd = dense.read()
+        val rs = sparse.read()
+        for (i in 0 until 5) assertTrue(abs(rd.weights[i] - rs.weights[i]) < 1e-9,
+            "dense and sparse paths diverge at i=$i: ${rd.weights[i]} vs ${rs.weights[i]}")
+    }
+
+    @Test
+    fun `DenseVector round-trips through JSON`() {
+        val v: VectorView = DenseVector.of(doubleArrayOf(1.0, -2.5, 3.14, 0.0))
+        val wire = json.encodeToString(VectorView.serializer(), v)
+        val decoded = json.decodeFromString(VectorView.serializer(), wire)
+        assertTrue(decoded is DenseVector)
+        assertEquals(v, decoded)
+    }
+
+    @Test
+    fun `SparseVector round-trips through JSON`() {
+        val v: VectorView = SparseVector.of(10, intArrayOf(2, 5, 9), doubleArrayOf(1.0, -2.0, 0.5))
+        val wire = json.encodeToString(VectorView.serializer(), v)
+        val decoded = json.decodeFromString(VectorView.serializer(), wire)
+        assertTrue(decoded is SparseVector)
+        assertEquals(v, decoded)
+    }
+
+    @Test
+    fun `learning rate schedules round-trip through JSON`() {
+        val constant = ConstantRate(0.05)
+        val step = StepDecay(0.01, 1e-3)
+        val expDecay = ExponentialDecay(0.01, 1e-5)
+        for (e in listOf(constant, step, expDecay)) {
+            val wire = json.encodeToString(ScalarExpr.serializer(), e)
+            val decoded = json.decodeFromString(ScalarExpr.serializer(), wire)
+            for (s in longArrayOf(0L, 100L, 10_000L)) {
+                assertEquals(e.eval(s.toDouble()), decoded.eval(s.toDouble()),
+                    "schedule diverged at step=$s: $e")
+            }
+        }
+    }
+
+    @Test
+    fun `CovarianceRegressionResult round-trips through JSON`() {
+        val stat = BayesianLinearRegression(featureSize = 3, priorVariance = 1.0)
+        val truth = doubleArrayOf(0.5, -1.0, 0.7)
+        val rng = Random(99)
+        repeat(500) {
+            val x = DoubleArray(3) { rng.nextDouble() * 2 - 1 }
+            var y = 0.0
+            for (i in 0 until 3) y += truth[i] * x[i]
+            stat.update(x, y, 1.0)
+        }
+        val before = stat.read()
+        val wire = json.encodeToString(CovarianceRegressionResult.serializer(), before)
+        val after = json.decodeFromString(CovarianceRegressionResult.serializer(), wire)
+        assertEquals(before, after)
+    }
+}

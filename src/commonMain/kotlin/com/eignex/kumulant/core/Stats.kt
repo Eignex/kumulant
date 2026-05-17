@@ -84,6 +84,35 @@ interface PairedStat<R : Result> : Stat<R> {
     override fun create(concurrency: Concurrency?): PairedStat<R>
 }
 
+/**
+ * Accumulator over paired vector-covariate / scalar-response observations
+ * `(x, y, weight)`, where `x` is a fixed-dimensional feature vector and `y` is the
+ * scalar target. The multivariate generalisation of [PairedStat].
+ *
+ * Implementations cover everything from a one-pass SGD weight tracker to a full
+ * Bayesian linear regression with covariance — they share the update shape and
+ * differ in what they expose on [read]. Inputs are passed as
+ * [com.eignex.kumulant.math.VectorView] so callers can submit sparse feature
+ * vectors without materialising them into dense arrays first.
+ */
+interface RegressionStat<R : Result> : Stat<R> {
+    /** Number of features in [x]. Updates with a different length will throw. */
+    val featureSize: Int
+
+    /** Record an `(x, y)` observation with the given [weight] at the current time. */
+    fun update(x: com.eignex.kumulant.math.VectorView, y: Double, weight: Double = 1.0) =
+        update(x, y, currentTimeNanos(), weight)
+
+    /** Record an `(x, y)` observation at [timestampNanos] with the given [weight]. */
+    fun update(x: com.eignex.kumulant.math.VectorView, y: Double, timestampNanos: Long, weight: Double = 1.0)
+
+    /** Convenience overload that wraps [x] as a [com.eignex.kumulant.math.DenseVector]. */
+    fun update(x: DoubleArray, y: Double, weight: Double = 1.0) =
+        update(com.eignex.kumulant.math.DenseVector.of(x), y, currentTimeNanos(), weight)
+
+    override fun create(concurrency: Concurrency?): RegressionStat<R>
+}
+
 /** Accumulator over fixed-dimensional vector observations. */
 interface VectorStat<R : Result> : Stat<R> {
     /** Record a [vector] observation with the given [weight] at the current time. */
