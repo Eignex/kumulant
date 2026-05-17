@@ -93,4 +93,23 @@ class VectorSerializationTest {
         val after = json.decodeFromString(CovarianceRegressionResult.serializer(), wire)
         assertEquals(before, after)
     }
+
+    @Test
+    fun `LinearRegressionResult round-trips polymorphically through sealed root`() {
+        // The sealed root carries the polymorphic discriminator so combo's
+        // LinearLearnerData(state: LinearRegressionResult) can wire-encode without
+        // knowing which concrete subtype a particular bandit produced.
+        val sgd = SGDLinearRegression(featureSize = 2).also { it.update(doubleArrayOf(1.0, 2.0), 0.5) }
+        val diag = DiagonalRegression(featureSize = 2, priorPrecision = 0.1)
+            .also { it.update(doubleArrayOf(1.0, 2.0), 0.5) }
+        val bayes = BayesianLinearRegression(featureSize = 2, priorVariance = 0.5)
+            .also { it.update(doubleArrayOf(1.0, 2.0), 0.5) }
+
+        for (snap in listOf<LinearRegressionResult>(sgd.read(), diag.read(), bayes.read())) {
+            val wire = json.encodeToString(LinearRegressionResult.serializer(), snap)
+            val decoded = json.decodeFromString(LinearRegressionResult.serializer(), wire)
+            assertEquals(snap, decoded, "round-trip failed for ${snap::class.simpleName}")
+            assertEquals(snap::class, decoded::class, "subtype changed on round-trip")
+        }
+    }
 }

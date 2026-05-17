@@ -24,6 +24,7 @@ import kotlinx.serialization.Serializable
  * [sse] is being tracked; implementations that don't accumulate it return `0.0`
  * consistent with that trait's contract.
  */
+@Serializable
 sealed interface LinearRegressionResult : Result, HasRegression {
     /** Fitted weight per feature, indexed by the same `i` as the input `x[i]`. */
     val weights: VectorView
