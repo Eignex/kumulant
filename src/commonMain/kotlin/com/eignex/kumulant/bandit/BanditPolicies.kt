@@ -29,13 +29,11 @@ interface BanditPolicy<R : Result> {
     fun update(stat: SeriesStat<R>, value: Double, weight: Double = 1.0) {
         stat.update(arm.encode(value), 0L, weight)
     }
-    fun evaluate(snapshot: R, step: Long, maximize: Boolean, rng: Random): Double
+    fun evaluate(snapshot: R, step: Long, rng: Random): Double
 
     fun addArm(snapshot: R) {}
     fun removeArm(snapshot: R) {}
 }
-
-private fun signedMean(mean: Double, maximize: Boolean) = if (maximize) mean else -mean
 
 /**
  * Thompson sampling: score each arm by a draw from its [posterior] given the snapshot.
@@ -45,8 +43,8 @@ class ThompsonSampling<R : Result>(
     override val arm: Arm<R>,
     val posterior: Posterior<R>,
 ) : BanditPolicy<R> {
-    override fun evaluate(snapshot: R, step: Long, maximize: Boolean, rng: Random) =
-        signedMean(posterior.sample(snapshot, rng), maximize)
+    override fun evaluate(snapshot: R, step: Long, rng: Random) =
+        posterior.sample(snapshot, rng)
 }
 
 // === Canonical pairings: arm + matching posterior ==========================
@@ -100,12 +98,11 @@ class UCB1(
         stat.update(arm.encode(value), 0L, weight)
         totalSamples += weight
     }
-    override fun evaluate(snapshot: BernoulliSumResult, step: Long, maximize: Boolean, rng: Random): Double {
+    override fun evaluate(snapshot: BernoulliSumResult, step: Long, rng: Random): Double {
         val n = snapshot.trials
         if (n < 1.0) return Double.POSITIVE_INFINITY
         val mean = snapshot.successes / n
-        val score = signedMean(mean, maximize)
-        return score + alpha * sqrt(2 * ln(totalSamples) / n)
+        return mean + alpha * sqrt(2 * ln(totalSamples) / n)
     }
     override fun addArm(snapshot: BernoulliSumResult) { totalSamples += snapshot.trials }
     override fun removeArm(snapshot: BernoulliSumResult) { totalSamples -= snapshot.trials }
@@ -119,13 +116,12 @@ class UCB1Normal(
     override val arm = MomentsArm(priorMean, priorWeight)
     private var nbrArms = 0
 
-    override fun evaluate(snapshot: MomentsResult, step: Long, maximize: Boolean, rng: Random): Double {
+    override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
         val nj = snapshot.totalWeights
         if (nbrArms <= 1 || nj < 8 * ln(nbrArms.toDouble())) return Double.POSITIVE_INFINITY
-        val score = signedMean(snapshot.mean, maximize)
         val mos = snapshot.meanOfSquares()
         val p1 = (mos - nj * snapshot.mean * snapshot.mean) / (nj - 1)
-        return score + alpha * sqrt(16 * p1 * (ln(nbrArms - 1.0) / nj))
+        return snapshot.mean + alpha * sqrt(16 * p1 * (ln(nbrArms - 1.0) / nj))
     }
     override fun addArm(snapshot: MomentsResult) { nbrArms++ }
     override fun removeArm(snapshot: MomentsResult) { nbrArms-- }
@@ -143,13 +139,12 @@ class UCB1Tuned(
         stat.update(arm.encode(value), 0L, weight)
         totalSamples += weight
     }
-    override fun evaluate(snapshot: MomentsResult, step: Long, maximize: Boolean, rng: Random): Double {
+    override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
         val nj = snapshot.totalWeights
         if (nj <= 1.0) return Double.POSITIVE_INFINITY
         val padding = ln(totalSamples) / nj
         val v = snapshot.meanOfSquares() - snapshot.mean * snapshot.mean + sqrt(2.0 * padding)
-        val score = signedMean(snapshot.mean, maximize)
-        return score + alpha * sqrt(padding * min(0.25, v))
+        return snapshot.mean + alpha * sqrt(padding * min(0.25, v))
     }
     override fun addArm(snapshot: MomentsResult) { totalSamples += snapshot.totalWeights }
     override fun removeArm(snapshot: MomentsResult) { totalSamples -= snapshot.totalWeights }
@@ -163,8 +158,8 @@ class Greedy(
     priorSquaredDeviations: Double = 0.02,
 ) : BanditPolicy<WeightedVarianceResult> {
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
-    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, maximize: Boolean, rng: Random) =
-        signedMean(snapshot.mean, maximize)
+    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) =
+        snapshot.mean
 }
 
 class EpsilonGreedy(
@@ -176,11 +171,11 @@ class EpsilonGreedy(
     init { require(epsilon in 0.0..1.0) { "epsilon must be in 0..1, got $epsilon" } }
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
 
-    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, maximize: Boolean, rng: Random): Double {
+    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double {
         return if (Random(step).nextDouble() < epsilon) {
             rng.nextDouble()
         } else {
-            signedMean(snapshot.mean, maximize)
+            snapshot.mean
         }
     }
 }
@@ -200,12 +195,12 @@ class EpsilonDecreasing(
         stat.update(arm.encode(value), 0L, weight)
         totalSamples += weight
     }
-    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, maximize: Boolean, rng: Random): Double {
+    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double {
         val eps = min(1.0, epsilon / totalSamples.pow(decay))
         return if (Random(step).nextDouble() < eps) {
             rng.nextDouble()
         } else {
-            signedMean(snapshot.mean, maximize)
+            snapshot.mean
         }
     }
     override fun addArm(snapshot: WeightedVarianceResult) { totalSamples += snapshot.totalWeights }
@@ -218,6 +213,6 @@ class UniformSelection(
     priorSquaredDeviations: Double = 0.02,
 ) : BanditPolicy<WeightedVarianceResult> {
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
-    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, maximize: Boolean, rng: Random) =
+    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) =
         rng.nextDouble()
 }

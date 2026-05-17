@@ -23,7 +23,6 @@ class MultiArmedBandit<R : Result>(
     val nbrArms: Int,
     val policy: BanditPolicy<R>,
     override val random: Random = Random.Default,
-    override val maximize: Boolean = true,
 ) : UnivariateBandit<R> {
 
     init { require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" } }
@@ -38,7 +37,7 @@ class MultiArmedBandit<R : Result>(
         var bestIdx = 0
         var bestScore = Double.NEGATIVE_INFINITY
         for (i in 0 until nbrArms) {
-            val score = policy.evaluate(arms[i].read(0L), t, maximize, random)
+            val score = policy.evaluate(arms[i].read(0L), t, random)
             if (score > bestScore) {
                 bestScore = score
                 bestIdx = i
@@ -48,7 +47,7 @@ class MultiArmedBandit<R : Result>(
     }
 
     override fun evaluate(armIndex: Int): Double =
-        policy.evaluate(arms[armIndex].read(0L), step.load(), maximize, random)
+        policy.evaluate(arms[armIndex].read(0L), step.load(), random)
 
     override fun update(armIndex: Int, value: Double, weight: Double) {
         policy.update(arms[armIndex], value, weight)

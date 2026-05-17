@@ -34,9 +34,9 @@ data class RouletteWheelArmResult(
  * (each arm's new weight depends on its segment-mean), so it's implemented as a direct
  * [UnivariateBandit] rather than a [BanditPolicy] plugged into [MultiArmedBandit].
  *
- * Only supports `maximize = true` — Ropke-Pisinger's weight increase is asymmetric and
- * doesn't have a clean "minimize" dual. Construct with `maximize = false` and the
- * constructor throws.
+ * Only meaningful for reward-maximisation: Ropke-Pisinger's weight increase is
+ * asymmetric and has no clean "minimize" dual. Callers wanting to minimise should
+ * negate the reward before calling [update].
  */
 class RouletteWheelBandit(
     val nbrArms: Int,
@@ -45,7 +45,6 @@ class RouletteWheelBandit(
     val initialWeight: Double = 1.0,
     val minWeight: Double = 0.01,
     override val random: Random = Random.Default,
-    override val maximize: Boolean = true,
 ) : UnivariateBandit<RouletteWheelArmResult> {
 
     init {
@@ -53,7 +52,6 @@ class RouletteWheelBandit(
         require(reactionFactor in 0.0..1.0) { "reactionFactor must be in [0, 1], got $reactionFactor" }
         require(segmentLength > 0) { "segmentLength must be positive, got $segmentLength" }
         require(minWeight > 0.0) { "minWeight must be positive, got $minWeight" }
-        require(maximize) { "RouletteWheelBandit only supports maximize=true" }
     }
 
     private val weights = DoubleArray(nbrArms) { initialWeight }

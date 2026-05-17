@@ -3,7 +3,6 @@ package com.eignex.kumulant.bandit
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
 import kotlin.test.assertTrue
 
 class RouletteWheelBanditTest {
@@ -67,12 +66,9 @@ class RouletteWheelBanditTest {
         val w0 = bandit.evaluate(0)
         assertEquals(1.0, w0)
         // Read does not affect any internal counter.
-        bandit.evaluate(1); bandit.evaluate(2); bandit.evaluate(0)
+        bandit.evaluate(1)
+        bandit.evaluate(2)
+        bandit.evaluate(0)
         assertEquals(1.0, bandit.evaluate(0))
-    }
-
-    @Test
-    fun `rejects maximize=false`() {
-        assertFails { RouletteWheelBandit(nbrArms = 2, maximize = false) }
     }
 }

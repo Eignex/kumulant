@@ -29,7 +29,6 @@ interface UnivariateBandit<R : Result> {
     }
 
     val random: Random
-    val maximize: Boolean
 
     fun snapshot(): List<R>
 }
