@@ -79,7 +79,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Construct a live [SeriesStat] from a [SeriesStatSpec]. One `when` per modality,
- * one cast at the boundary — sealed-hierarchy exhaustiveness keeps the cast safe.
+ * one cast at the boundary - sealed-hierarchy exhaustiveness keeps the cast safe.
  *
  * The wrapper-spec branches narrow [inner] to the expected modality at runtime; on
  * mismatch they raise the same `IllegalArgumentException` the previous per-spec

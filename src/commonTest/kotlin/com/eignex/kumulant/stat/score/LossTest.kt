@@ -55,7 +55,7 @@ class LogLossTest {
         val stat = LogLossStat().apply { update(x = 0.0, y = 1.0, timestampNanos = 0L, weight = 1.0) }
         val mean = stat.read(0L).mean
         assertEquals(true, mean.isFinite())
-        // Clamped to eps=1e-15, so loss ≈ -ln(1e-15) ≈ 34.5
+        // Clamped to eps=1e-15, so loss ~ -ln(1e-15) ~ 34.5
         assertEquals(-ln(1e-15), mean, 1e-9)
     }
 

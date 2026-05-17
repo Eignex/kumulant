@@ -56,7 +56,7 @@ class VectorizedStatTest {
     @Test
     fun `concurrency reflects template when no override is given`() {
         // Without an explicit override the wrapper must report the template's mode,
-        // not Concurrency.None — children are built from the template and inherit
+        // not Concurrency.None - children are built from the template and inherit
         // its mode, so the trait would otherwise lie.
         val stat = VectorizedStat(2, SumStat(concurrency = Concurrency.Relaxed))
         assertEquals(Concurrency.Relaxed, stat.concurrency)

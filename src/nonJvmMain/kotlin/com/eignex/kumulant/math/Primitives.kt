@@ -3,7 +3,7 @@ package com.eignex.kumulant.math
 /**
  * Scalar fallback for the dense primitives. The JVM target overrides these with a
  * SIMD-backed implementation using `jdk.incubator.vector`; non-JVM targets
- * (native, JS, Wasm) use the loops below — competitive with hand-written code
+ * (native, JS, Wasm) use the loops below - competitive with hand-written code
  * once the platform's compiler vectorises the inner loop, but without the
  * guaranteed lane-width win that the Vector API delivers on JVM.
  */

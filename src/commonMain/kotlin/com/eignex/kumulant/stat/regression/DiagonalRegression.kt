@@ -10,24 +10,24 @@ import com.eignex.kumulant.math.forEachStored
 import com.eignex.kumulant.stream.serializedLock
 
 /**
- * Linear regression with a *factorised* Gaussian posterior — each coefficient gets
+ * Linear regression with a *factorised* Gaussian posterior - each coefficient gets
  * its own running precision, but cross-coefficient correlations are dropped.
  *
  * Update rule (Newton-style with diagonal Hessian, MSE loss):
  *  ```
- *  ŷ                = bias + Σ w_i · x_i
- *  residual         = y - ŷ
- *  precision_i     += weight · x_i²
- *  w_i             -= η(step) · weight · (-residual · x_i + l2 · w_i) / precision_i
+ *  yhat                = bias + Sum w_i * x_i
+ *  residual         = y - yhat
+ *  precision_i     += weight * x_i^2
+ *  w_i             -= eta(step) * weight * (-residual * x_i + l2 * w_i) / precision_i
  *  biasPrecision   += weight
- *  bias            += η(step) · weight · residual / biasPrecision
+ *  bias            += eta(step) * weight * residual / biasPrecision
  *  ```
  *
  * Posterior samples are independent per coordinate: `w_i ~ N(weights[i], 1/precision[i])`.
  *
  * Sparse-aware: precision and weight updates only fire where `x_i != 0` (matching the
  * diagonal-Hessian semantics; coordinates absent from this observation contribute no
- * curvature). L2 acts only on touched coordinates — matches how coordinate-descent
+ * curvature). L2 acts only on touched coordinates - matches how coordinate-descent
  * solvers handle regularisation in the sparse setting.
  */
 class DiagonalRegression(

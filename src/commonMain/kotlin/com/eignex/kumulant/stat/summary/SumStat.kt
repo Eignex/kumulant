@@ -15,10 +15,10 @@ data class SumResult(
 ) : Result
 
 /**
- * Weighted sum `Σ value*weight` over the stream.
+ * Weighted sum `Sum value*weight` over the stream.
  *
  * Uses naive accumulation, so very long streams of mixed-magnitude values can
- * accumulate ulp drift on the order of √n. For compensated floating-point
+ * accumulate ulp drift on the order of sqrtn. For compensated floating-point
  * accumulation, prefer [MeanStat] or [VarianceStat] (Welford recurrences) and recover
  * the sum as `mean * totalWeights`.
  */

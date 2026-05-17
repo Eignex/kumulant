@@ -11,7 +11,7 @@ import kotlin.time.Duration
  * owning its own accumulator built from [factory]. Slot rotation is lock-free via CAS
  * against the slot's start timestamp.
  *
- * Companion to [ArrayBins] for the windowed family — both are mode-agnostic
+ * Companion to [ArrayBins] for the windowed family - both are mode-agnostic
  * concurrent containers used to build higher-level stat operators.
  */
 internal class SliceRing<R : Result, S : Stat<R>>(
@@ -89,7 +89,7 @@ internal class SliceRing<R : Result, S : Stat<R>>(
                 return
             }
             if (currentSlot.startNanos > expectedStart) {
-                // Bucket already advanced past us — the slot we'd want has been recycled.
+                // Bucket already advanced past us - the slot we'd want has been recycled.
                 return
             }
             val newSlot = Slot<R, S>(expectedStart, factory(concurrency))
@@ -97,7 +97,7 @@ internal class SliceRing<R : Result, S : Stat<R>>(
                 newSlot.stat.merge(values)
                 return
             }
-            // Lost CAS — retry; another thread may have installed the same or a newer slot.
+            // Lost CAS - retry; another thread may have installed the same or a newer slot.
         }
     }
 

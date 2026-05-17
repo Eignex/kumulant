@@ -14,7 +14,7 @@ import kotlin.math.pow
  *
  * Guarantees [relativeError] on every reported quantile using `O(log(max/min))`
  * bins. Supports negative values via a mirrored bin tree and a zero-bucket.
- * Tightening [relativeError] grows bin count roughly as `1/ε`.
+ * Tightening [relativeError] grows bin count roughly as `1/epsilon`.
  */
 class DDSketchStat(
     val relativeError: Double = 0.01,

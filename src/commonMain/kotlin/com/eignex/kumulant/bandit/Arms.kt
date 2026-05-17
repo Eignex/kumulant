@@ -52,7 +52,7 @@ data class BernoulliArm(
 }
 
 /** Single-moment arm (no variance tracking). Used by Poisson, Geometric, Exponential,
- *  GammaScale, which only need `sum = mean · totalWeights`. */
+ *  GammaScale, which only need `sum = mean * totalWeights`. */
 @Serializable
 @SerialName("MeanArm")
 data class MeanArm(

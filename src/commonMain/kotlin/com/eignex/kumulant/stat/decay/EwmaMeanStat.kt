@@ -9,9 +9,9 @@ import com.eignex.kumulant.stream.welfordMode
 /**
  * Exponentially weighted moving average driven by cumulative observation weight.
  *
- * Uses the biased-mean formulation: `biasedMean ← biasedMean + a·(value − biasedMean)`
- * with `a = 1 − exp(−α·w)`. Read returns the bias-corrected value
- * `biasedMean / (1 − exp(−α·totalWeights))`.
+ * Uses the biased-mean formulation: `biasedMean = biasedMean + a*(value - biasedMean)`
+ * with `a = 1 - exp(-alpha*w)`. Read returns the bias-corrected value
+ * `biasedMean / (1 - exp(-alpha*totalWeights))`.
  */
 class EwmaMeanStat(
     val weighting: DecayWeighting.Alpha,

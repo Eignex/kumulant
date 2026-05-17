@@ -73,7 +73,7 @@ data object ExponentialGammaPosterior : Posterior<WeightedMeanResult> {
 
 /**
  * Normal-Gamma posterior over a normal mean/variance. Draws (variance, mean) jointly:
- * variance ~ Inverse-Gamma(n/2, n·s²/2), mean | variance ~ Normal(snapshot.mean, σ²/n).
+ * variance ~ Inverse-Gamma(n/2, n*s^2/2), mean | variance ~ Normal(snapshot.mean, sigma^2/n).
  *
  * Re-draws on non-finite intermediates rather than returning NaN. The snapshot must be
  * prior-seeded (n > 0); an unseeded snapshot will spin.
@@ -117,7 +117,7 @@ data object LogNormalGammaPosterior : Posterior<WeightedVarianceResult> {
 }
 
 /**
- * Gamma posterior over the *scale* of a Gamma likelihood with fixed shape — the shape
+ * Gamma posterior over the *scale* of a Gamma likelihood with fixed shape - the shape
  * is a posterior parameter rather than something we infer from data. Not an `object`
  * because of that parameter.
  */

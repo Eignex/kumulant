@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * Space-Saving heavy-hitters snapshot. [keys], [counts], [errors] are parallel arrays of
- * length ≤ [capacity]; for each tracked key, [counts] is the (over)estimated weighted
+ * length <= [capacity]; for each tracked key, [counts] is the (over)estimated weighted
  * count and [errors] is the Space-Saving overestimate bound (the count is at most this
  * much above the true count). [totalSeen] is the unweighted update count.
  */

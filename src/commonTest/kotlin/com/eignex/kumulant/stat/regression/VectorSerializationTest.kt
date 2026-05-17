@@ -26,7 +26,7 @@ class VectorSerializationTest {
         val dense = DiagonalRegression(featureSize = 5, priorPrecision = 0.01)
         val sparse = DiagonalRegression(featureSize = 5, priorPrecision = 0.01)
         val rng = Random(13)
-        // Each observation activates a handful of features → naturally sparse.
+        // Each observation activates a handful of features -> naturally sparse.
         repeat(3000) {
             val active = listOf(0, 3, rng.nextInt(5))
             val xArr = DoubleArray(5).also { for (i in active.distinct()) it[i] = rng.nextDouble() * 2 - 1 }

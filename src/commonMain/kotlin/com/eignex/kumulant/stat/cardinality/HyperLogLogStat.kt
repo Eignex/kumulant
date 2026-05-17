@@ -22,103 +22,103 @@ import kotlin.math.pow
 @Serializable
 @SerialName("HyperLogLogResult")
 data class HyperLogLogResult(
-    val estimate: Double,
-    val precision: Int,
-    val registers: IntArray,
-    val totalSeen: Long,
+ val estimate: Double,
+ val precision: Int,
+ val registers: IntArray,
+ val totalSeen: Long,
 ) : Result
 
 /**
  * HyperLogLog cardinality estimator with a small-range linear-counting fallback.
  *
  * Allocates `m = 2^precision` byte-sized registers and uses the standard
- * `α_m · m² / Σ 2^-Mj` estimator, switching to linear counting on small inputs
- * (`rawE ≤ 2.5·m` with at least one empty register) to eliminate the well-known
+ * `alpha_m * m^2 / Sum 2^-Mj` estimator, switching to linear counting on small inputs
+ * (`rawE <= 2.5*m` with at least one empty register) to eliminate the well-known
  * HLL bias near zero. Inputs are run through SplitMix64 before bucketing so
  * callers can pass raw IDs without worrying about hash quality.
  *
- * Memory: `m` Longs (registers) plus a counter. Standard error is ≈ `1.04/√m`
- * (≈ 0.81% at the default `precision = 14`). 64-bit hashing makes the original
+ * Memory: `m` Longs (registers) plus a counter. Standard error is ~ `1.04/sqrtm`
+ * (~ 0.81% at the default `precision = 14`). 64-bit hashing makes the original
  * HLL large-range correction unnecessary.
  *
- * This is plain HLL with the standard small-range linear-counting fix — *not*
+ * This is plain HLL with the standard small-range linear-counting fix - *not*
  * HLL++. The Heule et al. (2013) empirical bias-correction tables are not
  * implemented; empirically, with SplitMix64 prehashing the medium-range bias
- * stays inside `1.04/√m` across `m … 5·m` (see the accuracy test in
- * `HyperLogLogTest`). The sparse representation is also omitted — the
+ * stays inside `1.04/sqrtm` across `m ... 5*m` (see the accuracy test in
+ * `HyperLogLogTest`). The sparse representation is also omitted - the
  * linear-counting fallback already gives near-exact estimates at low
  * cardinalities.
  */
 class HyperLogLogStat(
-    val precision: Int = 14,
-    override val concurrency: Concurrency = Concurrency.None,
+ val precision: Int = 14,
+ override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<HyperLogLogResult> {
 
-    init {
-        require(precision in 4..18) { "precision must be in 4..18" }
-    }
+ init {
+ require(precision in 4..18) { "precision must be in 4..18" }
+ }
 
-    private val m: Int = 1 shl precision
-    private val alpha: Double = when (m) {
-        16 -> 0.673
-        32 -> 0.697
-        64 -> 0.709
-        else -> 0.7213 / (1.0 + 1.079 / m)
-    }
+ private val m: Int = 1 shl precision
+ private val alpha: Double = when (m) {
+ 16 -> 0.673
+ 32 -> 0.697
+ 64 -> 0.709
+ else -> 0.7213 / (1.0 + 1.079 / m)
+ }
 
-    private val mode = concurrency.monotonicMode()
-    private val registers: StreamLongArray = mode.newLongArray(m)
-    private val totalSeen: StreamLong = mode.newLong(0L)
+ private val mode = concurrency.monotonicMode()
+ private val registers: StreamLongArray = mode.newLongArray(m)
+ private val totalSeen: StreamLong = mode.newLong(0L)
 
-    override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
-        val hash = splitmix64(value)
-        val idx = (hash ushr (64 - precision)).toInt() and (m - 1)
-        val w = hash shl precision
-        val rho = (w.countLeadingZeroBits().coerceAtMost(64 - precision)) + 1
-        casMax(registers, idx, rho.toLong())
-        totalSeen.add(1L)
-    }
+ override fun update(value: Long, timestampNanos: Long, weight: Double) {
+ if (weight <= 0.0) return
+ val hash = splitmix64(value)
+ val idx = (hash ushr (64 - precision)).toInt() and (m - 1)
+ val w = hash shl precision
+ val rho = (w.countLeadingZeroBits().coerceAtMost(64 - precision)) + 1
+ casMax(registers, idx, rho.toLong())
+ totalSeen.add(1L)
+ }
 
-    override fun merge(values: HyperLogLogResult) {
-        require(values.precision == precision) {
-            "Cannot merge HyperLogLogStat with precision ${values.precision} into $precision"
-        }
-        for (i in 0 until m) {
-            val incoming = values.registers[i].toLong()
-            if (incoming > 0L) casMax(registers, i, incoming)
-        }
-        totalSeen.add(values.totalSeen)
-    }
+ override fun merge(values: HyperLogLogResult) {
+ require(values.precision == precision) {
+ "Cannot merge HyperLogLogStat with precision ${values.precision} into $precision"
+ }
+ for (i in 0 until m) {
+ val incoming = values.registers[i].toLong()
+ if (incoming > 0L) casMax(registers, i, incoming)
+ }
+ totalSeen.add(values.totalSeen)
+ }
 
-    override fun reset() {
-        for (i in 0 until m) registers.store(i, 0L)
-        totalSeen.store(0L)
-    }
+ override fun reset() {
+ for (i in 0 until m) registers.store(i, 0L)
+ totalSeen.store(0L)
+ }
 
-    override fun read(timestampNanos: Long): HyperLogLogResult {
-        val snapshot = IntArray(m)
-        var sumInv = 0.0
-        var zeros = 0
-        for (i in 0 until m) {
-            val r = registers.load(i).toInt()
-            snapshot[i] = r
-            sumInv += 2.0.pow(-r)
-            if (r == 0) zeros++
-        }
-        val rawE = alpha * m.toDouble() * m.toDouble() / sumInv
-        val estimate = if (rawE <= 2.5 * m && zeros > 0) {
-            m * ln(m.toDouble() / zeros)
-        } else {
-            rawE
-        }
-        return HyperLogLogResult(
-            estimate = estimate,
-            precision = precision,
-            registers = snapshot,
-            totalSeen = totalSeen.load(),
-        )
-    }
+ override fun read(timestampNanos: Long): HyperLogLogResult {
+ val snapshot = IntArray(m)
+ var sumInv = 0.0
+ var zeros = 0
+ for (i in 0 until m) {
+ val r = registers.load(i).toInt()
+ snapshot[i] = r
+ sumInv += 2.0.pow(-r)
+ if (r == 0) zeros++
+ }
+ val rawE = alpha * m.toDouble() * m.toDouble() / sumInv
+ val estimate = if (rawE <= 2.5 * m && zeros > 0) {
+ m * ln(m.toDouble() / zeros)
+ } else {
+ rawE
+ }
+ return HyperLogLogResult(
+ estimate = estimate,
+ precision = precision,
+ registers = snapshot,
+ totalSeen = totalSeen.load(),
+ )
+ }
 
-    override fun create(concurrency: Concurrency?) = HyperLogLogStat(precision, concurrency ?: this.concurrency)
+ override fun create(concurrency: Concurrency?) = HyperLogLogStat(precision, concurrency ?: this.concurrency)
 }

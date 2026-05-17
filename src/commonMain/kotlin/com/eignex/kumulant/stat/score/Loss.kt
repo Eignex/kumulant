@@ -11,7 +11,7 @@ private const val LOG_LOSS_EPS: Double = 1e-15
 
 /**
  * Streaming mean squared error: paired `(prediction, truth)` aggregated as the
- * mean of `(prediction − truth)²`.
+ * mean of `(prediction - truth)^2`.
  */
 class MseLossStat(
     override val concurrency: Concurrency = Concurrency.None,
@@ -32,7 +32,7 @@ class MseLossStat(
 
 /**
  * Streaming mean absolute error: paired `(prediction, truth)` aggregated as the
- * mean of `|prediction − truth|`.
+ * mean of `|prediction - truth|`.
  */
 class MaeLossStat(
     override val concurrency: Concurrency = Concurrency.None,
@@ -52,10 +52,10 @@ class MaeLossStat(
 
 /**
  * Streaming binary log loss (cross-entropy): paired `(probability, outcome)`
- * aggregated as the mean of `−[y·ln(p) + (1−y)·ln(1−p)]`.
+ * aggregated as the mean of `-[y*ln(p) + (1-y)*ln(1-p)]`.
  *
- * Predictions are clamped into `[1e-15, 1 − 1e-15]` before taking logs to avoid
- * `±∞` on perfectly confident wrong predictions.
+ * Predictions are clamped into `[1e-15, 1 - 1e-15]` before taking logs to avoid
+ * `+/-inf` on perfectly confident wrong predictions.
  */
 class LogLossStat(
     override val concurrency: Concurrency = Concurrency.None,

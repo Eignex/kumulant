@@ -94,7 +94,7 @@ class TDigestTest {
         val td = TDigestStat(compression = compression, probabilities = doubleArrayOf(0.5))
         for (i in 1..50000) td.update(i.toDouble())
         val n = td.read().means.size
-        assertTrue(n <= 6 * compression, "centroid count $n exceeded ~6×δ bound")
+        assertTrue(n <= 6 * compression, "centroid count $n exceeded ~6xdelta bound")
     }
 
     @Test

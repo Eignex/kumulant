@@ -8,7 +8,7 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
 /**
  * Streaming pinball / quantile loss at level [tau]. Paired input is
  * `(prediction, truth)`; the per-row loss is
- * `max(τ·(y − ŷ), (τ − 1)·(y − ŷ))`, which equals `|y − ŷ|` when `τ = 0.5`.
+ * `max(tau*(y - yhat), (tau - 1)*(y - yhat))`, which equals `|y - yhat|` when `tau = 0.5`.
  *
  * Used to evaluate quantile regressors (LightGBM/XGBoost quantile objective)
  * and is the single-quantile analog of CRPS.

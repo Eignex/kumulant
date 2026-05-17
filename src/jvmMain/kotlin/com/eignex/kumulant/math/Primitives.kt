@@ -5,19 +5,18 @@ import jdk.incubator.vector.VectorOperators
 
 /**
  * JVM dense primitives. Routes to a SIMD path (`jdk.incubator.vector`) when the
- * incubator module is available at runtime, and to a scalar fallback otherwise.
+ * incubator module is available at runtime, scalar fallback otherwise.
  *
- * Detection runs once at class load (`Class.forName` probe) and the result is
- * stored in [simdAvailable]. The SIMD code lives in a separate private object
- * ([Simd]) so its static initializer — which references `DoubleVector` — only runs
- * when the probe succeeds. A JVM started without `--add-modules=jdk.incubator.vector`
- * still loads this file cleanly and gets the scalar path; no `NoClassDefFoundError`.
+ * Detection runs once at class load via `Class.forName`. The SIMD code lives in a
+ * separate private object ([Simd]) so its static initializer (which references
+ * `DoubleVector`) only runs when the probe succeeds. A JVM started without
+ * `--add-modules=jdk.incubator.vector` loads this file cleanly and takes the
+ * scalar path.
  *
- * Build wiring: kumulant compiles with `-Xadd-modules=jdk.incubator.vector` so the
- * SIMD code can reference `DoubleVector` at compile time. Tests pass the runtime
- * `--add-modules` flag to exercise the SIMD path. Downstream JVM consumers who add
- * the flag get SIMD; consumers who don't get the scalar path — no extra config
- * required for correctness.
+ * Build wiring: kumulant compiles with `-Xadd-modules=jdk.incubator.vector` to
+ * make the SIMD code resolve at compile time. Tests pass the same flag at runtime
+ * to exercise the SIMD path; consumers who pass it get SIMD, consumers who don't
+ * get scalar. No extra config required for correctness.
  */
 
 private val simdAvailable: Boolean = try {
@@ -70,7 +69,7 @@ private fun scalarScale(v: DoubleArray, vOff: Int, alpha: Double, len: Int) {
     for (i in 0 until len) v[vOff + i] *= alpha
 }
 
-// === SIMD path — only loaded when simdAvailable is true ====================
+// === SIMD path - only loaded when simdAvailable is true ====================
 
 private object Simd {
     private val SPECIES = DoubleVector.SPECIES_PREFERRED
@@ -104,7 +103,7 @@ private object Simd {
         while (i < bound) {
             val vx = DoubleVector.fromArray(SPECIES, x, xOff + i)
             val vy = DoubleVector.fromArray(SPECIES, y, yOff + i)
-            // y_new = α · x + y  →  vx.fma(alphaVec, vy) computes vx · alphaVec + vy.
+            // y_new = alpha * x + y  ->  vx.fma(alphaVec, vy) computes vx * alphaVec + vy.
             vx.fma(alphaVec, vy).intoArray(y, yOff + i)
             i += LANE
         }

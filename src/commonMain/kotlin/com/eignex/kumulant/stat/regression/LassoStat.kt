@@ -34,7 +34,7 @@ data class LassoResult(
 /**
  * Univariate lasso regression (single feature, soft-thresholded slope).
  *
- * Slope is `sign(sxy) * max(0, |sxy| - lambda * w) / sxx` — equivalent to OLSStat
+ * Slope is `sign(sxy) * max(0, |sxy| - lambda * w) / sxx` - equivalent to OLSStat
  * at lambda = 0, exactly zero once lambda dominates the cross-deviation.
  *
  * The raw cross-deviation `sxy` is carried on [LassoResult] so that merging

@@ -1,23 +1,16 @@
 package com.eignex.kumulant.math
 
 /**
- * Internal arithmetic primitives over [VectorView] / [MatrixView].
+ * Internal arithmetic primitives over [VectorView] / [MatrixView]. All functions
+ * are `internal`; the public vector/matrix surface stays read-only.
  *
- * **Sparse-aware iteration.** Every operation that needs to iterate the entries of
- * a vector goes through [forEachStored], which dispatches dense→all-indices and
- * sparse→stored-entries. Hot paths inline; cold paths trade a bit of overhead for
- * a single tested iteration surface.
+ * Iteration goes through [forEachStored], which dispatches dense to all-indices
+ * and sparse to stored entries. Densexdense paths delegate to [denseDot] /
+ * [denseAxpy] / [denseScale] in `Primitives.kt` (SIMD on JVM, scalar elsewhere).
  *
- * **SIMD hot paths.** Dense×dense paths delegate to the [denseDot] / [denseAxpy] /
- * [denseScale] primitives defined in `Primitives.kt`. JVM implementations use the
- * incubator Vector API; non-JVM targets use scalar fallbacks.
- *
- * **In-place vs fresh.** Functions that mutate a destination take it as the first
- * argument and return [Unit] (`scale`, `axpy`, `addOuter`). Functions that allocate
- * a fresh result return it directly (`matVec`, infix `dot`).
- *
- * Everything in this file is `internal` so the public vector/matrix surface stays
- * read-only.
+ * Naming: mutating functions take the destination first and return [Unit] (`scale`,
+ * `axpy`, `addOuter`); allocating functions return a fresh result (`matVec`,
+ * infix `dot`).
  */
 
 // === Iteration ============================================================
@@ -43,14 +36,14 @@ internal inline fun VectorView.forEachStored(block: (i: Int, v: Double) -> Unit)
 
 // === Scalar dispatch =======================================================
 
-/** `aᵀ · b`. Dense×dense routes through [denseDot] (SIMD on JVM); sparse paths
+/** `aT * b`. Densexdense routes through [denseDot] (SIMD on JVM); sparse paths
  *  iterate the cheaper operand's stored entries. */
 internal infix fun VectorView.dot(other: VectorView): Double {
     require(size == other.size) { "size mismatch: $size vs ${other.size}" }
     if (this is DenseVector && other is DenseVector) {
         return denseDot(data, 0, other.data, 0, size)
     }
-    // At least one sparse — iterate that side, gather from the other.
+    // At least one sparse - iterate that side, gather from the other.
     return if (this is SparseVector || other !is SparseVector) {
         var s = 0.0
         this.forEachStored { i, v -> s += v * other[i] }
@@ -64,7 +57,7 @@ internal infix fun VectorView.dot(other: VectorView): Double {
 
 // === In-place vector ops ===================================================
 
-/** `y ← y + α · x`. Dense `x` uses SIMD; sparse `x` walks stored entries. */
+/** `y = y + alpha * x`. Dense `x` uses SIMD; sparse `x` walks stored entries. */
 internal fun axpy(y: DenseVector, alpha: Double, x: VectorView) {
     require(y.size == x.size) { "size mismatch: ${y.size} vs ${x.size}" }
     if (alpha == 0.0) return
@@ -76,7 +69,7 @@ internal fun axpy(y: DenseVector, alpha: Double, x: VectorView) {
     }
 }
 
-/** `v ← α · v`. */
+/** `v = alpha * v`. */
 internal fun scale(v: DenseVector, alpha: Double) {
     if (alpha == 1.0) return
     denseScale(v.data, 0, alpha, v.size)
@@ -85,10 +78,10 @@ internal fun scale(v: DenseVector, alpha: Double) {
 // === In-place matrix ops ===================================================
 
 /**
- * `M ← M + α · x · yᵀ` (rank-1 update). Subtract by passing `alpha = -1.0`.
+ * `M = M + alpha * x * yT` (rank-1 update). Subtract by passing `alpha = -1.0`.
  *
- * Dense×dense routes each row's update through [denseAxpy] (SIMD). Sparse paths
- * only visit the rows/cols where `x_i · y_j` could be non-zero.
+ * Densexdense routes each row's update through [denseAxpy] (SIMD). Sparse paths
+ * only visit the rows/cols where `x_i * y_j` could be non-zero.
  */
 internal fun addOuter(M: DenseMatrix, alpha: Double, x: VectorView, y: VectorView) {
     require(M.rows == x.size && M.cols == y.size) {
@@ -105,7 +98,7 @@ internal fun addOuter(M: DenseMatrix, alpha: Double, x: VectorView, y: VectorVie
         }
         return
     }
-    // Mixed or sparse — fall back to per-stored-entry updates.
+    // Mixed or sparse - fall back to per-stored-entry updates.
     x.forEachStored { i, xi ->
         if (xi != 0.0) {
             val row = i * cols
@@ -117,7 +110,7 @@ internal fun addOuter(M: DenseMatrix, alpha: Double, x: VectorView, y: VectorVie
 
 // === Allocating ops ========================================================
 
-/** Matrix-vector product `A · x` into a fresh dense result. */
+/** Matrix-vector product `A * x` into a fresh dense result. */
 internal fun matVec(A: MatrixView, x: VectorView): DenseVector {
     require(A.cols == x.size) { "matVec shape mismatch: A is ${A.rows}x${A.cols}, x size ${x.size}" }
     val out = DenseVector(A.rows)

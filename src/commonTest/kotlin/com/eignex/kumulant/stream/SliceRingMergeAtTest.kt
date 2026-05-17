@@ -53,7 +53,7 @@ class SliceRingMergeAtTest {
         // bucket has startNanos = 10*sliceNanos, which is > expectedStart = 0.
         // mergeAt must skip the merge rather than overwriting the newer slot.
         ring.mergeAt(50, SumResult(99.0))
-        // Read the newer slice's contents — must still be 5.0, not 5+99.
+        // Read the newer slice's contents - must still be 5.0, not 5+99.
         var total = 0.0
         ring.forEachActive(newerStart + 500) { total += it.read().sum }
         assertEquals(5.0, total, DELTA)

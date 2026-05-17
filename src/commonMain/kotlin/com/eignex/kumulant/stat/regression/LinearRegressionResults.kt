@@ -13,16 +13,15 @@ import kotlinx.serialization.Serializable
  * Common shape across multivariate-x linear regression snapshots.
  *
  * Concrete subtypes add uncertainty quantification:
- *  - [SGDRegressionResult]: point estimates only — fast, no posterior.
- *  - [DiagonalRegressionResult]: per-coefficient precision, factorised posterior.
- *  - [CovarianceRegressionResult]: full posterior covariance + its Cholesky factor.
+ *  - [SGDRegressionResult]: point estimates only.
+ *  - [DiagonalRegressionResult]: per-coefficient precision (factorised posterior).
+ *  - [CovarianceRegressionResult]: full posterior covariance + Cholesky factor.
  *
- * Snapshots are sealed + `@Serializable` and expose only the read-only
- * [VectorView] / [MatrixView] surface — concrete weights round-trip as
- * [DenseVector], allowing a future sparse variant to swap in without breaking
- * callers. Regression error metrics from [HasRegression] become meaningful once
- * [sse] is being tracked; implementations that don't accumulate it return `0.0`
- * consistent with that trait's contract.
+ * Sealed + `@Serializable`. Concrete weights round-trip as [DenseVector] today;
+ * the public field is typed [VectorView] so a sparse variant can swap in without
+ * breaking callers. Regression error metrics from [HasRegression] become
+ * meaningful once [sse] is tracked; implementations that don't accumulate it
+ * return `0.0`.
  */
 @Serializable
 sealed interface LinearRegressionResult : Result, HasRegression {
@@ -82,9 +81,9 @@ data class DiagonalRegressionResult(
 ) : LinearRegressionResult
 
 /**
- * Full multivariate-Gaussian posterior over the weights — carries the joint
- * covariance Σ and its lower-triangular Cholesky factor L so samplers can draw
- * `w ~ N(mean, Σ)` via `mean + L u, u ~ N(0, I)` without redoing the decomposition.
+ * Full multivariate-Gaussian posterior. Carries the joint covariance and its
+ * lower-triangular Cholesky factor L so samplers can draw `w ~ N(mean, cov)` as
+ * `mean + L u, u ~ N(0, I)` without redoing the decomposition.
  */
 @Serializable
 @SerialName("CovarianceRegressionResult")
@@ -100,7 +99,7 @@ data class CovarianceRegressionResult(
 ) : LinearRegressionResult {
     init {
         require(covariance.rows == weights.size && covarianceL.rows == weights.size) {
-            "covariance matrices must be ${weights.size}×${weights.size}"
+            "covariance matrices must be ${weights.size}x${weights.size}"
         }
     }
 }

@@ -261,7 +261,7 @@ class OperationsRoundTripTest {
         val rebuilt = (decoded as VectorStatSpec<*>).materialize(Concurrency.None)
         val live = com.eignex.kumulant.stat.regression.OLSStat().liveAtIndices(0, 2)
 
-        // Vector slots: idx 0 is x, idx 1 ignored, idx 2 is y; y = 2x → slope 2.
+        // Vector slots: idx 0 is x, idx 1 ignored, idx 2 is y; y = 2x -> slope 2.
         listOf(
             doubleArrayOf(1.0, 99.0, 2.0),
             doubleArrayOf(2.0, 99.0, 4.0),

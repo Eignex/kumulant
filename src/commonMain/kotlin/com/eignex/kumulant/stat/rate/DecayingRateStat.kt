@@ -23,7 +23,7 @@ data class DecayingRateResult(
 /**
  * Time-decayed rate with the given [halfLife].
  *
- * Projects [DecayingSumStat] onto events-per-second via `α = ln 2 / halfLife`, so the
+ * Projects [DecayingSumStat] onto events-per-second via `alpha = ln 2 / halfLife`, so the
  * rate reflects only the recent window of activity.
  */
 class DecayingRateStat(

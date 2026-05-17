@@ -130,7 +130,7 @@ class DDSketchTest {
     fun `invalid relative error throws`() {
         assertFailsWith<IllegalArgumentException> { DDSketchStat(relativeError = -0.01) }
         assertFailsWith<IllegalArgumentException> { DDSketchStat(relativeError = 1.1) }
-        // Boundary values are degenerate: 0.0 → multiplier=+∞, 1.0 → div-by-zero in gamma.
+        // Boundary values are degenerate: 0.0 -> multiplier=+inf, 1.0 -> div-by-zero in gamma.
         assertFailsWith<IllegalArgumentException> { DDSketchStat(relativeError = 0.0) }
         assertFailsWith<IllegalArgumentException> { DDSketchStat(relativeError = 1.0) }
     }

@@ -26,7 +26,7 @@ data class MinHashResult(
 ) : Result
 
 /**
- * Estimated Jaccard similarity between the two underlying sets — the fraction of slots
+ * Estimated Jaccard similarity between the two underlying sets - the fraction of slots
  * where signatures agree. Requires matching [numHashes] and [seed].
  */
 fun MinHashResult.jaccard(other: MinHashResult): Double {
@@ -50,7 +50,7 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
 }
 
 /**
- * MinHash signature — for each of [numHashes] independent hash functions (salted by
+ * MinHash signature - for each of [numHashes] independent hash functions (salted by
  * `splitmix64(seed + i)`), maintain the running minimum hash over all inserted values.
  * The Jaccard similarity between two sets is estimated by the fraction of slots whose
  * signatures agree (see [jaccard]).

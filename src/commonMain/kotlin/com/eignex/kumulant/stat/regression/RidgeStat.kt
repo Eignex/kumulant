@@ -28,7 +28,7 @@ data class RidgeResult(
 /**
  * Univariate ridge regression (single feature, L2-shrunk slope).
  *
- * Slope is `sxy / (sxx + lambda * w)` — equivalent to OLSStat at lambda = 0,
+ * Slope is `sxy / (sxx + lambda * w)` - equivalent to OLSStat at lambda = 0,
  * shrinks toward zero as lambda grows. Intercept is the centered closed form
  * `meanY - slope * meanX`. Backed by the same Chan's parallel accumulator as
  * [OLSStat]; merge round-trips exactly via the [RidgeResult] reverse projection.

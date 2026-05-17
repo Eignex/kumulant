@@ -11,23 +11,23 @@ import com.eignex.kumulant.stream.serializedLock
 
 /**
  * Online linear regression by stochastic gradient descent on weighted MSE plus L2
- * regularisation. The cheapest of the multivariate regressors — point estimates only,
+ * regularisation. The cheapest of the multivariate regressors - point estimates only,
  * no posterior, fast updates.
  *
  * Update step (per observation, all coordinates `i`):
  *  ```
- *  ŷ          = bias + Σ w_i · x_i
- *  residual   = y - ŷ
- *  grad_i     = -residual · x_i + l2 · w_i
- *  w_i      ← w_i - η(step) · weight · grad_i
- *  bias     ← bias + η(step) · weight · residual
+ *  yhat          = bias + Sum w_i * x_i
+ *  residual   = y - yhat
+ *  grad_i     = -residual * x_i + l2 * w_i
+ *  w_i      = w_i - eta(step) * weight * grad_i
+ *  bias     = bias + eta(step) * weight * residual
  *  ```
  *
  * Bias has its own learning-rate schedule because the intercept usually wants a much
  * faster decay than the coefficients (it dominates predictions for new arms).
  *
  * Sparse-aware: the gradient loop only touches the nonzero coordinates of [x] when
- * given a [SparseVector], skipping the `-residual · x_i` zero-contribution for dense
+ * given a [SparseVector], skipping the `-residual * x_i` zero-contribution for dense
  * coords. L2 regularisation still applies to every coordinate, so the dense-side cost
  * is unchanged when `l2 > 0`.
  */
@@ -56,7 +56,7 @@ class SGDLinearRegression(
             val eta = learningRate.eval(step.toDouble())
             val etaBias = biasRate.eval(step.toDouble())
 
-            // ŷ via dispatched dot (sparse-aware).
+            // yhat via dispatched dot (sparse-aware).
             val yhat = bias + (x dot DenseVector.wrap(weights))
             val residual = y - yhat
             sse += residual * residual * weight

@@ -23,7 +23,7 @@ internal object NoopMutex : Mutex {
  * - Apple / Linux native: backed by a `pthread_mutex_t` allocated via cinterop;
  *   the native handle is freed on GC via `kotlin.native.ref.createCleaner`.
  * - mingwX64: backed by a Win32 `CRITICAL_SECTION`, similarly cleanered.
- * - JS / Wasm: noop — these runtimes are single-threaded.
+ * - JS / Wasm: noop - these runtimes are single-threaded.
  */
 internal expect class PlatformMutex() : Mutex {
     override fun <R> withLock(block: () -> R): R

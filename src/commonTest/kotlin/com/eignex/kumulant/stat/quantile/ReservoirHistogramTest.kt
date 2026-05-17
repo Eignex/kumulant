@@ -128,7 +128,7 @@ class ReservoirHistogramTest {
         val res = ReservoirHistogramStat(capacity = 10, seed = 1)
         listOf(0.0, 1.0, 2.0, 3.0).forEach { res.update(it) }
         val h = res.read().toSparseHistogram(binCount = 4)
-        // 4 values spread across [0, 3] into 4 bins of width 0.75 — every bin populated.
+        // 4 values spread across [0, 3] into 4 bins of width 0.75 - every bin populated.
         assertEquals(4, h.weights.size)
         assertEquals(4.0, h.weights.sum())
     }

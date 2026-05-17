@@ -10,7 +10,7 @@ class SplitMix64Test {
 
     @Test
     fun `splitmix64 matches reference vectors`() {
-        // Locked-in outputs — guard against accidental edits to the mixer constants.
+        // Locked-in outputs - guard against accidental edits to the mixer constants.
         assertEquals(4553024054441242788L, splitmix64(0L))
         assertEquals(6615013642232309006L, splitmix64(1L))
         assertEquals(-2854182258122887073L, splitmix64(-1L))

@@ -18,60 +18,60 @@ import kotlin.math.abs
 @Serializable
 @SerialName("ReliabilityResult")
 data class ReliabilityResult(
-    val numBins: Int,
-    /** `Σ wᵢ·probᵢ` per bin. */
-    val sumProbability: DoubleArray,
-    /** `Σ wᵢ·outcomeᵢ` per bin. */
-    val sumOutcome: DoubleArray,
-    /** `Σ wᵢ` per bin. */
-    val totalWeights: DoubleArray,
+ val numBins: Int,
+ /** `Sum w_i*prob_i` per bin. */
+ val sumProbability: DoubleArray,
+ /** `Sum w_i*outcome_i` per bin. */
+ val sumOutcome: DoubleArray,
+ /** `Sum w_i` per bin. */
+ val totalWeights: DoubleArray,
 ) : Result {
 
-    init {
-        require(sumProbability.size == numBins && sumOutcome.size == numBins && totalWeights.size == numBins) {
-            "ReliabilityResult arrays must have length numBins=$numBins"
-        }
-    }
+ init {
+ require(sumProbability.size == numBins && sumOutcome.size == numBins && totalWeights.size == numBins) {
+ "ReliabilityResult arrays must have length numBins=$numBins"
+ }
+ }
 
-    /** Mean predicted probability per bin (NaN where the bin is empty). */
-    val meanProbability: DoubleArray get() = DoubleArray(numBins) { i ->
-        if (totalWeights[i] > 0.0) sumProbability[i] / totalWeights[i] else Double.NaN
-    }
+ /** Mean predicted probability per bin (NaN where the bin is empty). */
+ val meanProbability: DoubleArray get() = DoubleArray(numBins) { i ->
+ if (totalWeights[i] > 0.0) sumProbability[i] / totalWeights[i] else Double.NaN
+ }
 
-    /** Empirical outcome rate per bin (NaN where the bin is empty). */
-    val outcomeRate: DoubleArray get() = DoubleArray(numBins) { i ->
-        if (totalWeights[i] > 0.0) sumOutcome[i] / totalWeights[i] else Double.NaN
-    }
+ /** Empirical outcome rate per bin (NaN where the bin is empty). */
+ val outcomeRate: DoubleArray get() = DoubleArray(numBins) { i ->
+ if (totalWeights[i] > 0.0) sumOutcome[i] / totalWeights[i] else Double.NaN
+ }
 
-    /**
-     * Expected Calibration Error: weighted mean over bins of
-     * `|meanProbability[i] − outcomeRate[i]|`. Empty bins contribute 0.
-     */
-    fun expectedCalibrationError(): Double {
-        var totalW = 0.0
-        for (w in totalWeights) totalW += w
-        if (totalW <= 0.0) return 0.0
-        var ece = 0.0
-        for (i in 0 until numBins) {
-            val w = totalWeights[i]
-            if (w <= 0.0) continue
-            val gap = abs(sumProbability[i] / w - sumOutcome[i] / w)
-            ece += (w / totalW) * gap
-        }
-        return ece
-    }
+ /**
+ * Expected Calibration Error: weighted mean over bins of
+ * `|meanProbability[i] - outcomeRate[i]|`. Empty bins contribute 0.
+ */
+ fun expectedCalibrationError(): Double {
+ var totalW = 0.0
+ for (w in totalWeights) totalW += w
+ if (totalW <= 0.0) return 0.0
+ var ece = 0.0
+ for (i in 0 until numBins) {
+ val w = totalWeights[i]
+ if (w <= 0.0) continue
+ val gap = abs(sumProbability[i] / w - sumOutcome[i] / w)
+ ece += (w / totalW) * gap
+ }
+ return ece
+ }
 
-    override fun equals(other: Any?): Boolean = other is ReliabilityResult &&
-        numBins == other.numBins &&
-        sumProbability.contentEquals(other.sumProbability) &&
-        sumOutcome.contentEquals(other.sumOutcome) &&
-        totalWeights.contentEquals(other.totalWeights)
+ override fun equals(other: Any?): Boolean = other is ReliabilityResult &&
+ numBins == other.numBins &&
+ sumProbability.contentEquals(other.sumProbability) &&
+ sumOutcome.contentEquals(other.sumOutcome) &&
+ totalWeights.contentEquals(other.totalWeights)
 
-    override fun hashCode(): Int =
-        31 * (
-            31 * (31 * numBins + sumProbability.contentHashCode()) +
-                sumOutcome.contentHashCode()
-            ) + totalWeights.contentHashCode()
+ override fun hashCode(): Int =
+ 31 * (
+ 31 * (31 * numBins + sumProbability.contentHashCode()) +
+ sumOutcome.contentHashCode()
+ ) + totalWeights.contentHashCode()
 }
 
 /**
@@ -83,52 +83,52 @@ data class ReliabilityResult(
  * Predictions outside `[0, 1]` are clamped to the nearest edge bin.
  */
 class ReliabilityStat(
-    val numBins: Int,
-    override val concurrency: Concurrency = Concurrency.None,
+ val numBins: Int,
+ override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<ReliabilityResult> {
 
-    init { require(numBins > 0) { "numBins must be > 0; got $numBins" } }
+ init { require(numBins > 0) { "numBins must be > 0; got $numBins" } }
 
-    private val mode = concurrency.additiveMode()
-    private val sumP: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
-    private val sumO: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
-    private val sumW: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
+ private val mode = concurrency.additiveMode()
+ private val sumP: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
+ private val sumO: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
+ private val sumW: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
 
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0) return
-        val clamped = x.coerceIn(0.0, 1.0)
-        val bin = (clamped * numBins).toInt().coerceIn(0, numBins - 1)
-        sumP[bin].add(clamped * weight)
-        sumO[bin].add(y * weight)
-        sumW[bin].add(weight)
-    }
+ override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
+ if (weight == 0.0) return
+ val clamped = x.coerceIn(0.0, 1.0)
+ val bin = (clamped * numBins).toInt().coerceIn(0, numBins - 1)
+ sumP[bin].add(clamped * weight)
+ sumO[bin].add(y * weight)
+ sumW[bin].add(weight)
+ }
 
-    override fun read(timestampNanos: Long) = ReliabilityResult(
-        numBins,
-        DoubleArray(numBins) { sumP[it].load() },
-        DoubleArray(numBins) { sumO[it].load() },
-        DoubleArray(numBins) { sumW[it].load() },
-    )
+ override fun read(timestampNanos: Long) = ReliabilityResult(
+ numBins,
+ DoubleArray(numBins) { sumP[it].load() },
+ DoubleArray(numBins) { sumO[it].load() },
+ DoubleArray(numBins) { sumW[it].load() },
+ )
 
-    override fun merge(values: ReliabilityResult) {
-        require(values.numBins == numBins) {
-            "numBins mismatch on merge: this=$numBins, other=${values.numBins}"
-        }
-        for (i in 0 until numBins) {
-            sumP[i].add(values.sumProbability[i])
-            sumO[i].add(values.sumOutcome[i])
-            sumW[i].add(values.totalWeights[i])
-        }
-    }
+ override fun merge(values: ReliabilityResult) {
+ require(values.numBins == numBins) {
+ "numBins mismatch on merge: this=$numBins, other=${values.numBins}"
+ }
+ for (i in 0 until numBins) {
+ sumP[i].add(values.sumProbability[i])
+ sumO[i].add(values.sumOutcome[i])
+ sumW[i].add(values.totalWeights[i])
+ }
+ }
 
-    override fun reset() {
-        for (i in 0 until numBins) {
-            sumP[i].store(0.0)
-            sumO[i].store(0.0)
-            sumW[i].store(0.0)
-        }
-    }
+ override fun reset() {
+ for (i in 0 until numBins) {
+ sumP[i].store(0.0)
+ sumO[i].store(0.0)
+ sumW[i].store(0.0)
+ }
+ }
 
-    override fun create(concurrency: Concurrency?) =
-        ReliabilityStat(numBins, concurrency ?: this.concurrency)
+ override fun create(concurrency: Concurrency?) =
+ ReliabilityStat(numBins, concurrency ?: this.concurrency)
 }

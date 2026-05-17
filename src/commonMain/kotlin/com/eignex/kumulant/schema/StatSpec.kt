@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 /**
  * Pure-data recipe for a [com.eignex.kumulant.core.Stat]. Each variant is a `data class`
  * (or `data object` for parameter-less stats) whose fields are exactly the stat's
- * configuration surface — no live cells, no locks, no
+ * configuration surface - no live cells, no locks, no
  * [com.eignex.kumulant.core.Concurrency].
  *
  * Polymorphism is by `@SerialName` on each variant, so any
@@ -16,9 +16,9 @@ import kotlinx.serialization.Serializable
  * when the format is configured with `encodeDefaults = false`.
  *
  * Construction of the live stat happens externally via the `materialize`
- * extension functions in `StatFactory.kt` — one `when` per modality,
+ * extension functions in `StatFactory.kt` - one `when` per modality,
  * one cast at the boundary. Specs stay as pure data so the wire format
- * doesn't drag behaviour through it. [Concurrency] is *not* on the wire —
+ * doesn't drag behaviour through it. [Concurrency] is *not* on the wire -
  * it's a deployment knob passed in at materialize time.
  *
  * The generic `<R>` on the modality-specific spec interfaces is a phantom

@@ -11,7 +11,7 @@ interface Result
  * [ListStats][com.eignex.kumulant.schema.ListStats] and the vector expansion helpers.
  *
  * Names disambiguate entries for map-style lookup while preserving positional order.
- * Constructing with duplicate names throws — pass explicit names to disambiguate.
+ * Constructing with duplicate names throws - pass explicit names to disambiguate.
  *
  * Positional producers (e.g. vector-expanded stats) use the secondary constructor
  * which auto-assigns index-based names ("0", "1", ...).

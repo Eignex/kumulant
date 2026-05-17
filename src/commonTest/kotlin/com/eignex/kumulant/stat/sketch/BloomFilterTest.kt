@@ -49,7 +49,7 @@ class BloomFilterTest {
             if (r.contains(i.toLong())) fps++
         }
         val rate = fps.toDouble() / queries
-        // Theoretical FP ≈ (1 - e^(-4*1000/4096))^4 ≈ 0.24 — keep slack.
+        // Theoretical FP ~ (1 - e^(-4*1000/4096))^4 ~ 0.24 - keep slack.
         assertTrue(rate < 0.32, "FP rate=$rate")
     }
 

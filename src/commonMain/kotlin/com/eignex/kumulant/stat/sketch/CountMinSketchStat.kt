@@ -11,7 +11,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * CountStat-MinStat sketch snapshot. [counters] is the [depth] × [width] matrix of counters in
+ * CountStat-MinStat sketch snapshot. [counters] is the [depth] x [width] matrix of counters in
  * row-major order. [seed] determines the per-row hash salts; merging two snapshots
  * requires identical [depth], [width], and [seed]. [totalSeen] is the unweighted update
  * count.
@@ -26,7 +26,7 @@ data class CountMinSketchResult(
     val totalSeen: Long,
 ) : Result
 
-/** Estimated weighted count of [value] — the minimum across rows. */
+/** Estimated weighted count of [value] - the minimum across rows. */
 fun CountMinSketchResult.estimate(value: Long): Long {
     if (counters.isEmpty()) return 0L
     val mask = (width - 1).toLong()
@@ -41,7 +41,7 @@ fun CountMinSketchResult.estimate(value: Long): Long {
 }
 
 /**
- * CountStat-MinStat sketch — a probabilistic frequency estimator over a [depth] × [width] matrix
+ * CountStat-MinStat sketch - a probabilistic frequency estimator over a [depth] x [width] matrix
  * of counters. Each update hashes the value with [depth] independent salts (derived from
  * [seed]) and increments one counter per row; the estimated count for any value is the
  * minimum counter across rows.

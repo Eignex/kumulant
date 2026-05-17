@@ -13,7 +13,7 @@ import com.eignex.kumulant.schema.unaryMinus
  * Convenience constructors for the common learning-rate schedules, expressed as
  * [ScalarExpr] over the step counter `X`. `RegressionStat` implementations evaluate
  * the expression at `step.toDouble()` per update, so any wire-portable scalar
- * function of the step works — these factories are just terse names for the three
+ * function of the step works - these factories are just terse names for the three
  * recipes that occur in practice.
  *
  * A regression stat takes its schedule as a plain [ScalarExpr], so callers can pass
@@ -29,10 +29,10 @@ import com.eignex.kumulant.schema.unaryMinus
 /** Constant rate `eta`. */
 fun ConstantRate(eta: Double = 1e-3): ScalarExpr = Const(eta)
 
-/** `eta / (1 + k · step)`. */
+/** `eta / (1 + k * step)`. */
 fun StepDecay(eta: Double = 1e-2, k: Double = 1e-3): ScalarExpr =
     Const(eta) / (Const(1.0) + Const(k) * X)
 
-/** `eta · exp(-k · step)`. */
+/** `eta * exp(-k * step)`. */
 fun ExponentialDecay(eta: Double = 1e-2, k: Double = 1e-5): ScalarExpr =
     Const(eta) * Exp(-Const(k) * X)

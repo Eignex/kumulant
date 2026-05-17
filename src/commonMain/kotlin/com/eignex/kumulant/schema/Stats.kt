@@ -131,7 +131,7 @@ data class LinearHistogram(
 ) : SeriesStatSpec<SparseHistogramResult>
 
 /**
- * Configuration for `ReservoirHistogramStat`. Seed has no default — the live constructor's
+ * Configuration for `ReservoirHistogramStat`. Seed has no default - the live constructor's
  * `Random.Default.nextLong()` is non-deterministic, which would silently produce
  * different goldens on each instantiation if mirrored here.
  */

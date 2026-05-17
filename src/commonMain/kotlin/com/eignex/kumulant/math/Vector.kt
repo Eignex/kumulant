@@ -4,15 +4,14 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Read-only N-vector. Backing storage may be dense or sparse — callers see the same
- * surface either way. The public contract is intentionally minimal: query the size,
- * read an entry by index, materialise to a `DoubleArray`. Everything else (dot
- * products, axpy, factorisations, mutation) is `internal` to kumulant; these views
- * are observation snapshots, not a public linear-algebra toolkit.
+ * Read-only N-vector. Backing storage may be dense or sparse; callers see the same
+ * surface either way. The public contract is small: query the size, read an entry
+ * by index, materialise to a `DoubleArray`. Dot products, axpy, factorisations,
+ * and mutation are `internal` to kumulant. These views are observation snapshots,
+ * not a general linear-algebra type.
  *
  * Subtypes are sealed and serialisable so snapshots round-trip through
- * `kotlinx.serialization` with their concrete storage preserved (dense ↔ dense,
- * sparse ↔ sparse).
+ * `kotlinx.serialization` with their concrete storage preserved.
  */
 @Serializable
 sealed interface VectorView {
@@ -25,10 +24,7 @@ sealed interface VectorView {
     fun toDoubleArray(): DoubleArray
 }
 
-/**
- * Dense double-precision vector. Mutation is `internal`; external callers only see
- * the read-only [VectorView] surface.
- */
+/** Dense double-precision vector. Mutation is `internal`. */
 @Serializable
 @SerialName("DenseVector")
 class DenseVector internal constructor(internal val data: DoubleArray) : VectorView {
@@ -60,15 +56,14 @@ class DenseVector internal constructor(internal val data: DoubleArray) : VectorV
 
 /**
  * Compressed sparse vector: parallel [indices]/[values] arrays of equal length, each
- * recording one nonzero entry. Always immutable from the caller's perspective — to
- * change the sparsity pattern, rebuild.
+ * holding one nonzero entry. Immutable from the caller's perspective; to change the
+ * sparsity pattern, rebuild.
  *
- * [get] is a linear scan rather than a binary search **on purpose**. The expected
- * `nnz` is small (handful to a few hundred — sparse feature vectors from
- * nominal-heavy CSPs); at that size a tight `IntArray` loop is faster than
- * binary search's mispredicted branches and indirect indexing. Internal ops
- * iterate via `forEachStored` and never go through [get] anyway, so the
- * external linear-scan is rare.
+ * [get] is a linear scan rather than a binary search on purpose. Typical `nnz` is
+ * small (handful to a few hundred for sparse feature vectors from nominal-heavy
+ * CSPs), and at that scale a tight `IntArray` loop beats binary search's
+ * mispredicted branches and indirect indexing. Internal ops iterate via
+ * [forEachStored] and skip [get] entirely.
  *
  * Indices are not required to be sorted; the constructor only checks the parallel-
  * array invariant.

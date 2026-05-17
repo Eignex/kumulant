@@ -25,7 +25,7 @@ internal interface StreamMode {
     /**
      * Allocate a fixed-length array of `Long` cells, initialised by [init]. Each slot
      * has the same atomicity guarantees as a single [StreamLong] under this mode but
-     * with a flat backing — one allocation, no per-slot object headers.
+     * with a flat backing - one allocation, no per-slot object headers.
      */
     fun newLongArray(size: Int, init: (Int) -> Long = { 0L }): StreamLongArray
 }
@@ -37,7 +37,7 @@ internal interface StreamMode {
  */
 internal fun rejectBoxedPrimitive(initial: Any?) {
     require(initial !is Double && initial !is Long) {
-        "StreamRef does not support boxed Double/Long — use newDouble/newLong instead, " +
+        "StreamRef does not support boxed Double/Long - use newDouble/newLong instead, " +
             "since CAS on boxed primitives compares identity, not value."
     }
 }
@@ -82,7 +82,7 @@ internal interface StreamLong {
  * Mutable reference cell with CAS semantics.
  *
  * Note: JVM boxing means `StreamRef<Double>` used under [AtomicMode] compares boxed
- * identities — avoid CAS loops on boxed primitives, prefer [StreamDouble] instead.
+ * identities - avoid CAS loops on boxed primitives, prefer [StreamDouble] instead.
  */
 internal interface StreamRef<T> {
     /** Read the current referent. */
@@ -123,13 +123,13 @@ internal interface StreamLongArray {
     fun compareAndSet(index: Int, expectedValue: Long, newValue: Long): Boolean
 }
 
-/** Property-delegate getter for [StreamDouble] — `val x: Double by streamDouble`. */
+/** Property-delegate getter for [StreamDouble] - `val x: Double by streamDouble`. */
 internal operator fun StreamDouble.getValue(
     thisRef: Any?,
     property: KProperty<*>
 ): Double = load()
 
-/** Property-delegate getter for [StreamLong] — `val x: Long by streamLong`. */
+/** Property-delegate getter for [StreamLong] - `val x: Long by streamLong`. */
 internal operator fun StreamLong.getValue(
     thisRef: Any?,
     property: KProperty<*>

@@ -59,7 +59,7 @@ class LinearRegressionStatsTest {
         for (i in truth.indices) assertTrue(abs(r.weights[i] - truth[i]) < 0.1,
             "weight[$i]=${r.weights[i]} far from truth=${truth[i]}")
         for (i in truth.indices) assertTrue(r.covariance[i, i] < 0.05,
-            "Σ[$i,$i]=${r.covariance[i, i]} did not shrink from prior 1.0")
+            "Sum[$i,$i]=${r.covariance[i, i]} did not shrink from prior 1.0")
     }
 
     @Test
@@ -110,7 +110,7 @@ class LinearRegressionStatsTest {
             assertTrue(abs(merged.weights[i] - truth[i]) < 0.1,
                 "merged weight[$i]=${merged.weights[i]} far from truth=${truth[i]}")
             // Posterior product should land in the same neighbourhood as replaying
-            // all observations into one stat — not pointwise-identical because SMW
+            // all observations into one stat - not pointwise-identical because SMW
             // accumulates a slightly different trajectory.
             assertTrue(abs(merged.weights[i] - refResult.weights[i]) < 0.15,
                 "merged weight[$i]=${merged.weights[i]} diverged from replay=${refResult.weights[i]}")
@@ -118,7 +118,7 @@ class LinearRegressionStatsTest {
         assertEquals(4000.0, merged.totalWeights, absoluteTolerance = 1e-9)
         // Combined posterior should be at least as tight as each operand.
         for (i in truth.indices) assertTrue(merged.covariance[i, i] < 0.05,
-            "merged Σ[$i,$i]=${merged.covariance[i, i]} did not tighten")
+            "merged Sum[$i,$i]=${merged.covariance[i, i]} did not tighten")
     }
 
     @Test

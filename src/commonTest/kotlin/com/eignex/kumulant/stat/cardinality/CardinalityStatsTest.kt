@@ -48,7 +48,7 @@ class HyperLogLogTest {
         for (i in 1..30_000) hll.update(i.toLong())
         val r = hll.read()
         val rel = abs(r.estimate - 30_000.0) / 30_000.0
-        // Standard error is ≈ 1.04 / sqrt(2^14) ≈ 0.81%, allow 3σ.
+        // Standard error is ~ 1.04 / sqrt(2^14) ~ 0.81%, allow 3sigma.
         assertTrue(rel < 0.03, "estimate=${r.estimate} rel=$rel")
     }
 
@@ -56,7 +56,7 @@ class HyperLogLogTest {
     fun `accuracy across cardinalities including the medium range stays within 2 percent`() {
         // Sweeps the m..3m window at precision 14 (m=16384) where the unmodified Flajolet
         // estimator is classically prone to a few percent downward bias. SplitMix64
-        // prehashing keeps the observed error inside ~1.4% across this range — well
+        // prehashing keeps the observed error inside ~1.4% across this range - well
         // under the 2% bound asserted here.
         val precision = 14
         val cardinalities = intArrayOf(1_000, 5_000, 10_000, 20_000, 30_000, 50_000)

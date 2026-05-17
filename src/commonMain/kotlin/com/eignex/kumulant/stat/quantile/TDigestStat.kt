@@ -50,11 +50,11 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
 
 /**
  * Buffered merging T-Digest (Dunning) with `k1` scaling function for high-fidelity
- * extreme-quantile estimates and bounded centroid count. [compression] (δ) caps
- * centroids to roughly `~6·δ`.
+ * extreme-quantile estimates and bounded centroid count. [compression] (delta) caps
+ * centroids to roughly `~6*delta`.
  *
  * Updates buffer values until [bufferCap] is reached, then fold them into the
- * sorted centroid list under the `k1`-difference ≤ 1 merge rule.
+ * sorted centroid list under the `k1`-difference <= 1 merge rule.
  *
  * Concurrency: all `update`/`merge`/`read`/`reset` calls are internally serialized
  * via a private platform mutex when the chosen [Concurrency] level is anything but

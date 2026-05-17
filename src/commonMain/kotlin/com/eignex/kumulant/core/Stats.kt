@@ -57,7 +57,7 @@ interface SeriesStat<R : Result> : Stat<R> {
 }
 
 /**
- * Accumulator over a stream of discrete `Long` values — covers both opaque keys
+ * Accumulator over a stream of discrete `Long` values - covers both opaque keys
  * (cardinality, heavy hitters, Bloom filters) and integer-valued measurements
  * (Poisson counts, time deltas, integer histograms).
  */
@@ -90,7 +90,7 @@ interface PairedStat<R : Result> : Stat<R> {
  * scalar target. The multivariate generalisation of [PairedStat].
  *
  * Implementations cover everything from a one-pass SGD weight tracker to a full
- * Bayesian linear regression with covariance — they share the update shape and
+ * Bayesian linear regression with covariance - they share the update shape and
  * differ in what they expose on [read]. Inputs are passed as
  * [com.eignex.kumulant.math.VectorView] so callers can submit sparse feature
  * vectors without materialising them into dense arrays first.

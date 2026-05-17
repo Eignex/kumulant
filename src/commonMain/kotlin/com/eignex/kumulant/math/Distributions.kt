@@ -27,18 +27,17 @@ private fun Random.nextDoublePos(): Double {
 fun Random.nextNormal(mean: Float, std: Float): Float = nextNormal(mean.toDouble(), std.toDouble()).toFloat()
 
 /**
- * Draw from `N(mean, std²)` via Marsaglia & Tsang's **Ziggurat** algorithm. The fast
+ * Draw from `N(mean, std^2)` via Marsaglia & Tsang's Ziggurat algorithm. The fast
  * path is one `nextInt()` + table lookup + comparison; ~97% of draws complete there.
- * The slow path handles the tail beyond `R = 3.4426` and the "wedge" regions outside
- * each layer's inner rectangle.
+ * The slow path handles the tail beyond `R = 3.4426` and the "wedge" regions
+ * outside each layer's inner rectangle.
  *
- * Stateless beyond the [Random] receiver — the precomputed layer tables ([ZIGGURAT_KN],
- * [ZIGGURAT_WN], [ZIGGURAT_FN]) live at file scope and initialise once at class load,
- * so call sites that need many Gaussians can just loop on the extension without
- * wrapping the rng in anything.
+ * Stateless beyond the [Random] receiver. The precomputed layer tables
+ * ([ZIGGURAT_KN], [ZIGGURAT_WN], [ZIGGURAT_FN]) initialise once at class load, so
+ * call sites that need many Gaussians can loop on the extension directly.
  *
  * Reference: Marsaglia, G. & Tsang, W. W. (2000), "The Ziggurat Method for
- * Generating Random Variables", *Journal of Statistical Software*, 5(8).
+ * Generating Random Variables", Journal of Statistical Software, 5(8).
  */
 fun Random.nextNormal(mean: Double = 0.0, std: Double = 1.0): Double = mean + std * standardNormal()
 
@@ -100,10 +99,10 @@ private val ZIGGURAT_INIT = run {
 // === Log-Normal ============================================================
 
 /**
- * Draw from a log-normal distribution parameterised by **real-scale** [mean] and
+ * Draw from a log-normal distribution parameterised by real-scale [mean] and
  * [variance] (not the underlying Normal's mu/sigma). Used by log-normal posteriors
- * where the bandit observes positive-valued rewards and wants a multiplicative
- * noise model.
+ * where the bandit observes positive-valued rewards under a multiplicative noise
+ * model.
  */
 fun Random.nextLogNormal(mean: Double, variance: Double): Double {
     require(mean > 0.0) { "nextLogNormal requires mean > 0; got $mean" }
@@ -117,12 +116,12 @@ fun Random.nextLogNormal(mean: Double, variance: Double): Double {
 // === Gamma =================================================================
 
 /**
- * Draw from `Gamma(alpha, 1)` (unit rate). Marsaglia-Tsang (2000) for `alpha ≥ 1`
+ * Draw from `Gamma(alpha, 1)` (unit rate). Marsaglia-Tsang (2000) for `alpha >= 1`
  * with Stuart's power-of-uniform boost for `alpha < 1`. Two fast paths for common
  * parameter values:
  *  - `alpha == 1.0`: returns `-ln(U)` directly (Exponential). Bypasses the
  *    Gaussian rejection loop entirely.
- *  - `alpha` a small positive integer (2..5): sums `α` Exponential samples.
+ *  - `alpha` a small positive integer (2..5): sums `alpha` Exponential samples.
  *    Cheaper than one Gaussian + acceptance test at that scale, and the
  *    integer check pays for itself in the common Poisson-prior usage pattern.
  */

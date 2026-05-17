@@ -31,7 +31,7 @@ data class LinearCountingResult(
  * Linear-counting cardinality estimator over a fixed [bits]-bit bitset.
  *
  * For each input, sets one bit indexed by `splitmix64(value) mod bits`. The cardinality
- * estimate is `-bits · ln(unsetBits / bits)`. Cheap and accurate for cardinalities up to
+ * estimate is `-bits * ln(unsetBits / bits)`. Cheap and accurate for cardinalities up to
  * roughly [bits]; degrades sharply (and saturates to infinity) when the bitset fills.
  * Prefer [HyperLogLogStat] when the cardinality range is unknown.
  *

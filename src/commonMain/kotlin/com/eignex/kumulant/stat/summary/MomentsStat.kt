@@ -26,7 +26,7 @@ data class MomentsResult(
 /**
  * Weighted first four central moments (mean, m2, m3, m4) for skewness and kurtosis.
  *
- * Uses the Pébay/Welford parallel recurrences; suitable for streaming and merge.
+ * Uses the Pebay/Welford parallel recurrences; suitable for streaming and merge.
  */
 class MomentsStat(
     override val concurrency: Concurrency = Concurrency.None,

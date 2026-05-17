@@ -207,7 +207,7 @@ class ExprTest {
     @Test fun `transformX only remaps x`() {
         val cfg: PairedStatSpec<*> = OLS.transformX(2.0 * X)
         val live = cfg.materialize(Concurrency.None)
-        // y=2x with x'=2x gives pairs (2,2),(4,4),(6,6) → slope 1
+        // y=2x with x'=2x gives pairs (2,2),(4,4),(6,6) -> slope 1
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)

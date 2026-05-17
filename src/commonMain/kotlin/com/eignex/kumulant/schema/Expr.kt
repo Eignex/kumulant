@@ -35,7 +35,7 @@ data object Y : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray): Double = y
 }
 
-/** `v[index]` — out-of-bounds throws at eval time. */
+/** `v[index]` - out-of-bounds throws at eval time. */
 @Serializable
 @SerialName("V")
 data class V(val index: Int) : ScalarExpr {
@@ -131,7 +131,7 @@ data class IfExpr(val cond: BoolExpr, val then: ScalarExpr, val otherwise: Scala
 
 /**
  * Reduction over the entire vector input. Distinct from element-level
- * arithmetic ([Add], [Mul]) — this collapses a `DoubleArray` of arbitrary
+ * arithmetic ([Add], [Mul]) - this collapses a `DoubleArray` of arbitrary
  * length to a single scalar via the chosen operation.
  */
 @Serializable
@@ -178,8 +178,8 @@ data class VFold(val op: VFoldOp) : ScalarExpr {
 }
 
 /**
- * Weighted dot product `Σ weights[i] * v[i]`. Length must match the incoming
- * vector at eval time. Wire form is a primitive list — encodes cleanly.
+ * Weighted dot product `Sum weights[i] * v[i]`. Length must match the incoming
+ * vector at eval time. Wire form is a primitive list - encodes cleanly.
  */
 @Serializable
 @SerialName("VDot")
@@ -263,7 +263,7 @@ data class InRange(val a: ScalarExpr, val min: Double, val max: Double) : BoolEx
 
 /**
  * Wire-serializable AST for vector-valued expressions over the same input env
- * as [ScalarExpr] / [BoolExpr]. The output length need not match the input —
+ * as [ScalarExpr] / [BoolExpr]. The output length need not match the input -
  * use this for permutations, dimensionality changes, pooling, feature
  * augmentation, etc. For same-length per-element transforms, the simpler
  * `transformElement(ScalarExpr)` config is more direct.
@@ -276,7 +276,7 @@ sealed interface VectorExpr {
 /**
  * Build an output vector by evaluating each [ScalarExpr] in order. Output
  * length = `exprs.size`. The exprs can reference any input element via
- * [V]`(i)` — sufficient for permutations (`VElements(listOf(V(2), V(0), V(1)))`),
+ * [V]`(i)` - sufficient for permutations (`VElements(listOf(V(2), V(0), V(1)))`),
  * pooling (`VElements(listOf((V(0)+V(1))/2.0, (V(2)+V(3))/2.0))`),
  * dimensionality reduction, and feature augmentation.
  */

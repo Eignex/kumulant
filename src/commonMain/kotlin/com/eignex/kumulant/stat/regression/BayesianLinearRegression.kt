@@ -20,25 +20,25 @@ import kotlin.math.sqrt
 
 /**
  * Bayesian linear regression with a Gaussian prior on the weights and Gaussian
- * residual noise — produces a full posterior covariance `Σ = H⁻¹` alongside the
- * point estimates. Suitable for Thompson-sampling-style bandits where each round
- * draws a weight vector from `N(weights, exploration · Σ)`.
+ * residual noise. Produces a full posterior covariance `S = H^-1` alongside the
+ * point estimates. Suitable for Thompson-sampling-style bandits drawing a fresh
+ * weight vector from `N(weights, exploration * S)` per round.
  *
  * Maintained incrementally via Sherman-Morrison-Woodbury on the inverse precision:
  *  ```
- *  z = Σ · x / sqrt(σ² + xᵀ · Σ · x)
- *  Σ ← Σ - z · zᵀ          (rank-1 downdate)
- *  w ← w - Σ · (-(y - ŷ) · x + λ · w)
+ *  z = S * x / sqrt(sigma^2 + xT * S * x)
+ *  S = S - z * zT          (rank-1 downdate)
+ *  w = w - S * (-(y - yhat) * x + lambda * w)
  *  ```
  *
- * The Cholesky factor L of Σ is tracked in parallel via [choleskyDowndateInPlace]
- * so that `w ~ N(weights, Σ)` draws are an O(n²) `weights + L · u` op — no fresh
- * Cholesky per sample. When the rank-1 downdate falls out of the positive-definite
- * cone (numerical instability), the factor is rebuilt from a regularised covariance
- * and the offending update is retried with a smaller step.
+ * The Cholesky factor `L` of `S` is tracked in parallel via
+ * [choleskyDowndateInPlace] so `w ~ N(weights, S)` draws are an O(n^2)
+ * `weights + L * u` op (no fresh Cholesky per sample). When the rank-1 downdate
+ * falls outside the positive-definite cone, the factor is rebuilt from a
+ * regularised covariance and the update is retried with a smaller step.
  *
- * Residual variance assumption: `σ² = 1` (standard normal residuals). Callers wanting
- * heteroscedastic noise can re-scale [y] before [update].
+ * Residual variance: `sigma^2 = 1`. Callers wanting heteroscedastic noise can
+ * re-scale [y] before [update].
  */
 class BayesianLinearRegression(
     override val featureSize: Int,
@@ -70,12 +70,12 @@ class BayesianLinearRegression(
             step++
             val eta = learningRate.eval(step.toDouble())
 
-            // ŷ via sparse-aware dot.
+            // yhat via sparse-aware dot.
             val yhat = bias + (x dot weights)
             val residual = y - yhat
             sse += residual * residual * weight
 
-            // z = Σ · x / sqrt(1 + xᵀ Σ x).
+            // z = Sum * x / sqrt(1 + xT Sum x).
             val z = matVec(covariance, x)
             val denom = sqrt(1.0 + (x dot z))
             if (denom == 0.0) return@withLock
@@ -95,10 +95,10 @@ class BayesianLinearRegression(
                 }
             }
 
-            // Σ ← Σ - z · zᵀ  (rank-1 downdate of the covariance).
+            // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
             addOuter(covariance, -1.0, z, z)
 
-            // w ← w - η · weight · Σ · grad, where grad = -residual · x + l2 · w.
+            // w = w - eta * weight * Sum * grad, where grad = -residual * x + l2 * w.
             val grad = DenseVector(featureSize)
             for (i in 0 until featureSize) grad[i] = -residual * x[i] + l2 * weights[i]
             axpy(weights, -eta * weight, matVec(covariance, grad))
@@ -124,20 +124,19 @@ class BayesianLinearRegression(
     /**
      * Combine two independent Gaussian posteriors over the same parameter by
      * multiplying their densities and renormalising. With zero-mean prior
-     * `N(0, priorVariance · I)`, each posterior already includes one prior factor,
+     * `N(0, priorVariance * I)`, each posterior already includes one prior factor,
      * so the combined precision subtracts one copy back out:
      *
      * ```
-     * H_new = H_self + H_other - H_prior
-     * b_new = H_self · μ_self + H_other · μ_other
-     * μ_new = H_new⁻¹ · b_new
-     * Σ_new = H_new⁻¹
+     * H_new  = H_self + H_other - H_prior
+     * b_new  = H_self * mu_self + H_other * mu_other
+     * mu_new = H_new^-1 * b_new
+     * S_new  = H_new^-1
      * ```
      *
-     * Falls back gracefully when `H_new` drifts outside SPD — the Cholesky helper's
-     * diagonal clamp catches it and returns a regularised result rather than NaNs.
-     * Bias is merged the same way, treating the intercept as a scalar Gaussian with
-     * zero prior mean.
+     * When `H_new` drifts outside SPD the Cholesky helper's diagonal clamp catches
+     * it and returns a regularised result rather than NaNs. Bias is merged the same
+     * way, treating the intercept as a scalar Gaussian with zero prior mean.
      */
     override fun merge(values: CovarianceRegressionResult) {
         require(values.featureSize == featureSize) {
@@ -150,7 +149,7 @@ class BayesianLinearRegression(
             val hSelf = invertSpd(covarianceL)
             val hOther = invertSpd(values.covarianceL)
 
-            // H_new = H_self + H_other - H_prior, where H_prior = (1/priorVariance) · I.
+            // H_new = H_self + H_other - H_prior, where H_prior = (1/priorVariance) * I.
             val priorPrec = 1.0 / priorVariance
             val hNew = DenseMatrix(n, n)
             for (i in 0 until n) {
@@ -159,7 +158,7 @@ class BayesianLinearRegression(
                 }
             }
 
-            // b = H_self · μ_self + H_other · μ_other  (μ_prior = 0 cancels its term)
+            // b = H_self * mu_self + H_other * mu_other  (mu_prior = 0 cancels its term)
             val otherWeights = values.weights.toDoubleArray()
             val selfWeights = weights.toDoubleArray()
             val b = DoubleArray(n)
@@ -169,7 +168,7 @@ class BayesianLinearRegression(
                 b[i] = s
             }
 
-            // Solve H_new · μ_new = b via chol(H_new); reuse the same factor for Σ_new.
+            // Solve H_new * mu_new = b via chol(H_new); reuse the same factor for Sum_new.
             val Lh = hNew.cholesky()
             val muNew = solveSpd(Lh, b)
             val sigmaNew = invertSpd(Lh)

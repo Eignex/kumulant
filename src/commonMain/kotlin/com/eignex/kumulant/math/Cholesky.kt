@@ -4,27 +4,24 @@ import kotlin.math.absoluteValue
 import kotlin.math.sqrt
 
 /**
- * Cholesky helpers operating directly on the flat-`DoubleArray` backing of
- * [DenseMatrix], in Double precision. Internal — these are kumulant-implementation
- * utilities used by the regression stats; they aren't part of the public matrix
- * surface.
+ * Cholesky helpers operating on the flat-`DoubleArray` backing of [DenseMatrix].
+ * Internal to the regression stats; not part of the public matrix surface.
  *
- * **Convention.** All functions in this file use the **lower-triangular** Cholesky
- * factor `L` such that `A = L · Lᵀ`. Entry `(i, k)` for `k ≤ i` lives at
- * `data[i · cols + k]`; entries with `k > i` are not read or written.
+ * Convention: lower-triangular factor `L` with `A = L * LT`. Entry `(i, k)` for
+ * `k <= i` lives at `data[i * cols + k]`; entries above the diagonal are neither
+ * read nor written.
  *
- * **Performance.** The hot inner loops (decomposition, forward substitution) reduce
- * to [denseDot] / [denseAxpy] on contiguous row runs — SIMD on JVM, scalar
- * elsewhere. The Givens rotation step in [choleskyDowndateInPlace] has a
- * loop-carried dependency and stays scalar. Back substitution in [solveSpd]
- * walks a strided column and also stays scalar; the forward half gets SIMD.
+ * Inner loops reduce to [denseDot] on contiguous row runs (SIMD on JVM). The
+ * Givens rotation step in [choleskyDowndateInPlace] has a loop-carried dependency
+ * and stays scalar. [solveSpd]'s back substitution walks a strided column and
+ * also stays scalar; the forward half uses SIMD.
  */
 
 /**
- * Lower-triangular Cholesky decomposition `A = L · Lᵀ`, returned as a fresh matrix.
+ * Lower-triangular Cholesky decomposition `A = L * LT`, returned as a fresh matrix.
  * Falls back to a small positive diagonal entry when [this] is not strictly
- * positive-definite — a regularised result is friendlier than a crash for the
- * online stats that call this on drifting precision matrices.
+ * positive-definite; a regularised result is friendlier than a crash for the online
+ * stats that call this on drifting precision matrices.
  */
 internal fun MatrixView.cholesky(): DenseMatrix {
     require(rows == cols) { "cholesky requires a square matrix; got ${rows}x${cols}" }
@@ -46,15 +43,14 @@ internal fun MatrixView.cholesky(): DenseMatrix {
 
 /**
  * In-place Cholesky downdate of a lower-triangular factor: modifies [this] so that
- * the matrix `A = L · Lᵀ` it represents becomes `A - x · xᵀ`. Returns `0.0` on
- * success, or a positive "norm" value signalling the downdate would leave the
- * matrix outside the positive-definite cone — the caller must repair via a fresh
+ * the matrix `A = L * LT` it represents becomes `A - x * xT`. Returns `0.0` on
+ * success, or a positive "norm" value when the downdate would leave the matrix
+ * outside the positive-definite cone. The caller then has to repair via a fresh
  * decomposition or take a smaller step.
  *
- * Algorithm: solve `L · s = x` via forward substitution; if `‖s‖ < 1` the downdate
- * stays SPD. Apply a sequence of Givens rotations to the rows of L (the natural
- * direction for lower-triangular storage) so that `s` is absorbed without
- * destroying the triangular structure.
+ * Algorithm: solve `L * s = x` by forward substitution; if `||s|| < 1` the downdate
+ * stays SPD. Then apply Givens rotations to the rows of L (the natural direction
+ * for lower-triangular storage) to absorb `s` without breaking triangularity.
  */
 internal fun DenseMatrix.choleskyDowndateInPlace(x: VectorView): Double {
     require(rows == cols) { "choleskyDowndateInPlace requires a square matrix; got ${rows}x${cols}" }
@@ -64,7 +60,7 @@ internal fun DenseMatrix.choleskyDowndateInPlace(x: VectorView): Double {
     val s = DoubleArray(n)
     val c = DoubleArray(n)
 
-    // Solve L · s = x by forward substitution. Inner sum is a contiguous dot product.
+    // Solve L * s = x by forward substitution. Inner sum is a contiguous dot product.
     s[0] = x[0] / L[0]
     for (i in 1 until n) {
         val rowI = i * n
@@ -88,7 +84,7 @@ internal fun DenseMatrix.choleskyDowndateInPlace(x: VectorView): Double {
         s[i] = b / nrm
         alpha = scale * nrm
     }
-    // Apply rotations along rows of L. Loop-carried in xx — stays scalar.
+    // Apply rotations along rows of L. Loop-carried in xx - stays scalar.
     for (j in 0 until n) {
         val rowJ = j * n
         var xx = 0.0
@@ -104,11 +100,11 @@ internal fun DenseMatrix.choleskyDowndateInPlace(x: VectorView): Double {
 }
 
 /**
- * Solve `A · x = b` for `x`, given `L = chol(A)` (lower-triangular, `A = L · Lᵀ`).
+ * Solve `A * x = b` for `x`, given `L = chol(A)` (lower-triangular, `A = L * LT`).
  * Allocates a fresh result vector; [b] is not modified.
  *
- * Forward substitution `L · y = b` runs over contiguous row data and uses [denseDot].
- * Back substitution `Lᵀ · x = y` walks a strided column and stays scalar.
+ * Forward substitution `L * y = b` runs over contiguous row data and uses [denseDot].
+ * Back substitution `LT * x = y` walks a strided column and stays scalar.
  */
 internal fun solveSpd(L: DenseMatrix, b: DoubleArray): DoubleArray {
     val n = L.rows
@@ -130,7 +126,7 @@ internal fun solveSpd(L: DenseMatrix, b: DoubleArray): DoubleArray {
     return x
 }
 
-/** Invert an SPD matrix from its Cholesky factor: returns `A⁻¹` given `L = chol(A)`. */
+/** Invert an SPD matrix from its Cholesky factor: returns `A^-1` given `L = chol(A)`. */
 internal fun invertSpd(L: DenseMatrix): DenseMatrix {
     val n = L.rows
     val inv = DenseMatrix(n, n)

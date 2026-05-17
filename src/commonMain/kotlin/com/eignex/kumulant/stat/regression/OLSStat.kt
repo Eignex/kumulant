@@ -28,7 +28,7 @@ data class OLSResult(
     HasRegression {
 
     /**
-     * Calculated from R² and the sign of the slope.
+     * Calculated from R^2 and the sign of the slope.
      * This avoids needing to store the raw covariance if not strictly necessary.
      */
     val correlation: Double
@@ -112,7 +112,7 @@ class OLSStat(
 
         val sxx2 = values.x.variance * w2
         val syy2 = values.y.variance * w2
-        val sxy2 = values.slope * sxx2 // slope = sxy / sxx  →  sxy = slope * sxx
+        val sxy2 = values.slope * sxx2 // slope = sxy / sxx  ->  sxy = slope * sxx
 
         val factor = w1 * w2 / nextW
         sxx.add(sxx2 + dx * dx * factor)

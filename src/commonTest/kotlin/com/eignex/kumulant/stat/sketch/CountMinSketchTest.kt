@@ -51,8 +51,8 @@ class CountMinSketchTest {
         for (i in 0 until n) cms.update((i % 1000).toLong())
         val r = cms.read()
         // True count of each of the 1000 keys is n/1000 = 100; CMS theory gives
-        // per-query error ≤ e/w · n with probability ≥ 1 - (1/e)^depth. Average
-        // overestimate across queries is comfortably below e/w · n ≈ 67.
+        // per-query error <= e/w * n with probability >= 1 - (1/e)^depth. Average
+        // overestimate across queries is comfortably below e/w * n ~ 67.
         var totalOverestimate = 0L
         for (k in 0L until 1000L) {
             val est = r.estimate(k)

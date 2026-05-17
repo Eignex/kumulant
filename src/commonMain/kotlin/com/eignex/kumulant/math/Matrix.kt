@@ -9,16 +9,14 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 /**
- * Read-only N×M matrix. Sealed alongside [VectorView] so snapshots round-trip
+ * Read-only NxM matrix. Sealed alongside [VectorView] so snapshots round-trip
  * through serialisation with their concrete storage preserved. Public surface is
- * read-only: shape, entry access, materialise to `Array<DoubleArray>`.
+ * read-only: shape, entry access, materialise to `Array<DoubleArray>`. Mutation,
+ * factorisations, and arithmetic are `internal`.
  *
- * Mutation, factorisations, and arithmetic are `internal` — kumulant exposes
- * matrices as observation snapshots, not as a general linear-algebra type.
- *
- * Only [DenseMatrix] today; a CSR/CSC sparse matrix can land here later when a
- * consumer needs it (today the only callers are full-covariance regression stats
- * whose state is intrinsically dense).
+ * Only [DenseMatrix] today. A CSR/CSC sparse matrix can land here when a consumer
+ * needs it; the only callers today are full-covariance regression stats whose state
+ * is intrinsically dense.
  */
 @Serializable
 sealed interface MatrixView {
@@ -33,14 +31,12 @@ sealed interface MatrixView {
 
 /**
  * Dense row-major matrix backed by a single contiguous `DoubleArray` of length
- * `rows · cols`. Element `(i, j)` lives at `data[i · cols + j]`.
+ * `rows * cols`. Element `(i, j)` lives at `data[i * cols + j]`.
  *
- * The flat-array layout is deliberate: one heap allocation, perfect cache locality
- * across row boundaries, and SIMD primitives (see `Primitives.kt`) can sweep long
- * runs without re-fetching row references. The serialisation form is a 2D
- * `Array<DoubleArray>` for readability; the in-memory form is flat.
- *
- * Mutation is `internal`; external callers only see the read-only [MatrixView] surface.
+ * Flat layout: one heap allocation, cache-friendly across row boundaries, and the
+ * SIMD primitives in `Primitives.kt` can sweep long runs without re-fetching row
+ * references. The serialisation form is a 2D `Array<DoubleArray>` for readability;
+ * the in-memory form is flat. Mutation is `internal`.
  */
 @Serializable(with = DenseMatrixSerializer::class)
 @SerialName("DenseMatrix")
@@ -92,22 +88,21 @@ class DenseMatrix internal constructor(
             return DenseMatrix(r, c, flat)
         }
 
-        /** Create an N×N identity matrix scaled by [diagonal]. */
+        /** Create an NxN identity matrix scaled by [diagonal]. */
         fun diagonal(size: Int, diagonal: Double = 1.0): DenseMatrix {
             val m = DenseMatrix(size, size)
             for (i in 0 until size) m[i, i] = diagonal
             return m
         }
 
-        /** Wrap an existing flat `DoubleArray` of length `rows · cols` without copying. */
+        /** Wrap an existing flat `DoubleArray` of length `rows * cols` without copying. */
         internal fun wrap(rows: Int, cols: Int, data: DoubleArray): DenseMatrix =
             DenseMatrix(rows, cols, data)
     }
 }
 
-/** Wire form for [DenseMatrix] — a row-major `Array<DoubleArray>`. The flat
- *  in-memory backing is an implementation detail; the serialised shape stays
- *  human-readable and stable across layout changes. */
+/** Serialises [DenseMatrix] as a 2D `Array<DoubleArray>`. The flat in-memory backing
+ *  is an implementation detail; the wire shape stays stable across layout changes. */
 internal object DenseMatrixSerializer : KSerializer<DenseMatrix> {
     private val inner = ArraySerializer(kotlinx.serialization.builtins.DoubleArraySerializer())
     override val descriptor: SerialDescriptor get() = inner.descriptor

@@ -10,7 +10,7 @@ import kotlin.test.assertTrue
 /**
  * Statistical sanity tests for the random-variate generators. Each test draws ~10k
  * samples and compares sample moments against analytic moments with generous slack.
- * Not a full distributional fit test — just enough to catch sign errors and
+ * Not a full distributional fit test - just enough to catch sign errors and
  * algorithmic mistakes.
  */
 class DistributionsTest {
@@ -50,12 +50,12 @@ class DistributionsTest {
 
     @Test
     fun `nextNormal tail produces values beyond Ziggurat R boundary`() {
-        // Ziggurat splits its work at R ≈ 3.44; verify the tail-sampling branch
+        // Ziggurat splits its work at R ~ 3.44; verify the tail-sampling branch
         // actually produces samples beyond it at the analytic rate.
         val rng = Random(3)
         var tailHits = 0
         repeat(100_000) { if (abs(rng.nextNormal()) > 3.5) tailHits++ }
-        // P(|N(0,1)| > 3.5) ≈ 4.65e-4 → expect ~46 hits in 100k.
+        // P(|N(0,1)| > 3.5) ~ 4.65e-4 -> expect ~46 hits in 100k.
         assertTrue(tailHits in 20..100, "tailHits=$tailHits (expected ~46)")
     }
 

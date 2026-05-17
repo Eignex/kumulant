@@ -11,59 +11,59 @@ import kotlin.time.Duration
 @Serializable
 @SerialName("DecayingMeanResult")
 data class DecayingMeanResult(
-    val mean: Double,
-    /** Effective weight of observations still contributing (decays with time). */
-    val totalWeights: Double,
-    val timestampNanos: Long,
+ val mean: Double,
+ /** Effective weight of observations still contributing (decays with time). */
+ val totalWeights: Double,
+ val timestampNanos: Long,
 ) : Result
 
 /**
- * Exponentially decaying weighted mean: `Σ(vᵢ·wᵢ·decay) / Σ(wᵢ·decay)`.
+ * Exponentially decaying weighted mean: `Sum(v_i*w_i*decay) / Sum(w_i*decay)`.
  *
- * Composes two [DecayingSumStat]s — one for weighted values, one for weights — so that the
+ * Composes two [DecayingSumStat]s - one for weighted values, one for weights - so that the
  * decay factor cancels in the ratio and the mean reflects only the *relative* weighting
  * of recent vs. older observations.
  */
 class DecayingMeanStat(
-    val weighting: DecayWeighting.HalfLife,
-    override val concurrency: Concurrency = Concurrency.None,
+ val weighting: DecayWeighting.HalfLife,
+ override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<DecayingMeanResult> {
 
-    constructor(halfLife: Duration, concurrency: Concurrency = Concurrency.None) :
-        this(DecayWeighting.HalfLife(halfLife), concurrency)
+ constructor(halfLife: Duration, concurrency: Concurrency = Concurrency.None) :
+ this(DecayWeighting.HalfLife(halfLife), concurrency)
 
-    val halfLife: Duration get() = weighting.halfLife
+ val halfLife: Duration get() = weighting.halfLife
 
-    private val sumX = DecayingSumStat(weighting, concurrency)
-    private val sumW = DecayingSumStat(weighting, concurrency)
+ private val sumX = DecayingSumStat(weighting, concurrency)
+ private val sumW = DecayingSumStat(weighting, concurrency)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        sumX.update(value, timestampNanos, weight)
-        sumW.update(1.0, timestampNanos, weight)
-    }
+ override fun update(value: Double, timestampNanos: Long, weight: Double) {
+ sumX.update(value, timestampNanos, weight)
+ sumW.update(1.0, timestampNanos, weight)
+ }
 
-    override fun read(timestampNanos: Long): DecayingMeanResult {
-        val sumX = sumX.read(timestampNanos).sum
-        val sumW = sumW.read(timestampNanos).sum
-        val mean = when {
-            sumW > 0.0 -> sumX / sumW
-            sumW == 0.0 -> 0.0
-            else -> Double.NaN
-        }
-        return DecayingMeanResult(mean, sumW, timestampNanos)
-    }
+ override fun read(timestampNanos: Long): DecayingMeanResult {
+ val sumX = sumX.read(timestampNanos).sum
+ val sumW = sumW.read(timestampNanos).sum
+ val mean = when {
+ sumW > 0.0 -> sumX / sumW
+ sumW == 0.0 -> 0.0
+ else -> Double.NaN
+ }
+ return DecayingMeanResult(mean, sumW, timestampNanos)
+ }
 
-    override fun merge(values: DecayingMeanResult) {
-        if (values.totalWeights <= 0.0) return
-        sumX.merge(DecayingSumResult(values.mean * values.totalWeights, values.timestampNanos))
-        sumW.merge(DecayingSumResult(values.totalWeights, values.timestampNanos))
-    }
+ override fun merge(values: DecayingMeanResult) {
+ if (values.totalWeights <= 0.0) return
+ sumX.merge(DecayingSumResult(values.mean * values.totalWeights, values.timestampNanos))
+ sumW.merge(DecayingSumResult(values.totalWeights, values.timestampNanos))
+ }
 
-    override fun reset() {
-        sumX.reset()
-        sumW.reset()
-    }
+ override fun reset() {
+ sumX.reset()
+ sumW.reset()
+ }
 
-    override fun create(concurrency: Concurrency?) =
-        DecayingMeanStat(weighting, concurrency ?: this.concurrency)
+ override fun create(concurrency: Concurrency?) =
+ DecayingMeanStat(weighting, concurrency ?: this.concurrency)
 }

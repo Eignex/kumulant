@@ -12,7 +12,7 @@ import com.eignex.kumulant.core.VectorStat
 private fun requireUniqueNames(entries: List<Pair<String, *>>, typeName: String) {
     val duplicates = entries.map { it.first }.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
     require(duplicates.isEmpty()) {
-        "Duplicate stat names in $typeName: $duplicates — pass explicit Pair<String, ...> to disambiguate"
+        "Duplicate stat names in $typeName: $duplicates - pass explicit Pair<String, ...> to disambiguate"
     }
 }
 
@@ -53,7 +53,7 @@ sealed class AbstractListStats<R : Result, S : Stat<out R>>(
  * name (for `.toMap()`).
  *
  * Names default to each stat's `simpleName`; override with `Pair<String, SeriesStat>`
- * entries. Duplicate names throw at construction — disambiguate explicitly.
+ * entries. Duplicate names throw at construction - disambiguate explicitly.
  *
  * Lighter than [StatGroup] when the [StatKey] / [BoundStat] apparatus isn't needed.
  */

@@ -49,11 +49,11 @@ data class GroupResult(
  * Subclass and declare stats via the [series], [paired], [vector], [discrete], [raw],
  * and [group] delegates; each property exposes a [StatKey] for typed retrieval from a
  * [GroupResult]. Every entry is a [StatSpec], which means the schema always
- * round-trips through the wire — no live-stat back-door.
+ * round-trips through the wire - no live-stat back-door.
  *
  * If you need an aggregation that isn't wire-expressible (e.g. a `filter`-wrapped
  * stat), build a [StatGroup] / `*ListStats` directly with the vararg `Pair`
- * constructor — bypass the schema layer entirely.
+ * constructor - bypass the schema layer entirely.
  *
  * The schema-level [concurrency] is the deployment knob: every config materializes
  * via `config.materialize(concurrency)` inside the [StatGroup] / `*ListStats`
