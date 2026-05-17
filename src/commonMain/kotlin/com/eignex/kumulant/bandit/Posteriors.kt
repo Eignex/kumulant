@@ -1,6 +1,9 @@
 package com.eignex.kumulant.bandit
 
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.math.nextBeta
+import com.eignex.kumulant.math.nextGamma
+import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult

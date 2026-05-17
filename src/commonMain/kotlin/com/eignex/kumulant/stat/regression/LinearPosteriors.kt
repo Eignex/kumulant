@@ -1,11 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
-// `nextNormal` currently lives in `kumulant.bandit.Distributions`; this is the only
-// cross-package import in this file. If a third caller outside `kumulant.bandit`
-// needs the random-variate helpers, lift Distributions to a neutral package
-// (e.g. `kumulant.math` or `kumulant.rng`) at that point.
-import com.eignex.kumulant.bandit.nextNormal
 import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.math.GaussianSampler
 import com.eignex.kumulant.math.VectorView
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -48,8 +44,9 @@ data object PointPosterior : LinearPosterior<SGDRegressionResult> {
         if (exploration <= 0.0) return snapshot.weights
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
+        val gauss = GaussianSampler(rng)
         val out = DoubleArray(n)
-        for (i in 0 until n) out[i] = rng.nextNormal(snapshot.weights[i], sd)
+        for (i in 0 until n) out[i] = gauss.next(snapshot.weights[i], sd)
         return DenseVector.of(out)
     }
 }
@@ -63,10 +60,11 @@ data object PointPosterior : LinearPosterior<SGDRegressionResult> {
 data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
     override fun sample(snapshot: DiagonalRegressionResult, rng: Random, exploration: Double): VectorView {
         val n = snapshot.weights.size
+        val gauss = GaussianSampler(rng)
         val out = DoubleArray(n)
         for (i in 0 until n) {
             val sd = sqrt(exploration / snapshot.precision[i])
-            out[i] = rng.nextNormal(snapshot.weights[i], sd)
+            out[i] = gauss.next(snapshot.weights[i], sd)
         }
         return DenseVector.of(out)
     }
@@ -86,7 +84,8 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
     override fun sample(snapshot: CovarianceRegressionResult, rng: Random, exploration: Double): VectorView {
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
-        val u = DoubleArray(n) { rng.nextNormal(0.0, sd) }
+        val gauss = GaussianSampler(rng)
+        val u = DoubleArray(n) { gauss.next(0.0, sd) }
         val out = DoubleArray(n)
         for (i in 0 until n) {
             var s = snapshot.weights[i]

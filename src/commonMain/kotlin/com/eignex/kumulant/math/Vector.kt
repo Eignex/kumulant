@@ -61,8 +61,14 @@ class DenseVector internal constructor(internal val data: DoubleArray) : VectorV
 /**
  * Compressed sparse vector: parallel [indices]/[values] arrays of equal length, each
  * recording one nonzero entry. Always immutable from the caller's perspective — to
- * change the sparsity pattern, rebuild. Linear lookup for [get]; cheap iteration
- * over nonzeros for internal ops (sparsity-aware dot products etc.).
+ * change the sparsity pattern, rebuild.
+ *
+ * [get] is a linear scan rather than a binary search **on purpose**. The expected
+ * `nnz` is small (handful to a few hundred — sparse feature vectors from
+ * nominal-heavy CSPs); at that size a tight `IntArray` loop is faster than
+ * binary search's mispredicted branches and indirect indexing. Internal ops
+ * iterate via `forEachStored` and never go through [get] anyway, so the
+ * external linear-scan is rare.
  *
  * Indices are not required to be sorted; the constructor only checks the parallel-
  * array invariant.
