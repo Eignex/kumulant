@@ -25,7 +25,6 @@ sealed interface MatrixView {
     val rows: Int
     val cols: Int
 
-    /** Read entry `(i, j)`. */
     operator fun get(i: Int, j: Int): Double
 
     /** Materialise into a fresh row-major `Array<DoubleArray>`. */

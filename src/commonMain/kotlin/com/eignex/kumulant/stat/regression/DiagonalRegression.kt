@@ -27,9 +27,8 @@ import com.eignex.kumulant.stream.serializedLock
  *
  * Sparse-aware: precision and weight updates only fire where `x_i != 0` (matching the
  * diagonal-Hessian semantics; coordinates absent from this observation contribute no
- * curvature). L2 falls into the same loop so it only acts on touched coordinates —
- * documented as a deliberate choice rather than a bug, consistent with how
- * coordinate-descent solvers usually handle regularisation in the sparse setting.
+ * curvature). L2 acts only on touched coordinates — matches how coordinate-descent
+ * solvers handle regularisation in the sparse setting.
  */
 class DiagonalRegression(
     override val featureSize: Int,

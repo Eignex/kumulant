@@ -41,14 +41,12 @@ class SGDLinearRegression(
 
     init { require(featureSize > 0) { "featureSize must be positive" } }
 
-    private val lock = serializeLock()
+    private val lock = concurrency.serializedLock()
     private val weights = DoubleArray(featureSize)
     private var bias: Double = 0.0
     private var totalWeights: Double = 0.0
     private var step: Long = 0L
     private var sse: Double = 0.0
-
-    private fun serializeLock() = concurrency.serializedLock()
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) =
         lock.withLock {
@@ -89,11 +87,10 @@ class SGDLinearRegression(
     }
 
     /**
-     * Sample-weighted blend of weights and bias — the same rule [combineMean] uses
-     * for scalar Welford stats. SGD has no second-moment information, so this is an
-     * *approximation*: weight vectors from two streams are correlated through their
-     * gradient trajectories in a way that an exact combine would need to know about.
-     * If you need a principled merge, use [BayesianLinearRegression] instead.
+     * Sample-weighted blend of weights and bias. SGD has no second-moment information,
+     * so this is an *approximation*: weight vectors from two streams are correlated
+     * through their gradient trajectories in a way that an exact combine would need to
+     * know about. If you need a principled merge, use [BayesianLinearRegression].
      */
     override fun merge(values: SGDRegressionResult) {
         require(values.featureSize == featureSize) {

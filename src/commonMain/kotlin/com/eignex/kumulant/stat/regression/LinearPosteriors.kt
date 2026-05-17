@@ -34,8 +34,7 @@ sealed interface LinearPosterior<R : LinearRegressionResult> {
 /**
  * Point estimate plus optional isotropic Gaussian noise. SGD models have no posterior
  * variance to draw from — `exploration` lets callers add a constant std-dev shake on
- * top of the point estimate for exploration's sake (matches the legacy `SGDLinearModel`
- * `sample` semantics).
+ * top of the point estimate.
  */
 @Serializable
 @SerialName("PointPosterior")

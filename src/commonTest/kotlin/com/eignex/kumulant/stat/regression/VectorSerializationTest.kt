@@ -12,9 +12,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * End-to-end checks for the new sealed VectorView abstraction: sparse inputs flow
- * through regression-stat updates without materialisation, and snapshots round-trip
- * through kotlinx.serialization preserving the concrete dense/sparse subtype.
+ * End-to-end checks for the sealed VectorView abstraction: sparse inputs flow through
+ * regression-stat updates without materialisation, and snapshots round-trip through
+ * kotlinx.serialization preserving the concrete dense/sparse subtype.
  */
 class VectorSerializationTest {
 

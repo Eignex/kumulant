@@ -29,17 +29,15 @@ sealed interface LinearRegressionResult : Result, HasRegression {
     /** Fitted weight per feature, indexed by the same `i` as the input `x[i]`. */
     val weights: VectorView
 
-    /** Fitted intercept. */
     val bias: Double
 
     /** Cumulative observation weight folded in. */
     override val totalWeights: Double
 
-    /** Number of [com.eignex.kumulant.core.RegressionStat.update] calls absorbed; useful as a
-     *  bookkeeping counter for scheduling decisions (learning-rate decay, retraining cadence). */
+    /** Number of [com.eignex.kumulant.core.RegressionStat.update] calls absorbed; useful
+     *  as a bookkeeping counter for learning-rate decay or retraining cadence. */
     val step: Long
 
-    /** Number of features (= `weights.size`). */
     val featureSize: Int get() = weights.size
 
     /** Evaluate the fitted hyperplane at [x]. */

@@ -7,11 +7,9 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
- * Random-variate generators for the distributions kumulant's bandit/regression code
- * needs. Implementations are textbook-standard: Marsaglia polar for Gaussian,
- * Marsaglia-Tsang for Gamma, two-gamma quotient for Beta. Each function lives as an
- * extension on [Random] for one-off use, with hot-path callers preferring
- * [GaussianSampler] (which caches the polar method's spare).
+ * Random-variate generators for the distributions kumulant's bandit and regression
+ * code needs. Implementations are textbook-standard: Ziggurat for Gaussian,
+ * Marsaglia-Tsang for Gamma, two-gamma quotient for Beta.
  */
 
 private const val MIN_POS = Double.MIN_VALUE
@@ -44,7 +42,6 @@ fun Random.nextNormal(mean: Float, std: Float): Float = nextNormal(mean.toDouble
  */
 fun Random.nextNormal(mean: Double = 0.0, std: Double = 1.0): Double = mean + std * standardNormal()
 
-/** N(0, 1) draw — the unparameterised core of [nextNormal]. */
 private fun Random.standardNormal(): Double {
     while (true) {
         val hz = nextInt()

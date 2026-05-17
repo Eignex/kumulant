@@ -24,12 +24,12 @@ class MathTest {
         val a = dense(1.0, 2.0, 3.0, 4.0)
         val b = dense(0.5, 0.0, -1.0, 2.0)
         val bSparse = sparse(4, 0 to 0.5, 2 to -1.0, 3 to 2.0)
-        val expected = 1*0.5 + 2*0 + 3*(-1) + 4*2  // 5.5
+        val expected = 1*0.5 + 2*0 + 3*(-1) + 4*2
         assertEquals(expected, a dot b, 1e-12)
         assertEquals(expected, b dot a, 1e-12)
         assertEquals(expected, a dot bSparse, 1e-12)
         assertEquals(expected, bSparse dot a, 1e-12)
-        // Same vector twice (sparse × dense form): self-dot = sum of squares.
+        // Same vector twice (sparse × dense form) — exercises the sparse-dispatch path.
         assertEquals(0.5*0.5 + 0 + 1 + 4, bSparse dot b, 1e-12)
     }
 
