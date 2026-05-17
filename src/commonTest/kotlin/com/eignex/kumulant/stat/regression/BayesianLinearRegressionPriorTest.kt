@@ -267,4 +267,107 @@ class BayesianLinearRegressionPriorTest {
         assertTrue(abs(prior.mean[0] - 2.0) < 1e-6, "got ${prior.mean[0]}")
         assertTrue(abs(prior.mean[1] - -2.0) < 1e-6, "got ${prior.mean[1]}")
     }
+
+    @Test
+    fun `fitPopulationPrior with a single snapshot has zero between-instance variance`() {
+        val cov = DenseMatrix.diagonal(2, 0.4)
+        val snap = CovarianceRegressionResult(
+            weights = DenseVector.of(doubleArrayOf(0.7, -0.3)),
+            bias = 0.0,
+            biasPrecision = 1.0,
+            totalWeights = 50.0,
+            step = 50L,
+            covariance = DenseMatrix.of(cov.toArray()),
+            covarianceL = DenseMatrix.diagonal(2, kotlin.math.sqrt(0.4)),
+            sse = 0.0,
+        )
+        val prior = BayesianLinearRegression.fitPopulationPrior(listOf(snap))
+        assertEquals(1, prior.instanceCount)
+        assertEquals(0.7, prior.mean[0], 1e-12)
+        assertEquals(-0.3, prior.mean[1], 1e-12)
+        // Single instance -> between term is 0, population covariance == within covariance.
+        for (i in 0 until 2) for (j in 0 until 2)
+            assertEquals(cov[i, j], prior.covariance[i, j], 1e-12)
+    }
+
+    @Test
+    fun `create propagates the configured prior to the clone`() {
+        val mean = DenseVector.of(doubleArrayOf(0.4, 1.1))
+        val cov = DenseMatrix.diagonal(2, 0.3)
+        val original = BayesianLinearRegression(
+            featureSize = 2,
+            priorMean = mean,
+            priorCovariance = cov,
+        )
+        // Mutate the original; the clone should still spring from the configured prior.
+        original.update(doubleArrayOf(1.0, 0.0), 5.0, 1.0)
+        val clone = original.create(null)
+        val r = clone.read()
+        for (i in 0 until 2) {
+            assertEquals(mean[i], r.weights[i], 1e-12)
+            assertEquals(cov[i, i], r.covariance[i, i], 1e-12)
+        }
+    }
+
+    @Test
+    fun `priorMean size mismatch is rejected`() {
+        assertFailsWith<IllegalArgumentException> {
+            BayesianLinearRegression(
+                featureSize = 3,
+                priorMean = DenseVector.of(doubleArrayOf(1.0, 2.0)),
+            )
+        }
+    }
+
+    @Test
+    fun `priorCovariance shape mismatch is rejected`() {
+        assertFailsWith<IllegalArgumentException> {
+            BayesianLinearRegression(
+                featureSize = 3,
+                priorCovariance = DenseMatrix.diagonal(2, 1.0),
+            )
+        }
+    }
+
+    @Test
+    fun `strong prior dominates with very little data`() {
+        // 5 noisy observations vs a very tight prior at the wrong mean: posterior
+        // should sit much closer to the prior than to the data-only OLS fit.
+        val priorMean = DenseVector.of(doubleArrayOf(0.0, 0.0))
+        val tight = DenseMatrix.diagonal(2, 1e-4)
+        val blr = BayesianLinearRegression(
+            featureSize = 2,
+            priorMean = priorMean,
+            priorCovariance = tight,
+        )
+        val rng = Random(0)
+        repeat(5) {
+            val x = DoubleArray(2) { rng.nextDouble() * 2 - 1 }
+            blr.update(x, 5.0 * x[0] + 3.0 * x[1], 1.0)
+        }
+        val w = blr.read().weights
+        for (i in 0 until 2) assertTrue(
+            abs(w[i]) < 0.1,
+            "strong prior should pin w[$i] near 0, got ${w[i]}"
+        )
+    }
+
+    @Test
+    fun `PopulationPrior round-trips through JSON`() {
+        val snap = CovarianceRegressionResult(
+            weights = DenseVector.of(doubleArrayOf(0.5, -0.5)),
+            bias = 0.0,
+            biasPrecision = 1.0,
+            totalWeights = 10.0,
+            step = 10L,
+            covariance = DenseMatrix.diagonal(2, 0.5),
+            covarianceL = DenseMatrix.diagonal(2, kotlin.math.sqrt(0.5)),
+            sse = 0.0,
+        )
+        val prior = BayesianLinearRegression.fitPopulationPrior(listOf(snap, snap))
+        val json = kotlinx.serialization.json.Json
+        val wire = json.encodeToString(PopulationPrior.serializer(), prior)
+        val decoded = json.decodeFromString(PopulationPrior.serializer(), wire)
+        assertEquals(prior, decoded)
+    }
 }

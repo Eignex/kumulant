@@ -4,6 +4,7 @@ import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
@@ -185,6 +186,21 @@ class MathTest {
         // x with ||L^-1 x|| >= 1 - pick x so that x*xT swamps A.
         val norm = L.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(3.0, 0.0)))
         assertTrue(norm >= 1.0, "expected norm >= 1 for an infeasible downdate, got $norm")
+    }
+
+    @Test
+    fun `cholesky strict mode throws on a non positive definite pivot`() {
+        // Negative diagonal pivot - immediately rejected with regularizeNonPD=false.
+        val bad = DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(1.0, 0.0),
+                doubleArrayOf(0.0, -0.5),
+            )
+        )
+        assertFailsWith<IllegalArgumentException> { bad.cholesky(regularizeNonPD = false) }
+        // Default regularising path still succeeds (clamps the pivot to 1e-5).
+        val L = bad.cholesky()
+        assertTrue(L[1, 1] > 0.0)
     }
 
     @Test
