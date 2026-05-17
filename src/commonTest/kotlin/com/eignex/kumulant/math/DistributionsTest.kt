@@ -33,7 +33,7 @@ class DistributionsTest {
     }
 
     @Test
-    fun `nextNormal matches higher moments of N(0,1)`() {
+    fun `nextNormal matches higher moments of standard normal`() {
         val rng = Random(101)
         val n = 50_000
         var s = 0.0

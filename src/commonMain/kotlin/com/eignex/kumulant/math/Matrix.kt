@@ -103,6 +103,7 @@ class DenseMatrix internal constructor(
 
 /** Serialises [DenseMatrix] as a 2D `Array<DoubleArray>`. The flat in-memory backing
  *  is an implementation detail; the wire shape stays stable across layout changes. */
+@OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 internal object DenseMatrixSerializer : KSerializer<DenseMatrix> {
     private val inner = ArraySerializer(kotlinx.serialization.builtins.DoubleArraySerializer())
     override val descriptor: SerialDescriptor get() = inner.descriptor
