@@ -68,6 +68,67 @@ class DistributionsTest {
     }
 
     @Test
+    fun `ZigguratSampler matches N(0,1) moments and higher`() {
+        val rng = Random(101)
+        val sampler = ZigguratSampler(rng)
+        val n = 50_000
+        var s = 0.0
+        var ss = 0.0
+        var s3 = 0.0
+        var s4 = 0.0
+        repeat(n) {
+            val x = sampler.next()
+            s += x
+            ss += x * x
+            s3 += x * x * x
+            s4 += x * x * x * x
+        }
+        val mean = s / n
+        val variance = ss / n - mean * mean
+        val skew = s3 / n
+        val kurt = s4 / n
+        assertTrue(abs(mean) < 0.02, "mean=$mean")
+        assertTrue(abs(variance - 1.0) < 0.03, "var=$variance")
+        // N(0,1) has skewness 0, kurtosis 3.
+        assertTrue(abs(skew) < 0.05, "skew=$skew")
+        assertTrue(abs(kurt - 3.0) < 0.2, "kurt=$kurt")
+    }
+
+    @Test
+    fun `ZigguratSampler tail produces values beyond R`() {
+        // R ≈ 3.44; we should see plenty of |x| > R over 100k draws.
+        val rng = Random(3)
+        val sampler = ZigguratSampler(rng)
+        var tailHits = 0
+        repeat(100_000) {
+            if (abs(sampler.next()) > 3.5) tailHits++
+        }
+        // P(|N(0,1)| > 3.5) ≈ 4.65e-4 → expect ~46 hits in 100k.
+        assertTrue(tailHits in 20..100, "tailHits=$tailHits (expected ~46)")
+    }
+
+    @Test
+    fun `ZigguratSampler scales with (mean, std)`() {
+        val rng = Random(5)
+        val sampler = ZigguratSampler(rng)
+        val n = 20_000
+        var s = 0.0
+        var ss = 0.0
+        repeat(n) { val x = sampler.next(5.0, 2.0); s += x; ss += x * x }
+        val mean = s / n
+        val variance = ss / n - mean * mean
+        assertTrue(abs(mean - 5.0) < 0.05, "mean=$mean")
+        assertTrue(abs(variance - 4.0) < 0.15, "var=$variance")
+    }
+
+    @Test
+    fun `ZigguratSampler is deterministic given the seed`() {
+        val a = ZigguratSampler(Random(123))
+        val b = ZigguratSampler(Random(123))
+        repeat(50) { assertEquals(a.next(), b.next()) }
+    }
+
+    @Test
     fun `nextGamma alpha=1 fast path matches Exponential moments`() {
         val rng = Random(3)
         val n = 20_000
