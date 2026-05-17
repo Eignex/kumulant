@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.ZigguratSampler
 import com.eignex.kumulant.math.VectorView
+import com.eignex.kumulant.math.nextNormal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
@@ -44,9 +44,8 @@ data object PointPosterior : LinearPosterior<SGDRegressionResult> {
         if (exploration <= 0.0) return snapshot.weights
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
-        val gauss = ZigguratSampler(rng)
         val out = DoubleArray(n)
-        for (i in 0 until n) out[i] = gauss.next(snapshot.weights[i], sd)
+        for (i in 0 until n) out[i] = rng.nextNormal(snapshot.weights[i], sd)
         return DenseVector.of(out)
     }
 }
@@ -60,11 +59,10 @@ data object PointPosterior : LinearPosterior<SGDRegressionResult> {
 data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
     override fun sample(snapshot: DiagonalRegressionResult, rng: Random, exploration: Double): VectorView {
         val n = snapshot.weights.size
-        val gauss = ZigguratSampler(rng)
         val out = DoubleArray(n)
         for (i in 0 until n) {
             val sd = sqrt(exploration / snapshot.precision[i])
-            out[i] = gauss.next(snapshot.weights[i], sd)
+            out[i] = rng.nextNormal(snapshot.weights[i], sd)
         }
         return DenseVector.of(out)
     }
@@ -84,8 +82,7 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
     override fun sample(snapshot: CovarianceRegressionResult, rng: Random, exploration: Double): VectorView {
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
-        val gauss = ZigguratSampler(rng)
-        val u = DoubleArray(n) { gauss.next(0.0, sd) }
+        val u = DoubleArray(n) { rng.nextNormal(0.0, sd) }
         val out = DoubleArray(n)
         for (i in 0 until n) {
             var s = snapshot.weights[i]

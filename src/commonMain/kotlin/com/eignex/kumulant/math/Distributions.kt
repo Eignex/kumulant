@@ -29,137 +29,75 @@ private fun Random.nextDoublePos(): Double {
 fun Random.nextNormal(mean: Float, std: Float): Float = nextNormal(mean.toDouble(), std.toDouble()).toFloat()
 
 /**
- * Draw from `N(mean, std²)` via Marsaglia polar. Each accepted (u, v) pair yields
- * two independent Gaussians; the bare extension discards the second. For repeated
- * draws against the same [Random], construct a [GaussianSampler] and call `next()` —
- * the cached spare halves throughput on Gaussian-bound loops.
- */
-fun Random.nextNormal(mean: Double = 0.0, std: Double = 1.0): Double {
-    var u: Double
-    var s: Double
-    do {
-        u = nextDouble() * 2 - 1
-        val v = nextDouble() * 2 - 1
-        s = u * u + v * v
-    } while (s >= 1.0 || s == 0.0)
-    val mul = sqrt(-2.0 * ln(s) / s)
-    return mean + std * u * mul
-}
-
-/**
- * Cached-spare Marsaglia polar sampler. Each accepted (u, v) pair yields two
- * standard Gaussians; we return one and stash the other for the next call. For
- * loops that draw N Gaussians per round (e.g.
- * [com.eignex.kumulant.stat.regression.MultivariateGaussian] sampling N weight
- * components, [com.eignex.kumulant.stat.regression.FactorisedGaussian] sampling
- * per-coordinate noise) this halves the wall-clock cost of the rejection loop.
+ * Draw from `N(mean, std²)` via Marsaglia & Tsang's **Ziggurat** algorithm. The fast
+ * path is one `nextInt()` + table lookup + comparison; ~97% of draws complete there.
+ * The slow path handles the tail beyond `R = 3.4426` and the "wedge" regions outside
+ * each layer's inner rectangle.
  *
- * Not thread-safe — one sampler per drawing thread.
- */
-class GaussianSampler(private val rng: Random) {
-    // NaN sentinel = no spare cached. Spare is a *standard* Gaussian (mean=0, std=1);
-    // [next] applies the per-call (mean, std) scaling on top.
-    private var spare: Double = Double.NaN
-
-    /** Draw from `N(mean, std²)`. */
-    fun next(mean: Double = 0.0, std: Double = 1.0): Double {
-        val cached = spare
-        if (!cached.isNaN()) {
-            spare = Double.NaN
-            return mean + std * cached
-        }
-        var u: Double
-        var v: Double
-        var s: Double
-        do {
-            u = rng.nextDouble() * 2 - 1
-            v = rng.nextDouble() * 2 - 1
-            s = u * u + v * v
-        } while (s >= 1.0 || s == 0.0)
-        val mul = sqrt(-2.0 * ln(s) / s)
-        spare = v * mul
-        return mean + std * (u * mul)
-    }
-}
-
-/**
- * Marsaglia & Tsang's **Ziggurat** algorithm for standard normal samples. The
- * fast path is one `nextInt()` + one table lookup + one comparison; ~97% of draws
- * complete there. The slow path handles the tail beyond `R = 3.4426` and the
- * "wedge" regions outside the inner rectangle of each layer.
- *
- * Roughly 2-3× faster end-to-end than [GaussianSampler] on Gaussian-bound loops.
- * Tables are computed once at class load (not per instance), so constructing a
- * sampler is free after the first use.
- *
- * **Caveats.** Not thread-safe (per-thread instance). The full int range is used
- * for the layer index + sign + magnitude, which means the single value
- * `Int.MIN_VALUE` returns the boundary sample exactly — a 1-in-4-billion edge
- * case with no statistical impact.
+ * Stateless beyond the [Random] receiver — the precomputed layer tables ([ZIGGURAT_KN],
+ * [ZIGGURAT_WN], [ZIGGURAT_FN]) live at file scope and initialise once at class load,
+ * so call sites that need many Gaussians can just loop on the extension without
+ * wrapping the rng in anything.
  *
  * Reference: Marsaglia, G. & Tsang, W. W. (2000), "The Ziggurat Method for
  * Generating Random Variables", *Journal of Statistical Software*, 5(8).
  */
-class ZigguratSampler(private val rng: Random) {
+fun Random.nextNormal(mean: Double = 0.0, std: Double = 1.0): Double = mean + std * standardNormal()
 
-    /** Draw from `N(mean, std²)`. */
-    fun next(mean: Double = 0.0, std: Double = 1.0): Double = mean + std * sample()
-
-    private fun sample(): Double {
-        while (true) {
-            val hz = rng.nextInt()
-            val iz = hz and (N - 1)
-            val absHz = if (hz >= 0) hz else -hz
-            // Quick accept: lands here for ~97% of draws.
-            if (absHz < KN[iz]) return hz * WN[iz]
-            // Slow path: tail (iz == 0) or wedge.
-            if (iz == 0) {
-                var x: Double
-                var y: Double
-                do {
-                    x = -ln(rng.nextDouble().coerceAtLeast(MIN_POS)) * R_INV
-                    y = -ln(rng.nextDouble().coerceAtLeast(MIN_POS))
-                } while (y + y < x * x)
-                return if (hz > 0) R + x else -(R + x)
-            }
-            val x = hz * WN[iz]
-            if (FN[iz] + rng.nextDouble() * (FN[iz - 1] - FN[iz]) < exp(-0.5 * x * x)) {
-                return x
-            }
+/** N(0, 1) draw — the unparameterised core of [nextNormal]. */
+private fun Random.standardNormal(): Double {
+    while (true) {
+        val hz = nextInt()
+        val iz = hz and (ZIGGURAT_N - 1)
+        val absHz = if (hz >= 0) hz else -hz
+        // Fast path: ~97% of draws land in the inner rectangle of their layer.
+        if (absHz < ZIGGURAT_KN[iz]) return hz * ZIGGURAT_WN[iz]
+        // Slow path: tail beyond R (iz == 0) or wedge test.
+        if (iz == 0) {
+            var x: Double
+            var y: Double
+            do {
+                x = -ln(nextDouble().coerceAtLeast(MIN_POS)) * ZIGGURAT_R_INV
+                y = -ln(nextDouble().coerceAtLeast(MIN_POS))
+            } while (y + y < x * x)
+            return if (hz > 0) ZIGGURAT_R + x else -(ZIGGURAT_R + x)
+        }
+        val x = hz * ZIGGURAT_WN[iz]
+        if (ZIGGURAT_FN[iz] + nextDouble() * (ZIGGURAT_FN[iz - 1] - ZIGGURAT_FN[iz]) < exp(-0.5 * x * x)) {
+            return x
         }
     }
+}
 
-    companion object {
-        // Marsaglia 2000 constants for N=128 layers.
-        private const val N = 128
-        private const val R = 3.442619855899
-        private const val R_INV = 1.0 / R
-        private const val V = 9.91256303526217e-3
-        private const val M1 = 2147483648.0  // 2^31 as Double for table init
+// Marsaglia 2000 constants for N=128 layers. Computed once at class load.
+private const val ZIGGURAT_N = 128
+private const val ZIGGURAT_R = 3.442619855899
+private const val ZIGGURAT_R_INV = 1.0 / ZIGGURAT_R
+private const val ZIGGURAT_V = 9.91256303526217e-3
+private const val ZIGGURAT_M1 = 2147483648.0  // 2^31 as Double
 
-        private val KN = IntArray(N)
-        private val WN = DoubleArray(N)
-        private val FN = DoubleArray(N)
+private val ZIGGURAT_KN = IntArray(ZIGGURAT_N)
+private val ZIGGURAT_WN = DoubleArray(ZIGGURAT_N)
+private val ZIGGURAT_FN = DoubleArray(ZIGGURAT_N)
 
-        init {
-            var dn = R
-            var tn = dn
-            val q = V / exp(-0.5 * R * R)
-            KN[0] = ((R / q) * M1).toInt()
-            KN[1] = 0
-            WN[0] = q / M1
-            WN[N - 1] = R / M1
-            FN[0] = 1.0
-            FN[N - 1] = exp(-0.5 * R * R)
-            for (i in N - 2 downTo 1) {
-                dn = sqrt(-2.0 * ln(V / dn + exp(-0.5 * dn * dn)))
-                KN[i + 1] = ((dn / tn) * M1).toInt()
-                tn = dn
-                WN[i] = dn / M1
-                FN[i] = exp(-0.5 * dn * dn)
-            }
-        }
+private val ZIGGURAT_INIT = run {
+    var dn = ZIGGURAT_R
+    var tn = dn
+    val q = ZIGGURAT_V / exp(-0.5 * ZIGGURAT_R * ZIGGURAT_R)
+    ZIGGURAT_KN[0] = ((ZIGGURAT_R / q) * ZIGGURAT_M1).toInt()
+    ZIGGURAT_KN[1] = 0
+    ZIGGURAT_WN[0] = q / ZIGGURAT_M1
+    ZIGGURAT_WN[ZIGGURAT_N - 1] = ZIGGURAT_R / ZIGGURAT_M1
+    ZIGGURAT_FN[0] = 1.0
+    ZIGGURAT_FN[ZIGGURAT_N - 1] = exp(-0.5 * ZIGGURAT_R * ZIGGURAT_R)
+    for (i in ZIGGURAT_N - 2 downTo 1) {
+        dn = sqrt(-2.0 * ln(ZIGGURAT_V / dn + exp(-0.5 * dn * dn)))
+        ZIGGURAT_KN[i + 1] = ((dn / tn) * ZIGGURAT_M1).toInt()
+        tn = dn
+        ZIGGURAT_WN[i] = dn / ZIGGURAT_M1
+        ZIGGURAT_FN[i] = exp(-0.5 * dn * dn)
     }
+    Unit
 }
 
 // === Log-Normal ============================================================

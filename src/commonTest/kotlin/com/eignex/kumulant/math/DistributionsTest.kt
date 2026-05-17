@@ -1,9 +1,6 @@
 package com.eignex.kumulant.math
 
 import kotlin.math.abs
-import kotlin.math.exp
-import kotlin.math.ln
-import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -32,56 +29,13 @@ class DistributionsTest {
     }
 
     @Test
-    fun `GaussianSampler matches Random nextNormal distribution`() {
-        val a = Random(7)
-        val b = Random(7)
-        val sampler = GaussianSampler(b)
-        val n = 20_000
-        var sumA = 0.0; var sumB = 0.0; var ssA = 0.0; var ssB = 0.0
-        repeat(n) {
-            val x = a.nextNormal(0.0, 1.0)
-            val y = sampler.next(0.0, 1.0)
-            sumA += x; sumB += y
-            ssA += x * x; ssB += y * y
-        }
-        // Both should yield N(0,1) statistics. Don't require pointwise equality —
-        // the cached-spare consumes (u, v) pairs differently than the bare extension.
-        assertTrue(abs(sumA / n) < 0.02 && abs(sumB / n) < 0.02)
-        assertTrue(abs(ssA / n - 1.0) < 0.05 && abs(ssB / n - 1.0) < 0.05)
-    }
-
-    @Test
-    fun `GaussianSampler caches the spare`() {
-        val rng = Random(42)
-        val sampler = GaussianSampler(rng)
-        // Two consecutive next() calls should consume exactly one (u, v) pair.
-        // Verify by counting how many nextDouble() the sampler triggers.
-        val counted = CountingRandom(Random(42))
-        val s2 = GaussianSampler(counted)
-        s2.next(); s2.next()
-        // Marsaglia polar consumes ≥ 2 doubles per pair (more if (u,v) rejected),
-        // but two next() calls should NOT use ≥ 4 doubles unless both went through
-        // their own rejection loops. Bound: ≤ 3 successive pairs on average ≈ 6
-        // doubles. We just verify it's < 4, which proves caching engaged.
-        assertTrue(counted.count <= 4,
-            "two next() calls consumed ${counted.count} doubles — spare not cached?")
-    }
-
-    @Test
-    fun `ZigguratSampler matches N(0,1) moments and higher`() {
+    fun `nextNormal matches higher moments of N(0,1)`() {
         val rng = Random(101)
-        val sampler = ZigguratSampler(rng)
         val n = 50_000
-        var s = 0.0
-        var ss = 0.0
-        var s3 = 0.0
-        var s4 = 0.0
+        var s = 0.0; var ss = 0.0; var s3 = 0.0; var s4 = 0.0
         repeat(n) {
-            val x = sampler.next()
-            s += x
-            ss += x * x
-            s3 += x * x * x
-            s4 += x * x * x * x
+            val x = rng.nextNormal()
+            s += x; ss += x * x; s3 += x * x * x; s4 += x * x * x * x
         }
         val mean = s / n
         val variance = ss / n - mean * mean
@@ -95,37 +49,21 @@ class DistributionsTest {
     }
 
     @Test
-    fun `ZigguratSampler tail produces values beyond R`() {
-        // R ≈ 3.44; we should see plenty of |x| > R over 100k draws.
+    fun `nextNormal tail produces values beyond Ziggurat R boundary`() {
+        // Ziggurat splits its work at R ≈ 3.44; verify the tail-sampling branch
+        // actually produces samples beyond it at the analytic rate.
         val rng = Random(3)
-        val sampler = ZigguratSampler(rng)
         var tailHits = 0
-        repeat(100_000) {
-            if (abs(sampler.next()) > 3.5) tailHits++
-        }
+        repeat(100_000) { if (abs(rng.nextNormal()) > 3.5) tailHits++ }
         // P(|N(0,1)| > 3.5) ≈ 4.65e-4 → expect ~46 hits in 100k.
         assertTrue(tailHits in 20..100, "tailHits=$tailHits (expected ~46)")
     }
 
     @Test
-    fun `ZigguratSampler scales with (mean, std)`() {
-        val rng = Random(5)
-        val sampler = ZigguratSampler(rng)
-        val n = 20_000
-        var s = 0.0
-        var ss = 0.0
-        repeat(n) { val x = sampler.next(5.0, 2.0); s += x; ss += x * x }
-        val mean = s / n
-        val variance = ss / n - mean * mean
-        assertTrue(abs(mean - 5.0) < 0.05, "mean=$mean")
-        assertTrue(abs(variance - 4.0) < 0.15, "var=$variance")
-    }
-
-    @Test
-    fun `ZigguratSampler is deterministic given the seed`() {
-        val a = ZigguratSampler(Random(123))
-        val b = ZigguratSampler(Random(123))
-        repeat(50) { assertEquals(a.next(), b.next()) }
+    fun `nextNormal is deterministic given the seed`() {
+        val a = Random(123)
+        val b = Random(123)
+        repeat(50) { assertEquals(a.nextNormal(2.0, 0.5), b.nextNormal(2.0, 0.5)) }
     }
 
     @Test
@@ -236,11 +174,4 @@ class DistributionsTest {
         assertFailsWith<IllegalArgumentException> { rng.nextBeta(0.0, 1.0) }
         assertFailsWith<IllegalArgumentException> { rng.nextBeta(1.0, 0.0) }
     }
-}
-
-/** Test helper: a Random wrapper that counts nextDouble() invocations. */
-private class CountingRandom(private val rng: Random) : Random() {
-    var count: Int = 0
-    override fun nextBits(bitCount: Int): Int = rng.nextBits(bitCount)
-    override fun nextDouble(): Double { count++; return rng.nextDouble() }
 }
