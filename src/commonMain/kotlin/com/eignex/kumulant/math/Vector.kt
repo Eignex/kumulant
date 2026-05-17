@@ -94,8 +94,10 @@ class SparseVector internal constructor(
     }
 
     override fun equals(other: Any?): Boolean = this === other ||
-        (other is SparseVector && size == other.size &&
-            indices.contentEquals(other.indices) && values.contentEquals(other.values))
+        (
+            other is SparseVector && size == other.size &&
+                indices.contentEquals(other.indices) && values.contentEquals(other.values)
+            )
     override fun hashCode(): Int {
         var h = size
         h = 31 * h + indices.contentHashCode()

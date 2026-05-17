@@ -70,12 +70,13 @@ private const val ZIGGURAT_N = 128
 private const val ZIGGURAT_R = 3.442619855899
 private const val ZIGGURAT_R_INV = 1.0 / ZIGGURAT_R
 private const val ZIGGURAT_V = 9.91256303526217e-3
-private const val ZIGGURAT_M1 = 2147483648.0  // 2^31 as Double
+private const val ZIGGURAT_M1 = 2147483648.0 // 2^31 as Double
 
 private val ZIGGURAT_KN = IntArray(ZIGGURAT_N)
 private val ZIGGURAT_WN = DoubleArray(ZIGGURAT_N)
 private val ZIGGURAT_FN = DoubleArray(ZIGGURAT_N)
 
+@Suppress("UnusedPrivateProperty")
 private val ZIGGURAT_INIT = run {
     var dn = ZIGGURAT_R
     var tn = dn

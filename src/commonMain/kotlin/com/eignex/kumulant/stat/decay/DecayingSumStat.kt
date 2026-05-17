@@ -15,8 +15,8 @@ import kotlin.time.Duration
 @Serializable
 @SerialName("DecayingSumResult")
 data class DecayingSumResult(
- val sum: Double,
- val timestampNanos: Long,
+    val sum: Double,
+    val timestampNanos: Long,
 ) : Result
 
 /**
@@ -28,73 +28,73 @@ data class DecayingSumResult(
  * accumulator in a bounded numerical range even after many half-lives of activity.
  */
 class DecayingSumStat(
- val weighting: DecayWeighting.HalfLife,
- override val concurrency: Concurrency = Concurrency.None,
+    val weighting: DecayWeighting.HalfLife,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<DecayingSumResult> {
 
- constructor(halfLife: Duration, concurrency: Concurrency = Concurrency.None) :
- this(DecayWeighting.HalfLife(halfLife), concurrency)
+    constructor(halfLife: Duration, concurrency: Concurrency = Concurrency.None) :
+        this(DecayWeighting.HalfLife(halfLife), concurrency)
 
- val halfLife: Duration get() = weighting.halfLife
- private val alpha = weighting.alpha
- private val rotationThresholdNanos = weighting.halfLife.inWholeNanoseconds * ROTATION_HALF_LIVES
+    val halfLife: Duration get() = weighting.halfLife
+    private val alpha = weighting.alpha
+    private val rotationThresholdNanos = weighting.halfLife.inWholeNanoseconds * ROTATION_HALF_LIVES
 
- private class Epoch(val landmarkNanos: Long, val accumulator: StreamDouble)
+    private class Epoch(val landmarkNanos: Long, val accumulator: StreamDouble)
 
- private val mode = concurrency.additiveMode()
- private val epochRef = mode.newReference(
- Epoch(currentTimeNanos(), mode.newDouble(0.0))
- )
+    private val mode = concurrency.additiveMode()
+    private val epochRef = mode.newReference(
+        Epoch(currentTimeNanos(), mode.newDouble(0.0))
+    )
 
- override fun update(value: Double, timestampNanos: Long, weight: Double) {
- while (true) {
- val epoch = epochRef.load()
- if (timestampNanos - epoch.landmarkNanos > rotationThresholdNanos) {
- tryRotateEpoch(epoch, timestampNanos)
- continue
- }
- val dt = timestampNanos - epoch.landmarkNanos
- epoch.accumulator.add(value * weight * exp(alpha * dt))
- return
- }
- }
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        while (true) {
+            val epoch = epochRef.load()
+            if (timestampNanos - epoch.landmarkNanos > rotationThresholdNanos) {
+                tryRotateEpoch(epoch, timestampNanos)
+                continue
+            }
+            val dt = timestampNanos - epoch.landmarkNanos
+            epoch.accumulator.add(value * weight * exp(alpha * dt))
+            return
+        }
+    }
 
- private fun tryRotateEpoch(old: Epoch, now: Long) {
- val dt = now - old.landmarkNanos
- val carried = old.accumulator.load() * exp(-alpha * dt)
- epochRef.compareAndSet(old, Epoch(now, mode.newDouble(carried)))
- }
+    private fun tryRotateEpoch(old: Epoch, now: Long) {
+        val dt = now - old.landmarkNanos
+        val carried = old.accumulator.load() * exp(-alpha * dt)
+        epochRef.compareAndSet(old, Epoch(now, mode.newDouble(carried)))
+    }
 
- override fun read(timestampNanos: Long): DecayingSumResult {
- val epoch = epochRef.load()
- val dt = (timestampNanos - epoch.landmarkNanos).toDouble()
- val sum = epoch.accumulator.load() * exp(-alpha * dt)
- return DecayingSumResult(sum, timestampNanos)
- }
+    override fun read(timestampNanos: Long): DecayingSumResult {
+        val epoch = epochRef.load()
+        val dt = (timestampNanos - epoch.landmarkNanos).toDouble()
+        val sum = epoch.accumulator.load() * exp(-alpha * dt)
+        return DecayingSumResult(sum, timestampNanos)
+    }
 
- override fun merge(values: DecayingSumResult) {
- if (values.sum == 0.0) return
- while (true) {
- val epoch = epochRef.load()
- val now = values.timestampNanos
- if (now - epoch.landmarkNanos <= rotationThresholdNanos) {
- val dt = (now - epoch.landmarkNanos).toDouble()
- epoch.accumulator.add(values.sum * exp(alpha * dt))
- break
- }
- tryRotateEpoch(epoch, now)
- }
- }
+    override fun merge(values: DecayingSumResult) {
+        if (values.sum == 0.0) return
+        while (true) {
+            val epoch = epochRef.load()
+            val now = values.timestampNanos
+            if (now - epoch.landmarkNanos <= rotationThresholdNanos) {
+                val dt = (now - epoch.landmarkNanos).toDouble()
+                epoch.accumulator.add(values.sum * exp(alpha * dt))
+                break
+            }
+            tryRotateEpoch(epoch, now)
+        }
+    }
 
- override fun reset() {
- val current = epochRef.load()
- epochRef.compareAndSet(current, Epoch(currentTimeNanos(), mode.newDouble(0.0)))
- }
+    override fun reset() {
+        val current = epochRef.load()
+        epochRef.compareAndSet(current, Epoch(currentTimeNanos(), mode.newDouble(0.0)))
+    }
 
- override fun create(concurrency: Concurrency?) =
- DecayingSumStat(weighting, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) =
+        DecayingSumStat(weighting, concurrency ?: this.concurrency)
 
- private companion object {
- const val ROTATION_HALF_LIVES = 50L
- }
+    private companion object {
+        const val ROTATION_HALF_LIVES = 50L
+    }
 }

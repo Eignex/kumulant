@@ -4,7 +4,6 @@ import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.MatrixView
 import com.eignex.kumulant.math.VectorView
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -49,9 +49,9 @@ class DenseMatrix internal constructor(
     constructor(rows: Int, cols: Int = rows) : this(rows, cols, DoubleArray(rows * cols))
 
     init {
-        require(rows >= 0 && cols >= 0) { "negative shape: ${rows}x${cols}" }
+        require(rows >= 0 && cols >= 0) { "negative shape: ${rows}x$cols" }
         require(data.size == rows * cols) {
-            "data length ${data.size} does not match shape ${rows}x${cols} (= ${rows * cols})"
+            "data length ${data.size} does not match shape ${rows}x$cols (= ${rows * cols})"
         }
     }
 
@@ -75,7 +75,7 @@ class DenseMatrix internal constructor(
         h = 31 * h + data.contentHashCode()
         return h
     }
-    override fun toString(): String = "DenseMatrix(${rows}x${cols})"
+    override fun toString(): String = "DenseMatrix(${rows}x$cols)"
 
     companion object {
         /** Copy a row-major `Array<DoubleArray>` into a fresh dense matrix. */

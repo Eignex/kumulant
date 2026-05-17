@@ -13,6 +13,7 @@ import kotlin.test.assertTrue
  * happen to pass even with a sign or transpose error because their tolerances are
  * loose; these tests pin the math down.
  */
+@Suppress("VariableNaming") // single-letter matrix/vector names track math conventions
 class MathTest {
 
     private fun dense(vararg v: Double) = DenseVector.of(v)
@@ -24,13 +25,13 @@ class MathTest {
         val a = dense(1.0, 2.0, 3.0, 4.0)
         val b = dense(0.5, 0.0, -1.0, 2.0)
         val bSparse = sparse(4, 0 to 0.5, 2 to -1.0, 3 to 2.0)
-        val expected = 1*0.5 + 2*0 + 3*(-1) + 4*2
+        val expected = 1 * 0.5 + 2 * 0 + 3 * (-1) + 4 * 2
         assertEquals(expected, a dot b, 1e-12)
         assertEquals(expected, b dot a, 1e-12)
         assertEquals(expected, a dot bSparse, 1e-12)
         assertEquals(expected, bSparse dot a, 1e-12)
         // Same vector twice (sparse x dense form) - exercises the sparse-dispatch path.
-        assertEquals(0.5*0.5 + 0 + 1 + 4, bSparse dot b, 1e-12)
+        assertEquals(0.5 * 0.5 + 0 + 1 + 4, bSparse dot b, 1e-12)
     }
 
     @Test
@@ -45,21 +46,23 @@ class MathTest {
         val v = DenseVector.of(doubleArrayOf(1.0, -2.0, 3.0))
         scale(v, 0.5)
         assertEquals(dense(0.5, -1.0, 1.5), v)
-        scale(v, 1.0)  // no-op
+        scale(v, 1.0) // no-op
         assertEquals(dense(0.5, -1.0, 1.5), v)
     }
 
     @Test
     fun `matVec computes A x for dense and sparse x`() {
         // A = [[1, 2], [3, 4], [5, 6]]
-        val A = DenseMatrix.of(arrayOf(
-            doubleArrayOf(1.0, 2.0),
-            doubleArrayOf(3.0, 4.0),
-            doubleArrayOf(5.0, 6.0),
-        ))
+        val A = DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(1.0, 2.0),
+                doubleArrayOf(3.0, 4.0),
+                doubleArrayOf(5.0, 6.0),
+            )
+        )
         val xDense = dense(1.0, -1.0)
         val xSparse = sparse(2, 0 to 1.0, 1 to -1.0)
-        val expected = dense(1.0*1 + 2*-1, 3.0*1 + 4*-1, 5.0*1 + 6*-1)
+        val expected = dense(1.0 * 1 + 2 * -1, 3.0 * 1 + 4 * -1, 5.0 * 1 + 6 * -1)
         assertEquals(expected, matVec(A, xDense))
         assertEquals(expected, matVec(A, xSparse))
     }
@@ -69,10 +72,10 @@ class MathTest {
         // M starts as identity 2x2; add 0.5 * [1,2] * [3,4]^T = 0.5 * [[3,4],[6,8]]
         val M = DenseMatrix.diagonal(2, 1.0)
         addOuter(M, 0.5, dense(1.0, 2.0), dense(3.0, 4.0))
-        assertEquals(1.0 + 0.5*3, M[0, 0], 1e-12)
+        assertEquals(1.0 + 0.5 * 3, M[0, 0], 1e-12)
         assertEquals(0.5 * 4, M[0, 1], 1e-12)
         assertEquals(0.5 * 6, M[1, 0], 1e-12)
-        assertEquals(1.0 + 0.5*8, M[1, 1], 1e-12)
+        assertEquals(1.0 + 0.5 * 8, M[1, 1], 1e-12)
     }
 
     @Test
@@ -89,11 +92,13 @@ class MathTest {
     @Test
     fun `cholesky reconstructs A as L Lt for a non-diagonal SPD matrix`() {
         // A = [[4, 2, 0], [2, 5, 1], [0, 1, 3]] - symmetric positive-definite.
-        val A = DenseMatrix.of(arrayOf(
-            doubleArrayOf(4.0, 2.0, 0.0),
-            doubleArrayOf(2.0, 5.0, 1.0),
-            doubleArrayOf(0.0, 1.0, 3.0),
-        ))
+        val A = DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(4.0, 2.0, 0.0),
+                doubleArrayOf(2.0, 5.0, 1.0),
+                doubleArrayOf(0.0, 1.0, 3.0),
+            )
+        )
         val L = A.cholesky()
         // Verify A == L * LT.
         for (i in 0 until 3) for (j in 0 until 3) {
@@ -107,11 +112,13 @@ class MathTest {
 
     @Test
     fun `solveSpd inverts A b via Cholesky factor`() {
-        val A = DenseMatrix.of(arrayOf(
-            doubleArrayOf(4.0, 2.0, 0.0),
-            doubleArrayOf(2.0, 5.0, 1.0),
-            doubleArrayOf(0.0, 1.0, 3.0),
-        ))
+        val A = DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(4.0, 2.0, 0.0),
+                doubleArrayOf(2.0, 5.0, 1.0),
+                doubleArrayOf(0.0, 1.0, 3.0),
+            )
+        )
         val L = A.cholesky()
         val b = doubleArrayOf(1.0, 0.5, -1.0)
         val x = solveSpd(L, b)
@@ -125,11 +132,13 @@ class MathTest {
 
     @Test
     fun `invertSpd produces A inverse for a non-diagonal matrix`() {
-        val A = DenseMatrix.of(arrayOf(
-            doubleArrayOf(4.0, 2.0, 0.0),
-            doubleArrayOf(2.0, 5.0, 1.0),
-            doubleArrayOf(0.0, 1.0, 3.0),
-        ))
+        val A = DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(4.0, 2.0, 0.0),
+                doubleArrayOf(2.0, 5.0, 1.0),
+                doubleArrayOf(0.0, 1.0, 3.0),
+            )
+        )
         val L = A.cholesky()
         val Ainv = invertSpd(L)
         // A * Ainv should be identity.
@@ -144,11 +153,13 @@ class MathTest {
     @Test
     fun `cholesky downdate then reconstruct equals A minus x xt`() {
         // Build an SPD A with enough headroom to absorb the downdate.
-        val A = DenseMatrix.of(arrayOf(
-            doubleArrayOf(10.0, 2.0, 1.0),
-            doubleArrayOf(2.0, 8.0, 3.0),
-            doubleArrayOf(1.0, 3.0, 7.0),
-        ))
+        val A = DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(10.0, 2.0, 1.0),
+                doubleArrayOf(2.0, 8.0, 3.0),
+                doubleArrayOf(1.0, 3.0, 7.0),
+            )
+        )
         val L = A.cholesky()
         val x = doubleArrayOf(0.5, 1.0, -0.5)
         val norm = L.choleskyDowndateInPlace(DenseVector.of(x))
@@ -164,10 +175,12 @@ class MathTest {
 
     @Test
     fun `cholesky downdate refuses to exit the SPD cone`() {
-        val A = DenseMatrix.of(arrayOf(
-            doubleArrayOf(2.0, 0.0),
-            doubleArrayOf(0.0, 2.0),
-        ))
+        val A = DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(2.0, 0.0),
+                doubleArrayOf(0.0, 2.0),
+            )
+        )
         val L = A.cholesky()
         // x with ||L^-1 x|| >= 1 - pick x so that x*xT swamps A.
         val norm = L.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(3.0, 0.0)))

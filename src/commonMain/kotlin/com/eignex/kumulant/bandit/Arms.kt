@@ -2,14 +2,14 @@ package com.eignex.kumulant.bandit
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.MeanStat
+import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
-import com.eignex.kumulant.stat.summary.BernoulliSumResult
-import com.eignex.kumulant.stat.summary.MomentsResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.ln

@@ -1,3 +1,5 @@
+@file:Suppress("VariableNaming", "FunctionParameterNaming") // math convention: single-letter matrices L, M, etc.
+
 package com.eignex.kumulant.math
 
 import kotlin.math.absoluteValue
@@ -24,7 +26,7 @@ import kotlin.math.sqrt
  * stats that call this on drifting precision matrices.
  */
 internal fun MatrixView.cholesky(): DenseMatrix {
-    require(rows == cols) { "cholesky requires a square matrix; got ${rows}x${cols}" }
+    require(rows == cols) { "cholesky requires a square matrix; got ${rows}x$cols" }
     val n = rows
     val L = DenseMatrix(n, n)
     val Ld = L.data
@@ -33,8 +35,11 @@ internal fun MatrixView.cholesky(): DenseMatrix {
         for (j in 0..i) {
             val rowJ = j * n
             val sum = denseDot(Ld, rowI, Ld, rowJ, j)
-            if (i == j) Ld[rowI + i] = sqrt(this[i, i] - sum)
-            else Ld[rowI + j] = (this[i, j] - sum) / Ld[rowJ + j]
+            if (i == j) {
+                Ld[rowI + i] = sqrt(this[i, i] - sum)
+            } else {
+                Ld[rowI + j] = (this[i, j] - sum) / Ld[rowJ + j]
+            }
         }
         if (Ld[rowI + i] <= 0.0 || Ld[rowI + i].isNaN()) Ld[rowI + i] = 1e-5
     }
@@ -53,7 +58,7 @@ internal fun MatrixView.cholesky(): DenseMatrix {
  * for lower-triangular storage) to absorb `s` without breaking triangularity.
  */
 internal fun DenseMatrix.choleskyDowndateInPlace(x: VectorView): Double {
-    require(rows == cols) { "choleskyDowndateInPlace requires a square matrix; got ${rows}x${cols}" }
+    require(rows == cols) { "choleskyDowndateInPlace requires a square matrix; got ${rows}x$cols" }
     require(rows == x.size) { "x size ${x.size} must match matrix dim $rows" }
     val L = data
     val n = rows

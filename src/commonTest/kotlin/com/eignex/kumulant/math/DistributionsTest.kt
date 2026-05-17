@@ -21,7 +21,11 @@ class DistributionsTest {
         val n = 20_000
         var s = 0.0
         var ss = 0.0
-        repeat(n) { val x = rng.nextNormal(2.0, 0.5); s += x; ss += x * x }
+        repeat(n) {
+            val x = rng.nextNormal(2.0, 0.5)
+            s += x
+            ss += x * x
+        }
         val mean = s / n
         val variance = ss / n - mean * mean
         assertTrue(abs(mean - 2.0) < 0.02, "mean=$mean")
@@ -32,10 +36,16 @@ class DistributionsTest {
     fun `nextNormal matches higher moments of N(0,1)`() {
         val rng = Random(101)
         val n = 50_000
-        var s = 0.0; var ss = 0.0; var s3 = 0.0; var s4 = 0.0
+        var s = 0.0
+        var ss = 0.0
+        var s3 = 0.0
+        var s4 = 0.0
         repeat(n) {
             val x = rng.nextNormal()
-            s += x; ss += x * x; s3 += x * x * x; s4 += x * x * x * x
+            s += x
+            ss += x * x
+            s3 += x * x * x
+            s4 += x * x * x * x
         }
         val mean = s / n
         val variance = ss / n - mean * mean
@@ -70,9 +80,15 @@ class DistributionsTest {
     fun `nextGamma alpha=1 fast path matches Exponential moments`() {
         val rng = Random(3)
         val n = 20_000
-        var s = 0.0; var ss = 0.0
-        repeat(n) { val x = rng.nextGamma(1.0); s += x; ss += x * x }
-        val mean = s / n; val variance = ss / n - mean * mean
+        var s = 0.0
+        var ss = 0.0
+        repeat(n) {
+            val x = rng.nextGamma(1.0)
+            s += x
+            ss += x * x
+        }
+        val mean = s / n
+        val variance = ss / n - mean * mean
         // Exp(1) has mean=1, variance=1.
         assertTrue(abs(mean - 1.0) < 0.03, "mean=$mean")
         assertTrue(abs(variance - 1.0) < 0.08, "var=$variance")
@@ -82,9 +98,15 @@ class DistributionsTest {
     fun `nextGamma small integer alpha matches Erlang moments`() {
         val rng = Random(11)
         val n = 20_000
-        var s = 0.0; var ss = 0.0
-        repeat(n) { val x = rng.nextGamma(3.0); s += x; ss += x * x }
-        val mean = s / n; val variance = ss / n - mean * mean
+        var s = 0.0
+        var ss = 0.0
+        repeat(n) {
+            val x = rng.nextGamma(3.0)
+            s += x
+            ss += x * x
+        }
+        val mean = s / n
+        val variance = ss / n - mean * mean
         // Gamma(3, 1) has mean=3, variance=3.
         assertTrue(abs(mean - 3.0) < 0.1, "mean=$mean")
         assertTrue(abs(variance - 3.0) < 0.2, "var=$variance")
@@ -95,9 +117,15 @@ class DistributionsTest {
         val rng = Random(13)
         val n = 20_000
         val alpha = 7.5
-        var s = 0.0; var ss = 0.0
-        repeat(n) { val x = rng.nextGamma(alpha); s += x; ss += x * x }
-        val mean = s / n; val variance = ss / n - mean * mean
+        var s = 0.0
+        var ss = 0.0
+        repeat(n) {
+            val x = rng.nextGamma(alpha)
+            s += x
+            ss += x * x
+        }
+        val mean = s / n
+        val variance = ss / n - mean * mean
         assertTrue(abs(mean - alpha) < 0.15, "mean=$mean")
         assertTrue(abs(variance - alpha) < 0.5, "var=$variance")
     }
@@ -107,9 +135,15 @@ class DistributionsTest {
         val rng = Random(17)
         val n = 20_000
         val alpha = 0.4
-        var s = 0.0; var ss = 0.0
-        repeat(n) { val x = rng.nextGamma(alpha); s += x; ss += x * x }
-        val mean = s / n; val variance = ss / n - mean * mean
+        var s = 0.0
+        var ss = 0.0
+        repeat(n) {
+            val x = rng.nextGamma(alpha)
+            s += x
+            ss += x * x
+        }
+        val mean = s / n
+        val variance = ss / n - mean * mean
         assertTrue(abs(mean - alpha) < 0.05, "mean=$mean")
         assertTrue(abs(variance - alpha) < 0.1, "var=$variance")
     }
@@ -135,7 +169,8 @@ class DistributionsTest {
     fun `nextBeta general matches analytic mean`() {
         val rng = Random(2)
         val n = 20_000
-        val a = 2.0; val b = 5.0
+        val a = 2.0
+        val b = 5.0
         var s = 0.0
         repeat(n) { s += rng.nextBeta(a, b) }
         // Beta(a, b) has mean = a / (a + b).
@@ -155,7 +190,8 @@ class DistributionsTest {
     fun `nextLogNormal matches analytic mean`() {
         val rng = Random(31)
         val n = 20_000
-        val mean = 2.0; val variance = 0.5
+        val mean = 2.0
+        val variance = 0.5
         var s = 0.0
         repeat(n) { s += rng.nextLogNormal(mean, variance) }
         assertTrue(abs(s / n - mean) < 0.1, "mean=${s / n}")

@@ -15,8 +15,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("BernoulliSumResult")
 data class BernoulliSumResult(
- val successes: Double,
- val trials: Double,
+    val successes: Double,
+    val trials: Double,
 ) : Result
 
 /**
@@ -27,31 +27,31 @@ data class BernoulliSumResult(
  * Beta-Binomial Thompson sampling without doing the sampling itself.
  */
 class BernoulliSumStat(
- override val concurrency: Concurrency = Concurrency.None,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<BernoulliSumResult> {
 
- private val mode = concurrency.additiveMode()
- private val successes = mode.newDouble(0.0)
- private val trials = mode.newDouble(0.0)
+    private val mode = concurrency.additiveMode()
+    private val successes = mode.newDouble(0.0)
+    private val trials = mode.newDouble(0.0)
 
- override fun update(value: Double, timestampNanos: Long, weight: Double) {
- if (weight == 0.0) return
- successes.add(value * weight)
- trials.add(weight)
- }
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight == 0.0) return
+        successes.add(value * weight)
+        trials.add(weight)
+    }
 
- override fun read(timestampNanos: Long) =
- BernoulliSumResult(successes.load(), trials.load())
+    override fun read(timestampNanos: Long) =
+        BernoulliSumResult(successes.load(), trials.load())
 
- override fun merge(values: BernoulliSumResult) {
- successes.add(values.successes)
- trials.add(values.trials)
- }
+    override fun merge(values: BernoulliSumResult) {
+        successes.add(values.successes)
+        trials.add(values.trials)
+    }
 
- override fun reset() {
- successes.store(0.0)
- trials.store(0.0)
- }
+    override fun reset() {
+        successes.store(0.0)
+        trials.store(0.0)
+    }
 
- override fun create(concurrency: Concurrency?) = BernoulliSumStat(concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = BernoulliSumStat(concurrency ?: this.concurrency)
 }

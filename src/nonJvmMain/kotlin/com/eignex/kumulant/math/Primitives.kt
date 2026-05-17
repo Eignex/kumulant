@@ -9,8 +9,10 @@ package com.eignex.kumulant.math
  */
 
 internal actual fun denseDot(
-    a: DoubleArray, aOff: Int,
-    b: DoubleArray, bOff: Int,
+    a: DoubleArray,
+    aOff: Int,
+    b: DoubleArray,
+    bOff: Int,
     len: Int,
 ): Double {
     var s = 0.0
@@ -19,9 +21,11 @@ internal actual fun denseDot(
 }
 
 internal actual fun denseAxpy(
-    y: DoubleArray, yOff: Int,
+    y: DoubleArray,
+    yOff: Int,
     alpha: Double,
-    x: DoubleArray, xOff: Int,
+    x: DoubleArray,
+    xOff: Int,
     len: Int,
 ) {
     if (alpha == 0.0) return
@@ -29,7 +33,8 @@ internal actual fun denseAxpy(
 }
 
 internal actual fun denseScale(
-    v: DoubleArray, vOff: Int,
+    v: DoubleArray,
+    vOff: Int,
     alpha: Double,
     len: Int,
 ) {

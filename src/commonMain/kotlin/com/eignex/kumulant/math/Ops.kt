@@ -1,3 +1,5 @@
+@file:Suppress("VariableNaming", "FunctionParameterNaming") // math convention: single-letter matrices L, M, etc.
+
 package com.eignex.kumulant.math
 
 /**

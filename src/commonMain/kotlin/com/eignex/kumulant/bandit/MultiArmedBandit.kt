@@ -52,7 +52,10 @@ class MultiArmedBandit<R : Result>(
         var bestScore = Double.NEGATIVE_INFINITY
         for (i in 0 until nbrArms) {
             val score = policy.evaluate(arms[i].read(0L), t, maximize, rng)
-            if (score > bestScore) { bestScore = score; bestIdx = i }
+            if (score > bestScore) {
+                bestScore = score
+                bestIdx = i
+            }
         }
         return bestIdx
     }

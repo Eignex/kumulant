@@ -40,8 +40,10 @@ class VectorSerializationTest {
         }
         val rd = dense.read()
         val rs = sparse.read()
-        for (i in 0 until 5) assertTrue(abs(rd.weights[i] - rs.weights[i]) < 1e-9,
-            "dense and sparse paths diverge at i=$i: ${rd.weights[i]} vs ${rs.weights[i]}")
+        for (i in 0 until 5) assertTrue(
+            abs(rd.weights[i] - rs.weights[i]) < 1e-9,
+            "dense and sparse paths diverge at i=$i: ${rd.weights[i]} vs ${rs.weights[i]}"
+        )
     }
 
     @Test
@@ -71,8 +73,11 @@ class VectorSerializationTest {
             val wire = json.encodeToString(ScalarExpr.serializer(), e)
             val decoded = json.decodeFromString(ScalarExpr.serializer(), wire)
             for (s in longArrayOf(0L, 100L, 10_000L)) {
-                assertEquals(e.eval(s.toDouble()), decoded.eval(s.toDouble()),
-                    "schedule diverged at step=$s: $e")
+                assertEquals(
+                    e.eval(s.toDouble()),
+                    decoded.eval(s.toDouble()),
+                    "schedule diverged at step=$s: $e"
+                )
             }
         }
     }

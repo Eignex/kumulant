@@ -1,8 +1,9 @@
+@file:Suppress("VariableNaming", "FunctionParameterNaming") // math convention: single-letter matrices L, M, etc.
+
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
-import com.eignex.kumulant.schema.ScalarExpr
 import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
@@ -15,6 +16,7 @@ import com.eignex.kumulant.math.invertSpd
 import com.eignex.kumulant.math.matVec
 import com.eignex.kumulant.math.scale
 import com.eignex.kumulant.math.solveSpd
+import com.eignex.kumulant.schema.ScalarExpr
 import com.eignex.kumulant.stream.serializedLock
 import kotlin.math.sqrt
 

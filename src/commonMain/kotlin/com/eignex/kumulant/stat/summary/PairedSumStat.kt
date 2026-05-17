@@ -16,9 +16,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("PairedSumResult")
 data class PairedSumResult(
- val totalWeights: Double,
- val sumX: Double,
- val sumY: Double,
+    val totalWeights: Double,
+    val sumX: Double,
+    val sumY: Double,
 ) : Result
 
 /**
@@ -33,35 +33,35 @@ data class PairedSumResult(
  * a Welford-style stat over each axis instead.
  */
 class PairedSumStat(
- override val concurrency: Concurrency = Concurrency.None,
+    override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<PairedSumResult> {
 
- private val mode = concurrency.additiveMode()
- private val totalWeights = mode.newDouble(0.0)
- private val sumX = mode.newDouble(0.0)
- private val sumY = mode.newDouble(0.0)
+    private val mode = concurrency.additiveMode()
+    private val totalWeights = mode.newDouble(0.0)
+    private val sumX = mode.newDouble(0.0)
+    private val sumY = mode.newDouble(0.0)
 
- override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
- if (weight == 0.0) return
- totalWeights.add(weight)
- sumX.add(x * weight)
- sumY.add(y * weight)
- }
+    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
+        if (weight == 0.0) return
+        totalWeights.add(weight)
+        sumX.add(x * weight)
+        sumY.add(y * weight)
+    }
 
- override fun read(timestampNanos: Long) =
- PairedSumResult(totalWeights.load(), sumX.load(), sumY.load())
+    override fun read(timestampNanos: Long) =
+        PairedSumResult(totalWeights.load(), sumX.load(), sumY.load())
 
- override fun merge(values: PairedSumResult) {
- totalWeights.add(values.totalWeights)
- sumX.add(values.sumX)
- sumY.add(values.sumY)
- }
+    override fun merge(values: PairedSumResult) {
+        totalWeights.add(values.totalWeights)
+        sumX.add(values.sumX)
+        sumY.add(values.sumY)
+    }
 
- override fun reset() {
- totalWeights.store(0.0)
- sumX.store(0.0)
- sumY.store(0.0)
- }
+    override fun reset() {
+        totalWeights.store(0.0)
+        sumX.store(0.0)
+        sumY.store(0.0)
+    }
 
- override fun create(concurrency: Concurrency?) = PairedSumStat(concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = PairedSumStat(concurrency ?: this.concurrency)
 }

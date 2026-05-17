@@ -5,8 +5,8 @@ import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 /**
  * Smoke tests for the multivariate regression stats: feed each implementation a
@@ -15,13 +15,19 @@ import kotlin.test.assertFailsWith
  */
 class LinearRegressionStatsTest {
 
-    private fun fitLine(stat: RegressionStat<*>, slope: DoubleArray, intercept: Double, n: Int = 4000, seed: Long = 42L) {
+    private fun fitLine(
+        stat: RegressionStat<*>,
+        slope: DoubleArray,
+        intercept: Double,
+        n: Int = 4000,
+        seed: Long = 42L,
+    ) {
         val rng = Random(seed)
         repeat(n) {
             val x = DoubleArray(slope.size) { rng.nextDouble() * 2.0 - 1.0 }
             var y = intercept
             for (i in slope.indices) y += slope[i] * x[i]
-            y += rng.nextDouble() * 0.02 - 0.01  // small noise
+            y += rng.nextDouble() * 0.02 - 0.01 // small noise
             stat.update(x, y, 1.0)
         }
     }
@@ -32,8 +38,10 @@ class LinearRegressionStatsTest {
         val truth = doubleArrayOf(1.5, -2.0, 0.5)
         fitLine(stat, truth, intercept = 0.3)
         val r = stat.read()
-        for (i in truth.indices) assertTrue(abs(r.weights[i] - truth[i]) < 0.1,
-            "weight[$i]=${r.weights[i]} far from truth=${truth[i]}")
+        for (i in truth.indices) assertTrue(
+            abs(r.weights[i] - truth[i]) < 0.1,
+            "weight[$i]=${r.weights[i]} far from truth=${truth[i]}"
+        )
         assertTrue(abs(r.bias - 0.3) < 0.1, "bias=${r.bias} far from 0.3")
     }
 
@@ -43,8 +51,10 @@ class LinearRegressionStatsTest {
         val truth = doubleArrayOf(1.0, -1.5, 2.0)
         fitLine(stat, truth, intercept = -0.2)
         val r = stat.read()
-        for (i in truth.indices) assertTrue(abs(r.weights[i] - truth[i]) < 0.05,
-            "weight[$i]=${r.weights[i]} far from truth=${truth[i]}")
+        for (i in truth.indices) assertTrue(
+            abs(r.weights[i] - truth[i]) < 0.05,
+            "weight[$i]=${r.weights[i]} far from truth=${truth[i]}"
+        )
         val precisionArr = r.precision.toDoubleArray()
         assertTrue(precisionArr.all { it > 100.0 }, "precision should grow with data: ${precisionArr.toList()}")
         assertTrue(r.biasPrecision > 100.0)
@@ -56,10 +66,14 @@ class LinearRegressionStatsTest {
         val truth = doubleArrayOf(0.8, 1.2, -0.5)
         fitLine(stat, truth, intercept = 0.0)
         val r = stat.read()
-        for (i in truth.indices) assertTrue(abs(r.weights[i] - truth[i]) < 0.1,
-            "weight[$i]=${r.weights[i]} far from truth=${truth[i]}")
-        for (i in truth.indices) assertTrue(r.covariance[i, i] < 0.05,
-            "Sum[$i,$i]=${r.covariance[i, i]} did not shrink from prior 1.0")
+        for (i in truth.indices) assertTrue(
+            abs(r.weights[i] - truth[i]) < 0.1,
+            "weight[$i]=${r.weights[i]} far from truth=${truth[i]}"
+        )
+        for (i in truth.indices) assertTrue(
+            r.covariance[i, i] < 0.05,
+            "Sum[$i,$i]=${r.covariance[i, i]} did not shrink from prior 1.0"
+        )
     }
 
     @Test
@@ -85,8 +99,10 @@ class LinearRegressionStatsTest {
         a.merge(b.read())
         val r = a.read()
         assertEquals(4000.0, r.totalWeights, absoluteTolerance = 1e-9)
-        for (i in truth.indices) assertTrue(abs(r.weights[i] - truth[i]) < 0.15,
-            "merged weight[$i]=${r.weights[i]} far from truth=${truth[i]}")
+        for (i in truth.indices) assertTrue(
+            abs(r.weights[i] - truth[i]) < 0.15,
+            "merged weight[$i]=${r.weights[i]} far from truth=${truth[i]}"
+        )
     }
 
     @Test
@@ -107,18 +123,24 @@ class LinearRegressionStatsTest {
         val refResult = ref.read()
 
         for (i in truth.indices) {
-            assertTrue(abs(merged.weights[i] - truth[i]) < 0.1,
-                "merged weight[$i]=${merged.weights[i]} far from truth=${truth[i]}")
+            assertTrue(
+                abs(merged.weights[i] - truth[i]) < 0.1,
+                "merged weight[$i]=${merged.weights[i]} far from truth=${truth[i]}"
+            )
             // Posterior product should land in the same neighbourhood as replaying
             // all observations into one stat - not pointwise-identical because SMW
             // accumulates a slightly different trajectory.
-            assertTrue(abs(merged.weights[i] - refResult.weights[i]) < 0.15,
-                "merged weight[$i]=${merged.weights[i]} diverged from replay=${refResult.weights[i]}")
+            assertTrue(
+                abs(merged.weights[i] - refResult.weights[i]) < 0.15,
+                "merged weight[$i]=${merged.weights[i]} diverged from replay=${refResult.weights[i]}"
+            )
         }
         assertEquals(4000.0, merged.totalWeights, absoluteTolerance = 1e-9)
         // Combined posterior should be at least as tight as each operand.
-        for (i in truth.indices) assertTrue(merged.covariance[i, i] < 0.05,
-            "merged Sum[$i,$i]=${merged.covariance[i, i]} did not tighten")
+        for (i in truth.indices) assertTrue(
+            merged.covariance[i, i] < 0.05,
+            "merged Sum[$i,$i]=${merged.covariance[i, i]} did not tighten"
+        )
     }
 
     @Test

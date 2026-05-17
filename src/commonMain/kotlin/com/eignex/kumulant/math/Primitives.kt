@@ -13,22 +13,27 @@ package com.eignex.kumulant.math
 
 /** `Sum a[aOff..aOff+len-1] * b[bOff..bOff+len-1]`. */
 internal expect fun denseDot(
-    a: DoubleArray, aOff: Int,
-    b: DoubleArray, bOff: Int,
+    a: DoubleArray,
+    aOff: Int,
+    b: DoubleArray,
+    bOff: Int,
     len: Int,
 ): Double
 
 /** `y[yOff..] = y[yOff..] + alpha * x[xOff..]`. */
 internal expect fun denseAxpy(
-    y: DoubleArray, yOff: Int,
+    y: DoubleArray,
+    yOff: Int,
     alpha: Double,
-    x: DoubleArray, xOff: Int,
+    x: DoubleArray,
+    xOff: Int,
     len: Int,
 )
 
 /** `v[vOff..vOff+len-1] = alpha * v[..]`. */
 internal expect fun denseScale(
-    v: DoubleArray, vOff: Int,
+    v: DoubleArray,
+    vOff: Int,
     alpha: Double,
     len: Int,
 )

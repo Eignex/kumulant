@@ -50,31 +50,39 @@ class ThompsonSampling<R : Result>(
 }
 
 // === Canonical pairings: arm + matching posterior ==========================
+// PascalCase below is the convention for constructor-shaped factories.
 
+@Suppress("FunctionNaming")
 fun BetaBernoulliTS(priorAlpha: Double = 1.0, priorBeta: Double = 1.0) =
     ThompsonSampling(BernoulliArm(priorAlpha, priorBeta), BetaPosterior)
 
+@Suppress("FunctionNaming")
 fun NormalTS(
     priorMean: Double = 0.0,
     priorWeight: Double = 0.02,
     priorSquaredDeviations: Double = 0.02,
 ) = ThompsonSampling(NormalArm(priorMean, priorWeight, priorSquaredDeviations), NormalGammaPosterior)
 
+@Suppress("FunctionNaming")
 fun LogNormalTS(
     priorMean: Double = 0.0,
     priorWeight: Double = 0.02,
     priorSquaredDeviations: Double = 2.0,
 ) = ThompsonSampling(LogNormalArm(priorMean, priorWeight, priorSquaredDeviations), LogNormalGammaPosterior)
 
+@Suppress("FunctionNaming")
 fun PoissonTS(priorMean: Double = 1.0, priorWeight: Double = 0.01) =
     ThompsonSampling(MeanArm(priorMean, priorWeight), PoissonGammaPosterior)
 
+@Suppress("FunctionNaming")
 fun GeometricTS(priorMean: Double = 2.0, priorWeight: Double = 1.0) =
     ThompsonSampling(MeanArm(priorMean, priorWeight), GeometricBetaPosterior)
 
+@Suppress("FunctionNaming")
 fun ExponentialTS(priorMean: Double = 1.0, priorWeight: Double = 0.01) =
     ThompsonSampling(MeanArm(priorMean, priorWeight), ExponentialGammaPosterior)
 
+@Suppress("FunctionNaming")
 fun GammaScaleTS(fixedShape: Double, priorMean: Double = 1.0, priorWeight: Double = 0.1) =
     ThompsonSampling(MeanArm(priorMean, priorWeight), GammaScalePosterior(fixedShape))
 
@@ -169,8 +177,11 @@ class EpsilonGreedy(
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
 
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, maximize: Boolean, rng: Random): Double {
-        return if (Random(step).nextDouble() < epsilon) rng.nextDouble()
-        else signedMean(snapshot.mean, maximize)
+        return if (Random(step).nextDouble() < epsilon) {
+            rng.nextDouble()
+        } else {
+            signedMean(snapshot.mean, maximize)
+        }
     }
 }
 
@@ -191,8 +202,11 @@ class EpsilonDecreasing(
     }
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, maximize: Boolean, rng: Random): Double {
         val eps = min(1.0, epsilon / totalSamples.pow(decay))
-        return if (Random(step).nextDouble() < eps) rng.nextDouble()
-        else signedMean(snapshot.mean, maximize)
+        return if (Random(step).nextDouble() < eps) {
+            rng.nextDouble()
+        } else {
+            signedMean(snapshot.mean, maximize)
+        }
     }
     override fun addArm(snapshot: WeightedVarianceResult) { totalSamples += snapshot.totalWeights }
     override fun removeArm(snapshot: WeightedVarianceResult) { totalSamples -= snapshot.totalWeights }
