@@ -1,24 +1,32 @@
-package com.eignex.kumulant.bandit
+package com.eignex.kumulant.stat.regression
 
+// `nextNormal` currently lives in `kumulant.bandit.Distributions`; this is the only
+// cross-package import in this file. If a third caller outside `kumulant.bandit`
+// needs the random-variate helpers, lift Distributions to a neutral package
+// (e.g. `kumulant.math` or `kumulant.rng`) at that point.
+import com.eignex.kumulant.bandit.nextNormal
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
-import com.eignex.kumulant.stat.regression.CovarianceRegressionResult
-import com.eignex.kumulant.stat.regression.DiagonalRegressionResult
-import com.eignex.kumulant.stat.regression.LinearRegressionResult
-import com.eignex.kumulant.stat.regression.SGDRegressionResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
- * Stateless multivariate sampler over a regression snapshot — the multivariate analogue
- * of [Posterior]. Reads weights (and whichever uncertainty-quantification fields the
- * concrete snapshot carries) and returns a fresh draw of the weight vector, scaled by
- * an `exploration` multiplier so callers can dial up or down the variance per round.
+ * Stateless multivariate sampler over a [LinearRegressionResult] snapshot — reads
+ * weights (and whichever uncertainty-quantification fields the concrete snapshot
+ * carries) and returns a fresh draw of the weight vector, scaled by an
+ * `exploration` multiplier so callers can dial the posterior variance up or down
+ * per round.
  *
- * Sealed + `@Serializable` so a `(regression, posterior)` configuration is wire-portable
- * via skema's polymorphic discriminator.
+ * Lives next to the regression results because Thompson sampling is one of several
+ * ways to consume a posterior — Bayesian optimisation will combine these samplers
+ * with acquisition functions (UCB, EI, PI) that read the same snapshots. The
+ * univariate-bandit `kumulant.bandit.Posterior` family is sibling but disjoint:
+ * different result shape, different math.
+ *
+ * Sealed + `@Serializable` so a `(regression, posterior)` configuration is wire-
+ * portable via skema's polymorphic discriminator.
  */
 @Serializable
 sealed interface LinearPosterior<R : LinearRegressionResult> {
