@@ -16,6 +16,12 @@ import kotlin.test.assertTrue
  * regression-stat updates without materialisation, and snapshots round-trip through
  * kotlinx.serialization preserving the concrete dense/sparse subtype.
  */
+private inline fun mean(n: Int, draw: () -> Double): Double {
+    var s = 0.0
+    repeat(n) { s += draw() }
+    return s / n
+}
+
 class VectorSerializationTest {
 
     private val json = Json { encodeDefaults = false }
@@ -97,6 +103,43 @@ class VectorSerializationTest {
         val wire = json.encodeToString(CovarianceRegressionResult.serializer(), before)
         val after = json.decodeFromString(CovarianceRegressionResult.serializer(), wire)
         assertEquals(before, after)
+    }
+
+    @Test
+    fun `LinearPosterior evaluate matches mean plus calibrated Gaussian noise`() {
+        // Average evaluate(x) over ~2k draws and check the sample mean lands near
+        // predict(x) for each posterior shape. Distributional correctness of the
+        // underlying samplers is exercised in DistributionsTest and MathTest.
+        val rng = Random(2026)
+        val truth = doubleArrayOf(0.7, -0.3, 1.5)
+
+        val sgd = SGDLinearRegression(featureSize = 3, learningRate = ConstantRate(0.05))
+        val diag = DiagonalRegression(featureSize = 3, priorPrecision = 0.01)
+        val bayes = BayesianLinearRegression(featureSize = 3, priorVariance = 1.0)
+        repeat(2000) {
+            val xArr = DoubleArray(3) { rng.nextDouble() * 2 - 1 }
+            var y = 0.0
+            for (i in 0 until 3) y += truth[i] * xArr[i]
+            sgd.update(xArr, y, 1.0)
+            diag.update(xArr, y, 1.0)
+            bayes.update(xArr, y, 1.0)
+        }
+        val queryX = DenseVector.of(doubleArrayOf(0.4, -0.2, 0.6))
+        val analyticMean = 0.7 * 0.4 + -0.3 * -0.2 + 1.5 * 0.6
+
+        for ((label, m) in listOf(
+            "PointPosterior" to mean(2000) {
+                PointPosterior.evaluate(sgd.read(), queryX, rng, exploration = 0.1)
+            },
+            "FactorisedGaussian" to mean(2000) {
+                FactorisedGaussian.evaluate(diag.read(), queryX, rng, exploration = 1.0)
+            },
+            "MultivariateGaussian" to mean(2000) {
+                MultivariateGaussian.evaluate(bayes.read(), queryX, rng, exploration = 1.0)
+            },
+        )) {
+            assertTrue(abs(m - analyticMean) < 0.2, "$label evaluate mean=$m far from $analyticMean")
+        }
     }
 
     @Test

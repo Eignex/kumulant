@@ -2,6 +2,8 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
+import com.eignex.kumulant.math.dot
+import com.eignex.kumulant.math.matVec
 import com.eignex.kumulant.math.nextNormal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -26,8 +28,20 @@ import kotlin.random.Random
 @Serializable
 sealed interface LinearPosterior<R : LinearRegressionResult> {
     /** Draw a weight vector from the posterior at `exploration` variance scale.
-     *  `exploration = 0.0` is the point estimate; `1.0` is the calibrated posterior. */
+     *  `exploration = 0.0` collapses to the point estimate; `1.0` is the calibrated posterior. */
     fun sample(snapshot: R, rng: Random, exploration: Double = 1.0): VectorView
+
+    /**
+     * Score a query point [x] under a fresh posterior draw. Parallels
+     * [com.eignex.kumulant.bandit.BanditPolicy.evaluate] for the multivariate
+     * setting: an outer "pick the best x" loop calls this once per candidate.
+     *
+     * Default is `bias + (x dot sample(...))`. Concrete subtypes may override with
+     * a specialised formula (e.g. drawing only `xT * Sigma * x` worth of variance
+     * instead of the full weight vector).
+     */
+    fun evaluate(snapshot: R, x: VectorView, rng: Random, exploration: Double = 1.0): Double =
+        snapshot.bias + (x dot sample(snapshot, rng, exploration))
 }
 
 /**
@@ -46,6 +60,15 @@ data object PointPosterior : LinearPosterior<SGDRegressionResult> {
         for (i in 0 until n) out[i] = rng.nextNormal(snapshot.weights[i], sd)
         return DenseVector.of(out)
     }
+
+    /** Closes to `predict(x) + sd * ||x|| * N(0,1)` since the per-coord noise terms
+     *  are iid; one Gaussian draw instead of one per coordinate. */
+    override fun evaluate(snapshot: SGDRegressionResult, x: VectorView, rng: Random, exploration: Double): Double {
+        val mean = snapshot.predict(x)
+        if (exploration <= 0.0) return mean
+        val xNormSq = x dot x
+        return mean + sqrt(exploration * xNormSq) * rng.nextNormal()
+    }
 }
 
 /**
@@ -63,6 +86,17 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
             out[i] = rng.nextNormal(snapshot.weights[i], sd)
         }
         return DenseVector.of(out)
+    }
+
+    /** Sum of independent normals: `predict(x) + sqrt(exploration * Sum x_i^2 / precision[i]) * N(0,1)`. */
+    override fun evaluate(snapshot: DiagonalRegressionResult, x: VectorView, rng: Random, exploration: Double): Double {
+        val mean = snapshot.predict(x)
+        var variance = 0.0
+        for (i in 0 until x.size) {
+            val xi = x[i]
+            variance += xi * xi / snapshot.precision[i]
+        }
+        return mean + sqrt(exploration * variance) * rng.nextNormal()
     }
 }
 
@@ -88,5 +122,19 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
             out[i] = s
         }
         return DenseVector.of(out)
+    }
+
+    /** Closes to `predict(x) + sqrt(exploration * xT * Sigma * x) * N(0,1)`; one
+     *  `matVec` and one `dot` instead of sampling the full weight vector. */
+    override fun evaluate(
+        snapshot: CovarianceRegressionResult,
+        x: VectorView,
+        rng: Random,
+        exploration: Double
+    ): Double {
+        val mean = snapshot.predict(x)
+        val sigmaX = matVec(snapshot.covariance, x)
+        val variance = x dot sigmaX
+        return mean + sqrt(exploration * variance) * rng.nextNormal()
     }
 }

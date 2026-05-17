@@ -21,11 +21,14 @@ import kotlin.math.sqrt
 
 /**
  * Lower-triangular Cholesky decomposition `A = L * LT`, returned as a fresh matrix.
- * Falls back to a small positive diagonal entry when [this] is not strictly
- * positive-definite; a regularised result is friendlier than a crash for the online
- * stats that call this on drifting precision matrices.
+ *
+ * With [regularizeNonPD] true (default), non-positive-definite inputs get a small
+ * positive diagonal entry instead of a crash - suitable for the online stats that
+ * call this on drifting precision matrices. Pass `false` for strict
+ * positive-definiteness validation (e.g. user-supplied prior covariance); the
+ * function throws [IllegalArgumentException] at the first non-PD pivot.
  */
-internal fun MatrixView.cholesky(): DenseMatrix {
+internal fun MatrixView.cholesky(regularizeNonPD: Boolean = true): DenseMatrix {
     require(rows == cols) { "cholesky requires a square matrix; got ${rows}x$cols" }
     val n = rows
     val L = DenseMatrix(n, n)
@@ -41,7 +44,12 @@ internal fun MatrixView.cholesky(): DenseMatrix {
                 Ld[rowI + j] = (this[i, j] - sum) / Ld[rowJ + j]
             }
         }
-        if (Ld[rowI + i] <= 0.0 || Ld[rowI + i].isNaN()) Ld[rowI + i] = 1e-5
+        if (Ld[rowI + i] <= 0.0 || Ld[rowI + i].isNaN()) {
+            require(regularizeNonPD) {
+                "matrix is not positive-definite at pivot $i (diagonal=${Ld[rowI + i]})"
+            }
+            Ld[rowI + i] = 1e-5
+        }
     }
     return L
 }

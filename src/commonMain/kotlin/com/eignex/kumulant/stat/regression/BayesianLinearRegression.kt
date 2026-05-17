@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.math.MatrixView
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.math.addOuter
 import com.eignex.kumulant.math.axpy
@@ -18,6 +19,7 @@ import com.eignex.kumulant.math.scale
 import com.eignex.kumulant.math.solveSpd
 import com.eignex.kumulant.schema.ScalarExpr
 import com.eignex.kumulant.stream.serializedLock
+import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
 
 /**
@@ -48,17 +50,48 @@ class BayesianLinearRegression(
     val learningRate: ScalarExpr = ConstantRate(1.0),
     val l2: Double = 0.0,
     override val concurrency: Concurrency = Concurrency.None,
+    priorMean: VectorView? = null,
+    priorCovariance: MatrixView? = null,
 ) : RegressionStat<CovarianceRegressionResult> {
 
     init {
         require(featureSize > 0) { "featureSize must be positive" }
         require(priorVariance > 0.0) { "priorVariance must be positive, got $priorVariance" }
+        require(priorMean == null || priorMean.size == featureSize) {
+            "priorMean.size=${priorMean?.size}, expected $featureSize"
+        }
+        require(
+            priorCovariance == null || (priorCovariance.rows == featureSize && priorCovariance.cols == featureSize)
+        ) {
+            "priorCovariance must be ${featureSize}x$featureSize, got ${priorCovariance?.rows}x${priorCovariance?.cols}"
+        }
+    }
+
+    // Stored prior: caller-supplied or the default isotropic N(0, priorVariance * I).
+    // `initialCovarianceL` is validated up front via strict (non-regularising) Cholesky
+    // so a non-PD user prior throws at construction rather than silently corrupting fits.
+    private val initialWeights: DoubleArray = priorMean?.toDoubleArray() ?: DoubleArray(featureSize)
+    private val initialCovariance: DenseMatrix = priorCovariance
+        ?.let { DenseMatrix.of(it.toArray()) }
+        ?: DenseMatrix.diagonal(featureSize, priorVariance)
+    private val initialCovarianceL: DenseMatrix = initialCovariance.cholesky(regularizeNonPD = false)
+
+    // Prior precision H_prior = Sigma_prior^-1, cached so merge() can subtract one prior factor.
+    private val priorPrecisionMatrix: DenseMatrix = invertSpd(initialCovarianceL)
+
+    // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
+    private val priorInfo: DoubleArray = DoubleArray(featureSize).also { out ->
+        for (i in 0 until featureSize) {
+            var s = 0.0
+            for (j in 0 until featureSize) s += priorPrecisionMatrix[i, j] * initialWeights[j]
+            out[i] = s
+        }
     }
 
     private val lock = concurrency.serializedLock()
-    private val weights = DenseVector.zero(featureSize)
-    private val covariance = DenseMatrix.diagonal(featureSize, priorVariance)
-    private val covarianceL = DenseMatrix.diagonal(featureSize, sqrt(priorVariance))
+    private val weights = DenseVector.of(initialWeights.copyOf())
+    private val covariance = DenseMatrix.of(initialCovariance.toArray())
+    private val covarianceL = DenseMatrix.of(initialCovarianceL.toArray())
     private var bias: Double = 0.0
     private var biasPrecision: Double = 1.0 / priorVariance
     private var totalWeights: Double = 0.0
@@ -125,20 +158,22 @@ class BayesianLinearRegression(
 
     /**
      * Combine two independent Gaussian posteriors over the same parameter by
-     * multiplying their densities and renormalising. With zero-mean prior
-     * `N(0, priorVariance * I)`, each posterior already includes one prior factor,
-     * so the combined precision subtracts one copy back out:
+     * multiplying their densities and renormalising. Each posterior already includes
+     * one prior factor, so the combined precision subtracts one copy back out:
      *
      * ```
      * H_new  = H_self + H_other - H_prior
-     * b_new  = H_self * mu_self + H_other * mu_other
+     * b_new  = H_self * mu_self + H_other * mu_other - H_prior * mu_prior
      * mu_new = H_new^-1 * b_new
      * S_new  = H_new^-1
      * ```
      *
-     * When `H_new` drifts outside SPD the Cholesky helper's diagonal clamp catches
-     * it and returns a regularised result rather than NaNs. Bias is merged the same
-     * way, treating the intercept as a scalar Gaussian with zero prior mean.
+     * For a non-zero prior mean the `H_prior * mu_prior` correction is subtracted
+     * from the information vector as well, otherwise the merged posterior would
+     * count the prior shift twice. When `H_new` drifts outside SPD the Cholesky
+     * helper's diagonal clamp catches it and returns a regularised result rather
+     * than NaNs. Bias is merged the same way, treating the intercept as a scalar
+     * Gaussian with zero prior mean.
      */
     override fun merge(values: CovarianceRegressionResult) {
         require(values.featureSize == featureSize) {
@@ -151,21 +186,20 @@ class BayesianLinearRegression(
             val hSelf = invertSpd(covarianceL)
             val hOther = invertSpd(values.covarianceL)
 
-            // H_new = H_self + H_other - H_prior, where H_prior = (1/priorVariance) * I.
-            val priorPrec = 1.0 / priorVariance
+            // H_new = H_self + H_other - H_prior.
             val hNew = DenseMatrix(n, n)
             for (i in 0 until n) {
                 for (j in 0 until n) {
-                    hNew[i, j] = hSelf[i, j] + hOther[i, j] - if (i == j) priorPrec else 0.0
+                    hNew[i, j] = hSelf[i, j] + hOther[i, j] - priorPrecisionMatrix[i, j]
                 }
             }
 
-            // b = H_self * mu_self + H_other * mu_other  (mu_prior = 0 cancels its term)
+            // b = H_self * mu_self + H_other * mu_other - H_prior * mu_prior.
             val otherWeights = values.weights.toDoubleArray()
             val selfWeights = weights.toDoubleArray()
             val b = DoubleArray(n)
             for (i in 0 until n) {
-                var s = 0.0
+                var s = -priorInfo[i]
                 for (j in 0 until n) s += hSelf[i, j] * selfWeights[j] + hOther[i, j] * otherWeights[j]
                 b[i] = s
             }
@@ -200,12 +234,10 @@ class BayesianLinearRegression(
     }
 
     override fun reset() = lock.withLock {
-        covariance.data.fill(0.0)
-        covarianceL.data.fill(0.0)
-        for (i in 0 until featureSize) {
-            weights[i] = 0.0
-            covariance[i, i] = priorVariance
-            covarianceL[i, i] = sqrt(priorVariance)
+        for (i in 0 until featureSize) weights[i] = initialWeights[i]
+        for (k in covariance.data.indices) {
+            covariance.data[k] = initialCovariance.data[k]
+            covarianceL.data[k] = initialCovarianceL.data[k]
         }
         bias = 0.0
         biasPrecision = 1.0 / priorVariance
@@ -215,5 +247,87 @@ class BayesianLinearRegression(
     }
 
     override fun create(concurrency: Concurrency?) =
-        BayesianLinearRegression(featureSize, priorVariance, learningRate, l2, concurrency ?: this.concurrency)
+        BayesianLinearRegression(
+            featureSize = featureSize,
+            priorVariance = priorVariance,
+            learningRate = learningRate,
+            l2 = l2,
+            concurrency = concurrency ?: this.concurrency,
+            priorMean = DenseVector.of(initialWeights.copyOf()),
+            priorCovariance = DenseMatrix.of(initialCovariance.toArray()),
+        )
+
+    companion object {
+        /**
+         * Empirical-Bayes population prior from a set of per-instance posteriors that
+         * share the same feature layout. Decomposes total variance into within-instance
+         * (mean of per-instance covariances) plus between-instance (covariance of
+         * per-instance means):
+         *
+         * ```
+         * mu_pop    = weighted_mean(snapshot_i.weights)
+         * Sigma_pop = mean(snapshot_i.covariance)
+         *           + weighted_cov(snapshot_i.weights, mu_pop)
+         * ```
+         *
+         * Weighting per snapshot is `snapshot.totalWeights` by default (more data =
+         * tighter contribution); pass an explicit [weight] selector to override (e.g.
+         * uniform weighting, or weighting by `step`). Empty input throws.
+         */
+        fun fitPopulationPrior(
+            snapshots: List<CovarianceRegressionResult>,
+            weight: (CovarianceRegressionResult) -> Double = { it.totalWeights.coerceAtLeast(1.0) },
+        ): PopulationPrior {
+            require(snapshots.isNotEmpty()) { "fitPopulationPrior requires at least one snapshot" }
+            val n = snapshots[0].featureSize
+            require(snapshots.all { it.featureSize == n }) {
+                "all snapshots must share featureSize=$n"
+            }
+
+            val weights = DoubleArray(snapshots.size) { weight(snapshots[it]) }
+            val wTotal = weights.sum()
+            require(wTotal > 0.0) { "fitPopulationPrior: sum of weights must be positive, got $wTotal" }
+
+            // mu_pop = weighted mean of per-instance posterior means.
+            val muPop = DoubleArray(n)
+            for (s in snapshots.indices) {
+                val wi = weights[s]
+                val w = snapshots[s].weights
+                for (i in 0 until n) muPop[i] += wi * w[i]
+            }
+            for (i in 0 until n) muPop[i] /= wTotal
+
+            // Sigma_pop = weighted mean of Sigma_i + weighted covariance of (mu_i - mu_pop).
+            val sigmaPop = DenseMatrix(n, n)
+            for (s in snapshots.indices) {
+                val wi = weights[s] / wTotal
+                val cov = snapshots[s].covariance
+                val mu = snapshots[s].weights
+                for (i in 0 until n) {
+                    val di = mu[i] - muPop[i]
+                    for (j in 0 until n) {
+                        sigmaPop[i, j] = sigmaPop[i, j] + wi * (cov[i, j] + di * (mu[j] - muPop[j]))
+                    }
+                }
+            }
+
+            return PopulationPrior(
+                mean = DenseVector.of(muPop),
+                covariance = sigmaPop,
+                instanceCount = snapshots.size,
+            )
+        }
+    }
 }
+
+/**
+ * Empirical-Bayes prior fitted across a population of related regression posteriors.
+ * Hand [mean] and [covariance] straight to [BayesianLinearRegression]'s `priorMean`
+ * / `priorCovariance` constructor parameters to seed a new instance.
+ */
+@Serializable
+data class PopulationPrior(
+    val mean: DenseVector,
+    val covariance: DenseMatrix,
+    val instanceCount: Int,
+)
