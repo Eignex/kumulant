@@ -56,7 +56,6 @@ class SGDLinearRegression(
             val eta = learningRate.eval(step.toDouble())
             val etaBias = biasRate.eval(step.toDouble())
 
-            // yhat via dispatched dot (sparse-aware).
             val yhat = bias + (x dot DenseVector.wrap(weights))
             val residual = y - yhat
             sse += residual * residual * weight

@@ -48,7 +48,6 @@ class ThompsonSampling<R : Result>(
 }
 
 // === Canonical pairings: arm + matching posterior ==========================
-// PascalCase below is the convention for constructor-shaped factories.
 
 @Suppress("FunctionNaming")
 fun BetaBernoulliTS(priorAlpha: Double = 1.0, priorBeta: Double = 1.0) =

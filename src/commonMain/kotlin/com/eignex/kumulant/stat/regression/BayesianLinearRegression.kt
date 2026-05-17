@@ -105,7 +105,6 @@ class BayesianLinearRegression(
             step++
             val eta = learningRate.eval(step.toDouble())
 
-            // yhat via sparse-aware dot.
             val yhat = bias + (x dot weights)
             val residual = y - yhat
             sse += residual * residual * weight
@@ -182,7 +181,6 @@ class BayesianLinearRegression(
         lock.withLock {
             val n = featureSize
 
-            // Precisions from each operand via their Cholesky factors.
             val hSelf = invertSpd(covarianceL)
             val hOther = invertSpd(values.covarianceL)
 
