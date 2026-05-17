@@ -17,7 +17,7 @@ class RouletteWheelBanditTest {
             random = Random(1),
         )
         val before = bandit.snapshot().map { it.weight }
-        // 3 updates < segmentLength=4 → no rebalance yet.
+        // 3 updates < segmentLength=4 -> no rebalance yet.
         bandit.update(0, 3.0)
         bandit.update(1, 0.0)
         bandit.update(0, 3.0)

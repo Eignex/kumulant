@@ -22,12 +22,12 @@ data class RouletteWheelArmResult(
  * has a weight; [choose] samples arms with probability proportional to their weights
  * (roulette wheel). After every [segmentLength] [update] calls, weights re-balance via
  *
- *     w_i ← w_i * (1 - reactionFactor) + reactionFactor * avgScore_i
+ *     w_i = w_i * (1 - reactionFactor) + reactionFactor * avgScore_i
  *
  * where `avgScore_i` is the mean reward per call of arm i over the segment, floored at
  * [minWeight] so no arm gets permanently extinguished. Compared to the policy-driven
  * [MultiArmedBandit], this scheme batches the weight update over a segment of picks
- * rather than reacting per observation — useful when rewards are noisy and continuous
+ * rather than reacting per observation - useful when rewards are noisy and continuous
  * updates would thrash.
  *
  * Unlike most kumulant bandits, the weight rebalance is a global cross-arm operation
