@@ -70,10 +70,10 @@ class StochasticRegressionStat(
     private val stepCell = mode.newLong(0L)
     private val sseCell = mode.newDouble(0.0)
 
-    // L2 lazy-scale: actual w_i = stored[i] * scale. Only allocated when needed.
+    // Logical w_i = stored[i] * scale.
     private val l2ScaleCell: StreamDouble? = if (penalty is Penalty.L2) mode.newDouble(1.0) else null
 
-    // L1 truncated-gradient: actual w_i = softThreshold(stored[i], pendingThreshold - lastApplied[i]).
+    // Logical w_i = softThreshold(stored[i], pendingThreshold - lastApplied[i]).
     private val l1PendingCell: StreamDouble? = if (penalty is Penalty.L1) mode.newDouble(0.0) else null
     private val l1LastApplied: StreamDoubleArray? = if (penalty is Penalty.L1) mode.newDoubleArray(featureSize) else null
 
@@ -104,7 +104,6 @@ class StochasticRegressionStat(
             val eta = learningRate.eval(s.toDouble())
             val etaBias = biasRate.eval(s.toDouble())
 
-            // yhat uses the *effective* weight projection, but we only need it where x_i != 0.
             var dot = 0.0
             x.forEachStored { i, v -> dot += effectiveWeight(i) * v }
             val yhat = biasCell.load() + dot
@@ -117,7 +116,6 @@ class StochasticRegressionStat(
                     x.forEachStored { i, v -> weightsCell.add(i, coeff * v) }
                 }
                 is Penalty.L2 -> {
-                    // Decay the shared scale once (O(1)), then SGD only on touched coords.
                     val factor = 1.0 - eta * weight * p.lambda
                     require(factor > 0.0) {
                         "L2 decay factor must stay positive: 1 - eta*weight*lambda = $factor"
@@ -125,11 +123,10 @@ class StochasticRegressionStat(
                     val scale = casMultiply(l2ScaleCell!!, factor)
                     val coeff = eta * weight * residual
                     x.forEachStored { i, v -> weightsCell.add(i, coeff * v / scale) }
-                    // Fold scale back into storage when it drifts too small to keep precision.
+                    // Refold before precision dies; one rare dense sweep amortised over many updates.
                     if (scale < 1e-12) foldL2Scale()
                 }
                 is Penalty.L1 -> {
-                    // Accumulate threshold once (O(1)), then per-touched-coord lazy-apply + SGD step.
                     val pending = l1PendingCell!!.addAndGet(eta * weight * p.lambda)
                     val coeff = eta * weight * residual
                     x.forEachStored { i, v ->
@@ -150,11 +147,11 @@ class StochasticRegressionStat(
         }
     }
 
-    /** Rescale stored cells by the current L2 scale and reset scale to 1.0. */
     private fun foldL2Scale() {
         val scale = l2ScaleCell!!.load()
         if (scale == 1.0) return
-        if (!l2ScaleCell.compareAndSet(scale, 1.0)) return // another thread folded first
+        // Lose the CAS race -> another thread is folding; bail rather than double-apply.
+        if (!l2ScaleCell.compareAndSet(scale, 1.0)) return
         for (i in 0 until featureSize) {
             while (true) {
                 val w = weightsCell.load(i)
@@ -163,7 +160,7 @@ class StochasticRegressionStat(
         }
     }
 
-    /** Apply pending L1 threshold to coord [i] and add the SGD [delta], in one CAS-loop. */
+    /** Apply pending L1 threshold to coord [i] and add the SGD [delta] in one CAS-loop. */
     private fun applyL1AndStep(i: Int, pending: Double, delta: Double) {
         val lastApplied = l1LastApplied!!.load(i)
         val threshold = pending - lastApplied
@@ -180,7 +177,7 @@ class StochasticRegressionStat(
 
     override fun read(timestampNanos: Long): StochasticRegressionResult = lock.withLock {
         val materialised = DoubleArray(featureSize) { effectiveWeight(it) }
-        // Fold lazy state back into storage so the snapshot's invariants match the underlying cells.
+        // Snapshot returns logical weights, so reset lazy state to match.
         when (penalty) {
             Penalty.None -> {}
             is Penalty.L2 -> {
