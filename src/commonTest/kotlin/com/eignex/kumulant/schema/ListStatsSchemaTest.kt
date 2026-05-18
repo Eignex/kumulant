@@ -2,7 +2,7 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
-import com.eignex.kumulant.stat.regression.OLSResult
+import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -31,7 +31,7 @@ class ListStatsSchemaTest {
 
     @Test fun `pairedListStats from schema preserves order`() {
         val schema = object : StatSchema() {
-            val a by paired(OLS)
+            val a by paired(UnivariateRegression())
             val b by paired(Covariance)
         }
         val list = PairedListStats<Result>(schema)
@@ -39,7 +39,7 @@ class ListStatsSchemaTest {
         list.update(2.0, 4.0)
         val r = list.read()
         assertEquals(listOf("a", "b"), r.names)
-        assertEquals(2.0, (r.results[0] as OLSResult).slope, DELTA)
+        assertEquals(2.0, (r.results[0] as UnivariateRegressionResult).slope, DELTA)
     }
 
     @Test fun `discreteListStats from schema preserves order`() {

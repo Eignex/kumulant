@@ -1,5 +1,7 @@
 package com.eignex.kumulant.core
 
+import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.math.VectorView
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.time.Duration
@@ -91,14 +93,44 @@ interface HasShapeMoments : HasSampleVariance {
 }
 
 /**
- * Generic interface for model prediction (y = mx + c).
+ * Fitted linear model `y = bias + weights . x`. Covers both univariate ([HasSlope])
+ * and multivariate regression results behind one surface so consumers can be
+ * written generically over "anything with a linear predictor".
  */
 interface HasLinearModel : Result {
+    /** Fitted weight per feature, indexed by the same `i` as the input `x[i]`. */
+    val weights: VectorView
+
+    /** Fitted bias / intercept term. */
+    val bias: Double
+
+    val featureSize: Int get() = weights.size
+
+    /** Evaluate the fitted hyperplane at [x]. */
+    fun predict(x: VectorView): Double {
+        require(x.size == weights.size) { "x.size=${x.size}, expected ${weights.size}" }
+        var sum = bias
+        for (i in 0 until weights.size) sum += x[i] * weights[i]
+        return sum
+    }
+}
+
+/**
+ * Univariate special case: `y = slope * x + intercept`. The general
+ * [HasLinearModel] surface is derived from `slope`/`intercept` so univariate
+ * regression results compose with any consumer written against
+ * [HasLinearModel] without storing redundant fields.
+ */
+interface HasSlope : HasLinearModel {
     /** Fitted slope coefficient `m`. */
     val slope: Double
 
     /** Fitted intercept `c`. */
     val intercept: Double
+
+    override val weights: VectorView get() = DenseVector.of(doubleArrayOf(slope))
+    override val bias: Double get() = intercept
+    override val featureSize: Int get() = 1
 
     /** Evaluate the fitted line at [x]. */
     fun predict(x: Double): Double = (slope * x) + intercept

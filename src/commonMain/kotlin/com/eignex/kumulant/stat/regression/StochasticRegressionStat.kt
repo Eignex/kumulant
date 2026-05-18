@@ -31,13 +31,13 @@ import com.eignex.kumulant.stream.serializedLock
  * coords. L2 regularisation still applies to every coordinate, so the dense-side cost
  * is unchanged when `l2 > 0`.
  */
-class SGDLinearRegression(
+class StochasticRegressionStat(
     override val featureSize: Int,
     val learningRate: ScalarExpr = ConstantRate(1e-3),
     val biasRate: ScalarExpr = learningRate,
     val l2: Double = 0.0,
     override val concurrency: Concurrency = Concurrency.None,
-) : RegressionStat<SGDRegressionResult> {
+) : RegressionStat<StochasticRegressionResult> {
 
     init { require(featureSize > 0) { "featureSize must be positive" } }
 
@@ -75,8 +75,8 @@ class SGDLinearRegression(
             totalWeights += weight
         }
 
-    override fun read(timestampNanos: Long): SGDRegressionResult = lock.withLock {
-        SGDRegressionResult(
+    override fun read(timestampNanos: Long): StochasticRegressionResult = lock.withLock {
+        StochasticRegressionResult(
             weights = DenseVector.of(weights),
             bias = bias,
             totalWeights = totalWeights,
@@ -89,9 +89,9 @@ class SGDLinearRegression(
      * Sample-weighted blend of weights and bias. SGD has no second-moment information,
      * so this is an *approximation*: weight vectors from two streams are correlated
      * through their gradient trajectories in a way that an exact combine would need to
-     * know about. If you need a principled merge, use [BayesianLinearRegression].
+     * know about. If you need a principled merge, use [BayesianRegressionStat].
      */
-    override fun merge(values: SGDRegressionResult) {
+    override fun merge(values: StochasticRegressionResult) {
         require(values.featureSize == featureSize) {
             "merge: featureSize mismatch ${values.featureSize} vs $featureSize"
         }
@@ -121,5 +121,5 @@ class SGDLinearRegression(
     }
 
     override fun create(concurrency: Concurrency?) =
-        SGDLinearRegression(featureSize, learningRate, biasRate, l2, concurrency ?: this.concurrency)
+        StochasticRegressionStat(featureSize, learningRate, biasRate, l2, concurrency ?: this.concurrency)
 }

@@ -30,7 +30,7 @@ import com.eignex.kumulant.stream.serializedLock
  * curvature). L2 acts only on touched coordinates - matches how coordinate-descent
  * solvers handle regularisation in the sparse setting.
  */
-class DiagonalRegression(
+class DiagonalRegressionStat(
     override val featureSize: Int,
     val priorPrecision: Double = 1.0,
     val learningRate: ScalarExpr = ConstantRate(1.0),
@@ -131,5 +131,5 @@ class DiagonalRegression(
     }
 
     override fun create(concurrency: Concurrency?) =
-        DiagonalRegression(featureSize, priorPrecision, learningRate, l2, concurrency ?: this.concurrency)
+        DiagonalRegressionStat(featureSize, priorPrecision, learningRate, l2, concurrency ?: this.concurrency)
 }

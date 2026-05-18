@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
+import com.eignex.kumulant.core.HasSlope
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.summary.VarianceResult
@@ -13,48 +13,64 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
 
-/** Fitted Ordinary Least Squares regression with marginal x/y variances for merge. */
+/**
+ * Fitted univariate least-squares regression `y = slope * x + intercept`. Carries
+ * the marginal `x` / `y` variances and the raw weighted cross-deviation [sxy] so
+ * the result round-trips losslessly under merge regardless of [penalty].
+ */
 @Serializable
-@SerialName("OLSResult")
-data class OLSResult(
+@SerialName("UnivariateRegressionResult")
+data class UnivariateRegressionResult(
+    val penalty: Penalty,
     override val totalWeights: Double,
     override val slope: Double,
     override val intercept: Double,
     override val sse: Double,
+    /** Raw weighted cross-deviation `Sum((x - meanX)(y - meanY) * w)` from the underlying
+     *  accumulator. Stored explicitly so merge round-trips losslessly even when [slope]
+     *  has been soft-thresholded to zero or shrunk away from `sxy / sxx`. */
+    val sxy: Double,
     val x: VarianceResult,
     val y: VarianceResult,
 ) : Result,
-    HasLinearModel,
+    HasSlope,
     HasRegression {
 
+    override val sst: Double get() = y.variance * totalWeights
+
+    /** Weighted covariance `sxy / totalWeights`. */
+    val covariance: Double get() = if (totalWeights > 0.0) sxy / totalWeights else 0.0
+
     /**
-     * Calculated from R^2 and the sign of the slope.
-     * This avoids needing to store the raw covariance if not strictly necessary.
+     * Pearson correlation derived from R^2 and the sign of [sxy]. Reuses [sst]/[sse]
+     * rather than storing the raw quantity.
      */
     val correlation: Double
         get() {
             if (sst <= 0.0) return 0.0
             val r2 = (1.0 - (sse / sst)).coerceAtLeast(0.0)
             val r = sqrt(r2)
-            return if (slope >= 0) r else -r
+            return if (sxy >= 0.0) r else -r
         }
-    override val sst: Double
-        get() = y.variance * totalWeights
-
-    /** Weighted covariance `slope * var(x)`. */
-    val covariance: Double
-        get() = slope * x.variance
 }
 
 /**
- * Online Ordinary Least Squares (OLS) linear regression: y = slope * x + intercept.
+ * Online univariate linear regression backed by Chan's parallel Welford accumulator
+ * on `(x, y)`. A single hot path drives every [Penalty]: accumulation is identical;
+ * the penalty's closed-form projection is applied only at [read].
  *
- * Uses Chan's parallel algorithm for numerically stable online updates and merging.
- * Supports weighted observations.
+ *  - [Penalty.None]: `slope = sxy / sxx` (ordinary least squares).
+ *  - [Penalty.L1]: soft-thresholded `slope = sign(sxy) * max(0, |sxy| - lambda * w) / sxx` (Lasso).
+ *  - [Penalty.L2]: `slope = sxy / (sxx + lambda * w)` (Ridge).
+ *
+ * `intercept = meanY - slope * meanX` in every case. Merging consumes a result type
+ * carrying the raw [UnivariateRegressionResult.sxy], so the round trip is exact for
+ * every penalty including the L1 case where the regularised slope can be zero.
  */
-class OLSStat(
+class UnivariateRegressionStat(
+    val penalty: Penalty = Penalty.None,
     override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<OLSResult> {
+) : PairedStat<UnivariateRegressionResult> {
 
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
@@ -69,14 +85,6 @@ class OLSStat(
     val meanX: Double by mx
     val meanY: Double by my
 
-    /**
-     * Update with a new (x, y) observation using Chan's online algorithm.
-     *
-     * Incremental formula (weight-aware Welford):
-     *   sXX += weight * dx * dx * oldW / nextW
-     *   sXY += weight * dx * dy * oldW / nextW
-     *   sYY += weight * dy * dy * oldW / nextW
-     */
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
         if (weight <= 0.0) return@withLock
 
@@ -95,12 +103,7 @@ class OLSStat(
         sxy.add(dx * dy * factor)
     }
 
-    /**
-     * Merge an [OLSResult] from another accumulator using Chan's parallel algorithm.
-     *
-     * Recovers sXX, sYY, sXY from the result's stored variances and slope.
-     */
-    override fun merge(values: OLSResult) = lock.withLock {
+    override fun merge(values: UnivariateRegressionResult) = lock.withLock {
         val w2 = values.totalWeights
         if (w2 <= 0.0) return@withLock
 
@@ -112,7 +115,7 @@ class OLSStat(
 
         val sxx2 = values.x.variance * w2
         val syy2 = values.y.variance * w2
-        val sxy2 = values.slope * sxx2 // slope = sxy / sxx  ->  sxy = slope * sxx
+        val sxy2 = values.sxy
 
         val factor = w1 * w2 / nextW
         sxx.add(sxx2 + dx * dx * factor)
@@ -133,7 +136,7 @@ class OLSStat(
         sxy.store(0.0)
     }
 
-    override fun read(timestampNanos: Long): OLSResult = lock.withLock {
+    override fun read(timestampNanos: Long): UnivariateRegressionResult = lock.withLock {
         val totalW = w.load()
         val meanX = mx.load()
         val meanY = my.load()
@@ -141,19 +144,37 @@ class OLSStat(
         val ssy = syy.load()
         val ssxy = sxy.load()
 
-        val slope = if (ssx > 0.0) ssxy / ssx else 0.0
+        val slope = when (val p = penalty) {
+            Penalty.None -> if (ssx > 0.0) ssxy / ssx else 0.0
+            is Penalty.L1 -> {
+                val threshold = p.lambda * totalW
+                val shrunk = when {
+                    ssxy > threshold -> ssxy - threshold
+                    ssxy < -threshold -> ssxy + threshold
+                    else -> 0.0
+                }
+                if (ssx > 0.0) shrunk / ssx else 0.0
+            }
+            is Penalty.L2 -> {
+                val denom = ssx + p.lambda * totalW
+                if (denom > 0.0) ssxy / denom else 0.0
+            }
+        }
         val intercept = meanY - slope * meanX
-        val sse = (ssy - slope * ssxy).coerceAtLeast(0.0)
+        val sse = (ssy - 2.0 * slope * ssxy + slope * slope * ssx).coerceAtLeast(0.0)
 
-        OLSResult(
+        UnivariateRegressionResult(
+            penalty = penalty,
             totalWeights = totalW,
             slope = slope,
             intercept = intercept,
             sse = sse,
+            sxy = ssxy,
             x = VarianceResult(meanX, if (totalW > 0.0) ssx / totalW else 0.0),
-            y = VarianceResult(meanY, if (totalW > 0.0) ssy / totalW else 0.0)
+            y = VarianceResult(meanY, if (totalW > 0.0) ssy / totalW else 0.0),
         )
     }
 
-    override fun create(concurrency: Concurrency?) = OLSStat(concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) =
+        UnivariateRegressionStat(penalty, concurrency ?: this.concurrency)
 }

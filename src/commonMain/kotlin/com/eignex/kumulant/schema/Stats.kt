@@ -9,9 +9,8 @@ import com.eignex.kumulant.stat.quantile.SparseHistogramResult
 import com.eignex.kumulant.stat.quantile.TDigestResult
 import com.eignex.kumulant.stat.rate.RateResult
 import com.eignex.kumulant.stat.regression.CovarianceResult
-import com.eignex.kumulant.stat.regression.LassoResult
-import com.eignex.kumulant.stat.regression.OLSResult
-import com.eignex.kumulant.stat.regression.RidgeResult
+import com.eignex.kumulant.stat.regression.Penalty
+import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
 import com.eignex.kumulant.stat.score.AucResult
 import com.eignex.kumulant.stat.score.ReliabilityResult
 import com.eignex.kumulant.stat.sketch.BloomFilterResult
@@ -160,20 +159,14 @@ data class PitHistogram(val numBins: Int) : SeriesStatSpec<SparseHistogramResult
 data object PairedSum : PairedStatSpec<PairedSumResult>
 
 @Serializable
-@SerialName("OLS")
-data object OLS : PairedStatSpec<OLSResult>
+@SerialName("UnivariateRegression")
+data class UnivariateRegression(
+    val penalty: Penalty = Penalty.None,
+) : PairedStatSpec<UnivariateRegressionResult>
 
 @Serializable
 @SerialName("Covariance")
 data object Covariance : PairedStatSpec<CovarianceResult>
-
-@Serializable
-@SerialName("Lasso")
-data class Lasso(val lambda: Double) : PairedStatSpec<LassoResult>
-
-@Serializable
-@SerialName("Ridge")
-data class Ridge(val lambda: Double) : PairedStatSpec<RidgeResult>
 
 @Serializable
 @SerialName("BrierScore")

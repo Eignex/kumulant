@@ -92,18 +92,18 @@ class OperationsRoundTripTest {
     }
 
     @Test fun `withFixedX should lift paired to series`() {
-        val cfg: SeriesStatSpec<com.eignex.kumulant.stat.regression.OLSResult> =
-            OLS.withFixedX(2.0)
+        val cfg: SeriesStatSpec<com.eignex.kumulant.stat.regression.UnivariateRegressionResult> =
+            UnivariateRegression().withFixedX(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        val live = com.eignex.kumulant.stat.regression.OLSStat().liveWithFixedX(2.0)
+        val live = com.eignex.kumulant.stat.regression.UnivariateRegressionStat().liveWithFixedX(2.0)
 
         listOf(4.0, 6.0, 8.0).forEach {
             rebuilt.update(it)
             live.update(it)
         }
-        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.OLSResult
+        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
         val l = live.read()
         assertEquals(l.totalWeights, r.totalWeights, DELTA)
     }
@@ -152,17 +152,17 @@ class OperationsRoundTripTest {
     }
 
     @Test fun `withWeight paired should match live composition`() {
-        val cfg: PairedStatSpec<com.eignex.kumulant.stat.regression.OLSResult> = OLS.withWeight(2.0)
+        val cfg: PairedStatSpec<com.eignex.kumulant.stat.regression.UnivariateRegressionResult> = UnivariateRegression().withWeight(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as PairedStatSpec<*>).materialize(Concurrency.None)
-        val live = com.eignex.kumulant.stat.regression.OLSStat().liveWithWeight(2.0)
+        val live = com.eignex.kumulant.stat.regression.UnivariateRegressionStat().liveWithWeight(2.0)
 
         listOf(1.0 to 2.0, 2.0 to 4.0, 3.0 to 6.0).forEach { (x, y) ->
             rebuilt.update(x, y)
             live.update(x, y)
         }
-        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.OLSResult
+        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
         val l = live.read()
         assertEquals(l.slope, r.slope, DELTA)
         assertEquals(l.totalWeights, r.totalWeights, DELTA)
@@ -254,12 +254,12 @@ class OperationsRoundTripTest {
     }
 
     @Test fun `atIndices should lift paired to vector`() {
-        val cfg: VectorStatSpec<com.eignex.kumulant.stat.regression.OLSResult> =
-            OLS.atIndices(indexX = 0, indexY = 2)
+        val cfg: VectorStatSpec<com.eignex.kumulant.stat.regression.UnivariateRegressionResult> =
+            UnivariateRegression().atIndices(indexX = 0, indexY = 2)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as VectorStatSpec<*>).materialize(Concurrency.None)
-        val live = com.eignex.kumulant.stat.regression.OLSStat().liveAtIndices(0, 2)
+        val live = com.eignex.kumulant.stat.regression.UnivariateRegressionStat().liveAtIndices(0, 2)
 
         // Vector slots: idx 0 is x, idx 1 ignored, idx 2 is y; y = 2x -> slope 2.
         listOf(
@@ -270,31 +270,31 @@ class OperationsRoundTripTest {
             rebuilt.update(it)
             live.update(it)
         }
-        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.OLSResult
+        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
         val l = live.read()
         assertEquals(2.0, r.slope, DELTA)
         assertEquals(l.slope, r.slope, DELTA)
     }
 
     @Test fun `withFixedY should lift paired to series`() {
-        val cfg: SeriesStatSpec<com.eignex.kumulant.stat.regression.OLSResult> =
-            OLS.withFixedY(5.0)
+        val cfg: SeriesStatSpec<com.eignex.kumulant.stat.regression.UnivariateRegressionResult> =
+            UnivariateRegression().withFixedY(5.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        val live = com.eignex.kumulant.stat.regression.OLSStat().liveWithFixedY(5.0)
+        val live = com.eignex.kumulant.stat.regression.UnivariateRegressionStat().liveWithFixedY(5.0)
 
         listOf(1.0, 2.0, 3.0).forEach {
             rebuilt.update(it)
             live.update(it)
         }
-        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.OLSResult
+        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
         val l = live.read()
         assertEquals(l.totalWeights, r.totalWeights, DELTA)
     }
 
     @Test fun `withTimeAsX should round trip structurally`() {
-        val cfg: SeriesStatSpec<*> = OLS.withTimeAsX()
+        val cfg: SeriesStatSpec<*> = UnivariateRegression().withTimeAsX()
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         assertIs<WithTimeAsX>(decoded)
@@ -302,7 +302,7 @@ class OperationsRoundTripTest {
     }
 
     @Test fun `withTimeAsY should round trip structurally`() {
-        val cfg: SeriesStatSpec<*> = OLS.withTimeAsY()
+        val cfg: SeriesStatSpec<*> = UnivariateRegression().withTimeAsY()
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         assertIs<WithTimeAsY>(decoded)
@@ -310,7 +310,7 @@ class OperationsRoundTripTest {
     }
 
     @Test fun `windowed paired should round trip structurally`() {
-        val cfg: PairedStatSpec<*> = OLS.windowed(durationMillis = 2000L, slices = 5)
+        val cfg: PairedStatSpec<*> = UnivariateRegression().windowed(durationMillis = 2000L, slices = 5)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as WindowedPaired
         assertEquals(2000L, decoded.durationMillis)

@@ -10,15 +10,15 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 /**
- * Custom prior + empirical-Bayes population fitting for [BayesianLinearRegression].
+ * Custom prior + empirical-Bayes population fitting for [BayesianRegressionStat].
  * The custom prior is what lets klause persist a posterior across solver calls -
  * the previous read() snapshot is fed back in as the next instance's prior.
  */
-class BayesianLinearRegressionPriorTest {
+class BayesianRegressionStatPriorTest {
 
     @Test
     fun `default prior matches isotropic Gaussian with priorVariance on the diagonal`() {
-        val blr = BayesianLinearRegression(featureSize = 3, priorVariance = 2.0)
+        val blr = BayesianRegressionStat(featureSize = 3, priorVariance = 2.0)
         val r = blr.read()
         for (i in 0 until 3) {
             assertEquals(0.0, r.weights[i], 1e-12)
@@ -37,7 +37,7 @@ class BayesianLinearRegressionPriorTest {
                 doubleArrayOf(0.0, 0.0, 0.5),
             )
         )
-        val blr = BayesianLinearRegression(
+        val blr = BayesianRegressionStat(
             featureSize = 3,
             priorMean = mean,
             priorCovariance = cov,
@@ -59,7 +59,7 @@ class BayesianLinearRegressionPriorTest {
             )
         )
         assertFailsWith<IllegalArgumentException> {
-            BayesianLinearRegression(featureSize = 2, priorCovariance = bad)
+            BayesianRegressionStat(featureSize = 2, priorCovariance = bad)
         }
     }
 
@@ -67,7 +67,7 @@ class BayesianLinearRegressionPriorTest {
     fun `reset restores configured prior`() {
         val mean = DenseVector.of(doubleArrayOf(1.0, -0.5))
         val cov = DenseMatrix.diagonal(2, 0.25)
-        val blr = BayesianLinearRegression(featureSize = 2, priorMean = mean, priorCovariance = cov)
+        val blr = BayesianRegressionStat(featureSize = 2, priorMean = mean, priorCovariance = cov)
         val rng = Random(7)
         repeat(200) {
             val x = DoubleArray(2) { rng.nextDouble() * 2 - 1 }
@@ -89,7 +89,7 @@ class BayesianLinearRegressionPriorTest {
         // A confident-but-wrong prior should still be overridden by data.
         val truth = doubleArrayOf(0.5, -1.0, 0.7)
         val wrongMean = DenseVector.of(doubleArrayOf(-2.0, 3.0, -1.0))
-        val blr = BayesianLinearRegression(
+        val blr = BayesianRegressionStat(
             featureSize = 3,
             priorMean = wrongMean,
             priorCovariance = DenseMatrix.diagonal(3, 0.1),
@@ -119,7 +119,7 @@ class BayesianLinearRegressionPriorTest {
                 doubleArrayOf(0.1, 0.5),
             )
         )
-        fun fresh() = BayesianLinearRegression(
+        fun fresh() = BayesianRegressionStat(
             featureSize = 2,
             priorMean = priorMean,
             priorCovariance = priorCov,
@@ -162,7 +162,7 @@ class BayesianLinearRegressionPriorTest {
             covarianceL = cov.let { c -> DenseMatrix.diagonal(2, kotlin.math.sqrt(0.4)) },
             sse = 0.0,
         )
-        val prior = BayesianLinearRegression.fitPopulationPrior(List(5) { snap })
+        val prior = BayesianRegressionStat.fitPopulationPrior(List(5) { snap })
         for (i in 0 until 2) {
             assertEquals(mean[i], prior.mean[i], 1e-12)
             // Between-cluster variance is zero, within-cluster variance is `cov`.
@@ -189,7 +189,7 @@ class BayesianLinearRegressionPriorTest {
         )
         val a = snap(doubleArrayOf(1.0, 0.0))
         val b = snap(doubleArrayOf(-1.0, 0.0))
-        val prior = BayesianLinearRegression.fitPopulationPrior(listOf(a, b))
+        val prior = BayesianRegressionStat.fitPopulationPrior(listOf(a, b))
         assertEquals(0.0, prior.mean[0], 1e-12)
         assertEquals(0.0, prior.mean[1], 1e-12)
         // Between = 0.5 * (1 - 0)^2 + 0.5 * (-1 - 0)^2 = 1.0; within = 0.01.
@@ -219,8 +219,8 @@ class BayesianLinearRegressionPriorTest {
                 sse = 0.0,
             )
         }
-        val prior = BayesianLinearRegression.fitPopulationPrior(snaps)
-        val seeded = BayesianLinearRegression(
+        val prior = BayesianRegressionStat.fitPopulationPrior(snaps)
+        val seeded = BayesianRegressionStat(
             featureSize = 2,
             priorMean = prior.mean,
             priorCovariance = prior.covariance,
@@ -235,7 +235,7 @@ class BayesianLinearRegressionPriorTest {
     @Test
     fun `fitPopulationPrior throws on empty input`() {
         assertFailsWith<IllegalArgumentException> {
-            BayesianLinearRegression.fitPopulationPrior(emptyList())
+            BayesianRegressionStat.fitPopulationPrior(emptyList())
         }
     }
 
@@ -259,7 +259,7 @@ class BayesianLinearRegressionPriorTest {
         val b = snap(doubleArrayOf(-2.0, 2.0))
         val list = listOf(a, b)
         var i = 0
-        val prior = BayesianLinearRegression.fitPopulationPrior(list) { _ ->
+        val prior = BayesianRegressionStat.fitPopulationPrior(list) { _ ->
             val w = if (i == 0) 1.0 else 1e-12
             i++
             w
@@ -281,7 +281,7 @@ class BayesianLinearRegressionPriorTest {
             covarianceL = DenseMatrix.diagonal(2, kotlin.math.sqrt(0.4)),
             sse = 0.0,
         )
-        val prior = BayesianLinearRegression.fitPopulationPrior(listOf(snap))
+        val prior = BayesianRegressionStat.fitPopulationPrior(listOf(snap))
         assertEquals(1, prior.instanceCount)
         assertEquals(0.7, prior.mean[0], 1e-12)
         assertEquals(-0.3, prior.mean[1], 1e-12)
@@ -294,7 +294,7 @@ class BayesianLinearRegressionPriorTest {
     fun `create propagates the configured prior to the clone`() {
         val mean = DenseVector.of(doubleArrayOf(0.4, 1.1))
         val cov = DenseMatrix.diagonal(2, 0.3)
-        val original = BayesianLinearRegression(
+        val original = BayesianRegressionStat(
             featureSize = 2,
             priorMean = mean,
             priorCovariance = cov,
@@ -312,7 +312,7 @@ class BayesianLinearRegressionPriorTest {
     @Test
     fun `priorMean size mismatch is rejected`() {
         assertFailsWith<IllegalArgumentException> {
-            BayesianLinearRegression(
+            BayesianRegressionStat(
                 featureSize = 3,
                 priorMean = DenseVector.of(doubleArrayOf(1.0, 2.0)),
             )
@@ -322,7 +322,7 @@ class BayesianLinearRegressionPriorTest {
     @Test
     fun `priorCovariance shape mismatch is rejected`() {
         assertFailsWith<IllegalArgumentException> {
-            BayesianLinearRegression(
+            BayesianRegressionStat(
                 featureSize = 3,
                 priorCovariance = DenseMatrix.diagonal(2, 1.0),
             )
@@ -332,10 +332,10 @@ class BayesianLinearRegressionPriorTest {
     @Test
     fun `strong prior dominates with very little data`() {
         // 5 noisy observations vs a very tight prior at the wrong mean: posterior
-        // should sit much closer to the prior than to the data-only OLS fit.
+        // should sit much closer to the prior than to the data-only UnivariateRegression() fit.
         val priorMean = DenseVector.of(doubleArrayOf(0.0, 0.0))
         val tight = DenseMatrix.diagonal(2, 1e-4)
-        val blr = BayesianLinearRegression(
+        val blr = BayesianRegressionStat(
             featureSize = 2,
             priorMean = priorMean,
             priorCovariance = tight,
@@ -364,7 +364,7 @@ class BayesianLinearRegressionPriorTest {
             covarianceL = DenseMatrix.diagonal(2, kotlin.math.sqrt(0.5)),
             sse = 0.0,
         )
-        val prior = BayesianLinearRegression.fitPopulationPrior(listOf(snap, snap))
+        val prior = BayesianRegressionStat.fitPopulationPrior(listOf(snap, snap))
         val json = kotlinx.serialization.json.Json
         val wire = json.encodeToString(PopulationPrior.serializer(), prior)
         val decoded = json.decodeFromString(PopulationPrior.serializer(), wire)

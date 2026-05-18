@@ -20,9 +20,9 @@ import com.eignex.kumulant.schema.unaryMinus
  * either a factory result or hand-build something arbitrary:
  *
  * ```kotlin
- * SGDLinearRegression(featureSize = 16, learningRate = ConstantRate(0.05))
- * SGDLinearRegression(featureSize = 16, learningRate = StepDecay(0.01, 1e-3))
- * SGDLinearRegression(featureSize = 16, learningRate = 0.01 * Exp(-1e-5 * X))
+ * StochasticRegressionStat(featureSize = 16, learningRate = ConstantRate(0.05))
+ * StochasticRegressionStat(featureSize = 16, learningRate = StepDecay(0.01, 1e-3))
+ * StochasticRegressionStat(featureSize = 16, learningRate = 0.01 * Exp(-1e-5 * X))
  * ```
  */
 

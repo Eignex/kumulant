@@ -194,36 +194,36 @@ class ExprTest {
     }
 
     @Test fun `transformPair swaps x and y`() {
-        val cfg: PairedStatSpec<*> = OLS.transformPair(xExpr = Y, yExpr = X)
+        val cfg: PairedStatSpec<*> = UnivariateRegression().transformPair(xExpr = Y, yExpr = X)
         val live = cfg.materialize(Concurrency.None)
         // After swap of (1,2),(2,4),(3,6): slope x/y = 0.5
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
-        val r = live.read() as com.eignex.kumulant.stat.regression.OLSResult
+        val r = live.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
         assertEquals(0.5, r.slope, DELTA)
     }
 
     @Test fun `transformX only remaps x`() {
-        val cfg: PairedStatSpec<*> = OLS.transformX(2.0 * X)
+        val cfg: PairedStatSpec<*> = UnivariateRegression().transformX(2.0 * X)
         val live = cfg.materialize(Concurrency.None)
         // y=2x with x'=2x gives pairs (2,2),(4,4),(6,6) -> slope 1
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
-        val r = live.read() as com.eignex.kumulant.stat.regression.OLSResult
+        val r = live.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
         assertEquals(1.0, r.slope, DELTA)
     }
 
     @Test fun `filter paired drops by predicate over x and y`() {
-        val cfg: PairedStatSpec<*> = OLS.filter((X gt 0.0) and (Y gt 0.0))
+        val cfg: PairedStatSpec<*> = UnivariateRegression().filter((X gt 0.0) and (Y gt 0.0))
         val live = cfg.materialize(Concurrency.None)
         live.update(-1.0, 5.0)
         live.update(1.0, -5.0)
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
-        val r = live.read() as com.eignex.kumulant.stat.regression.OLSResult
+        val r = live.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
         assertEquals(2.0, r.slope, DELTA)
     }
 
@@ -394,7 +394,7 @@ class ExprTest {
     }
 
     @Test fun `paired and vector configs round trip via wire`() {
-        val cfg: PairedStatSpec<*> = OLS.transformPair(xExpr = Y, yExpr = X)
+        val cfg: PairedStatSpec<*> = UnivariateRegression().transformPair(xExpr = Y, yExpr = X)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as TransformPair
         assertEquals(Y, decoded.xExpr)

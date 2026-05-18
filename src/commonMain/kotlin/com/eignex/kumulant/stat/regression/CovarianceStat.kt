@@ -43,12 +43,13 @@ data class CovarianceResult(
 /**
  * Online covariance and Pearson correlation between two streams.
  *
- * Derived from [OLSStat]: the same Chan's parallel algorithm drives accumulation,
- * and [CovarianceResult] is projected from [OLSResult] via [mapResult].
+ * Derived from [UnivariateRegressionStat]: the same Chan's parallel algorithm drives
+ * accumulation, and [CovarianceResult] is projected from [UnivariateRegressionResult]
+ * via [mapResult].
  */
 class CovarianceStat(
     concurrency: Concurrency = Concurrency.None,
-) : PairedStat<CovarianceResult> by OLSStat(concurrency).mapResult(
+) : PairedStat<CovarianceResult> by UnivariateRegressionStat(concurrency = concurrency).mapResult(
     forward = { ols ->
         val w = ols.totalWeights
         val sxx = ols.x.variance * w
@@ -57,7 +58,7 @@ class CovarianceStat(
             totalWeights = w,
             meanX = ols.x.mean,
             meanY = ols.y.mean,
-            sxy = ols.slope * sxx,
+            sxy = ols.sxy,
             sxx = sxx,
             syy = syy,
         )
@@ -67,11 +68,13 @@ class CovarianceStat(
         val slope = if (cov.sxx > 0.0) cov.sxy / cov.sxx else 0.0
         val varX = if (w > 0.0) cov.sxx / w else 0.0
         val varY = if (w > 0.0) cov.syy / w else 0.0
-        OLSResult(
+        UnivariateRegressionResult(
+            penalty = Penalty.None,
             totalWeights = w,
             slope = slope,
             intercept = cov.meanY - slope * cov.meanX,
             sse = (cov.syy - slope * cov.sxy).coerceAtLeast(0.0),
+            sxy = cov.sxy,
             x = VarianceResult(cov.meanX, varX),
             y = VarianceResult(cov.meanY, varY),
         )

@@ -92,10 +92,10 @@ class StatTraitsTest {
         assertEquals(12.0, s.m2)
     }
 
-    private data class Lin(override val slope: Double, override val intercept: Double) : HasLinearModel
+    private data class Lin(override val slope: Double, override val intercept: Double) : HasSlope
 
     @Test
-    fun `HasLinearModel predict applies slope and intercept`() {
+    fun `HasSlope predict applies slope and intercept`() {
         val m = Lin(slope = 2.0, intercept = -1.0)
         assertEquals(-1.0, m.predict(0.0))
         assertEquals(9.0, m.predict(5.0))

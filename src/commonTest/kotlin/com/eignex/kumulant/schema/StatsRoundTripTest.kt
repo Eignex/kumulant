@@ -1,6 +1,7 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.stat.regression.Penalty
 import com.eignex.skema.SchemaJson
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
@@ -107,7 +108,7 @@ class StatsRoundTripTest {
     }
 
     @Test fun `olsConfig round trips`() {
-        assertEquals(OLS, roundTrip(OLS))
+        assertEquals(UnivariateRegression(), roundTrip(UnivariateRegression()))
     }
 
     @Test fun `covarianceConfig round trips`() {
@@ -115,12 +116,12 @@ class StatsRoundTripTest {
     }
 
     @Test fun `lassoConfig round trips`() {
-        val cfg = Lasso(lambda = 0.1)
+        val cfg = UnivariateRegression(Penalty.L1(lambda = 0.1))
         assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun `ridgeConfig round trips`() {
-        val cfg = Ridge(lambda = 0.5)
+        val cfg = UnivariateRegression(Penalty.L2(lambda = 0.5))
         assertEquals(cfg, roundTrip(cfg))
     }
 

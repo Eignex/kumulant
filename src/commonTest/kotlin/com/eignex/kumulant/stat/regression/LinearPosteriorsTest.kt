@@ -9,8 +9,8 @@ import kotlin.test.assertTrue
 
 class LinearPosteriorsTest {
 
-    private fun sgdSnapshot(): SGDRegressionResult {
-        val stat = SGDLinearRegression(featureSize = 2, learningRate = ConstantRate(0.05))
+    private fun sgdSnapshot(): StochasticRegressionResult {
+        val stat = StochasticRegressionStat(featureSize = 2, learningRate = ConstantRate(0.05))
         val rng = Random(1)
         repeat(800) {
             val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
@@ -21,7 +21,7 @@ class LinearPosteriorsTest {
     }
 
     private fun diagonalSnapshot(): DiagonalRegressionResult {
-        val stat = DiagonalRegression(featureSize = 2, priorPrecision = 0.1)
+        val stat = DiagonalRegressionStat(featureSize = 2, priorPrecision = 0.1)
         val rng = Random(1)
         repeat(800) {
             val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
@@ -32,7 +32,7 @@ class LinearPosteriorsTest {
     }
 
     private fun bayesianSnapshot(): CovarianceRegressionResult {
-        val stat = BayesianLinearRegression(featureSize = 2, priorVariance = 1.0)
+        val stat = BayesianRegressionStat(featureSize = 2, priorVariance = 1.0)
         val rng = Random(1)
         repeat(800) {
             val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
@@ -157,7 +157,7 @@ class LinearPosteriorsTest {
 
     @Test
     fun `SGD update skips non-positive weight`() {
-        val stat = SGDLinearRegression(featureSize = 2)
+        val stat = StochasticRegressionStat(featureSize = 2)
         stat.update(doubleArrayOf(1.0, 2.0), y = 1.0, weight = 0.0)
         stat.update(doubleArrayOf(1.0, 2.0), y = 1.0, weight = -1.0)
         val r = stat.read()
@@ -167,7 +167,7 @@ class LinearPosteriorsTest {
 
     @Test
     fun `SGD with L2 regularisation visits every coordinate`() {
-        val stat = SGDLinearRegression(
+        val stat = StochasticRegressionStat(
             featureSize = 3,
             learningRate = ConstantRate(0.05),
             l2 = 0.1,
@@ -184,7 +184,7 @@ class LinearPosteriorsTest {
 
     @Test
     fun `SGD merge with zero combined weight is a no-op`() {
-        val stat = SGDLinearRegression(featureSize = 2)
+        val stat = StochasticRegressionStat(featureSize = 2)
         val empty = stat.read()
         stat.merge(empty)
         val r = stat.read()
@@ -193,19 +193,19 @@ class LinearPosteriorsTest {
 
     @Test
     fun `SGD merge rejects featureSize mismatch`() {
-        val a = SGDLinearRegression(featureSize = 2)
-        val b = SGDLinearRegression(featureSize = 3)
+        val a = StochasticRegressionStat(featureSize = 2)
+        val b = StochasticRegressionStat(featureSize = 3)
         kotlin.test.assertFailsWith<IllegalArgumentException> { a.merge(b.read()) }
     }
 
     @Test
     fun `SGD rejects non-positive featureSize`() {
-        kotlin.test.assertFailsWith<IllegalArgumentException> { SGDLinearRegression(featureSize = 0) }
+        kotlin.test.assertFailsWith<IllegalArgumentException> { StochasticRegressionStat(featureSize = 0) }
     }
 
     @Test
     fun `SGD create returns a new instance preserving configuration`() {
-        val a = SGDLinearRegression(featureSize = 4, l2 = 0.5)
+        val a = StochasticRegressionStat(featureSize = 4, l2 = 0.5)
         val b = a.create()
         val r = b.read()
         assertEquals(4, r.weights.size)

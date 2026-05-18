@@ -11,7 +11,7 @@ class OLSTest {
 
     @Test
     fun `perfect positive line y = 2x + 1`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         for (x in 0..9) ols.update(x.toDouble(), 2.0 * x + 1.0)
         val r = ols.read()
         assertEquals(2.0, r.slope, APPROX)
@@ -20,7 +20,7 @@ class OLSTest {
 
     @Test
     fun `perfect negative line y = -3x + 5`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         for (x in 0..9) ols.update(x.toDouble(), -3.0 * x + 5.0)
         val r = ols.read()
         assertEquals(-3.0, r.slope, APPROX)
@@ -29,7 +29,7 @@ class OLSTest {
 
     @Test
     fun `horizontal line slope is zero`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         repeat(5) { ols.update(it.toDouble(), 7.0) }
         val r = ols.read()
         assertEquals(0.0, r.slope, APPROX)
@@ -38,7 +38,7 @@ class OLSTest {
 
     @Test
     fun `vertical data all same x gives slope zero`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         repeat(5) { ols.update(3.0, it.toDouble()) }
         val r = ols.read()
         assertEquals(0.0, r.slope, EPS)
@@ -46,14 +46,14 @@ class OLSTest {
 
     @Test
     fun `r-squared is 1 for perfect fit`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         for (x in 0..9) ols.update(x.toDouble(), 2.0 * x + 1.0)
         assertEquals(1.0, ols.read().rSquared, APPROX)
     }
 
     @Test
     fun `r-squared is low for noisy data`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
 
         ols.update(0.0, 10.0)
         ols.update(1.0, -5.0)
@@ -64,7 +64,7 @@ class OLSTest {
 
     @Test
     fun `sse is non-negative`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         repeat(10) { ols.update(it.toDouble(), it * 2.0 + 0.1 * (it % 3 - 1)) }
         assertTrue(ols.read().sse >= 0.0)
     }
@@ -72,16 +72,16 @@ class OLSTest {
     @Test
     fun `correlation sign matches slope sign`() {
         val pos =
-            OLSStat().apply { for (x in 0..9) update(x.toDouble(), x.toDouble()) }
+            UnivariateRegressionStat().apply { for (x in 0..9) update(x.toDouble(), x.toDouble()) }
         val neg =
-            OLSStat().apply { for (x in 0..9) update(x.toDouble(), -x.toDouble()) }
+            UnivariateRegressionStat().apply { for (x in 0..9) update(x.toDouble(), -x.toDouble()) }
         assertTrue(pos.read().correlation > 0.0)
         assertTrue(neg.read().correlation < 0.0)
     }
 
     @Test
     fun `x and y means are correct`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         for (x in 1..5) ols.update(x.toDouble(), x.toDouble() * 2)
         val r = ols.read()
         assertEquals(3.0, r.x.mean, APPROX)
@@ -90,14 +90,14 @@ class OLSTest {
 
     @Test
     fun `totalWeights equals number of updates`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         repeat(7) { ols.update(it.toDouble(), it.toDouble()) }
         assertEquals(7.0, ols.read().totalWeights, EPS)
     }
 
     @Test
     fun `weighted update shifts means`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         ols.update(0.0, 0.0, weight = 1.0)
         ols.update(10.0, 10.0, weight = 9.0)
         val r = ols.read()
@@ -107,10 +107,10 @@ class OLSTest {
     @Test
     fun `merge of two perfect-line halves recovers full regression`() {
         val full =
-            OLSStat().apply { for (x in 0..19) update(x.toDouble(), 3.0 * x + 2.0) }
+            UnivariateRegressionStat().apply { for (x in 0..19) update(x.toDouble(), 3.0 * x + 2.0) }
         val left =
-            OLSStat().apply { for (x in 0..9) update(x.toDouble(), 3.0 * x + 2.0) }
-        val right = OLSStat().apply {
+            UnivariateRegressionStat().apply { for (x in 0..9) update(x.toDouble(), 3.0 * x + 2.0) }
+        val right = UnivariateRegressionStat().apply {
             for (x in 10..19) update(
                 x.toDouble(),
                 3.0 * x + 2.0
@@ -126,8 +126,8 @@ class OLSTest {
     @Test
     fun `merge with empty is no-op`() {
         val ols =
-            OLSStat().apply { for (x in 0..4) update(x.toDouble(), x.toDouble()) }
-        val empty = OLSStat()
+            UnivariateRegressionStat().apply { for (x in 0..4) update(x.toDouble(), x.toDouble()) }
+        val empty = UnivariateRegressionStat()
         val before = ols.read()
         ols.merge(empty.read())
         assertEquals(before.slope, ols.read().slope, EPS)
@@ -137,7 +137,7 @@ class OLSTest {
     @Test
     fun `reset clears all state`() {
         val ols =
-            OLSStat().apply { for (x in 0..9) update(x.toDouble(), x.toDouble()) }
+            UnivariateRegressionStat().apply { for (x in 0..9) update(x.toDouble(), x.toDouble()) }
         ols.reset()
         val r = ols.read()
         assertEquals(0.0, r.totalWeights, EPS)
@@ -146,7 +146,7 @@ class OLSTest {
 
     @Test
     fun `create produces fresh independent stat`() {
-        val ols1 = OLSStat(Concurrency.Relaxed).apply {
+        val ols1 = UnivariateRegressionStat(concurrency = Concurrency.Relaxed).apply {
             for (x in 0..4) update(x.toDouble(), x.toDouble())
         }
         val ols2 = ols1.create(Concurrency.None)
@@ -158,14 +158,14 @@ class OLSTest {
     @Test
     fun `predict uses slope and intercept`() {
         val ols =
-            OLSStat().apply { for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0) }
+            UnivariateRegressionStat().apply { for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0) }
         val r = ols.read()
         assertEquals(11.0, r.predict(5.0), APPROX)
     }
 
     @Test
     fun `mse and rmse derive from sse and totalWeights`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         ols.update(0.0, 10.0)
         ols.update(1.0, -5.0)
         ols.update(2.0, 8.0)
@@ -178,7 +178,7 @@ class OLSTest {
 
     @Test
     fun `ssr plus sse equals sst`() {
-        val ols = OLSStat()
+        val ols = UnivariateRegressionStat()
         for (x in 0..9) ols.update(x.toDouble(), 2.0 * x + 1.0 + 0.1 * (x % 3 - 1))
         val r = ols.read()
         assertEquals(r.sst, r.ssr + r.sse, APPROX)
@@ -186,7 +186,7 @@ class OLSTest {
 
     @Test
     fun `regression metrics are zero for empty stat`() {
-        val r = OLSStat().read()
+        val r = UnivariateRegressionStat().read()
         assertEquals(0.0, r.totalWeights, EPS)
         assertEquals(0.0, r.sse, EPS)
         assertEquals(0.0, r.sst, EPS)
@@ -273,9 +273,9 @@ class CovarianceTest {
 class RidgeTest {
 
     @Test
-    fun `lambda 0 reproduces OLSStat slope and intercept`() {
-        val ridge = RidgeStat(lambda = 0.0)
-        val ols = OLSStat()
+    fun `lambda 0 reproduces UnivariateRegressionStat slope and intercept`() {
+        val ridge = UnivariateRegressionStat(Penalty.L2(lambda = 0.0))
+        val ols = UnivariateRegressionStat()
         for (x in 0..9) {
             val y = 2.0 * x + 1.0
             ridge.update(x.toDouble(), y)
@@ -289,10 +289,10 @@ class RidgeTest {
 
     @Test
     fun `positive lambda shrinks slope toward zero`() {
-        val unreg = RidgeStat(0.0).apply {
+        val unreg = UnivariateRegressionStat(Penalty.L2(0.0)).apply {
             for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0)
         }
-        val reg = RidgeStat(10.0).apply {
+        val reg = UnivariateRegressionStat(Penalty.L2(10.0)).apply {
             for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0)
         }
         val u = unreg.read().slope
@@ -302,7 +302,7 @@ class RidgeTest {
 
     @Test
     fun `large lambda drives slope toward zero and intercept toward meanY`() {
-        val ridge = RidgeStat(lambda = 1e9)
+        val ridge = UnivariateRegressionStat(Penalty.L2(lambda = 1e9))
         for (x in 0..9) ridge.update(x.toDouble(), 2.0 * x + 1.0)
         val r = ridge.read()
         assertEquals(0.0, r.slope, 1e-6)
@@ -310,9 +310,9 @@ class RidgeTest {
     }
 
     @Test
-    fun `sse is non-negative and at least OLSStat sse`() {
-        val ols = OLSStat()
-        val ridge = RidgeStat(lambda = 5.0)
+    fun `sse is non-negative and at least UnivariateRegressionStat sse`() {
+        val ols = UnivariateRegressionStat()
+        val ridge = UnivariateRegressionStat(Penalty.L2(lambda = 5.0))
         for (x in 0..9) {
             val y = 2.0 * x + 1.0 + (x % 3 - 1) * 0.5
             ols.update(x.toDouble(), y)
@@ -325,7 +325,7 @@ class RidgeTest {
 
     @Test
     fun `predict uses ridge slope and intercept`() {
-        val ridge = RidgeStat(lambda = 1.0)
+        val ridge = UnivariateRegressionStat(Penalty.L2(lambda = 1.0))
         for (x in 0..9) ridge.update(x.toDouble(), 2.0 * x + 1.0)
         val r = ridge.read()
         assertEquals(r.slope * 5.0 + r.intercept, r.predict(5.0), APPROX)
@@ -333,13 +333,13 @@ class RidgeTest {
 
     @Test
     fun `merge of two halves matches a single accumulator`() {
-        val full = RidgeStat(lambda = 2.0).apply {
+        val full = UnivariateRegressionStat(Penalty.L2(lambda = 2.0)).apply {
             for (x in 0..19) update(x.toDouble(), 3.0 * x + 2.0)
         }
-        val left = RidgeStat(lambda = 2.0).apply {
+        val left = UnivariateRegressionStat(Penalty.L2(lambda = 2.0)).apply {
             for (x in 0..9) update(x.toDouble(), 3.0 * x + 2.0)
         }
-        val right = RidgeStat(lambda = 2.0).apply {
+        val right = UnivariateRegressionStat(Penalty.L2(lambda = 2.0)).apply {
             for (x in 10..19) update(x.toDouble(), 3.0 * x + 2.0)
         }
         left.merge(right.read())
@@ -351,7 +351,7 @@ class RidgeTest {
 
     @Test
     fun `reset clears state`() {
-        val ridge = RidgeStat(lambda = 1.0).apply {
+        val ridge = UnivariateRegressionStat(Penalty.L2(lambda = 1.0)).apply {
             for (x in 0..9) update(x.toDouble(), x.toDouble())
         }
         ridge.reset()
@@ -362,23 +362,23 @@ class RidgeTest {
 
     @Test
     fun `create produces fresh independent stat with same lambda`() {
-        val r1 = RidgeStat(lambda = 3.0).apply {
+        val r1 = UnivariateRegressionStat(Penalty.L2(lambda = 3.0)).apply {
             for (x in 0..4) update(x.toDouble(), x.toDouble())
         }
         val r2 = r1.create()
         r2.update(100.0, 200.0)
         assertEquals(5.0, r1.read().totalWeights, EPS)
         assertEquals(1.0, r2.read().totalWeights, EPS)
-        assertEquals(3.0, r2.read().lambda, EPS)
+        assertEquals(Penalty.L2(3.0), r2.read().penalty)
     }
 }
 
 class LassoTest {
 
     @Test
-    fun `lambda 0 reproduces OLSStat slope`() {
-        val lasso = LassoStat(lambda = 0.0)
-        val ols = OLSStat()
+    fun `lambda 0 reproduces UnivariateRegressionStat slope`() {
+        val lasso = UnivariateRegressionStat(Penalty.L1(lambda = 0.0))
+        val ols = UnivariateRegressionStat()
         for (x in 0..9) {
             val y = 2.0 * x + 1.0
             lasso.update(x.toDouble(), y)
@@ -390,10 +390,10 @@ class LassoTest {
 
     @Test
     fun `small lambda shrinks slope toward zero but keeps sign`() {
-        val unreg = LassoStat(0.0).apply {
+        val unreg = UnivariateRegressionStat(Penalty.L1(0.0)).apply {
             for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0)
         }
-        val reg = LassoStat(1.0).apply {
+        val reg = UnivariateRegressionStat(Penalty.L1(1.0)).apply {
             for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0)
         }
         val u = unreg.read().slope
@@ -404,7 +404,7 @@ class LassoTest {
 
     @Test
     fun `large lambda zeros slope and sets intercept to meanY`() {
-        val lasso = LassoStat(lambda = 1e9)
+        val lasso = UnivariateRegressionStat(Penalty.L1(lambda = 1e9))
         for (x in 0..9) lasso.update(x.toDouble(), 2.0 * x + 1.0)
         val r = lasso.read()
         assertEquals(0.0, r.slope, EPS)
@@ -413,7 +413,7 @@ class LassoTest {
 
     @Test
     fun `predict at slope-zeroing lambda returns meanY`() {
-        val lasso = LassoStat(lambda = 1e9)
+        val lasso = UnivariateRegressionStat(Penalty.L1(lambda = 1e9))
         for (x in 0..9) lasso.update(x.toDouble(), 2.0 * x + 1.0)
         val r = lasso.read()
         assertEquals(r.y.mean, r.predict(42.0), EPS)
@@ -421,13 +421,13 @@ class LassoTest {
 
     @Test
     fun `merge of two halves matches a single accumulator`() {
-        val full = LassoStat(lambda = 1.0).apply {
+        val full = UnivariateRegressionStat(Penalty.L1(lambda = 1.0)).apply {
             for (x in 0..19) update(x.toDouble(), 3.0 * x + 2.0)
         }
-        val left = LassoStat(lambda = 1.0).apply {
+        val left = UnivariateRegressionStat(Penalty.L1(lambda = 1.0)).apply {
             for (x in 0..9) update(x.toDouble(), 3.0 * x + 2.0)
         }
-        val right = LassoStat(lambda = 1.0).apply {
+        val right = UnivariateRegressionStat(Penalty.L1(lambda = 1.0)).apply {
             for (x in 10..19) update(x.toDouble(), 3.0 * x + 2.0)
         }
         left.merge(right.read())
@@ -439,15 +439,15 @@ class LassoTest {
 
     @Test
     fun `merge round-trips when both halves have slope zero under lambda`() {
-        // lambda huge -> both halves have slope == 0 in their LassoResult, but their raw sxy is preserved.
+        // lambda huge -> both halves have slope == 0 in their UnivariateRegressionResult, but their raw sxy is preserved.
         val lambda = 1e6
-        val full = LassoStat(lambda).apply {
+        val full = UnivariateRegressionStat(Penalty.L1(lambda)).apply {
             for (x in 0..19) update(x.toDouble(), 3.0 * x + 2.0)
         }
-        val left = LassoStat(lambda).apply {
+        val left = UnivariateRegressionStat(Penalty.L1(lambda)).apply {
             for (x in 0..9) update(x.toDouble(), 3.0 * x + 2.0)
         }
-        val right = LassoStat(lambda).apply {
+        val right = UnivariateRegressionStat(Penalty.L1(lambda)).apply {
             for (x in 10..19) update(x.toDouble(), 3.0 * x + 2.0)
         }
         assertEquals(0.0, left.read().slope, EPS)
@@ -460,7 +460,7 @@ class LassoTest {
 
     @Test
     fun `reset clears state`() {
-        val lasso = LassoStat(lambda = 1.0).apply {
+        val lasso = UnivariateRegressionStat(Penalty.L1(lambda = 1.0)).apply {
             for (x in 0..9) update(x.toDouble(), x.toDouble())
         }
         lasso.reset()
@@ -472,13 +472,13 @@ class LassoTest {
 
     @Test
     fun `create produces fresh independent stat with same lambda`() {
-        val l1 = LassoStat(lambda = 0.5).apply {
+        val l1 = UnivariateRegressionStat(Penalty.L1(lambda = 0.5)).apply {
             for (x in 0..4) update(x.toDouble(), x.toDouble())
         }
         val l2 = l1.create()
         l2.update(100.0, 200.0)
         assertEquals(5.0, l1.read().totalWeights, EPS)
         assertEquals(1.0, l2.read().totalWeights, EPS)
-        assertEquals(0.5, l2.read().lambda, EPS)
+        assertEquals(Penalty.L1(0.5), l2.read().penalty)
     }
 }

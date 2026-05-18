@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stat.regression.OLSStat
+import com.eignex.kumulant.stat.regression.UnivariateRegressionStat
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,7 +11,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withTimeAsX feeds timestamp-in-seconds into x and value into y`() {
-        val stat = OLSStat().withTimeAsX()
+        val stat = UnivariateRegressionStat().withTimeAsX()
         stat.update(value = 10.0, timestampNanos = 1_000_000_000L)
         stat.update(value = 12.0, timestampNanos = 2_000_000_000L)
         stat.update(value = 14.0, timestampNanos = 3_000_000_000L)
@@ -25,7 +25,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withTimeAsY feeds value into x and timestamp-in-seconds into y`() {
-        val stat = OLSStat().withTimeAsY()
+        val stat = UnivariateRegressionStat().withTimeAsY()
         stat.update(value = 10.0, timestampNanos = 1_000_000_000L)
         stat.update(value = 12.0, timestampNanos = 2_000_000_000L)
         stat.update(value = 14.0, timestampNanos = 3_000_000_000L)
@@ -37,7 +37,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withTimeAsX create preserves the time-axis binding`() {
-        val original = OLSStat().withTimeAsX()
+        val original = UnivariateRegressionStat().withTimeAsX()
         val clone = original.create()
         clone.update(value = 10.0, timestampNanos = 1_000_000_000L)
         clone.update(value = 20.0, timestampNanos = 2_000_000_000L)
@@ -48,7 +48,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withTimeAsY create preserves the time-axis binding`() {
-        val original = OLSStat().withTimeAsY()
+        val original = UnivariateRegressionStat().withTimeAsY()
         val clone = original.create()
         clone.update(value = 10.0, timestampNanos = 1_000_000_000L)
         clone.update(value = 20.0, timestampNanos = 2_000_000_000L)
@@ -59,7 +59,7 @@ class AxisBindingsTest {
 
     @Test
     fun `withTimeAsX respects weight`() {
-        val stat = OLSStat().withTimeAsX()
+        val stat = UnivariateRegressionStat().withTimeAsX()
         stat.update(value = 10.0, timestampNanos = 1_000_000_000L, weight = 3.0)
         stat.update(value = 20.0, timestampNanos = 2_000_000_000L, weight = 3.0)
 

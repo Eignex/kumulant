@@ -49,9 +49,7 @@ import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
 import com.eignex.kumulant.stat.regression.CovarianceStat
-import com.eignex.kumulant.stat.regression.LassoStat
-import com.eignex.kumulant.stat.regression.OLSStat
-import com.eignex.kumulant.stat.regression.RidgeStat
+import com.eignex.kumulant.stat.regression.UnivariateRegressionStat
 import com.eignex.kumulant.stat.score.AucStat
 import com.eignex.kumulant.stat.score.BrierScoreStat
 import com.eignex.kumulant.stat.score.LogLossStat
@@ -166,10 +164,8 @@ fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concur
     val out: PairedStat<*> = when (this) {
         // ----- Paired leaves -----
         PairedSum -> PairedSumStat(concurrency)
-        OLS -> OLSStat(concurrency)
+        is UnivariateRegression -> UnivariateRegressionStat(penalty, concurrency)
         Covariance -> CovarianceStat(concurrency)
-        is Lasso -> LassoStat(lambda, concurrency)
-        is Ridge -> RidgeStat(lambda, concurrency)
         BrierScore -> BrierScoreStat(concurrency)
         MseLoss -> MseLossStat(concurrency)
         MaeLoss -> MaeLossStat(concurrency)

@@ -29,8 +29,8 @@ class VectorSerializationTest {
     @Test
     fun `sparse and dense inputs converge to the same fit`() {
         val truth = doubleArrayOf(1.5, 0.0, 0.0, -2.0, 0.0)
-        val dense = DiagonalRegression(featureSize = 5, priorPrecision = 0.01)
-        val sparse = DiagonalRegression(featureSize = 5, priorPrecision = 0.01)
+        val dense = DiagonalRegressionStat(featureSize = 5, priorPrecision = 0.01)
+        val sparse = DiagonalRegressionStat(featureSize = 5, priorPrecision = 0.01)
         val rng = Random(13)
         // Each observation activates a handful of features -> naturally sparse.
         repeat(3000) {
@@ -90,7 +90,7 @@ class VectorSerializationTest {
 
     @Test
     fun `CovarianceRegressionResult round-trips through JSON`() {
-        val stat = BayesianLinearRegression(featureSize = 3, priorVariance = 1.0)
+        val stat = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         val truth = doubleArrayOf(0.5, -1.0, 0.7)
         val rng = Random(99)
         repeat(500) {
@@ -113,9 +113,9 @@ class VectorSerializationTest {
         val rng = Random(2026)
         val truth = doubleArrayOf(0.7, -0.3, 1.5)
 
-        val sgd = SGDLinearRegression(featureSize = 3, learningRate = ConstantRate(0.05))
-        val diag = DiagonalRegression(featureSize = 3, priorPrecision = 0.01)
-        val bayes = BayesianLinearRegression(featureSize = 3, priorVariance = 1.0)
+        val sgd = StochasticRegressionStat(featureSize = 3, learningRate = ConstantRate(0.05))
+        val diag = DiagonalRegressionStat(featureSize = 3, priorPrecision = 0.01)
+        val bayes = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         repeat(2000) {
             val xArr = DoubleArray(3) { rng.nextDouble() * 2 - 1 }
             var y = 0.0
@@ -147,10 +147,10 @@ class VectorSerializationTest {
         // The sealed root carries the polymorphic discriminator so combo's
         // LinearLearnerData(state: LinearRegressionResult) can wire-encode without
         // knowing which concrete subtype a particular bandit produced.
-        val sgd = SGDLinearRegression(featureSize = 2).also { it.update(doubleArrayOf(1.0, 2.0), 0.5) }
-        val diag = DiagonalRegression(featureSize = 2, priorPrecision = 0.1)
+        val sgd = StochasticRegressionStat(featureSize = 2).also { it.update(doubleArrayOf(1.0, 2.0), 0.5) }
+        val diag = DiagonalRegressionStat(featureSize = 2, priorPrecision = 0.1)
             .also { it.update(doubleArrayOf(1.0, 2.0), 0.5) }
-        val bayes = BayesianLinearRegression(featureSize = 2, priorVariance = 0.5)
+        val bayes = BayesianRegressionStat(featureSize = 2, priorVariance = 0.5)
             .also { it.update(doubleArrayOf(1.0, 2.0), 0.5) }
 
         for (snap in listOf<LinearRegressionResult>(sgd.read(), diag.read(), bayes.read())) {

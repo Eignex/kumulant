@@ -16,8 +16,9 @@ import com.eignex.kumulant.stat.cardinality.LinearCountingResult
 import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.CovarianceStat
-import com.eignex.kumulant.stat.regression.OLSResult
-import com.eignex.kumulant.stat.regression.OLSStat
+import com.eignex.kumulant.stat.regression.Penalty
+import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+import com.eignex.kumulant.stat.regression.UnivariateRegressionStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
@@ -300,7 +301,7 @@ class PairedStatGroupTest {
 
     @Test
     fun `update forwards x and y pairs to all child stats`() {
-        val ols = StatKey<OLSResult>("ols") to OLSStat()
+        val ols = StatKey<UnivariateRegressionResult>("ols") to UnivariateRegressionStat()
         val cov = StatKey<CovarianceResult>("cov") to CovarianceStat()
 
         val group = PairedStatGroup(ols, cov)
@@ -320,20 +321,20 @@ class PairedStatGroupTest {
 
     @Test
     fun `merge delegates only to keys present in incoming result`() {
-        val olsKey = StatKey<OLSResult>("ols") to OLSStat()
+        val olsKey = StatKey<UnivariateRegressionResult>("ols") to UnivariateRegressionStat()
         val covKey = StatKey<CovarianceResult>("cov") to CovarianceStat()
 
         val target = PairedStatGroup(olsKey, covKey)
         target.update(1.0, 2.0)
 
         val source = PairedStatGroup(
-            StatKey<OLSResult>("ols") to OLSStat(),
+            StatKey<UnivariateRegressionResult>("ols") to UnivariateRegressionStat(),
             StatKey<CovarianceResult>("cov") to CovarianceStat()
         )
         source.update(2.0, 4.0)
         source.update(3.0, 6.0)
 
-        val onlyOls = GroupResult(results = mapOf("ols" to source.read()[StatKey<OLSResult>("ols")]))
+        val onlyOls = GroupResult(results = mapOf("ols" to source.read()[StatKey<UnivariateRegressionResult>("ols")]))
 
         target.merge(onlyOls)
         val merged = target.read()
@@ -344,7 +345,7 @@ class PairedStatGroupTest {
 
     @Test
     fun `reset clears all child stats`() {
-        val olsKey = StatKey<OLSResult>("ols") to OLSStat()
+        val olsKey = StatKey<UnivariateRegressionResult>("ols") to UnivariateRegressionStat()
         val group = PairedStatGroup(olsKey)
         group.update(1.0, 2.0)
         group.update(2.0, 4.0)
@@ -354,7 +355,7 @@ class PairedStatGroupTest {
 
     @Test
     fun `create returns an independent group`() {
-        val olsKey = StatKey<OLSResult>("ols") to OLSStat()
+        val olsKey = StatKey<UnivariateRegressionResult>("ols") to UnivariateRegressionStat()
         val original = PairedStatGroup(olsKey)
         original.update(1.0, 2.0)
 
@@ -369,21 +370,21 @@ class PairedStatGroupTest {
     fun `create uses group mode when create mode is null`() {
         var childCreateConcurrency: Concurrency? = null
 
-        val tracking = object : PairedStat<OLSResult> {
+        val tracking = object : PairedStat<UnivariateRegressionResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: OLSResult) = Unit
+            override fun merge(values: UnivariateRegressionResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) =
-                OLSResult(0.0, 0.0, 0.0, 0.0, VarianceResult(0.0, 0.0), VarianceResult(0.0, 0.0))
-            override fun create(concurrency: Concurrency?): PairedStat<OLSResult> {
+                UnivariateRegressionResult(Penalty.None, 0.0, 0.0, 0.0, 0.0, 0.0, VarianceResult(0.0, 0.0), VarianceResult(0.0, 0.0))
+            override fun create(concurrency: Concurrency?): PairedStat<UnivariateRegressionResult> {
                 childCreateConcurrency = concurrency
                 return this
             }
         }
 
         val group = PairedStatGroup(
-            StatKey<OLSResult>("ols") to tracking,
+            StatKey<UnivariateRegressionResult>("ols") to tracking,
             concurrency = Concurrency.None
         )
         group.create(null)
@@ -393,7 +394,7 @@ class PairedStatGroupTest {
     @Test
     fun `paired schema constructor materializes config entries`() {
         val schema = object : StatSchema() {
-            val olsKey by paired(OLS)
+            val olsKey by paired(UnivariateRegression())
             val covKey by paired(Covariance)
         }
         val group = PairedStatGroup(schema)
@@ -408,72 +409,72 @@ class PairedListStatsTest {
 
     @Test
     fun `update forwards to all child stats`() {
-        val stats = PairedListStats<Result>("ols" to OLSStat(), "cov" to CovarianceStat())
+        val stats = PairedListStats<Result>("ols" to UnivariateRegressionStat(), "cov" to CovarianceStat())
         stats.update(1.0, 2.0)
         stats.update(2.0, 4.0)
 
         val r = stats.read()
         assertEquals(listOf("ols", "cov"), r.names)
-        val first = assertIs<OLSResult>(r.results[0])
+        val first = assertIs<UnivariateRegressionResult>(r.results[0])
         assertEquals(2.0, first.slope, DELTA)
     }
 
     @Test
     fun `duplicate names throw at construction`() {
         assertFailsWith<IllegalArgumentException> {
-            PairedListStats<OLSResult>("a" to OLSStat(), "a" to OLSStat())
+            PairedListStats<UnivariateRegressionResult>("a" to UnivariateRegressionStat(), "a" to UnivariateRegressionStat())
         }
     }
 
     @Test
     fun `pairedListStats factory auto-names by simpleName`() {
-        val stats = pairedListStats<Result>(OLSStat(), CovarianceStat())
+        val stats = pairedListStats<Result>(UnivariateRegressionStat(), CovarianceStat())
         val map = stats.read().toMap()
-        assertEquals(setOf("OLSStat", "CovarianceStat"), map.keys)
+        assertEquals(setOf("UnivariateRegressionStat", "CovarianceStat"), map.keys)
     }
 
     @Test
     fun `pairedListStats factory rejects duplicate auto-names`() {
         assertFailsWith<IllegalArgumentException> {
-            pairedListStats<OLSResult>(OLSStat(), OLSStat())
+            pairedListStats<UnivariateRegressionResult>(UnivariateRegressionStat(), UnivariateRegressionStat())
         }
     }
 
     @Test
     fun `reset clears all child stats`() {
-        val stats = PairedListStats<OLSResult>("ols" to OLSStat())
+        val stats = PairedListStats<UnivariateRegressionResult>("ols" to UnivariateRegressionStat())
         stats.update(1.0, 2.0)
         stats.update(3.0, 6.0)
         stats.reset()
         val r = stats.read()
-        val first = assertIs<OLSResult>(r.results[0])
+        val first = assertIs<UnivariateRegressionResult>(r.results[0])
         assertEquals(0.0, first.totalWeights, DELTA)
     }
 
     @Test
     fun `create returns independent list`() {
-        val original = PairedListStats<OLSResult>("ols" to OLSStat())
+        val original = PairedListStats<UnivariateRegressionResult>("ols" to UnivariateRegressionStat())
         original.update(1.0, 2.0)
         val clone = original.create()
         clone.update(3.0, 6.0)
 
-        val origFirst = assertIs<OLSResult>(original.read().results[0])
-        val cloneFirst = assertIs<OLSResult>(clone.read().results[0])
+        val origFirst = assertIs<UnivariateRegressionResult>(original.read().results[0])
+        val cloneFirst = assertIs<UnivariateRegressionResult>(clone.read().results[0])
         assertEquals(1.0, origFirst.totalWeights, DELTA)
         assertEquals(1.0, cloneFirst.totalWeights, DELTA)
     }
 
     @Test
     fun `merge combines each position`() {
-        val target = PairedListStats<OLSResult>("ols" to OLSStat())
+        val target = PairedListStats<UnivariateRegressionResult>("ols" to UnivariateRegressionStat())
         target.update(1.0, 2.0)
 
-        val source = PairedListStats<OLSResult>("ols" to OLSStat())
+        val source = PairedListStats<UnivariateRegressionResult>("ols" to UnivariateRegressionStat())
         source.update(2.0, 4.0)
         source.update(3.0, 6.0)
 
         target.merge(source.read())
-        val mergedFirst = assertIs<OLSResult>(target.read().results[0])
+        val mergedFirst = assertIs<UnivariateRegressionResult>(target.read().results[0])
         assertEquals(3.0, mergedFirst.totalWeights, DELTA)
     }
 
@@ -481,14 +482,14 @@ class PairedListStatsTest {
     fun `create uses list mode when create mode is null`() {
         var childCreateConcurrency: Concurrency? = null
 
-        val tracking = object : PairedStat<OLSResult> {
+        val tracking = object : PairedStat<UnivariateRegressionResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: OLSResult) = Unit
+            override fun merge(values: UnivariateRegressionResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) =
-                OLSResult(0.0, 0.0, 0.0, 0.0, VarianceResult(0.0, 0.0), VarianceResult(0.0, 0.0))
-            override fun create(concurrency: Concurrency?): PairedStat<OLSResult> {
+                UnivariateRegressionResult(Penalty.None, 0.0, 0.0, 0.0, 0.0, 0.0, VarianceResult(0.0, 0.0), VarianceResult(0.0, 0.0))
+            override fun create(concurrency: Concurrency?): PairedStat<UnivariateRegressionResult> {
                 childCreateConcurrency = concurrency
                 return this
             }
@@ -501,11 +502,11 @@ class PairedListStatsTest {
 
     @Test
     fun `input x and y are forwarded in order`() {
-        val stats = PairedListStats<OLSResult>("ols" to OLSStat())
+        val stats = PairedListStats<UnivariateRegressionResult>("ols" to UnivariateRegressionStat())
         stats.update(1.0, 2.0)
         stats.update(2.0, 4.0)
         stats.update(3.0, 6.0)
-        val result = assertIs<OLSResult>(stats.read().results[0])
+        val result = assertIs<UnivariateRegressionResult>(stats.read().results[0])
         assertTrue(result.slope > 0.0)
     }
 }

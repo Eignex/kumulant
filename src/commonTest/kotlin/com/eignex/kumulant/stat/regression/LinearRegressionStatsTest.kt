@@ -34,7 +34,7 @@ class LinearRegressionStatsTest {
 
     @Test
     fun `sgd should recover ground truth weights`() {
-        val stat = SGDLinearRegression(featureSize = 3, learningRate = ConstantRate(0.05))
+        val stat = StochasticRegressionStat(featureSize = 3, learningRate = ConstantRate(0.05))
         val truth = doubleArrayOf(1.5, -2.0, 0.5)
         fitLine(stat, truth, intercept = 0.3)
         val r = stat.read()
@@ -47,7 +47,7 @@ class LinearRegressionStatsTest {
 
     @Test
     fun `diagonal should recover ground truth weights with finite per-coefficient precision`() {
-        val stat = DiagonalRegression(featureSize = 3, priorPrecision = 0.01)
+        val stat = DiagonalRegressionStat(featureSize = 3, priorPrecision = 0.01)
         val truth = doubleArrayOf(1.0, -1.5, 2.0)
         fitLine(stat, truth, intercept = -0.2)
         val r = stat.read()
@@ -62,7 +62,7 @@ class LinearRegressionStatsTest {
 
     @Test
     fun `bayesian should recover ground truth and shrink covariance`() {
-        val stat = BayesianLinearRegression(featureSize = 3, priorVariance = 1.0)
+        val stat = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         val truth = doubleArrayOf(0.8, 1.2, -0.5)
         fitLine(stat, truth, intercept = 0.0)
         val r = stat.read()
@@ -78,8 +78,8 @@ class LinearRegressionStatsTest {
 
     @Test
     fun `merge on diagonal regression combines independent normals`() {
-        val a = DiagonalRegression(featureSize = 2, priorPrecision = 0.01)
-        val b = DiagonalRegression(featureSize = 2, priorPrecision = 0.01)
+        val a = DiagonalRegressionStat(featureSize = 2, priorPrecision = 0.01)
+        val b = DiagonalRegressionStat(featureSize = 2, priorPrecision = 0.01)
         val truth = doubleArrayOf(2.0, -1.0)
         fitLine(a, truth, intercept = 0.0, n = 2000, seed = 1L)
         fitLine(b, truth, intercept = 0.0, n = 2000, seed = 2L)
@@ -91,8 +91,8 @@ class LinearRegressionStatsTest {
 
     @Test
     fun `merge on SGD blends sample-weighted`() {
-        val a = SGDLinearRegression(featureSize = 2, learningRate = ConstantRate(0.05))
-        val b = SGDLinearRegression(featureSize = 2, learningRate = ConstantRate(0.05))
+        val a = StochasticRegressionStat(featureSize = 2, learningRate = ConstantRate(0.05))
+        val b = StochasticRegressionStat(featureSize = 2, learningRate = ConstantRate(0.05))
         val truth = doubleArrayOf(1.0, -1.0)
         fitLine(a, truth, intercept = 0.0, n = 2000, seed = 11L)
         fitLine(b, truth, intercept = 0.0, n = 2000, seed = 22L)
@@ -107,14 +107,14 @@ class LinearRegressionStatsTest {
 
     @Test
     fun `merge on Bayesian combines posteriors via density product`() {
-        val a = BayesianLinearRegression(featureSize = 3, priorVariance = 1.0)
-        val b = BayesianLinearRegression(featureSize = 3, priorVariance = 1.0)
+        val a = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
+        val b = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         val truth = doubleArrayOf(0.5, -1.2, 0.9)
         fitLine(a, truth, intercept = 0.0, n = 2000, seed = 5L)
         fitLine(b, truth, intercept = 0.0, n = 2000, seed = 7L)
 
         // Reference: a single stat fed the same total data should agree with merge(a, b).
-        val ref = BayesianLinearRegression(featureSize = 3, priorVariance = 1.0)
+        val ref = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         fitLine(ref, truth, intercept = 0.0, n = 2000, seed = 5L)
         fitLine(ref, truth, intercept = 0.0, n = 2000, seed = 7L)
 
@@ -145,7 +145,7 @@ class LinearRegressionStatsTest {
 
     @Test
     fun `reset restores prior state`() {
-        val stat = DiagonalRegression(featureSize = 2, priorPrecision = 0.5)
+        val stat = DiagonalRegressionStat(featureSize = 2, priorPrecision = 0.5)
         fitLine(stat, doubleArrayOf(1.0, 1.0), intercept = 0.0, n = 100)
         stat.reset()
         val r = stat.read()
@@ -158,7 +158,7 @@ class LinearRegressionStatsTest {
 
     @Test
     fun `featureSize mismatch on update throws`() {
-        val stat = SGDLinearRegression(featureSize = 3)
+        val stat = StochasticRegressionStat(featureSize = 3)
         assertFailsWith<IllegalArgumentException> {
             stat.update(doubleArrayOf(1.0, 2.0), y = 0.0)
         }

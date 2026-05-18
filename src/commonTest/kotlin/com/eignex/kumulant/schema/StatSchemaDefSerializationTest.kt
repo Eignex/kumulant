@@ -86,8 +86,8 @@ class StatSchemaDefSerializationTest {
             val requests by series(Sum)
             val weightedSum by series(Sum.withWeight(2.0))
             val count by series(Sum.withValue(1.0).withWeight(1.0))
-            val ols by paired(OLS)
-            val olsAtFixedX by series(OLS.withFixedX(0.5))
+            val ols by paired(UnivariateRegression())
+            val olsAtFixedX by series(UnivariateRegression().withFixedX(0.5))
             val users by discrete(HyperLogLog(precision = 10))
         }
 
@@ -110,7 +110,7 @@ class StatSchemaDefSerializationTest {
         val def = StatSchemaDef(
             mapOf(
                 "sum" to Sum,
-                "ols" to OLS,
+                "ols" to UnivariateRegression(),
                 "users" to HyperLogLog(precision = 10),
                 "perDim" to Sum.vectorized(3),
             )
@@ -132,7 +132,7 @@ class StatSchemaDefSerializationTest {
 
     @Test
     fun `materializePaired binds paired entries`() {
-        val def = StatSchemaDef(mapOf("ols" to OLS))
+        val def = StatSchemaDef(mapOf("ols" to UnivariateRegression()))
         val bound = def.materializePaired()
         assertEquals(1, bound.size)
     }
@@ -165,7 +165,7 @@ class StatSchemaDefSerializationTest {
 
     @Test
     fun `materializeSeries rejects non-series entries`() {
-        val def = StatSchemaDef(mapOf("ols" to OLS))
+        val def = StatSchemaDef(mapOf("ols" to UnivariateRegression()))
         assertFailsWith<IllegalArgumentException> { def.materializeSeries() }
     }
 }

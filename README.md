@@ -48,7 +48,7 @@ val sketch = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.
 for (x in stream) sketch.update(x)
 val r = sketch.read() // r.probabilities and r.quantiles are parallel arrays
 
-val ols = OLSStat()
+val ols = UnivariateRegressionStat()
 for ((x, y) in pairs) ols.update(x, y)
 val fit = ols.read()
 val yHat = fit.slope * 7.0 + fit.intercept
@@ -61,7 +61,7 @@ val yHat = fit.slope * 7.0 + fit.intercept
 | Cardinality  | HyperLogLog, LinearCounting                                                    |
 | Sketch       | BloomFilter, CountMinSketch, MinHash, SpaceSaving                              |
 | Rate         | Rate, CounterRate, DecayingRate                                                |
-| Regression   | OLS, Covariance, Ridge, Lasso                                                  |
+| Regression   | UnivariateRegression (OLS / L1 / L2), Covariance, SGD, Diagonal, Bayesian      |
 | Decay        | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance            |
 | Score        | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
 
@@ -110,7 +110,7 @@ under write-heavy load.
 
 ```kotlin
 val hits = SumStat(concurrency = Concurrency.HighWrite)
-val ols = OLSStat(concurrency = Concurrency.Strict)
+val ols = UnivariateRegressionStat(concurrency = Concurrency.Strict)
 ```
 
 ## TODO

@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.DenseMatrix
@@ -12,7 +13,7 @@ import kotlinx.serialization.Serializable
  * Common shape across multivariate-x linear regression snapshots.
  *
  * Concrete subtypes add uncertainty quantification:
- *  - [SGDRegressionResult]: point estimates only.
+ *  - [StochasticRegressionResult]: point estimates only.
  *  - [DiagonalRegressionResult]: per-coefficient precision (factorised posterior).
  *  - [CovarianceRegressionResult]: full posterior covariance + Cholesky factor.
  *
@@ -23,11 +24,10 @@ import kotlinx.serialization.Serializable
  * return `0.0`.
  */
 @Serializable
-sealed interface LinearRegressionResult : Result, HasRegression {
-    /** Fitted weight per feature, indexed by the same `i` as the input `x[i]`. */
-    val weights: VectorView
+sealed interface LinearRegressionResult : Result, HasLinearModel, HasRegression {
+    override val weights: VectorView
 
-    val bias: Double
+    override val bias: Double
 
     /** Cumulative observation weight folded in. */
     override val totalWeights: Double
@@ -35,22 +35,12 @@ sealed interface LinearRegressionResult : Result, HasRegression {
     /** Number of [com.eignex.kumulant.core.RegressionStat.update] calls absorbed; useful
      *  as a bookkeeping counter for learning-rate decay or retraining cadence. */
     val step: Long
-
-    val featureSize: Int get() = weights.size
-
-    /** Evaluate the fitted hyperplane at [x]. */
-    fun predict(x: VectorView): Double {
-        require(x.size == weights.size) { "x.size=${x.size}, expected ${weights.size}" }
-        var sum = bias
-        for (i in 0 until weights.size) sum += x[i] * weights[i]
-        return sum
-    }
 }
 
 /** SGD weight estimates with no posterior. Cheap, no uncertainty quantification. */
 @Serializable
-@SerialName("SGDRegressionResult")
-data class SGDRegressionResult(
+@SerialName("StochasticRegressionResult")
+data class StochasticRegressionResult(
     override val weights: DenseVector,
     override val bias: Double,
     override val totalWeights: Double,
@@ -58,7 +48,7 @@ data class SGDRegressionResult(
     /** Sum of squared residuals (estimated, EMA-style); 0.0 if not tracked. */
     override val sse: Double = 0.0,
     /** Per-optimiser auxiliary state (e.g. Adam's `m`/`v`); empty for plain SGD. */
-    val updaterState: List<DenseVector> = emptyList(),
+    val updaterState: List<VectorView> = emptyList(),
 ) : LinearRegressionResult
 
 /**

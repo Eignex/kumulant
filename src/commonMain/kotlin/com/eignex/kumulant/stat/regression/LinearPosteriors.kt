@@ -51,8 +51,8 @@ sealed interface LinearPosterior<R : LinearRegressionResult> {
  */
 @Serializable
 @SerialName("PointPosterior")
-data object PointPosterior : LinearPosterior<SGDRegressionResult> {
-    override fun sample(snapshot: SGDRegressionResult, rng: Random, exploration: Double): VectorView {
+data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
+    override fun sample(snapshot: StochasticRegressionResult, rng: Random, exploration: Double): VectorView {
         if (exploration <= 0.0) return snapshot.weights
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
@@ -63,7 +63,7 @@ data object PointPosterior : LinearPosterior<SGDRegressionResult> {
 
     /** Closes to `predict(x) + sd * ||x|| * N(0,1)` since the per-coord noise terms
      *  are iid; one Gaussian draw instead of one per coordinate. */
-    override fun evaluate(snapshot: SGDRegressionResult, x: VectorView, rng: Random, exploration: Double): Double {
+    override fun evaluate(snapshot: StochasticRegressionResult, x: VectorView, rng: Random, exploration: Double): Double {
         val mean = snapshot.predict(x)
         if (exploration <= 0.0) return mean
         val xNormSq = x dot x

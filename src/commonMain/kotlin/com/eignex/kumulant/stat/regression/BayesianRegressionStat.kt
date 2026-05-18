@@ -28,12 +28,17 @@ import kotlin.math.sqrt
  * point estimates. Suitable for Thompson-sampling-style bandits drawing a fresh
  * weight vector from `N(weights, exploration * S)` per round.
  *
- * Maintained incrementally via Sherman-Morrison-Woodbury on the inverse precision:
+ * Maintained incrementally via Sherman-Morrison-Woodbury for likelihood precision
+ * `weight` (variance `1/weight`):
  *  ```
- *  z = S * x / sqrt(sigma^2 + xT * S * x)
- *  S = S - z * zT          (rank-1 downdate)
- *  w = w - S * (-(y - yhat) * x + lambda * w)
+ *  z       = sqrt(weight) * S * x / sqrt(1 + weight * xT * S * x)
+ *  S       = S - z * zT                     (rank-1 downdate)
+ *  w       = w + weight * S_new * x * (y - yhat)
  *  ```
+ *
+ * At default knobs (`learningRate = 1.0`, `l2 = 0.0`) this is the closed-form
+ * conjugate Gaussian posterior update; setting either knob is a deliberate
+ * detuning into damped-SGD-with-posterior-preconditioner territory.
  *
  * The Cholesky factor `L` of `S` is tracked in parallel via
  * [choleskyDowndateInPlace] so `w ~ N(weights, S)` draws are an O(n^2)
@@ -42,9 +47,9 @@ import kotlin.math.sqrt
  * regularised covariance and the update is retried with a smaller step.
  *
  * Residual variance: `sigma^2 = 1`. Callers wanting heteroscedastic noise can
- * re-scale [y] before [update].
+ * re-scale [y] before [update] or pass per-observation precision via `weight`.
  */
-class BayesianLinearRegression(
+class BayesianRegressionStat(
     override val featureSize: Int,
     val priorVariance: Double = 1.0,
     val learningRate: ScalarExpr = ConstantRate(1.0),
@@ -109,11 +114,13 @@ class BayesianLinearRegression(
             val residual = y - yhat
             sse += residual * residual * weight
 
-            // z = Sum * x / sqrt(1 + xT Sum x).
+            // SMW rank-1 downdate for likelihood precision `weight` (variance 1/weight):
+            //   S_new = S - (weight * S x xT S) / (1 + weight * xT S x)
+            //         = S - z zT,  where  z = sqrt(weight) * S x / sqrt(1 + weight * xT S x).
             val z = matVec(covariance, x)
-            val denom = sqrt(1.0 + (x dot z))
+            val denom = sqrt(1.0 + weight * (x dot z))
             if (denom == 0.0) return@withLock
-            scale(z, 1.0 / denom)
+            scale(z, sqrt(weight) / denom)
 
             // Downdate the Cholesky factor; repair on instability.
             var norm = covarianceL.choleskyDowndateInPlace(z)
@@ -245,7 +252,7 @@ class BayesianLinearRegression(
     }
 
     override fun create(concurrency: Concurrency?) =
-        BayesianLinearRegression(
+        BayesianRegressionStat(
             featureSize = featureSize,
             priorVariance = priorVariance,
             learningRate = learningRate,
@@ -320,7 +327,7 @@ class BayesianLinearRegression(
 
 /**
  * Empirical-Bayes prior fitted across a population of related regression posteriors.
- * Hand [mean] and [covariance] straight to [BayesianLinearRegression]'s `priorMean`
+ * Hand [mean] and [covariance] straight to [BayesianRegressionStat]'s `priorMean`
  * / `priorCovariance` constructor parameters to seed a new instance.
  */
 @Serializable
