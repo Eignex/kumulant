@@ -17,7 +17,6 @@ import com.eignex.kumulant.math.invertSpd
 import com.eignex.kumulant.math.matVec
 import com.eignex.kumulant.math.scale
 import com.eignex.kumulant.math.solveSpd
-import com.eignex.kumulant.schema.ScalarExpr
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
@@ -36,12 +35,9 @@ import kotlin.math.sqrt
  *  w       = w + weight * S_new * x * (y - yhat)
  *  ```
  *
- * At default knobs (`learningRate = 1.0`, `weightDecay = 0.0`) this is the closed-form
- * conjugate Gaussian posterior update; setting either knob is a deliberate detuning
- * into damped-SGD-with-posterior-preconditioner territory. [weightDecay] is an
- * SGD-style `-eta * lambda * w` shrinkage applied through the gradient and has no
- * Bayesian interpretation; the Bayesian regularisation is the Gaussian prior
- * (controlled by [priorVariance] / `priorMean` / `priorCovariance`).
+ * This is the strict closed-form conjugate Gaussian posterior update. Regularisation
+ * is the Gaussian prior, controlled by [priorVariance] / `priorMean` / `priorCovariance`;
+ * tighten the prior to shrink weights toward zero (or toward a target mean).
  *
  * The Cholesky factor `L` of `S` is tracked in parallel via
  * [choleskyDowndateInPlace] so `w ~ N(weights, S)` draws are an O(n^2)
@@ -55,8 +51,6 @@ import kotlin.math.sqrt
 class BayesianRegressionStat(
     override val featureSize: Int,
     val priorVariance: Double = 1.0,
-    val learningRate: ScalarExpr = ConstantRate(1.0),
-    val weightDecay: Double = 0.0,
     override val concurrency: Concurrency = Concurrency.None,
     priorMean: VectorView? = null,
     priorCovariance: MatrixView? = null,
@@ -111,7 +105,6 @@ class BayesianRegressionStat(
             require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
             if (weight <= 0.0) return@withLock
             step++
-            val eta = learningRate.eval(step.toDouble())
 
             val yhat = bias + (x dot weights)
             val residual = y - yhat
@@ -142,13 +135,13 @@ class BayesianRegressionStat(
             // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
             addOuter(covariance, -1.0, z, z)
 
-            // w = w - eta * weight * Sum * grad, where grad = -residual * x + weightDecay * w.
-            val grad = DenseVector(featureSize)
-            for (i in 0 until featureSize) grad[i] = -residual * x[i] + weightDecay * weights[i]
-            axpy(weights, -eta * weight, matVec(covariance, grad))
+            // Posterior mean update: w = w + weight * S_new * x * residual.
+            val xResidual = DenseVector(featureSize)
+            for (i in 0 until featureSize) xResidual[i] = residual * x[i]
+            axpy(weights, weight, matVec(covariance, xResidual))
 
             biasPrecision += weight
-            bias += eta * weight * residual / biasPrecision
+            bias += weight * residual / biasPrecision
             totalWeights += weight
         }
 
@@ -258,8 +251,6 @@ class BayesianRegressionStat(
         BayesianRegressionStat(
             featureSize = featureSize,
             priorVariance = priorVariance,
-            learningRate = learningRate,
-            weightDecay = weightDecay,
             concurrency = concurrency ?: this.concurrency,
             priorMean = DenseVector.of(initialWeights.copyOf()),
             priorCovariance = DenseMatrix.of(initialCovariance.toArray()),
