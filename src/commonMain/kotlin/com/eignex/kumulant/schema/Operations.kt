@@ -84,7 +84,7 @@ fun <R : Result> VectorStatSpec<R>.withWeight(weight: Double): VectorStatSpec<R>
 fun <R : Result> DiscreteStatSpec<R>.withWeight(weight: Double): DiscreteStatSpec<R> =
     WithWeightDiscrete(this, weight) as DiscreteStatSpec<R>
 
-// ========== withValue (Series, Discrete) ==========
+// ========== withValue (Series, Paired, Vector, Discrete) ==========
 
 /** Wire spec for `SeriesStat.withValue(value)`: pins every update to [value]. */
 @Serializable
@@ -95,6 +95,28 @@ data class WithValueSeries(
     /** Value pushed into the inner stat on every update. */
     val value: Double,
 ) : SeriesStatSpec<Result>
+
+/** Wire spec for `PairedStat.withValue(x, y)`: pins every update to the constant `(x, y)`. */
+@Serializable
+@SerialName("WithValuePaired")
+data class WithValuePaired(
+    /** Inner spec whose updates use the fixed `(x, y)`. */
+    val inner: StatSpec,
+    /** Value pushed as the `x` coordinate on every update. */
+    val x: Double,
+    /** Value pushed as the `y` coordinate on every update. */
+    val y: Double,
+) : PairedStatSpec<Result>
+
+/** Wire spec for `VectorStat.withValue(value)`: pins every update to the constant vector [value]. */
+@Serializable
+@SerialName("WithValueVector")
+data class WithValueVector(
+    /** Inner spec whose updates use the fixed [value]. */
+    val inner: StatSpec,
+    /** Vector pushed into the inner stat on every update; materialized as a `DoubleArray`. */
+    val value: List<Double>,
+) : VectorStatSpec<Result>
 
 /** Wire spec for `DiscreteStat.withValue(value)`: pins every update to [value]. */
 @Serializable
@@ -109,6 +131,14 @@ data class WithValueDiscrete(
 /** Wrap this series spec so every update pushes the constant [value] regardless of input. */
 fun <R : Result> SeriesStatSpec<R>.withValue(value: Double): SeriesStatSpec<R> =
     WithValueSeries(this, value) as SeriesStatSpec<R>
+
+/** Wrap this paired spec so every update pushes the constant `(x, y)` pair regardless of input. */
+fun <R : Result> PairedStatSpec<R>.withValue(x: Double, y: Double): PairedStatSpec<R> =
+    WithValuePaired(this, x, y) as PairedStatSpec<R>
+
+/** Wrap this vector spec so every update pushes the constant vector [value] regardless of input. */
+fun <R : Result> VectorStatSpec<R>.withValue(value: List<Double>): VectorStatSpec<R> =
+    WithValueVector(this, value) as VectorStatSpec<R>
 
 /** Wrap this discrete spec so every update pushes the constant [value] regardless of input. */
 fun <R : Result> DiscreteStatSpec<R>.withValue(value: Long): DiscreteStatSpec<R> =
