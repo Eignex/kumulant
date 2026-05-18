@@ -24,6 +24,7 @@ private fun Random.nextDoublePos(): Double {
 
 // === Normal ================================================================
 
+/** Float overload of [nextNormal]; widens to Double, samples, narrows back. */
 fun Random.nextNormal(mean: Float, std: Float): Float = nextNormal(mean.toDouble(), std.toDouble()).toFloat()
 
 /**

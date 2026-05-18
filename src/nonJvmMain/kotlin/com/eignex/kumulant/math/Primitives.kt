@@ -42,4 +42,5 @@ internal actual fun denseScale(
     for (i in 0 until len) v[vOff + i] *= alpha
 }
 
+/** Identifies the runtime math backend powering the SIMD-like primitives. */
 public actual val mathBackend: String = "scalar"

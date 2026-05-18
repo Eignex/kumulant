@@ -26,6 +26,7 @@ import kotlin.random.Random
  */
 @Serializable
 sealed interface Posterior<R : Result> {
+    /** Draw a single Monte Carlo sample of the arm's reward from its posterior. */
     fun sample(snapshot: R, rng: Random): Double
 }
 
@@ -123,7 +124,10 @@ data object LogNormalGammaPosterior : Posterior<WeightedVarianceResult> {
  */
 @Serializable
 @SerialName("GammaScalePosterior")
-data class GammaScalePosterior(val fixedShape: Double) : Posterior<WeightedMeanResult> {
+data class GammaScalePosterior(
+    /** Known shape parameter of the Gamma likelihood. */
+    val fixedShape: Double,
+) : Posterior<WeightedMeanResult> {
     override fun sample(snapshot: WeightedMeanResult, rng: Random): Double {
         val sum = snapshot.mean * snapshot.totalWeights
         return rng.nextGamma(snapshot.totalWeights * fixedShape) / sum

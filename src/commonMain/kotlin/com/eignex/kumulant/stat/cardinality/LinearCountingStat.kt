@@ -20,10 +20,15 @@ import kotlin.math.ln
 @Serializable
 @SerialName("LinearCountingResult")
 data class LinearCountingResult(
+    /** Estimated cardinality `-bits * ln(unsetBits / bits)`. */
     val estimate: Double,
+    /** Total bitset size in bits. */
     val bits: Int,
+    /** Number of bits still cleared; saturates the estimator as it shrinks to zero. */
     val unsetBits: Long,
+    /** Packed bitset (`bits / 64` longs); mergeable via word-wise OR. */
     val words: LongArray,
+    /** Total observations the sketch has absorbed. */
     val totalSeen: Long,
 ) : Result
 

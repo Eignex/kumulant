@@ -15,7 +15,9 @@ import kotlin.time.Duration
 @Serializable
 @SerialName("DecayingSumResult")
 data class DecayingSumResult(
+    /** Time-decayed sum at [timestampNanos]. */
     val sum: Double,
+    /** Wall-clock timestamp (nanoseconds) at which the snapshot was taken. */
     val timestampNanos: Long,
 ) : Result
 
@@ -28,6 +30,7 @@ data class DecayingSumResult(
  * accumulator in a bounded numerical range even after many half-lives of activity.
  */
 class DecayingSumStat(
+    /** Time-decay schedule applied to past contributions. */
     val weighting: DecayWeighting.HalfLife,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<DecayingSumResult> {
@@ -35,6 +38,7 @@ class DecayingSumStat(
     constructor(halfLife: Duration, concurrency: Concurrency = Concurrency.None) :
         this(DecayWeighting.HalfLife(halfLife), concurrency)
 
+    /** Wall-clock half-life of past contributions. */
     val halfLife: Duration get() = weighting.halfLife
     private val alpha = weighting.alpha
     private val rotationThresholdNanos = weighting.halfLife.inWholeNanoseconds * ROTATION_HALF_LIVES

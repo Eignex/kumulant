@@ -9,7 +9,7 @@ import kotlin.time.DurationUnit
 
 /** Result carrying a normalized throughput. */
 interface HasRate : Result {
-    /** The normalized rate in Events Per Second (Hz) */
+    /** The normalized rate in Events Per Second (Hz). */
     val rate: Double
 
     /**
@@ -26,7 +26,7 @@ interface HasSampleVariance : Result {
     /** Cumulative weight of observations that contributed to this result. */
     val totalWeights: Double
 
-    /** sum of squares totals */
+    /** Sum-of-squared-deviations total. */
     val sst: Double get() = variance * totalWeights
 
     /** Population variance: [sst] / [totalWeights]. */
@@ -49,13 +49,13 @@ interface HasSampleVariance : Result {
 
 /** Result exposing higher central moments plus skewness and kurtosis. */
 interface HasShapeMoments : HasSampleVariance {
-    /** Raw 2nd central moment: sum((x - mean)^2 * weight) */
+    /** Raw 2nd central moment: `Sum (x - mean)^2 * weight`. */
     val m2: Double get() = sst
 
-    /** Raw 3rd central moment: sum((x - mean)^3 * weight) */
+    /** Raw 3rd central moment: `Sum (x - mean)^3 * weight`. */
     val m3: Double
 
-    /** Raw 4th central moment: sum((x - mean)^4 * weight) */
+    /** Raw 4th central moment: `Sum (x - mean)^4 * weight`. */
     val m4: Double
 
     /** Biased skewness `(m3 / w) / variance^1.5`. */
@@ -104,6 +104,7 @@ interface HasLinearModel : Result {
     /** Fitted bias / intercept term. */
     val bias: Double
 
+    /** Number of features in [weights]. */
     val featureSize: Int get() = weights.size
 
     /** Evaluate the fitted hyperplane at [x]. */
@@ -141,10 +142,10 @@ interface HasSlope : HasLinearModel {
  * Extends HasSampleVariance because R^2 requires SST.
  */
 interface HasRegression : HasSampleVariance {
-    /** Sum of Squared Errors (Residuals) */
+    /** Sum-of-squared-errors (residuals). */
     val sse: Double
 
-    /** Sum of squares due to regression */
+    /** Sum-of-squares due to regression. */
     val ssr: Double get() = sst - sse
 
     /** Mean squared error. */

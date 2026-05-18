@@ -19,7 +19,9 @@ interface Result
 @Serializable
 @SerialName("ResultList")
 data class ResultList<R : Result>(
+    /** Per-entry names; same length as [results] and required to be unique. */
     val names: List<String>,
+    /** Ordered list of per-entry snapshots. */
     val results: List<R>,
 ) : Result {
     init {

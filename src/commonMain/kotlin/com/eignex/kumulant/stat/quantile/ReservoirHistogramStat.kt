@@ -19,11 +19,16 @@ import kotlin.random.Random
 @Serializable
 @SerialName("ReservoirResult")
 data class ReservoirResult(
+    /** Retained sample values; length up to [capacity]. */
     val values: DoubleArray,
+    /** Parallel A-Res priority keys used to drive merging. */
     val keys: DoubleArray,
+    /** Reservoir size. */
     val capacity: Int,
+    /** Total observations the sketch has absorbed (not just retained). */
     val totalSeen: Long,
-    val totalWeight: Double
+    /** Cumulative observation weight folded in. */
+    val totalWeight: Double,
 ) : Result
 
 /** Linear-interpolated quantile at [probability] from a reservoir sample (treats sample as unweighted). */
@@ -100,7 +105,9 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  * under [Concurrency.None] the lock is a noop. Throughput-bound under thread contention.
  */
 class ReservoirHistogramStat(
+    /** Reservoir size (capacity of retained samples). */
     val capacity: Int = 1024,
+    /** PRNG seed for reproducible reservoir admission. */
     val seed: Long = Random.Default.nextLong(),
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<ReservoirResult> {

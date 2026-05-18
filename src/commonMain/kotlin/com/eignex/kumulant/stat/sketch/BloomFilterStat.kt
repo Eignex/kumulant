@@ -18,9 +18,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("BloomFilterResult")
 data class BloomFilterResult(
+    /** Total bitset size in bits. */
     val bits: Int,
+    /** Number of hash functions probed per membership query. */
     val hashes: Int,
+    /** Packed bitset (`bits / 64` longs); mergeable via word-wise OR. */
     val words: LongArray,
+    /** Number of `update(value)` calls absorbed; informational. */
     val totalSeen: Long,
 ) : Result
 

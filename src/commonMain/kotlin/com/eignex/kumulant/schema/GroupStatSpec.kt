@@ -10,4 +10,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 @SerialName("GroupStatSpec")
-data class GroupStatSpec(val stats: Map<String, StatSpec>) : SeriesStatSpec<GroupResult>
+data class GroupStatSpec(
+    /** Nested specs keyed by [StatKey.name]; each must be a [SeriesStatSpec]. */
+    val stats: Map<String, StatSpec>,
+) : SeriesStatSpec<GroupResult>

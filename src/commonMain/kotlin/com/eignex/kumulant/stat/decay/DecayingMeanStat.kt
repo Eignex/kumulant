@@ -11,9 +11,11 @@ import kotlin.time.Duration
 @Serializable
 @SerialName("DecayingMeanResult")
 data class DecayingMeanResult(
+    /** Time-decayed weighted running mean. */
     val mean: Double,
     /** Effective weight of observations still contributing (decays with time). */
     val totalWeights: Double,
+    /** Wall-clock timestamp (nanoseconds) at which the snapshot was taken. */
     val timestampNanos: Long,
 ) : Result
 
@@ -25,6 +27,7 @@ data class DecayingMeanResult(
  * of recent vs. older observations.
  */
 class DecayingMeanStat(
+    /** Time-decay schedule applied to past contributions. */
     val weighting: DecayWeighting.HalfLife,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<DecayingMeanResult> {
@@ -32,6 +35,7 @@ class DecayingMeanStat(
     constructor(halfLife: Duration, concurrency: Concurrency = Concurrency.None) :
         this(DecayWeighting.HalfLife(halfLife), concurrency)
 
+    /** Wall-clock half-life of past contributions. */
     val halfLife: Duration get() = weighting.halfLife
 
     private val sumX = DecayingSumStat(weighting, concurrency)

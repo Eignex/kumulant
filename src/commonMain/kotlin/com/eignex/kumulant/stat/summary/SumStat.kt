@@ -11,7 +11,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("SumResult")
 data class SumResult(
-    val sum: Double
+    /** Weighted running sum. */
+    val sum: Double,
 ) : Result
 
 /**

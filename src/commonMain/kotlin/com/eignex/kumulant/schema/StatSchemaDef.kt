@@ -16,7 +16,10 @@ import kotlinx.serialization.Serializable
  * [materializeSeries] (or one of the modality-specific variants).
  */
 @Serializable
-data class StatSchemaDef(val stats: Map<String, StatSpec>)
+data class StatSchemaDef(
+    /** Per-entry specs keyed by [StatKey.name]. */
+    val stats: Map<String, StatSpec>,
+)
 
 /** Materialize every entry, regardless of modality. Caller filters by stat type. */
 fun StatSchemaDef.materialize(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, *, *>> =

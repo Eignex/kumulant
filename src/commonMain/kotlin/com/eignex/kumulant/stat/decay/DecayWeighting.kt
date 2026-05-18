@@ -25,7 +25,10 @@ sealed interface DecayWeighting {
         if (w == 0.0) 0.0 else 1.0 - exp(-alpha * w)
 
     /** Time-driven decay: alpha = ln(2) / halfLife, progress measured in nanoseconds. */
-    class HalfLife(val halfLife: Duration) : DecayWeighting {
+    class HalfLife(
+        /** Wall-clock half-life of past contributions. */
+        val halfLife: Duration,
+    ) : DecayWeighting {
         override val alpha: Double = ln(2.0) / halfLife.inWholeNanoseconds.toDouble()
     }
 

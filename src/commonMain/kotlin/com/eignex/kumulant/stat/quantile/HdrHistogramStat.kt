@@ -14,8 +14,11 @@ import kotlin.math.pow
  * into integers for O(1) bitwise routing, perfectly preserving fractional precision.
  */
 class HdrHistogramStat(
+    /** Smallest value the histogram can distinguish. */
     val lowestDiscernibleValue: Double = 0.001,
+    /** Initial upper bound; the histogram grows past this if needed. */
     val initialHighestTrackableValue: Double = 100.0,
+    /** Number of significant digits of precision (1..5). */
     val significantDigits: Int = 3,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<SparseHistogramResult> {

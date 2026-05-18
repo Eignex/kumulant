@@ -19,9 +19,13 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("MinHashResult")
 data class MinHashResult(
+    /** Number of independent hash functions in the signature. */
     val numHashes: Int,
+    /** PRNG seed used to derive the per-hash salts; must match for merge / [jaccard]. */
     val seed: Long,
+    /** Per-hash running minimums; element-wise min produces a valid merge. */
     val signatures: LongArray,
+    /** Number of `update(value)` calls absorbed; informational. */
     val totalSeen: Long,
 ) : Result
 
@@ -59,7 +63,9 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
  * `numHashes` Longs; mergeable element-wise via min when `numHashes` and `seed` match.
  */
 class MinHashStat(
+    /** Signature length; higher = better Jaccard accuracy at more memory. */
     val numHashes: Int = 128,
+    /** PRNG seed used to derive the per-hash salts; must match across instances to compare. */
     val seed: Long = -3724518991637283867L, // 0xcafef00dd15ea5e5
     override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<MinHashResult> {

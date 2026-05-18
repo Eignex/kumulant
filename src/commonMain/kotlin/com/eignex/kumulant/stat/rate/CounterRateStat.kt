@@ -17,6 +17,7 @@ import com.eignex.kumulant.stream.welfordMode
  */
 class CounterRateStat(
     override val concurrency: Concurrency = Concurrency.None,
+    /** When true, a counter decrease is interpreted as a reset rather than a negative rate. */
     val treatDecreaseAsReset: Boolean = true,
 ) : SeriesStat<RateResult> {
 

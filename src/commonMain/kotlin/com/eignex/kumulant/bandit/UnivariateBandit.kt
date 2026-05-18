@@ -13,6 +13,7 @@ import kotlin.random.Random
  * (seeded for tests, shared for production, custom for special cases).
  */
 interface UnivariateBandit<R : Result> {
+    /** Pick an arm to play next; uses [random] for any sampling. */
     fun choose(): Int
 
     /** Score the arm at [armIndex] under the current policy. Parallels
@@ -21,14 +22,19 @@ interface UnivariateBandit<R : Result> {
      *  a custom selector on top of the per-arm scores. */
     fun evaluate(armIndex: Int): Double
 
+    /** Fold a single observed reward [value] (with optional [weight]) into the arm at [armIndex]. */
     fun update(armIndex: Int, value: Double, weight: Double = 1.0)
+
+    /** Batched [update]: applies one observation per arm/value pair. */
     fun updateAll(armIndices: IntArray, values: DoubleArray, weights: DoubleArray? = null) {
         require(armIndices.size == values.size) { "armIndices and values must have equal size" }
         require(weights == null || weights.size == values.size) { "weights must match values size" }
         for (i in armIndices.indices) update(armIndices[i], values[i], weights?.get(i) ?: 1.0)
     }
 
+    /** Single source of randomness for [choose] and any policy-internal sampling. */
     val random: Random
 
+    /** Materialise the current per-arm state for inspection or serialisation. */
     fun snapshot(): List<R>
 }

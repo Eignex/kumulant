@@ -12,6 +12,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("MeanResult")
 data class MeanResult(
+    /** Running arithmetic mean. */
     val mean: Double,
 ) : Result
 
@@ -19,7 +20,9 @@ data class MeanResult(
 @Serializable
 @SerialName("WeightedMeanResult")
 data class WeightedMeanResult(
+    /** Cumulative observation weight folded in. */
     val totalWeights: Double,
+    /** Weighted running mean. */
     val mean: Double,
 ) : Result
 

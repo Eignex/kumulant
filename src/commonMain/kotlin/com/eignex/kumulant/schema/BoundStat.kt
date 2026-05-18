@@ -9,8 +9,10 @@ data class BoundStat<
     S : Stat<R>,
     K : StatKey<R>
     >(
+    /** Typed key under which [stat]'s result lives in the [GroupResult]. */
     val key: K,
-    val stat: S
+    /** Live accumulator producing the result. */
+    val stat: S,
 )
 
 /** Marker for stats whose result is a [GroupResult]. */

@@ -13,8 +13,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("RangeResult")
 data class RangeResult(
+    /** Running minimum value. */
     val min: Double,
-    val max: Double
+    /** Running maximum value. */
+    val max: Double,
 ) : Result
 
 /**

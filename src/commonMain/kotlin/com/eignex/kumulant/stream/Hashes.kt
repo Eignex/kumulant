@@ -44,6 +44,7 @@ fun hash64(value: String): Long = hash64(value.encodeToByteArray())
 
 /** Pluggable 64-bit byte hash. Implementations must be deterministic and pure. */
 fun interface Hasher64 {
+    /** Return a 64-bit hash of [bytes]. Equal byte arrays must return equal hashes. */
     fun hash(bytes: ByteArray): Long
 }
 

@@ -16,8 +16,15 @@ package com.eignex.kumulant.core
  * schema propagates the choice to every registered stat at delegate registration.
  */
 enum class Concurrency {
+    /** Single-threaded; no atomics, no locks. Cheapest path when the caller serialises externally. */
     None,
+
+    /** Lock-free atomic cells; concurrent updates on coupled state may drift but never throw. */
     Relaxed,
+
+    /** Coarse lock around coupled state; exact arithmetic at the cost of contention. */
     Strict,
+
+    /** JVM-only striped adders for additive stats under heavy concurrent writes; falls back to [Strict] elsewhere. */
     HighWrite,
 }

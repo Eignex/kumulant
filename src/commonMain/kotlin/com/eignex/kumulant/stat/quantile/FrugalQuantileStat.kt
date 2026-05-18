@@ -18,8 +18,11 @@ import com.eignex.kumulant.stream.welfordMode
  * - frugal sketches do not admit a true associative combine.
  */
 class FrugalQuantileStat(
+    /** Target quantile probability in `[0, 1]`. */
     val q: Double,
+    /** Adaptive step size used to chase the quantile. */
     val stepSize: Double = 0.01,
+    /** Initial estimate seeding the random walk. */
     val initialEstimate: Double = 0.0,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<QuantileResult> {

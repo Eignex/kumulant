@@ -18,12 +18,18 @@ import kotlin.math.max
 @Serializable
 @SerialName("TDigestResult")
 data class TDigestResult(
+    /** Probabilities at which [quantiles] are evaluated; parallel to [quantiles]. */
     val probabilities: DoubleArray,
+    /** Estimated quantile values, parallel to [probabilities]. */
     val quantiles: DoubleArray,
+    /** Centroid means sorted ascending; parallel to [weights]. */
     val means: DoubleArray,
+    /** Centroid weights, parallel to [means]. */
     val weights: DoubleArray,
+    /** Cumulative observation weight folded in. */
     val totalWeight: Double,
-    val compression: Double
+    /** T-digest compression parameter; lower = more centroids, tighter quantiles. */
+    val compression: Double,
 ) : Result
 
 /** Convert centroids to a sparse histogram with bins centered on each centroid. */
@@ -53,8 +59,8 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  * extreme-quantile estimates and bounded centroid count. [compression] (delta) caps
  * centroids to roughly `~6*delta`.
  *
- * Updates buffer values until [bufferCap] is reached, then fold them into the
- * sorted centroid list under the `k1`-difference <= 1 merge rule.
+ * Updates buffer values until the internal `bufferCap` is reached, then fold them into
+ * the sorted centroid list under the `k1`-difference <= 1 merge rule.
  *
  * Concurrency: all `update`/`merge`/`read`/`reset` calls are internally serialized
  * via a private platform mutex when the chosen [Concurrency] level is anything but
@@ -62,7 +68,9 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  * under thread contention.
  */
 class TDigestStat(
+    /** Compression parameter; lower = more centroids, tighter quantiles, more memory. */
     val compression: Double = 100.0,
+    /** Quantiles to evaluate at read time. */
     val probabilities: DoubleArray = doubleArrayOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<TDigestResult> {

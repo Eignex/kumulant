@@ -50,6 +50,7 @@ data class HyperLogLogResult(
  * cardinalities.
  */
 class HyperLogLogStat(
+    /** Number of register-index bits; memory is `2^precision` bytes. */
     val precision: Int = 14,
     override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<HyperLogLogResult> {

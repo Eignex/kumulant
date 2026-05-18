@@ -14,6 +14,7 @@ import com.eignex.kumulant.stream.welfordMode
  * `biasedMean / (1 - exp(-alpha*totalWeights))`.
  */
 class EwmaMeanStat(
+    /** Per-observation smoothing schedule. */
     val weighting: DecayWeighting.Alpha,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<WeightedMeanResult> {
@@ -21,6 +22,7 @@ class EwmaMeanStat(
     constructor(alpha: Double, concurrency: Concurrency = Concurrency.None) :
         this(DecayWeighting.Alpha(alpha), concurrency)
 
+    /** Smoothing factor; larger = more weight on recent samples. */
     val alpha: Double get() = weighting.alpha
 
     private val mode = concurrency.welfordMode()

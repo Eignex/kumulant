@@ -12,8 +12,11 @@ import kotlin.random.Random
 @Serializable
 @SerialName("RouletteWheelArmResult")
 data class RouletteWheelArmResult(
+    /** Current arm weight used by the roulette draw. */
     val weight: Double,
+    /** Sum of rewards observed for this arm since the last segment rebalance. */
     val accumulatedScore: Double,
+    /** Number of updates observed for this arm since the last segment rebalance. */
     val callCount: Int,
 ) : Result
 
@@ -39,10 +42,15 @@ data class RouletteWheelArmResult(
  * negate the reward before calling [update].
  */
 class RouletteWheelBandit(
+    /** Number of arms in the population. */
     val nbrArms: Int,
+    /** Blend factor for the Ropke-Pisinger weight update; 0 = no learning, 1 = pure segment-mean. */
     val reactionFactor: Double = 0.1,
+    /** Number of [update] calls between successive weight rebalances. */
     val segmentLength: Int = 10,
+    /** Starting weight assigned to every arm. */
     val initialWeight: Double = 1.0,
+    /** Floor on the rebalanced weight; prevents arms from being permanently extinguished. */
     val minWeight: Double = 0.01,
     override val random: Random = Random.Default,
 ) : UnivariateBandit<RouletteWheelArmResult> {

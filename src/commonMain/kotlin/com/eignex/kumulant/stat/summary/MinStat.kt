@@ -12,7 +12,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("MinResult")
 data class MinResult(
-    val min: Double
+    /** Running minimum value. */
+    val min: Double,
 ) : Result
 
 /** Tracks the minimum of a stream. */

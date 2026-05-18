@@ -16,15 +16,23 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("AucResult")
 data class AucResult(
+    /** Estimated ROC area under curve at read time. */
     val auc: Double,
+    /** Cumulative positive-label weight observed across the stream. */
     val totalPositives: Double,
+    /** Cumulative negative-label weight observed across the stream. */
     val totalNegatives: Double,
+    /** Per-bin positive weights, parallel to [negatives]. */
     val positives: DoubleArray,
+    /** Per-bin negative weights, parallel to [positives]. */
     val negatives: DoubleArray,
+    /** Inclusive lower bound on the score range. */
     val lowerBound: Double,
+    /** Inclusive upper bound on the score range. */
     val upperBound: Double,
 ) : Result {
 
+    /** Number of histogram bins (same length as [positives] / [negatives]). */
     val numBins: Int get() = positives.size
 
     init {
@@ -70,8 +78,11 @@ data class AucResult(
  * raw classifier margins, pass a wider range or pre-sigmoid the score.
  */
 class AucStat(
+    /** Number of histogram bins covering `[lowerBound, upperBound]`. */
     val numBins: Int = 256,
+    /** Inclusive lower bound on the score range; out-of-range scores clamp to the edge bin. */
     val lowerBound: Double = 0.0,
+    /** Inclusive upper bound on the score range; out-of-range scores clamp to the edge bin. */
     val upperBound: Double = 1.0,
     override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<AucResult> {

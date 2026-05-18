@@ -15,10 +15,11 @@ import kotlinx.serialization.Serializable
 @SerialName("MomentsResult")
 data class MomentsResult(
     override val totalWeights: Double,
+    /** Weighted running mean. */
     val mean: Double,
     override val m2: Double,
     override val m3: Double,
-    override val m4: Double
+    override val m4: Double,
 ) : Result, HasSampleVariance, HasShapeMoments {
     override val sst: Double get() = m2
 }

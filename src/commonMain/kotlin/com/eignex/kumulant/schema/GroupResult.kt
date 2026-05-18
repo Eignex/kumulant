@@ -15,8 +15,10 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("GroupResult")
 data class GroupResult(
+    /** Per-stat snapshots keyed by [StatKey.name]. */
     val results: Map<String, Result>,
 ) : Result {
+    /** Typed lookup by [StatKey]; throws if no result has been recorded for that key. */
     @Suppress("UNCHECKED_CAST")
     operator fun <R : Result> get(key: StatKey<R>): R {
         val value = requireNotNull(results[key.name]) {
@@ -25,18 +27,22 @@ data class GroupResult(
         return value as R
     }
 
+    /** Typed lookup into a nested [GroupResult] by [group] then [key]. */
     operator fun <R : Result> get(group: StatKey<GroupResult>, key: StatKey<R>): R {
         return this[group][key]
     }
 
+    /** Typed lookup of the nested [GroupResult] for a [group]. */
     operator fun <K> get(group: GroupStatKey<K>): GroupResult {
         return this[group as StatKey<GroupResult>]
     }
 
+    /** Typed lookup into a nested [GroupResult] by [group] then [key]. */
     operator fun <K, R : Result> get(group: GroupStatKey<K>, key: StatKey<R>): R {
         return this[group][key]
     }
 
+    /** Typed lookup into a nested [GroupResult] using a key selector run against the group's typed key list. */
     operator fun <K, R : Result> get(group: GroupStatKey<K>, select: K.() -> StatKey<R>): R {
         return this[group][group.keys.select()]
     }

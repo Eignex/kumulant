@@ -17,6 +17,7 @@ import kotlin.time.Duration
 @SerialName("DecayingRateResult")
 data class DecayingRateResult(
     override val rate: Double,
+    /** Wall-clock timestamp (nanoseconds) of the snapshot, for downstream extrapolation. */
     val timestampNanos: Long,
 ) : Result, HasRate
 

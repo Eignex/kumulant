@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 sealed interface VectorView {
+    /** Number of entries (including stored zeros for sparse). */
     val size: Int
 
     /** Read entry at [i]. O(1) for dense, O(nnz) linear scan for sparse. */
@@ -42,6 +43,7 @@ class DenseVector internal constructor(internal val data: DoubleArray) : VectorV
     override fun hashCode(): Int = data.contentHashCode()
     override fun toString(): String = "DenseVector(size=$size)"
 
+    /** Factory entrypoints for [DenseVector]. */
     companion object {
         /** Copy a `DoubleArray` into a fresh dense vector. */
         fun of(values: DoubleArray): DenseVector = DenseVector(values.copyOf())
@@ -106,6 +108,7 @@ class SparseVector internal constructor(
     }
     override fun toString(): String = "SparseVector(size=$size, nnz=${indices.size})"
 
+    /** Factory entrypoints for [SparseVector]. */
     companion object {
         /** Build a sparse vector. Copies inputs so the caller can reuse the arrays. */
         fun of(size: Int, indices: IntArray, values: DoubleArray): SparseVector =

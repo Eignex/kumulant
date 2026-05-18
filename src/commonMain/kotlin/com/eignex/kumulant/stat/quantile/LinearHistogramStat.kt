@@ -13,8 +13,11 @@ import com.eignex.kumulant.stream.additiveMode
  * lock-free via [ArrayBins].
  */
 class LinearHistogramStat(
+    /** Inclusive lower bound of the histogram's covered range. */
     val lowerBound: Double,
+    /** Exclusive upper bound of the histogram's covered range. */
     val upperBound: Double,
+    /** Number of equal-width bins between the bounds. */
     val binCount: Int,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<SparseHistogramResult> {

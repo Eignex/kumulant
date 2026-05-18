@@ -20,9 +20,13 @@ import kotlinx.serialization.encoding.Encoder
  */
 @Serializable
 sealed interface MatrixView {
+    /** Number of rows. */
     val rows: Int
+
+    /** Number of columns. */
     val cols: Int
 
+    /** Read entry at `(i, j)`. */
     operator fun get(i: Int, j: Int): Double
 
     /** Materialise into a fresh row-major `Array<DoubleArray>`. */
@@ -77,6 +81,7 @@ class DenseMatrix internal constructor(
     }
     override fun toString(): String = "DenseMatrix(${rows}x$cols)"
 
+    /** Factory entrypoints for [DenseMatrix]. */
     companion object {
         /** Copy a row-major `Array<DoubleArray>` into a fresh dense matrix. */
         fun of(rows: Array<DoubleArray>): DenseMatrix {

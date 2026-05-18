@@ -20,7 +20,9 @@ import kotlin.random.Random
  * [policy] evaluate call; thread-safety is the caller's responsibility.
  */
 class MultiArmedBandit<R : Result>(
+    /** Number of arms in the population. */
     val nbrArms: Int,
+    /** Policy that owns the per-arm cumulators and the arm-selection rule. */
     val policy: BanditPolicy<R>,
     override val random: Random = Random.Default,
 ) : UnivariateBandit<R> {

@@ -12,7 +12,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("CountResult")
 data class CountResult(
-    val count: Long
+    /** Number of observations seen. */
+    val count: Long,
 ) : Result
 
 /** Observation count: each update contributes 1 regardless of supplied value and weight. */

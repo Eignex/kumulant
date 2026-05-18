@@ -9,30 +9,42 @@ import kotlin.math.pow
 @Serializable
 @SerialName("QuantileResult")
 data class QuantileResult(
+    /** Probability the [quantile] targets. */
     val probability: Double,
-    val quantile: Double
+    /** Estimated quantile value at [probability]. */
+    val quantile: Double,
 ) : Result
 
 /** DDSketch snapshot: logarithmic bins plus precomputed [quantiles] for [probabilities]. */
 @Serializable
 @SerialName("SketchResult")
 data class SketchResult(
+    /** Probabilities at which [quantiles] are evaluated; parallel to [quantiles]. */
     val probabilities: DoubleArray,
+    /** Estimated quantile values, parallel to [probabilities]. */
     val quantiles: DoubleArray,
+    /** Multiplicative bin-boundary ratio `(1 + relativeError) / (1 - relativeError)`. */
     val gamma: Double,
+    /** Cumulative observation weight folded in. */
     val totalWeights: Double,
+    /** Weight observed at the zero bin. */
     val zeroCount: Double,
+    /** Positive-side bin counts keyed by signed log-bucket index. */
     val positiveBins: Map<Int, Double>,
-    val negativeBins: Map<Int, Double>
+    /** Negative-side bin counts keyed by signed log-bucket index. */
+    val negativeBins: Map<Int, Double>,
 ) : Result
 
 /** Histogram as parallel `[lowerBounds, upperBounds)` bucket arrays with [weights]. */
 @Serializable
 @SerialName("SparseHistogramResult")
 data class SparseHistogramResult(
+    /** Inclusive lower bound of each bucket; parallel to [upperBounds] and [weights]. */
     val lowerBounds: DoubleArray,
+    /** Exclusive upper bound of each bucket; parallel to [lowerBounds] and [weights]. */
     val upperBounds: DoubleArray,
-    val weights: DoubleArray
+    /** Observed weight per bucket; parallel to [lowerBounds] / [upperBounds]. */
+    val weights: DoubleArray,
 ) : Result
 
 /** Project a [SketchResult] into a [SparseHistogramResult] by expanding its bin indices to bucket boundaries. */

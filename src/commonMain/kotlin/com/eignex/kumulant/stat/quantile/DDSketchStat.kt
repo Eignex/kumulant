@@ -17,14 +17,16 @@ import kotlin.math.pow
  * Tightening [relativeError] grows bin count roughly as `1/epsilon`.
  */
 class DDSketchStat(
+    /** Relative error guarantee on every reported quantile. */
     val relativeError: Double = 0.01,
+    /** Quantiles to evaluate at read time. */
     val probabilities: DoubleArray = doubleArrayOf(
         0.5,
         0.75,
         0.9,
         0.95,
         0.99,
-        0.999
+        0.999,
     ),
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<SketchResult> {

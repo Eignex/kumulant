@@ -16,8 +16,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("PairedSumResult")
 data class PairedSumResult(
+    /** Cumulative observation weight (`Sum w_i`). */
     val totalWeights: Double,
+    /** Weighted `x` sum (`Sum w_i * x_i`). */
     val sumX: Double,
+    /** Weighted `y` sum (`Sum w_i * y_i`). */
     val sumY: Double,
 ) : Result
 

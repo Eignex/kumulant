@@ -15,7 +15,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("BernoulliSumResult")
 data class BernoulliSumResult(
+    /** Weighted count of success indicators (`Sum w_i * x_i`). */
     val successes: Double,
+    /** Cumulative observation weight (`Sum w_i`). */
     val trials: Double,
 ) : Result
 

@@ -18,6 +18,7 @@ import kotlin.math.abs
 @Serializable
 @SerialName("ReliabilityResult")
 data class ReliabilityResult(
+    /** Number of equal-width probability bins covering `[0, 1]`. */
     val numBins: Int,
     /** `Sum w_i*prob_i` per bin. */
     val sumProbability: DoubleArray,
