@@ -53,6 +53,9 @@ data class BernoulliArm(
         if (priorBeta > 0.0) s.update(0.0, 0L, priorBeta)
         return s
     }
+
+    /** Factory entry-point for [BernoulliArm] (host for [warmStart]). */
+    companion object
 }
 
 /** Single-moment arm (no variance tracking). Used by Poisson, Geometric, Exponential,
@@ -70,6 +73,9 @@ data class MeanArm(
         if (priorWeight > 0.0) s.update(priorMean, 0L, priorWeight)
         return s
     }
+
+    /** Factory entry-point for [MeanArm] (host for [warmStart]). */
+    companion object
 }
 
 /** Gaussian arm with a Normal-Gamma prior (unknown mean and variance). */
@@ -95,6 +101,9 @@ data class NormalArm(
         }
         return s
     }
+
+    /** Factory entry-point for [NormalArm] (host for [warmStart]). */
+    companion object
 }
 
 /** Like [NormalArm] but folds `ln(value)` into the stat. Pair with [LogNormalGammaPosterior]. */
@@ -111,6 +120,9 @@ data class LogNormalArm(
     override fun createStat(): SeriesStat<WeightedVarianceResult> =
         NormalArm(priorMean, priorWeight, priorSquaredDeviations).createStat()
     override fun encode(value: Double): Double = ln(value)
+
+    /** Factory entry-point for [LogNormalArm] (host for [warmStart]). */
+    companion object
 }
 
 /** Moments-tracking arm used by UCB1Normal / UCB1Tuned (needs `m2`, not just variance). */
@@ -127,8 +139,90 @@ data class MomentsArm(
         if (priorWeight > 0.0) s.update(priorMean, 0L, priorWeight)
         return s
     }
+
+    /** Factory entry-point for [MomentsArm] (host for [warmStart]). */
+    companion object
 }
 
 /** Helper: read `meanOfSquares` from a moments snapshot (= m2/N + mean^2). */
 internal fun MomentsResult.meanOfSquares(): Double =
     if (totalWeights > 0.0) m2 / totalWeights + mean * mean else 0.0
+
+// === Warm-start helpers: build an Arm spec from a pooled global snapshot ====
+//
+// Each helper takes the current global snapshot and a [shrinkage] in `[0, 1]` that
+// scales how much of the global evidence is counted as the arm's prior pseudo-count.
+// `shrinkage = 0` collapses to the bare prior; `shrinkage = 1` treats every global
+// observation as if it had been seen by this arm. Use at construction or [reset]
+// to warm-start a per-arm accumulator from cross-arm experience.
+//
+// Univariate hierarchical pooling has no clean general API (see the discussion next
+// to [com.eignex.kumulant.bandit.LinearContextualBandit] for the contextual case);
+// these per-arm-type helpers cover the Result types where shrinkage has a uniform
+// pseudo-count interpretation.
+
+/** Warm-started [BernoulliArm] from a global Bernoulli snapshot. */
+fun BernoulliArm.Companion.warmStart(
+    global: BernoulliSumResult,
+    shrinkage: Double = 1.0,
+): BernoulliArm {
+    require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
+    return BernoulliArm(
+        priorAlpha = global.successes * shrinkage,
+        priorBeta = (global.trials - global.successes) * shrinkage,
+    )
+}
+
+/** Warm-started [MeanArm] from a global weighted-mean snapshot. */
+fun MeanArm.Companion.warmStart(
+    global: WeightedMeanResult,
+    shrinkage: Double = 1.0,
+): MeanArm {
+    require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
+    return MeanArm(
+        priorMean = global.mean,
+        priorWeight = global.totalWeights * shrinkage,
+    )
+}
+
+/** Warm-started [NormalArm] from a global weighted-variance snapshot. The arm's prior
+ *  variance is preserved from the global; only the prior weight is shrunk. */
+fun NormalArm.Companion.warmStart(
+    global: WeightedVarianceResult,
+    shrinkage: Double = 1.0,
+): NormalArm {
+    require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
+    val priorWeight = global.totalWeights * shrinkage
+    return NormalArm(
+        priorMean = global.mean,
+        priorWeight = priorWeight,
+        priorSquaredDeviations = global.variance * priorWeight,
+    )
+}
+
+/** Warm-started [LogNormalArm] from a global weighted-variance snapshot on the log
+ *  scale (caller is responsible for ensuring the snapshot is over `ln(reward)`). */
+fun LogNormalArm.Companion.warmStart(
+    global: WeightedVarianceResult,
+    shrinkage: Double = 1.0,
+): LogNormalArm {
+    require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
+    val priorWeight = global.totalWeights * shrinkage
+    return LogNormalArm(
+        priorMean = global.mean,
+        priorWeight = priorWeight,
+        priorSquaredDeviations = global.variance * priorWeight,
+    )
+}
+
+/** Warm-started [MomentsArm] from a global moments snapshot. */
+fun MomentsArm.Companion.warmStart(
+    global: MomentsResult,
+    shrinkage: Double = 1.0,
+): MomentsArm {
+    require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
+    return MomentsArm(
+        priorMean = global.mean,
+        priorWeight = global.totalWeights * shrinkage,
+    )
+}
