@@ -176,8 +176,6 @@ fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concur
         // ----- Paired wrappers -----
         is WithWeightPaired ->
             requirePaired(inner, "WithWeightPaired").materialize(concurrency).withWeight(weight)
-        is WithValuePaired ->
-            requirePaired(inner, "WithValuePaired").materialize(concurrency).withValue(x, y)
         is AtX ->
             requireSeries(inner, "AtX").materialize(concurrency).atX()
         is AtY ->
@@ -209,8 +207,6 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
         // ----- Vector wrappers / adapters -----
         is WithWeightVector ->
             requireVector(inner, "WithWeightVector").materialize(concurrency).withWeight(weight)
-        is WithValueVector ->
-            requireVector(inner, "WithValueVector").materialize(concurrency).withValue(value.toDoubleArray())
         is AtIndex ->
             requireSeries(inner, "AtIndex").materialize(concurrency).atIndex(index)
         is AtIndices ->

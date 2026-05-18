@@ -69,18 +69,6 @@ internal class TransformLongStat<R : Result>(
 /** Replace every incoming Double with the constant [value]. */
 fun <R : Result> SeriesStat<R>.withValue(value: Double): SeriesStat<R> = ConstantValueStat(this, value)
 
-/** Replace every incoming `(x, y)` pair with the constants [x] / [y]. */
-fun <R : Result> PairedStat<R>.withValue(x: Double, y: Double): PairedStat<R> =
-    ConstantValuePairedStat(this, x, y)
-
-/**
- * Replace every incoming vector with the constant [value]. The replacement is reused
- * across updates without copying; callers that need defensive isolation should pass a
- * fresh copy.
- */
-fun <R : Result> VectorStat<R>.withValue(value: DoubleArray): VectorStat<R> =
-    ConstantValueVectorStat(this, value)
-
 /** Replace every incoming Long with the constant [value]. */
 fun <R : Result> DiscreteStat<R>.withValue(value: Long): DiscreteStat<R> = ConstantValueDiscreteStat(this, value)
 
@@ -93,29 +81,6 @@ internal class ConstantValueStat<R : Result>(
     }
     override fun create(concurrency: Concurrency?): SeriesStat<R> =
         ConstantValueStat(delegate.create(concurrency), value)
-}
-
-internal class ConstantValuePairedStat<R : Result>(
-    private val delegate: PairedStat<R>,
-    private val pinX: Double,
-    private val pinY: Double,
-) : PairedStat<R>, Stat<R> by delegate {
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(pinX, pinY, timestampNanos, weight)
-    }
-    override fun create(concurrency: Concurrency?): PairedStat<R> =
-        ConstantValuePairedStat(delegate.create(concurrency), pinX, pinY)
-}
-
-internal class ConstantValueVectorStat<R : Result>(
-    private val delegate: VectorStat<R>,
-    private val pin: DoubleArray,
-) : VectorStat<R>, Stat<R> by delegate {
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
-        delegate.update(pin, timestampNanos, weight)
-    }
-    override fun create(concurrency: Concurrency?): VectorStat<R> =
-        ConstantValueVectorStat(delegate.create(concurrency), pin)
 }
 
 internal class ConstantValueDiscreteStat<R : Result>(
