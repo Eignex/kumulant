@@ -55,7 +55,9 @@ import kotlin.math.sqrt
  */
 class BayesianRegressionStat(
     override val featureSize: Int,
+    /** Isotropic prior variance used when neither [priorCovariance] nor `priorMean` is supplied. */
     val priorVariance: Double = 1.0,
+    /** Canonical GLM link function; [Link.Identity] is the strict closed-form Gaussian posterior. */
     val link: Link = Link.Identity,
     override val concurrency: Concurrency = Concurrency.None,
     priorMean: VectorView? = null,
@@ -270,6 +272,7 @@ class BayesianRegressionStat(
             priorCovariance = DenseMatrix.of(initialCovariance.toArray()),
         )
 
+    /** Empirical-Bayes / hierarchical helpers that operate on populations of fitted snapshots. */
     companion object {
         /**
          * Empirical-Bayes population prior from a set of per-instance posteriors that
@@ -340,7 +343,10 @@ class BayesianRegressionStat(
  */
 @Serializable
 data class PopulationPrior(
+    /** Population mean of the per-instance posterior means. */
     val mean: DenseVector,
+    /** Population covariance: within-instance posterior + between-instance mean spread. */
     val covariance: DenseMatrix,
+    /** Number of per-instance posteriors that contributed to this prior. */
     val instanceCount: Int,
 )

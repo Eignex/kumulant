@@ -39,9 +39,13 @@ import com.eignex.kumulant.stream.serializedLock
  */
 class DiagonalRegressionStat(
     override val featureSize: Int,
+    /** Initial per-coordinate precision (inverse variance) seeded into every weight. */
     val priorPrecision: Double = 1.0,
+    /** Per-step learning-rate schedule applied to coefficient updates. */
     val learningRate: ScalarExpr = ConstantRate(1.0),
+    /** Regularisation applied during the gradient step; defaults to plain Newton-SGD. */
     val penalty: Penalty = Penalty.None,
+    /** Canonical GLM link; [Link.Identity] is the classical Gaussian factorised posterior. */
     val link: Link = Link.Identity,
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<DiagonalRegressionResult> {

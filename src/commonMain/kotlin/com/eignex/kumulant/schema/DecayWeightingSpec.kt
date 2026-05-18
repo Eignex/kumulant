@@ -24,38 +24,72 @@ import kotlin.time.Duration.Companion.milliseconds
 @Serializable
 sealed interface DecayWeightingSpec
 
+/** Wall-clock half-life decay: weight halves every [durationMillis]. */
 @Serializable
 @SerialName("HalfLife")
-data class HalfLife(val durationMillis: Long) : DecayWeightingSpec {
+data class HalfLife(
+    /** Half-life in milliseconds. */
+    val durationMillis: Long,
+) : DecayWeightingSpec {
+    /** Inflate to the runtime [DecayWeighting.HalfLife] form. */
     fun toDecayWeighting(): DecayWeighting.HalfLife = DecayWeighting.HalfLife(durationMillis.milliseconds)
 }
 
+/** Per-observation decay: each new sample carries weight [alpha] against the running estimate. */
 @Serializable
 @SerialName("Alpha")
-data class Alpha(val alpha: Double) : DecayWeightingSpec {
+data class Alpha(
+    /** Smoothing factor in `(0, 1]`; larger = more weight on recent samples. */
+    val alpha: Double,
+) : DecayWeightingSpec {
+    /** Inflate to the runtime [DecayWeighting.Alpha] form. */
     fun toDecayWeighting(): DecayWeighting.Alpha = DecayWeighting.Alpha(alpha)
 }
 
+/** Spec for `DecayingSumStat`: time-decayed running sum with [HalfLife] weighting. */
 @Serializable
 @SerialName("DecayingSum")
-data class DecayingSum(val weighting: HalfLife) : SeriesStatSpec<DecayingSumResult>
+data class DecayingSum(
+    /** Half-life schedule applied to past contributions. */
+    val weighting: HalfLife,
+) : SeriesStatSpec<DecayingSumResult>
 
+/** Spec for `DecayingMeanStat`: time-decayed running mean with [HalfLife] weighting. */
 @Serializable
 @SerialName("DecayingMean")
-data class DecayingMean(val weighting: HalfLife) : SeriesStatSpec<DecayingMeanResult>
+data class DecayingMean(
+    /** Half-life schedule applied to past contributions. */
+    val weighting: HalfLife,
+) : SeriesStatSpec<DecayingMeanResult>
 
+/** Spec for `DecayingVarianceStat`: time-decayed running variance with [HalfLife] weighting. */
 @Serializable
 @SerialName("DecayingVariance")
-data class DecayingVariance(val weighting: HalfLife) : SeriesStatSpec<DecayingVarianceResult>
+data class DecayingVariance(
+    /** Half-life schedule applied to past contributions. */
+    val weighting: HalfLife,
+) : SeriesStatSpec<DecayingVarianceResult>
 
+/** Spec for `EwmaMeanStat`: exponentially-weighted moving average with per-observation [Alpha]. */
 @Serializable
 @SerialName("EwmaMean")
-data class EwmaMean(val weighting: Alpha) : SeriesStatSpec<WeightedMeanResult>
+data class EwmaMean(
+    /** Per-observation smoothing factor. */
+    val weighting: Alpha,
+) : SeriesStatSpec<WeightedMeanResult>
 
+/** Spec for `EwmaVarianceStat`: exponentially-weighted moving variance with per-observation [Alpha]. */
 @Serializable
 @SerialName("EwmaVariance")
-data class EwmaVariance(val weighting: Alpha) : SeriesStatSpec<WeightedVarianceResult>
+data class EwmaVariance(
+    /** Per-observation smoothing factor. */
+    val weighting: Alpha,
+) : SeriesStatSpec<WeightedVarianceResult>
 
+/** Spec for `DecayingRateStat`: events-per-second with exponential time decay. */
 @Serializable
 @SerialName("DecayingRate")
-data class DecayingRate(val halfLifeMillis: Long) : SeriesStatSpec<DecayingRateResult>
+data class DecayingRate(
+    /** Half-life of the rate's memory, in milliseconds. */
+    val halfLifeMillis: Long,
+) : SeriesStatSpec<DecayingRateResult>

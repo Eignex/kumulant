@@ -81,6 +81,7 @@ data class StochasticRegressionResult(
 data class DiagonalRegressionResult(
     override val weights: DenseVector,
     override val bias: Double,
+    /** Posterior precision (inverse variance) on the bias term. */
     val biasPrecision: Double,
     override val totalWeights: Double,
     override val step: Long,
@@ -100,10 +101,13 @@ data class DiagonalRegressionResult(
 data class CovarianceRegressionResult(
     override val weights: DenseVector,
     override val bias: Double,
+    /** Posterior precision (inverse variance) on the bias term. */
     val biasPrecision: Double,
     override val totalWeights: Double,
     override val step: Long,
+    /** Full posterior covariance matrix over [weights]. */
     val covariance: DenseMatrix,
+    /** Lower-triangular Cholesky factor of [covariance], maintained in lockstep for sampling. */
     val covarianceL: DenseMatrix,
     override val link: Link = Link.Identity,
     override val sse: Double = 0.0,

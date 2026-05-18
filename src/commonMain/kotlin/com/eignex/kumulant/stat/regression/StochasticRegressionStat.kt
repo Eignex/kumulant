@@ -55,9 +55,13 @@ import com.eignex.kumulant.stream.welfordMode
  */
 class StochasticRegressionStat(
     override val featureSize: Int,
+    /** Per-step learning-rate schedule applied to coefficient updates. */
     val learningRate: ScalarExpr = ConstantRate(1e-3),
+    /** Per-step learning-rate schedule applied to the bias update; defaults to [learningRate]. */
     val biasRate: ScalarExpr = learningRate,
+    /** Regularisation applied during the gradient step; defaults to plain SGD. */
     val penalty: Penalty = Penalty.None,
+    /** Canonical GLM link function; [Link.Identity] gives ordinary least-squares SGD. */
     val link: Link = Link.Identity,
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<StochasticRegressionResult> {
@@ -85,9 +89,16 @@ class StochasticRegressionStat(
         null
     }
 
+    /** Live view of the running intercept. */
     val bias: Double by biasCell
+
+    /** Live view of the cumulative observation weight folded in. */
     val totalWeights: Double by totalWeightsCell
+
+    /** Live view of the per-observation step counter (driving the learning-rate schedule). */
     val step: Long by stepCell
+
+    /** Live view of the accumulated per-link loss (SSE for Identity, deviance for Logit / Log). */
     val sse: Double by sseCell
 
     /** Logical weight at coord [i]: applies the lazy [Penalty] transformation to the stored cell. */

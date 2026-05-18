@@ -30,7 +30,9 @@ data class UnivariateRegressionResult(
      *  accumulator. Stored explicitly so merge round-trips losslessly even when [slope]
      *  has been soft-thresholded to zero or shrunk away from `sxy / sxx`. */
     val sxy: Double,
+    /** Marginal statistics of the `x` stream. */
     val x: VarianceResult,
+    /** Marginal statistics of the `y` stream. */
     val y: VarianceResult,
 ) : Result,
     HasSlope,
@@ -68,6 +70,7 @@ data class UnivariateRegressionResult(
  * every penalty including the L1 case where the regularised slope can be zero.
  */
 class UnivariateRegressionStat(
+    /** Regularisation applied at `read()` time; defaults to plain OLS. */
     val penalty: Penalty = Penalty.None,
     override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<UnivariateRegressionResult> {
@@ -81,8 +84,13 @@ class UnivariateRegressionStat(
     private val syy = mode.newDouble(0.0)
     private val sxy = mode.newDouble(0.0)
 
+    /** Live view of the cumulative observation weight. */
     val totalWeights: Double by w
+
+    /** Live view of the running mean of `x`. */
     val meanX: Double by mx
+
+    /** Live view of the running mean of `y`. */
     val meanY: Double by my
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {

@@ -20,10 +20,16 @@ sealed interface Penalty {
     /** L1 / Lasso: drives sparsity in the fitted weights. */
     @Serializable
     @SerialName("L1")
-    data class L1(val lambda: Double) : Penalty
+    data class L1(
+        /** Regularisation strength. */
+        val lambda: Double,
+    ) : Penalty
 
     /** L2 / Ridge: shrinks the fitted weights toward zero. */
     @Serializable
     @SerialName("L2")
-    data class L2(val lambda: Double) : Penalty
+    data class L2(
+        /** Regularisation strength. */
+        val lambda: Double,
+    ) : Penalty
 }

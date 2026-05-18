@@ -13,14 +13,17 @@ import kotlin.math.sqrt
 @Serializable
 @SerialName("CovarianceResult")
 data class CovarianceResult(
+    /** Cumulative observation weight folded in. */
     val totalWeights: Double,
+    /** Weighted running mean of `x`. */
     val meanX: Double,
+    /** Weighted running mean of `y`. */
     val meanY: Double,
-    /** Sum of cross-deviations: sum((x - meanX)(y - meanY) * w) */
+    /** Sum of cross-deviations: `Sum (x - meanX)(y - meanY) * w`. */
     val sxy: Double,
-    /** Sum of squared deviations in x: sum((x - meanX)^2 * w) */
+    /** Sum of squared deviations in x: `Sum (x - meanX)^2 * w`. */
     val sxx: Double,
-    /** Sum of squared deviations in y: sum((y - meanY)^2 * w) */
+    /** Sum of squared deviations in y: `Sum (y - meanY)^2 * w`. */
     val syy: Double,
 ) : Result {
     /** Sample covariance `sxy / totalWeights`. */

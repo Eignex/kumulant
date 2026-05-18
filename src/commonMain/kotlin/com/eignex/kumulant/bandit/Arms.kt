@@ -30,6 +30,7 @@ import kotlin.math.sqrt
  */
 @Serializable
 sealed interface Arm<R : Result> {
+    /** Allocate a fresh per-arm accumulator already seeded with this arm's prior. */
     fun createStat(): SeriesStat<R>
 
     /** Map a raw observation onto the scale the stat accumulates. Identity by default;
@@ -37,10 +38,13 @@ sealed interface Arm<R : Result> {
     fun encode(value: Double): Double = value
 }
 
+/** Bernoulli arm with a Beta(`priorAlpha`, `priorBeta`) prior on the success probability. */
 @Serializable
 @SerialName("BernoulliArm")
 data class BernoulliArm(
+    /** Prior pseudo-count of successes. */
     val priorAlpha: Double = 1.0,
+    /** Prior pseudo-count of failures. */
     val priorBeta: Double = 1.0,
 ) : Arm<BernoulliSumResult> {
     override fun createStat(): SeriesStat<BernoulliSumResult> {
@@ -56,7 +60,9 @@ data class BernoulliArm(
 @Serializable
 @SerialName("MeanArm")
 data class MeanArm(
+    /** Prior mean reward, seeded as an observation of weight [priorWeight]. */
     val priorMean: Double = 1.0,
+    /** Pseudo-weight of the prior seed; smaller = weaker prior. */
     val priorWeight: Double = 0.01,
 ) : Arm<WeightedMeanResult> {
     override fun createStat(): SeriesStat<WeightedMeanResult> {
@@ -66,11 +72,15 @@ data class MeanArm(
     }
 }
 
+/** Gaussian arm with a Normal-Gamma prior (unknown mean and variance). */
 @Serializable
 @SerialName("NormalArm")
 data class NormalArm(
+    /** Prior mean reward. */
     val priorMean: Double = 0.0,
+    /** Pseudo-weight of the prior seed. */
     val priorWeight: Double = 0.02,
+    /** Prior sum of squared deviations; tightens the prior on the variance. */
     val priorSquaredDeviations: Double = 0.02,
 ) : Arm<WeightedVarianceResult> {
     override fun createStat(): SeriesStat<WeightedVarianceResult> {
@@ -91,8 +101,11 @@ data class NormalArm(
 @Serializable
 @SerialName("LogNormalArm")
 data class LogNormalArm(
+    /** Prior mean of `ln(reward)`. */
     val priorMean: Double = 0.0,
+    /** Pseudo-weight of the prior seed. */
     val priorWeight: Double = 0.02,
+    /** Prior sum of squared deviations on the log scale. */
     val priorSquaredDeviations: Double = 2.0,
 ) : Arm<WeightedVarianceResult> {
     override fun createStat(): SeriesStat<WeightedVarianceResult> =
@@ -104,7 +117,9 @@ data class LogNormalArm(
 @Serializable
 @SerialName("MomentsArm")
 data class MomentsArm(
+    /** Prior mean reward. */
     val priorMean: Double = 0.0,
+    /** Pseudo-weight of the prior seed. */
     val priorWeight: Double = 0.02,
 ) : Arm<MomentsResult> {
     override fun createStat(): SeriesStat<MomentsResult> {

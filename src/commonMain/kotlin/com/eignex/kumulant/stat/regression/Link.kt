@@ -25,8 +25,13 @@ import kotlin.math.max
  */
 @Serializable
 sealed interface Link {
+    /** Inverse link: maps the linear predictor `eta` to the response mean. */
     fun invMean(eta: Double): Double
+
+    /** Second derivative of the per-observation negative log-likelihood at `eta`. */
     fun curvature(eta: Double): Double
+
+    /** Per-observation negative log-likelihood (modulo `eta`-independent constants). */
     fun loss(eta: Double, y: Double): Double
 
     /** `mu = eta`. Gaussian likelihood with `sigma^2 = 1`. */
