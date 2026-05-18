@@ -13,6 +13,7 @@ import com.eignex.kumulant.operation.FilterPairedStat
 import com.eignex.kumulant.operation.FilterSeriesStat
 import com.eignex.kumulant.operation.FilterVectorStat
 import com.eignex.kumulant.operation.FoldPairedStat
+import com.eignex.kumulant.operation.FoldVectorPairedStat
 import com.eignex.kumulant.operation.FoldVectorStat
 import com.eignex.kumulant.operation.TransformLongStat
 import com.eignex.kumulant.operation.TransformPairStat
@@ -229,6 +230,14 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is FoldVector -> {
             val m = requireSeries(inner, "FoldVector").materialize(concurrency) as SeriesStat<Result>
             FoldVectorStat(m) { vec -> expr.eval(0.0, 0.0, vec) }
+        }
+        is FoldVectorPaired -> {
+            val m = requirePaired(inner, "FoldVectorPaired").materialize(concurrency) as PairedStat<Result>
+            FoldVectorPairedStat(
+                m,
+                foldX = { vec -> xExpr.eval(0.0, 0.0, vec) },
+                foldY = { vec -> yExpr.eval(0.0, 0.0, vec) },
+            )
         }
         is TransformVector -> {
             val m = requireVector(inner, "TransformVector").materialize(concurrency) as VectorStat<Result>

@@ -515,6 +515,30 @@ fun <R : Result> SeriesStatSpec<R>.foldVector(expr: ScalarExpr): VectorStatSpec<
     FoldVector(this, expr) as VectorStatSpec<R>
 
 /**
+ * Lift a [PairedStatSpec] to a [VectorStatSpec] by reducing each incoming vector to a
+ * pair `(xExpr, yExpr)` of scalars before driving the inner paired stat. Both
+ * expressions typically use [VFold] / [VDot] / [V] to consume the vector; e.g.
+ * `OLS().foldVector(xExpr = V(0), yExpr = V(1))` correlates the first two coordinates.
+ */
+@Serializable
+@SerialName("FoldVectorPaired")
+data class FoldVectorPaired(
+    /** Inner paired spec receiving the folded `(x, y)` pair. */
+    val inner: StatSpec,
+    /** Expression reducing each vector to the inner stat's `x` argument. */
+    val xExpr: ScalarExpr,
+    /** Expression reducing each vector to the inner stat's `y` argument. */
+    val yExpr: ScalarExpr,
+) : VectorStatSpec<Result>
+
+/**
+ * Lift this paired spec to a vector spec, reducing every vector to a pair
+ * `(xExpr, yExpr)` of scalars via [xExpr] and [yExpr].
+ */
+fun <R : Result> PairedStatSpec<R>.foldVector(xExpr: ScalarExpr, yExpr: ScalarExpr): VectorStatSpec<R> =
+    FoldVectorPaired(this, xExpr, yExpr) as VectorStatSpec<R>
+
+/**
  * Apply a [VectorExpr] to remap each incoming vector before update - wire
  * counterpart of `VectorStat<R>.transformVector { ... }`. Output length and
  * input length need not match; the inner stat must be parameterised for the

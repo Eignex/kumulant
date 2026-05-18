@@ -34,3 +34,15 @@ internal class FoldPairedStat<R : Result>(
     override fun create(concurrency: Concurrency?): PairedStat<R> =
         FoldPairedStat(delegate.create(concurrency), transform)
 }
+
+internal class FoldVectorPairedStat<R : Result>(
+    private val delegate: PairedStat<R>,
+    private val foldX: (DoubleArray) -> Double,
+    private val foldY: (DoubleArray) -> Double,
+) : VectorStat<R>, Stat<R> by delegate {
+    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
+        delegate.update(foldX(vector), foldY(vector), timestampNanos, weight)
+    }
+    override fun create(concurrency: Concurrency?): VectorStat<R> =
+        FoldVectorPairedStat(delegate.create(concurrency), foldX, foldY)
+}
