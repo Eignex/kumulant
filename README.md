@@ -96,6 +96,44 @@ group.update(value = 12.7)
 val p99 = group.read()[Telemetry.latencyP99]
 ```
 
+## Bandits
+
+Bandits build on per-arm stats: each arm owns a kumulant accumulator, and
+the bandit picks arms by scoring their snapshots. The lifecycle pieces
+(`update`/`snapshot`/`merge`/`reset`) match the `Stat` interface, so per-arm
+state inherits the same concurrency modes, wire-portable snapshots, and
+merge semantics as any other stat in the library.
+
+```kotlin
+// Beta-Bernoulli Thompson sampling over four arms.
+val bandit = MultiArmedBandit(nbrArms = 4, policy = BetaBernoulliTS())
+val arm = bandit.choose()
+bandit.update(arm, value = 1.0)  // observed reward
+```
+
+For context-aware decisions, `LinearContextualBandit` wraps one
+`RegressionStat` per arm and scores each arm under the round's feature
+vector via a shared `LinearPosterior`:
+
+```kotlin
+val cb = LinearContextualBandit(
+    nbrArms = 4,
+    template = BayesianRegressionStat(featureSize = 8),
+    posterior = MultivariateGaussian,  // -> Linear Thompson Sampling
+)
+val a = cb.choose(features)
+cb.update(a, features, reward = 12.7)
+```
+
+Composite arms paired with AST-driven combiners model multi-component
+reward shapes (zero-inflated lognormal, hurdle Gaussian, mixtures) without
+writing a class per shape — the routing and score combination are
+expressed as the same `ScalarExpr` / `BoolExpr` ASTs used by the stat
+composition layer, so composites round-trip over the wire too. Continuous
+pooling on contextual bandits and a `HierarchicalBayesianRegression`
+manager cover the cold-start / borrow-from-population story when arms
+join an in-progress run.
+
 ## Concurrency
 
 Each stat picks a concurrency mode at construction. The default is
