@@ -6,9 +6,9 @@ import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.math.forEachStored
 import com.eignex.kumulant.schema.ScalarExpr
+import com.eignex.kumulant.stream.StreamDouble
+import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.getValue
-import com.eignex.kumulant.stream.serializedLock
-import com.eignex.kumulant.stream.SerialMode
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 
@@ -21,35 +21,36 @@ import com.eignex.kumulant.stream.welfordMode
  *  ```
  *  yhat       = bias + Sum w_i * x_i
  *  residual   = y - yhat
- *  grad_i     = -residual * x_i + (penalty-specific term)
+ *  grad_i     = -residual * x_i
  *  w_i       -= eta(step) * weight * grad_i
  *  bias      += etaBias(step) * weight * residual
  *  ```
+ * Regularisation is then applied via the [Penalty]-specific lazy formulation
+ * described below, which keeps the per-observation cost proportional to `nnz(x)`
+ * rather than to [featureSize].
  *
  * Bias has its own learning-rate schedule because the intercept usually wants a much
  * faster decay than the coefficients (it dominates predictions for new arms).
  *
- * Sparse-aware at [Penalty.None]: the gradient loop only touches the nonzero coordinates
- * of [x] when given a [SparseVector], skipping the `-residual * x_i` zero-contribution
- * for dense coords. Any non-trivial [penalty] hits every coordinate, so the dense-side
- * cost is unchanged when regularisation is active.
+ * Penalty handling (sparse-access for every variant):
+ *  - [Penalty.None]: plain SGD.
+ *  - [Penalty.L2]: Bottou-style multiplicative scaling - the logical weight at coord
+ *    `i` is `stored[i] * scale`. Each step does `scale *= (1 - eta * weight * lambda)`
+ *    (one scalar, not N) and the gradient step modifies only touched coords with
+ *    `stored[i] += delta / scale`. Snapshot reads return the materialised logical
+ *    weights `stored[i] * scale`. When `scale` drifts below `1e-12` it is folded
+ *    back into `stored` under the lock to preserve precision.
+ *  - [Penalty.L1]: truncated-gradient with cumulative threshold. A scalar
+ *    `pendingThreshold` accumulates `eta * weight * lambda` per update; touching
+ *    coord `i` lazily applies the threshold delta since its last touch
+ *    (`lastApplied[i]`), then takes the SGD step. Untouched coords sit pending
+ *    until they're either touched or materialised at read.
  *
- * Penalty handling:
- *  - [Penalty.None]: plain SGD, sparse-aware.
- *  - [Penalty.L2]: gradient-form L2 (`grad_i = -residual * x_i + lambda * w_i`); full dense loop.
- *  - [Penalty.L1]: gradient SGD step followed by a proximal soft-thresholding sweep
- *    `w_i = sign(w_i) * max(0, |w_i| - eta * weight * lambda)` over every coord, which
- *    is what actually drives sparsity (subgradient L1 on its own does not).
- *
- * Concurrency is selected by access density: at [Penalty.None] the update is sparse
- * (only stored coords of `x` see writes), so [Concurrency.Relaxed] uses per-cell atomic
- * adds with no lock - HOGWILD!-style asynchronous SGD where concurrent updaters may
- * compute gradients from slightly stale weights but each write is atomic, and
- * convergence holds for the convex MSE loss. At [Penalty.L1] / [Penalty.L2] every
- * coordinate is touched every update regardless of `x`, so cells would be pure overhead
- * - [Concurrency.Relaxed] falls back to plain cells under a single lock, the same
- * machinery [Concurrency.Strict] uses. [Concurrency.None] is single-threaded in all
- * cases.
+ * Concurrency follows the Welford-coupled pattern: every cell is per-slot atomic
+ * under [Concurrency.Relaxed] (HOGWILD!-style asynchronous SGD - concurrent updaters
+ * may compute gradients from slightly stale weights, but each write is an atomic add
+ * or CAS, and convergence holds for the convex MSE loss). Under [Concurrency.Strict]
+ * a single lock fully serialises the update. [Concurrency.None] is single-threaded.
  */
 class StochasticRegressionStat(
     override val featureSize: Int,
@@ -61,22 +62,39 @@ class StochasticRegressionStat(
 
     init { require(featureSize > 0) { "featureSize must be positive" } }
 
-    // Sparse access (no penalty) gets HOGWILD! cells under Relaxed; dense access (L1/L2)
-    // falls back to plain cells under a coarse lock since per-cell atomics buy nothing
-    // when every coord is touched every update.
-    private val sparseAccess = penalty == Penalty.None
-    private val mode = if (sparseAccess) concurrency.welfordMode() else SerialMode
-    private val lock = if (sparseAccess) concurrency.welfordLock() else concurrency.serializedLock()
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val weightsCell = mode.newDoubleArray(featureSize)
     private val biasCell = mode.newDouble(0.0)
     private val totalWeightsCell = mode.newDouble(0.0)
     private val stepCell = mode.newLong(0L)
     private val sseCell = mode.newDouble(0.0)
 
+    // L2 lazy-scale: actual w_i = stored[i] * scale. Only allocated when needed.
+    private val l2ScaleCell: StreamDouble? = if (penalty is Penalty.L2) mode.newDouble(1.0) else null
+
+    // L1 truncated-gradient: actual w_i = softThreshold(stored[i], pendingThreshold - lastApplied[i]).
+    private val l1PendingCell: StreamDouble? = if (penalty is Penalty.L1) mode.newDouble(0.0) else null
+    private val l1LastApplied: StreamDoubleArray? = if (penalty is Penalty.L1) mode.newDoubleArray(featureSize) else null
+
     val bias: Double by biasCell
     val totalWeights: Double by totalWeightsCell
     val step: Long by stepCell
     val sse: Double by sseCell
+
+    /** Logical weight at coord [i]: applies the lazy [Penalty] transformation to the stored cell. */
+    private fun effectiveWeight(i: Int): Double = when (val p = penalty) {
+        Penalty.None -> weightsCell.load(i)
+        is Penalty.L2 -> weightsCell.load(i) * l2ScaleCell!!.load()
+        is Penalty.L1 -> softThreshold(weightsCell.load(i), l1PendingCell!!.load() - l1LastApplied!!.load(i))
+    }
+
+    private fun softThreshold(w: Double, threshold: Double): Double = when {
+        threshold <= 0.0 -> w
+        w > threshold -> w - threshold
+        w < -threshold -> w + threshold
+        else -> 0.0
+    }
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) =
         lock.withLock {
@@ -86,56 +104,99 @@ class StochasticRegressionStat(
             val eta = learningRate.eval(s.toDouble())
             val etaBias = biasRate.eval(s.toDouble())
 
+            // yhat uses the *effective* weight projection, but we only need it where x_i != 0.
             var dot = 0.0
-            for (i in 0 until featureSize) dot += weightsCell.load(i) * x[i]
+            x.forEachStored { i, v -> dot += effectiveWeight(i) * v }
             val yhat = biasCell.load() + dot
             val residual = y - yhat
             sseCell.add(residual * residual * weight)
 
             when (val p = penalty) {
                 Penalty.None -> {
-                    // Sparse-friendly: only touch coords stored in x.
                     val coeff = eta * weight * residual
                     x.forEachStored { i, v -> weightsCell.add(i, coeff * v) }
                 }
                 is Penalty.L2 -> {
-                    // L2 enters the gradient and hits every coord; full dense loop.
-                    for (i in 0 until featureSize) {
-                        val wi = weightsCell.load(i)
-                        val grad = -residual * x[i] + p.lambda * wi
-                        weightsCell.add(i, -eta * weight * grad)
+                    // Decay the shared scale once (O(1)), then SGD only on touched coords.
+                    val factor = 1.0 - eta * weight * p.lambda
+                    require(factor > 0.0) {
+                        "L2 decay factor must stay positive: 1 - eta*weight*lambda = $factor"
                     }
+                    val scale = casMultiply(l2ScaleCell!!, factor)
+                    val coeff = eta * weight * residual
+                    x.forEachStored { i, v -> weightsCell.add(i, coeff * v / scale) }
+                    // Fold scale back into storage when it drifts too small to keep precision.
+                    if (scale < 1e-12) foldL2Scale()
                 }
                 is Penalty.L1 -> {
-                    // Plain SGD step on every coord, then proximal soft-threshold to drive sparsity.
-                    for (i in 0 until featureSize) {
-                        weightsCell.add(i, eta * weight * residual * x[i])
+                    // Accumulate threshold once (O(1)), then per-touched-coord lazy-apply + SGD step.
+                    val pending = l1PendingCell!!.addAndGet(eta * weight * p.lambda)
+                    val coeff = eta * weight * residual
+                    x.forEachStored { i, v ->
+                        applyL1AndStep(i, pending, coeff * v)
                     }
-                    val threshold = eta * weight * p.lambda
-                    for (i in 0 until featureSize) softThreshold(i, threshold)
                 }
             }
             biasCell.add(etaBias * weight * residual)
             totalWeightsCell.add(weight)
         }
 
-    /** CAS-loop soft-threshold so concurrent SGD updates aren't lost under [Concurrency.Relaxed]. */
-    private fun softThreshold(i: Int, threshold: Double) {
+    /** CAS-multiply a shared scalar. Lock-free under [Concurrency.Relaxed]. */
+    private fun casMultiply(cell: StreamDouble, factor: Double): Double {
         while (true) {
-            val wi = weightsCell.load(i)
-            val next = when {
-                wi > threshold -> wi - threshold
-                wi < -threshold -> wi + threshold
-                else -> 0.0
+            val current = cell.load()
+            val next = current * factor
+            if (cell.compareAndSet(current, next)) return next
+        }
+    }
+
+    /** Rescale stored cells by the current L2 scale and reset scale to 1.0. */
+    private fun foldL2Scale() {
+        val scale = l2ScaleCell!!.load()
+        if (scale == 1.0) return
+        if (!l2ScaleCell.compareAndSet(scale, 1.0)) return // another thread folded first
+        for (i in 0 until featureSize) {
+            while (true) {
+                val w = weightsCell.load(i)
+                if (weightsCell.compareAndSet(i, w, w * scale)) break
             }
-            if (wi == next) return
-            if (weightsCell.compareAndSet(i, wi, next)) return
+        }
+    }
+
+    /** Apply pending L1 threshold to coord [i] and add the SGD [delta], in one CAS-loop. */
+    private fun applyL1AndStep(i: Int, pending: Double, delta: Double) {
+        val lastApplied = l1LastApplied!!.load(i)
+        val threshold = pending - lastApplied
+        while (true) {
+            val stored = weightsCell.load(i)
+            val thresholded = softThreshold(stored, threshold)
+            val next = thresholded + delta
+            if (weightsCell.compareAndSet(i, stored, next)) {
+                l1LastApplied.store(i, pending)
+                return
+            }
         }
     }
 
     override fun read(timestampNanos: Long): StochasticRegressionResult = lock.withLock {
+        val materialised = DoubleArray(featureSize) { effectiveWeight(it) }
+        // Fold lazy state back into storage so the snapshot's invariants match the underlying cells.
+        when (penalty) {
+            Penalty.None -> {}
+            is Penalty.L2 -> {
+                for (i in 0 until featureSize) weightsCell.store(i, materialised[i])
+                l2ScaleCell!!.store(1.0)
+            }
+            is Penalty.L1 -> {
+                val pending = l1PendingCell!!.load()
+                for (i in 0 until featureSize) {
+                    weightsCell.store(i, materialised[i])
+                    l1LastApplied!!.store(i, pending)
+                }
+            }
+        }
         StochasticRegressionResult(
-            weights = DenseVector.of(DoubleArray(featureSize) { weightsCell.load(it) }),
+            weights = DenseVector.of(materialised),
             bias = biasCell.load(),
             totalWeights = totalWeightsCell.load(),
             step = stepCell.load(),
@@ -160,9 +221,11 @@ class StochasticRegressionStat(
             if (wNew > 0.0) {
                 val other = values.weights.toDoubleArray()
                 for (i in 0 until featureSize) {
-                    val blended = (weightsCell.load(i) * w1 + other[i] * w2) / wNew
+                    val blended = (effectiveWeight(i) * w1 + other[i] * w2) / wNew
                     weightsCell.store(i, blended)
+                    l1LastApplied?.store(i, l1PendingCell!!.load())
                 }
+                l2ScaleCell?.store(1.0)
                 biasCell.store((biasCell.load() * w1 + values.bias * w2) / wNew)
             }
             totalWeightsCell.store(wNew)
@@ -172,7 +235,12 @@ class StochasticRegressionStat(
     }
 
     override fun reset() = lock.withLock {
-        for (i in 0 until featureSize) weightsCell.store(i, 0.0)
+        for (i in 0 until featureSize) {
+            weightsCell.store(i, 0.0)
+            l1LastApplied?.store(i, 0.0)
+        }
+        l2ScaleCell?.store(1.0)
+        l1PendingCell?.store(0.0)
         biasCell.store(0.0)
         totalWeightsCell.store(0.0)
         stepCell.store(0L)
