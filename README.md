@@ -112,4 +112,3 @@ under write-heavy load.
 val hits = SumStat(concurrency = Concurrency.HighWrite)
 val ols = UnivariateRegressionStat(concurrency = Concurrency.Strict)
 ```
-- Ops parity for pairedvector
