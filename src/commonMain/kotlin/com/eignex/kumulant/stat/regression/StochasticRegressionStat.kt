@@ -13,21 +13,22 @@ import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 
 /**
- * Online linear regression by stochastic gradient descent on weighted MSE plus
- * optional [Penalty]. The cheapest of the multivariate regressors - point estimates only,
- * no posterior, fast updates.
+ * Online generalised linear regression by stochastic gradient descent on the canonical
+ * [Link]'s negative log-likelihood plus optional [Penalty]. The cheapest of the
+ * multivariate regressors - point estimates only, no posterior, fast updates.
  *
  * Update step (per observation, all coordinates `i`):
  *  ```
- *  yhat       = bias + Sum w_i * x_i
- *  residual   = y - yhat
- *  grad_i     = -residual * x_i
- *  w_i       -= eta(step) * weight * grad_i
- *  bias      += etaBias(step) * weight * residual
+ *  eta        = bias + Sum w_i * x_i
+ *  mu         = link.invMean(eta)
+ *  grad_i     = (mu - y) * x_i      (canonical-link form)
+ *  w_i       -= eta_t(step) * weight * grad_i
+ *  bias      += etaBias(step) * weight * (mu - y) * (-1)
  *  ```
- * Regularisation is then applied via the [Penalty]-specific lazy formulation
- * described below, which keeps the per-observation cost proportional to `nnz(x)`
- * rather than to [featureSize].
+ * Reduces to the textbook MSE-SGD when `link = Link.Identity` (then `mu = eta` and
+ * `grad_i = -residual * x_i`). Regularisation is applied via the [Penalty]-specific
+ * lazy formulation described below, which keeps the per-observation cost proportional
+ * to `nnz(x)` rather than to [featureSize].
  *
  * Bias has its own learning-rate schedule because the intercept usually wants a much
  * faster decay than the coefficients (it dominates predictions for new arms).
@@ -57,6 +58,7 @@ class StochasticRegressionStat(
     val learningRate: ScalarExpr = ConstantRate(1e-3),
     val biasRate: ScalarExpr = learningRate,
     val penalty: Penalty = Penalty.None,
+    val link: Link = Link.Identity,
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<StochasticRegressionResult> {
 
@@ -106,13 +108,14 @@ class StochasticRegressionStat(
 
             var dot = 0.0
             x.forEachStored { i, v -> dot += effectiveWeight(i) * v }
-            val yhat = biasCell.load() + dot
-            val residual = y - yhat
-            sseCell.add(residual * residual * weight)
+            val etaPred = biasCell.load() + dot
+            val mu = link.invMean(etaPred)
+            val negResidual = mu - y
+            sseCell.add(link.loss(etaPred, y) * weight)
 
             when (val p = penalty) {
                 Penalty.None -> {
-                    val coeff = eta * weight * residual
+                    val coeff = -eta * weight * negResidual
                     x.forEachStored { i, v -> weightsCell.add(i, coeff * v) }
                 }
                 is Penalty.L2 -> {
@@ -121,20 +124,20 @@ class StochasticRegressionStat(
                         "L2 decay factor must stay positive: 1 - eta*weight*lambda = $factor"
                     }
                     val scale = casMultiply(l2ScaleCell!!, factor)
-                    val coeff = eta * weight * residual
+                    val coeff = -eta * weight * negResidual
                     x.forEachStored { i, v -> weightsCell.add(i, coeff * v / scale) }
                     // Refold before precision dies; one rare dense sweep amortised over many updates.
                     if (scale < 1e-12) foldL2Scale()
                 }
                 is Penalty.L1 -> {
                     val pending = l1PendingCell!!.addAndGet(eta * weight * p.lambda)
-                    val coeff = eta * weight * residual
+                    val coeff = -eta * weight * negResidual
                     x.forEachStored { i, v ->
                         applyL1AndStep(i, pending, coeff * v)
                     }
                 }
             }
-            biasCell.add(etaBias * weight * residual)
+            biasCell.add(-etaBias * weight * negResidual)
             totalWeightsCell.add(weight)
         }
 
@@ -197,6 +200,7 @@ class StochasticRegressionStat(
             bias = biasCell.load(),
             totalWeights = totalWeightsCell.load(),
             step = stepCell.load(),
+            link = link,
             sse = sseCell.load(),
         )
     }
@@ -245,5 +249,5 @@ class StochasticRegressionStat(
     }
 
     override fun create(concurrency: Concurrency?) =
-        StochasticRegressionStat(featureSize, learningRate, biasRate, penalty, concurrency ?: this.concurrency)
+        StochasticRegressionStat(featureSize, learningRate, biasRate, penalty, link, concurrency ?: this.concurrency)
 }

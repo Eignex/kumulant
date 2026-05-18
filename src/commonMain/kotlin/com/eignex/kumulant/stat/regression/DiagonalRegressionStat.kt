@@ -10,19 +10,22 @@ import com.eignex.kumulant.schema.ScalarExpr
 import com.eignex.kumulant.stream.serializedLock
 
 /**
- * Linear regression with a *factorised* Gaussian posterior - each coefficient gets
- * its own running precision, but cross-coefficient correlations are dropped.
+ * Generalised linear regression with a *factorised* Gaussian posterior - each
+ * coefficient gets its own running precision, but cross-coefficient correlations
+ * are dropped.
  *
- * Update rule (Newton-style with diagonal Hessian, MSE loss):
+ * Update rule (Newton-style with diagonal Hessian, canonical [Link]):
  *  ```
- *  yhat              = bias + Sum w_i * x_i
- *  residual          = y - yhat
- *  precision_i      += weight * x_i^2
- *  w_i              -= eta(step) * weight * grad_i / precision_i
- *  biasPrecision    += weight
- *  bias             += eta(step) * weight * residual / biasPrecision
+ *  eta               = bias + Sum w_i * x_i
+ *  mu                = link.invMean(eta)
+ *  curvature         = link.curvature(eta)
+ *  precision_i      += weight * curvature * x_i^2
+ *  w_i              -= eta_t(step) * weight * grad_i / precision_i
+ *  biasPrecision    += weight * curvature
+ *  bias             += eta_t(step) * weight * (y - mu) / biasPrecision
  *  ```
- * where `grad_i` is `-residual * x_i` plus the [penalty]-specific term.
+ * where `grad_i = (mu - y) * x_i` plus any [penalty]-specific term. Reduces to the
+ * Gaussian / MSE case when `link = Link.Identity` (then `curvature = 1`, `mu = eta`).
  *
  * Posterior samples are independent per coordinate: `w_i ~ N(weights[i], 1/precision[i])`.
  *
@@ -39,6 +42,7 @@ class DiagonalRegressionStat(
     val priorPrecision: Double = 1.0,
     val learningRate: ScalarExpr = ConstantRate(1.0),
     val penalty: Penalty = Penalty.None,
+    val link: Link = Link.Identity,
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<DiagonalRegressionResult> {
 
@@ -63,24 +67,26 @@ class DiagonalRegressionStat(
             step++
             val eta = learningRate.eval(step.toDouble())
 
-            val yhat = bias + (x dot DenseVector.wrap(weights))
-            val residual = y - yhat
-            sse += residual * residual * weight
+            val etaPred = bias + (x dot DenseVector.wrap(weights))
+            val mu = link.invMean(etaPred)
+            val negResidual = mu - y
+            val curvature = link.curvature(etaPred)
+            sse += link.loss(etaPred, y) * weight
 
             // Diagonal Hessian update: only coordinates stored in x see curvature this round.
             when (val p = penalty) {
                 Penalty.None -> x.forEachStored { i, v ->
-                    precision[i] += weight * v * v
-                    weights[i] -= eta * weight * (-residual * v) / precision[i]
+                    precision[i] += weight * curvature * v * v
+                    weights[i] -= eta * weight * (negResidual * v) / precision[i]
                 }
                 is Penalty.L2 -> x.forEachStored { i, v ->
-                    precision[i] += weight * v * v
-                    val grad = -residual * v + p.lambda * weights[i]
+                    precision[i] += weight * curvature * v * v
+                    val grad = negResidual * v + p.lambda * weights[i]
                     weights[i] -= eta * weight * grad / precision[i]
                 }
                 is Penalty.L1 -> x.forEachStored { i, v ->
-                    precision[i] += weight * v * v
-                    weights[i] -= eta * weight * (-residual * v) / precision[i]
+                    precision[i] += weight * curvature * v * v
+                    weights[i] -= eta * weight * (negResidual * v) / precision[i]
                     val threshold = eta * weight * p.lambda / precision[i]
                     val wi = weights[i]
                     weights[i] = when {
@@ -90,8 +96,8 @@ class DiagonalRegressionStat(
                     }
                 }
             }
-            biasPrecision += weight
-            bias += eta * weight * residual / biasPrecision
+            biasPrecision += weight * curvature
+            bias -= eta * weight * negResidual / biasPrecision
             totalWeights += weight
         }
 
@@ -103,6 +109,7 @@ class DiagonalRegressionStat(
             totalWeights = totalWeights,
             step = step,
             precision = DenseVector.of(precision),
+            link = link,
             sse = sse,
         )
     }
@@ -152,5 +159,5 @@ class DiagonalRegressionStat(
     }
 
     override fun create(concurrency: Concurrency?) =
-        DiagonalRegressionStat(featureSize, priorPrecision, learningRate, penalty, concurrency ?: this.concurrency)
+        DiagonalRegressionStat(featureSize, priorPrecision, learningRate, penalty, link, concurrency ?: this.concurrency)
 }

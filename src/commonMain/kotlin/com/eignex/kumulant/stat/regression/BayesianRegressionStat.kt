@@ -22,22 +22,27 @@ import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
 
 /**
- * Bayesian linear regression with a Gaussian prior on the weights and Gaussian
- * residual noise. Produces a full posterior covariance `S = H^-1` alongside the
- * point estimates. Suitable for Thompson-sampling-style bandits drawing a fresh
- * weight vector from `N(weights, exploration * S)` per round.
+ * Bayesian generalised linear regression with a Gaussian prior on the weights and a
+ * canonical [Link] for the response. Produces a full posterior covariance `S = H^-1`
+ * alongside the point estimates. Suitable for Thompson-sampling-style bandits drawing
+ * a fresh weight vector from `N(weights, exploration * S)` per round.
  *
- * Maintained incrementally via Sherman-Morrison-Woodbury for likelihood precision
- * `weight` (variance `1/weight`):
+ * Maintained incrementally via Sherman-Morrison-Woodbury for per-observation precision
+ * `w_c = weight * link.curvature(eta)`:
  *  ```
- *  z       = sqrt(weight) * S * x / sqrt(1 + weight * xT * S * x)
+ *  z       = sqrt(w_c) * S * x / sqrt(1 + w_c * xT * S * x)
  *  S       = S - z * zT                     (rank-1 downdate)
- *  w       = w + weight * S_new * x * (y - yhat)
+ *  w       = w + weight * S_new * x * (y - mu)
  *  ```
  *
- * This is the strict closed-form conjugate Gaussian posterior update. Regularisation
- * is the Gaussian prior, controlled by [priorVariance] / `priorMean` / `priorCovariance`;
- * tighten the prior to shrink weights toward zero (or toward a target mean).
+ * Under [Link.Identity] this is the strict closed-form conjugate Gaussian posterior
+ * (`curvature = 1`). Under [Link.Logit] / [Link.Log] it is the online Laplace
+ * approximation - each observation tightens the posterior by the local Hessian
+ * `curvature * x xT`, which is exact only at the current linear predictor. The
+ * approximation tracks the true GLM posterior closely for well-identified problems.
+ *
+ * Regularisation is the Gaussian prior, controlled by [priorVariance] / `priorMean`
+ * / `priorCovariance`; tighten the prior to shrink weights toward zero (or a target).
  *
  * The Cholesky factor `L` of `S` is tracked in parallel via
  * [choleskyDowndateInPlace] so `w ~ N(weights, S)` draws are an O(n^2)
@@ -51,6 +56,7 @@ import kotlin.math.sqrt
 class BayesianRegressionStat(
     override val featureSize: Int,
     val priorVariance: Double = 1.0,
+    val link: Link = Link.Identity,
     override val concurrency: Concurrency = Concurrency.None,
     priorMean: VectorView? = null,
     priorCovariance: MatrixView? = null,
@@ -106,17 +112,23 @@ class BayesianRegressionStat(
             if (weight <= 0.0) return@withLock
             step++
 
-            val yhat = bias + (x dot weights)
-            val residual = y - yhat
-            sse += residual * residual * weight
+            val etaPred = bias + (x dot weights)
+            val mu = link.invMean(etaPred)
+            val residual = y - mu
+            val curvature = link.curvature(etaPred)
+            sse += link.loss(etaPred, y) * weight
 
-            // SMW rank-1 downdate for likelihood precision `weight` (variance 1/weight):
-            //   S_new = S - (weight * S x xT S) / (1 + weight * xT S x)
-            //         = S - z zT,  where  z = sqrt(weight) * S x / sqrt(1 + weight * xT S x).
+            // SMW rank-1 downdate. For canonical-link GLMs the per-observation precision
+            // is `weight * curvature`: 1 under Identity gives the exact conjugate update;
+            // for Logit / Log this is the local Laplace approximation around the current
+            // linear predictor (not the strict closed-form Bayesian update).
+            //   S_new = S - (w_c * S x xT S) / (1 + w_c * xT S x)
+            //         = S - z zT, where z = sqrt(w_c) * S x / sqrt(1 + w_c * xT S x).
+            val wc = weight * curvature
             val z = matVec(covariance, x)
-            val denom = sqrt(1.0 + weight * (x dot z))
+            val denom = sqrt(1.0 + wc * (x dot z))
             if (denom == 0.0) return@withLock
-            scale(z, sqrt(weight) / denom)
+            scale(z, sqrt(wc) / denom)
 
             // Downdate the Cholesky factor; repair on instability.
             var norm = covarianceL.choleskyDowndateInPlace(z)
@@ -135,12 +147,12 @@ class BayesianRegressionStat(
             // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
             addOuter(covariance, -1.0, z, z)
 
-            // Posterior mean update: w = w + weight * S_new * x * residual.
+            // Posterior mean update: w = w + weight * S_new * x * (y - mu).
             val xResidual = DenseVector(featureSize)
             for (i in 0 until featureSize) xResidual[i] = residual * x[i]
             axpy(weights, weight, matVec(covariance, xResidual))
 
-            biasPrecision += weight
+            biasPrecision += wc
             bias += weight * residual / biasPrecision
             totalWeights += weight
         }
@@ -154,6 +166,7 @@ class BayesianRegressionStat(
             step = step,
             covariance = DenseMatrix.of(covariance.toArray()),
             covarianceL = DenseMatrix.of(covarianceL.toArray()),
+            link = link,
             sse = sse,
         )
     }
@@ -251,6 +264,7 @@ class BayesianRegressionStat(
         BayesianRegressionStat(
             featureSize = featureSize,
             priorVariance = priorVariance,
+            link = link,
             concurrency = concurrency ?: this.concurrency,
             priorMean = DenseVector.of(initialWeights.copyOf()),
             priorCovariance = DenseMatrix.of(initialCovariance.toArray()),

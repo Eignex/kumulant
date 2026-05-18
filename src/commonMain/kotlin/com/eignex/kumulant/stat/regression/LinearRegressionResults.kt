@@ -35,9 +35,29 @@ sealed interface LinearRegressionResult : Result, HasLinearModel, HasRegression 
     /** Number of [com.eignex.kumulant.core.RegressionStat.update] calls absorbed; useful
      *  as a bookkeeping counter for learning-rate decay or retraining cadence. */
     val step: Long
+
+    /** Canonical link applied at prediction time; the stored [weights] and [bias] live
+     *  in the linear-predictor space, [predict] returns the link-mapped mean. */
+    val link: Link
+
+    /** Linear predictor `eta = bias + x . weights`, before the inverse link. */
+    fun linearPredictor(x: VectorView): Double {
+        require(x.size == weights.size) { "x.size=${x.size}, expected ${weights.size}" }
+        var sum = bias
+        for (i in 0 until weights.size) sum += x[i] * weights[i]
+        return sum
+    }
+
+    /** Mean response: `link.invMean(linearPredictor(x))`. For [Link.Identity] this is
+     *  the linear predictor itself, matching plain linear regression. */
+    override fun predict(x: VectorView): Double = link.invMean(linearPredictor(x))
 }
 
-/** SGD weight estimates with no posterior. Cheap, no uncertainty quantification. */
+/** SGD weight estimates with no posterior. Cheap, no uncertainty quantification.
+ *  [sse] carries the accumulated per-link loss; for [Link.Identity] this is the
+ *  classical SSE, for [Link.Logit] / [Link.Log] it is the GLM deviance (negative
+ *  log-likelihood). [HasRegression.mse] / [HasRegression.rmse] / [HasRegression.rSquared]
+ *  are only natural under Identity. */
 @Serializable
 @SerialName("StochasticRegressionResult")
 data class StochasticRegressionResult(
@@ -45,7 +65,7 @@ data class StochasticRegressionResult(
     override val bias: Double,
     override val totalWeights: Double,
     override val step: Long,
-    /** Sum of squared residuals (estimated, EMA-style); 0.0 if not tracked. */
+    override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
     /** Per-optimiser auxiliary state (e.g. Adam's `m`/`v`); empty for plain SGD. */
     val updaterState: List<VectorView> = emptyList(),
@@ -66,6 +86,7 @@ data class DiagonalRegressionResult(
     override val step: Long,
     /** Per-coefficient precision (inverse variance). Same length as [weights]. */
     val precision: DenseVector,
+    override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
 ) : LinearRegressionResult
 
@@ -84,6 +105,7 @@ data class CovarianceRegressionResult(
     override val step: Long,
     val covariance: DenseMatrix,
     val covarianceL: DenseMatrix,
+    override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
 ) : LinearRegressionResult {
     init {
