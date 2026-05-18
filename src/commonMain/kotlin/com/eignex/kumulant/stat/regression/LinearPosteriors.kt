@@ -143,3 +143,30 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         return mean + sqrt(exploration * variance) * rng.nextNormal()
     }
 }
+
+/**
+ * LinUCB-style confidence-bound scoring: `predict(x) + exploration * sqrt(xT * Sigma * x)`.
+ * Deterministic given the snapshot — no random draw at evaluate time — so the
+ * `exploration` parameter here plays the role of LinUCB's `alpha` (confidence-bound
+ * width), not the variance scale used by Thompson-style posteriors. [sample] returns
+ * the snapshot's mean weights since UCB has no per-arm randomization; callers that
+ * want sampled weights should pair with [MultivariateGaussian] instead.
+ */
+@Serializable
+@SerialName("LinUcb")
+data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
+    override fun sample(snapshot: CovarianceRegressionResult, rng: Random, exploration: Double): VectorView =
+        snapshot.weights
+
+    override fun evaluate(
+        snapshot: CovarianceRegressionResult,
+        x: VectorView,
+        rng: Random,
+        exploration: Double
+    ): Double {
+        val mean = snapshot.predict(x)
+        val sigmaX = matVec(snapshot.covariance, x)
+        val variance = x dot sigmaX
+        return mean + exploration * sqrt(variance)
+    }
+}
