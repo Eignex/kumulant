@@ -7,6 +7,8 @@ import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.math.forEachStored
 import com.eignex.kumulant.schema.ScalarExpr
 import com.eignex.kumulant.stream.getValue
+import com.eignex.kumulant.stream.serializedLock
+import com.eignex.kumulant.stream.SerialMode
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 
@@ -39,11 +41,15 @@ import com.eignex.kumulant.stream.welfordMode
  *    `w_i = sign(w_i) * max(0, |w_i| - eta * weight * lambda)` over every coord, which
  *    is what actually drives sparsity (subgradient L1 on its own does not).
  *
- * Concurrency follows the Welford-coupled pattern: under [Concurrency.Relaxed] every
- * cell is a per-slot atomic (HOGWILD!-style asynchronous SGD - concurrent updaters
- * may compute gradients from slightly stale weights, but each weight update is an
- * atomic add and convergence holds for the convex MSE loss); under [Concurrency.Strict]
- * a single lock fully serialises the update.
+ * Concurrency is selected by access density: at [Penalty.None] the update is sparse
+ * (only stored coords of `x` see writes), so [Concurrency.Relaxed] uses per-cell atomic
+ * adds with no lock - HOGWILD!-style asynchronous SGD where concurrent updaters may
+ * compute gradients from slightly stale weights but each write is atomic, and
+ * convergence holds for the convex MSE loss. At [Penalty.L1] / [Penalty.L2] every
+ * coordinate is touched every update regardless of `x`, so cells would be pure overhead
+ * - [Concurrency.Relaxed] falls back to plain cells under a single lock, the same
+ * machinery [Concurrency.Strict] uses. [Concurrency.None] is single-threaded in all
+ * cases.
  */
 class StochasticRegressionStat(
     override val featureSize: Int,
@@ -55,8 +61,12 @@ class StochasticRegressionStat(
 
     init { require(featureSize > 0) { "featureSize must be positive" } }
 
-    private val mode = concurrency.welfordMode()
-    private val lock = concurrency.welfordLock()
+    // Sparse access (no penalty) gets HOGWILD! cells under Relaxed; dense access (L1/L2)
+    // falls back to plain cells under a coarse lock since per-cell atomics buy nothing
+    // when every coord is touched every update.
+    private val sparseAccess = penalty == Penalty.None
+    private val mode = if (sparseAccess) concurrency.welfordMode() else SerialMode
+    private val lock = if (sparseAccess) concurrency.welfordLock() else concurrency.serializedLock()
     private val weightsCell = mode.newDoubleArray(featureSize)
     private val biasCell = mode.newDouble(0.0)
     private val totalWeightsCell = mode.newDouble(0.0)
