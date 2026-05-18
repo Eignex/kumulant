@@ -46,8 +46,8 @@ data class GroupResult(
  * Declarative, typed schema for a group of stats, layered on top of
  * `com.eignex.skema.Schema<StatSpec>` so the entries map is wire-serializable.
  *
- * Subclass and declare stats via the [series], [paired], [vector], [discrete], [raw],
- * and [group] delegates; each property exposes a [StatKey] for typed retrieval from a
+ * Subclass and declare stats via the [series], [paired], [vector], [discrete], and
+ * [group] delegates; each property exposes a [StatKey] for typed retrieval from a
  * [GroupResult]. Every entry is a [StatSpec], which means the schema always
  * round-trips through the wire - no live-stat back-door.
  *

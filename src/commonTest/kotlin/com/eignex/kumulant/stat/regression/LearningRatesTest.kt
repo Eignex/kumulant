@@ -17,7 +17,8 @@ class LearningRatesTest {
 
     @Test
     fun `StepDecay halves at the configured horizon`() {
-        val eta = 0.02; val k = 0.01
+        val eta = 0.02
+        val k = 0.01
         val sched = StepDecay(eta, k)
         assertEquals(eta, sched.eval(0.0), absoluteTolerance = 1e-12)
         assertEquals(eta / 2.0, sched.eval(1.0 / k), absoluteTolerance = 1e-12)
@@ -26,7 +27,8 @@ class LearningRatesTest {
 
     @Test
     fun `ExponentialDecay matches eta times exp minus k step`() {
-        val eta = 0.1; val k = 0.05
+        val eta = 0.1
+        val k = 0.05
         val sched = ExponentialDecay(eta, k)
         assertEquals(eta, sched.eval(0.0), absoluteTolerance = 1e-12)
         for (step in listOf(1.0, 5.0, 50.0)) {

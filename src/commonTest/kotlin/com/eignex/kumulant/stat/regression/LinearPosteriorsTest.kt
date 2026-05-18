@@ -54,10 +54,12 @@ class LinearPosteriorsTest {
         val snap = sgdSnapshot()
         val rng = Random(0)
         val n = 800
-        var s0 = 0.0; var s1 = 0.0
+        var s0 = 0.0
+        var s1 = 0.0
         repeat(n) {
             val v = PointPosterior.sample(snap, rng, exploration = 0.25)
-            s0 += v[0]; s1 += v[1]
+            s0 += v[0]
+            s1 += v[1]
         }
         assertTrue(abs(s0 / n - snap.weights[0]) < 0.05)
         assertTrue(abs(s1 / n - snap.weights[1]) < 0.05)
@@ -86,10 +88,12 @@ class LinearPosteriorsTest {
         val snap = diagonalSnapshot()
         val rng = Random(0)
         val n = 1000
-        var s0 = 0.0; var s1 = 0.0
+        var s0 = 0.0
+        var s1 = 0.0
         repeat(n) {
             val v = FactorisedGaussian.sample(snap, rng, exploration = 1.0)
-            s0 += v[0]; s1 += v[1]
+            s0 += v[0]
+            s1 += v[1]
         }
         assertTrue(abs(s0 / n - snap.weights[0]) < 0.05)
         assertTrue(abs(s1 / n - snap.weights[1]) < 0.05)
@@ -111,10 +115,12 @@ class LinearPosteriorsTest {
         val snap = bayesianSnapshot()
         val rng = Random(0)
         val n = 1000
-        var s0 = 0.0; var s1 = 0.0
+        var s0 = 0.0
+        var s1 = 0.0
         repeat(n) {
             val v = MultivariateGaussian.sample(snap, rng, exploration = 0.5)
-            s0 += v[0]; s1 += v[1]
+            s0 += v[0]
+            s1 += v[1]
         }
         assertTrue(abs(s0 / n - snap.weights[0]) < 0.05)
         assertTrue(abs(s1 / n - snap.weights[1]) < 0.05)

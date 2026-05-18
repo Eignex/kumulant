@@ -50,6 +50,7 @@ sealed interface Link {
             val m = sigmoid(eta)
             return m * (1.0 - m)
         }
+
         /** `softplus(eta) - y * eta = log(1 + exp(eta)) - y * eta`, computed stably. */
         override fun loss(eta: Double, y: Double): Double = softplus(eta) - y * eta
     }
@@ -60,6 +61,7 @@ sealed interface Link {
     data object Log : Link {
         override fun invMean(eta: Double) = exp(eta)
         override fun curvature(eta: Double) = exp(eta)
+
         /** `mu - y * eta = exp(eta) - y * eta`; drops the `log(y!)` constant. */
         override fun loss(eta: Double, y: Double): Double = exp(eta) - y * eta
     }
@@ -67,7 +69,12 @@ sealed interface Link {
 
 /** Stable sigmoid using the positive-tail branch to avoid `exp` overflow at negative `eta`. */
 internal fun sigmoid(eta: Double): Double =
-    if (eta >= 0.0) 1.0 / (1.0 + exp(-eta)) else { val e = exp(eta); e / (1.0 + e) }
+    if (eta >= 0.0) {
+        1.0 / (1.0 + exp(-eta))
+    } else {
+        val e = exp(eta)
+        e / (1.0 + e)
+    }
 
 /** Stable `log(1 + exp(eta))` via `max(eta, 0) + log1p(exp(-|eta|))`. */
 internal fun softplus(eta: Double): Double = max(eta, 0.0) + ln(1.0 + exp(-kotlin.math.abs(eta)))

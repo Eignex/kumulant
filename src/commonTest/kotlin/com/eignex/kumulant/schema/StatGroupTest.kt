@@ -376,7 +376,16 @@ class PairedStatGroupTest {
             override fun merge(values: UnivariateRegressionResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) =
-                UnivariateRegressionResult(Penalty.None, 0.0, 0.0, 0.0, 0.0, 0.0, VarianceResult(0.0, 0.0), VarianceResult(0.0, 0.0))
+                UnivariateRegressionResult(
+                    Penalty.None,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    VarianceResult(0.0, 0.0),
+                    VarianceResult(0.0, 0.0)
+                )
             override fun create(concurrency: Concurrency?): PairedStat<UnivariateRegressionResult> {
                 childCreateConcurrency = concurrency
                 return this
@@ -422,7 +431,10 @@ class PairedListStatsTest {
     @Test
     fun `duplicate names throw at construction`() {
         assertFailsWith<IllegalArgumentException> {
-            PairedListStats<UnivariateRegressionResult>("a" to UnivariateRegressionStat(), "a" to UnivariateRegressionStat())
+            PairedListStats<UnivariateRegressionResult>(
+                "a" to UnivariateRegressionStat(),
+                "a" to UnivariateRegressionStat()
+            )
         }
     }
 
@@ -488,7 +500,16 @@ class PairedListStatsTest {
             override fun merge(values: UnivariateRegressionResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) =
-                UnivariateRegressionResult(Penalty.None, 0.0, 0.0, 0.0, 0.0, 0.0, VarianceResult(0.0, 0.0), VarianceResult(0.0, 0.0))
+                UnivariateRegressionResult(
+                    Penalty.None,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    VarianceResult(0.0, 0.0),
+                    VarianceResult(0.0, 0.0)
+                )
             override fun create(concurrency: Concurrency?): PairedStat<UnivariateRegressionResult> {
                 childCreateConcurrency = concurrency
                 return this

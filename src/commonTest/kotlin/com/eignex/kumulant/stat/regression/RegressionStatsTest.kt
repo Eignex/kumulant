@@ -439,7 +439,7 @@ class LassoTest {
 
     @Test
     fun `merge round-trips when both halves have slope zero under lambda`() {
-        // lambda huge -> both halves have slope == 0 in their UnivariateRegressionResult, but their raw sxy is preserved.
+        // lambda huge -> both halves have slope == 0 in their result, but raw sxy is preserved.
         val lambda = 1e6
         val full = UnivariateRegressionStat(Penalty.L1(lambda)).apply {
             for (x in 0..19) update(x.toDouble(), 3.0 * x + 2.0)

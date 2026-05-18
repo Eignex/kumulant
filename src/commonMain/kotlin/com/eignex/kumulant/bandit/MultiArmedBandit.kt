@@ -17,7 +17,7 @@ import kotlin.random.Random
  * reproducibility, `Random.Default` for shared global state, or any custom
  * implementation (e.g. a thread-local wrapper, or a SecureRandom-backed bridge).
  * The bandit treats [random] as the single source of randomness for every
- * [policy.evaluate] call; thread-safety is the caller's responsibility.
+ * [policy] evaluate call; thread-safety is the caller's responsibility.
  */
 class MultiArmedBandit<R : Result>(
     val nbrArms: Int,

@@ -63,7 +63,12 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
 
     /** Closes to `predict(x) + sd * ||x|| * N(0,1)` since the per-coord noise terms
      *  are iid; one Gaussian draw instead of one per coordinate. */
-    override fun evaluate(snapshot: StochasticRegressionResult, x: VectorView, rng: Random, exploration: Double): Double {
+    override fun evaluate(
+        snapshot: StochasticRegressionResult,
+        x: VectorView,
+        rng: Random,
+        exploration: Double
+    ): Double {
         val mean = snapshot.predict(x)
         if (exploration <= 0.0) return mean
         val xNormSq = x dot x

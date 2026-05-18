@@ -11,7 +11,7 @@ import com.eignex.kumulant.core.VectorStat
 /**
  * Filter adapters. Constructed by the spec layer's
  * `filter(BoolExpr)` materialization in
- * [com.eignex.kumulant.schema.Operations.kt]: the predicate closure is built
+ * `com.eignex.kumulant.schema.Operations.kt`: the predicate closure is built
  * from the AST at materialize time.
  */
 

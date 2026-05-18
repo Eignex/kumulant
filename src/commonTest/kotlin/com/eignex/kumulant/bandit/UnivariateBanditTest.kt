@@ -30,7 +30,9 @@ class UnivariateBanditTest {
     @Test
     fun `MultiArmedBandit choose does not mutate arm state`() {
         val mab = MultiArmedBandit(nbrArms = 3, policy = BetaBernoulliTS(), random = Random(0))
-        mab.update(0, 1.0); mab.update(1, 0.0); mab.update(2, 1.0)
+        mab.update(0, 1.0)
+        mab.update(1, 0.0)
+        mab.update(2, 1.0)
         val before = mab.snapshot()
         repeat(10) { mab.choose() }
         assertEquals(before, mab.snapshot())
@@ -39,7 +41,9 @@ class UnivariateBanditTest {
     @Test
     fun `MultiArmedBandit snapshot reflects per-arm updates`() {
         val mab = MultiArmedBandit(nbrArms = 2, policy = BetaBernoulliTS(1.0, 1.0), random = Random(0))
-        mab.update(0, 1.0); mab.update(0, 1.0); mab.update(1, 0.0)
+        mab.update(0, 1.0)
+        mab.update(0, 1.0)
+        mab.update(1, 0.0)
         val snap = mab.snapshot()
         assertEquals(2, snap.size)
         assertTrue(snap[0].successes > snap[1].successes)
@@ -133,7 +137,8 @@ class UnivariateBanditTest {
             initialWeight = 1.0,
             random = Random(0),
         )
-        bandit.update(0, 5.0); bandit.update(0, 5.0)
+        bandit.update(0, 5.0)
+        bandit.update(0, 5.0)
         val snap = bandit.snapshot()
         assertTrue(snap[0].weight > 1.0)
         assertEquals(1.0, snap[1].weight)

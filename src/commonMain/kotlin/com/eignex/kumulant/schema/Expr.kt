@@ -12,7 +12,7 @@ private val EMPTY_VECTOR = DoubleArray(0)
 
 /**
  * Wire-serializable AST for scalar expressions over the input env: a primary
- * [x], an optional [y] (paired stats), and an optional [v] (vector stats).
+ * `x`, an optional `y` (paired stats), and an optional `v` (vector stats).
  * Nodes are pure data; evaluation is recursive interpretation.
  *
  * Polymorphic via skema's `$type` discriminator. The DSL extensions in this

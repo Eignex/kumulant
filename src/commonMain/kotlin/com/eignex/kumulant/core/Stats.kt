@@ -96,7 +96,7 @@ interface PairedStat<R : Result> : Stat<R> {
  * vectors without materialising them into dense arrays first.
  */
 interface RegressionStat<R : Result> : Stat<R> {
-    /** Number of features in [x]. Updates with a different length will throw. */
+    /** Number of features expected in `x` on each [update]. Mismatched lengths throw. */
     val featureSize: Int
 
     /** Record an `(x, y)` observation with the given [weight] at the current time. */
@@ -106,7 +106,7 @@ interface RegressionStat<R : Result> : Stat<R> {
     /** Record an `(x, y)` observation at [timestampNanos] with the given [weight]. */
     fun update(x: com.eignex.kumulant.math.VectorView, y: Double, timestampNanos: Long, weight: Double = 1.0)
 
-    /** Convenience overload that wraps [x] as a [com.eignex.kumulant.math.DenseVector]. */
+    /** Convenience overload that wraps `x` as a [com.eignex.kumulant.math.DenseVector]. */
     fun update(x: DoubleArray, y: Double, weight: Double = 1.0) =
         update(com.eignex.kumulant.math.DenseVector.of(x), y, currentTimeNanos(), weight)
 

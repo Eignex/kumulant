@@ -152,7 +152,8 @@ class OperationsRoundTripTest {
     }
 
     @Test fun `withWeight paired should match live composition`() {
-        val cfg: PairedStatSpec<com.eignex.kumulant.stat.regression.UnivariateRegressionResult> = UnivariateRegression().withWeight(2.0)
+        val cfg: PairedStatSpec<com.eignex.kumulant.stat.regression.UnivariateRegressionResult> =
+            UnivariateRegression().withWeight(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as PairedStatSpec<*>).materialize(Concurrency.None)

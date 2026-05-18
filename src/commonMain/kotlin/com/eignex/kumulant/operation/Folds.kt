@@ -10,7 +10,7 @@ import com.eignex.kumulant.core.VectorStat
 /**
  * Fold adapters. Constructed by the spec layer's `foldPaired(ScalarExpr)` /
  * `foldVector(ScalarExpr)` materialization in
- * [com.eignex.kumulant.schema.Operations.kt].
+ * `com.eignex.kumulant.schema.Operations.kt`.
  */
 
 internal class FoldVectorStat<R : Result>(

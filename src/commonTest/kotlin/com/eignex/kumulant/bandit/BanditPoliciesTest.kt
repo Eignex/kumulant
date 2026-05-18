@@ -85,7 +85,9 @@ class BanditPoliciesTest {
         val mab = MultiArmedBandit(nbrArms = 2, policy = pol, random = Random(0))
         val empty = com.eignex.kumulant.stat.summary.BernoulliSumResult(0.0, 0.0)
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(empty, 0L, Random(0)))
-        mab.update(0, 1.0); mab.update(0, 0.0); mab.update(1, 1.0)
+        mab.update(0, 1.0)
+        mab.update(0, 0.0)
+        mab.update(1, 1.0)
         assertTrue(mab.evaluate(0).isFinite())
         assertTrue(mab.evaluate(1).isFinite())
     }
@@ -94,7 +96,8 @@ class BanditPoliciesTest {
     fun `UCB1 addArm and removeArm adjust totalSamples`() {
         val pol = UCB1()
         val snap = com.eignex.kumulant.stat.summary.BernoulliSumResult(successes = 3.0, trials = 10.0)
-        pol.addArm(snap); pol.addArm(snap)
+        pol.addArm(snap)
+        pol.addArm(snap)
         val small = com.eignex.kumulant.stat.summary.BernoulliSumResult(2.0, 4.0)
         val sBefore = pol.evaluate(small, 0L, Random(0))
         pol.removeArm(snap)
@@ -106,10 +109,16 @@ class BanditPoliciesTest {
     fun `UCB1Normal returns infinity until enough samples`() {
         val pol = UCB1Normal()
         val mom = com.eignex.kumulant.stat.summary.MomentsResult(
-            totalWeights = 1.0, mean = 0.5, m2 = 0.1, m3 = 0.0, m4 = 0.0,
+            totalWeights = 1.0,
+            mean = 0.5,
+            m2 = 0.1,
+            m3 = 0.0,
+            m4 = 0.0,
         )
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(mom, 0L, Random(0)))
-        pol.addArm(mom); pol.addArm(mom); pol.addArm(mom)
+        pol.addArm(mom)
+        pol.addArm(mom)
+        pol.addArm(mom)
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(mom, 0L, Random(0)))
         // mean=0 keeps the (mos - n*mean^2) variance term non-negative.
         val big = mom.copy(totalWeights = 100.0, mean = 0.0, m2 = 25.0)
@@ -123,7 +132,8 @@ class BanditPoliciesTest {
         val mom = com.eignex.kumulant.stat.summary.MomentsResult(1.0, 0.5, 0.0, 0.0, 0.0)
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(mom, 0L, Random(0)))
         val bigger = mom.copy(totalWeights = 10.0, m2 = 1.0)
-        pol.addArm(mom); pol.addArm(bigger)
+        pol.addArm(mom)
+        pol.addArm(bigger)
         assertTrue(pol.evaluate(bigger, 0L, Random(0)).isFinite())
         pol.removeArm(mom)
     }
@@ -131,8 +141,11 @@ class BanditPoliciesTest {
     @Test
     fun `Greedy returns snapshot mean`() {
         val mab = MultiArmedBandit(nbrArms = 2, policy = Greedy(), random = Random(1))
-        mab.update(0, 1.0); mab.update(0, 1.0); mab.update(1, -1.0)
-        val s0 = mab.evaluate(0); val s1 = mab.evaluate(1)
+        mab.update(0, 1.0)
+        mab.update(0, 1.0)
+        mab.update(1, -1.0)
+        val s0 = mab.evaluate(0)
+        val s1 = mab.evaluate(1)
         assertTrue(s0 > s1)
     }
 
@@ -146,7 +159,8 @@ class BanditPoliciesTest {
     fun `EpsilonGreedy exploits when epsilon is zero and explores when one`() {
         val exploit = EpsilonGreedy(epsilon = 0.0)
         val mab1 = MultiArmedBandit(nbrArms = 2, policy = exploit, random = Random(1))
-        mab1.update(0, 5.0); mab1.update(0, 5.0)
+        mab1.update(0, 5.0)
+        mab1.update(0, 5.0)
         val s = mab1.evaluate(0)
         assertTrue(s > 1.0)
 
@@ -168,7 +182,10 @@ class BanditPoliciesTest {
     fun `EpsilonDecreasing falls back to mean as samples grow`() {
         val pol = EpsilonDecreasing(epsilon = 2.0, decay = 0.5)
         val mab = MultiArmedBandit(nbrArms = 2, policy = pol, random = Random(0))
-        repeat(200) { mab.update(0, 1.0); mab.update(1, 0.0) }
+        repeat(200) {
+            mab.update(0, 1.0)
+            mab.update(1, 0.0)
+        }
         var meanHits = 0
         repeat(100) { if (mab.evaluate(0) > 0.5) meanHits++ }
         assertTrue(meanHits > 50, "expected mostly exploit, got $meanHits/100")
@@ -178,7 +195,9 @@ class BanditPoliciesTest {
     fun `EpsilonDecreasing addArm and removeArm adjust totalSamples`() {
         val pol = EpsilonDecreasing(epsilon = 1.0, decay = 1.0)
         val snap = com.eignex.kumulant.stat.summary.WeightedVarianceResult(
-            totalWeights = 100.0, mean = 0.5, variance = 0.1,
+            totalWeights = 100.0,
+            mean = 0.5,
+            variance = 0.1,
         )
         pol.addArm(snap)
         pol.removeArm(snap)
@@ -188,7 +207,9 @@ class BanditPoliciesTest {
     fun `UniformSelection ignores snapshot and returns uniform draws`() {
         val pol = UniformSelection()
         val snap = com.eignex.kumulant.stat.summary.WeightedVarianceResult(
-            totalWeights = 1.0, mean = 99.0, variance = 0.0,
+            totalWeights = 1.0,
+            mean = 99.0,
+            variance = 0.0,
         )
         repeat(50) {
             val v = pol.evaluate(snap, 0L, Random(it.toLong()))

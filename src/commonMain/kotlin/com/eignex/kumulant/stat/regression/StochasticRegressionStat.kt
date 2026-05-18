@@ -77,7 +77,13 @@ class StochasticRegressionStat(
 
     // Logical w_i = softThreshold(stored[i], pendingThreshold - lastApplied[i]).
     private val l1PendingCell: StreamDouble? = if (penalty is Penalty.L1) mode.newDouble(0.0) else null
-    private val l1LastApplied: StreamDoubleArray? = if (penalty is Penalty.L1) mode.newDoubleArray(featureSize) else null
+    private val l1LastApplied: StreamDoubleArray? = if (penalty is Penalty.L1) {
+        mode.newDoubleArray(
+            featureSize
+        )
+    } else {
+        null
+    }
 
     val bias: Double by biasCell
     val totalWeights: Double by totalWeightsCell

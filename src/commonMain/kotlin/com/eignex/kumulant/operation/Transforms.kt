@@ -14,7 +14,7 @@ import com.eignex.kumulant.core.VectorStat
  * [TransformLongStat]) are constructed by the spec layer's
  * `transform(ScalarExpr)` / `transformPair(xExpr, yExpr)` /
  * `transformElement(ScalarExpr)` / `transformVector(VectorExpr)` materialization
- * in [com.eignex.kumulant.schema.Operations.kt]; the closure is built from the
+ * in `com.eignex.kumulant.schema.Operations.kt`; the closure is built from the
  * AST at materialize time.
  *
  * The exceptions are [withValue], [asSeries], and [asDiscrete]: parameter-only

@@ -12,7 +12,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Bloom-filter snapshot. [words] is the bitset packed as `bits / 64` longs; merging two
+ * Bloom-filter snapshot. `words` is the bitset packed as `bits / 64` longs; merging two
  * snapshots requires identical [bits] and [hashes].
  */
 @Serializable
@@ -24,7 +24,7 @@ data class BloomFilterResult(
     val totalSeen: Long,
 ) : Result
 
-/** True iff every bit set during an `update(value)` is still set in [words]. */
+/** True iff every bit set during an `update(value)` is still set in `words`. */
 fun BloomFilterResult.contains(value: Long): Boolean {
     val mask = (bits - 1).toLong()
     val h1 = splitmix64(value)

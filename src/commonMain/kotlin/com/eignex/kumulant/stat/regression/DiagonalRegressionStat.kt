@@ -159,5 +159,12 @@ class DiagonalRegressionStat(
     }
 
     override fun create(concurrency: Concurrency?) =
-        DiagonalRegressionStat(featureSize, priorPrecision, learningRate, penalty, link, concurrency ?: this.concurrency)
+        DiagonalRegressionStat(
+            featureSize,
+            priorPrecision,
+            learningRate,
+            penalty,
+            link,
+            concurrency ?: this.concurrency
+        )
 }

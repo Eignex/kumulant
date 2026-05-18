@@ -18,8 +18,8 @@ import kotlinx.serialization.Serializable
  * Construction of the live stat happens externally via the `materialize`
  * extension functions in `StatFactory.kt` - one `when` per modality,
  * one cast at the boundary. Specs stay as pure data so the wire format
- * doesn't drag behaviour through it. [Concurrency] is *not* on the wire -
- * it's a deployment knob passed in at materialize time.
+ * doesn't drag behaviour through it. [com.eignex.kumulant.core.Concurrency] is *not*
+ * on the wire - it's a deployment knob passed in at materialize time.
  *
  * The generic `<R>` on the modality-specific spec interfaces is a phantom
  * marker: it carries the result type through the schema declarators

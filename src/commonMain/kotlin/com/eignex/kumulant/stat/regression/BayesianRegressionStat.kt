@@ -51,7 +51,7 @@ import kotlin.math.sqrt
  * regularised covariance and the update is retried with a smaller step.
  *
  * Residual variance: `sigma^2 = 1`. Callers wanting heteroscedastic noise can
- * re-scale [y] before [update] or pass per-observation precision via `weight`.
+ * re-scale `y` before `update()` or pass per-observation precision via `weight`.
  */
 class BayesianRegressionStat(
     override val featureSize: Int,

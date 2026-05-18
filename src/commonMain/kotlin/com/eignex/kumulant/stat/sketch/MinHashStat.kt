@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
 /**
  * MinHash signature snapshot. [signatures] is the per-hash running minimum of
  * `splitmix64(value xor splitmix64(seed + i))` over all updates; merging two snapshots
- * takes element-wise min and requires identical [numHashes] and [seed].
+ * takes element-wise min and requires identical `numHashes` and `seed`.
  */
 @Serializable
 @SerialName("MinHashResult")
@@ -27,7 +27,7 @@ data class MinHashResult(
 
 /**
  * Estimated Jaccard similarity between the two underlying sets - the fraction of slots
- * where signatures agree. Requires matching [numHashes] and [seed].
+ * where signatures agree. Requires matching `numHashes` and `seed`.
  */
 fun MinHashResult.jaccard(other: MinHashResult): Double {
     require(numHashes == other.numHashes) {
@@ -50,13 +50,13 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
 }
 
 /**
- * MinHash signature - for each of [numHashes] independent hash functions (salted by
+ * MinHash signature - for each of `numHashes` independent hash functions (salted by
  * `splitmix64(seed + i)`), maintain the running minimum hash over all inserted values.
  * The Jaccard similarity between two sets is estimated by the fraction of slots whose
  * signatures agree (see [jaccard]).
  *
  * Standard error of the Jaccard estimate is roughly `1 / sqrt(numHashes)`. Memory is
- * [numHashes] Longs; mergeable element-wise via min when [numHashes] and [seed] match.
+ * `numHashes` Longs; mergeable element-wise via min when `numHashes` and `seed` match.
  */
 class MinHashStat(
     val numHashes: Int = 128,

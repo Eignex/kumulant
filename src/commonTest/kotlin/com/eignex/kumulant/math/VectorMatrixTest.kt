@@ -1,3 +1,5 @@
+@file:Suppress("VariableNaming") // math convention: single-letter matrices (M, L) in test setups
+
 package com.eignex.kumulant.math
 
 import kotlin.test.Test
@@ -176,9 +178,15 @@ class VectorMatrixTest {
     fun `addOuter dense skips rows where x is zero`() {
         val M = DenseMatrix.diagonal(3, 0.0)
         addOuter(M, 1.0, DenseVector.of(doubleArrayOf(0.0, 2.0, 0.0)), DenseVector.of(doubleArrayOf(1.0, 1.0, 1.0)))
-        assertEquals(0.0, M[0, 0]); assertEquals(0.0, M[0, 1]); assertEquals(0.0, M[0, 2])
-        assertEquals(2.0, M[1, 0]); assertEquals(2.0, M[1, 1]); assertEquals(2.0, M[1, 2])
-        assertEquals(0.0, M[2, 0]); assertEquals(0.0, M[2, 1]); assertEquals(0.0, M[2, 2])
+        assertEquals(0.0, M[0, 0])
+        assertEquals(0.0, M[0, 1])
+        assertEquals(0.0, M[0, 2])
+        assertEquals(2.0, M[1, 0])
+        assertEquals(2.0, M[1, 1])
+        assertEquals(2.0, M[1, 2])
+        assertEquals(0.0, M[2, 0])
+        assertEquals(0.0, M[2, 1])
+        assertEquals(0.0, M[2, 2])
     }
 
     @Test
