@@ -56,4 +56,15 @@ class MultiArmedBandit<R : Result>(
     }
 
     override fun snapshot(): List<R> = arms.map { it.read(0L) }
+
+    override fun armResult(armIndex: Int): R = arms[armIndex].read(0L)
+
+    /**
+     * Live per-arm accumulator owned by this bandit. Exposed so callers can compose with
+     * the stat ecosystem - e.g. inspect the running snapshot, plug into a [com.eignex.kumulant.schema.StatGroup],
+     * or apply ops via the live-stat extensions. Writes flow through the policy's
+     * [BanditPolicy.update] (use [MultiArmedBandit.update] for that); the returned reference
+     * is intended for read-side and composition, not for bypassing the policy.
+     */
+    fun armStat(armIndex: Int): SeriesStat<R> = arms[armIndex]
 }

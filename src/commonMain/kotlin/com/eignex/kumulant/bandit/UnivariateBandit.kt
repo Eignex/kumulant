@@ -37,4 +37,8 @@ interface UnivariateBandit<R : Result> {
 
     /** Materialise the current per-arm state for inspection or serialisation. */
     fun snapshot(): List<R>
+
+    /** Per-arm snapshot at [armIndex]; default reads from [snapshot]. Implementations may
+     *  override to avoid building the full list when only one arm is needed. */
+    fun armResult(armIndex: Int): R = snapshot()[armIndex]
 }
