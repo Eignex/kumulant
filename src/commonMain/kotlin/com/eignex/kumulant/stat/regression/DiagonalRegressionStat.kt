@@ -15,26 +15,30 @@ import com.eignex.kumulant.stream.serializedLock
  *
  * Update rule (Newton-style with diagonal Hessian, MSE loss):
  *  ```
- *  yhat                = bias + Sum w_i * x_i
- *  residual         = y - yhat
- *  precision_i     += weight * x_i^2
- *  w_i             -= eta(step) * weight * (-residual * x_i + l2 * w_i) / precision_i
- *  biasPrecision   += weight
- *  bias            += eta(step) * weight * residual / biasPrecision
+ *  yhat              = bias + Sum w_i * x_i
+ *  residual          = y - yhat
+ *  precision_i      += weight * x_i^2
+ *  w_i              -= eta(step) * weight * grad_i / precision_i
+ *  biasPrecision    += weight
+ *  bias             += eta(step) * weight * residual / biasPrecision
  *  ```
+ * where `grad_i` is `-residual * x_i` plus the [penalty]-specific term.
  *
  * Posterior samples are independent per coordinate: `w_i ~ N(weights[i], 1/precision[i])`.
  *
  * Sparse-aware: precision and weight updates only fire where `x_i != 0` (matching the
  * diagonal-Hessian semantics; coordinates absent from this observation contribute no
- * curvature). L2 acts only on touched coordinates - matches how coordinate-descent
- * solvers handle regularisation in the sparse setting.
+ * curvature). Penalty handling:
+ *  - [Penalty.None]: no regularisation.
+ *  - [Penalty.L2]: `grad_i += lambda * w_i` on touched coords (coordinate-descent style).
+ *  - [Penalty.L1]: proximal soft-thresholding on touched coords after the gradient step,
+ *    threshold scaled by `eta * weight * lambda / precision_i`.
  */
 class DiagonalRegressionStat(
     override val featureSize: Int,
     val priorPrecision: Double = 1.0,
     val learningRate: ScalarExpr = ConstantRate(1.0),
-    val l2: Double = 0.0,
+    val penalty: Penalty = Penalty.None,
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<DiagonalRegressionResult> {
 
@@ -64,10 +68,27 @@ class DiagonalRegressionStat(
             sse += residual * residual * weight
 
             // Diagonal Hessian update: only coordinates stored in x see curvature this round.
-            x.forEachStored { i, v ->
-                precision[i] += weight * v * v
-                val grad = -residual * v + l2 * weights[i]
-                weights[i] -= eta * weight * grad / precision[i]
+            when (val p = penalty) {
+                Penalty.None -> x.forEachStored { i, v ->
+                    precision[i] += weight * v * v
+                    weights[i] -= eta * weight * (-residual * v) / precision[i]
+                }
+                is Penalty.L2 -> x.forEachStored { i, v ->
+                    precision[i] += weight * v * v
+                    val grad = -residual * v + p.lambda * weights[i]
+                    weights[i] -= eta * weight * grad / precision[i]
+                }
+                is Penalty.L1 -> x.forEachStored { i, v ->
+                    precision[i] += weight * v * v
+                    weights[i] -= eta * weight * (-residual * v) / precision[i]
+                    val threshold = eta * weight * p.lambda / precision[i]
+                    val wi = weights[i]
+                    weights[i] = when {
+                        wi > threshold -> wi - threshold
+                        wi < -threshold -> wi + threshold
+                        else -> 0.0
+                    }
+                }
             }
             biasPrecision += weight
             bias += eta * weight * residual / biasPrecision
@@ -131,5 +152,5 @@ class DiagonalRegressionStat(
     }
 
     override fun create(concurrency: Concurrency?) =
-        DiagonalRegressionStat(featureSize, priorPrecision, learningRate, l2, concurrency ?: this.concurrency)
+        DiagonalRegressionStat(featureSize, priorPrecision, learningRate, penalty, concurrency ?: this.concurrency)
 }

@@ -36,9 +36,12 @@ import kotlin.math.sqrt
  *  w       = w + weight * S_new * x * (y - yhat)
  *  ```
  *
- * At default knobs (`learningRate = 1.0`, `l2 = 0.0`) this is the closed-form
- * conjugate Gaussian posterior update; setting either knob is a deliberate
- * detuning into damped-SGD-with-posterior-preconditioner territory.
+ * At default knobs (`learningRate = 1.0`, `weightDecay = 0.0`) this is the closed-form
+ * conjugate Gaussian posterior update; setting either knob is a deliberate detuning
+ * into damped-SGD-with-posterior-preconditioner territory. [weightDecay] is an
+ * SGD-style `-eta * lambda * w` shrinkage applied through the gradient and has no
+ * Bayesian interpretation; the Bayesian regularisation is the Gaussian prior
+ * (controlled by [priorVariance] / `priorMean` / `priorCovariance`).
  *
  * The Cholesky factor `L` of `S` is tracked in parallel via
  * [choleskyDowndateInPlace] so `w ~ N(weights, S)` draws are an O(n^2)
@@ -53,7 +56,7 @@ class BayesianRegressionStat(
     override val featureSize: Int,
     val priorVariance: Double = 1.0,
     val learningRate: ScalarExpr = ConstantRate(1.0),
-    val l2: Double = 0.0,
+    val weightDecay: Double = 0.0,
     override val concurrency: Concurrency = Concurrency.None,
     priorMean: VectorView? = null,
     priorCovariance: MatrixView? = null,
@@ -139,9 +142,9 @@ class BayesianRegressionStat(
             // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
             addOuter(covariance, -1.0, z, z)
 
-            // w = w - eta * weight * Sum * grad, where grad = -residual * x + l2 * w.
+            // w = w - eta * weight * Sum * grad, where grad = -residual * x + weightDecay * w.
             val grad = DenseVector(featureSize)
-            for (i in 0 until featureSize) grad[i] = -residual * x[i] + l2 * weights[i]
+            for (i in 0 until featureSize) grad[i] = -residual * x[i] + weightDecay * weights[i]
             axpy(weights, -eta * weight, matVec(covariance, grad))
 
             biasPrecision += weight
@@ -256,7 +259,7 @@ class BayesianRegressionStat(
             featureSize = featureSize,
             priorVariance = priorVariance,
             learningRate = learningRate,
-            l2 = l2,
+            weightDecay = weightDecay,
             concurrency = concurrency ?: this.concurrency,
             priorMean = DenseVector.of(initialWeights.copyOf()),
             priorCovariance = DenseMatrix.of(initialCovariance.toArray()),

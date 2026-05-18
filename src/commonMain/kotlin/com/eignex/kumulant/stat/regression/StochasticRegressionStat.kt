@@ -26,16 +26,23 @@ import com.eignex.kumulant.stream.serializedLock
  * Bias has its own learning-rate schedule because the intercept usually wants a much
  * faster decay than the coefficients (it dominates predictions for new arms).
  *
- * Sparse-aware: the gradient loop only touches the nonzero coordinates of [x] when
- * given a [SparseVector], skipping the `-residual * x_i` zero-contribution for dense
- * coords. L2 regularisation still applies to every coordinate, so the dense-side cost
- * is unchanged when `l2 > 0`.
+ * Sparse-aware at [Penalty.None]: the gradient loop only touches the nonzero coordinates
+ * of [x] when given a [SparseVector], skipping the `-residual * x_i` zero-contribution
+ * for dense coords. Any non-trivial [penalty] hits every coordinate, so the dense-side
+ * cost is unchanged when regularisation is active.
+ *
+ * Penalty handling:
+ *  - [Penalty.None]: plain SGD, sparse-aware.
+ *  - [Penalty.L2]: gradient-form L2 (`grad_i = -residual * x_i + lambda * w_i`); full dense loop.
+ *  - [Penalty.L1]: gradient SGD step followed by a proximal soft-thresholding sweep
+ *    `w_i = sign(w_i) * max(0, |w_i| - eta * weight * lambda)` over every coord, which
+ *    is what actually drives sparsity (subgradient L1 on its own does not).
  */
 class StochasticRegressionStat(
     override val featureSize: Int,
     val learningRate: ScalarExpr = ConstantRate(1e-3),
     val biasRate: ScalarExpr = learningRate,
-    val l2: Double = 0.0,
+    val penalty: Penalty = Penalty.None,
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<StochasticRegressionResult> {
 
@@ -60,15 +67,31 @@ class StochasticRegressionStat(
             val residual = y - yhat
             sse += residual * residual * weight
 
-            if (l2 == 0.0) {
-                // Sparse-friendly: only touch coords stored in x.
-                val coeff = eta * weight * residual
-                x.forEachStored { i, v -> weights[i] += coeff * v }
-            } else {
-                // L2 hits every coord; full-loop dense path regardless of x density.
-                for (i in 0 until featureSize) {
-                    val grad = -residual * x[i] + l2 * weights[i]
-                    weights[i] -= eta * weight * grad
+            when (val p = penalty) {
+                Penalty.None -> {
+                    // Sparse-friendly: only touch coords stored in x.
+                    val coeff = eta * weight * residual
+                    x.forEachStored { i, v -> weights[i] += coeff * v }
+                }
+                is Penalty.L2 -> {
+                    // L2 enters the gradient and hits every coord; full dense loop.
+                    for (i in 0 until featureSize) {
+                        val grad = -residual * x[i] + p.lambda * weights[i]
+                        weights[i] -= eta * weight * grad
+                    }
+                }
+                is Penalty.L1 -> {
+                    // Plain SGD step on every coord, then proximal soft-threshold to drive sparsity.
+                    for (i in 0 until featureSize) weights[i] += eta * weight * residual * x[i]
+                    val threshold = eta * weight * p.lambda
+                    for (i in 0 until featureSize) {
+                        val wi = weights[i]
+                        weights[i] = when {
+                            wi > threshold -> wi - threshold
+                            wi < -threshold -> wi + threshold
+                            else -> 0.0
+                        }
+                    }
                 }
             }
             bias += etaBias * weight * residual
@@ -121,5 +144,5 @@ class StochasticRegressionStat(
     }
 
     override fun create(concurrency: Concurrency?) =
-        StochasticRegressionStat(featureSize, learningRate, biasRate, l2, concurrency ?: this.concurrency)
+        StochasticRegressionStat(featureSize, learningRate, biasRate, penalty, concurrency ?: this.concurrency)
 }

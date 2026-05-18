@@ -170,7 +170,7 @@ class LinearPosteriorsTest {
         val stat = StochasticRegressionStat(
             featureSize = 3,
             learningRate = ConstantRate(0.05),
-            l2 = 0.1,
+            penalty = Penalty.L2(0.1),
         )
         val rng = Random(1)
         repeat(500) {
@@ -205,7 +205,7 @@ class LinearPosteriorsTest {
 
     @Test
     fun `SGD create returns a new instance preserving configuration`() {
-        val a = StochasticRegressionStat(featureSize = 4, l2 = 0.5)
+        val a = StochasticRegressionStat(featureSize = 4, penalty = Penalty.L2(0.5))
         val b = a.create()
         val r = b.read()
         assertEquals(4, r.weights.size)
