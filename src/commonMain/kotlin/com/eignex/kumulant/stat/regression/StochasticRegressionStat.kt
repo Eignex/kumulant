@@ -4,23 +4,24 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
-import com.eignex.kumulant.math.dot
 import com.eignex.kumulant.math.forEachStored
 import com.eignex.kumulant.schema.ScalarExpr
-import com.eignex.kumulant.stream.serializedLock
+import com.eignex.kumulant.stream.getValue
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 
 /**
- * Online linear regression by stochastic gradient descent on weighted MSE plus L2
- * regularisation. The cheapest of the multivariate regressors - point estimates only,
+ * Online linear regression by stochastic gradient descent on weighted MSE plus
+ * optional [Penalty]. The cheapest of the multivariate regressors - point estimates only,
  * no posterior, fast updates.
  *
  * Update step (per observation, all coordinates `i`):
  *  ```
- *  yhat          = bias + Sum w_i * x_i
+ *  yhat       = bias + Sum w_i * x_i
  *  residual   = y - yhat
- *  grad_i     = -residual * x_i + l2 * w_i
- *  w_i      = w_i - eta(step) * weight * grad_i
- *  bias     = bias + eta(step) * weight * residual
+ *  grad_i     = -residual * x_i + (penalty-specific term)
+ *  w_i       -= eta(step) * weight * grad_i
+ *  bias      += etaBias(step) * weight * residual
  *  ```
  *
  * Bias has its own learning-rate schedule because the intercept usually wants a much
@@ -37,6 +38,12 @@ import com.eignex.kumulant.stream.serializedLock
  *  - [Penalty.L1]: gradient SGD step followed by a proximal soft-thresholding sweep
  *    `w_i = sign(w_i) * max(0, |w_i| - eta * weight * lambda)` over every coord, which
  *    is what actually drives sparsity (subgradient L1 on its own does not).
+ *
+ * Concurrency follows the Welford-coupled pattern: under [Concurrency.Relaxed] every
+ * cell is a per-slot atomic (HOGWILD!-style asynchronous SGD - concurrent updaters
+ * may compute gradients from slightly stale weights, but each weight update is an
+ * atomic add and convergence holds for the convex MSE loss); under [Concurrency.Strict]
+ * a single lock fully serialises the update.
  */
 class StochasticRegressionStat(
     override val featureSize: Int,
@@ -48,63 +55,81 @@ class StochasticRegressionStat(
 
     init { require(featureSize > 0) { "featureSize must be positive" } }
 
-    private val lock = concurrency.serializedLock()
-    private val weights = DoubleArray(featureSize)
-    private var bias: Double = 0.0
-    private var totalWeights: Double = 0.0
-    private var step: Long = 0L
-    private var sse: Double = 0.0
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
+    private val weightsCell = mode.newDoubleArray(featureSize)
+    private val biasCell = mode.newDouble(0.0)
+    private val totalWeightsCell = mode.newDouble(0.0)
+    private val stepCell = mode.newLong(0L)
+    private val sseCell = mode.newDouble(0.0)
+
+    val bias: Double by biasCell
+    val totalWeights: Double by totalWeightsCell
+    val step: Long by stepCell
+    val sse: Double by sseCell
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) =
         lock.withLock {
             require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
             if (weight <= 0.0) return@withLock
-            step++
-            val eta = learningRate.eval(step.toDouble())
-            val etaBias = biasRate.eval(step.toDouble())
+            val s = stepCell.addAndGet(1L)
+            val eta = learningRate.eval(s.toDouble())
+            val etaBias = biasRate.eval(s.toDouble())
 
-            val yhat = bias + (x dot DenseVector.wrap(weights))
+            var dot = 0.0
+            for (i in 0 until featureSize) dot += weightsCell.load(i) * x[i]
+            val yhat = biasCell.load() + dot
             val residual = y - yhat
-            sse += residual * residual * weight
+            sseCell.add(residual * residual * weight)
 
             when (val p = penalty) {
                 Penalty.None -> {
                     // Sparse-friendly: only touch coords stored in x.
                     val coeff = eta * weight * residual
-                    x.forEachStored { i, v -> weights[i] += coeff * v }
+                    x.forEachStored { i, v -> weightsCell.add(i, coeff * v) }
                 }
                 is Penalty.L2 -> {
                     // L2 enters the gradient and hits every coord; full dense loop.
                     for (i in 0 until featureSize) {
-                        val grad = -residual * x[i] + p.lambda * weights[i]
-                        weights[i] -= eta * weight * grad
+                        val wi = weightsCell.load(i)
+                        val grad = -residual * x[i] + p.lambda * wi
+                        weightsCell.add(i, -eta * weight * grad)
                     }
                 }
                 is Penalty.L1 -> {
                     // Plain SGD step on every coord, then proximal soft-threshold to drive sparsity.
-                    for (i in 0 until featureSize) weights[i] += eta * weight * residual * x[i]
-                    val threshold = eta * weight * p.lambda
                     for (i in 0 until featureSize) {
-                        val wi = weights[i]
-                        weights[i] = when {
-                            wi > threshold -> wi - threshold
-                            wi < -threshold -> wi + threshold
-                            else -> 0.0
-                        }
+                        weightsCell.add(i, eta * weight * residual * x[i])
                     }
+                    val threshold = eta * weight * p.lambda
+                    for (i in 0 until featureSize) softThreshold(i, threshold)
                 }
             }
-            bias += etaBias * weight * residual
-            totalWeights += weight
+            biasCell.add(etaBias * weight * residual)
+            totalWeightsCell.add(weight)
         }
+
+    /** CAS-loop soft-threshold so concurrent SGD updates aren't lost under [Concurrency.Relaxed]. */
+    private fun softThreshold(i: Int, threshold: Double) {
+        while (true) {
+            val wi = weightsCell.load(i)
+            val next = when {
+                wi > threshold -> wi - threshold
+                wi < -threshold -> wi + threshold
+                else -> 0.0
+            }
+            if (wi == next) return
+            if (weightsCell.compareAndSet(i, wi, next)) return
+        }
+    }
 
     override fun read(timestampNanos: Long): StochasticRegressionResult = lock.withLock {
         StochasticRegressionResult(
-            weights = DenseVector.of(weights),
-            bias = bias,
-            totalWeights = totalWeights,
-            step = step,
-            sse = sse,
+            weights = DenseVector.of(DoubleArray(featureSize) { weightsCell.load(it) }),
+            bias = biasCell.load(),
+            totalWeights = totalWeightsCell.load(),
+            step = stepCell.load(),
+            sse = sseCell.load(),
         )
     }
 
@@ -119,28 +144,29 @@ class StochasticRegressionStat(
             "merge: featureSize mismatch ${values.featureSize} vs $featureSize"
         }
         lock.withLock {
-            val w1 = totalWeights
+            val w1 = totalWeightsCell.load()
             val w2 = values.totalWeights
             val wNew = w1 + w2
             if (wNew > 0.0) {
                 val other = values.weights.toDoubleArray()
                 for (i in 0 until featureSize) {
-                    weights[i] = (weights[i] * w1 + other[i] * w2) / wNew
+                    val blended = (weightsCell.load(i) * w1 + other[i] * w2) / wNew
+                    weightsCell.store(i, blended)
                 }
-                bias = (bias * w1 + values.bias * w2) / wNew
+                biasCell.store((biasCell.load() * w1 + values.bias * w2) / wNew)
             }
-            totalWeights = wNew
-            step += values.step
-            sse += values.sse
+            totalWeightsCell.store(wNew)
+            stepCell.add(values.step)
+            sseCell.add(values.sse)
         }
     }
 
     override fun reset() = lock.withLock {
-        for (i in 0 until featureSize) weights[i] = 0.0
-        bias = 0.0
-        totalWeights = 0.0
-        step = 0L
-        sse = 0.0
+        for (i in 0 until featureSize) weightsCell.store(i, 0.0)
+        biasCell.store(0.0)
+        totalWeightsCell.store(0.0)
+        stepCell.store(0L)
+        sseCell.store(0.0)
     }
 
     override fun create(concurrency: Concurrency?) =

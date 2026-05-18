@@ -19,6 +19,9 @@ internal object AtomicMode : StreamMode {
 
     override fun newLongArray(size: Int, init: (Int) -> Long): AtomicLongCellArray =
         AtomicLongCellArray(KAtomicLongArray(LongArray(size, init)))
+
+    override fun newDoubleArray(size: Int, init: (Int) -> Double): AtomicDoubleCellArray =
+        AtomicDoubleCellArray(KAtomicLongArray(LongArray(size) { init(it).toRawBits() }))
 }
 
 /** CAS-based atomic [StreamDouble] using `Double.toRawBits` encoding over an atomic `Long`. */
@@ -95,6 +98,36 @@ internal value class AtomicLongCellArray(val ref: KAtomicLongArray) : StreamLong
     override fun addAndGet(index: Int, delta: Long): Long = ref.addAndFetchAt(index, delta)
     override fun compareAndSet(index: Int, expectedValue: Long, newValue: Long): Boolean =
         ref.compareAndSetAt(index, expectedValue, newValue)
+}
+
+/** Platform-atomic [StreamDoubleArray] backed by an `AtomicLongArray` of IEEE-754 bit patterns. */
+@JvmInline
+internal value class AtomicDoubleCellArray(val ref: KAtomicLongArray) : StreamDoubleArray {
+    override val size: Int get() = ref.size
+    override fun load(index: Int): Double = Double.fromBits(ref.loadAt(index))
+    override fun store(index: Int, value: Double) = ref.storeAt(index, value.toRawBits())
+    override fun add(index: Int, delta: Double) {
+        if (delta == 0.0) return
+        var currentBits = ref.loadAt(index)
+        while (true) {
+            val nextBits = (Double.fromBits(currentBits) + delta).toRawBits()
+            val witness = ref.compareAndExchangeAt(index, currentBits, nextBits)
+            if (witness == currentBits) return
+            currentBits = witness
+        }
+    }
+    override fun addAndGet(index: Int, delta: Double): Double {
+        var currentBits = ref.loadAt(index)
+        while (true) {
+            val nextVal = Double.fromBits(currentBits) + delta
+            val nextBits = nextVal.toRawBits()
+            val witness = ref.compareAndExchangeAt(index, currentBits, nextBits)
+            if (witness == currentBits) return nextVal
+            currentBits = witness
+        }
+    }
+    override fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean =
+        ref.compareAndSetAt(index, expectedValue.toRawBits(), newValue.toRawBits())
 }
 
 /** Platform-atomic [StreamRef]. */

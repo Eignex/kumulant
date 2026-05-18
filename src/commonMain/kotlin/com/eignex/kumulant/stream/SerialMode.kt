@@ -11,6 +11,9 @@ internal object SerialMode : StreamMode {
 
     override fun newLongArray(size: Int, init: (Int) -> Long) =
         SerialLongArray(LongArray(size, init))
+
+    override fun newDoubleArray(size: Int, init: (Int) -> Double) =
+        SerialDoubleArray(DoubleArray(size, init))
 }
 
 /** Plain-`var` [StreamLong] implementation used by [SerialMode]. */
@@ -77,6 +80,25 @@ internal class SerialLongArray(val ref: LongArray) : StreamLongArray {
     }
     override fun compareAndSet(index: Int, expectedValue: Long, newValue: Long): Boolean {
         if (ref[index] == expectedValue) {
+            ref[index] = newValue
+            return true
+        }
+        return false
+    }
+}
+
+/** Plain-array [StreamDoubleArray] implementation used by [SerialMode]. */
+internal class SerialDoubleArray(val ref: DoubleArray) : StreamDoubleArray {
+    override val size: Int get() = ref.size
+    override fun load(index: Int): Double = ref[index]
+    override fun store(index: Int, value: Double) { ref[index] = value }
+    override fun add(index: Int, delta: Double) { ref[index] += delta }
+    override fun addAndGet(index: Int, delta: Double): Double {
+        ref[index] += delta
+        return ref[index]
+    }
+    override fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean {
+        if (ref[index].toRawBits() == expectedValue.toRawBits()) {
             ref[index] = newValue
             return true
         }

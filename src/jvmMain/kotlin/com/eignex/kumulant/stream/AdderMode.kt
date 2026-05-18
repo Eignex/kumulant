@@ -27,6 +27,9 @@ internal object AdderMode : StreamMode {
      */
     override fun newLongArray(size: Int, init: (Int) -> Long): StreamLongArray =
         AtomicMode.newLongArray(size, init)
+
+    override fun newDoubleArray(size: Int, init: (Int) -> Double): StreamDoubleArray =
+        AtomicMode.newDoubleArray(size, init)
 }
 
 /** [StreamDouble] backed by a striped `java.util.concurrent.atomic.DoubleAdder`. */

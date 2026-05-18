@@ -28,6 +28,12 @@ internal interface StreamMode {
      * with a flat backing - one allocation, no per-slot object headers.
      */
     fun newLongArray(size: Int, init: (Int) -> Long = { 0L }): StreamLongArray
+
+    /**
+     * Allocate a fixed-length array of `Double` cells, initialised by [init]. Same
+     * atomicity guarantees as [newDouble] per slot, flat backing.
+     */
+    fun newDoubleArray(size: Int, init: (Int) -> Double = { 0.0 }): StreamDoubleArray
 }
 
 /**
@@ -96,6 +102,20 @@ internal interface StreamRef<T> {
 
     /** Atomic compare-and-set; returns true iff the swap happened. */
     fun compareAndSet(expectedValue: T, newValue: T): Boolean
+}
+
+/**
+ * Fixed-length array of `Double` cells. Each slot supports the same load / store / add /
+ * CAS operations as a scalar [StreamDouble] under the owning mode. Slot indices are
+ * `0..size-1`; out-of-range access throws.
+ */
+internal interface StreamDoubleArray {
+    val size: Int
+    fun load(index: Int): Double
+    fun store(index: Int, value: Double)
+    fun add(index: Int, delta: Double)
+    fun addAndGet(index: Int, delta: Double): Double
+    fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean
 }
 
 /**
