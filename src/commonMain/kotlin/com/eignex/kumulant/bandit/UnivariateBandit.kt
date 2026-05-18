@@ -41,4 +41,19 @@ interface UnivariateBandit<R : Result> {
     /** Per-arm snapshot at [armIndex]; default reads from [snapshot]. Implementations may
      *  override to avoid building the full list when only one arm is needed. */
     fun armResult(armIndex: Int): R = snapshot()[armIndex]
+
+    /** Merge each `others[i]` into the corresponding arm. Length must equal the bandit's
+     *  arm count. Used to combine bandit replicas trained in parallel. */
+    fun merge(others: List<R>)
+
+    /** Clear all per-arm state back to the prior-seeded baseline. */
+    fun reset()
+
+    /** Spawn a fresh bandit with the same configuration; per-arm state resets to the prior
+     *  seed. The [random] source may be replaced (default: this bandit's [random]).
+     *
+     *  Caveat: bandit policies that carry aggregate state across arms (e.g. UCB1's
+     *  `totalSamples`) share that state with the source instance. Pass an independent
+     *  policy instance to the constructor if you need a fully isolated bandit. */
+    fun create(random: Random = this.random): UnivariateBandit<R>
 }

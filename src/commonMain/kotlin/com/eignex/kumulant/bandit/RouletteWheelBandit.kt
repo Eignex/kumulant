@@ -107,4 +107,34 @@ class RouletteWheelBandit(
 
     override fun snapshot(): List<RouletteWheelArmResult> =
         List(nbrArms) { RouletteWheelArmResult(weights[it], accumulatedScores[it], callCounts[it]) }
+
+    /**
+     * Heuristic merge: weights are arithmetically averaged across replicas; scores and
+     * call counts are summed (treating the other replica's segment as additional
+     * unobserved data). Roulette-wheel adaptive selection has no canonical merge
+     * semantics - the segment-based rebalance is inherently sequential - so use this
+     * for "roughly combine two parallel runs" rather than for principled aggregation.
+     */
+    override fun merge(others: List<RouletteWheelArmResult>) {
+        require(others.size == nbrArms) {
+            "merge: others.size=${others.size} does not match nbrArms=$nbrArms"
+        }
+        for (i in 0 until nbrArms) {
+            weights[i] = ((weights[i] + others[i].weight) / 2.0).coerceAtLeast(minWeight)
+            accumulatedScores[i] += others[i].accumulatedScore
+            callCounts[i] += others[i].callCount
+        }
+    }
+
+    override fun reset() {
+        for (i in 0 until nbrArms) {
+            weights[i] = initialWeight
+            accumulatedScores[i] = 0.0
+            callCounts[i] = 0
+        }
+        picksThisSegment = 0
+    }
+
+    override fun create(random: Random): RouletteWheelBandit =
+        RouletteWheelBandit(nbrArms, reactionFactor, segmentLength, initialWeight, minWeight, random)
 }

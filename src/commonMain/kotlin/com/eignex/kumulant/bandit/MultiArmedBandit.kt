@@ -59,6 +59,30 @@ class MultiArmedBandit<R : Result>(
 
     override fun armResult(armIndex: Int): R = arms[armIndex].read(0L)
 
+    override fun merge(others: List<R>) {
+        require(others.size == nbrArms) {
+            "merge: others.size=${others.size} does not match nbrArms=$nbrArms"
+        }
+        for (i in 0 until nbrArms) {
+            val oldSnap = arms[i].read(0L)
+            policy.removeArm(oldSnap)
+            arms[i].merge(others[i])
+            policy.addArm(arms[i].read(0L))
+        }
+    }
+
+    override fun reset() {
+        for (i in 0 until nbrArms) {
+            policy.removeArm(arms[i].read(0L))
+            arms[i] = policy.createArm()
+            policy.addArm(arms[i].read(0L))
+        }
+        step.store(0L)
+    }
+
+    override fun create(random: Random): MultiArmedBandit<R> =
+        MultiArmedBandit(nbrArms, policy, random)
+
     /**
      * Live per-arm accumulator owned by this bandit. Exposed so callers can compose with
      * the stat ecosystem - e.g. inspect the running snapshot, plug into a [com.eignex.kumulant.schema.StatGroup],
