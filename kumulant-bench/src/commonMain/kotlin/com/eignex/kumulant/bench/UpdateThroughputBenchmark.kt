@@ -24,7 +24,18 @@ import kotlin.random.Random
 @OutputTimeUnit(kotlinx.benchmark.BenchmarkTimeUnit.MICROSECONDS)
 open class UpdateThroughputBenchmark {
 
-    @Param("SumStat")
+    @Param(
+        "SumStat",
+        "CountStat",
+        "TotalWeightsStat",
+        "MeanStat",
+        "VarianceStat",
+        "MomentsStat",
+        "MinStat",
+        "MaxStat",
+        "RangeStat",
+        "BernoulliSumStat",
+    )
     var name: String = ""
 
     @Param("None", "Relaxed", "Strict")
