@@ -120,6 +120,21 @@ class TreePosteriorsTest {
     }
 
     @Test
+    fun `UcbTreePosterior bonus shrinks as evidence grows`() {
+        val stat = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = emptyList(), randomSeed = 80)
+        val rng = Random(80)
+        repeat(5) { stat.update(feat(0.0), 2.0 + rng.nextDouble() - 0.5) }
+        val snapEarly = stat.read(0L)
+        repeat(5_000) { stat.update(feat(0.0), 2.0 + rng.nextDouble() - 0.5) }
+        val snapLate = stat.read(0L)
+
+        val posterior = UcbTreePosterior(priorWeight = 1.0, priorVariance = 1.0)
+        val earlyBonus = posterior.evaluate(snapEarly, feat(0.0), Random(0), 1.0) - snapEarly.predict(feat(0.0))
+        val lateBonus = posterior.evaluate(snapLate, feat(0.0), Random(0), 1.0) - snapLate.predict(feat(0.0))
+        assertTrue(earlyBonus > lateBonus, "earlyBonus=$earlyBonus lateBonus=$lateBonus should shrink")
+    }
+
+    @Test
     fun `UcbForestPosterior exceeds the merged mean`() {
         val f = forestSnap(
             listOf(

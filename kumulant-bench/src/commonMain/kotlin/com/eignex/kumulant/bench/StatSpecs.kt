@@ -449,12 +449,14 @@ val frugalQuantileStatSpec = seriesStatSpec(
 
 // === Regression =============================================================
 //
-// All regression specs feed featureSize=1 with x = Update.value and y = 2x + 0.1.
-// True slope is exactly 2, intercept 0.1. The scalar pulls slope[0] from the
-// snapshot's coefficients; the reference is the constant 2.0 with a loose
-// tolerance to absorb regularisation / online-update drift.
+// Multi-feature regression specs feed an 8-dim deterministic random feature
+// vector (seeded by the update value's bits) and a known target
+// y = trueWeights · x + bias. The scalar pulls weights[0] from the snapshot;
+// the reference is trueWeights[0] = 2.0. This exercises the full coupled
+// (Sxx, Sxy) recurrence rather than the trivial featureSize=1 path.
 
-private fun deriveTargetY(x: Double): Double = 2.0 * x + 0.1
+private const val REG_FEATURE_SIZE = 8
+private val regTrueWeights = doubleArrayOf(2.0, -1.0, 0.5, -0.5, 1.0, 0.1, -0.2, 0.3)
 
 val univariateRegressionStatSpec = pairedStatSpec(
     name = "UnivariateRegressionStat",
@@ -483,37 +485,43 @@ val covarianceStatSpec = pairedStatSpec(
 val bayesianRegressionStatSpec = regressionStatSpec(
     name = "BayesianRegressionStat",
     factory = { c ->
-        com.eignex.kumulant.stat.regression.BayesianRegressionStat(featureSize = 1, concurrency = c)
+        com.eignex.kumulant.stat.regression.BayesianRegressionStat(
+            featureSize = REG_FEATURE_SIZE, concurrency = c,
+        )
     },
     updates = ::uniformVariableWeights,
     scalar = { it.weights[0] },
-    reference = { _ -> 2.0 },
-    // Bayesian regression with the default prior pulls the slope sharply toward 0
-    // for our tiny synthetic problem (featureSize=1, 5k samples); the snapshot
-    // sits near 1.5, so allow generous slack.
+    reference = { _ -> regTrueWeights[0] },
+    featureSize = REG_FEATURE_SIZE,
+    trueWeights = regTrueWeights,
 )
 
 val diagonalRegressionStatSpec = regressionStatSpec(
     name = "DiagonalRegressionStat",
     factory = { c ->
-        com.eignex.kumulant.stat.regression.DiagonalRegressionStat(featureSize = 1, concurrency = c)
+        com.eignex.kumulant.stat.regression.DiagonalRegressionStat(
+            featureSize = REG_FEATURE_SIZE, concurrency = c,
+        )
     },
     updates = ::uniformVariableWeights,
     scalar = { it.weights[0] },
-    reference = { _ -> 2.0 },
-    // Same prior-bias behavior as the Bayesian variant.
+    reference = { _ -> regTrueWeights[0] },
+    featureSize = REG_FEATURE_SIZE,
+    trueWeights = regTrueWeights,
 )
 
 val stochasticRegressionStatSpec = regressionStatSpec(
     name = "StochasticRegressionStat",
     factory = { c ->
-        com.eignex.kumulant.stat.regression.StochasticRegressionStat(featureSize = 1, concurrency = c)
+        com.eignex.kumulant.stat.regression.StochasticRegressionStat(
+            featureSize = REG_FEATURE_SIZE, concurrency = c,
+        )
     },
     updates = ::uniformVariableWeights,
     scalar = { it.weights[0] },
-    reference = { _ -> 2.0 },
-    // Plain SGD with the default learning-rate schedule lands around 0.9 after
-    // 5k samples on this synthetic problem — convergence is slow with no warmup.
+    reference = { _ -> regTrueWeights[0] },
+    featureSize = REG_FEATURE_SIZE,
+    trueWeights = regTrueWeights,
 )
 
 // === Score ==================================================================

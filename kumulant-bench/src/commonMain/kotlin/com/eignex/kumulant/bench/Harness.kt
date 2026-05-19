@@ -89,9 +89,13 @@ fun <R : Result> pairedStatSpec(
 )
 
 /**
- * Build a spec for a [RegressionStat]-shaped stat. The feature vector is the
- * single-element `[Update.value]`, and the target is derived by [deriveY]
- * (defaulting to `2 * x + 0.1` for a known true slope).
+ * Build a spec for a [RegressionStat]-shaped stat with [featureSize] features and
+ * a known [trueWeights] vector (`length == featureSize`).
+ *
+ * Each [Update] is expanded into a deterministic random feature vector seeded by
+ * `Update.value.toRawBits()`; the target is `trueWeights . x + bias`. This gives
+ * every spec a known closed-form regression problem at any featureSize without
+ * needing to widen the workload type.
  */
 fun <R : Result> regressionStatSpec(
     name: String,
@@ -99,18 +103,39 @@ fun <R : Result> regressionStatSpec(
     updates: (seed: Int, n: Int) -> Sequence<Update>,
     scalar: (R) -> Double,
     reference: (Sequence<Update>) -> Double,
-    deriveY: (Double) -> Double = { 2.0 * it + 0.1 },
-): StatSpec<RegressionStat<R>, R> = StatSpec(
-    name = name,
-    factory = factory,
-    applyUpdate = { s, u ->
-        s.update(DenseVector.of(doubleArrayOf(u.value)), deriveY(u.value), u.timestampNanos, u.weight)
-    },
-    readSnapshot = { s, ts -> s.read(ts) },
-    updates = updates,
-    scalar = scalar,
-    reference = reference,
-)
+    featureSize: Int = 1,
+    trueWeights: DoubleArray = doubleArrayOf(2.0),
+    bias: Double = 0.1,
+): StatSpec<RegressionStat<R>, R> {
+    require(trueWeights.size == featureSize) {
+        "$name: trueWeights.size=${trueWeights.size} must equal featureSize=$featureSize"
+    }
+    return StatSpec(
+        name = name,
+        factory = factory,
+        applyUpdate = { s, u ->
+            val x = featuresFor(u.value, featureSize)
+            var y = bias
+            var i = 0
+            while (i < featureSize) { y += trueWeights[i] * x[i]; i++ }
+            s.update(DenseVector.of(x), y, u.timestampNanos, u.weight)
+        },
+        readSnapshot = { s, ts -> s.read(ts) },
+        updates = updates,
+        scalar = scalar,
+        reference = reference,
+    )
+}
+
+/**
+ * Deterministic feature vector seeded by [value]'s bit pattern. The same value
+ * always yields the same features so the bench's reference computations are
+ * reproducible across runs.
+ */
+fun featuresFor(value: Double, featureSize: Int): DoubleArray {
+    val rng = Random(value.toRawBits())
+    return DoubleArray(featureSize) { rng.nextDouble() * 2.0 - 1.0 }
+}
 
 /**
  * Build a spec for a [DiscreteStat]-shaped stat (cardinality estimators). The

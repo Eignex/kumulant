@@ -3,7 +3,9 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.PI
@@ -62,10 +64,11 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  * Updates buffer values until the internal `bufferCap` is reached, then fold them into
  * the sorted centroid list under the `k1`-difference <= 1 merge rule.
  *
- * Concurrency: all `update`/`merge`/`read`/`reset` calls are internally serialized
- * via a private platform mutex when the chosen [Concurrency] level is anything but
- * [Concurrency.None]; under [Concurrency.None] the lock is a noop. Throughput-bound
- * under thread contention.
+ * Concurrency: the hot-path `update` is lock-free under [Concurrency.Relaxed]
+ * (atomic claim into a ring buffer); a buffer-full triggers a brief locked compress
+ * that does not block concurrent claims in the next epoch. Under
+ * [Concurrency.Strict] / [Concurrency.HighWrite] an outer lock serializes updates
+ * against reads/merges. Under [Concurrency.None] no synchronization runs.
  */
 class TDigestStat(
     /** Compression parameter; lower = more centroids, tighter quantiles, more memory. */
@@ -83,40 +86,89 @@ class TDigestStat(
     }
 
     private val bufferCap: Int = max(10, (5.0 * compression).toInt())
+    private val bufferCapLong: Long = bufferCap.toLong()
 
-    // All mutable state is accessed only under [lock].
+    private val mode = concurrency.additiveMode()
+    // Outer lock: noop under None/Relaxed; real under Strict/HighWrite. Linearizes
+    // update/merge/read against each other for strict semantics.
+    private val outerLock = concurrency.welfordLock()
+    // Compress lock: noop under None; real otherwise. Protects centroid arrays and
+    // the buffer-drain critical section against concurrent compress / read / merge.
+    private val compressLock = concurrency.serializedLock()
+
+    // Lock-free ring buffer (one epoch). Updates atomically claim a slot via
+    // bufferIndex.addAndGet, then write value+weight and bump commitIndex. Overflow
+    // (claimed > bufferCap) is funneled through compressLock to drain + reset.
+    private val bufferIndex = mode.newLong(0L)
+    private val commitIndex = mode.newLong(0L)
+    private val buffer = mode.newDoubleArray(bufferCap)
+    private val bufferWeights = mode.newDoubleArray(bufferCap)
+    private val totalWeightCell = mode.newDouble(0.0)
+
+    // Centroid arrays. Always accessed under compressLock (except trivially under None).
     private var means = DoubleArray(0)
     private var weights = DoubleArray(0)
-    private val buffer = DoubleArray(bufferCap)
-    private val bufferWeights = DoubleArray(bufferCap)
-    private var bufferLen = 0
-    private var totalWeight = 0.0
-    private val lock = concurrency.serializedLock()
 
     private fun k1(q: Double): Double =
         compression / (2.0 * PI) * asin(2.0 * q.coerceIn(0.0, 1.0) - 1.0)
 
-    private fun compress() {
-        val bLen = bufferLen
-        if (bLen == 0 && means.isEmpty()) return
+    /**
+     * Drain the current buffer epoch into the centroid arrays. Caller MUST hold
+     * [compressLock]. Idempotent: a no-op if the buffer is empty.
+     */
+    private fun drainLocked() {
+        // Freeze the buffer epoch by CAS-bumping bufferIndex to bufferCap; any concurrent
+        // claimer that observes bufferIndex >= bufferCap will overflow into compressLock
+        // and retry against the next epoch.
+        var claimed: Int
+        while (true) {
+            val cur = bufferIndex.load()
+            if (cur >= bufferCapLong) {
+                claimed = bufferCap
+                break
+            }
+            if (cur == 0L) return
+            if (bufferIndex.compareAndSet(cur, bufferCapLong)) {
+                claimed = cur.toInt()
+                break
+            }
+        }
+        // Wait for in-flight commits: each successful claim eventually increments
+        // commitIndex once. commitIndex == claimed means every claimed slot is written.
+        while (commitIndex.load() < claimed.toLong()) { /* spin briefly */ }
 
-        val n = means.size + bLen
+        val snapVal = DoubleArray(claimed) { buffer.load(it) }
+        val snapW = DoubleArray(claimed) { bufferWeights.load(it) }
+
+        // Reset for the next epoch BEFORE compressing — new claimers can start writing
+        // into a fresh buffer while we merge the snapshot.
+        bufferIndex.store(0L)
+        commitIndex.store(0L)
+
+        compressInto(snapVal, snapW, claimed)
+    }
+
+    /** Merge the snapshot into [means]/[weights] under the k1 difference rule. */
+    private fun compressInto(bufVal: DoubleArray, bufW: DoubleArray, bufLen: Int) {
+        if (bufLen == 0 && means.isEmpty()) return
+
+        val n = means.size + bufLen
         val combinedM = DoubleArray(n)
         val combinedW = DoubleArray(n)
 
         var i = 0
         var j = 0
         var c = 0
-        val bufIdx = (0 until bLen).sortedBy { buffer[it] }
-        while (i < means.size && j < bLen) {
-            val bv = buffer[bufIdx[j]]
+        val bufIdx = (0 until bufLen).sortedBy { bufVal[it] }
+        while (i < means.size && j < bufLen) {
+            val bv = bufVal[bufIdx[j]]
             if (means[i] <= bv) {
                 combinedM[c] = means[i]
                 combinedW[c] = weights[i]
                 i++
             } else {
                 combinedM[c] = bv
-                combinedW[c] = bufferWeights[bufIdx[j]]
+                combinedW[c] = bufW[bufIdx[j]]
                 j++
             }
             c++
@@ -127,16 +179,14 @@ class TDigestStat(
             i++
             c++
         }
-        while (j < bLen) {
-            combinedM[c] = buffer[bufIdx[j]]
-            combinedW[c] = bufferWeights[bufIdx[j]]
+        while (j < bufLen) {
+            combinedM[c] = bufVal[bufIdx[j]]
+            combinedW[c] = bufW[bufIdx[j]]
             j++
             c++
         }
 
-        bufferLen = 0
-
-        val total = totalWeight
+        val total = totalWeightCell.load()
         if (total <= 0.0) {
             means = DoubleArray(0)
             weights = DoubleArray(0)
@@ -179,18 +229,27 @@ class TDigestStat(
         weights = outW.copyOf(outLen)
     }
 
-    private fun updateLocked(value: Double, weight: Double) {
-        val idx = bufferLen
-        buffer[idx] = value
-        bufferWeights[idx] = weight
-        bufferLen = idx + 1
-        totalWeight += weight
-        if (idx + 1 >= bufferCap) compress()
-    }
-
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0 || value.isNaN()) return
-        lock.withLock { updateLocked(value, weight) }
+        outerLock.withLock {
+            while (true) {
+                val claimed = bufferIndex.addAndGet(1L)
+                val idx = (claimed - 1L).toInt()
+                if (claimed <= bufferCapLong) {
+                    buffer.store(idx, value)
+                    bufferWeights.store(idx, weight)
+                    totalWeightCell.add(weight)
+                    commitIndex.add(1L)
+                    if (claimed == bufferCapLong) {
+                        compressLock.withLock { drainLocked() }
+                    }
+                    return@withLock
+                }
+                // Overflow: a concurrent compress is needed before our claim can land.
+                compressLock.withLock { drainLocked() }
+                // Loop and retry against the next epoch.
+            }
+        }
     }
 
     override fun create(concurrency: Concurrency?) = TDigestStat(
@@ -203,72 +262,90 @@ class TDigestStat(
         require(abs(compression - values.compression) < 1e-9) {
             "Cannot merge TDigests with different compression"
         }
-        lock.withLock {
-            for (i in values.means.indices) {
-                val w = values.weights[i]
-                if (w > 0.0 && !values.means[i].isNaN()) {
-                    updateLocked(values.means[i], w)
+        outerLock.withLock {
+            compressLock.withLock {
+                // Drain any buffered points first so they appear in the centroid array.
+                drainLocked()
+                // Feed the incoming centroids through the same compress path.
+                val n = values.means.size
+                val sv = DoubleArray(n)
+                val sw = DoubleArray(n)
+                var c = 0
+                for (i in 0 until n) {
+                    val w = values.weights[i]
+                    if (w > 0.0 && !values.means[i].isNaN()) {
+                        sv[c] = values.means[i]
+                        sw[c] = w
+                        c++
+                        totalWeightCell.add(w)
+                    }
                 }
+                if (c > 0) compressInto(sv, sw, c)
             }
         }
     }
 
     override fun reset() {
-        lock.withLock {
-            means = DoubleArray(0)
-            weights = DoubleArray(0)
-            bufferLen = 0
-            totalWeight = 0.0
+        outerLock.withLock {
+            compressLock.withLock {
+                bufferIndex.store(0L)
+                commitIndex.store(0L)
+                totalWeightCell.store(0.0)
+                means = DoubleArray(0)
+                weights = DoubleArray(0)
+            }
         }
     }
 
-    override fun read(timestampNanos: Long): TDigestResult = lock.withLock {
-        if (bufferLen > 0) compress()
+    override fun read(timestampNanos: Long): TDigestResult = outerLock.withLock {
+        compressLock.withLock {
+            drainLocked()
 
-        val total = totalWeight
-        val computed = DoubleArray(probabilities.size)
-        if (means.isEmpty() || total <= 0.0) {
-            return@withLock TDigestResult(probabilities, computed, means.copyOf(), weights.copyOf(), total, compression)
-        }
-
-        // Cumulative rank at each centroid's center (half-weight offsets).
-        val centers = DoubleArray(means.size)
-        var acc = 0.0
-        for (i in means.indices) {
-            centers[i] = acc + weights[i] / 2.0
-            acc += weights[i]
-        }
-
-        for (pi in probabilities.indices) {
-            val targetRank = probabilities[pi] * total
-            val n = means.size
-            val q: Double
-            if (n == 1 || targetRank <= centers[0]) {
-                q = means[0]
-            } else if (targetRank >= centers[n - 1]) {
-                q = means[n - 1]
-            } else {
-                var idx = 0
-                for (i in 0 until n - 1) {
-                    if (targetRank <= centers[i + 1]) {
-                        idx = i
-                        break
-                    }
-                }
-                val span = centers[idx + 1] - centers[idx]
-                val frac = if (span <= 0.0) 0.0 else (targetRank - centers[idx]) / span
-                q = means[idx] + frac * (means[idx + 1] - means[idx])
+            val total = totalWeightCell.load()
+            val computed = DoubleArray(probabilities.size)
+            if (means.isEmpty() || total <= 0.0) {
+                return@withLock TDigestResult(probabilities, computed, means.copyOf(), weights.copyOf(), total, compression)
             }
-            computed[pi] = q
-        }
 
-        return@withLock TDigestResult(
-            probabilities = probabilities,
-            quantiles = computed,
-            means = means.copyOf(),
-            weights = weights.copyOf(),
-            totalWeight = total,
-            compression = compression
-        )
+            // Cumulative rank at each centroid's center (half-weight offsets).
+            val centers = DoubleArray(means.size)
+            var acc = 0.0
+            for (i in means.indices) {
+                centers[i] = acc + weights[i] / 2.0
+                acc += weights[i]
+            }
+
+            for (pi in probabilities.indices) {
+                val targetRank = probabilities[pi] * total
+                val n = means.size
+                val q: Double
+                if (n == 1 || targetRank <= centers[0]) {
+                    q = means[0]
+                } else if (targetRank >= centers[n - 1]) {
+                    q = means[n - 1]
+                } else {
+                    var idx = 0
+                    for (i in 0 until n - 1) {
+                        if (targetRank <= centers[i + 1]) {
+                            idx = i
+                            break
+                        }
+                    }
+                    val span = centers[idx + 1] - centers[idx]
+                    val frac = if (span <= 0.0) 0.0 else (targetRank - centers[idx]) / span
+                    q = means[idx] + frac * (means[idx + 1] - means[idx])
+                }
+                computed[pi] = q
+            }
+
+            TDigestResult(
+                probabilities = probabilities,
+                quantiles = computed,
+                means = means.copyOf(),
+                weights = weights.copyOf(),
+                totalWeight = total,
+                compression = compression
+            )
+        }
     }
 }

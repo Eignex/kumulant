@@ -13,7 +13,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class ContextualBanditTest {
+class RegressionContextualBanditTest {
 
     private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
