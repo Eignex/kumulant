@@ -122,6 +122,30 @@ val a = cb.choose(features)
 cb.update(a, features, reward = 12.7)
 ```
 
+| Family       | Bandits                                                                                  |
+|--------------|-------------------------------------------------------------------------------------------|
+| Univariate   | MultiArmedBandit, RouletteWheelBandit, BoltzmannBandit, Exp3Bandit, TopTwoThompsonBandit  |
+| Contextual   | RegressionContextualBandit, KnnContextualBandit, Exp4Bandit                                |
+| Policies     | UCB1, UCB1-Normal, UCB1-Tuned, KL-UCB, MOSS, UCB-V, Thompson sampling, Greedy, EpsilonGreedy, EpsilonDecreasing, UniformSelection |
+
+The bandit hierarchy splits action and state into orthogonal interfaces.
+`UnivariateBandit` and `ContextualBandit` carry the `choose` / `update`
+surface; `PerArmBandit<R>` and `Snapshotable<S>` carry the
+snapshot/merge/replicate surface; `Scorable` and `ContextualScorable`
+are opt-in for bandits whose `choose` is an argmax over independent
+per-arm scores. Bandits that select arms via joint sampling (Top-Two
+Thompson, Boltzmann) or that don't fit a per-arm state shape (Exp4)
+slot in cleanly without bending the contract.
+
+```kotlin
+// Whole-bandit configurations round-trip on the wire alongside their policies.
+val spec: UnivariateBanditSpec = MultiArmedSpec(
+    nbrArms = 4,
+    policy = Ucb1Spec(alpha = 1.5),
+)
+val live: Bandit = spec.materialize(Random(0))
+```
+
 Composite arms model multi-component rewards like zero-inflated lognormal
 revenue without writing a class per shape; routing and score combination
 travel as the same expression ASTs the rest of the library uses, so the

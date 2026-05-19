@@ -9,7 +9,7 @@ plugins {
 }
 
 eignexPublish {
-    description.set("Fast, concurrency-friendly streaming statistics for Kotlin/KMP.")
+    description.set("Streaming statistics, sketches, and online bandits for Kotlin/KMP.")
     githubRepo.set("Eignex/kumulant")
 }
 
