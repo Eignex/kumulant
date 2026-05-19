@@ -126,19 +126,7 @@ class TDigestStat(
         // Freeze the buffer epoch by CAS-bumping bufferIndex to bufferCap; any concurrent
         // claimer that observes bufferIndex >= bufferCap will overflow into compressLock
         // and retry against the next epoch.
-        var claimed: Int
-        while (true) {
-            val cur = bufferIndex.load()
-            if (cur >= bufferCapLong) {
-                claimed = bufferCap
-                break
-            }
-            if (cur == 0L) return
-            if (bufferIndex.compareAndSet(cur, bufferCapLong)) {
-                claimed = cur.toInt()
-                break
-            }
-        }
+        val claimed = claimBufferEpoch() ?: return
         // Wait for in-flight commits: each successful claim eventually increments
         // commitIndex once. commitIndex == claimed means every claimed slot is written.
         while (commitIndex.load() < claimed.toLong()) { /* spin briefly */ }
@@ -152,6 +140,17 @@ class TDigestStat(
         commitIndex.store(0L)
 
         compressInto(snapVal, snapW, claimed)
+    }
+
+    /** CAS the buffer index up to [bufferCap] to freeze the current epoch. Returns the
+     *  number of valid entries claimed, or `null` if the buffer was empty. */
+    private fun claimBufferEpoch(): Int? {
+        while (true) {
+            val cur = bufferIndex.load()
+            if (cur >= bufferCapLong) return bufferCap
+            if (cur == 0L) return null
+            if (bufferIndex.compareAndSet(cur, bufferCapLong)) return cur.toInt()
+        }
     }
 
     /** Merge the snapshot into [means]/[weights] under the k1 difference rule. */

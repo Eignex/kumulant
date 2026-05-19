@@ -43,6 +43,8 @@ data class HeavyHittersResult(
  * Memory is `O(capacity)` Longs.
  */
 class SpaceSavingStat(
+    /** Maximum number of distinct keys tracked; smaller capacity means looser
+     *  heavy-hitter guarantees but lower memory. */
     val capacity: Int,
     override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<HeavyHittersResult> {
