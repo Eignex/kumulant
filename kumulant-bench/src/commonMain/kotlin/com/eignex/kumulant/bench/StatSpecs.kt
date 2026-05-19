@@ -6,6 +6,9 @@ import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceStat
 import com.eignex.kumulant.stat.decay.EwmaMeanStat
 import com.eignex.kumulant.stat.decay.EwmaVarianceStat
+import com.eignex.kumulant.stat.rate.CounterRateStat
+import com.eignex.kumulant.stat.rate.DecayingRateStat
+import com.eignex.kumulant.stat.rate.RateStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.MaxStat
@@ -21,6 +24,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Registry of [StatSpec]s — one entry per univariate stat. Tests and benchmarks
@@ -30,23 +34,23 @@ import kotlin.time.Duration.Companion.hours
 
 // === Summary ================================================================
 
-private fun bernoulliWorkload(seed: Int, n: Int): Sequence<DoubleArray> = sequence {
+private fun bernoulliWorkload(seed: Int, n: Int): Sequence<Update> = sequence {
     val rng = Random(seed)
     repeat(n) {
-        yield(doubleArrayOf(if (rng.nextDouble() < 0.3) 1.0 else 0.0, 0.5 + rng.nextDouble()))
+        yield(Update(if (rng.nextDouble() < 0.3) 1.0 else 0.0, 0.5 + rng.nextDouble(), 0L))
     }
 }
 
-private fun twoPassMean(data: List<DoubleArray>): Double {
-    val totW = data.sumOf { it[1] }
-    return if (totW == 0.0) 0.0 else data.sumOf { it[0] * it[1] } / totW
+private fun twoPassMean(data: List<Update>): Double {
+    val totW = data.sumOf { it.weight }
+    return if (totW == 0.0) 0.0 else data.sumOf { it.value * it.weight } / totW
 }
 
-private fun twoPassVariance(data: List<DoubleArray>): Double {
-    val totW = data.sumOf { it[1] }
+private fun twoPassVariance(data: List<Update>): Double {
+    val totW = data.sumOf { it.weight }
     if (totW == 0.0) return 0.0
-    val mean = data.sumOf { it[0] * it[1] } / totW
-    return data.sumOf { val d = it[0] - mean; it[1] * d * d } / totW
+    val mean = data.sumOf { it.value * it.weight } / totW
+    return data.sumOf { val d = it.value - mean; it.weight * d * d } / totW
 }
 
 val sumStatSpec = StatSpec(
@@ -54,7 +58,7 @@ val sumStatSpec = StatSpec(
     factory = { c -> SumStat(c) },
     updates = ::uniformVariableWeights,
     scalar = { it.sum },
-    reference = { it.sumOf { p -> p[0] * p[1] } },
+    reference = { it.sumOf { u -> u.value * u.weight } },
     tolerance = 1e-9,
 )
 
@@ -72,7 +76,7 @@ val totalWeightsStatSpec = StatSpec(
     factory = { c -> TotalWeightsStat(c) },
     updates = ::uniformVariableWeights,
     scalar = { it.sum },
-    reference = { it.sumOf { p -> p[1] } },
+    reference = { it.sumOf { u -> u.weight } },
     tolerance = 1e-9,
 )
 
@@ -108,7 +112,7 @@ val minStatSpec = StatSpec(
     factory = { c -> MinStat(c) },
     updates = ::uniformUnitWeights,
     scalar = { it.min },
-    reference = { seq -> seq.fold(Double.POSITIVE_INFINITY) { acc, p -> min(acc, p[0]) } },
+    reference = { seq -> seq.fold(Double.POSITIVE_INFINITY) { acc, u -> min(acc, u.value) } },
     tolerance = 0.0,
 )
 
@@ -117,7 +121,7 @@ val maxStatSpec = StatSpec(
     factory = { c -> MaxStat(c) },
     updates = ::uniformUnitWeights,
     scalar = { it.max },
-    reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, p -> max(acc, p[0]) } },
+    reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
     tolerance = 0.0,
 )
 
@@ -129,50 +133,57 @@ val rangeStatSpec = StatSpec(
     reference = { seq ->
         var lo = Double.POSITIVE_INFINITY
         var hi = Double.NEGATIVE_INFINITY
-        for (p in seq) {
-            if (p[0] < lo) lo = p[0]
-            if (p[0] > hi) hi = p[0]
+        for (u in seq) {
+            if (u.value < lo) lo = u.value
+            if (u.value > hi) hi = u.value
         }
         hi - lo
     },
     tolerance = 0.0,
 )
 
+val bernoulliSumStatSpec = StatSpec(
+    name = "BernoulliSumStat",
+    factory = { c -> BernoulliSumStat(c) },
+    updates = ::bernoulliWorkload,
+    scalar = { it.successes },
+    reference = { it.sumOf { u -> u.value * u.weight } },
+    tolerance = 1e-9,
+)
+
 // === Decay ==================================================================
 //
-// All time-driven decay stats are exercised at `timestampNanos = 0` for every
-// update and the read — the decay factor `exp(-alpha*(t - t_i))` collapses to 1,
-// so the stat behaves like its non-decaying counterpart and admits a closed-form
+// Time-driven decay stats are exercised at `timestampNanos = 0` for every update
+// and the read — the decay factor `exp(-alpha*(t - t_i))` collapses to 1 so the
+// stat behaves like its non-decaying counterpart and admits a closed-form
 // reference. EWMA-family stats (decay by accumulated weight) require the
 // recursion-based reference and are order-dependent.
 
-// A 1-hour half-life is irrelevant when every update lands at t=0, but the stat
-// requires *some* schedule at construction.
 private val decayWeighting = DecayWeighting.HalfLife(1.hours)
 private val ewmaWeighting = DecayWeighting.Alpha(0.01)
 
-private fun ewmaMean(alpha: Double, data: List<DoubleArray>): Double {
+private fun ewmaMean(alpha: Double, data: List<Update>): Double {
     var biased = 0.0
     var cumW = 0.0
-    for (p in data) {
-        val a = 1.0 - exp(-alpha * p[1])
-        biased += a * (p[0] - biased)
-        cumW += p[1]
+    for (u in data) {
+        val a = 1.0 - exp(-alpha * u.weight)
+        biased += a * (u.value - biased)
+        cumW += u.weight
     }
     val bc = 1.0 - exp(-alpha * cumW)
     return if (bc > 0.0) biased / bc else 0.0
 }
 
-private fun ewmaVariance(alpha: Double, data: List<DoubleArray>): Double {
+private fun ewmaVariance(alpha: Double, data: List<Update>): Double {
     var biasedMean = 0.0
     var biasedM2 = 0.0
     var cumW = 0.0
-    for (p in data) {
-        val a = 1.0 - exp(-alpha * p[1])
-        val delta = p[0] - biasedMean
+    for (u in data) {
+        val a = 1.0 - exp(-alpha * u.weight)
+        val delta = u.value - biasedMean
         biasedMean += a * delta
         biasedM2 = (1.0 - a) * (biasedM2 + a * delta * delta)
-        cumW += p[1]
+        cumW += u.weight
     }
     val bc = 1.0 - exp(-alpha * cumW)
     return if (bc > 0.0) biasedM2 / bc else 0.0
@@ -183,7 +194,7 @@ val decayingSumStatSpec = StatSpec(
     factory = { c -> DecayingSumStat(decayWeighting, c) },
     updates = ::uniformVariableWeights,
     scalar = { it.sum },
-    reference = { it.sumOf { p -> p[0] * p[1] } },
+    reference = { it.sumOf { u -> u.value * u.weight } },
     tolerance = 1e-9,
 )
 
@@ -225,14 +236,97 @@ val ewmaVarianceStatSpec = StatSpec(
     orderIndependent = false,
 )
 
-val bernoulliSumStatSpec = StatSpec(
-    name = "BernoulliSumStat",
-    factory = { c -> BernoulliSumStat(c) },
-    updates = ::bernoulliWorkload,
-    scalar = { it.successes },
-    reference = { it.sumOf { p -> p[0] * p[1] } },
-    tolerance = 1e-9,
+// === Rate ===================================================================
+//
+// Rate stats need real elapsed time to produce meaningful values: rate =
+// totalValue / elapsed_seconds. The workload progresses timestamps in 1 ms
+// strides, and [StatSpec.readAt] takes the snapshot just past the last update.
+
+// RateStat measures elapsed from the *first* observation's timestamp, not from
+// zero. Our workload puts the first update at 1 ms, so elapsedSec = readAt - 1ms.
+private const val WORKLOAD_STRIDE_NANOS = 1_000_000L
+
+private fun elapsedSeconds(list: List<Update>): Double {
+    if (list.isEmpty()) return 0.0
+    return (readAtFor(list.size) - list.first().timestampNanos) / 1_000_000_000.0
+}
+
+private fun rateReference(seq: Sequence<Update>): Double {
+    val list = seq.toList()
+    val elapsedSec = elapsedSeconds(list)
+    if (elapsedSec <= 0.0) return 0.0
+    return list.sumOf { it.value * it.weight } / elapsedSec
+}
+
+private fun counterReference(seq: Sequence<Update>): Double {
+    val list = seq.toList()
+    val elapsedSec = elapsedSeconds(list)
+    if (elapsedSec <= 0.0) return 0.0
+    return list.last().value / elapsedSec
+}
+
+private fun readAtFor(n: Int): Long = timeProgressingElapsedNanos(n)
+
+private val decayingRateHalfLife = 30.minutes
+
+// DecayingRateStat exposes `decayedSum * ln(2)/halfLifeSec`. With our half-life
+// (30 minutes) far exceeding the workload's elapsed window (~5–10s), the decay
+// factor is ~1 so the snapshot tracks `totalValue * ln(2)/halfLifeSec`.
+private fun decayingRateReference(seq: Sequence<Update>): Double {
+    val list = seq.toList()
+    if (list.isEmpty()) return 0.0
+    val total = list.sumOf { it.value * it.weight }
+    val scale = kotlin.math.ln(2.0) / (decayingRateHalfLife.inWholeNanoseconds / 1_000_000_000.0)
+    return total * scale
+}
+
+val rateStatSpec = StatSpec(
+    name = "RateStat",
+    factory = { c -> RateStat(c) },
+    updates = ::timeProgressingUnitWeights,
+    scalar = { it.rate },
+    reference = ::rateReference,
+    readAt = ::readAtFor,
+    // Under HighWrite striping, the startTimestamp may be set by a later
+    // sample than the actual first, slightly shrinking the elapsed denominator.
+    tolerance = 1.0,
 )
+
+val decayingRateStatSpec = StatSpec(
+    name = "DecayingRateStat",
+    factory = { c -> DecayingRateStat(decayingRateHalfLife, c) },
+    updates = ::timeProgressingUnitWeights,
+    scalar = { it.rate },
+    reference = ::decayingRateReference,
+    readAt = ::readAtFor,
+    // Small decay over the workload window — within 1% of the un-decayed scaled sum.
+    tolerance = 1e-2,
+)
+
+val counterRateStatSpec = StatSpec(
+    name = "CounterRateStat",
+    factory = { c -> CounterRateStat(c) },
+    updates = ::counterWorkload,
+    scalar = { it.rate },
+    reference = ::counterReference,
+    readAt = ::readAtFor,
+    tolerance = 1.0,
+    // CounterRate assumes a single monotonic counter source. The concurrency test
+    // concatenates per-thread counters which the stat reads as resets — the
+    // result depends on the interleaving order, so skip the exact comparison
+    // for non-None levels. The serial correctness test still pins the math.
+    orderIndependent = false,
+)
+
+private fun counterWorkload(seed: Int, n: Int): Sequence<Update> = sequence {
+    val rng = Random(seed)
+    val stride = 1_000_000L
+    var v = 0.0
+    repeat(n) { i ->
+        v += rng.nextDouble()
+        yield(Update(v, 1.0, (i + 1).toLong() * stride))
+    }
+}
 
 /** Every spec exposed by the bench module. */
 val allSpecs: List<StatSpec<*>> = listOf(
@@ -251,4 +345,7 @@ val allSpecs: List<StatSpec<*>> = listOf(
     decayingVarianceStatSpec,
     ewmaMeanStatSpec,
     ewmaVarianceStatSpec,
+    rateStatSpec,
+    decayingRateStatSpec,
+    counterRateStatSpec,
 )

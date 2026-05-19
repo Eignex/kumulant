@@ -11,13 +11,12 @@ import kotlinx.benchmark.Scope
 import kotlinx.benchmark.Setup
 import kotlinx.benchmark.State
 import kotlinx.benchmark.TearDown
-import kotlin.random.Random
 
 /**
  * Update-loop throughput for every [StatSpec]. The `name` parameter picks the spec
- * by [StatSpec.name]; `concurrency` picks the level. The benchmark drives
- * [updatesPerInvocation] cells through `update` per invocation and JMH reports
- * operations per second — divide by [updatesPerInvocation] to get per-update cost.
+ * by [StatSpec.name]; `concurrency` picks the level. Each invocation pushes
+ * [updatesPerInvocation] observations through `update` and JMH reports throughput
+ * — divide by [updatesPerInvocation] to recover per-update cost.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
@@ -40,6 +39,9 @@ open class UpdateThroughputBenchmark {
         "DecayingVarianceStat",
         "EwmaMeanStat",
         "EwmaVarianceStat",
+        "RateStat",
+        "DecayingRateStat",
+        "CounterRateStat",
     )
     var name: String = ""
 
@@ -49,6 +51,7 @@ open class UpdateThroughputBenchmark {
     private lateinit var stat: SeriesStat<*>
     private lateinit var values: DoubleArray
     private lateinit var weights: DoubleArray
+    private lateinit var timestamps: LongArray
 
     private val updatesPerInvocation = 4096
 
@@ -56,23 +59,23 @@ open class UpdateThroughputBenchmark {
     fun setup() {
         val spec = allSpecs.first { it.name == name }
         stat = spec.factory(Concurrency.valueOf(concurrency))
-        val rng = Random(1)
-        values = DoubleArray(updatesPerInvocation) { rng.nextDouble() }
-        weights = DoubleArray(updatesPerInvocation) { 1.0 }
+        val workload = spec.updates(0, updatesPerInvocation).toList()
+        values = DoubleArray(updatesPerInvocation) { workload[it].value }
+        weights = DoubleArray(updatesPerInvocation) { workload[it].weight }
+        timestamps = LongArray(updatesPerInvocation) { workload[it].timestampNanos }
     }
 
     @Benchmark
     fun update() {
         var i = 0
         while (i < updatesPerInvocation) {
-            stat.update(values[i], 0L, weights[i])
+            stat.update(values[i], timestamps[i], weights[i])
             i++
         }
     }
 
     @TearDown
     fun teardown() {
-        // Force a read so the JIT can't prove the snapshot is unused.
         stat.read(0L)
     }
 }

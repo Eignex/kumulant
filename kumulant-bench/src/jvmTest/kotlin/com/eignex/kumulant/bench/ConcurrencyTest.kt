@@ -51,8 +51,8 @@ class ConcurrencyTest {
         val combined = (0 until threadCount).asSequence().flatMap { tid ->
             spec.updates(tid, updatesPerThread)
         }
-        for (p in combined) stat.update(p[0], 0L, p[1])
-        val got = spec.scalar(stat.read(0L))
+        for (u in combined) stat.update(u.value, u.timestampNanos, u.weight)
+        val got = spec.scalar(stat.read(spec.readAt(threadCount * updatesPerThread)))
         assertTrue(got.isFinite(), "${spec.name} @ $level: non-finite snapshot $got")
         if (exact) {
             val want = spec.reference(
@@ -75,8 +75,8 @@ class ConcurrencyTest {
             executor.submit {
                 try {
                     start.await()
-                    for (pair in spec.updates(tid, updatesPerThread)) {
-                        stat.update(pair[0], 0L, pair[1])
+                    for (u in spec.updates(tid, updatesPerThread)) {
+                        stat.update(u.value, u.timestampNanos, u.weight)
                     }
                 } catch (t: Throwable) {
                     caught = t
@@ -90,7 +90,7 @@ class ConcurrencyTest {
         executor.shutdownNow()
         caught?.let { throw AssertionError("${spec.name} threw under $level", it) }
 
-        val got = spec.scalar(stat.read(0L))
+        val got = spec.scalar(stat.read(spec.readAt(threadCount * updatesPerThread)))
         assertTrue(got.isFinite(), "${spec.name} @ $level: non-finite snapshot $got")
         if (exact) {
             val combined = (0 until threadCount).asSequence().flatMap { tid ->
