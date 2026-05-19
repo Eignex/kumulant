@@ -53,7 +53,7 @@ private fun twoPassVariance(data: List<Update>): Double {
     return data.sumOf { val d = it.value - mean; it.weight * d * d } / totW
 }
 
-val sumStatSpec = StatSpec(
+val sumStatSpec = seriesStatSpec(
     name = "SumStat",
     factory = { c -> SumStat(c) },
     updates = ::uniformVariableWeights,
@@ -62,7 +62,7 @@ val sumStatSpec = StatSpec(
     tolerance = 1e-9,
 )
 
-val countStatSpec = StatSpec(
+val countStatSpec = seriesStatSpec(
     name = "CountStat",
     factory = { c -> CountStat(c) },
     updates = ::uniformVariableWeights,
@@ -71,7 +71,7 @@ val countStatSpec = StatSpec(
     tolerance = 1e-9,
 )
 
-val totalWeightsStatSpec = StatSpec(
+val totalWeightsStatSpec = seriesStatSpec(
     name = "TotalWeightsStat",
     factory = { c -> TotalWeightsStat(c) },
     updates = ::uniformVariableWeights,
@@ -80,7 +80,7 @@ val totalWeightsStatSpec = StatSpec(
     tolerance = 1e-9,
 )
 
-val meanStatSpec = StatSpec(
+val meanStatSpec = seriesStatSpec(
     name = "MeanStat",
     factory = { c -> MeanStat(c) },
     updates = ::uniformVariableWeights,
@@ -89,7 +89,7 @@ val meanStatSpec = StatSpec(
     tolerance = 1e-9,
 )
 
-val varianceStatSpec = StatSpec(
+val varianceStatSpec = seriesStatSpec(
     name = "VarianceStat",
     factory = { c -> VarianceStat(c) },
     updates = ::uniformVariableWeights,
@@ -98,7 +98,7 @@ val varianceStatSpec = StatSpec(
     tolerance = 1e-9,
 )
 
-val momentsStatSpec = StatSpec(
+val momentsStatSpec = seriesStatSpec(
     name = "MomentsStat",
     factory = { c -> MomentsStat(c) },
     updates = ::uniformVariableWeights,
@@ -107,7 +107,7 @@ val momentsStatSpec = StatSpec(
     tolerance = 1e-9,
 )
 
-val minStatSpec = StatSpec(
+val minStatSpec = seriesStatSpec(
     name = "MinStat",
     factory = { c -> MinStat(c) },
     updates = ::uniformUnitWeights,
@@ -116,7 +116,7 @@ val minStatSpec = StatSpec(
     tolerance = 0.0,
 )
 
-val maxStatSpec = StatSpec(
+val maxStatSpec = seriesStatSpec(
     name = "MaxStat",
     factory = { c -> MaxStat(c) },
     updates = ::uniformUnitWeights,
@@ -125,7 +125,7 @@ val maxStatSpec = StatSpec(
     tolerance = 0.0,
 )
 
-val rangeStatSpec = StatSpec(
+val rangeStatSpec = seriesStatSpec(
     name = "RangeStat",
     factory = { c -> RangeStat(c) },
     updates = ::uniformUnitWeights,
@@ -142,7 +142,7 @@ val rangeStatSpec = StatSpec(
     tolerance = 0.0,
 )
 
-val bernoulliSumStatSpec = StatSpec(
+val bernoulliSumStatSpec = seriesStatSpec(
     name = "BernoulliSumStat",
     factory = { c -> BernoulliSumStat(c) },
     updates = ::bernoulliWorkload,
@@ -189,7 +189,7 @@ private fun ewmaVariance(alpha: Double, data: List<Update>): Double {
     return if (bc > 0.0) biasedM2 / bc else 0.0
 }
 
-val decayingSumStatSpec = StatSpec(
+val decayingSumStatSpec = seriesStatSpec(
     name = "DecayingSumStat",
     factory = { c -> DecayingSumStat(decayWeighting, c) },
     updates = ::uniformVariableWeights,
@@ -198,7 +198,7 @@ val decayingSumStatSpec = StatSpec(
     tolerance = 1e-9,
 )
 
-val decayingMeanStatSpec = StatSpec(
+val decayingMeanStatSpec = seriesStatSpec(
     name = "DecayingMeanStat",
     factory = { c -> DecayingMeanStat(decayWeighting, c) },
     updates = ::uniformVariableWeights,
@@ -207,7 +207,7 @@ val decayingMeanStatSpec = StatSpec(
     tolerance = 1e-9,
 )
 
-val decayingVarianceStatSpec = StatSpec(
+val decayingVarianceStatSpec = seriesStatSpec(
     name = "DecayingVarianceStat",
     factory = { c -> DecayingVarianceStat(decayWeighting, c) },
     updates = ::uniformVariableWeights,
@@ -216,7 +216,7 @@ val decayingVarianceStatSpec = StatSpec(
     tolerance = 1e-9,
 )
 
-val ewmaMeanStatSpec = StatSpec(
+val ewmaMeanStatSpec = seriesStatSpec(
     name = "EwmaMeanStat",
     factory = { c -> EwmaMeanStat(ewmaWeighting, c) },
     updates = ::uniformVariableWeights,
@@ -226,7 +226,7 @@ val ewmaMeanStatSpec = StatSpec(
     orderIndependent = false,
 )
 
-val ewmaVarianceStatSpec = StatSpec(
+val ewmaVarianceStatSpec = seriesStatSpec(
     name = "EwmaVarianceStat",
     factory = { c -> EwmaVarianceStat(ewmaWeighting, c) },
     updates = ::uniformVariableWeights,
@@ -280,7 +280,7 @@ private fun decayingRateReference(seq: Sequence<Update>): Double {
     return total * scale
 }
 
-val rateStatSpec = StatSpec(
+val rateStatSpec = seriesStatSpec(
     name = "RateStat",
     factory = { c -> RateStat(c) },
     updates = ::timeProgressingUnitWeights,
@@ -292,7 +292,7 @@ val rateStatSpec = StatSpec(
     tolerance = 1.0,
 )
 
-val decayingRateStatSpec = StatSpec(
+val decayingRateStatSpec = seriesStatSpec(
     name = "DecayingRateStat",
     factory = { c -> DecayingRateStat(decayingRateHalfLife, c) },
     updates = ::timeProgressingUnitWeights,
@@ -303,7 +303,7 @@ val decayingRateStatSpec = StatSpec(
     tolerance = 1e-2,
 )
 
-val counterRateStatSpec = StatSpec(
+val counterRateStatSpec = seriesStatSpec(
     name = "CounterRateStat",
     factory = { c -> CounterRateStat(c) },
     updates = ::counterWorkload,
@@ -328,8 +328,39 @@ private fun counterWorkload(seed: Int, n: Int): Sequence<Update> = sequence {
     }
 }
 
+// === Cardinality ============================================================
+//
+// Cardinality stats consume Long identifiers. The harness converts each Update
+// value to its IEEE-754 raw bits — that yields well-spread integer IDs from the
+// uniform [0, 1) double workload. Reference cardinality is the count of distinct
+// raw-bit IDs in the stream; sketches sit within their stated standard error.
+
+val hyperLogLogStatSpec = discreteStatSpec(
+    name = "HyperLogLogStat",
+    factory = { c -> com.eignex.kumulant.stat.cardinality.HyperLogLogStat(precision = 14, concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.estimate },
+    reference = { seq -> seq.map { it.value.toRawBits() }.toSet().size.toDouble() },
+    // Standard error ~ 1.04/sqrt(2^14) = 0.81%. With 5000 distinct IDs this is
+    // about 40 — allow 100 for safety across seeds and concurrency-induced drift.
+    tolerance = 100.0,
+)
+
+val linearCountingStatSpec = discreteStatSpec(
+    name = "LinearCountingStat",
+    factory = { c ->
+        com.eignex.kumulant.stat.cardinality.LinearCountingStat(bits = 1 shl 16, concurrency = c)
+    },
+    updates = ::uniformUnitWeights,
+    scalar = { it.estimate },
+    reference = { seq -> seq.map { it.value.toRawBits() }.toSet().size.toDouble() },
+    // 64K-bit bitset over 5000 distinct IDs: load ~7.6%, bias is small and the
+    // estimator converges quickly. Allow 50 to be safe.
+    tolerance = 50.0,
+)
+
 /** Every spec exposed by the bench module. */
-val allSpecs: List<StatSpec<*>> = listOf(
+val allSpecs: List<StatSpec<*, *>> = listOf(
     sumStatSpec,
     countStatSpec,
     totalWeightsStatSpec,
@@ -348,4 +379,6 @@ val allSpecs: List<StatSpec<*>> = listOf(
     rateStatSpec,
     decayingRateStatSpec,
     counterRateStatSpec,
+    hyperLogLogStatSpec,
+    linearCountingStatSpec,
 )

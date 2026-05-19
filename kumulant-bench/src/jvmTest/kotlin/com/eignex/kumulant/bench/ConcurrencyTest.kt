@@ -12,9 +12,8 @@ import kotlin.test.assertTrue
 /**
  * Drive every [StatSpec] under every [Concurrency] level and verify the snapshot.
  *
- * - [Concurrency.None] — single-threaded; assertion is identical to the commonTest
- *   correctness test but pinned here so a JVM-only contributor can run the whole
- *   matrix in one place.
+ * - [Concurrency.None] — single-threaded; assertion mirrors the commonTest correctness
+ *   test, pinned here so a JVM-only contributor can run the whole matrix in one place.
  * - [Concurrency.Strict] / [Concurrency.HighWrite] — concurrent; exact match against
  *   the analytical reference for [StatSpec.orderIndependent] stats; finiteness only
  *   for order-dependent ones.
@@ -46,13 +45,13 @@ class ConcurrencyTest {
         for (spec in allSpecs) runConcurrent(spec, Concurrency.Relaxed, exact = false)
     }
 
-    private fun <R : Result> runSerial(spec: StatSpec<R>, level: Concurrency, exact: Boolean) {
+    private fun <S, R : Result> runSerial(spec: StatSpec<S, R>, level: Concurrency, exact: Boolean) {
         val stat = spec.factory(level)
         val combined = (0 until threadCount).asSequence().flatMap { tid ->
             spec.updates(tid, updatesPerThread)
         }
-        for (u in combined) stat.update(u.value, u.timestampNanos, u.weight)
-        val got = spec.scalar(stat.read(spec.readAt(threadCount * updatesPerThread)))
+        for (u in combined) spec.applyUpdate(stat, u)
+        val got = spec.scalar(spec.readSnapshot(stat, spec.readAt(threadCount * updatesPerThread)))
         assertTrue(got.isFinite(), "${spec.name} @ $level: non-finite snapshot $got")
         if (exact) {
             val want = spec.reference(
@@ -65,7 +64,7 @@ class ConcurrencyTest {
         }
     }
 
-    private fun <R : Result> runConcurrent(spec: StatSpec<R>, level: Concurrency, exact: Boolean) {
+    private fun <S, R : Result> runConcurrent(spec: StatSpec<S, R>, level: Concurrency, exact: Boolean) {
         val stat = spec.factory(level)
         val executor = Executors.newFixedThreadPool(threadCount)
         val start = CountDownLatch(1)
@@ -76,7 +75,7 @@ class ConcurrencyTest {
                 try {
                     start.await()
                     for (u in spec.updates(tid, updatesPerThread)) {
-                        stat.update(u.value, u.timestampNanos, u.weight)
+                        spec.applyUpdate(stat, u)
                     }
                 } catch (t: Throwable) {
                     caught = t
@@ -90,7 +89,7 @@ class ConcurrencyTest {
         executor.shutdownNow()
         caught?.let { throw AssertionError("${spec.name} threw under $level", it) }
 
-        val got = spec.scalar(stat.read(spec.readAt(threadCount * updatesPerThread)))
+        val got = spec.scalar(spec.readSnapshot(stat, spec.readAt(threadCount * updatesPerThread)))
         assertTrue(got.isFinite(), "${spec.name} @ $level: non-finite snapshot $got")
         if (exact) {
             val combined = (0 until threadCount).asSequence().flatMap { tid ->

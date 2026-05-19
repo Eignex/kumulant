@@ -159,7 +159,10 @@ class StandaloneBanditExtraTest {
         baseline.update(0, feat(0.0), 1.0)
         bonus.update(0, feat(0.0), 1.0)
         // Advance the step counters so the UCB bound has ln(t) > 0.
-        repeat(5) { baseline.choose(feat(0.0)); bonus.choose(feat(0.0)) }
+        repeat(5) {
+            baseline.choose(feat(0.0))
+            bonus.choose(feat(0.0))
+        }
         assertTrue(bonus.evaluate(0, feat(0.0)) > baseline.evaluate(0, feat(0.0)))
     }
 

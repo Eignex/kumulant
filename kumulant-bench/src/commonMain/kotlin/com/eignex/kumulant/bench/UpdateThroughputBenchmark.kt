@@ -1,7 +1,6 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.SeriesStat
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.BenchmarkMode
 import kotlinx.benchmark.Mode
@@ -15,8 +14,8 @@ import kotlinx.benchmark.TearDown
 /**
  * Update-loop throughput for every [StatSpec]. The `name` parameter picks the spec
  * by [StatSpec.name]; `concurrency` picks the level. Each invocation pushes
- * [updatesPerInvocation] observations through `update` and JMH reports throughput
- * — divide by [updatesPerInvocation] to recover per-update cost.
+ * [updatesPerInvocation] observations through the spec's `applyUpdate` and JMH
+ * reports throughput — divide by [updatesPerInvocation] for per-update cost.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
@@ -42,40 +41,63 @@ open class UpdateThroughputBenchmark {
         "RateStat",
         "DecayingRateStat",
         "CounterRateStat",
+        "HyperLogLogStat",
+        "LinearCountingStat",
     )
     var name: String = ""
 
     @Param("None", "Relaxed", "Strict")
     var concurrency: String = ""
 
-    private lateinit var stat: SeriesStat<*>
-    private lateinit var values: DoubleArray
-    private lateinit var weights: DoubleArray
-    private lateinit var timestamps: LongArray
-
+    private lateinit var driver: BenchDriver
     private val updatesPerInvocation = 4096
 
     @Setup
     fun setup() {
         val spec = allSpecs.first { it.name == name }
-        stat = spec.factory(Concurrency.valueOf(concurrency))
-        val workload = spec.updates(0, updatesPerInvocation).toList()
-        values = DoubleArray(updatesPerInvocation) { workload[it].value }
-        weights = DoubleArray(updatesPerInvocation) { workload[it].weight }
-        timestamps = LongArray(updatesPerInvocation) { workload[it].timestampNanos }
+        driver = makeDriver(spec, Concurrency.valueOf(concurrency), updatesPerInvocation)
     }
 
     @Benchmark
     fun update() {
-        var i = 0
-        while (i < updatesPerInvocation) {
-            stat.update(values[i], timestamps[i], weights[i])
-            i++
-        }
+        driver.runUpdates()
     }
 
     @TearDown
     fun teardown() {
-        stat.read(0L)
+        driver.snapshot()
     }
+}
+
+/** Type-erased driver capturing the stat instance and pre-materialised workload
+ *  so the JMH hot loop avoids generic dispatch and lambda allocation. */
+private class BenchDriver(
+    private val applyUpdate: (Update) -> Unit,
+    private val readSnapshot: () -> Unit,
+    private val workload: Array<Update>,
+) {
+    fun runUpdates() {
+        var i = 0
+        while (i < workload.size) {
+            applyUpdate(workload[i])
+            i++
+        }
+    }
+    fun snapshot() {
+        readSnapshot()
+    }
+}
+
+private fun <S, R : com.eignex.kumulant.core.Result> makeDriver(
+    spec: StatSpec<S, R>,
+    concurrency: Concurrency,
+    n: Int,
+): BenchDriver {
+    val stat = spec.factory(concurrency)
+    val workload = spec.updates(0, n).toList().toTypedArray()
+    return BenchDriver(
+        applyUpdate = { u -> spec.applyUpdate(stat, u) },
+        readSnapshot = { spec.readSnapshot(stat, 0L) },
+        workload = workload,
+    )
 }

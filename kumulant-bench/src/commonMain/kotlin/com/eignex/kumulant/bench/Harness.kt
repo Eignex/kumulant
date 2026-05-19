@@ -1,6 +1,7 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import kotlin.random.Random
@@ -9,45 +10,93 @@ import kotlin.random.Random
 class Update(val value: Double, val weight: Double, val timestampNanos: Long)
 
 /**
- * Generic spec describing how to drive a univariate [SeriesStat] under the bench
- * module's three test categories (correctness, concurrency, perf). One [StatSpec]
- * instance is reusable across all three drivers.
+ * Generic spec describing how to drive a stat under the bench module's three test
+ * categories (correctness, concurrency, perf). One [StatSpec] is reusable across all
+ * three drivers. Parameterised by the live stat type [S] so [SeriesStat]-based
+ * summary stats and [DiscreteStat]-based cardinality stats fit the same harness.
  *
- * - [factory] constructs a fresh stat at a given [Concurrency] level.
- * - [updates] generates a sequence of [Update]s for a given seed and workload size —
- *   kept deterministic so correctness and concurrency tests share reference values.
- * - [readAt] returns the timestamp at which the snapshot is taken (rate stats need
- *   this to be past the final update so elapsed time is positive).
- * - [scalar] reduces a snapshot to a single Double that correctness tests assert
- *   against a reference computed by [reference].
- * - [tolerance] is the absolute slack allowed when comparing snapshot scalars to
- *   the reference (some stats — sketches in particular — are inherently approximate).
- * - [orderIndependent] = false marks stats whose recurrence folds updates in arrival
- *   order (EWMA family); the concurrency test then only checks finiteness rather
- *   than exact reference match for non-None levels.
+ * Build a SeriesStat-backed spec via [seriesStatSpec]; a DiscreteStat-backed one via
+ * [discreteStatSpec]. Construct [StatSpec] directly only when wiring a stat type
+ * that doesn't have a helper yet.
  */
-class StatSpec<R : Result>(
+class StatSpec<S, R : Result>(
     val name: String,
-    val factory: (Concurrency) -> SeriesStat<R>,
+    val factory: (Concurrency) -> S,
+    val applyUpdate: (S, Update) -> Unit,
+    val readSnapshot: (S, Long) -> R,
     val updates: (seed: Int, n: Int) -> Sequence<Update>,
     val scalar: (R) -> Double,
     val reference: (Sequence<Update>) -> Double,
     val tolerance: Double = 0.0,
     val readAt: (n: Int) -> Long = { 0L },
+    /** When false, concurrent execution may produce a different result than the
+     *  analytical reference because the stat's recurrence folds updates in arrival
+     *  order (EWMA family). The concurrency test then skips the exact-match check
+     *  for this spec and only verifies finiteness. */
     val orderIndependent: Boolean = true,
 ) {
     /** Run a single-threaded workload and return the snapshot scalar. */
     fun runSerial(seed: Int, n: Int, concurrency: Concurrency = Concurrency.None): Double {
         val stat = factory(concurrency)
-        for (u in updates(seed, n)) {
-            stat.update(u.value, u.timestampNanos, u.weight)
-        }
-        return scalar(stat.read(readAt(n)))
+        for (u in updates(seed, n)) applyUpdate(stat, u)
+        return scalar(readSnapshot(stat, readAt(n)))
     }
 
     /** Compute the reference for the same workload — exact-math expected value. */
     fun expected(seed: Int, n: Int): Double = reference(updates(seed, n))
 }
+
+// === Helpers ================================================================
+
+/** Build a spec for a [SeriesStat]-shaped stat (the common case). */
+fun <R : Result> seriesStatSpec(
+    name: String,
+    factory: (Concurrency) -> SeriesStat<R>,
+    updates: (seed: Int, n: Int) -> Sequence<Update>,
+    scalar: (R) -> Double,
+    reference: (Sequence<Update>) -> Double,
+    tolerance: Double = 0.0,
+    readAt: (n: Int) -> Long = { 0L },
+    orderIndependent: Boolean = true,
+): StatSpec<SeriesStat<R>, R> = StatSpec(
+    name = name,
+    factory = factory,
+    applyUpdate = { s, u -> s.update(u.value, u.timestampNanos, u.weight) },
+    readSnapshot = { s, ts -> s.read(ts) },
+    updates = updates,
+    scalar = scalar,
+    reference = reference,
+    tolerance = tolerance,
+    readAt = readAt,
+    orderIndependent = orderIndependent,
+)
+
+/**
+ * Build a spec for a [DiscreteStat]-shaped stat (cardinality estimators). The
+ * harness [Update.value] is fed to the stat as `value.toRawBits().toLong()` so
+ * the bench preserves bit-identical input distributions across stats.
+ */
+fun <R : Result> discreteStatSpec(
+    name: String,
+    factory: (Concurrency) -> DiscreteStat<R>,
+    updates: (seed: Int, n: Int) -> Sequence<Update>,
+    scalar: (R) -> Double,
+    reference: (Sequence<Update>) -> Double,
+    tolerance: Double,
+    orderIndependent: Boolean = true,
+): StatSpec<DiscreteStat<R>, R> = StatSpec(
+    name = name,
+    factory = factory,
+    applyUpdate = { s, u -> s.update(u.value.toRawBits(), u.timestampNanos, u.weight) },
+    readSnapshot = { s, ts -> s.read(ts) },
+    updates = updates,
+    scalar = scalar,
+    reference = reference,
+    tolerance = tolerance,
+    orderIndependent = orderIndependent,
+)
+
+// === Workloads ==============================================================
 
 /** Standard workload: uniform [0, 1) values, unit weights, all at t=0. */
 fun uniformUnitWeights(seed: Int, n: Int): Sequence<Update> = sequence {
@@ -67,7 +116,7 @@ fun uniformVariableWeights(seed: Int, n: Int): Sequence<Update> = sequence {
  */
 fun timeProgressingUnitWeights(seed: Int, n: Int): Sequence<Update> = sequence {
     val rng = Random(seed)
-    val stride = 1_000_000L // 1 ms per update
+    val stride = 1_000_000L
     repeat(n) { i -> yield(Update(rng.nextDouble(), 1.0, (i + 1).toLong() * stride)) }
 }
 
