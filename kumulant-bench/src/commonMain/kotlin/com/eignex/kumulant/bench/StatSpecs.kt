@@ -307,7 +307,12 @@ class CounterRateBag internal constructor(val stat: CounterRateStat, val counter
 
 val counterRateStatSpec: StatSpec<CounterRateBag, com.eignex.kumulant.stat.rate.RateResult> = StatSpec(
     name = "CounterRateStat",
-    factory = { c -> CounterRateBag(CounterRateStat(c), AtomicLong(0L)) },
+    factory = { c ->
+        // Multi-writer bench: opt out of decrease-as-reset so out-of-order
+        // arrivals from racing threads don't inflate the running delta. See the
+        // CounterRateStat class docstring.
+        CounterRateBag(CounterRateStat(c, treatDecreaseAsReset = false), AtomicLong(0L))
+    },
     applyUpdate = { bag, u ->
         val i = bag.counter.addAndFetch(1L)
         bag.stat.update(i.toDouble(), u.timestampNanos, u.weight)

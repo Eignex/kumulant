@@ -47,7 +47,16 @@ class RateStat(
         timestampNanos: Long,
         weight: Double
     ) {
-        startTimestampNanos.compareAndSet(Long.MIN_VALUE, timestampNanos)
+        // CAS-loop down to the earliest observed timestamp. A plain
+        // compareAndSet(MIN_VALUE, ts) would pick an arbitrary first-arriver
+        // under contention, which can be a later thread whose timestamp is
+        // past the actual stream start — shrinking the duration window and
+        // inflating the reported rate.
+        while (true) {
+            val current = startTimestampNanos.load()
+            if (current != Long.MIN_VALUE && current <= timestampNanos) break
+            if (startTimestampNanos.compareAndSet(current, timestampNanos)) break
+        }
         totalValues.add(value * weight)
     }
 
