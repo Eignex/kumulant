@@ -40,15 +40,19 @@ data class LinearCountingResult(
  * roughly [bits]; degrades sharply (and saturates to infinity) when the bitset fills.
  * Prefer [HyperLogLogStat] when the cardinality range is unknown.
  *
- * [bits] must be a power of two and a multiple of 64. Memory is `bits / 64` Longs.
- * Mergeable via word-wise OR.
+ * [bits] must be a power of two and a multiple of 64.
  *
- * # Concurrency
+ * **Use cases:** distinct-value estimation when cardinality is bounded and
+ * the bitset can be sized comfortably above it. Cheaper and slightly more
+ * accurate than [HyperLogLogStat] in that regime; saturates badly above it.
  *
- * Each bit is set via atomic OR on a striped Long array; the unsetBits and
- * totalSeen counters are independent atomic ops. Lock-free and exact under
- * every [Concurrency] level — repeated sets of the same bit are idempotent,
- * and the order of bit sets does not affect the final bitset.
+ * **Memory:** O(bits / 64) Longs, plus two counters.
+ *
+ * **Update:** O(1) per observation; one hash + one atomic OR.
+ *
+ * **Concurrency:** Atomic OR on a striped Long array; counters are
+ * independent atomic ops. Lock-free and exact under every [Concurrency]
+ * level — bit sets are idempotent and commutative.
  */
 class LinearCountingStat(
     val bits: Int = 4096,

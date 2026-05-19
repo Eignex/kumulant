@@ -53,11 +53,16 @@ fun BloomFilterResult.contains(value: Long): Boolean {
  *
  * [bits] must be a power of two and a multiple of 64.
  *
- * # Concurrency
+ * **Use cases:** membership queries with bounded memory — feature flags,
+ * deduplication of seen keys, "have we seen this user before". Tolerates
+ * false positives but never false negatives.
  *
- * Each set bit is an atomic OR on a striped Long array. Lock-free and exact
- * under every [Concurrency] level — bit sets are idempotent and commutative,
- * so writer order does not affect the final bitset.
+ * **Memory:** O(bits / 64) Longs, plus a `totalSeen` counter.
+ *
+ * **Update:** O([hashes]) per observation; [hashes] independent atomic OR ops.
+ *
+ * **Concurrency:** Atomic OR on a striped Long array. Lock-free and exact
+ * under every [Concurrency] level — bit sets are idempotent and commutative.
  */
 class BloomFilterStat(
     val bits: Int = 1 shl 16,

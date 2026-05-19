@@ -59,12 +59,18 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
  * The Jaccard similarity between two sets is estimated by the fraction of slots whose
  * signatures agree (see [jaccard]).
  *
- * Standard error of the Jaccard estimate is roughly `1 / sqrt(numHashes)`. Memory is
- * `numHashes` Longs; mergeable element-wise via min when `numHashes` and `seed` match.
+ * Standard error of the Jaccard estimate is roughly `1 / sqrt(numHashes)`.
  *
- * # Concurrency
+ * **Use cases:** set-similarity estimation under bounded memory — near-duplicate
+ * detection, recommender-style "users who like X also like Y", clustering
+ * coarse buckets via locality-sensitive hashing.
  *
- * Each signature slot is a single-cell CAS-min loop on an atomic Long array.
+ * **Memory:** O([numHashes]) Longs.
+ *
+ * **Update:** O([numHashes]) per observation; one hash per signature slot
+ * followed by a CAS-min loop.
+ *
+ * **Concurrency:** Per-slot single-cell CAS-min loop on an atomic Long array.
  * Lock-free and exact under every [Concurrency] level — min over an unordered
  * set is the same regardless of writer order.
  */

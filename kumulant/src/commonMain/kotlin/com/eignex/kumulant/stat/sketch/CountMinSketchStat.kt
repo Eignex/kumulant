@@ -53,11 +53,16 @@ fun CountMinSketchResult.estimate(value: Long): Long {
  *
  * [width] must be a power of two so that the hash maps to an index via masking.
  *
- * # Concurrency
+ * **Use cases:** point-frequency estimation for heavy-hitter detection,
+ * per-key counters under bounded memory, top-k via paired [SpaceSavingStat].
  *
- * Each counter cell is a striped atomic add. Lock-free and exact under every
- * [Concurrency] level — increments commute, and the per-row independence
- * means racing writers on the same value just update different cells.
+ * **Memory:** O([depth] · [width]) Longs.
+ *
+ * **Update:** O([depth]) per observation; [depth] independent atomic adds.
+ *
+ * **Concurrency:** Striped atomic adds on independent rows. Lock-free and
+ * exact under every [Concurrency] level — increments commute, and racing
+ * writers on the same value just bump the same cells.
  */
 class CountMinSketchStat(
     val depth: Int = 5,

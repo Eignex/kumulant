@@ -49,13 +49,18 @@ data class HyperLogLogResult(
  * linear-counting fallback already gives near-exact estimates at low
  * cardinalities.
  *
- * # Concurrency
+ * **Use cases:** distinct-value estimation under tight memory (count unique
+ * users, unique error fingerprints, unique IPs). Reach for [LinearCountingStat]
+ * instead when cardinality is bounded and known to stay below the bitset size.
  *
- * Each register is updated via a single-cell CAS-max loop on a striped Long
- * array; the totalSeen counter is a separate atomic add. Both paths are
- * lock-free and exact under every [Concurrency] level — different writers
- * may race on the same register, but the max-over-incoming-rho invariant is
- * preserved by the CAS retry.
+ * **Memory:** O(m) = O(2^precision) bytes, plus a `totalSeen` counter.
+ *
+ * **Update:** O(1) per observation; one hash + register CAS-max.
+ *
+ * **Concurrency:** Per-register single-cell CAS-max loop on a striped Long
+ * array; `totalSeen` is a separate atomic add. Lock-free and exact under
+ * every [Concurrency] level — racing writers on the same register preserve
+ * the max-over-incoming-rho invariant via CAS retry.
  */
 class HyperLogLogStat(
     /** Number of register-index bits; memory is `2^precision` bytes. */

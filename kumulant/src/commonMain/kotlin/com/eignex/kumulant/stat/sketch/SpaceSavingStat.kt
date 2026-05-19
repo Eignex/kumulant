@@ -25,22 +25,34 @@ data class HeavyHittersResult(
 ) : Result
 
 /**
- * Heavy-hitters tracker. Two algorithms run depending on concurrency:
+ * Heavy-hitters tracker — keeps the [capacity] most-frequent keys with
+ * one-sided overestimate guarantees on their counts.
  *
- * - [Concurrency.None], [Concurrency.Strict], [Concurrency.HighWrite]:
- *   classic Space-Saving (Metwally, Agrawal, El Abbadi 2005). On a miss when full,
- *   the minimum-count slot is evicted and the new key inherits the old count plus
- *   its weight, with the old count recorded as the new key's overestimate bound.
- *   Reported counts are one-sided overestimates: `count >= true count`, gap <= `error`.
- *   Strict/HighWrite serialize against reads/merges via an outer lock.
+ * **Use cases:** top-k key discovery under bounded memory — most-frequent
+ * users, top error fingerprints, hot cache keys. Pair with [CountMinSketchStat]
+ * if you need point-frequency lookups on arbitrary keys, not just the top set.
  *
- * - [Concurrency.Relaxed]: lock-free Misra-Gries variant. On a miss when full,
- *   all counts are decremented by one in best-effort fashion; a freed slot is
- *   claimed via CAS. Counts under this mode are NOT overestimates - they may
- *   underestimate by the number of decrements, and the classic overestimate bound
- *   does not hold. Heavy hitters still surface; small/cold keys are bled out.
+ * **Memory:** O([capacity]) Longs (keys + counts + errors).
  *
- * Memory is `O(capacity)` Longs.
+ * **Update:** O(1) per observation when the key is tracked; O([capacity]) on
+ * a miss when the table is full (linear scan to find the minimum-count slot).
+ *
+ * **Concurrency:** Two algorithms run depending on level:
+ *
+ *  - [Concurrency.None], [Concurrency.Strict], [Concurrency.HighWrite]:
+ *    classic Space-Saving (Metwally, Agrawal, El Abbadi 2005). On a miss when
+ *    full, the minimum-count slot is evicted and the new key inherits the old
+ *    count plus its weight, with the old count recorded as the new key's
+ *    overestimate bound. Reported counts are one-sided overestimates:
+ *    `count >= true count`, gap <= `error`. Strict/HighWrite serialise against
+ *    reads/merges via an outer lock.
+ *
+ *  - [Concurrency.Relaxed]: lock-free Misra-Gries variant. On a miss when
+ *    full, all counts are decremented by one in best-effort fashion; a freed
+ *    slot is claimed via CAS. Counts under this mode are **not** overestimates
+ *    — they may underestimate by the number of decrements, and the classic
+ *    overestimate bound does not hold. Heavy hitters still surface; small/cold
+ *    keys are bled out.
  */
 class SpaceSavingStat(
     /** Maximum number of distinct keys tracked; smaller capacity means looser
