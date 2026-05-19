@@ -16,7 +16,14 @@ data class MinResult(
     val min: Double,
 ) : Result
 
-/** Tracks the minimum of a stream. */
+/**
+ * Tracks the minimum value seen across a stream.
+ *
+ * # Concurrency
+ *
+ * Single-cell CAS-min loop — exact under every [Concurrency] level.
+ * The CAS retry naturally serialises racing writers without a lock.
+ */
 class MinStat(
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<MinResult> {

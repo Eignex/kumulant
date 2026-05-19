@@ -28,6 +28,16 @@ data class MomentsResult(
  * Weighted first four central moments (mean, m2, m3, m4) for skewness and kurtosis.
  *
  * Uses the Pebay/Welford parallel recurrences; suitable for streaming and merge.
+ *
+ * # Concurrency
+ *
+ * Five coupled cells (`totalWeights, mean, m2, m3, m4`) updated in lockstep.
+ * [Concurrency.Strict] and [Concurrency.HighWrite] lock the body so each
+ * update is atomic — exact match to a serial run up to floating-point reorder
+ * ULPs. [Concurrency.Relaxed] drops the lock; the higher-order moments drift
+ * ~1e-4 relative under contention but never throw. Choose
+ * [Concurrency.Strict] when correctness matters more than the lock-free write
+ * path.
  */
 class MomentsStat(
     override val concurrency: Concurrency = Concurrency.None,

@@ -20,7 +20,14 @@ data class RangeResult(
 ) : Result
 
 /**
- * Tracks the minimum and maximum of a stream.
+ * Tracks the minimum and maximum value seen across a stream.
+ *
+ * # Concurrency
+ *
+ * Two independent CAS-min/CAS-max cells — each exact under every [Concurrency]
+ * level. A `read()` between the two CAS writes of a single update can briefly
+ * observe `min > max` on a never-yet-updated stat under heavy contention, but
+ * the per-cell guarantees hold.
  */
 class RangeStat(
     override val concurrency: Concurrency = Concurrency.None,

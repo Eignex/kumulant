@@ -27,13 +27,19 @@ data class PairedSumResult(
 /**
  * Weighted paired sum `(Sum w_i*x_i, Sum w_i*y_i)` with accumulated weight.
  *
- * Three independent atomic adds - additive category, no lock. Use as a
- * primitive for gradient/hessian aggregation in boosting and similar
+ * Use as a primitive for gradient/hessian aggregation in boosting and similar
  * paired-flow accumulators.
  *
  * Numerical caveat matches [SumStat]: very long mixed-magnitude streams accumulate
  * ulp drift on the order of sqrtn. For compensated accumulation, consider running
  * a Welford-style stat over each axis instead.
+ *
+ * # Concurrency
+ *
+ * Three independent atomic adds per update — exact under every [Concurrency]
+ * level. A `read()` interleaved between the three writes of a single update
+ * can briefly observe partially-applied state, but the per-cell guarantees
+ * hold. [Concurrency.HighWrite] switches the cells to striped adders.
  */
 class PairedSumStat(
     override val concurrency: Concurrency = Concurrency.None,

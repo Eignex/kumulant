@@ -16,7 +16,14 @@ data class MaxResult(
     val max: Double,
 ) : Result
 
-/** Tracks the maximum of a stream. */
+/**
+ * Tracks the maximum value seen across a stream.
+ *
+ * # Concurrency
+ *
+ * Single-cell CAS-max loop — exact under every [Concurrency] level.
+ * The CAS retry naturally serialises racing writers without a lock.
+ */
 class MaxStat(
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<MaxResult> {

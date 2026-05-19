@@ -22,6 +22,13 @@ data class SumResult(
  * accumulate ulp drift on the order of sqrtn. For compensated floating-point
  * accumulation, prefer [MeanStat] or [VarianceStat] (Welford recurrences) and recover
  * the sum as `mean * totalWeights`.
+ *
+ * # Concurrency
+ *
+ * Single atomic add per update — exact under every [Concurrency] level.
+ * [Concurrency.HighWrite] switches the backing cell to a striped adder
+ * (`DoubleAdder` on JVM) for higher throughput under heavy write contention,
+ * trading a slower `read()` that sweeps all stripes.
  */
 class SumStat(
     override val concurrency: Concurrency = Concurrency.None,

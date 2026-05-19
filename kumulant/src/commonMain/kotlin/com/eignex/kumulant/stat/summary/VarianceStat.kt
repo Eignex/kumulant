@@ -34,6 +34,16 @@ data class WeightedVarianceResult(
  *
  * Population variance `sst / totalWeights`; use [HasSampleVariance.sampleVariance] on
  * the result for the unbiased estimator.
+ *
+ * # Concurrency
+ *
+ * The Welford recurrence couples `(totalWeights, mean, sst)` across each
+ * update. [Concurrency.Strict] and [Concurrency.HighWrite] lock the body so
+ * each update is atomic — exact match to a serial run up to floating-point
+ * reorder ULPs. [Concurrency.Relaxed] drops the lock and the three cells race
+ * independently; the variance drifts ~1e-4 relative under contention but
+ * never throws. Choose [Concurrency.Strict] when correctness matters more
+ * than the lock-free write path.
  */
 class VarianceStat(
     override val concurrency: Concurrency = Concurrency.None,

@@ -16,6 +16,13 @@ data class CountResult(
     val count: Long,
 ) : Result
 
-/** Observation count: each update contributes 1 regardless of supplied value and weight. */
+/**
+ * Observation count: each update contributes 1 regardless of supplied value and weight.
+ *
+ * # Concurrency
+ *
+ * Inherits [SumStat]'s single-atomic-add update path — exact under every
+ * [Concurrency] level.
+ */
 class CountStat(concurrency: Concurrency = Concurrency.None) :
     SeriesStat<SumResult> by SumStat(concurrency).withWeight(1.0).withValue(1.0)

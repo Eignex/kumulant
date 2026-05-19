@@ -27,6 +27,14 @@ data class BernoulliSumResult(
  *
  * Mirrors combo's `BinarySum`: emits the sufficient statistics for binomial /
  * Beta-Binomial Thompson sampling without doing the sampling itself.
+ *
+ * # Concurrency
+ *
+ * Two independent atomic adds per update — exact under every [Concurrency]
+ * level. A `read()` interleaved between the two writes of a single update can
+ * briefly observe `successes/trials` mismatched by one observation's
+ * contribution, but the per-cell guarantees hold.
+ * [Concurrency.HighWrite] switches both cells to striped adders.
  */
 class BernoulliSumStat(
     override val concurrency: Concurrency = Concurrency.None,

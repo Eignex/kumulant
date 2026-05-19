@@ -31,6 +31,16 @@ data class WeightedMeanResult(
  *
  * Numerically stable across wide dynamic ranges; merges two [MeanStat]s using Chan's
  * parallel algorithm.
+ *
+ * # Concurrency
+ *
+ * The Welford recurrence couples `(totalWeights, mean)` across each update.
+ * [Concurrency.Strict] and [Concurrency.HighWrite] lock the body so each
+ * update is atomic — exact match to a serial run up to floating-point reorder
+ * ULPs. [Concurrency.Relaxed] drops the lock and updates the two cells via
+ * atomic CAS independently; the coupled invariant can drift by ~1e-5 relative
+ * under contention but never throws. Choose [Concurrency.Strict] when
+ * correctness matters more than the lock-free write path.
  */
 class MeanStat(
     override val concurrency: Concurrency = Concurrency.None,
