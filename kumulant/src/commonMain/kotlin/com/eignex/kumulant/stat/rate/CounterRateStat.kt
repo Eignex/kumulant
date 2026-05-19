@@ -15,22 +15,26 @@ import com.eignex.kumulant.stream.welfordMode
  * total is the sum of all forward increments. The rate at read time is
  * `totalDelta / (readTs - startTs)`.
  *
- * # Concurrency
- *
- * Safe under any number of concurrent writers without manual synchronisation.
- * The update body is serialised by an internal lock; the high-water-mark
- * advances only on forward progress (`value >= previousCounter`). Decreases
- * either trigger reset accounting (when [treatDecreaseAsReset] is `true`) or
- * are silently dropped as out-of-order arrivals from another writer.
- *
  * Ordering is by **counter value**, not timestamp. Two writers submitting
  * samples with overlapping timestamps work fine as long as their counter
- * values are globally monotonic (e.g. each pulled from a shared
- * `AtomicLong`). The start timestamp converges to the earliest observed
- * predecessor via a CAS-loop, so the duration window reflects the full
- * lifetime of the stream regardless of lock-acquisition order. An explicit
- * reset (counter decrease with [treatDecreaseAsReset]) re-anchors the start
- * window to the post-reset timestamp.
+ * values are globally monotonic (e.g. each pulled from a shared `AtomicLong`).
+ * An explicit reset (counter decrease with [treatDecreaseAsReset]) re-anchors
+ * the start window to the post-reset timestamp.
+ *
+ * **Use cases:** scraping monotonic counters (Prometheus `*_total` metrics,
+ * OS counter readings, replicated request counts). Pair with a Prometheus-style
+ * scraper that periodically samples an external counter.
+ *
+ * **Memory:** O(1) — total delta + start timestamp + `(lastCounter, lastTs)`.
+ *
+ * **Update:** O(1) per observation under the per-stat lock.
+ *
+ * **Concurrency:** Body locked under any concurrent [Concurrency] level
+ * (no-op under [Concurrency.None]); safe under any number of concurrent
+ * writers without external synchronisation. Forward-progressing samples
+ * advance the high-water mark; decreases either reset (when
+ * [treatDecreaseAsReset]) or drop silently. The start timestamp converges to
+ * the earliest observed predecessor via CAS-loop-min.
  */
 class CounterRateStat(
     override val concurrency: Concurrency = Concurrency.None,

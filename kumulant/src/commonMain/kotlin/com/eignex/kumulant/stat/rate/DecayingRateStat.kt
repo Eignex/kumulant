@@ -24,13 +24,19 @@ data class DecayingRateResult(
 /**
  * Time-decayed rate with the given [halfLife].
  *
- * Projects [DecayingSumStat] onto events-per-second via `alpha = ln 2 / halfLife`, so the
- * rate reflects only the recent window of activity.
+ * Projects [DecayingSumStat] onto events-per-second via `alpha = ln 2 / halfLife`,
+ * so the rate reflects only the recent window of activity.
  *
- * # Concurrency
+ * **Use cases:** recent throughput / events-per-second (request rate over the
+ * last 30 s, recent error rate). Reach for this over [RateStat] when older
+ * activity should fade.
  *
- * Pure projection of [DecayingSumStat]; inherits its lock-free epoch-rotation
- * design and is exact under every [Concurrency] level.
+ * **Memory:** O(1) — one [DecayingSumStat] plus a scalar projection.
+ *
+ * **Update:** O(1) per observation (one [DecayingSumStat.update] call).
+ *
+ * **Concurrency:** Inherits [DecayingSumStat]'s concurrency model — lock-free
+ * and exact under every [Concurrency] level.
  */
 class DecayingRateStat(
     val halfLife: Duration,

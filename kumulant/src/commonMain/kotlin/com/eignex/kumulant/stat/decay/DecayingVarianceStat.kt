@@ -36,8 +36,21 @@ data class DecayingVarianceResult(
  * second-central-moment are decayed in lockstep with elapsed wall-clock time.
  * Each update advances the landmark to the event timestamp, decays `W` and `M2`
  * by `exp(-alpha*Deltat)`, then applies the standard increment
- * `M2 += w*delta*(value - meanNew)`. This avoids the catastrophic cancellation of
- * the `E[X^2] - E[X]^2` form when `stdDev << |mean|`.
+ * `M2 += w*delta*(value - meanNew)`. This avoids the catastrophic cancellation
+ * of the `E[X^2] - E[X]^2` form when `stdDev << |mean|`.
+ *
+ * **Use cases:** recency-biased dispersion (rolling latency variance, recent
+ * variance for control charts). Reach for this over [VarianceStat] when older
+ * observations should fade.
+ *
+ * **Memory:** O(1) — landmark + three doubles plus a lock.
+ *
+ * **Update:** O(1) per observation; one `exp()` decay + Welford increment.
+ *
+ * **Concurrency:** Body locked under any concurrent [Concurrency] level
+ * (no-op under [Concurrency.None]). The multi-cell decay-then-Welford
+ * transition cannot survive lock-free CAS — see *Why locked under Relaxed*
+ * below. Exact under every level up to floating-point reorder ULPs.
  */
 class DecayingVarianceStat(
     /** Time-decay schedule applied to past contributions. */

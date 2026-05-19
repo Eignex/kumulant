@@ -22,18 +22,22 @@ data class DecayingMeanResult(
 /**
  * Exponentially decaying weighted mean: `Sum(v_i*w_i*decay) / Sum(w_i*decay)`.
  *
- * Composes two [DecayingSumStat]s — one for weighted values, one for weights — so that the
- * decay factor cancels in the ratio and the mean reflects only the *relative* weighting
- * of recent vs. older observations.
+ * Composes two [DecayingSumStat]s — one for weighted values, one for weights — so
+ * that the decay factor cancels in the ratio and the mean reflects only the
+ * *relative* weighting of recent vs. older observations.
  *
- * # Concurrency
+ * **Use cases:** recency-biased central tendency (rolling average of latencies,
+ * recent click-through rate, etc.). Reach for this over [MeanStat] when older
+ * observations should fade rather than persist.
  *
- * Inherits [DecayingSumStat]'s lock-free epoch-rotation design across both
- * underlying sums; exact under every [Concurrency] level. The two updates are
- * applied sequentially without a lock, so a `read()` interleaved between them
- * can observe one sum that includes the new sample and one that doesn't —
- * resulting in a momentary tiny bias on the ratio. Self-correcting on the next
- * update.
+ * **Memory:** O(1) — two `DecayingSumStat` instances.
+ *
+ * **Update:** O(1) per observation (two `DecayingSumStat.update()` calls).
+ *
+ * **Concurrency:** Inherits [DecayingSumStat]'s lock-free epoch-rotation;
+ * exact under every [Concurrency] level. The two sums are updated sequentially
+ * without a lock, so a `read()` between them can briefly observe a tiny ratio
+ * bias on a contested stream — self-correcting on the next update.
  */
 class DecayingMeanStat(
     /** Time-decay schedule applied to past contributions. */

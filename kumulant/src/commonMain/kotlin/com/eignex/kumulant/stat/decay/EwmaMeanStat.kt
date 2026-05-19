@@ -13,20 +13,22 @@ import com.eignex.kumulant.stream.welfordMode
  * with `a = 1 - exp(-alpha*w)`. Read returns the bias-corrected value
  * `biasedMean / (1 - exp(-alpha*totalWeights))`.
  *
- * # Concurrency
+ * **Use cases:** weight-windowed central tendency where elapsed time isn't
+ * relevant but observation count is (e.g. a smooth average of the last ~N
+ * predictions, regardless of how spaced apart they were). Reach for this over
+ * [DecayingMeanStat] when the cadence is irregular and you want a per-sample
+ * smoothing factor rather than wall-clock decay.
  *
- * Under [Concurrency.Strict] and [Concurrency.HighWrite] the update body is
- * locked so individual updates apply atomically, but **the final snapshot still
- * depends on the order in which updates arrive**. The recurrence folds each
- * sample into the running mean against the previous biased mean — a different
- * interleaving of the same multiset of updates produces a different result by
- * ~1–10%. This is intrinsic to EWMA, not a bug; locking does not (and cannot)
- * recover a serial reference value.
+ * **Memory:** O(1) — two doubles plus a lock.
  *
- * Under [Concurrency.Relaxed] the lock is dropped and individual updates may
- * additionally race on the read-modify-write of `biasedMean`, adding further
- * drift on top of the order dependence. Prefer [Concurrency.Strict] when
- * correctness matters more than write throughput.
+ * **Update:** O(1) per observation.
+ *
+ * **Concurrency:** Order-dependent recurrence. Even [Concurrency.Strict]
+ * (which locks the body) does **not** reproduce a serial reference value — the
+ * lock serialises arrival, not the order of arrival, and the result drifts
+ * ~3–10% under contention. [Concurrency.Relaxed] additionally drops the lock,
+ * compounding the drift. Use [Concurrency.Strict] when correctness matters
+ * more than write throughput.
  */
 class EwmaMeanStat(
     /** Per-observation smoothing schedule. */

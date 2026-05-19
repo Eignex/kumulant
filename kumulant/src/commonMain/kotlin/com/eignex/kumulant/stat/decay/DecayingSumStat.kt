@@ -26,19 +26,25 @@ data class DecayingSumResult(
  *
  * `S(t) = Sum v_i * w_i * exp(-alpha*(t - t_i))` with `alpha = ln(2)/halfLife`.
  *
- * The core time-decay primitive. Internally uses landmark-rotation to keep the stored
- * accumulator in a bounded numerical range even after many half-lives of activity.
+ * Internally uses landmark rotation to keep the stored accumulator in a
+ * bounded numerical range even after many half-lives of activity.
  *
- * # Concurrency
+ * **Use cases:** time-windowed event totals (requests in the last 30s),
+ * recency-weighted aggregation for monitoring dashboards. The core time-decay
+ * primitive — pair with another [DecayingSumStat] for ratios via
+ * [DecayingMeanStat], or with `ln(2)/halfLife` for per-second rates via
+ * [com.eignex.kumulant.stat.rate.DecayingRateStat].
  *
- * Lock-free under every concurrent level. Each update discounts its incoming
- * `value * weight` to the current epoch's landmark via `exp(alpha * dt)` and
- * applies a single atomic add to the epoch's accumulator. Epoch rotation
- * (which folds accumulated mass into a fresh landmark to keep the discount
- * exponent bounded) is a CAS swap of the epoch reference, so a thread that
- * loses the rotation race simply retries against the new epoch.
- * [Concurrency.HighWrite] switches the accumulator cell to a striped adder
- * for higher throughput under heavy write contention.
+ * **Memory:** O(1) — one epoch (`(landmark, accumulator)`) at a time.
+ *
+ * **Update:** O(1) per observation; one `exp()` + one atomic add. Epoch
+ * rotation fires at most once per `ROTATION_HALF_LIVES` half-lives and is
+ * O(1) amortised.
+ *
+ * **Concurrency:** Lock-free under every [Concurrency] level. Updates discount
+ * to the current epoch and atomic-add; epoch rotation is a CAS swap of the
+ * epoch reference, losers retry against the new epoch.
+ * [Concurrency.HighWrite] switches the accumulator cell to a striped adder.
  */
 class DecayingSumStat(
     /** Time-decay schedule applied to past contributions. */
