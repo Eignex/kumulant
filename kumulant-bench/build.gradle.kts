@@ -23,20 +23,11 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":kumulant"))
             implementation("org.jetbrains.kotlinx:kotlinx-benchmark-runtime:0.4.13")
-            // kumulant declares serialization compileOnly; mirror that here so
-            // native KLIB resolution can walk the kumulant klib without pulling
-            // serialization into the bench runtime.
-            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
-            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
-            // DDSketch et al. carry generated KSerializer companions whose static
-            // init touches kotlinx.serialization. The bench compile path uses
-            // compileOnly to avoid leaking it into the bench artifact, but at
-            // test runtime we need the real classes on the classpath.
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
         }
         jvmTest.dependencies {
             implementation(kotlin("test-junit"))

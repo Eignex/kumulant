@@ -2,8 +2,11 @@ package com.eignex.kumulant.bench
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
+import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.math.DenseVector
 import kotlin.random.Random
 
 /** Single observation passed to a stat under test. */
@@ -68,6 +71,61 @@ fun <R : Result> seriesStatSpec(
     reference = reference,
     tolerance = tolerance,
     readAt = readAt,
+    orderIndependent = orderIndependent,
+)
+
+/**
+ * Build a spec for a [PairedStat]-shaped stat (covariance, AUC, score losses).
+ * The y coordinate is derived from [Update.value] by [deriveY], which defaults
+ * to `2 * x + 0.1` — a known-slope linear relation suitable for regression and
+ * covariance, and a valid logit-style input for the loss family.
+ */
+fun <R : Result> pairedStatSpec(
+    name: String,
+    factory: (Concurrency) -> PairedStat<R>,
+    updates: (seed: Int, n: Int) -> Sequence<Update>,
+    scalar: (R) -> Double,
+    reference: (Sequence<Update>) -> Double,
+    tolerance: Double,
+    deriveY: (Double) -> Double = { 2.0 * it + 0.1 },
+    orderIndependent: Boolean = true,
+): StatSpec<PairedStat<R>, R> = StatSpec(
+    name = name,
+    factory = factory,
+    applyUpdate = { s, u -> s.update(u.value, deriveY(u.value), u.timestampNanos, u.weight) },
+    readSnapshot = { s, ts -> s.read(ts) },
+    updates = updates,
+    scalar = scalar,
+    reference = reference,
+    tolerance = tolerance,
+    orderIndependent = orderIndependent,
+)
+
+/**
+ * Build a spec for a [RegressionStat]-shaped stat. The feature vector is the
+ * single-element `[Update.value]`, and the target is derived by [deriveY]
+ * (defaulting to `2 * x + 0.1` for a known true slope).
+ */
+fun <R : Result> regressionStatSpec(
+    name: String,
+    factory: (Concurrency) -> RegressionStat<R>,
+    updates: (seed: Int, n: Int) -> Sequence<Update>,
+    scalar: (R) -> Double,
+    reference: (Sequence<Update>) -> Double,
+    tolerance: Double,
+    deriveY: (Double) -> Double = { 2.0 * it + 0.1 },
+    orderIndependent: Boolean = true,
+): StatSpec<RegressionStat<R>, R> = StatSpec(
+    name = name,
+    factory = factory,
+    applyUpdate = { s, u ->
+        s.update(DenseVector.of(doubleArrayOf(u.value)), deriveY(u.value), u.timestampNanos, u.weight)
+    },
+    readSnapshot = { s, ts -> s.read(ts) },
+    updates = updates,
+    scalar = scalar,
+    reference = reference,
+    tolerance = tolerance,
     orderIndependent = orderIndependent,
 )
 

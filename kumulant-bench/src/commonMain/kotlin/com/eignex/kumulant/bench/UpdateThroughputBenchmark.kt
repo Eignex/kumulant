@@ -53,6 +53,15 @@ open class UpdateThroughputBenchmark {
         "ReservoirHistogramStat",
         "TDigestStat",
         "FrugalQuantileStat",
+        "UnivariateRegressionStat",
+        "CovarianceStat",
+        "BayesianRegressionStat",
+        "DiagonalRegressionStat",
+        "StochasticRegressionStat",
+        "AucStat",
+        "BrierScoreStat",
+        "PinballLossStat",
+        "ReliabilityStat",
     )
     var name: String = ""
 

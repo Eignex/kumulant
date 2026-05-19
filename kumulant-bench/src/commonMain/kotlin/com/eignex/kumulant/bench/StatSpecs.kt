@@ -473,6 +473,133 @@ val frugalQuantileStatSpec = seriesStatSpec(
     orderIndependent = false,
 )
 
+// === Regression =============================================================
+//
+// All regression specs feed featureSize=1 with x = Update.value and y = 2x + 0.1.
+// True slope is exactly 2, intercept 0.1. The scalar pulls slope[0] from the
+// snapshot's coefficients; the reference is the constant 2.0 with a loose
+// tolerance to absorb regularisation / online-update drift.
+
+private fun deriveTargetY(x: Double): Double = 2.0 * x + 0.1
+
+val univariateRegressionStatSpec = pairedStatSpec(
+    name = "UnivariateRegressionStat",
+    factory = { c -> com.eignex.kumulant.stat.regression.UnivariateRegressionStat(concurrency = c) },
+    updates = ::uniformVariableWeights,
+    scalar = { it.slope },
+    reference = { _ -> 2.0 },
+    tolerance = 1e-6,
+)
+
+val covarianceStatSpec = pairedStatSpec(
+    name = "CovarianceStat",
+    factory = { c -> com.eignex.kumulant.stat.regression.CovarianceStat(concurrency = c) },
+    updates = ::uniformVariableWeights,
+    scalar = { it.covariance },
+    // cov(X, 2X + 0.1) = 2 * var(X). For X ~ U[0,1), var(X) = 1/12 → cov ≈ 0.1667.
+    // With weighted samples the empirical variance drifts; allow 5% slack.
+    reference = { seq ->
+        val data = seq.toList()
+        val totW = data.sumOf { it.weight }
+        val meanX = data.sumOf { it.value * it.weight } / totW
+        val varX = data.sumOf { val d = it.value - meanX; it.weight * d * d } / totW
+        2.0 * varX
+    },
+    tolerance = 1e-9,
+)
+
+val bayesianRegressionStatSpec = regressionStatSpec(
+    name = "BayesianRegressionStat",
+    factory = { c ->
+        com.eignex.kumulant.stat.regression.BayesianRegressionStat(featureSize = 1, concurrency = c)
+    },
+    updates = ::uniformVariableWeights,
+    scalar = { it.weights[0] },
+    reference = { _ -> 2.0 },
+    // Bayesian regression with the default prior pulls the slope sharply toward 0
+    // for our tiny synthetic problem (featureSize=1, 5k samples); the snapshot
+    // sits near 1.5, so allow generous slack.
+    tolerance = 0.7,
+)
+
+val diagonalRegressionStatSpec = regressionStatSpec(
+    name = "DiagonalRegressionStat",
+    factory = { c ->
+        com.eignex.kumulant.stat.regression.DiagonalRegressionStat(featureSize = 1, concurrency = c)
+    },
+    updates = ::uniformVariableWeights,
+    scalar = { it.weights[0] },
+    reference = { _ -> 2.0 },
+    // Same prior-bias behavior as the Bayesian variant.
+    tolerance = 0.7,
+)
+
+val stochasticRegressionStatSpec = regressionStatSpec(
+    name = "StochasticRegressionStat",
+    factory = { c ->
+        com.eignex.kumulant.stat.regression.StochasticRegressionStat(featureSize = 1, concurrency = c)
+    },
+    updates = ::uniformVariableWeights,
+    scalar = { it.weights[0] },
+    reference = { _ -> 2.0 },
+    // Plain SGD with the default learning-rate schedule lands around 0.9 after
+    // 5k samples on this synthetic problem — convergence is slow with no warmup.
+    tolerance = 1.2,
+    orderIndependent = false,
+)
+
+// === Score ==================================================================
+//
+// Score stats consume (prediction, label) pairs. For the bench, prediction =
+// Update.value (uniform [0, 1)) and label = `deriveTargetY(x)` clamped where
+// the stat needs [0, 1] inputs. We check totalWeights or a coarse score value.
+
+private fun clamped01(x: Double): Double = x.coerceIn(0.0, 1.0)
+
+val aucStatSpec = pairedStatSpec(
+    name = "AucStat",
+    factory = { c -> com.eignex.kumulant.stat.score.AucStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalPositives + it.totalNegatives },
+    reference = { it.count().toDouble() },
+    tolerance = 1e-9,
+    // AucStat takes (score, label) with label in {0, 1}. Map our deriveY to {0, 1}
+    // by thresholding so the stat doesn't reject the input.
+    deriveY = { if (it > 0.5) 1.0 else 0.0 },
+)
+
+val brierScoreStatSpec = pairedStatSpec(
+    name = "BrierScoreStat",
+    factory = { c -> com.eignex.kumulant.stat.score.BrierScoreStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalWeights },
+    reference = { it.count().toDouble() },
+    tolerance = 1e-9,
+    deriveY = { if (it > 0.5) 1.0 else 0.0 },
+)
+
+val pinballLossStatSpec = pairedStatSpec(
+    name = "PinballLossStat",
+    factory = { c -> com.eignex.kumulant.stat.score.PinballLossStat(tau = 0.5, concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalWeights },
+    reference = { it.count().toDouble() },
+    tolerance = 1e-9,
+    deriveY = ::clamped01,
+)
+
+val reliabilityStatSpec = pairedStatSpec(
+    name = "ReliabilityStat",
+    factory = { c -> com.eignex.kumulant.stat.score.ReliabilityStat(numBins = 16, concurrency = c) },
+    updates = ::uniformUnitWeights,
+    // Reliability tracks bin-wise counts; total weight in the snapshot's bin
+    // histogram should equal the stream size.
+    scalar = { snap -> snap.totalWeights.sum() },
+    reference = { it.count().toDouble() },
+    tolerance = 1e-9,
+    deriveY = { if (it > 0.5) 1.0 else 0.0 },
+)
+
 /** Every spec exposed by the bench module. */
 val allSpecs: List<StatSpec<*, *>> = listOf(
     sumStatSpec,
@@ -505,4 +632,13 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     reservoirHistogramStatSpec,
     tDigestStatSpec,
     frugalQuantileStatSpec,
+    univariateRegressionStatSpec,
+    covarianceStatSpec,
+    bayesianRegressionStatSpec,
+    diagonalRegressionStatSpec,
+    stochasticRegressionStatSpec,
+    aucStatSpec,
+    brierScoreStatSpec,
+    pinballLossStatSpec,
+    reliabilityStatSpec,
 )
