@@ -21,6 +21,15 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
  * Reward encoding lives at the call site — pre-transform `y` (e.g. `ln(y)`) before
  * [update]. The internal leaf accumulator is fixed to [VarianceStat]'s
  * [WeightedVarianceResult] so the [VarianceReduction] split metric applies.
+ *
+ * # Concurrency
+ *
+ * Leaf-arm updates are lock-free (each arm is a [VarianceStat] that honours
+ * [Concurrency]). Split conversion — the only path that mutates tree
+ * structure — is serialised by a per-tree lock that fires only once every
+ * [TreeConfig.splitPeriod] observations per audit leaf. The hot update path
+ * is therefore pure arm arithmetic with zero structural reference writes in
+ * the common case. See [Tree] for the full concurrency design.
  */
 class DecisionTreeRegressionStat(
     override val featureSize: Int,
