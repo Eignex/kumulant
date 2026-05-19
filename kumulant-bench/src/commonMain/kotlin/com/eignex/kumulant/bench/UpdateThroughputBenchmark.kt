@@ -35,6 +35,11 @@ open class UpdateThroughputBenchmark {
         "MaxStat",
         "RangeStat",
         "BernoulliSumStat",
+        "DecayingSumStat",
+        "DecayingMeanStat",
+        "DecayingVarianceStat",
+        "EwmaMeanStat",
+        "EwmaVarianceStat",
     )
     var name: String = ""
 

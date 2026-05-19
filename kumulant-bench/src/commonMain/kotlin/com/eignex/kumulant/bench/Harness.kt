@@ -26,6 +26,12 @@ class StatSpec<R : Result>(
     val scalar: (R) -> Double,
     val reference: (Sequence<DoubleArray>) -> Double,
     val tolerance: Double = 0.0,
+    /** When false, concurrent execution may produce a different result than the
+     *  analytical reference because the stat's recurrence folds updates in arrival
+     *  order (EWMA family). The concurrency test then skips the exact-match check
+     *  for this spec and only verifies the run completes without exceptions and
+     *  the snapshot scalar is finite. */
+    val orderIndependent: Boolean = true,
 ) {
     /** Run a single-threaded workload and return the snapshot scalar. */
     fun runSerial(seed: Int, n: Int, concurrency: Concurrency = Concurrency.None): Double {

@@ -1,5 +1,11 @@
 package com.eignex.kumulant.bench
 
+import com.eignex.kumulant.stat.decay.DecayWeighting
+import com.eignex.kumulant.stat.decay.DecayingMeanStat
+import com.eignex.kumulant.stat.decay.DecayingSumStat
+import com.eignex.kumulant.stat.decay.DecayingVarianceStat
+import com.eignex.kumulant.stat.decay.EwmaMeanStat
+import com.eignex.kumulant.stat.decay.EwmaVarianceStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.MaxStat
@@ -10,9 +16,11 @@ import com.eignex.kumulant.stat.summary.RangeStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
+import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.hours
 
 /**
  * Registry of [StatSpec]s — one entry per univariate stat. Tests and benchmarks
@@ -130,6 +138,93 @@ val rangeStatSpec = StatSpec(
     tolerance = 0.0,
 )
 
+// === Decay ==================================================================
+//
+// All time-driven decay stats are exercised at `timestampNanos = 0` for every
+// update and the read — the decay factor `exp(-alpha*(t - t_i))` collapses to 1,
+// so the stat behaves like its non-decaying counterpart and admits a closed-form
+// reference. EWMA-family stats (decay by accumulated weight) require the
+// recursion-based reference and are order-dependent.
+
+// A 1-hour half-life is irrelevant when every update lands at t=0, but the stat
+// requires *some* schedule at construction.
+private val decayWeighting = DecayWeighting.HalfLife(1.hours)
+private val ewmaWeighting = DecayWeighting.Alpha(0.01)
+
+private fun ewmaMean(alpha: Double, data: List<DoubleArray>): Double {
+    var biased = 0.0
+    var cumW = 0.0
+    for (p in data) {
+        val a = 1.0 - exp(-alpha * p[1])
+        biased += a * (p[0] - biased)
+        cumW += p[1]
+    }
+    val bc = 1.0 - exp(-alpha * cumW)
+    return if (bc > 0.0) biased / bc else 0.0
+}
+
+private fun ewmaVariance(alpha: Double, data: List<DoubleArray>): Double {
+    var biasedMean = 0.0
+    var biasedM2 = 0.0
+    var cumW = 0.0
+    for (p in data) {
+        val a = 1.0 - exp(-alpha * p[1])
+        val delta = p[0] - biasedMean
+        biasedMean += a * delta
+        biasedM2 = (1.0 - a) * (biasedM2 + a * delta * delta)
+        cumW += p[1]
+    }
+    val bc = 1.0 - exp(-alpha * cumW)
+    return if (bc > 0.0) biasedM2 / bc else 0.0
+}
+
+val decayingSumStatSpec = StatSpec(
+    name = "DecayingSumStat",
+    factory = { c -> DecayingSumStat(decayWeighting, c) },
+    updates = ::uniformVariableWeights,
+    scalar = { it.sum },
+    reference = { it.sumOf { p -> p[0] * p[1] } },
+    tolerance = 1e-9,
+)
+
+val decayingMeanStatSpec = StatSpec(
+    name = "DecayingMeanStat",
+    factory = { c -> DecayingMeanStat(decayWeighting, c) },
+    updates = ::uniformVariableWeights,
+    scalar = { it.mean },
+    reference = { twoPassMean(it.toList()) },
+    tolerance = 1e-9,
+)
+
+val decayingVarianceStatSpec = StatSpec(
+    name = "DecayingVarianceStat",
+    factory = { c -> DecayingVarianceStat(decayWeighting, c) },
+    updates = ::uniformVariableWeights,
+    scalar = { it.variance },
+    reference = { twoPassVariance(it.toList()) },
+    tolerance = 1e-9,
+)
+
+val ewmaMeanStatSpec = StatSpec(
+    name = "EwmaMeanStat",
+    factory = { c -> EwmaMeanStat(ewmaWeighting, c) },
+    updates = ::uniformVariableWeights,
+    scalar = { it.mean },
+    reference = { ewmaMean(ewmaWeighting.alpha, it.toList()) },
+    tolerance = 1e-9,
+    orderIndependent = false,
+)
+
+val ewmaVarianceStatSpec = StatSpec(
+    name = "EwmaVarianceStat",
+    factory = { c -> EwmaVarianceStat(ewmaWeighting, c) },
+    updates = ::uniformVariableWeights,
+    scalar = { it.variance },
+    reference = { ewmaVariance(ewmaWeighting.alpha, it.toList()) },
+    tolerance = 1e-9,
+    orderIndependent = false,
+)
+
 val bernoulliSumStatSpec = StatSpec(
     name = "BernoulliSumStat",
     factory = { c -> BernoulliSumStat(c) },
@@ -151,4 +246,9 @@ val allSpecs: List<StatSpec<*>> = listOf(
     maxStatSpec,
     rangeStatSpec,
     bernoulliSumStatSpec,
+    decayingSumStatSpec,
+    decayingMeanStatSpec,
+    decayingVarianceStatSpec,
+    ewmaMeanStatSpec,
+    ewmaVarianceStatSpec,
 )

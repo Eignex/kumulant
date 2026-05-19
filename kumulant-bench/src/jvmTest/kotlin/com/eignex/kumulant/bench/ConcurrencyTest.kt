@@ -10,12 +10,16 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * Drive every [StatSpec] from N threads under [Concurrency.Strict] and verify the
- * final snapshot scalar matches the analytical reference within the spec's tolerance.
- * Catches lost updates, torn reads, and lock-acquisition bugs.
+ * Drive every [StatSpec] under every [Concurrency] level and verify the snapshot.
  *
- * Under [Concurrency.Relaxed] additive stats are still exact (single atomic add per
- * update); coupled stats may drift but must not throw. Both levels are exercised.
+ * - [Concurrency.None] — single-threaded; assertion is identical to the commonTest
+ *   correctness test but pinned here so a JVM-only contributor can run the whole
+ *   matrix in one place.
+ * - [Concurrency.Strict] / [Concurrency.HighWrite] — concurrent; exact match against
+ *   the analytical reference for [StatSpec.orderIndependent] stats; finiteness only
+ *   for order-dependent ones.
+ * - [Concurrency.Relaxed] — concurrent; drift permitted on coupled stats, so we only
+ *   require the call to not throw and the snapshot to be finite.
  */
 class ConcurrencyTest {
 
@@ -23,16 +27,41 @@ class ConcurrencyTest {
     private val updatesPerThread = 2_500
 
     @Test
-    fun `every spec is exact under Strict concurrency`() {
-        for (spec in allSpecs) {
-            runConcurrent(spec, Concurrency.Strict, exact = true)
-        }
+    fun `every spec under None`() {
+        for (spec in allSpecs) runSerial(spec, Concurrency.None, exact = spec.orderIndependent)
     }
 
     @Test
-    fun `every spec runs without exception under Relaxed concurrency`() {
-        for (spec in allSpecs) {
-            runConcurrent(spec, Concurrency.Relaxed, exact = false)
+    fun `every spec under Strict`() {
+        for (spec in allSpecs) runConcurrent(spec, Concurrency.Strict, exact = spec.orderIndependent)
+    }
+
+    @Test
+    fun `every spec under HighWrite`() {
+        for (spec in allSpecs) runConcurrent(spec, Concurrency.HighWrite, exact = spec.orderIndependent)
+    }
+
+    @Test
+    fun `every spec under Relaxed`() {
+        for (spec in allSpecs) runConcurrent(spec, Concurrency.Relaxed, exact = false)
+    }
+
+    private fun <R : Result> runSerial(spec: StatSpec<R>, level: Concurrency, exact: Boolean) {
+        val stat = spec.factory(level)
+        val combined = (0 until threadCount).asSequence().flatMap { tid ->
+            spec.updates(tid, updatesPerThread)
+        }
+        for (p in combined) stat.update(p[0], 0L, p[1])
+        val got = spec.scalar(stat.read(0L))
+        assertTrue(got.isFinite(), "${spec.name} @ $level: non-finite snapshot $got")
+        if (exact) {
+            val want = spec.reference(
+                (0 until threadCount).asSequence().flatMap { spec.updates(it, updatesPerThread) }
+            )
+            assertTrue(
+                abs(got - want) <= spec.tolerance,
+                "${spec.name} @ $level: got=$got want=$want diff=${abs(got - want)} tol=${spec.tolerance}",
+            )
         }
     }
 
@@ -62,9 +91,8 @@ class ConcurrencyTest {
         caught?.let { throw AssertionError("${spec.name} threw under $level", it) }
 
         val got = spec.scalar(stat.read(0L))
+        assertTrue(got.isFinite(), "${spec.name} @ $level: non-finite snapshot $got")
         if (exact) {
-            // Reference: the spec's analytical reduction over the concatenation of
-            // every thread's deterministic workload.
             val combined = (0 until threadCount).asSequence().flatMap { tid ->
                 spec.updates(tid, updatesPerThread)
             }

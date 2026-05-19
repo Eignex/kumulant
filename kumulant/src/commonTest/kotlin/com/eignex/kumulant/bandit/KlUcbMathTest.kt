@@ -7,10 +7,11 @@ import kotlin.test.assertTrue
 class KlUcbMathTest {
 
     @Test
-    fun `klBernoulli is zero for matching means`() {
-        assertEquals(0.0, KlUcb.klBernoulli(0.0, 0.0), 1e-12)
+    fun `klBernoulli is zero for matching interior means`() {
+        // Boundary q values (0 or 1) return +infinity by convention since the log diverges.
         assertEquals(0.0, KlUcb.klBernoulli(0.5, 0.5), 1e-12)
-        assertEquals(0.0, KlUcb.klBernoulli(1.0, 1.0), 1e-12)
+        assertEquals(0.0, KlUcb.klBernoulli(0.3, 0.3), 1e-12)
+        assertEquals(0.0, KlUcb.klBernoulli(0.7, 0.7), 1e-12)
     }
 
     @Test

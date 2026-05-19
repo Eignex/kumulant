@@ -115,8 +115,8 @@ class BanditPoliciesExtraTest {
         val pol = UcbV(zeta = 1.2, c = 1.0)
         // populate totalSamples so the bound has logT > 0
         repeat(100) { pol.update(pol.arm.createStat(), 1.0) }
-        val low = MomentsResult(totalWeights = 10.0, mean = 1.0, m2 = 10.0, m3 = 0.0, m4 = 0.0)   // var = 0
-        val high = MomentsResult(totalWeights = 10.0, mean = 1.0, m2 = 30.0, m3 = 0.0, m4 = 0.0)  // var = 2
+        val low = MomentsResult(totalWeights = 10.0, mean = 1.0, m2 = 10.0, m3 = 0.0, m4 = 0.0) // var = 0
+        val high = MomentsResult(totalWeights = 10.0, mean = 1.0, m2 = 30.0, m3 = 0.0, m4 = 0.0) // var = 2
         assertTrue(pol.evaluate(high, 0L, Random(0)) > pol.evaluate(low, 0L, Random(0)))
     }
 }

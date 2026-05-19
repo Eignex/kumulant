@@ -69,9 +69,18 @@ class BanditInterfaceTest {
     fun `Bandit create returns a fresh independent replica`() {
         val original = MultiArmedBandit(nbrArms = 2, policy = NormalTS(), random = Random(3))
         repeat(20) { original.update(0, 5.0) }
+        // Dispatch through the joint interface; the replica should be at its prior baseline.
         val copy = (original as Bandit<*>).create()
-        // Updating the copy doesn't affect the original via shared state.
-        assertTrue(original.armResult(0).totalWeights > copy.armResult(0).totalWeights)
+        val populatedWeight = original.armResult(0).totalWeights
+        // Use a typed cast back so we can read field-typed properties.
+
+        @Suppress("UNCHECKED_CAST")
+        val typedCopy = copy as MultiArmedBandit<*>
+        val replicaWeight = (typedCopy.armResult(0)).let {
+            // Snapshot type is WeightedVarianceResult under NormalTS.
+            (it as com.eignex.kumulant.stat.summary.WeightedVarianceResult).totalWeights
+        }
+        assertTrue(populatedWeight > replicaWeight)
     }
 
     @Test
