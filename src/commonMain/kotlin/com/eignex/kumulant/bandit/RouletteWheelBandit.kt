@@ -43,7 +43,7 @@ data class RouletteWheelArmResult(
  */
 class RouletteWheelBandit(
     /** Number of arms in the population. */
-    val nbrArms: Int,
+    override val nbrArms: Int,
     /** Blend factor for the Ropke-Pisinger weight update; 0 = no learning, 1 = pure segment-mean. */
     val reactionFactor: Double = 0.1,
     /** Number of [update] calls between successive weight rebalances. */

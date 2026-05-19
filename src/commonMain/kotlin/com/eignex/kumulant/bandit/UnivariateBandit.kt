@@ -11,15 +11,16 @@ import kotlin.random.Random
  *
  * Implementations source all randomness from [random] so callers control the PRNG
  * (seeded for tests, shared for production, custom for special cases).
+ *
+ * Sibling to [ContextualBandit]; population-state machinery lives on the joint
+ * [Bandit] parent.
  */
-interface UnivariateBandit<R : Result> {
+interface UnivariateBandit<R : Result> : Bandit<R> {
     /** Pick an arm to play next; uses [random] for any sampling. */
     fun choose(): Int
 
-    /** Score the arm at [armIndex] under the current policy. Parallels
-     *  [com.eignex.kumulant.stat.regression.LinearPosterior.evaluate] for the
-     *  univariate setting - useful for inspection, debugging, or building
-     *  a custom selector on top of the per-arm scores. */
+    /** Score the arm at [armIndex] under the current policy. Useful for inspection,
+     *  debugging, or building a custom selector on top of the per-arm scores. */
     fun evaluate(armIndex: Int): Double
 
     /** Fold a single observed reward [value] (with optional [weight]) into the arm at [armIndex]. */
@@ -32,28 +33,5 @@ interface UnivariateBandit<R : Result> {
         for (i in armIndices.indices) update(armIndices[i], values[i], weights?.get(i) ?: 1.0)
     }
 
-    /** Single source of randomness for [choose] and any policy-internal sampling. */
-    val random: Random
-
-    /** Materialise the current per-arm state for inspection or serialisation. */
-    fun snapshot(): List<R>
-
-    /** Per-arm snapshot at [armIndex]; default reads from [snapshot]. Implementations may
-     *  override to avoid building the full list when only one arm is needed. */
-    fun armResult(armIndex: Int): R = snapshot()[armIndex]
-
-    /** Merge each `others[i]` into the corresponding arm. Length must equal the bandit's
-     *  arm count. Used to combine bandit replicas trained in parallel. */
-    fun merge(others: List<R>)
-
-    /** Clear all per-arm state back to the prior-seeded baseline. */
-    fun reset()
-
-    /** Spawn a fresh bandit with the same configuration; per-arm state resets to the prior
-     *  seed. The [random] source may be replaced (default: this bandit's [random]).
-     *
-     *  Caveat: bandit policies that carry aggregate state across arms (e.g. UCB1's
-     *  `totalSamples`) share that state with the source instance. Pass an independent
-     *  policy instance to the constructor if you need a fully isolated bandit. */
-    fun create(random: Random = this.random): UnivariateBandit<R>
+    override fun create(random: Random): UnivariateBandit<R>
 }

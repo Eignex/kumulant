@@ -35,6 +35,7 @@ class SplitNode(
 ) : Node() {
     @Volatile
     var pos: Node = pos
+
     @Volatile
     var neg: Node = neg
 

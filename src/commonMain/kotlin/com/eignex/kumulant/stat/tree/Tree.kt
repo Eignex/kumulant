@@ -7,9 +7,9 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import com.eignex.kumulant.stream.Mutex
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
-import com.eignex.kumulant.stream.Mutex
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -46,6 +46,7 @@ class Tree(
     private val splitLock: Mutex = if (concurrency == Concurrency.None) NoopMutex else PlatformMutex()
 
     private val nbrNodes: AtomicInt = AtomicInt(1)
+
     @Volatile
     private var root: Node = newLeaf(depth = 0)
 

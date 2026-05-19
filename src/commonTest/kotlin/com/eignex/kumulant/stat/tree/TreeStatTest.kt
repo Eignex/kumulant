@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.tree
 
-import com.eignex.kumulant.bandit.RegressionContextualBandit
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.math.DenseVector
 import kotlin.random.Random
 import kotlin.test.Test
@@ -89,76 +89,6 @@ class TreeStatTest {
         assertFailsWith<IllegalArgumentException> { a.merge(b.read(0L)) }
     }
 
-    // === Composes with RegressionContextualBandit ==============================
-
-    @Test
-    fun `RegressionContextualBandit drives tree-based arms`() {
-        val rng = Random(10)
-        val cb = RegressionContextualBandit(
-            nbrArms = 2,
-            template = DecisionTreeRegressionStat(
-                featureSize = 1,
-                splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-                config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
-                randomSeed = 11,
-            ),
-            posterior = ThompsonTreePosterior(priorWeight = 1.0, priorVariance = 1.0),
-            random = rng,
-        )
-        // Arm 0 pays 1 when x>0, 0 otherwise; arm 1 pays the opposite.
-        repeat(600) {
-            val x = rng.nextDouble() * 2 - 1
-            val xv = feat(x)
-            val a = cb.choose(xv)
-            val reward = when {
-                a == 0 && x > 0 -> 1.0
-                a == 1 && x <= 0 -> 1.0
-                else -> 0.0
-            }
-            cb.update(a, xv, reward)
-        }
-        val picksPos = IntArray(2)
-        val picksNeg = IntArray(2)
-        repeat(200) {
-            picksPos[cb.choose(feat(0.5))]++
-            picksNeg[cb.choose(feat(-0.5))]++
-        }
-        assertTrue(picksPos[0] > picksPos[1], "at x>0 arm 0 should dominate: $picksPos")
-        assertTrue(picksNeg[1] > picksNeg[0], "at x<0 arm 1 should dominate: $picksNeg")
-    }
-
-    @Test
-    fun `RegressionContextualBandit drives random-forest arms`() {
-        val rng = Random(20)
-        val cb = RegressionContextualBandit(
-            nbrArms = 2,
-            template = RandomForestRegressionStat(
-                featureSize = 1,
-                splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-                nbrTrees = 4,
-                config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
-                randomSeed = 21,
-            ),
-            posterior = ThompsonForestPosterior(priorWeight = 1.0, priorVariance = 1.0),
-            random = rng,
-        )
-        repeat(400) {
-            val x = rng.nextDouble() * 2 - 1
-            val xv = feat(x)
-            val a = cb.choose(xv)
-            val reward = if (a == 0 && x > 0 || a == 1 && x <= 0) 1.0 else 0.0
-            cb.update(a, xv, reward)
-        }
-        val pickAtPos = cb.choose(feat(0.7))
-        val pickAtNeg = cb.choose(feat(-0.7))
-        // Deterministic claims are flaky for ensembled Thompson; just sanity check
-        // that the snapshot's predictions follow the expected ordering for arm 0.
-        val snap = cb.armResult(0)
-        assertTrue(snap.predict(feat(0.5)) > snap.predict(feat(-0.5)))
-        // pick variables used to keep choose() in the loop hot path.
-        assertTrue(pickAtPos in 0..1 && pickAtNeg in 0..1)
-    }
-
     @Test
     fun `MeanTreePosterior is deterministic`() {
         val stat = DecisionTreeRegressionStat(
@@ -172,5 +102,211 @@ class TreeStatTest {
         val score2 = MeanTreePosterior.evaluate(snap, feat(0.0), Random(123), 0.5)
         assertEquals(score1, score2)
         assertTrue(score1 in 3.9..4.1)
+    }
+
+    // === Structural ============================================================
+
+    @Test
+    fun `empty splitCandidates degenerates to a single leaf`() {
+        val stat = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = emptyList(), randomSeed = 40)
+        repeat(500) { stat.update(feat(it.toDouble()), it.toDouble()) }
+        assertEquals(1, stat.tree().nodeCount)
+        val snap = stat.read(0L)
+        // Predictions ignore context — same value everywhere.
+        assertEquals(snap.predict(feat(-100.0)), snap.predict(feat(100.0)))
+    }
+
+    @Test
+    fun `maxNodes caps growth`() {
+        val candidates = (0 until 8).map { ThresholdSplit(0, it * 0.2 - 0.8) }
+        val stat = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = candidates,
+            config = TreeConfig(
+                splitPeriod = 4,
+                minSamplesSplit = 4.0,
+                minSamplesLeaf = 1.0,
+                maxNodes = 5,
+                tau = 1.0, // force splits via the tie-breaker
+            ),
+            randomSeed = 41,
+        )
+        val rng = Random(41)
+        repeat(2000) {
+            val x = rng.nextDouble() * 2 - 1
+            stat.update(feat(x), x)
+        }
+        assertTrue(stat.tree().nodeCount <= 5, "nodeCount=${stat.tree().nodeCount}")
+    }
+
+    @Test
+    fun `maxDepth caps growth`() {
+        val candidates = (0 until 8).map { ThresholdSplit(0, it * 0.2 - 0.8) }
+        val stat = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = candidates,
+            config = TreeConfig(
+                splitPeriod = 4,
+                minSamplesSplit = 4.0,
+                minSamplesLeaf = 1.0,
+                maxDepth = 2,
+                tau = 1.0,
+            ),
+            randomSeed = 42,
+        )
+        val rng = Random(42)
+        repeat(2000) {
+            val x = rng.nextDouble() * 2 - 1
+            stat.update(feat(x), x)
+        }
+        // At depth 2 the tree is at most a root + 2 splits + 4 leaves = 7 nodes.
+        assertTrue(stat.tree().nodeCount <= 7, "nodeCount=${stat.tree().nodeCount}")
+    }
+
+    @Test
+    fun `prettyPrint renders split structure`() {
+        val stat = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = listOf(ThresholdSplit(0, 0.0)),
+            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            randomSeed = 50,
+        )
+        repeat(200) { stat.update(feat(if (it % 2 == 0) -1.0 else 1.0), if (it % 2 == 0) -1.0 else 1.0) }
+        val rendered = stat.tree().prettyPrint()
+        assertTrue("x[0]" in rendered, "expected split predicate, got:\n$rendered")
+        assertTrue("leaf mean=" in rendered)
+        assertTrue("} else {" in rendered)
+    }
+
+    @Test
+    fun `snapshot routes to same leaf as live tree`() {
+        val stat = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = listOf(ThresholdSplit(0, 0.0)),
+            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            randomSeed = 60,
+        )
+        val rng = Random(60)
+        repeat(300) {
+            val x = rng.nextDouble() * 2 - 1
+            stat.update(feat(x), x)
+        }
+        val snap = stat.read(0L)
+        for (x in listOf(-0.9, -0.1, 0.1, 0.9)) {
+            assertEquals(stat.tree().predict(feat(x)), snap.predict(feat(x)), 1e-12)
+        }
+    }
+
+    // === Concurrency-mode plumbing =============================================
+
+    @Test
+    fun `Concurrency Relaxed preserves total weight on serial updates`() {
+        // Hot-path arithmetic should still be exact when run from a single thread.
+        val stat = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = listOf(ThresholdSplit(0, 0.0)),
+            config = TreeConfig(splitPeriod = 8, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
+            concurrency = Concurrency.Relaxed,
+            randomSeed = 70,
+        )
+        var expected = 0.0
+        val rng = Random(70)
+        repeat(500) {
+            val w = 1.0 + rng.nextDouble()
+            stat.update(feat(rng.nextDouble() * 2 - 1), rng.nextDouble(), weight = w)
+            expected += w
+        }
+        assertEquals(expected, stat.read(0L).totalWeights, 1e-9)
+    }
+
+    @Test
+    fun `Concurrency Strict preserves total weight on serial updates`() {
+        val stat = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = listOf(ThresholdSplit(0, 0.0)),
+            config = TreeConfig(splitPeriod = 8, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
+            concurrency = Concurrency.Strict,
+            randomSeed = 71,
+        )
+        var expected = 0.0
+        val rng = Random(71)
+        repeat(500) {
+            val w = 1.0 + rng.nextDouble()
+            stat.update(feat(rng.nextDouble() * 2 - 1), rng.nextDouble(), weight = w)
+            expected += w
+        }
+        assertEquals(expected, stat.read(0L).totalWeights, 1e-9)
+    }
+
+    // === Posteriors ============================================================
+
+    @Test
+    fun `UcbTreePosterior reduces to mean as evidence grows`() {
+        val stat = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = emptyList(), randomSeed = 80)
+        repeat(5) { stat.update(feat(0.0), 2.0) }
+        val snapEarly = stat.read(0L)
+        repeat(5_000) { stat.update(feat(0.0), 2.0) }
+        val snapLate = stat.read(0L)
+
+        val posterior = UcbTreePosterior(priorWeight = 1.0, priorVariance = 1.0)
+        val rng = Random(0)
+        val early = posterior.evaluate(snapEarly, feat(0.0), rng, 1.0)
+        val late = posterior.evaluate(snapLate, feat(0.0), rng, 1.0)
+        // Both bound the same leaf mean (2.0), but the early bound is looser.
+        assertTrue(early >= 2.0)
+        assertTrue(late >= 2.0)
+        assertTrue(early - 2.0 > late - 2.0, "early=$early late=$late should shrink")
+    }
+
+    @Test
+    fun `MeanForestPosterior matches findLeafMerged mean`() {
+        val stat = RandomForestRegressionStat(
+            featureSize = 1,
+            splitCandidates = listOf(ThresholdSplit(0, 0.0)),
+            nbrTrees = 3,
+            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            randomSeed = 90,
+        )
+        val rng = Random(90)
+        repeat(300) {
+            val x = rng.nextDouble() * 2 - 1
+            stat.update(feat(x), if (x > 0) 1.0 else -1.0)
+        }
+        val snap = stat.read(0L)
+        val direct = snap.findLeafMerged(feat(0.5)).mean
+        val viaPosterior = MeanForestPosterior.evaluate(snap, feat(0.5), Random(0), 1.0)
+        assertEquals(direct, viaPosterior, 1e-12)
+    }
+
+    @Test
+    fun `forest snapshot totalWeights sums per-tree weights under bagging`() {
+        val stat = RandomForestRegressionStat(
+            featureSize = 1,
+            splitCandidates = emptyList(),
+            nbrTrees = 5,
+            bagging = true,
+            randomSeed = 100,
+        )
+        repeat(1000) { stat.update(feat(0.0), 1.0) }
+        val snap = stat.read(0L)
+        // Per-tree totals fluctuate around the underlying 1000 due to Poisson(1)
+        // bagging; the sum is ~ nbrTrees * 1000.
+        assertTrue(snap.totalWeights > 4_000.0, "totalWeights=${snap.totalWeights}")
+        assertTrue(snap.totalWeights < 6_000.0, "totalWeights=${snap.totalWeights}")
+    }
+
+    @Test
+    fun `forest without bagging gives identical per-tree totalWeights`() {
+        val stat = RandomForestRegressionStat(
+            featureSize = 1,
+            splitCandidates = emptyList(),
+            nbrTrees = 3,
+            bagging = false,
+            randomSeed = 101,
+        )
+        repeat(200) { stat.update(feat(0.0), 1.0) }
+        val snap = stat.read(0L)
+        val totals = snap.trees.map { it.totalWeights }
+        for (t in totals) assertEquals(200.0, t, 1e-9)
     }
 }

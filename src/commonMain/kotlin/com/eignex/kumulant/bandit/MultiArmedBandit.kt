@@ -21,7 +21,7 @@ import kotlin.random.Random
  */
 class MultiArmedBandit<R : Result>(
     /** Number of arms in the population. */
-    val nbrArms: Int,
+    override val nbrArms: Int,
     /** Policy that owns the per-arm cumulators and the arm-selection rule. */
     val policy: BanditPolicy<R>,
     override val random: Random = Random.Default,
