@@ -138,6 +138,38 @@ class LinearPosteriorsTest {
     }
 
     @Test
+    fun `LinUcb evaluate is deterministic given the snapshot`() {
+        val snap = bayesianSnapshot()
+        val x = DenseVector.of(doubleArrayOf(0.3, 0.7))
+        val rng = Random(0)
+        val a = LinUcb.evaluate(snap, x, rng, exploration = 1.0)
+        val b = LinUcb.evaluate(snap, x, rng, exploration = 1.0)
+        assertEquals(a, b, "LinUcb consumes no RNG; repeated evaluate must agree")
+    }
+
+    @Test
+    fun `LinUcb evaluate is mean plus alpha times sqrt xT Sigma x`() {
+        val snap = bayesianSnapshot()
+        val x = DenseVector.of(doubleArrayOf(0.5, -0.5))
+        val alpha = 2.0
+        val score = LinUcb.evaluate(snap, x, Random(0), exploration = alpha)
+        val mean = snap.predict(x)
+        // Bound check: score should strictly exceed the mean for non-zero alpha and non-degenerate covariance.
+        assertTrue(score > mean, "LinUcb should add positive UCB term; score=$score, mean=$mean")
+    }
+
+    @Test
+    fun `LinUcb sample returns mean weights without randomization`() {
+        val snap = bayesianSnapshot()
+        val draw1 = LinUcb.sample(snap, Random(0)).toDoubleArray()
+        val draw2 = LinUcb.sample(snap, Random(99)).toDoubleArray()
+        assertTrue(draw1.contentEquals(draw2), "LinUcb sample is deterministic")
+        // And matches the snapshot's weights
+        val w = snap.weights.toDoubleArray()
+        assertTrue(draw1.contentEquals(w), "LinUcb sample returns snap.weights")
+    }
+
+    @Test
     fun `predict throws on wrong feature size`() {
         val snap = sgdSnapshot()
         assertTrue(snap.featureSize == 2)

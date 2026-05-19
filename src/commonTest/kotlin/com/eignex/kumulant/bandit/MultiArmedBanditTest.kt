@@ -53,4 +53,71 @@ class MultiArmedBanditTest {
         // Beta(2,5) mean is 2/7 ~= 0.2857.
         assertTrue(kotlin.math.abs(mean - 2.0 / 7.0) < 0.02, "mean=$mean")
     }
+
+    @Test
+    fun `armResult matches snapshot at index`() {
+        val mab = MultiArmedBandit(nbrArms = 3, policy = BetaBernoulliTS(), random = Random(0))
+        mab.update(0, 1.0)
+        mab.update(1, 1.0)
+        mab.update(2, 0.0)
+        val snap = mab.snapshot()
+        for (i in 0 until 3) assertEquals(snap[i], mab.armResult(i))
+    }
+
+    @Test
+    fun `armStat exposes the live per-arm SeriesStat`() {
+        val mab = MultiArmedBandit(nbrArms = 2, policy = BetaBernoulliTS(), random = Random(0))
+        mab.update(0, 1.0)
+        val stat = mab.armStat(0)
+        assertEquals(mab.armResult(0), stat.read(0L))
+    }
+
+    @Test
+    fun `merge per-arm folds another bandit's snapshot through the policy`() {
+        val a = MultiArmedBandit(nbrArms = 2, policy = BetaBernoulliTS(), random = Random(1))
+        val b = MultiArmedBandit(nbrArms = 2, policy = BetaBernoulliTS(), random = Random(2))
+        repeat(40) {
+            a.update(0, 1.0)
+            a.update(1, 0.0)
+        }
+        repeat(40) {
+            b.update(0, 1.0)
+            b.update(1, 0.0)
+        }
+        val before = a.armResult(0).trials
+        a.merge(b.snapshot())
+        val after = a.armResult(0).trials
+        assertTrue(after > before, "merged trials should exceed pre-merge: $before -> $after")
+    }
+
+    @Test
+    fun `merge rejects nbrArms mismatch`() {
+        val mab = MultiArmedBandit(nbrArms = 2, policy = BetaBernoulliTS())
+        val wrongSize = MultiArmedBandit(nbrArms = 3, policy = BetaBernoulliTS()).snapshot()
+        kotlin.test.assertFailsWith<IllegalArgumentException> { mab.merge(wrongSize) }
+    }
+
+    @Test
+    fun `reset rebuilds per-arm stats to prior baseline`() {
+        val mab = MultiArmedBandit(nbrArms = 2, policy = BetaBernoulliTS(2.0, 5.0), random = Random(0))
+        repeat(50) { mab.update(0, 1.0) }
+        val before = mab.armResult(0).trials
+        mab.reset()
+        val after = mab.armResult(0).trials
+        // After reset, only the prior pseudo-counts (2 + 5 = 7) remain.
+        assertEquals(7.0, after, 1e-9)
+        assertTrue(before > after, "reset shrank trials: $before -> $after")
+    }
+
+    @Test
+    fun `create returns a fresh bandit with the same configuration`() {
+        val original = MultiArmedBandit(nbrArms = 3, policy = BetaBernoulliTS(), random = Random(0))
+        repeat(30) { original.update(0, 1.0) }
+        val fresh = original.create()
+        assertEquals(3, fresh.snapshot().size)
+        // Fresh has only prior pseudo-counts on each arm
+        val freshTrials = fresh.armResult(0).trials
+        val origTrials = original.armResult(0).trials
+        assertTrue(origTrials > freshTrials)
+    }
 }

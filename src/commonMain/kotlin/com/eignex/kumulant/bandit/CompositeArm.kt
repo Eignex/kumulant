@@ -74,8 +74,10 @@ data class CompositeSubArm(
 /** Live composite accumulator: fans each observation through the per-sub-arm AST. */
 internal class CompositeStat(
     private val subArms: List<CompositeSubArm>,
-    private val subStats: List<SeriesStat<*>>,
+    initialSubStats: List<SeriesStat<*>>,
 ) : SeriesStat<ResultList<Result>> {
+
+    private val subStats: Array<SeriesStat<*>> = initialSubStats.toTypedArray()
 
     override val concurrency: Concurrency = subStats.firstOrNull()?.concurrency ?: Concurrency.None
 
@@ -106,8 +108,10 @@ internal class CompositeStat(
         }
     }
 
+    /** Reset re-seeds the prior pseudo-counts by rebuilding sub-stats via [Arm.createStat],
+     *  matching the priors-restored semantics of other Stat resets in the library. */
     override fun reset() {
-        for (s in subStats) s.reset()
+        for (i in subArms.indices) subStats[i] = subArms[i].arm.createStat()
     }
 
     override fun create(concurrency: Concurrency?): SeriesStat<ResultList<Result>> =

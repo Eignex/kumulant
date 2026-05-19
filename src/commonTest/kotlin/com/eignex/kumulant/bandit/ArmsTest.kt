@@ -104,4 +104,82 @@ class ArmsTest {
         val arm: Arm<*> = BernoulliArm()
         assertEquals(0.5, arm.encode(0.5))
     }
+
+    // === warmStart helpers ===
+
+    @Test
+    fun `BernoulliArm warmStart copies scaled successes and failures from global`() {
+        val global = com.eignex.kumulant.stat.summary.BernoulliSumResult(successes = 30.0, trials = 50.0)
+        val arm = BernoulliArm.warmStart(global, shrinkage = 0.5)
+        assertEquals(15.0, arm.priorAlpha)
+        assertEquals(10.0, arm.priorBeta)
+    }
+
+    @Test
+    fun `BernoulliArm warmStart with shrinkage zero produces zero pseudo-counts`() {
+        val global = com.eignex.kumulant.stat.summary.BernoulliSumResult(successes = 30.0, trials = 50.0)
+        val arm = BernoulliArm.warmStart(global, shrinkage = 0.0)
+        assertEquals(0.0, arm.priorAlpha)
+        assertEquals(0.0, arm.priorBeta)
+    }
+
+    @Test
+    fun `BernoulliArm warmStart rejects shrinkage outside the unit interval`() {
+        val global = com.eignex.kumulant.stat.summary.BernoulliSumResult(successes = 1.0, trials = 2.0)
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            BernoulliArm.warmStart(global, shrinkage = -0.1)
+        }
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            BernoulliArm.warmStart(global, shrinkage = 1.1)
+        }
+    }
+
+    @Test
+    fun `MeanArm warmStart uses global mean and shrunk weight`() {
+        val global = com.eignex.kumulant.stat.summary.WeightedMeanResult(totalWeights = 100.0, mean = 7.0)
+        val arm = MeanArm.warmStart(global, shrinkage = 0.3)
+        assertEquals(7.0, arm.priorMean)
+        assertEquals(30.0, arm.priorWeight)
+    }
+
+    @Test
+    fun `NormalArm warmStart preserves variance and shrinks weight`() {
+        val global = com.eignex.kumulant.stat.summary.WeightedVarianceResult(
+            totalWeights = 200.0,
+            mean = 4.0,
+            variance = 9.0,
+        )
+        val arm = NormalArm.warmStart(global, shrinkage = 0.5)
+        assertEquals(4.0, arm.priorMean)
+        assertEquals(100.0, arm.priorWeight)
+        // priorSquaredDeviations = variance * shrunkWeight = 9 * 100 = 900
+        assertEquals(900.0, arm.priorSquaredDeviations)
+    }
+
+    @Test
+    fun `LogNormalArm warmStart matches NormalArm shape on log-scale snapshot`() {
+        val global = com.eignex.kumulant.stat.summary.WeightedVarianceResult(
+            totalWeights = 80.0,
+            mean = 1.5,
+            variance = 4.0,
+        )
+        val arm = LogNormalArm.warmStart(global, shrinkage = 0.25)
+        assertEquals(1.5, arm.priorMean)
+        assertEquals(20.0, arm.priorWeight)
+        assertEquals(80.0, arm.priorSquaredDeviations)
+    }
+
+    @Test
+    fun `MomentsArm warmStart uses global mean and shrunk weight`() {
+        val global = MomentsResult(
+            totalWeights = 50.0,
+            mean = 3.0,
+            m2 = 100.0,
+            m3 = 0.0,
+            m4 = 0.0,
+        )
+        val arm = MomentsArm.warmStart(global, shrinkage = 0.8)
+        assertEquals(3.0, arm.priorMean)
+        assertEquals(40.0, arm.priorWeight)
+    }
 }
