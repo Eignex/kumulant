@@ -1,50 +1,112 @@
 package com.eignex.kumulant.bandit
 
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.math.VectorView
 import kotlin.random.Random
 
 /**
- * Shared machinery across every bandit flavour kumulant ships: a fixed population of
- * `R`-typed per-arm accumulators, plus the merge/reset/create plumbing replicas need.
+ * Root of every bandit kumulant ships. Carries the bare minimum every flavour
+ * needs: arm count, a randomness source, and a way to wipe state back to its
+ * prior-seeded baseline. The choose/update surface lives on the sibling
+ * [UnivariateBandit] (indexless arms) and [ContextualBandit] (per-round
+ * context vector) interfaces.
  *
- * Sibling specialisations bolt on flavour-specific `choose`/`update`/`evaluate`:
- *  - [UnivariateBandit] for indexless arms — `choose(): Int`, `update(armIndex, value, weight)`.
- *  - [ContextualBandit] for context-aware arms — `choose(x): Int`, `update(armIndex, x, reward, weight)`.
- *
- * Code that only inspects population state — replica merging, snapshot serialisation,
- * dashboard inspection, persistence — can target `Bandit<R>` and accept either flavour.
- *
- * The standalone weight-vector bandits ([Exp3Bandit], [Exp4Bandit], [BoltzmannBandit],
- * [KnnContextualBandit], [TopTwoThompsonBandit]) deliberately sit *outside* this hierarchy:
- * their state isn't a per-arm `Result`-typed sufficient stat, so the population API
- * here doesn't apply.
+ * State management — snapshot/merge/recreation — is orthogonal to action; see
+ * [Snapshotable] and the [PerArmBandit] convenience for the common case.
+ * Per-arm scoring (e.g. for inspection) is opted into via [Scorable] /
+ * [ContextualScorable] — bandits that select arms via joint sampling
+ * (Boltzmann, Top-Two Thompson) don't expose a per-arm score.
  */
-interface Bandit<R : Result> {
+interface Bandit {
     /** Number of arms in the population. Fixed at construction. */
     val nbrArms: Int
 
-    /** Single source of randomness for `choose` and any policy-internal sampling. */
+    /** Single source of randomness for [choose] and any policy-internal sampling. */
     val random: Random
 
-    /** Materialise the current per-arm state for inspection, serialisation, or replica merge. */
-    fun snapshot(): List<R>
-
-    /** Per-arm snapshot at [armIndex]; default reads from [snapshot]. Implementations may
-     *  override to avoid building the full list when only one arm is needed. */
-    fun armResult(armIndex: Int): R = snapshot()[armIndex]
-
-    /** Merge each `others[i]` into the corresponding arm. Length must equal [nbrArms].
-     *  Used to combine bandit replicas trained in parallel. */
-    fun merge(others: List<R>)
-
-    /** Clear all per-arm state back to the prior-seeded baseline. */
+    /** Clear all state back to the prior-seeded baseline. */
     fun reset()
+}
 
-    /** Spawn a fresh bandit with the same configuration; per-arm state resets to the
-     *  prior seed. The [random] source may be replaced (default: this bandit's [random]).
-     *
-     *  Caveat: bandit policies that carry aggregate state across arms (e.g. UCB1's
-     *  `totalSamples`) share that state with the source instance. Pass an independent
-     *  policy instance to the constructor if you need a fully isolated bandit. */
-    fun create(random: Random = this.random): Bandit<R>
+/**
+ * Online optimizer over a fixed set of unindexed arms. Each round the user
+ * calls [choose] to select an arm, plays it externally, then reports the
+ * observed reward via [update].
+ *
+ * Implementations source all randomness from [Bandit.random] so callers
+ * control the PRNG.
+ */
+interface UnivariateBandit : Bandit {
+    /** Pick an arm to play next; uses [Bandit.random] for any sampling. */
+    fun choose(): Int
+
+    /** Fold a single observed reward [value] (with optional [weight]) into the arm at [armIndex]. */
+    fun update(armIndex: Int, value: Double, weight: Double = 1.0)
+
+    /** Batched [update]: applies one observation per arm/value pair. */
+    fun updateAll(armIndices: IntArray, values: DoubleArray, weights: DoubleArray? = null) {
+        require(armIndices.size == values.size) { "armIndices and values must have equal size" }
+        require(weights == null || weights.size == values.size) { "weights must match values size" }
+        for (i in armIndices.indices) update(armIndices[i], values[i], weights?.get(i) ?: 1.0)
+    }
+}
+
+/**
+ * Context-aware bandit: each round the caller observes a feature vector
+ * `x`, calls [choose] to pick an arm, plays it externally, observes a
+ * reward, and feeds the `(x, reward)` pair back via [update].
+ *
+ * Implementations source all randomness from [Bandit.random].
+ */
+interface ContextualBandit : Bandit {
+    /** Pick an arm to play next, given the per-round context [x]. */
+    fun choose(x: VectorView): Int
+
+    /** Fold a single `(x, reward)` observation (with optional [weight]) into the arm at [armIndex]. */
+    fun update(armIndex: Int, x: VectorView, reward: Double, weight: Double = 1.0)
+}
+
+/**
+ * State surface for any bandit whose state can be checkpointed, replicated,
+ * and merged with a sibling's. Independent of the action surface — every
+ * bandit family has its own natural [S] (typically `List<R>` for per-arm
+ * sufficient statistics; see [PerArmBandit]).
+ */
+interface Snapshotable<S> {
+    /** Materialise the current state for inspection, serialisation, or replica merge. */
+    fun snapshot(): S
+
+    /** Merge [other]'s state into this one. Used to combine bandit replicas trained in parallel. */
+    fun merge(other: S)
+
+    /** Spawn a fresh bandit with the same configuration; state resets to the prior seed.
+     *  The [random] source may be replaced (default: this bandit's [Bandit.random]). */
+    fun create(random: Random): Snapshotable<S>
+}
+
+/**
+ * Convenience for the dominant case where state is one [Result] per arm.
+ * Adds per-arm access on top of [Snapshotable].
+ */
+interface PerArmBandit<R : Result> : Snapshotable<List<R>> {
+    /** Per-arm snapshot at [armIndex]; default reads from [snapshot]. Implementations
+     *  may override to avoid building the full list when only one arm is needed. */
+    fun armResult(armIndex: Int): R = snapshot()[armIndex]
+}
+
+/**
+ * Optional per-arm scoring for inspection / debugging / custom selectors.
+ * Bandits whose [UnivariateBandit.choose] is an argmax over independent
+ * per-arm scores expose this. Joint-sampling bandits (Boltzmann, Top-Two
+ * Thompson) and exponential-weights bandits (Exp3) do not.
+ */
+interface Scorable {
+    /** Score the arm at [armIndex] under the bandit's current state. */
+    fun evaluate(armIndex: Int): Double
+}
+
+/** Contextual analog of [Scorable]: per-arm score under the current context. */
+interface ContextualScorable {
+    /** Score the arm at [armIndex] under the current state and context [x]. */
+    fun evaluate(armIndex: Int, x: VectorView): Double
 }
