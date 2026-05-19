@@ -133,6 +133,14 @@ val rangeStatSpec = seriesStatSpec(
     },
 )
 
+val pairedSumStatSpec = pairedStatSpec(
+    name = "PairedSumStat",
+    factory = { c -> com.eignex.kumulant.stat.summary.PairedSumStat(concurrency = c) },
+    updates = ::uniformVariableWeights,
+    scalar = { it.sumX },
+    reference = { it.sumOf { u -> u.value * u.weight } },
+)
+
 val bernoulliSumStatSpec = seriesStatSpec(
     name = "BernoulliSumStat",
     factory = { c -> BernoulliSumStat(c) },
@@ -545,6 +553,32 @@ val pinballLossStatSpec = pairedStatSpec(
     deriveY = ::clamped01,
 )
 
+val logLossStatSpec = pairedStatSpec(
+    name = "LogLossStat",
+    factory = { c -> com.eignex.kumulant.stat.score.LogLossStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalWeights },
+    reference = { it.count().toDouble() },
+    // LogLoss needs prediction in (0, 1); shift away from the endpoints.
+    deriveY = { (it * 0.98 + 0.01).coerceIn(0.001, 0.999) },
+)
+
+val maeLossStatSpec = pairedStatSpec(
+    name = "MaeLossStat",
+    factory = { c -> com.eignex.kumulant.stat.score.MaeLossStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalWeights },
+    reference = { it.count().toDouble() },
+)
+
+val mseLossStatSpec = pairedStatSpec(
+    name = "MseLossStat",
+    factory = { c -> com.eignex.kumulant.stat.score.MseLossStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalWeights },
+    reference = { it.count().toDouble() },
+)
+
 val reliabilityStatSpec = pairedStatSpec(
     name = "ReliabilityStat",
     factory = { c -> com.eignex.kumulant.stat.score.ReliabilityStat(numBins = 16, concurrency = c) },
@@ -612,6 +646,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     maxStatSpec,
     rangeStatSpec,
     bernoulliSumStatSpec,
+    pairedSumStatSpec,
     decayingSumStatSpec,
     decayingMeanStatSpec,
     decayingVarianceStatSpec,
@@ -639,6 +674,9 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     stochasticRegressionStatSpec,
     aucStatSpec,
     brierScoreStatSpec,
+    logLossStatSpec,
+    maeLossStatSpec,
+    mseLossStatSpec,
     pinballLossStatSpec,
     reliabilityStatSpec,
     decisionTreeRegressionStatSpec,
