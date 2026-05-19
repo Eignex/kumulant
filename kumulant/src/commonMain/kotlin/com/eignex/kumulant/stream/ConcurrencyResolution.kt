@@ -47,3 +47,12 @@ internal fun Concurrency.serializedLock(): Mutex = when (this) {
     Concurrency.None -> NoopMutex
     else -> PlatformMutex()
 }
+
+/** Cell mode for a single first-writer-wins field that needs CAS (e.g. a stat's
+ *  lazily-initialised start timestamp). HighWrite's striped adders don't support
+ *  CAS, so this returns [AtomicMode] for every concurrent level — write contention
+ *  on a cell that's only ever written once is irrelevant anyway. */
+internal fun Concurrency.firstWriterMode(): StreamMode = when (this) {
+    Concurrency.None -> SerialMode
+    else -> AtomicMode
+}
