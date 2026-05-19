@@ -9,16 +9,27 @@ import kotlin.math.log2
 import kotlin.math.pow
 
 /**
- * Auto-resizing High Dynamic RangeStat (HDR) Histogram with native Double support.
- * By defining a lowestDiscernibleValue, it internally scales floating-point metrics
- * into integers for O(1) bitwise routing, perfectly preserving fractional precision.
+ * Auto-resizing High Dynamic Range (HDR) Histogram with native Double support.
  *
- * # Concurrency
+ * By defining a [lowestDiscernibleValue], the histogram internally scales
+ * floating-point metrics into integers for O(1) bitwise routing, preserving
+ * fractional precision down to that resolution.
  *
- * Each bucket is a striped atomic add. Lock-free and exact under every
- * [Concurrency] level — bucket increments commute, and bucket assignment is
- * deterministic per value so racing writers on the same value just bump the
- * same cell.
+ * **Use cases:** latency and SLO percentile reporting where bin-based
+ * quantiles with absolute error bounds are required. Reach for this over
+ * [DDSketchStat] when the value range is bounded and [lowestDiscernibleValue]
+ * is meaningful; over [TDigestStat] when bucket counts (rather than centroids)
+ * are wanted in the snapshot.
+ *
+ * **Memory:** O([significantDigits] · log2(highest/lowest)) buckets — grows
+ * to accommodate values past [initialHighestTrackableValue].
+ *
+ * **Update:** O(1) per observation; bitwise bucket assignment + striped
+ * atomic add.
+ *
+ * **Concurrency:** Striped atomic adds on independent buckets. Lock-free and
+ * exact under every [Concurrency] level — bucket increments commute and
+ * assignment is deterministic per value.
  */
 class HdrHistogramStat(
     /** Smallest value the histogram can distinguish. */

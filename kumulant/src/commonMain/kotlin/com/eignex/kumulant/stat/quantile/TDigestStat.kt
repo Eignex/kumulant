@@ -62,13 +62,26 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  * centroids to roughly `~6*delta`.
  *
  * Updates buffer values until the internal `bufferCap` is reached, then fold them into
- * the sorted centroid list under the `k1`-difference <= 1 merge rule.
+ * the sorted centroid list under the `k1`-difference ≤ 1 merge rule.
  *
- * Concurrency: the hot-path `update` is lock-free under [Concurrency.Relaxed]
- * (atomic claim into a ring buffer); a buffer-full triggers a brief locked compress
- * that does not block concurrent claims in the next epoch. Under
- * [Concurrency.Strict] / [Concurrency.HighWrite] an outer lock serializes updates
- * against reads/merges. Under [Concurrency.None] no synchronization runs.
+ * **Use cases:** approximate percentile estimation with adaptive resolution
+ * — tighter near the tails (0.001 / 0.999 percentiles), looser in the middle.
+ * Reach for this over [DDSketchStat] when you want extreme-quantile accuracy
+ * without committing to a relative-error parameter, and over
+ * [HdrHistogramStat] when the value range isn't known in advance.
+ *
+ * **Memory:** O([compression]) centroids (~6 · delta) plus a fixed-size buffer.
+ *
+ * **Update:** O(1) amortised per observation — a single atomic claim into the
+ * buffer, with a periodic O([compression] · log [compression]) compress when
+ * the buffer fills.
+ *
+ * **Concurrency:** Hot-path `update` is lock-free under [Concurrency.Relaxed]
+ * (atomic claim into a ring buffer); a buffer-full triggers a brief locked
+ * compress that does not block concurrent claims in the next epoch. Under
+ * [Concurrency.Strict] / [Concurrency.HighWrite] an outer lock serialises
+ * updates against reads/merges. [Concurrency.None] runs without
+ * synchronisation.
  */
 class TDigestStat(
     /** Compression parameter; lower = more centroids, tighter quantiles, more memory. */

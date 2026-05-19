@@ -16,12 +16,19 @@ import kotlin.math.pow
  * bins. Supports negative values via a mirrored bin tree and a zero-bucket.
  * Tightening [relativeError] grows bin count roughly as `1/epsilon`.
  *
- * # Concurrency
+ * **Use cases:** quantile / percentile monitoring of any positive-skewed
+ * scalar (latencies, payload sizes). Reach for this over [HdrHistogramStat]
+ * when the value range is unbounded; over [TDigestStat] when relative-error
+ * guarantees are required.
  *
- * Each bin is a striped atomic add. Lock-free and exact under every
- * [Concurrency] level — increments commute, and the bin assignment is a
- * deterministic function of the value so racing writers on the same value
- * just increment the same cell.
+ * **Memory:** O(log(max/min) / log(1+[relativeError])) bins — typically a few
+ * hundred to a few thousand bins for sub-percent error on real-world ranges.
+ *
+ * **Update:** O(1) per observation; one `log`/bin-assignment + striped atomic add.
+ *
+ * **Concurrency:** Striped atomic adds on independent bins. Lock-free and
+ * exact under every [Concurrency] level — increments commute, bin assignment
+ * is deterministic per value.
  */
 class DDSketchStat(
     /** Relative error guarantee on every reported quantile. */

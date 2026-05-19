@@ -12,20 +12,27 @@ import com.eignex.kumulant.stream.welfordMode
  * magnitude is scaled by [stepSize]. Cheap and memory-flat but biased and noisy -
  * use [DDSketchStat] when accuracy matters.
  *
- * Treats observations as unweighted (one unit step per update regardless of weight);
- * scaling the step by raw weight would let a single high-weight observation overshoot
- * the target catastrophically. [merge] averages two estimates as a coarse approximation
- * — frugal sketches do not admit a true associative combine.
+ * Treats observations as unweighted (one unit step per update regardless of
+ * weight); scaling the step by raw weight would let a single high-weight
+ * observation overshoot the target catastrophically. [merge] averages two
+ * estimates as a coarse approximation — frugal sketches do not admit a true
+ * associative combine.
  *
- * # Concurrency
+ * **Use cases:** memory-constrained tracking of a single quantile with no
+ * accuracy guarantee — IoT-class deployments, debug-only monitoring. For
+ * production quantile work prefer [DDSketchStat], [TDigestStat], or
+ * [HdrHistogramStat].
  *
- * The recurrence walks the estimate one step at a time toward [q], so the
- * snapshot value depends on update order. [Concurrency.Strict] and
- * [Concurrency.HighWrite] lock the body so each step is atomic, but
- * **arrival-order non-determinism remains** — Strict does not reproduce a
- * serial reference. [Concurrency.Relaxed] additionally drops the lock; the
- * single-cell estimate races but stays bounded. The bench reports ~15%
- * absolute error on a `q = 0.5` uniform stream regardless of level.
+ * **Memory:** O(1) — one double estimate plus a lock.
+ *
+ * **Update:** O(1) per observation.
+ *
+ * **Concurrency:** Order-dependent random-walk recurrence.
+ * [Concurrency.Strict] and [Concurrency.HighWrite] lock each step but do not
+ * reproduce a serial reference value — the lock serialises arrival, not
+ * order. [Concurrency.Relaxed] additionally drops the lock; the single-cell
+ * estimate races but stays bounded. Bench reports ~15% absolute error on a
+ * `q = 0.5` uniform stream regardless of level.
  */
 class FrugalQuantileStat(
     /** Target quantile probability in `[0, 1]`. */

@@ -6,17 +6,25 @@ import com.eignex.kumulant.stream.ArrayBins
 import com.eignex.kumulant.stream.additiveMode
 
 /**
- * Fixed-width binned histogram over `[lowerBound, upperBound)` split into [binCount] buckets.
+ * Fixed-width binned histogram over `[lowerBound, upperBound)` split into
+ * [binCount] buckets.
  *
- * Values below or at/above the range fall into dedicated underflow / overflow rows
- * `(NEG_INFINITY, lowerBound)` and `[upperBound, POS_INFINITY)`. Bin storage is
- * lock-free via [ArrayBins].
+ * Values below or at/above the range fall into dedicated underflow / overflow
+ * rows `(NEG_INFINITY, lowerBound)` and `[upperBound, POS_INFINITY)`.
  *
- * # Concurrency
+ * **Use cases:** monitoring distributions over a known range with equal-width
+ * buckets — calibration plots, probability histograms, anything with a flat
+ * resolution requirement. Reach for [HdrHistogramStat] for unbounded values
+ * with logarithmic resolution.
  *
- * Each bin is a striped atomic add. Lock-free and exact under every
- * [Concurrency] level — increments commute, and bin assignment is a
- * deterministic function of the value.
+ * **Memory:** O([binCount]) Longs plus two overflow cells.
+ *
+ * **Update:** O(1) per observation; arithmetic bin assignment + striped
+ * atomic add.
+ *
+ * **Concurrency:** Striped atomic adds on independent bins. Lock-free and
+ * exact under every [Concurrency] level — increments commute and bin
+ * assignment is deterministic per value.
  */
 class LinearHistogramStat(
     /** Inclusive lower bound of the histogram's covered range. */

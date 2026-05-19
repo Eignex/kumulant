@@ -103,13 +103,23 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  * (Efraimidis & Spirakis): each item gets a key `u^(1/w)` and the top-`k`
  * keys are retained, giving an unbiased weight-proportional sample.
  *
- * Concurrency: under [Concurrency.Relaxed] and [Concurrency.HighWrite] the
- * admit path scans for the min-key slot and CAS-replaces it; concurrent
+ * **Use cases:** keeping a representative sample of a stream you intend to
+ * post-process — model training over a uniform/weighted subsample, ad-hoc
+ * percentile lookups via the sample distribution, scratch-pad for
+ * downstream analytics that need raw values rather than aggregates.
+ *
+ * **Memory:** O([capacity]) doubles for values + keys, plus a small RNG lock.
+ *
+ * **Update:** O([capacity]) per observation on a full reservoir (linear scan
+ * for the minimum key); O(1) until the reservoir fills.
+ *
+ * **Concurrency:** Under [Concurrency.Relaxed] and [Concurrency.HighWrite]
+ * the admit path scans for the min-key slot and CAS-replaces it; concurrent
  * winners on the same slot fall through to a re-scan, and a brief torn-pair
- * window (key updated before value) is possible during a read - the sampling
+ * window (key updated before value) is possible during a read — the sampling
  * distribution stays approximately correct (bounded drift). Under
- * [Concurrency.Strict] an outer lock serializes admit against read for a
- * fully linearized sample. Under [Concurrency.None] no synchronization runs.
+ * [Concurrency.Strict] an outer lock serialises admit against read for a
+ * fully linearized sample. [Concurrency.None] runs without synchronisation.
  */
 class ReservoirHistogramStat(
     /** Reservoir size (capacity of retained samples). */
