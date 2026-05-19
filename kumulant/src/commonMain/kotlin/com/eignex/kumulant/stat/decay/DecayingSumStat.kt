@@ -28,6 +28,17 @@ data class DecayingSumResult(
  *
  * The core time-decay primitive. Internally uses landmark-rotation to keep the stored
  * accumulator in a bounded numerical range even after many half-lives of activity.
+ *
+ * # Concurrency
+ *
+ * Lock-free under every concurrent level. Each update discounts its incoming
+ * `value * weight` to the current epoch's landmark via `exp(alpha * dt)` and
+ * applies a single atomic add to the epoch's accumulator. Epoch rotation
+ * (which folds accumulated mass into a fresh landmark to keep the discount
+ * exponent bounded) is a CAS swap of the epoch reference, so a thread that
+ * loses the rotation race simply retries against the new epoch.
+ * [Concurrency.HighWrite] switches the accumulator cell to a striped adder
+ * for higher throughput under heavy write contention.
  */
 class DecayingSumStat(
     /** Time-decay schedule applied to past contributions. */

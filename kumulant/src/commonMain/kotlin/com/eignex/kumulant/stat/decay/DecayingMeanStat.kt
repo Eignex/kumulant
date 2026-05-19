@@ -22,9 +22,18 @@ data class DecayingMeanResult(
 /**
  * Exponentially decaying weighted mean: `Sum(v_i*w_i*decay) / Sum(w_i*decay)`.
  *
- * Composes two [DecayingSumStat]s - one for weighted values, one for weights - so that the
+ * Composes two [DecayingSumStat]s — one for weighted values, one for weights — so that the
  * decay factor cancels in the ratio and the mean reflects only the *relative* weighting
  * of recent vs. older observations.
+ *
+ * # Concurrency
+ *
+ * Inherits [DecayingSumStat]'s lock-free epoch-rotation design across both
+ * underlying sums; exact under every [Concurrency] level. The two updates are
+ * applied sequentially without a lock, so a `read()` interleaved between them
+ * can observe one sum that includes the new sample and one that doesn't —
+ * resulting in a momentary tiny bias on the ratio. Self-correcting on the next
+ * update.
  */
 class DecayingMeanStat(
     /** Time-decay schedule applied to past contributions. */
