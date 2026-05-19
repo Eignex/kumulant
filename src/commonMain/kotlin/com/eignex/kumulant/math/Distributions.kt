@@ -179,3 +179,17 @@ fun Random.nextBeta(alpha: Double, beta: Double): Double {
     val s = a + b
     return if (s > 0.0) a / s else if (a > 0.0) 1.0 else 0.0
 }
+
+// === Poisson ===============================================================
+
+/** Knuth's Poisson sampler at lambda=1; returns 0/1/2/... with mass `e^{-1} / k!`. */
+fun Random.nextPoissonOne(): Int {
+    val l = exp(-1.0)
+    var k = 0
+    var p = 1.0
+    do {
+        k++
+        p *= nextDouble()
+    } while (p > l)
+    return k - 1
+}

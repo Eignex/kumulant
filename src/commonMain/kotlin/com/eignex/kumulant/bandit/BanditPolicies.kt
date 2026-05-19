@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.MomentsResult
+import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.ln
 import kotlin.math.min
@@ -244,4 +245,131 @@ class UniformSelection(
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) =
         rng.nextDouble()
+}
+
+// === Newer UCB variants ====================================================
+
+/**
+ * KL-UCB (Garivier & Cappé 2011) — UCB variant for Bernoulli arms with a KL-divergence
+ * confidence bound. Score is `sup { q in [mean, 1] : n * KL(mean, q) <= ln(t) + c*ln(ln(t)) }`
+ * computed by binary search. Asymptotically optimal for Bernoulli rewards.
+ */
+class KlUcb(
+    /** Confidence padding: `ln(t) + c * ln(ln(t))`. Default `c = 0` is the standard form. */
+    val c: Double = 0.0,
+    /** Binary-search tolerance for the quantile root. */
+    val tolerance: Double = 1e-6,
+    priorAlpha: Double = 1.0,
+    priorBeta: Double = 1.0,
+) : BanditPolicy<BernoulliSumResult> {
+    override val arm = BernoulliArm(priorAlpha, priorBeta)
+    private var totalSamples: Double = 0.0
+
+    override fun update(stat: SeriesStat<BernoulliSumResult>, value: Double, weight: Double) {
+        stat.update(arm.encode(value), 0L, weight)
+        totalSamples += weight
+    }
+
+    override fun evaluate(snapshot: BernoulliSumResult, step: Long, rng: Random): Double {
+        val n = snapshot.trials
+        if (n < 1.0 || totalSamples <= 1.0) return Double.POSITIVE_INFINITY
+        val mean = (snapshot.successes / n).coerceIn(0.0, 1.0)
+        val bound = (ln(totalSamples) + c * ln(ln(totalSamples).coerceAtLeast(1.0))) / n
+        return klBernoulliUpper(mean, bound, tolerance)
+    }
+
+    override fun addArm(snapshot: BernoulliSumResult) { totalSamples += snapshot.trials }
+    override fun removeArm(snapshot: BernoulliSumResult) { totalSamples -= snapshot.trials }
+
+    /** Bernoulli KL utilities used by [KlUcb]. */
+    companion object {
+        /** `sup { q in [p, 1] : KL(p, q) <= bound }` via bisection. */
+        fun klBernoulliUpper(p: Double, bound: Double, tol: Double): Double {
+            if (bound <= 0.0) return p
+            var lo = p
+            var hi = 1.0
+            while (hi - lo > tol) {
+                val mid = (lo + hi) * 0.5
+                if (klBernoulli(p, mid) > bound) hi = mid else lo = mid
+            }
+            return lo
+        }
+
+        /** KL divergence between two Bernoulli distributions with means [p] and [q]. */
+        fun klBernoulli(p: Double, q: Double): Double {
+            if (q <= 0.0 || q >= 1.0) return Double.POSITIVE_INFINITY
+            var s = 0.0
+            if (p > 0.0) s += p * ln(p / q)
+            if (p < 1.0) s += (1.0 - p) * ln((1.0 - p) / (1.0 - q))
+            return s
+        }
+    }
+}
+
+/**
+ * MOSS (Audibert & Bubeck 2009) — minimax-optimal UCB variant. Score is
+ * `mean + sqrt(max(0, ln(t / (K * n))) / n)`. The bound shrinks faster than UCB1
+ * once an arm has more than `t / K` samples, eliminating the `log(t)` term's slack.
+ * Uses the anytime form (no horizon argument).
+ */
+class Moss(
+    /** Number of arms in the population; used in the bound's `t / (K * n)` term. */
+    val nbrArms: Int,
+    priorMean: Double = 0.0,
+    priorWeight: Double = 0.02,
+) : BanditPolicy<WeightedMeanResult> {
+    init { require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" } }
+    override val arm = MeanArm(priorMean, priorWeight)
+    private var totalSamples: Double = 0.0
+
+    override fun update(stat: SeriesStat<WeightedMeanResult>, value: Double, weight: Double) {
+        stat.update(arm.encode(value), 0L, weight)
+        totalSamples += weight
+    }
+
+    override fun evaluate(snapshot: WeightedMeanResult, step: Long, rng: Random): Double {
+        val n = snapshot.totalWeights
+        if (n < 1.0) return Double.POSITIVE_INFINITY
+        val arg = totalSamples / (nbrArms * n)
+        val padding = ln(arg.coerceAtLeast(1.0))
+        return snapshot.mean + sqrt(padding / n)
+    }
+
+    override fun addArm(snapshot: WeightedMeanResult) { totalSamples += snapshot.totalWeights }
+    override fun removeArm(snapshot: WeightedMeanResult) { totalSamples -= snapshot.totalWeights }
+}
+
+/**
+ * UCB-V (Audibert, Munos, Szepesvári 2009) — variance-aware UCB. Score is
+ * `mean + sqrt(2 * V * zeta * ln(t) / n) + 3 * c * zeta * ln(t) / n`. The bias-
+ * correction third term makes the bound finite-sample-honest where UCB1-Tuned's
+ * variance-aware bound is only asymptotic.
+ */
+class UcbV(
+    /** Variance-term scale. Audibert et al. recommend `zeta in [1, 1.2]`. */
+    val zeta: Double = 1.2,
+    /** Bias-correction term scale. Default matches the original paper. */
+    val c: Double = 1.0,
+    priorMean: Double = 0.0,
+    priorWeight: Double = 0.02,
+) : BanditPolicy<MomentsResult> {
+    init { require(zeta > 0.0) { "zeta must be positive, got $zeta" } }
+    override val arm = MomentsArm(priorMean, priorWeight)
+    private var totalSamples: Double = 0.0
+
+    override fun update(stat: SeriesStat<MomentsResult>, value: Double, weight: Double) {
+        stat.update(arm.encode(value), 0L, weight)
+        totalSamples += weight
+    }
+
+    override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
+        val n = snapshot.totalWeights
+        if (n < 1.0) return Double.POSITIVE_INFINITY
+        val v = (snapshot.meanOfSquares() - snapshot.mean * snapshot.mean).coerceAtLeast(0.0)
+        val logT = ln(totalSamples.coerceAtLeast(2.0))
+        return snapshot.mean + sqrt(2.0 * v * zeta * logT / n) + 3.0 * c * zeta * logT / n
+    }
+
+    override fun addArm(snapshot: MomentsResult) { totalSamples += snapshot.totalWeights }
+    override fun removeArm(snapshot: MomentsResult) { totalSamples -= snapshot.totalWeights }
 }

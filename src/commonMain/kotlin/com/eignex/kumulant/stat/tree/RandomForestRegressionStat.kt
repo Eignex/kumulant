@@ -5,10 +5,10 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.math.VectorView
+import com.eignex.kumulant.math.nextPoissonOne
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.ceil
-import kotlin.math.exp
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -58,7 +58,7 @@ class RandomForestRegressionStat(
             return
         }
         for (t in trees) {
-            val k = poissonOne(baggingRng)
+            val k = baggingRng.nextPoissonOne()
             if (k > 0) t.update(x, y, weight * k)
         }
     }
@@ -91,18 +91,6 @@ class RandomForestRegressionStat(
 
     /** Live underlying trees. Use for inspection. */
     fun trees(): List<Tree> = trees.toList()
-
-    /** Knuth's Poisson sampler at lambda=1; returns 0/1/2/... with mass `e^{-1} / k!`. */
-    private fun poissonOne(rng: Random): Int {
-        val l = exp(-1.0)
-        var k = 0
-        var p = 1.0
-        do {
-            k++
-            p *= rng.nextDouble()
-        } while (p > l)
-        return k - 1
-    }
 
     private fun defaultMtry(p: Int): Int =
         if (p <= 0) 0 else ceil(sqrt(p.toDouble())).toInt().coerceAtLeast(1)
