@@ -210,6 +210,63 @@ class ConcurrentStreamModesTest {
         assertEquals((writers * iters).toLong(), result.totalSeen)
     }
 
+    @Test
+    fun `TDigestStat under Relaxed survives concurrent update plus interleaved read`() {
+        val tdigest = TDigestStat(compression = 100.0, concurrency = Concurrency.Relaxed)
+        val writers = 4
+        val iters = 10_000
+        runWithReader(tdigest::read) {
+            runConcurrently(writers, iters) { t, i ->
+                tdigest.update((t * iters + i).toDouble())
+            }
+        }
+        val result = tdigest.read()
+        kotlin.test.assertTrue(
+            result.means.size <= 8 * 100,
+            "centroid count ${result.means.size} exceeded 8 * compression",
+        )
+        // totalWeight should account for every accepted observation (lock-free counter).
+        assertEquals((writers * iters).toDouble(), result.totalWeight, 1e-9)
+    }
+
+    @Test
+    fun `ReservoirHistogramStat under Relaxed never exceeds capacity under concurrent update plus read`() {
+        val capacity = 256
+        val reservoir = ReservoirHistogramStat(capacity = capacity, seed = 42L, concurrency = Concurrency.Relaxed)
+        val writers = 4
+        val iters = 10_000
+        runWithReader(reservoir::read) {
+            runConcurrently(writers, iters) { t, i ->
+                reservoir.update((t * iters + i).toDouble())
+            }
+        }
+        val result = reservoir.read()
+        kotlin.test.assertTrue(
+            result.values.size <= capacity,
+            "reservoir size ${result.values.size} exceeded capacity $capacity",
+        )
+        assertEquals((writers * iters).toLong(), result.totalSeen)
+    }
+
+    @Test
+    fun `SpaceSavingStat under Relaxed Misra-Gries stays within capacity under concurrent update plus read`() {
+        val capacity = 64
+        val ss = SpaceSavingStat(capacity = capacity, concurrency = Concurrency.Relaxed)
+        val writers = 4
+        val iters = 10_000
+        runWithReader(ss::read) {
+            runConcurrently(writers, iters) { _, i ->
+                ss.update((i % (capacity * 4)).toLong())
+            }
+        }
+        val result = ss.read()
+        kotlin.test.assertTrue(
+            result.keys.size <= capacity,
+            "tracked keys ${result.keys.size} exceeded capacity $capacity",
+        )
+        assertEquals((writers * iters).toLong(), result.totalSeen)
+    }
+
     /** Run [block] with a parallel reader thread invoking [read] in a tight loop until [block] returns. */
     private fun <R> runWithReader(read: () -> R, block: () -> Unit) {
         val stop = AtomicBoolean(false)

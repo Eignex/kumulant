@@ -28,6 +28,7 @@ class StatSpec<S, R : Result>(
     val factory: (Concurrency) -> S,
     val applyUpdate: (S, Update) -> Unit,
     val readSnapshot: (S, Long) -> R,
+    val merge: (S, R) -> Unit,
     val updates: (seed: Int, n: Int) -> Sequence<Update>,
     val scalar: (R) -> Double,
     val reference: (Sequence<Update>) -> Double,
@@ -59,6 +60,7 @@ fun <R : Result> seriesStatSpec(
     factory = factory,
     applyUpdate = { s, u -> s.update(u.value, u.timestampNanos, u.weight) },
     readSnapshot = { s, ts -> s.read(ts) },
+    merge = { s, r -> s.merge(r) },
     updates = updates,
     scalar = scalar,
     reference = reference,
@@ -83,6 +85,7 @@ fun <R : Result> pairedStatSpec(
     factory = factory,
     applyUpdate = { s, u -> s.update(u.value, deriveY(u.value), u.timestampNanos, u.weight) },
     readSnapshot = { s, ts -> s.read(ts) },
+    merge = { s, r -> s.merge(r) },
     updates = updates,
     scalar = scalar,
     reference = reference,
@@ -121,6 +124,7 @@ fun <R : Result> regressionStatSpec(
             s.update(DenseVector.of(x), y, u.timestampNanos, u.weight)
         },
         readSnapshot = { s, ts -> s.read(ts) },
+        merge = { s, r -> s.merge(r) },
         updates = updates,
         scalar = scalar,
         reference = reference,
@@ -153,6 +157,7 @@ fun <R : Result> discreteStatSpec(
     factory = factory,
     applyUpdate = { s, u -> s.update(u.value.toRawBits(), u.timestampNanos, u.weight) },
     readSnapshot = { s, ts -> s.read(ts) },
+    merge = { s, r -> s.merge(r) },
     updates = updates,
     scalar = scalar,
     reference = reference,
@@ -172,15 +177,21 @@ fun uniformVariableWeights(seed: Int, n: Int): Sequence<Update> = sequence {
     repeat(n) { yield(Update(rng.nextDouble(), 0.5 + rng.nextDouble(), 0L)) }
 }
 
+/** Inter-update timestamp step used by [timeProgressingUnitWeights]. Exposed so the
+ *  concurrency-drift analyzer can shift per-thread workloads onto non-overlapping
+ *  time windows for rate stats that silently drop out-of-order timestamps. */
+const val TIME_PROGRESSING_STRIDE_NANOS: Long = 1_000_000L
+
 /**
  * Time-progressing workload: monotonically increasing timestamps in 1 ms steps,
  * value in [0, 1), unit weight. Suitable for rate-style stats.
  */
 fun timeProgressingUnitWeights(seed: Int, n: Int): Sequence<Update> = sequence {
     val rng = Random(seed)
-    val stride = 1_000_000L
-    repeat(n) { i -> yield(Update(rng.nextDouble(), 1.0, (i + 1).toLong() * stride)) }
+    repeat(n) { i ->
+        yield(Update(rng.nextDouble(), 1.0, (i + 1).toLong() * TIME_PROGRESSING_STRIDE_NANOS))
+    }
 }
 
 /** Total elapsed nanoseconds for a [timeProgressingUnitWeights] stream of length [n]. */
-fun timeProgressingElapsedNanos(n: Int): Long = (n + 1).toLong() * 1_000_000L
+fun timeProgressingElapsedNanos(n: Int): Long = (n + 1).toLong() * TIME_PROGRESSING_STRIDE_NANOS

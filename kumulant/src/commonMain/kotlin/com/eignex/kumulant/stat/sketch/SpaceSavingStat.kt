@@ -3,7 +3,8 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.stream.serializedLock
+import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -24,18 +25,22 @@ data class HeavyHittersResult(
 ) : Result
 
 /**
- * Space-Saving heavy-hitters tracker (Metwally, Agrawal, El Abbadi 2005). Maintains up
- * to [capacity] (key, count, error) triples; on a miss when full, the minimum-count slot
- * is evicted and the new key inherits the old count plus its weight, with the old count
- * recorded as the new key's overestimate bound.
+ * Heavy-hitters tracker. Two algorithms run depending on concurrency:
  *
- * Reported counts are one-sided overestimates: `count >= true count` and the gap is at
- * most `error`. Memory is `O(capacity)` Longs; mergeable via the Cormode/Yi rule
- * (apply the same admission policy to incoming triples).
+ * - [Concurrency.None], [Concurrency.Strict], [Concurrency.HighWrite]:
+ *   classic Space-Saving (Metwally, Agrawal, El Abbadi 2005). On a miss when full,
+ *   the minimum-count slot is evicted and the new key inherits the old count plus
+ *   its weight, with the old count recorded as the new key's overestimate bound.
+ *   Reported counts are one-sided overestimates: `count >= true count`, gap <= `error`.
+ *   Strict/HighWrite serialize against reads/merges via an outer lock.
  *
- * Concurrency: all `update`/`merge`/`read`/`reset` calls are internally serialized
- * via a private platform mutex when [concurrency] is anything but [Concurrency.None];
- * under [Concurrency.None] the lock is a noop. Throughput-bound under thread contention.
+ * - [Concurrency.Relaxed]: lock-free Misra-Gries variant. On a miss when full,
+ *   all counts are decremented by one in best-effort fashion; a freed slot is
+ *   claimed via CAS. Counts under this mode are NOT overestimates - they may
+ *   underestimate by the number of decrements, and the classic overestimate bound
+ *   does not hold. Heavy hitters still surface; small/cold keys are bled out.
+ *
+ * Memory is `O(capacity)` Longs.
  */
 class SpaceSavingStat(
     val capacity: Int,
@@ -46,50 +51,110 @@ class SpaceSavingStat(
         require(capacity > 0) { "capacity must be > 0" }
     }
 
-    // All mutable state is accessed only under [lock].
-    private val keys = LongArray(capacity)
-    private val counts = LongArray(capacity)
-    private val errors = LongArray(capacity)
-    private var len = 0
-    private var totalSeen = 0L
-    private val lock = concurrency.serializedLock()
+    private val mode = concurrency.monotonicMode()
 
-    private fun admit(key: Long, addCount: Long, addError: Long) {
-        val n = len
-        for (i in 0 until n) {
-            if (keys[i] == key) {
-                counts[i] += addCount
-                errors[i] += addError
+    // Noop under None/Relaxed; real under Strict/HighWrite.
+    private val outerLock = concurrency.welfordLock()
+    private val useMisraGries: Boolean = concurrency == Concurrency.Relaxed
+
+    private val keys = mode.newLongArray(capacity)
+    private val counts = mode.newLongArray(capacity)
+    private val errors = mode.newLongArray(capacity)
+    private val totalSeenCell = mode.newLong(0L)
+
+    /**
+     * Classic Space-Saving admit. Caller serializes against concurrent admit / read
+     * (None: trivially; Strict/HighWrite: via [outerLock]).
+     */
+    private fun admitClassic(key: Long, addCount: Long, addError: Long) {
+        // Match existing key
+        for (i in 0 until capacity) {
+            if (counts.load(i) > 0L && keys.load(i) == key) {
+                counts.add(i, addCount)
+                errors.add(i, addError)
                 return
             }
         }
-        if (n < capacity) {
-            keys[n] = key
-            counts[n] = addCount
-            errors[n] = addError
-            len = n + 1
-            return
+        // Find empty slot (count == 0)
+        for (i in 0 until capacity) {
+            if (counts.load(i) == 0L) {
+                keys.store(i, key)
+                counts.store(i, addCount)
+                errors.store(i, addError)
+                return
+            }
         }
+        // Evict min-count slot
         var minIdx = 0
-        var minCount = counts[0]
-        for (i in 1 until n) {
-            if (counts[i] < minCount) {
-                minCount = counts[i]
+        var minCount = counts.load(0)
+        for (i in 1 until capacity) {
+            val c = counts.load(i)
+            if (c < minCount) {
+                minCount = c
                 minIdx = i
             }
         }
-        keys[minIdx] = key
-        counts[minIdx] = minCount + addCount
-        errors[minIdx] = minCount + addError
+        keys.store(minIdx, key)
+        counts.store(minIdx, minCount + addCount)
+        errors.store(minIdx, minCount + addError)
+    }
+
+    /**
+     * Lock-free Misra-Gries admit. Bounded drift: concurrent racers may
+     * see a brief torn (newCount, staleKey) view in a freshly-claimed slot.
+     */
+    private fun admitMisraGries(key: Long, addCount: Long, addError: Long) {
+        while (true) {
+            // 1. Find a slot whose current (key, count) matches and increment in place.
+            var matched = false
+            for (i in 0 until capacity) {
+                if (counts.load(i) > 0L && keys.load(i) == key) {
+                    counts.add(i, addCount)
+                    errors.add(i, addError)
+                    matched = true
+                    break
+                }
+            }
+            if (matched) return
+
+            // 2. Try to claim a free slot (count <= 0) via CAS on the count.
+            //    Concurrent decrements in step 3 can drive counts negative; treat
+            //    those as available too so an over-decrement doesn't trap callers.
+            var claimed = false
+            for (i in 0 until capacity) {
+                val c = counts.load(i)
+                if (c <= 0L) {
+                    if (counts.compareAndSet(i, c, addCount)) {
+                        keys.store(i, key)
+                        errors.store(i, addError)
+                        claimed = true
+                        break
+                    }
+                }
+            }
+            if (claimed) return
+
+            // 3. No free slot found - best-effort decrement of every count. A
+            //    concurrent admit may decrement in parallel; both progress, and
+            //    step 2 on the next iteration accepts the resulting non-positive
+            //    counts.
+            for (i in 0 until capacity) counts.add(i, -1L)
+            // Loop and retry.
+        }
     }
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
         val w = kotlin.math.round(weight).toLong()
         if (w <= 0L) return
-        lock.withLock {
-            admit(value, w, 0L)
-            totalSeen++
+        if (useMisraGries) {
+            admitMisraGries(value, w, 0L)
+            totalSeenCell.add(1L)
+        } else {
+            outerLock.withLock {
+                admitClassic(value, w, 0L)
+                totalSeenCell.add(1L)
+            }
         }
     }
 
@@ -97,34 +162,58 @@ class SpaceSavingStat(
         require(values.capacity == capacity) {
             "Cannot merge HeavyHitters with capacity=${values.capacity} into $capacity"
         }
-        lock.withLock {
+        if (useMisraGries) {
             for (i in values.keys.indices) {
-                admit(values.keys[i], values.counts[i], values.errors[i])
+                admitMisraGries(values.keys[i], values.counts[i], values.errors[i])
             }
-            totalSeen += values.totalSeen
+            totalSeenCell.add(values.totalSeen)
+        } else {
+            outerLock.withLock {
+                for (i in values.keys.indices) {
+                    admitClassic(values.keys[i], values.counts[i], values.errors[i])
+                }
+                totalSeenCell.add(values.totalSeen)
+            }
         }
     }
 
     override fun reset() {
-        lock.withLock {
-            len = 0
-            totalSeen = 0L
+        outerLock.withLock {
             for (i in 0 until capacity) {
-                keys[i] = 0L
-                counts[i] = 0L
-                errors[i] = 0L
+                keys.store(i, 0L)
+                counts.store(i, 0L)
+                errors.store(i, 0L)
             }
+            totalSeenCell.store(0L)
         }
     }
 
-    override fun read(timestampNanos: Long): HeavyHittersResult = lock.withLock {
-        val n = len.coerceAtMost(capacity)
+    override fun read(timestampNanos: Long): HeavyHittersResult = outerLock.withLock {
+        // Filter active slots (count > 0). Snapshot per-slot; under Relaxed a brief
+        // torn pair window is possible.
+        var active = 0
+        for (i in 0 until capacity) {
+            if (counts.load(i) > 0L) active++
+        }
+        val outK = LongArray(active)
+        val outC = LongArray(active)
+        val outE = LongArray(active)
+        var cursor = 0
+        for (i in 0 until capacity) {
+            val c = counts.load(i)
+            if (c > 0L && cursor < active) {
+                outK[cursor] = keys.load(i)
+                outC[cursor] = c
+                outE[cursor] = errors.load(i)
+                cursor++
+            }
+        }
         HeavyHittersResult(
             capacity = capacity,
-            keys = keys.copyOf(n),
-            counts = counts.copyOf(n),
-            errors = errors.copyOf(n),
-            totalSeen = totalSeen,
+            keys = outK.copyOf(cursor),
+            counts = outC.copyOf(cursor),
+            errors = outE.copyOf(cursor),
+            totalSeen = totalSeenCell.load(),
         )
     }
 

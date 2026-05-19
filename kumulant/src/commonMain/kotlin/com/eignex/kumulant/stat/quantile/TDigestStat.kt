@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
 import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
@@ -88,10 +88,16 @@ class TDigestStat(
     private val bufferCap: Int = max(10, (5.0 * compression).toInt())
     private val bufferCapLong: Long = bufferCap.toLong()
 
-    private val mode = concurrency.additiveMode()
+    // Use monotonicMode (SerialMode under None, AtomicMode otherwise) so the buffer
+    // index supports addAndGet + compareAndSet under every concurrent mode. Striped
+    // adders (HighWrite) don't expose CAS and have non-linearizable reads, which
+    // would break the claim/commit protocol below.
+    private val mode = concurrency.monotonicMode()
+
     // Outer lock: noop under None/Relaxed; real under Strict/HighWrite. Linearizes
     // update/merge/read against each other for strict semantics.
     private val outerLock = concurrency.welfordLock()
+
     // Compress lock: noop under None; real otherwise. Protects centroid arrays and
     // the buffer-drain critical section against concurrent compress / read / merge.
     private val compressLock = concurrency.serializedLock()
@@ -304,7 +310,14 @@ class TDigestStat(
             val total = totalWeightCell.load()
             val computed = DoubleArray(probabilities.size)
             if (means.isEmpty() || total <= 0.0) {
-                return@withLock TDigestResult(probabilities, computed, means.copyOf(), weights.copyOf(), total, compression)
+                return@withLock TDigestResult(
+                    probabilities,
+                    computed,
+                    means.copyOf(),
+                    weights.copyOf(),
+                    total,
+                    compression
+                )
             }
 
             // Cumulative rank at each centroid's center (half-weight offsets).

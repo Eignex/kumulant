@@ -21,6 +21,9 @@ import kotlin.math.abs
  *  - [Concurrency.HighWrite] — striped adders on JVM; same as Strict for
  *    additive stats, drift may appear on non-additive ones.
  *
+ * Per-thread workloads are shifted onto disjoint time windows so rate stats that
+ * drop out-of-order timestamps (CounterRate) see a globally monotonic stream.
+ *
  * Invoke via `./gradlew :kumulant-bench:analyzeConcurrencyDrift`.
  */
 fun main() {
@@ -44,6 +47,12 @@ fun main() {
     }
 }
 
+/** Shift thread [tid]'s update timestamps onto its own non-overlapping window. */
+private fun shiftForThread(tid: Int, updatesPerThread: Int, seq: Sequence<Update>): Sequence<Update> {
+    val offset = tid.toLong() * updatesPerThread.toLong() * TIME_PROGRESSING_STRIDE_NANOS
+    return if (offset == 0L) seq else seq.map { Update(it.value, it.weight, it.timestampNanos + offset) }
+}
+
 private fun <S, R : Result> measure(
     spec: StatSpec<S, R>,
     level: Concurrency,
@@ -51,7 +60,9 @@ private fun <S, R : Result> measure(
     updatesPerThread: Int,
 ) {
     val stat = spec.factory(level)
-    val seqs = (0 until threads).map { tid -> spec.updates(tid, updatesPerThread).toList() }
+    val seqs = (0 until threads).map { tid ->
+        shiftForThread(tid, updatesPerThread, spec.updates(tid, updatesPerThread)).toList()
+    }
 
     if (level == Concurrency.None) {
         for (s in seqs) for (u in s) spec.applyUpdate(stat, u)

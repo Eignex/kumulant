@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalAtomicApi::class)
+
 package com.eignex.kumulant.bench
 
 import com.eignex.kumulant.stat.decay.DecayWeighting
@@ -19,6 +21,8 @@ import com.eignex.kumulant.stat.summary.RangeStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
+import kotlin.concurrent.atomics.AtomicLong
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
@@ -292,27 +296,37 @@ val decayingRateStatSpec = seriesStatSpec(
     // Small decay over the workload window — within 1% of the un-decayed scaled sum.
 )
 
-val counterRateStatSpec = seriesStatSpec(
+// CounterRateStat is semantically one monotonic counter. The bench mirrors that
+// by binding the factory's stat to an [AtomicLong] that serializes all writers
+// behind a globally-monotonic sequence: each call to [applyUpdate] increments
+// the shared counter and feeds its new value to the stat. Under concurrent
+// writers the stat now sees true monotonic input regardless of thread
+// interleaving, isolating the stat's own concurrency primitives from the
+// "two independent counters" misuse pattern.
+class CounterRateBag internal constructor(val stat: CounterRateStat, val counter: AtomicLong)
+
+val counterRateStatSpec: StatSpec<CounterRateBag, com.eignex.kumulant.stat.rate.RateResult> = StatSpec(
     name = "CounterRateStat",
-    factory = { c -> CounterRateStat(c) },
-    updates = ::counterWorkload,
+    factory = { c -> CounterRateBag(CounterRateStat(c), AtomicLong(0L)) },
+    applyUpdate = { bag, u ->
+        val i = bag.counter.addAndFetch(1L)
+        bag.stat.update(i.toDouble(), u.timestampNanos, u.weight)
+    },
+    readSnapshot = { bag, ts -> bag.stat.read(ts) },
+    merge = { bag, r -> bag.stat.merge(r) },
+    updates = ::timeProgressingUnitWeights,
     scalar = { it.rate },
-    reference = ::counterReference,
+    reference = ::counterRateReference,
     readAt = ::readAtFor,
-    // CounterRate assumes a single monotonic counter source. The concurrency test
-    // concatenates per-thread counters which the stat reads as resets — the
-    // result depends on the interleaving order, so skip the exact comparison
-    // for non-None levels. The serial correctness test still pins the math.
 )
 
-private fun counterWorkload(seed: Int, n: Int): Sequence<Update> = sequence {
-    val rng = Random(seed)
-    val stride = 1_000_000L
-    var v = 0.0
-    repeat(n) { i ->
-        v += rng.nextDouble()
-        yield(Update(v, 1.0, (i + 1).toLong() * stride))
-    }
+private fun counterRateReference(seq: Sequence<Update>): Double {
+    val list = seq.toList()
+    val elapsedSec = elapsedSeconds(list)
+    if (elapsedSec <= 0.0) return 0.0
+    // Each update increments the shared counter by 1, so the final absolute
+    // counter value equals the stream length regardless of thread interleaving.
+    return list.size.toDouble() / elapsedSec
 }
 
 // === Cardinality ============================================================

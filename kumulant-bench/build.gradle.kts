@@ -78,7 +78,13 @@ tasks.register<JavaExec>("analyzeAccuracy") {
 }
 
 tasks.register<JavaExec>("analyzeConcurrencyDrift") {
-    description = "Per-stat drift under each Concurrency level, 4 threads. Prints to stdout."
+    description = "Per-stat update-path drift under each Concurrency level, 4 threads. Prints to stdout."
     mainClass.set("com.eignex.kumulant.bench.ConcurrencyDriftAnalysisKt")
+    kumulantBenchSetup()
+}
+
+tasks.register<JavaExec>("analyzeMergeContention") {
+    description = "Per-stat merge-path drift when 4 threads concurrently merge snapshots. Prints to stdout."
+    mainClass.set("com.eignex.kumulant.bench.MergeContentionAnalysisKt")
     kumulantBenchSetup()
 }

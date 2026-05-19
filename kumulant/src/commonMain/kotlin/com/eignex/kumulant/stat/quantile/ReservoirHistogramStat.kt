@@ -3,7 +3,10 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.serializedLock
+import com.eignex.kumulant.stream.NoopMutex
+import com.eignex.kumulant.stream.PlatformMutex
+import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.pow
@@ -100,9 +103,13 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  * (Efraimidis & Spirakis): each item gets a key `u^(1/w)` and the top-`k`
  * keys are retained, giving an unbiased weight-proportional sample.
  *
- * Concurrency: all `update`/`merge`/`read`/`reset` calls are internally serialized
- * via a private platform mutex when [concurrency] is anything but [Concurrency.None];
- * under [Concurrency.None] the lock is a noop. Throughput-bound under thread contention.
+ * Concurrency: under [Concurrency.Relaxed] and [Concurrency.HighWrite] the
+ * admit path scans for the min-key slot and CAS-replaces it; concurrent
+ * winners on the same slot fall through to a re-scan, and a brief torn-pair
+ * window (key updated before value) is possible during a read - the sampling
+ * distribution stays approximately correct (bounded drift). Under
+ * [Concurrency.Strict] an outer lock serializes admit against read for a
+ * fully linearized sample. Under [Concurrency.None] no synchronization runs.
  */
 class ReservoirHistogramStat(
     /** Reservoir size (capacity of retained samples). */
@@ -116,45 +123,65 @@ class ReservoirHistogramStat(
         require(capacity > 0) { "capacity must be > 0" }
     }
 
-    // All mutable state is accessed only under [lock].
-    private val random = Random(seed)
-    private val values = DoubleArray(capacity)
-    private val keys = DoubleArray(capacity)
-    private var len = 0
-    private var totalSeen = 0L
-    private var totalWeight = 0.0
-    private val lock = concurrency.serializedLock()
+    private val mode = concurrency.monotonicMode()
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0 || value.isNaN()) return
-        lock.withLock {
-            val u = random.nextDouble()
-            val key = if (weight == 1.0) u else u.pow(1.0 / weight)
-            admit(value, key)
-            totalSeen++
-            totalWeight += weight
-        }
+    // Outer lock: noop under None/Relaxed; real under Strict/HighWrite. Linearizes
+    // update/merge/read against each other for strict semantics.
+    private val outerLock = concurrency.welfordLock()
+
+    // RNG is not thread-safe; protect with a tiny lock under Relaxed (HighWrite
+    // and Strict already serialize via outerLock for HighWrite, but under
+    // Relaxed we need our own). None needs no lock.
+    private val rngLock = when (concurrency) {
+        Concurrency.Relaxed, Concurrency.HighWrite -> PlatformMutex()
+        else -> NoopMutex
+    }
+    private val random = Random(seed)
+
+    // Sentinel key for "empty slot"; any real A-Res key (in (0, 1]) beats it.
+    private val emptyKey = Double.NEGATIVE_INFINITY
+
+    private val sampleKeys = mode.newDoubleArray(capacity) { emptyKey }
+    private val sampleValues = mode.newDoubleArray(capacity) { 0.0 }
+    private val totalSeenCell = mode.newLong(0L)
+    private val totalWeightCell = mode.newDouble(0.0)
+
+    private fun drawKey(weight: Double): Double {
+        val u = rngLock.withLock { random.nextDouble() }
+        return if (weight == 1.0) u else u.pow(1.0 / weight)
     }
 
     private fun admit(value: Double, key: Double) {
-        val n = len
-        if (n < capacity) {
-            values[n] = value
-            keys[n] = key
-            len = n + 1
-            return
-        }
-        var minIdx = 0
-        var minKey = keys[0]
-        for (i in 1 until capacity) {
-            if (keys[i] < minKey) {
-                minKey = keys[i]
-                minIdx = i
+        // Scan for the min-key slot; CAS-replace. Retry on lost CAS.
+        while (true) {
+            var minIdx = 0
+            var minKey = sampleKeys.load(0)
+            for (i in 1 until capacity) {
+                val k = sampleKeys.load(i)
+                if (k < minKey) {
+                    minKey = k
+                    minIdx = i
+                }
             }
+            if (key <= minKey) return // not admit-worthy
+            if (sampleKeys.compareAndSet(minIdx, minKey, key)) {
+                // Brief window: a concurrent read may observe (oldValue, newKey).
+                // Acceptable drift - the value distribution stays approximately
+                // weight-proportional.
+                sampleValues.store(minIdx, value)
+                return
+            }
+            // Lost the CAS; re-scan against the updated state.
         }
-        if (key > minKey) {
-            values[minIdx] = value
-            keys[minIdx] = key
+    }
+
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight <= 0.0 || value.isNaN()) return
+        outerLock.withLock {
+            val key = drawKey(weight)
+            admit(value, key)
+            totalSeenCell.add(1L)
+            totalWeightCell.add(weight)
         }
     }
 
@@ -168,35 +195,50 @@ class ReservoirHistogramStat(
         require(values.values.size == values.keys.size) {
             "ReservoirResult values/keys size mismatch"
         }
-        lock.withLock {
+        outerLock.withLock {
             for (i in values.values.indices) {
                 admit(values.values[i], values.keys[i])
             }
-            totalSeen += values.totalSeen
-            totalWeight += values.totalWeight
+            totalSeenCell.add(values.totalSeen)
+            totalWeightCell.add(values.totalWeight)
         }
     }
 
     override fun reset() {
-        lock.withLock {
-            len = 0
-            totalSeen = 0L
-            totalWeight = 0.0
+        outerLock.withLock {
             for (i in 0 until capacity) {
-                values[i] = 0.0
-                keys[i] = 0.0
+                sampleKeys.store(i, emptyKey)
+                sampleValues.store(i, 0.0)
             }
+            totalSeenCell.store(0L)
+            totalWeightCell.store(0.0)
         }
     }
 
-    override fun read(timestampNanos: Long): ReservoirResult = lock.withLock {
-        val n = len.coerceAtMost(capacity)
+    override fun read(timestampNanos: Long): ReservoirResult = outerLock.withLock {
+        // Snapshot under outerLock (strict) or best-effort (relaxed). Filter
+        // out unfilled slots by sentinel key.
+        var filled = 0
+        for (i in 0 until capacity) {
+            if (sampleKeys.load(i) != emptyKey) filled++
+        }
+        val outVals = DoubleArray(filled)
+        val outKeys = DoubleArray(filled)
+        var cursor = 0
+        for (i in 0 until capacity) {
+            val k = sampleKeys.load(i)
+            if (k != emptyKey && cursor < filled) {
+                outKeys[cursor] = k
+                outVals[cursor] = sampleValues.load(i)
+                cursor++
+            }
+        }
         ReservoirResult(
-            values = values.copyOf(n),
-            keys = keys.copyOf(n),
+            values = outVals.copyOf(cursor),
+            keys = outKeys.copyOf(cursor),
             capacity = capacity,
-            totalSeen = totalSeen,
-            totalWeight = totalWeight
+            totalSeen = totalSeenCell.load(),
+            totalWeight = totalWeightCell.load()
         )
     }
 }
