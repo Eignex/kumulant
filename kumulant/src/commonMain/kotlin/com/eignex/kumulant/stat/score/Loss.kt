@@ -13,11 +13,14 @@ private const val LOG_LOSS_EPS: Double = 1e-15
  * Streaming mean squared error: paired `(prediction, truth)` aggregated as the
  * mean of `(prediction - truth)^2`.
  *
- * # Concurrency
+ * **Use cases:** regression model evaluation, online MSE tracking on
+ * forecasts. Pair with [MaeLossStat] for an L1 view of the same residuals.
  *
- * Backed by [MeanStat] — inherits its Welford concurrency model: locked under
- * [Concurrency.Strict] / [Concurrency.HighWrite], lock-free atomic cells with
- * possible ~1e-5 drift under [Concurrency.Relaxed].
+ * **Memory:** O(1) — backed by a [MeanStat].
+ *
+ * **Update:** O(1) per paired observation.
+ *
+ * **Concurrency:** Inherits [MeanStat]'s concurrency model.
  */
 class MseLossStat(
     override val concurrency: Concurrency = Concurrency.None,
@@ -40,9 +43,14 @@ class MseLossStat(
  * Streaming mean absolute error: paired `(prediction, truth)` aggregated as the
  * mean of `|prediction - truth|`.
  *
- * # Concurrency
+ * **Use cases:** robust regression-error monitoring (less penalising of
+ * outliers than MSE). Pair with [MseLossStat] for both views.
  *
- * Backed by [MeanStat] — same model as [MseLossStat].
+ * **Memory:** O(1) — backed by a [MeanStat].
+ *
+ * **Update:** O(1) per paired observation.
+ *
+ * **Concurrency:** Inherits [MeanStat]'s concurrency model.
  */
 class MaeLossStat(
     override val concurrency: Concurrency = Concurrency.None,
@@ -65,11 +73,17 @@ class MaeLossStat(
  * aggregated as the mean of `-[y*ln(p) + (1-y)*ln(1-p)]`.
  *
  * Predictions are clamped into `[1e-15, 1 - 1e-15]` before taking logs to avoid
- * `+/-inf` on perfectly confident wrong predictions.
+ * `±inf` on perfectly confident wrong predictions.
  *
- * # Concurrency
+ * **Use cases:** classifier evaluation — strictly proper scoring rule that
+ * heavily penalises confident-and-wrong predictions. Pair with
+ * [BrierScoreStat] for the bounded counterpart.
  *
- * Backed by [MeanStat] — same model as [MseLossStat].
+ * **Memory:** O(1) — backed by a [MeanStat].
+ *
+ * **Update:** O(1) per paired observation.
+ *
+ * **Concurrency:** Inherits [MeanStat]'s concurrency model.
  */
 class LogLossStat(
     override val concurrency: Concurrency = Concurrency.None,

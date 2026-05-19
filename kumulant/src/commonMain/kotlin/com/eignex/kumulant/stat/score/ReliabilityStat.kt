@@ -83,12 +83,18 @@ data class ReliabilityResult(
  *
  * Predictions outside `[0, 1]` are clamped to the nearest edge bin.
  *
- * # Concurrency
+ * **Use cases:** calibration diagnostics for probabilistic forecasters — the
+ * raw material for reliability diagrams and Expected Calibration Error.
+ * Pair with [BrierScoreStat] for the matching proper-scoring number.
  *
- * Per update: three independent striped atomic adds (sumProbability,
- * sumOutcome, totalWeights — all on the destination bin). Lock-free and
- * exact under every [Concurrency] level — bin assignment is deterministic
- * per prediction and increments commute.
+ * **Memory:** O([numBins]) — three parallel Double arrays per bin.
+ *
+ * **Update:** O(1) per paired observation (three atomic adds on the
+ * destination bin).
+ *
+ * **Concurrency:** Three independent striped atomic adds per update.
+ * Lock-free and exact under every [Concurrency] level — bin assignment is
+ * deterministic per prediction and increments commute.
  */
 class ReliabilityStat(
     val numBins: Int,
