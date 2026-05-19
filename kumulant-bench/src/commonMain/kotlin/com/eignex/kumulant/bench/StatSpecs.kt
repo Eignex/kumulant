@@ -600,6 +600,52 @@ val reliabilityStatSpec = pairedStatSpec(
     deriveY = { if (it > 0.5) 1.0 else 0.0 },
 )
 
+// === Tree ===================================================================
+//
+// Tree regressors fold (vector, y, weight) tuples into a piecewise-constant model.
+// We don't try to match slope or split structure here; the invariant is
+// "every update's weight reached the snapshot", which makes
+// [TreeRegressionResult.totalWeights] / [ForestRegressionResult.totalWeights]
+// the natural scalar.
+
+private val treeSplitCandidates = listOf(
+    com.eignex.kumulant.stat.tree.ThresholdSplit(0, 0.5),
+)
+
+val decisionTreeRegressionStatSpec = regressionStatSpec(
+    name = "DecisionTreeRegressionStat",
+    factory = { c ->
+        com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = treeSplitCandidates,
+            concurrency = c,
+        )
+    },
+    updates = ::uniformVariableWeights,
+    scalar = { it.totalWeights },
+    reference = { seq -> seq.sumOf { it.weight } },
+    tolerance = 1e-6,
+)
+
+val randomForestRegressionStatSpec = regressionStatSpec(
+    name = "RandomForestRegressionStat",
+    factory = { c ->
+        com.eignex.kumulant.stat.tree.RandomForestRegressionStat(
+            featureSize = 1,
+            splitCandidates = treeSplitCandidates,
+            nbrTrees = 4,
+            bagging = false,
+            concurrency = c,
+        )
+    },
+    updates = ::uniformVariableWeights,
+    // ForestRegressionResult.totalWeights = sum over trees; without bagging each
+    // tree absorbs the full stream, so the total is `nbrTrees * sum(weights)`.
+    scalar = { it.totalWeights },
+    reference = { seq -> 4.0 * seq.sumOf { it.weight } },
+    tolerance = 1e-6,
+)
+
 /** Every spec exposed by the bench module. */
 val allSpecs: List<StatSpec<*, *>> = listOf(
     sumStatSpec,
@@ -641,4 +687,6 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     brierScoreStatSpec,
     pinballLossStatSpec,
     reliabilityStatSpec,
+    decisionTreeRegressionStatSpec,
+    randomForestRegressionStatSpec,
 )

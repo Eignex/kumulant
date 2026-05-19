@@ -62,6 +62,8 @@ open class UpdateThroughputBenchmark {
         "BrierScoreStat",
         "PinballLossStat",
         "ReliabilityStat",
+        "DecisionTreeRegressionStat",
+        "RandomForestRegressionStat",
     )
     var name: String = ""
 
