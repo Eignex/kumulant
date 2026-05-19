@@ -22,14 +22,24 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
  * [update]. The internal leaf accumulator is fixed to [VarianceStat]'s
  * [WeightedVarianceResult] so the [VarianceReduction] split metric applies.
  *
- * # Concurrency
+ * **Use cases:** non-linear regression where the relationship between context
+ * and target is piecewise constant or step-like — bandit reward modelling,
+ * contextual stratification, anything where linear regression would miss the
+ * structure. Reach for [RandomForestRegressionStat] for ensembled diversity.
  *
- * Leaf-arm updates are lock-free (each arm is a [VarianceStat] that honours
- * [Concurrency]). Split conversion — the only path that mutates tree
- * structure — is serialised by a per-tree lock that fires only once every
- * [TreeConfig.splitPeriod] observations per audit leaf. The hot update path
- * is therefore pure arm arithmetic with zero structural reference writes in
- * the common case. See [Tree] for the full concurrency design.
+ * **Memory:** O(nodes · splitCandidates) — a [VarianceStat] per node plus
+ * per-audit-leaf candidate accumulators. Bounded by [TreeConfig.maxNodes].
+ *
+ * **Update:** O(depth) per observation — a tree walk to the destination leaf,
+ * then an arm update at that leaf. Splits fire at most once every
+ * [TreeConfig.splitPeriod] observations per audit leaf.
+ *
+ * **Concurrency:** Leaf-arm updates are lock-free (each arm is a
+ * [VarianceStat] that honours [Concurrency]). Split conversion — the only
+ * path that mutates tree structure — is serialised by a per-tree lock that
+ * fires only at split decisions. The hot update path is therefore pure arm
+ * arithmetic with zero structural reference writes in the common case. See
+ * [Tree] for the full concurrency design.
  */
 class DecisionTreeRegressionStat(
     override val featureSize: Int,

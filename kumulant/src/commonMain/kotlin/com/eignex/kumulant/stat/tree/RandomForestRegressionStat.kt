@@ -22,6 +22,23 @@ import kotlin.random.Random
  *
  * Snapshot is a [ForestRegressionResult] carrying every per-tree [TreeRegressionResult];
  * tree-aware posteriors merge per-tree leaf aggregates at score time.
+ *
+ * **Use cases:** non-linear contextual regression with built-in variance
+ * estimation across trees — the natural backbone for Thompson-sampling
+ * contextual bandits. Reach for [DecisionTreeRegressionStat] alone when a
+ * single tree's predictions suffice and ensembled diversity isn't needed.
+ *
+ * **Memory:** O([nbrTrees] · single-tree memory) — see
+ * [DecisionTreeRegressionStat]. Heavier but parallelisable.
+ *
+ * **Update:** O([nbrTrees] · depth) per observation — each tree's update is
+ * independent. Under [bagging] = true, each tree applies a fresh
+ * Poisson(1)-reweighted version of the update.
+ *
+ * **Concurrency:** Inherits [DecisionTreeRegressionStat]'s per-tree
+ * concurrency model. Trees are updated sequentially within a single
+ * `update()` call (no inner parallelism); concurrent callers each contend
+ * for each tree's split lock independently.
  */
 class RandomForestRegressionStat(
     override val featureSize: Int,
