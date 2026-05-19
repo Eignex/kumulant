@@ -58,8 +58,6 @@ class ThompsonSampling<R : Result>(
         posterior.sample(snapshot, rng)
 }
 
-// === Canonical pairings: arm + matching posterior ==========================
-
 /** Thompson sampling over a Beta(`priorAlpha`, `priorBeta`) prior on a Bernoulli reward. */
 @Suppress("FunctionNaming")
 fun BetaBernoulliTS(priorAlpha: Double = 1.0, priorBeta: Double = 1.0) =
@@ -100,8 +98,6 @@ fun ExponentialTS(priorMean: Double = 1.0, priorWeight: Double = 0.01) =
 @Suppress("FunctionNaming")
 fun GammaScaleTS(fixedShape: Double, priorMean: Double = 1.0, priorWeight: Double = 0.1) =
     ThompsonSampling(MeanArm(priorMean, priorWeight), GammaScalePosterior(fixedShape))
-
-// === UCB family ============================================================
 
 /** Classical UCB1 over a Bernoulli reward with a Beta prior on the success probability. */
 class UCB1(
@@ -172,8 +168,6 @@ class UCB1Tuned(
     override fun addArm(snapshot: MomentsResult) { totalSamples += snapshot.totalWeights }
     override fun removeArm(snapshot: MomentsResult) { totalSamples -= snapshot.totalWeights }
 }
-
-// === Mean-only policies (Normal arm, no sampling) ==========================
 
 /** Pure-exploitation policy: always picks the arm with the highest posterior mean. */
 class Greedy(
@@ -246,8 +240,6 @@ class UniformSelection(
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) =
         rng.nextDouble()
 }
-
-// === Newer UCB variants ====================================================
 
 /**
  * KL-UCB (Garivier & Cappé 2011) — UCB variant for Bernoulli arms with a KL-divergence

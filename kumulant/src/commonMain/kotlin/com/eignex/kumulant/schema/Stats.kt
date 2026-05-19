@@ -41,8 +41,6 @@ import kotlinx.serialization.Serializable
  * Construction lives in `StatFactory.kt`; specs here are pure data only.
  */
 
-// ========== Series ==========
-
 /** Spec for `MeanStat`: weighted running mean. */
 @Serializable
 @SerialName("Mean")
@@ -188,8 +186,6 @@ data class PitHistogram(
     val numBins: Int,
 ) : SeriesStatSpec<SparseHistogramResult>
 
-// ========== Paired ==========
-
 /** Spec for `PairedSumStat`: tracks per-axis sums of `(x, y)` updates. */
 @Serializable
 @SerialName("PairedSum")
@@ -255,8 +251,6 @@ data class Reliability(
     /** Number of equal-width probability bins. */
     val numBins: Int,
 ) : PairedStatSpec<ReliabilityResult>
-
-// ========== Discrete ==========
 
 /** Spec for `HyperLogLogStat`: cardinality sketch with controllable [precision]. */
 @Serializable

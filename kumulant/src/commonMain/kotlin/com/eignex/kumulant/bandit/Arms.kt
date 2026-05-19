@@ -148,20 +148,20 @@ data class MomentsArm(
 internal fun MomentsResult.meanOfSquares(): Double =
     if (totalWeights > 0.0) m2 / totalWeights + mean * mean else 0.0
 
-// === Warm-start helpers: build an Arm spec from a pooled global snapshot ====
-//
-// Each helper takes the current global snapshot and a [shrinkage] in `[0, 1]` that
-// scales how much of the global evidence is counted as the arm's prior pseudo-count.
-// `shrinkage = 0` collapses to the bare prior; `shrinkage = 1` treats every global
-// observation as if it had been seen by this arm. Use at construction or [reset]
-// to warm-start a per-arm accumulator from cross-arm experience.
-//
-// Univariate hierarchical pooling has no clean general API (see the discussion next
-// to [com.eignex.kumulant.bandit.RegressionContextualBandit] for the contextual case);
-// these per-arm-type helpers cover the Result types where shrinkage has a uniform
-// pseudo-count interpretation.
-
-/** Warm-started [BernoulliArm] from a global Bernoulli snapshot. */
+/**
+ * Warm-started [BernoulliArm] from a global Bernoulli snapshot.
+ *
+ * Builds an Arm spec from a pooled global snapshot. [shrinkage] in `[0, 1]`
+ * scales how much of the global evidence is counted as the arm's prior
+ * pseudo-count: `0` collapses to the bare prior; `1` treats every global
+ * observation as if it had been seen by this arm. The same convention applies
+ * to every `warmStart` overload below.
+ *
+ * Univariate hierarchical pooling has no clean general API (see the discussion
+ * next to [com.eignex.kumulant.bandit.RegressionContextualBandit] for the
+ * contextual case); these per-arm-type helpers cover the Result types where
+ * shrinkage has a uniform pseudo-count interpretation.
+ */
 fun BernoulliArm.Companion.warmStart(
     global: BernoulliSumResult,
     shrinkage: Double = 1.0,

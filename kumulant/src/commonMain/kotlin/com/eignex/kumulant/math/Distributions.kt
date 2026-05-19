@@ -22,8 +22,6 @@ private fun Random.nextDoublePos(): Double {
     }
 }
 
-// === Normal ================================================================
-
 /** Float overload of [nextNormal]; widens to Double, samples, narrows back. */
 fun Random.nextNormal(mean: Float, std: Float): Float = nextNormal(mean.toDouble(), std.toDouble()).toFloat()
 
@@ -98,8 +96,6 @@ private val ZIGGURAT_INIT = run {
     Unit
 }
 
-// === Log-Normal ============================================================
-
 /**
  * Draw from a log-normal distribution parameterised by real-scale [mean] and
  * [variance] (not the underlying Normal's mu/sigma). Used by log-normal posteriors
@@ -114,8 +110,6 @@ fun Random.nextLogNormal(mean: Double, variance: Double): Double {
     val sigma = sqrt(ln(phi * phi / (mean * mean)))
     return exp(nextNormal(mu, sigma))
 }
-
-// === Gamma =================================================================
 
 /**
  * Draw from `Gamma(alpha, 1)` (unit rate). Marsaglia-Tsang (2000) for `alpha >= 1`
@@ -159,8 +153,6 @@ fun Random.nextGamma(alpha: Double): Double {
     }
 }
 
-// === Beta ==================================================================
-
 /**
  * Draw from `Beta(alpha, beta)` via the two-gamma quotient `X / (X + Y)` where
  * `X ~ Gamma(alpha)`, `Y ~ Gamma(beta)`. Fast paths for the trivial special cases:
@@ -179,8 +171,6 @@ fun Random.nextBeta(alpha: Double, beta: Double): Double {
     val s = a + b
     return if (s > 0.0) a / s else if (a > 0.0) 1.0 else 0.0
 }
-
-// === Poisson ===============================================================
 
 /** Knuth's Poisson sampler at lambda=1; returns 0/1/2/... with mass `e^{-1} / k!`. */
 fun Random.nextPoissonOne(): Int {

@@ -14,8 +14,6 @@ class StandaloneBanditExtraTest {
 
     private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
-    // === Exp3 ===
-
     @Test
     fun `Exp3 gamma=1 produces uniform play distribution regardless of weights`() {
         val b = Exp3Bandit(nbrArms = 3, eta = 0.5, gamma = 1.0, random = Random(0))
@@ -52,8 +50,6 @@ class StandaloneBanditExtraTest {
         assertTrue(small.isFinite() && large.isFinite())
     }
 
-    // === Exp4 ===
-
     @Test
     fun `Exp4 rejects expert returning wrong-length advice`() {
         val badExpert = Exp4Expert { _, _ -> DoubleArray(99) { 1.0 / 99 } }
@@ -80,8 +76,6 @@ class StandaloneBanditExtraTest {
         val w = b.expertWeights()
         assertEquals(1.0, w.sum(), 1e-9)
     }
-
-    // === Boltzmann ===
 
     @Test
     fun `Boltzmann temperature respects floor`() {
@@ -120,8 +114,6 @@ class StandaloneBanditExtraTest {
         val snap = b.snapshot()
         for (a in 0 until 3) assertEquals(b.armResult(a), snap[a])
     }
-
-    // === Knn ===
 
     @Test
     fun `Knn uses custom distance function`() {
@@ -178,8 +170,6 @@ class StandaloneBanditExtraTest {
             KnnContextualBandit.squaredL2(feat(1.0), feat(1.0, 2.0))
         }
     }
-
-    // === Top-Two TS ===
 
     @Test
     fun `TopTwoTS sampleArgmax is callable directly`() {

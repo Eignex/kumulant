@@ -15,8 +15,6 @@ package com.eignex.kumulant.math
  * infix `dot`).
  */
 
-// === Iteration ============================================================
-
 /**
  * Visit each stored entry of [this] as `(index, value)`. For [DenseVector] that's
  * every index in `0 until size`; for [SparseVector] that's the entries present in
@@ -35,8 +33,6 @@ internal inline fun VectorView.forEachStored(block: (i: Int, v: Double) -> Unit)
         }
     }
 }
-
-// === Scalar dispatch =======================================================
 
 /** `aT * b`. Densexdense routes through [denseDot] (SIMD on JVM); sparse paths
  *  iterate the cheaper operand's stored entries. */
@@ -57,8 +53,6 @@ internal infix fun VectorView.dot(other: VectorView): Double {
     }
 }
 
-// === In-place vector ops ===================================================
-
 /** `y = y + alpha * x`. Dense `x` uses SIMD; sparse `x` walks stored entries. */
 internal fun axpy(y: DenseVector, alpha: Double, x: VectorView) {
     require(y.size == x.size) { "size mismatch: ${y.size} vs ${x.size}" }
@@ -76,8 +70,6 @@ internal fun scale(v: DenseVector, alpha: Double) {
     if (alpha == 1.0) return
     denseScale(v.data, 0, alpha, v.size)
 }
-
-// === In-place matrix ops ===================================================
 
 /**
  * `M = M + alpha * x * yT` (rank-1 update). Subtract by passing `alpha = -1.0`.
@@ -109,8 +101,6 @@ internal fun addOuter(M: DenseMatrix, alpha: Double, x: VectorView, y: VectorVie
         }
     }
 }
-
-// === Allocating ops ========================================================
 
 /** Matrix-vector product `A * x` into a fresh dense result. */
 internal fun matVec(A: MatrixView, x: VectorView): DenseVector {

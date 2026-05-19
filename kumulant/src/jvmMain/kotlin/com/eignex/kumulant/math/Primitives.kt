@@ -57,8 +57,6 @@ internal actual fun denseScale(
 /** Identifies the runtime math backend powering the SIMD-like primitives. */
 public actual val mathBackend: String = if (simdAvailable) "simd(${Simd.lanes()} lanes)" else "scalar"
 
-// === Scalar fallback (matches nonJvmMain's implementations) ================
-
 private fun scalarDot(a: DoubleArray, aOff: Int, b: DoubleArray, bOff: Int, len: Int): Double {
     var s = 0.0
     for (i in 0 until len) s += a[aOff + i] * b[bOff + i]
@@ -74,8 +72,6 @@ private fun scalarScale(v: DoubleArray, vOff: Int, alpha: Double, len: Int) {
     if (alpha == 1.0) return
     for (i in 0 until len) v[vOff + i] *= alpha
 }
-
-// === SIMD path - only loaded when simdAvailable is true ====================
 
 private object Simd {
     private val SPECIES = DoubleVector.SPECIES_PREFERRED

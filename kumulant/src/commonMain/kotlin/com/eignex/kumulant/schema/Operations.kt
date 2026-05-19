@@ -26,8 +26,6 @@ import kotlinx.serialization.Serializable
  * those.
  */
 
-// ========== withWeight ==========
-
 /** Wire spec for `SeriesStat.withWeight(weight)`: multiplies every update by [weight]. */
 @Serializable
 @SerialName("WithWeightSeries")
@@ -84,8 +82,6 @@ fun <R : Result> VectorStatSpec<R>.withWeight(weight: Double): VectorStatSpec<R>
 fun <R : Result> DiscreteStatSpec<R>.withWeight(weight: Double): DiscreteStatSpec<R> =
     WithWeightDiscrete(this, weight) as DiscreteStatSpec<R>
 
-// ========== withValue (Series, Discrete) ==========
-
 /** Wire spec for `SeriesStat.withValue(value)`: pins every update to [value]. */
 @Serializable
 @SerialName("WithValueSeries")
@@ -114,8 +110,6 @@ fun <R : Result> SeriesStatSpec<R>.withValue(value: Double): SeriesStatSpec<R> =
 fun <R : Result> DiscreteStatSpec<R>.withValue(value: Long): DiscreteStatSpec<R> =
     WithValueDiscrete(this, value) as DiscreteStatSpec<R>
 
-// ========== Type adapters: asSeries / asDiscrete ==========
-
 /** Wire spec for `DiscreteStat.asSeries()`: views a discrete stat as a series stat. */
 @Serializable
 @SerialName("AsSeries")
@@ -139,8 +133,6 @@ fun <R : Result> DiscreteStatSpec<R>.asSeries(): SeriesStatSpec<R> =
 /** Adapt a series spec into a discrete spec - the discrete sees `value.toLong()` per update. */
 fun <R : Result> SeriesStatSpec<R>.asDiscrete(): DiscreteStatSpec<R> =
     AsDiscrete(this) as DiscreteStatSpec<R>
-
-// ========== Selectors: atX / atY / atIndex / atIndices ==========
 
 /** Wire spec for `SeriesStat.atX()`: feeds the `x` component of paired updates into a series stat. */
 @Serializable
@@ -194,8 +186,6 @@ fun <R : Result> SeriesStatSpec<R>.atIndex(index: Int): VectorStatSpec<R> =
 fun <R : Result> PairedStatSpec<R>.atIndices(indexX: Int, indexY: Int): VectorStatSpec<R> =
     AtIndices(this, indexX, indexY) as VectorStatSpec<R>
 
-// ========== Axis bindings: withFixedX/Y, withTimeAsX/Y ==========
-
 /** Wire spec for `PairedStat.withFixedX(fixedX)`: pins `x` to a constant in every paired update. */
 @Serializable
 @SerialName("WithFixedX")
@@ -247,8 +237,6 @@ fun <R : Result> PairedStatSpec<R>.withTimeAsX(): SeriesStatSpec<R> =
 /** Adapt a paired spec into a series spec by using the update timestamp as `y`. */
 fun <R : Result> PairedStatSpec<R>.withTimeAsY(): SeriesStatSpec<R> =
     WithTimeAsY(this) as SeriesStatSpec<R>
-
-// ========== Windowed ==========
 
 /** Wire spec for `SeriesStat.windowed(durationMillis, slices)`: sliding time window with [slices] buckets. */
 @Serializable
@@ -322,8 +310,6 @@ fun <R : Result> DiscreteStatSpec<R>.windowed(
     slices: Int = 10,
 ): DiscreteStatSpec<R> = WindowedDiscrete(this, durationMillis, slices) as DiscreteStatSpec<R>
 
-// ========== Vectorized (Series template replicated per dimension) ==========
-
 /** Wire spec for `SeriesStat.vectorized(dimensions)`: replicates a series stat across [dimensions] coordinates. */
 @Serializable
 @SerialName("Vectorized")
@@ -337,8 +323,6 @@ data class Vectorized(
 /** Lift a series spec to a vector spec by replicating it across every coordinate of an N-dim input. */
 fun <R : Result> SeriesStatSpec<R>.vectorized(dimensions: Int): VectorStatSpec<ResultList<R>> =
     Vectorized(dimensions, this) as VectorStatSpec<ResultList<R>>
-
-// ========== Transform / Filter via expression AST ==========
 
 /**
  * Apply [expr] as the value transform on every update - wire-friendly

@@ -105,8 +105,6 @@ class ArmsTest {
         assertEquals(0.5, arm.encode(0.5))
     }
 
-    // === warmStart helpers ===
-
     @Test
     fun `BernoulliArm warmStart copies scaled successes and failures from global`() {
         val global = com.eignex.kumulant.stat.summary.BernoulliSumResult(successes = 30.0, trials = 50.0)

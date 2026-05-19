@@ -36,8 +36,6 @@ import kotlin.time.Duration.Companion.minutes
  * an entry here and nothing else.
  */
 
-// === Summary ================================================================
-
 private fun bernoulliWorkload(seed: Int, n: Int): Sequence<Update> = sequence {
     val rng = Random(seed)
     repeat(n) {
@@ -153,8 +151,6 @@ val bernoulliSumStatSpec = seriesStatSpec(
     reference = { it.sumOf { u -> u.value * u.weight } },
 )
 
-// === Decay ==================================================================
-//
 // Time-driven decay stats are exercised at `timestampNanos = 0` for every update
 // and the read — the decay factor `exp(-alpha*(t - t_i))` collapses to 1 so the
 // stat behaves like its non-decaying counterpart and admits a closed-form
@@ -231,8 +227,6 @@ val ewmaVarianceStatSpec = seriesStatSpec(
     reference = { ewmaVariance(ewmaWeighting.alpha, it.toList()) },
 )
 
-// === Rate ===================================================================
-//
 // Rate stats need real elapsed time to produce meaningful values: rate =
 // totalValue / elapsed_seconds. The workload progresses timestamps in 1 ms
 // strides, and [StatSpec.readAt] takes the snapshot just past the last update.
@@ -334,8 +328,6 @@ private fun counterRateReference(seq: Sequence<Update>): Double {
     return list.size.toDouble() / elapsedSec
 }
 
-// === Cardinality ============================================================
-//
 // Cardinality stats consume Long identifiers. The harness converts each Update
 // value to its IEEE-754 raw bits — that yields well-spread integer IDs from the
 // uniform [0, 1) double workload. Reference cardinality is the count of distinct
@@ -351,8 +343,6 @@ val hyperLogLogStatSpec = discreteStatSpec(
     // about 40 — allow 100 for safety across seeds and concurrency-induced drift.
 )
 
-// === Sketches ===============================================================
-//
 // Sketch stats check the universal "no update was lost" invariant via totalSeen.
 // The dedicated unit tests in :kumulant cover accuracy; the bench test the
 // concurrency-safety of the update path.
@@ -401,8 +391,6 @@ val linearCountingStatSpec = discreteStatSpec(
     // estimator converges quickly. Allow 50 to be safe.
 )
 
-// === Quantile ===============================================================
-//
 // Quantile stats check "no update was lost" via totalWeights / totalSeen. Frugal
 // is order-dependent (random walk) and uses a wide tolerance to allow drift
 // around the true median of uniform [0, 1).
@@ -466,8 +454,6 @@ val frugalQuantileStatSpec = seriesStatSpec(
     reference = { _ -> 0.5 },
 )
 
-// === Regression =============================================================
-//
 // Multi-feature regression specs feed an 8-dim deterministic random feature
 // vector (seeded by the update value's bits) and a known target
 // y = trueWeights · x + bias. The scalar pulls weights[0] from the snapshot;
@@ -543,8 +529,6 @@ val stochasticRegressionStatSpec = regressionStatSpec(
     trueWeights = regTrueWeights,
 )
 
-// === Score ==================================================================
-//
 // Score stats consume (prediction, label) pairs. For the bench, prediction =
 // Update.value (uniform [0, 1)) and label = `deriveTargetY(x)` clamped where
 // the stat needs [0, 1] inputs. We check totalWeights or a coarse score value.
@@ -617,8 +601,6 @@ val reliabilityStatSpec = pairedStatSpec(
     deriveY = { if (it > 0.5) 1.0 else 0.0 },
 )
 
-// === Tree ===================================================================
-//
 // Tree regressors fold (vector, y, weight) tuples into a piecewise-constant model.
 // We don't try to match slope or split structure here; the invariant is
 // "every update's weight reached the snapshot", which makes

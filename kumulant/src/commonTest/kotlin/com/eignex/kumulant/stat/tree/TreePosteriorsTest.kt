@@ -91,8 +91,6 @@ class TreePosteriorsTest {
         assertTrue(low > 4.0, "should exceed mean")
     }
 
-    // === Forest posteriors ===========
-
     private fun forestSnap(values: List<WeightedVarianceResult>): ForestRegressionResult =
         ForestRegressionResult(values.map { TreeRegressionResult(TreeLeafResult(it)) })
 

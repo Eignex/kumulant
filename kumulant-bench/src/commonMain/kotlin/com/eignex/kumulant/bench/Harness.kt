@@ -45,8 +45,6 @@ class StatSpec<S, R : Result>(
     fun expected(seed: Int, n: Int): Double = reference(updates(seed, n))
 }
 
-// === Helpers ================================================================
-
 /** Build a spec for a [SeriesStat]-shaped stat (the common case). */
 fun <R : Result> seriesStatSpec(
     name: String,
@@ -162,8 +160,6 @@ fun <R : Result> discreteStatSpec(
     scalar = scalar,
     reference = reference,
 )
-
-// === Workloads ==============================================================
 
 /** Standard workload: uniform [0, 1) values, unit weights, all at t=0. */
 fun uniformUnitWeights(seed: Int, n: Int): Sequence<Update> = sequence {

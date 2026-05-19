@@ -86,7 +86,6 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concurrency.None): SeriesStat<R> {
     val out: SeriesStat<*> = when (this) {
-        // ----- Series leaves -----
         Mean -> MeanStat(concurrency)
         Sum -> SumStat(concurrency)
         Min -> MinStat(concurrency)
@@ -111,14 +110,12 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is ReservoirHistogram -> ReservoirHistogramStat(capacity, seed, concurrency)
         is TDigest -> TDigestStat(compression, probabilities.toDoubleArray(), concurrency)
         is PitHistogram -> pitHistogram(numBins, concurrency)
-        // ----- Decay-weighted series -----
         is DecayingSum -> DecayingSumStat(weighting.toDecayWeighting(), concurrency)
         is DecayingMean -> DecayingMeanStat(weighting.toDecayWeighting(), concurrency)
         is DecayingVariance -> DecayingVarianceStat(weighting.toDecayWeighting(), concurrency)
         is EwmaMean -> EwmaMeanStat(weighting.toDecayWeighting(), concurrency)
         is EwmaVariance -> EwmaVarianceStat(weighting.toDecayWeighting(), concurrency)
         is DecayingRate -> DecayingRateStat(halfLifeMillis.milliseconds, concurrency)
-        // ----- Group (nested series schema) -----
         is GroupStatSpec -> {
             val children = stats.map { (name, config) ->
                 require(config is SeriesStatSpec<*>) {
@@ -128,7 +125,6 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
             }
             StatGroup(stats = children, concurrency = concurrency)
         }
-        // ----- Series wrappers -----
         is WithWeightSeries ->
             requireSeries(inner, "WithWeightSeries").materialize(concurrency).withWeight(weight)
         is WithValueSeries ->
@@ -163,7 +159,6 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
  */
 fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concurrency.None): PairedStat<R> {
     val out: PairedStat<*> = when (this) {
-        // ----- Paired leaves -----
         PairedSum -> PairedSumStat(concurrency)
         is UnivariateRegression -> UnivariateRegressionStat(penalty, concurrency)
         Covariance -> CovarianceStat(concurrency)
@@ -174,7 +169,6 @@ fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is PinballLoss -> PinballLossStat(tau, concurrency)
         is Auc -> AucStat(numBins, lowerBound, upperBound, concurrency)
         is Reliability -> ReliabilityStat(numBins, concurrency)
-        // ----- Paired wrappers -----
         is WithWeightPaired ->
             requirePaired(inner, "WithWeightPaired").materialize(concurrency).withWeight(weight)
         is AtX ->
@@ -205,7 +199,6 @@ fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concur
  */
 fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concurrency.None): VectorStat<R> {
     val out: VectorStat<*> = when (this) {
-        // ----- Vector wrappers / adapters -----
         is WithWeightVector ->
             requireVector(inner, "WithWeightVector").materialize(concurrency).withWeight(weight)
         is AtIndex ->
@@ -252,14 +245,12 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
  */
 fun <R : Result> DiscreteStatSpec<R>.materialize(concurrency: Concurrency = Concurrency.None): DiscreteStat<R> {
     val out: DiscreteStat<*> = when (this) {
-        // ----- Discrete leaves -----
         is HyperLogLog -> HyperLogLogStat(precision, concurrency)
         is LinearCounting -> LinearCountingStat(bits, concurrency)
         is BloomFilter -> BloomFilterStat(bits, hashes, concurrency)
         is CountMinSketch -> CountMinSketchStat(depth, width, seed, concurrency)
         is MinHash -> MinHashStat(numHashes, seed, concurrency)
         is SpaceSaving -> SpaceSavingStat(capacity, concurrency)
-        // ----- Discrete wrappers -----
         is WithWeightDiscrete ->
             requireDiscrete(inner, "WithWeightDiscrete").materialize(concurrency).withWeight(weight)
         is WithValueDiscrete ->
@@ -292,8 +283,6 @@ fun StatSpec.materialize(concurrency: Concurrency = Concurrency.None): com.eigne
     is VectorStatSpec<*> -> materialize(concurrency)
     is DiscreteStatSpec<*> -> materialize(concurrency)
 }
-
-// ===== Runtime modality narrowing for wrapper inners =====
 
 private fun requireSeries(inner: StatSpec, op: String): SeriesStatSpec<*> {
     require(inner is SeriesStatSpec<*>) {

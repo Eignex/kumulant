@@ -450,8 +450,6 @@ data class VElements(
         DoubleArray(exprs.size) { i -> exprs[i].eval(x, y, v) }
 }
 
-// ========== DSL: arithmetic operators ==========
-
 /** Build [Add] of two expressions. */
 operator fun ScalarExpr.plus(rhs: ScalarExpr): ScalarExpr = Add(this, rhs)
 
@@ -490,8 +488,6 @@ operator fun Double.div(rhs: ScalarExpr): ScalarExpr = Div(Const(this), rhs)
 
 /** Unary minus: wraps in [Neg]. */
 operator fun ScalarExpr.unaryMinus(): ScalarExpr = Neg(this)
-
-// ========== DSL: comparison and boolean ==========
 
 /** Strictly-greater-than comparison. */
 infix fun ScalarExpr.gt(rhs: ScalarExpr): BoolExpr = Gt(this, rhs)
