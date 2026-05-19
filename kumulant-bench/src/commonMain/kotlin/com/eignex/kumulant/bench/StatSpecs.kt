@@ -401,6 +401,78 @@ val linearCountingStatSpec = discreteStatSpec(
     tolerance = 50.0,
 )
 
+// === Quantile ===============================================================
+//
+// Quantile stats check "no update was lost" via totalWeights / totalSeen. Frugal
+// is order-dependent (random walk) and uses a wide tolerance to allow drift
+// around the true median of uniform [0, 1).
+
+val ddSketchStatSpec = seriesStatSpec(
+    name = "DDSketchStat",
+    factory = { c -> com.eignex.kumulant.stat.quantile.DDSketchStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalWeights },
+    reference = { it.count().toDouble() },
+    tolerance = 1e-6,
+)
+
+val hdrHistogramStatSpec = seriesStatSpec(
+    name = "HdrHistogramStat",
+    factory = { c -> com.eignex.kumulant.stat.quantile.HdrHistogramStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { snap -> snap.weights.sum() },
+    reference = { it.count().toDouble() },
+    tolerance = 1e-6,
+)
+
+val linearHistogramStatSpec = seriesStatSpec(
+    name = "LinearHistogramStat",
+    factory = { c ->
+        com.eignex.kumulant.stat.quantile.LinearHistogramStat(
+            lowerBound = 0.0,
+            upperBound = 1.0,
+            binCount = 64,
+            concurrency = c,
+        )
+    },
+    updates = ::uniformUnitWeights,
+    scalar = { snap -> snap.weights.sum() },
+    reference = { it.count().toDouble() },
+    tolerance = 1e-6,
+)
+
+val reservoirHistogramStatSpec = seriesStatSpec(
+    name = "ReservoirHistogramStat",
+    factory = { c ->
+        com.eignex.kumulant.stat.quantile.ReservoirHistogramStat(capacity = 256, concurrency = c)
+    },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalSeen.toDouble() },
+    reference = { it.count().toDouble() },
+    tolerance = 0.0,
+)
+
+val tDigestStatSpec = seriesStatSpec(
+    name = "TDigestStat",
+    factory = { c -> com.eignex.kumulant.stat.quantile.TDigestStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { snap -> snap.weights.sum() },
+    reference = { it.count().toDouble() },
+    tolerance = 1e-6,
+)
+
+val frugalQuantileStatSpec = seriesStatSpec(
+    name = "FrugalQuantileStat",
+    factory = { c -> com.eignex.kumulant.stat.quantile.FrugalQuantileStat(q = 0.5, concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.quantile },
+    // Frugal is a random walk targeting q=0.5 over uniform [0,1); the median is
+    // 0.5 but the estimate wanders within a few stepSizes of it.
+    reference = { _ -> 0.5 },
+    tolerance = 0.2,
+    orderIndependent = false,
+)
+
 /** Every spec exposed by the bench module. */
 val allSpecs: List<StatSpec<*, *>> = listOf(
     sumStatSpec,
@@ -427,4 +499,10 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     countMinSketchStatSpec,
     minHashStatSpec,
     spaceSavingStatSpec,
+    ddSketchStatSpec,
+    hdrHistogramStatSpec,
+    linearHistogramStatSpec,
+    reservoirHistogramStatSpec,
+    tDigestStatSpec,
+    frugalQuantileStatSpec,
 )

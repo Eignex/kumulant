@@ -47,6 +47,12 @@ open class UpdateThroughputBenchmark {
         "CountMinSketchStat",
         "MinHashStat",
         "SpaceSavingStat",
+        "DDSketchStat",
+        "HdrHistogramStat",
+        "LinearHistogramStat",
+        "ReservoirHistogramStat",
+        "TDigestStat",
+        "FrugalQuantileStat",
     )
     var name: String = ""
 

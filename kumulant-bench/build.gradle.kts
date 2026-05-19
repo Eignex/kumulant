@@ -31,6 +31,12 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            // DDSketch et al. carry generated KSerializer companions whose static
+            // init touches kotlinx.serialization. The bench compile path uses
+            // compileOnly to avoid leaking it into the bench artifact, but at
+            // test runtime we need the real classes on the classpath.
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
         }
         jvmTest.dependencies {
             implementation(kotlin("test-junit"))
