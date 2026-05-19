@@ -241,21 +241,20 @@ class TreeStatTest {
     // === Posteriors ============================================================
 
     @Test
-    fun `UcbTreePosterior reduces to mean as evidence grows`() {
+    fun `UcbTreePosterior bonus shrinks as evidence grows`() {
         val stat = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = emptyList(), randomSeed = 80)
-        repeat(5) { stat.update(feat(0.0), 2.0) }
+        val rng = Random(80)
+        // Noisy rewards around mean 2.0 — variance must be non-zero for the bonus
+        // to be observable.
+        repeat(5) { stat.update(feat(0.0), 2.0 + rng.nextDouble() - 0.5) }
         val snapEarly = stat.read(0L)
-        repeat(5_000) { stat.update(feat(0.0), 2.0) }
+        repeat(5_000) { stat.update(feat(0.0), 2.0 + rng.nextDouble() - 0.5) }
         val snapLate = stat.read(0L)
 
         val posterior = UcbTreePosterior(priorWeight = 1.0, priorVariance = 1.0)
-        val rng = Random(0)
-        val early = posterior.evaluate(snapEarly, feat(0.0), rng, 1.0)
-        val late = posterior.evaluate(snapLate, feat(0.0), rng, 1.0)
-        // Both bound the same leaf mean (2.0), but the early bound is looser.
-        assertTrue(early >= 2.0)
-        assertTrue(late >= 2.0)
-        assertTrue(early - 2.0 > late - 2.0, "early=$early late=$late should shrink")
+        val earlyBonus = posterior.evaluate(snapEarly, feat(0.0), Random(0), 1.0) - snapEarly.predict(feat(0.0))
+        val lateBonus = posterior.evaluate(snapLate, feat(0.0), Random(0), 1.0) - snapLate.predict(feat(0.0))
+        assertTrue(earlyBonus > lateBonus, "earlyBonus=$earlyBonus lateBonus=$lateBonus should shrink")
     }
 
     @Test
