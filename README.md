@@ -144,12 +144,6 @@ val a = cb.choose(features)
 cb.update(a, features, reward = 12.7)
 ```
 
-| Family       | Bandits                                                                                  |
-|--------------|-------------------------------------------------------------------------------------------|
-| Univariate   | MultiArmedBandit, RouletteWheelBandit, BoltzmannBandit, Exp3Bandit, TopTwoThompsonBandit  |
-| Contextual   | RegressionContextualBandit, KnnContextualBandit, Exp4Bandit                                |
-| Policies     | UCB1, UCB1-Normal, UCB1-Tuned, KL-UCB, MOSS, UCB-V, Thompson sampling, Greedy, EpsilonGreedy, EpsilonDecreasing, UniformSelection |
-
 The bandit hierarchy splits action and state into orthogonal interfaces.
 UnivariateBandit and ContextualBandit carry the choose / update surface;
 PerArmBandit and Snapshotable carry the snapshot/merge/replicate
