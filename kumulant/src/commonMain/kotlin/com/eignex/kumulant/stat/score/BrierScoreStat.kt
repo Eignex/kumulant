@@ -10,8 +10,14 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  * `(probability, outcome)` where `outcome  in  {0, 1}`; aggregated as the mean of
  * `(probability - outcome)^2`.
  *
- * Strictly proper scoring rule for binary classification - the binary
+ * Strictly proper scoring rule for binary classification — the binary
  * counterpart to Gaussian CRPS. Lower is better; the bound is `[0, 1]`.
+ *
+ * # Concurrency
+ *
+ * Backed by [MeanStat] — inherits its Welford concurrency model: locked under
+ * [Concurrency.Strict] / [Concurrency.HighWrite], lock-free atomic cells with
+ * possible ~1e-5 drift under [Concurrency.Relaxed].
  */
 class BrierScoreStat(
     override val concurrency: Concurrency = Concurrency.None,

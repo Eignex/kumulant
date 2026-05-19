@@ -12,6 +12,12 @@ private const val LOG_LOSS_EPS: Double = 1e-15
 /**
  * Streaming mean squared error: paired `(prediction, truth)` aggregated as the
  * mean of `(prediction - truth)^2`.
+ *
+ * # Concurrency
+ *
+ * Backed by [MeanStat] — inherits its Welford concurrency model: locked under
+ * [Concurrency.Strict] / [Concurrency.HighWrite], lock-free atomic cells with
+ * possible ~1e-5 drift under [Concurrency.Relaxed].
  */
 class MseLossStat(
     override val concurrency: Concurrency = Concurrency.None,
@@ -33,6 +39,10 @@ class MseLossStat(
 /**
  * Streaming mean absolute error: paired `(prediction, truth)` aggregated as the
  * mean of `|prediction - truth|`.
+ *
+ * # Concurrency
+ *
+ * Backed by [MeanStat] — same model as [MseLossStat].
  */
 class MaeLossStat(
     override val concurrency: Concurrency = Concurrency.None,
@@ -56,6 +66,10 @@ class MaeLossStat(
  *
  * Predictions are clamped into `[1e-15, 1 - 1e-15]` before taking logs to avoid
  * `+/-inf` on perfectly confident wrong predictions.
+ *
+ * # Concurrency
+ *
+ * Backed by [MeanStat] — same model as [MseLossStat].
  */
 class LogLossStat(
     override val concurrency: Concurrency = Concurrency.None,

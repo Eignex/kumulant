@@ -12,6 +12,12 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  *
  * Used to evaluate quantile regressors (LightGBM/XGBoost quantile objective)
  * and is the single-quantile analog of CRPS.
+ *
+ * # Concurrency
+ *
+ * Backed by [MeanStat] — inherits its Welford concurrency model: locked under
+ * [Concurrency.Strict] / [Concurrency.HighWrite], lock-free atomic cells with
+ * possible ~1e-5 drift under [Concurrency.Relaxed].
  */
 class PinballLossStat(
     val tau: Double,

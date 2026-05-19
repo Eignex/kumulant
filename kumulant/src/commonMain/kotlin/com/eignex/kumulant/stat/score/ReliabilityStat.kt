@@ -82,6 +82,13 @@ data class ReliabilityResult(
  * but soft labels and weighted updates work uniformly.
  *
  * Predictions outside `[0, 1]` are clamped to the nearest edge bin.
+ *
+ * # Concurrency
+ *
+ * Per update: three independent striped atomic adds (sumProbability,
+ * sumOutcome, totalWeights — all on the destination bin). Lock-free and
+ * exact under every [Concurrency] level — bin assignment is deterministic
+ * per prediction and increments commute.
  */
 class ReliabilityStat(
     val numBins: Int,

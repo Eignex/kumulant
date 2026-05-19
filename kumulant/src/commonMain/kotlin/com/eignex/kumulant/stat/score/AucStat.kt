@@ -76,6 +76,13 @@ data class AucResult(
  *
  * Default range is `[0, 1]`, suitable for calibrated probability scores. For
  * raw classifier margins, pass a wider range or pre-sigmoid the score.
+ *
+ * # Concurrency
+ *
+ * Per update: two independent striped atomic adds (one positive bin, one
+ * negative bin). Lock-free and exact under every [Concurrency] level — bin
+ * assignment is deterministic per score, and increments commute. The AUC
+ * computation at `read()` is a single-threaded sweep of the bin snapshot.
  */
 class AucStat(
     /** Number of histogram bins covering `[lowerBound, upperBound]`. */
