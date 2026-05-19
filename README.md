@@ -65,6 +65,26 @@ val yHat = fit.slope * 7.0 + fit.intercept
 | Decay        | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance            |
 | Score        | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
 
+```kotlin
+val bandit = MultiArmedBandit(nbrArms = 4, policy = BetaBernoulliTS())
+val arm = bandit.choose()
+bandit.update(arm, value = if (rewardOnArm(arm)) 1.0 else 0.0)
+
+val cb = RegressionContextualBandit(
+    nbrArms = 4,
+    template = BayesianRegressionStat(featureSize = 8),
+    posterior = MultivariateGaussian,
+)
+val a = cb.choose(features)
+cb.update(a, features, reward = 12.7)
+```
+
+| Family       | Bandits                                                                                  |
+|--------------|-------------------------------------------------------------------------------------------|
+| Univariate   | MultiArmedBandit, RouletteWheelBandit, BoltzmannBandit, Exp3Bandit, TopTwoThompsonBandit  |
+| Contextual   | RegressionContextualBandit, KnnContextualBandit, Exp4Bandit                                |
+| Policies     | UCB1, UCB1-Normal, UCB1-Tuned, KL-UCB, MOSS, UCB-V, Thompson sampling, Greedy, EpsilonGreedy, EpsilonDecreasing, UniformSelection |
+
 ## Composing stats
 
 You can wrap a stat to change how it sees its input. Time-windowing,
@@ -129,13 +149,13 @@ cb.update(a, features, reward = 12.7)
 | Policies     | UCB1, UCB1-Normal, UCB1-Tuned, KL-UCB, MOSS, UCB-V, Thompson sampling, Greedy, EpsilonGreedy, EpsilonDecreasing, UniformSelection |
 
 The bandit hierarchy splits action and state into orthogonal interfaces.
-`UnivariateBandit` and `ContextualBandit` carry the `choose` / `update`
-surface; `PerArmBandit<R>` and `Snapshotable<S>` carry the
-snapshot/merge/replicate surface; `Scorable` and `ContextualScorable`
-are opt-in for bandits whose `choose` is an argmax over independent
-per-arm scores. Bandits that select arms via joint sampling (Top-Two
-Thompson, Boltzmann) or that don't fit a per-arm state shape (Exp4)
-slot in cleanly without bending the contract.
+UnivariateBandit and ContextualBandit carry the choose / update surface;
+PerArmBandit and Snapshotable carry the snapshot/merge/replicate
+surface; Scorable and ContextualScorable are opt-in for bandits whose
+choose is an argmax over independent per-arm scores. Bandits that
+select arms via joint sampling (Top-Two Thompson, Boltzmann) or that
+don't fit a per-arm state shape (Exp4) slot in cleanly without bending
+the contract.
 
 ```kotlin
 // Whole-bandit configurations round-trip on the wire alongside their policies.
