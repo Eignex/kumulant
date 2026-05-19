@@ -4,7 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.currentTimeNanos
-import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.serializedLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -53,7 +53,14 @@ class DecayingVarianceStat(
     private val alpha = weighting.alpha
 
     private val mode = concurrency.welfordMode()
-    private val lock = concurrency.welfordLock()
+    // The update body decays (W, mean, M2) in lockstep before applying the
+    // Welford increment — a multi-cell transition that lock-free CAS on
+    // individual cells cannot keep consistent. Under Concurrency.Relaxed the
+    // standard welfordLock returns NoopMutex and the cells drift apart by
+    // multiplicative decay factors, leaving the variance off by 50%+ under
+    // contention. We use serializedLock so the body is atomic at every
+    // concurrent level; cells stay coupled regardless of writer count.
+    private val lock = concurrency.serializedLock()
     private val landmarkNanos = mode.newLong(currentTimeNanos())
     private val totalWeights = mode.newDouble(0.0)
     private val mean = mode.newDouble(0.0)
