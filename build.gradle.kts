@@ -1,69 +1,9 @@
-@file:OptIn(ExperimentalWasmDsl::class)
-
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
-
 plugins {
-    id("com.eignex.kmp") version "1.1.5"
-    kotlin("plugin.serialization") version "2.3.0"
-}
-
-eignexPublish {
-    description.set("Fast, concurrency-friendly streaming statistics for Kotlin/KMP.")
-    githubRepo.set("Eignex/kumulant")
-}
-
-kotlin {
-    applyDefaultHierarchyTemplate()
-    compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
-    }
-    jvm()
-    js(IR) { browser(); nodejs() }
-    wasmJs { browser(); nodejs() }
-    wasmWasi { nodejs() }
-    linuxX64(); linuxArm64()
-    macosX64(); macosArm64(); mingwX64()
-    iosX64(); iosArm64(); iosSimulatorArm64()
-
-    sourceSets {
-        val nonJvmMain by creating {
-            dependsOn(commonMain.get())
-        }
-        nativeMain.get().dependsOn(nonJvmMain)
-        jsMain.get().dependsOn(nonJvmMain)
-        wasmJsMain.get().dependsOn(nonJvmMain)
-        wasmWasiMain.get().dependsOn(nonJvmMain)
-
-        val posixMain by creating { dependsOn(nativeMain.get()) }
-        appleMain.get().dependsOn(posixMain)
-        linuxMain.get().dependsOn(posixMain)
-        webMain.get().dependsOn(nonJvmMain)
-        wasmWasiMain.get().dependsOn(webMain.get())
-        commonMain.dependencies {
-            api("com.eignex:skema:0.1.1")
-            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
-            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
-        }
-        jvmMain.dependencies {
-            implementation(kotlin("reflect"))
-        }
-        commonTest.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.10.0")
-        }
-    }
-}
-
-// JVM SIMD primitives in com.eignex.kumulant.math.Primitives.kt use the incubator
-// Vector API. Make the module visible to the Kotlin compiler and at test runtime;
-// downstream JVM consumers need the same flag.
-tasks.withType<KotlinJvmCompile>().configureEach {
-    compilerOptions.freeCompilerArgs.add("-Xadd-modules=jdk.incubator.vector")
-}
-tasks.withType<Test>().configureEach {
-    if (project.findProperty("kumulant.noSimd") != "true") {
-        jvmArgs("--add-modules=jdk.incubator.vector")
-    }
+    // Declared here with apply=false so that two KMP subprojects don't each load
+    // the Kotlin plugin into separate classloaders (which conflicts on shared
+    // build services like KotlinNativeBundleBuildService).
+    kotlin("multiplatform") version "2.3.0" apply false
+    kotlin("plugin.allopen") version "2.3.0" apply false
+    kotlin("plugin.serialization") version "2.3.0" apply false
+    id("org.jetbrains.kotlinx.benchmark") version "0.4.13" apply false
 }

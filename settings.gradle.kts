@@ -7,4 +7,4 @@ pluginManagement {
     }
 }
 
-include("bench")
+include(":kumulant", ":kumulant-bench")

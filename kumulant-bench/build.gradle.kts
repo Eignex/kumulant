@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
-    kotlin("multiplatform")
+    kotlin("multiplatform") version "2.3.0"
     kotlin("plugin.allopen") version "2.3.0"
     id("org.jetbrains.kotlinx.benchmark") version "0.4.13"
 }
@@ -21,7 +21,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":"))
+            implementation(project(":kumulant"))
             implementation("org.jetbrains.kotlinx:kotlinx-benchmark-runtime:0.4.13")
             // kumulant declares serialization compileOnly; mirror that here so
             // native KLIB resolution can walk the kumulant klib without pulling
