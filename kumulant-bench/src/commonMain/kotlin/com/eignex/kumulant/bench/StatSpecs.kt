@@ -346,6 +346,48 @@ val hyperLogLogStatSpec = discreteStatSpec(
     tolerance = 100.0,
 )
 
+// === Sketches ===============================================================
+//
+// Sketch stats check the universal "no update was lost" invariant via totalSeen.
+// The dedicated unit tests in :kumulant cover accuracy; the bench test the
+// concurrency-safety of the update path.
+
+val bloomFilterStatSpec = discreteStatSpec(
+    name = "BloomFilterStat",
+    factory = { c -> com.eignex.kumulant.stat.sketch.BloomFilterStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalSeen.toDouble() },
+    reference = { it.count().toDouble() },
+    tolerance = 0.0,
+)
+
+val countMinSketchStatSpec = discreteStatSpec(
+    name = "CountMinSketchStat",
+    factory = { c -> com.eignex.kumulant.stat.sketch.CountMinSketchStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalSeen.toDouble() },
+    reference = { it.count().toDouble() },
+    tolerance = 0.0,
+)
+
+val minHashStatSpec = discreteStatSpec(
+    name = "MinHashStat",
+    factory = { c -> com.eignex.kumulant.stat.sketch.MinHashStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalSeen.toDouble() },
+    reference = { it.count().toDouble() },
+    tolerance = 0.0,
+)
+
+val spaceSavingStatSpec = discreteStatSpec(
+    name = "SpaceSavingStat",
+    factory = { c -> com.eignex.kumulant.stat.sketch.SpaceSavingStat(capacity = 128, concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.totalSeen.toDouble() },
+    reference = { it.count().toDouble() },
+    tolerance = 0.0,
+)
+
 val linearCountingStatSpec = discreteStatSpec(
     name = "LinearCountingStat",
     factory = { c ->
@@ -381,4 +423,8 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     counterRateStatSpec,
     hyperLogLogStatSpec,
     linearCountingStatSpec,
+    bloomFilterStatSpec,
+    countMinSketchStatSpec,
+    minHashStatSpec,
+    spaceSavingStatSpec,
 )

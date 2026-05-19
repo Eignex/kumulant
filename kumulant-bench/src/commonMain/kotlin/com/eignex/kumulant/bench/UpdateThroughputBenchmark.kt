@@ -43,6 +43,10 @@ open class UpdateThroughputBenchmark {
         "CounterRateStat",
         "HyperLogLogStat",
         "LinearCountingStat",
+        "BloomFilterStat",
+        "CountMinSketchStat",
+        "MinHashStat",
+        "SpaceSavingStat",
     )
     var name: String = ""
 
