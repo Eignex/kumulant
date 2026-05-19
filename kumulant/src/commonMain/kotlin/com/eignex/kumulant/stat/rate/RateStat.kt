@@ -52,9 +52,6 @@ class RateStat(
 ) : SeriesStat<RateResult> {
 
     private val totalValues = concurrency.additiveMode().newDouble(0.0)
-    // CAS-capable cell so the first writer atomically wins the start-timestamp
-    // race. Striped adders (HighWrite) don't support CAS and would otherwise
-    // race on the check-then-act idiom, leaving the duration window corrupted.
     private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MIN_VALUE)
 
     override fun update(
@@ -62,11 +59,8 @@ class RateStat(
         timestampNanos: Long,
         weight: Double
     ) {
-        // CAS-loop down to the earliest observed timestamp. A plain
-        // compareAndSet(MIN_VALUE, ts) would pick an arbitrary first-arriver
-        // under contention, which can be a later thread whose timestamp is
-        // past the actual stream start — shrinking the duration window and
-        // inflating the reported rate.
+        // CAS-loop-min — a plain compareAndSet(MIN_VALUE, ts) would let an arbitrary
+        // first-arriving thread set the start, not the thread with the earliest ts.
         while (true) {
             val current = startTimestampNanos.load()
             if (current != Long.MIN_VALUE && current <= timestampNanos) break

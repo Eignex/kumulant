@@ -45,7 +45,6 @@ internal class ArrayBins(val mode: StreamMode) {
                 newLength = capacity
             }
 
-            // Create new array, preserving existing StreamDouble instances
             val newBins = Array(newLength) { i ->
                 val targetIndex = newOffset + i
                 if (targetIndex >= offset && targetIndex < offset + length) {

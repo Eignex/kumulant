@@ -49,10 +49,6 @@ class CounterRateStat(
     private val lock = concurrency.serializedLock()
     private val mode = concurrency.welfordMode()
     private val totalDelta = concurrency.additiveMode().newDouble(0.0)
-    // CAS-capable cell so the start timestamp can converge to the earliest
-    // observed predecessor across concurrent writers; striped adders
-    // (HighWrite) can't CAS, so this side-steps the global mode for this one
-    // cell. Cheap: only written during a forward-delta or a reset.
     private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MIN_VALUE)
     private val lastCounter = mode.newDouble(Double.NaN)
     private val lastTimestampNanos = mode.newLong(Long.MIN_VALUE)
@@ -66,7 +62,6 @@ class CounterRateStat(
         val previousTimestamp = lastTimestampNanos.load()
 
         if (previousCounter.isNaN()) {
-            // First observation — record state, no delta yet.
             lastCounter.store(value)
             lastTimestampNanos.store(timestampNanos)
             return@withLock
@@ -77,30 +72,24 @@ class CounterRateStat(
                 val scaledDelta = ((value - previousCounter) * weight).coerceAtLeast(0.0)
                 if (scaledDelta > 0.0) {
                     totalDelta.add(scaledDelta)
-                    // Anchor (or lower) the start window to the previous sample's ts —
-                    // it's the earliest observed predecessor of a real delta.
                     advanceStartTimestampDown(previousTimestamp)
                 }
                 lastCounter.store(value)
                 lastTimestampNanos.store(timestampNanos)
             }
             treatDecreaseAsReset -> {
-                // Counter restart (process restart, wrap, ...). The new value is
-                // counted as post-reset progress and the start window re-anchors
-                // to *this* timestamp regardless of prior state.
                 val scaledDelta = (value * weight).coerceAtLeast(0.0)
                 if (scaledDelta > 0.0) {
                     totalDelta.add(scaledDelta)
+                    // Counter restart re-anchors the start window to this timestamp.
                     startTimestampNanos.store(timestampNanos)
                 }
                 lastCounter.store(value)
                 lastTimestampNanos.store(timestampNanos)
             }
-            // else: decrease with treatDecreaseAsReset=false — assume an
-            // out-of-order arrival from a concurrent writer and drop. Leave
-            // lastCounter / lastTimestampNanos alone so the next legitimate
-            // forward update computes its delta against the true high-water
-            // mark.
+            // Decrease with treatDecreaseAsReset=false: drop without touching
+            // lastCounter/lastTimestampNanos so the next forward update computes its
+            // delta against the true high-water mark.
         }
     }
 
