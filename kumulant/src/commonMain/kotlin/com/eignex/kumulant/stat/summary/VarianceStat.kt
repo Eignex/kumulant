@@ -32,18 +32,22 @@ data class WeightedVarianceResult(
 /**
  * Weighted mean and variance via Welford with Chan-style parallel merge.
  *
- * Population variance `sst / totalWeights`; use [HasSampleVariance.sampleVariance] on
- * the result for the unbiased estimator.
+ * Population variance `sst / totalWeights`; use [HasSampleVariance.sampleVariance]
+ * on the result for the unbiased estimator.
  *
- * # Concurrency
+ * **Use cases:** dispersion of any scalar quantity; the standard ingredient
+ * for control charts, anomaly thresholds, and bandit posteriors. Pairs with
+ * [MomentsStat] when skewness/kurtosis are also needed.
  *
- * The Welford recurrence couples `(totalWeights, mean, sst)` across each
- * update. [Concurrency.Strict] and [Concurrency.HighWrite] lock the body so
- * each update is atomic — exact match to a serial run up to floating-point
- * reorder ULPs. [Concurrency.Relaxed] drops the lock and the three cells race
- * independently; the variance drifts ~1e-4 relative under contention but
- * never throws. Choose [Concurrency.Strict] when correctness matters more
- * than the lock-free write path.
+ * **Memory:** O(1) — three doubles plus a lock.
+ *
+ * **Update:** O(1) per observation.
+ *
+ * **Concurrency:** Welford-coupled cells. [Concurrency.Strict] and
+ * [Concurrency.HighWrite] lock the body — exact match to a serial run up to
+ * floating-point reorder ULPs. [Concurrency.Relaxed] drops the lock and the
+ * three cells race independently; the variance drifts ~1e-4 relative under
+ * contention but never throws.
  */
 class VarianceStat(
     override val concurrency: Concurrency = Concurrency.None,

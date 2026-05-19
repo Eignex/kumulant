@@ -29,15 +29,18 @@ data class MomentsResult(
  *
  * Uses the Pebay/Welford parallel recurrences; suitable for streaming and merge.
  *
- * # Concurrency
+ * **Use cases:** distribution shape monitoring (skew/kurt anomaly detection,
+ * non-Gaussian tail diagnostics). Heavier than [VarianceStat]; reach for it
+ * only when third/fourth moments are needed.
  *
- * Five coupled cells (`totalWeights, mean, m2, m3, m4`) updated in lockstep.
- * [Concurrency.Strict] and [Concurrency.HighWrite] lock the body so each
- * update is atomic — exact match to a serial run up to floating-point reorder
- * ULPs. [Concurrency.Relaxed] drops the lock; the higher-order moments drift
- * ~1e-4 relative under contention but never throw. Choose
- * [Concurrency.Strict] when correctness matters more than the lock-free write
- * path.
+ * **Memory:** O(1) — five doubles plus a lock.
+ *
+ * **Update:** O(1) per observation.
+ *
+ * **Concurrency:** Welford-coupled cells. [Concurrency.Strict] and
+ * [Concurrency.HighWrite] lock the body — exact match to a serial run up to
+ * floating-point reorder ULPs. [Concurrency.Relaxed] drops the lock; the
+ * higher-order moments drift ~1e-4 relative under contention but never throw.
  */
 class MomentsStat(
     override val concurrency: Concurrency = Concurrency.None,

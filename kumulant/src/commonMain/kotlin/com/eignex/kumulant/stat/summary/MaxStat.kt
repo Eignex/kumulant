@@ -19,10 +19,16 @@ data class MaxResult(
 /**
  * Tracks the maximum value seen across a stream.
  *
- * # Concurrency
+ * **Use cases:** peak observation tracking, headroom checks, range
+ * computation (paired with [MinStat] or directly via [RangeStat]).
  *
- * Single-cell CAS-max loop — exact under every [Concurrency] level.
- * The CAS retry naturally serialises racing writers without a lock.
+ * **Memory:** O(1) — a single double cell.
+ *
+ * **Update:** O(1) per observation.
+ *
+ * **Concurrency:** Single-cell CAS-max loop — exact under every
+ * [Concurrency] level. The CAS retry naturally serialises racing writers
+ * without a lock.
  */
 class MaxStat(
     override val concurrency: Concurrency = Concurrency.None,

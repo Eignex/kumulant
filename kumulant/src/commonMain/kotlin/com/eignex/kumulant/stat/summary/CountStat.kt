@@ -19,10 +19,13 @@ data class CountResult(
 /**
  * Observation count: each update contributes 1 regardless of supplied value and weight.
  *
- * # Concurrency
+ * **Use cases:** event rate denominators, sample sizes, "how many".
  *
- * Inherits [SumStat]'s single-atomic-add update path — exact under every
- * [Concurrency] level.
+ * **Memory:** O(1).
+ *
+ * **Update:** O(1).
+ *
+ * **Concurrency:** Inherits [SumStat]'s concurrency model.
  */
 class CountStat(concurrency: Concurrency = Concurrency.None) :
     SeriesStat<SumResult> by SumStat(concurrency).withWeight(1.0).withValue(1.0)
