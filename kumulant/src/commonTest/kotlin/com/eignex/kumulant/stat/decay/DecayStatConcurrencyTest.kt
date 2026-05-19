@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.decay
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.SeriesStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
@@ -12,7 +12,8 @@ import kotlin.time.Duration.Companion.seconds
 class DecayStatConcurrencyTest {
 
     private val values = doubleArrayOf(1.0, 2.5, -1.0, 3.0, 0.5, 4.0)
-    private val timestamps = longArrayOf(0L, 1_000_000_000L, 2_000_000_000L, 3_000_000_000L, 4_000_000_000L, 5_000_000_000L)
+    private val timestamps =
+        longArrayOf(0L, 1_000_000_000L, 2_000_000_000L, 3_000_000_000L, 4_000_000_000L, 5_000_000_000L)
 
     private fun <R : Result> sequentialReads(
         factory: (Concurrency) -> SeriesStat<R>,

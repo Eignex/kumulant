@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class QuantileStatConcurrencyTest {
 
@@ -14,14 +15,16 @@ class QuantileStatConcurrencyTest {
             val s = LinearHistogramStat(
                 lowerBound = 0.0,
                 upperBound = 5.0,
-                numBins = 10,
+                binCount = 10,
                 concurrency = mode,
             )
             for (v in values) s.update(v)
             s.read(0L)
         }
         val ref = reads[Concurrency.None]!!
-        for ((mode, r) in reads) assertEquals(ref, r, "LinearHistogramStat mode=$mode")
+        for ((mode, r) in reads) {
+            assertTrue(ref.weights.contentEquals(r.weights), "LinearHistogram weights mode=$mode")
+        }
     }
 
     @Test
@@ -63,7 +66,7 @@ class QuantileStatConcurrencyTest {
         }
         val ref = reads[Concurrency.None]!!
         for ((mode, r) in reads) {
-            assertEquals(ref.totalCount, r.totalCount, "HdrHistogram totalCount mode=$mode")
+            assertTrue(ref.weights.contentEquals(r.weights), "HdrHistogram weights mode=$mode")
         }
     }
 
@@ -76,7 +79,7 @@ class QuantileStatConcurrencyTest {
         }
         val ref = reads[Concurrency.None]!!
         for ((mode, r) in reads) {
-            assertEquals(ref.estimate, r.estimate, 1e-9, "FrugalQuantile mode=$mode")
+            assertEquals(ref.quantile, r.quantile, 1e-9, "FrugalQuantile mode=$mode")
         }
     }
 }

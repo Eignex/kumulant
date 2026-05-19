@@ -16,7 +16,10 @@ class SketchStatConcurrencyTest {
             s.read(0L)
         }
         val ref = reads[Concurrency.None]!!
-        for ((mode, r) in reads) assertEquals(ref, r, "BloomFilterStat mode=$mode")
+        for ((mode, r) in reads) {
+            assertEquals(ref.totalSeen, r.totalSeen, "BloomFilter totalSeen mode=$mode")
+            kotlin.test.assertTrue(ref.words.contentEquals(r.words), "BloomFilter words mode=$mode")
+        }
     }
 
     @Test
@@ -42,7 +45,9 @@ class SketchStatConcurrencyTest {
             s.read(0L)
         }
         val ref = reads[Concurrency.None]!!
-        for ((mode, r) in reads) assertEquals(ref, r, "MinHashStat mode=$mode")
+        for ((mode, r) in reads) {
+            kotlin.test.assertTrue(ref.signatures.contentEquals(r.signatures), "MinHash signatures mode=$mode")
+        }
     }
 
     @Test
@@ -54,7 +59,8 @@ class SketchStatConcurrencyTest {
         }
         val ref = reads[Concurrency.None]!!
         for ((mode, r) in reads) {
-            assertEquals(ref.heavyHitters, r.heavyHitters, "SpaceSavingStat mode=$mode")
+            assertEquals(ref.keys.toList(), r.keys.toList(), "SpaceSavingStat keys mode=$mode")
+            assertEquals(ref.counts.toList(), r.counts.toList(), "SpaceSavingStat counts mode=$mode")
         }
     }
 }

@@ -16,7 +16,11 @@ class CardinalityStatConcurrencyTest {
             s.read(0L)
         }
         val ref = reads[Concurrency.None]!!
-        for ((mode, r) in reads) assertEquals(ref, r, "LinearCountingStat mode=$mode")
+        for ((mode, r) in reads) {
+            assertEquals(ref.estimate, r.estimate, 1e-9, "LinearCounting estimate mode=$mode")
+            assertEquals(ref.unsetBits, r.unsetBits, "LinearCounting unsetBits mode=$mode")
+            assertEquals(ref.totalSeen, r.totalSeen, "LinearCounting totalSeen mode=$mode")
+        }
     }
 
     @Test

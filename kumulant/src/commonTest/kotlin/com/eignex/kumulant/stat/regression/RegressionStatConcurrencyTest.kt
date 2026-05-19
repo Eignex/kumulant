@@ -11,8 +11,13 @@ class RegressionStatConcurrencyTest {
     private val ys = doubleArrayOf(0.0, 1.0, 1.5, 2.5, 3.0, 4.5, 5.5)
 
     private val mvX = arrayOf(
-        doubleArrayOf(0.1, -0.2), doubleArrayOf(0.5, 0.3), doubleArrayOf(1.0, 0.1),
-        doubleArrayOf(1.5, -0.5), doubleArrayOf(2.0, 0.0), doubleArrayOf(2.5, 0.7), doubleArrayOf(3.0, -0.3),
+        doubleArrayOf(0.1, -0.2),
+        doubleArrayOf(0.5, 0.3),
+        doubleArrayOf(1.0, 0.1),
+        doubleArrayOf(1.5, -0.5),
+        doubleArrayOf(2.0, 0.0),
+        doubleArrayOf(2.5, 0.7),
+        doubleArrayOf(3.0, -0.3),
     )
 
     @Test
