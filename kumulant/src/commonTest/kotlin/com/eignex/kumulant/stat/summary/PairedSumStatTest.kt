@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 private const val DELTA = 1e-12
 
-class PairedSumTest {
+class PairedSumStatTest {
 
     @Test
     fun `sums weighted x and y independently`() {

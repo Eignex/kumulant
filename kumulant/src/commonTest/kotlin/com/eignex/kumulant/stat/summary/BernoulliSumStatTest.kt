@@ -5,7 +5,7 @@ import kotlin.test.assertEquals
 
 private const val DELTA = 1e-12
 
-class BernoulliSumTest {
+class BernoulliSumStatTest {
 
     @Test
     fun `unit-weight binary updates count successes and trials`() {

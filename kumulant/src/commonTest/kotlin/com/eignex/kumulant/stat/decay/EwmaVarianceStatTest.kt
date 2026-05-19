@@ -1,0 +1,77 @@
+package com.eignex.kumulant.stat.decay
+
+import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
+private const val DELTA = 1e-9
+
+class EwmaVarianceStatTest {
+    private val delta = 1e-9
+
+    @Test
+    fun `EwmaVarianceStat create produces fresh independent stat`() {
+        val v1 = EwmaVarianceStat(alpha = 0.5).apply {
+            update(1.0)
+            update(2.0)
+        }
+        val v2 = v1.create()
+        repeat(10) { v1.update(1000.0) }
+        assertEquals(0.0, v2.read().totalWeights, delta)
+        assertTrue(v1.read().totalWeights > 0.0)
+    }
+
+    @Test
+    fun `EwmaVarianceStat tracking volatility shift`() {
+        val stat = EwmaVarianceStat(alpha = 0.1)
+
+        repeat(50) { stat.update(10.0, 1.0) }
+        val lowVar = stat.read().variance
+
+        stat.update(1000.0, 1.0)
+        val highVar = stat.read().variance
+
+        assertTrue(highVar > lowVar, "VarianceStat should spike on outlier")
+    }
+
+    @Test
+    fun `EwmaVarianceStat empty merge`() {
+        val stat = EwmaVarianceStat(alpha = 0.1)
+        stat.update(10.0, 1.0)
+        stat.update(20.0, 1.0)
+        val currentVar = stat.read().variance
+
+        stat.merge(WeightedVarianceResult(0.0, 0.0, 0.0))
+
+        assertEquals(currentVar, stat.read().variance, delta)
+    }
+
+    @Test
+    fun `EwmaVarianceStat bias correction prevents zero division`() {
+        val stat = EwmaVarianceStat(alpha = 0.1)
+
+        assertEquals(0.0, stat.read().mean, delta)
+        assertEquals(0.0, stat.read().variance, delta)
+    }
+
+    @Test
+    fun `EwmaVarianceStat reset clears state`() {
+        val varStat = EwmaVarianceStat(alpha = 0.5)
+        varStat.update(10.0)
+        varStat.update(20.0)
+        varStat.reset()
+        assertEquals(0.0, varStat.read().mean, delta)
+        assertEquals(0.0, varStat.read().variance, delta)
+        assertEquals(0.0, varStat.read().totalWeights, delta)
+    }
+
+    @Test
+    fun `EwmaVarianceStat before any update returns zero state`() {
+        val v = EwmaVarianceStat(alpha = 0.1)
+        val r = v.read()
+        assertEquals(0.0, r.totalWeights, DELTA)
+        assertEquals(0.0, r.mean, DELTA)
+        assertEquals(0.0, r.variance, DELTA)
+    }
+}
