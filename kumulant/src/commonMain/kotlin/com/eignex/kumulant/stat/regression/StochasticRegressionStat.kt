@@ -47,11 +47,24 @@ import com.eignex.kumulant.stream.welfordMode
  *    (`lastApplied[i]`), then takes the SGD step. Untouched coords sit pending
  *    until they're either touched or materialised at read.
  *
- * Concurrency follows the Welford-coupled pattern: every cell is per-slot atomic
- * under [Concurrency.Relaxed] (HOGWILD!-style asynchronous SGD - concurrent updaters
- * may compute gradients from slightly stale weights, but each write is an atomic add
- * or CAS, and convergence holds for the convex MSE loss). Under [Concurrency.Strict]
- * a single lock fully serialises the update. [Concurrency.None] is single-threaded.
+ * **Use cases:** high-throughput online regression where point estimates
+ * suffice and the per-update cost must stay small (large feature spaces, very
+ * fast streams, HOGWILD!-style distributed training). Reach for
+ * [DiagonalRegressionStat] when uncertainty is needed; for
+ * [BayesianRegressionStat] when the full posterior is needed.
+ *
+ * **Memory:** O([featureSize]) — weights vector, bias, optional L1 lazy-apply
+ * bookkeeping.
+ *
+ * **Update:** O(nnz(x)) per observation — sparse-aware over touched
+ * coordinates.
+ *
+ * **Concurrency:** Welford-coupled, per-slot atomic under [Concurrency.Relaxed]
+ * (HOGWILD!-style asynchronous SGD — concurrent updaters may compute gradients
+ * from slightly stale weights, but each write is an atomic add or CAS, and
+ * convergence holds for the convex MSE loss). [Concurrency.Strict] and
+ * [Concurrency.HighWrite] lock the body. [Concurrency.None] runs without
+ * synchronisation.
  */
 class StochasticRegressionStat(
     override val featureSize: Int,

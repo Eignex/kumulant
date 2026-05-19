@@ -37,12 +37,21 @@ import com.eignex.kumulant.stream.serializedLock
  *  - [Penalty.L1]: proximal soft-thresholding on touched coords after the gradient step,
  *    threshold scaled by `eta * weight * lambda / precision_i`.
  *
- * # Concurrency
+ * **Use cases:** high-dimensional online regression where marginal posteriors
+ * suffice (per-coordinate uncertainty without joint covariance) — sparse
+ * feature spaces, click-prediction style models. Reach for
+ * [BayesianRegressionStat] when feature correlations matter; for
+ * [StochasticRegressionStat] when SGD's even-cheaper per-update cost is
+ * required.
  *
- * The Newton-style step couples per-coord `(precision_i, weights_i)` and the
- * shared `(bias, biasPrecision)`. The body is serialised by an internal lock
- * under every concurrent [Concurrency] level (no-op under [Concurrency.None]),
- * giving exact match to a serial run up to floating-point reorder ULPs.
+ * **Memory:** O([featureSize]) — weights + per-coord precisions + bias pair.
+ *
+ * **Update:** O(nnz(x)) per observation — sparse-aware over the touched
+ * coordinates of `x` rather than the full feature width.
+ *
+ * **Concurrency:** Body serialised by an internal lock under any concurrent
+ * [Concurrency] level (no-op under [Concurrency.None]). Exact under every
+ * level up to floating-point reorder ULPs.
  */
 class DiagonalRegressionStat(
     override val featureSize: Int,

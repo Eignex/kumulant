@@ -69,15 +69,21 @@ data class UnivariateRegressionResult(
  * carrying the raw [UnivariateRegressionResult.sxy], so the round trip is exact for
  * every penalty including the L1 case where the regularised slope can be zero.
  *
- * # Concurrency
+ * **Use cases:** single-feature streaming regression — calibration of a
+ * scalar predictor, dose-response curves, anything where `y ~ slope·x +
+ * intercept` covers it. For multi-feature regression reach for
+ * [DiagonalRegressionStat] (factorised posterior) or [BayesianRegressionStat]
+ * (full posterior).
  *
- * Welford couples `(totalWeights, meanX, meanY, sxx, sxy, syy)` across each
- * update. [Concurrency.Strict] and [Concurrency.HighWrite] lock the body so
- * each update is atomic — exact match to a serial run up to floating-point
- * reorder ULPs. [Concurrency.Relaxed] drops the lock and the six cells race
- * independently; the regression coefficients drift by ~1e-5 relative under
- * contention but never throw. Choose [Concurrency.Strict] when correctness
- * matters more than the lock-free write path.
+ * **Memory:** O(1) — six doubles plus a lock.
+ *
+ * **Update:** O(1) per observation.
+ *
+ * **Concurrency:** Welford-coupled cells. [Concurrency.Strict] and
+ * [Concurrency.HighWrite] lock the body — exact match to a serial run up to
+ * floating-point reorder ULPs. [Concurrency.Relaxed] drops the lock; the six
+ * cells race and coefficients drift ~1e-5 relative under contention but
+ * never throw.
  */
 class UnivariateRegressionStat(
     /** Regularisation applied at `read()` time; defaults to plain OLS. */

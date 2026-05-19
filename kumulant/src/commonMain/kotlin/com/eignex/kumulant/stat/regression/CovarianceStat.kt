@@ -50,11 +50,14 @@ data class CovarianceResult(
  * accumulation, and [CovarianceResult] is projected from [UnivariateRegressionResult]
  * via [mapResult].
  *
- * # Concurrency
+ * **Use cases:** monitoring joint variability and correlation between two
+ * scalar streams (input metric vs output, feature drift detection).
  *
- * Inherits [UnivariateRegressionStat]'s concurrency model: locked under
- * [Concurrency.Strict] / [Concurrency.HighWrite], lock-free atomic cells with
- * possible ~1e-5 drift under [Concurrency.Relaxed].
+ * **Memory:** O(1) — same as [UnivariateRegressionStat].
+ *
+ * **Update:** O(1) per paired observation.
+ *
+ * **Concurrency:** Inherits [UnivariateRegressionStat]'s concurrency model.
  */
 class CovarianceStat(
     concurrency: Concurrency = Concurrency.None,
