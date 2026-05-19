@@ -65,6 +65,8 @@ val yHat = fit.slope * 7.0 + fit.intercept
 | Decay        | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance            |
 | Score        | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
 
+---
+
 ```kotlin
 val bandit = MultiArmedBandit(nbrArms = 4, policy = BetaBernoulliTS())
 val arm = bandit.choose()
