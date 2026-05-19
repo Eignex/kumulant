@@ -12,6 +12,13 @@ import kotlin.math.pow
  * Auto-resizing High Dynamic RangeStat (HDR) Histogram with native Double support.
  * By defining a lowestDiscernibleValue, it internally scales floating-point metrics
  * into integers for O(1) bitwise routing, perfectly preserving fractional precision.
+ *
+ * # Concurrency
+ *
+ * Each bucket is a striped atomic add. Lock-free and exact under every
+ * [Concurrency] level — bucket increments commute, and bucket assignment is
+ * deterministic per value so racing writers on the same value just bump the
+ * same cell.
  */
 class HdrHistogramStat(
     /** Smallest value the histogram can distinguish. */

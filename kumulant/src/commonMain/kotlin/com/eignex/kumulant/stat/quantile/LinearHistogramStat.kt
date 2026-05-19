@@ -11,6 +11,12 @@ import com.eignex.kumulant.stream.additiveMode
  * Values below or at/above the range fall into dedicated underflow / overflow rows
  * `(NEG_INFINITY, lowerBound)` and `[upperBound, POS_INFINITY)`. Bin storage is
  * lock-free via [ArrayBins].
+ *
+ * # Concurrency
+ *
+ * Each bin is a striped atomic add. Lock-free and exact under every
+ * [Concurrency] level — increments commute, and bin assignment is a
+ * deterministic function of the value.
  */
 class LinearHistogramStat(
     /** Inclusive lower bound of the histogram's covered range. */

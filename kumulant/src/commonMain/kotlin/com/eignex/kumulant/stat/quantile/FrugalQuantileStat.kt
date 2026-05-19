@@ -15,7 +15,17 @@ import com.eignex.kumulant.stream.welfordMode
  * Treats observations as unweighted (one unit step per update regardless of weight);
  * scaling the step by raw weight would let a single high-weight observation overshoot
  * the target catastrophically. [merge] averages two estimates as a coarse approximation
- * - frugal sketches do not admit a true associative combine.
+ * — frugal sketches do not admit a true associative combine.
+ *
+ * # Concurrency
+ *
+ * The recurrence walks the estimate one step at a time toward [q], so the
+ * snapshot value depends on update order. [Concurrency.Strict] and
+ * [Concurrency.HighWrite] lock the body so each step is atomic, but
+ * **arrival-order non-determinism remains** — Strict does not reproduce a
+ * serial reference. [Concurrency.Relaxed] additionally drops the lock; the
+ * single-cell estimate races but stays bounded. The bench reports ~15%
+ * absolute error on a `q = 0.5` uniform stream regardless of level.
  */
 class FrugalQuantileStat(
     /** Target quantile probability in `[0, 1]`. */

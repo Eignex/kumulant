@@ -15,6 +15,13 @@ import kotlin.math.pow
  * Guarantees [relativeError] on every reported quantile using `O(log(max/min))`
  * bins. Supports negative values via a mirrored bin tree and a zero-bucket.
  * Tightening [relativeError] grows bin count roughly as `1/epsilon`.
+ *
+ * # Concurrency
+ *
+ * Each bin is a striped atomic add. Lock-free and exact under every
+ * [Concurrency] level — increments commute, and the bin assignment is a
+ * deterministic function of the value so racing writers on the same value
+ * just increment the same cell.
  */
 class DDSketchStat(
     /** Relative error guarantee on every reported quantile. */
