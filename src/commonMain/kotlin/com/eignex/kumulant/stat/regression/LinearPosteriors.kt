@@ -26,7 +26,7 @@ import kotlin.random.Random
  * portable via skema's polymorphic discriminator.
  */
 @Serializable
-sealed interface LinearPosterior<R : LinearRegressionResult> {
+sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosterior<R> {
     /** Draw a weight vector from the posterior at `exploration` variance scale.
      *  `exploration = 0.0` collapses to the point estimate; `1.0` is the calibrated posterior. */
     fun sample(snapshot: R, rng: Random, exploration: Double = 1.0): VectorView
@@ -40,7 +40,7 @@ sealed interface LinearPosterior<R : LinearRegressionResult> {
      * a specialised formula (e.g. drawing only `xT * Sigma * x` worth of variance
      * instead of the full weight vector).
      */
-    fun evaluate(snapshot: R, x: VectorView, rng: Random, exploration: Double = 1.0): Double =
+    override fun evaluate(snapshot: R, x: VectorView, rng: Random, exploration: Double): Double =
         snapshot.bias + (x dot sample(snapshot, rng, exploration))
 }
 

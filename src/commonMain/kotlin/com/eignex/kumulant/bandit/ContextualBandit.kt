@@ -1,14 +1,14 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.math.VectorView
-import com.eignex.kumulant.stat.regression.LinearRegressionResult
 import kotlin.random.Random
 
 /**
  * Context-aware bandit: each round the caller observes a feature vector `x`, calls
  * [choose] to pick an arm, plays it externally, observes a reward, and feeds the
- * `(x, reward)` pair back via [update]. Each arm owns a [RegressionStat] that
+ * `(x, reward)` pair back via [update]. Each arm owns a [com.eignex.kumulant.core.RegressionStat] that
  * predicts reward as a function of `x`; arm selection scores each arm's current
  * model under the new context.
  *
@@ -19,7 +19,7 @@ import kotlin.random.Random
  * Implementations source all randomness from [random] so callers control the PRNG
  * (seeded for tests, shared for production, custom for special cases).
  */
-interface ContextualBandit<R : LinearRegressionResult> {
+interface ContextualBandit<R : Result> {
     /** Number of arms in the population. */
     val nbrArms: Int
 
@@ -43,11 +43,16 @@ interface ContextualBandit<R : LinearRegressionResult> {
      *  override to avoid building the full list when only one arm is needed. */
     fun armResult(armIndex: Int): R = snapshot()[armIndex]
 
-    /** Live per-arm regressor; exposed so callers can compose with the stat ecosystem -
-     *  inspect, plug into a [com.eignex.kumulant.schema.StatGroup], or apply ops via
-     *  the live-stat extensions. Writes should still flow through [update] to keep the
-     *  bandit's bookkeeping in sync. */
-    fun armStat(armIndex: Int): RegressionStat<R>
+    /** Live per-arm sufficient-statistic accumulator; exposed so callers can compose with
+     *  the stat ecosystem - inspect, plug into a [com.eignex.kumulant.schema.StatGroup],
+     *  or apply ops via the live-stat extensions. Writes should still flow through
+     *  [update] to keep the bandit's bookkeeping in sync.
+     *
+     *  Implementations are free to return any [Stat] flavour appropriate to their
+     *  internal representation: [RegressionContextualBandit] returns a
+     *  [com.eignex.kumulant.core.RegressionStat]; tree-based bandits return the
+     *  per-arm tree's root [com.eignex.kumulant.core.SeriesStat]. */
+    fun armStat(armIndex: Int): Stat<R>
 
     /** Merge each `others[i]` into the corresponding arm. Length must equal [nbrArms].
      *  Used to combine bandit replicas trained in parallel. */

@@ -20,7 +20,7 @@ class ContextualBanditTest {
     @Test
     fun `constructor rejects non-positive nbrArms`() {
         assertFailsWith<IllegalArgumentException> {
-            LinearContextualBandit(
+            RegressionContextualBandit(
                 nbrArms = 0,
                 template = BayesianRegressionStat(featureSize = 2),
                 posterior = MultivariateGaussian,
@@ -38,7 +38,7 @@ class ContextualBanditTest {
             doubleArrayOf(0.5, 0.5),
         )
         val rng = Random(1)
-        val bandit = LinearContextualBandit(
+        val bandit = RegressionContextualBandit(
             nbrArms = 3,
             template = BayesianRegressionStat(featureSize = 2, priorVariance = 1.0),
             posterior = MultivariateGaussian,
@@ -71,7 +71,7 @@ class ContextualBanditTest {
         // Same RNG seed, same snapshot -> same score. Catches accidental shared mutable
         // state on the posterior.
         val rng = Random(0)
-        val bandit = LinearContextualBandit(
+        val bandit = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = LinUcb,
@@ -87,7 +87,7 @@ class ContextualBanditTest {
 
     @Test
     fun `armStat exposes the live per-arm regressor`() {
-        val bandit = LinearContextualBandit(
+        val bandit = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
@@ -102,13 +102,13 @@ class ContextualBanditTest {
 
     @Test
     fun `merge fans per-arm snapshots through to sub-stats`() {
-        val ba = LinearContextualBandit(
+        val ba = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
             random = Random(1),
         )
-        val bb = LinearContextualBandit(
+        val bb = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
@@ -122,7 +122,7 @@ class ContextualBanditTest {
             bb.update(0, feat(1.0, 0.0), 1.0)
             bb.update(1, feat(0.0, 1.0), -1.0)
         }
-        val merged = LinearContextualBandit(
+        val merged = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
@@ -138,12 +138,12 @@ class ContextualBanditTest {
 
     @Test
     fun `merge rejects size mismatch`() {
-        val bandit = LinearContextualBandit(
+        val bandit = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
         )
-        val wrongSize = LinearContextualBandit(
+        val wrongSize = RegressionContextualBandit(
             nbrArms = 3,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
@@ -153,7 +153,7 @@ class ContextualBanditTest {
 
     @Test
     fun `reset restores prior baseline`() {
-        val bandit = LinearContextualBandit(
+        val bandit = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2, priorVariance = 1.0),
             posterior = MultivariateGaussian,
@@ -169,7 +169,7 @@ class ContextualBanditTest {
 
     @Test
     fun `create returns a fresh bandit with the same configuration`() {
-        val original = LinearContextualBandit(
+        val original = RegressionContextualBandit(
             nbrArms = 4,
             template = BayesianRegressionStat(featureSize = 3),
             posterior = MultivariateGaussian,
@@ -186,7 +186,7 @@ class ContextualBanditTest {
 
     @Test
     fun `pooled bandit globalSnapshot is null when pooling is disabled`() {
-        val bandit = LinearContextualBandit(
+        val bandit = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
@@ -197,7 +197,7 @@ class ContextualBanditTest {
 
     @Test
     fun `pooled bandit globalSnapshot is non-null when pooling is enabled`() {
-        val bandit = LinearContextualBandit(
+        val bandit = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
@@ -218,7 +218,7 @@ class ContextualBanditTest {
         // When pooling is on and the global has fitted some signal, the per-arm regressors
         // should track delta-from-global, not raw reward.
         val rng = Random(1)
-        val pooled = LinearContextualBandit(
+        val pooled = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
@@ -245,14 +245,14 @@ class ContextualBanditTest {
 
     @Test
     fun `pooled bandit mergeGlobal accumulates cross-replica global`() {
-        val ba = LinearContextualBandit(
+        val ba = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
             globalTemplate = BayesianRegressionStat(featureSize = 2),
             random = Random(1),
         )
-        val bb = LinearContextualBandit(
+        val bb = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
@@ -261,7 +261,7 @@ class ContextualBanditTest {
         )
         repeat(50) { ba.update(0, feat(1.0, 0.0), 1.0) }
         repeat(50) { bb.update(0, feat(1.0, 0.0), 1.0) }
-        val mergeable = LinearContextualBandit(
+        val mergeable = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
@@ -278,7 +278,7 @@ class ContextualBanditTest {
 
     @Test
     fun `mergeGlobal is a no-op when pooling is disabled`() {
-        val bandit = LinearContextualBandit(
+        val bandit = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,
@@ -293,7 +293,7 @@ class ContextualBanditTest {
 
     @Test
     fun `reset clears global when pooling is enabled`() {
-        val bandit = LinearContextualBandit(
+        val bandit = RegressionContextualBandit(
             nbrArms = 2,
             template = BayesianRegressionStat(featureSize = 2),
             posterior = MultivariateGaussian,

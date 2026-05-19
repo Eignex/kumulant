@@ -157,7 +157,7 @@ internal fun MomentsResult.meanOfSquares(): Double =
 // to warm-start a per-arm accumulator from cross-arm experience.
 //
 // Univariate hierarchical pooling has no clean general API (see the discussion next
-// to [com.eignex.kumulant.bandit.LinearContextualBandit] for the contextual case);
+// to [com.eignex.kumulant.bandit.RegressionContextualBandit] for the contextual case);
 // these per-arm-type helpers cover the Result types where shrinkage has a uniform
 // pseudo-count interpretation.
 

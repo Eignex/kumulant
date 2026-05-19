@@ -1,0 +1,256 @@
+package com.eignex.kumulant.stat.tree
+
+import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.math.VectorView
+import com.eignex.kumulant.stat.summary.VarianceStat
+import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlin.math.ln
+import kotlin.math.pow
+import kotlin.math.sqrt
+import kotlin.random.Random
+
+/**
+ * Online VFDT-style decision tree partitioning context vectors. Each leaf carries a
+ * weighted-variance accumulator; audit leaves additionally track pos/neg sub-arms per
+ * candidate split and, every [TreeConfig.splitPeriod] observations, evaluate them against
+ * the Hoeffding bound to decide whether to convert themselves into a [SplitNode].
+ *
+ * Plain data structure with no bandit coupling — leaves accumulate weighted means &
+ * variances of the (encoded) target. Callers wanting bandit-flavoured scoring wrap this
+ * via [DecisionTreeRegressionStat] and pair with a [com.eignex.kumulant.stat.regression.RegressionPosterior].
+ */
+class Tree(
+    private val splitCandidates: List<Split>,
+    private val config: TreeConfig = TreeConfig(),
+    private val leafArmFactory: () -> SeriesStat<WeightedVarianceResult> = { VarianceStat() },
+    randomSeed: Int = 0,
+) {
+    private val random = Random(randomSeed)
+    private val canGrow: Boolean = splitCandidates.isNotEmpty()
+
+    private var nbrNodes: Int = 1
+    private var root: Node = newLeaf(depth = 0)
+
+    /** Walk to the leaf [row] resolves to. */
+    fun findLeaf(row: VectorView): LeafNode = root.findLeaf(row)
+
+    /** Root aggregate arm. */
+    fun rootArm(): SeriesStat<WeightedVarianceResult> = root.arm
+
+    /** Live root node, for snapshotting. */
+    fun rootNode(): Node = root
+
+    /** Mean of the leaf [row] resolves to. */
+    fun predict(row: VectorView): Double = findLeaf(row).arm.read(0L).mean
+
+    /** Number of internal + leaf nodes currently in the tree. */
+    val nodeCount: Int get() = nbrNodes
+
+    /** Fold an observation into the tree, possibly growing it. */
+    fun update(row: VectorView, value: Double, weight: Double = 1.0) {
+        root = updateNode(root, row, value, weight, depth = 0)
+    }
+
+    /** Aggregate snapshot at the root: sufficient stat over every observation absorbed. */
+    fun rootSnapshot(): WeightedVarianceResult = root.arm.read(0L)
+
+    /** Reset to a single fresh leaf. */
+    fun reset() {
+        nbrNodes = 1
+        root = newLeaf(depth = 0)
+    }
+
+    /** Render the tree as nested `if (split) { ... } else { ... }` text. */
+    fun prettyPrint(indent: String = ""): String = buildString { prettyPrintTo(this, root, indent) }
+
+    /**
+     * Structurally merge [other] into this tree. [other] is consumed (its node references
+     * may be grafted into this tree) and must not be used afterwards.
+     *
+     *  - **Same split predicate**: merge the node's aggregate arm and recurse on both
+     *    children. Exact: subtree-aggregate invariants are preserved.
+     *  - **Both leaves**: merge arms directly.
+     *  - **Self leaf, other split**: adopt other's structure wholesale and fold self's
+     *    leaf aggregate into the adopted root.
+     *  - **Self split, other leaf** *or* **different splits**: keep self's structure and
+     *    fold other's root aggregate into self's root only; other's substructure is lost.
+     */
+    fun merge(other: Tree) {
+        root = mergeNodes(root, other.root)
+        nbrNodes = countNodes(root)
+    }
+
+    /** Snapshot merge using only the immutable result. Falls through to the same rules
+     *  as [merge] but the "other" side is a [TreeNodeResult] tree-of-results rather than
+     *  a live Tree. */
+    fun mergeSnapshot(other: TreeNodeResult) {
+        root = mergeNodeWithResult(root, other)
+        nbrNodes = countNodes(root)
+    }
+
+    private fun mergeNodes(a: Node, b: Node): Node {
+        if (a is SplitNode && b is SplitNode && a.split == b.split) {
+            a.arm.merge(b.arm.read(0L))
+            a.pos = mergeNodes(a.pos, b.pos)
+            a.neg = mergeNodes(a.neg, b.neg)
+            return a
+        }
+        if (a is LeafNode && b is LeafNode) {
+            a.arm.merge(b.arm.read(0L))
+            return a
+        }
+        if (a is LeafNode && b is SplitNode) {
+            b.arm.merge(a.arm.read(0L))
+            return b
+        }
+        a.arm.merge(b.arm.read(0L))
+        return a
+    }
+
+    private fun mergeNodeWithResult(a: Node, b: TreeNodeResult): Node {
+        if (a is SplitNode && b is TreeSplitResult && a.split == b.split) {
+            a.arm.merge(b.value)
+            a.pos = mergeNodeWithResult(a.pos, b.pos)
+            a.neg = mergeNodeWithResult(a.neg, b.neg)
+            return a
+        }
+        if (a is LeafNode && b is TreeLeafResult) {
+            a.arm.merge(b.value)
+            return a
+        }
+        if (a is LeafNode && b is TreeSplitResult) {
+            // Rebuild a fresh subtree from b's structure, fold a's leaf into the root.
+            val cloned = cloneFromResult(b, depth = 0)
+            cloned.arm.merge(a.arm.read(0L))
+            return cloned
+        }
+        // a split + b leaf, or splits differ: keep a's structure, fold b's aggregate.
+        a.arm.merge(b.value)
+        return a
+    }
+
+    private fun cloneFromResult(node: TreeNodeResult, depth: Int): Node {
+        nbrNodes++
+        return when (node) {
+            is TreeLeafResult -> {
+                val arm = leafArmFactory()
+                arm.merge(node.value)
+                TerminalLeaf(arm)
+            }
+            is TreeSplitResult -> {
+                val arm = leafArmFactory()
+                arm.merge(node.value)
+                SplitNode(
+                    split = node.split,
+                    pos = cloneFromResult(node.pos, depth + 1),
+                    neg = cloneFromResult(node.neg, depth + 1),
+                    arm = arm,
+                )
+            }
+        }
+    }
+
+    private fun countNodes(node: Node): Int = when (node) {
+        is SplitNode -> 1 + countNodes(node.pos) + countNodes(node.neg)
+        is LeafNode -> 1
+    }
+
+    private fun prettyPrintTo(sb: StringBuilder, node: Node, indent: String) {
+        when (node) {
+            is SplitNode -> {
+                sb.append(indent).append("if (").append(node.split.toString()).append(") {\n")
+                prettyPrintTo(sb, node.pos, "$indent  ")
+                sb.append(indent).append("} else {\n")
+                prettyPrintTo(sb, node.neg, "$indent  ")
+                sb.append(indent).append("}\n")
+            }
+            is LeafNode -> {
+                val mean = node.arm.read(0L).mean
+                sb.append(indent).append("leaf mean=").append(mean).append('\n')
+            }
+        }
+    }
+
+    private fun newLeaf(depth: Int): LeafNode {
+        if (depth >= config.maxDepth || nbrNodes + 1 > config.maxNodes || !canGrow) {
+            return TerminalLeaf(leafArmFactory())
+        }
+        val subset = pickCandidates()
+        return AuditLeaf(
+            arm = leafArmFactory(),
+            candidates = subset,
+            pos = List(subset.size) { leafArmFactory() },
+            neg = List(subset.size) { leafArmFactory() },
+        )
+    }
+
+    private fun pickCandidates(): List<Split> {
+        val k = config.mtry ?: return splitCandidates
+        if (k >= splitCandidates.size) return splitCandidates
+        return splitCandidates.shuffled(random).take(k)
+    }
+
+    private fun updateNode(node: Node, row: VectorView, value: Double, weight: Double, depth: Int): Node =
+        when (node) {
+            is SplitNode -> {
+                node.arm.update(value, 0L, weight)
+                if (node.split.direction(row)) {
+                    node.pos = updateNode(node.pos, row, value, weight, depth + 1)
+                } else {
+                    node.neg = updateNode(node.neg, row, value, weight, depth + 1)
+                }
+                node
+            }
+            is TerminalLeaf -> {
+                node.arm.update(value, 0L, weight)
+                node
+            }
+            is AuditLeaf -> updateAuditLeaf(node, row, value, weight, depth)
+        }
+
+    private fun updateAuditLeaf(
+        leaf: AuditLeaf,
+        row: VectorView,
+        value: Double,
+        weight: Double,
+        depth: Int,
+    ): Node {
+        leaf.arm.update(value, 0L, weight)
+        for ((i, split) in leaf.candidates.withIndex()) {
+            if (split.direction(row)) {
+                leaf.pos[i].update(value, 0L, weight)
+            } else {
+                leaf.neg[i].update(value, 0L, weight)
+            }
+        }
+        leaf.observationsSinceLastCheck++
+        if (leaf.observationsSinceLastCheck < config.splitPeriod) return leaf
+        leaf.observationsSinceLastCheck = 0
+
+        val total = leaf.arm.read(0L)
+        if (total.totalWeights < config.minSamplesSplit) return leaf
+        val pos = leaf.pos.map { it.read(0L) }
+        val neg = leaf.neg.map { it.read(0L) }
+        val ranked = config.metric.rank(total, pos, neg, config.minSamplesSplit, config.minSamplesLeaf)
+        if (ranked.bestIndex < 0 || ranked.top1 <= 0.0) return leaf
+
+        val eps = hoeffdingBound(config.delta, total.totalWeights, depth, config.deltaDecay)
+        val passesHoeffding = ranked.top1 - ranked.top2 > eps
+        val passesTau = eps < config.tau
+        if (!passesHoeffding && !passesTau) return leaf
+
+        nbrNodes += 2
+        return SplitNode(
+            split = leaf.candidates[ranked.bestIndex],
+            pos = newLeaf(depth + 1),
+            neg = newLeaf(depth + 1),
+            arm = leaf.arm,
+        )
+    }
+
+    private fun hoeffdingBound(delta: Double, n: Double, depth: Int, decay: Double): Double {
+        if (n <= 0.0) return Double.POSITIVE_INFINITY
+        val adjusted = delta * decay.pow(depth.toDouble())
+        return sqrt(-ln(adjusted) / (2.0 * n))
+    }
+}

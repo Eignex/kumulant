@@ -113,7 +113,7 @@ For context-aware decisions, the contextual bandit wraps one regression
 stat per arm and scores each arm under the round's feature vector.
 
 ```kotlin
-val cb = LinearContextualBandit(
+val cb = RegressionContextualBandit(
     nbrArms = 4,
     template = BayesianRegressionStat(featureSize = 8),
     posterior = MultivariateGaussian,

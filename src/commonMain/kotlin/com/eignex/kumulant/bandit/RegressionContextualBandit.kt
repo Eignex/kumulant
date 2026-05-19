@@ -1,53 +1,49 @@
 package com.eignex.kumulant.bandit
 
 import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.VectorView
-import com.eignex.kumulant.stat.regression.LinearPosterior
-import com.eignex.kumulant.stat.regression.LinearRegressionResult
+import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlin.random.Random
 
 /**
- * Linear contextual bandit: each arm is a [RegressionStat] cloned from [template], scored
- * per round by [posterior] under the incoming context vector. Specialises to:
+ * Generic contextual bandit: each arm owns a [RegressionStat] cloned from [template]
+ * and is scored by the shared [posterior] under the round's context vector. The same
+ * machinery covers every regressor in kumulant:
  *
- *  - **Linear Thompson Sampling**: `BayesianRegressionStat` + `MultivariateGaussian`
- *    posterior — each evaluate draws a fresh weight vector and returns its prediction.
- *  - **Greedy**: any `RegressionStat` + `PointPosterior` with `exploration = 0.0` —
- *    score is the mean prediction `bias + x . weights`.
- *  - **LinUCB-style**: pair a [LinearPosterior] whose `evaluate` returns a confidence-
- *    bound score (e.g. mean + `sqrt(xT Sigma x)` * alpha) over `BayesianRegressionStat`.
- *    The built-in [com.eignex.kumulant.stat.regression.MultivariateGaussian] returns a
- *    sampled prediction (Thompson form); UCB-style scoring is a one-line custom
- *    [LinearPosterior].
+ *  - **Linear Thompson Sampling**: [com.eignex.kumulant.stat.regression.BayesianRegressionStat]
+ *    + [com.eignex.kumulant.stat.regression.MultivariateGaussian].
+ *  - **LinUcb**: any linear regressor + [com.eignex.kumulant.stat.regression.LinUcb].
+ *  - **Greedy SGD**: [com.eignex.kumulant.stat.regression.StochasticRegressionStat] +
+ *    [com.eignex.kumulant.stat.regression.PointPosterior] with `exploration = 0.0`.
+ *  - **Decision-tree bandit**: [com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat]
+ *    + a [com.eignex.kumulant.stat.tree.TreePosterior].
+ *  - **Random-forest bandit**: [com.eignex.kumulant.stat.tree.RandomForestRegressionStat]
+ *    + a [com.eignex.kumulant.stat.tree.ForestPosterior].
  *
- * Each arm's regressor is constructed via `template.create(null)` so per-arm state is
+ * Per-arm regressors are constructed via `template.create(null)` so per-arm state is
  * independent. [exploration] scales the posterior's exploration parameter; pass `0.0`
- * for pure exploitation (point predictions only).
+ * for pure exploitation (point estimates only).
  *
- * **Continuous pooling (optional).** If [globalTemplate] is non-null, the bandit also
+ * **Continuous pooling (optional).** When [globalTemplate] is non-null, the bandit also
  * maintains a global regressor that absorbs every `(x, reward)` regardless of arm.
  * Per-arm regressors then fit *residuals* against the global's mean prediction, and
- * arm scoring adds the global's mean back in: `score(a, x) = global_mean(x) +
- * posterior.evaluate(arm_a, x)`. This is the cheap pragmatic shrinkage scheme — cold-
- * start arms aren't dumb because the global already has cross-arm evidence — at ~2x
- * compute per update. Caveats:
- *  - The global is biased by play frequency (the policy oversamples winners), so it's
- *    a "policy-weighted population mean", not a uniform population estimate.
- *  - The per-arm deltas are fit against a moving global, so they're approximate rather
- *    than jointly inferred. Steady-state this washes out; with concept drift it doesn't.
- *  - Exploration in [posterior] applies only to the per-arm delta; the global is
- *    treated as a deterministic mean. Underestimates uncertainty where the global
- *    itself is uncertain (early observations, sparse feature regions).
+ * arm scoring adds the global's mean back in. The global's mean is read via
+ * `posterior.evaluate(globalSnapshot, x, rng, exploration = 0.0)` — i.e. the same
+ * posterior at zero exploration — so any regressor whose posterior implements
+ * exploration=0 to mean-prediction (every built-in one does) can be pooled.
  *
- * For true hierarchical Bayes use [com.eignex.kumulant.stat.regression.BayesianRegressionStat.fitPopulationPrior]
- * with a periodic refit instead.
+ * Caveats are the same as the linear-only version: policy-weighted global bias,
+ * approximate joint fit, exploration variance underestimated where the global itself
+ * is uncertain. For true hierarchical Bayes use
+ * [com.eignex.kumulant.stat.regression.BayesianRegressionStat.fitPopulationPrior].
  */
-class LinearContextualBandit<R : LinearRegressionResult>(
+class RegressionContextualBandit<R : Result>(
     override val nbrArms: Int,
     /** Template regressor; one independent copy is allocated per arm via [RegressionStat.create]. */
     private val template: RegressionStat<R>,
     /** Stateless arm scorer applied to each per-arm snapshot at [choose] time. */
-    val posterior: LinearPosterior<R>,
+    val posterior: RegressionPosterior<R>,
     /** Per-evaluate exploration scale forwarded to the posterior; `0.0` collapses to the point estimate. */
     val exploration: Double = 1.0,
     /** Template for the global pooling regressor; `null` disables pooling. */
@@ -58,11 +54,10 @@ class LinearContextualBandit<R : LinearRegressionResult>(
     init { require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" } }
 
     private val arms: Array<RegressionStat<R>> = Array(nbrArms) { template.create(null) }
-
-    /** Continuous pooling regressor; null when pooling is disabled. */
     private val global: RegressionStat<R>? = globalTemplate?.create(null)
 
-    private fun globalMean(x: VectorView): Double = global?.read(0L)?.linearPredictor(x) ?: 0.0
+    private fun globalMean(x: VectorView): Double =
+        global?.let { posterior.evaluate(it.read(0L), x, random, 0.0) } ?: 0.0
 
     override fun choose(x: VectorView): Int {
         val gMean = globalMean(x)
@@ -86,7 +81,7 @@ class LinearContextualBandit<R : LinearRegressionResult>(
         if (g == null) {
             arms[armIndex].update(x, reward, weight)
         } else {
-            val gMean = g.read(0L).linearPredictor(x)
+            val gMean = posterior.evaluate(g.read(0L), x, random, 0.0)
             arms[armIndex].update(x, reward - gMean, weight)
             g.update(x, reward, weight)
         }
@@ -126,6 +121,6 @@ class LinearContextualBandit<R : LinearRegressionResult>(
         global?.reset()
     }
 
-    override fun create(random: Random): LinearContextualBandit<R> =
-        LinearContextualBandit(nbrArms, template, posterior, exploration, globalTemplate, random)
+    override fun create(random: Random): RegressionContextualBandit<R> =
+        RegressionContextualBandit(nbrArms, template, posterior, exploration, globalTemplate, random)
 }
