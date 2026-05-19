@@ -40,7 +40,7 @@ class DecisionTreeRegressionStat(
     private val seedRng = kotlin.random.Random(randomSeed)
     private var tree: Tree = newTree()
 
-    private fun newTree(): Tree = Tree(splitCandidates, config, leafArmFactory, seedRng.nextInt())
+    private fun newTree(): Tree = Tree(splitCandidates, config, concurrency, leafArmFactory, seedRng.nextInt())
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }

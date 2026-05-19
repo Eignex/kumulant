@@ -1,8 +1,13 @@
+@file:OptIn(ExperimentalAtomicApi::class)
+
 package com.eignex.kumulant.stat.tree
 
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlin.concurrent.Volatile
+import kotlin.concurrent.atomics.AtomicLong
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * Internal tree node. Every node — both internal splits and leaves — carries an arm
@@ -24,10 +29,15 @@ sealed class Node {
 class SplitNode(
     /** Predicate routing observations into [pos] (true) or [neg] (false). */
     val split: Split,
-    var pos: Node,
-    var neg: Node,
+    pos: Node,
+    neg: Node,
     override val arm: SeriesStat<WeightedVarianceResult>,
 ) : Node() {
+    @Volatile
+    var pos: Node = pos
+    @Volatile
+    var neg: Node = neg
+
     override fun findLeaf(row: VectorView): LeafNode =
         if (split.direction(row)) pos.findLeaf(row) else neg.findLeaf(row)
 }
@@ -60,6 +70,8 @@ class AuditLeaf(
         }
     }
 
-    /** Counter throttling audit work to every Nth observation. */
-    var observationsSinceLastCheck: Int = 0
+    /** Counter throttling audit work to every Nth observation. Atomic so concurrent
+     *  updaters don't lose ticks; the split decision is taken by the thread that
+     *  crosses the period boundary, under the tree's split lock. */
+    val observationsSinceLastCheck: AtomicLong = AtomicLong(0L)
 }

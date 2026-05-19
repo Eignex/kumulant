@@ -1,9 +1,18 @@
+@file:OptIn(ExperimentalAtomicApi::class)
+
 package com.eignex.kumulant.stat.tree
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import com.eignex.kumulant.stream.NoopMutex
+import com.eignex.kumulant.stream.PlatformMutex
+import com.eignex.kumulant.stream.Mutex
+import kotlin.concurrent.Volatile
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -18,17 +27,26 @@ import kotlin.random.Random
  * Plain data structure with no bandit coupling — leaves accumulate weighted means &
  * variances of the (encoded) target. Callers wanting bandit-flavoured scoring wrap this
  * via [DecisionTreeRegressionStat] and pair with a [com.eignex.kumulant.stat.regression.RegressionPosterior].
+ *
+ * Concurrency: leaf-arm updates run lock-free (the arms themselves honour [concurrency]).
+ * The split-conversion path — the only one that mutates tree structure — is serialised
+ * by a single per-tree lock, fired only every [TreeConfig.splitPeriod] observations per
+ * audit leaf. Pointer writes on the hot path are skipped when the child reference is
+ * unchanged, so the typical update is pure arm arithmetic.
  */
 class Tree(
     private val splitCandidates: List<Split>,
     private val config: TreeConfig = TreeConfig(),
-    private val leafArmFactory: () -> SeriesStat<WeightedVarianceResult> = { VarianceStat() },
+    private val concurrency: Concurrency = Concurrency.None,
+    private val leafArmFactory: () -> SeriesStat<WeightedVarianceResult> = { VarianceStat(concurrency) },
     randomSeed: Int = 0,
 ) {
     private val random = Random(randomSeed)
     private val canGrow: Boolean = splitCandidates.isNotEmpty()
+    private val splitLock: Mutex = if (concurrency == Concurrency.None) NoopMutex else PlatformMutex()
 
-    private var nbrNodes: Int = 1
+    private val nbrNodes: AtomicInt = AtomicInt(1)
+    @Volatile
     private var root: Node = newLeaf(depth = 0)
 
     /** Walk to the leaf [row] resolves to. */
@@ -44,11 +62,13 @@ class Tree(
     fun predict(row: VectorView): Double = findLeaf(row).arm.read(0L).mean
 
     /** Number of internal + leaf nodes currently in the tree. */
-    val nodeCount: Int get() = nbrNodes
+    val nodeCount: Int get() = nbrNodes.load()
 
     /** Fold an observation into the tree, possibly growing it. */
     fun update(row: VectorView, value: Double, weight: Double = 1.0) {
-        root = updateNode(root, row, value, weight, depth = 0)
+        val current = root
+        val next = updateNode(current, row, value, weight, depth = 0)
+        if (next !== current) root = next
     }
 
     /** Aggregate snapshot at the root: sufficient stat over every observation absorbed. */
@@ -56,8 +76,10 @@ class Tree(
 
     /** Reset to a single fresh leaf. */
     fun reset() {
-        nbrNodes = 1
-        root = newLeaf(depth = 0)
+        splitLock.withLock {
+            nbrNodes.store(1)
+            root = newLeaf(depth = 0)
+        }
     }
 
     /** Render the tree as nested `if (split) { ... } else { ... }` text. */
@@ -76,16 +98,20 @@ class Tree(
      *    fold other's root aggregate into self's root only; other's substructure is lost.
      */
     fun merge(other: Tree) {
-        root = mergeNodes(root, other.root)
-        nbrNodes = countNodes(root)
+        splitLock.withLock {
+            root = mergeNodes(root, other.root)
+            nbrNodes.store(countNodes(root))
+        }
     }
 
     /** Snapshot merge using only the immutable result. Falls through to the same rules
      *  as [merge] but the "other" side is a [TreeNodeResult] tree-of-results rather than
      *  a live Tree. */
     fun mergeSnapshot(other: TreeNodeResult) {
-        root = mergeNodeWithResult(root, other)
-        nbrNodes = countNodes(root)
+        splitLock.withLock {
+            root = mergeNodeWithResult(root, other)
+            nbrNodes.store(countNodes(root))
+        }
     }
 
     private fun mergeNodes(a: Node, b: Node): Node {
@@ -130,7 +156,7 @@ class Tree(
     }
 
     private fun cloneFromResult(node: TreeNodeResult, depth: Int): Node {
-        nbrNodes++
+        nbrNodes.addAndFetch(1)
         return when (node) {
             is TreeLeafResult -> {
                 val arm = leafArmFactory()
@@ -172,7 +198,7 @@ class Tree(
     }
 
     private fun newLeaf(depth: Int): LeafNode {
-        if (depth >= config.maxDepth || nbrNodes + 1 > config.maxNodes || !canGrow) {
+        if (depth >= config.maxDepth || nbrNodes.load() + 1 > config.maxNodes || !canGrow) {
             return TerminalLeaf(leafArmFactory())
         }
         val subset = pickCandidates()
@@ -195,9 +221,13 @@ class Tree(
             is SplitNode -> {
                 node.arm.update(value, 0L, weight)
                 if (node.split.direction(row)) {
-                    node.pos = updateNode(node.pos, row, value, weight, depth + 1)
+                    val child = node.pos
+                    val next = updateNode(child, row, value, weight, depth + 1)
+                    if (next !== child) node.pos = next
                 } else {
-                    node.neg = updateNode(node.neg, row, value, weight, depth + 1)
+                    val child = node.neg
+                    val next = updateNode(child, row, value, weight, depth + 1)
+                    if (next !== child) node.neg = next
                 }
                 node
             }
@@ -223,29 +253,35 @@ class Tree(
                 leaf.neg[i].update(value, 0L, weight)
             }
         }
-        leaf.observationsSinceLastCheck++
-        if (leaf.observationsSinceLastCheck < config.splitPeriod) return leaf
-        leaf.observationsSinceLastCheck = 0
+        val ticks = leaf.observationsSinceLastCheck.addAndFetch(1L)
+        if (ticks < config.splitPeriod) return leaf
 
-        val total = leaf.arm.read(0L)
-        if (total.totalWeights < config.minSamplesSplit) return leaf
-        val pos = leaf.pos.map { it.read(0L) }
-        val neg = leaf.neg.map { it.read(0L) }
-        val ranked = config.metric.rank(total, pos, neg, config.minSamplesSplit, config.minSamplesLeaf)
-        if (ranked.bestIndex < 0 || ranked.top1 <= 0.0) return leaf
+        return splitLock.withLock {
+            // Double-check inside the lock: another thread may have already audited
+            // (and reset the counter) or replaced this leaf.
+            if (leaf.observationsSinceLastCheck.load() < config.splitPeriod) return@withLock leaf
+            leaf.observationsSinceLastCheck.store(0L)
 
-        val eps = hoeffdingBound(config.delta, total.totalWeights, depth, config.deltaDecay)
-        val passesHoeffding = ranked.top1 - ranked.top2 > eps
-        val passesTau = eps < config.tau
-        if (!passesHoeffding && !passesTau) return leaf
+            val total = leaf.arm.read(0L)
+            if (total.totalWeights < config.minSamplesSplit) return@withLock leaf
+            val pos = leaf.pos.map { it.read(0L) }
+            val neg = leaf.neg.map { it.read(0L) }
+            val ranked = config.metric.rank(total, pos, neg, config.minSamplesSplit, config.minSamplesLeaf)
+            if (ranked.bestIndex < 0 || ranked.top1 <= 0.0) return@withLock leaf
 
-        nbrNodes += 2
-        return SplitNode(
-            split = leaf.candidates[ranked.bestIndex],
-            pos = newLeaf(depth + 1),
-            neg = newLeaf(depth + 1),
-            arm = leaf.arm,
-        )
+            val eps = hoeffdingBound(config.delta, total.totalWeights, depth, config.deltaDecay)
+            val passesHoeffding = ranked.top1 - ranked.top2 > eps
+            val passesTau = eps < config.tau
+            if (!passesHoeffding && !passesTau) return@withLock leaf
+
+            nbrNodes.addAndFetch(2)
+            SplitNode(
+                split = leaf.candidates[ranked.bestIndex],
+                pos = newLeaf(depth + 1),
+                neg = newLeaf(depth + 1),
+                arm = leaf.arm,
+            )
+        }
     }
 
     private fun hoeffdingBound(delta: Double, n: Double, depth: Int, decay: Double): Double {

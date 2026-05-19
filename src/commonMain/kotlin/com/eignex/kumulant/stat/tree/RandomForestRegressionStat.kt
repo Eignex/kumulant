@@ -49,7 +49,7 @@ class RandomForestRegressionStat(
     private val baggingRng = Random(seedRng.nextInt())
     private var trees: Array<Tree> = Array(nbrTrees) { newTree() }
 
-    private fun newTree(): Tree = Tree(splitCandidates, this.config, leafArmFactory, seedRng.nextInt())
+    private fun newTree(): Tree = Tree(splitCandidates, this.config, concurrency, leafArmFactory, seedRng.nextInt())
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
