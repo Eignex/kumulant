@@ -60,3 +60,25 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 tasks.withType<Test>().configureEach {
     jvmArgs("--add-modules=jdk.incubator.vector")
 }
+
+// Analysis tasks. Each one drives the StatSpec registry and prints a measurement
+// table to stdout — these are not pass/fail tests, they are reports you read.
+fun JavaExec.kumulantBenchSetup() {
+    group = "bench"
+    classpath = kotlin.jvm().compilations.getByName("main").let {
+        it.output.allOutputs + it.runtimeDependencyFiles
+    }
+    jvmArgs("--add-modules=jdk.incubator.vector")
+}
+
+tasks.register<JavaExec>("analyzeAccuracy") {
+    description = "Per-stat serial accuracy vs analytical reference. Prints to stdout."
+    mainClass.set("com.eignex.kumulant.bench.AccuracyAnalysisKt")
+    kumulantBenchSetup()
+}
+
+tasks.register<JavaExec>("analyzeConcurrencyDrift") {
+    description = "Per-stat drift under each Concurrency level, 4 threads. Prints to stdout."
+    mainClass.set("com.eignex.kumulant.bench.ConcurrencyDriftAnalysisKt")
+    kumulantBenchSetup()
+}

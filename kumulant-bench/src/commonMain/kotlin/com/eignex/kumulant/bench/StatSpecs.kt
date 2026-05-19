@@ -59,7 +59,6 @@ val sumStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.sum },
     reference = { it.sumOf { u -> u.value * u.weight } },
-    tolerance = 1e-9,
 )
 
 val countStatSpec = seriesStatSpec(
@@ -68,7 +67,6 @@ val countStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.sum },
     reference = { it.count().toDouble() },
-    tolerance = 1e-9,
 )
 
 val totalWeightsStatSpec = seriesStatSpec(
@@ -77,7 +75,6 @@ val totalWeightsStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.sum },
     reference = { it.sumOf { u -> u.weight } },
-    tolerance = 1e-9,
 )
 
 val meanStatSpec = seriesStatSpec(
@@ -86,7 +83,6 @@ val meanStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.mean },
     reference = { twoPassMean(it.toList()) },
-    tolerance = 1e-9,
 )
 
 val varianceStatSpec = seriesStatSpec(
@@ -95,7 +91,6 @@ val varianceStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.variance },
     reference = { twoPassVariance(it.toList()) },
-    tolerance = 1e-9,
 )
 
 val momentsStatSpec = seriesStatSpec(
@@ -104,7 +99,6 @@ val momentsStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.mean },
     reference = { twoPassMean(it.toList()) },
-    tolerance = 1e-9,
 )
 
 val minStatSpec = seriesStatSpec(
@@ -113,7 +107,6 @@ val minStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.min },
     reference = { seq -> seq.fold(Double.POSITIVE_INFINITY) { acc, u -> min(acc, u.value) } },
-    tolerance = 0.0,
 )
 
 val maxStatSpec = seriesStatSpec(
@@ -122,7 +115,6 @@ val maxStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.max },
     reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
-    tolerance = 0.0,
 )
 
 val rangeStatSpec = seriesStatSpec(
@@ -139,7 +131,6 @@ val rangeStatSpec = seriesStatSpec(
         }
         hi - lo
     },
-    tolerance = 0.0,
 )
 
 val bernoulliSumStatSpec = seriesStatSpec(
@@ -148,7 +139,6 @@ val bernoulliSumStatSpec = seriesStatSpec(
     updates = ::bernoulliWorkload,
     scalar = { it.successes },
     reference = { it.sumOf { u -> u.value * u.weight } },
-    tolerance = 1e-9,
 )
 
 // === Decay ==================================================================
@@ -195,7 +185,6 @@ val decayingSumStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.sum },
     reference = { it.sumOf { u -> u.value * u.weight } },
-    tolerance = 1e-9,
 )
 
 val decayingMeanStatSpec = seriesStatSpec(
@@ -204,7 +193,6 @@ val decayingMeanStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.mean },
     reference = { twoPassMean(it.toList()) },
-    tolerance = 1e-9,
 )
 
 val decayingVarianceStatSpec = seriesStatSpec(
@@ -213,7 +201,6 @@ val decayingVarianceStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.variance },
     reference = { twoPassVariance(it.toList()) },
-    tolerance = 1e-9,
 )
 
 val ewmaMeanStatSpec = seriesStatSpec(
@@ -222,8 +209,6 @@ val ewmaMeanStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.mean },
     reference = { ewmaMean(ewmaWeighting.alpha, it.toList()) },
-    tolerance = 1e-9,
-    orderIndependent = false,
 )
 
 val ewmaVarianceStatSpec = seriesStatSpec(
@@ -232,8 +217,6 @@ val ewmaVarianceStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.variance },
     reference = { ewmaVariance(ewmaWeighting.alpha, it.toList()) },
-    tolerance = 1e-9,
-    orderIndependent = false,
 )
 
 // === Rate ===================================================================
@@ -289,7 +272,6 @@ val rateStatSpec = seriesStatSpec(
     readAt = ::readAtFor,
     // Under HighWrite striping, the startTimestamp may be set by a later
     // sample than the actual first, slightly shrinking the elapsed denominator.
-    tolerance = 1.0,
 )
 
 val decayingRateStatSpec = seriesStatSpec(
@@ -300,7 +282,6 @@ val decayingRateStatSpec = seriesStatSpec(
     reference = ::decayingRateReference,
     readAt = ::readAtFor,
     // Small decay over the workload window — within 1% of the un-decayed scaled sum.
-    tolerance = 1e-2,
 )
 
 val counterRateStatSpec = seriesStatSpec(
@@ -310,12 +291,10 @@ val counterRateStatSpec = seriesStatSpec(
     scalar = { it.rate },
     reference = ::counterReference,
     readAt = ::readAtFor,
-    tolerance = 1.0,
     // CounterRate assumes a single monotonic counter source. The concurrency test
     // concatenates per-thread counters which the stat reads as resets — the
     // result depends on the interleaving order, so skip the exact comparison
     // for non-None levels. The serial correctness test still pins the math.
-    orderIndependent = false,
 )
 
 private fun counterWorkload(seed: Int, n: Int): Sequence<Update> = sequence {
@@ -343,7 +322,6 @@ val hyperLogLogStatSpec = discreteStatSpec(
     reference = { seq -> seq.map { it.value.toRawBits() }.toSet().size.toDouble() },
     // Standard error ~ 1.04/sqrt(2^14) = 0.81%. With 5000 distinct IDs this is
     // about 40 — allow 100 for safety across seeds and concurrency-induced drift.
-    tolerance = 100.0,
 )
 
 // === Sketches ===============================================================
@@ -358,7 +336,6 @@ val bloomFilterStatSpec = discreteStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.totalSeen.toDouble() },
     reference = { it.count().toDouble() },
-    tolerance = 0.0,
 )
 
 val countMinSketchStatSpec = discreteStatSpec(
@@ -367,7 +344,6 @@ val countMinSketchStatSpec = discreteStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.totalSeen.toDouble() },
     reference = { it.count().toDouble() },
-    tolerance = 0.0,
 )
 
 val minHashStatSpec = discreteStatSpec(
@@ -376,7 +352,6 @@ val minHashStatSpec = discreteStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.totalSeen.toDouble() },
     reference = { it.count().toDouble() },
-    tolerance = 0.0,
 )
 
 val spaceSavingStatSpec = discreteStatSpec(
@@ -385,7 +360,6 @@ val spaceSavingStatSpec = discreteStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.totalSeen.toDouble() },
     reference = { it.count().toDouble() },
-    tolerance = 0.0,
 )
 
 val linearCountingStatSpec = discreteStatSpec(
@@ -398,7 +372,6 @@ val linearCountingStatSpec = discreteStatSpec(
     reference = { seq -> seq.map { it.value.toRawBits() }.toSet().size.toDouble() },
     // 64K-bit bitset over 5000 distinct IDs: load ~7.6%, bias is small and the
     // estimator converges quickly. Allow 50 to be safe.
-    tolerance = 50.0,
 )
 
 // === Quantile ===============================================================
@@ -413,7 +386,6 @@ val ddSketchStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.totalWeights },
     reference = { it.count().toDouble() },
-    tolerance = 1e-6,
 )
 
 val hdrHistogramStatSpec = seriesStatSpec(
@@ -422,7 +394,6 @@ val hdrHistogramStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { snap -> snap.weights.sum() },
     reference = { it.count().toDouble() },
-    tolerance = 1e-6,
 )
 
 val linearHistogramStatSpec = seriesStatSpec(
@@ -438,7 +409,6 @@ val linearHistogramStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { snap -> snap.weights.sum() },
     reference = { it.count().toDouble() },
-    tolerance = 1e-6,
 )
 
 val reservoirHistogramStatSpec = seriesStatSpec(
@@ -449,7 +419,6 @@ val reservoirHistogramStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.totalSeen.toDouble() },
     reference = { it.count().toDouble() },
-    tolerance = 0.0,
 )
 
 val tDigestStatSpec = seriesStatSpec(
@@ -458,7 +427,6 @@ val tDigestStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { snap -> snap.weights.sum() },
     reference = { it.count().toDouble() },
-    tolerance = 1e-6,
 )
 
 val frugalQuantileStatSpec = seriesStatSpec(
@@ -469,8 +437,6 @@ val frugalQuantileStatSpec = seriesStatSpec(
     // Frugal is a random walk targeting q=0.5 over uniform [0,1); the median is
     // 0.5 but the estimate wanders within a few stepSizes of it.
     reference = { _ -> 0.5 },
-    tolerance = 0.2,
-    orderIndependent = false,
 )
 
 // === Regression =============================================================
@@ -488,7 +454,6 @@ val univariateRegressionStatSpec = pairedStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.slope },
     reference = { _ -> 2.0 },
-    tolerance = 1e-6,
 )
 
 val covarianceStatSpec = pairedStatSpec(
@@ -505,7 +470,6 @@ val covarianceStatSpec = pairedStatSpec(
         val varX = data.sumOf { val d = it.value - meanX; it.weight * d * d } / totW
         2.0 * varX
     },
-    tolerance = 1e-9,
 )
 
 val bayesianRegressionStatSpec = regressionStatSpec(
@@ -519,7 +483,6 @@ val bayesianRegressionStatSpec = regressionStatSpec(
     // Bayesian regression with the default prior pulls the slope sharply toward 0
     // for our tiny synthetic problem (featureSize=1, 5k samples); the snapshot
     // sits near 1.5, so allow generous slack.
-    tolerance = 0.7,
 )
 
 val diagonalRegressionStatSpec = regressionStatSpec(
@@ -531,7 +494,6 @@ val diagonalRegressionStatSpec = regressionStatSpec(
     scalar = { it.weights[0] },
     reference = { _ -> 2.0 },
     // Same prior-bias behavior as the Bayesian variant.
-    tolerance = 0.7,
 )
 
 val stochasticRegressionStatSpec = regressionStatSpec(
@@ -544,8 +506,6 @@ val stochasticRegressionStatSpec = regressionStatSpec(
     reference = { _ -> 2.0 },
     // Plain SGD with the default learning-rate schedule lands around 0.9 after
     // 5k samples on this synthetic problem — convergence is slow with no warmup.
-    tolerance = 1.2,
-    orderIndependent = false,
 )
 
 // === Score ==================================================================
@@ -562,7 +522,6 @@ val aucStatSpec = pairedStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.totalPositives + it.totalNegatives },
     reference = { it.count().toDouble() },
-    tolerance = 1e-9,
     // AucStat takes (score, label) with label in {0, 1}. Map our deriveY to {0, 1}
     // by thresholding so the stat doesn't reject the input.
     deriveY = { if (it > 0.5) 1.0 else 0.0 },
@@ -574,7 +533,6 @@ val brierScoreStatSpec = pairedStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.totalWeights },
     reference = { it.count().toDouble() },
-    tolerance = 1e-9,
     deriveY = { if (it > 0.5) 1.0 else 0.0 },
 )
 
@@ -584,7 +542,6 @@ val pinballLossStatSpec = pairedStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.totalWeights },
     reference = { it.count().toDouble() },
-    tolerance = 1e-9,
     deriveY = ::clamped01,
 )
 
@@ -596,7 +553,6 @@ val reliabilityStatSpec = pairedStatSpec(
     // histogram should equal the stream size.
     scalar = { snap -> snap.totalWeights.sum() },
     reference = { it.count().toDouble() },
-    tolerance = 1e-9,
     deriveY = { if (it > 0.5) 1.0 else 0.0 },
 )
 
@@ -624,7 +580,6 @@ val decisionTreeRegressionStatSpec = regressionStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.totalWeights },
     reference = { seq -> seq.sumOf { it.weight } },
-    tolerance = 1e-6,
 )
 
 val randomForestRegressionStatSpec = regressionStatSpec(
@@ -643,7 +598,6 @@ val randomForestRegressionStatSpec = regressionStatSpec(
     // tree absorbs the full stream, so the total is `nbrTrees * sum(weights)`.
     scalar = { it.totalWeights },
     reference = { seq -> 4.0 * seq.sumOf { it.weight } },
-    tolerance = 1e-6,
 )
 
 /** Every spec exposed by the bench module. */

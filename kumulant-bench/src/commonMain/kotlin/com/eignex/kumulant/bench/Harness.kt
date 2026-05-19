@@ -13,14 +13,15 @@ import kotlin.random.Random
 class Update(val value: Double, val weight: Double, val timestampNanos: Long)
 
 /**
- * Generic spec describing how to drive a stat under the bench module's three test
- * categories (correctness, concurrency, perf). One [StatSpec] is reusable across all
- * three drivers. Parameterised by the live stat type [S] so [SeriesStat]-based
- * summary stats and [DiscreteStat]-based cardinality stats fit the same harness.
+ * Generic spec describing how to drive a stat under the bench module's analyses.
+ * One [StatSpec] feeds the perf benchmark, the accuracy report, and the
+ * concurrency-drift report. Parameterised by the live stat type [S] so
+ * [SeriesStat]-based summary stats and [DiscreteStat]-based cardinality stats
+ * fit the same harness.
  *
- * Build a SeriesStat-backed spec via [seriesStatSpec]; a DiscreteStat-backed one via
- * [discreteStatSpec]. Construct [StatSpec] directly only when wiring a stat type
- * that doesn't have a helper yet.
+ * Build a SeriesStat-backed spec via [seriesStatSpec]; a DiscreteStat-backed one
+ * via [discreteStatSpec]. Construct [StatSpec] directly only when wiring a stat
+ * type that doesn't have a helper yet.
  */
 class StatSpec<S, R : Result>(
     val name: String,
@@ -30,13 +31,7 @@ class StatSpec<S, R : Result>(
     val updates: (seed: Int, n: Int) -> Sequence<Update>,
     val scalar: (R) -> Double,
     val reference: (Sequence<Update>) -> Double,
-    val tolerance: Double = 0.0,
     val readAt: (n: Int) -> Long = { 0L },
-    /** When false, concurrent execution may produce a different result than the
-     *  analytical reference because the stat's recurrence folds updates in arrival
-     *  order (EWMA family). The concurrency test then skips the exact-match check
-     *  for this spec and only verifies finiteness. */
-    val orderIndependent: Boolean = true,
 ) {
     /** Run a single-threaded workload and return the snapshot scalar. */
     fun runSerial(seed: Int, n: Int, concurrency: Concurrency = Concurrency.None): Double {
@@ -58,9 +53,7 @@ fun <R : Result> seriesStatSpec(
     updates: (seed: Int, n: Int) -> Sequence<Update>,
     scalar: (R) -> Double,
     reference: (Sequence<Update>) -> Double,
-    tolerance: Double = 0.0,
     readAt: (n: Int) -> Long = { 0L },
-    orderIndependent: Boolean = true,
 ): StatSpec<SeriesStat<R>, R> = StatSpec(
     name = name,
     factory = factory,
@@ -69,9 +62,7 @@ fun <R : Result> seriesStatSpec(
     updates = updates,
     scalar = scalar,
     reference = reference,
-    tolerance = tolerance,
     readAt = readAt,
-    orderIndependent = orderIndependent,
 )
 
 /**
@@ -86,9 +77,7 @@ fun <R : Result> pairedStatSpec(
     updates: (seed: Int, n: Int) -> Sequence<Update>,
     scalar: (R) -> Double,
     reference: (Sequence<Update>) -> Double,
-    tolerance: Double,
     deriveY: (Double) -> Double = { 2.0 * it + 0.1 },
-    orderIndependent: Boolean = true,
 ): StatSpec<PairedStat<R>, R> = StatSpec(
     name = name,
     factory = factory,
@@ -97,8 +86,6 @@ fun <R : Result> pairedStatSpec(
     updates = updates,
     scalar = scalar,
     reference = reference,
-    tolerance = tolerance,
-    orderIndependent = orderIndependent,
 )
 
 /**
@@ -112,9 +99,7 @@ fun <R : Result> regressionStatSpec(
     updates: (seed: Int, n: Int) -> Sequence<Update>,
     scalar: (R) -> Double,
     reference: (Sequence<Update>) -> Double,
-    tolerance: Double,
     deriveY: (Double) -> Double = { 2.0 * it + 0.1 },
-    orderIndependent: Boolean = true,
 ): StatSpec<RegressionStat<R>, R> = StatSpec(
     name = name,
     factory = factory,
@@ -125,8 +110,6 @@ fun <R : Result> regressionStatSpec(
     updates = updates,
     scalar = scalar,
     reference = reference,
-    tolerance = tolerance,
-    orderIndependent = orderIndependent,
 )
 
 /**
@@ -140,8 +123,6 @@ fun <R : Result> discreteStatSpec(
     updates: (seed: Int, n: Int) -> Sequence<Update>,
     scalar: (R) -> Double,
     reference: (Sequence<Update>) -> Double,
-    tolerance: Double,
-    orderIndependent: Boolean = true,
 ): StatSpec<DiscreteStat<R>, R> = StatSpec(
     name = name,
     factory = factory,
@@ -150,8 +131,6 @@ fun <R : Result> discreteStatSpec(
     updates = updates,
     scalar = scalar,
     reference = reference,
-    tolerance = tolerance,
-    orderIndependent = orderIndependent,
 )
 
 // === Workloads ==============================================================
