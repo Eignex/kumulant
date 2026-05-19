@@ -52,6 +52,12 @@ fun BloomFilterResult.contains(value: Long): Boolean {
  * bitwise OR when [bits] and [hashes] match.
  *
  * [bits] must be a power of two and a multiple of 64.
+ *
+ * # Concurrency
+ *
+ * Each set bit is an atomic OR on a striped Long array. Lock-free and exact
+ * under every [Concurrency] level — bit sets are idempotent and commutative,
+ * so writer order does not affect the final bitset.
  */
 class BloomFilterStat(
     val bits: Int = 1 shl 16,

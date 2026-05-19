@@ -52,6 +52,12 @@ fun CountMinSketchResult.estimate(value: Long): Long {
  * and [seed] match.
  *
  * [width] must be a power of two so that the hash maps to an index via masking.
+ *
+ * # Concurrency
+ *
+ * Each counter cell is a striped atomic add. Lock-free and exact under every
+ * [Concurrency] level — increments commute, and the per-row independence
+ * means racing writers on the same value just update different cells.
  */
 class CountMinSketchStat(
     val depth: Int = 5,

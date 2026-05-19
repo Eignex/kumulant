@@ -42,6 +42,13 @@ data class LinearCountingResult(
  *
  * [bits] must be a power of two and a multiple of 64. Memory is `bits / 64` Longs.
  * Mergeable via word-wise OR.
+ *
+ * # Concurrency
+ *
+ * Each bit is set via atomic OR on a striped Long array; the unsetBits and
+ * totalSeen counters are independent atomic ops. Lock-free and exact under
+ * every [Concurrency] level — repeated sets of the same bit are idempotent,
+ * and the order of bit sets does not affect the final bitset.
  */
 class LinearCountingStat(
     val bits: Int = 4096,

@@ -61,6 +61,12 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
  *
  * Standard error of the Jaccard estimate is roughly `1 / sqrt(numHashes)`. Memory is
  * `numHashes` Longs; mergeable element-wise via min when `numHashes` and `seed` match.
+ *
+ * # Concurrency
+ *
+ * Each signature slot is a single-cell CAS-min loop on an atomic Long array.
+ * Lock-free and exact under every [Concurrency] level — min over an unordered
+ * set is the same regardless of writer order.
  */
 class MinHashStat(
     /** Signature length; higher = better Jaccard accuracy at more memory. */
