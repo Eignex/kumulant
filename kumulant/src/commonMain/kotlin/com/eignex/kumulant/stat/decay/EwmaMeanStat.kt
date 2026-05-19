@@ -12,6 +12,21 @@ import com.eignex.kumulant.stream.welfordMode
  * Uses the biased-mean formulation: `biasedMean = biasedMean + a*(value - biasedMean)`
  * with `a = 1 - exp(-alpha*w)`. Read returns the bias-corrected value
  * `biasedMean / (1 - exp(-alpha*totalWeights))`.
+ *
+ * # Concurrency
+ *
+ * Under [Concurrency.Strict] and [Concurrency.HighWrite] the update body is
+ * locked so individual updates apply atomically, but **the final snapshot still
+ * depends on the order in which updates arrive**. The recurrence folds each
+ * sample into the running mean against the previous biased mean — a different
+ * interleaving of the same multiset of updates produces a different result by
+ * ~1–10%. This is intrinsic to EWMA, not a bug; locking does not (and cannot)
+ * recover a serial reference value.
+ *
+ * Under [Concurrency.Relaxed] the lock is dropped and individual updates may
+ * additionally race on the read-modify-write of `biasedMean`, adding further
+ * drift on top of the order dependence. Prefer [Concurrency.Strict] when
+ * correctness matters more than write throughput.
  */
 class EwmaMeanStat(
     /** Per-observation smoothing schedule. */

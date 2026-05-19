@@ -11,6 +11,19 @@ import com.eignex.kumulant.stream.welfordMode
  *
  * Tracks biased mean and biased second-moment `M2` via Welford-style delta updates,
  * then divides by the bias correction at read time.
+ *
+ * # Concurrency
+ *
+ * Same caveat as [EwmaMeanStat]: the recurrence folds each sample into the
+ * running `(biasedMean, biasedM2)` pair in arrival order, so the snapshot
+ * value under any concurrent level depends on how the JVM interleaves updates
+ * — even [Concurrency.Strict] (which locks the body) does not reproduce the
+ * serial result, drifting ~3–10% from a serial baseline on contended
+ * workloads. Under [Concurrency.Relaxed] the lock is also dropped and
+ * individual cell updates race, compounding the drift. Prefer
+ * [Concurrency.Strict] when correctness matters more than write throughput;
+ * use [com.eignex.kumulant.stat.summary.VarianceStat] if you need an
+ * order-independent variance under contention.
  */
 class EwmaVarianceStat(
     /** Per-observation smoothing schedule. */
