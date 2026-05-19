@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.firstWriterMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -35,18 +36,18 @@ class RateStat(
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<RateResult> {
 
-    private val mode = concurrency.additiveMode()
-    private val totalValues = mode.newDouble(0.0)
-    private val startTimestampNanos = mode.newLong(Long.MIN_VALUE)
+    private val totalValues = concurrency.additiveMode().newDouble(0.0)
+    // CAS-capable cell so the first writer atomically wins the start-timestamp
+    // race. Striped adders (HighWrite) don't support CAS and would otherwise
+    // race on the check-then-act idiom, leaving the duration window corrupted.
+    private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MIN_VALUE)
 
     override fun update(
         value: Double,
         timestampNanos: Long,
         weight: Double
     ) {
-        if (startTimestampNanos.load() == Long.MIN_VALUE) {
-            startTimestampNanos.store(timestampNanos)
-        }
+        startTimestampNanos.compareAndSet(Long.MIN_VALUE, timestampNanos)
         totalValues.add(value * weight)
     }
 
