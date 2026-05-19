@@ -52,6 +52,16 @@ import kotlin.math.sqrt
  *
  * Residual variance: `sigma^2 = 1`. Callers wanting heteroscedastic noise can
  * re-scale `y` before `update()` or pass per-observation precision via `weight`.
+ *
+ * # Concurrency
+ *
+ * The Sherman-Morrison-Woodbury update couples the entire `(weights,
+ * covariance, choleskyL)` state — there is no lock-free fast path for an
+ * `O(n^2)` rank-1 downdate. The body is serialised by an internal lock under
+ * every concurrent [Concurrency] level (no-op under [Concurrency.None]),
+ * giving exact match to a serial run up to floating-point reorder ULPs.
+ * Throughput is bound by lock contention; shard across multiple instances
+ * and merge if you need higher write rates.
  */
 class BayesianRegressionStat(
     override val featureSize: Int,

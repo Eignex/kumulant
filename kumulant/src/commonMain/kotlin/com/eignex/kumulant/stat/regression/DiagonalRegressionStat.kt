@@ -36,6 +36,13 @@ import com.eignex.kumulant.stream.serializedLock
  *  - [Penalty.L2]: `grad_i += lambda * w_i` on touched coords (coordinate-descent style).
  *  - [Penalty.L1]: proximal soft-thresholding on touched coords after the gradient step,
  *    threshold scaled by `eta * weight * lambda / precision_i`.
+ *
+ * # Concurrency
+ *
+ * The Newton-style step couples per-coord `(precision_i, weights_i)` and the
+ * shared `(bias, biasPrecision)`. The body is serialised by an internal lock
+ * under every concurrent [Concurrency] level (no-op under [Concurrency.None]),
+ * giving exact match to a serial run up to floating-point reorder ULPs.
  */
 class DiagonalRegressionStat(
     override val featureSize: Int,

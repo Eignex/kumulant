@@ -68,6 +68,16 @@ data class UnivariateRegressionResult(
  * `intercept = meanY - slope * meanX` in every case. Merging consumes a result type
  * carrying the raw [UnivariateRegressionResult.sxy], so the round trip is exact for
  * every penalty including the L1 case where the regularised slope can be zero.
+ *
+ * # Concurrency
+ *
+ * Welford couples `(totalWeights, meanX, meanY, sxx, sxy, syy)` across each
+ * update. [Concurrency.Strict] and [Concurrency.HighWrite] lock the body so
+ * each update is atomic — exact match to a serial run up to floating-point
+ * reorder ULPs. [Concurrency.Relaxed] drops the lock and the six cells race
+ * independently; the regression coefficients drift by ~1e-5 relative under
+ * contention but never throw. Choose [Concurrency.Strict] when correctness
+ * matters more than the lock-free write path.
  */
 class UnivariateRegressionStat(
     /** Regularisation applied at `read()` time; defaults to plain OLS. */
