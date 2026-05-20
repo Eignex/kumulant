@@ -27,7 +27,7 @@ data class DecayingMeanResult(
  * *relative* weighting of recent vs. older observations.
  *
  * **Use cases:** recency-biased central tendency (rolling average of latencies,
- * recent click-through rate, etc.). Reach for this over [MeanStat] when older
+ * recent click-through rate, etc.). Reach for this over [com.eignex.kumulant.stat.summary.MeanStat] when older
  * observations should fade rather than persist.
  *
  * **Memory:** O(1) — two `DecayingSumStat` instances.

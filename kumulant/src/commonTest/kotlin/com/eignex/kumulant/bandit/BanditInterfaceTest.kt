@@ -9,7 +9,6 @@ import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.MultivariateGaussian
-import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -82,8 +81,10 @@ class BanditInterfaceTest {
 
         @Suppress("UNCHECKED_CAST")
         val typedCopy = copy as MultiArmedBandit<*>
-        val replicaWeight = (typedCopy.armResult(0) as
-            com.eignex.kumulant.stat.summary.WeightedVarianceResult).totalWeights
+        val replicaWeight = (
+            typedCopy.armResult(0) as
+                com.eignex.kumulant.stat.summary.WeightedVarianceResult
+            ).totalWeights
         assertTrue(populatedWeight > replicaWeight)
     }
 
@@ -108,7 +109,4 @@ class BanditInterfaceTest {
         val asBandit: PerArmBandit<*> = cb
         assertEquals(asBandit.snapshot()[1], asBandit.armResult(1))
     }
-
-    // Suppresses unused warning on the BernoulliSumResult import (referenced by KDoc tests elsewhere).
-    private val _bernoulliPlaceholder: BernoulliSumResult? = null
 }

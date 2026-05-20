@@ -19,7 +19,7 @@ import kotlin.random.Random
  * Lives next to the regression results because Thompson sampling is one of several
  * ways to consume the posterior; Bayesian optimisation will combine these samplers
  * with acquisition functions (UCB, EI, PI) reading the same snapshots. The
- * univariate-bandit [com.eignex.kumulant.bandit.Posterior] family is a sibling but
+ * univariate-bandit [com.eignex.kumulant.bandit.univariate.Posterior] family is a sibling but
  * disjoint: different result shape, different math.
  *
  * Sealed + `@Serializable` so a `(regression, posterior)` configuration is wire
@@ -33,7 +33,7 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
 
     /**
      * Score a query point [x] under a fresh posterior draw. Parallels
-     * [com.eignex.kumulant.bandit.BanditPolicy.evaluate] for the multivariate
+     * [com.eignex.kumulant.bandit.univariate.BanditPolicy.evaluate] for the multivariate
      * setting: an outer "pick the best x" loop calls this once per candidate.
      *
      * Default is `bias + (x dot sample(...))`. Concrete subtypes may override with

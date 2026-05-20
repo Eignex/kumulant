@@ -44,7 +44,7 @@ data class RateResult(
  * **Concurrency:** Single atomic add for the total + CAS-loop-min for the
  * start timestamp. Lock-free and exact under every [Concurrency] level.
  * [Concurrency.HighWrite] switches the total cell to a striped adder; the
- * start timestamp stays an [AtomicLong] (the striped adder doesn't support
+ * start timestamp stays an `AtomicLong` (the striped adder doesn't support
  * CAS).
  */
 class RateStat(
@@ -61,10 +61,10 @@ class RateStat(
     ) {
         // CAS-loop-min — a plain compareAndSet(MIN_VALUE, ts) would let an arbitrary
         // first-arriving thread set the start, not the thread with the earliest ts.
-        while (true) {
-            val current = startTimestampNanos.load()
-            if (current != Long.MIN_VALUE && current <= timestampNanos) break
+        var current = startTimestampNanos.load()
+        while (current == Long.MIN_VALUE || current > timestampNanos) {
             if (startTimestampNanos.compareAndSet(current, timestampNanos)) break
+            current = startTimestampNanos.load()
         }
         totalValues.add(value * weight)
     }

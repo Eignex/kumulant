@@ -21,7 +21,7 @@ interface Bandit {
     /** Number of arms in the population. Fixed at construction. */
     val nbrArms: Int
 
-    /** Single source of randomness for [choose] and any policy-internal sampling. */
+    /** Single source of randomness for `choose` and any policy-internal sampling. */
     val random: Random
 
     /** Clear all state back to the prior-seeded baseline. */
@@ -30,7 +30,7 @@ interface Bandit {
 
 /**
  * Online optimizer over a fixed set of unindexed arms. Each round the user
- * calls [choose] to select an arm, plays it externally, then reports the
+ * calls `choose` to select an arm, plays it externally, then reports the
  * observed reward via [update].
  *
  * Implementations source all randomness from [Bandit.random] so callers
@@ -53,7 +53,7 @@ interface UnivariateBandit : Bandit {
 
 /**
  * Context-aware bandit: each round the caller observes a feature vector
- * `x`, calls [choose] to pick an arm, plays it externally, observes a
+ * `x`, calls `choose` to pick an arm, plays it externally, observes a
  * reward, and feeds the `(x, reward)` pair back via [update].
  *
  * Implementations source all randomness from [Bandit.random].

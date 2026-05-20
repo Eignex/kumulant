@@ -27,10 +27,11 @@ data class Exp3ArmResult(
  *  3. On reward `r in [0, 1]`, IPS-estimate gain `g = r / p[a]`, update
  *     `w[a] *= exp(eta * g)`.
  *
- * Regret bound is `O(sqrt(T * K * ln(K)))` under default tunings. Univariate sibling
- * to [Exp4Bandit] — same machinery without the expert layer. Standalone class because
- * its sampling distribution is computed across arms, not by independent-per-arm
- * `evaluate` + argmax.
+ * Regret bound is `O(sqrt(T * K * ln(K)))` under default tunings. Univariate
+ * sibling to [com.eignex.kumulant.bandit.contextual.Exp4Bandit] — same
+ * machinery without the expert layer. Standalone class because its sampling
+ * distribution is computed across arms, not by independent-per-arm `evaluate`
+ * + argmax.
  *
  * Rewards passed to [update] must lie in `[0, 1]` for the regret theory to apply;
  * outside-bound rewards are accepted but may destabilise the exponential weight update.

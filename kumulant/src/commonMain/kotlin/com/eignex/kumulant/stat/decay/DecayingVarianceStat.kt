@@ -40,7 +40,7 @@ data class DecayingVarianceResult(
  * of the `E[X^2] - E[X]^2` form when `stdDev << |mean|`.
  *
  * **Use cases:** recency-biased dispersion (rolling latency variance, recent
- * variance for control charts). Reach for this over [VarianceStat] when older
+ * variance for control charts). Reach for this over [com.eignex.kumulant.stat.summary.VarianceStat] when older
  * observations should fade.
  *
  * **Memory:** O(1) — landmark + three doubles plus a lock.

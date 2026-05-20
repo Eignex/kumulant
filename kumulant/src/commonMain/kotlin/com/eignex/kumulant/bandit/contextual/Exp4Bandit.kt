@@ -11,7 +11,7 @@ import kotlin.math.ln
 import kotlin.random.Random
 
 /**
- * Snapshot of [Exp4Bandit]'s state: the per-expert exponential weights. The
+ * Snapshot of [com.eignex.kumulant.bandit.contextual.Exp4Bandit]'s state: the per-expert exponential weights. The
  * bandit's state is over experts (not arms), so it surfaces via [Snapshotable]
  * rather than the [com.eignex.kumulant.bandit.PerArmBandit] per-arm convenience.
  */

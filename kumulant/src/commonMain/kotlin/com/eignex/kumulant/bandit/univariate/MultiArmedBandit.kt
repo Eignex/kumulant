@@ -13,7 +13,7 @@ import kotlin.random.Random
 
 /**
  * Univariate bandit with a fixed number of independent arms. The [policy] owns each
- * arm's accumulator (a kumulant [SeriesStat]); on each [choose] the bandit reads a
+ * arm's accumulator (a kumulant [SeriesStat]); on each `choose` the bandit reads a
  * fresh snapshot per arm and asks the policy to score them.
  *
  * Random source is caller-supplied via [random]. Pass `Random(seed)` for

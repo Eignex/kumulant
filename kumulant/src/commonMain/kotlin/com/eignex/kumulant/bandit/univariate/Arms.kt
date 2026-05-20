@@ -158,7 +158,7 @@ internal fun MomentsResult.meanOfSquares(): Double =
  * to every `warmStart` overload below.
  *
  * Univariate hierarchical pooling has no clean general API (see the discussion
- * next to [com.eignex.kumulant.bandit.RegressionContextualBandit] for the
+ * next to [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit] for the
  * contextual case); these per-arm-type helpers cover the Result types where
  * shrinkage has a uniform pseudo-count interpretation.
  */

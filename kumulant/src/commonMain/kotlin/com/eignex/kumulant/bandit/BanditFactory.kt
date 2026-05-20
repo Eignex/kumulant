@@ -35,11 +35,11 @@ import com.eignex.kumulant.bandit.univariate.ThompsonSamplingSpec
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonSpec
 import com.eignex.kumulant.bandit.univariate.UCB1
+import com.eignex.kumulant.bandit.univariate.UCB1Normal
+import com.eignex.kumulant.bandit.univariate.UCB1Tuned
 import com.eignex.kumulant.bandit.univariate.Ucb1NormalSpec
 import com.eignex.kumulant.bandit.univariate.Ucb1Spec
 import com.eignex.kumulant.bandit.univariate.Ucb1TunedSpec
-import com.eignex.kumulant.bandit.univariate.UCB1Normal
-import com.eignex.kumulant.bandit.univariate.UCB1Tuned
 import com.eignex.kumulant.bandit.univariate.UcbV
 import com.eignex.kumulant.bandit.univariate.UcbVSpec
 import com.eignex.kumulant.bandit.univariate.UniformSelection
@@ -48,11 +48,11 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.regression.BayesianRegressionStat
+import com.eignex.kumulant.stat.regression.ConstantRate
 import com.eignex.kumulant.stat.regression.DiagonalRegressionStat
 import com.eignex.kumulant.stat.regression.LinearRegressionResult
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import com.eignex.kumulant.stat.regression.StochasticRegressionStat
-import com.eignex.kumulant.stat.regression.ConstantRate
 import kotlin.random.Random
 
 /**
@@ -87,18 +87,22 @@ fun MultiArmedSpec<*>.materialize(random: Random = Random.Default): MultiArmedBa
         random = random,
     )
 
+/** Build a live [RouletteWheelBandit] from its spec. */
 fun RouletteWheelSpec.materialize(random: Random = Random.Default): RouletteWheelBandit =
     RouletteWheelBandit(nbrArms, reactionFactor, segmentLength, initialWeight, minWeight, random)
 
+/** Build a live [BoltzmannBandit] from its spec. */
 fun BoltzmannSpec.materialize(random: Random = Random.Default): BoltzmannBandit =
     BoltzmannBandit(nbrArms, priorMean, priorWeight, initialTau, minTau, decay, random)
 
+/** Build a live [Exp3Bandit] from its spec, resolving null `eta` / `gamma` to defaults. */
 fun Exp3Spec.materialize(random: Random = Random.Default): Exp3Bandit {
     val resolvedEta = eta ?: Exp3Bandit.defaultEta(nbrArms)
     val resolvedGamma = gamma ?: (nbrArms * resolvedEta).coerceAtMost(1.0)
     return Exp3Bandit(nbrArms, resolvedEta, resolvedGamma, random)
 }
 
+/** Build a live [TopTwoThompsonBandit] from its spec. */
 fun <R : Result> TopTwoThompsonSpec<R>.materialize(random: Random = Random.Default): TopTwoThompsonBandit<R> =
     TopTwoThompsonBandit(
         nbrArms = nbrArms,
@@ -143,6 +147,7 @@ private fun LinearRegressionSpec.materialize(
     )
 }
 
+/** Build a live [RegressionContextualBandit] from its spec. */
 fun RegressionContextualSpec.materialize(
     random: Random = Random.Default,
     concurrency: Concurrency = Concurrency.None,
@@ -166,6 +171,8 @@ val knnDistanceRegistry: Map<String, (VectorView, VectorView) -> Double> = mapOf
     "squaredL2" to KnnContextualBandit.Companion::squaredL2,
 )
 
+/** Build a live [KnnContextualBandit] from its spec, resolving the distance
+ *  function via [distanceRegistry] (defaults to [knnDistanceRegistry]). */
 fun KnnContextualSpec.materialize(
     random: Random = Random.Default,
     distanceRegistry: Map<String, (VectorView, VectorView) -> Double> = knnDistanceRegistry,

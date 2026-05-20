@@ -171,7 +171,7 @@ class BanditPoliciesExtraTest {
     }
 
     @Test
-    fun `UCB1 infinite for untried, finite once tried`() {
+    fun `UCB1 infinite for untried then finite once tried`() {
         val pol = UCB1()
         val empty = BernoulliSumResult(0.0, 0.0)
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(empty, 0L, Random(0)))

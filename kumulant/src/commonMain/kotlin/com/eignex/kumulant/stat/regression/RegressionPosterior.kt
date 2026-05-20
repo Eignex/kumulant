@@ -14,7 +14,7 @@ import kotlin.random.Random
  *  - For tree models the snapshot is routed via `findLeaf(x)` and the leaf's
  *    weighted-variance summary drives the draw — see the `TreePosterior` family.
  *
- * Used by [com.eignex.kumulant.bandit.RegressionContextualBandit] and by Bayesian-
+ * Used by [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit] and by Bayesian-
  * optimisation acquisition functions that need to score candidate points.
  */
 interface RegressionPosterior<R : Result> {

@@ -1,18 +1,14 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.kumulant.stat.regression.FactorisedGaussian
-import com.eignex.kumulant.stat.regression.LinUcb
 import com.eignex.kumulant.stat.regression.LinearPosterior
 import com.eignex.kumulant.stat.regression.LinearRegressionResult
-import com.eignex.kumulant.stat.regression.MultivariateGaussian
-import com.eignex.kumulant.stat.regression.PointPosterior
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Wire-portable specification for a contextual bandit instance.
  *
- * Materialisation lives in [com.eignex.kumulant.bandit.BanditFactory].
+ * Materialisation lives in `BanditFactory`.
  *
  * Note: [com.eignex.kumulant.bandit.contextual.Exp4Bandit] is intentionally
  * absent from this hierarchy — its experts are function lambdas with no
@@ -29,10 +25,15 @@ sealed interface ContextualBanditSpec
 @Serializable
 @SerialName("RegressionContextual")
 data class RegressionContextualSpec(
+    /** Number of arms in the population. */
     val nbrArms: Int,
+    /** Per-arm regressor template; cloned for each arm. */
     val regression: LinearRegressionSpec,
+    /** Stateless arm scorer applied to each per-arm snapshot. */
     val posterior: LinearPosterior<*>,
+    /** Per-evaluate exploration scale forwarded to [posterior]. */
     val exploration: Double = 1.0,
+    /** Template for the global pooling regressor; `null` disables pooling. */
     val globalRegression: LinearRegressionSpec? = null,
 ) : ContextualBanditSpec
 
@@ -48,7 +49,9 @@ sealed interface LinearRegressionSpec {
     @Serializable
     @SerialName("BayesianRegression")
     data class Bayesian(
+        /** Coefficient dimension. */
         val featureSize: Int,
+        /** Isotropic prior variance on every coefficient. */
         val priorVariance: Double = 1.0,
     ) : LinearRegressionSpec
 
@@ -56,8 +59,11 @@ sealed interface LinearRegressionSpec {
     @Serializable
     @SerialName("DiagonalRegression")
     data class Diagonal(
+        /** Coefficient dimension. */
         val featureSize: Int,
+        /** Initial per-coordinate precision. */
         val priorPrecision: Double = 1.0,
+        /** Constant learning-rate schedule. */
         val learningRate: Double = 1.0,
     ) : LinearRegressionSpec
 
@@ -65,7 +71,9 @@ sealed interface LinearRegressionSpec {
     @Serializable
     @SerialName("StochasticRegression")
     data class Stochastic(
+        /** Coefficient dimension. */
         val featureSize: Int,
+        /** Constant learning-rate schedule. */
         val learningRate: Double = 1e-3,
     ) : LinearRegressionSpec
 }
@@ -75,10 +83,16 @@ sealed interface LinearRegressionSpec {
 @Serializable
 @SerialName("KnnContextual")
 data class KnnContextualSpec(
+    /** Number of arms in the population. */
     val nbrArms: Int,
+    /** Neighbourhood size used for scoring. */
     val k: Int = 5,
+    /** Maximum observations retained per arm before FIFO eviction. */
     val maxHistoryPerArm: Int = 1024,
+    /** Score assigned to arms with no history yet. */
     val coldStartScore: Double = 1.0,
+    /** UCB-style exploration scale. */
     val exploration: Double = 1.0,
+    /** Name of the distance function in the factory's registry. */
     val distance: String = "squaredL2",
 ) : ContextualBanditSpec

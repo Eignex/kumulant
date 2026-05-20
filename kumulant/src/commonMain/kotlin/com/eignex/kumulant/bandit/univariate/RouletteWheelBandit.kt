@@ -25,7 +25,7 @@ data class RouletteWheelArmResult(
 
 /**
  * Adaptive operator-selection bandit in the Ropke-Pisinger 2006 ALNS scheme. Each arm
- * has a weight; [choose] samples arms with probability proportional to their weights
+ * has a weight; `choose` samples arms with probability proportional to their weights
  * (roulette wheel). After every [segmentLength] [update] calls, weights re-balance via
  *
  *     w_i = w_i * (1 - reactionFactor) + reactionFactor * avgScore_i
@@ -82,7 +82,7 @@ class RouletteWheelBandit(
         return nbrArms - 1
     }
 
-    /** Returns the arm's current weight. Used by [choose] is computed inline; this is
+    /** Returns the arm's current weight. Used by `choose` is computed inline; this is
      *  the [Scorable] view exposed for inspection / debugging. */
     override fun evaluate(armIndex: Int): Double = weights[armIndex]
 
