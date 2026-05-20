@@ -12,15 +12,34 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.random.Random
 
 /**
- * Univariate bandit with a fixed number of independent arms. The [policy] owns each
- * arm's accumulator (a kumulant [SeriesStat]); on each `choose` the bandit reads a
- * fresh snapshot per arm and asks the policy to score them.
+ * Univariate bandit with a fixed number of independent arms, each backed by a
+ * kumulant [SeriesStat]; on every `choose` the bandit asks the [policy] to
+ * score a fresh snapshot per arm and picks the argmax.
  *
- * Random source is caller-supplied via [random]. Pass `Random(seed)` for
- * reproducibility, `Random.Default` for shared global state, or any custom
- * implementation (e.g. a thread-local wrapper, or a SecureRandom-backed bridge).
- * The bandit treats [random] as the single source of randomness for every
- * [policy] evaluate call; thread-safety is the caller's responsibility.
+ * The selection rule and the arm accumulator both live in [BanditPolicy], so
+ * swapping Thompson sampling for UCB1 is a policy swap, not a bandit swap.
+ *
+ * **Use cases:** stationary multi-armed problems with scalar rewards; any
+ * policy expressible as "score each arm independently, pick the max".
+ *
+ * **Arms:** indexless, `nbrArms` fixed at construction; each arm owns one
+ * [SeriesStat] from `policy.createArm()`.
+ *
+ * **Memory:** O(nbrArms · arm-state) — per-arm [SeriesStat] plus a shared
+ * atomic step counter.
+ *
+ * **Choose:** O(nbrArms) — one `policy.evaluate` per arm, argmax.
+ *
+ * **Update:** O(1) on the targeted arm, delegated to `policy.update`.
+ *
+ * **Randomness:** every `policy.evaluate` and `policy.update` receives the
+ * caller-supplied [random]; reproducible under a fixed seed if the policy is.
+ *
+ * **Concurrency:** per-arm [SeriesStat] carries its own concurrency. The step
+ * counter is an atomic so concurrent `choose`s see distinct `t` values;
+ * racing `update`s on different arms never block. Cross-arm snapshot
+ * consistency is best-effort — a concurrent update may interleave between
+ * per-arm reads.
  */
 class MultiArmedBandit<R : Result>(
     /** Number of arms in the population. */

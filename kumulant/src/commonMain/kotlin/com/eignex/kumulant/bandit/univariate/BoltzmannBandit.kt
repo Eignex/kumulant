@@ -9,18 +9,42 @@ import kotlin.math.pow
 import kotlin.random.Random
 
 /**
- * Boltzmann exploration (a.k.a. softmax bandit): pick arm `a` with probability
- * proportional to `exp(mean[a] / tau(t))`, where `tau(t)` is the temperature at round
- * `t`. High temperature flattens the distribution toward uniform exploration; low
- * temperature sharpens toward greedy exploitation.
+ * Boltzmann exploration (a.k.a. softmax bandit): samples arm `a` with
+ * probability proportional to `exp(mean[a] / tau(t))`, where `tau(t)` is the
+ * temperature at round `t` and per-arm means are tracked by independent
+ * [com.eignex.kumulant.stat.summary.MeanStat] cells.
  *
- * Default schedule cools as `tau(t) = max(minTau, initialTau / t^decay)` — Cesa-Bianchi
- * & Fischer's classical recipe with `decay = 1`. Pass a constant schedule (decay = 0)
- * for fixed-temperature softmax.
+ * Default schedule cools as `tau(t) = max(minTau, initialTau / t^decay)` —
+ * Cesa-Bianchi & Fischer's classical recipe with `decay = 1`. Pass a constant
+ * schedule (`decay = 0`) for fixed-temperature softmax. High temperature
+ * flattens the distribution toward uniform exploration; low temperature
+ * sharpens toward greedy exploitation.
  *
- * The play distribution is a softmax over all arms, not an argmax over independent
- * per-arm scores — so this bandit doesn't expose a [com.eignex.kumulant.bandit.Scorable]
- * face, but its per-arm `(mean, totalWeights)` state still fits [PerArmBandit].
+ * The play distribution is a softmax over all arms, not an argmax over
+ * independent per-arm scores — so this bandit doesn't expose
+ * [com.eignex.kumulant.bandit.Scorable], but its per-arm
+ * `(mean, totalWeights)` state still fits [PerArmBandit].
+ *
+ * **Use cases:** stationary scalar-reward problems where smooth probabilistic
+ * exploration is preferable to UCB's deterministic confidence bounds; any
+ * setting where a tunable cooling schedule is convenient.
+ *
+ * **Arms:** indexless, `nbrArms` fixed at construction; each arm owns one
+ * [com.eignex.kumulant.stat.summary.MeanStat].
+ *
+ * **Memory:** O(nbrArms) — one mean cell per arm plus a step counter.
+ *
+ * **Choose:** O(nbrArms) — softmax over per-arm means, inverse-CDF sample.
+ *
+ * **Update:** O(1) on the targeted arm.
+ *
+ * **Randomness:** every `choose` consumes one `random.nextDouble()` for the
+ * softmax draw; reproducible under a fixed seed.
+ *
+ * **Concurrency:** per-arm [com.eignex.kumulant.core.SeriesStat] carries its
+ * own concurrency. The step counter is non-atomic — concurrent `choose` calls
+ * race on it and may yield duplicate `t` values; pin to a single thread when
+ * the cooling schedule must be exact.
  */
 class BoltzmannBandit(
     /** Number of arms. */

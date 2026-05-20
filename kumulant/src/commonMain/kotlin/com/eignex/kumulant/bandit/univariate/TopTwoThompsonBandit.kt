@@ -7,23 +7,45 @@ import com.eignex.kumulant.core.SeriesStat
 import kotlin.random.Random
 
 /**
- * Top-Two Thompson Sampling (Russo 2020) — pure-exploration variant of Thompson
- * sampling targeting best-arm identification rather than regret minimisation. Each
- * round:
+ * Top-Two Thompson Sampling (Russo 2020) — pure-exploration variant of
+ * Thompson sampling for best-arm identification: sample every arm's
+ * posterior, take the argmax `arm1`, play it with probability [beta], or
+ * else resample until the argmax differs from `arm1` and play that runner-up.
  *
- *  1. Sample once from every arm's posterior; let `arm1 = argmax(scores)`.
- *  2. With probability [beta], play `arm1`.
- *  3. Otherwise resample posteriors until the argmax differs from `arm1`; play that
- *     second-favoured arm (`arm2`).
+ * The forced resampling keeps a fraction of the budget on the runner-up so
+ * the gap to the best arm is identified asymptotically optimally. Converges
+ * to the optimal exploration fraction `beta = 0.5` for two-armed problems;
+ * tune lower to bias toward exploitation when running in the
+ * regret-minimisation regime.
  *
- * The forced resampling keeps a fraction of the budget on the runner-up so the gap to
- * the best arm is identified asymptotically optimally. Converges to the optimal
- * exploration fraction `beta = 0.5` for two-armed problems; tune lower to bias toward
- * exploitation when running in the regret-minimisation regime.
+ * Doesn't expose [com.eignex.kumulant.bandit.Scorable]: arm selection
+ * samples jointly and conditionally resamples, so there's no per-arm score
+ * callers can read in isolation. The per-arm posterior state still fits
+ * [PerArmBandit].
  *
- * Doesn't expose a [com.eignex.kumulant.bandit.Scorable] face: arm selection samples
- * jointly and conditionally resamples, so there's no per-arm score callers can read in
- * isolation. The per-arm posterior state still fits [PerArmBandit].
+ * **Use cases:** best-arm identification and pure-exploration problems where
+ * shrinking the regret gap matters more than minimising cumulative regret;
+ * any posterior expressible as a [ThompsonSampling] policy.
+ *
+ * **Arms:** indexless, `nbrArms ≥ 2` fixed at construction; each arm owns
+ * one posterior cell from `policy.createArm()`.
+ *
+ * **Memory:** O(nbrArms · arm-state) — per-arm posterior plus a step
+ * counter.
+ *
+ * **Choose:** O(nbrArms) expected; O([maxResamples] · nbrArms) worst case
+ * when the second-arm resample loop spins to the cap.
+ *
+ * **Update:** O(1) on the targeted arm, delegated to `policy.update`.
+ *
+ * **Randomness:** every posterior sample and the `beta` coin flip use the
+ * caller-supplied [random]; reproducible under a fixed seed if the policy
+ * is.
+ *
+ * **Concurrency:** per-arm [com.eignex.kumulant.core.SeriesStat] carries its
+ * own concurrency. The step counter is non-atomic — concurrent `choose`
+ * calls race on it. Cross-arm snapshot consistency during `choose` is
+ * best-effort under racing updates.
  */
 class TopTwoThompsonBandit<R : Result>(
     /** Number of arms. */

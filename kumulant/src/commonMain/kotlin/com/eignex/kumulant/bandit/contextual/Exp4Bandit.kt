@@ -33,25 +33,51 @@ fun interface Exp4Expert {
 }
 
 /**
- * EXP4 (Auer, Cesa-Bianchi, Freund, Schapire 2002) — adversarial contextual bandit
- * over a fixed pool of [experts]. Each round:
+ * EXP4 (Auer, Cesa-Bianchi, Freund, Schapire 2002) — adversarial contextual
+ * bandit over a fixed pool of [experts]. Each round, every expert returns a
+ * distribution over arms for the context; the bandit mixes those
+ * distributions weighted by per-expert exponential weights, blends with
+ * uniform exploration `gamma`, samples an arm, and on reward `r ∈ [0,1]`
+ * folds the IPS-corrected gain back into the expert weights.
  *
- *  1. Each expert returns a distribution over arms given the context.
- *  2. The bandit mixes expert distributions weighted by the experts' current weights,
- *     then blends with uniform exploration (`gamma`) to form the play distribution `p`.
- *  3. Arm `a ~ p` is played; on reward `r in [0,1]`, the IPS-style estimated gain
- *     `r / p[a]` for the played arm (0 elsewhere) feeds back into per-expert weight
- *     updates `w_i *= exp(eta * xi_i[a] * r / p[a])`.
+ * Regret bound is `O(sqrt(T · K · ln N))` under the default [eta]/[gamma]
+ * picks derived from `nbrArms` (K) and `experts.size` (N), so the algorithm
+ * trades off exploration breadth (more experts) against learning rate.
+ * Rewards passed to [update] must lie in `[0, 1]` for the regret theory to
+ * apply; outside-bound rewards are accepted but may destabilise the weight
+ * updates.
  *
- * Regret bound is `O(sqrt(T * K * ln(N)))` under default [eta]/[gamma] picks
- * derived from `nbrArms` (K) and `experts.size` (N), so the algorithm trades off
- * exploration breadth (more experts) against learning rate. Rewards passed to [update]
- * must lie in `[0, 1]` for the regret theory to apply; outside-bound rewards are
- * accepted but may destabilise the weight updates.
+ * State is per-expert (not per-arm) so it surfaces via
+ * [Snapshotable]&lt;[Exp4State]&gt; rather than the
+ * [com.eignex.kumulant.bandit.PerArmBandit] convenience used by sibling
+ * contextual bandits.
  *
- * Its state is per-expert (not per-arm) so it surfaces via
- * [Snapshotable]&lt;[Exp4State]&gt; rather than the [com.eignex.kumulant.bandit.PerArmBandit]
- * convenience used by sibling contextual bandits.
+ * **Use cases:** non-stationary or adversarial contextual problems where a
+ * small set of policies (linear scorers, rule-based heuristics, pretrained
+ * models) can advise arm distributions; meta-learning over a finite pool of
+ * experts.
+ *
+ * **Arms:** contextual with caller-defined feature dimension (every
+ * expert's `advise` returns length `nbrArms`); `nbrArms` and `experts.size`
+ * fixed at construction.
+ *
+ * **Memory:** O(experts.size + experts.size · nbrArms) — one weight per
+ * expert plus a cached last-advice matrix and play distribution.
+ *
+ * **Choose:** O(experts.size · (advise + nbrArms)) — query every expert and
+ * mix their distributions.
+ *
+ * **Update:** O(experts.size · (advise + nbrArms)) — re-evaluates experts at
+ * `x` so the played arm's IPS gain is correct, then multiplicative update
+ * across all expert weights.
+ *
+ * **Randomness:** every `choose` consumes one `random.nextDouble()`;
+ * reproducible under a fixed seed when expert `advise` is deterministic.
+ *
+ * **Concurrency:** not thread-safe — expert weights, the cached advice
+ * matrix, and the cached play distribution are mutated without
+ * synchronisation. Serialise `choose` and `update` externally for
+ * multi-thread use.
  */
 class Exp4Bandit(
     /** Number of arms; every expert's distribution must have this length. */

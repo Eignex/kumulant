@@ -24,25 +24,45 @@ data class RouletteWheelArmResult(
 ) : Result
 
 /**
- * Adaptive operator-selection bandit in the Ropke-Pisinger 2006 ALNS scheme. Each arm
- * has a weight; `choose` samples arms with probability proportional to their weights
- * (roulette wheel). After every [segmentLength] [update] calls, weights re-balance via
+ * Adaptive operator-selection bandit in the Ropke-Pisinger 2006 ALNS scheme:
+ * each arm carries a weight, `choose` samples proportional to weights
+ * (roulette wheel), and weights re-balance in batches.
  *
- *     w_i = w_i * (1 - reactionFactor) + reactionFactor * avgScore_i
+ * After every [segmentLength] [update] calls, weights re-balance via
+ * `w_i = w_i · (1 - reactionFactor) + reactionFactor · avgScore_i`, where
+ * `avgScore_i` is the mean reward per call of arm `i` over the segment,
+ * floored at [minWeight] so no arm is permanently extinguished. Batched
+ * re-balance (rather than per-observation) is useful when rewards are noisy
+ * and continuous updates would thrash. Only meaningful for
+ * reward-maximisation: the weight increase is asymmetric and has no clean
+ * "minimise" dual — callers wanting to minimise should negate the reward
+ * before [update].
  *
- * where `avgScore_i` is the mean reward per call of arm i over the segment, floored at
- * [minWeight] so no arm gets permanently extinguished. Compared to the policy-driven
- * [MultiArmedBandit], this scheme batches the weight update over a segment of picks
- * rather than reacting per observation - useful when rewards are noisy and continuous
- * updates would thrash.
+ * Implemented as a direct [UnivariateBandit] rather than a [BanditPolicy]
+ * plugged into [MultiArmedBandit] because the re-balance is a global
+ * cross-arm operation (each arm's new weight depends on its segment-mean).
  *
- * Unlike most kumulant bandits, the weight rebalance is a global cross-arm operation
- * (each arm's new weight depends on its segment-mean), so it's implemented as a direct
- * [UnivariateBandit] rather than a [BanditPolicy] plugged into [MultiArmedBandit].
+ * **Use cases:** operator selection inside meta-heuristics (ALNS, LNS),
+ * where reward signals are noisy and selection breadth across many candidate
+ * operators matters more than fine-grained per-step tracking.
  *
- * Only meaningful for reward-maximisation: Ropke-Pisinger's weight increase is
- * asymmetric and has no clean "minimize" dual. Callers wanting to minimise should
- * negate the reward before calling [update].
+ * **Arms:** indexless, `nbrArms` fixed at construction; per-arm state is
+ * `(weight, segment score sum, segment call count)`.
+ *
+ * **Memory:** O(nbrArms) — three parallel arrays plus a segment counter.
+ *
+ * **Choose:** O(nbrArms) — sum the weights, inverse-CDF sample.
+ *
+ * **Update:** O(1) amortised; O(nbrArms) on the segment boundary where the
+ * re-balance sweeps every arm.
+ *
+ * **Randomness:** every `choose` consumes one `random.nextDouble()` (or one
+ * `nextInt` when all weights collapse to zero); reproducible under a fixed
+ * seed.
+ *
+ * **Concurrency:** not thread-safe — weights, segment scores, and the
+ * segment counter are mutated without synchronisation. Serialise `choose`
+ * and `update` externally for multi-thread use.
  */
 class RouletteWheelBandit(
     /** Number of arms in the population. */

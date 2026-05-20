@@ -30,21 +30,48 @@ data class KnnArmResult(
 ) : Result
 
 /**
- * Non-parametric contextual bandit: each arm keeps a bounded history of past
- * `(context, reward, weight)` observations and is scored at choose time by the
- * empirical mean reward over the `k` nearest historical contexts, with an optional
- * UCB-style bonus that decays with the arm's total sample weight.
+ * Non-parametric contextual bandit: each arm keeps a bounded FIFO history of
+ * past `(context, reward, weight)` observations and is scored at choose time
+ * by the empirical mean reward over the `k` nearest historical contexts,
+ * plus an optional UCB-style bonus that decays with the arm's cumulative
+ * weight.
  *
- *  - **Distance**: defaults to squared L2 between dense vectors; supply [distance]
- *    for custom metrics (Mahalanobis, cosine, kernelised).
- *  - **History cap**: each arm's reservoir is bounded to [maxHistoryPerArm]; when
- *    full, new observations overwrite the oldest. Memory is `O(K * cap * featureSize)`.
+ *  - **Distance**: defaults to squared L2 between dense vectors; supply
+ *    [distance] for custom metrics (Mahalanobis, cosine, kernelised).
+ *  - **History cap**: each arm's reservoir is bounded to [maxHistoryPerArm];
+ *    when full, new observations overwrite the oldest.
  *  - **Cold start**: arms with fewer than `k` observations score
- *    `coldStartScore + ucbBonus`, so they are explored before more populous arms.
+ *    `coldStartScore + ucbBonus`, so they are explored before more populous
+ *    arms.
  *
  * Per-arm state is a history rather than a sufficient statistic, so the
  * [PerArmBandit] snapshot is a [KnnArmResult] (the bounded reservoir itself)
  * rather than a scalar summary.
+ *
+ * **Use cases:** contextual problems where reward is a smooth function of
+ * context but the functional form is unknown; small-to-medium feature
+ * dimensions where exact k-NN is affordable; settings where interpretable
+ * "similar past contexts" reasoning is valuable.
+ *
+ * **Arms:** contextual with caller-defined feature dimension; `nbrArms`
+ * fixed at construction. Per-arm reservoir is bounded by [maxHistoryPerArm].
+ *
+ * **Memory:** O(nbrArms · maxHistoryPerArm · featureSize) — bounded
+ * per-arm history of context copies plus parallel reward/weight arrays.
+ *
+ * **Choose:** O(nbrArms · maxHistoryPerArm · (featureSize + k)) — linear
+ * scan over each arm's history with a bounded top-k heap.
+ *
+ * **Update:** O(featureSize) — append context copy and roll the oldest
+ * entry off when capped.
+ *
+ * **Randomness:** [random] is held for API uniformity but currently unused;
+ * `choose` is deterministic, breaking ties by lowest arm index.
+ *
+ * **Concurrency:** not thread-safe — per-arm history mutable lists, the
+ * total-weight array, and the step counter are mutated without
+ * synchronisation. Serialise `choose` and `update` externally for
+ * multi-thread use.
  */
 class KnnContextualBandit(
     /** Number of arms. */

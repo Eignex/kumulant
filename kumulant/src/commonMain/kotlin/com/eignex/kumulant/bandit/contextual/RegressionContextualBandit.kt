@@ -10,9 +10,10 @@ import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlin.random.Random
 
 /**
- * Generic contextual bandit: each arm owns a [RegressionStat] cloned from [template]
- * and is scored by the shared [posterior] under the round's context vector. The same
- * machinery covers every regressor in kumulant:
+ * Generic contextual bandit: each arm owns a [RegressionStat] cloned from
+ * [template] and is scored at choose time by the shared [posterior] under
+ * the round's context vector, argmaxed across arms. The same machinery
+ * covers every regressor in kumulant:
  *
  *  - **Linear Thompson Sampling**: [com.eignex.kumulant.stat.regression.BayesianRegressionStat]
  *    + [com.eignex.kumulant.stat.regression.MultivariateGaussian].
@@ -24,22 +25,54 @@ import kotlin.random.Random
  *  - **Random-forest bandit**: [com.eignex.kumulant.stat.tree.RandomForestRegressionStat]
  *    + a [com.eignex.kumulant.stat.tree.ForestPosterior].
  *
- * Per-arm regressors are constructed via `template.create(null)` so per-arm state is
- * independent. [exploration] scales the posterior's exploration parameter; pass `0.0`
- * for pure exploitation (point estimates only).
+ * Per-arm regressors are constructed via `template.create(null)` so per-arm
+ * state is independent. [exploration] scales the posterior's exploration
+ * parameter; pass `0.0` for pure exploitation (point estimates only).
  *
- * **Continuous pooling (optional).** When [globalTemplate] is non-null, the bandit also
- * maintains a global regressor that absorbs every `(x, reward)` regardless of arm.
- * Per-arm regressors then fit *residuals* against the global's mean prediction, and
- * arm scoring adds the global's mean back in. The global's mean is read via
- * `posterior.evaluate(globalSnapshot, x, rng, exploration = 0.0)` — i.e. the same
- * posterior at zero exploration — so any regressor whose posterior implements
- * exploration=0 to mean-prediction (every built-in one does) can be pooled.
- *
- * Caveats are the same as the linear-only version: policy-weighted global bias,
- * approximate joint fit, exploration variance underestimated where the global itself
- * is uncertain. For true hierarchical Bayes use
+ * Optional continuous pooling: when [globalTemplate] is non-null the bandit
+ * also maintains a global regressor that absorbs every `(x, reward)`
+ * regardless of arm. Per-arm regressors then fit *residuals* against the
+ * global's mean prediction, and arm scoring adds the global's mean back in.
+ * The global's mean is read via
+ * `posterior.evaluate(globalSnapshot, x, rng, exploration = 0.0)` — i.e. the
+ * same posterior at zero exploration — so any regressor whose posterior
+ * implements `exploration = 0` as mean-prediction (every built-in one does)
+ * can be pooled. Caveats are the same as the linear-only version:
+ * policy-weighted global bias, approximate joint fit, exploration variance
+ * underestimated where the global itself is uncertain. For true hierarchical
+ * Bayes use
  * [com.eignex.kumulant.stat.regression.BayesianRegressionStat.fitPopulationPrior].
+ *
+ * **Use cases:** parametric and tree-based contextual bandits over scalar
+ * rewards; any [RegressionStat] + [RegressionPosterior] pairing that
+ * supports the policy you want (Thompson, LinUCB, greedy, tree, forest).
+ *
+ * **Arms:** contextual with caller-defined feature dimension; `nbrArms`
+ * fixed at construction. Per-arm state is the cloned regressor; optional
+ * global regressor is a single additional cell.
+ *
+ * **Memory:** O(nbrArms · regressor-state) plus optional O(regressor-state)
+ * for the global. The dominant per-arm term depends on the regressor — e.g.
+ * `O(featureSize^2)` for Bayesian/LinUCB Gram matrices, `O(featureSize)` for
+ * SGD, tree-size-dependent for trees and forests.
+ *
+ * **Choose:** O(nbrArms · posterior-evaluate) plus one global evaluate when
+ * pooling is on. `posterior-evaluate` is regressor-dependent (e.g.
+ * `O(featureSize^2)` for Bayesian sampling, `O(featureSize)` for point
+ * predictions).
+ *
+ * **Update:** O(regressor-update) on the played arm, plus one global update
+ * when pooling is on. Regressor-dependent: e.g. `O(featureSize^2)` for
+ * Sherman-Morrison Bayesian updates, `O(featureSize)` for SGD.
+ *
+ * **Randomness:** every posterior evaluate (per arm during `choose`, plus
+ * the optional global at `exploration = 0`) receives the caller-supplied
+ * [random]; reproducible under a fixed seed if the posterior is.
+ *
+ * **Concurrency:** per-arm [RegressionStat] carries its own concurrency,
+ * and the optional global is a single shared [RegressionStat] whose
+ * concurrency it likewise inherits. Cross-arm snapshot consistency during
+ * `choose` is best-effort under racing updates.
  */
 class RegressionContextualBandit<R : Result>(
     override val nbrArms: Int,
