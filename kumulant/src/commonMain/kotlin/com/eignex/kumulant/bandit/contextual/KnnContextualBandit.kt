@@ -5,7 +5,9 @@ import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.math.SparseVector
 import com.eignex.kumulant.math.VectorView
+import com.eignex.kumulant.math.forEachStored
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.ln
@@ -100,7 +102,7 @@ class KnnContextualBandit(
         require(exploration >= 0.0) { "exploration must be non-negative, got $exploration" }
     }
 
-    private val historyContexts: Array<MutableList<DenseVector>> = Array(nbrArms) { mutableListOf() }
+    private val historyContexts: Array<MutableList<VectorView>> = Array(nbrArms) { mutableListOf() }
     private val historyRewards: Array<MutableList<Double>> = Array(nbrArms) { mutableListOf() }
     private val historyWeights: Array<MutableList<Double>> = Array(nbrArms) { mutableListOf() }
     private val totalWeights: DoubleArray = DoubleArray(nbrArms)
@@ -142,7 +144,7 @@ class KnnContextualBandit(
             rs.removeAt(0)
             totalWeights[armIndex] -= dropped
         }
-        ctxs += DenseVector.of(x.toDoubleArray())
+        ctxs += copyOf(x)
         rs += reward
         ws += weight
         totalWeights[armIndex] += weight
@@ -232,15 +234,72 @@ class KnnContextualBandit(
     companion object {
         private const val COLD_START_BONUS = 1.0
 
-        /** Squared L2 distance between two vectors of equal size. */
+        /**
+         * Squared L2 distance between two vectors of equal size. Sparse-aware:
+         * dense/dense walks every index; sparse/dense iterates the sparse side's
+         * stored entries and accumulates dense-only contributions via a baseline
+         * pass; sparse/sparse iterates the union of stored indices on both sides.
+         */
         fun squaredL2(a: VectorView, b: VectorView): Double {
             require(a.size == b.size) { "size mismatch: ${a.size} vs ${b.size}" }
+            return when {
+                a is DenseVector && b is DenseVector -> denseSquaredL2(a, b)
+                a is SparseVector && b is SparseVector -> sparseSquaredL2(a, b)
+                a is SparseVector -> mixedSquaredL2(a, b)
+                else -> mixedSquaredL2(b as SparseVector, a)
+            }
+        }
+
+        private fun denseSquaredL2(a: DenseVector, b: DenseVector): Double {
             var s = 0.0
             for (i in 0 until a.size) {
                 val d = a[i] - b[i]
                 s += d * d
             }
             return s
+        }
+
+        private fun mixedSquaredL2(sparse: SparseVector, dense: VectorView): Double {
+            // Start from the dense side's full squared norm, then correct the sparse-indexed
+            // entries to use (sparse_v - dense_v)^2 instead of dense_v^2.
+            var s = 0.0
+            for (i in 0 until dense.size) {
+                val d = dense[i]
+                s += d * d
+            }
+            sparse.forEachStored { i, v ->
+                val d = dense[i]
+                val replaced = v - d
+                s += replaced * replaced - d * d
+            }
+            return s
+        }
+
+        private fun sparseSquaredL2(a: SparseVector, b: SparseVector): Double {
+            var s = 0.0
+            a.forEachStored { i, v ->
+                val d = v - b[i]
+                s += d * d
+            }
+            b.forEachStored { i, v ->
+                if (a[i] == 0.0) s += v * v
+            }
+            return s
+        }
+    }
+
+    private fun copyOf(x: VectorView): VectorView = when (x) {
+        is DenseVector -> DenseVector.of(x.toDoubleArray())
+        is SparseVector -> {
+            val keepIdx = IntArray(x.size)
+            val keepVal = DoubleArray(x.size)
+            var n = 0
+            x.forEachStored { i, v ->
+                keepIdx[n] = i
+                keepVal[n] = v
+                n++
+            }
+            SparseVector.of(x.size, keepIdx.copyOf(n), keepVal.copyOf(n))
         }
     }
 }

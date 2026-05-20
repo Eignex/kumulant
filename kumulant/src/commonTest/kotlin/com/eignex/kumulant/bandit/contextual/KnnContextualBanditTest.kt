@@ -1,6 +1,8 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.kumulant.bandit.contextual.KnnContextualBandit.Companion.squaredL2
 import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.math.SparseVector
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -81,5 +83,51 @@ class KnnContextualBanditTest {
         val b = a.create(a.random)
         assertEquals(0, b.historySize(0))
         assertEquals(5, a.historySize(0))
+    }
+
+    @Test
+    fun `squaredL2 dense and sparse agree across storage combinations`() {
+        val aDense = DenseVector.of(doubleArrayOf(1.0, 0.0, -2.0, 3.0, 0.0))
+        val bDense = DenseVector.of(doubleArrayOf(0.0, 4.0, -2.0, 1.0, 5.0))
+        val aSparse = SparseVector.of(
+            size = 5,
+            indices = intArrayOf(0, 2, 3),
+            values = doubleArrayOf(1.0, -2.0, 3.0),
+        )
+        val bSparse = SparseVector.of(
+            size = 5,
+            indices = intArrayOf(1, 2, 3, 4),
+            values = doubleArrayOf(4.0, -2.0, 1.0, 5.0),
+        )
+        val reference = squaredL2(aDense, bDense)
+        assertEquals(reference, squaredL2(aSparse, bDense), 1e-12)
+        assertEquals(reference, squaredL2(aDense, bSparse), 1e-12)
+        assertEquals(reference, squaredL2(aSparse, bSparse), 1e-12)
+    }
+
+    @Test
+    fun `sparse update preserves sparse storage and matches dense scoring`() {
+        val sparseInput = KnnContextualBandit(nbrArms = 1, k = 2, exploration = 0.0)
+        val denseInput = KnnContextualBandit(nbrArms = 1, k = 2, exploration = 0.0)
+        val rows = listOf(
+            doubleArrayOf(1.0, 0.0, 0.0, 2.0) to 0.5,
+            doubleArrayOf(0.0, 0.0, 3.0, 0.0) to -0.25,
+            doubleArrayOf(0.5, 0.0, 0.0, 1.5) to 1.0,
+        )
+        for ((x, r) in rows) {
+            denseInput.update(0, DenseVector.of(x), r)
+            val nz = x.withIndex().filter { it.value != 0.0 }
+            sparseInput.update(
+                0,
+                SparseVector.of(
+                    size = x.size,
+                    indices = nz.map { it.index }.toIntArray(),
+                    values = nz.map { it.value }.toDoubleArray(),
+                ),
+                r,
+            )
+        }
+        val q = DenseVector.of(doubleArrayOf(0.5, 0.0, 0.0, 1.5))
+        assertEquals(denseInput.evaluate(0, q), sparseInput.evaluate(0, q), 1e-12)
     }
 }

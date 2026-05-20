@@ -318,11 +318,20 @@ data class Vectorized(
     val dimensions: Int,
     /** Series spec replicated independently across every dimension. */
     val template: StatSpec,
+    /**
+     * When `true`, fan out only the stored entries of sparse inputs - turning per-update
+     * cost into `O(nnz)` and treating absent indices as "no observation" rather than
+     * "observed 0.0". Safe for additive series stats; leave `false` for Mean/Variance.
+     */
+    val skipZeros: Boolean = false,
 ) : VectorStatSpec<ResultList<Result>>
 
 /** Lift a series spec to a vector spec by replicating it across every coordinate of an N-dim input. */
-fun <R : Result> SeriesStatSpec<R>.vectorized(dimensions: Int): VectorStatSpec<ResultList<R>> =
-    Vectorized(dimensions, this) as VectorStatSpec<ResultList<R>>
+fun <R : Result> SeriesStatSpec<R>.vectorized(
+    dimensions: Int,
+    skipZeros: Boolean = false,
+): VectorStatSpec<ResultList<R>> =
+    Vectorized(dimensions, this, skipZeros) as VectorStatSpec<ResultList<R>>
 
 /**
  * Apply [expr] as the value transform on every update - wire-friendly

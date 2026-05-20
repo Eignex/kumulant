@@ -210,7 +210,7 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
                 .windowed(durationMillis.milliseconds, slices, concurrency)
         is Vectorized -> {
             val tpl = requireSeries(template, "Vectorized").materialize(concurrency) as SeriesStat<Result>
-            VectorizedStat(dimensions, tpl)
+            VectorizedStat(dimensions, tpl, skipZeros)
         }
         is TransformVectorElement -> {
             val m = requireVector(inner, "TransformVectorElement").materialize(concurrency) as VectorStat<Result>

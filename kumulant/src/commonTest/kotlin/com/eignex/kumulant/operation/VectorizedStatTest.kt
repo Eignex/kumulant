@@ -1,6 +1,8 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.math.SparseVector
+import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
@@ -76,5 +78,35 @@ class VectorizedStatTest {
         val r = stat.read()
         assertEquals(3.0, r.results[0].sum, DELTA)
         assertEquals(3.0, r.results[1].sum, DELTA)
+    }
+
+    @Test
+    fun `skipZeros with sparse input only touches stored entries`() {
+        val stat = VectorizedStat(dimensions = 5, template = CountStat(), skipZeros = true)
+        stat.update(SparseVector.of(size = 5, indices = intArrayOf(1, 3), values = doubleArrayOf(2.5, 7.0)))
+        stat.update(SparseVector.of(size = 5, indices = intArrayOf(3), values = doubleArrayOf(1.0)))
+        val r = stat.read()
+        assertEquals(0.0, r.results[0].sum, DELTA)
+        assertEquals(1.0, r.results[1].sum, DELTA)
+        assertEquals(0.0, r.results[2].sum, DELTA)
+        assertEquals(2.0, r.results[3].sum, DELTA)
+        assertEquals(0.0, r.results[4].sum, DELTA)
+    }
+
+    @Test
+    fun `skipZeros agrees with dense when the input has no zeros`() {
+        val sparse = VectorizedStat(dimensions = 3, template = SumStat(), skipZeros = true)
+        val dense = VectorizedStat(dimensions = 3, template = SumStat(), skipZeros = false)
+        val rows = listOf(
+            doubleArrayOf(1.0, 2.0, 3.0),
+            doubleArrayOf(4.0, 5.0, 6.0),
+        )
+        for (r in rows) {
+            sparse.update(r)
+            dense.update(r)
+        }
+        val a = sparse.read()
+        val b = dense.read()
+        for (i in 0 until 3) assertEquals(b.results[i].sum, a.results[i].sum, DELTA)
     }
 }

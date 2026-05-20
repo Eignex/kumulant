@@ -165,10 +165,8 @@ class BayesianRegressionStat(
             // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
             addOuter(covariance, -1.0, z, z)
 
-            // Posterior mean update: w = w + weight * S_new * x * (y - mu).
-            val xResidual = DenseVector(featureSize)
-            for (i in 0 until featureSize) xResidual[i] = residual * x[i]
-            axpy(weights, weight, matVec(covariance, xResidual))
+            // Posterior mean update: w += (weight * residual) * S_new * x.
+            axpy(weights, weight * residual, matVec(covariance, x))
 
             biasPrecision += wc
             bias += weight * residual / biasPrecision

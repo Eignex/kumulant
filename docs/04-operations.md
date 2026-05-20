@@ -98,6 +98,17 @@ result is a ResultList carrying the per-channel snapshots.
 val perChannelMean = Mean.vectorized(dimensions = 8)
 ```
 
+For sparse inputs, pass `skipZeros = true` so the fan-out walks the
+vector's stored entries instead of every coordinate. The cost drops
+from O(dimensions) to O(nnz) per update, and an absent index counts as
+"no observation" rather than "observed 0.0". Use it for additive
+channels like Sum, Count, or Rate where the two are equivalent; leave
+the default for Mean and Variance, which need the distinction.
+
+```kotlin
+val sparseCounts = Count.vectorized(dimensions = 10_000, skipZeros = true)
+```
+
 ## Operation locality
 
 All operations are zero-state except windowed and vectorized. The others
