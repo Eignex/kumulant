@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.kumulant.stream.spinHint
 import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -140,19 +141,40 @@ class TDigestStat(
         // claimer that observes bufferIndex >= bufferCap will overflow into compressLock
         // and retry against the next epoch.
         val claimed = claimBufferEpoch() ?: return
-        // Wait for in-flight commits: each successful claim eventually increments
-        // commitIndex once. commitIndex == claimed means every claimed slot is written.
-        while (commitIndex.load() < claimed.toLong()) { /* spin briefly */ }
+        // Wait for in-flight commits to land. Under Relaxed an addAndGet that
+        // straddles a concurrent reset can leave a stranded claim whose commit
+        // never lands in this epoch's commitIndex — fall back to whatever is
+        // committed so far rather than spinning forever. Drift is the Relaxed
+        // contract; livelock is not.
+        var committed = commitIndex.load().toInt()
+        var spins = 0
+        while (committed < claimed) {
+            spinHint()
+            committed = commitIndex.load().toInt()
+            if (++spins >= SPIN_MAX) {
+                // Stranded claim: trim to what we can prove committed and proceed.
+                break
+            }
+        }
+        val drained = if (committed < claimed) committed else claimed
 
-        val snapVal = DoubleArray(claimed) { buffer.load(it) }
-        val snapW = DoubleArray(claimed) { bufferWeights.load(it) }
+        val snapVal = DoubleArray(drained) { buffer.load(it) }
+        val snapW = DoubleArray(drained) { bufferWeights.load(it) }
 
         // Reset for the next epoch BEFORE compressing — new claimers can start writing
         // into a fresh buffer while we merge the snapshot.
         bufferIndex.store(0L)
         commitIndex.store(0L)
 
-        compressInto(snapVal, snapW, claimed)
+        compressInto(snapVal, snapW, drained)
+    }
+
+    private companion object {
+        // Spin loop iterations before giving up on a stranded in-flight commit.
+        // Sized to cover normal scheduler hiccups but small enough that an
+        // orphaned claim (writer suspended across a drain reset, never lands its
+        // commit in this epoch's counter) doesn't wedge the reader for long.
+        private const val SPIN_MAX = 10_000
     }
 
     /** CAS the buffer index up to [bufferCap] to freeze the current epoch. Returns the
