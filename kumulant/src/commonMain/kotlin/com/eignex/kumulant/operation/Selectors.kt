@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 
 /** Adapter implementing [atX]: drives a [SeriesStat] from the x coordinate of a pair. */
 internal class AtXStat<R : Result>(
@@ -38,7 +39,7 @@ internal class AtIndexStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val index: Int
 ) : VectorStat<R>, Stat<R> by delegate {
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(vector[index], timestampNanos, weight)
     }
 
@@ -53,7 +54,7 @@ internal class AtIndicesStat<R : Result>(
     private val indexX: Int,
     private val indexY: Int
 ) : VectorStat<R>, Stat<R> by delegate {
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(vector[indexX], vector[indexY], timestampNanos, weight)
     }
 

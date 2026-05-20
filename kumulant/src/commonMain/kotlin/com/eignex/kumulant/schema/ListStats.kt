@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 
 private fun requireUniqueNames(entries: List<Pair<String, *>>, typeName: String) {
     val duplicates = entries.map { it.first }.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
@@ -145,7 +146,7 @@ class VectorListStats<R : Result>(
             concurrency = concurrency,
         )
 
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(vector, timestampNanos, weight)
     }
 

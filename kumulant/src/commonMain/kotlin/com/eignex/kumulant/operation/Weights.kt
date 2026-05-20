@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 
 /** Force every update through this stat to use a constant [weight], discarding caller weight. */
 fun <R : Result> SeriesStat<R>.withWeight(weight: Double): SeriesStat<R> = WithWeightStat(this, weight)
@@ -53,7 +54,7 @@ internal class WithWeightVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val weight: Double
 ) : VectorStat<R>, Stat<R> by delegate {
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(vector, timestampNanos, this.weight)
     }
 

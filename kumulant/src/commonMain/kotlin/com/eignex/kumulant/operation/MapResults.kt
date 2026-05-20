@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 
 /**
  * Present a [SeriesStat]'s result as a different type via an invertible projection.
@@ -88,7 +89,7 @@ internal class MapResultVectorStat<R1 : Result, R2 : Result>(
     private val forward: (R1) -> R2,
     private val reverse: (R2) -> R1
 ) : VectorStat<R2>, Stat<R2> by MappedResultCore(delegate, forward, reverse) {
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) =
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) =
         delegate.update(vector, timestampNanos, weight)
     override fun create(concurrency: Concurrency?): VectorStat<R2> =
         MapResultVectorStat(delegate.create(concurrency), forward, reverse)

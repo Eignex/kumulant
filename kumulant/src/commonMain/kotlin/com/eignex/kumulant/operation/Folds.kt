@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 
 /**
  * Fold adapters. Constructed by the spec layer's `foldPaired(ScalarExpr)` /
@@ -17,8 +18,8 @@ internal class FoldVectorStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val transform: (DoubleArray) -> Double
 ) : VectorStat<R>, Stat<R> by delegate {
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
-        delegate.update(transform(vector), timestampNanos, weight)
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+        delegate.update(transform(vector.toDoubleArray()), timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         FoldVectorStat(delegate.create(concurrency), transform)
@@ -40,8 +41,9 @@ internal class FoldVectorPairedStat<R : Result>(
     private val foldX: (DoubleArray) -> Double,
     private val foldY: (DoubleArray) -> Double,
 ) : VectorStat<R>, Stat<R> by delegate {
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
-        delegate.update(foldX(vector), foldY(vector), timestampNanos, weight)
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+        val arr = vector.toDoubleArray()
+        delegate.update(foldX(arr), foldY(arr), timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         FoldVectorPairedStat(delegate.create(concurrency), foldX, foldY)

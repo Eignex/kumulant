@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 
 /**
  * Internal base shared by [StatGroup], [PairedStatGroup], and [VectorStatGroup]. Holds the
@@ -108,7 +109,7 @@ class VectorStatGroup(
     constructor(schema: StatSchema, concurrency: Concurrency? = null) :
         this(stats = vectorSpecs(schema), concurrency = concurrency)
 
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(vector, timestampNanos, weight)
     }
 

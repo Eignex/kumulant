@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 
 /**
  * Filter adapters. Constructed by the spec layer's
@@ -41,8 +42,8 @@ internal class FilterVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val predicate: (DoubleArray) -> Boolean
 ) : VectorStat<R>, Stat<R> by delegate {
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
-        if (predicate(vector)) delegate.update(vector, timestampNanos, weight)
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+        if (predicate(vector.toDoubleArray())) delegate.update(vector, timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         FilterVectorStat(delegate.create(concurrency), predicate)

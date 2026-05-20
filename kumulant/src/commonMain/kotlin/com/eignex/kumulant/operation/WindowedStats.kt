@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stream.SliceRing
 import kotlin.time.Duration
 
@@ -143,7 +144,7 @@ internal class WindowedVectorStat<R : Result>(
     private val template = template.create(concurrency = this.concurrency)
     private val ring = SliceRing<R, VectorStat<R>>(windowDuration, slices, concurrency) { c -> this.template.create(c) }
 
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         ring.slotFor(timestampNanos)?.update(vector, timestampNanos, weight)
     }
 

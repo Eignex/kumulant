@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.operation.VectorizedStat
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
@@ -606,7 +607,11 @@ class VectorStatGroupTest {
 
         val tracking = object : VectorStat<ResultList<SumResult>> {
             override val concurrency: Concurrency = Concurrency.None
-            override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) = Unit
+            override fun update(
+                vector: com.eignex.kumulant.math.VectorView,
+                timestampNanos: Long,
+                weight: Double
+            ) = Unit
             override fun merge(values: ResultList<SumResult>) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())
@@ -723,7 +728,11 @@ class VectorListStatsTest {
 
         val tracking = object : VectorStat<ResultList<SumResult>> {
             override val concurrency: Concurrency = Concurrency.None
-            override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) = Unit
+            override fun update(
+                vector: com.eignex.kumulant.math.VectorView,
+                timestampNanos: Long,
+                weight: Double
+            ) = Unit
             override fun merge(values: ResultList<SumResult>) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())

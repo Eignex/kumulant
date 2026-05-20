@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 
 /**
  * Fans each vector observation out to one [SeriesStat] per dimension.
@@ -24,7 +25,7 @@ class VectorizedStat<R : Result>(
     override val concurrency: Concurrency get() = template.concurrency
 
     override fun update(
-        vector: DoubleArray,
+        vector: VectorView,
         timestampNanos: Long,
         weight: Double,
     ) {

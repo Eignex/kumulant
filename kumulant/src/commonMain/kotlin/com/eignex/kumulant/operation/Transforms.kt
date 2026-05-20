@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.VectorView
 
 /**
  * Pre-update transform adapters. The lambda-bound variants
@@ -48,8 +49,8 @@ internal class TransformVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val transform: (DoubleArray) -> DoubleArray
 ) : VectorStat<R>, Stat<R> by delegate {
-    override fun update(vector: DoubleArray, timestampNanos: Long, weight: Double) {
-        delegate.update(transform(vector), timestampNanos, weight)
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+        delegate.update(transform(vector.toDoubleArray()), timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         TransformVectorStat(delegate.create(concurrency), transform)
