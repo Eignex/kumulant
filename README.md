@@ -29,6 +29,9 @@ online regression, and a handful of scoring metrics for evaluating
 predictions as they come in. Everything runs on the JVM, in the browser,
 in WebAssembly, and on native Linux, macOS, Windows, and iOS.
 
+In-depth prose docs live under [`docs/`](docs/README.md); start with
+the [overview](docs/01-overview.md) for the mental model.
+
 ## Installation
 
 ```kotlin
@@ -87,11 +90,15 @@ cb.update(a, features, reward = 12.7)
 | Contextual   | RegressionContextualBandit, KnnContextualBandit, Exp4Bandit                                |
 | Policies     | UCB1, UCB1-Normal, UCB1-Tuned, KL-UCB, MOSS, UCB-V, Thompson sampling, Greedy, EpsilonGreedy, EpsilonDecreasing, UniformSelection |
 
+A tour of every family with notes on when to pick which lives in the
+[stats doc](docs/02-stats.md).
+
 ## Composing stats
 
 You can wrap a stat to change how it sees its input. Time-windowing,
 weighting, filtering, and pre-update transforms all stack on top of
-any stat.
+any stat. See the [operations doc](docs/04-operations.md) for the full
+adapter surface.
 
 ```kotlin
 val recentMean = MeanStat().windowed(1.minutes, slices = 10)
@@ -103,7 +110,8 @@ val positiveMean = Mean.filter(X gt 0.0).materialize()
 You can also describe a whole collection of stats as data, ship that
 description to another process, and start sending partial results
 across. The receiver rebuilds the same shape of accumulator and merges
-the snapshots in as they arrive.
+the snapshots in as they arrive. See the
+[schemas doc](docs/05-schemas.md) for the wire-portable spec family.
 
 ```kotlin
 object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
@@ -123,7 +131,9 @@ val p99 = group.read()[Telemetry.latencyP99]
 Bandits build on per-arm stats: each arm owns a kumulant accumulator
 and the bandit picks arms by scoring their snapshots. Per-arm state
 inherits the same concurrency modes, wire-portable snapshots, and merge
-semantics as any other stat.
+semantics as any other stat. The [bandits doc](docs/06-bandits.md)
+walks through the hierarchy, the univariate and contextual families,
+policies, and arms.
 
 ```kotlin
 val bandit = MultiArmedBandit(nbrArms = 4, policy = BetaBernoulliTS())
@@ -179,7 +189,8 @@ heavy contention but never throw or corrupt their state, which makes
 it a good fit for hot paths where a strict lock would dominate the
 cost. Strict mode adds the locking needed to keep coupled state exact,
 and HighWrite swaps in striped adders on the JVM for additive stats
-under write-heavy load.
+under write-heavy load. The [concurrency doc](docs/03-concurrency.md)
+covers the per-stat semantics in more depth.
 
 ```kotlin
 val hits = SumStat(concurrency = Concurrency.HighWrite)
