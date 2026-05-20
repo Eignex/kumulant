@@ -8,6 +8,8 @@ import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.math.nextPoissonOne
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlin.math.ceil
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -114,6 +116,8 @@ class RandomForestRegressionStat(
 }
 
 /** Snapshot of a [RandomForestRegressionStat]: per-tree immutable snapshots. */
+@Serializable
+@SerialName("ForestRegressionResult")
 data class ForestRegressionResult(
     /** Per-tree immutable snapshots; non-empty. */
     val trees: List<TreeRegressionResult>,

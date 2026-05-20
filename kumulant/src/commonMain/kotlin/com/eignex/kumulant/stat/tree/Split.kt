@@ -2,25 +2,27 @@ package com.eignex.kumulant.stat.tree
 
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.schema.BoolExpr
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
- * Binary predicate routing a context vector to "pos" (true) or "neg" (false). The
- * interface is intentionally open so external libraries can plug in their own
- * predicate flavours — e.g. klause-coupled splits that read typed handles out of
- * a constraint-solver sample, or domain-specific splits that consult auxiliary
- * state alongside the context.
+ * Binary predicate routing a context vector to "pos" (true) or "neg" (false).
  *
  * Built-in implementations: [ThresholdSplit] (numeric `x[i] <= t`) and [ExprSplit]
- * (wrapping a wire-portable [BoolExpr] over the context vector). Wire serialization
- * is per-implementation; consumers needing portable splits should use one of those
- * two or supply their own `@Serializable` subtype.
+ * (wrapping a wire-portable [BoolExpr] over the context vector). The interface is
+ * sealed so tree snapshots round-trip cleanly through `kotlinx.serialization`;
+ * callers needing custom predicates compose them as [BoolExpr] AST nodes and wrap
+ * them in [ExprSplit].
  */
-interface Split {
+@Serializable
+sealed interface Split {
     /** Evaluate the predicate against the context [row]. */
     fun direction(row: VectorView): Boolean
 }
 
 /** Route by `row[featureIndex] <= threshold`. Threshold is inclusive on the "pos" side. */
+@Serializable
+@SerialName("ThresholdSplit")
 data class ThresholdSplit(
     /** Index into the context vector that the split inspects. */
     val featureIndex: Int,
@@ -37,6 +39,8 @@ data class ThresholdSplit(
  * via `V(i)` — matching the existing kumulant AST conventions. Wire-portable through
  * skema's polymorphism on [BoolExpr].
  */
+@Serializable
+@SerialName("ExprSplit")
 data class ExprSplit(
     /** Predicate expression over the context vector. */
     val expr: BoolExpr,

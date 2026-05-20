@@ -3,6 +3,8 @@ package com.eignex.kumulant.stat.tree
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Immutable snapshot of a [Tree] at read time. Carries the tree structure (split
@@ -12,6 +14,8 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
  * The root's [WeightedVarianceResult] is exposed as the canonical scalar snapshot;
  * callers wanting context-specific predictions use [findLeaf] or [predict].
  */
+@Serializable
+@SerialName("TreeRegressionResult")
 data class TreeRegressionResult(
     /** Root of the snapshot tree. */
     val root: TreeNodeResult,
@@ -30,6 +34,7 @@ data class TreeRegressionResult(
 }
 
 /** Snapshot of a single tree node — split or leaf. */
+@Serializable
 sealed interface TreeNodeResult {
     /** Aggregate over every observation routed through this node. */
     val value: WeightedVarianceResult
@@ -39,6 +44,8 @@ sealed interface TreeNodeResult {
 }
 
 /** Immutable split-node snapshot. */
+@Serializable
+@SerialName("TreeSplitResult")
 data class TreeSplitResult(
     /** Routing predicate. */
     val split: Split,
@@ -53,6 +60,8 @@ data class TreeSplitResult(
 }
 
 /** Immutable leaf-node snapshot. */
+@Serializable
+@SerialName("TreeLeafResult")
 data class TreeLeafResult(
     override val value: WeightedVarianceResult,
 ) : TreeNodeResult {

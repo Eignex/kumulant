@@ -6,6 +6,8 @@ import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -18,6 +20,8 @@ import kotlin.random.Random
  * append-then-trim: foreign samples are concatenated to the local history and
  * the oldest entries roll off if the result exceeds `maxHistoryPerArm`.
  */
+@Serializable
+@SerialName("KnnArmResult")
 data class KnnArmResult(
     /** Retained contexts (each a copy of the submitted [VectorView]). */
     val contexts: List<DoubleArray>,
