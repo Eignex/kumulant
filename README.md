@@ -29,8 +29,7 @@ online regression, and a handful of scoring metrics for evaluating
 predictions as they come in. Everything runs on the JVM, in the browser,
 in WebAssembly, and on native Linux, macOS, Windows, and iOS.
 
-In-depth prose docs live under [`docs/`](docs/README.md); start with
-the [overview](docs/01-overview.md) for the mental model.
+Start with the [overview](docs/README.md) for the mental model.
 
 ## Installation
 
