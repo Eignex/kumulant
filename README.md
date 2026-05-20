@@ -56,18 +56,22 @@ val fit = ols.read()
 val yHat = fit.slope * 7.0 + fit.intercept
 ```
 
-| Family       | Stats                                                                          |
-|--------------|--------------------------------------------------------------------------------|
-| Summary      | Sum, Mean, Min, Max, Range, Variance, Moments, BernoulliSum, Count             |
-| Quantile     | DDSketch, TDigest, HdrHistogram, LinearHistogram, ReservoirHistogram, FrugalQuantile |
-| Cardinality  | HyperLogLog, LinearCounting                                                    |
-| Sketch       | BloomFilter, CountMinSketch, MinHash, SpaceSaving                              |
-| Rate         | Rate, CounterRate, DecayingRate                                                |
-| Regression   | UnivariateRegression (OLS / L1 / L2), Covariance, SGD, Diagonal, Bayesian      |
-| Decay        | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance            |
-| Score        | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
+Stats group into eight families. The [stats doc](docs/02-stats.md)
+walks through each family with notes on when to pick which.
 
----
+| Family                                       | Stats                                                                          |
+|----------------------------------------------|--------------------------------------------------------------------------------|
+| [Summary](docs/02-stats.md#summary)          | Sum, Mean, Min, Max, Range, Variance, Moments, BernoulliSum, Count             |
+| [Quantile](docs/02-stats.md#quantile)        | DDSketch, TDigest, HdrHistogram, LinearHistogram, ReservoirHistogram, FrugalQuantile |
+| [Cardinality](docs/02-stats.md#cardinality)  | HyperLogLog, LinearCounting                                                    |
+| [Sketch](docs/02-stats.md#sketch)            | BloomFilter, CountMinSketch, MinHash, SpaceSaving                              |
+| [Rate](docs/02-stats.md#rate)                | Rate, CounterRate, DecayingRate                                                |
+| [Regression](docs/02-stats.md#regression)    | UnivariateRegression (OLS / L1 / L2), Covariance, SGD, Diagonal, Bayesian      |
+| [Decay](docs/02-stats.md#decay)              | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance            |
+| [Score](docs/02-stats.md#score)              | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
+
+Bandits sit on top of the stat layer; each arm owns a kumulant
+accumulator and the bandit picks arms by scoring their snapshots.
 
 ```kotlin
 val bandit = MultiArmedBandit(nbrArms = 4, policy = BetaBernoulliTS())
@@ -88,9 +92,6 @@ cb.update(a, features, reward = 12.7)
 | Univariate   | MultiArmedBandit, RouletteWheelBandit, BoltzmannBandit, Exp3Bandit, TopTwoThompsonBandit  |
 | Contextual   | RegressionContextualBandit, KnnContextualBandit, Exp4Bandit                                |
 | Policies     | UCB1, UCB1-Normal, UCB1-Tuned, KL-UCB, MOSS, UCB-V, Thompson sampling, Greedy, EpsilonGreedy, EpsilonDecreasing, UniformSelection |
-
-A tour of every family with notes on when to pick which lives in the
-[stats doc](docs/02-stats.md).
 
 ## Composing stats
 
