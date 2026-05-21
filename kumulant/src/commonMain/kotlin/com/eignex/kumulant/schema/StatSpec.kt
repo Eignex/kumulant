@@ -44,3 +44,7 @@ sealed interface VectorStatSpec<R : Result> : StatSpec
 /** [StatSpec] that materializes into a [com.eignex.kumulant.core.DiscreteStat] with result type [R]. */
 @Serializable
 sealed interface DiscreteStatSpec<R : Result> : StatSpec
+
+/** [StatSpec] that materializes into a [com.eignex.kumulant.core.RegressionStat] with result type [R]. */
+@Serializable
+sealed interface RegressionStatSpec<R : Result> : StatSpec

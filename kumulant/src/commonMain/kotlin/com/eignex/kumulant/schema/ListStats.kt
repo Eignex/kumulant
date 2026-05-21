@@ -201,4 +201,53 @@ fun <R : Result> discreteListStats(
     concurrency: Concurrency? = null,
 ): DiscreteListStats<R> = DiscreteListStats(stats.map { autoName(it) to it }, concurrency)
 
+/** Regression-input counterpart of [ListStats]. Each `(x, y, ts, weight)` update fans
+ *  out to every entry; the snapshot is a [ResultList] keyed by name. */
+class RegressionListStats<R : Result>(
+    entries: List<Pair<String, com.eignex.kumulant.core.RegressionStat<out R>>>,
+    concurrency: Concurrency? = null,
+) : AbstractListStats<R, com.eignex.kumulant.core.RegressionStat<out R>>(entries, concurrency, "RegressionListStats"),
+    com.eignex.kumulant.core.RegressionStat<ResultList<R>> {
+
+    constructor(vararg entries: Pair<String, com.eignex.kumulant.core.RegressionStat<out R>>, concurrency: Concurrency? = null) :
+        this(entries.toList(), concurrency)
+
+    @Suppress("UNCHECKED_CAST")
+    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+        this(
+            entries = regressionSpecs(schema).map {
+                it.key.name to (it.stat as com.eignex.kumulant.core.RegressionStat<out R>)
+            },
+            concurrency = concurrency,
+        )
+
+    override val featureSize: Int = entries.firstOrNull()?.second?.featureSize
+        ?: error("RegressionListStats requires at least one entry")
+    init {
+        for ((name, stat) in entries) {
+            require(stat.featureSize == featureSize) {
+                "RegressionListStats entry '$name' has featureSize=${stat.featureSize}, expected $featureSize"
+            }
+        }
+    }
+
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+        for ((_, stat) in entries) stat.update(x, y, timestampNanos, weight)
+    }
+
+    override fun create(concurrency: Concurrency?): com.eignex.kumulant.core.RegressionStat<ResultList<R>> {
+        val effectiveConcurrency = concurrency ?: this.concurrencyOverride
+        return RegressionListStats(
+            entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
+            effectiveConcurrency,
+        )
+    }
+}
+
+/** Auto-named [RegressionListStats]: each stat keyed by its class `simpleName`. */
+fun <R : Result> regressionListStats(
+    vararg stats: com.eignex.kumulant.core.RegressionStat<out R>,
+    concurrency: Concurrency? = null,
+): RegressionListStats<R> = RegressionListStats(stats.map { autoName(it) to it }, concurrency)
+
 private fun autoName(stat: Any): String = stat::class.simpleName ?: "Stat"

@@ -115,6 +115,13 @@ internal fun discreteSpecs(schema: StatSchema): List<BoundStat<*, out DiscreteSt
         toSpec<DiscreteStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
 
+/** Regression-modality specs from a schema. */
+internal fun regressionSpecs(schema: StatSchema): List<BoundStat<*, out com.eignex.kumulant.core.RegressionStat<*>, *>> =
+    schema.entries.mapNotNull { (name, config) ->
+        if (config !is RegressionStatSpec<*>) return@mapNotNull null
+        toSpec<com.eignex.kumulant.core.RegressionStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
+    }
+
 @Suppress("UNCHECKED_CAST")
 internal fun <S : Stat<*>> toSpec(key: StatKey<*>, stat: S): BoundStat<*, out S, *> =
     BoundStat(key as StatKey<Result>, stat as Stat<Result>) as BoundStat<*, out S, *>

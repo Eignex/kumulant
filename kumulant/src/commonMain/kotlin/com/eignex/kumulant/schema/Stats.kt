@@ -8,9 +8,18 @@ import com.eignex.kumulant.stat.quantile.SketchResult
 import com.eignex.kumulant.stat.quantile.SparseHistogramResult
 import com.eignex.kumulant.stat.quantile.TDigestResult
 import com.eignex.kumulant.stat.rate.RateResult
+import com.eignex.kumulant.stat.regression.ConstantRate
+import com.eignex.kumulant.stat.regression.CovarianceRegressionResult
 import com.eignex.kumulant.stat.regression.CovarianceResult
+import com.eignex.kumulant.stat.regression.DiagonalRegressionResult
+import com.eignex.kumulant.stat.regression.Link
 import com.eignex.kumulant.stat.regression.Penalty
+import com.eignex.kumulant.stat.regression.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+import com.eignex.kumulant.stat.tree.ForestRegressionResult
+import com.eignex.kumulant.stat.tree.Split
+import com.eignex.kumulant.stat.tree.TreeConfig
+import com.eignex.kumulant.stat.tree.TreeRegressionResult
 import com.eignex.kumulant.stat.score.AucResult
 import com.eignex.kumulant.stat.score.ReliabilityResult
 import com.eignex.kumulant.stat.sketch.BloomFilterResult
@@ -307,3 +316,79 @@ data class SpaceSaving(
     /** Number of distinct items retained; smaller = more aggressive eviction. */
     val capacity: Int,
 ) : DiscreteStatSpec<HeavyHittersResult>
+
+/** Spec for `BayesianRegressionStat`: closed-form Gaussian linear regression with isotropic prior. */
+@Serializable
+@SerialName("BayesianRegression")
+data class BayesianRegression(
+    /** Number of input features. */
+    val featureSize: Int,
+    /** Isotropic prior variance applied to every coefficient. */
+    val priorVariance: Double = 1.0,
+    /** GLM link function; `Link.Identity` keeps the strict closed-form Gaussian posterior. */
+    val link: Link = Link.Identity,
+) : RegressionStatSpec<CovarianceRegressionResult>
+
+/** Spec for `StochasticRegressionStat`: SGD over the linear weights and bias. */
+@Serializable
+@SerialName("StochasticRegression")
+data class StochasticRegression(
+    /** Number of input features. */
+    val featureSize: Int,
+    /** Per-step learning rate. */
+    val learningRate: ScalarExpr = ConstantRate(1e-3),
+    /** Per-step bias learning rate; defaults to [learningRate]. */
+    val biasRate: ScalarExpr = ConstantRate(1e-3),
+    /** Gradient-step regulariser. */
+    val penalty: Penalty = Penalty.None,
+    /** GLM link function; `Link.Identity` gives plain OLS-SGD. */
+    val link: Link = Link.Identity,
+) : RegressionStatSpec<StochasticRegressionResult>
+
+/** Spec for `DiagonalRegressionStat`: factorised-Gaussian posterior with per-coordinate precision. */
+@Serializable
+@SerialName("DiagonalRegression")
+data class DiagonalRegression(
+    /** Number of input features. */
+    val featureSize: Int,
+    /** Initial per-coordinate precision (inverse variance) seeded into every weight. */
+    val priorPrecision: Double = 1.0,
+    /** Per-step learning rate. */
+    val learningRate: ScalarExpr = ConstantRate(1.0),
+    /** Gradient-step regulariser. */
+    val penalty: Penalty = Penalty.None,
+    /** GLM link function. */
+    val link: Link = Link.Identity,
+) : RegressionStatSpec<DiagonalRegressionResult>
+
+/** Spec for `DecisionTreeRegressionStat`: online VFDT regression tree. */
+@Serializable
+@SerialName("DecisionTreeRegression")
+data class DecisionTreeRegression(
+    /** Number of input features. */
+    val featureSize: Int,
+    /** Candidate splits considered at every audit leaf. */
+    val splitCandidates: List<Split>,
+    /** Tree growth tunables. */
+    val config: TreeConfig = TreeConfig(),
+    /** PRNG seed for per-leaf candidate subsampling and bagging. */
+    val randomSeed: Int = 0,
+) : RegressionStatSpec<TreeRegressionResult>
+
+/** Spec for `RandomForestRegressionStat`: ensembled VFDT regression forest. */
+@Serializable
+@SerialName("RandomForestRegression")
+data class RandomForestRegression(
+    /** Number of input features. */
+    val featureSize: Int,
+    /** Candidate split pool. */
+    val splitCandidates: List<Split>,
+    /** Trees in the forest. */
+    val nbrTrees: Int = 10,
+    /** Tree growth tunables (mtry defaults to `ceil(sqrt(p))` when null). */
+    val config: TreeConfig = TreeConfig(),
+    /** Oza & Russell Poisson(1) per-tree reweighting. */
+    val bagging: Boolean = true,
+    /** PRNG seed shared across trees. */
+    val randomSeed: Int = 0,
+) : RegressionStatSpec<ForestRegressionResult>

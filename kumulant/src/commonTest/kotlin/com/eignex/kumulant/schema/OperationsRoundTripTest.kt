@@ -336,4 +336,38 @@ class OperationsRoundTripTest {
         assertEquals(3, decoded.slices)
         decoded.materialize(Concurrency.None)
     }
+
+    @Test fun `weightBy series multiplies weight by AST expression`() {
+        // sum += value * weight * weighter(value), weighter = X * X.
+        val cfg: SeriesStatSpec<SumResult> = Sum.weightBy(X * X)
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
+        val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
+        rebuilt.update(2.0)  // 2 * 1 * 4 = 8
+        rebuilt.update(3.0)  // 3 * 1 * 9 = 27
+        assertEquals(35.0, (rebuilt.read() as SumResult).sum, DELTA)
+    }
+
+    @Test fun `throttle series forwards every Nth update`() {
+        val cfg: SeriesStatSpec<SumResult> = Sum.throttle(every = 3)
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
+        val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
+        repeat(10) { rebuilt.update(1.0) }  // updates at ticks 3, 6, 9
+        assertEquals(3.0, (rebuilt.read() as SumResult).sum, DELTA)
+    }
+
+    @Test fun `sample series is deterministic across replays with the same seed`() {
+        val cfg: SeriesStatSpec<SumResult> = Sum.sample(rate = 0.5, seed = 42L)
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val a = (SchemaJson.decodeFromString(StatSpec.serializer(), json) as SeriesStatSpec<*>)
+            .materialize(Concurrency.None)
+        val b = (SchemaJson.decodeFromString(StatSpec.serializer(), json) as SeriesStatSpec<*>)
+            .materialize(Concurrency.None)
+        repeat(100) {
+            a.update(1.0)
+            b.update(1.0)
+        }
+        assertEquals((a.read() as SumResult).sum, (b.read() as SumResult).sum, DELTA)
+    }
 }

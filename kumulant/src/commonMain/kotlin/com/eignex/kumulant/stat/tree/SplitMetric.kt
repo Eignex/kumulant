@@ -1,6 +1,8 @@
 package com.eignex.kumulant.stat.tree
 
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Scores a candidate split against a leaf's pre-split distribution. Higher is better.
@@ -8,9 +10,11 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
  * always last in the ranking.
  *
  * Ships [VarianceReduction] only; other metrics (t-test, chi-square, info gain) can
- * be added as concrete callers ask for them.
+ * be added as concrete callers ask for them. Sealed so the wire form (TreeConfig
+ * inside a tree spec) stays portable.
  */
-interface SplitMetric {
+@Serializable
+sealed interface SplitMetric {
     /** Score a candidate split given its total / pos / neg variance snapshots. */
     fun score(
         total: WeightedVarianceResult,
@@ -20,7 +24,9 @@ interface SplitMetric {
 }
 
 /** Mean variance reduction. The classic CART regression criterion. */
-object VarianceReduction : SplitMetric {
+@Serializable
+@SerialName("VarianceReduction")
+data object VarianceReduction : SplitMetric {
     override fun score(
         total: WeightedVarianceResult,
         pos: WeightedVarianceResult,

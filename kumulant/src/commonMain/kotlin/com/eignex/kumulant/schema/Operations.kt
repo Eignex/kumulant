@@ -549,3 +549,306 @@ data class TransformVector(
 /** Wrap this vector spec so each incoming vector is remapped through [expr] before update. */
 fun <R : Result> VectorStatSpec<R>.transformVector(expr: VectorExpr): VectorStatSpec<R> =
     TransformVector(this, expr) as VectorStatSpec<R>
+
+/** Wire spec for `SeriesStat.weightBy(expr)`: multiplies each update's weight by `expr.eval(value)`. */
+@Serializable
+@SerialName("WeightByValueSeries")
+data class WeightByValueSeries(
+    /** Inner series spec receiving the reweighted update. */
+    val inner: StatSpec,
+    /** Expression producing the per-update weight multiplier from the input value. */
+    val expr: ScalarExpr,
+) : SeriesStatSpec<Result>
+
+/** Wire spec for `PairedStat.weightBy(expr)`: multiplies each update's weight by `expr.eval(x, y)`. */
+@Serializable
+@SerialName("WeightByValuePaired")
+data class WeightByValuePaired(
+    /** Inner paired spec receiving the reweighted update. */
+    val inner: StatSpec,
+    /** Expression producing the per-update weight multiplier from `(x, y)`. */
+    val expr: ScalarExpr,
+) : PairedStatSpec<Result>
+
+/** Wire spec for `VectorStat.weightBy(expr)`: multiplies each update's weight by `expr.eval(0, 0, v)`. */
+@Serializable
+@SerialName("WeightByValueVector")
+data class WeightByValueVector(
+    /** Inner vector spec receiving the reweighted update. */
+    val inner: StatSpec,
+    /** Expression producing the per-update weight multiplier from the vector (bound as `V`). */
+    val expr: ScalarExpr,
+) : VectorStatSpec<Result>
+
+/** Wire spec for `DiscreteStat.weightBy(expr)`: multiplies each update's weight by `expr.eval(value.toDouble())`. */
+@Serializable
+@SerialName("WeightByValueDiscrete")
+data class WeightByValueDiscrete(
+    /** Inner discrete spec receiving the reweighted update. */
+    val inner: StatSpec,
+    /** Expression producing the per-update weight multiplier from `value.toDouble()`. */
+    val expr: ScalarExpr,
+) : DiscreteStatSpec<Result>
+
+/** Wrap this series spec so every update's weight is multiplied by `expr.eval(value)`. */
+fun <R : Result> SeriesStatSpec<R>.weightBy(expr: ScalarExpr): SeriesStatSpec<R> =
+    WeightByValueSeries(this, expr) as SeriesStatSpec<R>
+
+/** Wrap this paired spec so every update's weight is multiplied by `expr.eval(x, y)`. */
+fun <R : Result> PairedStatSpec<R>.weightBy(expr: ScalarExpr): PairedStatSpec<R> =
+    WeightByValuePaired(this, expr) as PairedStatSpec<R>
+
+/** Wrap this vector spec so every update's weight is multiplied by `expr.eval(0, 0, vec)`. */
+fun <R : Result> VectorStatSpec<R>.weightBy(expr: ScalarExpr): VectorStatSpec<R> =
+    WeightByValueVector(this, expr) as VectorStatSpec<R>
+
+/** Wrap this discrete spec so every update's weight is multiplied by `expr.eval(value.toDouble())`. */
+fun <R : Result> DiscreteStatSpec<R>.weightBy(expr: ScalarExpr): DiscreteStatSpec<R> =
+    WeightByValueDiscrete(this, expr) as DiscreteStatSpec<R>
+
+/** Wire spec for `SeriesStat.throttle(every)`: forwards only every [every]th update. */
+@Serializable
+@SerialName("ThrottleSeries")
+data class ThrottleSeries(
+    /** Inner series spec receiving the throttled updates. */
+    val inner: StatSpec,
+    /** Stride: pass one update for every [every] arrivals. */
+    val every: Int,
+) : SeriesStatSpec<Result>
+
+/** Wire spec for `PairedStat.throttle(every)`: forwards only every [every]th update. */
+@Serializable
+@SerialName("ThrottlePaired")
+data class ThrottlePaired(
+    /** Inner paired spec receiving the throttled updates. */
+    val inner: StatSpec,
+    /** Stride: pass one update for every [every] arrivals. */
+    val every: Int,
+) : PairedStatSpec<Result>
+
+/** Wire spec for `VectorStat.throttle(every)`: forwards only every [every]th update. */
+@Serializable
+@SerialName("ThrottleVector")
+data class ThrottleVector(
+    /** Inner vector spec receiving the throttled updates. */
+    val inner: StatSpec,
+    /** Stride: pass one update for every [every] arrivals. */
+    val every: Int,
+) : VectorStatSpec<Result>
+
+/** Wire spec for `DiscreteStat.throttle(every)`: forwards only every [every]th update. */
+@Serializable
+@SerialName("ThrottleDiscrete")
+data class ThrottleDiscrete(
+    /** Inner discrete spec receiving the throttled updates. */
+    val inner: StatSpec,
+    /** Stride: pass one update for every [every] arrivals. */
+    val every: Int,
+) : DiscreteStatSpec<Result>
+
+/** Wrap this series spec so it only sees one in every [every] updates. */
+fun <R : Result> SeriesStatSpec<R>.throttle(every: Int): SeriesStatSpec<R> =
+    ThrottleSeries(this, every) as SeriesStatSpec<R>
+
+/** Wrap this paired spec so it only sees one in every [every] updates. */
+fun <R : Result> PairedStatSpec<R>.throttle(every: Int): PairedStatSpec<R> =
+    ThrottlePaired(this, every) as PairedStatSpec<R>
+
+/** Wrap this vector spec so it only sees one in every [every] updates. */
+fun <R : Result> VectorStatSpec<R>.throttle(every: Int): VectorStatSpec<R> =
+    ThrottleVector(this, every) as VectorStatSpec<R>
+
+/** Wrap this discrete spec so it only sees one in every [every] updates. */
+fun <R : Result> DiscreteStatSpec<R>.throttle(every: Int): DiscreteStatSpec<R> =
+    ThrottleDiscrete(this, every) as DiscreteStatSpec<R>
+
+/** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */
+@Serializable
+@SerialName("SampleSeries")
+data class SampleSeries(
+    /** Inner series spec receiving the sampled updates. */
+    val inner: StatSpec,
+    /** Per-update keep probability in `[0.0, 1.0]`. */
+    val rate: Double,
+    /** Seed for the materialised PRNG so replays are deterministic. */
+    val seed: Long,
+) : SeriesStatSpec<Result>
+
+/** Wire spec for `PairedStat.sample(rate, random)`: forwards each update with probability [rate]. */
+@Serializable
+@SerialName("SamplePaired")
+data class SamplePaired(
+    /** Inner paired spec receiving the sampled updates. */
+    val inner: StatSpec,
+    /** Per-update keep probability in `[0.0, 1.0]`. */
+    val rate: Double,
+    /** Seed for the materialised PRNG so replays are deterministic. */
+    val seed: Long,
+) : PairedStatSpec<Result>
+
+/** Wire spec for `VectorStat.sample(rate, random)`: forwards each update with probability [rate]. */
+@Serializable
+@SerialName("SampleVector")
+data class SampleVector(
+    /** Inner vector spec receiving the sampled updates. */
+    val inner: StatSpec,
+    /** Per-update keep probability in `[0.0, 1.0]`. */
+    val rate: Double,
+    /** Seed for the materialised PRNG so replays are deterministic. */
+    val seed: Long,
+) : VectorStatSpec<Result>
+
+/** Wire spec for `DiscreteStat.sample(rate, random)`: forwards each update with probability [rate]. */
+@Serializable
+@SerialName("SampleDiscrete")
+data class SampleDiscrete(
+    /** Inner discrete spec receiving the sampled updates. */
+    val inner: StatSpec,
+    /** Per-update keep probability in `[0.0, 1.0]`. */
+    val rate: Double,
+    /** Seed for the materialised PRNG so replays are deterministic. */
+    val seed: Long,
+) : DiscreteStatSpec<Result>
+
+/** Wrap this series spec to keep each update with probability [rate]; [seed] feeds the PRNG. */
+fun <R : Result> SeriesStatSpec<R>.sample(rate: Double, seed: Long): SeriesStatSpec<R> =
+    SampleSeries(this, rate, seed) as SeriesStatSpec<R>
+
+/** Wrap this paired spec to keep each update with probability [rate]; [seed] feeds the PRNG. */
+fun <R : Result> PairedStatSpec<R>.sample(rate: Double, seed: Long): PairedStatSpec<R> =
+    SamplePaired(this, rate, seed) as PairedStatSpec<R>
+
+/** Wrap this vector spec to keep each update with probability [rate]; [seed] feeds the PRNG. */
+fun <R : Result> VectorStatSpec<R>.sample(rate: Double, seed: Long): VectorStatSpec<R> =
+    SampleVector(this, rate, seed) as VectorStatSpec<R>
+
+/** Wrap this discrete spec to keep each update with probability [rate]; [seed] feeds the PRNG. */
+fun <R : Result> DiscreteStatSpec<R>.sample(rate: Double, seed: Long): DiscreteStatSpec<R> =
+    SampleDiscrete(this, rate, seed) as DiscreteStatSpec<R>
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RegressionStat decorators (wire forms). Inner is typed at the base StatSpec;
+// the materialiser in StatFactory.kt resolves the modality and casts. ScalarExpr
+// bindings for regression: `X` is unused (0.0), `Y` is the target y, `V` is the
+// feature vector x.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Wire spec for `RegressionStat.filter(pred)`. */
+@Serializable
+@SerialName("FilterRegression")
+data class FilterRegression(
+    /** Inner regression spec receiving only the updates that pass [pred]. */
+    val inner: StatSpec,
+    /** Boolean predicate over `(x = V, y = Y)`; false suppresses the update. */
+    val pred: BoolExpr,
+) : RegressionStatSpec<Result>
+
+/** Wire spec for `RegressionStat.transformY(expr)`. */
+@Serializable
+@SerialName("TransformYRegression")
+data class TransformYRegression(
+    /** Inner regression spec receiving the transformed y. */
+    val inner: StatSpec,
+    /** Expression remapping y; sees `Y` and `V`. */
+    val expr: ScalarExpr,
+) : RegressionStatSpec<Result>
+
+/** Wire spec for `RegressionStat.transformX(expr)`. */
+@Serializable
+@SerialName("TransformXRegression")
+data class TransformXRegression(
+    /** Inner regression spec receiving the transformed x. */
+    val inner: StatSpec,
+    /** Expression producing the new vector; sees `Y` and `V`. */
+    val expr: VectorExpr,
+) : RegressionStatSpec<Result>
+
+/** Wire spec for `RegressionStat.withWeight(weight)`: replaces every update's weight. */
+@Serializable
+@SerialName("WithWeightRegression")
+data class WithWeightRegression(
+    /** Inner regression spec whose updates are reweighted to [weight]. */
+    val inner: StatSpec,
+    /** Constant weight applied to every update. */
+    val weight: Double,
+) : RegressionStatSpec<Result>
+
+/** Wire spec for `RegressionStat.weightBy(expr)`: multiplies each update's weight by `expr.eval(0, y, v)`. */
+@Serializable
+@SerialName("WeightByValueRegression")
+data class WeightByValueRegression(
+    /** Inner regression spec receiving the reweighted update. */
+    val inner: StatSpec,
+    /** Per-update weight multiplier from `(y = Y, x = V)`. */
+    val expr: ScalarExpr,
+) : RegressionStatSpec<Result>
+
+/** Wire spec for `RegressionStat.throttle(every)`. */
+@Serializable
+@SerialName("ThrottleRegression")
+data class ThrottleRegression(
+    /** Inner regression spec receiving the throttled updates. */
+    val inner: StatSpec,
+    /** Stride; pass one update for every [every] arrivals. */
+    val every: Int,
+) : RegressionStatSpec<Result>
+
+/** Wire spec for `RegressionStat.sample(rate, random)`. */
+@Serializable
+@SerialName("SampleRegression")
+data class SampleRegression(
+    /** Inner regression spec receiving the sampled updates. */
+    val inner: StatSpec,
+    /** Bernoulli keep probability in `[0.0, 1.0]`. */
+    val rate: Double,
+    /** Seed for the materialised PRNG. */
+    val seed: Long,
+) : RegressionStatSpec<Result>
+
+/** Wire spec for `SeriesStat.foldRegression(featureSize, project)`: lift a series spec
+ *  into the regression modality by projecting `(x, y)` to a scalar via [project]. */
+@Serializable
+@SerialName("FoldRegression")
+data class FoldRegression(
+    /** Inner series spec receiving the projected scalar. */
+    val inner: StatSpec,
+    /** Expected x-vector dimension; enforced at update time. */
+    val featureSize: Int,
+    /** Expression projecting `(x = V, y = Y)` to a scalar. */
+    val project: ScalarExpr,
+) : RegressionStatSpec<Result>
+
+/** Wrap this regression spec so updates are forwarded only when [pred] evaluates true. */
+fun <R : Result> RegressionStatSpec<R>.filter(pred: BoolExpr): RegressionStatSpec<R> =
+    FilterRegression(this, pred) as RegressionStatSpec<R>
+
+/** Wrap this regression spec so y is remapped by [expr] before the inner stat sees it. */
+fun <R : Result> RegressionStatSpec<R>.transformY(expr: ScalarExpr): RegressionStatSpec<R> =
+    TransformYRegression(this, expr) as RegressionStatSpec<R>
+
+/** Wrap this regression spec so x is remapped by [expr] before the inner stat sees it. */
+fun <R : Result> RegressionStatSpec<R>.transformX(expr: VectorExpr): RegressionStatSpec<R> =
+    TransformXRegression(this, expr) as RegressionStatSpec<R>
+
+/** Wrap this regression spec so every update uses [weight] regardless of caller input. */
+fun <R : Result> RegressionStatSpec<R>.withWeight(weight: Double): RegressionStatSpec<R> =
+    WithWeightRegression(this, weight) as RegressionStatSpec<R>
+
+/** Wrap this regression spec so every update's weight is multiplied by `expr.eval(0, y, v)`. */
+fun <R : Result> RegressionStatSpec<R>.weightBy(expr: ScalarExpr): RegressionStatSpec<R> =
+    WeightByValueRegression(this, expr) as RegressionStatSpec<R>
+
+/** Wrap this regression spec so it only sees one in every [every] updates. */
+fun <R : Result> RegressionStatSpec<R>.throttle(every: Int): RegressionStatSpec<R> =
+    ThrottleRegression(this, every) as RegressionStatSpec<R>
+
+/** Wrap this regression spec to keep each update with probability [rate]; [seed] feeds the PRNG. */
+fun <R : Result> RegressionStatSpec<R>.sample(rate: Double, seed: Long): RegressionStatSpec<R> =
+    SampleRegression(this, rate, seed) as RegressionStatSpec<R>
+
+/** Lift this series spec into the regression modality. [project] reduces each `(x = V, y = Y)`
+ *  update to a scalar that the inner series stat absorbs. Use `Y` for the marginal-y view. */
+fun <R : Result> SeriesStatSpec<R>.foldRegression(
+    featureSize: Int,
+    project: ScalarExpr,
+): RegressionStatSpec<R> = FoldRegression(this, featureSize, project) as RegressionStatSpec<R>
