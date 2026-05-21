@@ -1,8 +1,6 @@
 package com.eignex.kumulant.bench
 
-import com.eignex.kumulant.bandit.ContextualBandit
-import com.eignex.kumulant.bandit.UnivariateBandit
-import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.bandit.Bandit
 import kotlin.random.Random
 
 /**
@@ -35,10 +33,7 @@ fun main() {
     println("-".repeat(96))
 
     for (spec in allBanditSpecs) {
-        val report = when (spec) {
-            is UnivariateBanditSpec -> measureUnivariate(spec, rounds, banditSeed, oracleSeed)
-            is ContextualBanditSpec -> measureContextual(spec, rounds, banditSeed, oracleSeed)
-        }
+        val report = measure(spec, rounds, banditSeed, oracleSeed)
         println(
             "%-32s  %12d  %14.4f  %16.4f  %13.1f%%".format(
                 spec.name, rounds, report.totalReward, report.cumulativeRegret, report.tailOptimalPct,
@@ -53,60 +48,26 @@ private data class AccuracyReport(
     val tailOptimalPct: Double,
 )
 
-private fun measureUnivariate(
-    spec: UnivariateBanditSpec,
+private fun <B : Bandit> measure(
+    spec: BanditSpec<B>,
     rounds: Int,
     banditSeed: Long,
     oracleSeed: Long,
 ): AccuracyReport {
-    val bandit: UnivariateBandit = spec.build(Random(banditSeed))
+    val bandit = spec.build(Random(banditSeed))
     val oracleRng = Random(oracleSeed)
-    val rewardRng = Random(oracleSeed xor 0x55_AA_55_AAL) // independent stream for the regret reference
+    // Independent reward stream so the optimal-arm counterfactual is drawn from the
+    // same marginal distribution but not correlated with the realised draw.
+    val refRng = Random(oracleSeed xor 0x55_AA_55_AAL)
     val tailStart = rounds * 9 / 10
     var totalReward = 0.0
     var regret = 0.0
     var tailOptimal = 0
     for (t in 0 until rounds) {
-        val chosen = bandit.choose()
-        val reward = spec.sampleReward(chosen, oracleRng)
-        bandit.update(chosen, reward)
-        val optimalReward = spec.sampleReward(spec.optimalArm, rewardRng)
-        totalReward += reward
-        regret += optimalReward - reward
-        if (t >= tailStart && chosen == spec.optimalArm) tailOptimal++
-    }
-    val tailRounds = rounds - tailStart
-    return AccuracyReport(
-        totalReward = totalReward,
-        cumulativeRegret = regret,
-        tailOptimalPct = if (tailRounds == 0) 0.0 else 100.0 * tailOptimal / tailRounds,
-    )
-}
-
-private fun measureContextual(
-    spec: ContextualBanditSpec,
-    rounds: Int,
-    banditSeed: Long,
-    oracleSeed: Long,
-): AccuracyReport {
-    val bandit: ContextualBandit = spec.build(Random(banditSeed))
-    val oracleRng = Random(oracleSeed)
-    val rewardRng = Random(oracleSeed xor 0x55_AA_55_AAL)
-    val tailStart = rounds * 9 / 10
-    var totalReward = 0.0
-    var regret = 0.0
-    var tailOptimal = 0
-    for (t in 0 until rounds) {
-        val ctx = spec.sampleContext(oracleRng)
-        val x = DenseVector.of(ctx)
-        val chosen = bandit.choose(x)
-        val reward = spec.sampleReward(chosen, ctx, oracleRng)
-        bandit.update(chosen, x, reward)
-        val opt = spec.optimalArm(ctx)
-        val optimalReward = spec.sampleReward(opt, ctx, rewardRng)
-        totalReward += reward
-        regret += optimalReward - reward
-        if (t >= tailStart && chosen == opt) tailOptimal++
+        val sample = spec.regretCycle(bandit, oracleRng, refRng)
+        totalReward += sample.reward
+        regret += sample.optimalReward - sample.reward
+        if (t >= tailStart && sample.chosen == sample.optimal) tailOptimal++
     }
     val tailRounds = rounds - tailStart
     return AccuracyReport(

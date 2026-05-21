@@ -13,98 +13,108 @@ import com.eignex.kumulant.stat.regression.MultivariateGaussian
 import com.eignex.kumulant.stat.regression.PointPosterior
 import com.eignex.kumulant.stat.regression.StochasticRegressionStat
 import com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat
+import com.eignex.kumulant.stat.tree.MeanTreePosterior
 import com.eignex.kumulant.stat.tree.ThresholdSplit
 import com.eignex.kumulant.stat.tree.TreeConfig
 import kotlin.random.Random
 
 /**
- * Bench-side description of a bandit configuration. Carries the constructors plus
- * a synthetic reward oracle so the bench can drive (choose, play, update) cycles
- * end-to-end without depending on a live environment.
- *
- * Two variants — univariate and contextual — because the action/feedback shape
- * differs at the bandit interface. Both share name and arm count.
+ * Bench-side description of a bandit configuration. Modality (univariate vs
+ * contextual) is erased into the closures — there is one generic [BanditSpec]
+ * class, and the factory functions [univariateBanditSpec] / [contextualBanditSpec]
+ * pre-bake the choose/play/update logic. Mirrors the
+ * [StatSpec][com.eignex.kumulant.bench.StatSpec] convention used for stat benches.
  */
-sealed interface BanditSpec {
-    /** Human-readable spec name; printed in bench tables. */
-    val name: String
-
-    /** Arms in the population; fixed at spec construction time. */
-    val nbrArms: Int
-
-    /** Build a fresh bandit + per-cycle driver. The driver closes over [random]
-     *  (bandit PRNG) and [oracleRng] (reward sampling), so multiple drivers can
-     *  share a spec safely. */
-    fun newDriver(random: Random, oracleRng: Random): BanditDriver
-}
-
-/**
- * A bandit instance together with a `cycle` closure that performs one
- * (choose, play, update) round. Bench analyses call [cycle] in tight loops.
- */
-class BanditDriver(
-    /** Live bandit; expose so analyses can snapshot when needed. */
-    val bandit: Bandit,
-    /** Run one (choose, play, update) round. */
-    val cycle: () -> Unit,
+class BanditSpec<B : Bandit>(
+    /** Human-readable name printed in bench tables. */
+    val name: String,
+    /** Arm count fixed at spec construction time. */
+    val nbrArms: Int,
+    /** Context vector dimension; `0` for univariate. */
+    val featureSize: Int,
+    /** Build a fresh bandit with [random] as the PRNG. */
+    val build: (Random) -> B,
+    /** Run one (choose, play, update) round. Used by throughput / drift benches. */
+    val cycle: (B, oracleRng: Random) -> Unit,
+    /** Run one round and also compute the optimal-arm reward sample using [refRng].
+     *  Used by the accuracy bench to compute per-round regret. */
+    val regretCycle: (B, oracleRng: Random, refRng: Random) -> RegretSample,
 )
 
 /**
- * Univariate bandit spec: no context, arm chosen by [Bandit.choose] alone. The
- * oracle yields a scalar reward per arm via [sampleReward]. [optimalArm] is the
- * arm with the highest expected reward under the oracle and is used by the
- * accuracy analysis as the regret baseline.
+ * Per-round bookkeeping produced by [BanditSpec.regretCycle]: the chosen arm, the
+ * oracle's optimal arm, the realized reward at the chosen arm, and the
+ * counterfactual reward had the optimal arm been played.
  */
-class UnivariateBanditSpec(
-    override val name: String,
-    override val nbrArms: Int,
-    /** Factory taking a PRNG; one fresh bandit per driver. */
-    val build: (Random) -> UnivariateBandit,
-    /** Reward sampler conditioned on arm index. */
-    val sampleReward: (armIndex: Int, oracleRng: Random) -> Double,
-    /** Best arm under the oracle's expected reward; used by the accuracy bench. */
-    val optimalArm: Int,
-) : BanditSpec {
-    override fun newDriver(random: Random, oracleRng: Random): BanditDriver {
-        val bandit = build(random)
-        return BanditDriver(bandit) {
-            val i = bandit.choose()
-            val r = sampleReward(i, oracleRng)
-            bandit.update(i, r)
-        }
-    }
-}
+data class RegretSample(
+    /** Arm the bandit chose this round. */
+    val chosen: Int,
+    /** Arm the oracle considers optimal for this round. */
+    val optimal: Int,
+    /** Realized reward at the chosen arm. */
+    val reward: Double,
+    /** Counterfactual reward at the optimal arm, sampled from the independent ref PRNG. */
+    val optimalReward: Double,
+)
 
-/**
- * Contextual bandit spec: each round samples a context vector and the chosen
- * arm's reward conditional on context. [optimalArm] for accuracy lookups is a
- * function of the context vector.
- */
-class ContextualBanditSpec(
-    override val name: String,
-    override val nbrArms: Int,
-    /** Context dimension. */
-    val featureSize: Int,
-    /** Factory taking a PRNG; one fresh bandit per driver. */
-    val build: (Random) -> ContextualBandit,
-    /** Per-round context sampler. */
-    val sampleContext: (oracleRng: Random) -> DoubleArray,
-    /** Reward sampler conditioned on arm and context. */
-    val sampleReward: (armIndex: Int, context: DoubleArray, oracleRng: Random) -> Double,
-    /** Best arm given context under the oracle's expected reward. */
-    val optimalArm: (context: DoubleArray) -> Int,
-) : BanditSpec {
-    override fun newDriver(random: Random, oracleRng: Random): BanditDriver {
-        val bandit = build(random)
-        return BanditDriver(bandit) {
-            val ctx = sampleContext(oracleRng)
-            val x = DenseVector.of(ctx)
-            val i = bandit.choose(x)
-            val r = sampleReward(i, ctx, oracleRng)
-            bandit.update(i, x, r)
-        }
-    }
-}
+/** Build a [BanditSpec] for a univariate bandit. The reward oracle is conditioned
+ *  only on the arm index; [optimalArm] is the arm with the highest expected reward. */
+fun univariateBanditSpec(
+    name: String,
+    nbrArms: Int,
+    build: (Random) -> UnivariateBandit,
+    sampleReward: (armIndex: Int, oracleRng: Random) -> Double,
+    optimalArm: Int,
+): BanditSpec<UnivariateBandit> = BanditSpec(
+    name = name,
+    nbrArms = nbrArms,
+    featureSize = 0,
+    build = build,
+    cycle = { bandit, oracle ->
+        val i = bandit.choose()
+        val r = sampleReward(i, oracle)
+        bandit.update(i, r)
+    },
+    regretCycle = { bandit, oracle, ref ->
+        val i = bandit.choose()
+        val r = sampleReward(i, oracle)
+        bandit.update(i, r)
+        RegretSample(i, optimalArm, r, sampleReward(optimalArm, ref))
+    },
+)
+
+/** Build a [BanditSpec] for a contextual bandit. Each round samples a context
+ *  via [sampleContext]; the reward oracle is conditioned on arm and context. */
+fun contextualBanditSpec(
+    name: String,
+    nbrArms: Int,
+    featureSize: Int,
+    build: (Random) -> ContextualBandit,
+    sampleContext: (oracleRng: Random) -> DoubleArray,
+    sampleReward: (armIndex: Int, context: DoubleArray, oracleRng: Random) -> Double,
+    optimalArm: (context: DoubleArray) -> Int,
+): BanditSpec<ContextualBandit> = BanditSpec(
+    name = name,
+    nbrArms = nbrArms,
+    featureSize = featureSize,
+    build = build,
+    cycle = { bandit, oracle ->
+        val ctx = sampleContext(oracle)
+        val x = DenseVector.of(ctx)
+        val i = bandit.choose(x)
+        val r = sampleReward(i, ctx, oracle)
+        bandit.update(i, x, r)
+    },
+    regretCycle = { bandit, oracle, ref ->
+        val ctx = sampleContext(oracle)
+        val x = DenseVector.of(ctx)
+        val i = bandit.choose(x)
+        val r = sampleReward(i, ctx, oracle)
+        bandit.update(i, x, r)
+        val opt = optimalArm(ctx)
+        RegretSample(i, opt, r, sampleReward(opt, ctx, ref))
+    },
+)
 
 // Catalog ----------------------------------------------------------------------
 
@@ -124,7 +134,7 @@ private fun contextualOptimalArm(x: DoubleArray): Int = if (x[0] >= 0.0) 0 else 
 private fun contextualContext(oracleRng: Random): DoubleArray =
     doubleArrayOf(oracleRng.nextDouble() * 2.0 - 1.0)
 
-val multiArmedThompsonSpec = UnivariateBanditSpec(
+val multiArmedThompsonSpec = univariateBanditSpec(
     name = "MultiArmed/Thompson",
     nbrArms = 2,
     build = { r -> MultiArmedBandit(nbrArms = 2, policy = BetaBernoulliTS(), random = r) },
@@ -132,7 +142,7 @@ val multiArmedThompsonSpec = UnivariateBanditSpec(
     optimalArm = 1,
 )
 
-val multiArmedUcb1Spec = UnivariateBanditSpec(
+val multiArmedUcb1Spec = univariateBanditSpec(
     name = "MultiArmed/UCB1",
     nbrArms = 2,
     build = { r -> MultiArmedBandit(nbrArms = 2, policy = UCB1(), random = r) },
@@ -140,7 +150,7 @@ val multiArmedUcb1Spec = UnivariateBanditSpec(
     optimalArm = 1,
 )
 
-val bayesianContextualSpec = ContextualBanditSpec(
+val bayesianContextualSpec = contextualBanditSpec(
     name = "RegressionContextual/Bayesian",
     nbrArms = 2,
     featureSize = 1,
@@ -157,7 +167,7 @@ val bayesianContextualSpec = ContextualBanditSpec(
     optimalArm = ::contextualOptimalArm,
 )
 
-val sgdContextualSpec = ContextualBanditSpec(
+val sgdContextualSpec = contextualBanditSpec(
     name = "RegressionContextual/SGD",
     nbrArms = 2,
     featureSize = 1,
@@ -181,7 +191,7 @@ private val treeBanditCandidates = listOf(
     ThresholdSplit(0, 0.5),
 )
 
-val decisionTreeContextualSpec = ContextualBanditSpec(
+val decisionTreeContextualSpec = contextualBanditSpec(
     name = "RegressionContextual/DT",
     nbrArms = 2,
     featureSize = 1,
@@ -193,7 +203,7 @@ val decisionTreeContextualSpec = ContextualBanditSpec(
                 splitCandidates = treeBanditCandidates,
                 config = TreeConfig(splitPeriod = 16, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
             ),
-            posterior = com.eignex.kumulant.stat.tree.MeanTreePosterior,
+            posterior = MeanTreePosterior,
             random = r,
         )
     },
@@ -203,7 +213,7 @@ val decisionTreeContextualSpec = ContextualBanditSpec(
 )
 
 /** Every spec exposed by the bench module's bandit analyses. */
-val allBanditSpecs: List<BanditSpec> = listOf(
+val allBanditSpecs: List<BanditSpec<*>> = listOf(
     multiArmedThompsonSpec,
     multiArmedUcb1Spec,
     bayesianContextualSpec,

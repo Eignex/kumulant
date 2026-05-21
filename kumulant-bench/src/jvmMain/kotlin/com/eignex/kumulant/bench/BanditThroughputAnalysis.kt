@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bench
 
+import com.eignex.kumulant.bandit.Bandit
 import java.lang.management.ManagementFactory
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -69,32 +70,39 @@ private fun formatRate(opsPerSec: Double): String = when {
     else -> "%.0f".format(opsPerSec)
 }
 
-private fun measureCell(
-    spec: BanditSpec,
+private fun <B : Bandit> measureCell(
+    spec: BanditSpec<B>,
     threads: Int,
     warmupMs: Long,
     measureMs: Long,
     banditSeed: Long,
     oracleSeed: Long,
 ): BanditCell {
-    val driver = spec.newDriver(Random(banditSeed), Random(oracleSeed))
-    runWindow(driver, threads, warmupMs)
+    val bandit = spec.build(Random(banditSeed))
+    val oracle = Random(oracleSeed)
+    runWindow(spec, bandit, oracle, threads, warmupMs)
     System.gc()
     val gcBefore = gcMillis()
-    val ops = runWindow(driver, threads, measureMs)
+    val ops = runWindow(spec, bandit, oracle, threads, measureMs)
     val gcAfter = gcMillis()
     return BanditCell(cycles = ops.cyclesTotal, elapsedNanos = ops.elapsedNanos, gcMillis = gcAfter - gcBefore)
 }
 
 private data class BanditRunResult(val cyclesTotal: Long, val elapsedNanos: Long)
 
-private fun runWindow(driver: BanditDriver, threads: Int, durationMs: Long): BanditRunResult {
+private fun <B : Bandit> runWindow(
+    spec: BanditSpec<B>,
+    bandit: B,
+    oracle: Random,
+    threads: Int,
+    durationMs: Long,
+): BanditRunResult {
     if (threads == 1) {
         val deadline = System.nanoTime() + durationMs * 1_000_000L
         var cycles = 0L
         val t0 = System.nanoTime()
         while (System.nanoTime() < deadline) {
-            driver.cycle()
+            spec.cycle(bandit, oracle)
             cycles++
         }
         return BanditRunResult(cycles, System.nanoTime() - t0)
@@ -109,7 +117,7 @@ private fun runWindow(driver: BanditDriver, threads: Int, durationMs: Long): Ban
             start.await()
             var local = 0L
             while (!stop.get()) {
-                driver.cycle()
+                spec.cycle(bandit, oracle)
                 local++
             }
             cyclesTotal.addAndGet(local)
