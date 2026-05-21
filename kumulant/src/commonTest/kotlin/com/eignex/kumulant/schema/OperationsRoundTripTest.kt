@@ -343,8 +343,8 @@ class OperationsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        rebuilt.update(2.0)  // 2 * 1 * 4 = 8
-        rebuilt.update(3.0)  // 3 * 1 * 9 = 27
+        rebuilt.update(2.0) // 2 * 1 * 4 = 8
+        rebuilt.update(3.0) // 3 * 1 * 9 = 27
         assertEquals(35.0, (rebuilt.read() as SumResult).sum, DELTA)
     }
 
@@ -353,7 +353,7 @@ class OperationsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        repeat(10) { rebuilt.update(1.0) }  // updates at ticks 3, 6, 9
+        repeat(10) { rebuilt.update(1.0) } // updates at ticks 3, 6, 9
         assertEquals(3.0, (rebuilt.read() as SumResult).sum, DELTA)
     }
 

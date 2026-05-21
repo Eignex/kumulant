@@ -80,23 +80,23 @@ class SamplingTest {
     fun `series weightBy multiplies caller weight by expression result`() {
         val stat = SumStat().weightBy { v -> v * v }
         // sum += value * weight * weighter(value); caller weight defaults to 1.
-        stat.update(2.0)  // contributes 2 * 1 * 4 = 8
-        stat.update(3.0)  // contributes 3 * 1 * 9 = 27
+        stat.update(2.0) // contributes 2 * 1 * 4 = 8
+        stat.update(3.0) // contributes 3 * 1 * 9 = 27
         assertEquals(35.0, stat.read().sum, DELTA)
     }
 
     @Test
     fun `paired weightBy multiplies caller weight by expression`() {
         val stat = SumStat().atY().weightBy { _, y -> y }
-        stat.update(0.0, y = 2.0)  // 2 * 1 * 2 = 4
-        stat.update(0.0, y = 5.0)  // 5 * 1 * 5 = 25
+        stat.update(0.0, y = 2.0) // 2 * 1 * 2 = 4
+        stat.update(0.0, y = 5.0) // 5 * 1 * 5 = 25
         assertEquals(29.0, stat.read().sum, DELTA)
     }
 
     @Test
     fun `discrete weightBy composes with caller weight`() {
         val stat = SumStat().asDiscrete().weightBy { v -> v.toDouble() }
-        stat.update(value = 3L, weight = 2.0)  // 3 * 2 * 3 = 18
+        stat.update(value = 3L, weight = 2.0) // 3 * 2 * 3 = 18
         assertEquals(18.0, stat.read().sum, DELTA)
     }
 }

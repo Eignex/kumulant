@@ -199,7 +199,9 @@ class Tree(
                 val residual = subtractWVR(node.value, childSum)
                 val carry = if (residual.totalWeights > 0.0) {
                     leafArmFactory().also { it.merge(residual) }
-                } else null
+                } else {
+                    null
+                }
                 SplitNode(split = node.split, pos = pos, neg = neg, carryover = carry)
             }
         }

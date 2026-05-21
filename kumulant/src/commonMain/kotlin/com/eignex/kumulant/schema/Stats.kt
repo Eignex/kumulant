@@ -16,10 +16,6 @@ import com.eignex.kumulant.stat.regression.Link
 import com.eignex.kumulant.stat.regression.Penalty
 import com.eignex.kumulant.stat.regression.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
-import com.eignex.kumulant.stat.tree.ForestRegressionResult
-import com.eignex.kumulant.stat.tree.Split
-import com.eignex.kumulant.stat.tree.TreeConfig
-import com.eignex.kumulant.stat.tree.TreeRegressionResult
 import com.eignex.kumulant.stat.score.AucResult
 import com.eignex.kumulant.stat.score.ReliabilityResult
 import com.eignex.kumulant.stat.sketch.BloomFilterResult
@@ -35,6 +31,10 @@ import com.eignex.kumulant.stat.summary.RangeResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import com.eignex.kumulant.stat.tree.ForestRegressionResult
+import com.eignex.kumulant.stat.tree.Split
+import com.eignex.kumulant.stat.tree.TreeConfig
+import com.eignex.kumulant.stat.tree.TreeRegressionResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

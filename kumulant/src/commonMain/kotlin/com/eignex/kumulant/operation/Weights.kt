@@ -81,15 +81,21 @@ internal class WithWeightDiscreteStat<R : Result>(
  * Per-update weight multiplier driven by the input. `weightBy` multiplies the
  * caller-supplied weight by the value [weighter] returns, so it composes with
  * [withWeight] (which replaces weight outright). The spec-layer counterpart in
- * `Operations.kt` takes a [ScalarExpr] and materializes the closure at build
+ * `Operations.kt` takes a [com.eignex.kumulant.schema.ScalarExpr] and materializes the closure at build
  * time.
  */
 fun <R : Result> SeriesStat<R>.weightBy(weighter: (Double) -> Double): SeriesStat<R> =
     WeightBySeriesStat(this, weighter)
+
+/** Paired-stat counterpart of [SeriesStat.weightBy]; [weighter] sees `(x, y)`. */
 fun <R : Result> PairedStat<R>.weightBy(weighter: (Double, Double) -> Double): PairedStat<R> =
     WeightByPairedStat(this, weighter)
+
+/** Vector-stat counterpart of [SeriesStat.weightBy]; [weighter] sees the full vector. */
 fun <R : Result> VectorStat<R>.weightBy(weighter: (DoubleArray) -> Double): VectorStat<R> =
     WeightByVectorStat(this, weighter)
+
+/** Discrete-stat counterpart of [SeriesStat.weightBy]; [weighter] sees the long value. */
 fun <R : Result> DiscreteStat<R>.weightBy(weighter: (Long) -> Double): DiscreteStat<R> =
     WeightByDiscreteStat(this, weighter)
 

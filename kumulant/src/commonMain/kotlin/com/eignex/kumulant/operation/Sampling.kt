@@ -27,17 +27,29 @@ import kotlin.random.Random
 
 /** Forward only every [every]th update to the delegate; drop the rest. */
 fun <R : Result> SeriesStat<R>.throttle(every: Int): SeriesStat<R> = ThrottleSeriesStat(this, every)
+
+/** Paired-stat counterpart of [SeriesStat.throttle]. */
 fun <R : Result> PairedStat<R>.throttle(every: Int): PairedStat<R> = ThrottlePairedStat(this, every)
+
+/** Vector-stat counterpart of [SeriesStat.throttle]. */
 fun <R : Result> VectorStat<R>.throttle(every: Int): VectorStat<R> = ThrottleVectorStat(this, every)
+
+/** Discrete-stat counterpart of [SeriesStat.throttle]. */
 fun <R : Result> DiscreteStat<R>.throttle(every: Int): DiscreteStat<R> = ThrottleDiscreteStat(this, every)
 
 /** Bernoulli-sample each update at probability [rate], using [random] as the PRNG. */
 fun <R : Result> SeriesStat<R>.sample(rate: Double, random: Random): SeriesStat<R> =
     SampleSeriesStat(this, rate, random)
+
+/** Paired-stat counterpart of [SeriesStat.sample]. */
 fun <R : Result> PairedStat<R>.sample(rate: Double, random: Random): PairedStat<R> =
     SamplePairedStat(this, rate, random)
+
+/** Vector-stat counterpart of [SeriesStat.sample]. */
 fun <R : Result> VectorStat<R>.sample(rate: Double, random: Random): VectorStat<R> =
     SampleVectorStat(this, rate, random)
+
+/** Discrete-stat counterpart of [SeriesStat.sample]. */
 fun <R : Result> DiscreteStat<R>.sample(rate: Double, random: Random): DiscreteStat<R> =
     SampleDiscreteStat(this, rate, random)
 

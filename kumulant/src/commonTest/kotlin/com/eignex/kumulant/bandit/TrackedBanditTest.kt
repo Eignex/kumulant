@@ -35,8 +35,8 @@ class TrackedBanditTest {
         val tracked = TrackedContextualBandit(
             inner = inner,
             contextFeatureSize = 1,
-            chooseTemplate = BayesianRegressionStat(featureSize = 1),       // policy: y = arm | x
-            updateJointTemplate = BayesianRegressionStat(featureSize = 2),  // 1 (arm) + 1 (context)
+            chooseTemplate = BayesianRegressionStat(featureSize = 1), // policy: y = arm | x
+            updateJointTemplate = BayesianRegressionStat(featureSize = 2), // 1 (arm) + 1 (context)
             updateMarginalTemplate = BayesianRegressionStat(featureSize = 1),
             updateArmRewardTemplate = CovarianceStat(),
         )

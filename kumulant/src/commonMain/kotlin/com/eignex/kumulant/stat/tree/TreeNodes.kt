@@ -132,4 +132,3 @@ internal fun Node.subtreeAggregate(): WeightedVarianceResult = when (this) {
         if (carry != null) mergeWVR(base, carry.read(0L)) else base
     }
 }
-

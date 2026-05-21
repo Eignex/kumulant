@@ -42,13 +42,12 @@ class RegressionListStatsTest {
             )
             error("should have thrown")
         } catch (e: IllegalArgumentException) {
-            assert("featureSize" in e.message.orEmpty())
+            check("featureSize" in e.message.orEmpty())
         }
     }
 
     @Test
-    fun `tree plus marginal-y observation recovers the old root-arm view`() {
-        // The dropped TrackedRegressionStat use-case, expressed via the standard ops.
+    fun `tree plus marginal-y observation composes via foldRegression`() {
         val tree = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = emptyList())
         val observation = SumStat().foldRegression(featureSize = 1) { _, y -> y }
         val composite = RegressionListStats<Result>("tree" to tree, "marginalY" to observation)

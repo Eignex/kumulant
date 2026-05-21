@@ -2,7 +2,6 @@ package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.StochasticRegressionStat
-import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat
@@ -59,8 +58,8 @@ class RegressionOpsTest {
     fun `weightBy multiplies caller weight by per-update expr`() {
         val inner = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = emptyList())
         val stat = inner.weightBy { _, y -> y * y }
-        stat.update(feat(0.0), y = 2.0)  // weight = 1 * 4
-        stat.update(feat(0.0), y = 3.0)  // weight = 1 * 9
+        stat.update(feat(0.0), y = 2.0) // weight = 1 * 4
+        stat.update(feat(0.0), y = 3.0) // weight = 1 * 9
         assertEquals(13.0, stat.read(0L).totalWeights, DELTA)
     }
 
@@ -83,7 +82,7 @@ class RegressionOpsTest {
     }
 
     @Test
-    fun `foldRegression lifts a series stat to consume (x, y)`() {
+    fun `foldRegression lifts a series stat to consume x and y`() {
         // Project y through, ignore x; the SeriesStat sees only y.
         val stat = VarianceStat().foldRegression(featureSize = 2) { _, y -> y }
         for (y in doubleArrayOf(1.0, 2.0, 3.0, 4.0, 5.0)) stat.update(feat(0.0, 0.0), y)
@@ -97,7 +96,7 @@ class RegressionOpsTest {
     fun `foldRegression rejects x-vector size mismatch`() {
         val stat = SumStat().foldRegression(featureSize = 3) { _, y -> y }
         try {
-            stat.update(feat(1.0, 2.0), y = 0.0)  // size = 2, expected 3
+            stat.update(feat(1.0, 2.0), y = 0.0) // size = 2, expected 3
             error("should have thrown")
         } catch (e: IllegalArgumentException) {
             assertTrue("x.size=2" in e.message.orEmpty())

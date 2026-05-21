@@ -7,8 +7,8 @@ import com.eignex.kumulant.stat.regression.CovarianceRegressionResult
 import com.eignex.kumulant.stat.regression.StochasticRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.tree.ThresholdSplit
-import com.eignex.kumulant.stat.tree.TreeRegressionResult
 import com.eignex.kumulant.stat.tree.TreeConfig
+import com.eignex.kumulant.stat.tree.TreeRegressionResult
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,7 +20,10 @@ private fun feat(vararg xs: Double) = DenseVector.of(xs)
 class RegressionSpecsRoundTripTest {
 
     @Test fun `BayesianRegression leaf spec round trips and materializes`() {
-        val cfg: RegressionStatSpec<CovarianceRegressionResult> = BayesianRegression(featureSize = 2, priorVariance = 0.5)
+        val cfg: RegressionStatSpec<CovarianceRegressionResult> = BayesianRegression(
+            featureSize = 2,
+            priorVariance = 0.5
+        )
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
         val live = decoded.materialize(Concurrency.None)
@@ -73,8 +76,8 @@ class RegressionSpecsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
         val live = decoded.materialize(Concurrency.None)
-        live.update(feat(0.0), y = -1.0)  // dropped
-        live.update(feat(0.0), y = 1.0)   // kept
+        live.update(feat(0.0), y = -1.0) // dropped
+        live.update(feat(0.0), y = 1.0) // kept
         assertTrue(live is RegressionStat<*>)
     }
 
@@ -111,7 +114,7 @@ class RegressionSpecsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
         val live = decoded.materialize(Concurrency.None)
-        live.update(feat(0.0), y = 3.0)  // y rewritten to 6.0 before fold projects Y to inner
+        live.update(feat(0.0), y = 3.0) // y rewritten to 6.0 before fold projects Y to inner
         assertEquals(6.0, (live.read(0L) as SumResult).sum, DELTA)
     }
 }

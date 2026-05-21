@@ -378,13 +378,19 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
         is WithWeightRegression ->
             requireRegression(inner, "WithWeightRegression").materialize(concurrency).withWeight(weight)
         is WeightByValueRegression -> {
-            val m = requireRegression(inner, "WeightByValueRegression").materialize(concurrency) as RegressionStat<Result>
+            val m = requireRegression(
+                inner,
+                "WeightByValueRegression"
+            ).materialize(concurrency) as RegressionStat<Result>
             m.weightBy { v, y -> expr.eval(0.0, y, v.toDoubleArray()) }
         }
         is ThrottleRegression ->
             requireRegression(inner, "ThrottleRegression").materialize(concurrency).throttle(every)
         is SampleRegression ->
-            requireRegression(inner, "SampleRegression").materialize(concurrency).sample(rate, kotlin.random.Random(seed))
+            requireRegression(
+                inner,
+                "SampleRegression"
+            ).materialize(concurrency).sample(rate, kotlin.random.Random(seed))
         is FoldRegression -> {
             val m = requireSeries(inner, "FoldRegression").materialize(concurrency) as SeriesStat<Result>
             m.foldRegression(featureSize) { v, y -> project.eval(0.0, y, v.toDoubleArray()) }

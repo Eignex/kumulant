@@ -38,7 +38,9 @@ import kotlin.random.Random
  * static type information.
  */
 class TrackedContextualBandit<B : ContextualBandit>(
+    /** Underlying bandit; exposed for `PerArmBandit` / `ContextualScorable` access. */
     val inner: B,
+    /** Context vector dimension validated against templates and incoming updates. */
     val contextFeatureSize: Int,
     private val chooseTemplate: RegressionStat<out Result>? = null,
     private val updateJointTemplate: RegressionStat<out Result>? = null,
@@ -138,6 +140,7 @@ class TrackedContextualBandit<B : ContextualBandit>(
  * Both templates are optional; null disables that side.
  */
 class TrackedUnivariateBandit<B : UnivariateBandit>(
+    /** Underlying bandit; exposed for `PerArmBandit` / `Scorable` access. */
     val inner: B,
     private val chooseTemplate: SeriesStat<out Result>? = null,
     private val updateArmRewardTemplate: PairedStat<out Result>? = null,
