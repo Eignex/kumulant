@@ -69,6 +69,12 @@ fun JavaExec.kumulantBenchSetup() {
         it.output.allOutputs + it.runtimeDependencyFiles
     }
     jvmArgs("--add-modules=jdk.incubator.vector")
+    // Forward `-Dbench.*` from the gradle invocation onto the forked JVM so users
+    // can tune cell duration, thread count, and JFR options without editing code.
+    System.getProperties().forEach { k, v ->
+        val key = k.toString()
+        if (key.startsWith("bench.")) systemProperty(key, v.toString())
+    }
 }
 
 tasks.register<JavaExec>("analyzeAccuracy") {
@@ -80,6 +86,12 @@ tasks.register<JavaExec>("analyzeAccuracy") {
 tasks.register<JavaExec>("analyzeConcurrencyDrift") {
     description = "Per-stat update-path drift under each Concurrency level, 4 threads. Prints to stdout."
     mainClass.set("com.eignex.kumulant.bench.ConcurrencyDriftAnalysisKt")
+    kumulantBenchSetup()
+}
+
+tasks.register<JavaExec>("analyzeThroughput") {
+    description = "Per-stat update throughput at 1 and N threads × each Concurrency level. Optional JFR via -Dbench.jfr=true. Prints to stdout."
+    mainClass.set("com.eignex.kumulant.bench.ThroughputAnalysisKt")
     kumulantBenchSetup()
 }
 
