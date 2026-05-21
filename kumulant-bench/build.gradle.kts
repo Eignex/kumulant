@@ -95,6 +95,24 @@ tasks.register<JavaExec>("analyzeThroughput") {
     kumulantBenchSetup()
 }
 
+tasks.register<JavaExec>("analyzeBanditThroughput") {
+    description = "Per-bandit (choose, play, update) cycles/sec at 1 and N threads. Prints to stdout."
+    mainClass.set("com.eignex.kumulant.bench.BanditThroughputAnalysisKt")
+    kumulantBenchSetup()
+}
+
+tasks.register<JavaExec>("analyzeBanditAccuracy") {
+    description = "Per-bandit cumulative regret under a known reward model. Prints to stdout."
+    mainClass.set("com.eignex.kumulant.bench.BanditAccuracyAnalysisKt")
+    kumulantBenchSetup()
+}
+
+tasks.register<JavaExec>("analyzeBanditDrift") {
+    description = "Per-bandit concurrent-update drift over N threads sharing the same bandit. Prints to stdout."
+    mainClass.set("com.eignex.kumulant.bench.BanditDriftAnalysisKt")
+    kumulantBenchSetup()
+}
+
 tasks.register<JavaExec>("analyzeMergeContention") {
     description = "Per-stat merge-path drift when 4 threads concurrently merge snapshots. Prints to stdout."
     mainClass.set("com.eignex.kumulant.bench.MergeContentionAnalysisKt")
