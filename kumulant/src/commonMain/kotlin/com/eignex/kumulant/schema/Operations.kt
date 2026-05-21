@@ -726,14 +726,8 @@ fun <R : Result> VectorStatSpec<R>.sample(rate: Double, seed: Long): VectorStatS
 fun <R : Result> DiscreteStatSpec<R>.sample(rate: Double, seed: Long): DiscreteStatSpec<R> =
     SampleDiscrete(this, rate, seed) as DiscreteStatSpec<R>
 
-// ─────────────────────────────────────────────────────────────────────────────
-// RegressionStat decorators (wire forms). Inner is typed at the base StatSpec;
-// the materialiser in StatFactory.kt resolves the modality and casts. ScalarExpr
-// bindings for regression: `X` is unused (0.0), `Y` is the target y, `V` is the
-// feature vector x.
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** Wire spec for `RegressionStat.filter(pred)`. */
+/** Wire spec for `RegressionStat.filter(pred)`. ScalarExpr bindings for regression:
+ *  `X` is unused (0.0), `Y` is the target y, `V` is the feature vector x. */
 @Serializable
 @SerialName("FilterRegression")
 data class FilterRegression(

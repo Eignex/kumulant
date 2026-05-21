@@ -3,6 +3,7 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
@@ -204,19 +205,19 @@ fun <R : Result> discreteListStats(
 /** Regression-input counterpart of [ListStats]. Each `(x, y, ts, weight)` update fans
  *  out to every entry; the snapshot is a [ResultList] keyed by name. */
 class RegressionListStats<R : Result>(
-    entries: List<Pair<String, com.eignex.kumulant.core.RegressionStat<out R>>>,
+    entries: List<Pair<String, RegressionStat<out R>>>,
     concurrency: Concurrency? = null,
-) : AbstractListStats<R, com.eignex.kumulant.core.RegressionStat<out R>>(entries, concurrency, "RegressionListStats"),
-    com.eignex.kumulant.core.RegressionStat<ResultList<R>> {
+) : AbstractListStats<R, RegressionStat<out R>>(entries, concurrency, "RegressionListStats"),
+    RegressionStat<ResultList<R>> {
 
-    constructor(vararg entries: Pair<String, com.eignex.kumulant.core.RegressionStat<out R>>, concurrency: Concurrency? = null) :
+    constructor(vararg entries: Pair<String, RegressionStat<out R>>, concurrency: Concurrency? = null) :
         this(entries.toList(), concurrency)
 
     @Suppress("UNCHECKED_CAST")
     constructor(schema: StatSchema, concurrency: Concurrency? = null) :
         this(
             entries = regressionSpecs(schema).map {
-                it.key.name to (it.stat as com.eignex.kumulant.core.RegressionStat<out R>)
+                it.key.name to (it.stat as RegressionStat<out R>)
             },
             concurrency = concurrency,
         )
@@ -235,7 +236,7 @@ class RegressionListStats<R : Result>(
         for ((_, stat) in entries) stat.update(x, y, timestampNanos, weight)
     }
 
-    override fun create(concurrency: Concurrency?): com.eignex.kumulant.core.RegressionStat<ResultList<R>> {
+    override fun create(concurrency: Concurrency?): RegressionStat<ResultList<R>> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         return RegressionListStats(
             entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
@@ -246,7 +247,7 @@ class RegressionListStats<R : Result>(
 
 /** Auto-named [RegressionListStats]: each stat keyed by its class `simpleName`. */
 fun <R : Result> regressionListStats(
-    vararg stats: com.eignex.kumulant.core.RegressionStat<out R>,
+    vararg stats: RegressionStat<out R>,
     concurrency: Concurrency? = null,
 ): RegressionListStats<R> = RegressionListStats(stats.map { autoName(it) to it }, concurrency)
 

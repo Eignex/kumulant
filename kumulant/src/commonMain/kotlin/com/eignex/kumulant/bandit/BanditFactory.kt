@@ -44,6 +44,7 @@ import com.eignex.kumulant.bandit.univariate.UcbV
 import com.eignex.kumulant.bandit.univariate.UcbVSpec
 import com.eignex.kumulant.bandit.univariate.UniformSelection
 import com.eignex.kumulant.bandit.univariate.UniformSelectionSpec
+import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.VectorView
@@ -112,8 +113,8 @@ fun <R : Result> TopTwoThompsonSpec<R>.materialize(random: Random = Random.Defau
         random = random,
     )
 
-/** Dispatch any [com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec] to its concrete bandit. */
-fun com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec.materialize(
+/** Dispatch any [UnivariateBanditSpec] to its concrete bandit. */
+fun UnivariateBanditSpec.materialize(
     random: Random = Random.Default,
 ): Bandit = when (this) {
     is MultiArmedSpec<*> -> materialize(random)
@@ -122,8 +123,6 @@ fun com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec.materialize(
     is Exp3Spec -> materialize(random)
     is TopTwoThompsonSpec<*> -> (this as TopTwoThompsonSpec<Result>).materialize(random)
 }
-
-// === Contextual ============================================================
 
 /** Build a live linear [com.eignex.kumulant.core.RegressionStat] from its spec. */
 private fun LinearRegressionSpec.materialize(

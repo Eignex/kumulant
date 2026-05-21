@@ -3,6 +3,7 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
@@ -116,10 +117,10 @@ internal fun discreteSpecs(schema: StatSchema): List<BoundStat<*, out DiscreteSt
     }
 
 /** Regression-modality specs from a schema. */
-internal fun regressionSpecs(schema: StatSchema): List<BoundStat<*, out com.eignex.kumulant.core.RegressionStat<*>, *>> =
+internal fun regressionSpecs(schema: StatSchema): List<BoundStat<*, out RegressionStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is RegressionStatSpec<*>) return@mapNotNull null
-        toSpec<com.eignex.kumulant.core.RegressionStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
+        toSpec<RegressionStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
     }
 
 @Suppress("UNCHECKED_CAST")
