@@ -173,6 +173,78 @@ configuration, state reset to the prior seed, and a swappable random.
 Use it to spin up clean replicas for parallel training without
 reserialising the spec.
 
+## Observability wrappers
+
+Bandits answer "which arm to play" but production deployments want richer
+introspection: what policy is the bandit learning, how does reward depend
+on context, which arms correlate with which rewards. `TrackedContextualBandit`
+and `TrackedUnivariateBandit` wrap any bandit and route every `choose` /
+`update` event into a small set of aggregate side stats. Arm-level
+bucketing is a planned `stratify` op; encode the arm into the observation
+(the joint template does this automatically) until that lands.
+
+`TrackedContextualBandit` has four optional template slots:
+
+- `chooseTemplate: RegressionStat<*>?`. Sees `update(x = context, y =
+  armIndex.toDouble(), weight = 1.0)` at every `choose`. Models the
+  bandit's **policy**: arm selections as a function of context. The
+  template's `featureSize` must equal `contextFeatureSize`.
+- `updateJointTemplate: RegressionStat<*>?`. Sees `update(x =
+  [armIndex.toDouble()] ++ context, y = reward, weight)` at every
+  `update`. **Joint reward model** with the chosen arm prepended as an
+  extra feature; the coefficient on the arm dimension gives the
+  arm-conditional effect. The template's `featureSize` must equal
+  `1 + contextFeatureSize`.
+- `updateMarginalTemplate: RegressionStat<*>?`. Sees `update(x = context,
+  y = reward, weight)` at every `update`. **Marginal reward-given-context
+  model**, agnostic to which arm was played. The template's `featureSize`
+  must equal `contextFeatureSize`.
+- `updateArmRewardTemplate: PairedStat<*>?`. Sees `update(x =
+  armIndex.toDouble(), y = reward, weight)` at every `update`.
+  **Arm-versus-reward**: slope, correlation, or covariance between arm
+  and observed reward.
+
+`TrackedUnivariateBandit` (no context) has two slots:
+
+- `chooseTemplate: SeriesStat<*>?`. Sees `update(value =
+  armIndex.toDouble(), weight = 1.0)` at every `choose`. Arm-pick
+  distribution over time; a `CountStat` here gives total pulls, a
+  `MomentsStat` gives the empirical arm distribution.
+- `updateArmRewardTemplate: PairedStat<*>?`. Sees `update(x =
+  armIndex.toDouble(), y = reward, weight)` at every `update`. Per-arm
+  reward distribution via the paired modality.
+
+Every slot is independent and may be null to disable.
+
+The wrapper itself only satisfies the action interface (`ContextualBandit`
+or `UnivariateBandit`). To reach `PerArmBandit.snapshot()`,
+`ContextualScorable.evaluate(i, x)`, or any other interface the inner
+bandit implements, dot through `tracked.inner.<method>`. The inner is
+typed as the generic parameter `B`, so no casts are needed.
+
+```kotlin
+val bandit = TrackedContextualBandit(
+    inner = RegressionContextualBandit(nbrArms, BayesianRegressionStat(d), MultivariateGaussian),
+    contextFeatureSize = d,
+    chooseTemplate = BayesianRegressionStat(featureSize = d),       // policy
+    updateJointTemplate = BayesianRegressionStat(featureSize = d + 1), // arm + context
+    updateMarginalTemplate = BayesianRegressionStat(featureSize = d),  // marginal
+    updateArmRewardTemplate = CovarianceStat(),                        // arm-vs-reward
+)
+val armIndex = bandit.choose(x)
+bandit.update(armIndex, x, reward)
+bandit.chooseResult()              // policy regressor snapshot
+bandit.updateJointResult()         // joint model snapshot
+bandit.updateMarginalResult()      // marginal model snapshot
+bandit.updateArmRewardResult()     // arm-vs-reward covariance snapshot
+bandit.inner.armResult(armIndex)   // PerArmBandit access via .inner
+```
+
+For non-bandit regressors that want marginal-y observability alongside
+the model, compose the regressor with a side `SeriesStat` via
+`RegressionListStats` and `foldRegression(Y)`. See the "RegressionStat
+decorators" section in [04-operations.md](04-operations.md).
+
 ## Single source of randomness
 
 Every bandit takes a Random at construction and routes every draw,

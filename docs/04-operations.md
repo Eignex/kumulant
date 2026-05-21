@@ -15,13 +15,27 @@ need an arbitrary Kotlin lambda.
 
 ## Per-update weighting
 
-`withWeight(constant)` multiplies every incoming observation's weight by
-a constant. It is available on each modality, both live and as a spec.
+`withWeight(constant)` replaces every incoming observation's weight with
+a constant, discarding the caller-supplied weight. It is available on
+each modality, both live and as a spec.
 
 ```kotlin
-val downweighted = MeanStat().withWeight(0.5)
-val specDownweighted = Mean.withWeight(0.5)
+val pinned = MeanStat().withWeight(0.5)
+val pinnedSpec = Mean.withWeight(0.5)
 ```
+
+`weightBy` multiplies the caller-supplied weight by a per-update value.
+The live form takes a Kotlin lambda; the spec form takes a `ScalarExpr`
+from the AST DSL. Series sees the value, paired sees `(x, y)`, vector
+sees the full vector, discrete sees `value.toDouble()`.
+
+```kotlin
+val squared = SumStat().weightBy { v -> v * v }
+val squaredSpec = Sum.weightBy(X * X)
+```
+
+Use `withWeight` to pin the weight regardless of input. Use `weightBy`
+to scale per-update on top of whatever weight the caller supplied.
 
 ## Filtering
 
@@ -73,6 +87,57 @@ paired stat into a series stat by pinning one axis. `withTimeAsX` and
 `withTimeAsY` feed the per-update timestamp into one axis of a paired
 stat, which is useful for fitting a value-versus-time trend.
 
+## Throttling and sampling
+
+`throttle(every = N)` forwards only every Nth update to the inner stat
+and drops the rest. Useful for cheap downsampling, capping audit-leaf
+sub-stat work, and any "every Nth observation" diagnostic. The counter
+is an atomic so multi-thread updates still pick exactly one in N.
+
+```kotlin
+val every10th = MeanStat().throttle(every = 10)
+val every10thSpec = Mean.throttle(every = 10)
+```
+
+`sample(rate, ...)` keeps each update with Bernoulli probability `rate`.
+The live form takes a `kotlin.random.Random` so the caller can plug in
+any PRNG; the spec form takes a `Long` seed and the materialiser
+constructs a fresh `Random(seed)` so replays are deterministic. The
+`Random` instance is not thread-safe by default. Either wrap it
+externally or run under `Concurrency.None` if you need exact replay
+under contention.
+
+```kotlin
+val downsampled = MeanStat().sample(rate = 0.1, random = Random(42))
+val downsampledSpec = Mean.sample(rate = 0.1, seed = 42L)
+```
+
+Both compose with every other op. `throttle` is deterministic by tick
+count; `sample` is deterministic per seed.
+
+## Fanning out: ListStats and StatGroup
+
+To send each update to N inner stats and read back a `ResultList`, use
+`ListStats` (and its modality siblings `PairedListStats`,
+`VectorListStats`, `DiscreteListStats`). Each takes named entries; on
+read the per-entry snapshots come back keyed by both name (for
+`.toMap()`) and position (for merge alignment).
+
+```kotlin
+val tee = ListStats(
+    "count" to CountStat(),
+    "mean" to MeanStat(),
+    "variance" to VarianceStat(),
+)
+tee.update(3.0)
+val snap: ResultList<Result> = tee.read()
+snap.toMap()["mean"]
+```
+
+For schema-driven cases where you want `StatKey` / `BoundStat`
+plumbing on top, reach for `StatGroup` instead. `ListStats` is the
+lighter form for "I just want N stats fanned out."
+
 ## Windowing
 
 `windowed(duration, slices, concurrency)` wraps any stat in a
@@ -109,10 +174,72 @@ the default for Mean and Variance, which need the distinction.
 val sparseCounts = Count.vectorized(dimensions = 10_000, skipZeros = true)
 ```
 
+## RegressionStat decorators
+
+RegressionStat has the same op surface as the other modalities. The bindings
+match the ScalarExpr DSL convention: `Y` is the target y, `V` is the feature
+vector x, `X` is unused. BoolExpr predicates see the same.
+
+```kotlin
+val regressor = StochasticRegression(featureSize = 2)
+    .filter(Y gt 0.0)
+    .transformY(Y - 1.0)
+    .weightBy(Y * Y)
+    .throttle(every = 4)
+```
+
+Live extensions take Kotlin lambdas with the signature `(VectorView, Double)
+-> ...`. Spec/wire forms take ScalarExpr / BoolExpr / VectorExpr just like the
+other modalities, and the materializer in `StatFactory.kt` builds the closure
+from the AST at construction.
+
+Five leaf RegressionStatSpecs are wire-portable: `BayesianRegression`,
+`StochasticRegression`, `DiagonalRegression`, `DecisionTreeRegression`,
+`RandomForestRegression`. The tree specs carry a `TreeConfig` and a
+`List<Split>`, both serializable. Live regressors with non-serializable
+hooks (custom `leafArmFactory`) stay constructable directly but not via
+spec.
+
+### Lifting a SeriesStat into the regression modality
+
+`SeriesStat<R>.foldRegression(featureSize, project)` lifts a series stat
+into a `RegressionStat<R>` by projecting `(x, y)` to a scalar. The most
+common use is the marginal-y view: pass `Y` (spec) or `{ _, y -> y }`
+(live).
+
+```kotlin
+val marginalY = VarianceStat().foldRegression(featureSize = 1) { _, y -> y }
+val marginalYSpec = Mean.foldRegression(featureSize = 1, project = Y)
+```
+
+### Tee for RegressionStat
+
+`RegressionListStats` fans one `(x, y)` update to N inner regressors and
+produces a `ResultList`. Combine it with `foldRegression` to attach a
+marginal-y observation alongside a regressor in a single composite:
+
+```kotlin
+val composite = RegressionListStats(
+    "tree" to DecisionTreeRegressionStat(featureSize, splits),
+    "marginalY" to VarianceStat().foldRegression(featureSize) { _, y -> y },
+)
+composite.update(x, y)
+val snap = composite.read(0L).toMap()
+snap["marginalY"]  // marginal mean / variance of y, independent of x
+```
+
+This is the standard composition. No bespoke wrapper needed.
+
 ## Operation locality
 
-All operations are zero-state except windowed and vectorized. The others
-delegate every cell, lock, and snapshot to the inner stat and just
-intercept update to massage its input. A chain like
+Most operations are zero-state: filter, transform, withWeight, withValue,
+weightBy, atX/atY/atIndex, withFixedX/Y, withTimeAsX/Y, asSeries,
+asDiscrete, fold. They delegate every cell, lock, and snapshot to the
+inner stat and just intercept update to massage its input. A chain like
 `Mean.filter(X gt 0.0).withWeight(0.5).windowed(1.minutes)` is still one
 MeanStat doing the math, with a thin chain of adapters in front.
+
+The stateful ops carry small extras: `throttle` keeps a single atomic
+tick counter, `sample` keeps a `Random` instance, `windowed` keeps a
+ring buffer of slice sub-stats, and `vectorized` keeps `dimensions`
+sub-stats. `ListStats` / `StatGroup` keep one inner per entry.
