@@ -47,13 +47,19 @@ class MultiArmedBandit<R : Result>(
     /** Policy that owns the per-arm cumulators and the arm-selection rule. */
     val policy: BanditPolicy<R>,
     override val random: Random = Random.Default,
-) : UnivariateBandit, PerArmBandit<R>, Scorable {
+) : UnivariateBandit,
+    PerArmBandit<R>,
+    Scorable {
 
-    init { require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" } }
+    init {
+        require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
+    }
 
     private val step = AtomicLong(0L)
     private val arms: Array<SeriesStat<R>> = Array(nbrArms) {
-        policy.createArm().also { policy.addArm(it.read(0L)) }
+        val arm = policy.createArm()
+        policy.addArm(arm.read(0L))
+        arm
     }
 
     override fun choose(): Int {
@@ -70,8 +76,7 @@ class MultiArmedBandit<R : Result>(
         return bestIdx
     }
 
-    override fun evaluate(armIndex: Int): Double =
-        policy.evaluate(arms[armIndex].read(0L), step.load(), random)
+    override fun evaluate(armIndex: Int): Double = policy.evaluate(arms[armIndex].read(0L), step.load(), random)
 
     override fun update(armIndex: Int, value: Double, weight: Double) {
         policy.update(arms[armIndex], value, weight)
@@ -102,8 +107,7 @@ class MultiArmedBandit<R : Result>(
         step.store(0L)
     }
 
-    override fun create(random: Random): MultiArmedBandit<R> =
-        MultiArmedBandit(nbrArms, policy, random)
+    override fun create(random: Random): MultiArmedBandit<R> = MultiArmedBandit(nbrArms, policy, random)
 
     /**
      * Live per-arm accumulator owned by this bandit. Exposed so callers can compose with

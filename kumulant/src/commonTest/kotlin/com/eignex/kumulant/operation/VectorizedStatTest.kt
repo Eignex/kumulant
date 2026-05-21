@@ -11,8 +11,7 @@ import kotlin.test.assertFailsWith
 
 private const val DELTA = 1e-12
 
-private fun sumVector(dimensions: Int): VectorizedStat<SumResult> =
-    VectorizedStat(dimensions, SumStat())
+private fun sumVector(dimensions: Int): VectorizedStat<SumResult> = VectorizedStat(dimensions, SumStat())
 
 class VectorizedStatTest {
 

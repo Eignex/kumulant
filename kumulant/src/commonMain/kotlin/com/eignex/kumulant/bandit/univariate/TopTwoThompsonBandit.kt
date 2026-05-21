@@ -58,7 +58,8 @@ class TopTwoThompsonBandit<R : Result>(
     val maxResamples: Int = 32,
     /** Single source of randomness. */
     override val random: Random = Random.Default,
-) : UnivariateBandit, PerArmBandit<R> {
+) : UnivariateBandit,
+    PerArmBandit<R> {
     init {
         require(nbrArms >= 2) { "nbrArms must be at least 2 for top-two, got $nbrArms" }
         require(beta in 0.0..1.0) { "beta must lie in [0, 1], got $beta" }

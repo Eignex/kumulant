@@ -23,9 +23,7 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  *
  * **Concurrency:** Inherits [MeanStat]'s concurrency model.
  */
-class BrierScoreStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<WeightedMeanResult> {
+class BrierScoreStat(override val concurrency: Concurrency = Concurrency.None) : PairedStat<WeightedMeanResult> {
 
     private val inner = MeanStat(concurrency)
 

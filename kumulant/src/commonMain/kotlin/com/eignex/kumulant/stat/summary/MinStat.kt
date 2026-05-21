@@ -30,9 +30,7 @@ data class MinResult(
  * [Concurrency] level. The CAS retry naturally serialises racing writers
  * without a lock.
  */
-class MinStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<MinResult> {
+class MinStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<MinResult> {
 
     private val mode = concurrency.monotonicMode()
     private val value = mode.newDouble(Double.POSITIVE_INFINITY)

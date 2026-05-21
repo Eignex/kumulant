@@ -9,12 +9,12 @@ import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.MultivariateGaussian
+import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
-
 /**
  * Polymorphic checks against the joint [Bandit] interface plus the [PerArmBandit]
  * convenience — anything that targets the per-arm state surface should work
@@ -83,7 +83,7 @@ class BanditInterfaceTest {
         val typedCopy = copy as MultiArmedBandit<*>
         val replicaWeight = (
             typedCopy.armResult(0) as
-                com.eignex.kumulant.stat.summary.WeightedVarianceResult
+                WeightedVarianceResult
             ).totalWeights
         assertTrue(populatedWeight > replicaWeight)
     }

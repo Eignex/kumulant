@@ -20,7 +20,9 @@ data class MomentsResult(
     override val m2: Double,
     override val m3: Double,
     override val m4: Double,
-) : Result, HasSampleVariance, HasShapeMoments {
+) : Result,
+    HasSampleVariance,
+    HasShapeMoments {
     override val sst: Double get() = m2
 }
 
@@ -42,9 +44,7 @@ data class MomentsResult(
  * floating-point reorder ULPs. [Concurrency.Relaxed] drops the lock; the
  * higher-order moments drift ~1e-4 relative under contention but never throw.
  */
-class MomentsStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<MomentsResult> {
+class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<MomentsResult> {
 
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()

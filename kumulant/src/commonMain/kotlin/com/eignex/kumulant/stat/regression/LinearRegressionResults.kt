@@ -24,7 +24,10 @@ import kotlinx.serialization.Serializable
  * return `0.0`.
  */
 @Serializable
-sealed interface LinearRegressionResult : Result, HasLinearModel, HasRegression {
+sealed interface LinearRegressionResult :
+    Result,
+    HasLinearModel,
+    HasRegression {
     override val weights: VectorView
 
     override val bias: Double

@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.ln
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -177,8 +179,7 @@ data class MinExpr(
     /** Right operand. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double =
-        kotlin.math.min(l.eval(x, y, v), r.eval(x, y, v))
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = min(l.eval(x, y, v), r.eval(x, y, v))
 }
 
 /** Wire spec for `max(l, r)`. */
@@ -190,8 +191,7 @@ data class MaxExpr(
     /** Right operand. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double =
-        kotlin.math.max(l.eval(x, y, v), r.eval(x, y, v))
+    override fun eval(x: Double, y: Double, v: DoubleArray): Double = max(l.eval(x, y, v), r.eval(x, y, v))
 }
 
 /** Wire spec for a ternary `if (cond) then else otherwise`. */
@@ -248,29 +248,34 @@ data class VFold(
             for (e in v) s += e
             s
         }
+
         VFoldOp.Product -> {
             var p = 1.0
             for (e in v) p *= e
             p
         }
+
         VFoldOp.Mean -> {
             require(v.isNotEmpty()) { "VFold.Mean on empty vector" }
             var s = 0.0
             for (e in v) s += e
             s / v.size
         }
+
         VFoldOp.Min -> {
             require(v.isNotEmpty()) { "VFold.Min on empty vector" }
             var m = v[0]
             for (i in 1 until v.size) if (v[i] < m) m = v[i]
             m
         }
+
         VFoldOp.Max -> {
             require(v.isNotEmpty()) { "VFold.Max on empty vector" }
             var m = v[0]
             for (i in 1 until v.size) if (v[i] > m) m = v[i]
             m
         }
+
         VFoldOp.Norm2 -> {
             var s = 0.0
             for (e in v) s += e * e

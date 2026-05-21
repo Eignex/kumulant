@@ -54,10 +54,8 @@ data class LinearCountingResult(
  * independent atomic ops. Lock-free and exact under every [Concurrency]
  * level — bit sets are idempotent and commutative.
  */
-class LinearCountingStat(
-    val bits: Int = 4096,
-    override val concurrency: Concurrency = Concurrency.None,
-) : DiscreteStat<LinearCountingResult> {
+class LinearCountingStat(val bits: Int = 4096, override val concurrency: Concurrency = Concurrency.None) :
+    DiscreteStat<LinearCountingResult> {
 
     init {
         require(bits > 0) { "bits must be > 0" }

@@ -17,9 +17,9 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * mixed-structure merges. Subtree aggregates include the carryover but the hot path
  * never reads or writes it.
  */
-sealed class Node {
+sealed interface Node {
     /** Walk to the leaf this row resolves to. */
-    abstract fun findLeaf(row: VectorView): LeafNode
+    fun findLeaf(row: VectorView): LeafNode
 }
 
 /**
@@ -34,7 +34,7 @@ class SplitNode(
     pos: Node,
     neg: Node,
     carryover: SeriesStat<WeightedVarianceResult>? = null,
-) : Node() {
+) : Node {
     @Volatile
     var pos: Node = pos
 
@@ -53,7 +53,7 @@ class SplitNode(
 
 /** Leaf node — terminus of the tree walk for a given row, and the only node type
  *  that owns a live accumulator. */
-sealed class LeafNode : Node() {
+sealed class LeafNode : Node {
     /** The leaf's weighted-variance accumulator. */
     abstract val arm: SeriesStat<WeightedVarianceResult>
 
@@ -126,6 +126,7 @@ internal fun mergeWVR(a: WeightedVarianceResult, b: WeightedVarianceResult): Wei
  *  and merge paths, never on hot updates. */
 internal fun Node.subtreeAggregate(): WeightedVarianceResult = when (this) {
     is LeafNode -> arm.read(0L)
+
     is SplitNode -> {
         val base = mergeWVR(pos.subtreeAggregate(), neg.subtreeAggregate())
         val carry = carryover

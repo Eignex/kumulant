@@ -28,7 +28,7 @@ class ArrayBinsTest {
         bins.add(5, 1.0)
         bins.add(5, 2.0)
         bins.add(5, 0.5)
-        assertEquals(3.5, bins.snapshot()[5]!!, DELTA)
+        assertEquals(3.5, bins.snapshot().getValue(5), DELTA)
     }
 
     @Test
@@ -37,8 +37,8 @@ class ArrayBinsTest {
         bins.add(-10, 2.0)
         bins.add(-5, 3.0)
         val snap = bins.snapshot()
-        assertEquals(2.0, snap[-10]!!, DELTA)
-        assertEquals(3.0, snap[-5]!!, DELTA)
+        assertEquals(2.0, snap.getValue(-10), DELTA)
+        assertEquals(3.0, snap.getValue(-5), DELTA)
     }
 
     @Test
@@ -47,8 +47,8 @@ class ArrayBinsTest {
         bins.add(0, 1.0)
         bins.add(-200, 2.0)
         val snap = bins.snapshot()
-        assertEquals(1.0, snap[0]!!, DELTA)
-        assertEquals(2.0, snap[-200]!!, DELTA)
+        assertEquals(1.0, snap.getValue(0), DELTA)
+        assertEquals(2.0, snap.getValue(-200), DELTA)
     }
 
     @Test
@@ -57,8 +57,8 @@ class ArrayBinsTest {
         bins.add(0, 1.0)
         bins.add(10_000, 2.0)
         val snap = bins.snapshot()
-        assertEquals(1.0, snap[0]!!, DELTA)
-        assertEquals(2.0, snap[10_000]!!, DELTA)
+        assertEquals(1.0, snap.getValue(0), DELTA)
+        assertEquals(2.0, snap.getValue(10_000), DELTA)
     }
 
     @Test
@@ -72,9 +72,9 @@ class ArrayBinsTest {
         bins.add(0, 4.0)
         bins.add(1, 5.0)
         val snap = bins.snapshot()
-        assertEquals(5.0, snap[0]!!, DELTA)
-        assertEquals(7.0, snap[1]!!, DELTA)
-        assertEquals(3.0, snap[10_000]!!, DELTA)
+        assertEquals(5.0, snap.getValue(0), DELTA)
+        assertEquals(7.0, snap.getValue(1), DELTA)
+        assertEquals(3.0, snap.getValue(10_000), DELTA)
     }
 
     @Test
@@ -114,9 +114,9 @@ class ArrayBinsTest {
         bins.add(50_000, 1.0)
         val snap = bins.snapshot()
         assertEquals(4, snap.size)
-        assertEquals(1.0, snap[0]!!, DELTA)
-        assertEquals(1.0, snap[500]!!, DELTA)
-        assertEquals(1.0, snap[5_000]!!, DELTA)
-        assertEquals(1.0, snap[50_000]!!, DELTA)
+        assertEquals(1.0, snap.getValue(0), DELTA)
+        assertEquals(1.0, snap.getValue(500), DELTA)
+        assertEquals(1.0, snap.getValue(5_000), DELTA)
+        assertEquals(1.0, snap.getValue(50_000), DELTA)
     }
 }

@@ -61,7 +61,8 @@ class BoltzmannBandit(
     val decay: Double = 1.0,
     /** Single source of randomness. */
     override val random: Random = Random.Default,
-) : UnivariateBandit, PerArmBandit<WeightedMeanResult> {
+) : UnivariateBandit,
+    PerArmBandit<WeightedMeanResult> {
     init {
         require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
         require(initialTau > 0.0) { "initialTau must be positive, got $initialTau" }

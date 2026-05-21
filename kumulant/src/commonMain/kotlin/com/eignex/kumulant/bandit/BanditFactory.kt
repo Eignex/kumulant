@@ -46,6 +46,7 @@ import com.eignex.kumulant.bandit.univariate.UniformSelection
 import com.eignex.kumulant.bandit.univariate.UniformSelectionSpec
 import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.regression.BayesianRegressionStat
@@ -65,28 +66,37 @@ import kotlin.random.Random
  */
 fun <R : Result> BanditPolicySpec<R>.materialize(): BanditPolicy<R> = when (this) {
     is ThompsonSamplingSpec<*> -> ThompsonSampling(arm as Arm<R>, posterior as Posterior<R>) as BanditPolicy<R>
+
     is Ucb1Spec -> UCB1(alpha, priorAlpha, priorBeta) as BanditPolicy<R>
+
     is Ucb1NormalSpec -> UCB1Normal(alpha, priorMean, priorWeight) as BanditPolicy<R>
+
     is Ucb1TunedSpec -> UCB1Tuned(alpha, priorMean, priorWeight) as BanditPolicy<R>
+
     is GreedySpec -> Greedy(priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
+
     is EpsilonGreedySpec ->
         EpsilonGreedy(epsilon, priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
+
     is EpsilonDecreasingSpec ->
         EpsilonDecreasing(epsilon, decay, priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
+
     is UniformSelectionSpec ->
         UniformSelection(priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
+
     is KlUcbSpec -> KlUcb(c, tolerance, priorAlpha, priorBeta) as BanditPolicy<R>
+
     is MossSpec -> Moss(nbrArms, priorMean, priorWeight) as BanditPolicy<R>
+
     is UcbVSpec -> UcbV(zeta, c, priorMean, priorWeight) as BanditPolicy<R>
 }
 
 /** Build a live [UnivariateBandit] from its spec. */
-fun MultiArmedSpec<*>.materialize(random: Random = Random.Default): MultiArmedBandit<Result> =
-    MultiArmedBandit(
-        nbrArms = nbrArms,
-        policy = policy.materialize() as BanditPolicy<Result>,
-        random = random,
-    )
+fun MultiArmedSpec<*>.materialize(random: Random = Random.Default): MultiArmedBandit<Result> = MultiArmedBandit(
+    nbrArms = nbrArms,
+    policy = policy.materialize() as BanditPolicy<Result>,
+    random = random,
+)
 
 /** Build a live [RouletteWheelBandit] from its spec. */
 fun RouletteWheelSpec.materialize(random: Random = Random.Default): RouletteWheelBandit =
@@ -114,9 +124,7 @@ fun <R : Result> TopTwoThompsonSpec<R>.materialize(random: Random = Random.Defau
     )
 
 /** Dispatch any [UnivariateBanditSpec] to its concrete bandit. */
-fun UnivariateBanditSpec.materialize(
-    random: Random = Random.Default,
-): Bandit = when (this) {
+fun UnivariateBanditSpec.materialize(random: Random = Random.Default): Bandit = when (this) {
     is MultiArmedSpec<*> -> materialize(random)
     is RouletteWheelSpec -> materialize(random)
     is BoltzmannSpec -> materialize(random)
@@ -124,27 +132,28 @@ fun UnivariateBanditSpec.materialize(
     is TopTwoThompsonSpec<*> -> (this as TopTwoThompsonSpec<Result>).materialize(random)
 }
 
-/** Build a live linear [com.eignex.kumulant.core.RegressionStat] from its spec. */
-private fun LinearRegressionSpec.materialize(
-    concurrency: Concurrency,
-): com.eignex.kumulant.core.RegressionStat<out LinearRegressionResult> = when (this) {
-    is LinearRegressionSpec.Bayesian -> BayesianRegressionStat(
-        featureSize = featureSize,
-        priorVariance = priorVariance,
-        concurrency = concurrency,
-    )
-    is LinearRegressionSpec.Diagonal -> DiagonalRegressionStat(
-        featureSize = featureSize,
-        priorPrecision = priorPrecision,
-        learningRate = ConstantRate(learningRate),
-        concurrency = concurrency,
-    )
-    is LinearRegressionSpec.Stochastic -> StochasticRegressionStat(
-        featureSize = featureSize,
-        learningRate = ConstantRate(learningRate),
-        concurrency = concurrency,
-    )
-}
+/** Build a live linear [RegressionStat] from its spec. */
+private fun LinearRegressionSpec.materialize(concurrency: Concurrency): RegressionStat<out LinearRegressionResult> =
+    when (this) {
+        is LinearRegressionSpec.Bayesian -> BayesianRegressionStat(
+            featureSize = featureSize,
+            priorVariance = priorVariance,
+            concurrency = concurrency,
+        )
+
+        is LinearRegressionSpec.Diagonal -> DiagonalRegressionStat(
+            featureSize = featureSize,
+            priorPrecision = priorPrecision,
+            learningRate = ConstantRate(learningRate),
+            concurrency = concurrency,
+        )
+
+        is LinearRegressionSpec.Stochastic -> StochasticRegressionStat(
+            featureSize = featureSize,
+            learningRate = ConstantRate(learningRate),
+            concurrency = concurrency,
+        )
+    }
 
 /** Build a live [RegressionContextualBandit] from its spec. */
 fun RegressionContextualSpec.materialize(
@@ -156,10 +165,10 @@ fun RegressionContextualSpec.materialize(
     @Suppress("UNCHECKED_CAST")
     return RegressionContextualBandit(
         nbrArms = nbrArms,
-        template = template as com.eignex.kumulant.core.RegressionStat<LinearRegressionResult>,
+        template = template as RegressionStat<LinearRegressionResult>,
         posterior = posterior as RegressionPosterior<LinearRegressionResult>,
         exploration = exploration,
-        globalTemplate = global as? com.eignex.kumulant.core.RegressionStat<LinearRegressionResult>,
+        globalTemplate = global as? RegressionStat<LinearRegressionResult>,
         random = random,
     )
 }

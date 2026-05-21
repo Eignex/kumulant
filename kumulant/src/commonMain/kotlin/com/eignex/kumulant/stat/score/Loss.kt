@@ -22,9 +22,7 @@ private const val LOG_LOSS_EPS: Double = 1e-15
  *
  * **Concurrency:** Inherits [MeanStat]'s concurrency model.
  */
-class MseLossStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<WeightedMeanResult> {
+class MseLossStat(override val concurrency: Concurrency = Concurrency.None) : PairedStat<WeightedMeanResult> {
 
     private val inner = MeanStat(concurrency)
 
@@ -52,9 +50,7 @@ class MseLossStat(
  *
  * **Concurrency:** Inherits [MeanStat]'s concurrency model.
  */
-class MaeLossStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<WeightedMeanResult> {
+class MaeLossStat(override val concurrency: Concurrency = Concurrency.None) : PairedStat<WeightedMeanResult> {
 
     private val inner = MeanStat(concurrency)
 
@@ -85,9 +81,7 @@ class MaeLossStat(
  *
  * **Concurrency:** Inherits [MeanStat]'s concurrency model.
  */
-class LogLossStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<WeightedMeanResult> {
+class LogLossStat(override val concurrency: Concurrency = Concurrency.None) : PairedStat<WeightedMeanResult> {
 
     private val inner = MeanStat(concurrency)
 

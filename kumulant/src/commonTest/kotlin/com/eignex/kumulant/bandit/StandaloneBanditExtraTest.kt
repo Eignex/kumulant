@@ -13,8 +13,8 @@ import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 /** Edge cases across Exp3, Exp4, Boltzmann, Knn, TopTwoTS that the per-class
  *  tests don't already cover. */
 class StandaloneBanditExtraTest {
@@ -61,7 +61,7 @@ class StandaloneBanditExtraTest {
     fun `Exp4 rejects expert returning wrong-length advice`() {
         val badExpert = Exp4Expert { _, _ -> DoubleArray(99) { 1.0 / 99 } }
         val b = Exp4Bandit(nbrArms = 3, experts = listOf(badExpert), random = Random(0))
-        kotlin.test.assertFailsWith<IllegalArgumentException> { b.playDistribution(feat(0.0)) }
+        assertFailsWith<IllegalArgumentException> { b.playDistribution(feat(0.0)) }
     }
 
     @Test
@@ -173,7 +173,7 @@ class StandaloneBanditExtraTest {
 
     @Test
     fun `Knn squaredL2 rejects mismatched sizes`() {
-        kotlin.test.assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             KnnContextualBandit.squaredL2(feat(1.0), feat(1.0, 2.0))
         }
     }

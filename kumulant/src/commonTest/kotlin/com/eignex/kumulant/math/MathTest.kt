@@ -1,3 +1,5 @@
+@file:Suppress("PropertyName") // math convention: single-letter matrices (A, L, M) in tests
+
 package com.eignex.kumulant.math
 
 import kotlin.math.abs
@@ -59,7 +61,7 @@ class MathTest {
                 doubleArrayOf(1.0, 2.0),
                 doubleArrayOf(3.0, 4.0),
                 doubleArrayOf(5.0, 6.0),
-            )
+            ),
         )
         val xDense = dense(1.0, -1.0)
         val xSparse = sparse(2, 0 to 1.0, 1 to -1.0)
@@ -84,9 +86,17 @@ class MathTest {
         val M = DenseMatrix.diagonal(3, 0.0)
         addOuter(M, 1.0, sparse(3, 1 to 2.0), sparse(3, 0 to 3.0, 2 to 4.0))
         // Only row 1 should be nonzero; cols 0 and 2 in that row get 2*3=6 and 2*4=8.
-        for (i in 0 until 3) for (j in 0 until 3) {
-            val expected = if (i == 1 && j == 0) 6.0 else if (i == 1 && j == 2) 8.0 else 0.0
-            assertEquals(expected, M[i, j], 1e-12, "M[$i,$j]")
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                val expected = if (i == 1 && j == 0) {
+                    6.0
+                } else if (i == 1 && j == 2) {
+                    8.0
+                } else {
+                    0.0
+                }
+                assertEquals(expected, M[i, j], 1e-12, "M[$i,$j]")
+            }
         }
     }
 
@@ -98,14 +108,16 @@ class MathTest {
                 doubleArrayOf(4.0, 2.0, 0.0),
                 doubleArrayOf(2.0, 5.0, 1.0),
                 doubleArrayOf(0.0, 1.0, 3.0),
-            )
+            ),
         )
         val L = A.cholesky()
         // Verify A == L * LT.
-        for (i in 0 until 3) for (j in 0 until 3) {
-            var s = 0.0
-            for (k in 0..minOf(i, j)) s += L[i, k] * L[j, k]
-            assertEquals(A[i, j], s, 1e-10, "L LT mismatch at [$i,$j]")
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                var s = 0.0
+                for (k in 0..minOf(i, j)) s += L[i, k] * L[j, k]
+                assertEquals(A[i, j], s, 1e-10, "L LT mismatch at [$i,$j]")
+            }
         }
         // Strict lower triangular: upper entries zero.
         for (i in 0 until 3) for (j in i + 1 until 3) assertEquals(0.0, L[i, j], "L[$i,$j] should be zero")
@@ -118,7 +130,7 @@ class MathTest {
                 doubleArrayOf(4.0, 2.0, 0.0),
                 doubleArrayOf(2.0, 5.0, 1.0),
                 doubleArrayOf(0.0, 1.0, 3.0),
-            )
+            ),
         )
         val L = A.cholesky()
         val b = doubleArrayOf(1.0, 0.5, -1.0)
@@ -138,16 +150,18 @@ class MathTest {
                 doubleArrayOf(4.0, 2.0, 0.0),
                 doubleArrayOf(2.0, 5.0, 1.0),
                 doubleArrayOf(0.0, 1.0, 3.0),
-            )
+            ),
         )
         val L = A.cholesky()
         val Ainv = invertSpd(L)
         // A * Ainv should be identity.
-        for (i in 0 until 3) for (j in 0 until 3) {
-            var s = 0.0
-            for (k in 0 until 3) s += A[i, k] * Ainv[k, j]
-            val expected = if (i == j) 1.0 else 0.0
-            assertEquals(expected, s, 1e-9, "A*Ainv mismatch at [$i,$j]")
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                var s = 0.0
+                for (k in 0 until 3) s += A[i, k] * Ainv[k, j]
+                val expected = if (i == j) 1.0 else 0.0
+                assertEquals(expected, s, 1e-9, "A*Ainv mismatch at [$i,$j]")
+            }
         }
     }
 
@@ -159,18 +173,20 @@ class MathTest {
                 doubleArrayOf(10.0, 2.0, 1.0),
                 doubleArrayOf(2.0, 8.0, 3.0),
                 doubleArrayOf(1.0, 3.0, 7.0),
-            )
+            ),
         )
         val L = A.cholesky()
         val x = doubleArrayOf(0.5, 1.0, -0.5)
         val norm = L.choleskyDowndateInPlace(DenseVector.of(x))
         assertEquals(0.0, norm, "downdate should stay in the SPD cone")
         // L_new * L_newT should equal A - x*xT.
-        for (i in 0 until 3) for (j in 0 until 3) {
-            var s = 0.0
-            for (k in 0..minOf(i, j)) s += L[i, k] * L[j, k]
-            val expected = A[i, j] - x[i] * x[j]
-            assertEquals(expected, s, 1e-9, "downdate mismatch at [$i,$j]")
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                var s = 0.0
+                for (k in 0..minOf(i, j)) s += L[i, k] * L[j, k]
+                val expected = A[i, j] - x[i] * x[j]
+                assertEquals(expected, s, 1e-9, "downdate mismatch at [$i,$j]")
+            }
         }
     }
 
@@ -180,7 +196,7 @@ class MathTest {
             arrayOf(
                 doubleArrayOf(2.0, 0.0),
                 doubleArrayOf(0.0, 2.0),
-            )
+            ),
         )
         val L = A.cholesky()
         // x with ||L^-1 x|| >= 1 - pick x so that x*xT swamps A.
@@ -195,7 +211,7 @@ class MathTest {
             arrayOf(
                 doubleArrayOf(1.0, 0.0),
                 doubleArrayOf(0.0, -0.5),
-            )
+            ),
         )
         assertFailsWith<IllegalArgumentException> { bad.cholesky(regularizeNonPD = false) }
         // Default regularising path still succeeds (clamps the pivot to 1e-5).

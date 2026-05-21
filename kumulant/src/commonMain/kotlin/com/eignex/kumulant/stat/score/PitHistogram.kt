@@ -14,7 +14,5 @@ import com.eignex.kumulant.stat.quantile.SparseHistogramResult
  * Caller computes `pit = forecast.cdf(y)` upstream and feeds it as the value.
  * Backed by [LinearHistogramStat] with bounds pinned to `[0, 1]`.
  */
-fun pitHistogram(
-    numBins: Int,
-    concurrency: Concurrency = Concurrency.None,
-): SeriesStat<SparseHistogramResult> = LinearHistogramStat(0.0, 1.0, numBins, concurrency)
+fun pitHistogram(numBins: Int, concurrency: Concurrency = Concurrency.None): SeriesStat<SparseHistogramResult> =
+    LinearHistogramStat(0.0, 1.0, numBins, concurrency)

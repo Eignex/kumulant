@@ -27,7 +27,7 @@ class RegressionStatConcurrencyTest {
             for (i in xs.indices) s.update(xs[i], ys[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.slope, r.slope, 1e-9, "Univariate slope mode=$mode")
             assertEquals(ref.intercept, r.intercept, 1e-9, "Univariate intercept mode=$mode")
@@ -41,7 +41,7 @@ class RegressionStatConcurrencyTest {
             for (i in xs.indices) s.update(xs[i], ys[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.covariance, r.covariance, 1e-9, "Covariance mode=$mode")
             assertEquals(ref.correlation, r.correlation, 1e-9, "Correlation mode=$mode")
@@ -55,7 +55,7 @@ class RegressionStatConcurrencyTest {
             for (i in mvX.indices) s.update(DenseVector.of(mvX[i]), ys[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.bias, r.bias, 1e-9, "Stochastic bias mode=$mode")
             for (j in 0 until 2) assertEquals(ref.weights[j], r.weights[j], 1e-9, "Stochastic w[$j] mode=$mode")
@@ -69,7 +69,7 @@ class RegressionStatConcurrencyTest {
             for (i in mvX.indices) s.update(DenseVector.of(mvX[i]), ys[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.bias, r.bias, 1e-9, "Diagonal bias mode=$mode")
             for (j in 0 until 2) assertEquals(ref.weights[j], r.weights[j], 1e-9, "Diagonal w[$j] mode=$mode")
@@ -83,7 +83,7 @@ class RegressionStatConcurrencyTest {
             for (i in mvX.indices) s.update(DenseVector.of(mvX[i]), ys[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.bias, r.bias, 1e-9, "Bayesian bias mode=$mode")
             for (j in 0 until 2) assertEquals(ref.weights[j], r.weights[j], 1e-9, "Bayesian w[$j] mode=$mode")

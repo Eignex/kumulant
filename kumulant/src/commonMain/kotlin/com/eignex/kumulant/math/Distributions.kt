@@ -169,7 +169,13 @@ fun Random.nextBeta(alpha: Double, beta: Double): Double {
     val a = nextGamma(alpha)
     val b = nextGamma(beta)
     val s = a + b
-    return if (s > 0.0) a / s else if (a > 0.0) 1.0 else 0.0
+    return if (s > 0.0) {
+        a / s
+    } else if (a > 0.0) {
+        1.0
+    } else {
+        0.0
+    }
 }
 
 /** Knuth's Poisson sampler at lambda=1; returns 0/1/2/... with mass `e^{-1} / k!`. */

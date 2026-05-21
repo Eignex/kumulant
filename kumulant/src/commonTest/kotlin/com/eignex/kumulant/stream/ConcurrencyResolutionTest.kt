@@ -4,7 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
-
+import kotlin.test.assertTrue
 class AdditiveModeTest {
 
     @Test
@@ -90,12 +90,12 @@ class WelfordLockTest {
 
     @Test
     fun `welfordLock should return PlatformMutex for Strict`() {
-        kotlin.test.assertTrue(Concurrency.Strict.welfordLock() is PlatformMutex)
+        assertTrue(Concurrency.Strict.welfordLock() is PlatformMutex)
     }
 
     @Test
     fun `welfordLock should return PlatformMutex for HighWrite`() {
-        kotlin.test.assertTrue(Concurrency.HighWrite.welfordLock() is PlatformMutex)
+        assertTrue(Concurrency.HighWrite.welfordLock() is PlatformMutex)
     }
 }
 
@@ -108,16 +108,16 @@ class SerializedLockTest {
 
     @Test
     fun `serializedLock should return PlatformMutex for Relaxed`() {
-        kotlin.test.assertTrue(Concurrency.Relaxed.serializedLock() is PlatformMutex)
+        assertTrue(Concurrency.Relaxed.serializedLock() is PlatformMutex)
     }
 
     @Test
     fun `serializedLock should return PlatformMutex for Strict`() {
-        kotlin.test.assertTrue(Concurrency.Strict.serializedLock() is PlatformMutex)
+        assertTrue(Concurrency.Strict.serializedLock() is PlatformMutex)
     }
 
     @Test
     fun `serializedLock should return PlatformMutex for HighWrite`() {
-        kotlin.test.assertTrue(Concurrency.HighWrite.serializedLock() is PlatformMutex)
+        assertTrue(Concurrency.HighWrite.serializedLock() is PlatformMutex)
     }
 }

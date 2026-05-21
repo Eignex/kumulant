@@ -16,7 +16,7 @@ class ScoreStatConcurrencyTest {
             for (i in preds.indices) s.update(preds[i], obs[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.mean, r.mean, 1e-9, "BrierScoreStat mode=$mode")
         }
@@ -29,7 +29,7 @@ class ScoreStatConcurrencyTest {
             for (i in preds.indices) s.update(preds[i], obs[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.mean, r.mean, 1e-9, "MseLossStat mode=$mode")
         }
@@ -42,7 +42,7 @@ class ScoreStatConcurrencyTest {
             for (i in preds.indices) s.update(preds[i], obs[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.mean, r.mean, 1e-9, "MaeLossStat mode=$mode")
         }
@@ -55,7 +55,7 @@ class ScoreStatConcurrencyTest {
             for (i in preds.indices) s.update(preds[i], obs[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.mean, r.mean, 1e-9, "LogLossStat mode=$mode")
         }
@@ -68,7 +68,7 @@ class ScoreStatConcurrencyTest {
             for (i in preds.indices) s.update(preds[i], obs[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.mean, r.mean, 1e-9, "PinballLossStat mode=$mode")
         }
@@ -81,7 +81,7 @@ class ScoreStatConcurrencyTest {
             for (i in preds.indices) s.update(preds[i], obs[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref, r, "ReliabilityStat mode=$mode")
     }
 }

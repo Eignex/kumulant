@@ -2,18 +2,16 @@
 
 package com.eignex.kumulant.math
 
-/**
- * Internal arithmetic primitives over [VectorView] / [MatrixView]. All functions
- * are `internal`; the public vector/matrix surface stays read-only.
- *
- * Iteration goes through [forEachStored], which dispatches dense to all-indices
- * and sparse to stored entries. Densexdense paths delegate to [denseDot] /
- * [denseAxpy] / [denseScale] in `Primitives.kt` (SIMD on JVM, scalar elsewhere).
- *
- * Naming: mutating functions take the destination first and return [Unit] (`scale`,
- * `axpy`, `addOuter`); allocating functions return a fresh result (`matVec`,
- * infix `dot`).
- */
+// Internal arithmetic primitives over [VectorView] / [MatrixView]. All functions
+// are `internal`; the public vector/matrix surface stays read-only.
+//
+// Iteration goes through [forEachStored], which dispatches dense to all-indices
+// and sparse to stored entries. Densexdense paths delegate to [denseDot] /
+// [denseAxpy] / [denseScale] in `Primitives.kt` (SIMD on JVM, scalar elsewhere).
+//
+// Naming: mutating functions take the destination first and return [Unit] (`scale`,
+// `axpy`, `addOuter`); allocating functions return a fresh result (`matVec`,
+// infix `dot`).
 
 /**
  * Visit each stored entry of [this] as `(index, value)`. For [DenseVector] that's
@@ -26,6 +24,7 @@ internal inline fun VectorView.forEachStored(block: (i: Int, v: Double) -> Unit)
             val d = data
             for (i in 0 until d.size) block(i, d[i])
         }
+
         is SparseVector -> {
             val idx = indices
             val vals = values

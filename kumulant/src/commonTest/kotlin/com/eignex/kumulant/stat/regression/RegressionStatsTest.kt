@@ -111,10 +111,12 @@ class OLSTest {
         val left =
             UnivariateRegressionStat().apply { for (x in 0..9) update(x.toDouble(), 3.0 * x + 2.0) }
         val right = UnivariateRegressionStat().apply {
-            for (x in 10..19) update(
-                x.toDouble(),
-                3.0 * x + 2.0
-            )
+            for (x in 10..19) {
+                update(
+                    x.toDouble(),
+                    3.0 * x + 2.0,
+                )
+            }
         }
         left.merge(right.read())
 

@@ -170,6 +170,7 @@ class UnivariateRegressionStat(
 
         val slope = when (val p = penalty) {
             Penalty.None -> if (ssx > 0.0) ssxy / ssx else 0.0
+
             is Penalty.L1 -> {
                 val threshold = p.lambda * totalW
                 val shrunk = when {
@@ -179,6 +180,7 @@ class UnivariateRegressionStat(
                 }
                 if (ssx > 0.0) shrunk / ssx else 0.0
             }
+
             is Penalty.L2 -> {
                 val denom = ssx + p.lambda * totalW
                 if (denom > 0.0) ssxy / denom else 0.0
@@ -199,6 +201,5 @@ class UnivariateRegressionStat(
         )
     }
 
-    override fun create(concurrency: Concurrency?) =
-        UnivariateRegressionStat(penalty, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = UnivariateRegressionStat(penalty, concurrency ?: this.concurrency)
 }

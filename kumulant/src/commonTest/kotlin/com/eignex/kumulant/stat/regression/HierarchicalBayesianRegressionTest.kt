@@ -27,8 +27,10 @@ class HierarchicalBayesianRegressionTest {
         // Diagonal = 2.0
         for (i in 0 until 3) assertEquals(2.0, prior.covariance[i, i])
         // Off-diagonals = 0
-        for (i in 0 until 3) for (j in 0 until 3) {
-            if (i != j) assertEquals(0.0, prior.covariance[i, j])
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                if (i != j) assertEquals(0.0, prior.covariance[i, j])
+            }
         }
         assertEquals(0, prior.instanceCount)
     }

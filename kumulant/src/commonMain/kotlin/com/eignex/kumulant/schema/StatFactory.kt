@@ -88,6 +88,7 @@ import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.tree.RandomForestRegressionStat
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -101,35 +102,60 @@ import kotlin.time.Duration.Companion.milliseconds
 fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concurrency.None): SeriesStat<R> {
     val out: SeriesStat<*> = when (this) {
         Mean -> MeanStat(concurrency)
+
         Sum -> SumStat(concurrency)
+
         Min -> MinStat(concurrency)
+
         Max -> MaxStat(concurrency)
+
         Range -> RangeStat(concurrency)
+
         Variance -> VarianceStat(concurrency)
+
         Moments -> MomentsStat(concurrency)
+
         BernoulliSum -> BernoulliSumStat(concurrency)
+
         TotalWeights -> TotalWeightsStat(concurrency)
+
         Count -> CountStat(concurrency)
+
         Rate -> RateStat(concurrency)
+
         is CounterRate -> CounterRateStat(concurrency, treatDecreaseAsReset)
+
         is DDSketch -> DDSketchStat(relativeError, probabilities.toDoubleArray(), concurrency)
+
         is FrugalQuantile -> FrugalQuantileStat(q, stepSize, initialEstimate, concurrency)
+
         is HdrHistogram -> HdrHistogramStat(
             lowestDiscernibleValue,
             initialHighestTrackableValue,
             significantDigits,
             concurrency,
         )
+
         is LinearHistogram -> LinearHistogramStat(lowerBound, upperBound, binCount, concurrency)
+
         is ReservoirHistogram -> ReservoirHistogramStat(capacity, seed, concurrency)
+
         is TDigest -> TDigestStat(compression, probabilities.toDoubleArray(), concurrency)
+
         is PitHistogram -> pitHistogram(numBins, concurrency)
+
         is DecayingSum -> DecayingSumStat(weighting.toDecayWeighting(), concurrency)
+
         is DecayingMean -> DecayingMeanStat(weighting.toDecayWeighting(), concurrency)
+
         is DecayingVariance -> DecayingVarianceStat(weighting.toDecayWeighting(), concurrency)
+
         is EwmaMean -> EwmaMeanStat(weighting.toDecayWeighting(), concurrency)
+
         is EwmaVariance -> EwmaVarianceStat(weighting.toDecayWeighting(), concurrency)
+
         is DecayingRate -> DecayingRateStat(halfLifeMillis.milliseconds, concurrency)
+
         is GroupStatSpec -> {
             val children = stats.map { (name, config) ->
                 require(config is SeriesStatSpec<*>) {
@@ -139,38 +165,51 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
             }
             StatGroup(stats = children, concurrency = concurrency)
         }
+
         is WithWeightSeries ->
             requireSeries(inner, "WithWeightSeries").materialize(concurrency).withWeight(weight)
+
         is WithValueSeries ->
             requireSeries(inner, "WithValueSeries").materialize(concurrency).withValue(value)
+
         is AsSeries ->
             requireDiscrete(inner, "AsSeries").materialize(concurrency).asSeries()
+
         is WithFixedX ->
             requirePaired(inner, "WithFixedX").materialize(concurrency).withFixedX(fixedX)
+
         is WithFixedY ->
             requirePaired(inner, "WithFixedY").materialize(concurrency).withFixedY(fixedY)
+
         is WithTimeAsX ->
             requirePaired(inner, "WithTimeAsX").materialize(concurrency).withTimeAsX()
+
         is WithTimeAsY ->
             requirePaired(inner, "WithTimeAsY").materialize(concurrency).withTimeAsY()
+
         is WindowedSeries ->
             requireSeries(inner, "WindowedSeries").materialize(concurrency)
                 .windowed(durationMillis.milliseconds, slices, concurrency)
+
         is TransformValueSeries -> {
             val m = requireSeries(inner, "TransformValueSeries").materialize(concurrency) as SeriesStat<Result>
             TransformValueStat(m) { expr.eval(it) }
         }
+
         is FilterValueSeries -> {
             val m = requireSeries(inner, "FilterValueSeries").materialize(concurrency) as SeriesStat<Result>
             FilterSeriesStat(m) { pred.eval(it) }
         }
+
         is WeightByValueSeries ->
             (requireSeries(inner, "WeightByValueSeries").materialize(concurrency) as SeriesStat<Result>)
                 .weightBy { v -> expr.eval(v) }
+
         is ThrottleSeries ->
             requireSeries(inner, "ThrottleSeries").materialize(concurrency).throttle(every)
+
         is SampleSeries ->
-            requireSeries(inner, "SampleSeries").materialize(concurrency).sample(rate, kotlin.random.Random(seed))
+            requireSeries(inner, "SampleSeries").materialize(concurrency).sample(rate, Random(seed))
     }
     return out as SeriesStat<R>
 }
@@ -181,43 +220,62 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
 fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concurrency.None): PairedStat<R> {
     val out: PairedStat<*> = when (this) {
         PairedSum -> PairedSumStat(concurrency)
+
         is UnivariateRegression -> UnivariateRegressionStat(penalty, concurrency)
+
         Covariance -> CovarianceStat(concurrency)
+
         BrierScore -> BrierScoreStat(concurrency)
+
         MseLoss -> MseLossStat(concurrency)
+
         MaeLoss -> MaeLossStat(concurrency)
+
         LogLoss -> LogLossStat(concurrency)
+
         is PinballLoss -> PinballLossStat(tau, concurrency)
+
         is Auc -> AucStat(numBins, lowerBound, upperBound, concurrency)
+
         is Reliability -> ReliabilityStat(numBins, concurrency)
+
         is WithWeightPaired ->
             requirePaired(inner, "WithWeightPaired").materialize(concurrency).withWeight(weight)
+
         is AtX ->
             requireSeries(inner, "AtX").materialize(concurrency).atX()
+
         is AtY ->
             requireSeries(inner, "AtY").materialize(concurrency).atY()
+
         is WindowedPaired ->
             requirePaired(inner, "WindowedPaired").materialize(concurrency)
                 .windowed(durationMillis.milliseconds, slices, concurrency)
+
         is TransformPair -> {
             val m = requirePaired(inner, "TransformPair").materialize(concurrency) as PairedStat<Result>
             TransformPairStat(m) { xv, yv -> xExpr.eval(xv, yv) to yExpr.eval(xv, yv) }
         }
+
         is FilterPaired -> {
             val m = requirePaired(inner, "FilterPaired").materialize(concurrency) as PairedStat<Result>
             FilterPairedStat(m) { xv, yv -> pred.eval(xv, yv) }
         }
+
         is FoldPaired -> {
             val m = requireSeries(inner, "FoldPaired").materialize(concurrency) as SeriesStat<Result>
             FoldPairedStat(m) { xv, yv -> expr.eval(xv, yv) }
         }
+
         is WeightByValuePaired ->
             (requirePaired(inner, "WeightByValuePaired").materialize(concurrency) as PairedStat<Result>)
                 .weightBy { xv, yv -> expr.eval(xv, yv) }
+
         is ThrottlePaired ->
             requirePaired(inner, "ThrottlePaired").materialize(concurrency).throttle(every)
+
         is SamplePaired ->
-            requirePaired(inner, "SamplePaired").materialize(concurrency).sample(rate, kotlin.random.Random(seed))
+            requirePaired(inner, "SamplePaired").materialize(concurrency).sample(rate, Random(seed))
     }
     return out as PairedStat<R>
 }
@@ -229,29 +287,37 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
     val out: VectorStat<*> = when (this) {
         is WithWeightVector ->
             requireVector(inner, "WithWeightVector").materialize(concurrency).withWeight(weight)
+
         is AtIndex ->
             requireSeries(inner, "AtIndex").materialize(concurrency).atIndex(index)
+
         is AtIndices ->
             requirePaired(inner, "AtIndices").materialize(concurrency).atIndices(indexX, indexY)
+
         is WindowedVector ->
             requireVector(inner, "WindowedVector").materialize(concurrency)
                 .windowed(durationMillis.milliseconds, slices, concurrency)
+
         is Vectorized -> {
             val tpl = requireSeries(template, "Vectorized").materialize(concurrency) as SeriesStat<Result>
             VectorizedStat(dimensions, tpl, skipZeros)
         }
+
         is TransformVectorElement -> {
             val m = requireVector(inner, "TransformVectorElement").materialize(concurrency) as VectorStat<Result>
             TransformVectorStat(m) { vec -> DoubleArray(vec.size) { i -> expr.eval(vec[i], 0.0, vec) } }
         }
+
         is FilterVector -> {
             val m = requireVector(inner, "FilterVector").materialize(concurrency) as VectorStat<Result>
             FilterVectorStat(m) { vec -> pred.eval(0.0, 0.0, vec) }
         }
+
         is FoldVector -> {
             val m = requireSeries(inner, "FoldVector").materialize(concurrency) as SeriesStat<Result>
             FoldVectorStat(m) { vec -> expr.eval(0.0, 0.0, vec) }
         }
+
         is FoldVectorPaired -> {
             val m = requirePaired(inner, "FoldVectorPaired").materialize(concurrency) as PairedStat<Result>
             FoldVectorPairedStat(
@@ -260,17 +326,21 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
                 foldY = { vec -> yExpr.eval(0.0, 0.0, vec) },
             )
         }
+
         is TransformVector -> {
             val m = requireVector(inner, "TransformVector").materialize(concurrency) as VectorStat<Result>
             TransformVectorStat(m) { vec -> expr.eval(0.0, 0.0, vec) }
         }
+
         is WeightByValueVector ->
             (requireVector(inner, "WeightByValueVector").materialize(concurrency) as VectorStat<Result>)
                 .weightBy { vec -> expr.eval(0.0, 0.0, vec) }
+
         is ThrottleVector ->
             requireVector(inner, "ThrottleVector").materialize(concurrency).throttle(every)
+
         is SampleVector ->
-            requireVector(inner, "SampleVector").materialize(concurrency).sample(rate, kotlin.random.Random(seed))
+            requireVector(inner, "SampleVector").materialize(concurrency).sample(rate, Random(seed))
     }
     return out as VectorStat<R>
 }
@@ -281,35 +351,49 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
 fun <R : Result> DiscreteStatSpec<R>.materialize(concurrency: Concurrency = Concurrency.None): DiscreteStat<R> {
     val out: DiscreteStat<*> = when (this) {
         is HyperLogLog -> HyperLogLogStat(precision, concurrency)
+
         is LinearCounting -> LinearCountingStat(bits, concurrency)
+
         is BloomFilter -> BloomFilterStat(bits, hashes, concurrency)
+
         is CountMinSketch -> CountMinSketchStat(depth, width, seed, concurrency)
+
         is MinHash -> MinHashStat(numHashes, seed, concurrency)
+
         is SpaceSaving -> SpaceSavingStat(capacity, concurrency)
+
         is WithWeightDiscrete ->
             requireDiscrete(inner, "WithWeightDiscrete").materialize(concurrency).withWeight(weight)
+
         is WithValueDiscrete ->
             requireDiscrete(inner, "WithValueDiscrete").materialize(concurrency).withValue(value)
+
         is AsDiscrete ->
             requireSeries(inner, "AsDiscrete").materialize(concurrency).asDiscrete()
+
         is WindowedDiscrete ->
             requireDiscrete(inner, "WindowedDiscrete").materialize(concurrency)
                 .windowed(durationMillis.milliseconds, slices, concurrency)
+
         is TransformValueDiscrete -> {
             val m = requireDiscrete(inner, "TransformValueDiscrete").materialize(concurrency) as DiscreteStat<Result>
             TransformLongStat(m) { expr.eval(it.toDouble()).toLong() }
         }
+
         is FilterValueDiscrete -> {
             val m = requireDiscrete(inner, "FilterValueDiscrete").materialize(concurrency) as DiscreteStat<Result>
             FilterDiscreteStat(m) { pred.eval(it.toDouble()) }
         }
+
         is WeightByValueDiscrete ->
             (requireDiscrete(inner, "WeightByValueDiscrete").materialize(concurrency) as DiscreteStat<Result>)
                 .weightBy { v -> expr.eval(v.toDouble()) }
+
         is ThrottleDiscrete ->
             requireDiscrete(inner, "ThrottleDiscrete").materialize(concurrency).throttle(every)
+
         is SampleDiscrete ->
-            requireDiscrete(inner, "SampleDiscrete").materialize(concurrency).sample(rate, kotlin.random.Random(seed))
+            requireDiscrete(inner, "SampleDiscrete").materialize(concurrency).sample(rate, Random(seed))
     }
     return out as DiscreteStat<R>
 }
@@ -341,10 +425,13 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
     val out: RegressionStat<*> = when (this) {
         is BayesianRegression ->
             BayesianRegressionStat(featureSize, priorVariance, link, concurrency)
+
         is StochasticRegression ->
             StochasticRegressionStat(featureSize, learningRate, biasRate, penalty, link, concurrency)
+
         is DiagonalRegression ->
             DiagonalRegressionStat(featureSize, priorPrecision, learningRate, penalty, link, concurrency)
+
         is DecisionTreeRegression ->
             DecisionTreeRegressionStat(
                 featureSize = featureSize,
@@ -353,6 +440,7 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
                 concurrency = concurrency,
                 randomSeed = randomSeed,
             )
+
         is RandomForestRegression ->
             RandomForestRegressionStat(
                 featureSize = featureSize,
@@ -363,34 +451,42 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
                 concurrency = concurrency,
                 randomSeed = randomSeed,
             )
+
         is FilterRegression -> {
             val m = requireRegression(inner, "FilterRegression").materialize(concurrency) as RegressionStat<Result>
             m.filter { v, y -> pred.eval(0.0, y, v.toDoubleArray()) }
         }
+
         is TransformYRegression -> {
             val m = requireRegression(inner, "TransformYRegression").materialize(concurrency) as RegressionStat<Result>
             m.transformY { v, y -> expr.eval(0.0, y, v.toDoubleArray()) }
         }
+
         is TransformXRegression -> {
             val m = requireRegression(inner, "TransformXRegression").materialize(concurrency) as RegressionStat<Result>
             m.transformX { v, y -> expr.eval(0.0, y, v.toDoubleArray()) }
         }
+
         is WithWeightRegression ->
             requireRegression(inner, "WithWeightRegression").materialize(concurrency).withWeight(weight)
+
         is WeightByValueRegression -> {
             val m = requireRegression(
                 inner,
-                "WeightByValueRegression"
+                "WeightByValueRegression",
             ).materialize(concurrency) as RegressionStat<Result>
             m.weightBy { v, y -> expr.eval(0.0, y, v.toDoubleArray()) }
         }
+
         is ThrottleRegression ->
             requireRegression(inner, "ThrottleRegression").materialize(concurrency).throttle(every)
+
         is SampleRegression ->
             requireRegression(
                 inner,
-                "SampleRegression"
-            ).materialize(concurrency).sample(rate, kotlin.random.Random(seed))
+                "SampleRegression",
+            ).materialize(concurrency).sample(rate, Random(seed))
+
         is FoldRegression -> {
             val m = requireSeries(inner, "FoldRegression").materialize(concurrency) as SeriesStat<Result>
             m.foldRegression(featureSize) { v, y -> project.eval(0.0, y, v.toDoubleArray()) }

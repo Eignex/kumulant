@@ -27,7 +27,9 @@ sealed class AbstractListStats<R : Result, S : Stat<out R>>(
     protected val concurrencyOverride: Concurrency?,
     private val typeName: String,
 ) : Stat<ResultList<R>> {
-    init { requireUniqueNames(entries, typeName) }
+    init {
+        requireUniqueNames(entries, typeName)
+    }
 
     final override val concurrency: Concurrency get() = concurrencyOverride ?: Concurrency.None
 
@@ -59,10 +61,8 @@ sealed class AbstractListStats<R : Result, S : Stat<out R>>(
  *
  * Lighter than [StatGroup] when the [StatKey] / [BoundStat] apparatus isn't needed.
  */
-class ListStats<R : Result>(
-    entries: List<Pair<String, SeriesStat<out R>>>,
-    concurrency: Concurrency? = null,
-) : AbstractListStats<R, SeriesStat<out R>>(entries, concurrency, "ListStats"),
+class ListStats<R : Result>(entries: List<Pair<String, SeriesStat<out R>>>, concurrency: Concurrency? = null) :
+    AbstractListStats<R, SeriesStat<out R>>(entries, concurrency, "ListStats"),
     SeriesStat<ResultList<R>> {
 
     constructor(vararg entries: Pair<String, SeriesStat<out R>>, concurrency: Concurrency? = null) :
@@ -89,16 +89,12 @@ class ListStats<R : Result>(
 }
 
 /** Auto-named [ListStats]: each stat keyed by its class `simpleName`. */
-fun <R : Result> seriesListStats(
-    vararg stats: SeriesStat<out R>,
-    concurrency: Concurrency? = null,
-): ListStats<R> = ListStats(stats.map { autoName(it) to it }, concurrency)
+fun <R : Result> seriesListStats(vararg stats: SeriesStat<out R>, concurrency: Concurrency? = null): ListStats<R> =
+    ListStats(stats.map { autoName(it) to it }, concurrency)
 
 /** Paired-input counterpart of [ListStats]. */
-class PairedListStats<R : Result>(
-    entries: List<Pair<String, PairedStat<out R>>>,
-    concurrency: Concurrency? = null,
-) : AbstractListStats<R, PairedStat<out R>>(entries, concurrency, "PairedListStats"),
+class PairedListStats<R : Result>(entries: List<Pair<String, PairedStat<out R>>>, concurrency: Concurrency? = null) :
+    AbstractListStats<R, PairedStat<out R>>(entries, concurrency, "PairedListStats"),
     PairedStat<ResultList<R>> {
 
     constructor(vararg entries: Pair<String, PairedStat<out R>>, concurrency: Concurrency? = null) :
@@ -131,10 +127,8 @@ fun <R : Result> pairedListStats(
 ): PairedListStats<R> = PairedListStats(stats.map { autoName(it) to it }, concurrency)
 
 /** Vector-input counterpart of [ListStats]. */
-class VectorListStats<R : Result>(
-    entries: List<Pair<String, VectorStat<out R>>>,
-    concurrency: Concurrency? = null,
-) : AbstractListStats<R, VectorStat<out R>>(entries, concurrency, "VectorListStats"),
+class VectorListStats<R : Result>(entries: List<Pair<String, VectorStat<out R>>>, concurrency: Concurrency? = null) :
+    AbstractListStats<R, VectorStat<out R>>(entries, concurrency, "VectorListStats"),
     VectorStat<ResultList<R>> {
 
     constructor(vararg entries: Pair<String, VectorStat<out R>>, concurrency: Concurrency? = null) :

@@ -38,17 +38,15 @@ import com.eignex.kumulant.stat.tree.TreeRegressionResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * [StatSpec] variants for kumulant's stats. Co-located here (rather than next to each
- * stat) because Kotlin requires direct subclasses of a sealed interface to live in the
- * same package as the interface.
- *
- * Each variant uses `@SerialName` matching its Kotlin class name, so the wire `$type`
- * value mirrors what a Kotlin reader would type. Defaults match the underlying stat's
- * primary constructor so authored payloads stay terse under `encodeDefaults = false`.
- *
- * Construction lives in `StatFactory.kt`; specs here are pure data only.
- */
+// [StatSpec] variants for kumulant's stats. Co-located here (rather than next to each
+// stat) because Kotlin requires direct subclasses of a sealed interface to live in the
+// same package as the interface.
+//
+// Each variant uses `@SerialName` matching its Kotlin class name, so the wire `$type`
+// value mirrors what a Kotlin reader would type. Defaults match the underlying stat's
+// primary constructor so authored payloads stay terse under `encodeDefaults = false`.
+//
+// Construction lives in `StatFactory.kt`; specs here are pure data only.
 
 /** Spec for `MeanStat`: weighted running mean. */
 @Serializable

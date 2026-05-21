@@ -36,8 +36,8 @@ class ReservoirHistogramTest {
     @Test
     fun `weighted sampling biases toward heavy weight`() {
         val res = ReservoirHistogramStat(capacity = 50, seed = 11)
-        for (i in 1..1000) res.update(0.0, weight = 1.0)
-        for (i in 1..1000) res.update(100.0, weight = 50.0)
+        repeat(1000) { res.update(0.0, weight = 1.0) }
+        repeat(1000) { res.update(100.0, weight = 50.0) }
         val mean = res.read().values.average()
         assertTrue(mean > 50.0, "expected heavy bias toward 100, got mean=$mean")
     }

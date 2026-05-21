@@ -18,8 +18,9 @@ import com.eignex.kumulant.math.VectorView
 
 internal class FilterSeriesStat<R : Result>(
     private val delegate: SeriesStat<R>,
-    private val predicate: (Double) -> Boolean
-) : SeriesStat<R>, Stat<R> by delegate {
+    private val predicate: (Double) -> Boolean,
+) : SeriesStat<R>,
+    Stat<R> by delegate {
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (predicate(value)) delegate.update(value, timestampNanos, weight)
     }
@@ -29,8 +30,9 @@ internal class FilterSeriesStat<R : Result>(
 
 internal class FilterPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
-    private val predicate: (Double, Double) -> Boolean
-) : PairedStat<R>, Stat<R> by delegate {
+    private val predicate: (Double, Double) -> Boolean,
+) : PairedStat<R>,
+    Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (predicate(x, y)) delegate.update(x, y, timestampNanos, weight)
     }
@@ -40,8 +42,9 @@ internal class FilterPairedStat<R : Result>(
 
 internal class FilterVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
-    private val predicate: (DoubleArray) -> Boolean
-) : VectorStat<R>, Stat<R> by delegate {
+    private val predicate: (DoubleArray) -> Boolean,
+) : VectorStat<R>,
+    Stat<R> by delegate {
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         if (predicate(vector.toDoubleArray())) delegate.update(vector, timestampNanos, weight)
     }
@@ -51,8 +54,9 @@ internal class FilterVectorStat<R : Result>(
 
 internal class FilterDiscreteStat<R : Result>(
     private val delegate: DiscreteStat<R>,
-    private val predicate: (Long) -> Boolean
-) : DiscreteStat<R>, Stat<R> by delegate {
+    private val predicate: (Long) -> Boolean,
+) : DiscreteStat<R>,
+    Stat<R> by delegate {
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (predicate(value)) delegate.update(value, timestampNanos, weight)
     }

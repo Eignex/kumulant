@@ -113,7 +113,7 @@ class StatSchemaDefSerializationTest {
                 "ols" to UnivariateRegression(),
                 "users" to HyperLogLog(precision = 10),
                 "perDim" to Sum.vectorized(3),
-            )
+            ),
         )
         val bound = def.materialize(Concurrency.None)
         assertEquals(4, bound.size)

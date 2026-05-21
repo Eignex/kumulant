@@ -44,7 +44,7 @@ class ListStatsTest {
         val ex = assertFailsWith<IllegalArgumentException> {
             seriesListStats<SumResult>(SumStat(), SumStat())
         }
-        check("Duplicate" in (ex.message ?: "")) { "got: ${ex.message}" }
+        check("Duplicate" in ex.message.orEmpty()) { "got: ${ex.message}" }
     }
 
     @Test

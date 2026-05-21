@@ -1,12 +1,13 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 class LinearPosteriorsTest {
 
     private fun sgdSnapshot(): StochasticRegressionResult {
@@ -173,22 +174,22 @@ class LinearPosteriorsTest {
     fun `predict throws on wrong feature size`() {
         val snap = sgdSnapshot()
         assertTrue(snap.featureSize == 2)
-        kotlin.test.assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             snap.predict(DenseVector.of(doubleArrayOf(1.0)))
         }
     }
 
     @Test
     fun `CovarianceRegressionResult rejects shape mismatch`() {
-        kotlin.test.assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             CovarianceRegressionResult(
                 weights = DenseVector.of(doubleArrayOf(0.0, 0.0)),
                 bias = 0.0,
                 biasPrecision = 1.0,
                 totalWeights = 0.0,
                 step = 0L,
-                covariance = com.eignex.kumulant.math.DenseMatrix(3, 3),
-                covarianceL = com.eignex.kumulant.math.DenseMatrix(3, 3),
+                covariance = DenseMatrix(3, 3),
+                covarianceL = DenseMatrix(3, 3),
             )
         }
     }
@@ -233,12 +234,12 @@ class LinearPosteriorsTest {
     fun `SGD merge rejects featureSize mismatch`() {
         val a = StochasticRegressionStat(featureSize = 2)
         val b = StochasticRegressionStat(featureSize = 3)
-        kotlin.test.assertFailsWith<IllegalArgumentException> { a.merge(b.read()) }
+        assertFailsWith<IllegalArgumentException> { a.merge(b.read()) }
     }
 
     @Test
     fun `SGD rejects non-positive featureSize`() {
-        kotlin.test.assertFailsWith<IllegalArgumentException> { StochasticRegressionStat(featureSize = 0) }
+        assertFailsWith<IllegalArgumentException> { StochasticRegressionStat(featureSize = 0) }
     }
 
     @Test

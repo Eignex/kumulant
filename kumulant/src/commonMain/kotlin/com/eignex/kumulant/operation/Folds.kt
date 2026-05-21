@@ -16,8 +16,9 @@ import com.eignex.kumulant.math.VectorView
 
 internal class FoldVectorStat<R : Result>(
     private val delegate: SeriesStat<R>,
-    private val transform: (DoubleArray) -> Double
-) : VectorStat<R>, Stat<R> by delegate {
+    private val transform: (DoubleArray) -> Double,
+) : VectorStat<R>,
+    Stat<R> by delegate {
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(transform(vector.toDoubleArray()), timestampNanos, weight)
     }
@@ -27,8 +28,9 @@ internal class FoldVectorStat<R : Result>(
 
 internal class FoldPairedStat<R : Result>(
     private val delegate: SeriesStat<R>,
-    private val transform: (Double, Double) -> Double
-) : PairedStat<R>, Stat<R> by delegate {
+    private val transform: (Double, Double) -> Double,
+) : PairedStat<R>,
+    Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(transform(x, y), timestampNanos, weight)
     }
@@ -40,7 +42,8 @@ internal class FoldVectorPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val foldX: (DoubleArray) -> Double,
     private val foldY: (DoubleArray) -> Double,
-) : VectorStat<R>, Stat<R> by delegate {
+) : VectorStat<R>,
+    Stat<R> by delegate {
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         val arr = vector.toDoubleArray()
         delegate.update(foldX(arr), foldY(arr), timestampNanos, weight)

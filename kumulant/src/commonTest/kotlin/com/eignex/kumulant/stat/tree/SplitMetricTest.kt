@@ -3,8 +3,8 @@ package com.eignex.kumulant.stat.tree
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 class SplitMetricTest {
 
     private fun v(n: Double, mean: Double, variance: Double) =
@@ -66,7 +66,7 @@ class SplitMetricTest {
 
     @Test
     fun `rank requires aligned pos and neg lists`() {
-        kotlin.test.assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             VarianceReduction.rank(v(1.0, 0.0, 1.0), listOf(v(1.0, 0.0, 0.0)), emptyList(), 0.0, 0.0)
         }
     }

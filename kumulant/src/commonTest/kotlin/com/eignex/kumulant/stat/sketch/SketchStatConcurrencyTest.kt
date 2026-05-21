@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
+import kotlin.test.assertTrue
 class SketchStatConcurrencyTest {
 
     private val keys = longArrayOf(1L, 2L, 3L, 2L, 1L, 4L, 5L, 1L, 6L, 7L)
@@ -15,10 +15,10 @@ class SketchStatConcurrencyTest {
             for (k in keys) s.update(k)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.totalSeen, r.totalSeen, "BloomFilter totalSeen mode=$mode")
-            kotlin.test.assertTrue(ref.words.contentEquals(r.words), "BloomFilter words mode=$mode")
+            assertTrue(ref.words.contentEquals(r.words), "BloomFilter words mode=$mode")
         }
     }
 
@@ -29,7 +29,7 @@ class SketchStatConcurrencyTest {
             for (k in keys) s.update(k)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             // CountMinSketchResult has counters; their estimate equals across modes.
             assertEquals(ref.estimate(1L), r.estimate(1L), "CountMinSketch.estimate(1) mode=$mode")
@@ -44,9 +44,9 @@ class SketchStatConcurrencyTest {
             for (k in keys) s.update(k)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
-            kotlin.test.assertTrue(ref.signatures.contentEquals(r.signatures), "MinHash signatures mode=$mode")
+            assertTrue(ref.signatures.contentEquals(r.signatures), "MinHash signatures mode=$mode")
         }
     }
 
@@ -61,7 +61,7 @@ class SketchStatConcurrencyTest {
             for (k in keys) s.update(k)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.keys.toList(), r.keys.toList(), "SpaceSavingStat keys mode=$mode")
             assertEquals(ref.counts.toList(), r.counts.toList(), "SpaceSavingStat counts mode=$mode")
@@ -74,7 +74,7 @@ class SketchStatConcurrencyTest {
         val s = SpaceSavingStat(capacity = 4, concurrency = Concurrency.Relaxed)
         for (k in keys) s.update(k)
         val r = s.read(0L)
-        kotlin.test.assertTrue(1L in r.keys.toList(), "hot key missing under Misra-Gries")
+        assertTrue(1L in r.keys.toList(), "hot key missing under Misra-Gries")
         assertEquals(keys.size.toLong(), r.totalSeen, "totalSeen mode=Relaxed")
     }
 }

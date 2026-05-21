@@ -22,7 +22,7 @@ class RegressionSpecsRoundTripTest {
     @Test fun `BayesianRegression leaf spec round trips and materializes`() {
         val cfg: RegressionStatSpec<CovarianceRegressionResult> = BayesianRegression(
             featureSize = 2,
-            priorVariance = 0.5
+            priorVariance = 0.5,
         )
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>

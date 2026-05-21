@@ -8,6 +8,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.exp
 import kotlin.math.ln
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -92,7 +93,8 @@ class Exp4Bandit(
     val gamma: Double = (nbrArms * eta).coerceAtMost(1.0),
     /** Single source of randomness for the round's arm draw. */
     override val random: Random = Random.Default,
-) : ContextualBandit, Snapshotable<Exp4State> {
+) : ContextualBandit,
+    Snapshotable<Exp4State> {
     init {
         require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
         require(experts.isNotEmpty()) { "experts must be non-empty" }
@@ -178,8 +180,7 @@ class Exp4Bandit(
     }
 
     /** Spawn a fresh bandit with the same experts and tunables; weights reset to uniform. */
-    override fun create(random: Random): Exp4Bandit =
-        Exp4Bandit(nbrArms, experts, eta, gamma, random)
+    override fun create(random: Random): Exp4Bandit = Exp4Bandit(nbrArms, experts, eta, gamma, random)
 
     private fun normalizeIfNeeded() {
         var maxW = 0.0
@@ -197,6 +198,6 @@ class Exp4Bandit(
         /** Default learning rate from the EXP4 regret analysis: `sqrt(ln(N) / (T * K))`
          *  collapsed to a horizon-free form using `T = 1` as a starting heuristic. */
         fun defaultEta(nbrArms: Int, nbrExperts: Int): Double =
-            kotlin.math.sqrt(ln(nbrExperts.toDouble().coerceAtLeast(2.0)) / nbrArms)
+            sqrt(ln(nbrExperts.toDouble().coerceAtLeast(2.0)) / nbrArms)
     }
 }

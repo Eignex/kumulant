@@ -17,7 +17,7 @@ class RateStatConcurrencyTest {
             for (i in values.indices) s.update(values[i], timestamps[i])
             s.read(timestamps.last())
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref, r, "RateStat mode=$mode")
     }
 
@@ -29,7 +29,7 @@ class RateStatConcurrencyTest {
             for (i in counters.indices) s.update(counters[i], timestamps[i])
             s.read(timestamps.last())
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref, r, "CounterRateStat mode=$mode")
     }
 
@@ -40,7 +40,7 @@ class RateStatConcurrencyTest {
             for (i in values.indices) s.update(values[i], timestamps[i])
             s.read(timestamps.last())
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             // Different add-orderings can produce ULP-level differences; use a tight tolerance.
             assertEquals(ref.rate, r.rate, 1e-12, "DecayingRate rate mode=$mode")

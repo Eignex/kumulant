@@ -67,7 +67,7 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
         snapshot: StochasticRegressionResult,
         x: VectorView,
         rng: Random,
-        exploration: Double
+        exploration: Double,
     ): Double {
         val mean = snapshot.predict(x)
         if (exploration <= 0.0) return mean
@@ -135,7 +135,7 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         snapshot: CovarianceRegressionResult,
         x: VectorView,
         rng: Random,
-        exploration: Double
+        exploration: Double,
     ): Double {
         val mean = snapshot.predict(x)
         val sigmaX = matVec(snapshot.covariance, x)
@@ -162,7 +162,7 @@ data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
         snapshot: CovarianceRegressionResult,
         x: VectorView,
         rng: Random,
-        exploration: Double
+        exploration: Double,
     ): Double {
         val mean = snapshot.predict(x)
         val sigmaX = matVec(snapshot.covariance, x)

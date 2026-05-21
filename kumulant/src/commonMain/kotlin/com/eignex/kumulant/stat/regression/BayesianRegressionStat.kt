@@ -1,4 +1,5 @@
-@file:Suppress("VariableNaming", "FunctionParameterNaming") // math convention: single-letter matrices L, M, etc.
+// math convention: single-letter matrices L, M, etc.
+@file:Suppress("VariableNaming", "FunctionParameterNaming", "PropertyName")
 
 package com.eignex.kumulant.stat.regression
 
@@ -87,7 +88,7 @@ class BayesianRegressionStat(
             "priorMean.size=${priorMean?.size}, expected $featureSize"
         }
         require(
-            priorCovariance == null || (priorCovariance.rows == featureSize && priorCovariance.cols == featureSize)
+            priorCovariance == null || (priorCovariance.rows == featureSize && priorCovariance.cols == featureSize),
         ) {
             "priorCovariance must be ${featureSize}x$featureSize, got ${priorCovariance?.rows}x${priorCovariance?.cols}"
         }
@@ -124,54 +125,54 @@ class BayesianRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) =
-        lock.withLock {
-            require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-            if (weight <= 0.0) return@withLock
-            step++
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        if (weight <= 0.0) return@withLock
+        step++
 
-            val etaPred = bias + (x dot weights)
-            val mu = link.invMean(etaPred)
-            val residual = y - mu
-            val curvature = link.curvature(etaPred)
-            sse += link.loss(etaPred, y) * weight
+        val etaPred = bias + (x dot weights)
+        val mu = link.invMean(etaPred)
+        val residual = y - mu
+        val curvature = link.curvature(etaPred)
+        sse += link.loss(etaPred, y) * weight
 
-            // SMW rank-1 downdate. For canonical-link GLMs the per-observation precision
-            // is `weight * curvature`: 1 under Identity gives the exact conjugate update;
-            // for Logit / Log this is the local Laplace approximation around the current
-            // linear predictor (not the strict closed-form Bayesian update).
-            //   S_new = S - (w_c * S x xT S) / (1 + w_c * xT S x)
-            //         = S - z zT, where z = sqrt(w_c) * S x / sqrt(1 + w_c * xT S x).
-            val wc = weight * curvature
-            val z = matVec(covariance, x)
-            val denom = sqrt(1.0 + wc * (x dot z))
-            if (denom == 0.0) return@withLock
-            scale(z, sqrt(wc) / denom)
+        // SMW rank-1 downdate. For canonical-link GLMs the per-observation precision
+        // is `weight * curvature`: 1 under Identity gives the exact conjugate update;
+        // for Logit / Log this is the local Laplace approximation around the current
+        // linear predictor (not the strict closed-form Bayesian update).
+        //   S_new = S - (w_c * S x xT S) / (1 + w_c * xT S x)
+        //         = S - z zT, where z = sqrt(w_c) * S x / sqrt(1 + w_c * xT S x).
+        val wc = weight * curvature
+        val z = matVec(covariance, x)
+        val denom = sqrt(1.0 + wc * (x dot z))
+        if (denom == 0.0) return@withLock
+        scale(z, sqrt(wc) / denom)
 
-            // Downdate the Cholesky factor; repair on instability.
-            var norm = covarianceL.choleskyDowndateInPlace(z)
-            if (norm > 1.0) {
-                for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + 1e-5
-                val Lnew = covariance.cholesky()
-                for (i in 0 until featureSize)
-                    for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
-                norm = covarianceL.choleskyDowndateInPlace(z)
-                while (norm > 1.0) {
-                    scale(z, 1.0 / (norm + 1e-5))
-                    norm = covarianceL.choleskyDowndateInPlace(z)
-                }
+        // Downdate the Cholesky factor; repair on instability.
+        var norm = covarianceL.choleskyDowndateInPlace(z)
+        if (norm > 1.0) {
+            for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + 1e-5
+            val Lnew = covariance.cholesky()
+            for (i in 0 until featureSize) {
+                for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
             }
-
-            // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
-            addOuter(covariance, -1.0, z, z)
-
-            // Posterior mean update: w += (weight * residual) * S_new * x.
-            axpy(weights, weight * residual, matVec(covariance, x))
-
-            biasPrecision += wc
-            bias += weight * residual / biasPrecision
-            totalWeights += weight
+            norm = covarianceL.choleskyDowndateInPlace(z)
+            while (norm > 1.0) {
+                scale(z, 1.0 / (norm + 1e-5))
+                norm = covarianceL.choleskyDowndateInPlace(z)
+            }
         }
+
+        // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
+        addOuter(covariance, -1.0, z, z)
+
+        // Posterior mean update: w += (weight * residual) * S_new * x.
+        axpy(weights, weight * residual, matVec(covariance, x))
+
+        biasPrecision += wc
+        bias += weight * residual / biasPrecision
+        totalWeights += weight
+    }
 
     override fun read(timestampNanos: Long): CovarianceRegressionResult = lock.withLock {
         CovarianceRegressionResult(
@@ -276,15 +277,14 @@ class BayesianRegressionStat(
         sse = 0.0
     }
 
-    override fun create(concurrency: Concurrency?) =
-        BayesianRegressionStat(
-            featureSize = featureSize,
-            priorVariance = priorVariance,
-            link = link,
-            concurrency = concurrency ?: this.concurrency,
-            priorMean = DenseVector.of(initialWeights.copyOf()),
-            priorCovariance = DenseMatrix.of(initialCovariance.toArray()),
-        )
+    override fun create(concurrency: Concurrency?) = BayesianRegressionStat(
+        featureSize = featureSize,
+        priorVariance = priorVariance,
+        link = link,
+        concurrency = concurrency ?: this.concurrency,
+        priorMean = DenseVector.of(initialWeights.copyOf()),
+        priorCovariance = DenseMatrix.of(initialCovariance.toArray()),
+    )
 
     /** Empirical-Bayes / hierarchical helpers that operate on populations of fitted snapshots. */
     companion object {

@@ -23,12 +23,12 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  *
  * **Concurrency:** Inherits [MeanStat]'s concurrency model.
  */
-class PinballLossStat(
-    val tau: Double,
-    override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<WeightedMeanResult> {
+class PinballLossStat(val tau: Double, override val concurrency: Concurrency = Concurrency.None) :
+    PairedStat<WeightedMeanResult> {
 
-    init { require(tau in 0.0..1.0) { "tau must be in [0, 1]; got $tau" } }
+    init {
+        require(tau in 0.0..1.0) { "tau must be in [0, 1]; got $tau" }
+    }
 
     private val inner = MeanStat(concurrency)
 

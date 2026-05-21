@@ -30,9 +30,7 @@ data class MaxResult(
  * [Concurrency] level. The CAS retry naturally serialises racing writers
  * without a lock.
  */
-class MaxStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<MaxResult> {
+class MaxStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<MaxResult> {
 
     private val mode = concurrency.monotonicMode()
     private val value = mode.newDouble(Double.NEGATIVE_INFINITY)

@@ -1,4 +1,4 @@
-@file:Suppress("VariableNaming") // math convention: single-letter matrices (M, L) in test setups
+@file:Suppress("VariableNaming", "PropertyName") // math convention: single-letter matrices (M, L) in test setups
 
 package com.eignex.kumulant.math
 
@@ -126,8 +126,10 @@ class VectorMatrixTest {
     @Test
     fun `DenseMatrix diagonal seeds entries`() {
         val m = DenseMatrix.diagonal(3, 2.5)
-        for (i in 0 until 3) for (j in 0 until 3) {
-            assertEquals(if (i == j) 2.5 else 0.0, m[i, j])
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                assertEquals(if (i == j) 2.5 else 0.0, m[i, j])
+            }
         }
     }
 
@@ -169,8 +171,10 @@ class VectorMatrixTest {
     fun `addOuter with alpha zero is a no-op`() {
         val M = DenseMatrix.diagonal(2, 1.0)
         addOuter(M, 0.0, DenseVector.of(doubleArrayOf(1.0, 1.0)), DenseVector.of(doubleArrayOf(1.0, 1.0)))
-        for (i in 0 until 2) for (j in 0 until 2) {
-            assertEquals(if (i == j) 1.0 else 0.0, M[i, j])
+        for (i in 0 until 2) {
+            for (j in 0 until 2) {
+                assertEquals(if (i == j) 1.0 else 0.0, M[i, j])
+            }
         }
     }
 
@@ -198,8 +202,10 @@ class VectorMatrixTest {
             SparseVector.of(3, intArrayOf(0, 1), doubleArrayOf(0.0, 1.0)),
             SparseVector.of(3, intArrayOf(2), doubleArrayOf(5.0)),
         )
-        for (i in 0 until 3) for (j in 0 until 3) {
-            assertEquals(if (i == 1 && j == 2) 5.0 else 0.0, M[i, j], "M[$i,$j]")
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                assertEquals(if (i == 1 && j == 2) 5.0 else 0.0, M[i, j], "M[$i,$j]")
+            }
         }
     }
 

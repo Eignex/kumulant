@@ -42,7 +42,9 @@ data class CompositeArm(
     /** Sub-arms whose stats receive routed observations. */
     val subArms: List<CompositeSubArm>,
 ) : Arm<ResultList<Result>> {
-    init { require(subArms.isNotEmpty()) { "CompositeArm requires at least one subArm" } }
+    init {
+        require(subArms.isNotEmpty()) { "CompositeArm requires at least one subArm" }
+    }
 
     override fun createStat(): SeriesStat<ResultList<Result>> =
         CompositeStat(subArms, subArms.map { it.arm.createStat() })
@@ -72,10 +74,8 @@ data class CompositeSubArm(
 )
 
 /** Live composite accumulator: fans each observation through the per-sub-arm AST. */
-internal class CompositeStat(
-    private val subArms: List<CompositeSubArm>,
-    initialSubStats: List<SeriesStat<*>>,
-) : SeriesStat<ResultList<Result>> {
+internal class CompositeStat(private val subArms: List<CompositeSubArm>, initialSubStats: List<SeriesStat<*>>) :
+    SeriesStat<ResultList<Result>> {
 
     private val subStats: Array<SeriesStat<*>> = initialSubStats.toTypedArray()
 
@@ -95,8 +95,7 @@ internal class CompositeStat(
         }
     }
 
-    override fun read(timestampNanos: Long): ResultList<Result> =
-        ResultList(subStats.map { it.read(timestampNanos) })
+    override fun read(timestampNanos: Long): ResultList<Result> = ResultList(subStats.map { it.read(timestampNanos) })
 
     override fun merge(values: ResultList<Result>) {
         require(values.results.size == subStats.size) {

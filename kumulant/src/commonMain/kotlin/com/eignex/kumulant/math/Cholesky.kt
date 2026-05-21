@@ -1,23 +1,22 @@
-@file:Suppress("VariableNaming", "FunctionParameterNaming") // math convention: single-letter matrices L, M, etc.
+// math convention: single-letter matrices L, M, etc.
+@file:Suppress("VariableNaming", "FunctionParameterNaming", "PropertyName")
 
 package com.eignex.kumulant.math
 
 import kotlin.math.absoluteValue
 import kotlin.math.sqrt
 
-/**
- * Cholesky helpers operating on the flat-`DoubleArray` backing of [DenseMatrix].
- * Internal to the regression stats; not part of the public matrix surface.
- *
- * Convention: lower-triangular factor `L` with `A = L * LT`. Entry `(i, k)` for
- * `k <= i` lives at `data[i * cols + k]`; entries above the diagonal are neither
- * read nor written.
- *
- * Inner loops reduce to [denseDot] on contiguous row runs (SIMD on JVM). The
- * Givens rotation step in [choleskyDowndateInPlace] has a loop-carried dependency
- * and stays scalar. [solveSpd]'s back substitution walks a strided column and
- * also stays scalar; the forward half uses SIMD.
- */
+// Cholesky helpers operating on the flat-`DoubleArray` backing of [DenseMatrix].
+// Internal to the regression stats; not part of the public matrix surface.
+//
+// Convention: lower-triangular factor `L` with `A = L * LT`. Entry `(i, k)` for
+// `k <= i` lives at `data[i * cols + k]`; entries above the diagonal are neither
+// read nor written.
+//
+// Inner loops reduce to [denseDot] on contiguous row runs (SIMD on JVM). The
+// Givens rotation step in [choleskyDowndateInPlace] has a loop-carried dependency
+// and stays scalar. [solveSpd]'s back substitution walks a strided column and
+// also stays scalar; the forward half uses SIMD.
 
 /**
  * Lower-triangular Cholesky decomposition `A = L * LT`, returned as a fresh matrix.

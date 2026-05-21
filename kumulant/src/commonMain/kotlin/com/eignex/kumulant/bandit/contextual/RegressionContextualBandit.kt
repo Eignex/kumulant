@@ -85,9 +85,13 @@ class RegressionContextualBandit<R : Result>(
     /** Template for the global pooling regressor; `null` disables pooling. */
     private val globalTemplate: RegressionStat<R>? = null,
     override val random: Random = Random.Default,
-) : ContextualBandit, PerArmBandit<R>, ContextualScorable {
+) : ContextualBandit,
+    PerArmBandit<R>,
+    ContextualScorable {
 
-    init { require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" } }
+    init {
+        require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
+    }
 
     private val arms: Array<RegressionStat<R>> = Array(nbrArms) { template.create(null) }
     private val global: RegressionStat<R>? = globalTemplate?.create(null)

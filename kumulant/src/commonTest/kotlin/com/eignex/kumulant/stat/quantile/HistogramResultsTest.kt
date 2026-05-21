@@ -68,7 +68,7 @@ class HistogramResultsTest {
         for (i in 1 until hist.lowerBounds.size) {
             assertTrue(
                 hist.lowerBounds[i] >= hist.lowerBounds[i - 1],
-                "bounds not sorted: ${hist.lowerBounds.toList()}"
+                "bounds not sorted: ${hist.lowerBounds.toList()}",
             )
         }
         assertEquals(6.0, hist.weights.sum(), DELTA)

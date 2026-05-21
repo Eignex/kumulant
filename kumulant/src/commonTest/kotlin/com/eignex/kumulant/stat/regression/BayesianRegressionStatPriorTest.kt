@@ -3,12 +3,12 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
 import kotlin.math.abs
+import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 /**
  * Custom prior + empirical-Bayes population fitting for [BayesianRegressionStat].
  * The custom prior is what lets klause persist a posterior across solver calls -
@@ -35,7 +35,7 @@ class BayesianRegressionStatPriorTest {
                 doubleArrayOf(1.0, 0.3, 0.0),
                 doubleArrayOf(0.3, 1.0, 0.0),
                 doubleArrayOf(0.0, 0.0, 0.5),
-            )
+            ),
         )
         val blr = BayesianRegressionStat(
             featureSize = 3,
@@ -56,7 +56,7 @@ class BayesianRegressionStatPriorTest {
             arrayOf(
                 doubleArrayOf(1.0, 0.0),
                 doubleArrayOf(0.0, -0.1),
-            )
+            ),
         )
         assertFailsWith<IllegalArgumentException> {
             BayesianRegressionStat(featureSize = 2, priorCovariance = bad)
@@ -117,7 +117,7 @@ class BayesianRegressionStatPriorTest {
             arrayOf(
                 doubleArrayOf(0.5, 0.1),
                 doubleArrayOf(0.1, 0.5),
-            )
+            ),
         )
         fun fresh() = BayesianRegressionStat(
             featureSize = 2,
@@ -142,10 +142,12 @@ class BayesianRegressionStatPriorTest {
 
         val rc = combined.read()
         val ra = a.read()
-        for (i in 0 until 2) assertTrue(
-            abs(rc.weights[i] - ra.weights[i]) < 0.05,
-            "merge diverged at $i: ${rc.weights[i]} vs ${ra.weights[i]}"
-        )
+        for (i in 0 until 2) {
+            assertTrue(
+                abs(rc.weights[i] - ra.weights[i]) < 0.05,
+                "merge diverged at $i: ${rc.weights[i]} vs ${ra.weights[i]}",
+            )
+        }
     }
 
     @Test
@@ -159,7 +161,7 @@ class BayesianRegressionStatPriorTest {
             totalWeights = 100.0,
             step = 100L,
             covariance = DenseMatrix.of(cov.toArray()),
-            covarianceL = cov.let { c -> DenseMatrix.diagonal(2, kotlin.math.sqrt(0.4)) },
+            covarianceL = cov.let { c -> DenseMatrix.diagonal(2, sqrt(0.4)) },
             sse = 0.0,
         )
         val prior = BayesianRegressionStat.fitPopulationPrior(List(5) { snap })
@@ -176,7 +178,7 @@ class BayesianRegressionStatPriorTest {
         // Two posteriors with very different means and tight covariance: the population
         // covariance should be dominated by the between-instance term (~ (mu_diff/2)^2).
         val tight = DenseMatrix.diagonal(2, 0.01)
-        val sqrt01 = kotlin.math.sqrt(0.01)
+        val sqrt01 = sqrt(0.01)
         fun snap(mu: DoubleArray) = CovarianceRegressionResult(
             weights = DenseVector.of(mu),
             bias = 0.0,
@@ -202,7 +204,7 @@ class BayesianRegressionStatPriorTest {
         // The output is exactly the shape BLR's constructor wants - feed it straight in
         // and confirm the new instance starts at the fitted population mean.
         val cov = DenseMatrix.diagonal(2, 0.5)
-        val sqrt05 = kotlin.math.sqrt(0.5)
+        val sqrt05 = sqrt(0.5)
         val snaps = listOf(
             doubleArrayOf(0.5, 1.0),
             doubleArrayOf(0.3, 0.8),
@@ -228,8 +230,11 @@ class BayesianRegressionStatPriorTest {
         val r = seeded.read()
         assertEquals(prior.mean[0], r.weights[0], 1e-12)
         assertEquals(prior.mean[1], r.weights[1], 1e-12)
-        for (i in 0 until 2) for (j in 0 until 2)
-            assertEquals(prior.covariance[i, j], r.covariance[i, j], 1e-9)
+        for (i in 0 until 2) {
+            for (j in 0 until 2) {
+                assertEquals(prior.covariance[i, j], r.covariance[i, j], 1e-9)
+            }
+        }
     }
 
     @Test
@@ -244,7 +249,7 @@ class BayesianRegressionStatPriorTest {
         // With weight selector returning 1.0 for the first snapshot and 0.0 for the
         // second, the result should equal the first snapshot in isolation.
         val cov = DenseMatrix.diagonal(2, 0.3)
-        val sqrt03 = kotlin.math.sqrt(0.3)
+        val sqrt03 = sqrt(0.3)
         fun snap(mu: DoubleArray) = CovarianceRegressionResult(
             weights = DenseVector.of(mu),
             bias = 0.0,
@@ -278,7 +283,7 @@ class BayesianRegressionStatPriorTest {
             totalWeights = 50.0,
             step = 50L,
             covariance = DenseMatrix.of(cov.toArray()),
-            covarianceL = DenseMatrix.diagonal(2, kotlin.math.sqrt(0.4)),
+            covarianceL = DenseMatrix.diagonal(2, sqrt(0.4)),
             sse = 0.0,
         )
         val prior = BayesianRegressionStat.fitPopulationPrior(listOf(snap))
@@ -286,8 +291,11 @@ class BayesianRegressionStatPriorTest {
         assertEquals(0.7, prior.mean[0], 1e-12)
         assertEquals(-0.3, prior.mean[1], 1e-12)
         // Single instance -> between term is 0, population covariance == within covariance.
-        for (i in 0 until 2) for (j in 0 until 2)
-            assertEquals(cov[i, j], prior.covariance[i, j], 1e-12)
+        for (i in 0 until 2) {
+            for (j in 0 until 2) {
+                assertEquals(cov[i, j], prior.covariance[i, j], 1e-12)
+            }
+        }
     }
 
     @Test
@@ -346,10 +354,12 @@ class BayesianRegressionStatPriorTest {
             blr.update(x, 5.0 * x[0] + 3.0 * x[1], 1.0)
         }
         val w = blr.read().weights
-        for (i in 0 until 2) assertTrue(
-            abs(w[i]) < 0.1,
-            "strong prior should pin w[$i] near 0, got ${w[i]}"
-        )
+        for (i in 0 until 2) {
+            assertTrue(
+                abs(w[i]) < 0.1,
+                "strong prior should pin w[$i] near 0, got ${w[i]}",
+            )
+        }
     }
 
     @Test
@@ -361,7 +371,7 @@ class BayesianRegressionStatPriorTest {
             totalWeights = 10.0,
             step = 10L,
             covariance = DenseMatrix.diagonal(2, 0.5),
-            covarianceL = DenseMatrix.diagonal(2, kotlin.math.sqrt(0.5)),
+            covarianceL = DenseMatrix.diagonal(2, sqrt(0.5)),
             sse = 0.0,
         )
         val prior = BayesianRegressionStat.fitPopulationPrior(listOf(snap, snap))

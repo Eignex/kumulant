@@ -21,8 +21,7 @@ sealed interface DecayWeighting {
      * weighted mean's bias that has been "worked off" after observing cumulative weight [w].
      * Returns 0 for w = 0 to avoid 0/0 when no observations have arrived.
      */
-    fun correction(w: Double): Double =
-        if (w == 0.0) 0.0 else 1.0 - exp(-alpha * w)
+    fun correction(w: Double): Double = if (w == 0.0) 0.0 else 1.0 - exp(-alpha * w)
 
     /** Time-driven decay: alpha = ln(2) / halfLife, progress measured in nanoseconds. */
     class HalfLife(

@@ -35,21 +35,23 @@ class VectorSerializationTest {
         // Each observation activates a handful of features -> naturally sparse.
         repeat(3000) {
             val active = listOf(0, 3, rng.nextInt(5))
-            val xArr = DoubleArray(5).also { for (i in active.distinct()) it[i] = rng.nextDouble() * 2 - 1 }
+            val xArr = DoubleArray(5).also { arr -> for (i in active.distinct()) arr[i] = rng.nextDouble() * 2 - 1 }
             var y = 0.0
             for (i in 0 until 5) y += truth[i] * xArr[i]
             y += rng.nextDouble() * 0.02 - 0.01
             dense.update(DenseVector.of(xArr), y, 1.0)
-            val nz = (0 until 5).filter { xArr[it] != 0.0 }
-            val xs = SparseVector.of(5, nz.toIntArray(), nz.map { xArr[it] }.toDoubleArray())
+            val nz = (0 until 5).filter { idx -> xArr[idx] != 0.0 }
+            val xs = SparseVector.of(5, nz.toIntArray(), nz.map { idx -> xArr[idx] }.toDoubleArray())
             sparse.update(xs, y, 1.0)
         }
         val rd = dense.read()
         val rs = sparse.read()
-        for (i in 0 until 5) assertTrue(
-            abs(rd.weights[i] - rs.weights[i]) < 1e-9,
-            "dense and sparse paths diverge at i=$i: ${rd.weights[i]} vs ${rs.weights[i]}"
-        )
+        for (i in 0 until 5) {
+            assertTrue(
+                abs(rd.weights[i] - rs.weights[i]) < 1e-9,
+                "dense and sparse paths diverge at i=$i: ${rd.weights[i]} vs ${rs.weights[i]}",
+            )
+        }
     }
 
     @Test
@@ -82,7 +84,7 @@ class VectorSerializationTest {
                 assertEquals(
                     e.eval(s.toDouble()),
                     decoded.eval(s.toDouble()),
-                    "schedule diverged at step=$s: $e"
+                    "schedule diverged at step=$s: $e",
                 )
             }
         }

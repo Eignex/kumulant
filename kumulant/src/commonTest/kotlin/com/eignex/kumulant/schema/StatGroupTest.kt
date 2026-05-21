@@ -67,7 +67,7 @@ class StatGroupTest {
 
         val source = StatGroup(
             StatKey<SumResult>("sum") to SumStat(),
-            StatKey<SumResult>("count") to SumStat().withValue(1.0).withWeight(1.0)
+            StatKey<SumResult>("count") to SumStat().withValue(1.0).withWeight(1.0),
         )
         source.update(2.0)
         source.update(3.0)
@@ -136,9 +136,9 @@ class StatGroupTest {
         val source = StatGroup(
             StatKey<GroupResult>("nested") to StatGroup(
                 StatKey<SumResult>("leafSum") to SumStat(),
-                StatKey<SumResult>("leafCount") to SumStat().withValue(1.0).withWeight(1.0)
+                StatKey<SumResult>("leafCount") to SumStat().withValue(1.0).withWeight(1.0),
             ),
-            StatKey<SumResult>("topSum") to SumStat()
+            StatKey<SumResult>("topSum") to SumStat(),
         )
         source.update(5.0)
 
@@ -209,7 +209,7 @@ class StatGroupTest {
 
         val group = StatGroup(
             StatKey<SumResult>("sum") to tracking,
-            concurrency = Concurrency.None
+            concurrency = Concurrency.None,
         )
 
         group.create(null)
@@ -330,7 +330,7 @@ class PairedStatGroupTest {
 
         val source = PairedStatGroup(
             StatKey<UnivariateRegressionResult>("ols") to UnivariateRegressionStat(),
-            StatKey<CovarianceResult>("cov") to CovarianceStat()
+            StatKey<CovarianceResult>("cov") to CovarianceStat(),
         )
         source.update(2.0, 4.0)
         source.update(3.0, 6.0)
@@ -376,17 +376,16 @@ class PairedStatGroupTest {
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: UnivariateRegressionResult) = Unit
             override fun reset() = Unit
-            override fun read(timestampNanos: Long) =
-                UnivariateRegressionResult(
-                    Penalty.None,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    VarianceResult(0.0, 0.0),
-                    VarianceResult(0.0, 0.0)
-                )
+            override fun read(timestampNanos: Long) = UnivariateRegressionResult(
+                Penalty.None,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                VarianceResult(0.0, 0.0),
+                VarianceResult(0.0, 0.0),
+            )
             override fun create(concurrency: Concurrency?): PairedStat<UnivariateRegressionResult> {
                 childCreateConcurrency = concurrency
                 return this
@@ -395,7 +394,7 @@ class PairedStatGroupTest {
 
         val group = PairedStatGroup(
             StatKey<UnivariateRegressionResult>("ols") to tracking,
-            concurrency = Concurrency.None
+            concurrency = Concurrency.None,
         )
         group.create(null)
         assertSame(Concurrency.None, childCreateConcurrency)
@@ -434,7 +433,7 @@ class PairedListStatsTest {
         assertFailsWith<IllegalArgumentException> {
             PairedListStats<UnivariateRegressionResult>(
                 "a" to UnivariateRegressionStat(),
-                "a" to UnivariateRegressionStat()
+                "a" to UnivariateRegressionStat(),
             )
         }
     }
@@ -500,17 +499,16 @@ class PairedListStatsTest {
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: UnivariateRegressionResult) = Unit
             override fun reset() = Unit
-            override fun read(timestampNanos: Long) =
-                UnivariateRegressionResult(
-                    Penalty.None,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    VarianceResult(0.0, 0.0),
-                    VarianceResult(0.0, 0.0)
-                )
+            override fun read(timestampNanos: Long) = UnivariateRegressionResult(
+                Penalty.None,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                VarianceResult(0.0, 0.0),
+                VarianceResult(0.0, 0.0),
+            )
             override fun create(concurrency: Concurrency?): PairedStat<UnivariateRegressionResult> {
                 childCreateConcurrency = concurrency
                 return this
@@ -563,13 +561,13 @@ class VectorStatGroupTest {
 
         val source = VectorStatGroup(
             StatKey<ResultList<SumResult>>("sums") to sumVector(2),
-            StatKey<ResultList<WeightedMeanResult>>("means") to meanVector(2)
+            StatKey<ResultList<WeightedMeanResult>>("means") to meanVector(2),
         )
         source.update(doubleArrayOf(2.0, 20.0))
         source.update(doubleArrayOf(3.0, 30.0))
 
         val onlySums = GroupResult(
-            results = mapOf("sums" to source.read()[StatKey<ResultList<SumResult>>("sums")])
+            results = mapOf("sums" to source.read()[StatKey<ResultList<SumResult>>("sums")]),
         )
 
         target.merge(onlySums)
@@ -607,11 +605,7 @@ class VectorStatGroupTest {
 
         val tracking = object : VectorStat<ResultList<SumResult>> {
             override val concurrency: Concurrency = Concurrency.None
-            override fun update(
-                vector: com.eignex.kumulant.math.VectorView,
-                timestampNanos: Long,
-                weight: Double
-            ) = Unit
+            override fun update(vector: VectorView, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: ResultList<SumResult>) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())
@@ -623,7 +617,7 @@ class VectorStatGroupTest {
 
         val group = VectorStatGroup(
             StatKey<ResultList<SumResult>>("v") to tracking,
-            concurrency = Concurrency.None
+            concurrency = Concurrency.None,
         )
         group.create(null)
         assertSame(Concurrency.None, childCreateConcurrency)
@@ -638,7 +632,7 @@ class VectorStatGroupTest {
         group.update(doubleArrayOf(1.0, 10.0))
         group.update(doubleArrayOf(3.0, 30.0))
         val r = group.read()
-        kotlin.test.assertTrue(r.results.containsKey("vsumKey"))
+        assertTrue(r.results.containsKey("vsumKey"))
     }
 }
 
@@ -665,7 +659,7 @@ class VectorListStatsTest {
         assertFailsWith<IllegalArgumentException> {
             VectorListStats<ResultList<SumResult>>(
                 "a" to sumVector(2),
-                "a" to sumVector(2)
+                "a" to sumVector(2),
             )
         }
     }
@@ -728,11 +722,7 @@ class VectorListStatsTest {
 
         val tracking = object : VectorStat<ResultList<SumResult>> {
             override val concurrency: Concurrency = Concurrency.None
-            override fun update(
-                vector: com.eignex.kumulant.math.VectorView,
-                timestampNanos: Long,
-                weight: Double
-            ) = Unit
+            override fun update(vector: VectorView, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: ResultList<SumResult>) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())
@@ -818,8 +808,7 @@ class DiscreteStatGroupTest {
             override fun update(value: Long, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: HyperLogLogResult) = Unit
             override fun reset() = Unit
-            override fun read(timestampNanos: Long) =
-                HyperLogLogResult(0.0, 10, IntArray(0), 0L)
+            override fun read(timestampNanos: Long) = HyperLogLogResult(0.0, 10, IntArray(0), 0L)
             override fun create(concurrency: Concurrency?): DiscreteStat<HyperLogLogResult> {
                 childCreateConcurrency = concurrency
                 return this
@@ -828,7 +817,7 @@ class DiscreteStatGroupTest {
 
         val group = DiscreteStatGroup(
             StatKey<HyperLogLogResult>("h") to tracking,
-            concurrency = Concurrency.None
+            concurrency = Concurrency.None,
         )
         group.create(null)
         assertSame(Concurrency.None, childCreateConcurrency)

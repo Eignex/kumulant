@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
+import kotlin.test.assertTrue
 class ConcurrentStreamModesTest {
 
     @Test
@@ -57,10 +57,10 @@ class ConcurrentStreamModesTest {
     fun `AtomicDouble add to NaN cell publishes the result through CAS`() {
         val d = AtomicMode.newDouble(Double.NaN)
         d.add(1.0)
-        kotlin.test.assertTrue(d.load().isNaN(), "NaN + 1.0 should still be NaN")
+        assertTrue(d.load().isNaN(), "NaN + 1.0 should still be NaN")
         val d2 = AtomicMode.newDouble(Double.POSITIVE_INFINITY)
         d2.add(1.0)
-        kotlin.test.assertEquals(Double.POSITIVE_INFINITY, d2.load(), 0.0)
+        assertEquals(Double.POSITIVE_INFINITY, d2.load(), 0.0)
     }
 
     @Test
@@ -110,7 +110,7 @@ class ConcurrentStreamModesTest {
         val n = (threads * iters).toLong()
         val expected = (n - 1).toDouble() / 2.0
         assertEquals(n.toDouble(), result.totalWeights, 0.0)
-        kotlin.test.assertTrue(
+        assertTrue(
             abs(result.mean - expected) < 1e-6,
             "mean drifted: got ${result.mean}, expected $expected",
         )
@@ -129,11 +129,11 @@ class ConcurrentStreamModesTest {
         val expectedMean = (n - 1).toDouble() / 2.0
         val expectedVar = (n.toDouble() * n - 1.0) / 12.0
         assertEquals(n.toDouble(), result.totalWeights, 0.0)
-        kotlin.test.assertTrue(
+        assertTrue(
             abs(result.mean - expectedMean) < 1e-6,
             "mean drifted: got ${result.mean}, expected $expectedMean",
         )
-        kotlin.test.assertTrue(
+        assertTrue(
             abs(result.variance - expectedVar) / expectedVar < 1e-9,
             "variance drifted: got ${result.variance}, expected $expectedVar",
         )
@@ -164,7 +164,7 @@ class ConcurrentStreamModesTest {
         }
         val result = tdigest.read()
         // ~6 * compression is the documented centroid bound. Allow some slack.
-        kotlin.test.assertTrue(
+        assertTrue(
             result.means.size <= 8 * 100,
             "centroid count ${result.means.size} exceeded 8 * compression",
         )
@@ -183,7 +183,7 @@ class ConcurrentStreamModesTest {
             }
         }
         val result = reservoir.read()
-        kotlin.test.assertTrue(
+        assertTrue(
             result.values.size <= capacity,
             "reservoir size ${result.values.size} exceeded capacity $capacity",
         )
@@ -203,7 +203,7 @@ class ConcurrentStreamModesTest {
             }
         }
         val result = ss.read()
-        kotlin.test.assertTrue(
+        assertTrue(
             result.keys.size <= capacity,
             "tracked keys ${result.keys.size} exceeded capacity $capacity",
         )
@@ -221,7 +221,7 @@ class ConcurrentStreamModesTest {
             }
         }
         val result = tdigest.read()
-        kotlin.test.assertTrue(
+        assertTrue(
             result.means.size <= 8 * 100,
             "centroid count ${result.means.size} exceeded 8 * compression",
         )
@@ -241,7 +241,7 @@ class ConcurrentStreamModesTest {
             }
         }
         val result = reservoir.read()
-        kotlin.test.assertTrue(
+        assertTrue(
             result.values.size <= capacity,
             "reservoir size ${result.values.size} exceeded capacity $capacity",
         )
@@ -260,7 +260,7 @@ class ConcurrentStreamModesTest {
             }
         }
         val result = ss.read()
-        kotlin.test.assertTrue(
+        assertTrue(
             result.keys.size <= capacity,
             "tracked keys ${result.keys.size} exceeded capacity $capacity",
         )

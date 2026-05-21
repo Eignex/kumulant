@@ -4,6 +4,8 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.ArrayBins
 import com.eignex.kumulant.stream.additiveMode
+import kotlin.math.abs
+import kotlin.math.round
 
 /**
  * Fixed-width binned histogram over `[lowerBound, upperBound)` split into
@@ -60,7 +62,9 @@ class LinearHistogramStat(
 
         when {
             value < lowerBound -> underflow.add(weight)
+
             value >= upperBound -> overflow.add(weight)
+
             else -> {
                 val idx = ((value - lowerBound) / binWidth).toInt().coerceIn(0, binCount - 1)
                 bins.add(idx, weight)
@@ -72,7 +76,7 @@ class LinearHistogramStat(
         lowerBound,
         upperBound,
         binCount,
-        concurrency ?: this.concurrency
+        concurrency ?: this.concurrency,
     )
 
     override fun merge(values: SparseHistogramResult) {
@@ -86,15 +90,18 @@ class LinearHistogramStat(
                     totalWeights.add(w)
                     underflow.add(w)
                 }
+
                 lo == upperBound && !hi.isFinite() -> {
                     totalWeights.add(w)
                     overflow.add(w)
                 }
+
                 lo.isFinite() && hi.isFinite() && matchesLayout(lo, hi) -> {
                     totalWeights.add(w)
                     val idx = ((lo - lowerBound) / binWidth).toInt().coerceIn(0, binCount - 1)
                     bins.add(idx, w)
                 }
+
                 else -> {
                     val target = when {
                         !lo.isFinite() && hi.isFinite() -> hi - binWidth / 2.0
@@ -109,10 +116,10 @@ class LinearHistogramStat(
 
     private fun matchesLayout(lo: Double, hi: Double): Boolean {
         val span = hi - lo
-        if (kotlin.math.abs(span - binWidth) > binWidth * 1e-12) return false
+        if (abs(span - binWidth) > binWidth * 1e-12) return false
         val ratio = (lo - lowerBound) / binWidth
-        val rounded = kotlin.math.round(ratio)
-        return kotlin.math.abs(ratio - rounded) < 1e-9 && rounded >= 0.0 && rounded < binCount
+        val rounded = round(ratio)
+        return abs(ratio - rounded) < 1e-9 && rounded >= 0.0 && rounded < binCount
     }
 
     override fun reset() {

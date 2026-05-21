@@ -19,7 +19,8 @@ data class DecayingRateResult(
     override val rate: Double,
     /** Wall-clock timestamp (nanoseconds) of the snapshot, for downstream extrapolation. */
     val timestampNanos: Long,
-) : Result, HasRate
+) : Result,
+    HasRate
 
 /**
  * Time-decayed rate with the given [halfLife].
@@ -38,18 +39,12 @@ data class DecayingRateResult(
  * **Concurrency:** Inherits [DecayingSumStat]'s concurrency model — lock-free
  * and exact under every [Concurrency] level.
  */
-class DecayingRateStat(
-    val halfLife: Duration,
-    override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<DecayingRateResult> by decayingRateDelegate(halfLife, concurrency)
+class DecayingRateStat(val halfLife: Duration, override val concurrency: Concurrency = Concurrency.None) :
+    SeriesStat<DecayingRateResult> by decayingRateDelegate(halfLife, concurrency)
 
-private fun rateScale(halfLife: Duration): Double =
-    (ln(2.0) / halfLife.inWholeNanoseconds.toDouble()) * 1e9
+private fun rateScale(halfLife: Duration): Double = (ln(2.0) / halfLife.inWholeNanoseconds.toDouble()) * 1e9
 
-private fun decayingRateDelegate(
-    halfLife: Duration,
-    concurrency: Concurrency
-): SeriesStat<DecayingRateResult> {
+private fun decayingRateDelegate(halfLife: Duration, concurrency: Concurrency): SeriesStat<DecayingRateResult> {
     val scale = rateScale(halfLife)
     return DecayingSumStat(halfLife, concurrency).mapResult(
         forward = { sum ->
@@ -57,6 +52,6 @@ private fun decayingRateDelegate(
         },
         reverse = { rate ->
             DecayingSumResult(rate.rate / scale, rate.timestampNanos)
-        }
+        },
     )
 }

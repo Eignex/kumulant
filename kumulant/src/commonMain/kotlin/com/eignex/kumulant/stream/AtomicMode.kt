@@ -79,13 +79,10 @@ internal value class AtomicLong(val ref: KAtomicLong) : StreamLong {
         ref.addAndFetch(delta)
     }
 
-    override fun addAndGet(delta: Long): Long {
-        return ref.addAndFetch(delta)
-    }
+    override fun addAndGet(delta: Long): Long = ref.addAndFetch(delta)
 
-    override fun compareAndSet(expectedValue: Long, newValue: Long): Boolean {
-        return ref.compareAndSet(expectedValue, newValue)
-    }
+    override fun compareAndSet(expectedValue: Long, newValue: Long): Boolean =
+        ref.compareAndSet(expectedValue, newValue)
 }
 
 /** Platform-atomic [StreamLongArray] backed by `kotlin.concurrent.atomics.AtomicLongArray`. */
@@ -94,7 +91,9 @@ internal value class AtomicLongCellArray(val ref: KAtomicLongArray) : StreamLong
     override val size: Int get() = ref.size
     override fun load(index: Int): Long = ref.loadAt(index)
     override fun store(index: Int, value: Long) = ref.storeAt(index, value)
-    override fun add(index: Int, delta: Long) { ref.addAndFetchAt(index, delta) }
+    override fun add(index: Int, delta: Long) {
+        ref.addAndFetchAt(index, delta)
+    }
     override fun addAndGet(index: Int, delta: Long): Long = ref.addAndFetchAt(index, delta)
     override fun compareAndSet(index: Int, expectedValue: Long, newValue: Long): Boolean =
         ref.compareAndSetAt(index, expectedValue, newValue)
@@ -141,11 +140,7 @@ internal value class AtomicReference<T>(val ref: KAtomicReference<T>) : StreamRe
         ref.store(value)
     }
 
-    override fun compareAndExchange(expectedValue: T, newValue: T): T {
-        return ref.compareAndExchange(expectedValue, newValue)
-    }
+    override fun compareAndExchange(expectedValue: T, newValue: T): T = ref.compareAndExchange(expectedValue, newValue)
 
-    override fun compareAndSet(expectedValue: T, newValue: T): Boolean {
-        return ref.compareAndSet(expectedValue, newValue)
-    }
+    override fun compareAndSet(expectedValue: T, newValue: T): Boolean = ref.compareAndSet(expectedValue, newValue)
 }

@@ -94,7 +94,9 @@ class KnnContextualBandit(
     val distance: (VectorView, VectorView) -> Double = ::squaredL2,
     /** Single source of randomness; used only for tie-breaking, currently deterministic. */
     override val random: Random = Random.Default,
-) : ContextualBandit, PerArmBandit<KnnArmResult>, ContextualScorable {
+) : ContextualBandit,
+    PerArmBandit<KnnArmResult>,
+    ContextualScorable {
     init {
         require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
         require(k > 0) { "k must be positive, got $k" }
@@ -290,6 +292,7 @@ class KnnContextualBandit(
 
     private fun copyOf(x: VectorView): VectorView = when (x) {
         is DenseVector -> DenseVector.of(x.toDoubleArray())
+
         is SparseVector -> {
             val keepIdx = IntArray(x.size)
             val keepVal = DoubleArray(x.size)

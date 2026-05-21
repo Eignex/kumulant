@@ -7,24 +7,22 @@ import com.eignex.kumulant.core.ResultList
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * Wire-friendly counterparts of the composable operations in
- * `com.eignex.kumulant.operation.*`. Each spec holds an inner [StatSpec]
- * (polymorphic by `@SerialName`) plus the operation's primitive parameters.
- *
- * The inner field is typed at the base [StatSpec] interface so the
- * polymorphic decoder doesn't need a generic argument; construction
- * (`StatFactory.kt`) runtime-checks the inner's modality and casts it. The
- * user-facing typed surface is the extension functions below on the
- * modality-specific spec interfaces (`SeriesStatSpec<R>.withWeight(...)`,
- * etc.) - the unsafe cast there is correct because the wrapper is
- * parametric in `R` only at the type level.
- *
- * Lambda-bound operations (`filter`, `mapResult`, `transformValue`/`Pair`/`Vector`/`Long`,
- * `foldVector`/`Paired`) do not appear here - their behavior cannot be
- * expressed without an expression language. Use the live-stat back-door for
- * those.
- */
+// Wire-friendly counterparts of the composable operations in
+// `com.eignex.kumulant.operation.*`. Each spec holds an inner [StatSpec]
+// (polymorphic by `@SerialName`) plus the operation's primitive parameters.
+//
+// The inner field is typed at the base [StatSpec] interface so the
+// polymorphic decoder doesn't need a generic argument; construction
+// (`StatFactory.kt`) runtime-checks the inner's modality and casts it. The
+// user-facing typed surface is the extension functions below on the
+// modality-specific spec interfaces (`SeriesStatSpec<R>.withWeight(...)`,
+// etc.) - the unsafe cast there is correct because the wrapper is
+// parametric in `R` only at the type level.
+//
+// AST-backed operations (filter, transform, weightBy, fold) reach into
+// `ScalarExpr` / `BoolExpr` / `VectorExpr` so the whole composition serialises.
+// Lambda-only live forms (`mapResult`, the lambda overloads of
+// `transformValue`/`transformPair`/`filter`) stay in the live-stat package only.
 
 /** Wire spec for `SeriesStat.withWeight(weight)`: multiplies every update by [weight]. */
 @Serializable
@@ -127,12 +125,10 @@ data class AsDiscrete(
 ) : DiscreteStatSpec<Result>
 
 /** Adapt a discrete spec into a series spec - the series sees `value.toDouble()` per update. */
-fun <R : Result> DiscreteStatSpec<R>.asSeries(): SeriesStatSpec<R> =
-    AsSeries(this) as SeriesStatSpec<R>
+fun <R : Result> DiscreteStatSpec<R>.asSeries(): SeriesStatSpec<R> = AsSeries(this) as SeriesStatSpec<R>
 
 /** Adapt a series spec into a discrete spec - the discrete sees `value.toLong()` per update. */
-fun <R : Result> SeriesStatSpec<R>.asDiscrete(): DiscreteStatSpec<R> =
-    AsDiscrete(this) as DiscreteStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.asDiscrete(): DiscreteStatSpec<R> = AsDiscrete(this) as DiscreteStatSpec<R>
 
 /** Wire spec for `SeriesStat.atX()`: feeds the `x` component of paired updates into a series stat. */
 @Serializable
@@ -179,8 +175,7 @@ fun <R : Result> SeriesStatSpec<R>.atX(): PairedStatSpec<R> = AtX(this) as Paire
 fun <R : Result> SeriesStatSpec<R>.atY(): PairedStatSpec<R> = AtY(this) as PairedStatSpec<R>
 
 /** Adapt a series spec into a vector spec by consuming the [index]-th coordinate of each vector. */
-fun <R : Result> SeriesStatSpec<R>.atIndex(index: Int): VectorStatSpec<R> =
-    AtIndex(this, index) as VectorStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.atIndex(index: Int): VectorStatSpec<R> = AtIndex(this, index) as VectorStatSpec<R>
 
 /** Adapt a paired spec into a vector spec by consuming the [indexX] / [indexY] coordinates. */
 fun <R : Result> PairedStatSpec<R>.atIndices(indexX: Int, indexY: Int): VectorStatSpec<R> =
@@ -231,12 +226,10 @@ fun <R : Result> PairedStatSpec<R>.withFixedY(fixedY: Double): SeriesStatSpec<R>
     WithFixedY(this, fixedY) as SeriesStatSpec<R>
 
 /** Adapt a paired spec into a series spec by using the update timestamp as `x`. */
-fun <R : Result> PairedStatSpec<R>.withTimeAsX(): SeriesStatSpec<R> =
-    WithTimeAsX(this) as SeriesStatSpec<R>
+fun <R : Result> PairedStatSpec<R>.withTimeAsX(): SeriesStatSpec<R> = WithTimeAsX(this) as SeriesStatSpec<R>
 
 /** Adapt a paired spec into a series spec by using the update timestamp as `y`. */
-fun <R : Result> PairedStatSpec<R>.withTimeAsY(): SeriesStatSpec<R> =
-    WithTimeAsY(this) as SeriesStatSpec<R>
+fun <R : Result> PairedStatSpec<R>.withTimeAsY(): SeriesStatSpec<R> = WithTimeAsY(this) as SeriesStatSpec<R>
 
 /** Wire spec for `SeriesStat.windowed(durationMillis, slices)`: sliding time window with [slices] buckets. */
 @Serializable
@@ -287,28 +280,20 @@ data class WindowedDiscrete(
 ) : DiscreteStatSpec<Result>
 
 /** Wrap this series spec in a sliding time window of [durationMillis] split into [slices] buckets. */
-fun <R : Result> SeriesStatSpec<R>.windowed(
-    durationMillis: Long,
-    slices: Int = 10,
-): SeriesStatSpec<R> = WindowedSeries(this, durationMillis, slices) as SeriesStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.windowed(durationMillis: Long, slices: Int = 10): SeriesStatSpec<R> =
+    WindowedSeries(this, durationMillis, slices) as SeriesStatSpec<R>
 
 /** Wrap this paired spec in a sliding time window of [durationMillis] split into [slices] buckets. */
-fun <R : Result> PairedStatSpec<R>.windowed(
-    durationMillis: Long,
-    slices: Int = 10,
-): PairedStatSpec<R> = WindowedPaired(this, durationMillis, slices) as PairedStatSpec<R>
+fun <R : Result> PairedStatSpec<R>.windowed(durationMillis: Long, slices: Int = 10): PairedStatSpec<R> =
+    WindowedPaired(this, durationMillis, slices) as PairedStatSpec<R>
 
 /** Wrap this vector spec in a sliding time window of [durationMillis] split into [slices] buckets. */
-fun <R : Result> VectorStatSpec<R>.windowed(
-    durationMillis: Long,
-    slices: Int = 10,
-): VectorStatSpec<R> = WindowedVector(this, durationMillis, slices) as VectorStatSpec<R>
+fun <R : Result> VectorStatSpec<R>.windowed(durationMillis: Long, slices: Int = 10): VectorStatSpec<R> =
+    WindowedVector(this, durationMillis, slices) as VectorStatSpec<R>
 
 /** Wrap this discrete spec in a sliding time window of [durationMillis] split into [slices] buckets. */
-fun <R : Result> DiscreteStatSpec<R>.windowed(
-    durationMillis: Long,
-    slices: Int = 10,
-): DiscreteStatSpec<R> = WindowedDiscrete(this, durationMillis, slices) as DiscreteStatSpec<R>
+fun <R : Result> DiscreteStatSpec<R>.windowed(durationMillis: Long, slices: Int = 10): DiscreteStatSpec<R> =
+    WindowedDiscrete(this, durationMillis, slices) as DiscreteStatSpec<R>
 
 /** Wire spec for `SeriesStat.vectorized(dimensions)`: replicates a series stat across [dimensions] coordinates. */
 @Serializable
@@ -330,8 +315,7 @@ data class Vectorized(
 fun <R : Result> SeriesStatSpec<R>.vectorized(
     dimensions: Int,
     skipZeros: Boolean = false,
-): VectorStatSpec<ResultList<R>> =
-    Vectorized(dimensions, this, skipZeros) as VectorStatSpec<ResultList<R>>
+): VectorStatSpec<ResultList<R>> = Vectorized(dimensions, this, skipZeros) as VectorStatSpec<ResultList<R>>
 
 /**
  * Apply [expr] as the value transform on every update - wire-friendly
@@ -425,12 +409,10 @@ fun <R : Result> PairedStatSpec<R>.transformPair(xExpr: ScalarExpr, yExpr: Scala
     TransformPair(this, xExpr, yExpr) as PairedStatSpec<R>
 
 /** Map only the x coordinate; y stays as-is. */
-fun <R : Result> PairedStatSpec<R>.transformX(expr: ScalarExpr): PairedStatSpec<R> =
-    transformPair(expr, Y)
+fun <R : Result> PairedStatSpec<R>.transformX(expr: ScalarExpr): PairedStatSpec<R> = transformPair(expr, Y)
 
 /** Map only the y coordinate; x stays as-is. */
-fun <R : Result> PairedStatSpec<R>.transformY(expr: ScalarExpr): PairedStatSpec<R> =
-    transformPair(X, expr)
+fun <R : Result> PairedStatSpec<R>.transformY(expr: ScalarExpr): PairedStatSpec<R> = transformPair(X, expr)
 
 /** Wrap this paired spec so updates are forwarded only when [pred] evaluates true on `(x, y)`. */
 fun <R : Result> PairedStatSpec<R>.filter(pred: BoolExpr): PairedStatSpec<R> =
@@ -842,7 +824,5 @@ fun <R : Result> RegressionStatSpec<R>.sample(rate: Double, seed: Long): Regress
 
 /** Lift this series spec into the regression modality. [project] reduces each `(x = V, y = Y)`
  *  update to a scalar that the inner series stat absorbs. Use `Y` for the marginal-y view. */
-fun <R : Result> SeriesStatSpec<R>.foldRegression(
-    featureSize: Int,
-    project: ScalarExpr,
-): RegressionStatSpec<R> = FoldRegression(this, featureSize, project) as RegressionStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.foldRegression(featureSize: Int, project: ScalarExpr): RegressionStatSpec<R> =
+    FoldRegression(this, featureSize, project) as RegressionStatSpec<R>

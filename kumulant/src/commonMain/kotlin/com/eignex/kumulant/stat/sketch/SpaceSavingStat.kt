@@ -7,6 +7,7 @@ import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.math.round
 
 /**
  * Space-Saving heavy-hitters snapshot. [keys], [counts], [errors] are parallel arrays of
@@ -159,7 +160,7 @@ class SpaceSavingStat(
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        val w = kotlin.math.round(weight).toLong()
+        val w = round(weight).toLong()
         if (w <= 0L) return
         if (useMisraGries) {
             admitMisraGries(value, w, 0L)

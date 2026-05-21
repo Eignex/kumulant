@@ -21,28 +21,28 @@ import kotlin.time.Duration
 fun <R : Result> SeriesStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
-    concurrency: Concurrency = Concurrency.None
+    concurrency: Concurrency = Concurrency.None,
 ): SeriesStat<R> = WindowedSeriesStat(duration, slices, this, concurrency)
 
 /** Paired-stat counterpart of [SeriesStat.windowed]. */
 fun <R : Result> PairedStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
-    concurrency: Concurrency = Concurrency.None
+    concurrency: Concurrency = Concurrency.None,
 ): PairedStat<R> = WindowedPairedStat(duration, slices, this, concurrency)
 
 /** Vector-stat counterpart of [SeriesStat.windowed]. */
 fun <R : Result> VectorStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
-    concurrency: Concurrency = Concurrency.None
+    concurrency: Concurrency = Concurrency.None,
 ): VectorStat<R> = WindowedVectorStat(duration, slices, this, concurrency)
 
 /** Discrete-stat counterpart of [SeriesStat.windowed]. */
 fun <R : Result> DiscreteStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
-    concurrency: Concurrency = Concurrency.None
+    concurrency: Concurrency = Concurrency.None,
 ): DiscreteStat<R> = WindowedDiscreteStat(duration, slices, this, concurrency)
 
 /**
@@ -50,11 +50,7 @@ fun <R : Result> DiscreteStat<R>.windowed(
  * slot at [timestampNanos], and read the result. Shared by the four [windowed]
  * adapters since their `read` is modality-agnostic.
  */
-private fun <R : Result, S : Stat<R>> windowedRead(
-    template: S,
-    ring: SliceRing<R, S>,
-    timestampNanos: Long,
-): R {
+private fun <R : Result, S : Stat<R>> windowedRead(template: S, ring: SliceRing<R, S>, timestampNanos: Long): R {
     val acc = template.create(concurrency = Concurrency.None)
     ring.forEachActive(timestampNanos) { acc.merge(it.read(timestampNanos)) }
     return acc.read(timestampNanos)
@@ -118,7 +114,7 @@ internal class WindowedDiscreteStat<R : Result>(
     private val ring = SliceRing<R, DiscreteStat<R>>(
         windowDuration,
         slices,
-        concurrency
+        concurrency,
     ) { c -> this.template.create(c) }
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {

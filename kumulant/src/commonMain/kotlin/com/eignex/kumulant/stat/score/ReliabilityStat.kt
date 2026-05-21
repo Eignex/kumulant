@@ -68,11 +68,10 @@ data class ReliabilityResult(
         sumOutcome.contentEquals(other.sumOutcome) &&
         totalWeights.contentEquals(other.totalWeights)
 
-    override fun hashCode(): Int =
-        31 * (
-            31 * (31 * numBins + sumProbability.contentHashCode()) +
-                sumOutcome.contentHashCode()
-            ) + totalWeights.contentHashCode()
+    override fun hashCode(): Int = 31 * (
+        31 * (31 * numBins + sumProbability.contentHashCode()) +
+            sumOutcome.contentHashCode()
+        ) + totalWeights.contentHashCode()
 }
 
 /**
@@ -96,12 +95,12 @@ data class ReliabilityResult(
  * Lock-free and exact under every [Concurrency] level — bin assignment is
  * deterministic per prediction and increments commute.
  */
-class ReliabilityStat(
-    val numBins: Int,
-    override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<ReliabilityResult> {
+class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = Concurrency.None) :
+    PairedStat<ReliabilityResult> {
 
-    init { require(numBins > 0) { "numBins must be > 0; got $numBins" } }
+    init {
+        require(numBins > 0) { "numBins must be > 0; got $numBins" }
+    }
 
     private val mode = concurrency.additiveMode()
     private val sumP: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
@@ -143,6 +142,5 @@ class ReliabilityStat(
         }
     }
 
-    override fun create(concurrency: Concurrency?) =
-        ReliabilityStat(numBins, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = ReliabilityStat(numBins, concurrency ?: this.concurrency)
 }

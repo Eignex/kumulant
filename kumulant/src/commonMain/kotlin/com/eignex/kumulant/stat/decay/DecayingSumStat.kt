@@ -64,7 +64,7 @@ class DecayingSumStat(
 
     private val mode = concurrency.additiveMode()
     private val epochRef = mode.newReference(
-        Epoch(currentTimeNanos(), mode.newDouble(0.0))
+        Epoch(currentTimeNanos(), mode.newDouble(0.0)),
     )
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -112,8 +112,7 @@ class DecayingSumStat(
         epochRef.compareAndSet(current, Epoch(currentTimeNanos(), mode.newDouble(0.0)))
     }
 
-    override fun create(concurrency: Concurrency?) =
-        DecayingSumStat(weighting, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = DecayingSumStat(weighting, concurrency ?: this.concurrency)
 
     private companion object {
         const val ROTATION_HALF_LIVES = 50L

@@ -1,10 +1,11 @@
 package com.eignex.kumulant.bandit.univariate
 
+import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 /**
  * Behavioural checks for [MultiArmedBandit.evaluate]: it should be a read-only
  * scoring op (no step increment, no policy state mutation) and agree with the
@@ -51,7 +52,7 @@ class MultiArmedBanditTest {
         repeat(n) { sum += mab.evaluate(0) }
         val mean = sum / n
         // Beta(2,5) mean is 2/7 ~= 0.2857.
-        assertTrue(kotlin.math.abs(mean - 2.0 / 7.0) < 0.02, "mean=$mean")
+        assertTrue(abs(mean - 2.0 / 7.0) < 0.02, "mean=$mean")
     }
 
     @Test
@@ -94,7 +95,7 @@ class MultiArmedBanditTest {
     fun `merge rejects nbrArms mismatch`() {
         val mab = MultiArmedBandit(nbrArms = 2, policy = BetaBernoulliTS())
         val wrongSize = MultiArmedBandit(nbrArms = 3, policy = BetaBernoulliTS()).snapshot()
-        kotlin.test.assertFailsWith<IllegalArgumentException> { mab.merge(wrongSize) }
+        assertFailsWith<IllegalArgumentException> { mab.merge(wrongSize) }
     }
 
     @Test

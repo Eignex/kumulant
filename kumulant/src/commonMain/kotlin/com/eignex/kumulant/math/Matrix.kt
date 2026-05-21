@@ -1,9 +1,11 @@
 package com.eignex.kumulant.math
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ArraySerializer
+import kotlinx.serialization.builtins.DoubleArraySerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -64,7 +66,9 @@ class DenseMatrix internal constructor(
         DoubleArray(cols) { j -> data[i * cols + j] }
     }
 
-    internal operator fun set(i: Int, j: Int, v: Double) { data[i * cols + j] = v }
+    internal operator fun set(i: Int, j: Int, v: Double) {
+        data[i * cols + j] = v
+    }
 
     /** Offset into [data] where row [i] starts. */
     internal fun rowOffset(i: Int): Int = i * cols
@@ -101,19 +105,17 @@ class DenseMatrix internal constructor(
         }
 
         /** Wrap an existing flat `DoubleArray` of length `rows * cols` without copying. */
-        internal fun wrap(rows: Int, cols: Int, data: DoubleArray): DenseMatrix =
-            DenseMatrix(rows, cols, data)
+        internal fun wrap(rows: Int, cols: Int, data: DoubleArray): DenseMatrix = DenseMatrix(rows, cols, data)
     }
 }
 
 /** Serialises [DenseMatrix] as a 2D `Array<DoubleArray>`. The flat in-memory backing
  *  is an implementation detail; the wire shape stays stable across layout changes. */
-@OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+@OptIn(ExperimentalSerializationApi::class)
 internal object DenseMatrixSerializer : KSerializer<DenseMatrix> {
-    private val inner = ArraySerializer(kotlinx.serialization.builtins.DoubleArraySerializer())
+    private val inner = ArraySerializer(DoubleArraySerializer())
     override val descriptor: SerialDescriptor get() = inner.descriptor
     override fun serialize(encoder: Encoder, value: DenseMatrix) =
         encoder.encodeSerializableValue(inner, value.toArray())
-    override fun deserialize(decoder: Decoder): DenseMatrix =
-        DenseMatrix.of(decoder.decodeSerializableValue(inner))
+    override fun deserialize(decoder: Decoder): DenseMatrix = DenseMatrix.of(decoder.decodeSerializableValue(inner))
 }

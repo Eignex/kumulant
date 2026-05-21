@@ -79,7 +79,9 @@ class StochasticRegressionStat(
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<StochasticRegressionResult> {
 
-    init { require(featureSize > 0) { "featureSize must be positive" } }
+    init {
+        require(featureSize > 0) { "featureSize must be positive" }
+    }
 
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
@@ -96,7 +98,7 @@ class StochasticRegressionStat(
     private val l1PendingCell: StreamDouble? = if (penalty is Penalty.L1) mode.newDouble(0.0) else null
     private val l1LastApplied: StreamDoubleArray? = if (penalty is Penalty.L1) {
         mode.newDoubleArray(
-            featureSize
+            featureSize,
         )
     } else {
         null
@@ -115,11 +117,22 @@ class StochasticRegressionStat(
     val sse: Double by sseCell
 
     /** Logical weight at coord [i]: applies the lazy [Penalty] transformation to the stored cell. */
-    private fun effectiveWeight(i: Int): Double = when (val p = penalty) {
+    private fun effectiveWeight(i: Int): Double = when (penalty) {
         Penalty.None -> weightsCell.load(i)
-        is Penalty.L2 -> weightsCell.load(i) * l2ScaleCell!!.load()
-        is Penalty.L1 -> softThreshold(weightsCell.load(i), l1PendingCell!!.load() - l1LastApplied!!.load(i))
+
+        is Penalty.L2 -> weightsCell.load(i) * requireL2Scale().load()
+
+        is Penalty.L1 -> {
+            val pending = requireL1Pending().load() - requireL1LastApplied().load(i)
+            softThreshold(weightsCell.load(i), pending)
+        }
     }
+
+    private fun requireL2Scale(): StreamDouble = l2ScaleCell ?: error("l2ScaleCell is only allocated under Penalty.L2")
+    private fun requireL1Pending(): StreamDouble =
+        l1PendingCell ?: error("l1PendingCell is only allocated under Penalty.L1")
+    private fun requireL1LastApplied(): StreamDoubleArray =
+        l1LastApplied ?: error("l1LastApplied is only allocated under Penalty.L1")
 
     private fun softThreshold(w: Double, threshold: Double): Double = when {
         threshold <= 0.0 -> w
@@ -128,48 +141,49 @@ class StochasticRegressionStat(
         else -> 0.0
     }
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) =
-        lock.withLock {
-            require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-            if (weight <= 0.0) return@withLock
-            val s = stepCell.addAndGet(1L)
-            val eta = learningRate.eval(s.toDouble())
-            val etaBias = biasRate.eval(s.toDouble())
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        if (weight <= 0.0) return@withLock
+        val s = stepCell.addAndGet(1L)
+        val eta = learningRate.eval(s.toDouble())
+        val etaBias = biasRate.eval(s.toDouble())
 
-            var dot = 0.0
-            x.forEachStored { i, v -> dot += effectiveWeight(i) * v }
-            val etaPred = biasCell.load() + dot
-            val mu = link.invMean(etaPred)
-            val negResidual = mu - y
-            sseCell.add(link.loss(etaPred, y) * weight)
+        var dot = 0.0
+        x.forEachStored { i, v -> dot += effectiveWeight(i) * v }
+        val etaPred = biasCell.load() + dot
+        val mu = link.invMean(etaPred)
+        val negResidual = mu - y
+        sseCell.add(link.loss(etaPred, y) * weight)
 
-            when (val p = penalty) {
-                Penalty.None -> {
-                    val coeff = -eta * weight * negResidual
-                    x.forEachStored { i, v -> weightsCell.add(i, coeff * v) }
+        when (val p = penalty) {
+            Penalty.None -> {
+                val coeff = -eta * weight * negResidual
+                x.forEachStored { i, v -> weightsCell.add(i, coeff * v) }
+            }
+
+            is Penalty.L2 -> {
+                val factor = 1.0 - eta * weight * p.lambda
+                require(factor > 0.0) {
+                    "L2 decay factor must stay positive: 1 - eta*weight*lambda = $factor"
                 }
-                is Penalty.L2 -> {
-                    val factor = 1.0 - eta * weight * p.lambda
-                    require(factor > 0.0) {
-                        "L2 decay factor must stay positive: 1 - eta*weight*lambda = $factor"
-                    }
-                    val scale = casMultiply(l2ScaleCell!!, factor)
-                    val coeff = -eta * weight * negResidual
-                    x.forEachStored { i, v -> weightsCell.add(i, coeff * v / scale) }
-                    // Refold before precision dies; one rare dense sweep amortised over many updates.
-                    if (scale < 1e-12) foldL2Scale()
-                }
-                is Penalty.L1 -> {
-                    val pending = l1PendingCell!!.addAndGet(eta * weight * p.lambda)
-                    val coeff = -eta * weight * negResidual
-                    x.forEachStored { i, v ->
-                        applyL1AndStep(i, pending, coeff * v)
-                    }
+                val scale = casMultiply(requireL2Scale(), factor)
+                val coeff = -eta * weight * negResidual
+                x.forEachStored { i, v -> weightsCell.add(i, coeff * v / scale) }
+                // Refold before precision dies; one rare dense sweep amortised over many updates.
+                if (scale < 1e-12) foldL2Scale()
+            }
+
+            is Penalty.L1 -> {
+                val pending = requireL1Pending().addAndGet(eta * weight * p.lambda)
+                val coeff = -eta * weight * negResidual
+                x.forEachStored { i, v ->
+                    applyL1AndStep(i, pending, coeff * v)
                 }
             }
-            biasCell.add(-etaBias * weight * negResidual)
-            totalWeightsCell.add(weight)
         }
+        biasCell.add(-etaBias * weight * negResidual)
+        totalWeightsCell.add(weight)
+    }
 
     /** CAS-multiply a shared scalar. Lock-free under [Concurrency.Relaxed]. */
     private fun casMultiply(cell: StreamDouble, factor: Double): Double {
@@ -181,10 +195,11 @@ class StochasticRegressionStat(
     }
 
     private fun foldL2Scale() {
-        val scale = l2ScaleCell!!.load()
+        val scaleCell = requireL2Scale()
+        val scale = scaleCell.load()
         if (scale == 1.0) return
         // Lose the CAS race -> another thread is folding; bail rather than double-apply.
-        if (!l2ScaleCell.compareAndSet(scale, 1.0)) return
+        if (!scaleCell.compareAndSet(scale, 1.0)) return
         for (i in 0 until featureSize) {
             while (true) {
                 val w = weightsCell.load(i)
@@ -195,14 +210,14 @@ class StochasticRegressionStat(
 
     /** Apply pending L1 threshold to coord [i] and add the SGD [delta] in one CAS-loop. */
     private fun applyL1AndStep(i: Int, pending: Double, delta: Double) {
-        val lastApplied = l1LastApplied!!.load(i)
-        val threshold = pending - lastApplied
+        val lastAppliedCell = requireL1LastApplied()
+        val threshold = pending - lastAppliedCell.load(i)
         while (true) {
             val stored = weightsCell.load(i)
             val thresholded = softThreshold(stored, threshold)
             val next = thresholded + delta
             if (weightsCell.compareAndSet(i, stored, next)) {
-                l1LastApplied.store(i, pending)
+                lastAppliedCell.store(i, pending)
                 return
             }
         }
@@ -213,15 +228,17 @@ class StochasticRegressionStat(
         // Snapshot returns logical weights, so reset lazy state to match.
         when (penalty) {
             Penalty.None -> {}
+
             is Penalty.L2 -> {
                 for (i in 0 until featureSize) weightsCell.store(i, materialised[i])
-                l2ScaleCell!!.store(1.0)
+                requireL2Scale().store(1.0)
             }
+
             is Penalty.L1 -> {
-                val pending = l1PendingCell!!.load()
+                val pending = requireL1Pending().load()
                 for (i in 0 until featureSize) {
                     weightsCell.store(i, materialised[i])
-                    l1LastApplied!!.store(i, pending)
+                    requireL1LastApplied().store(i, pending)
                 }
             }
         }
@@ -254,7 +271,7 @@ class StochasticRegressionStat(
                 for (i in 0 until featureSize) {
                     val blended = (effectiveWeight(i) * w1 + other[i] * w2) / wNew
                     weightsCell.store(i, blended)
-                    l1LastApplied?.store(i, l1PendingCell!!.load())
+                    l1LastApplied?.store(i, requireL1Pending().load())
                 }
                 l2ScaleCell?.store(1.0)
                 biasCell.store((biasCell.load() * w1 + values.bias * w2) / wNew)

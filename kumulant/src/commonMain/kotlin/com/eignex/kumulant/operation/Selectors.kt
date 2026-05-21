@@ -9,58 +9,51 @@ import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.math.VectorView
 
 /** Adapter implementing [atX]: drives a [SeriesStat] from the x coordinate of a pair. */
-internal class AtXStat<R : Result>(
-    private val delegate: SeriesStat<R>
-) : PairedStat<R>, Stat<R> by delegate {
+internal class AtXStat<R : Result>(private val delegate: SeriesStat<R>) :
+    PairedStat<R>,
+    Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x, timestampNanos, weight)
     }
 
-    override fun create(concurrency: Concurrency?): PairedStat<R> {
-        return AtXStat(delegate.create(concurrency))
-    }
+    override fun create(concurrency: Concurrency?): PairedStat<R> = AtXStat(delegate.create(concurrency))
 }
 
 /** Adapter implementing [atY]: drives a [SeriesStat] from the y coordinate of a pair. */
-internal class AtYStat<R : Result>(
-    private val delegate: SeriesStat<R>
-) : PairedStat<R>, Stat<R> by delegate {
+internal class AtYStat<R : Result>(private val delegate: SeriesStat<R>) :
+    PairedStat<R>,
+    Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(y, timestampNanos, weight)
     }
 
-    override fun create(concurrency: Concurrency?): PairedStat<R> {
-        return AtYStat(delegate.create(concurrency))
-    }
+    override fun create(concurrency: Concurrency?): PairedStat<R> = AtYStat(delegate.create(concurrency))
 }
 
 /** Adapter implementing [atIndex]: drives a [SeriesStat] from one slot of a vector. */
-internal class AtIndexStat<R : Result>(
-    private val delegate: SeriesStat<R>,
-    private val index: Int
-) : VectorStat<R>, Stat<R> by delegate {
+internal class AtIndexStat<R : Result>(private val delegate: SeriesStat<R>, private val index: Int) :
+    VectorStat<R>,
+    Stat<R> by delegate {
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(vector[index], timestampNanos, weight)
     }
 
-    override fun create(concurrency: Concurrency?): VectorStat<R> {
-        return AtIndexStat(delegate.create(concurrency), index)
-    }
+    override fun create(concurrency: Concurrency?): VectorStat<R> = AtIndexStat(delegate.create(concurrency), index)
 }
 
 /** Adapter implementing [atIndices]: drives a [PairedStat] from two slots of a vector. */
 internal class AtIndicesStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val indexX: Int,
-    private val indexY: Int
-) : VectorStat<R>, Stat<R> by delegate {
+    private val indexY: Int,
+) : VectorStat<R>,
+    Stat<R> by delegate {
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(vector[indexX], vector[indexY], timestampNanos, weight)
     }
 
-    override fun create(concurrency: Concurrency?): VectorStat<R> {
-        return AtIndicesStat(delegate.create(concurrency), indexX, indexY)
-    }
+    override fun create(concurrency: Concurrency?): VectorStat<R> =
+        AtIndicesStat(delegate.create(concurrency), indexX, indexY)
 }
 
 /** Adapt a [SeriesStat] to consume only the x coordinate of a paired input. */

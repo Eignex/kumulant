@@ -2,13 +2,14 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.math.DenseVector
 import kotlin.math.abs
+import kotlin.math.exp
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 class StochasticRegressionStatTest {
 
     private fun fitLine(
@@ -34,10 +35,12 @@ class StochasticRegressionStatTest {
         val truth = doubleArrayOf(1.5, -2.0, 0.5)
         fitLine(stat, truth, intercept = 0.3)
         val r = stat.read()
-        for (i in truth.indices) assertTrue(
-            abs(r.weights[i] - truth[i]) < 0.1,
-            "weight[$i]=${r.weights[i]} far from truth=${truth[i]}"
-        )
+        for (i in truth.indices) {
+            assertTrue(
+                abs(r.weights[i] - truth[i]) < 0.1,
+                "weight[$i]=${r.weights[i]} far from truth=${truth[i]}",
+            )
+        }
         assertTrue(abs(r.bias - 0.3) < 0.1, "bias=${r.bias} far from 0.3")
     }
 
@@ -51,10 +54,12 @@ class StochasticRegressionStatTest {
         a.merge(b.read())
         val r = a.read()
         assertEquals(4000.0, r.totalWeights, absoluteTolerance = 1e-9)
-        for (i in truth.indices) assertTrue(
-            abs(r.weights[i] - truth[i]) < 0.15,
-            "merged weight[$i]=${r.weights[i]} far from truth=${truth[i]}"
-        )
+        for (i in truth.indices) {
+            assertTrue(
+                abs(r.weights[i] - truth[i]) < 0.15,
+                "merged weight[$i]=${r.weights[i]} far from truth=${truth[i]}",
+            )
+        }
     }
 
     @Test
@@ -67,7 +72,7 @@ class StochasticRegressionStatTest {
 
     @Test
     fun `SGD with Logit link converges on classification data`() {
-        val rng = kotlin.random.Random(11)
+        val rng = Random(11)
         val stat = StochasticRegressionStat(
             featureSize = 2,
             learningRate = ConstantRate(0.1),
@@ -76,20 +81,20 @@ class StochasticRegressionStatTest {
         repeat(3000) {
             val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
             val logit = 1.5 * x[0] - 1.5 * x[1]
-            val p = 1.0 / (1.0 + kotlin.math.exp(-logit))
+            val p = 1.0 / (1.0 + exp(-logit))
             val y = if (rng.nextDouble() < p) 1.0 else 0.0
             stat.update(x, y, 1.0)
         }
         val snap = stat.read()
         assertTrue(snap.weights[0] > 0.0, "w[0] = ${snap.weights[0]} should be positive")
         assertTrue(snap.weights[1] < 0.0, "w[1] = ${snap.weights[1]} should be negative")
-        val p1 = snap.predict(com.eignex.kumulant.math.DenseVector.of(doubleArrayOf(1.0, -1.0)))
+        val p1 = snap.predict(DenseVector.of(doubleArrayOf(1.0, -1.0)))
         assertTrue(p1 in 0.0..1.0)
     }
 
     @Test
     fun `SGD under Concurrency Relaxed converges with no penalty`() {
-        val rng = kotlin.random.Random(3)
+        val rng = Random(3)
         val stat = StochasticRegressionStat(
             featureSize = 2,
             learningRate = ConstantRate(0.05),
@@ -101,13 +106,13 @@ class StochasticRegressionStatTest {
         }
         val snap = stat.read()
         // Relaxed mode is still single-threaded in tests; convergence should match Concurrency.None
-        assertTrue(kotlin.math.abs(snap.weights[0] - 1.0) < 0.3, "w[0] = ${snap.weights[0]}")
-        assertTrue(kotlin.math.abs(snap.weights[1] - (-2.0)) < 0.3, "w[1] = ${snap.weights[1]}")
+        assertTrue(abs(snap.weights[0] - 1.0) < 0.3, "w[0] = ${snap.weights[0]}")
+        assertTrue(abs(snap.weights[1] - (-2.0)) < 0.3, "w[1] = ${snap.weights[1]}")
     }
 
     @Test
     fun `SGD with lazy L1 induces sparsity on the irrelevant coordinate`() {
-        val rng = kotlin.random.Random(4)
+        val rng = Random(4)
         // lambda small enough that the signal coord's gradient beats the threshold,
         // but not so small that irrelevant coords drift far from zero.
         val stat = StochasticRegressionStat(
@@ -125,18 +130,18 @@ class StochasticRegressionStatTest {
         assertTrue(snap.weights[0] > 0.5, "w[0]=${snap.weights[0]} should be substantially positive")
         // L1 should keep irrelevant coords closer to zero than the signal coord
         assertTrue(
-            kotlin.math.abs(snap.weights[1]) < snap.weights[0],
+            abs(snap.weights[1]) < snap.weights[0],
             "w[1]=${snap.weights[1]} should be smaller than w[0]=${snap.weights[0]}",
         )
         assertTrue(
-            kotlin.math.abs(snap.weights[2]) < snap.weights[0],
+            abs(snap.weights[2]) < snap.weights[0],
             "w[2]=${snap.weights[2]} should be smaller than w[0]=${snap.weights[0]}",
         )
     }
 
     @Test
     fun `SGD with lazy L2 shrinks weights toward zero`() {
-        val rng = kotlin.random.Random(5)
+        val rng = Random(5)
         // Strong L2 -> weights stay small even with strong signal.
         val statL2 = StochasticRegressionStat(
             featureSize = 2,
@@ -155,7 +160,7 @@ class StochasticRegressionStatTest {
         val l2 = statL2.read()
         val no = statNoReg.read()
         // L2 weights should be strictly smaller in magnitude (or near zero) than the unregularised baseline
-        assertTrue(kotlin.math.abs(l2.weights[0]) <= kotlin.math.abs(no.weights[0]) + 0.05)
-        assertTrue(kotlin.math.abs(l2.weights[1]) <= kotlin.math.abs(no.weights[1]) + 0.05)
+        assertTrue(abs(l2.weights[0]) <= abs(no.weights[0]) + 0.05)
+        assertTrue(abs(l2.weights[1]) <= abs(no.weights[1]) + 0.05)
     }
 }

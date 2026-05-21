@@ -1,9 +1,11 @@
 package com.eignex.kumulant.stat.regression
 
+import kotlin.math.abs
+import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-
 class LinkTest {
 
     @Test
@@ -17,8 +19,8 @@ class LinkTest {
     fun `Logit loss matches softplus form`() {
         val link = Link.Logit
         val eta = 1.5
-        val expectedAtOne = kotlin.math.ln(1.0 + kotlin.math.exp(eta)) - 1.0 * eta
-        val expectedAtZero = kotlin.math.ln(1.0 + kotlin.math.exp(eta))
+        val expectedAtOne = ln(1.0 + exp(eta)) - 1.0 * eta
+        val expectedAtZero = ln(1.0 + exp(eta))
         assertEquals(expectedAtOne, link.loss(eta, y = 1.0), absoluteTolerance = 1e-12)
         assertEquals(expectedAtZero, link.loss(eta, y = 0.0), absoluteTolerance = 1e-12)
     }
@@ -28,13 +30,13 @@ class LinkTest {
         val link = Link.Logit
         val loss = link.loss(eta = 1000.0, y = 0.0)
         assertTrue(loss.isFinite(), "loss=$loss not finite")
-        assertTrue(kotlin.math.abs(loss - 1000.0) < 1e-9, "loss = $loss, expected ~1000")
+        assertTrue(abs(loss - 1000.0) < 1e-9, "loss = $loss, expected ~1000")
     }
 
     @Test
     fun `Log loss is exp eta minus y times eta`() {
         val link = Link.Log
         val eta = 0.5
-        assertEquals(kotlin.math.exp(eta) - 2.0 * eta, link.loss(eta, y = 2.0), absoluteTolerance = 1e-12)
+        assertEquals(exp(eta) - 2.0 * eta, link.loss(eta, y = 2.0), absoluteTolerance = 1e-12)
     }
 }

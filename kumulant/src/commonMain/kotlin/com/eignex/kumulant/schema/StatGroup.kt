@@ -31,19 +31,18 @@ sealed class AbstractStatGroup<S : Stat<*>>(
 }
 
 /** Fans each update out to a heterogeneous list of [SeriesStat]s and reports their results keyed by name. */
-class StatGroup(
-    stats: List<BoundStat<*, out SeriesStat<*>, *>>,
-    concurrency: Concurrency? = null,
-) : AbstractStatGroup<SeriesStat<*>>(stats, concurrency), SeriesStat<GroupResult> {
+class StatGroup(stats: List<BoundStat<*, out SeriesStat<*>, *>>, concurrency: Concurrency? = null) :
+    AbstractStatGroup<SeriesStat<*>>(stats, concurrency),
+    SeriesStat<GroupResult> {
 
     constructor(
         vararg stats: BoundStat<*, out SeriesStat<*>, *>,
-        concurrency: Concurrency? = null
+        concurrency: Concurrency? = null,
     ) : this(stats = stats.asList(), concurrency = concurrency)
 
     constructor(
         vararg stats: Pair<StatKey<*>, SeriesStat<*>>,
-        concurrency: Concurrency? = null
+        concurrency: Concurrency? = null,
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
     constructor(schema: StatSchema, concurrency: Concurrency? = null) :
@@ -61,19 +60,18 @@ class StatGroup(
 }
 
 /** [StatGroup] variant over paired (x, y) inputs. */
-class PairedStatGroup(
-    stats: List<BoundStat<*, out PairedStat<*>, *>>,
-    concurrency: Concurrency? = null,
-) : AbstractStatGroup<PairedStat<*>>(stats, concurrency), PairedStat<GroupResult> {
+class PairedStatGroup(stats: List<BoundStat<*, out PairedStat<*>, *>>, concurrency: Concurrency? = null) :
+    AbstractStatGroup<PairedStat<*>>(stats, concurrency),
+    PairedStat<GroupResult> {
 
     constructor(
         vararg stats: BoundStat<*, out PairedStat<*>, *>,
-        concurrency: Concurrency? = null
+        concurrency: Concurrency? = null,
     ) : this(stats = stats.asList(), concurrency = concurrency)
 
     constructor(
         vararg stats: Pair<StatKey<*>, PairedStat<*>>,
-        concurrency: Concurrency? = null
+        concurrency: Concurrency? = null,
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
     constructor(schema: StatSchema, concurrency: Concurrency? = null) :
@@ -91,19 +89,18 @@ class PairedStatGroup(
 }
 
 /** [StatGroup] variant over vector inputs. */
-class VectorStatGroup(
-    stats: List<BoundStat<*, out VectorStat<*>, *>>,
-    concurrency: Concurrency? = null,
-) : AbstractStatGroup<VectorStat<*>>(stats, concurrency), VectorStat<GroupResult> {
+class VectorStatGroup(stats: List<BoundStat<*, out VectorStat<*>, *>>, concurrency: Concurrency? = null) :
+    AbstractStatGroup<VectorStat<*>>(stats, concurrency),
+    VectorStat<GroupResult> {
 
     constructor(
         vararg stats: BoundStat<*, out VectorStat<*>, *>,
-        concurrency: Concurrency? = null
+        concurrency: Concurrency? = null,
     ) : this(stats = stats.asList(), concurrency = concurrency)
 
     constructor(
         vararg stats: Pair<StatKey<*>, VectorStat<*>>,
-        concurrency: Concurrency? = null
+        concurrency: Concurrency? = null,
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
     constructor(schema: StatSchema, concurrency: Concurrency? = null) :
@@ -121,19 +118,18 @@ class VectorStatGroup(
 }
 
 /** [StatGroup] variant over discrete (Long) inputs. */
-class DiscreteStatGroup(
-    stats: List<BoundStat<*, out DiscreteStat<*>, *>>,
-    concurrency: Concurrency? = null,
-) : AbstractStatGroup<DiscreteStat<*>>(stats, concurrency), DiscreteStat<GroupResult> {
+class DiscreteStatGroup(stats: List<BoundStat<*, out DiscreteStat<*>, *>>, concurrency: Concurrency? = null) :
+    AbstractStatGroup<DiscreteStat<*>>(stats, concurrency),
+    DiscreteStat<GroupResult> {
 
     constructor(
         vararg stats: BoundStat<*, out DiscreteStat<*>, *>,
-        concurrency: Concurrency? = null
+        concurrency: Concurrency? = null,
     ) : this(stats = stats.asList(), concurrency = concurrency)
 
     constructor(
         vararg stats: Pair<StatKey<*>, DiscreteStat<*>>,
-        concurrency: Concurrency? = null
+        concurrency: Concurrency? = null,
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
     constructor(schema: StatSchema, concurrency: Concurrency? = null) :

@@ -4,11 +4,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-internal fun runConcurrently(
-    threads: Int,
-    iterationsPerThread: Int,
-    body: (threadId: Int, iter: Int) -> Unit,
-) {
+internal fun runConcurrently(threads: Int, iterationsPerThread: Int, body: (threadId: Int, iter: Int) -> Unit) {
     val pool = Executors.newFixedThreadPool(threads)
     val start = CountDownLatch(1)
     val done = CountDownLatch(threads)

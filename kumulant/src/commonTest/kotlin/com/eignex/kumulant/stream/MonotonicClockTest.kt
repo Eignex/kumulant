@@ -11,7 +11,7 @@ class MonotonicClockTest {
         for (i in 1 until samples.size) {
             assertTrue(
                 samples[i] >= samples[i - 1],
-                "sample[$i]=${samples[i]} < sample[${i - 1}]=${samples[i - 1]}"
+                "sample[$i]=${samples[i]} < sample[${i - 1}]=${samples[i - 1]}",
             )
         }
     }

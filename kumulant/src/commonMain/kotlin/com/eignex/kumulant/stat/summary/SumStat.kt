@@ -35,18 +35,12 @@ data class SumResult(
  * adder (`DoubleAdder` on JVM) for higher throughput under heavy write
  * contention, trading a slower `read()` that sweeps all stripes.
  */
-class SumStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<SumResult> {
+class SumStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<SumResult> {
 
     private val mode = concurrency.additiveMode()
     private val value = mode.newDouble(0.0)
 
-    override fun update(
-        value: Double,
-        timestampNanos: Long,
-        weight: Double
-    ) {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
         this.value.add(value * weight)
     }
 

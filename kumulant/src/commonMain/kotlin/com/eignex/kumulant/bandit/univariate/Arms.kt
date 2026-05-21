@@ -145,8 +145,7 @@ data class MomentsArm(
 }
 
 /** Helper: read `meanOfSquares` from a moments snapshot (= m2/N + mean^2). */
-internal fun MomentsResult.meanOfSquares(): Double =
-    if (totalWeights > 0.0) m2 / totalWeights + mean * mean else 0.0
+internal fun MomentsResult.meanOfSquares(): Double = if (totalWeights > 0.0) m2 / totalWeights + mean * mean else 0.0
 
 /**
  * Warm-started [BernoulliArm] from a global Bernoulli snapshot.
@@ -162,10 +161,7 @@ internal fun MomentsResult.meanOfSquares(): Double =
  * contextual case); these per-arm-type helpers cover the Result types where
  * shrinkage has a uniform pseudo-count interpretation.
  */
-fun BernoulliArm.Companion.warmStart(
-    global: BernoulliSumResult,
-    shrinkage: Double = 1.0,
-): BernoulliArm {
+fun BernoulliArm.Companion.warmStart(global: BernoulliSumResult, shrinkage: Double = 1.0): BernoulliArm {
     require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
     return BernoulliArm(
         priorAlpha = global.successes * shrinkage,
@@ -174,10 +170,7 @@ fun BernoulliArm.Companion.warmStart(
 }
 
 /** Warm-started [MeanArm] from a global weighted-mean snapshot. */
-fun MeanArm.Companion.warmStart(
-    global: WeightedMeanResult,
-    shrinkage: Double = 1.0,
-): MeanArm {
+fun MeanArm.Companion.warmStart(global: WeightedMeanResult, shrinkage: Double = 1.0): MeanArm {
     require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
     return MeanArm(
         priorMean = global.mean,
@@ -187,10 +180,7 @@ fun MeanArm.Companion.warmStart(
 
 /** Warm-started [NormalArm] from a global weighted-variance snapshot. The arm's prior
  *  variance is preserved from the global; only the prior weight is shrunk. */
-fun NormalArm.Companion.warmStart(
-    global: WeightedVarianceResult,
-    shrinkage: Double = 1.0,
-): NormalArm {
+fun NormalArm.Companion.warmStart(global: WeightedVarianceResult, shrinkage: Double = 1.0): NormalArm {
     require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
     val priorWeight = global.totalWeights * shrinkage
     return NormalArm(
@@ -202,10 +192,7 @@ fun NormalArm.Companion.warmStart(
 
 /** Warm-started [LogNormalArm] from a global weighted-variance snapshot on the log
  *  scale (caller is responsible for ensuring the snapshot is over `ln(reward)`). */
-fun LogNormalArm.Companion.warmStart(
-    global: WeightedVarianceResult,
-    shrinkage: Double = 1.0,
-): LogNormalArm {
+fun LogNormalArm.Companion.warmStart(global: WeightedVarianceResult, shrinkage: Double = 1.0): LogNormalArm {
     require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
     val priorWeight = global.totalWeights * shrinkage
     return LogNormalArm(
@@ -216,10 +203,7 @@ fun LogNormalArm.Companion.warmStart(
 }
 
 /** Warm-started [MomentsArm] from a global moments snapshot. */
-fun MomentsArm.Companion.warmStart(
-    global: MomentsResult,
-    shrinkage: Double = 1.0,
-): MomentsArm {
+fun MomentsArm.Companion.warmStart(global: MomentsResult, shrinkage: Double = 1.0): MomentsArm {
     require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
     return MomentsArm(
         priorMean = global.mean,

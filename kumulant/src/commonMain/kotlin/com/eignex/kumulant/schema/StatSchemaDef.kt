@@ -28,46 +28,42 @@ fun StatSchemaDef.materialize(concurrency: Concurrency = Concurrency.None): List
 /** Materialize series-modality entries only; throws if any entry isn't series. */
 fun StatSchemaDef.materializeSeries(
     concurrency: Concurrency = Concurrency.None,
-): List<BoundStat<*, out SeriesStat<*>, *>> =
-    stats.map { (name, config) ->
-        require(config is SeriesStatSpec<*>) {
-            "Entry '$name' has config ${config::class.simpleName}, expected a SeriesStatSpec"
-        }
-        bindSeries(name, config.materialize(concurrency))
+): List<BoundStat<*, out SeriesStat<*>, *>> = stats.map { (name, config) ->
+    require(config is SeriesStatSpec<*>) {
+        "Entry '$name' has config ${config::class.simpleName}, expected a SeriesStatSpec"
     }
+    bindSeries(name, config.materialize(concurrency))
+}
 
 /** Materialize paired-modality entries only; throws if any entry isn't paired. */
 fun StatSchemaDef.materializePaired(
     concurrency: Concurrency = Concurrency.None,
-): List<BoundStat<*, out PairedStat<*>, *>> =
-    stats.map { (name, config) ->
-        require(config is PairedStatSpec<*>) {
-            "Entry '$name' has config ${config::class.simpleName}, expected a PairedStatSpec"
-        }
-        bindPaired(name, config.materialize(concurrency))
+): List<BoundStat<*, out PairedStat<*>, *>> = stats.map { (name, config) ->
+    require(config is PairedStatSpec<*>) {
+        "Entry '$name' has config ${config::class.simpleName}, expected a PairedStatSpec"
     }
+    bindPaired(name, config.materialize(concurrency))
+}
 
 /** Materialize vector-modality entries only; throws if any entry isn't vector. */
 fun StatSchemaDef.materializeVector(
     concurrency: Concurrency = Concurrency.None,
-): List<BoundStat<*, out VectorStat<*>, *>> =
-    stats.map { (name, config) ->
-        require(config is VectorStatSpec<*>) {
-            "Entry '$name' has config ${config::class.simpleName}, expected a VectorStatSpec"
-        }
-        bindVector(name, config.materialize(concurrency))
+): List<BoundStat<*, out VectorStat<*>, *>> = stats.map { (name, config) ->
+    require(config is VectorStatSpec<*>) {
+        "Entry '$name' has config ${config::class.simpleName}, expected a VectorStatSpec"
     }
+    bindVector(name, config.materialize(concurrency))
+}
 
 /** Materialize discrete-modality entries only; throws if any entry isn't discrete. */
 fun StatSchemaDef.materializeDiscrete(
     concurrency: Concurrency = Concurrency.None,
-): List<BoundStat<*, out DiscreteStat<*>, *>> =
-    stats.map { (name, config) ->
-        require(config is DiscreteStatSpec<*>) {
-            "Entry '$name' has config ${config::class.simpleName}, expected a DiscreteStatSpec"
-        }
-        bindDiscrete(name, config.materialize(concurrency))
+): List<BoundStat<*, out DiscreteStat<*>, *>> = stats.map { (name, config) ->
+    require(config is DiscreteStatSpec<*>) {
+        "Entry '$name' has config ${config::class.simpleName}, expected a DiscreteStatSpec"
     }
+    bindDiscrete(name, config.materialize(concurrency))
+}
 
 @Suppress("UNCHECKED_CAST")
 private fun bind(name: String, stat: Stat<*>): BoundStat<*, *, *> =

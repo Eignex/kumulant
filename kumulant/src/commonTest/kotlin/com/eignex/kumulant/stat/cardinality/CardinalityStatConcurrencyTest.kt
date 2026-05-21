@@ -15,7 +15,7 @@ class CardinalityStatConcurrencyTest {
             for (k in keys) s.update(k)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.estimate, r.estimate, 1e-9, "LinearCounting estimate mode=$mode")
             assertEquals(ref.unsetBits, r.unsetBits, "LinearCounting unsetBits mode=$mode")
@@ -30,7 +30,7 @@ class CardinalityStatConcurrencyTest {
             for (k in keys) s.update(k)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref.estimate, r.estimate, "HyperLogLogStat mode=$mode")
     }
 }

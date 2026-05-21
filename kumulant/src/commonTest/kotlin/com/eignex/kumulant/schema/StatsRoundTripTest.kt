@@ -2,11 +2,14 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.regression.Penalty
+import com.eignex.kumulant.stat.summary.MaxResult
+import com.eignex.kumulant.stat.summary.MinResult
+import com.eignex.kumulant.stat.summary.SumResult
+import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.skema.SchemaJson
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
 /**
  * Round-trip tests for every [StatSpec]. For each modality, build a schema
  * with a config-only entry, encode, decode, materialize, drive a small fixed
@@ -224,7 +227,7 @@ class StatsRoundTripTest {
             val max by series(Max)
         }
         val def = SchemaJson.decodeFromString<StatSchemaDef>(
-            SchemaJson.encodeToString(schema.statSchemaDef())
+            SchemaJson.encodeToString(schema.statSchemaDef()),
         )
         val rebuilt = StatGroup(stats = def.materializeSeries(Concurrency.None))
         val live = StatGroup(schema)
@@ -236,12 +239,12 @@ class StatsRoundTripTest {
 
         val live0 = live.read()
         val rebuilt0 = rebuilt.read()
-        assertEquals(live0[schema.sum].sum, rebuilt0[StatKey<com.eignex.kumulant.stat.summary.SumResult>("sum")].sum)
+        assertEquals(live0[schema.sum].sum, rebuilt0[StatKey<SumResult>("sum")].sum)
         assertEquals(
             live0[schema.mean].mean,
-            rebuilt0[StatKey<com.eignex.kumulant.stat.summary.WeightedMeanResult>("mean")].mean
+            rebuilt0[StatKey<WeightedMeanResult>("mean")].mean,
         )
-        assertEquals(live0[schema.min].min, rebuilt0[StatKey<com.eignex.kumulant.stat.summary.MinResult>("min")].min)
-        assertEquals(live0[schema.max].max, rebuilt0[StatKey<com.eignex.kumulant.stat.summary.MaxResult>("max")].max)
+        assertEquals(live0[schema.min].min, rebuilt0[StatKey<MinResult>("min")].min)
+        assertEquals(live0[schema.max].max, rebuilt0[StatKey<MaxResult>("max")].max)
     }
 }

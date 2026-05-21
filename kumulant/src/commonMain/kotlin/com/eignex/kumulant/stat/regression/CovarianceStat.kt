@@ -59,36 +59,35 @@ data class CovarianceResult(
  *
  * **Concurrency:** Inherits [UnivariateRegressionStat]'s concurrency model.
  */
-class CovarianceStat(
-    concurrency: Concurrency = Concurrency.None,
-) : PairedStat<CovarianceResult> by UnivariateRegressionStat(concurrency = concurrency).mapResult(
-    forward = { ols ->
-        val w = ols.totalWeights
-        val sxx = ols.x.variance * w
-        val syy = ols.y.variance * w
-        CovarianceResult(
-            totalWeights = w,
-            meanX = ols.x.mean,
-            meanY = ols.y.mean,
-            sxy = ols.sxy,
-            sxx = sxx,
-            syy = syy,
-        )
-    },
-    reverse = { cov ->
-        val w = cov.totalWeights
-        val slope = if (cov.sxx > 0.0) cov.sxy / cov.sxx else 0.0
-        val varX = if (w > 0.0) cov.sxx / w else 0.0
-        val varY = if (w > 0.0) cov.syy / w else 0.0
-        UnivariateRegressionResult(
-            penalty = Penalty.None,
-            totalWeights = w,
-            slope = slope,
-            intercept = cov.meanY - slope * cov.meanX,
-            sse = (cov.syy - slope * cov.sxy).coerceAtLeast(0.0),
-            sxy = cov.sxy,
-            x = VarianceResult(cov.meanX, varX),
-            y = VarianceResult(cov.meanY, varY),
-        )
-    }
-)
+class CovarianceStat(concurrency: Concurrency = Concurrency.None) :
+    PairedStat<CovarianceResult> by UnivariateRegressionStat(concurrency = concurrency).mapResult(
+        forward = { ols ->
+            val w = ols.totalWeights
+            val sxx = ols.x.variance * w
+            val syy = ols.y.variance * w
+            CovarianceResult(
+                totalWeights = w,
+                meanX = ols.x.mean,
+                meanY = ols.y.mean,
+                sxy = ols.sxy,
+                sxx = sxx,
+                syy = syy,
+            )
+        },
+        reverse = { cov ->
+            val w = cov.totalWeights
+            val slope = if (cov.sxx > 0.0) cov.sxy / cov.sxx else 0.0
+            val varX = if (w > 0.0) cov.sxx / w else 0.0
+            val varY = if (w > 0.0) cov.syy / w else 0.0
+            UnivariateRegressionResult(
+                penalty = Penalty.None,
+                totalWeights = w,
+                slope = slope,
+                intercept = cov.meanY - slope * cov.meanX,
+                sse = (cov.syy - slope * cov.sxy).coerceAtLeast(0.0),
+                sxy = cov.sxy,
+                x = VarianceResult(cov.meanX, varX),
+                y = VarianceResult(cov.meanY, varY),
+            )
+        },
+    )

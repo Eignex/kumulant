@@ -72,7 +72,7 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
         return SparseHistogramResult(
             doubleArrayOf(lo),
             doubleArrayOf(nextUp(lo)),
-            doubleArrayOf(values.size.toDouble())
+            doubleArrayOf(values.size.toDouble()),
         )
     }
     val width = (hi - lo) / binCount
@@ -198,7 +198,7 @@ class ReservoirHistogramStat(
     override fun create(concurrency: Concurrency?) = ReservoirHistogramStat(
         capacity,
         seed,
-        concurrency ?: this.concurrency
+        concurrency ?: this.concurrency,
     )
 
     override fun merge(values: ReservoirResult) {
@@ -248,7 +248,7 @@ class ReservoirHistogramStat(
             keys = outKeys.copyOf(cursor),
             capacity = capacity,
             totalSeen = totalSeenCell.load(),
-            totalWeight = totalWeightCell.load()
+            totalWeight = totalWeightCell.load(),
         )
     }
 }

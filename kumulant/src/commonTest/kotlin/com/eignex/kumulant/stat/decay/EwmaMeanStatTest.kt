@@ -38,7 +38,7 @@ class EwmaMeanStatTest {
 
         assertTrue(
             stat.read().mean > 80.0,
-            "MeanStat should heavily favor the massive recent update"
+            "MeanStat should heavily favor the massive recent update",
         )
     }
 

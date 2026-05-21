@@ -1,15 +1,18 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.stat.summary.BernoulliSumResult
+import com.eignex.kumulant.stat.summary.MomentsResult
+import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 class BanditPoliciesTest {
 
-    private fun <R : com.eignex.kumulant.core.Result> drive(
+    private fun <R : Result> drive(
         policy: BanditPolicy<R>,
         rewards: List<Double>,
         nbrArms: Int = 2,
@@ -83,7 +86,7 @@ class BanditPoliciesTest {
     fun `UCB1 returns infinity for untried arm and finite once played`() {
         val pol = UCB1(alpha = 1.0)
         val mab = MultiArmedBandit(nbrArms = 2, policy = pol, random = Random(0))
-        val empty = com.eignex.kumulant.stat.summary.BernoulliSumResult(0.0, 0.0)
+        val empty = BernoulliSumResult(0.0, 0.0)
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(empty, 0L, Random(0)))
         mab.update(0, 1.0)
         mab.update(0, 0.0)
@@ -95,10 +98,10 @@ class BanditPoliciesTest {
     @Test
     fun `UCB1 addArm and removeArm adjust totalSamples`() {
         val pol = UCB1()
-        val snap = com.eignex.kumulant.stat.summary.BernoulliSumResult(successes = 3.0, trials = 10.0)
+        val snap = BernoulliSumResult(successes = 3.0, trials = 10.0)
         pol.addArm(snap)
         pol.addArm(snap)
-        val small = com.eignex.kumulant.stat.summary.BernoulliSumResult(2.0, 4.0)
+        val small = BernoulliSumResult(2.0, 4.0)
         val sBefore = pol.evaluate(small, 0L, Random(0))
         pol.removeArm(snap)
         val sAfter = pol.evaluate(small, 0L, Random(0))
@@ -108,7 +111,7 @@ class BanditPoliciesTest {
     @Test
     fun `UCB1Normal returns infinity until enough samples`() {
         val pol = UCB1Normal()
-        val mom = com.eignex.kumulant.stat.summary.MomentsResult(
+        val mom = MomentsResult(
             totalWeights = 1.0,
             mean = 0.5,
             m2 = 0.1,
@@ -129,7 +132,7 @@ class BanditPoliciesTest {
     @Test
     fun `UCB1Tuned returns infinity when totalWeights le 1`() {
         val pol = UCB1Tuned()
-        val mom = com.eignex.kumulant.stat.summary.MomentsResult(1.0, 0.5, 0.0, 0.0, 0.0)
+        val mom = MomentsResult(1.0, 0.5, 0.0, 0.0, 0.0)
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(mom, 0L, Random(0)))
         val bigger = mom.copy(totalWeights = 10.0, m2 = 1.0)
         pol.addArm(mom)
@@ -194,7 +197,7 @@ class BanditPoliciesTest {
     @Test
     fun `EpsilonDecreasing addArm and removeArm adjust totalSamples`() {
         val pol = EpsilonDecreasing(epsilon = 1.0, decay = 1.0)
-        val snap = com.eignex.kumulant.stat.summary.WeightedVarianceResult(
+        val snap = WeightedVarianceResult(
             totalWeights = 100.0,
             mean = 0.5,
             variance = 0.1,
@@ -206,7 +209,7 @@ class BanditPoliciesTest {
     @Test
     fun `UniformSelection ignores snapshot and returns uniform draws`() {
         val pol = UniformSelection()
-        val snap = com.eignex.kumulant.stat.summary.WeightedVarianceResult(
+        val snap = WeightedVarianceResult(
             totalWeights = 1.0,
             mean = 99.0,
             variance = 0.0,

@@ -9,6 +9,7 @@ import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.splitmix64
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.math.round
 
 /**
  * CountStat-MinStat sketch snapshot. [counters] is the [depth] x [width] matrix of counters in
@@ -86,7 +87,7 @@ class CountMinSketchStat(
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        val w = kotlin.math.round(weight).toLong()
+        val w = round(weight).toLong()
         if (w <= 0L) return
         for (row in 0 until depth) {
             val idx = (splitmix64(value xor rowSalts[row]) and mask).toInt()
@@ -128,6 +129,6 @@ class CountMinSketchStat(
         depth,
         width,
         seed,
-        concurrency ?: this.concurrency
+        concurrency ?: this.concurrency,
     )
 }

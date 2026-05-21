@@ -39,7 +39,9 @@ class HierarchicalBayesianRegression(
     initialPriorMean: DenseVector? = null,
     initialPriorCovariance: DenseMatrix? = null,
 ) {
-    init { require(featureSize > 0) { "featureSize must be positive" } }
+    init {
+        require(featureSize > 0) { "featureSize must be positive" }
+    }
 
     private val tracked = mutableListOf<BayesianRegressionStat>()
 

@@ -2,12 +2,12 @@ package com.eignex.kumulant.bandit.contextual
 
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
+import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 class Exp4BanditTest {
 
     private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
@@ -26,7 +26,7 @@ class Exp4BanditTest {
     fun `playDistribution is uniform with one uniform expert`() {
         val bandit = Exp4Bandit(nbrArms = 3, experts = listOf(uniformExpert(3)), random = Random(0))
         val p = bandit.playDistribution(feat(0.0, 0.0))
-        for (a in 0 until 3) assertTrue(kotlin.math.abs(p[a] - 1.0 / 3) < 1e-9, "p[$a]=${p[a]}")
+        for (a in 0 until 3) assertTrue(abs(p[a] - 1.0 / 3) < 1e-9, "p[$a]=${p[a]}")
     }
 
     @Test

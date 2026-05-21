@@ -16,11 +16,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed interface SplitMetric {
     /** Score a candidate split given its total / pos / neg variance snapshots. */
-    fun score(
-        total: WeightedVarianceResult,
-        pos: WeightedVarianceResult,
-        neg: WeightedVarianceResult,
-    ): Double
+    fun score(total: WeightedVarianceResult, pos: WeightedVarianceResult, neg: WeightedVarianceResult): Double
 }
 
 /** Mean variance reduction. The classic CART regression criterion. */
@@ -77,6 +73,7 @@ fun SplitMetric.rank(
                 top1 = v
                 bestI = i
             }
+
             v > top2 -> top2 = v
         }
     }

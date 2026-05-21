@@ -62,9 +62,7 @@ data class TreeSplitResult(
 /** Immutable leaf-node snapshot. */
 @Serializable
 @SerialName("TreeLeafResult")
-data class TreeLeafResult(
-    override val value: WeightedVarianceResult,
-) : TreeNodeResult {
+data class TreeLeafResult(override val value: WeightedVarianceResult) : TreeNodeResult {
     override fun findLeaf(x: VectorView): WeightedVarianceResult = value
 }
 
@@ -80,5 +78,6 @@ fun Node.snapshot(): TreeNodeResult = when (this) {
         val value = if (carry != null) mergeWVR(base, carry.read(0L)) else base
         TreeSplitResult(split, p, n, value)
     }
+
     is LeafNode -> TreeLeafResult(arm.read(0L))
 }

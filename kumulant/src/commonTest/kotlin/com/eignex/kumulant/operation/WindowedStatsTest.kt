@@ -21,8 +21,7 @@ private const val T20 = 20_000_000_000L
 
 class WindowedStatsTest {
 
-    private fun sumWindowed(slices: Int = 10) =
-        SumStat().windowed(duration = 10.seconds, slices = slices)
+    private fun sumWindowed(slices: Int = 10) = SumStat().windowed(duration = 10.seconds, slices = slices)
 
     @Test
     fun `update within window is included in read`() {

@@ -2,17 +2,17 @@ package com.eignex.kumulant.stat.tree
 
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlin.math.abs
+import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-
 class TreePosteriorsTest {
 
     private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
-    private fun snap(value: WeightedVarianceResult): TreeRegressionResult =
-        TreeRegressionResult(TreeLeafResult(value))
+    private fun snap(value: WeightedVarianceResult): TreeRegressionResult = TreeRegressionResult(TreeLeafResult(value))
 
     private fun split(
         threshold: Double,
@@ -25,7 +25,7 @@ class TreePosteriorsTest {
             pos = TreeLeafResult(posValue),
             neg = TreeLeafResult(negValue),
             value = rootValue,
-        )
+        ),
     )
 
     @Test
@@ -65,7 +65,7 @@ class TreePosteriorsTest {
                 .evaluate(s, feat(0.0), rng, 1.0)
         }
         val mean = draws.average()
-        assertTrue(kotlin.math.abs(mean - 5.0) < 0.2, "mean=$mean expected near 5.0")
+        assertTrue(abs(mean - 5.0) < 0.2, "mean=$mean expected near 5.0")
     }
 
     @Test
@@ -100,7 +100,7 @@ class TreePosteriorsTest {
             listOf(
                 WeightedVarianceResult(10.0, 1.0, 0.0),
                 WeightedVarianceResult(10.0, 3.0, 0.0),
-            )
+            ),
         )
         assertEquals(2.0, MeanForestPosterior.evaluate(f, feat(0.0), Random(0), 1.0), 1e-9)
     }
@@ -111,7 +111,7 @@ class TreePosteriorsTest {
             listOf(
                 WeightedVarianceResult(10.0, 1.0, 0.0),
                 WeightedVarianceResult(10.0, 3.0, 0.0),
-            )
+            ),
         )
         val s = ThompsonForestPosterior().evaluate(f, feat(0.0), Random(0), 0.0)
         assertEquals(2.0, s, 1e-9)
@@ -138,7 +138,7 @@ class TreePosteriorsTest {
             listOf(
                 WeightedVarianceResult(10.0, 1.0, 1.0),
                 WeightedVarianceResult(10.0, 1.0, 1.0),
-            )
+            ),
         )
         val s = UcbForestPosterior(priorWeight = 1.0, priorVariance = 1.0)
             .evaluate(f, feat(0.0), Random(0), 1.0)
@@ -149,6 +149,6 @@ class TreePosteriorsTest {
         val mean = xs.average()
         var s = 0.0
         for (x in xs) s += (x - mean) * (x - mean)
-        return kotlin.math.sqrt(s / (xs.size - 1))
+        return sqrt(s / (xs.size - 1))
     }
 }

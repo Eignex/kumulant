@@ -25,8 +25,7 @@ internal object AdderMode : StreamMode {
      * scalar `compareAndSet` throwing on `DoubleAdder`/`LongAdder`, the array path
      * just delegates to single-cell atomics.
      */
-    override fun newLongArray(size: Int, init: (Int) -> Long): StreamLongArray =
-        AtomicMode.newLongArray(size, init)
+    override fun newLongArray(size: Int, init: (Int) -> Long): StreamLongArray = AtomicMode.newLongArray(size, init)
 
     override fun newDoubleArray(size: Int, init: (Int) -> Double): StreamDoubleArray =
         AtomicMode.newDoubleArray(size, init)
@@ -39,12 +38,10 @@ internal value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
     constructor(initial: Double = 0.0) : this(
         JDoubleAdder().also {
             it.add(initial)
-        }
+        },
     )
 
-    override fun load(): Double {
-        return ref.sum()
-    }
+    override fun load(): Double = ref.sum()
 
     override fun store(value: Double) {
         ref.reset()
@@ -60,11 +57,9 @@ internal value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
         return ref.sum()
     }
 
-    override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean {
-        throw UnsupportedOperationException(
-            "DoubleAdder does not support compareAndSet; use AtomicMode for CAS-based stats"
-        )
-    }
+    override fun compareAndSet(expectedValue: Double, newValue: Double): Boolean = throw UnsupportedOperationException(
+        "DoubleAdder does not support compareAndSet; use AtomicMode for CAS-based stats",
+    )
 }
 
 /** [StreamLong] backed by a striped `java.util.concurrent.atomic.LongAdder`. */
@@ -72,9 +67,7 @@ internal value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
 internal value class LongAdder(val ref: JLongAdder) : StreamLong {
     constructor(initial: Long = 0L) : this(JLongAdder().also { it.add(initial) })
 
-    override fun load(): Long {
-        return ref.sum()
-    }
+    override fun load(): Long = ref.sum()
 
     override fun store(value: Long) {
         ref.reset()
@@ -90,9 +83,7 @@ internal value class LongAdder(val ref: JLongAdder) : StreamLong {
         return ref.sum()
     }
 
-    override fun compareAndSet(expectedValue: Long, newValue: Long): Boolean {
-        throw UnsupportedOperationException(
-            "LongAdder does not support compareAndSet; use AtomicMode for CAS-based stats"
-        )
-    }
+    override fun compareAndSet(expectedValue: Long, newValue: Long): Boolean = throw UnsupportedOperationException(
+        "LongAdder does not support compareAndSet; use AtomicMode for CAS-based stats",
+    )
 }

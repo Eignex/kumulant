@@ -46,9 +46,7 @@ data class WeightedMeanResult(
  * coupled `(totalWeights, mean)` pair can drift by ~1e-5 relative under
  * contention but never throws.
  */
-class MeanStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<WeightedMeanResult> {
+class MeanStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<WeightedMeanResult> {
 
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()

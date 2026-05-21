@@ -96,23 +96,21 @@ class RandomForestRegressionStat(
         trees = Array(nbrTrees) { newTree() }
     }
 
-    override fun create(concurrency: Concurrency?): RandomForestRegressionStat =
-        RandomForestRegressionStat(
-            featureSize = featureSize,
-            splitCandidates = splitCandidates,
-            nbrTrees = nbrTrees,
-            config = config,
-            bagging = bagging,
-            concurrency = concurrency ?: this.concurrency,
-            leafArmFactory = leafArmFactory,
-            randomSeed = seedRng.nextInt(),
-        )
+    override fun create(concurrency: Concurrency?): RandomForestRegressionStat = RandomForestRegressionStat(
+        featureSize = featureSize,
+        splitCandidates = splitCandidates,
+        nbrTrees = nbrTrees,
+        config = config,
+        bagging = bagging,
+        concurrency = concurrency ?: this.concurrency,
+        leafArmFactory = leafArmFactory,
+        randomSeed = seedRng.nextInt(),
+    )
 
     /** Live underlying trees. Use for inspection. */
     fun trees(): List<Tree> = trees.toList()
 
-    private fun defaultMtry(p: Int): Int =
-        if (p <= 0) 0 else ceil(sqrt(p.toDouble())).toInt().coerceAtLeast(1)
+    private fun defaultMtry(p: Int): Int = if (p <= 0) 0 else ceil(sqrt(p.toDouble())).toInt().coerceAtLeast(1)
 }
 
 /** Snapshot of a [RandomForestRegressionStat]: per-tree immutable snapshots. */
@@ -122,7 +120,9 @@ data class ForestRegressionResult(
     /** Per-tree immutable snapshots; non-empty. */
     val trees: List<TreeRegressionResult>,
 ) : Result {
-    init { require(trees.isNotEmpty()) { "ForestRegressionResult requires at least one tree" } }
+    init {
+        require(trees.isNotEmpty()) { "ForestRegressionResult requires at least one tree" }
+    }
 
     /** Merge the leaves that [x] routes to across every tree into a single weighted-
      *  variance aggregate. Useful for ensembled scoring. */

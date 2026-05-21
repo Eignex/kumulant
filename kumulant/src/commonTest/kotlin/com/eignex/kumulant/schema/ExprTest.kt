@@ -1,11 +1,16 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.ResultList
+import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
+import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
+import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 private const val DELTA = 1e-12
 
 class ExprTest {
@@ -164,8 +169,8 @@ class ExprTest {
         val live = cfg.materialize(Concurrency.None)
         for (i in -50L..50L) live.update(i)
         // 51 non-negative values survive; HLL estimate should reflect that scale.
-        val r = live.read() as com.eignex.kumulant.stat.cardinality.HyperLogLogResult
-        kotlin.test.assertTrue(r.estimate in 30.0..70.0, "estimate=${r.estimate}")
+        val r = live.read() as HyperLogLogResult
+        assertTrue(r.estimate in 30.0..70.0, "estimate=${r.estimate}")
     }
 
     @Test fun `arithmetic operators build expected ast`() {
@@ -200,7 +205,7 @@ class ExprTest {
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
-        val r = live.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+        val r = live.read() as UnivariateRegressionResult
         assertEquals(0.5, r.slope, DELTA)
     }
 
@@ -211,7 +216,7 @@ class ExprTest {
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
-        val r = live.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+        val r = live.read() as UnivariateRegressionResult
         assertEquals(1.0, r.slope, DELTA)
     }
 
@@ -223,7 +228,7 @@ class ExprTest {
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
-        val r = live.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+        val r = live.read() as UnivariateRegressionResult
         assertEquals(2.0, r.slope, DELTA)
     }
 
@@ -234,7 +239,7 @@ class ExprTest {
         live.update(doubleArrayOf(1.0, 2.0, 3.0))
         live.update(doubleArrayOf(4.0, 5.0, 6.0))
         @Suppress("UNCHECKED_CAST")
-        val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        val rl = live.read() as ResultList<SumResult>
         assertEquals(12.0, rl.results[0].sum, DELTA)
         assertEquals(16.0, rl.results[1].sum, DELTA)
         assertEquals(20.0, rl.results[2].sum, DELTA)
@@ -248,7 +253,7 @@ class ExprTest {
         live.update(doubleArrayOf(2.0, 4.0))
         live.update(doubleArrayOf(5.0, 10.0))
         @Suppress("UNCHECKED_CAST")
-        val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        val rl = live.read() as ResultList<SumResult>
         assertEquals(2.0, rl.results[0].sum, DELTA)
         assertEquals(4.0, rl.results[1].sum, DELTA)
     }
@@ -261,7 +266,7 @@ class ExprTest {
         live.update(doubleArrayOf(1.0, 10.0))
         live.update(doubleArrayOf(2.0, 20.0))
         @Suppress("UNCHECKED_CAST")
-        val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        val rl = live.read() as ResultList<SumResult>
         assertEquals(3.0, rl.results[0].sum, DELTA)
         assertEquals(30.0, rl.results[1].sum, DELTA)
     }
@@ -283,7 +288,7 @@ class ExprTest {
     }
 
     @Test fun `vdot length mismatch throws`() {
-        kotlin.test.assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             VDot(weights = listOf(1.0, 1.0)).eval(0.0, 0.0, doubleArrayOf(1.0, 2.0, 3.0))
         }
     }
@@ -321,7 +326,7 @@ class ExprTest {
         val live = cfg.materialize(Concurrency.None)
         live.update(doubleArrayOf(3.0, 4.0))
         live.update(doubleArrayOf(0.0, 0.0))
-        val r = live.read() as com.eignex.kumulant.stat.summary.WeightedMeanResult
+        val r = live.read() as WeightedMeanResult
         assertEquals(2.5, r.mean, DELTA)
     }
 
@@ -345,13 +350,13 @@ class ExprTest {
     @Test fun `vElements evaluates each in order`() {
         val expr = VElements(listOf(V(2), V(0), V(1)))
         val out = expr.eval(0.0, 0.0, doubleArrayOf(10.0, 20.0, 30.0))
-        kotlin.test.assertEquals(listOf(30.0, 10.0, 20.0), out.toList())
+        assertEquals(listOf(30.0, 10.0, 20.0), out.toList())
     }
 
     @Test fun `vElements pools pairs into means`() {
         val expr = VElements(listOf((V(0) + V(1)) / 2.0, (V(2) + V(3)) / 2.0))
         val out = expr.eval(0.0, 0.0, doubleArrayOf(2.0, 4.0, 10.0, 30.0))
-        kotlin.test.assertEquals(listOf(3.0, 20.0), out.toList())
+        assertEquals(listOf(3.0, 20.0), out.toList())
     }
 
     @Test fun `transformVector changes dimensionality via VElements`() {
@@ -362,7 +367,7 @@ class ExprTest {
         live.update(doubleArrayOf(2.0, 4.0, 10.0, 30.0))
         live.update(doubleArrayOf(0.0, 0.0, 4.0, 6.0))
         @Suppress("UNCHECKED_CAST")
-        val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        val rl = live.read() as ResultList<SumResult>
         assertEquals(3.0, rl.results[0].sum, DELTA)
         assertEquals(25.0, rl.results[1].sum, DELTA)
     }
@@ -374,7 +379,7 @@ class ExprTest {
         live.update(doubleArrayOf(1.0, 10.0, 100.0))
         live.update(doubleArrayOf(2.0, 20.0, 200.0))
         @Suppress("UNCHECKED_CAST")
-        val rl = live.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        val rl = live.read() as ResultList<SumResult>
         assertEquals(300.0, rl.results[0].sum, DELTA)
         assertEquals(3.0, rl.results[1].sum, DELTA)
         assertEquals(30.0, rl.results[2].sum, DELTA)
@@ -388,7 +393,7 @@ class ExprTest {
         val materialized = decoded.materialize(Concurrency.None)
         materialized.update(doubleArrayOf(3.0, 1.0))
         @Suppress("UNCHECKED_CAST")
-        val rl = materialized.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        val rl = materialized.read() as ResultList<SumResult>
         assertEquals(4.0, rl.results[0].sum, DELTA)
         assertEquals(2.0, rl.results[1].sum, DELTA)
     }

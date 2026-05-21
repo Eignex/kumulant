@@ -22,59 +22,50 @@ fun <R : Result> VectorStat<R>.withWeight(weight: Double): VectorStat<R> = WithW
 fun <R : Result> DiscreteStat<R>.withWeight(weight: Double): DiscreteStat<R> = WithWeightDiscreteStat(this, weight)
 
 /** Adapter implementing the series variant of [withWeight]. */
-internal class WithWeightStat<R : Result>(
-    private val delegate: SeriesStat<R>,
-    private val weight: Double
-) : SeriesStat<R>, Stat<R> by delegate {
+internal class WithWeightStat<R : Result>(private val delegate: SeriesStat<R>, private val weight: Double) :
+    SeriesStat<R>,
+    Stat<R> by delegate {
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(value, timestampNanos, this.weight)
     }
 
-    override fun create(concurrency: Concurrency?): SeriesStat<R> {
-        return WithWeightStat(delegate.create(concurrency), weight)
-    }
+    override fun create(concurrency: Concurrency?): SeriesStat<R> = WithWeightStat(delegate.create(concurrency), weight)
 }
 
 /** Adapter implementing the paired variant of [withWeight]. */
-internal class WithWeightPairedStat<R : Result>(
-    private val delegate: PairedStat<R>,
-    private val weight: Double
-) : PairedStat<R>, Stat<R> by delegate {
+internal class WithWeightPairedStat<R : Result>(private val delegate: PairedStat<R>, private val weight: Double) :
+    PairedStat<R>,
+    Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x, y, timestampNanos, this.weight)
     }
 
-    override fun create(concurrency: Concurrency?): PairedStat<R> {
-        return WithWeightPairedStat(delegate.create(concurrency), weight)
-    }
+    override fun create(concurrency: Concurrency?): PairedStat<R> =
+        WithWeightPairedStat(delegate.create(concurrency), weight)
 }
 
 /** Adapter implementing the vector variant of [withWeight]. */
-internal class WithWeightVectorStat<R : Result>(
-    private val delegate: VectorStat<R>,
-    private val weight: Double
-) : VectorStat<R>, Stat<R> by delegate {
+internal class WithWeightVectorStat<R : Result>(private val delegate: VectorStat<R>, private val weight: Double) :
+    VectorStat<R>,
+    Stat<R> by delegate {
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(vector, timestampNanos, this.weight)
     }
 
-    override fun create(concurrency: Concurrency?): VectorStat<R> {
-        return WithWeightVectorStat(delegate.create(concurrency), weight)
-    }
+    override fun create(concurrency: Concurrency?): VectorStat<R> =
+        WithWeightVectorStat(delegate.create(concurrency), weight)
 }
 
 /** Adapter implementing the discrete variant of [withWeight]. */
-internal class WithWeightDiscreteStat<R : Result>(
-    private val delegate: DiscreteStat<R>,
-    private val weight: Double
-) : DiscreteStat<R>, Stat<R> by delegate {
+internal class WithWeightDiscreteStat<R : Result>(private val delegate: DiscreteStat<R>, private val weight: Double) :
+    DiscreteStat<R>,
+    Stat<R> by delegate {
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         delegate.update(value, timestampNanos, this.weight)
     }
 
-    override fun create(concurrency: Concurrency?): DiscreteStat<R> {
-        return WithWeightDiscreteStat(delegate.create(concurrency), weight)
-    }
+    override fun create(concurrency: Concurrency?): DiscreteStat<R> =
+        WithWeightDiscreteStat(delegate.create(concurrency), weight)
 }
 
 /**
@@ -102,7 +93,8 @@ fun <R : Result> DiscreteStat<R>.weightBy(weighter: (Long) -> Double): DiscreteS
 internal class WeightBySeriesStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val weighter: (Double) -> Double,
-) : SeriesStat<R>, Stat<R> by delegate {
+) : SeriesStat<R>,
+    Stat<R> by delegate {
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(value, timestampNanos, weight * weighter(value))
     }
@@ -113,7 +105,8 @@ internal class WeightBySeriesStat<R : Result>(
 internal class WeightByPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val weighter: (Double, Double) -> Double,
-) : PairedStat<R>, Stat<R> by delegate {
+) : PairedStat<R>,
+    Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x, y, timestampNanos, weight * weighter(x, y))
     }
@@ -124,7 +117,8 @@ internal class WeightByPairedStat<R : Result>(
 internal class WeightByVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val weighter: (DoubleArray) -> Double,
-) : VectorStat<R>, Stat<R> by delegate {
+) : VectorStat<R>,
+    Stat<R> by delegate {
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(vector, timestampNanos, weight * weighter(vector.toDoubleArray()))
     }
@@ -135,7 +129,8 @@ internal class WeightByVectorStat<R : Result>(
 internal class WeightByDiscreteStat<R : Result>(
     private val delegate: DiscreteStat<R>,
     private val weighter: (Long) -> Double,
-) : DiscreteStat<R>, Stat<R> by delegate {
+) : DiscreteStat<R>,
+    Stat<R> by delegate {
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         delegate.update(value, timestampNanos, weight * weighter(value))
     }

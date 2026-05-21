@@ -1,10 +1,10 @@
 package com.eignex.kumulant.stat.score
 
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
-
 private const val DELTA = 1e-6
 
 class AucTest {
@@ -71,7 +71,7 @@ class AucTest {
     @Test
     fun `merge two halves yields the same auc as one stream`() {
         fun build(): Pair<AucStat, AucStat> {
-            val rng = kotlin.random.Random(42)
+            val rng = Random(42)
             val a = AucStat(numBins = 64)
             val b = AucStat(numBins = 64)
             val ref = AucStat(numBins = 64)

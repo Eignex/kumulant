@@ -81,8 +81,7 @@ class AtomicLongModeTest {
 
 class AtomicLongCellArrayTest {
 
-    private fun arr(size: Int, init: (Int) -> Long) =
-        AtomicMode.newLongArray(size, init)
+    private fun arr(size: Int, init: (Int) -> Long) = AtomicMode.newLongArray(size, init)
 
     @Test
     fun `size and per-cell load reflect the initialiser`() {

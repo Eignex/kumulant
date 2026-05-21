@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.regression
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.max
@@ -17,7 +18,7 @@ import kotlin.math.max
  *    precision per observation. Equals the variance function under the canonical link.
  *  - [loss] is the per-observation negative log-likelihood computed in a numerically
  *    stable way (log-trick for Logit, no overflow on either tail). Constants that
- *    don't depend on [eta] are dropped, so the absolute value is shifted but
+ *    don't depend on `eta` are dropped, so the absolute value is shifted but
  *    differences and sums are correct.
  *
  * Only canonical links are exposed: pairing a non-canonical link with the gradient
@@ -73,13 +74,12 @@ sealed interface Link {
 }
 
 /** Stable sigmoid using the positive-tail branch to avoid `exp` overflow at negative `eta`. */
-internal fun sigmoid(eta: Double): Double =
-    if (eta >= 0.0) {
-        1.0 / (1.0 + exp(-eta))
-    } else {
-        val e = exp(eta)
-        e / (1.0 + e)
-    }
+internal fun sigmoid(eta: Double): Double = if (eta >= 0.0) {
+    1.0 / (1.0 + exp(-eta))
+} else {
+    val e = exp(eta)
+    e / (1.0 + e)
+}
 
 /** Stable `log(1 + exp(eta))` via `max(eta, 0) + log1p(exp(-|eta|))`. */
-internal fun softplus(eta: Double): Double = max(eta, 0.0) + ln(1.0 + exp(-kotlin.math.abs(eta)))
+internal fun softplus(eta: Double): Double = max(eta, 0.0) + ln(1.0 + exp(-abs(eta)))

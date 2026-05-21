@@ -6,7 +6,7 @@ import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
+import kotlin.test.assertTrue
 /**
  * Schema-aware constructors for the four `*ListStats` classes. They walk the
  * matching modality helper (`seriesSpecs`/`pairedSpecs`/...) and turn it into
@@ -51,7 +51,7 @@ class ListStatsSchemaTest {
         for (i in 1L..50L) list.update(i)
         val r = list.read()
         assertEquals(listOf("a", "b"), r.names)
-        kotlin.test.assertTrue((r.results[0] as HyperLogLogResult).estimate > 30.0)
+        assertTrue((r.results[0] as HyperLogLogResult).estimate > 30.0)
     }
 
     @Test fun `vectorListStats from schema preserves order`() {

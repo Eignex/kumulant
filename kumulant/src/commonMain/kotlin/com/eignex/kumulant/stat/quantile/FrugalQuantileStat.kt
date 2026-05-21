@@ -73,7 +73,7 @@ class FrugalQuantileStat(
         q,
         stepSize,
         initialEstimate,
-        concurrency ?: this.concurrency
+        concurrency ?: this.concurrency,
     )
 
     override fun merge(values: QuantileResult) = lock.withLock {

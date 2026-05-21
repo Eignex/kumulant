@@ -27,28 +27,28 @@ class SummaryStatConcurrencyTest {
     @Test
     fun `SumStat sequential math equal across modes`() {
         val reads = sequentialReads { SumStat(concurrency = it) }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref, r, "SumStat mode=$mode")
     }
 
     @Test
     fun `CountStat sequential math equal across modes`() {
         val reads = sequentialReads { CountStat(concurrency = it) }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref, r, "CountStat mode=$mode")
     }
 
     @Test
     fun `TotalWeightsStat sequential math equal across modes`() {
         val reads = sequentialReads { TotalWeightsStat(concurrency = it) }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref, r, "TotalWeightsStat mode=$mode")
     }
 
     @Test
     fun `MeanStat sequential math equal across modes`() {
         val reads = sequentialReads { MeanStat(concurrency = it) }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.totalWeights, r.totalWeights, 1e-9, "MeanStat totalWeights mode=$mode")
             assertEquals(ref.mean, r.mean, 1e-9, "MeanStat mean mode=$mode")
@@ -58,7 +58,7 @@ class SummaryStatConcurrencyTest {
     @Test
     fun `VarianceStat sequential math equal across modes`() {
         val reads = sequentialReads { VarianceStat(concurrency = it) }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.totalWeights, r.totalWeights, 1e-9, "VarianceStat totalWeights mode=$mode")
             assertEquals(ref.mean, r.mean, 1e-9, "VarianceStat mean mode=$mode")
@@ -69,7 +69,7 @@ class SummaryStatConcurrencyTest {
     @Test
     fun `MomentsStat sequential math equal across modes`() {
         val reads = sequentialReads { MomentsStat(concurrency = it) }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.totalWeights, r.totalWeights, 1e-9, "MomentsStat totalWeights mode=$mode")
             assertEquals(ref.mean, r.mean, 1e-9, "MomentsStat mean mode=$mode")
@@ -82,21 +82,21 @@ class SummaryStatConcurrencyTest {
     @Test
     fun `MinStat sequential math equal across modes`() {
         val reads = sequentialReads { MinStat(concurrency = it) }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref, r, "MinStat mode=$mode")
     }
 
     @Test
     fun `MaxStat sequential math equal across modes`() {
         val reads = sequentialReads { MaxStat(concurrency = it) }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref, r, "MaxStat mode=$mode")
     }
 
     @Test
     fun `RangeStat sequential math equal across modes`() {
         val reads = sequentialReads { RangeStat(concurrency = it) }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref, r, "RangeStat mode=$mode")
     }
 
@@ -108,7 +108,7 @@ class SummaryStatConcurrencyTest {
             for (i in bernValues.indices) s.update(bernValues[i], 0L, weights[i])
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) assertEquals(ref, r, "BernoulliSumStat mode=$mode")
     }
 

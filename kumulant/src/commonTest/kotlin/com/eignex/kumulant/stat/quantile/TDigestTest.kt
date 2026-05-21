@@ -53,7 +53,7 @@ class TDigestTest {
     @Test
     fun `quantiles are monotonic`() {
         val td = TDigestStat(
-            probabilities = doubleArrayOf(0.1, 0.25, 0.5, 0.75, 0.9, 0.99)
+            probabilities = doubleArrayOf(0.1, 0.25, 0.5, 0.75, 0.9, 0.99),
         )
         for (i in 1..1000) td.update(i.toDouble())
         val qs = td.read().quantiles

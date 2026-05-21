@@ -34,11 +34,7 @@ class VectorizedStat<R : Result>(
 
     override val concurrency: Concurrency get() = template.concurrency
 
-    override fun update(
-        vector: VectorView,
-        timestampNanos: Long,
-        weight: Double,
-    ) {
+    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         require(vector.size == dimensions) {
             "Vector size ${vector.size} does not match expected dimensions $dimensions"
         }
@@ -51,8 +47,7 @@ class VectorizedStat<R : Result>(
         }
     }
 
-    override fun read(timestampNanos: Long): ResultList<R> =
-        ResultList(stats.map { it.read(timestampNanos) })
+    override fun read(timestampNanos: Long): ResultList<R> = ResultList(stats.map { it.read(timestampNanos) })
 
     override fun create(concurrency: Concurrency?): VectorStat<ResultList<R>> =
         VectorizedStat(dimensions, template.create(concurrency), skipZeros)

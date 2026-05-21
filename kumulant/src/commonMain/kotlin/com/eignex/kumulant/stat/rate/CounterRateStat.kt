@@ -53,11 +53,7 @@ class CounterRateStat(
     private val lastCounter = mode.newDouble(Double.NaN)
     private val lastTimestampNanos = mode.newLong(Long.MIN_VALUE)
 
-    override fun update(
-        value: Double,
-        timestampNanos: Long,
-        weight: Double
-    ) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
         val previousCounter = lastCounter.load()
         val previousTimestamp = lastTimestampNanos.load()
 
@@ -77,6 +73,7 @@ class CounterRateStat(
                 lastCounter.store(value)
                 lastTimestampNanos.store(timestampNanos)
             }
+
             treatDecreaseAsReset -> {
                 val scaledDelta = (value * weight).coerceAtLeast(0.0)
                 if (scaledDelta > 0.0) {
@@ -113,7 +110,7 @@ class CounterRateStat(
         RateResult(
             startTimestampNanos = start,
             totalValue = totalDelta.load(),
-            timestampNanos = timestampNanos
+            timestampNanos = timestampNanos,
         )
     }
 

@@ -12,11 +12,9 @@ import kotlinx.serialization.Serializable
 /** Cumulative rate: [totalValue] accumulated from [startTimestampNanos] to [timestampNanos]. */
 @Serializable
 @SerialName("RateResult")
-data class RateResult(
-    val startTimestampNanos: Long,
-    val totalValue: Double,
-    val timestampNanos: Long
-) : Result, HasRate {
+data class RateResult(val startTimestampNanos: Long, val totalValue: Double, val timestampNanos: Long) :
+    Result,
+    HasRate {
     override val rate: Double
         get() {
             val durationSeconds = (timestampNanos - startTimestampNanos) / 1e9
@@ -47,18 +45,12 @@ data class RateResult(
  * start timestamp stays an `AtomicLong` (the striped adder doesn't support
  * CAS).
  */
-class RateStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<RateResult> {
+class RateStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<RateResult> {
 
     private val totalValues = concurrency.additiveMode().newDouble(0.0)
     private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MIN_VALUE)
 
-    override fun update(
-        value: Double,
-        timestampNanos: Long,
-        weight: Double
-    ) {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // CAS-loop-min — a plain compareAndSet(MIN_VALUE, ts) would let an arbitrary
         // first-arriving thread set the start, not the thread with the earliest ts.
         var current = startTimestampNanos.load()
@@ -80,7 +72,7 @@ class RateStat(
         return RateResult(
             startTimestampNanos = start,
             totalValue = totalValues.load(),
-            timestampNanos = timestampNanos
+            timestampNanos = timestampNanos,
         )
     }
 

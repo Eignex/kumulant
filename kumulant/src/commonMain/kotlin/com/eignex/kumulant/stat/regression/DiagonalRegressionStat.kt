@@ -80,46 +80,47 @@ class DiagonalRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) =
-        lock.withLock {
-            require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-            if (weight <= 0.0) return@withLock
-            step++
-            val eta = learningRate.eval(step.toDouble())
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        if (weight <= 0.0) return@withLock
+        step++
+        val eta = learningRate.eval(step.toDouble())
 
-            val etaPred = bias + (x dot DenseVector.wrap(weights))
-            val mu = link.invMean(etaPred)
-            val negResidual = mu - y
-            val curvature = link.curvature(etaPred)
-            sse += link.loss(etaPred, y) * weight
+        val etaPred = bias + (x dot DenseVector.wrap(weights))
+        val mu = link.invMean(etaPred)
+        val negResidual = mu - y
+        val curvature = link.curvature(etaPred)
+        sse += link.loss(etaPred, y) * weight
 
-            // Diagonal Hessian update: only coordinates stored in x see curvature this round.
-            when (val p = penalty) {
-                Penalty.None -> x.forEachStored { i, v ->
-                    precision[i] += weight * curvature * v * v
-                    weights[i] -= eta * weight * (negResidual * v) / precision[i]
-                }
-                is Penalty.L2 -> x.forEachStored { i, v ->
-                    precision[i] += weight * curvature * v * v
-                    val grad = negResidual * v + p.lambda * weights[i]
-                    weights[i] -= eta * weight * grad / precision[i]
-                }
-                is Penalty.L1 -> x.forEachStored { i, v ->
-                    precision[i] += weight * curvature * v * v
-                    weights[i] -= eta * weight * (negResidual * v) / precision[i]
-                    val threshold = eta * weight * p.lambda / precision[i]
-                    val wi = weights[i]
-                    weights[i] = when {
-                        wi > threshold -> wi - threshold
-                        wi < -threshold -> wi + threshold
-                        else -> 0.0
-                    }
+        // Diagonal Hessian update: only coordinates stored in x see curvature this round.
+        when (val p = penalty) {
+            Penalty.None -> x.forEachStored { i, v ->
+                precision[i] += weight * curvature * v * v
+                weights[i] -= eta * weight * (negResidual * v) / precision[i]
+            }
+
+            is Penalty.L2 -> x.forEachStored { i, v ->
+                precision[i] += weight * curvature * v * v
+                val grad = negResidual * v + p.lambda * weights[i]
+                weights[i] -= eta * weight * grad / precision[i]
+            }
+
+            is Penalty.L1 -> x.forEachStored { i, v ->
+                precision[i] += weight * curvature * v * v
+                weights[i] -= eta * weight * (negResidual * v) / precision[i]
+                val threshold = eta * weight * p.lambda / precision[i]
+                val wi = weights[i]
+                weights[i] = when {
+                    wi > threshold -> wi - threshold
+                    wi < -threshold -> wi + threshold
+                    else -> 0.0
                 }
             }
-            biasPrecision += weight * curvature
-            bias -= eta * weight * negResidual / biasPrecision
-            totalWeights += weight
         }
+        biasPrecision += weight * curvature
+        bias -= eta * weight * negResidual / biasPrecision
+        totalWeights += weight
+    }
 
     override fun read(timestampNanos: Long): DiagonalRegressionResult = lock.withLock {
         DiagonalRegressionResult(
@@ -178,13 +179,12 @@ class DiagonalRegressionStat(
         sse = 0.0
     }
 
-    override fun create(concurrency: Concurrency?) =
-        DiagonalRegressionStat(
-            featureSize,
-            priorPrecision,
-            learningRate,
-            penalty,
-            link,
-            concurrency ?: this.concurrency
-        )
+    override fun create(concurrency: Concurrency?) = DiagonalRegressionStat(
+        featureSize,
+        priorPrecision,
+        learningRate,
+        penalty,
+        link,
+        concurrency ?: this.concurrency,
+    )
 }

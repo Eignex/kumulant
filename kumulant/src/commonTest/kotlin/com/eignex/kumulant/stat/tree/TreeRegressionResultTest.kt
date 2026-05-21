@@ -38,7 +38,7 @@ class TreeRegressionResultTest {
                 ),
                 neg = TreeLeafResult(c),
                 value = WeightedVarianceResult(3.0, 7.0, 80.0),
-            )
+            ),
         )
         assertEquals(a, r.findLeaf(feat(-1.0, -1.0)))
         assertEquals(b, r.findLeaf(feat(-1.0, 1.0)))

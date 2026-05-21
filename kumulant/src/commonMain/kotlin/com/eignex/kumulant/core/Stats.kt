@@ -49,8 +49,7 @@ interface Stat<R : Result> {
 /** Accumulator over a single scalar time series. */
 interface SeriesStat<R : Result> : Stat<R> {
     /** Record an observation with the given [weight], stamped at the current time. */
-    fun update(value: Double, weight: Double = 1.0) =
-        update(value, currentTimeNanos(), weight)
+    fun update(value: Double, weight: Double = 1.0) = update(value, currentTimeNanos(), weight)
 
     /** Record an observation at [timestampNanos] with the given [weight]. */
     fun update(value: Double, timestampNanos: Long, weight: Double = 1.0)
@@ -65,8 +64,7 @@ interface SeriesStat<R : Result> : Stat<R> {
  */
 interface DiscreteStat<R : Result> : Stat<R> {
     /** Record an observation with the given [weight], stamped at the current time. */
-    fun update(value: Long, weight: Double = 1.0) =
-        update(value, currentTimeNanos(), weight)
+    fun update(value: Long, weight: Double = 1.0) = update(value, currentTimeNanos(), weight)
 
     /** Record an observation at [timestampNanos] with the given [weight]. */
     fun update(value: Long, timestampNanos: Long, weight: Double = 1.0)
@@ -77,8 +75,7 @@ interface DiscreteStat<R : Result> : Stat<R> {
 /** Accumulator over paired (x, y) observations such as a regression. */
 interface PairedStat<R : Result> : Stat<R> {
     /** Record an (x, y) observation with the given [weight] at the current time. */
-    fun update(x: Double, y: Double, weight: Double = 1.0) =
-        update(x, y, currentTimeNanos(), weight)
+    fun update(x: Double, y: Double, weight: Double = 1.0) = update(x, y, currentTimeNanos(), weight)
 
     /** Record an (x, y) observation at [timestampNanos] with the given [weight]. */
     fun update(x: Double, y: Double, timestampNanos: Long, weight: Double = 1.0)
@@ -102,8 +99,7 @@ interface RegressionStat<R : Result> : Stat<R> {
     val featureSize: Int
 
     /** Record an `(x, y)` observation with the given [weight] at the current time. */
-    fun update(x: VectorView, y: Double, weight: Double = 1.0) =
-        update(x, y, currentTimeNanos(), weight)
+    fun update(x: VectorView, y: Double, weight: Double = 1.0) = update(x, y, currentTimeNanos(), weight)
 
     /** Record an `(x, y)` observation at [timestampNanos] with the given [weight]. */
     fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double = 1.0)
@@ -122,15 +118,13 @@ interface RegressionStat<R : Result> : Stat<R> {
 /** Accumulator over fixed-dimensional vector observations. */
 interface VectorStat<R : Result> : Stat<R> {
     /** Record a [vector] observation with the given [weight] at the current time. */
-    fun update(vector: VectorView, weight: Double = 1.0) =
-        update(vector, currentTimeNanos(), weight)
+    fun update(vector: VectorView, weight: Double = 1.0) = update(vector, currentTimeNanos(), weight)
 
     /** Record a [vector] observation at [timestampNanos] with the given [weight]. */
     fun update(vector: VectorView, timestampNanos: Long, weight: Double = 1.0)
 
     /** Convenience overload that wraps [vector] as a [DenseVector]. */
-    fun update(vector: DoubleArray, weight: Double = 1.0) =
-        update(DenseVector.of(vector), currentTimeNanos(), weight)
+    fun update(vector: DoubleArray, weight: Double = 1.0) = update(DenseVector.of(vector), currentTimeNanos(), weight)
 
     /** Timestamped convenience overload that wraps [vector] as a [DenseVector]. */
     fun update(vector: DoubleArray, timestampNanos: Long, weight: Double = 1.0) =

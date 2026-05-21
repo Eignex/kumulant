@@ -1,15 +1,13 @@
 package com.eignex.kumulant.stream
 
-/**
- * 64-bit hashing primitives used by the cardinality and sketch families.
- *
- * Naming convention for additional algorithms: each algorithm exposes top-level
- * functions named `<algo>64`, e.g. [splitmix64], `xxhash64(ByteArray)`,
- * `wyhash64(ByteArray)`. The unqualified [hash64] is an alias for the library's
- * recommended default `ByteArray` hash; callers that don't care which algorithm
- * produces the bits should use it. Callers needing a stable byte stream across
- * library versions should pin to a specific named algorithm or [Hasher64].
- */
+// 64-bit hashing primitives used by the cardinality and sketch families.
+//
+// Naming convention for additional algorithms: each algorithm exposes top-level
+// functions named `<algo>64`, e.g. [splitmix64], `xxhash64(ByteArray)`,
+// `wyhash64(ByteArray)`. The unqualified [hash64] is an alias for the library's
+// recommended default `ByteArray` hash; callers that don't care which algorithm
+// produces the bits should use it. Callers needing a stable byte stream across
+// library versions should pin to a specific named algorithm or [Hasher64].
 
 /**
  * SplitMix64 - a fast, high-quality 64-bit mixer suitable for spreading sequential

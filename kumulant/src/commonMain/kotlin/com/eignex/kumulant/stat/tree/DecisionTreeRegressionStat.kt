@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlin.random.Random
 
 /**
  * Online VFDT decision-tree regressor — a piecewise-constant predictor over the feature
@@ -58,9 +59,11 @@ class DecisionTreeRegressionStat(
     randomSeed: Int = 0,
 ) : RegressionStat<TreeRegressionResult> {
 
-    init { require(featureSize > 0) { "featureSize must be positive, got $featureSize" } }
+    init {
+        require(featureSize > 0) { "featureSize must be positive, got $featureSize" }
+    }
 
-    private val seedRng = kotlin.random.Random(randomSeed)
+    private val seedRng = Random(randomSeed)
     private var tree: Tree = newTree()
 
     private fun newTree(): Tree = Tree(splitCandidates, config, concurrency, leafArmFactory, seedRng.nextInt())
@@ -70,8 +73,7 @@ class DecisionTreeRegressionStat(
         tree.update(x, y, weight)
     }
 
-    override fun read(timestampNanos: Long): TreeRegressionResult =
-        TreeRegressionResult(tree.rootNode().snapshot())
+    override fun read(timestampNanos: Long): TreeRegressionResult = TreeRegressionResult(tree.rootNode().snapshot())
 
     override fun merge(values: TreeRegressionResult) {
         tree.mergeSnapshot(values.root)
@@ -81,15 +83,14 @@ class DecisionTreeRegressionStat(
         tree = newTree()
     }
 
-    override fun create(concurrency: Concurrency?): DecisionTreeRegressionStat =
-        DecisionTreeRegressionStat(
-            featureSize = featureSize,
-            splitCandidates = splitCandidates,
-            config = config,
-            concurrency = concurrency ?: this.concurrency,
-            leafArmFactory = leafArmFactory,
-            randomSeed = seedRng.nextInt(),
-        )
+    override fun create(concurrency: Concurrency?): DecisionTreeRegressionStat = DecisionTreeRegressionStat(
+        featureSize = featureSize,
+        splitCandidates = splitCandidates,
+        config = config,
+        concurrency = concurrency ?: this.concurrency,
+        leafArmFactory = leafArmFactory,
+        randomSeed = seedRng.nextInt(),
+    )
 
     /** Live underlying tree. Use for inspection / pretty-printing. */
     fun tree(): Tree = tree

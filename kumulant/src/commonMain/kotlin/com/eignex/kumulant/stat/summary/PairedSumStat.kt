@@ -44,9 +44,7 @@ data class PairedSumResult(
  * guarantees hold. [Concurrency.HighWrite] switches the cells to striped
  * adders.
  */
-class PairedSumStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<PairedSumResult> {
+class PairedSumStat(override val concurrency: Concurrency = Concurrency.None) : PairedStat<PairedSumResult> {
 
     private val mode = concurrency.additiveMode()
     private val totalWeights = mode.newDouble(0.0)
@@ -60,8 +58,7 @@ class PairedSumStat(
         sumY.add(y * weight)
     }
 
-    override fun read(timestampNanos: Long) =
-        PairedSumResult(totalWeights.load(), sumX.load(), sumY.load())
+    override fun read(timestampNanos: Long) = PairedSumResult(totalWeights.load(), sumX.load(), sumY.load())
 
     override fun merge(values: PairedSumResult) {
         totalWeights.add(values.totalWeights)

@@ -25,7 +25,7 @@ class HdrHistogramTest {
         assertEquals(1.0, r.weights[0], 1e-9)
         assertTrue(
             10.0 in r.lowerBounds[0]..r.upperBounds[0],
-            "expected 10.0 in [${r.lowerBounds[0]}, ${r.upperBounds[0]}]"
+            "expected 10.0 in [${r.lowerBounds[0]}, ${r.upperBounds[0]}]",
         )
     }
 
@@ -34,7 +34,7 @@ class HdrHistogramTest {
         val h = HdrHistogramStat(
             lowestDiscernibleValue = 0.001,
             initialHighestTrackableValue = 100.0,
-            significantDigits = 2
+            significantDigits = 2,
         )
         repeat(10) { h.update(10.0) }
         val r = h.read()
@@ -54,7 +54,7 @@ class HdrHistogramTest {
     @Test
     fun `negative values throw IllegalArgumentException`() {
         val h = HdrHistogramStat()
-        kotlin.test.assertFailsWith<IllegalArgumentException> { h.update(-1.0) }
+        assertFailsWith<IllegalArgumentException> { h.update(-1.0) }
         h.update(5.0)
         val r = h.read()
         assertEquals(1.0, r.weights.sum(), 1e-9)
@@ -72,7 +72,7 @@ class HdrHistogramTest {
     fun `histogram auto-resizes to accept values beyond initialHighestTrackableValue`() {
         val h = HdrHistogramStat(
             lowestDiscernibleValue = 0.001,
-            initialHighestTrackableValue = 10.0
+            initialHighestTrackableValue = 10.0,
         )
         h.update(1.0)
         h.update(5000.0)
@@ -133,7 +133,7 @@ class HdrHistogramTest {
         for (i in 1 until r.lowerBounds.size) {
             assertTrue(
                 r.lowerBounds[i] >= r.lowerBounds[i - 1],
-                "buckets not sorted: ${r.lowerBounds.toList()}"
+                "buckets not sorted: ${r.lowerBounds.toList()}",
             )
         }
     }
@@ -163,7 +163,7 @@ class HdrHistogramTest {
         assertFailsWith<IllegalArgumentException> {
             HdrHistogramStat(
                 lowestDiscernibleValue = 1.0,
-                initialHighestTrackableValue = 1.5
+                initialHighestTrackableValue = 1.5,
             )
         }
     }

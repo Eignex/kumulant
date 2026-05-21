@@ -83,6 +83,6 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
     return SparseHistogramResult(
         lowerBounds = lowers,
         upperBounds = uppers,
-        weights = weights
+        weights = weights,
     )
 }

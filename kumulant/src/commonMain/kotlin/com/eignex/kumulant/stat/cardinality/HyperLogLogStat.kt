@@ -21,12 +21,8 @@ import kotlin.math.pow
  */
 @Serializable
 @SerialName("HyperLogLogResult")
-data class HyperLogLogResult(
-    val estimate: Double,
-    val precision: Int,
-    val registers: IntArray,
-    val totalSeen: Long,
-) : Result
+data class HyperLogLogResult(val estimate: Double, val precision: Int, val registers: IntArray, val totalSeen: Long) :
+    Result
 
 /**
  * HyperLogLog cardinality estimator with a small-range linear-counting fallback.

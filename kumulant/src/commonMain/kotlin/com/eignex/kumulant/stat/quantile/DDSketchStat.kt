@@ -79,7 +79,7 @@ class DDSketchStat(
     override fun create(concurrency: Concurrency?) = DDSketchStat(
         relativeError,
         probabilities,
-        concurrency ?: this.concurrency
+        concurrency ?: this.concurrency,
     )
 
     override fun merge(values: SketchResult) {
@@ -105,9 +105,7 @@ class DDSketchStat(
         negativeBins.clear()
     }
 
-    private fun valueFromIndex(index: Int): Double {
-        return 2.0 * gamma.pow(index) / (1.0 + gamma)
-    }
+    private fun valueFromIndex(index: Int): Double = 2.0 * gamma.pow(index) / (1.0 + gamma)
 
     override fun read(timestampNanos: Long): SketchResult {
         val total = totalWeights.load()
@@ -125,7 +123,7 @@ class DDSketchStat(
                 totalWeights = total,
                 zeroCount = zeroSnap,
                 positiveBins = posSnap,
-                negativeBins = negSnap
+                negativeBins = negSnap,
             )
         }
 
@@ -158,7 +156,7 @@ class DDSketchStat(
             totalWeights = total,
             zeroCount = zeroSnap,
             positiveBins = posSnap,
-            negativeBins = negSnap
+            negativeBins = negSnap,
         )
     }
 }

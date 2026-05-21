@@ -32,9 +32,11 @@ class TopTwoThompsonBanditTest {
         // arm 0 is best; rewards are noisy enough that the runner-up keeps getting play during training.
         repeat(600) {
             val a = b.choose()
-            val mean = when (a) { 0 -> 1.0
+            val mean = when (a) {
+                0 -> 1.0
                 1 -> 0.5
-                else -> 0.0 }
+                else -> 0.0
+            }
             b.update(a, mean + rng.nextDouble() * 0.5 - 0.25)
         }
         val picks = IntArray(3)

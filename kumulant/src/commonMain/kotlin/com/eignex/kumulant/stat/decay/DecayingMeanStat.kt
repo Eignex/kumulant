@@ -81,6 +81,5 @@ class DecayingMeanStat(
         sumW.reset()
     }
 
-    override fun create(concurrency: Concurrency?) =
-        DecayingMeanStat(weighting, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = DecayingMeanStat(weighting, concurrency ?: this.concurrency)
 }

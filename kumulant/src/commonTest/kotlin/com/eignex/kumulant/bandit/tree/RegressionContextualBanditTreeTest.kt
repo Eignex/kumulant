@@ -71,7 +71,7 @@ class RegressionContextualBanditTreeTest {
             val x = rng.nextDouble() * 2 - 1
             val xv = feat(x)
             val a = cb.choose(xv)
-            val reward = if (a == 0 && x > 0 || a == 1 && x <= 0) 1.0 else 0.0
+            val reward = if ((a == 0 && x > 0) || (a == 1 && x <= 0)) 1.0 else 0.0
             cb.update(a, xv, reward)
         }
         val pickAtPos = cb.choose(feat(0.7))

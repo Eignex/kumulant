@@ -1,11 +1,11 @@
 package com.eignex.kumulant.bandit.univariate
 
+import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 class Exp3BanditTest {
 
     @Test
@@ -19,7 +19,7 @@ class Exp3BanditTest {
     fun `playDistribution starts uniform`() {
         val b = Exp3Bandit(nbrArms = 3, random = Random(0))
         val p = b.playDistribution()
-        for (a in 0 until 3) assertTrue(kotlin.math.abs(p[a] - 1.0 / 3) < 1e-9)
+        for (a in 0 until 3) assertTrue(abs(p[a] - 1.0 / 3) < 1e-9)
     }
 
     @Test

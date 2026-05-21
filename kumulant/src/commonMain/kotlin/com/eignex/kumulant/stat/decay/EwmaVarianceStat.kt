@@ -111,7 +111,7 @@ class EwmaVarianceStat(
         WeightedVarianceResult(
             totalWeights.load(),
             mean,
-            variance
+            variance,
         )
     }
 

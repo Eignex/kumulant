@@ -141,6 +141,5 @@ class DecayingVarianceStat(
         m2.store(0.0)
     }
 
-    override fun create(concurrency: Concurrency?) =
-        DecayingVarianceStat(weighting, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = DecayingVarianceStat(weighting, concurrency ?: this.concurrency)
 }

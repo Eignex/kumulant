@@ -54,8 +54,7 @@ class ThompsonSampling<R : Result>(
     /** Stateless sampler used to draw a score from each arm's snapshot. */
     val posterior: Posterior<R>,
 ) : BanditPolicy<R> {
-    override fun evaluate(snapshot: R, step: Long, rng: Random) =
-        posterior.sample(snapshot, rng)
+    override fun evaluate(snapshot: R, step: Long, rng: Random) = posterior.sample(snapshot, rng)
 }
 
 /** Thompson sampling over a Beta(`priorAlpha`, `priorBeta`) prior on a Bernoulli reward. */
@@ -65,19 +64,13 @@ fun BetaBernoulliTS(priorAlpha: Double = 1.0, priorBeta: Double = 1.0) =
 
 /** Thompson sampling over a Normal-Gamma prior; unknown mean and variance. */
 @Suppress("FunctionNaming")
-fun NormalTS(
-    priorMean: Double = 0.0,
-    priorWeight: Double = 0.02,
-    priorSquaredDeviations: Double = 0.02,
-) = ThompsonSampling(NormalArm(priorMean, priorWeight, priorSquaredDeviations), NormalGammaPosterior)
+fun NormalTS(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDeviations: Double = 0.02) =
+    ThompsonSampling(NormalArm(priorMean, priorWeight, priorSquaredDeviations), NormalGammaPosterior)
 
 /** Thompson sampling over a log-normal reward via Normal-Gamma on `log(value)`. */
 @Suppress("FunctionNaming")
-fun LogNormalTS(
-    priorMean: Double = 0.0,
-    priorWeight: Double = 0.02,
-    priorSquaredDeviations: Double = 2.0,
-) = ThompsonSampling(LogNormalArm(priorMean, priorWeight, priorSquaredDeviations), LogNormalGammaPosterior)
+fun LogNormalTS(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDeviations: Double = 2.0) =
+    ThompsonSampling(LogNormalArm(priorMean, priorWeight, priorSquaredDeviations), LogNormalGammaPosterior)
 
 /** Thompson sampling over a Poisson reward with a Gamma prior on the rate. */
 @Suppress("FunctionNaming")
@@ -119,8 +112,12 @@ class UCB1(
         val mean = snapshot.successes / n
         return mean + alpha * sqrt(2 * ln(totalSamples) / n)
     }
-    override fun addArm(snapshot: BernoulliSumResult) { totalSamples += snapshot.trials }
-    override fun removeArm(snapshot: BernoulliSumResult) { totalSamples -= snapshot.trials }
+    override fun addArm(snapshot: BernoulliSumResult) {
+        totalSamples += snapshot.trials
+    }
+    override fun removeArm(snapshot: BernoulliSumResult) {
+        totalSamples -= snapshot.trials
+    }
 }
 
 /** UCB1-Normal: Auer et al.'s variance-aware UCB for Gaussian rewards. */
@@ -140,8 +137,12 @@ class UCB1Normal(
         val p1 = (mos - nj * snapshot.mean * snapshot.mean) / (nj - 1)
         return snapshot.mean + alpha * sqrt(16 * p1 * (ln(nbrArms - 1.0) / nj))
     }
-    override fun addArm(snapshot: MomentsResult) { nbrArms++ }
-    override fun removeArm(snapshot: MomentsResult) { nbrArms-- }
+    override fun addArm(snapshot: MomentsResult) {
+        nbrArms++
+    }
+    override fun removeArm(snapshot: MomentsResult) {
+        nbrArms--
+    }
 }
 
 /** UCB1-Tuned: Auer et al.'s sample-variance-aware UCB, often tighter than plain UCB1. */
@@ -165,19 +166,19 @@ class UCB1Tuned(
         val v = snapshot.meanOfSquares() - snapshot.mean * snapshot.mean + sqrt(2.0 * padding)
         return snapshot.mean + alpha * sqrt(padding * min(0.25, v))
     }
-    override fun addArm(snapshot: MomentsResult) { totalSamples += snapshot.totalWeights }
-    override fun removeArm(snapshot: MomentsResult) { totalSamples -= snapshot.totalWeights }
+    override fun addArm(snapshot: MomentsResult) {
+        totalSamples += snapshot.totalWeights
+    }
+    override fun removeArm(snapshot: MomentsResult) {
+        totalSamples -= snapshot.totalWeights
+    }
 }
 
 /** Pure-exploitation policy: always picks the arm with the highest posterior mean. */
-class Greedy(
-    priorMean: Double = 0.0,
-    priorWeight: Double = 0.02,
-    priorSquaredDeviations: Double = 0.02,
-) : BanditPolicy<WeightedVarianceResult> {
+class Greedy(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDeviations: Double = 0.02) :
+    BanditPolicy<WeightedVarianceResult> {
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
-    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) =
-        snapshot.mean
+    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) = snapshot.mean
 }
 
 /** Epsilon-greedy: with probability [epsilon] pick uniformly, otherwise pick the highest mean. */
@@ -188,16 +189,17 @@ class EpsilonGreedy(
     priorWeight: Double = 0.02,
     priorSquaredDeviations: Double = 0.02,
 ) : BanditPolicy<WeightedVarianceResult> {
-    init { require(epsilon in 0.0..1.0) { "epsilon must be in 0..1, got $epsilon" } }
+    init {
+        require(epsilon in 0.0..1.0) { "epsilon must be in 0..1, got $epsilon" }
+    }
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
 
-    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double {
-        return if (Random(step).nextDouble() < epsilon) {
+    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double =
+        if (Random(step).nextDouble() < epsilon) {
             rng.nextDouble()
         } else {
             snapshot.mean
         }
-    }
 }
 
 /** Epsilon-greedy with `epsilon_t = min(1, epsilon / totalSamples^decay)`. */
@@ -210,7 +212,9 @@ class EpsilonDecreasing(
     priorWeight: Double = 0.02,
     priorSquaredDeviations: Double = 0.02,
 ) : BanditPolicy<WeightedVarianceResult> {
-    init { require(epsilon > 0.0) { "epsilon must be positive, got $epsilon" } }
+    init {
+        require(epsilon > 0.0) { "epsilon must be positive, got $epsilon" }
+    }
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
     private var totalSamples: Double = 0.0
 
@@ -226,19 +230,19 @@ class EpsilonDecreasing(
             snapshot.mean
         }
     }
-    override fun addArm(snapshot: WeightedVarianceResult) { totalSamples += snapshot.totalWeights }
-    override fun removeArm(snapshot: WeightedVarianceResult) { totalSamples -= snapshot.totalWeights }
+    override fun addArm(snapshot: WeightedVarianceResult) {
+        totalSamples += snapshot.totalWeights
+    }
+    override fun removeArm(snapshot: WeightedVarianceResult) {
+        totalSamples -= snapshot.totalWeights
+    }
 }
 
 /** Pure-exploration policy: every evaluate returns a fresh uniform draw. */
-class UniformSelection(
-    priorMean: Double = 0.0,
-    priorWeight: Double = 0.02,
-    priorSquaredDeviations: Double = 0.02,
-) : BanditPolicy<WeightedVarianceResult> {
+class UniformSelection(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDeviations: Double = 0.02) :
+    BanditPolicy<WeightedVarianceResult> {
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
-    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) =
-        rng.nextDouble()
+    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) = rng.nextDouble()
 }
 
 /**
@@ -270,8 +274,12 @@ class KlUcb(
         return klBernoulliUpper(mean, bound, tolerance)
     }
 
-    override fun addArm(snapshot: BernoulliSumResult) { totalSamples += snapshot.trials }
-    override fun removeArm(snapshot: BernoulliSumResult) { totalSamples -= snapshot.trials }
+    override fun addArm(snapshot: BernoulliSumResult) {
+        totalSamples += snapshot.trials
+    }
+    override fun removeArm(snapshot: BernoulliSumResult) {
+        totalSamples -= snapshot.trials
+    }
 
     /** Bernoulli KL utilities used by [KlUcb]. */
     companion object {
@@ -310,7 +318,9 @@ class Moss(
     priorMean: Double = 0.0,
     priorWeight: Double = 0.02,
 ) : BanditPolicy<WeightedMeanResult> {
-    init { require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" } }
+    init {
+        require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
+    }
     override val arm = MeanArm(priorMean, priorWeight)
     private var totalSamples: Double = 0.0
 
@@ -327,8 +337,12 @@ class Moss(
         return snapshot.mean + sqrt(padding / n)
     }
 
-    override fun addArm(snapshot: WeightedMeanResult) { totalSamples += snapshot.totalWeights }
-    override fun removeArm(snapshot: WeightedMeanResult) { totalSamples -= snapshot.totalWeights }
+    override fun addArm(snapshot: WeightedMeanResult) {
+        totalSamples += snapshot.totalWeights
+    }
+    override fun removeArm(snapshot: WeightedMeanResult) {
+        totalSamples -= snapshot.totalWeights
+    }
 }
 
 /**
@@ -345,7 +359,9 @@ class UcbV(
     priorMean: Double = 0.0,
     priorWeight: Double = 0.02,
 ) : BanditPolicy<MomentsResult> {
-    init { require(zeta > 0.0) { "zeta must be positive, got $zeta" } }
+    init {
+        require(zeta > 0.0) { "zeta must be positive, got $zeta" }
+    }
     override val arm = MomentsArm(priorMean, priorWeight)
     private var totalSamples: Double = 0.0
 
@@ -362,6 +378,10 @@ class UcbV(
         return snapshot.mean + sqrt(2.0 * v * zeta * logT / n) + 3.0 * c * zeta * logT / n
     }
 
-    override fun addArm(snapshot: MomentsResult) { totalSamples += snapshot.totalWeights }
-    override fun removeArm(snapshot: MomentsResult) { totalSamples -= snapshot.totalWeights }
+    override fun addArm(snapshot: MomentsResult) {
+        totalSamples += snapshot.totalWeights
+    }
+    override fun removeArm(snapshot: MomentsResult) {
+        totalSamples -= snapshot.totalWeights
+    }
 }

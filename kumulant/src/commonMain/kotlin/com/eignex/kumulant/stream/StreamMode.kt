@@ -144,13 +144,7 @@ internal interface StreamLongArray {
 }
 
 /** Property-delegate getter for [StreamDouble] - `val x: Double by streamDouble`. */
-internal operator fun StreamDouble.getValue(
-    thisRef: Any?,
-    property: KProperty<*>
-): Double = load()
+internal operator fun StreamDouble.getValue(thisRef: Any?, property: KProperty<*>): Double = load()
 
 /** Property-delegate getter for [StreamLong] - `val x: Long by streamLong`. */
-internal operator fun StreamLong.getValue(
-    thisRef: Any?,
-    property: KProperty<*>
-): Long = load()
+internal operator fun StreamLong.getValue(thisRef: Any?, property: KProperty<*>): Long = load()

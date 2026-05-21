@@ -36,7 +36,9 @@ class DenseVector internal constructor(internal val data: DoubleArray) : VectorV
     override fun get(i: Int): Double = data[i]
     override fun toDoubleArray(): DoubleArray = data.copyOf()
 
-    internal operator fun set(i: Int, v: Double) { data[i] = v }
+    internal operator fun set(i: Int, v: Double) {
+        data[i] = v
+    }
 
     override fun equals(other: Any?): Boolean =
         this === other || (other is DenseVector && data.contentEquals(other.data))

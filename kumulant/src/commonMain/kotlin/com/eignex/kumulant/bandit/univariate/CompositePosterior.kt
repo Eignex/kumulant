@@ -35,7 +35,9 @@ data class CompositePosterior(
     val combine: ScalarExpr,
 ) : Posterior<ResultList<Result>> {
 
-    init { require(subPosteriors.isNotEmpty()) { "CompositePosterior requires at least one subPosterior" } }
+    init {
+        require(subPosteriors.isNotEmpty()) { "CompositePosterior requires at least one subPosterior" }
+    }
 
     override fun sample(snapshot: ResultList<Result>, rng: Random): Double {
         require(snapshot.results.size == subPosteriors.size) {

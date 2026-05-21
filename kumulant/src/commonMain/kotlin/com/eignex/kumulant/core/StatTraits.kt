@@ -17,7 +17,7 @@ interface HasRate : Result {
      * Example: rate.per(1.minutes) returns Events Per Minute.
      */
     fun per(duration: Duration): Double = rate * duration.toDouble(
-        DurationUnit.SECONDS
+        DurationUnit.SECONDS,
     )
 }
 

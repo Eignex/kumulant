@@ -34,9 +34,7 @@ data class RangeResult(
  * single update can briefly observe `min > max` on a never-yet-updated stat
  * under heavy contention, but the per-cell guarantees hold.
  */
-class RangeStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<RangeResult> {
+class RangeStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<RangeResult> {
 
     private val mode = concurrency.monotonicMode()
     private val min = mode.newDouble(Double.POSITIVE_INFINITY)

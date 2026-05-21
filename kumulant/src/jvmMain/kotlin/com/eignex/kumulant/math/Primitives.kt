@@ -26,31 +26,14 @@ private val simdAvailable: Boolean = try {
     false
 }
 
-internal actual fun denseDot(
-    a: DoubleArray,
-    aOff: Int,
-    b: DoubleArray,
-    bOff: Int,
-    len: Int,
-): Double = if (simdAvailable) Simd.dot(a, aOff, b, bOff, len) else scalarDot(a, aOff, b, bOff, len)
+internal actual fun denseDot(a: DoubleArray, aOff: Int, b: DoubleArray, bOff: Int, len: Int): Double =
+    if (simdAvailable) Simd.dot(a, aOff, b, bOff, len) else scalarDot(a, aOff, b, bOff, len)
 
-internal actual fun denseAxpy(
-    y: DoubleArray,
-    yOff: Int,
-    alpha: Double,
-    x: DoubleArray,
-    xOff: Int,
-    len: Int,
-) {
+internal actual fun denseAxpy(y: DoubleArray, yOff: Int, alpha: Double, x: DoubleArray, xOff: Int, len: Int) {
     if (simdAvailable) Simd.axpy(y, yOff, alpha, x, xOff, len) else scalarAxpy(y, yOff, alpha, x, xOff, len)
 }
 
-internal actual fun denseScale(
-    v: DoubleArray,
-    vOff: Int,
-    alpha: Double,
-    len: Int,
-) {
+internal actual fun denseScale(v: DoubleArray, vOff: Int, alpha: Double, len: Int) {
     if (simdAvailable) Simd.scale(v, vOff, alpha, len) else scalarScale(v, vOff, alpha, len)
 }
 

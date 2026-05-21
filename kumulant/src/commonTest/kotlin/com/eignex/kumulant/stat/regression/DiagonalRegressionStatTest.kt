@@ -32,10 +32,12 @@ class DiagonalRegressionStatTest {
         val truth = doubleArrayOf(1.0, -1.5, 2.0)
         fitLine(stat, truth, intercept = -0.2)
         val r = stat.read()
-        for (i in truth.indices) assertTrue(
-            abs(r.weights[i] - truth[i]) < 0.05,
-            "weight[$i]=${r.weights[i]} far from truth=${truth[i]}"
-        )
+        for (i in truth.indices) {
+            assertTrue(
+                abs(r.weights[i] - truth[i]) < 0.05,
+                "weight[$i]=${r.weights[i]} far from truth=${truth[i]}",
+            )
+        }
         val precisionArr = r.precision.toDoubleArray()
         assertTrue(precisionArr.all { it > 100.0 }, "precision should grow with data: ${precisionArr.toList()}")
         assertTrue(r.biasPrecision > 100.0)
@@ -69,7 +71,7 @@ class DiagonalRegressionStatTest {
 
     @Test
     fun `Diagonal with Logit link tightens precision via curvature`() {
-        val rng = kotlin.random.Random(5)
+        val rng = Random(5)
         val stat = DiagonalRegressionStat(featureSize = 2, link = Link.Logit, priorPrecision = 0.5)
         repeat(500) {
             val x = doubleArrayOf(rng.nextDouble(), rng.nextDouble())

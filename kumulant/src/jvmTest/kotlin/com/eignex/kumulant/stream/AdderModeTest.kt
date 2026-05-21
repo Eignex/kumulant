@@ -1,10 +1,10 @@
 package com.eignex.kumulant.stream
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-
 private const val DELTA = 1e-9
 
 class AdderModeTest {
@@ -88,7 +88,7 @@ class AdderModeTest {
     fun `HyperLogLogStat runs under HighWrite concurrency`() {
         // HLL resolves Concurrency.HighWrite to AtomicMode internally (Adder lacks CAS),
         // so casMax works and update() succeeds.
-        val hll = HyperLogLogStat(precision = 10, concurrency = com.eignex.kumulant.core.Concurrency.HighWrite)
+        val hll = HyperLogLogStat(precision = 10, concurrency = Concurrency.HighWrite)
         for (i in 1..1000L) hll.update(i)
         val result = hll.read()
         assert(result.estimate > 0.0) { "expected non-zero estimate, got ${result.estimate}" }

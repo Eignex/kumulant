@@ -66,7 +66,8 @@ class Exp3Bandit(
     val gamma: Double = (nbrArms * eta).coerceAtMost(1.0),
     /** Single source of randomness. */
     override val random: Random = Random.Default,
-) : UnivariateBandit, PerArmBandit<Exp3ArmResult> {
+) : UnivariateBandit,
+    PerArmBandit<Exp3ArmResult> {
     init {
         require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
         require(eta > 0.0) { "eta must be positive, got $eta" }
@@ -136,8 +137,7 @@ class Exp3Bandit(
     }
 
     /** Spawn a fresh bandit with the same tunables; weights reset. */
-    override fun create(random: Random): Exp3Bandit =
-        Exp3Bandit(nbrArms, eta, gamma, random)
+    override fun create(random: Random): Exp3Bandit = Exp3Bandit(nbrArms, eta, gamma, random)
 
     private fun renormaliseIfNeeded() {
         var maxW = 0.0
@@ -151,7 +151,6 @@ class Exp3Bandit(
         private const val RENORM_THRESHOLD = 1e100
 
         /** Horizon-free default `eta = sqrt(ln(K) / K)`. */
-        fun defaultEta(nbrArms: Int): Double =
-            sqrt(ln(nbrArms.toDouble().coerceAtLeast(2.0)) / nbrArms)
+        fun defaultEta(nbrArms: Int): Double = sqrt(ln(nbrArms.toDouble().coerceAtLeast(2.0)) / nbrArms)
     }
 }

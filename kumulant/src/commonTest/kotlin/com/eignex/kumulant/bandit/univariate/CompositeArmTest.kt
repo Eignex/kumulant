@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.schema.Const
 import com.eignex.kumulant.schema.IfExpr
@@ -15,7 +16,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 class CompositeArmTest {
 
     private fun zilnArm(): CompositeArm = CompositeArm(
@@ -73,7 +73,7 @@ class CompositeArmTest {
             listOf(
                 CompositeSubArm(BernoulliArm(), filter = X gt 0.0),
                 CompositeSubArm(BernoulliArm(), filter = X gt 10.0),
-            )
+            ),
         )
         val stat = arm.createStat()
         repeat(20) { stat.update(5.0, 0L, 1.0) }
@@ -88,7 +88,7 @@ class CompositeArmTest {
         val arm = CompositeArm(
             listOf(
                 CompositeSubArm(BernoulliArm(), weightExpr = Const(0.5)),
-            )
+            ),
         )
         val stat = arm.createStat()
         stat.update(1.0, 0L, 2.0)
@@ -113,7 +113,7 @@ class CompositeArmTest {
     @Test
     fun `merge rejects size mismatch`() {
         val statA = zilnArm().createStat()
-        val mismatch = ResultList<com.eignex.kumulant.core.Result>(
+        val mismatch = ResultList<Result>(
             listOf(BernoulliSumResult(1.0, 2.0)),
         )
         assertFailsWith<IllegalArgumentException> { statA.merge(mismatch) }
@@ -151,7 +151,7 @@ class CompositeArmTest {
     @Test
     fun `composite posterior rejects snapshot size mismatch`() {
         val posterior = zilnPosterior()
-        val wrongSnapshot = ResultList<com.eignex.kumulant.core.Result>(
+        val wrongSnapshot = ResultList<Result>(
             listOf(BernoulliSumResult(1.0, 2.0)),
         )
         assertFailsWith<IllegalArgumentException> { posterior.sample(wrongSnapshot, Random(0)) }

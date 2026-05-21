@@ -21,7 +21,7 @@ class QuantileStatConcurrencyTest {
             for (v in values) s.update(v)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertTrue(ref.weights.contentEquals(r.weights), "LinearHistogram weights mode=$mode")
         }
@@ -34,7 +34,7 @@ class QuantileStatConcurrencyTest {
             for (v in values) s.update(v)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             for (i in ref.probabilities.indices) {
                 assertEquals(ref.quantiles[i], r.quantiles[i], 1e-9, "DDSketch q=${ref.probabilities[i]} mode=$mode")
@@ -49,7 +49,7 @@ class QuantileStatConcurrencyTest {
             for (v in values) s.update(v)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             for (i in ref.probabilities.indices) {
                 assertEquals(ref.quantiles[i], r.quantiles[i], 1e-9, "TDigest q=${ref.probabilities[i]} mode=$mode")
@@ -64,7 +64,7 @@ class QuantileStatConcurrencyTest {
             for (v in values) s.update(v)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertTrue(ref.weights.contentEquals(r.weights), "HdrHistogram weights mode=$mode")
         }
@@ -77,7 +77,7 @@ class QuantileStatConcurrencyTest {
             for (v in values) s.update(v)
             s.read(0L)
         }
-        val ref = reads[Concurrency.None]!!
+        val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
             assertEquals(ref.quantile, r.quantile, 1e-9, "FrugalQuantile mode=$mode")
         }

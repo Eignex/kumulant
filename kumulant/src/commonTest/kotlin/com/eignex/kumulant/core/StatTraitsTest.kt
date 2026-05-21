@@ -18,10 +18,7 @@ class StatTraitsTest {
         assertEquals(120.0, r.per(1.minutes), absoluteTolerance = 1e-12)
     }
 
-    private data class Sv(
-        override val totalWeights: Double,
-        override val sst: Double,
-    ) : HasSampleVariance
+    private data class Sv(override val totalWeights: Double, override val sst: Double) : HasSampleVariance
 
     @Test
     fun `HasSampleVariance returns zero when totalWeights is zero`() {
@@ -101,11 +98,8 @@ class StatTraitsTest {
         assertEquals(9.0, m.predict(5.0))
     }
 
-    private data class Reg(
-        override val totalWeights: Double,
-        override val sst: Double,
-        override val sse: Double,
-    ) : HasRegression
+    private data class Reg(override val totalWeights: Double, override val sst: Double, override val sse: Double) :
+        HasRegression
 
     @Test
     fun `HasRegression derives metrics from sst and sse`() {

@@ -76,7 +76,9 @@ class RouletteWheelBandit(
     /** Floor on the rebalanced weight; prevents arms from being permanently extinguished. */
     val minWeight: Double = 0.01,
     override val random: Random = Random.Default,
-) : UnivariateBandit, PerArmBandit<RouletteWheelArmResult>, Scorable {
+) : UnivariateBandit,
+    PerArmBandit<RouletteWheelArmResult>,
+    Scorable {
 
     init {
         require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }

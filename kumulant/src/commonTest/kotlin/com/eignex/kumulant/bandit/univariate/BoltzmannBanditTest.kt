@@ -1,10 +1,10 @@
 package com.eignex.kumulant.bandit.univariate
 
+import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 class BoltzmannBanditTest {
 
     @Test
@@ -27,9 +27,11 @@ class BoltzmannBanditTest {
         )
         repeat(500) {
             val a = b.choose()
-            val reward = when (a) { 0 -> 0.0
+            val reward = when (a) {
+                0 -> 0.0
                 1 -> 1.0
-                else -> 0.5 }
+                else -> 0.5
+            }
             b.update(a, reward)
         }
         val picks = IntArray(3)
@@ -44,7 +46,7 @@ class BoltzmannBanditTest {
         b.playDistribution()
         b.playDistribution()
         // step=3, tau = 1/3
-        assertTrue(kotlin.math.abs(b.temperature() - 1.0 / 3.0) < 1e-9)
+        assertTrue(abs(b.temperature() - 1.0 / 3.0) < 1e-9)
     }
 
     @Test
@@ -55,6 +57,6 @@ class BoltzmannBanditTest {
         b.reset()
         // After reset, temperature returns to initial after the first call.
         b.playDistribution()
-        assertTrue(kotlin.math.abs(b.temperature() - 1.0) < 1e-9)
+        assertTrue(abs(b.temperature() - 1.0) < 1e-9)
     }
 }

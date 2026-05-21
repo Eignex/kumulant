@@ -9,11 +9,9 @@ internal object SerialMode : StreamMode {
         return SerialRef(initial)
     }
 
-    override fun newLongArray(size: Int, init: (Int) -> Long) =
-        SerialLongArray(LongArray(size, init))
+    override fun newLongArray(size: Int, init: (Int) -> Long) = SerialLongArray(LongArray(size, init))
 
-    override fun newDoubleArray(size: Int, init: (Int) -> Double) =
-        SerialDoubleArray(DoubleArray(size, init))
+    override fun newDoubleArray(size: Int, init: (Int) -> Double) = SerialDoubleArray(DoubleArray(size, init))
 }
 
 /** Plain-`var` [StreamLong] implementation used by [SerialMode]. */
@@ -72,8 +70,12 @@ internal class SerialDouble(var ref: Double) : StreamDouble {
 internal class SerialLongArray(val ref: LongArray) : StreamLongArray {
     override val size: Int get() = ref.size
     override fun load(index: Int): Long = ref[index]
-    override fun store(index: Int, value: Long) { ref[index] = value }
-    override fun add(index: Int, delta: Long) { ref[index] += delta }
+    override fun store(index: Int, value: Long) {
+        ref[index] = value
+    }
+    override fun add(index: Int, delta: Long) {
+        ref[index] += delta
+    }
     override fun addAndGet(index: Int, delta: Long): Long {
         ref[index] += delta
         return ref[index]
@@ -91,8 +93,12 @@ internal class SerialLongArray(val ref: LongArray) : StreamLongArray {
 internal class SerialDoubleArray(val ref: DoubleArray) : StreamDoubleArray {
     override val size: Int get() = ref.size
     override fun load(index: Int): Double = ref[index]
-    override fun store(index: Int, value: Double) { ref[index] = value }
-    override fun add(index: Int, delta: Double) { ref[index] += delta }
+    override fun store(index: Int, value: Double) {
+        ref[index] = value
+    }
+    override fun add(index: Int, delta: Double) {
+        ref[index] += delta
+    }
     override fun addAndGet(index: Int, delta: Double): Double {
         ref[index] += delta
         return ref[index]

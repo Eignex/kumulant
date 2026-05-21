@@ -13,13 +13,11 @@ import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.random.Random
 
-/**
- * Decorator surface for [RegressionStat], mirroring the live ops on the other modalities.
- * Every wrapper delegates `read` / `merge` / `reset` / `concurrency` / `featureSize` to
- * the inner regressor and intercepts only `update` to filter, transform, weight,
- * throttle, sample, or fan out. Spec-layer counterparts in
- * `com.eignex.kumulant.schema.Operations.kt` materialise to these wrappers.
- */
+// Decorator surface for [RegressionStat], mirroring the live ops on the other modalities.
+// Every wrapper delegates `read` / `merge` / `reset` / `concurrency` / `featureSize` to
+// the inner regressor and intercepts only `update` to filter, transform, weight,
+// throttle, sample, or fan out. Spec-layer counterparts in
+// `com.eignex.kumulant.schema.Operations.kt` materialise to these wrappers.
 
 /** Forward only updates that pass [predicate]; the predicate sees `(x, y)`. */
 fun <R : Result> RegressionStat<R>.filter(predicate: (VectorView, Double) -> Boolean): RegressionStat<R> =
@@ -42,8 +40,7 @@ fun <R : Result> RegressionStat<R>.weightBy(weighter: (VectorView, Double) -> Do
     WeightByRegressionStat(this, weighter)
 
 /** Forward only every [every]th update; drop the rest. */
-fun <R : Result> RegressionStat<R>.throttle(every: Int): RegressionStat<R> =
-    ThrottleRegressionStat(this, every)
+fun <R : Result> RegressionStat<R>.throttle(every: Int): RegressionStat<R> = ThrottleRegressionStat(this, every)
 
 /** Bernoulli-sample each update at probability [rate] using [random] as the PRNG. */
 fun <R : Result> RegressionStat<R>.sample(rate: Double, random: Random): RegressionStat<R> =
@@ -63,16 +60,15 @@ fun <R : Result> SeriesStat<R>.foldRegression(
     project: (VectorView, Double) -> Double,
 ): RegressionStat<R> = FoldRegressionStat(this, featureSize, project)
 
-private fun checkEvery(every: Int) =
-    require(every >= 1) { "throttle every must be >= 1, got $every" }
+private fun checkEvery(every: Int) = require(every >= 1) { "throttle every must be >= 1, got $every" }
 
-private fun checkRate(rate: Double) =
-    require(rate in 0.0..1.0) { "sample rate must be in [0, 1], got $rate" }
+private fun checkRate(rate: Double) = require(rate in 0.0..1.0) { "sample rate must be in [0, 1], got $rate" }
 
 internal class FilterRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
     private val predicate: (VectorView, Double) -> Boolean,
-) : RegressionStat<R>, Stat<R> by delegate {
+) : RegressionStat<R>,
+    Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         if (predicate(x, y)) delegate.update(x, y, timestampNanos, weight)
@@ -84,7 +80,8 @@ internal class FilterRegressionStat<R : Result>(
 internal class TransformYRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
     private val transform: (VectorView, Double) -> Double,
-) : RegressionStat<R>, Stat<R> by delegate {
+) : RegressionStat<R>,
+    Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x, transform(x, y), timestampNanos, weight)
@@ -96,7 +93,8 @@ internal class TransformYRegressionStat<R : Result>(
 internal class TransformXRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
     private val transform: (VectorView, Double) -> DoubleArray,
-) : RegressionStat<R>, Stat<R> by delegate {
+) : RegressionStat<R>,
+    Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(DenseVector.of(transform(x, y)), y, timestampNanos, weight)
@@ -108,7 +106,8 @@ internal class TransformXRegressionStat<R : Result>(
 internal class WithWeightRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
     private val weight: Double,
-) : RegressionStat<R>, Stat<R> by delegate {
+) : RegressionStat<R>,
+    Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x, y, timestampNanos, this.weight)
@@ -120,7 +119,8 @@ internal class WithWeightRegressionStat<R : Result>(
 internal class WeightByRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
     private val weighter: (VectorView, Double) -> Double,
-) : RegressionStat<R>, Stat<R> by delegate {
+) : RegressionStat<R>,
+    Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x, y, timestampNanos, weight * weighter(x, y))
@@ -129,11 +129,12 @@ internal class WeightByRegressionStat<R : Result>(
         WeightByRegressionStat(delegate.create(concurrency), weighter)
 }
 
-internal class ThrottleRegressionStat<R : Result>(
-    private val delegate: RegressionStat<R>,
-    private val every: Int,
-) : RegressionStat<R>, Stat<R> by delegate {
-    init { checkEvery(every) }
+internal class ThrottleRegressionStat<R : Result>(private val delegate: RegressionStat<R>, private val every: Int) :
+    RegressionStat<R>,
+    Stat<R> by delegate {
+    init {
+        checkEvery(every)
+    }
     override val featureSize: Int = delegate.featureSize
     private val tick = AtomicLong(0L)
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
@@ -147,8 +148,11 @@ internal class SampleRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
     private val rate: Double,
     private val random: Random,
-) : RegressionStat<R>, Stat<R> by delegate {
-    init { checkRate(rate) }
+) : RegressionStat<R>,
+    Stat<R> by delegate {
+    init {
+        checkRate(rate)
+    }
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         if (random.nextDouble() < rate) delegate.update(x, y, timestampNanos, weight)
@@ -161,8 +165,11 @@ internal class FoldRegressionStat<R : Result>(
     private val delegate: SeriesStat<R>,
     override val featureSize: Int,
     private val project: (VectorView, Double) -> Double,
-) : RegressionStat<R>, Stat<R> by delegate {
-    init { require(featureSize > 0) { "featureSize must be positive, got $featureSize" } }
+) : RegressionStat<R>,
+    Stat<R> by delegate {
+    init {
+        require(featureSize > 0) { "featureSize must be positive, got $featureSize" }
+    }
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
         delegate.update(project(x, y), timestampNanos, weight)

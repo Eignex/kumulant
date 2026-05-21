@@ -62,21 +62,18 @@ class HdrHistogramStat(
 
     private class State(
         val highestTrackableValue: Long, // Stored as scaled internal Long
-        val counts: Array<StreamDouble>
+        val counts: Array<StreamDouble>,
     )
 
     private val stateRef = mode.newReference(
         createState(
             (initialHighestTrackableValue * multiplier).toLong(),
-            emptyArray()
-        )
+            emptyArray(),
+        ),
     )
     private val totalWeights = mode.newDouble(0.0)
 
-    private fun createState(
-        internalHighest: Long,
-        oldCounts: Array<StreamDouble>
-    ): State {
+    private fun createState(internalHighest: Long, oldCounts: Array<StreamDouble>): State {
         // Ensure the internal highest is at least 2 to prevent bitwise math collapse
         val safeHighest = if (internalHighest < 2L) 2L else internalHighest
 
@@ -146,7 +143,7 @@ class HdrHistogramStat(
         lowestDiscernibleValue,
         initialHighestTrackableValue,
         significantDigits,
-        concurrency ?: this.concurrency
+        concurrency ?: this.concurrency,
     )
 
     override fun merge(values: SparseHistogramResult) {
@@ -164,7 +161,7 @@ class HdrHistogramStat(
             val state = stateRef.load()
             val fresh = createState(
                 (initialHighestTrackableValue * multiplier).toLong(),
-                emptyArray()
+                emptyArray(),
             )
             if (stateRef.compareAndSet(state, fresh)) return
         }

@@ -41,9 +41,7 @@ data class BernoulliSumResult(
  * but the per-cell guarantees hold. [Concurrency.HighWrite] switches both
  * cells to striped adders.
  */
-class BernoulliSumStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<BernoulliSumResult> {
+class BernoulliSumStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<BernoulliSumResult> {
 
     private val mode = concurrency.additiveMode()
     private val successes = mode.newDouble(0.0)
@@ -55,8 +53,7 @@ class BernoulliSumStat(
         trials.add(weight)
     }
 
-    override fun read(timestampNanos: Long) =
-        BernoulliSumResult(successes.load(), trials.load())
+    override fun read(timestampNanos: Long) = BernoulliSumResult(successes.load(), trials.load())
 
     override fun merge(values: BernoulliSumResult) {
         successes.add(values.successes)

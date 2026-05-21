@@ -190,6 +190,7 @@ class Tree(
                 arm.merge(node.value)
                 TerminalLeaf(arm)
             }
+
             is TreeSplitResult -> {
                 val pos = cloneFromResult(node.pos, depth + 1)
                 val neg = cloneFromResult(node.neg, depth + 1)
@@ -221,6 +222,7 @@ class Tree(
                 prettyPrintTo(sb, node.neg, "$indent  ")
                 sb.append(indent).append("}\n")
             }
+
             is LeafNode -> {
                 val mean = node.arm.read(0L).mean
                 sb.append(indent).append("leaf mean=").append(mean).append('\n')
@@ -247,34 +249,29 @@ class Tree(
         return splitCandidates.shuffled(random).take(k)
     }
 
-    private fun updateNode(node: Node, row: VectorView, value: Double, weight: Double, depth: Int): Node =
-        when (node) {
-            is SplitNode -> {
-                if (node.split.direction(row)) {
-                    val child = node.pos
-                    val next = updateNode(child, row, value, weight, depth + 1)
-                    if (next !== child) node.pos = next
-                } else {
-                    val child = node.neg
-                    val next = updateNode(child, row, value, weight, depth + 1)
-                    if (next !== child) node.neg = next
-                }
-                node
+    private fun updateNode(node: Node, row: VectorView, value: Double, weight: Double, depth: Int): Node = when (node) {
+        is SplitNode -> {
+            if (node.split.direction(row)) {
+                val child = node.pos
+                val next = updateNode(child, row, value, weight, depth + 1)
+                if (next !== child) node.pos = next
+            } else {
+                val child = node.neg
+                val next = updateNode(child, row, value, weight, depth + 1)
+                if (next !== child) node.neg = next
             }
-            is TerminalLeaf -> {
-                node.arm.update(value, 0L, weight)
-                node
-            }
-            is AuditLeaf -> updateAuditLeaf(node, row, value, weight, depth)
+            node
         }
 
-    private fun updateAuditLeaf(
-        leaf: AuditLeaf,
-        row: VectorView,
-        value: Double,
-        weight: Double,
-        depth: Int,
-    ): Node {
+        is TerminalLeaf -> {
+            node.arm.update(value, 0L, weight)
+            node
+        }
+
+        is AuditLeaf -> updateAuditLeaf(node, row, value, weight, depth)
+    }
+
+    private fun updateAuditLeaf(leaf: AuditLeaf, row: VectorView, value: Double, weight: Double, depth: Int): Node {
         leaf.arm.update(value, 0L, weight)
         for ((i, split) in leaf.candidates.withIndex()) {
             if (split.direction(row)) {

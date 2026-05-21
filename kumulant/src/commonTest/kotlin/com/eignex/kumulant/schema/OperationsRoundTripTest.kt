@@ -1,12 +1,17 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.ResultList
+import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
+import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import com.eignex.kumulant.operation.asDiscrete as liveAsDiscrete
 import com.eignex.kumulant.operation.atIndex as liveAtIndex
 import com.eignex.kumulant.operation.atIndices as liveAtIndices
@@ -16,7 +21,6 @@ import com.eignex.kumulant.operation.withFixedX as liveWithFixedX
 import com.eignex.kumulant.operation.withFixedY as liveWithFixedY
 import com.eignex.kumulant.operation.withValue as liveWithValue
 import com.eignex.kumulant.operation.withWeight as liveWithWeight
-
 /**
  * Round-trip tests for the operation specs in [Operations.kt]: encode, decode,
  * materialize, drive a small fixed input, compare against a live composition.
@@ -92,7 +96,7 @@ class OperationsRoundTripTest {
     }
 
     @Test fun `withFixedX should lift paired to series`() {
-        val cfg: SeriesStatSpec<com.eignex.kumulant.stat.regression.UnivariateRegressionResult> =
+        val cfg: SeriesStatSpec<UnivariateRegressionResult> =
             UnivariateRegression().withFixedX(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -103,7 +107,7 @@ class OperationsRoundTripTest {
             rebuilt.update(it)
             live.update(it)
         }
-        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+        val r = rebuilt.read() as UnivariateRegressionResult
         val l = live.read()
         assertEquals(l.totalWeights, r.totalWeights, DELTA)
     }
@@ -126,7 +130,7 @@ class OperationsRoundTripTest {
         materialized.update(doubleArrayOf(1.0, 2.0, 3.0))
         materialized.update(doubleArrayOf(4.0, 5.0, 6.0))
         @Suppress("UNCHECKED_CAST")
-        val rl = materialized.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        val rl = materialized.read() as ResultList<SumResult>
         assertEquals(3, rl.results.size)
         assertEquals(5.0, rl.results[0].sum, DELTA)
         assertEquals(7.0, rl.results[1].sum, DELTA)
@@ -140,19 +144,19 @@ class OperationsRoundTripTest {
         assertIs<AsSeries>(decoded)
         val materialized = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
         for (i in 1..50) materialized.update(i.toDouble())
-        val r = materialized.read() as com.eignex.kumulant.stat.cardinality.HyperLogLogResult
-        kotlin.test.assertTrue(r.estimate > 30.0)
+        val r = materialized.read() as HyperLogLogResult
+        assertTrue(r.estimate > 30.0)
     }
 
     @Test fun `materialize should reject inner with wrong modality`() {
         val bad = AtIndices(Sum, indexX = 0, indexY = 1)
-        kotlin.test.assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             bad.materialize(Concurrency.None)
         }
     }
 
     @Test fun `withWeight paired should match live composition`() {
-        val cfg: PairedStatSpec<com.eignex.kumulant.stat.regression.UnivariateRegressionResult> =
+        val cfg: PairedStatSpec<UnivariateRegressionResult> =
             UnivariateRegression().withWeight(2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -163,7 +167,7 @@ class OperationsRoundTripTest {
             rebuilt.update(x, y)
             live.update(x, y)
         }
-        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+        val r = rebuilt.read() as UnivariateRegressionResult
         val l = live.read()
         assertEquals(l.slope, r.slope, DELTA)
         assertEquals(l.totalWeights, r.totalWeights, DELTA)
@@ -177,7 +181,7 @@ class OperationsRoundTripTest {
         rebuilt.update(doubleArrayOf(1.0, 10.0))
         rebuilt.update(doubleArrayOf(2.0, 20.0))
         @Suppress("UNCHECKED_CAST")
-        val rl = rebuilt.read() as com.eignex.kumulant.core.ResultList<SumResult>
+        val rl = rebuilt.read() as ResultList<SumResult>
         assertEquals(9.0, rl.results[0].sum, DELTA)
         assertEquals(90.0, rl.results[1].sum, DELTA)
     }
@@ -188,7 +192,7 @@ class OperationsRoundTripTest {
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as DiscreteStatSpec<*>).materialize(Concurrency.None)
         for (i in 1L..50L) rebuilt.update(i)
-        val r = rebuilt.read() as com.eignex.kumulant.stat.cardinality.HyperLogLogResult
+        val r = rebuilt.read() as HyperLogLogResult
         assertEquals(0.0, r.estimate)
     }
 
@@ -198,8 +202,8 @@ class OperationsRoundTripTest {
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as DiscreteStatSpec<*>).materialize(Concurrency.None)
         for (i in 1L..100L) rebuilt.update(i)
-        val r = rebuilt.read() as com.eignex.kumulant.stat.cardinality.HyperLogLogResult
-        kotlin.test.assertTrue(r.estimate in 0.5..2.0, "estimate=${r.estimate}")
+        val r = rebuilt.read() as HyperLogLogResult
+        assertTrue(r.estimate in 0.5..2.0, "estimate=${r.estimate}")
     }
 
     @Test fun `asDiscrete should lift series`() {
@@ -255,7 +259,7 @@ class OperationsRoundTripTest {
     }
 
     @Test fun `atIndices should lift paired to vector`() {
-        val cfg: VectorStatSpec<com.eignex.kumulant.stat.regression.UnivariateRegressionResult> =
+        val cfg: VectorStatSpec<UnivariateRegressionResult> =
             UnivariateRegression().atIndices(indexX = 0, indexY = 2)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -271,14 +275,14 @@ class OperationsRoundTripTest {
             rebuilt.update(it)
             live.update(it)
         }
-        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+        val r = rebuilt.read() as UnivariateRegressionResult
         val l = live.read()
         assertEquals(2.0, r.slope, DELTA)
         assertEquals(l.slope, r.slope, DELTA)
     }
 
     @Test fun `withFixedY should lift paired to series`() {
-        val cfg: SeriesStatSpec<com.eignex.kumulant.stat.regression.UnivariateRegressionResult> =
+        val cfg: SeriesStatSpec<UnivariateRegressionResult> =
             UnivariateRegression().withFixedY(5.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
@@ -289,7 +293,7 @@ class OperationsRoundTripTest {
             rebuilt.update(it)
             live.update(it)
         }
-        val r = rebuilt.read() as com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+        val r = rebuilt.read() as UnivariateRegressionResult
         val l = live.read()
         assertEquals(l.totalWeights, r.totalWeights, DELTA)
     }

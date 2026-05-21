@@ -48,7 +48,7 @@ class DDSketchTest {
     fun `quantiles are monotonically non-decreasing`() {
         val sketch = DDSketchStat(
             relativeError = 0.01,
-            probabilities = doubleArrayOf(0.25, 0.5, 0.75, 0.9, 0.99)
+            probabilities = doubleArrayOf(0.25, 0.5, 0.75, 0.9, 0.99),
         )
         for (i in 1..1000) sketch.update(i.toDouble())
         val qs = sketch.read().quantiles
@@ -187,7 +187,7 @@ class DDSketchTest {
                 zeroCount = 0.0,
                 positiveBins = emptyMap(),
                 negativeBins = emptyMap(),
-            )
+            ),
         )
 
         assertEquals(10.0, a.read().totalWeights, 1e-9)

@@ -4,12 +4,12 @@ import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlin.math.ln
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
 class BanditPoliciesExtraTest {
 
     @Test
@@ -21,8 +21,8 @@ class BanditPoliciesExtraTest {
 
     @Test
     fun `klBernoulli handles boundary p values`() {
-        assertEquals(-kotlin.math.ln(1.0 - 0.3), KlUcb.klBernoulli(0.0, 0.3), 1e-12)
-        assertEquals(-kotlin.math.ln(0.4), KlUcb.klBernoulli(1.0, 0.4), 1e-12)
+        assertEquals(-ln(1.0 - 0.3), KlUcb.klBernoulli(0.0, 0.3), 1e-12)
+        assertEquals(-ln(0.4), KlUcb.klBernoulli(1.0, 0.4), 1e-12)
     }
 
     @Test

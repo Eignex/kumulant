@@ -43,7 +43,7 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
         return SparseHistogramResult(
             doubleArrayOf(means[0]),
             doubleArrayOf(means[0]),
-            doubleArrayOf(weights[0])
+            doubleArrayOf(weights[0]),
         )
     }
     val lowers = DoubleArray(n)
@@ -129,8 +129,7 @@ class TDigestStat(
     private var means = DoubleArray(0)
     private var weights = DoubleArray(0)
 
-    private fun k1(q: Double): Double =
-        compression / (2.0 * PI) * asin(2.0 * q.coerceIn(0.0, 1.0) - 1.0)
+    private fun k1(q: Double): Double = compression / (2.0 * PI) * asin(2.0 * q.coerceIn(0.0, 1.0) - 1.0)
 
     /**
      * Drain the current buffer epoch into the centroid arrays. Caller MUST hold
@@ -295,7 +294,7 @@ class TDigestStat(
     override fun create(concurrency: Concurrency?) = TDigestStat(
         compression,
         probabilities,
-        concurrency ?: this.concurrency
+        concurrency ?: this.concurrency,
     )
 
     override fun merge(values: TDigestResult) {
@@ -350,7 +349,7 @@ class TDigestStat(
                     means.copyOf(),
                     weights.copyOf(),
                     total,
-                    compression
+                    compression,
                 )
             }
 
@@ -391,7 +390,7 @@ class TDigestStat(
                 means = means.copyOf(),
                 weights = weights.copyOf(),
                 totalWeight = total,
-                compression = compression
+                compression = compression,
             )
         }
     }

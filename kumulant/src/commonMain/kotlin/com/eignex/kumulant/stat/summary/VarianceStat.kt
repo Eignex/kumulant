@@ -27,7 +27,8 @@ data class WeightedVarianceResult(
     /** Weighted running mean. */
     val mean: Double,
     override val variance: Double,
-) : Result, HasSampleVariance
+) : Result,
+    HasSampleVariance
 
 /**
  * Weighted mean and variance via Welford with Chan-style parallel merge.
@@ -49,9 +50,7 @@ data class WeightedVarianceResult(
  * three cells race independently; the variance drifts ~1e-4 relative under
  * contention but never throws.
  */
-class VarianceStat(
-    override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<WeightedVarianceResult> {
+class VarianceStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<WeightedVarianceResult> {
 
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
