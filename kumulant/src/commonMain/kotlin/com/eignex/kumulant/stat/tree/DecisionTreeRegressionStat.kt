@@ -34,12 +34,16 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
  * then an arm update at that leaf. Splits fire at most once every
  * [TreeConfig.splitPeriod] observations per audit leaf.
  *
- * **Concurrency:** Leaf-arm updates are lock-free (each arm is a
- * [VarianceStat] that honours [Concurrency]). Split conversion — the only
- * path that mutates tree structure — is serialised by a per-tree lock that
- * fires only at split decisions. The hot update path is therefore pure arm
- * arithmetic with zero structural reference writes in the common case. See
- * [Tree] for the full concurrency design.
+ * **Concurrency:** The hot update path touches exactly one accumulator — the
+ * leaf the observation routes to. Internal split nodes carry no live arm; subtree
+ * aggregates (`rootSnapshot`, `TreeSplitResult.value`) are derived by combining
+ * descendants at snapshot time. Each leaf arm is a [VarianceStat] honouring
+ * [Concurrency], so multiple threads landing in different leaves never contend.
+ * Split conversion takes a per-tree lock fired only at split decisions. Predictions
+ * (the load-bearing consumer for bandits) are race-free; the root-level aggregate
+ * `TreeRegressionResult.totalWeights` / `rootMean` is best-effort under concurrent
+ * growth and may drift by a few ULPs of the workload — single-threaded runs are
+ * exact. See [Tree] for the full concurrency design.
  */
 class DecisionTreeRegressionStat(
     override val featureSize: Int,

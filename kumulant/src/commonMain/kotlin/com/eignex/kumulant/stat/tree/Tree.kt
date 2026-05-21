@@ -24,9 +24,11 @@ import kotlin.random.Random
  * candidate split and, every [TreeConfig.splitPeriod] observations, evaluate them against
  * the Hoeffding bound to decide whether to convert themselves into a [SplitNode].
  *
- * Plain data structure with no bandit coupling — leaves accumulate weighted means &
- * variances of the (encoded) target. Callers wanting bandit-flavoured scoring wrap this
- * via [DecisionTreeRegressionStat] and pair with a [com.eignex.kumulant.stat.regression.RegressionPosterior].
+ * Internal split nodes hold no live arm — subtree aggregates (`rootSnapshot`, the `value`
+ * fields on [TreeSplitResult]) are derived by combining descendants at snapshot/merge
+ * time. The hot update path therefore touches exactly one arm: the leaf the observation
+ * routes to. Under [Concurrency.Strict] this removes the root-arm serialization point
+ * that previously bottlenecked multi-threaded throughput.
  *
  * Concurrency: leaf-arm updates run lock-free (the arms themselves honour [concurrency]).
  * The split-conversion path — the only one that mutates tree structure — is serialised
@@ -53,9 +55,6 @@ class Tree(
     /** Walk to the leaf [row] resolves to. */
     fun findLeaf(row: VectorView): LeafNode = root.findLeaf(row)
 
-    /** Root aggregate arm. */
-    fun rootArm(): SeriesStat<WeightedVarianceResult> = root.arm
-
     /** Live root node, for snapshotting. */
     fun rootNode(): Node = root
 
@@ -72,8 +71,12 @@ class Tree(
         if (next !== current) root = next
     }
 
-    /** Aggregate snapshot at the root: sufficient stat over every observation absorbed. */
-    fun rootSnapshot(): WeightedVarianceResult = root.arm.read(0L)
+    /** Aggregate snapshot at the root — derived by walking leaves and any
+     *  [SplitNode.carryover] aggregates. Under concurrent updates with active growth,
+     *  pointer races at split-time can leak observations into orphaned sub-arms; this
+     *  walk is therefore best-effort and may drift by a few ULPs of the configured
+     *  workload under contention. Single-threaded runs are exact. */
+    fun rootSnapshot(): WeightedVarianceResult = root.subtreeAggregate()
 
     /** Reset to a single fresh leaf. */
     fun reset() {
@@ -90,13 +93,18 @@ class Tree(
      * Structurally merge [other] into this tree. [other] is consumed (its node references
      * may be grafted into this tree) and must not be used afterwards.
      *
-     *  - **Same split predicate**: merge the node's aggregate arm and recurse on both
-     *    children. Exact: subtree-aggregate invariants are preserved.
+     *  - **Same split predicate**: recurse on both children — internal aggregates are
+     *    derived from leaves, so no per-split merge step is needed.
      *  - **Both leaves**: merge arms directly.
      *  - **Self leaf, other split**: adopt other's structure wholesale and fold self's
-     *    leaf aggregate into the adopted root.
-     *  - **Self split, other leaf** *or* **different splits**: keep self's structure and
-     *    fold other's root aggregate into self's root only; other's substructure is lost.
+     *    leaf aggregate into the adopted subtree's leftmost leaf.
+     *  - **Self split, other leaf** *or* **different splits**: keep self's structure
+     *    and fold other's aggregate (recursively combined if other is a split) into
+     *    self's leftmost leaf.
+     *
+     * The "leftmost leaf" rule preserves the merged total weight but biases the
+     * un-routable observations into a single bucket — an honest fallback when the
+     * structures don't align.
      */
     fun merge(other: Tree) {
         splitLock.withLock {
@@ -117,9 +125,10 @@ class Tree(
 
     private fun mergeNodes(a: Node, b: Node): Node {
         if (a is SplitNode && b is SplitNode && a.split == b.split) {
-            a.arm.merge(b.arm.read(0L))
             a.pos = mergeNodes(a.pos, b.pos)
             a.neg = mergeNodes(a.neg, b.neg)
+            val bCarry = b.carryover
+            if (bCarry != null) foldIntoCarryover(a, bCarry.read(0L))
             return a
         }
         if (a is LeafNode && b is LeafNode) {
@@ -127,18 +136,24 @@ class Tree(
             return a
         }
         if (a is LeafNode && b is SplitNode) {
-            b.arm.merge(a.arm.read(0L))
+            foldIntoCarryover(b, a.arm.read(0L))
             return b
         }
-        a.arm.merge(b.arm.read(0L))
+        // a split + b leaf, or splits differ: keep a's structure, fold b's aggregate.
+        foldIntoCarryover(a as SplitNode, b.subtreeAggregate())
         return a
     }
 
     private fun mergeNodeWithResult(a: Node, b: TreeNodeResult): Node {
         if (a is SplitNode && b is TreeSplitResult && a.split == b.split) {
-            a.arm.merge(b.value)
             a.pos = mergeNodeWithResult(a.pos, b.pos)
             a.neg = mergeNodeWithResult(a.neg, b.neg)
+            // b.value carries the full subtree aggregate; the child recursion already
+            // folded the structurally-aligned portion. Pull only the residual — what b's
+            // value holds beyond the sum of its children — into a's carryover.
+            val childSum = mergeWVR(b.pos.value, b.neg.value)
+            val residual = subtractWVR(b.value, childSum)
+            if (residual.totalWeights > 0.0) foldIntoCarryover(a, residual)
             return a
         }
         if (a is LeafNode && b is TreeLeafResult) {
@@ -146,14 +161,25 @@ class Tree(
             return a
         }
         if (a is LeafNode && b is TreeSplitResult) {
-            // Rebuild a fresh subtree from b's structure, fold a's leaf into the root.
-            val cloned = cloneFromResult(b, depth = 0)
-            cloned.arm.merge(a.arm.read(0L))
+            val cloned = cloneFromResult(b, depth = 0) as SplitNode
+            foldIntoCarryover(cloned, a.arm.read(0L))
             return cloned
         }
         // a split + b leaf, or splits differ: keep a's structure, fold b's aggregate.
-        a.arm.merge(b.value)
+        foldIntoCarryover(a as SplitNode, b.value)
         return a
+    }
+
+    private fun foldIntoCarryover(node: SplitNode, value: WeightedVarianceResult) {
+        if (value.totalWeights <= 0.0) return
+        val existing = node.carryover
+        if (existing != null) {
+            existing.merge(value)
+        } else {
+            val arm = leafArmFactory()
+            arm.merge(value)
+            node.carryover = arm
+        }
     }
 
     private fun cloneFromResult(node: TreeNodeResult, depth: Int): Node {
@@ -165,14 +191,16 @@ class Tree(
                 TerminalLeaf(arm)
             }
             is TreeSplitResult -> {
-                val arm = leafArmFactory()
-                arm.merge(node.value)
-                SplitNode(
-                    split = node.split,
-                    pos = cloneFromResult(node.pos, depth + 1),
-                    neg = cloneFromResult(node.neg, depth + 1),
-                    arm = arm,
-                )
+                val pos = cloneFromResult(node.pos, depth + 1)
+                val neg = cloneFromResult(node.neg, depth + 1)
+                // Re-establish any orphan aggregate the snapshot encodes by comparing the
+                // recorded value against the sum of the cloned children's aggregates.
+                val childSum = mergeWVR(node.pos.value, node.neg.value)
+                val residual = subtractWVR(node.value, childSum)
+                val carry = if (residual.totalWeights > 0.0) {
+                    leafArmFactory().also { it.merge(residual) }
+                } else null
+                SplitNode(split = node.split, pos = pos, neg = neg, carryover = carry)
             }
         }
     }
@@ -220,7 +248,6 @@ class Tree(
     private fun updateNode(node: Node, row: VectorView, value: Double, weight: Double, depth: Int): Node =
         when (node) {
             is SplitNode -> {
-                node.arm.update(value, 0L, weight)
                 if (node.split.direction(row)) {
                     val child = node.pos
                     val next = updateNode(child, row, value, weight, depth + 1)
@@ -275,12 +302,16 @@ class Tree(
             val passesTau = eps < config.tau
             if (!passesHoeffding && !passesTau) return@withLock leaf
 
+            // Stash the pre-split aggregate as the new split's carryover so it shows up
+            // in subtree aggregates without burdening the hot path. New leaves start
+            // empty so prior-driven Thompson/UCB exploration behaves as it did before
+            // the split fired.
             nbrNodes.addAndFetch(2)
             SplitNode(
                 split = leaf.candidates[ranked.bestIndex],
                 pos = newLeaf(depth + 1),
                 neg = newLeaf(depth + 1),
-                arm = leaf.arm,
+                carryover = leaf.arm,
             )
         }
     }
