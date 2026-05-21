@@ -35,7 +35,7 @@ Start with the [overview](docs/README.md) for the mental model.
 
 ```kotlin
 dependencies {
-    implementation("com.eignex:kumulant:0.1.0")
+    implementation("com.eignex:kumulant:0.2.0")
 }
 ```
 
