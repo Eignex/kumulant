@@ -230,6 +230,40 @@ snap["marginalY"]  // marginal mean / variance of y, independent of x
 
 This is the standard composition. No bespoke wrapper needed.
 
+## Series shifts
+
+`lag(k)`, `diff(k)`, and `derivative()` are series-only adapters that
+re-shape the value before it reaches the inner stat. `lag(k)` forwards
+the observation from `k` updates ago, `diff(k)` forwards
+`value - value_{t-k}` (the k-step finite difference), and `derivative()`
+forwards `(value - prev) * 1e9 / (timestamp - prev)` so the inner stat
+sees an instantaneous rate. The first `k` (or one, for `derivative()`)
+updates warm silently; nothing is forwarded until enough history exists.
+
+```kotlin
+val laggedMean = MeanStat().lag(k = 5)
+val firstDifference = SumStat().diff(k = 1)
+val slope = MeanStat().derivative()
+```
+
+All three are available live and as specs.
+
+## Hysteresis
+
+`hysteresis(low, high)` debounces a noisy numeric stream into a 0.0 /
+1.0 signal using two thresholds. The state flips to 1.0 when an input
+rises above `high`, and back to 0.0 when an input falls below `low`;
+values inside the deadband `[low, high]` hold the current state. Each
+update forwards the current debounced state to the inner stat (not just
+transitions), so downstream sums and rates observe per-update progress.
+
+```kotlin
+val onOffMean = MeanStat().hysteresis(low = 0.2, high = 0.8)
+```
+
+Use it to derive a stable on/off interpretation from a flapping signal
+before feeding it into a counter, mean, or rate.
+
 ## Operation locality
 
 Most operations are zero-state: filter, transform, withWeight, withValue,

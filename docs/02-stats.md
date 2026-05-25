@@ -82,6 +82,26 @@ BernoulliSumStat sums weight only when the value is nonzero, which is
 the natural counter for binary outcomes such as click-or-not or
 pass-or-fail.
 
+ExcursionStat tracks the running peak, the lowest value seen since the
+peak was last set, and the largest peak-to-subsequent-trough excursion
+observed across the stream. Use it for drawdown and recovery monitoring,
+or any "how far has the signal fallen from its running high" question.
+
+RunLengthStat tracks the length of the current consecutive truthy run
+and the longest such run observed so far. Truthy means a nonzero,
+non-NaN value, so feeding it the output of a predicate produces the
+classic "longest streak" diagnostic.
+
+CrossingStat counts how often the input stream crosses a configured
+level, separated into up-crossings and down-crossings. Use it when the
+useful signal is "how active is this around a threshold", such as
+zero-crossings of a centred series or threshold-touch counts on an SLO.
+
+ThresholdBucketStat is a weighted counter over caller-supplied value
+buckets. Pass a strictly increasing edge list; the stat reports the
+per-bucket weighted counts. Use it when the breakpoints are meaningful
+up front and you do not need a full histogram digest.
+
 ### Quantile
 
 The quantile family answers "what value sits at the p-th percentile?"
@@ -201,6 +221,24 @@ exponentially-weighted moving variants with a step-based decay
 (`alpha * new + (1 - alpha) * old`). They are cheaper and more familiar
 but assume roughly fixed intervals between observations; mixed-interval
 streams should reach for the timestamp-based decay variants instead.
+
+HoltStat is double exponential smoothing: it tracks a level and a trend
+with separate smoothing factors and supports a damping factor `phi` in
+`(0, 1]` that geometrically discounts the trend on forecast. The result
+exposes `forecast(steps)` so the same recurrence drives projections.
+Use it when the stream has a slow-moving trend on top of noise and you
+want a short-horizon forecast.
+
+SeasonalSmoothingStat extends HoltStat with a seasonal vector of length
+`period`, the classical Holt-Winters method. Additive and multiplicative
+modes are both supported. Use it when the stream has a repeating cycle
+(daily, weekly, anything periodic) on top of a level and trend.
+
+RecursiveVarianceStat applies the GARCH-style recurrence
+`sigma² = omega + alpha * value² + beta * sigma²`. Compared with
+EwmaVarianceStat it adds a long-run baseline term `omega` and decouples
+the shock and persistence coefficients, which makes it a better fit for
+volatility tracking where the floor matters.
 
 ### Regression
 
