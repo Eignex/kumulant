@@ -61,13 +61,13 @@ walks through each family with notes on when to pick which.
 
 | Family                                       | Stats                                                                          |
 |----------------------------------------------|--------------------------------------------------------------------------------|
-| [Summary](docs/02-stats.md#summary)          | Sum, Mean, Min, Max, Range, Variance, Moments, BernoulliSum, Count             |
+| [Summary](docs/02-stats.md#summary)          | Sum, Mean, Min, Max, Range, Variance, Moments, BernoulliSum, Count, Excursion, RunLength, Crossing, ThresholdBucket |
 | [Quantile](docs/02-stats.md#quantile)        | DDSketch, TDigest, HdrHistogram, LinearHistogram, ReservoirHistogram, FrugalQuantile |
 | [Cardinality](docs/02-stats.md#cardinality)  | HyperLogLog, LinearCounting                                                    |
 | [Sketch](docs/02-stats.md#sketch)            | BloomFilter, CountMinSketch, MinHash, SpaceSaving                              |
 | [Rate](docs/02-stats.md#rate)                | Rate, CounterRate, DecayingRate                                                |
 | [Regression](docs/02-stats.md#regression)    | UnivariateRegression (OLS / L1 / L2), Covariance, SGD, Diagonal, Bayesian      |
-| [Decay](docs/02-stats.md#decay)              | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance            |
+| [Decay](docs/02-stats.md#decay)              | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance, Holt, SeasonalSmoothing, RecursiveVariance |
 | [Score](docs/02-stats.md#score)              | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
 
 Bandits sit on top of the stat layer; each arm owns a kumulant
