@@ -3,8 +3,8 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.monotonicMode
-import com.eignex.kumulant.stream.serializedLock
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -46,8 +46,10 @@ data class AutocorrelationResult(
  *
  * **Update:** O(1).
  *
- * **Concurrency:** Coupled sum / sum-of-squares / cross-product / ring (category 3).
- * The internal lock keeps the multi-cell update consistent.
+ * **Concurrency:** Coupled sum / sum-of-squares / cross-product / ring cells, same model
+ * as [com.eignex.kumulant.stat.decay.EwmaVarianceStat]. [Concurrency.Strict] and
+ * [Concurrency.HighWrite] lock the body so each update is atomic; [Concurrency.Relaxed]
+ * drops the lock and the cells race independently with bounded drift; never throws.
  */
 class AutocorrelationStat(
     /** Lag between paired observations; must be at least 1. */
@@ -59,8 +61,8 @@ class AutocorrelationStat(
         require(lag >= 1) { "AutocorrelationStat lag must be >= 1, got $lag" }
     }
 
-    private val streamMode = concurrency.monotonicMode()
-    private val lock = concurrency.serializedLock()
+    private val streamMode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val tick = streamMode.newLong(0L)
     private val ring = streamMode.newDoubleArray(lag)
     private val sum = streamMode.newDouble(0.0)

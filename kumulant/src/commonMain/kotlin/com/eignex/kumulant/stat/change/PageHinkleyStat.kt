@@ -3,8 +3,8 @@ package com.eignex.kumulant.stat.change
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.monotonicMode
-import com.eignex.kumulant.stream.serializedLock
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.max
@@ -60,8 +60,10 @@ data class PageHinkleyResult(
  *
  * **Update:** O(1).
  *
- * **Concurrency:** Coupled mean / positive / negative / extrema cells (category 3).
- * The internal lock keeps the multi-cell update consistent.
+ * **Concurrency:** Order-dependent recurrence over coupled cells, same model as
+ * [com.eignex.kumulant.stat.decay.EwmaVarianceStat]. [Concurrency.Strict] and
+ * [Concurrency.HighWrite] lock the body so each update is atomic; [Concurrency.Relaxed]
+ * drops the lock and the cells race independently with bounded drift; never throws.
  */
 class PageHinkleyStat(
     /** Tolerance absorbing in-control fluctuation; must be `>= 0`. */
@@ -76,8 +78,8 @@ class PageHinkleyStat(
         require(threshold >= 0.0) { "threshold must be >= 0, got $threshold" }
     }
 
-    private val streamMode = concurrency.monotonicMode()
-    private val lock = concurrency.serializedLock()
+    private val streamMode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val count = streamMode.newLong(0L)
     private val mean = streamMode.newDouble(0.0)
     private val cumPos = streamMode.newDouble(0.0)

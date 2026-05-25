@@ -3,8 +3,8 @@ package com.eignex.kumulant.stat.decay
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.monotonicMode
-import com.eignex.kumulant.stream.serializedLock
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -90,8 +90,10 @@ data class SeasonalSmoothingResult(
  *
  * **Update:** O(1) — single seasonal slot touched per update.
  *
- * **Concurrency:** Coupled level / trend / seasonal recurrence (category 3). The
- * internal lock keeps the multi-cell update consistent under any [Concurrency] level.
+ * **Concurrency:** Order-dependent recurrence, same model as [HoltStat] / [EwmaMeanStat].
+ * [Concurrency.Strict] and [Concurrency.HighWrite] lock the body so each update is atomic;
+ * [Concurrency.Relaxed] drops the lock and the level/trend/seasonal cells race independently
+ * with bounded drift; never throws.
  */
 class SeasonalSmoothingStat(
     /** Per-observation smoothing schedule for the level. */
@@ -141,8 +143,8 @@ class SeasonalSmoothingStat(
     /** Seasonal smoothing factor. */
     val gamma: Double get() = gammaWeighting.alpha
 
-    private val streamMode = concurrency.monotonicMode()
-    private val lock = concurrency.serializedLock()
+    private val streamMode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val initialized = streamMode.newLong(0L)
     private val level = streamMode.newDouble(0.0)
     private val trend = streamMode.newDouble(0.0)

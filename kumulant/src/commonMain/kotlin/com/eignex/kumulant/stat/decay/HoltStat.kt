@@ -3,8 +3,8 @@ package com.eignex.kumulant.stat.decay
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.monotonicMode
-import com.eignex.kumulant.stream.serializedLock
+import com.eignex.kumulant.stream.welfordLock
+import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -67,9 +67,10 @@ data class HoltResult(
  *
  * **Update:** O(1).
  *
- * **Concurrency:** Coupled level/trend recurrence (category 3). The internal lock keeps
- * the two-cell update consistent under any [Concurrency] level; throughput drops under
- * heavy contention but no exceptions and no torn snapshots.
+ * **Concurrency:** Order-dependent recurrence, same model as [EwmaMeanStat]. [Concurrency.Strict]
+ * and [Concurrency.HighWrite] lock the body so each update is atomic but the lock serialises
+ * arrival, not order; the snapshot drifts under contention. [Concurrency.Relaxed] drops the lock
+ * and the two cells race independently with bounded drift; never throws.
  */
 class HoltStat(
     /** Per-observation smoothing schedule used for both the level smoother and the trend smoother. */
@@ -98,8 +99,8 @@ class HoltStat(
     /** Trend smoothing factor; larger weights recent slopes more. */
     val beta: Double get() = betaWeighting.alpha
 
-    private val mode = concurrency.monotonicMode()
-    private val lock = concurrency.serializedLock()
+    private val mode = concurrency.welfordMode()
+    private val lock = concurrency.welfordLock()
     private val initialized = mode.newLong(0L)
     private val level = mode.newDouble(0.0)
     private val trend = mode.newDouble(0.0)

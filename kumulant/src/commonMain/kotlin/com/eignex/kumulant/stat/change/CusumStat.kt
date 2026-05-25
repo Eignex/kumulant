@@ -4,7 +4,6 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.monotonicMode
-import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.max
@@ -53,8 +52,9 @@ data class CusumResult(
  *
  * **Update:** O(1).
  *
- * **Concurrency:** Coupled positive / negative cusum cells (category 3). The internal
- * lock keeps the multi-cell update consistent.
+ * **Concurrency:** The positive and negative cumulative sums are independent recurrences;
+ * each cell is updated via a single-cell CAS loop (category 2). No lock; concurrent
+ * updates retry their own cell's CAS without contending across sides and never throw.
  */
 class CusumStat(
     /** In-control target value to compare each input against. */
@@ -72,31 +72,45 @@ class CusumStat(
     }
 
     private val streamMode = concurrency.monotonicMode()
-    private val lock = concurrency.serializedLock()
     private val cusumPos = streamMode.newDouble(0.0)
     private val cusumNeg = streamMode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
         val deviation = value - target
-        cusumPos.store(max(0.0, cusumPos.load() + deviation - referenceValue))
-        cusumNeg.store(min(0.0, cusumNeg.load() + deviation + referenceValue))
+        while (true) {
+            val prev = cusumPos.load()
+            val next = max(0.0, prev + deviation - referenceValue)
+            if (cusumPos.compareAndSet(prev, next)) break
+        }
+        while (true) {
+            val prev = cusumNeg.load()
+            val next = min(0.0, prev + deviation + referenceValue)
+            if (cusumNeg.compareAndSet(prev, next)) break
+        }
     }
 
-    override fun merge(values: CusumResult) = lock.withLock {
-        // No exact recurrence-preserving merge; combine snapshots by averaging the two cusums.
-        cusumPos.store(0.5 * (cusumPos.load() + values.cusumPositive))
-        cusumNeg.store(0.5 * (cusumNeg.load() + values.cusumNegative))
+    override fun merge(values: CusumResult) {
+        while (true) {
+            val prev = cusumPos.load()
+            val next = 0.5 * (prev + values.cusumPositive)
+            if (cusumPos.compareAndSet(prev, next)) break
+        }
+        while (true) {
+            val prev = cusumNeg.load()
+            val next = 0.5 * (prev + values.cusumNegative)
+            if (cusumNeg.compareAndSet(prev, next)) break
+        }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() {
         cusumPos.store(0.0)
         cusumNeg.store(0.0)
     }
 
-    override fun read(timestampNanos: Long) = lock.withLock {
+    override fun read(timestampNanos: Long): CusumResult {
         val pos = cusumPos.load()
         val neg = cusumNeg.load()
-        CusumResult(
+        return CusumResult(
             target = target,
             referenceValue = referenceValue,
             threshold = threshold,
