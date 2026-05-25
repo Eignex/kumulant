@@ -26,6 +26,7 @@ import com.eignex.kumulant.stat.summary.AutocorrelationResult
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.CrossingResult
 import com.eignex.kumulant.stat.summary.ExcursionResult
+import com.eignex.kumulant.stat.summary.MadResult
 import com.eignex.kumulant.stat.summary.MaxResult
 import com.eignex.kumulant.stat.summary.MinResult
 import com.eignex.kumulant.stat.summary.MomentsResult
@@ -126,6 +127,14 @@ data class Autocorrelation(
     /** Lag between paired observations; must be at least 1. */
     val lag: Int,
 ) : SeriesStatSpec<AutocorrelationResult>
+
+/** Spec for `MadStat`: streaming median and median absolute deviation via two t-digests. */
+@Serializable
+@SerialName("Mad")
+data class Mad(
+    /** T-digest compression for both digests; lower = more centroids, tighter quantiles. */
+    val compression: Double = 100.0,
+) : SeriesStatSpec<MadResult>
 
 /** Spec for `ThresholdBucketStat`: weighted counts per user-defined value bucket. */
 @Serializable

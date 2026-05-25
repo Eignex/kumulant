@@ -1,12 +1,11 @@
 package com.eignex.kumulant.stat.summary
 
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-9
 
 class AutocorrelationStatTest {
 
@@ -46,7 +45,7 @@ class AutocorrelationStatTest {
     fun `sinusoid lag-1 autocorrelation tracks the underlying period`() {
         // For samples of cos(2*pi*k/8), lag-1 acf is cos(2*pi/8) = sqrt(2)/2 ~ 0.707.
         val s = AutocorrelationStat(lag = 1)
-        for (k in 0 until 1024) s.update(cos(2.0 * kotlin.math.PI * k / 8.0))
+        for (k in 0 until 1024) s.update(cos(2.0 * PI * k / 8.0))
         val r = s.read()
         assertEquals(0.707, r.autocorrelation, 0.05)
     }

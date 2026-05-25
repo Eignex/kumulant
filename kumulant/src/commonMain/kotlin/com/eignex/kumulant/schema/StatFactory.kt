@@ -88,6 +88,7 @@ import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.CrossingStat
 import com.eignex.kumulant.stat.summary.ExcursionStat
+import com.eignex.kumulant.stat.summary.MadStat
 import com.eignex.kumulant.stat.summary.MaxStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MinStat
@@ -141,6 +142,8 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is ThresholdBucket -> ThresholdBucketStat(thresholds.toDoubleArray(), concurrency)
 
         is Autocorrelation -> AutocorrelationStat(lag, concurrency)
+
+        is Mad -> MadStat(compression, concurrency)
 
         Variance -> VarianceStat(concurrency)
 

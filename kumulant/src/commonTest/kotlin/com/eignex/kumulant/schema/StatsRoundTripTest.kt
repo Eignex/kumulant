@@ -108,6 +108,11 @@ class StatsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
+    @Test fun `madConfig round trips`() {
+        val cfg = Mad(compression = 200.0)
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
     @Test fun `varianceConfig round trips`() {
         assertEquals(Variance, roundTrip(Variance))
     }

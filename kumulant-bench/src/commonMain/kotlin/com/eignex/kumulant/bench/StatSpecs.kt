@@ -24,6 +24,7 @@ import com.eignex.kumulant.stat.rate.RateStat
 import com.eignex.kumulant.stat.summary.AutocorrelationStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
+import com.eignex.kumulant.stat.summary.MadStat
 import com.eignex.kumulant.stat.summary.CrossingStat
 import com.eignex.kumulant.stat.summary.ExcursionStat
 import com.eignex.kumulant.stat.summary.MaxStat
@@ -202,6 +203,15 @@ val excursionStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.peak },
     reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
+)
+
+val madStatSpec = seriesStatSpec(
+    name = "MadStat",
+    factory = { c -> MadStat(compression = 200.0, concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.median },
+    // Median of uniform [0, 1) is 0.5.
+    reference = { _ -> 0.5 },
 )
 
 val autocorrelationStatSpec = seriesStatSpec(
@@ -989,6 +999,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     sojournStatSpec,
     ratioVsTargetStatSpec,
     autocorrelationStatSpec,
+    madStatSpec,
     lagSeriesStatSpec,
     diffSeriesStatSpec,
     derivativeSeriesStatSpec,
