@@ -39,8 +39,8 @@ jobs:
         with:
           name: test-reports
           path: |
-            build/reports/tests/
-            build/test-results/
+            kumulant/build/reports/tests/
+            kumulant/build/test-results/
           if-no-files-found: ignore
 
       - name: Upload results to Codecov (main only)
@@ -48,5 +48,5 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: build/reports/kover/report.xml
+          files: kumulant/build/reports/kover/report.xml
           fail_ci_if_error: false
