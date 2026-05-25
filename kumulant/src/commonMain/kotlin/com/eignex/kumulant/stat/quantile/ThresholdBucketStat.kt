@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.summary
+package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result

@@ -1,5 +1,6 @@
-package com.eignex.kumulant.stat.summary
+package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -86,5 +87,17 @@ class ThresholdBucketStatTest {
         val r = ThresholdBucketStat(doubleArrayOf(0.0, 1.0)).read()
         assertEquals(listOf(0.0, 0.0, 0.0), r.counts)
         for (c in r.counts) assertEquals(0.0, c, DELTA)
+    }
+
+    @Test
+    fun `sequential math equal across concurrency modes`() {
+        val values = doubleArrayOf(1.0, -2.0, 3.5, 0.0, 4.2, -1.1, 7.0, 2.5)
+        val reads = Concurrency.entries.associateWith { mode ->
+            val s = ThresholdBucketStat(doubleArrayOf(-1.0, 0.0, 1.0, 3.0), concurrency = mode)
+            for (v in values) s.update(v)
+            s.read()
+        }
+        val ref = reads.getValue(Concurrency.None)
+        for ((mode, r) in reads) assertEquals(ref, r, "ThresholdBucketStat mode=$mode")
     }
 }

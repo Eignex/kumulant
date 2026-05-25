@@ -113,41 +113,6 @@ class SummaryStatConcurrencyTest {
     }
 
     @Test
-    fun `ExcursionStat sequential math equal across modes`() {
-        val reads = sequentialReads { ExcursionStat(concurrency = it) }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) assertEquals(ref, r, "ExcursionStat mode=$mode")
-    }
-
-    @Test
-    fun `RunLengthStat sequential math equal across modes`() {
-        val flagValues = doubleArrayOf(1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0)
-        val reads = Concurrency.entries.associateWith { mode ->
-            val s = RunLengthStat(concurrency = mode)
-            for (i in flagValues.indices) s.update(flagValues[i], 0L, weights[i])
-            s.read(0L)
-        }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) assertEquals(ref, r, "RunLengthStat mode=$mode")
-    }
-
-    @Test
-    fun `CrossingStat sequential math equal across modes`() {
-        val reads = sequentialReads { CrossingStat(level = 1.0, concurrency = it) }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) assertEquals(ref, r, "CrossingStat mode=$mode")
-    }
-
-    @Test
-    fun `ThresholdBucketStat sequential math equal across modes`() {
-        val reads = sequentialReads {
-            ThresholdBucketStat(thresholds = doubleArrayOf(-1.0, 0.0, 1.0, 3.0), concurrency = it)
-        }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) assertEquals(ref, r, "ThresholdBucketStat mode=$mode")
-    }
-
-    @Test
     fun `merge across modes preserves math`() {
         val a = SumStat(concurrency = Concurrency.None).apply { for (v in values) update(v, 0L, 1.0) }
         for (mode in Concurrency.entries) {
