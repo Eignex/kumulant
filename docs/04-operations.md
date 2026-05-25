@@ -264,6 +264,25 @@ val onOffMean = MeanStat().hysteresis(low = 0.2, high = 0.8)
 Use it to derive a stable on/off interpretation from a flapping signal
 before feeding it into a counter, mean, or rate.
 
+## Wall-clock resampling
+
+`resampleByTime(bucket, aggregator)` aligns the input stream onto fixed
+wall-clock buckets and forwards one observation per closed bucket to the
+inner stat. The per-bucket value is chosen by the aggregator (Mean, Sum,
+Last, Min, Max). The in-progress bucket is held until an update arrives
+in a later bucket. Compared with `.windowed()`, this exposes the
+per-bucket boundary explicitly: downstream sees one update per closed
+slot rather than a sliding view of raw inputs.
+
+```kotlin
+val perMinuteMean = MeanStat().resampleByTime(1.minutes, ResampleAggregator.Mean)
+val perMinuteMeanSpec = Mean.resampleByTime(bucketMillis = 60_000L, ResampleAggregator.Mean)
+```
+
+Use it to downsample noisy high-rate streams before feeding them into
+sketches, regressors, or any downstream consumer that prefers a
+regularly-spaced input.
+
 ## Operation locality
 
 Most operations are zero-state: filter, transform, withWeight, withValue,

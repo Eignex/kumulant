@@ -102,6 +102,22 @@ buckets. Pass a strictly increasing edge list; the stat reports the
 per-bucket weighted counts. Use it when the breakpoints are meaningful
 up front and you do not need a full histogram digest.
 
+RecencyStat reports the time elapsed since the most recent observation.
+Compose with `.filter(...)` for "time since the last matching event"
+diagnostics like staleness checks or last-error-seen monitors.
+
+RatioVsTargetStat reports the weighted fraction of observations meeting
+a target threshold under a configurable comparison (above, at-least,
+below, at-most, equals). The cumulative form is the leaf stat; pair it
+with `.windowed(...)` to get the windowed-ratio variant used by SLO
+compliance and error-budget tracking.
+
+SojournStat tracks how long a categorical state has been occupied over
+its declared alphabet. The result carries per-state total nanos,
+per-state transition counts, the current state, and the current dwell.
+Use it for uptime / availability breakdowns or any dwell-time
+accounting where the state set is known up front.
+
 ### Quantile
 
 The quantile family answers "what value sits at the p-th percentile?"
