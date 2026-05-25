@@ -103,6 +103,11 @@ class StatsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
+    @Test fun `autocorrelationConfig round trips`() {
+        val cfg = Autocorrelation(lag = 3)
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
     @Test fun `varianceConfig round trips`() {
         assertEquals(Variance, roundTrip(Variance))
     }

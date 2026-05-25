@@ -22,6 +22,7 @@ import com.eignex.kumulant.stat.sketch.BloomFilterResult
 import com.eignex.kumulant.stat.sketch.CountMinSketchResult
 import com.eignex.kumulant.stat.sketch.HeavyHittersResult
 import com.eignex.kumulant.stat.sketch.MinHashResult
+import com.eignex.kumulant.stat.summary.AutocorrelationResult
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.CrossingResult
 import com.eignex.kumulant.stat.summary.ExcursionResult
@@ -117,6 +118,14 @@ data class Crossing(
     /** The level the input stream is compared against. */
     val level: Double,
 ) : SeriesStatSpec<CrossingResult>
+
+/** Spec for `AutocorrelationStat`: streaming autocorrelation at fixed lag. */
+@Serializable
+@SerialName("Autocorrelation")
+data class Autocorrelation(
+    /** Lag between paired observations; must be at least 1. */
+    val lag: Int,
+) : SeriesStatSpec<AutocorrelationResult>
 
 /** Spec for `ThresholdBucketStat`: weighted counts per user-defined value bucket. */
 @Serializable

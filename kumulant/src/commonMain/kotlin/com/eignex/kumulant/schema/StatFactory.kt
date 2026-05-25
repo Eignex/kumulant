@@ -83,6 +83,7 @@ import com.eignex.kumulant.stat.sketch.BloomFilterStat
 import com.eignex.kumulant.stat.sketch.CountMinSketchStat
 import com.eignex.kumulant.stat.sketch.MinHashStat
 import com.eignex.kumulant.stat.sketch.SpaceSavingStat
+import com.eignex.kumulant.stat.summary.AutocorrelationStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.CrossingStat
@@ -138,6 +139,8 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is Crossing -> CrossingStat(level, concurrency)
 
         is ThresholdBucket -> ThresholdBucketStat(thresholds.toDoubleArray(), concurrency)
+
+        is Autocorrelation -> AutocorrelationStat(lag, concurrency)
 
         Variance -> VarianceStat(concurrency)
 

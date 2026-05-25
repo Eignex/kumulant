@@ -21,6 +21,7 @@ import com.eignex.kumulant.stat.decay.SeasonalSmoothingStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
+import com.eignex.kumulant.stat.summary.AutocorrelationStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.CrossingStat
@@ -201,6 +202,15 @@ val excursionStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.peak },
     reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
+)
+
+val autocorrelationStatSpec = seriesStatSpec(
+    name = "AutocorrelationStat",
+    factory = { c -> AutocorrelationStat(lag = 1, concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.autocorrelation },
+    // For an i.i.d uniform stream the lag-1 autocorrelation tends to zero. Tolerance applied in the harness.
+    reference = { _ -> 0.0 },
 )
 
 val recencyStatSpec = seriesStatSpec(
@@ -978,6 +988,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     recencyStatSpec,
     sojournStatSpec,
     ratioVsTargetStatSpec,
+    autocorrelationStatSpec,
     lagSeriesStatSpec,
     diffSeriesStatSpec,
     derivativeSeriesStatSpec,
