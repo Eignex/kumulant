@@ -130,14 +130,22 @@ running median. Use it as the robust analog of standard deviation for
 heavy-tailed inputs where the mean and variance overstate central
 tendency and spread.
 
+### Change
+
+The change family detects when a stream's distribution shifts. Each
+detector exposes a running statistic, a configurable threshold, and a
+boolean alarm flag.
+
 CusumStat is a two-sided cumulative-sum change-point detector. Configure
 an in-control target, a reference value (allowance) absorbing in-control
 variation, and a decision threshold; the result carries both cumulative
-sums and an alarm flag.
+sums and an alarm flag. Use it when the in-control mean is known up
+front.
 
 PageHinkleyStat is the cumulative-deviation-from-running-mean change
 detector. It does not require a known in-control target — the running
-mean acts as the reference. Tolerance and threshold control sensitivity.
+mean acts as the reference. Tolerance and threshold control sensitivity;
+use it when the in-control mean must be learned online.
 
 AdwinStat is the ADWIN2 adaptive-windowing detector. It maintains an
 exponential-histogram window of recent observations and drops the older
