@@ -19,6 +19,7 @@ import com.eignex.kumulant.stat.decay.HoltStat
 import com.eignex.kumulant.stat.decay.RecursiveVarianceStat
 import com.eignex.kumulant.stat.decay.SeasonalMode
 import com.eignex.kumulant.stat.decay.SeasonalSmoothingStat
+import com.eignex.kumulant.stat.change.AdwinStat
 import com.eignex.kumulant.stat.change.CusumStat
 import com.eignex.kumulant.stat.change.PageHinkleyStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
@@ -223,6 +224,15 @@ val pageHinkleyStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.mean },
     // Mean of uniform [0, 1) is 0.5.
+    reference = { _ -> 0.5 },
+)
+
+val adwinStatSpec = seriesStatSpec(
+    name = "AdwinStat",
+    factory = { c -> AdwinStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.mean },
+    // Window mean of stationary uniform [0, 1) input concentrates around 0.5.
     reference = { _ -> 0.5 },
 )
 
@@ -1032,6 +1042,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     madStatSpec,
     cusumStatSpec,
     pageHinkleyStatSpec,
+    adwinStatSpec,
     bandSeriesStatSpec,
     lagSeriesStatSpec,
     diffSeriesStatSpec,

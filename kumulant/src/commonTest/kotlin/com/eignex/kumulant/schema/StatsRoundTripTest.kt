@@ -123,6 +123,11 @@ class StatsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
+    @Test fun `adwinConfig round trips`() {
+        val cfg = Adwin(delta = 0.005, maxBucketsPerSize = 8)
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
     @Test fun `varianceConfig round trips`() {
         assertEquals(Variance, roundTrip(Variance))
     }

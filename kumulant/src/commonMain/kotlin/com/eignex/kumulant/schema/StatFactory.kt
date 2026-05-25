@@ -51,6 +51,7 @@ import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.cardinality.LinearCountingStat
+import com.eignex.kumulant.stat.change.AdwinStat
 import com.eignex.kumulant.stat.change.CusumStat
 import com.eignex.kumulant.stat.change.PageHinkleyStat
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
@@ -152,6 +153,8 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is Cusum -> CusumStat(target, referenceValue, threshold, concurrency)
 
         is PageHinkley -> PageHinkleyStat(delta, threshold, concurrency)
+
+        is Adwin -> AdwinStat(delta, maxBucketsPerSize, concurrency)
 
         Variance -> VarianceStat(concurrency)
 

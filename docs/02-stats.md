@@ -129,6 +129,21 @@ running median. Use it as the robust analog of standard deviation for
 heavy-tailed inputs where the mean and variance overstate central
 tendency and spread.
 
+CusumStat is a two-sided cumulative-sum change-point detector. Configure
+an in-control target, a reference value (allowance) absorbing in-control
+variation, and a decision threshold; the result carries both cumulative
+sums and an alarm flag.
+
+PageHinkleyStat is the cumulative-deviation-from-running-mean change
+detector. It does not require a known in-control target — the running
+mean acts as the reference. Tolerance and threshold control sensitivity.
+
+AdwinStat is the ADWIN2 adaptive-windowing detector. It maintains an
+exponential-histogram window of recent observations and drops the older
+portion whenever a statistically-significant mean shift is detected
+against the Hoeffding bound. Use it when neither a target value nor a
+fixed window is known up front.
+
 ### Quantile
 
 The quantile family answers "what value sits at the p-th percentile?"

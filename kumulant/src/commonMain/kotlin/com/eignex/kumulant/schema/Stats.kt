@@ -2,6 +2,7 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.cardinality.LinearCountingResult
+import com.eignex.kumulant.stat.change.AdwinResult
 import com.eignex.kumulant.stat.change.CusumResult
 import com.eignex.kumulant.stat.change.PageHinkleyResult
 import com.eignex.kumulant.stat.quantile.QuantileResult
@@ -151,6 +152,16 @@ data class PageHinkley(
     /** Alarm threshold for either drift. */
     val threshold: Double = 50.0,
 ) : SeriesStatSpec<PageHinkleyResult>
+
+/** Spec for `AdwinStat`: ADWIN2 adaptive-windowing change detector. */
+@Serializable
+@SerialName("Adwin")
+data class Adwin(
+    /** Confidence parameter for the Hoeffding-bound cut test. */
+    val delta: Double = 0.002,
+    /** Maximum number of buckets per power-of-two size class before merging upward. */
+    val maxBucketsPerSize: Int = 5,
+) : SeriesStatSpec<AdwinResult>
 
 /** Spec for `MadStat`: streaming median and median absolute deviation via two t-digests. */
 @Serializable
