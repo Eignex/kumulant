@@ -1,6 +1,7 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.stat.decay.SeasonalMode
 import com.eignex.kumulant.stat.regression.Penalty
 import com.eignex.kumulant.stat.summary.MaxResult
 import com.eignex.kumulant.stat.summary.MinResult
@@ -53,6 +54,32 @@ class StatsRoundTripTest {
 
     @Test fun `crossingConfig round trips`() {
         val cfg = Crossing(level = 3.5)
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
+    @Test fun `holtConfig round trips`() {
+        val cfg = Holt(
+            alphaWeighting = Alpha(0.3),
+            betaWeighting = Alpha(0.1),
+            phi = 0.9,
+        )
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
+    @Test fun `seasonalSmoothingConfig round trips`() {
+        val cfg = SeasonalSmoothing(
+            alphaWeighting = Alpha(0.3),
+            betaWeighting = Alpha(0.1),
+            gammaWeighting = Alpha(0.2),
+            period = 7,
+            mode = SeasonalMode.Multiplicative,
+            phi = 0.95,
+        )
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
+    @Test fun `recursiveVarianceConfig round trips`() {
+        val cfg = RecursiveVariance(omega = 0.1, alpha = 0.05, beta = 0.9)
         assertEquals(cfg, roundTrip(cfg))
     }
 

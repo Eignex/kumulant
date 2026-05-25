@@ -12,6 +12,10 @@ import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceStat
 import com.eignex.kumulant.stat.decay.EwmaMeanStat
 import com.eignex.kumulant.stat.decay.EwmaVarianceStat
+import com.eignex.kumulant.stat.decay.HoltStat
+import com.eignex.kumulant.stat.decay.RecursiveVarianceStat
+import com.eignex.kumulant.stat.decay.SeasonalMode
+import com.eignex.kumulant.stat.decay.SeasonalSmoothingStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
@@ -341,6 +345,105 @@ val ewmaVarianceStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.variance },
     reference = { ewmaVariance(ewmaWeighting.alpha, it.toList()) },
+)
+
+private val holtAlpha = DecayWeighting.Alpha(0.3)
+private val holtBeta = DecayWeighting.Alpha(0.1)
+
+private fun holtLevelReference(seq: Sequence<Update>): Double {
+    var level = 0.0
+    var trend = 0.0
+    var initialized = false
+    for (u in seq) {
+        if (!initialized) {
+            level = u.value
+            trend = 0.0
+            initialized = true
+            continue
+        }
+        val a = 1.0 - exp(-holtAlpha.alpha * u.weight)
+        val b = 1.0 - exp(-holtBeta.alpha * u.weight)
+        val prev = level
+        level = a * u.value + (1.0 - a) * (prev + trend)
+        trend = b * (level - prev) + (1.0 - b) * trend
+    }
+    return level
+}
+
+val holtStatSpec = seriesStatSpec(
+    name = "HoltStat",
+    factory = { c -> HoltStat(holtAlpha, holtBeta, phi = 1.0, concurrency = c) },
+    updates = ::uniformVariableWeights,
+    scalar = { it.level },
+    reference = ::holtLevelReference,
+)
+
+private const val RV_OMEGA = 0.01
+private const val RV_ALPHA = 0.1
+private const val RV_BETA = 0.85
+
+private fun recursiveVarianceReference(seq: Sequence<Update>): Double {
+    var v = 0.0
+    for (u in seq) v = RV_OMEGA + RV_ALPHA * u.value * u.value + RV_BETA * v
+    return v
+}
+
+val recursiveVarianceStatSpec = seriesStatSpec(
+    name = "RecursiveVarianceStat",
+    factory = { c -> RecursiveVarianceStat(RV_OMEGA, RV_ALPHA, RV_BETA, c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.variance },
+    reference = ::recursiveVarianceReference,
+)
+
+private val seasonalAlpha = DecayWeighting.Alpha(0.3)
+private val seasonalBeta = DecayWeighting.Alpha(0.05)
+private val seasonalGamma = DecayWeighting.Alpha(0.4)
+private const val SEASONAL_PERIOD = 4
+
+private fun seasonalLevelReference(seq: Sequence<Update>): Double {
+    var level = 0.0
+    var trend = 0.0
+    val seasons = DoubleArray(SEASONAL_PERIOD)
+    var initialized = false
+    var slot = 0
+    for (u in seq) {
+        val s = seasons[slot]
+        if (!initialized) {
+            level = u.value
+            trend = 0.0
+            initialized = true
+            slot = (slot + 1) % SEASONAL_PERIOD
+            continue
+        }
+        val a = 1.0 - exp(-seasonalAlpha.alpha * u.weight)
+        val b = 1.0 - exp(-seasonalBeta.alpha * u.weight)
+        val g = 1.0 - exp(-seasonalGamma.alpha * u.weight)
+        val prev = level
+        level = a * (u.value - s) + (1.0 - a) * (prev + trend)
+        trend = b * (level - prev) + (1.0 - b) * trend
+        seasons[slot] = g * (u.value - level) + (1.0 - g) * s
+        slot = (slot + 1) % SEASONAL_PERIOD
+    }
+    return level
+}
+
+val seasonalSmoothingStatSpec = seriesStatSpec(
+    name = "SeasonalSmoothingStat",
+    factory = { c ->
+        SeasonalSmoothingStat(
+            alphaWeighting = seasonalAlpha,
+            betaWeighting = seasonalBeta,
+            gammaWeighting = seasonalGamma,
+            period = SEASONAL_PERIOD,
+            mode = SeasonalMode.Additive,
+            phi = 1.0,
+            concurrency = c,
+        )
+    },
+    updates = ::uniformVariableWeights,
+    scalar = { it.level },
+    reference = ::seasonalLevelReference,
 )
 
 // Rate stats need real elapsed time to produce meaningful values: rate =
@@ -785,6 +888,9 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     decayingVarianceStatSpec,
     ewmaMeanStatSpec,
     ewmaVarianceStatSpec,
+    holtStatSpec,
+    recursiveVarianceStatSpec,
+    seasonalSmoothingStatSpec,
     rateStatSpec,
     decayingRateStatSpec,
     counterRateStatSpec,

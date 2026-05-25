@@ -4,6 +4,10 @@ import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingMeanResult
 import com.eignex.kumulant.stat.decay.DecayingSumResult
 import com.eignex.kumulant.stat.decay.DecayingVarianceResult
+import com.eignex.kumulant.stat.decay.HoltResult
+import com.eignex.kumulant.stat.decay.RecursiveVarianceResult
+import com.eignex.kumulant.stat.decay.SeasonalMode
+import com.eignex.kumulant.stat.decay.SeasonalSmoothingResult
 import com.eignex.kumulant.stat.rate.DecayingRateResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -85,6 +89,48 @@ data class EwmaVariance(
     /** Per-observation smoothing factor. */
     val weighting: Alpha,
 ) : SeriesStatSpec<WeightedVarianceResult>
+
+/** Spec for `HoltStat`: double exponential smoothing with optional trend damping. */
+@Serializable
+@SerialName("Holt")
+data class Holt(
+    /** Per-observation smoothing factor for the level. */
+    val alphaWeighting: Alpha,
+    /** Per-observation smoothing factor for the trend; defaults to the level's [alphaWeighting]. */
+    val betaWeighting: Alpha = alphaWeighting,
+    /** Trend damping in `(0, 1]`; `1.0` is plain Holt. */
+    val phi: Double = 1.0,
+) : SeriesStatSpec<HoltResult>
+
+/** Spec for `SeasonalSmoothingStat`: triple exponential smoothing (Holt-Winters). */
+@Serializable
+@SerialName("SeasonalSmoothing")
+data class SeasonalSmoothing(
+    /** Per-observation smoothing factor for the level. */
+    val alphaWeighting: Alpha,
+    /** Per-observation smoothing factor for the trend. */
+    val betaWeighting: Alpha,
+    /** Per-observation smoothing factor for the seasonal vector. */
+    val gammaWeighting: Alpha,
+    /** Length of the seasonal cycle in updates. */
+    val period: Int,
+    /** Seasonal coupling. */
+    val mode: SeasonalMode = SeasonalMode.Additive,
+    /** Trend damping in `(0, 1]`. */
+    val phi: Double = 1.0,
+) : SeriesStatSpec<SeasonalSmoothingResult>
+
+/** Spec for `RecursiveVarianceStat`: `sigma^2_t = omega + alpha * value^2 + beta * sigma^2_{t-1}`. */
+@Serializable
+@SerialName("RecursiveVariance")
+data class RecursiveVariance(
+    /** Long-run baseline term. */
+    val omega: Double,
+    /** Shock coefficient applied to `value^2`. */
+    val alpha: Double,
+    /** Persistence coefficient applied to the previous variance. */
+    val beta: Double,
+) : SeriesStatSpec<RecursiveVarianceResult>
 
 /** Spec for `DecayingRateStat`: events-per-second with exponential time decay. */
 @Serializable

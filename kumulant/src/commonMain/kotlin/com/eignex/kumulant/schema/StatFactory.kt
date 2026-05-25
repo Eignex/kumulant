@@ -53,6 +53,9 @@ import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceStat
 import com.eignex.kumulant.stat.decay.EwmaMeanStat
 import com.eignex.kumulant.stat.decay.EwmaVarianceStat
+import com.eignex.kumulant.stat.decay.HoltStat
+import com.eignex.kumulant.stat.decay.RecursiveVarianceStat
+import com.eignex.kumulant.stat.decay.SeasonalSmoothingStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.quantile.FrugalQuantileStat
 import com.eignex.kumulant.stat.quantile.HdrHistogramStat
@@ -169,6 +172,25 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is EwmaMean -> EwmaMeanStat(weighting.toDecayWeighting(), concurrency)
 
         is EwmaVariance -> EwmaVarianceStat(weighting.toDecayWeighting(), concurrency)
+
+        is Holt -> HoltStat(
+            alphaWeighting = alphaWeighting.toDecayWeighting(),
+            betaWeighting = betaWeighting.toDecayWeighting(),
+            phi = phi,
+            concurrency = concurrency,
+        )
+
+        is SeasonalSmoothing -> SeasonalSmoothingStat(
+            alphaWeighting = alphaWeighting.toDecayWeighting(),
+            betaWeighting = betaWeighting.toDecayWeighting(),
+            gammaWeighting = gammaWeighting.toDecayWeighting(),
+            period = period,
+            mode = mode,
+            phi = phi,
+            concurrency = concurrency,
+        )
+
+        is RecursiveVariance -> RecursiveVarianceStat(omega, alpha, beta, concurrency)
 
         is DecayingRate -> DecayingRateStat(halfLifeMillis.milliseconds, concurrency)
 
