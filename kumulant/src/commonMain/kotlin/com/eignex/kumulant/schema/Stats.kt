@@ -23,12 +23,16 @@ import com.eignex.kumulant.stat.sketch.CountMinSketchResult
 import com.eignex.kumulant.stat.sketch.HeavyHittersResult
 import com.eignex.kumulant.stat.sketch.MinHashResult
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
+import com.eignex.kumulant.stat.summary.CrossingResult
+import com.eignex.kumulant.stat.summary.ExcursionResult
 import com.eignex.kumulant.stat.summary.MaxResult
 import com.eignex.kumulant.stat.summary.MinResult
 import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.PairedSumResult
 import com.eignex.kumulant.stat.summary.RangeResult
+import com.eignex.kumulant.stat.summary.RunLengthResult
 import com.eignex.kumulant.stat.summary.SumResult
+import com.eignex.kumulant.stat.summary.ThresholdBucketResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import com.eignex.kumulant.stat.tree.ForestRegressionResult
@@ -72,6 +76,32 @@ data object Max : SeriesStatSpec<MaxResult>
 @Serializable
 @SerialName("Range")
 data object Range : SeriesStatSpec<RangeResult>
+
+/** Spec for `ExcursionStat`: running peak with the largest peak-to-trough excursion observed. */
+@Serializable
+@SerialName("Excursion")
+data object Excursion : SeriesStatSpec<ExcursionResult>
+
+/** Spec for `RunLengthStat`: current and longest consecutive truthy-run lengths. */
+@Serializable
+@SerialName("RunLength")
+data object RunLength : SeriesStatSpec<RunLengthResult>
+
+/** Spec for `CrossingStat`: counts upward and downward crossings of a configured level. */
+@Serializable
+@SerialName("Crossing")
+data class Crossing(
+    /** The level the input stream is compared against. */
+    val level: Double,
+) : SeriesStatSpec<CrossingResult>
+
+/** Spec for `ThresholdBucketStat`: weighted counts per user-defined value bucket. */
+@Serializable
+@SerialName("ThresholdBucket")
+data class ThresholdBucket(
+    /** Strictly increasing thresholds defining the bucket edges. */
+    val thresholds: List<Double>,
+) : SeriesStatSpec<ThresholdBucketResult>
 
 /** Spec for `VarianceStat`: weighted running variance (Welford). */
 @Serializable

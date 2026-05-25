@@ -32,6 +32,7 @@ import com.eignex.kumulant.operation.derivative
 import com.eignex.kumulant.operation.diff
 import com.eignex.kumulant.operation.filter
 import com.eignex.kumulant.operation.foldRegression
+import com.eignex.kumulant.operation.hysteresis
 import com.eignex.kumulant.operation.lag
 import com.eignex.kumulant.operation.sample
 import com.eignex.kumulant.operation.throttle
@@ -80,13 +81,17 @@ import com.eignex.kumulant.stat.sketch.MinHashStat
 import com.eignex.kumulant.stat.sketch.SpaceSavingStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
+import com.eignex.kumulant.stat.summary.CrossingStat
+import com.eignex.kumulant.stat.summary.ExcursionStat
 import com.eignex.kumulant.stat.summary.MaxStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MinStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.PairedSumStat
 import com.eignex.kumulant.stat.summary.RangeStat
+import com.eignex.kumulant.stat.summary.RunLengthStat
 import com.eignex.kumulant.stat.summary.SumStat
+import com.eignex.kumulant.stat.summary.ThresholdBucketStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat
@@ -113,6 +118,14 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         Max -> MaxStat(concurrency)
 
         Range -> RangeStat(concurrency)
+
+        Excursion -> ExcursionStat(concurrency)
+
+        RunLength -> RunLengthStat(concurrency)
+
+        is Crossing -> CrossingStat(level, concurrency)
+
+        is ThresholdBucket -> ThresholdBucketStat(thresholds.toDoubleArray(), concurrency)
 
         Variance -> VarianceStat(concurrency)
 
@@ -222,6 +235,9 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is DerivativeSeries ->
             requireSeries(inner, "DerivativeSeries").materialize(concurrency).derivative()
+
+        is HysteresisSeries ->
+            requireSeries(inner, "HysteresisSeries").materialize(concurrency).hysteresis(low, high)
     }
     return out as SeriesStat<R>
 }

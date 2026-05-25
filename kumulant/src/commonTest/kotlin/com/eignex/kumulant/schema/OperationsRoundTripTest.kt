@@ -19,6 +19,7 @@ import com.eignex.kumulant.operation.atX as liveAtX
 import com.eignex.kumulant.operation.atY as liveAtY
 import com.eignex.kumulant.operation.derivative as liveDerivative
 import com.eignex.kumulant.operation.diff as liveDiff
+import com.eignex.kumulant.operation.hysteresis as liveHysteresis
 import com.eignex.kumulant.operation.lag as liveLag
 import com.eignex.kumulant.operation.withFixedX as liveWithFixedX
 import com.eignex.kumulant.operation.withFixedY as liveWithFixedY
@@ -395,6 +396,22 @@ class OperationsRoundTripTest {
         val r = rebuilt.read() as SumResult
         val l = live.read()
         assertEquals(3.0 + 5.0 + 7.0, r.sum, DELTA)
+        assertEquals(l.sum, r.sum, DELTA)
+    }
+
+    @Test fun `hysteresis series should match live composition`() {
+        val cfg: SeriesStatSpec<SumResult> = Sum.hysteresis(low = 1.0, high = 5.0)
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
+        val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
+        val live = SumStat().liveHysteresis(low = 1.0, high = 5.0)
+
+        listOf(0.0, 2.0, 6.0, 4.0, 0.5).forEach {
+            rebuilt.update(it)
+            live.update(it)
+        }
+        val r = rebuilt.read() as SumResult
+        val l = live.read()
         assertEquals(l.sum, r.sum, DELTA)
     }
 

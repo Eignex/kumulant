@@ -43,6 +43,24 @@ class StatsRoundTripTest {
         assertEquals(Range, roundTrip(Range))
     }
 
+    @Test fun `excursionConfig round trips`() {
+        assertEquals(Excursion, roundTrip(Excursion))
+    }
+
+    @Test fun `runLengthConfig round trips`() {
+        assertEquals(RunLength, roundTrip(RunLength))
+    }
+
+    @Test fun `crossingConfig round trips`() {
+        val cfg = Crossing(level = 3.5)
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
+    @Test fun `thresholdBucketConfig round trips`() {
+        val cfg = ThresholdBucket(thresholds = listOf(0.0, 10.0, 100.0))
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
     @Test fun `varianceConfig round trips`() {
         assertEquals(Variance, roundTrip(Variance))
     }

@@ -691,6 +691,25 @@ fun <R : Result> SeriesStatSpec<R>.diff(k: Int = 1): SeriesStatSpec<R> = DiffSer
 /** Wrap this series spec to forward the per-second time derivative of the value stream. */
 fun <R : Result> SeriesStatSpec<R>.derivative(): SeriesStatSpec<R> = DerivativeSeries(this) as SeriesStatSpec<R>
 
+/**
+ * Wire spec for `SeriesStat.hysteresis(low, high)`: maps a noisy numeric stream into a debounced
+ * `0.0` / `1.0` signal using two thresholds.
+ */
+@Serializable
+@SerialName("HysteresisSeries")
+data class HysteresisSeries(
+    /** Inner series spec receiving the debounced 0.0/1.0 stream. */
+    val inner: StatSpec,
+    /** Lower threshold; transitions to low state when input falls below this. */
+    val low: Double,
+    /** Upper threshold; transitions to high state when input rises above this. Must be >= [low]. */
+    val high: Double,
+) : SeriesStatSpec<Result>
+
+/** Wrap this series spec to debounce its input into a 0.0/1.0 stream via two-threshold hysteresis. */
+fun <R : Result> SeriesStatSpec<R>.hysteresis(low: Double, high: Double): SeriesStatSpec<R> =
+    HysteresisSeries(this, low, high) as SeriesStatSpec<R>
+
 /** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable
 @SerialName("SampleSeries")

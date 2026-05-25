@@ -2,6 +2,10 @@
 
 package com.eignex.kumulant.bench
 
+import com.eignex.kumulant.operation.derivative
+import com.eignex.kumulant.operation.diff
+import com.eignex.kumulant.operation.hysteresis
+import com.eignex.kumulant.operation.lag
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumStat
@@ -13,12 +17,16 @@ import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
+import com.eignex.kumulant.stat.summary.CrossingStat
+import com.eignex.kumulant.stat.summary.ExcursionStat
 import com.eignex.kumulant.stat.summary.MaxStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MinStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.RangeStat
+import com.eignex.kumulant.stat.summary.RunLengthStat
 import com.eignex.kumulant.stat.summary.SumStat
+import com.eignex.kumulant.stat.summary.ThresholdBucketStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.concurrent.atomics.AtomicLong
@@ -132,6 +140,114 @@ val rangeStatSpec = seriesStatSpec(
             if (u.value > hi) hi = u.value
         }
         hi - lo
+    },
+)
+
+val thresholdBucketStatSpec = seriesStatSpec(
+    name = "ThresholdBucketStat",
+    factory = { c -> ThresholdBucketStat(doubleArrayOf(0.25, 0.5, 0.75), c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.counts.sum() },
+    reference = { it.count().toDouble() },
+)
+
+val crossingStatSpec = seriesStatSpec(
+    name = "CrossingStat",
+    factory = { c -> CrossingStat(level = 0.5, concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { (it.upCrossings + it.downCrossings).toDouble() },
+    reference = { seq ->
+        var prev = -1
+        var crossings = 0L
+        for (u in seq) {
+            val side = if (u.value >= 0.5) 1 else 0
+            if (prev == -1) {
+                prev = side
+            } else if (prev != side) {
+                crossings++
+                prev = side
+            }
+        }
+        crossings.toDouble()
+    },
+)
+
+val runLengthStatSpec = seriesStatSpec(
+    name = "RunLengthStat",
+    factory = { c -> RunLengthStat(c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.longest.toDouble() },
+    // uniformUnitWeights yields strictly positive values, so every update is truthy
+    // and the longest run equals the stream length.
+    reference = { it.count().toDouble() },
+)
+
+val excursionStatSpec = seriesStatSpec(
+    name = "ExcursionStat",
+    factory = { c -> ExcursionStat(c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.peak },
+    reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
+)
+
+val lagSeriesStatSpec = seriesStatSpec(
+    name = "LagSeriesStat",
+    factory = { c -> SumStat(c).lag(1) },
+    updates = ::uniformUnitWeights,
+    // Inner SumStat receives value[0..n-2]; its sum equals total - value[n-1].
+    scalar = { it.sum },
+    reference = { seq ->
+        val list = seq.toList()
+        if (list.size < 2) 0.0 else list.dropLast(1).sumOf { it.value * it.weight }
+    },
+)
+
+val diffSeriesStatSpec = seriesStatSpec(
+    name = "DiffSeriesStat",
+    factory = { c -> SumStat(c).diff(1) },
+    updates = ::uniformUnitWeights,
+    // First differences telescope: sum equals value[n-1] - value[0].
+    scalar = { it.sum },
+    reference = { seq ->
+        val list = seq.toList()
+        if (list.size < 2) 0.0 else list.last().value - list.first().value
+    },
+)
+
+val derivativeSeriesStatSpec = seriesStatSpec(
+    name = "DerivativeSeriesStat",
+    factory = { c -> SumStat(c).derivative() },
+    updates = ::timeProgressingUnitWeights,
+    scalar = { it.sum },
+    // Each derivative sample is (delta / strideSeconds). They telescope to
+    // (value[n-1] - value[0]) / strideSeconds — independent of n.
+    reference = { seq ->
+        val list = seq.toList()
+        if (list.size < 2) 0.0 else {
+            val strideSec = TIME_PROGRESSING_STRIDE_NANOS / 1_000_000_000.0
+            (list.last().value - list.first().value) / strideSec
+        }
+    },
+)
+
+val hysteresisSeriesStatSpec = seriesStatSpec(
+    name = "HysteresisSeriesStat",
+    factory = { c -> SumStat(c).hysteresis(low = 0.3, high = 0.7) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.sum },
+    reference = { seq ->
+        var state = -1 // -1 unset, 0 low, 1 high
+        var acc = 0.0
+        for (u in seq) {
+            state = when {
+                u.value > 0.7 -> 1
+                u.value < 0.3 -> 0
+                state == -1 -> 0
+                else -> state
+            }
+            if (state == 1) acc += u.weight
+        }
+        acc
     },
 )
 
@@ -654,6 +770,14 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     minStatSpec,
     maxStatSpec,
     rangeStatSpec,
+    thresholdBucketStatSpec,
+    crossingStatSpec,
+    runLengthStatSpec,
+    excursionStatSpec,
+    lagSeriesStatSpec,
+    diffSeriesStatSpec,
+    derivativeSeriesStatSpec,
+    hysteresisSeriesStatSpec,
     bernoulliSumStatSpec,
     pairedSumStatSpec,
     decayingSumStatSpec,
