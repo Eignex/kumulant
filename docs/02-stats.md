@@ -82,6 +82,32 @@ BernoulliSumStat sums weight only when the value is nonzero, which is
 the natural counter for binary outcomes such as click-or-not or
 pass-or-fail.
 
+MadStat tracks the running median and median absolute deviation via two
+T-digests: one over raw values and one over absolute deviations from the
+running median. Use it as the robust analog of standard deviation for
+heavy-tailed inputs where the mean and variance overstate central
+tendency and spread.
+
+For the windowed fraction-meeting-threshold pattern (SLO compliance,
+error budgets), there is no dedicated stat: compose
+`Mean.transform(IfExpr(X gt threshold, 1.0, 0.0)).windowed(window)`.
+`MeanStat` over the Bernoulli-encoded predicate is exactly the matched
+fraction.
+
+For the streaming autocorrelation at a fixed lag there is no dedicated
+stat: lag-k autocorrelation is the Pearson correlation of `(value,
+lag-k value)`, so `Covariance.withSelfLag(k)` directly produces it via
+the existing `CovarianceStat` and a `withSelfLag` operator that
+self-pairs each input with the value seen k updates ago.
+
+### Event
+
+The event family covers stats whose output is discrete-temporal in
+shape: state transitions, dwell times, last-seen timestamps, and
+running peak excursions. They share the streaming-stats discipline but
+their results carry counts of state changes and timestamps rather than
+numeric aggregates.
+
 ExcursionStat tracks the running peak, the lowest value seen since the
 peak was last set, and the largest peak-to-subsequent-trough excursion
 observed across the stream. Use it for drawdown and recovery monitoring,
@@ -97,20 +123,9 @@ level, separated into up-crossings and down-crossings. Use it when the
 useful signal is "how active is this around a threshold", such as
 zero-crossings of a centred series or threshold-touch counts on an SLO.
 
-ThresholdBucketStat is a weighted counter over caller-supplied value
-buckets. Pass a strictly increasing edge list; the stat reports the
-per-bucket weighted counts. Use it when the breakpoints are meaningful
-up front and you do not need a full histogram digest.
-
 RecencyStat reports the time elapsed since the most recent observation.
 Compose with `.filter(...)` for "time since the last matching event"
 diagnostics like staleness checks or last-error-seen monitors.
-
-For the windowed fraction-meeting-threshold pattern (SLO compliance,
-error budgets), there is no dedicated stat: compose
-`Mean.transform(IfExpr(X gt threshold, 1.0, 0.0)).windowed(window)`.
-`MeanStat` over the Bernoulli-encoded predicate is exactly the matched
-fraction.
 
 SojournStat tracks how long a categorical state has been occupied over
 its declared alphabet. The result carries per-state total nanos,
@@ -118,17 +133,28 @@ per-state transition counts, the current state, and the current dwell.
 Use it for uptime / availability breakdowns or any dwell-time
 accounting where the state set is known up front.
 
-For the streaming autocorrelation at a fixed lag there is no dedicated
-stat: lag-k autocorrelation is the Pearson correlation of `(value,
-lag-k value)`, so `Covariance.withSelfLag(k)` directly produces it via
-the existing `CovarianceStat` and a `withSelfLag` operator that
-self-pairs each input with the value seen k updates ago.
+### Rate
 
-MadStat tracks the running median and median absolute deviation via two
-T-digests: one over raw values and one over absolute deviations from the
-running median. Use it as the robust analog of standard deviation for
-heavy-tailed inputs where the mean and variance overstate central
-tendency and spread.
+The rate family sits next to event because it answers the throughput
+question — how often events arrive — using a [HasRate] result so
+consumers can pull events per second (or per any other duration)
+through one trait.
+
+RateStat divides observation count by the wall-clock span of the
+window. Use it for end-to-end throughput where every update represents
+one event.
+
+CounterRateStat is the right pick when the underlying signal is itself
+a monotonically-increasing counter (for example a packet counter, a
+byte counter, or a CPU cycle count pulled from another process). It
+differentiates the counter to recover an event rate and can be told
+whether a decrease means a reset or an actual negative rate.
+
+DecayingRateStat is an exponentially-decayed events-per-second.
+Compared with RateStat it tracks recent activity more responsively;
+compared with CounterRateStat it weights events by recency rather than
+treating them uniformly across the window. Use it when you want a
+smooth, responsive rate metric.
 
 ### Change
 
@@ -188,6 +214,11 @@ FrugalQuantileStat is a constant-memory single-quantile tracker (two
 state variables). Use it when you can fit only a few bytes per stat and
 you only care about one percentile.
 
+ThresholdBucketStat is a weighted counter over caller-supplied value
+buckets. Pass a strictly increasing edge list; the stat reports the
+per-bucket weighted counts. Use it when the breakpoints are meaningful
+up front and you do not need a full histogram digest.
+
 ### Cardinality
 
 The cardinality family answers "how many distinct keys have I seen?".
@@ -233,27 +264,6 @@ do not need every key's count, only the busiest few.
 MinHashStat is a Jaccard similarity sketch. It estimates the overlap
 between two sets without comparing them directly, which is the standard
 tool for deduplication and near-duplicate detection over streams.
-
-### Rate
-
-The rate family produces a HasRate result, so consumers can pull events
-per second (and per any other duration) through one trait.
-
-RateStat divides observation count by the wall-clock span of the
-window. Use it for end-to-end throughput where every update represents
-one event.
-
-CounterRateStat is the right pick when the underlying signal is itself
-a monotonically-increasing counter (for example a packet counter, a
-byte counter, or a CPU cycle count pulled from another process). It
-differentiates the counter to recover an event rate and can be told
-whether a decrease means a reset or an actual negative rate.
-
-DecayingRateStat is an exponentially-decayed events-per-second.
-Compared with RateStat it tracks recent activity more responsively;
-compared with CounterRateStat it weights events by recency rather than
-treating them uniformly across the window. Use it when you want a
-smooth, responsive rate metric.
 
 ### Decay
 
