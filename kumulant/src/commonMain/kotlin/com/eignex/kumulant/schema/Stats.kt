@@ -32,6 +32,7 @@ import com.eignex.kumulant.stat.summary.PairedSumResult
 import com.eignex.kumulant.stat.summary.RangeResult
 import com.eignex.kumulant.stat.summary.RecencyResult
 import com.eignex.kumulant.stat.summary.RunLengthResult
+import com.eignex.kumulant.stat.summary.SojournResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.ThresholdBucketResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
@@ -342,6 +343,14 @@ data class MinHash(
     /** PRNG seed used to derive the per-hash salts. */
     val seed: Long = -3724518991637283867L,
 ) : DiscreteStatSpec<MinHashResult>
+
+/** Spec for `SojournStat`: per-state time, transition counts, and current dwell over a declared alphabet. */
+@Serializable
+@SerialName("Sojourn")
+data class Sojourn(
+    /** Declared categorical state alphabet, in order. Must be non-empty and unique. */
+    val states: List<Long>,
+) : DiscreteStatSpec<SojournResult>
 
 /** Spec for `SpaceSavingStat`: top-[capacity] heavy-hitters tracker. */
 @Serializable

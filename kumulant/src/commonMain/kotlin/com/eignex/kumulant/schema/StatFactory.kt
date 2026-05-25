@@ -94,6 +94,7 @@ import com.eignex.kumulant.stat.summary.PairedSumStat
 import com.eignex.kumulant.stat.summary.RangeStat
 import com.eignex.kumulant.stat.summary.RecencyStat
 import com.eignex.kumulant.stat.summary.RunLengthStat
+import com.eignex.kumulant.stat.summary.SojournStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.ThresholdBucketStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
@@ -414,6 +415,8 @@ fun <R : Result> DiscreteStatSpec<R>.materialize(concurrency: Concurrency = Conc
         is MinHash -> MinHashStat(numHashes, seed, concurrency)
 
         is SpaceSaving -> SpaceSavingStat(capacity, concurrency)
+
+        is Sojourn -> SojournStat(states, concurrency)
 
         is WithWeightDiscrete ->
             requireDiscrete(inner, "WithWeightDiscrete").materialize(concurrency).withWeight(weight)

@@ -238,6 +238,11 @@ class StatsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
+    @Test fun `sojournConfig round trips`() {
+        val cfg = Sojourn(states = listOf(0L, 1L, 2L))
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
     @Test fun `decayingSumConfig round trips`() {
         val cfg = DecayingSum(HalfLife(60_000L))
         assertEquals(cfg, roundTrip(cfg))

@@ -30,6 +30,8 @@ import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.RangeStat
 import com.eignex.kumulant.stat.summary.RecencyStat
 import com.eignex.kumulant.stat.summary.RunLengthStat
+import com.eignex.kumulant.stat.summary.SojournResult
+import com.eignex.kumulant.stat.summary.SojournStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.ThresholdBucketStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
@@ -202,6 +204,29 @@ val recencyStatSpec = seriesStatSpec(
     // Reference: timestamp of the most recent observation.
     scalar = { it.lastObservedTimestampNanos.toDouble() },
     reference = { seq -> seq.lastOrNull()?.timestampNanos?.toDouble() ?: Long.MIN_VALUE.toDouble() },
+)
+
+private val sojournStates = listOf(0L, 1L, 2L)
+
+val sojournStatSpec: StatSpec<SojournStat, SojournResult> = StatSpec(
+    name = "SojournStat",
+    factory = { c -> SojournStat(sojournStates, c) },
+    applyUpdate = { s, u ->
+        // Map the workload value into the declared 3-state alphabet.
+        val state = sojournStates[(u.value.toRawBits() and Long.MAX_VALUE).rem(sojournStates.size.toLong()).toInt()]
+        s.update(state, u.timestampNanos, u.weight)
+    },
+    readSnapshot = { s, ts -> s.read(ts) },
+    merge = { s, r -> s.merge(r) },
+    updates = ::timeProgressingUnitWeights,
+    // Total accounted time equals the span from first observation to the read timestamp.
+    scalar = { it.totalNanosByState.sum().toDouble() + it.currentDwellNanos.toDouble() },
+    reference = { seq ->
+        val list = seq.toList()
+        if (list.isEmpty()) 0.0 else timeProgressingElapsedNanos(list.size).toDouble() -
+            TIME_PROGRESSING_STRIDE_NANOS.toDouble() - list.first().timestampNanos.toDouble()
+    },
+    readAt = { n -> timeProgressingElapsedNanos(n) - TIME_PROGRESSING_STRIDE_NANOS },
 )
 
 val lagSeriesStatSpec = seriesStatSpec(
@@ -888,6 +913,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     runLengthStatSpec,
     excursionStatSpec,
     recencyStatSpec,
+    sojournStatSpec,
     lagSeriesStatSpec,
     diffSeriesStatSpec,
     derivativeSeriesStatSpec,
