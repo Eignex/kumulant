@@ -21,6 +21,18 @@ interface HasRate : Result {
     )
 }
 
+/**
+ * Result exposing a center estimate and a scale estimate. Consumed by the `band`
+ * operator and any other downstream that derives `center ± k * scale` style bands.
+ */
+interface HasCenterScale : Result {
+    /** Center of the distribution (mean, median, level, etc.). */
+    val center: Double
+
+    /** Scale of the distribution (standard deviation, MAD, span, etc.). */
+    val scale: Double
+}
+
 /** Result exposing variance-family quantities derived from [sst] and [totalWeights]. */
 interface HasSampleVariance : Result {
     /** Cumulative weight of observations that contributed to this result. */

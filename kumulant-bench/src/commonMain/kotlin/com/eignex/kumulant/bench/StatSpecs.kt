@@ -6,6 +6,7 @@ import com.eignex.kumulant.operation.derivative
 import com.eignex.kumulant.operation.diff
 import com.eignex.kumulant.operation.hysteresis
 import com.eignex.kumulant.operation.lag
+import com.eignex.kumulant.operation.band
 import com.eignex.kumulant.operation.ResampleAggregator
 import com.eignex.kumulant.operation.resampleByTime
 import com.eignex.kumulant.stat.decay.DecayWeighting
@@ -203,6 +204,15 @@ val excursionStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.peak },
     reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
+)
+
+val bandSeriesStatSpec = seriesStatSpec(
+    name = "BandSeriesStat",
+    factory = { c -> VarianceStat(c).band(k = 2.0) },
+    updates = ::uniformVariableWeights,
+    // Center of a variance result is the running mean.
+    scalar = { it.center },
+    reference = { twoPassMean(it.toList()) },
 )
 
 val madStatSpec = seriesStatSpec(
@@ -1000,6 +1010,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     ratioVsTargetStatSpec,
     autocorrelationStatSpec,
     madStatSpec,
+    bandSeriesStatSpec,
     lagSeriesStatSpec,
     diffSeriesStatSpec,
     derivativeSeriesStatSpec,

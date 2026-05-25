@@ -2,11 +2,13 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.ResultList
+import com.eignex.kumulant.operation.BandResult
 import com.eignex.kumulant.operation.ResampleAggregator
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
+import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -19,6 +21,7 @@ import com.eignex.kumulant.operation.atIndex as liveAtIndex
 import com.eignex.kumulant.operation.atIndices as liveAtIndices
 import com.eignex.kumulant.operation.atX as liveAtX
 import com.eignex.kumulant.operation.atY as liveAtY
+import com.eignex.kumulant.operation.band as liveBand
 import com.eignex.kumulant.operation.derivative as liveDerivative
 import com.eignex.kumulant.operation.diff as liveDiff
 import com.eignex.kumulant.operation.hysteresis as liveHysteresis
@@ -422,6 +425,25 @@ class OperationsRoundTripTest {
         val r = rebuilt.read() as SumResult
         val l = live.read()
         assertEquals(l.sum, r.sum, DELTA)
+    }
+
+    @Test fun `band series should match live composition`() {
+        val cfg: SeriesStatSpec<BandResult> = Variance.band(k = 2.0)
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
+        val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
+        val live = VarianceStat().liveBand(k = 2.0)
+
+        listOf(0.0, 1.0, 2.0, 3.0, 4.0).forEach {
+            rebuilt.update(it)
+            live.update(it)
+        }
+        val r = rebuilt.read() as BandResult
+        val l = live.read()
+        assertEquals(l.center, r.center, DELTA)
+        assertEquals(l.scale, r.scale, DELTA)
+        assertEquals(l.lower, r.lower, DELTA)
+        assertEquals(l.upper, r.upper, DELTA)
     }
 
     @Test fun `hysteresis series should match live composition`() {

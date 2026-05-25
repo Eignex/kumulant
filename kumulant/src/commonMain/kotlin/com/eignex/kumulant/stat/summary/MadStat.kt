@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
@@ -16,7 +17,11 @@ data class MadResult(
     val median: Double,
     /** Median absolute deviation from the running median estimate. */
     val mad: Double,
-) : Result
+) : Result,
+    HasCenterScale {
+    override val center: Double get() = median
+    override val scale: Double get() = mad
+}
 
 /**
  * Streaming median absolute deviation, the robust analog of standard deviation. Backed

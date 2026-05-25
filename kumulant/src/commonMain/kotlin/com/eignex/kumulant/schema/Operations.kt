@@ -4,6 +4,7 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
+import com.eignex.kumulant.operation.BandResult
 import com.eignex.kumulant.operation.ResampleAggregator
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -732,6 +733,22 @@ fun <R : Result> SeriesStatSpec<R>.resampleByTime(
     bucketMillis: Long,
     aggregator: ResampleAggregator = ResampleAggregator.Mean,
 ): SeriesStatSpec<R> = ResampleByTimeSeries(this, bucketMillis, aggregator) as SeriesStatSpec<R>
+
+/**
+ * Wire spec for `SeriesStat.band(k)`: derives `center ± k * scale` from any series stat whose
+ * result implements [com.eignex.kumulant.core.HasCenterScale].
+ */
+@Serializable
+@SerialName("BandSeries")
+data class BandSeries(
+    /** Inner series spec; its result must implement [com.eignex.kumulant.core.HasCenterScale]. */
+    val inner: StatSpec,
+    /** Scale multiplier. */
+    val k: Double,
+) : SeriesStatSpec<BandResult>
+
+/** Wrap this series spec to expose a `[lower, upper]` band of width [k] * scale around center. */
+fun SeriesStatSpec<*>.band(k: Double): SeriesStatSpec<BandResult> = BandSeries(this, k)
 
 /** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable

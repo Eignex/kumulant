@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.HasShapeMoments
 import com.eignex.kumulant.core.Result
@@ -22,8 +23,11 @@ data class MomentsResult(
     override val m4: Double,
 ) : Result,
     HasSampleVariance,
-    HasShapeMoments {
+    HasShapeMoments,
+    HasCenterScale {
     override val sst: Double get() = m2
+    override val center: Double get() = mean
+    override val scale: Double get() = stdDev
 }
 
 /**

@@ -4,6 +4,7 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
+import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
@@ -28,6 +29,7 @@ import com.eignex.kumulant.operation.atIndex
 import com.eignex.kumulant.operation.atIndices
 import com.eignex.kumulant.operation.atX
 import com.eignex.kumulant.operation.atY
+import com.eignex.kumulant.operation.band
 import com.eignex.kumulant.operation.derivative
 import com.eignex.kumulant.operation.diff
 import com.eignex.kumulant.operation.filter
@@ -279,6 +281,15 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is ResampleByTimeSeries ->
             requireSeries(inner, "ResampleByTimeSeries").materialize(concurrency)
                 .resampleByTime(bucketMillis.milliseconds, aggregator)
+
+        is BandSeries -> {
+            // The runtime check happens at the first read; the cast is safe iff the inner stat's
+            // Result implements HasCenterScale, which is part of BandSeries's documented contract.
+            @Suppress("UNCHECKED_CAST")
+            val centerScaleInner = requireSeries(inner, "BandSeries").materialize(concurrency)
+                as SeriesStat<HasCenterScale>
+            centerScaleInner.band(k)
+        }
     }
     return out as SeriesStat<R>
 }

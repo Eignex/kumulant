@@ -283,6 +283,24 @@ Use it to downsample noisy high-rate streams before feeding them into
 sketches, regressors, or any downstream consumer that prefers a
 regularly-spaced input.
 
+## Bands around a center
+
+`band(k)` derives `center ± k * scale` from any series stat whose result
+implements the `HasCenterScale` trait (currently `VarianceStat`,
+`MomentsStat`, `MadStat`, and any future stat exposing the trait). The
+returned series stat produces a `BandResult` with center, scale, k,
+lower, and upper. Merging through the band wrapper is unsupported —
+merge the inner stat directly, then read the band.
+
+```kotlin
+val variance = VarianceStat().band(k = 2.0)
+val mad = MadStat().band(k = 1.5)
+```
+
+Pair it with `.windowed(...)` for sliding bands, or feed the inner stat
+through any of the other operators (filter, transform, weightBy) before
+deriving the band.
+
 ## Operation locality
 
 Most operations are zero-state: filter, transform, withWeight, withValue,

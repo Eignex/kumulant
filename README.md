@@ -61,7 +61,7 @@ walks through each family with notes on when to pick which.
 
 | Family                                       | Stats                                                                          |
 |----------------------------------------------|--------------------------------------------------------------------------------|
-| [Summary](docs/02-stats.md#summary)          | Sum, Mean, Min, Max, Range, Variance, Moments, BernoulliSum, Count, Excursion, RunLength, Crossing, ThresholdBucket, Recency, RatioVsTarget, Sojourn |
+| [Summary](docs/02-stats.md#summary)          | Sum, Mean, Min, Max, Range, Variance, Moments, BernoulliSum, Count, Excursion, RunLength, Crossing, ThresholdBucket, Recency, RatioVsTarget, Sojourn, Autocorrelation, Mad |
 | [Quantile](docs/02-stats.md#quantile)        | DDSketch, TDigest, HdrHistogram, LinearHistogram, ReservoirHistogram, FrugalQuantile |
 | [Cardinality](docs/02-stats.md#cardinality)  | HyperLogLog, LinearCounting                                                    |
 | [Sketch](docs/02-stats.md#sketch)            | BloomFilter, CountMinSketch, MinHash, SpaceSaving                              |

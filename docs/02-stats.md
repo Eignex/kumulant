@@ -118,6 +118,17 @@ per-state transition counts, the current state, and the current dwell.
 Use it for uptime / availability breakdowns or any dwell-time
 accounting where the state set is known up front.
 
+AutocorrelationStat estimates the streaming autocorrelation at a fixed
+lag using a small ring buffer plus three accumulators. Use it as a
+whiteness diagnostic on model residuals or a quick "is this stream
+serially correlated" check.
+
+MadStat tracks the running median and median absolute deviation via two
+T-digests: one over raw values and one over absolute deviations from the
+running median. Use it as the robust analog of standard deviation for
+heavy-tailed inputs where the mean and variance overstate central
+tendency and spread.
+
 ### Quantile
 
 The quantile family answers "what value sits at the p-th percentile?"

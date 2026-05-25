@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
@@ -28,7 +29,11 @@ data class WeightedVarianceResult(
     val mean: Double,
     override val variance: Double,
 ) : Result,
-    HasSampleVariance
+    HasSampleVariance,
+    HasCenterScale {
+    override val center: Double get() = mean
+    override val scale: Double get() = stdDev
+}
 
 /**
  * Weighted mean and variance via Welford with Chan-style parallel merge.
