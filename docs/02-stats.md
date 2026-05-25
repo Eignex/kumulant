@@ -106,11 +106,11 @@ RecencyStat reports the time elapsed since the most recent observation.
 Compose with `.filter(...)` for "time since the last matching event"
 diagnostics like staleness checks or last-error-seen monitors.
 
-RatioVsTargetStat reports the weighted fraction of observations meeting
-a target threshold under a configurable comparison (above, at-least,
-below, at-most, equals). The cumulative form is the leaf stat; pair it
-with `.windowed(...)` to get the windowed-ratio variant used by SLO
-compliance and error-budget tracking.
+For the windowed fraction-meeting-threshold pattern (SLO compliance,
+error budgets), there is no dedicated stat: compose
+`Mean.transform(IfExpr(X gt threshold, 1.0, 0.0)).windowed(window)`.
+`MeanStat` over the Bernoulli-encoded predicate is exactly the matched
+fraction.
 
 SojournStat tracks how long a categorical state has been occupied over
 its declared alphabet. The result carries per-state total nanos,
@@ -118,10 +118,11 @@ per-state transition counts, the current state, and the current dwell.
 Use it for uptime / availability breakdowns or any dwell-time
 accounting where the state set is known up front.
 
-AutocorrelationStat estimates the streaming autocorrelation at a fixed
-lag using a small ring buffer plus three accumulators. Use it as a
-whiteness diagnostic on model residuals or a quick "is this stream
-serially correlated" check.
+For the streaming autocorrelation at a fixed lag there is no dedicated
+stat: lag-k autocorrelation is the Pearson correlation of `(value,
+lag-k value)`, so `Covariance.withSelfLag(k)` directly produces it via
+the existing `CovarianceStat` and a `withSelfLag` operator that
+self-pairs each input with the value seen k updates ago.
 
 MadStat tracks the running median and median absolute deviation via two
 T-digests: one over raw values and one over absolute deviations from the

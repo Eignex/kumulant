@@ -45,6 +45,7 @@ import com.eignex.kumulant.operation.weightBy
 import com.eignex.kumulant.operation.windowed
 import com.eignex.kumulant.operation.withFixedX
 import com.eignex.kumulant.operation.withFixedY
+import com.eignex.kumulant.operation.withSelfLag
 import com.eignex.kumulant.operation.withTimeAsX
 import com.eignex.kumulant.operation.withTimeAsY
 import com.eignex.kumulant.operation.withValue
@@ -88,7 +89,6 @@ import com.eignex.kumulant.stat.sketch.BloomFilterStat
 import com.eignex.kumulant.stat.sketch.CountMinSketchStat
 import com.eignex.kumulant.stat.sketch.MinHashStat
 import com.eignex.kumulant.stat.sketch.SpaceSavingStat
-import com.eignex.kumulant.stat.summary.AutocorrelationStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.CrossingStat
@@ -100,7 +100,6 @@ import com.eignex.kumulant.stat.summary.MinStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.PairedSumStat
 import com.eignex.kumulant.stat.summary.RangeStat
-import com.eignex.kumulant.stat.summary.RatioVsTargetStat
 import com.eignex.kumulant.stat.summary.RecencyStat
 import com.eignex.kumulant.stat.summary.RunLengthStat
 import com.eignex.kumulant.stat.summary.SojournStat
@@ -139,14 +138,9 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         Recency -> RecencyStat(concurrency)
 
-        is RatioVsTarget -> RatioVsTargetStat(threshold, comparison, concurrency)
-            .windowed(windowDurationMillis.milliseconds, slices, concurrency)
-
         is Crossing -> CrossingStat(level, concurrency)
 
         is ThresholdBucket -> ThresholdBucketStat(thresholds.toDoubleArray(), concurrency)
-
-        is Autocorrelation -> AutocorrelationStat(lag, concurrency)
 
         is Mad -> MadStat(compression, concurrency)
 
@@ -290,6 +284,9 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is ResampleByTimeSeries ->
             requireSeries(inner, "ResampleByTimeSeries").materialize(concurrency)
                 .resampleByTime(bucketMillis.milliseconds, aggregator)
+
+        is WithSelfLagSeries ->
+            requirePaired(inner, "WithSelfLagSeries").materialize(concurrency).withSelfLag(k)
 
         is BandSeries -> {
             // The runtime check happens at the first read; the cast is safe iff the inner stat's

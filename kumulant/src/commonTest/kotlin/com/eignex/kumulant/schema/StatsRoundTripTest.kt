@@ -6,7 +6,6 @@ import com.eignex.kumulant.stat.regression.Penalty
 import com.eignex.kumulant.stat.summary.MaxResult
 import com.eignex.kumulant.stat.summary.MinResult
 import com.eignex.kumulant.stat.summary.SumResult
-import com.eignex.kumulant.stat.summary.TargetComparison
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.skema.SchemaJson
 import kotlinx.serialization.encodeToString
@@ -57,16 +56,6 @@ class StatsRoundTripTest {
         assertEquals(Recency, roundTrip(Recency))
     }
 
-    @Test fun `ratioVsTargetConfig round trips`() {
-        val cfg = RatioVsTarget(
-            threshold = 0.95,
-            comparison = TargetComparison.AtLeast,
-            windowDurationMillis = 60_000L,
-            slices = 6,
-        )
-        assertEquals(cfg, roundTrip(cfg))
-    }
-
     @Test fun `crossingConfig round trips`() {
         val cfg = Crossing(level = 3.5)
         assertEquals(cfg, roundTrip(cfg))
@@ -100,11 +89,6 @@ class StatsRoundTripTest {
 
     @Test fun `thresholdBucketConfig round trips`() {
         val cfg = ThresholdBucket(thresholds = listOf(0.0, 10.0, 100.0))
-        assertEquals(cfg, roundTrip(cfg))
-    }
-
-    @Test fun `autocorrelationConfig round trips`() {
-        val cfg = Autocorrelation(lag = 3)
         assertEquals(cfg, roundTrip(cfg))
     }
 

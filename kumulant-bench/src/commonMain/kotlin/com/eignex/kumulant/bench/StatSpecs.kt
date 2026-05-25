@@ -9,6 +9,7 @@ import com.eignex.kumulant.operation.lag
 import com.eignex.kumulant.operation.band
 import com.eignex.kumulant.operation.ResampleAggregator
 import com.eignex.kumulant.operation.resampleByTime
+import com.eignex.kumulant.operation.withSelfLag
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumStat
@@ -25,7 +26,6 @@ import com.eignex.kumulant.stat.change.PageHinkleyStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
-import com.eignex.kumulant.stat.summary.AutocorrelationStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.MadStat
@@ -36,12 +36,10 @@ import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MinStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.RangeStat
-import com.eignex.kumulant.stat.summary.RatioVsTargetStat
 import com.eignex.kumulant.stat.summary.RecencyStat
 import com.eignex.kumulant.stat.summary.RunLengthStat
 import com.eignex.kumulant.stat.summary.SojournResult
 import com.eignex.kumulant.stat.summary.SojournStat
-import com.eignex.kumulant.stat.summary.TargetComparison
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.ThresholdBucketStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
@@ -255,11 +253,11 @@ val madStatSpec = seriesStatSpec(
 )
 
 val autocorrelationStatSpec = seriesStatSpec(
-    name = "AutocorrelationStat",
-    factory = { c -> AutocorrelationStat(lag = 1, concurrency = c) },
+    name = "Covariance.withSelfLag",
+    factory = { c -> com.eignex.kumulant.stat.regression.CovarianceStat(c).withSelfLag(1) },
     updates = ::uniformUnitWeights,
-    scalar = { it.autocorrelation },
-    // For an i.i.d uniform stream the lag-1 autocorrelation tends to zero. Tolerance applied in the harness.
+    scalar = { it.correlation },
+    // For an i.i.d uniform stream the lag-1 autocorrelation tends to zero.
     reference = { _ -> 0.0 },
 )
 
@@ -353,22 +351,6 @@ val hysteresisSeriesStatSpec = seriesStatSpec(
             if (state == 1) acc += u.weight
         }
         acc
-    },
-)
-
-val ratioVsTargetStatSpec = seriesStatSpec(
-    name = "RatioVsTargetStat",
-    factory = { c -> RatioVsTargetStat(threshold = 0.5, comparison = TargetComparison.AtLeast, concurrency = c) },
-    updates = ::uniformVariableWeights,
-    scalar = { it.ratio },
-    reference = { seq ->
-        var matched = 0.0
-        var total = 0.0
-        for (u in seq) {
-            total += u.weight
-            if (u.value >= 0.5) matched += u.weight
-        }
-        if (total == 0.0) Double.NaN else matched / total
     },
 )
 
@@ -1037,7 +1019,6 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     excursionStatSpec,
     recencyStatSpec,
     sojournStatSpec,
-    ratioVsTargetStatSpec,
     autocorrelationStatSpec,
     madStatSpec,
     cusumStatSpec,

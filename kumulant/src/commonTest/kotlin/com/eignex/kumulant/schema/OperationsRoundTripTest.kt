@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.operation.BandResult
 import com.eignex.kumulant.operation.ResampleAggregator
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
+import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
@@ -29,6 +30,7 @@ import com.eignex.kumulant.operation.lag as liveLag
 import com.eignex.kumulant.operation.resampleByTime as liveResampleByTime
 import com.eignex.kumulant.operation.withFixedX as liveWithFixedX
 import com.eignex.kumulant.operation.withFixedY as liveWithFixedY
+import com.eignex.kumulant.operation.withSelfLag as liveWithSelfLag
 import com.eignex.kumulant.operation.withValue as liveWithValue
 import com.eignex.kumulant.operation.withWeight as liveWithWeight
 /**
@@ -425,6 +427,22 @@ class OperationsRoundTripTest {
         val r = rebuilt.read() as SumResult
         val l = live.read()
         assertEquals(l.sum, r.sum, DELTA)
+    }
+
+    @Test fun `withSelfLag series should match live composition`() {
+        val cfg: SeriesStatSpec<*> = Covariance.withSelfLag(k = 1)
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
+        val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
+        val live = com.eignex.kumulant.stat.regression.CovarianceStat().liveWithSelfLag(k = 1)
+
+        listOf(1.0, 2.0, 1.0, 2.0, 1.0, 2.0).forEach {
+            rebuilt.update(it)
+            live.update(it)
+        }
+        val r = rebuilt.read() as CovarianceResult
+        val l = live.read()
+        assertEquals(l.correlation, r.correlation, DELTA)
     }
 
     @Test fun `band series should match live composition`() {

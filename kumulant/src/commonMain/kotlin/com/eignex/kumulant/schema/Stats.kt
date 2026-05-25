@@ -25,7 +25,6 @@ import com.eignex.kumulant.stat.sketch.BloomFilterResult
 import com.eignex.kumulant.stat.sketch.CountMinSketchResult
 import com.eignex.kumulant.stat.sketch.HeavyHittersResult
 import com.eignex.kumulant.stat.sketch.MinHashResult
-import com.eignex.kumulant.stat.summary.AutocorrelationResult
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.CrossingResult
 import com.eignex.kumulant.stat.summary.ExcursionResult
@@ -35,12 +34,10 @@ import com.eignex.kumulant.stat.summary.MinResult
 import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.PairedSumResult
 import com.eignex.kumulant.stat.summary.RangeResult
-import com.eignex.kumulant.stat.summary.RatioResult
 import com.eignex.kumulant.stat.summary.RecencyResult
 import com.eignex.kumulant.stat.summary.RunLengthResult
 import com.eignex.kumulant.stat.summary.SojournResult
 import com.eignex.kumulant.stat.summary.SumResult
-import com.eignex.kumulant.stat.summary.TargetComparison
 import com.eignex.kumulant.stat.summary.ThresholdBucketResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -101,20 +98,6 @@ data object RunLength : SeriesStatSpec<RunLengthResult>
 @SerialName("Recency")
 data object Recency : SeriesStatSpec<RecencyResult>
 
-/** Spec for `RatioVsTargetStat`: windowed fraction of observations meeting a target. */
-@Serializable
-@SerialName("RatioVsTarget")
-data class RatioVsTarget(
-    /** Threshold compared against each value. */
-    val threshold: Double,
-    /** Comparison strategy. */
-    val comparison: TargetComparison = TargetComparison.AtLeast,
-    /** Sliding-window duration in milliseconds; must be positive. */
-    val windowDurationMillis: Long,
-    /** Number of ring slices used by the sliding window. */
-    val slices: Int = 10,
-) : SeriesStatSpec<RatioResult>
-
 /** Spec for `CrossingStat`: counts upward and downward crossings of a configured level. */
 @Serializable
 @SerialName("Crossing")
@@ -122,14 +105,6 @@ data class Crossing(
     /** The level the input stream is compared against. */
     val level: Double,
 ) : SeriesStatSpec<CrossingResult>
-
-/** Spec for `AutocorrelationStat`: streaming autocorrelation at fixed lag. */
-@Serializable
-@SerialName("Autocorrelation")
-data class Autocorrelation(
-    /** Lag between paired observations; must be at least 1. */
-    val lag: Int,
-) : SeriesStatSpec<AutocorrelationResult>
 
 /** Spec for `CusumStat`: two-sided cumulative-sum change-point detector. */
 @Serializable

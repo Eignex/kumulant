@@ -750,6 +750,25 @@ data class BandSeries(
 /** Wrap this series spec to expose a `[lower, upper]` band of width [k] * scale around center. */
 fun SeriesStatSpec<*>.band(k: Double): SeriesStatSpec<BandResult> = BandSeries(this, k)
 
+/**
+ * Wire spec for `PairedStat.withSelfLag(k)`: lifts a paired stat into a series stat by
+ * self-pairing each input with the value seen `k` updates ago. The inner paired stat
+ * receives `(current, lag-k)` so a covariance / correlation stat naturally yields the
+ * lag-k autocovariance / autocorrelation.
+ */
+@Serializable
+@SerialName("WithSelfLagSeries")
+data class WithSelfLagSeries(
+    /** Inner paired spec receiving `(current, lag-k)` pairs. */
+    val inner: StatSpec,
+    /** Lag between paired observations; must be at least 1. */
+    val k: Int,
+) : SeriesStatSpec<Result>
+
+/** Lift a paired spec into a series spec by self-pairing each input with the value seen [k] updates ago. */
+fun <R : Result> PairedStatSpec<R>.withSelfLag(k: Int): SeriesStatSpec<R> =
+    WithSelfLagSeries(this, k) as SeriesStatSpec<R>
+
 /** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable
 @SerialName("SampleSeries")
