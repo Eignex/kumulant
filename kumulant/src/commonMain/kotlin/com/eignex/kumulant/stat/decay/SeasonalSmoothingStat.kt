@@ -83,6 +83,9 @@ data class SeasonalSmoothingResult(
  * the residual `value - level`; multiplicative: from `value / level`, falling back to
  * `1.0` if `level == 0.0`).
  *
+ * **Use cases:** short-horizon forecasting of streams with a recurring cycle on top
+ * of a level and trend; pairs with [HoltStat] when no seasonal component is present.
+ *
  * **Memory:** O(period) — three scalar cells plus a season array plus a lock.
  *
  * **Update:** O(1) — single seasonal slot touched per update.
