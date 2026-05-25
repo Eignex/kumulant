@@ -2,6 +2,7 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.ResultList
+import com.eignex.kumulant.operation.ResampleAggregator
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
@@ -12,6 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import com.eignex.kumulant.operation.asDiscrete as liveAsDiscrete
 import com.eignex.kumulant.operation.atIndex as liveAtIndex
 import com.eignex.kumulant.operation.atIndices as liveAtIndices
@@ -21,6 +23,7 @@ import com.eignex.kumulant.operation.derivative as liveDerivative
 import com.eignex.kumulant.operation.diff as liveDiff
 import com.eignex.kumulant.operation.hysteresis as liveHysteresis
 import com.eignex.kumulant.operation.lag as liveLag
+import com.eignex.kumulant.operation.resampleByTime as liveResampleByTime
 import com.eignex.kumulant.operation.withFixedX as liveWithFixedX
 import com.eignex.kumulant.operation.withFixedY as liveWithFixedY
 import com.eignex.kumulant.operation.withValue as liveWithValue
@@ -396,6 +399,28 @@ class OperationsRoundTripTest {
         val r = rebuilt.read() as SumResult
         val l = live.read()
         assertEquals(3.0 + 5.0 + 7.0, r.sum, DELTA)
+        assertEquals(l.sum, r.sum, DELTA)
+    }
+
+    @Test fun `resampleByTime series should match live composition`() {
+        val cfg: SeriesStatSpec<SumResult> = Sum.resampleByTime(
+            bucketMillis = 100L,
+            aggregator = ResampleAggregator.Sum,
+        )
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
+        val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
+        val live = SumStat().liveResampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Sum)
+
+        // Bucket 0: 1.0, 3.0 (closed by bucket-1 update). Bucket 1: 7.0 (in progress).
+        val stamps = listOf(0L, 50_000_000L, 150_000_000L)
+        val values = listOf(1.0, 3.0, 7.0)
+        for (i in stamps.indices) {
+            rebuilt.update(values[i], stamps[i])
+            live.update(values[i], stamps[i])
+        }
+        val r = rebuilt.read() as SumResult
+        val l = live.read()
         assertEquals(l.sum, r.sum, DELTA)
     }
 

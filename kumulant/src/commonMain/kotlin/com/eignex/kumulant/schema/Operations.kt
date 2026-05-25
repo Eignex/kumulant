@@ -4,6 +4,7 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
+import com.eignex.kumulant.operation.ResampleAggregator
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -709,6 +710,28 @@ data class HysteresisSeries(
 /** Wrap this series spec to debounce its input into a 0.0/1.0 stream via two-threshold hysteresis. */
 fun <R : Result> SeriesStatSpec<R>.hysteresis(low: Double, high: Double): SeriesStatSpec<R> =
     HysteresisSeries(this, low, high) as SeriesStatSpec<R>
+
+/**
+ * Wire spec for `SeriesStat.resampleByTime(bucket, aggregator)`: aligns the input
+ * stream onto fixed wall-clock buckets and forwards one observation per closed bucket
+ * to the inner stat.
+ */
+@Serializable
+@SerialName("ResampleByTimeSeries")
+data class ResampleByTimeSeries(
+    /** Inner series spec receiving one update per closed bucket. */
+    val inner: StatSpec,
+    /** Bucket length in milliseconds; must be positive. */
+    val bucketMillis: Long,
+    /** Per-bucket reduction; defaults to [ResampleAggregator.Mean]. */
+    val aggregator: ResampleAggregator = ResampleAggregator.Mean,
+) : SeriesStatSpec<Result>
+
+/** Wrap this series spec to forward one per-bucket summary using [aggregator]. */
+fun <R : Result> SeriesStatSpec<R>.resampleByTime(
+    bucketMillis: Long,
+    aggregator: ResampleAggregator = ResampleAggregator.Mean,
+): SeriesStatSpec<R> = ResampleByTimeSeries(this, bucketMillis, aggregator) as SeriesStatSpec<R>
 
 /** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable

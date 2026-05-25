@@ -6,6 +6,8 @@ import com.eignex.kumulant.operation.derivative
 import com.eignex.kumulant.operation.diff
 import com.eignex.kumulant.operation.hysteresis
 import com.eignex.kumulant.operation.lag
+import com.eignex.kumulant.operation.ResampleAggregator
+import com.eignex.kumulant.operation.resampleByTime
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumStat
@@ -44,6 +46,8 @@ import kotlin.math.min
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 /**
  * Registry of [StatSpec]s — one entry per univariate stat. Tests and benchmarks
@@ -287,6 +291,47 @@ val hysteresisSeriesStatSpec = seriesStatSpec(
             if (state == 1) acc += u.weight
         }
         acc
+    },
+)
+
+val resampleByTimeSeriesStatSpec = seriesStatSpec(
+    name = "ResampleByTimeSeriesStat",
+    // Bucket length 2x the inter-update stride so each pair of updates closes a bucket.
+    factory = { c ->
+        SumStat(c).resampleByTime(
+            bucket = (2 * TIME_PROGRESSING_STRIDE_NANOS).toDuration(DurationUnit.NANOSECONDS),
+            aggregator = ResampleAggregator.Sum,
+        )
+    },
+    updates = ::timeProgressingUnitWeights,
+    scalar = { it.sum },
+    // Each closed bucket forwards the sum of two consecutive values. The last (possibly
+    // partial) bucket is never closed, so the reference drops its values.
+    reference = { seq ->
+        val list = seq.toList()
+        var total = 0.0
+        var i = 0
+        // First update lands in bucket 1 (timestamp = STRIDE -> floorDiv(2*STRIDE) = 0).
+        // Updates pair up two-at-a-time; on the third update the first bucket closes.
+        // To stay schedule-agnostic just replay the operator semantics here.
+        var bucketStart = -1L
+        var bucketSum = 0.0
+        while (i < list.size) {
+            val ts = list[i].timestampNanos
+            val bucket = ts.floorDiv(2 * TIME_PROGRESSING_STRIDE_NANOS)
+            if (bucketStart < 0L) {
+                bucketStart = bucket
+                bucketSum = list[i].value
+            } else if (bucket == bucketStart) {
+                bucketSum += list[i].value
+            } else {
+                total += bucketSum
+                bucketStart = bucket
+                bucketSum = list[i].value
+            }
+            i++
+        }
+        total
     },
 )
 
@@ -918,6 +963,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     diffSeriesStatSpec,
     derivativeSeriesStatSpec,
     hysteresisSeriesStatSpec,
+    resampleByTimeSeriesStatSpec,
     bernoulliSumStatSpec,
     pairedSumStatSpec,
     decayingSumStatSpec,

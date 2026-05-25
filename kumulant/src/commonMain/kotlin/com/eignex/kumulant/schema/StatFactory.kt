@@ -34,6 +34,7 @@ import com.eignex.kumulant.operation.filter
 import com.eignex.kumulant.operation.foldRegression
 import com.eignex.kumulant.operation.hysteresis
 import com.eignex.kumulant.operation.lag
+import com.eignex.kumulant.operation.resampleByTime
 import com.eignex.kumulant.operation.sample
 import com.eignex.kumulant.operation.throttle
 import com.eignex.kumulant.operation.transformX
@@ -264,6 +265,10 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is HysteresisSeries ->
             requireSeries(inner, "HysteresisSeries").materialize(concurrency).hysteresis(low, high)
+
+        is ResampleByTimeSeries ->
+            requireSeries(inner, "ResampleByTimeSeries").materialize(concurrency)
+                .resampleByTime(bucketMillis.milliseconds, aggregator)
     }
     return out as SeriesStat<R>
 }
