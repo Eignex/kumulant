@@ -28,6 +28,7 @@ import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MinStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.RangeStat
+import com.eignex.kumulant.stat.summary.RecencyStat
 import com.eignex.kumulant.stat.summary.RunLengthStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.ThresholdBucketStat
@@ -192,6 +193,15 @@ val excursionStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.peak },
     reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
+)
+
+val recencyStatSpec = seriesStatSpec(
+    name = "RecencyStat",
+    factory = { c -> RecencyStat(c) },
+    updates = ::timeProgressingUnitWeights,
+    // Reference: timestamp of the most recent observation.
+    scalar = { it.lastObservedTimestampNanos.toDouble() },
+    reference = { seq -> seq.lastOrNull()?.timestampNanos?.toDouble() ?: Long.MIN_VALUE.toDouble() },
 )
 
 val lagSeriesStatSpec = seriesStatSpec(
@@ -877,6 +887,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     crossingStatSpec,
     runLengthStatSpec,
     excursionStatSpec,
+    recencyStatSpec,
     lagSeriesStatSpec,
     diffSeriesStatSpec,
     derivativeSeriesStatSpec,

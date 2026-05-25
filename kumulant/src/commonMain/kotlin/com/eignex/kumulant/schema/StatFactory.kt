@@ -92,6 +92,7 @@ import com.eignex.kumulant.stat.summary.MinStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.PairedSumStat
 import com.eignex.kumulant.stat.summary.RangeStat
+import com.eignex.kumulant.stat.summary.RecencyStat
 import com.eignex.kumulant.stat.summary.RunLengthStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.ThresholdBucketStat
@@ -125,6 +126,8 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         Excursion -> ExcursionStat(concurrency)
 
         RunLength -> RunLengthStat(concurrency)
+
+        Recency -> RecencyStat(concurrency)
 
         is Crossing -> CrossingStat(level, concurrency)
 

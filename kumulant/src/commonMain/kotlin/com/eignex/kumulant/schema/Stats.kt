@@ -30,6 +30,7 @@ import com.eignex.kumulant.stat.summary.MinResult
 import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.PairedSumResult
 import com.eignex.kumulant.stat.summary.RangeResult
+import com.eignex.kumulant.stat.summary.RecencyResult
 import com.eignex.kumulant.stat.summary.RunLengthResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.ThresholdBucketResult
@@ -86,6 +87,11 @@ data object Excursion : SeriesStatSpec<ExcursionResult>
 @Serializable
 @SerialName("RunLength")
 data object RunLength : SeriesStatSpec<RunLengthResult>
+
+/** Spec for `RecencyStat`: time elapsed since the most recent observation. */
+@Serializable
+@SerialName("Recency")
+data object Recency : SeriesStatSpec<RecencyResult>
 
 /** Spec for `CrossingStat`: counts upward and downward crossings of a configured level. */
 @Serializable

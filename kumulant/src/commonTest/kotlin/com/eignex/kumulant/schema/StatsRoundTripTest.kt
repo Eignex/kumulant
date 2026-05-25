@@ -52,6 +52,10 @@ class StatsRoundTripTest {
         assertEquals(RunLength, roundTrip(RunLength))
     }
 
+    @Test fun `recencyConfig round trips`() {
+        assertEquals(Recency, roundTrip(Recency))
+    }
+
     @Test fun `crossingConfig round trips`() {
         val cfg = Crossing(level = 3.5)
         assertEquals(cfg, roundTrip(cfg))
