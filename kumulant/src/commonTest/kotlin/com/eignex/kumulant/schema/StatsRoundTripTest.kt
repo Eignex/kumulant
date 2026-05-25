@@ -6,6 +6,7 @@ import com.eignex.kumulant.stat.regression.Penalty
 import com.eignex.kumulant.stat.summary.MaxResult
 import com.eignex.kumulant.stat.summary.MinResult
 import com.eignex.kumulant.stat.summary.SumResult
+import com.eignex.kumulant.stat.summary.TargetComparison
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.skema.SchemaJson
 import kotlinx.serialization.encodeToString
@@ -54,6 +55,16 @@ class StatsRoundTripTest {
 
     @Test fun `recencyConfig round trips`() {
         assertEquals(Recency, roundTrip(Recency))
+    }
+
+    @Test fun `ratioVsTargetConfig round trips`() {
+        val cfg = RatioVsTarget(
+            threshold = 0.95,
+            comparison = TargetComparison.AtLeast,
+            windowDurationMillis = 60_000L,
+            slices = 6,
+        )
+        assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun `crossingConfig round trips`() {

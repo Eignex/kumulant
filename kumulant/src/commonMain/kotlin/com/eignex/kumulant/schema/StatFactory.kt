@@ -93,6 +93,7 @@ import com.eignex.kumulant.stat.summary.MinStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.PairedSumStat
 import com.eignex.kumulant.stat.summary.RangeStat
+import com.eignex.kumulant.stat.summary.RatioVsTargetStat
 import com.eignex.kumulant.stat.summary.RecencyStat
 import com.eignex.kumulant.stat.summary.RunLengthStat
 import com.eignex.kumulant.stat.summary.SojournStat
@@ -130,6 +131,9 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         RunLength -> RunLengthStat(concurrency)
 
         Recency -> RecencyStat(concurrency)
+
+        is RatioVsTarget -> RatioVsTargetStat(threshold, comparison, concurrency)
+            .windowed(windowDurationMillis.milliseconds, slices, concurrency)
 
         is Crossing -> CrossingStat(level, concurrency)
 

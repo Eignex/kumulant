@@ -30,10 +30,12 @@ import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MinStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.RangeStat
+import com.eignex.kumulant.stat.summary.RatioVsTargetStat
 import com.eignex.kumulant.stat.summary.RecencyStat
 import com.eignex.kumulant.stat.summary.RunLengthStat
 import com.eignex.kumulant.stat.summary.SojournResult
 import com.eignex.kumulant.stat.summary.SojournStat
+import com.eignex.kumulant.stat.summary.TargetComparison
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.ThresholdBucketStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
@@ -291,6 +293,22 @@ val hysteresisSeriesStatSpec = seriesStatSpec(
             if (state == 1) acc += u.weight
         }
         acc
+    },
+)
+
+val ratioVsTargetStatSpec = seriesStatSpec(
+    name = "RatioVsTargetStat",
+    factory = { c -> RatioVsTargetStat(threshold = 0.5, comparison = TargetComparison.AtLeast, concurrency = c) },
+    updates = ::uniformVariableWeights,
+    scalar = { it.ratio },
+    reference = { seq ->
+        var matched = 0.0
+        var total = 0.0
+        for (u in seq) {
+            total += u.weight
+            if (u.value >= 0.5) matched += u.weight
+        }
+        if (total == 0.0) Double.NaN else matched / total
     },
 )
 
@@ -959,6 +977,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     excursionStatSpec,
     recencyStatSpec,
     sojournStatSpec,
+    ratioVsTargetStatSpec,
     lagSeriesStatSpec,
     diffSeriesStatSpec,
     derivativeSeriesStatSpec,
