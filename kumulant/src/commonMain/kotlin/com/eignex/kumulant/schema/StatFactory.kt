@@ -51,6 +51,8 @@ import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.cardinality.LinearCountingStat
+import com.eignex.kumulant.stat.change.CusumStat
+import com.eignex.kumulant.stat.change.PageHinkleyStat
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceStat
@@ -146,6 +148,10 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is Autocorrelation -> AutocorrelationStat(lag, concurrency)
 
         is Mad -> MadStat(compression, concurrency)
+
+        is Cusum -> CusumStat(target, referenceValue, threshold, concurrency)
+
+        is PageHinkley -> PageHinkleyStat(delta, threshold, concurrency)
 
         Variance -> VarianceStat(concurrency)
 

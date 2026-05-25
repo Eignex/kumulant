@@ -2,6 +2,8 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.cardinality.LinearCountingResult
+import com.eignex.kumulant.stat.change.CusumResult
+import com.eignex.kumulant.stat.change.PageHinkleyResult
 import com.eignex.kumulant.stat.quantile.QuantileResult
 import com.eignex.kumulant.stat.quantile.ReservoirResult
 import com.eignex.kumulant.stat.quantile.SketchResult
@@ -127,6 +129,28 @@ data class Autocorrelation(
     /** Lag between paired observations; must be at least 1. */
     val lag: Int,
 ) : SeriesStatSpec<AutocorrelationResult>
+
+/** Spec for `CusumStat`: two-sided cumulative-sum change-point detector. */
+@Serializable
+@SerialName("Cusum")
+data class Cusum(
+    /** In-control target value to compare each input against. */
+    val target: Double = 0.0,
+    /** Reference value (allowance) absorbing in-control variation. */
+    val referenceValue: Double = 0.5,
+    /** Decision threshold for either side. */
+    val threshold: Double = 5.0,
+) : SeriesStatSpec<CusumResult>
+
+/** Spec for `PageHinkleyStat`: Page-Hinkley change-point detector. */
+@Serializable
+@SerialName("PageHinkley")
+data class PageHinkley(
+    /** Tolerance absorbing in-control fluctuation. */
+    val delta: Double = 0.005,
+    /** Alarm threshold for either drift. */
+    val threshold: Double = 50.0,
+) : SeriesStatSpec<PageHinkleyResult>
 
 /** Spec for `MadStat`: streaming median and median absolute deviation via two t-digests. */
 @Serializable

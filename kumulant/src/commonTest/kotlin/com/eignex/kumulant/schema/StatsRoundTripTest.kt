@@ -113,6 +113,16 @@ class StatsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
+    @Test fun `cusumConfig round trips`() {
+        val cfg = Cusum(target = 1.0, referenceValue = 0.25, threshold = 4.0)
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
+    @Test fun `pageHinkleyConfig round trips`() {
+        val cfg = PageHinkley(delta = 0.01, threshold = 25.0)
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
     @Test fun `varianceConfig round trips`() {
         assertEquals(Variance, roundTrip(Variance))
     }

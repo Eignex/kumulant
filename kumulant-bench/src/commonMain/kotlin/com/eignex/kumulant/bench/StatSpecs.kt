@@ -19,6 +19,8 @@ import com.eignex.kumulant.stat.decay.HoltStat
 import com.eignex.kumulant.stat.decay.RecursiveVarianceStat
 import com.eignex.kumulant.stat.decay.SeasonalMode
 import com.eignex.kumulant.stat.decay.SeasonalSmoothingStat
+import com.eignex.kumulant.stat.change.CusumStat
+import com.eignex.kumulant.stat.change.PageHinkleyStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
@@ -204,6 +206,24 @@ val excursionStatSpec = seriesStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.peak },
     reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
+)
+
+val cusumStatSpec = seriesStatSpec(
+    name = "CusumStat",
+    factory = { c -> CusumStat(target = 0.5, referenceValue = 0.5, threshold = 5.0, concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.cusumPositive },
+    // Uniform [0, 1) with target 0.5 and k=0.5 leaves cusumPos clipped at 0 throughout.
+    reference = { _ -> 0.0 },
+)
+
+val pageHinkleyStatSpec = seriesStatSpec(
+    name = "PageHinkleyStat",
+    factory = { c -> PageHinkleyStat(delta = 0.005, threshold = 50.0, concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.mean },
+    // Mean of uniform [0, 1) is 0.5.
+    reference = { _ -> 0.5 },
 )
 
 val bandSeriesStatSpec = seriesStatSpec(
@@ -1010,6 +1030,8 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     ratioVsTargetStatSpec,
     autocorrelationStatSpec,
     madStatSpec,
+    cusumStatSpec,
+    pageHinkleyStatSpec,
     bandSeriesStatSpec,
     lagSeriesStatSpec,
     diffSeriesStatSpec,
