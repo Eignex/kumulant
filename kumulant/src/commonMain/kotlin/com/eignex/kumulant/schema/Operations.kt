@@ -644,6 +644,53 @@ fun <R : Result> VectorStatSpec<R>.throttle(every: Int): VectorStatSpec<R> =
 fun <R : Result> DiscreteStatSpec<R>.throttle(every: Int): DiscreteStatSpec<R> =
     ThrottleDiscrete(this, every) as DiscreteStatSpec<R>
 
+/**
+ * Wire spec for `SeriesStat.lag(k)`: forwards the value seen `k` updates ago. The
+ * first `k` updates warm the internal ring and forward nothing.
+ */
+@Serializable
+@SerialName("LagSeries")
+data class LagSeries(
+    /** Inner series spec receiving the lagged value. */
+    val inner: StatSpec,
+    /** Lag depth in updates; must be >= 1. */
+    val k: Int,
+) : SeriesStatSpec<Result>
+
+/**
+ * Wire spec for `SeriesStat.diff(k)`: forwards the k-th difference `value - value[t - k]`.
+ * The first `k` updates warm the internal ring and forward nothing.
+ */
+@Serializable
+@SerialName("DiffSeries")
+data class DiffSeries(
+    /** Inner series spec receiving the k-th difference. */
+    val inner: StatSpec,
+    /** Lag depth used to form the difference; must be >= 1. */
+    val k: Int = 1,
+) : SeriesStatSpec<Result>
+
+/**
+ * Wire spec for `SeriesStat.derivative()`: forwards `(value - prev) / (timestamp - prevTimestamp)`
+ * in units-per-second. The first update warms the cell and forwards nothing; coincident timestamps
+ * are dropped.
+ */
+@Serializable
+@SerialName("DerivativeSeries")
+data class DerivativeSeries(
+    /** Inner series spec receiving the time-derivative. */
+    val inner: StatSpec,
+) : SeriesStatSpec<Result>
+
+/** Wrap this series spec to forward the value seen [k] updates ago. */
+fun <R : Result> SeriesStatSpec<R>.lag(k: Int): SeriesStatSpec<R> = LagSeries(this, k) as SeriesStatSpec<R>
+
+/** Wrap this series spec to forward the k-th difference `value - value[t - k]`. */
+fun <R : Result> SeriesStatSpec<R>.diff(k: Int = 1): SeriesStatSpec<R> = DiffSeries(this, k) as SeriesStatSpec<R>
+
+/** Wrap this series spec to forward the per-second time derivative of the value stream. */
+fun <R : Result> SeriesStatSpec<R>.derivative(): SeriesStatSpec<R> = DerivativeSeries(this) as SeriesStatSpec<R>
+
 /** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable
 @SerialName("SampleSeries")

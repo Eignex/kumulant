@@ -28,8 +28,11 @@ import com.eignex.kumulant.operation.atIndex
 import com.eignex.kumulant.operation.atIndices
 import com.eignex.kumulant.operation.atX
 import com.eignex.kumulant.operation.atY
+import com.eignex.kumulant.operation.derivative
+import com.eignex.kumulant.operation.diff
 import com.eignex.kumulant.operation.filter
 import com.eignex.kumulant.operation.foldRegression
+import com.eignex.kumulant.operation.lag
 import com.eignex.kumulant.operation.sample
 import com.eignex.kumulant.operation.throttle
 import com.eignex.kumulant.operation.transformX
@@ -210,6 +213,15 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is SampleSeries ->
             requireSeries(inner, "SampleSeries").materialize(concurrency).sample(rate, Random(seed))
+
+        is LagSeries ->
+            requireSeries(inner, "LagSeries").materialize(concurrency).lag(k)
+
+        is DiffSeries ->
+            requireSeries(inner, "DiffSeries").materialize(concurrency).diff(k)
+
+        is DerivativeSeries ->
+            requireSeries(inner, "DerivativeSeries").materialize(concurrency).derivative()
     }
     return out as SeriesStat<R>
 }
