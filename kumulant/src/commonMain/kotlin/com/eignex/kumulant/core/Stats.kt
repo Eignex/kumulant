@@ -5,9 +5,15 @@ import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stream.currentTimeNanos
 
 /**
- * The base interface for all statistical accumulators.
+ * The base interface for all statistical accumulators. Implementations
+ * accumulate a streaming view of some input, expose the current state as an
+ * immutable [Result] via [read], and merge another snapshot in via [merge].
+ *
+ * The full lifecycle (`update` / `read` / `merge`) is shown end-to-end below.
  *
  * @param R The type of the result object produced by this statistic.
+ *
+ * @sample com.eignex.kumulant.samples.basicMeanLifecycle
  */
 interface Stat<R : Result> {
     /**

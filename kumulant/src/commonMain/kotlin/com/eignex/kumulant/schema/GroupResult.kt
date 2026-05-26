@@ -58,6 +58,8 @@ data class GroupResult(
  * The schema-level [concurrency] is the deployment knob: every config materializes
  * via `config.materialize(concurrency)` inside the [StatGroup] / `*ListStats`
  * constructor.
+ *
+ * @sample com.eignex.kumulant.samples.schemaDeclarationAndRead
  */
 @Suppress("AbstractClassCanBeConcreteClass") // concrete class would expose `register` and the modality
 // helpers to direct callers; abstract enforces the "extend and declare stats" usage pattern.

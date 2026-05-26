@@ -56,6 +56,23 @@ kotlin {
     }
 }
 
+// Dokka site is the canonical user documentation. Module-level and per-package prose
+// lives in adjacent .md files; runnable code examples live as samples under
+// src/commonTest and are referenced from KDoc with `@sample`.
+dokka {
+    moduleName.set("kumulant")
+    dokkaSourceSets.named("commonMain") {
+        includes.from(
+            "module.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/stat/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/operation/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/schema/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/bandit/package.md",
+        )
+        samples.from("src/commonMain/kotlin/com/eignex/kumulant/samples")
+    }
+}
+
 // JVM SIMD primitives in com.eignex.kumulant.math.Primitives.kt use the incubator
 // Vector API. Make the module visible to the Kotlin compiler and at test runtime;
 // downstream JVM consumers need the same flag.

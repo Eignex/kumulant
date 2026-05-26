@@ -25,6 +25,8 @@ import kotlinx.serialization.Serializable
  * marker: it carries the result type through the schema declarators
  * (`series(spec): StatKey<R>`) and the materialize return type, but it
  * does not appear in the wire format.
+ *
+ * @sample com.eignex.kumulant.samples.specRoundTrip
  */
 @Serializable
 sealed interface StatSpec
