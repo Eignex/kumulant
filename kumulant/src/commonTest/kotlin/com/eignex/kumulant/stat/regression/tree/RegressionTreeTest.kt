@@ -5,12 +5,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class TreeTest {
+class RegressionTreeTest {
 
     private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
-    private fun newTree(candidates: List<Split> = emptyList(), config: TreeConfig = TreeConfig()) =
-        Tree(splitCandidates = candidates, config = config, randomSeed = 0)
+    private fun newTree(candidates: List<Split> = emptyList(), config: RegressionTreeConfig = RegressionTreeConfig()) =
+        RegressionTree(splitCandidates = candidates, config = config, randomSeed = 0)
 
     @Test
     fun `update folds into the root arm even without splits`() {
@@ -26,7 +26,7 @@ class TreeTest {
     fun `nodeCount starts at 1 and grows as splits trigger`() {
         val tree = newTree(
             candidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
         )
         assertEquals(1, tree.nodeCount)
         repeat(20) {
@@ -40,7 +40,7 @@ class TreeTest {
     fun `reset returns to a single leaf`() {
         val tree = newTree(
             candidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
         )
         repeat(20) { tree.update(feat(if (it % 2 == 0) -1.0 else 1.0), 1.0) }
         tree.reset()
@@ -52,7 +52,7 @@ class TreeTest {
     fun `growth halts at maxNodes`() {
         val tree = newTree(
             candidates = listOf(ThresholdSplit(0, 0.0), ThresholdSplit(0, 0.5), ThresholdSplit(0, -0.5)),
-            config = TreeConfig(splitPeriod = 2, minSamplesSplit = 2.0, minSamplesLeaf = 1.0, maxNodes = 3),
+            config = RegressionTreeConfig(splitPeriod = 2, minSamplesSplit = 2.0, minSamplesLeaf = 1.0, maxNodes = 3),
         )
         repeat(40) { tree.update(feat(if (it % 2 == 0) -1.0 else 1.0), if (it % 2 == 0) -1.0 else 1.0) }
         assertTrue(tree.nodeCount <= 3, "expected <= 3 nodes (maxNodes cap), got ${tree.nodeCount}")
@@ -79,7 +79,7 @@ class TreeTest {
     fun `prettyPrint emits split predicate after growth`() {
         val tree = newTree(
             candidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
         )
         repeat(20) { tree.update(feat(if (it % 2 == 0) -1.0 else 1.0), if (it % 2 == 0) -1.0 else 1.0) }
         val out = tree.prettyPrint()
@@ -92,10 +92,10 @@ class TreeTest {
 
     @Test
     fun `merge structurally combines same-split trees`() {
-        val cfg = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0)
+        val cfg = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0)
         val splits = listOf(ThresholdSplit(0, 0.0))
-        val a = Tree(splits, cfg, randomSeed = 1)
-        val b = Tree(splits, cfg, randomSeed = 2)
+        val a = RegressionTree(splits, cfg, randomSeed = 1)
+        val b = RegressionTree(splits, cfg, randomSeed = 2)
         repeat(20) {
             val x = if (it % 2 == 0) -1.0 else 1.0
             a.update(feat(x), x)
@@ -108,11 +108,11 @@ class TreeTest {
 
     @Test
     fun `mergeSnapshot adopts other structure when self is a leaf`() {
-        val cfg = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0)
+        val cfg = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0)
         val splits = listOf(ThresholdSplit(0, 0.0))
-        val grown = Tree(splits, cfg, randomSeed = 3)
+        val grown = RegressionTree(splits, cfg, randomSeed = 3)
         repeat(20) { grown.update(feat(if (it % 2 == 0) -1.0 else 1.0), if (it % 2 == 0) -1.0 else 1.0) }
-        val fresh = Tree(splits, cfg, randomSeed = 4)
+        val fresh = RegressionTree(splits, cfg, randomSeed = 4)
         assertEquals(1, fresh.nodeCount)
         fresh.mergeSnapshot(grown.rootNode().snapshot())
         assertTrue(fresh.nodeCount >= 3, "fresh should adopt grown structure, got ${fresh.nodeCount}")

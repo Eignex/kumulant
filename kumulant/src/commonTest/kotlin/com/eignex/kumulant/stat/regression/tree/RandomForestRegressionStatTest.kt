@@ -17,7 +17,7 @@ class RandomForestRegressionStatTest {
             featureSize = 1,
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
             nbrTrees = 4,
-            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
             randomSeed = 5,
         )
         val rng = Random(5)

@@ -15,7 +15,7 @@ import com.eignex.kumulant.stat.regression.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.MeanTreePosterior
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
-import com.eignex.kumulant.stat.regression.tree.TreeConfig
+import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import kotlin.random.Random
 
 /**
@@ -201,7 +201,7 @@ val decisionTreeContextualSpec = contextualBanditSpec(
             template = DecisionTreeRegressionStat(
                 featureSize = 1,
                 splitCandidates = treeBanditCandidates,
-                config = TreeConfig(splitPeriod = 16, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
+                config = RegressionTreeConfig(splitPeriod = 16, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
             ),
             posterior = MeanTreePosterior,
             random = r,

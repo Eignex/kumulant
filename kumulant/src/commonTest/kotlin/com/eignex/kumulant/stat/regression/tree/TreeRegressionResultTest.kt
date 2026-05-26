@@ -19,7 +19,7 @@ class TreeRegressionResultTest {
 
     @Test
     fun `findLeaf routes through nested splits`() {
-        // Tree:        x[0] <= 0
+        // RegressionTree:        x[0] <= 0
         //              /        \
         //         x[1] <= 0     leaf C (value=20)
         //         /        \
@@ -54,11 +54,11 @@ class TreeRegressionResultTest {
     }
 
     @Test
-    fun `Node snapshot freezes structure`() {
+    fun `RegressionNode snapshot freezes structure`() {
         // Verify snapshot round-trip preserves split predicates and leaf values.
-        val live = Tree(
+        val live = RegressionTree(
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
             randomSeed = 0,
         )
         repeat(20) { live.update(feat(if (it % 2 == 0) -1.0 else 1.0), if (it % 2 == 0) -1.0 else 1.0) }

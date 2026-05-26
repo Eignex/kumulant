@@ -3,11 +3,11 @@ package com.eignex.kumulant.stat.regression.tree
 import kotlinx.serialization.Serializable
 
 /**
- * Tunables for [Tree] growth, shared by [DecisionTreeRegressionStat] and
+ * Tunables for [RegressionTree] growth, shared by [DecisionTreeRegressionStat] and
  * [RandomForestRegressionStat].
  */
 @Serializable
-data class TreeConfig(
+data class RegressionTreeConfig(
     /** Hoeffding-bound confidence threshold. Lower -> splits require more evidence. */
     val delta: Double = 0.05,
     /** Multiplicative decay applied to [delta] per depth — slows growth near leaves. */

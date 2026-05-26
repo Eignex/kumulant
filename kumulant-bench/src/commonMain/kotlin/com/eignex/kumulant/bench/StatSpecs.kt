@@ -960,7 +960,7 @@ val reliabilityStatSpec = pairedStatSpec(
     deriveY = { if (it > 0.5) 1.0 else 0.0 },
 )
 
-// Tree regressors fold (vector, y, weight) tuples into a piecewise-constant model.
+// RegressionTree regressors fold (vector, y, weight) tuples into a piecewise-constant model.
 // We don't try to match slope or split structure here; the invariant is
 // "every update's weight reached the snapshot", which makes
 // [TreeRegressionResult.totalWeights] / [ForestRegressionResult.totalWeights]

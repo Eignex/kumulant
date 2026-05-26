@@ -10,7 +10,7 @@ import kotlin.random.Random
 
 /**
  * Online VFDT decision-tree regressor — a piecewise-constant predictor over the feature
- * space, growing on the fly via the Hoeffding bound. Wraps a [Tree] in the kumulant
+ * space, growing on the fly via the Hoeffding bound. Wraps a [RegressionTree] in the kumulant
  * [RegressionStat] contract so it composes with everything that consumes regressors
  * (the bandit family, schemas, op pipelines).
  *
@@ -29,11 +29,11 @@ import kotlin.random.Random
  * structure. Reach for [RandomForestRegressionStat] for ensembled diversity.
  *
  * **Memory:** O(nodes · splitCandidates) — a [VarianceStat] per node plus
- * per-audit-leaf candidate accumulators. Bounded by [TreeConfig.maxNodes].
+ * per-audit-leaf candidate accumulators. Bounded by [RegressionTreeConfig.maxNodes].
  *
  * **Update:** O(depth) per observation — a tree walk to the destination leaf,
  * then an arm update at that leaf. Splits fire at most once every
- * [TreeConfig.splitPeriod] observations per audit leaf.
+ * [RegressionTreeConfig.splitPeriod] observations per audit leaf.
  *
  * **Concurrency:** The hot update path touches exactly one accumulator — the
  * leaf the observation routes to. Internal split nodes carry no live arm; subtree
@@ -44,15 +44,15 @@ import kotlin.random.Random
  * (the load-bearing consumer for bandits) are race-free; the root-level aggregate
  * `TreeRegressionResult.totalWeights` / `rootMean` is best-effort under concurrent
  * growth and may drift by a few ULPs of the workload — single-threaded runs are
- * exact. See [Tree] for the full concurrency design.
+ * exact. See [RegressionTree] for the full concurrency design.
  */
 class DecisionTreeRegressionStat(
     override val featureSize: Int,
     /** Candidate splits considered at every audit leaf. Pass an empty list to disable
      *  growth — the regressor then degenerates to a single global accumulator. */
     val splitCandidates: List<Split>,
-    /** Tunables shared with the underlying [Tree]. */
-    val config: TreeConfig = TreeConfig(),
+    /** Tunables shared with the underlying [RegressionTree]. */
+    val config: RegressionTreeConfig = RegressionTreeConfig(),
     override val concurrency: Concurrency = Concurrency.None,
     /** Leaf-arm factory; defaults to a fresh [VarianceStat] honouring the regressor's [concurrency]. */
     private val leafArmFactory: () -> SeriesStat<WeightedVarianceResult> = { VarianceStat(concurrency) },
@@ -64,9 +64,15 @@ class DecisionTreeRegressionStat(
     }
 
     private val seedRng = Random(randomSeed)
-    private var tree: Tree = newTree()
+    private var tree: RegressionTree = newTree()
 
-    private fun newTree(): Tree = Tree(splitCandidates, config, concurrency, leafArmFactory, seedRng.nextInt())
+    private fun newTree(): RegressionTree = RegressionTree(
+        splitCandidates,
+        config,
+        concurrency,
+        leafArmFactory,
+        seedRng.nextInt(),
+    )
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
@@ -93,5 +99,5 @@ class DecisionTreeRegressionStat(
     )
 
     /** Live underlying tree. Use for inspection / pretty-printing. */
-    fun tree(): Tree = tree
+    fun tree(): RegressionTree = tree
 }

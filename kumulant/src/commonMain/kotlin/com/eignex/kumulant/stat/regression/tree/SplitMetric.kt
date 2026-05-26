@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  * always last in the ranking.
  *
  * Ships [VarianceReduction] only; other metrics (t-test, chi-square, info gain) can
- * be added as concrete callers ask for them. Sealed so the wire form (TreeConfig
+ * be added as concrete callers ask for them. Sealed so the wire form (RegressionTreeConfig
  * inside a tree spec) stays portable.
  */
 @Serializable

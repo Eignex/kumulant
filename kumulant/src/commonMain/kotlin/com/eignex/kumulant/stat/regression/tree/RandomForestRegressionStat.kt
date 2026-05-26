@@ -15,7 +15,7 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
- * Online random-forest regressor — a population of [Tree]s sharing the candidate-split
+ * Online random-forest regressor — a population of [RegressionTree]s sharing the candidate-split
  * pool. Diversity comes from:
  *
  *  - **Oza & Russell online bagging**: per-tree Poisson(1) reweighting at every update.
@@ -48,7 +48,7 @@ class RandomForestRegressionStat(
     val splitCandidates: List<Split>,
     /** Trees in the forest. */
     val nbrTrees: Int = 10,
-    config: TreeConfig = TreeConfig(),
+    config: RegressionTreeConfig = RegressionTreeConfig(),
     /** Oza & Russell online bagging: per-tree Poisson(1) reweighting at update time. */
     val bagging: Boolean = true,
     override val concurrency: Concurrency = Concurrency.None,
@@ -61,14 +61,20 @@ class RandomForestRegressionStat(
         require(nbrTrees > 0) { "nbrTrees must be positive, got $nbrTrees" }
     }
 
-    /** [TreeConfig] with [TreeConfig.mtry] defaulted to `ceil(sqrt(p))` when null. */
-    val config: TreeConfig = config.copy(mtry = config.mtry ?: defaultMtry(splitCandidates.size))
+    /** [RegressionTreeConfig] with [RegressionTreeConfig.mtry] defaulted to `ceil(sqrt(p))` when null. */
+    val config: RegressionTreeConfig = config.copy(mtry = config.mtry ?: defaultMtry(splitCandidates.size))
 
     private val seedRng = Random(randomSeed)
     private val baggingRng = Random(seedRng.nextInt())
-    private var trees: Array<Tree> = Array(nbrTrees) { newTree() }
+    private var trees: Array<RegressionTree> = Array(nbrTrees) { newTree() }
 
-    private fun newTree(): Tree = Tree(splitCandidates, this.config, concurrency, leafArmFactory, seedRng.nextInt())
+    private fun newTree(): RegressionTree = RegressionTree(
+        splitCandidates,
+        this.config,
+        concurrency,
+        leafArmFactory,
+        seedRng.nextInt(),
+    )
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
@@ -108,7 +114,7 @@ class RandomForestRegressionStat(
     )
 
     /** Live underlying trees. Use for inspection. */
-    fun trees(): List<Tree> = trees.toList()
+    fun trees(): List<RegressionTree> = trees.toList()
 
     private fun defaultMtry(p: Int): Int = if (p <= 0) 0 else ceil(sqrt(p.toDouble())).toInt().coerceAtLeast(1)
 }

@@ -90,7 +90,9 @@ import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionStat
 import com.eignex.kumulant.stat.regression.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.UnivariateRegressionStat
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeClassifierStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
+import com.eignex.kumulant.stat.regression.tree.RandomForestClassifierStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
 import com.eignex.kumulant.stat.score.AccuracyStat
 import com.eignex.kumulant.stat.score.AucStat
@@ -585,6 +587,28 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
         is RandomForestRegression ->
             RandomForestRegressionStat(
                 featureSize = featureSize,
+                splitCandidates = splitCandidates,
+                nbrTrees = nbrTrees,
+                config = config,
+                bagging = bagging,
+                concurrency = concurrency,
+                randomSeed = randomSeed,
+            )
+
+        is DecisionTreeClassifier ->
+            DecisionTreeClassifierStat(
+                featureSize = featureSize,
+                numClasses = numClasses,
+                splitCandidates = splitCandidates,
+                config = config,
+                concurrency = concurrency,
+                randomSeed = randomSeed,
+            )
+
+        is RandomForestClassifier ->
+            RandomForestClassifierStat(
+                featureSize = featureSize,
+                numClasses = numClasses,
                 splitCandidates = splitCandidates,
                 nbrTrees = nbrTrees,
                 config = config,

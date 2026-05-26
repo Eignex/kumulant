@@ -3,8 +3,8 @@ package com.eignex.kumulant.operation
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
+import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
-import com.eignex.kumulant.stat.regression.tree.TreeConfig
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.random.Random
@@ -108,7 +108,7 @@ class RegressionOpsTest {
         val inner = DecisionTreeRegressionStat(
             featureSize = 1,
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
         )
         val stat = inner.filter { _, y -> y > 0.0 }.weightBy { _, y -> y }.throttle(every = 2)
         repeat(20) { i ->

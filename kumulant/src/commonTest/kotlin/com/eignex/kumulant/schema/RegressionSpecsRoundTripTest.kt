@@ -5,8 +5,8 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.CovarianceRegressionResult
 import com.eignex.kumulant.stat.regression.StochasticRegressionResult
+import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
-import com.eignex.kumulant.stat.regression.tree.TreeConfig
 import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.skema.SchemaJson
@@ -60,11 +60,11 @@ class RegressionSpecsRoundTripTest {
         decoded.materialize(Concurrency.None).update(feat(0.5, 0.5), y = 1.0)
     }
 
-    @Test fun `DecisionTreeRegression leaf spec round trips with TreeConfig`() {
+    @Test fun `DecisionTreeRegression leaf spec round trips with RegressionTreeConfig`() {
         val cfg = DecisionTreeRegression(
             featureSize = 1,
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 8),
+            config = RegressionTreeConfig(splitPeriod = 8),
         )
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
@@ -83,6 +83,29 @@ class RegressionSpecsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
         decoded.materialize(Concurrency.None).update(feat(0.5), y = 1.0)
+    }
+
+    @Test fun `DecisionTreeClassifier leaf spec round trips`() {
+        val cfg = DecisionTreeClassifier(
+            featureSize = 2,
+            numClasses = 3,
+            splitCandidates = listOf(ThresholdSplit(0, 0.0)),
+        )
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
+        decoded.materialize(Concurrency.None).update(feat(0.5, 0.5), y = 2.0)
+    }
+
+    @Test fun `RandomForestClassifier leaf spec round trips`() {
+        val cfg = RandomForestClassifier(
+            featureSize = 2,
+            numClasses = 3,
+            splitCandidates = listOf(ThresholdSplit(0, 0.0)),
+            nbrTrees = 4,
+        )
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
+        decoded.materialize(Concurrency.None).update(feat(0.5, 0.5), y = 1.0)
     }
 
     @Test fun `filter decorator spec drops failing predicate`() {

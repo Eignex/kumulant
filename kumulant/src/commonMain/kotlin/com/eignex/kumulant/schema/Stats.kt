@@ -27,9 +27,12 @@ import com.eignex.kumulant.stat.regression.Penalty
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+import com.eignex.kumulant.stat.regression.tree.ClassificationTreeConfig
+import com.eignex.kumulant.stat.regression.tree.ForestClassificationResult
 import com.eignex.kumulant.stat.regression.tree.ForestRegressionResult
+import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import com.eignex.kumulant.stat.regression.tree.Split
-import com.eignex.kumulant.stat.regression.tree.TreeConfig
+import com.eignex.kumulant.stat.regression.tree.TreeClassificationResult
 import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult
 import com.eignex.kumulant.stat.score.AucResult
 import com.eignex.kumulant.stat.score.ConfusionMatrixResult
@@ -503,8 +506,8 @@ data class DecisionTreeRegression(
     val featureSize: Int,
     /** Candidate splits considered at every audit leaf. */
     val splitCandidates: List<Split>,
-    /** Tree growth tunables. */
-    val config: TreeConfig = TreeConfig(),
+    /** RegressionTree growth tunables. */
+    val config: RegressionTreeConfig = RegressionTreeConfig(),
     /** PRNG seed for per-leaf candidate subsampling and bagging. */
     val randomSeed: Int = 0,
 ) : RegressionStatSpec<TreeRegressionResult>
@@ -519,10 +522,46 @@ data class RandomForestRegression(
     val splitCandidates: List<Split>,
     /** Trees in the forest. */
     val nbrTrees: Int = 10,
-    /** Tree growth tunables (mtry defaults to `ceil(sqrt(p))` when null). */
-    val config: TreeConfig = TreeConfig(),
+    /** RegressionTree growth tunables (mtry defaults to `ceil(sqrt(p))` when null). */
+    val config: RegressionTreeConfig = RegressionTreeConfig(),
     /** Oza & Russell Poisson(1) per-tree reweighting. */
     val bagging: Boolean = true,
     /** PRNG seed shared across trees. */
     val randomSeed: Int = 0,
 ) : RegressionStatSpec<ForestRegressionResult>
+
+/** Spec for `DecisionTreeClassifierStat`: online VFDT classification tree. */
+@Serializable
+@SerialName("DecisionTreeClassifier")
+data class DecisionTreeClassifier(
+    /** Number of input features. */
+    val featureSize: Int,
+    /** Number of classes; `y` must round to `[0, numClasses)`. */
+    val numClasses: Int,
+    /** Candidate splits considered at every audit leaf. */
+    val splitCandidates: List<Split>,
+    /** RegressionTree growth tunables. */
+    val config: ClassificationTreeConfig = ClassificationTreeConfig(),
+    /** PRNG seed. */
+    val randomSeed: Int = 0,
+) : RegressionStatSpec<TreeClassificationResult>
+
+/** Spec for `RandomForestClassifierStat`: ensembled VFDT classification forest. */
+@Serializable
+@SerialName("RandomForestClassifier")
+data class RandomForestClassifier(
+    /** Number of input features. */
+    val featureSize: Int,
+    /** Number of classes. */
+    val numClasses: Int,
+    /** Candidate split pool. */
+    val splitCandidates: List<Split>,
+    /** Trees in the forest. */
+    val nbrTrees: Int = 10,
+    /** RegressionTree growth tunables (mtry defaults to `ceil(sqrt(p))` when null). */
+    val config: ClassificationTreeConfig = ClassificationTreeConfig(),
+    /** Oza & Russell Poisson(1) per-tree reweighting. */
+    val bagging: Boolean = true,
+    /** PRNG seed shared across trees. */
+    val randomSeed: Int = 0,
+) : RegressionStatSpec<ForestClassificationResult>

@@ -4,10 +4,10 @@ import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
+import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import com.eignex.kumulant.stat.regression.tree.ThompsonForestPosterior
 import com.eignex.kumulant.stat.regression.tree.ThompsonTreePosterior
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
-import com.eignex.kumulant.stat.regression.tree.TreeConfig
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -24,7 +24,7 @@ class RegressionContextualBanditTreeTest {
             template = DecisionTreeRegressionStat(
                 featureSize = 1,
                 splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-                config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+                config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
                 randomSeed = 11,
             ),
             posterior = ThompsonTreePosterior(priorWeight = 1.0, priorVariance = 1.0),
@@ -61,7 +61,7 @@ class RegressionContextualBanditTreeTest {
                 featureSize = 1,
                 splitCandidates = listOf(ThresholdSplit(0, 0.0)),
                 nbrTrees = 4,
-                config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+                config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
                 randomSeed = 21,
             ),
             posterior = ThompsonForestPosterior(priorWeight = 1.0, priorVariance = 1.0),

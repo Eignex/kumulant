@@ -24,7 +24,7 @@ class DecisionTreeRegressionStatTest {
         val stat = DecisionTreeRegressionStat(
             featureSize = 1,
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 8, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
+            config = RegressionTreeConfig(splitPeriod = 8, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
             randomSeed = 1,
         )
         val rng = Random(1)
@@ -54,7 +54,7 @@ class DecisionTreeRegressionStatTest {
         val stat = DecisionTreeRegressionStat(
             featureSize = 1,
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
             randomSeed = 4,
         )
         repeat(100) { stat.update(feat(if (it % 2 == 0) -1.0 else 1.0), if (it % 2 == 0) -1.0 else 1.0) }
@@ -78,7 +78,7 @@ class DecisionTreeRegressionStatTest {
         val stat = DecisionTreeRegressionStat(
             featureSize = 1,
             splitCandidates = candidates,
-            config = TreeConfig(
+            config = RegressionTreeConfig(
                 splitPeriod = 4,
                 minSamplesSplit = 4.0,
                 minSamplesLeaf = 1.0,
@@ -101,7 +101,7 @@ class DecisionTreeRegressionStatTest {
         val stat = DecisionTreeRegressionStat(
             featureSize = 1,
             splitCandidates = candidates,
-            config = TreeConfig(
+            config = RegressionTreeConfig(
                 splitPeriod = 4,
                 minSamplesSplit = 4.0,
                 minSamplesLeaf = 1.0,
@@ -123,7 +123,7 @@ class DecisionTreeRegressionStatTest {
         val stat = DecisionTreeRegressionStat(
             featureSize = 1,
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
             randomSeed = 50,
         )
         repeat(200) { stat.update(feat(if (it % 2 == 0) -1.0 else 1.0), if (it % 2 == 0) -1.0 else 1.0) }
@@ -138,7 +138,7 @@ class DecisionTreeRegressionStatTest {
         val stat = DecisionTreeRegressionStat(
             featureSize = 1,
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
+            config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
             randomSeed = 60,
         )
         val rng = Random(60)
@@ -157,7 +157,7 @@ class DecisionTreeRegressionStatTest {
         val stat = DecisionTreeRegressionStat(
             featureSize = 1,
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 8, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
+            config = RegressionTreeConfig(splitPeriod = 8, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
             concurrency = Concurrency.Relaxed,
             randomSeed = 70,
         )
@@ -176,7 +176,7 @@ class DecisionTreeRegressionStatTest {
         val stat = DecisionTreeRegressionStat(
             featureSize = 1,
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
-            config = TreeConfig(splitPeriod = 8, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
+            config = RegressionTreeConfig(splitPeriod = 8, minSamplesSplit = 8.0, minSamplesLeaf = 4.0),
             concurrency = Concurrency.Strict,
             randomSeed = 71,
         )

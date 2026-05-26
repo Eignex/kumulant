@@ -39,7 +39,7 @@ data class RegressionContextualSpec(
 
 /**
  * Wire-portable spec for the three [LinearRegressionResult]-typed regressors that
- * [RegressionContextualBandit] composes with. Tree-based regressors and other
+ * [RegressionContextualBandit] composes with. RegressionTree-based regressors and other
  * non-linear stats are not yet wire-portable; construct them programmatically.
  */
 @Serializable
