@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.decay
+package com.eignex.kumulant.stat.forecast
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

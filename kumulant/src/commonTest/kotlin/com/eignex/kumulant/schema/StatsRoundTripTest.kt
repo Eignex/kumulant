@@ -1,7 +1,7 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.stat.decay.SeasonalMode
+import com.eignex.kumulant.stat.forecast.SeasonalMode
 import com.eignex.kumulant.stat.regression.Penalty
 import com.eignex.kumulant.stat.summary.MaxResult
 import com.eignex.kumulant.stat.summary.MinResult

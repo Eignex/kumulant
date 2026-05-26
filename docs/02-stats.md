@@ -283,12 +283,17 @@ exponentially-weighted moving variants with a step-based decay
 but assume roughly fixed intervals between observations; mixed-interval
 streams should reach for the timestamp-based decay variants instead.
 
+### Forecast
+
+The forecast family runs predictive recurrences with multi-cell state.
+Their results expose `forecast(steps)` projections, distinguishing
+them from the decay family's running-moment shape.
+
 HoltStat is double exponential smoothing: it tracks a level and a trend
 with separate smoothing factors and supports a damping factor `phi` in
-`(0, 1]` that geometrically discounts the trend on forecast. The result
-exposes `forecast(steps)` so the same recurrence drives projections.
-Use it when the stream has a slow-moving trend on top of noise and you
-want a short-horizon forecast.
+`(0, 1]` that geometrically discounts the trend on forecast. Use it
+when the stream has a slow-moving trend on top of noise and you want a
+short-horizon forecast.
 
 SeasonalSmoothingStat extends HoltStat with a seasonal vector of length
 `period`, the classical Holt-Winters method. Additive and multiplicative

@@ -1,8 +1,9 @@
-package com.eignex.kumulant.stat.decay
+package com.eignex.kumulant.stat.forecast
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -90,8 +91,9 @@ data class SeasonalSmoothingResult(
  *
  * **Update:** O(1) — single seasonal slot touched per update.
  *
- * **Concurrency:** Order-dependent recurrence, same model as [HoltStat] / [EwmaMeanStat].
- * [Concurrency.Strict] and [Concurrency.HighWrite] lock the body so each update is atomic;
+ * **Concurrency:** Order-dependent recurrence, same model as [HoltStat] and
+ * [com.eignex.kumulant.stat.decay.EwmaMeanStat]. [Concurrency.Strict] and
+ * [Concurrency.HighWrite] lock the body so each update is atomic;
  * [Concurrency.Relaxed] drops the lock and the level/trend/seasonal cells race independently
  * with bounded drift; never throws.
  */

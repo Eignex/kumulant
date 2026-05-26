@@ -4,10 +4,10 @@ import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingMeanResult
 import com.eignex.kumulant.stat.decay.DecayingSumResult
 import com.eignex.kumulant.stat.decay.DecayingVarianceResult
-import com.eignex.kumulant.stat.decay.HoltResult
-import com.eignex.kumulant.stat.decay.RecursiveVarianceResult
-import com.eignex.kumulant.stat.decay.SeasonalMode
-import com.eignex.kumulant.stat.decay.SeasonalSmoothingResult
+import com.eignex.kumulant.stat.forecast.HoltResult
+import com.eignex.kumulant.stat.forecast.RecursiveVarianceResult
+import com.eignex.kumulant.stat.forecast.SeasonalMode
+import com.eignex.kumulant.stat.forecast.SeasonalSmoothingResult
 import com.eignex.kumulant.stat.rate.DecayingRateResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult

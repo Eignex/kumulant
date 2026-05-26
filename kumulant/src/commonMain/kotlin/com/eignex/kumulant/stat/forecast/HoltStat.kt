@@ -1,8 +1,9 @@
-package com.eignex.kumulant.stat.decay
+package com.eignex.kumulant.stat.forecast
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -47,7 +48,7 @@ data class HoltResult(
  * Double exponential smoothing (Holt's method) with optional damping.
  *
  * Per-update recurrence (treating `weight` as the smoothing speed multiplier in the
- * same shape as [EwmaMeanStat]):
+ * same shape as [com.eignex.kumulant.stat.decay.EwmaMeanStat]):
  *
  * ```
  * a   = 1 - exp(-alpha * weight)
@@ -61,13 +62,13 @@ data class HoltResult(
  * standard Holt smoothing; with `phi < 1.0` the trend is geometrically damped.
  *
  * **Use cases:** smoothing a noisy series and producing short-horizon forecasts when a
- * non-zero local trend is expected. [EwmaMeanStat] is the special case `beta == 0`.
+ * non-zero local trend is expected. [com.eignex.kumulant.stat.decay.EwmaMeanStat] is the special case `beta == 0`.
  *
  * **Memory:** O(1) — two doubles plus a lock.
  *
  * **Update:** O(1).
  *
- * **Concurrency:** Order-dependent recurrence, same model as [EwmaMeanStat]. [Concurrency.Strict]
+ * **Concurrency:** Order-dependent recurrence, same model as [com.eignex.kumulant.stat.decay.EwmaMeanStat]. [Concurrency.Strict]
  * and [Concurrency.HighWrite] lock the body so each update is atomic but the lock serialises
  * arrival, not order; the snapshot drifts under contention. [Concurrency.Relaxed] drops the lock
  * and the two cells race independently with bounded drift; never throws.

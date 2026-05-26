@@ -69,7 +69,8 @@ walks through each family with notes on when to pick which.
 | [Cardinality](docs/02-stats.md#cardinality)  | HyperLogLog, LinearCounting                                                    |
 | [Sketch](docs/02-stats.md#sketch)            | BloomFilter, CountMinSketch, MinHash, SpaceSaving                              |
 | [Regression](docs/02-stats.md#regression)    | UnivariateRegression (OLS / L1 / L2), Covariance, SGD, Diagonal, Bayesian      |
-| [Decay](docs/02-stats.md#decay)              | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance, Holt, SeasonalSmoothing, RecursiveVariance |
+| [Decay](docs/02-stats.md#decay)              | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance             |
+| [Forecast](docs/02-stats.md#forecast)        | Holt, SeasonalSmoothing, RecursiveVariance                                      |
 | [Score](docs/02-stats.md#score)              | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
 
 Bandits sit on top of the stat layer; each arm owns a kumulant

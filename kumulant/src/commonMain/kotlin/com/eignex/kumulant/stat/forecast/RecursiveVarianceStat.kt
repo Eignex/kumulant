@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.decay
+package com.eignex.kumulant.stat.forecast
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
@@ -24,8 +24,9 @@ data class RecursiveVarianceResult(
 /**
  * Generic recursive variance: `sigma^2_t = omega + alpha * value_t^2 + beta * sigma^2_{t-1}`.
  *
- * [EwmaVarianceStat] (centred, weight-driven) is a special-cased relative of this; setting
- * `omega = 0` and `alpha = 1 - beta` recovers an uncentred EWMA variance recursion.
+ * [com.eignex.kumulant.stat.decay.EwmaVarianceStat] (centred, weight-driven) is a special-cased
+ * relative of this; setting `omega = 0` and `alpha = 1 - beta` recovers an uncentred EWMA
+ * variance recursion.
  *
  * The first update seeds `sigma^2 = omega + alpha * value^2` (treating the previous
  * variance as zero).

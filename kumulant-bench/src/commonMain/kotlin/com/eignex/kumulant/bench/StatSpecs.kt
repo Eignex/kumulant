@@ -16,10 +16,10 @@ import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceStat
 import com.eignex.kumulant.stat.decay.EwmaMeanStat
 import com.eignex.kumulant.stat.decay.EwmaVarianceStat
-import com.eignex.kumulant.stat.decay.HoltStat
-import com.eignex.kumulant.stat.decay.RecursiveVarianceStat
-import com.eignex.kumulant.stat.decay.SeasonalMode
-import com.eignex.kumulant.stat.decay.SeasonalSmoothingStat
+import com.eignex.kumulant.stat.forecast.HoltStat
+import com.eignex.kumulant.stat.forecast.RecursiveVarianceStat
+import com.eignex.kumulant.stat.forecast.SeasonalMode
+import com.eignex.kumulant.stat.forecast.SeasonalSmoothingStat
 import com.eignex.kumulant.stat.change.AdwinStat
 import com.eignex.kumulant.stat.change.CusumStat
 import com.eignex.kumulant.stat.change.PageHinkleyStat
