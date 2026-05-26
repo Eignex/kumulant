@@ -120,6 +120,10 @@ class StatsRoundTripTest {
         assertEquals(Moments, roundTrip(Moments))
     }
 
+    @Test fun `summaryConfig round trips`() {
+        assertEquals(Summary, roundTrip(Summary))
+    }
+
     @Test fun `bernoulliSumConfig round trips`() {
         assertEquals(BernoulliSum, roundTrip(BernoulliSum))
     }

@@ -110,6 +110,7 @@ import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.PairedSumStat
 import com.eignex.kumulant.stat.summary.RangeStat
 import com.eignex.kumulant.stat.summary.SumStat
+import com.eignex.kumulant.stat.summary.SummaryStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat
@@ -158,6 +159,8 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         Variance -> VarianceStat(concurrency)
 
         Moments -> MomentsStat(concurrency)
+
+        Summary -> SummaryStat(concurrency)
 
         BernoulliSum -> BernoulliSumStat(concurrency)
 

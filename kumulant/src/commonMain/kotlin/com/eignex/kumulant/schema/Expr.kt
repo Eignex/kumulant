@@ -332,6 +332,104 @@ data class IfExpr(
 }
 
 /**
+ * One case of a [Switch] expression: when `on` evaluates to [value] (exact equality),
+ * the result is [then]. Exact double equality is fine for integer-valued keys like
+ * [VIndex]; not recommended for general continuous comparisons.
+ */
+@Serializable
+@SerialName("SwitchCase")
+data class SwitchCase(
+    /** Value of the switch key that selects this branch. */
+    val value: Double,
+    /** Expression evaluated when this case is selected. */
+    val then: ScalarExpr,
+)
+
+/**
+ * Multi-way branch on a scalar key. Replaces nested [IfExpr] cascades. The first case
+ * whose [SwitchCase.value] equals `on.eval(...)` exactly wins; if none match, [otherwise]
+ * is returned.
+ */
+@Serializable
+@SerialName("Switch")
+data class Switch(
+    /** Scalar expression whose value selects the case. Typically [VIndex]. */
+    val on: ScalarExpr,
+    /** Cases checked in order. */
+    val cases: List<SwitchCase>,
+    /** Returned when no case matches. */
+    val otherwise: ScalarExpr,
+) : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
+        val key = on.eval(x, y, v, primary)
+        for (c in cases) if (c.value == key) return c.then.eval(x, y, v, primary)
+        return otherwise.eval(x, y, v, primary)
+    }
+}
+
+/**
+ * Membership test: `of in values` (exact equality). Use it to flatten chains of
+ * `Eq` predicates joined by `Or` — e.g. `VIndex In listOf(0.0, 3.0)`.
+ */
+@Serializable
+@SerialName("In")
+data class In(
+    /** Scalar expression being tested. */
+    val of: ScalarExpr,
+    /** Allowed values; exact equality. */
+    val values: List<Double>,
+) : BoolExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        of.eval(x, y, v, primary) in values
+}
+
+/**
+ * Z-score projection: `(X - Center) / Scale`, emitting `0` when [Scale] is still zero.
+ * Reusable AST sugar for the standard-scaler pattern; requires a [HasCenterScale] primary.
+ */
+@Serializable
+@SerialName("Standardize")
+data object Standardize : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
+        val unwrapped = if (primary is IndexedResult) primary.inner else primary
+        check(unwrapped is HasCenterScale) {
+            "Standardize requires a HasCenterScale primary; got ${unwrapped?.let { it::class.simpleName }}"
+        }
+        val scale = unwrapped.scale
+        return if (scale > 0.0) (x - unwrapped.center) / scale else 0.0
+    }
+}
+
+/**
+ * Min-max projection mapping `X` from `[primary.min, primary.max]` to `[targetLow, targetHigh]`,
+ * emitting [targetLow] while the running range is still degenerate. Reusable AST sugar for the
+ * min-max-scaler pattern; requires a [HasMinMax] primary.
+ */
+@Serializable
+@SerialName("MinMax")
+data class MinMax(
+    /** Lower bound of the output range. */
+    val targetLow: Double = 0.0,
+    /** Upper bound of the output range. */
+    val targetHigh: Double = 1.0,
+) : ScalarExpr {
+    init {
+        require(targetHigh > targetLow) { "MinMax targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
+    }
+
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
+        val unwrapped = if (primary is IndexedResult) primary.inner else primary
+        check(unwrapped is HasMinMax) {
+            "MinMax requires a HasMinMax primary; got ${unwrapped?.let { it::class.simpleName }}"
+        }
+        val lo = unwrapped.min
+        val hi = unwrapped.max
+        val span = hi - lo
+        return if (span > 0.0) targetLow + (x - lo) / span * (targetHigh - targetLow) else targetLow
+    }
+}
+
+/**
  * Reduction over the entire vector input. Distinct from element-level
  * arithmetic ([Add], [Mul]) - this collapses a `DoubleArray` of arbitrary
  * length to a single scalar via the chosen operation.

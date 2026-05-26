@@ -39,6 +39,7 @@ import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.PairedSumResult
 import com.eignex.kumulant.stat.summary.RangeResult
 import com.eignex.kumulant.stat.summary.SumResult
+import com.eignex.kumulant.stat.summary.SummaryResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import com.eignex.kumulant.stat.tree.ForestRegressionResult
@@ -163,6 +164,12 @@ data object Variance : SeriesStatSpec<WeightedVarianceResult>
 @Serializable
 @SerialName("Moments")
 data object Moments : SeriesStatSpec<MomentsResult>
+
+/** Spec for `SummaryStat`: mean / variance / min / max in one result, useful as a primary
+ *  for mixed-scaler feedback projections. */
+@Serializable
+@SerialName("Summary")
+data object Summary : SeriesStatSpec<SummaryResult>
 
 /** Spec for `BernoulliSumStat`: weighted count of nonzero inputs. */
 @Serializable
