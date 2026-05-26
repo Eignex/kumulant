@@ -2,6 +2,7 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasMinMax
+import com.eignex.kumulant.core.IndexedResult
 import com.eignex.kumulant.core.Result
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -52,10 +53,11 @@ data object Y : ScalarExpr {
 @SerialName("Center")
 data object Center : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        check(primary is HasCenterScale) {
-            "Center requires a HasCenterScale feedback primary; got ${primary?.let { it::class.simpleName }}"
+        val unwrapped = if (primary is IndexedResult) primary.inner else primary
+        check(unwrapped is HasCenterScale) {
+            "Center requires a HasCenterScale feedback primary; got ${unwrapped?.let { it::class.simpleName }}"
         }
-        return primary.center
+        return unwrapped.center
     }
 }
 
@@ -68,10 +70,11 @@ data object Center : ScalarExpr {
 @SerialName("Scale")
 data object Scale : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        check(primary is HasCenterScale) {
-            "Scale requires a HasCenterScale feedback primary; got ${primary?.let { it::class.simpleName }}"
+        val unwrapped = if (primary is IndexedResult) primary.inner else primary
+        check(unwrapped is HasCenterScale) {
+            "Scale requires a HasCenterScale feedback primary; got ${unwrapped?.let { it::class.simpleName }}"
         }
-        return primary.scale
+        return unwrapped.scale
     }
 }
 
@@ -84,10 +87,11 @@ data object Scale : ScalarExpr {
 @SerialName("Low")
 data object Low : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        check(primary is HasMinMax) {
-            "Low requires a HasMinMax feedback primary; got ${primary?.let { it::class.simpleName }}"
+        val unwrapped = if (primary is IndexedResult) primary.inner else primary
+        check(unwrapped is HasMinMax) {
+            "Low requires a HasMinMax feedback primary; got ${unwrapped?.let { it::class.simpleName }}"
         }
-        return primary.min
+        return unwrapped.min
     }
 }
 
@@ -100,10 +104,30 @@ data object Low : ScalarExpr {
 @SerialName("High")
 data object High : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        check(primary is HasMinMax) {
-            "High requires a HasMinMax feedback primary; got ${primary?.let { it::class.simpleName }}"
+        val unwrapped = if (primary is IndexedResult) primary.inner else primary
+        check(unwrapped is HasMinMax) {
+            "High requires a HasMinMax feedback primary; got ${unwrapped?.let { it::class.simpleName }}"
         }
-        return primary.max
+        return unwrapped.max
+    }
+}
+
+/**
+ * In element-wise feedback contexts (vector / regression / paired), returns the
+ * coordinate index of the currently evaluating element as a Double. Outside such
+ * contexts (primary is not an [IndexedResult]), raises [IllegalStateException].
+ *
+ * Branch on this with [IfExpr]/[Eq] to apply different sub-expressions per coordinate:
+ * `IfExpr(VIndex eq 0.0, (X - Center) / Scale, X)`.
+ */
+@Serializable
+@SerialName("VIndex")
+data object VIndex : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
+        check(primary is IndexedResult) {
+            "VIndex requires an element-wise feedback context; got ${primary?.let { it::class.simpleName }}"
+        }
+        return primary.index.toDouble()
     }
 }
 

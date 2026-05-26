@@ -7,6 +7,20 @@ import kotlinx.serialization.Serializable
 interface Result
 
 /**
+ * Wraps an [inner] result with the coordinate [index] currently being evaluated.
+ * Element-wise feedback wrappers (vector / regression / paired) pass this to the
+ * projection AST so it can branch on `VIndex` and still address primary-snapshot
+ * fields (`Center`, `Scale`, `Low`, `High`) via the transparent unwrap performed by
+ * those AST nodes.
+ */
+data class IndexedResult(
+    /** The per-coordinate primary snapshot. */
+    val inner: Result,
+    /** Index of the coordinate this snapshot belongs to (0-based). */
+    val index: Int,
+) : Result
+
+/**
  * Ordered list of results with per-entry names. Produced by
  * [ListStats][com.eignex.kumulant.schema.ListStats] and the vector expansion helpers.
  *

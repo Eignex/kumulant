@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.IndexedResult
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
@@ -86,7 +87,7 @@ internal class FeedbackVectorStat<P : Result, I : Result>(
         primary.update(vector, timestampNanos, weight)
         val snapshot = primary.read(timestampNanos)
         val transformed = DoubleArray(vector.size) { i ->
-            project.eval(vector[i], 0.0, EMPTY_VECTOR, snapshot.results[i])
+            project.eval(vector[i], 0.0, EMPTY_VECTOR, IndexedResult(snapshot.results[i], i))
         }
         inner.update(transformed, timestampNanos, weight)
     }
@@ -129,7 +130,7 @@ internal class FeedbackRegressionStat<P : Result, R : Result>(
         primary.update(x, timestampNanos, weight)
         val snapshot = primary.read(timestampNanos)
         val transformed = DoubleArray(x.size) { i ->
-            project.eval(x[i], 0.0, EMPTY_VECTOR, snapshot.results[i])
+            project.eval(x[i], 0.0, EMPTY_VECTOR, IndexedResult(snapshot.results[i], i))
         }
         inner.update(transformed, y, timestampNanos, weight)
     }
@@ -173,8 +174,8 @@ internal class FeedbackPairedStat<P : Result, R : Result>(
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         primaryX.update(x, timestampNanos, weight)
         primaryY.update(y, timestampNanos, weight)
-        val tx = project.eval(x, 0.0, EMPTY_VECTOR, primaryX.read(timestampNanos))
-        val ty = project.eval(y, 0.0, EMPTY_VECTOR, primaryY.read(timestampNanos))
+        val tx = project.eval(x, 0.0, EMPTY_VECTOR, IndexedResult(primaryX.read(timestampNanos), 0))
+        val ty = project.eval(y, 0.0, EMPTY_VECTOR, IndexedResult(primaryY.read(timestampNanos), 1))
         inner.update(tx, ty, timestampNanos, weight)
     }
 
