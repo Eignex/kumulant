@@ -791,6 +791,52 @@ fun <R : Result> SeriesStatSpec<R>.withFeedback(primary: SeriesStatSpec<*>, proj
     WithFeedbackSeries(this, primary, project) as SeriesStatSpec<R>
 
 /**
+ * Wire spec for `VectorStat.standardScaleFeatures(dimensions)`: element-wise z-score
+ * over a [dimensions]-dimensional vector input using a per-coordinate [Variance]
+ * primary fan-out.
+ */
+@Serializable
+@SerialName("StandardScalerVector")
+data class StandardScalerVector(
+    /** Inner vector spec receiving the per-coordinate z-scored vector. */
+    val inner: StatSpec,
+    /** Number of vector coordinates; must match the primary fan-out size. */
+    val dimensions: Int,
+) : VectorStatSpec<Result>
+
+/**
+ * Wire spec for `VectorStat.minMaxScaleFeatures(dimensions, targetLow, targetHigh)`:
+ * element-wise min-max scaling over a [dimensions]-dimensional vector input using a
+ * per-coordinate [Range] primary fan-out.
+ */
+@Serializable
+@SerialName("MinMaxScalerVector")
+data class MinMaxScalerVector(
+    /** Inner vector spec receiving the rescaled vector. */
+    val inner: StatSpec,
+    /** Number of vector coordinates. */
+    val dimensions: Int,
+    /** Lower bound of each coordinate's output range. */
+    val targetLow: Double = 0.0,
+    /** Upper bound of each coordinate's output range. */
+    val targetHigh: Double = 1.0,
+) : VectorStatSpec<Result>
+
+/** Element-wise standardise a vector spec against a hidden per-coordinate [Variance] primary. */
+fun <R : Result> VectorStatSpec<R>.standardScaleFeatures(dimensions: Int): VectorStatSpec<R> =
+    StandardScalerVector(this, dimensions) as VectorStatSpec<R>
+
+/** Element-wise min-max scale a vector spec against a hidden per-coordinate [Range] primary. */
+fun <R : Result> VectorStatSpec<R>.minMaxScaleFeatures(
+    dimensions: Int,
+    targetLow: Double = 0.0,
+    targetHigh: Double = 1.0,
+): VectorStatSpec<R> {
+    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
+    return MinMaxScalerVector(this, dimensions, targetLow, targetHigh) as VectorStatSpec<R>
+}
+
+/**
  * Wire spec for `SeriesStat.standardScaler()`: z-scores the input against a hidden
  * [Variance] primary, then forwards the standardized value to [inner]. Compact wire
  * alias for the equivalent [WithFeedbackSeries] composition.

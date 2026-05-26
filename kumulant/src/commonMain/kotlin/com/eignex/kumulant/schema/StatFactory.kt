@@ -36,9 +36,11 @@ import com.eignex.kumulant.operation.filter
 import com.eignex.kumulant.operation.foldRegression
 import com.eignex.kumulant.operation.hysteresis
 import com.eignex.kumulant.operation.lag
+import com.eignex.kumulant.operation.minMaxScaleFeatures
 import com.eignex.kumulant.operation.minMaxScaler
 import com.eignex.kumulant.operation.resampleByTime
 import com.eignex.kumulant.operation.sample
+import com.eignex.kumulant.operation.standardScaleFeatures
 import com.eignex.kumulant.operation.standardScaler
 import com.eignex.kumulant.operation.throttle
 import com.eignex.kumulant.operation.transformX
@@ -446,6 +448,14 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is SampleVector ->
             requireVector(inner, "SampleVector").materialize(concurrency).sample(rate, Random(seed))
+
+        is StandardScalerVector ->
+            requireVector(inner, "StandardScalerVector").materialize(concurrency)
+                .standardScaleFeatures(dimensions, concurrency)
+
+        is MinMaxScalerVector ->
+            requireVector(inner, "MinMaxScalerVector").materialize(concurrency)
+                .minMaxScaleFeatures(dimensions, targetLow, targetHigh, concurrency)
     }
     return out as VectorStat<R>
 }

@@ -2,7 +2,9 @@ package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.schema.Center
 import com.eignex.kumulant.schema.Const
 import com.eignex.kumulant.schema.High
@@ -28,10 +30,10 @@ import com.eignex.kumulant.stat.summary.VarianceStat
 
 /** AST: `(X - center) / scale` guarded by `Scale > 0`, emitting `0` while the variance is
  *  still degenerate. */
-private val standardScalerProjection: ScalarExpr =
+internal val standardScalerProjection: ScalarExpr =
     IfExpr(Scale gt 0.0, (X - Center) / Scale, Const(0.0))
 
-private fun minMaxProjection(targetLow: Double, targetHigh: Double): ScalarExpr {
+internal fun minMaxProjection(targetLow: Double, targetHigh: Double): ScalarExpr {
     val span = High - Low
     val normalized = (X - Low) / span
     val scaled = normalized * (targetHigh - targetLow) + targetLow
@@ -59,4 +61,39 @@ fun <R : Result> SeriesStat<R>.minMaxScaler(
 ): SeriesStat<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
     return withFeedback(RangeStat(concurrency), minMaxProjection(targetLow, targetHigh))
+}
+
+/**
+ * Element-wise standard scaler over a [dimensions]-dimensional vector input. Each
+ * coordinate carries its own [VarianceStat] primary; the inner vector stat sees a
+ * per-coordinate z-scored vector. Each coordinate degrades to `0` while its
+ * variance is still zero.
+ */
+@Suppress("UNCHECKED_CAST")
+fun <I : Result> VectorStat<I>.standardScaleFeatures(
+    dimensions: Int,
+    concurrency: Concurrency = this.concurrency,
+): VectorStat<I> {
+    val primary = VectorizedStat(dimensions, VarianceStat(concurrency))
+        as VectorStat<ResultList<Result>>
+    return withFeedback(primary, standardScalerProjection)
+}
+
+/**
+ * Element-wise min-max scaler over a [dimensions]-dimensional vector input. Each
+ * coordinate carries its own [RangeStat] primary; the inner vector stat sees a
+ * per-coordinate `[targetLow, targetHigh]`-mapped vector. Each coordinate degrades
+ * to [targetLow] while its range is still degenerate.
+ */
+@Suppress("UNCHECKED_CAST")
+fun <I : Result> VectorStat<I>.minMaxScaleFeatures(
+    dimensions: Int,
+    targetLow: Double = 0.0,
+    targetHigh: Double = 1.0,
+    concurrency: Concurrency = this.concurrency,
+): VectorStat<I> {
+    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
+    val primary = VectorizedStat(dimensions, RangeStat(concurrency))
+        as VectorStat<ResultList<Result>>
+    return withFeedback(primary, minMaxProjection(targetLow, targetHigh))
 }
