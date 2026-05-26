@@ -29,7 +29,10 @@ online regression, and a handful of scoring metrics for evaluating
 predictions as they come in. Everything runs on the JVM, in the browser,
 in WebAssembly, and on native Linux, macOS, Windows, and iOS.
 
-Start with the [overview](docs/README.md) for the mental model.
+The generated [Dokka API site](https://eignex.github.io/kumulant) is the
+canonical reference. The mental model, per-family tour, operation
+catalogue, schema/wire walkthrough, concurrency notes, and bandit hierarchy
+live as module and package overviews in the generated site.
 
 ## Installation
 
@@ -56,22 +59,25 @@ val fit = ols.read()
 val yHat = fit.slope * 7.0 + fit.intercept
 ```
 
-Stats group into eight families. The [stats doc](docs/02-stats.md)
-walks through each family with notes on when to pick which.
+Stats group into families under the `stat.*` subpackages. Each family
+page on the Dokka site lists the entries and the notes on when to pick
+which.
 
-| Family                                       | Stats                                                                          |
-|----------------------------------------------|--------------------------------------------------------------------------------|
-| [Summary](docs/02-stats.md#summary)          | Sum, Mean, Min, Max, Range, Variance, Moments, BernoulliSum, Count, Mad        |
-| [Event](docs/02-stats.md#event)              | Excursion, RunLength, Crossing, Recency, Sojourn                                |
-| [Rate](docs/02-stats.md#rate)                | Rate, CounterRate, DecayingRate                                                 |
-| [Change](docs/02-stats.md#change)            | Cusum, PageHinkley, Adwin                                                       |
-| [Quantile](docs/02-stats.md#quantile)        | DDSketch, TDigest, HdrHistogram, LinearHistogram, ReservoirHistogram, FrugalQuantile, ThresholdBucket |
-| [Cardinality](docs/02-stats.md#cardinality)  | HyperLogLog, LinearCounting                                                    |
-| [Sketch](docs/02-stats.md#sketch)            | BloomFilter, CountMinSketch, MinHash, SpaceSaving                              |
-| [Regression](docs/02-stats.md#regression)    | UnivariateRegression (OLS / L1 / L2), Covariance, SGD, Diagonal, Bayesian      |
-| [Decay](docs/02-stats.md#decay)              | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance             |
-| [Forecast](docs/02-stats.md#forecast)        | Holt, SeasonalSmoothing, RecursiveVariance                                      |
-| [Score](docs/02-stats.md#score)              | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Reliability, PitHistogram |
+| Family       | Stats                                                                          |
+|--------------|--------------------------------------------------------------------------------|
+| Summary      | Sum, Mean, Min, Max, Range, Variance, Moments, Summary, BernoulliSum, Count, Mad |
+| Event        | Excursion, RunLength, Crossing, Recency, Sojourn                                |
+| Rate         | Rate, CounterRate, DecayingRate                                                 |
+| Change       | Cusum, PageHinkley, Adwin                                                       |
+| Quantile     | DDSketch, TDigest, HdrHistogram, LinearHistogram, ReservoirHistogram, FrugalQuantile, ThresholdBucket |
+| Cardinality  | HyperLogLog, LinearCounting                                                    |
+| Sketch       | BloomFilter, CountMinSketch, MinHash, SpaceSaving                              |
+| Regression   | UnivariateRegression (OLS / L1 / L2), Covariance, Softmax, GaussianNaiveBayes; GLMs (Stochastic, Diagonal, Bayesian, Hierarchical); trees (DecisionTree, RandomForest, classifier variants) |
+| Decay        | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance             |
+| Forecast     | Holt, SeasonalSmoothing, RecursiveVariance                                      |
+| Score        | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Accuracy, ConfusionMatrix, PitHistogram |
+| Calibration  | Reliability, PlattCalibrator, IsotonicCalibrator                                |
+| Anomaly      | GaussianScorer, QuantileFilter, HalfSpaceTrees                                  |
 
 Bandits sit on top of the stat layer; each arm owns a kumulant
 accumulator and the bandit picks arms by scoring their snapshots.
@@ -100,8 +106,8 @@ cb.update(a, features, reward = 12.7)
 
 You can wrap a stat to change how it sees its input. Time-windowing,
 weighting, filtering, and pre-update transforms all stack on top of
-any stat. See the [operations doc](docs/04-operations.md) for the full
-adapter surface.
+any stat. See the `operation` package overview on the Dokka site for
+the full adapter surface.
 
 ```kotlin
 val recentMean = MeanStat().windowed(1.minutes, slices = 10)
@@ -114,7 +120,8 @@ You can also describe a whole collection of stats as data, ship that
 description to another process, and start sending partial results
 across. The receiver rebuilds the same shape of accumulator and merges
 the snapshots in as they arrive. See the
-[schemas doc](docs/05-schemas.md) for the wire-portable spec family.
+`schema` package overview on the Dokka site for the wire-portable spec
+family.
 
 ```kotlin
 object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
@@ -134,9 +141,9 @@ val p99 = group.read()[Telemetry.latencyP99]
 Bandits build on per-arm stats: each arm owns a kumulant accumulator
 and the bandit picks arms by scoring their snapshots. Per-arm state
 inherits the same concurrency modes, wire-portable snapshots, and merge
-semantics as any other stat. The [bandits doc](docs/06-bandits.md)
-walks through the hierarchy, the univariate and contextual families,
-policies, and arms.
+semantics as any other stat. The `bandit` package overview on the
+Dokka site walks through the hierarchy, the univariate and contextual
+families, policies, and arms.
 
 ```kotlin
 val bandit = MultiArmedBandit(nbrArms = 4, policy = BetaBernoulliTS())
@@ -192,8 +199,8 @@ heavy contention but never throw or corrupt their state, which makes
 it a good fit for hot paths where a strict lock would dominate the
 cost. Strict mode adds the locking needed to keep coupled state exact,
 and HighWrite swaps in striped adders on the JVM for additive stats
-under write-heavy load. The [concurrency doc](docs/03-concurrency.md)
-covers the per-stat semantics in more depth.
+under write-heavy load. The `Concurrency` enum's KDoc on the Dokka
+site covers the per-stat semantics in more depth.
 
 ```kotlin
 val hits = SumStat(concurrency = Concurrency.HighWrite)
