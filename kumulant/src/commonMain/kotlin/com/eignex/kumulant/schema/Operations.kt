@@ -791,12 +791,39 @@ fun <R : Result> SeriesStatSpec<R>.withFeedback(primary: SeriesStatSpec<*>, proj
     WithFeedbackSeries(this, primary, project) as SeriesStatSpec<R>
 
 /**
- * Z-score the input against a hidden [Variance] primary, then forward the standardized
- * value to this spec. Wire-portable as a [WithFeedbackSeries] composition. Emits `0`
- * while the running variance is still zero.
+ * Wire spec for `SeriesStat.standardScaler()`: z-scores the input against a hidden
+ * [Variance] primary, then forwards the standardized value to [inner]. Compact wire
+ * alias for the equivalent [WithFeedbackSeries] composition.
  */
-fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> =
-    withFeedback(Variance, IfExpr(Scale gt 0.0, (X - Center) / Scale, Const(0.0)))
+@Serializable
+@SerialName("StandardScaler")
+data class StandardScalerSeries(
+    /** Inner spec receiving the z-scored value. */
+    val inner: StatSpec,
+) : SeriesStatSpec<Result>
+
+/**
+ * Wire spec for `SeriesStat.minMaxScaler(targetLow, targetHigh)`: min-max scales the
+ * input against a hidden [Range] primary into `[targetLow, targetHigh]`, then forwards
+ * the mapped value to [inner]. Compact wire alias for the equivalent
+ * [WithFeedbackSeries] composition.
+ */
+@Serializable
+@SerialName("MinMaxScaler")
+data class MinMaxScalerSeries(
+    /** Inner spec receiving the rescaled value. */
+    val inner: StatSpec,
+    /** Lower bound of the output range. */
+    val targetLow: Double = 0.0,
+    /** Upper bound of the output range. */
+    val targetHigh: Double = 1.0,
+) : SeriesStatSpec<Result>
+
+/**
+ * Z-score the input against a hidden [Variance] primary, then forward the standardized
+ * value to this spec. Emits `0` while the running variance is still zero.
+ */
+fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> = StandardScalerSeries(this) as SeriesStatSpec<R>
 
 /**
  * Min-max scale the input against a hidden [Range] primary into `[targetLow, targetHigh]`,
@@ -806,10 +833,7 @@ fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> =
  */
 fun <R : Result> SeriesStatSpec<R>.minMaxScaler(targetLow: Double = 0.0, targetHigh: Double = 1.0): SeriesStatSpec<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
-    val span = High - Low
-    val normalized = (X - Low) / span
-    val scaled = normalized * (targetHigh - targetLow) + targetLow
-    return withFeedback(Range, IfExpr(span gt 0.0, scaled, Const(targetLow)))
+    return MinMaxScalerSeries(this, targetLow, targetHigh) as SeriesStatSpec<R>
 }
 
 /** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */
