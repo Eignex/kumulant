@@ -1,5 +1,7 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.kumulant.core.HasCenterScale
+import com.eignex.kumulant.core.Result
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
@@ -23,21 +25,53 @@ private val EMPTY_VECTOR = DoubleArray(0)
 @Serializable
 sealed interface ScalarExpr {
     /** Evaluate this expression against the per-update inputs. */
-    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR): Double
+    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Double
 }
 
 /** Refers to the primary scalar input `x`. */
 @Serializable
 @SerialName("X")
 data object X : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = x
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = x
 }
 
 /** Refers to the secondary scalar input `y` (paired stats only). */
 @Serializable
 @SerialName("Y")
 data object Y : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = y
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = y
+}
+
+/**
+ * Reads the `center` field of the feedback primary's snapshot. Requires the primary's
+ * result to implement [HasCenterScale]; raises [IllegalStateException] when evaluated
+ * without a primary, or when the primary's result does not expose a center.
+ */
+@Serializable
+@SerialName("Center")
+data object Center : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
+        check(primary is HasCenterScale) {
+            "Center requires a HasCenterScale feedback primary; got ${primary?.let { it::class.simpleName }}"
+        }
+        return primary.center
+    }
+}
+
+/**
+ * Reads the `scale` field of the feedback primary's snapshot. Requires the primary's
+ * result to implement [HasCenterScale]; raises [IllegalStateException] when evaluated
+ * without a primary, or when the primary's result does not expose a scale.
+ */
+@Serializable
+@SerialName("Scale")
+data object Scale : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
+        check(primary is HasCenterScale) {
+            "Scale requires a HasCenterScale feedback primary; got ${primary?.let { it::class.simpleName }}"
+        }
+        return primary.scale
+    }
 }
 
 /** `v[index]` - out-of-bounds throws at eval time. */
@@ -47,7 +81,7 @@ data class V(
     /** Vector coordinate to read. */
     val index: Int,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = v[index]
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = v[index]
 }
 
 /** Wire spec for a constant scalar. */
@@ -57,7 +91,7 @@ data class Const(
     /** Literal value returned by [eval]. */
     val v: Double,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = this.v
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = this.v
 }
 
 /** Wire spec for `l + r`. */
@@ -69,7 +103,12 @@ data class Add(
     /** Right operand. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = l.eval(x, y, v) + r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) + r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `l - r`. */
@@ -81,7 +120,12 @@ data class Sub(
     /** Right operand (subtrahend). */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = l.eval(x, y, v) - r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) - r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `l * r`. */
@@ -93,7 +137,12 @@ data class Mul(
     /** Right operand. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = l.eval(x, y, v) * r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) * r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `l / r`. */
@@ -105,7 +154,12 @@ data class Div(
     /** Divisor. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = l.eval(x, y, v) / r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) / r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `-a`. */
@@ -115,7 +169,7 @@ data class Neg(
     /** Operand to negate. */
     val a: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = -a.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = -a.eval(x, y, v, primary)
 }
 
 /** Wire spec for `|a|`. */
@@ -125,7 +179,7 @@ data class Abs(
     /** Operand whose absolute value is returned. */
     val a: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = abs(a.eval(x, y, v))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = abs(a.eval(x, y, v, primary))
 }
 
 /** Wire spec for the natural logarithm `ln(a)`. */
@@ -135,7 +189,7 @@ data class Log(
     /** Operand passed to `ln`. */
     val a: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = ln(a.eval(x, y, v))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = ln(a.eval(x, y, v, primary))
 }
 
 /** Wire spec for `exp(a)`. */
@@ -145,7 +199,7 @@ data class Exp(
     /** Operand passed to `exp`. */
     val a: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = exp(a.eval(x, y, v))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = exp(a.eval(x, y, v, primary))
 }
 
 /** Wire spec for `sqrt(a)`. */
@@ -155,7 +209,7 @@ data class Sqrt(
     /** Operand passed to `sqrt`. */
     val a: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = sqrt(a.eval(x, y, v))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = sqrt(a.eval(x, y, v, primary))
 }
 
 /** Wire spec for `a ^ b`. */
@@ -167,7 +221,12 @@ data class Pow(
     /** Exponent. */
     val b: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = a.eval(x, y, v).pow(b.eval(x, y, v))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = a.eval(
+        x,
+        y,
+        v,
+        primary,
+    ).pow(b.eval(x, y, v, primary))
 }
 
 /** Wire spec for `min(l, r)`. */
@@ -179,7 +238,10 @@ data class MinExpr(
     /** Right operand. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = min(l.eval(x, y, v), r.eval(x, y, v))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = min(
+        l.eval(x, y, v, primary),
+        r.eval(x, y, v, primary),
+    )
 }
 
 /** Wire spec for `max(l, r)`. */
@@ -191,7 +253,10 @@ data class MaxExpr(
     /** Right operand. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = max(l.eval(x, y, v), r.eval(x, y, v))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = max(
+        l.eval(x, y, v, primary),
+        r.eval(x, y, v, primary),
+    )
 }
 
 /** Wire spec for a ternary `if (cond) then else otherwise`. */
@@ -205,8 +270,8 @@ data class IfExpr(
     /** Branch returned when [cond] is false. */
     val otherwise: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double =
-        if (cond.eval(x, y, v)) then.eval(x, y, v) else otherwise.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        if (cond.eval(x, y, v, primary)) then.eval(x, y, v, primary) else otherwise.eval(x, y, v, primary)
 }
 
 /**
@@ -242,7 +307,7 @@ data class VFold(
     /** Reduction operation applied to the vector. */
     val op: VFoldOp,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double = when (op) {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = when (op) {
         VFoldOp.Sum -> {
             var s = 0.0
             for (e in v) s += e
@@ -294,7 +359,7 @@ data class VDot(
     /** Coefficient vector applied element-wise; must match input length at eval. */
     val weights: List<Double>,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Double {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
         require(v.size == weights.size) {
             "VDot length mismatch: weights=${weights.size}, v=${v.size}"
         }
@@ -311,7 +376,7 @@ data class VDot(
 @Serializable
 sealed interface BoolExpr {
     /** Evaluate this predicate against the per-update inputs. */
-    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR): Boolean
+    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Boolean
 }
 
 /** Wire spec for `l > r`. */
@@ -323,7 +388,12 @@ data class Gt(
     /** Right operand. */
     val r: ScalarExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) > r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) > r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `l >= r`. */
@@ -335,7 +405,12 @@ data class Ge(
     /** Right operand. */
     val r: ScalarExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) >= r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) >= r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `l < r`. */
@@ -347,7 +422,12 @@ data class Lt(
     /** Right operand. */
     val r: ScalarExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) < r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) < r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `l <= r`. */
@@ -359,7 +439,12 @@ data class Le(
     /** Right operand. */
     val r: ScalarExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) <= r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) <= r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `l == r`. Exact floating-point equality; usually you want a tolerance instead. */
@@ -371,7 +456,12 @@ data class Eq(
     /** Right operand. */
     val r: ScalarExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) == r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) == r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `l && r` (short-circuiting). */
@@ -383,7 +473,12 @@ data class And(
     /** Right operand; evaluated only when [l] is true. */
     val r: BoolExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) && r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) && r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `l || r` (short-circuiting). */
@@ -395,7 +490,12 @@ data class Or(
     /** Right operand; evaluated only when [l] is false. */
     val r: BoolExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = l.eval(x, y, v) || r.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
+        x,
+        y,
+        v,
+        primary,
+    ) || r.eval(x, y, v, primary)
 }
 
 /** Wire spec for `!a`. */
@@ -405,7 +505,7 @@ data class Not(
     /** Operand to negate. */
     val a: BoolExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean = !a.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = !a.eval(x, y, v, primary)
 }
 
 /** `min <= a <= max` (inclusive). Wire-compact form of `And(Ge(a, min), Le(a, max))`. */
@@ -419,8 +519,8 @@ data class InRange(
     /** Inclusive upper bound. */
     val max: Double,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): Boolean {
-        val value = a.eval(x, y, v)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean {
+        val value = a.eval(x, y, v, primary)
         return value in min..max
     }
 }
@@ -435,7 +535,7 @@ data class InRange(
 @Serializable
 sealed interface VectorExpr {
     /** Evaluate this expression to produce a fresh vector from the per-update inputs. */
-    fun eval(x: Double = 0.0, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR): DoubleArray
+    fun eval(x: Double = 0.0, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): DoubleArray
 }
 
 /**
@@ -451,8 +551,8 @@ data class VElements(
     /** Per-output-coordinate expression; output length = `exprs.size`. */
     val exprs: List<ScalarExpr>,
 ) : VectorExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray): DoubleArray =
-        DoubleArray(exprs.size) { i -> exprs[i].eval(x, y, v) }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): DoubleArray =
+        DoubleArray(exprs.size) { i -> exprs[i].eval(x, y, v, primary) }
 }
 
 /** Build [Add] of two expressions. */

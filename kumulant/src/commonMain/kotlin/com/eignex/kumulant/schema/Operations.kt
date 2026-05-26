@@ -769,6 +769,27 @@ data class WithSelfLagSeries(
 fun <R : Result> PairedStatSpec<R>.withSelfLag(k: Int): SeriesStatSpec<R> =
     WithSelfLagSeries(this, k) as SeriesStatSpec<R>
 
+/**
+ * Wire spec for `SeriesStat.withFeedback(primary, project)`: couples an inner series stat with
+ * a state-tracking primary so the projection [ScalarExpr] sees the primary's just-updated
+ * snapshot via [com.eignex.kumulant.schema.Center] / [com.eignex.kumulant.schema.Scale]
+ * (and future primary-aware AST nodes). The wrapper's result is the inner stat's snapshot.
+ */
+@Serializable
+@SerialName("WithFeedbackSeries")
+data class WithFeedbackSeries(
+    /** Inner series spec receiving the projected value. */
+    val inner: StatSpec,
+    /** Primary series spec maintaining running state. */
+    val primary: StatSpec,
+    /** Scalar projection evaluated against `(value, primary.snapshot)`. */
+    val project: ScalarExpr,
+) : SeriesStatSpec<Result>
+
+/** Wrap this inner series spec with a feedback primary; the projection AST sees the primary snapshot. */
+fun <R : Result> SeriesStatSpec<R>.withFeedback(primary: SeriesStatSpec<*>, project: ScalarExpr): SeriesStatSpec<R> =
+    WithFeedbackSeries(this, primary, project) as SeriesStatSpec<R>
+
 /** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable
 @SerialName("SampleSeries")

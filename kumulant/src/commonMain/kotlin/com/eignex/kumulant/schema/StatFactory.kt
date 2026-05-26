@@ -43,6 +43,7 @@ import com.eignex.kumulant.operation.transformX
 import com.eignex.kumulant.operation.transformY
 import com.eignex.kumulant.operation.weightBy
 import com.eignex.kumulant.operation.windowed
+import com.eignex.kumulant.operation.withFeedback
 import com.eignex.kumulant.operation.withFixedX
 import com.eignex.kumulant.operation.withFixedY
 import com.eignex.kumulant.operation.withSelfLag
@@ -287,6 +288,15 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is WithSelfLagSeries ->
             requirePaired(inner, "WithSelfLagSeries").materialize(concurrency).withSelfLag(k)
+
+        is WithFeedbackSeries -> {
+            val innerStat = requireSeries(inner, "WithFeedbackSeries").materialize(concurrency) as SeriesStat<Result>
+            val primaryStat = requireSeries(
+                primary,
+                "WithFeedbackSeries",
+            ).materialize(concurrency) as SeriesStat<Result>
+            innerStat.withFeedback(primaryStat, project)
+        }
 
         is BandSeries -> {
             // The runtime check happens at the first read; the cast is safe iff the inner stat's

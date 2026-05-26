@@ -28,6 +28,7 @@ import com.eignex.kumulant.operation.diff as liveDiff
 import com.eignex.kumulant.operation.hysteresis as liveHysteresis
 import com.eignex.kumulant.operation.lag as liveLag
 import com.eignex.kumulant.operation.resampleByTime as liveResampleByTime
+import com.eignex.kumulant.operation.withFeedback as liveWithFeedback
 import com.eignex.kumulant.operation.withFixedX as liveWithFixedX
 import com.eignex.kumulant.operation.withFixedY as liveWithFixedY
 import com.eignex.kumulant.operation.withSelfLag as liveWithSelfLag
@@ -443,6 +444,21 @@ class OperationsRoundTripTest {
         val r = rebuilt.read() as CovarianceResult
         val l = live.read()
         assertEquals(l.correlation, r.correlation, DELTA)
+    }
+
+    @Test fun `withFeedback series should match live composition`() {
+        val cfg: SeriesStatSpec<SumResult> = Sum.withFeedback(Variance, (X - Center) / Scale)
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
+        val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
+        val live = SumStat().liveWithFeedback(VarianceStat(), (X - Center) / Scale)
+        for (x in doubleArrayOf(1.0, 2.0, 3.0, 4.0, 5.0)) {
+            rebuilt.update(x)
+            live.update(x)
+        }
+        val r = rebuilt.read() as SumResult
+        val l = live.read()
+        assertEquals(l.sum, r.sum, DELTA)
     }
 
     @Test fun `band series should match live composition`() {
