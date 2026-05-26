@@ -383,6 +383,13 @@ fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is SamplePaired ->
             requirePaired(inner, "SamplePaired").materialize(concurrency).sample(rate, Random(seed))
+
+        is StandardScalerPaired ->
+            requirePaired(inner, "StandardScalerPaired").materialize(concurrency).standardScaler(concurrency)
+
+        is MinMaxScalerPaired ->
+            requirePaired(inner, "MinMaxScalerPaired").materialize(concurrency)
+                .minMaxScaler(targetLow, targetHigh, concurrency)
     }
     return out as PairedStat<R>
 }
@@ -608,6 +615,14 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
             val m = requireSeries(inner, "FoldRegression").materialize(concurrency) as SeriesStat<Result>
             m.foldRegression(featureSize) { v, y -> project.eval(0.0, y, v.toDoubleArray()) }
         }
+
+        is StandardScalerRegression ->
+            requireRegression(inner, "StandardScalerRegression").materialize(concurrency)
+                .standardScaleFeatures(concurrency)
+
+        is MinMaxScalerRegression ->
+            requireRegression(inner, "MinMaxScalerRegression").materialize(concurrency)
+                .minMaxScaleFeatures(targetLow, targetHigh, concurrency)
     }
     return out as RegressionStat<R>
 }

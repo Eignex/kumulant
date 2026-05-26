@@ -1,6 +1,8 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
@@ -96,6 +98,98 @@ internal class FeedbackVectorStat<P : Result, I : Result>(
 
     override fun create(concurrency: Concurrency?): VectorStat<I> =
         FeedbackVectorStat(inner.create(concurrency), primary.create(concurrency), project)
+
+    companion object {
+        private val EMPTY_VECTOR = DoubleArray(0)
+    }
+}
+
+/**
+ * Regression analogue of `withFeedback`: the [primary] is a per-feature fan-out
+ * ([VectorizedStat]); the projection is evaluated element-wise against each
+ * coordinate's primary snapshot and the transformed feature vector is forwarded to
+ * the inner regressor. `y` and `weight` pass through unchanged.
+ */
+fun <P : Result, R : Result> RegressionStat<R>.withFeedback(
+    primary: VectorStat<ResultList<P>>,
+    project: ScalarExpr,
+): RegressionStat<R> = FeedbackRegressionStat(this, primary, project)
+
+internal class FeedbackRegressionStat<P : Result, R : Result>(
+    private val inner: RegressionStat<R>,
+    /** Per-coordinate primary state-tracking stat owned by the wrapper. */
+    val primary: VectorStat<ResultList<P>>,
+    private val project: ScalarExpr,
+) : RegressionStat<R>,
+    Stat<R> by inner {
+
+    override val featureSize: Int get() = inner.featureSize
+
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+        primary.update(x, timestampNanos, weight)
+        val snapshot = primary.read(timestampNanos)
+        val transformed = DoubleArray(x.size) { i ->
+            project.eval(x[i], 0.0, EMPTY_VECTOR, snapshot.results[i])
+        }
+        inner.update(transformed, y, timestampNanos, weight)
+    }
+
+    override fun reset() {
+        primary.reset()
+        inner.reset()
+    }
+
+    override fun create(concurrency: Concurrency?): RegressionStat<R> =
+        FeedbackRegressionStat(inner.create(concurrency), primary.create(concurrency), project)
+
+    companion object {
+        private val EMPTY_VECTOR = DoubleArray(0)
+    }
+}
+
+/**
+ * Paired analogue of `withFeedback`: separate [primaryX] and [primaryY] state-tracking
+ * stats track the two axes independently. On each update, `x` is sent to `primaryX`
+ * and `y` to `primaryY`; the same [project] AST is evaluated twice (once per axis,
+ * each against its own primary snapshot) and the transformed `(x', y')` is forwarded
+ * to the inner paired stat.
+ */
+fun <P : Result, R : Result> PairedStat<R>.withFeedback(
+    primaryX: SeriesStat<P>,
+    primaryY: SeriesStat<P>,
+    project: ScalarExpr,
+): PairedStat<R> = FeedbackPairedStat(this, primaryX, primaryY, project)
+
+internal class FeedbackPairedStat<P : Result, R : Result>(
+    private val inner: PairedStat<R>,
+    /** x-axis state-tracking stat owned by the wrapper. */
+    val primaryX: SeriesStat<P>,
+    /** y-axis state-tracking stat owned by the wrapper. */
+    val primaryY: SeriesStat<P>,
+    private val project: ScalarExpr,
+) : PairedStat<R>,
+    Stat<R> by inner {
+
+    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
+        primaryX.update(x, timestampNanos, weight)
+        primaryY.update(y, timestampNanos, weight)
+        val tx = project.eval(x, 0.0, EMPTY_VECTOR, primaryX.read(timestampNanos))
+        val ty = project.eval(y, 0.0, EMPTY_VECTOR, primaryY.read(timestampNanos))
+        inner.update(tx, ty, timestampNanos, weight)
+    }
+
+    override fun reset() {
+        primaryX.reset()
+        primaryY.reset()
+        inner.reset()
+    }
+
+    override fun create(concurrency: Concurrency?): PairedStat<R> = FeedbackPairedStat(
+        inner.create(concurrency),
+        primaryX.create(concurrency),
+        primaryY.create(concurrency),
+        project,
+    )
 
     companion object {
         private val EMPTY_VECTOR = DoubleArray(0)

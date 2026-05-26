@@ -837,6 +837,82 @@ fun <R : Result> VectorStatSpec<R>.minMaxScaleFeatures(
 }
 
 /**
+ * Wire spec for `RegressionStat.standardScaleFeatures()`: element-wise z-score over
+ * the inner regressor's feature vector via a per-coordinate [Variance] primary.
+ * The featureSize is pulled from the inner regressor's contract.
+ */
+@Serializable
+@SerialName("StandardScalerRegression")
+data class StandardScalerRegression(
+    /** Inner regression spec receiving the per-feature z-scored vector. */
+    val inner: StatSpec,
+) : RegressionStatSpec<Result>
+
+/**
+ * Wire spec for `RegressionStat.minMaxScaleFeatures(targetLow, targetHigh)`: element-wise
+ * min-max scaling over the inner regressor's feature vector via a per-coordinate [Range]
+ * primary.
+ */
+@Serializable
+@SerialName("MinMaxScalerRegression")
+data class MinMaxScalerRegression(
+    /** Inner regression spec receiving the rescaled feature vector. */
+    val inner: StatSpec,
+    /** Lower bound of each coordinate's output range. */
+    val targetLow: Double = 0.0,
+    /** Upper bound of each coordinate's output range. */
+    val targetHigh: Double = 1.0,
+) : RegressionStatSpec<Result>
+
+/**
+ * Wire spec for `PairedStat.standardScaler()`: z-scores both axes against per-axis
+ * [Variance] primaries.
+ */
+@Serializable
+@SerialName("StandardScalerPaired")
+data class StandardScalerPaired(
+    /** Inner paired spec receiving the per-axis z-scored pair. */
+    val inner: StatSpec,
+) : PairedStatSpec<Result>
+
+/**
+ * Wire spec for `PairedStat.minMaxScaler(targetLow, targetHigh)`: min-max scales each
+ * axis against its own [Range] primary.
+ */
+@Serializable
+@SerialName("MinMaxScalerPaired")
+data class MinMaxScalerPaired(
+    /** Inner paired spec receiving the rescaled pair. */
+    val inner: StatSpec,
+    /** Lower bound of each axis's output range. */
+    val targetLow: Double = 0.0,
+    /** Upper bound of each axis's output range. */
+    val targetHigh: Double = 1.0,
+) : PairedStatSpec<Result>
+
+/** Z-score both axes of a paired spec against per-axis [Variance] primaries. */
+fun <R : Result> PairedStatSpec<R>.standardScaler(): PairedStatSpec<R> = StandardScalerPaired(this) as PairedStatSpec<R>
+
+/** Min-max scale both axes of a paired spec against per-axis [Range] primaries. */
+fun <R : Result> PairedStatSpec<R>.minMaxScaler(targetLow: Double = 0.0, targetHigh: Double = 1.0): PairedStatSpec<R> {
+    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
+    return MinMaxScalerPaired(this, targetLow, targetHigh) as PairedStatSpec<R>
+}
+
+/** Element-wise standardise a regression spec's feature vector. */
+fun <R : Result> RegressionStatSpec<R>.standardScaleFeatures(): RegressionStatSpec<R> =
+    StandardScalerRegression(this) as RegressionStatSpec<R>
+
+/** Element-wise min-max scale a regression spec's feature vector. */
+fun <R : Result> RegressionStatSpec<R>.minMaxScaleFeatures(
+    targetLow: Double = 0.0,
+    targetHigh: Double = 1.0,
+): RegressionStatSpec<R> {
+    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
+    return MinMaxScalerRegression(this, targetLow, targetHigh) as RegressionStatSpec<R>
+}
+
+/**
  * Wire spec for `SeriesStat.standardScaler()`: z-scores the input against a hidden
  * [Variance] primary, then forwards the standardized value to [inner]. Compact wire
  * alias for the equivalent [WithFeedbackSeries] composition.

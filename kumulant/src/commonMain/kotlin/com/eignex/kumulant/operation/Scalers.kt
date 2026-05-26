@@ -1,6 +1,8 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
@@ -96,4 +98,61 @@ fun <I : Result> VectorStat<I>.minMaxScaleFeatures(
     val primary = VectorizedStat(dimensions, RangeStat(concurrency))
         as VectorStat<ResultList<Result>>
     return withFeedback(primary, minMaxProjection(targetLow, targetHigh))
+}
+
+/**
+ * Element-wise standard scaler over the regression's feature vector. Each coordinate
+ * carries its own [VarianceStat] primary; the inner regressor sees a per-feature
+ * z-scored vector. `y` and `weight` pass through unchanged.
+ */
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> RegressionStat<R>.standardScaleFeatures(
+    concurrency: Concurrency = this.concurrency,
+): RegressionStat<R> {
+    val primary = VectorizedStat(featureSize, VarianceStat(concurrency))
+        as VectorStat<ResultList<Result>>
+    return withFeedback(primary, standardScalerProjection)
+}
+
+/**
+ * Element-wise min-max scaler over the regression's feature vector. Each coordinate
+ * carries its own [RangeStat] primary; the inner regressor sees a per-feature
+ * rescaled vector. `y` and `weight` pass through unchanged.
+ */
+@Suppress("UNCHECKED_CAST")
+fun <R : Result> RegressionStat<R>.minMaxScaleFeatures(
+    targetLow: Double = 0.0,
+    targetHigh: Double = 1.0,
+    concurrency: Concurrency = this.concurrency,
+): RegressionStat<R> {
+    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
+    val primary = VectorizedStat(featureSize, RangeStat(concurrency))
+        as VectorStat<ResultList<Result>>
+    return withFeedback(primary, minMaxProjection(targetLow, targetHigh))
+}
+
+/**
+ * Z-score both axes of a paired stat against per-axis [VarianceStat] primaries, then
+ * forward the standardized `(x', y')` to the inner. Each axis degrades to `0` while
+ * its variance is still zero.
+ */
+fun <R : Result> PairedStat<R>.standardScaler(concurrency: Concurrency = this.concurrency): PairedStat<R> =
+    withFeedback(VarianceStat(concurrency), VarianceStat(concurrency), standardScalerProjection)
+
+/**
+ * Min-max scale both axes of a paired stat against per-axis [RangeStat] primaries into
+ * `[targetLow, targetHigh]`. Each axis degrades to [targetLow] while its range is still
+ * degenerate.
+ */
+fun <R : Result> PairedStat<R>.minMaxScaler(
+    targetLow: Double = 0.0,
+    targetHigh: Double = 1.0,
+    concurrency: Concurrency = this.concurrency,
+): PairedStat<R> {
+    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
+    return withFeedback(
+        RangeStat(concurrency),
+        RangeStat(concurrency),
+        minMaxProjection(targetLow, targetHigh),
+    )
 }
