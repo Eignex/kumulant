@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.schema.Sgd
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
@@ -11,7 +12,7 @@ import kotlin.test.assertTrue
 class LinearPosteriorsTest {
 
     private fun sgdSnapshot(): StochasticRegressionResult {
-        val stat = StochasticRegressionStat(featureSize = 2, learningRate = ConstantRate(0.05))
+        val stat = StochasticRegressionStat(featureSize = 2, optimizer = Sgd(ConstantRate(0.05)))
         val rng = Random(1)
         repeat(800) {
             val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
@@ -208,7 +209,7 @@ class LinearPosteriorsTest {
     fun `SGD with L2 regularisation visits every coordinate`() {
         val stat = StochasticRegressionStat(
             featureSize = 3,
-            learningRate = ConstantRate(0.05),
+            optimizer = Sgd(ConstantRate(0.05)),
             penalty = Penalty.L2(0.1),
         )
         val rng = Random(1)

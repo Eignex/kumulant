@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.schema.Sgd
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
@@ -36,7 +37,7 @@ class SoftmaxRegressionStatTest {
 
     @Test
     fun `learns a separable three-class problem`() {
-        val stat = SoftmaxRegressionStat(featureSize = 2, numClasses = 3, learningRate = ConstantRate(0.2))
+        val stat = SoftmaxRegressionStat(featureSize = 2, numClasses = 3, optimizer = Sgd(ConstantRate(0.2)))
         val rng = Random(123L)
         // Three clusters around (1,0), (-1,1), (-1,-1).
         val centers = arrayOf(
@@ -101,8 +102,8 @@ class SoftmaxRegressionStatTest {
 
     @Test
     fun `merge blends weights sample-weighted`() {
-        val a = SoftmaxRegressionStat(featureSize = 2, numClasses = 2, learningRate = ConstantRate(0.1))
-        val b = SoftmaxRegressionStat(featureSize = 2, numClasses = 2, learningRate = ConstantRate(0.1))
+        val a = SoftmaxRegressionStat(featureSize = 2, numClasses = 2, optimizer = Sgd(ConstantRate(0.1)))
+        val b = SoftmaxRegressionStat(featureSize = 2, numClasses = 2, optimizer = Sgd(ConstantRate(0.1)))
         repeat(100) { a.update(doubleArrayOf(1.0, 0.0), 1.0) }
         repeat(100) { b.update(doubleArrayOf(0.0, 1.0), 0.0) }
         a.merge(b.read())

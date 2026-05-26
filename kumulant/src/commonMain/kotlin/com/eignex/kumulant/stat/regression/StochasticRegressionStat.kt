@@ -5,7 +5,9 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.math.forEachStored
+import com.eignex.kumulant.schema.OptimizerSpec
 import com.eignex.kumulant.schema.ScalarExpr
+import com.eignex.kumulant.schema.Sgd
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.getValue
@@ -15,64 +17,38 @@ import com.eignex.kumulant.stream.welfordMode
 /**
  * Online generalised linear regression by stochastic gradient descent on the canonical
  * [Link]'s negative log-likelihood plus optional [Penalty]. The cheapest of the
- * multivariate regressors - point estimates only, no posterior, fast updates.
+ * multivariate regressors — point estimates only, no posterior, fast updates.
  *
- * Update step (per observation, all coordinates `i`):
- *  ```
- *  eta        = bias + Sum w_i * x_i
- *  mu         = link.invMean(eta)
- *  grad_i     = (mu - y) * x_i      (canonical-link form)
- *  w_i       -= eta_t(step) * weight * grad_i
- *  bias      += etaBias(step) * weight * (mu - y) * (-1)
- *  ```
- * Reduces to the textbook MSE-SGD when `link = Link.Identity` (then `mu = eta` and
- * `grad_i = -residual * x_i`). Regularisation is applied via the [Penalty]-specific
- * lazy formulation described below, which keeps the per-observation cost proportional
- * to `nnz(x)` rather than to [featureSize].
+ * The per-coordinate update rule is owned by [optimizer] ([Sgd] / [com.eignex.kumulant.schema.Adagrad] /
+ * [com.eignex.kumulant.schema.Rmsprop] / [com.eignex.kumulant.schema.Adam]). The bias has its own
+ * [biasOptimizer] schedule because the intercept usually wants a different cadence than
+ * the coefficients.
  *
- * Bias has its own learning-rate schedule because the intercept usually wants a much
- * faster decay than the coefficients (it dominates predictions for new arms).
+ * [Penalty.L1] and [Penalty.L2] require [optimizer] (and [biasOptimizer]) to be [Sgd]; the
+ * lazy-update tricks they rely on (Bottou-style multiplicative scaling for L2; cumulative
+ * truncated gradient for L1) are SGD-specific. With a non-Sgd optimizer the penalty must
+ * be [Penalty.None]; folding L1/L2 into Adam-class updates is left for a future refactor.
  *
- * Penalty handling (sparse-access for every variant):
- *  - [Penalty.None]: plain SGD.
- *  - [Penalty.L2]: Bottou-style multiplicative scaling - the logical weight at coord
- *    `i` is `stored[i] * scale`. Each step does `scale *= (1 - eta * weight * lambda)`
- *    (one scalar, not N) and the gradient step modifies only touched coords with
- *    `stored[i] += delta / scale`. Snapshot reads return the materialised logical
- *    weights `stored[i] * scale`. When `scale` drifts below `1e-12` it is folded
- *    back into `stored` under the lock to preserve precision.
- *  - [Penalty.L1]: truncated-gradient with cumulative threshold. A scalar
- *    `pendingThreshold` accumulates `eta * weight * lambda` per update; touching
- *    coord `i` lazily applies the threshold delta since its last touch
- *    (`lastApplied[i]`), then takes the SGD step. Untouched coords sit pending
- *    until they're either touched or materialised at read.
+ * **Use cases:** high-throughput online regression where point estimates suffice and
+ * the per-update cost must stay small. Reach for [DiagonalRegressionStat] when uncertainty
+ * is needed; for [BayesianRegressionStat] when the full posterior is needed.
  *
- * **Use cases:** high-throughput online regression where point estimates
- * suffice and the per-update cost must stay small (large feature spaces, very
- * fast streams, HOGWILD!-style distributed training). Reach for
- * [DiagonalRegressionStat] when uncertainty is needed; for
- * [BayesianRegressionStat] when the full posterior is needed.
+ * **Memory:** O([featureSize]) — weights vector, bias, plus optimizer aux state.
  *
- * **Memory:** O([featureSize]) — weights vector, bias, optional L1 lazy-apply
- * bookkeeping.
+ * **Update:** O(nnz(x)) per observation under [Penalty.None]; the L1/L2 paths add
+ * lazy-update bookkeeping with the same asymptotic cost.
  *
- * **Update:** O(nnz(x)) per observation — sparse-aware over touched
- * coordinates.
- *
- * **Concurrency:** Welford-coupled, per-slot atomic under [Concurrency.Relaxed]
- * (HOGWILD!-style asynchronous SGD — concurrent updaters may compute gradients
- * from slightly stale weights, but each write is an atomic add or CAS, and
- * convergence holds for the convex MSE loss). [Concurrency.Strict] and
- * [Concurrency.HighWrite] lock the body. [Concurrency.None] runs without
- * synchronisation.
+ * **Concurrency:** Welford-coupled per-slot atomic under [Concurrency.Relaxed]
+ * (HOGWILD-style asynchronous SGD), serialised under [Concurrency.Strict] /
+ * [Concurrency.HighWrite].
  */
 class StochasticRegressionStat(
     override val featureSize: Int,
-    /** Per-step learning-rate schedule applied to coefficient updates. */
-    val learningRate: ScalarExpr = ConstantRate(1e-3),
-    /** Per-step learning-rate schedule applied to the bias update; defaults to [learningRate]. */
-    val biasRate: ScalarExpr = learningRate,
-    /** Regularisation applied during the gradient step; defaults to plain SGD. */
+    /** Per-coordinate update rule for the weight vector. */
+    val optimizer: OptimizerSpec = Sgd(),
+    /** Update rule for the bias scalar. Defaults to [optimizer]. */
+    val biasOptimizer: OptimizerSpec = optimizer,
+    /** Regularisation applied during the gradient step; requires [Sgd] optimizers. */
     val penalty: Penalty = Penalty.None,
     /** Canonical GLM link function; [Link.Identity] gives ordinary least-squares SGD. */
     val link: Link = Link.Identity,
@@ -81,7 +57,17 @@ class StochasticRegressionStat(
 
     init {
         require(featureSize > 0) { "featureSize must be positive" }
+        require(penalty == Penalty.None || (optimizer is Sgd && biasOptimizer is Sgd)) {
+            "Penalty.L1 / Penalty.L2 require Sgd optimizers; got optimizer=${optimizer::class.simpleName}"
+        }
     }
+
+    // SGD learning-rate schedules for the penalty fast paths.
+    private val sgdLearningRate: ScalarExpr? = (optimizer as? Sgd)?.learningRate
+    private val sgdBiasRate: ScalarExpr? = (biasOptimizer as? Sgd)?.learningRate
+
+    private val weightOpt: Optimizer = optimizer.materialize(featureSize, concurrency)
+    private val biasOpt: Optimizer = biasOptimizer.materialize(1, concurrency)
 
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
@@ -96,13 +82,8 @@ class StochasticRegressionStat(
 
     // Logical w_i = softThreshold(stored[i], pendingThreshold - lastApplied[i]).
     private val l1PendingCell: StreamDouble? = if (penalty is Penalty.L1) mode.newDouble(0.0) else null
-    private val l1LastApplied: StreamDoubleArray? = if (penalty is Penalty.L1) {
-        mode.newDoubleArray(
-            featureSize,
-        )
-    } else {
-        null
-    }
+    private val l1LastApplied: StreamDoubleArray? =
+        if (penalty is Penalty.L1) mode.newDoubleArray(featureSize) else null
 
     /** Live view of the running intercept. */
     val bias: Double by biasCell
@@ -110,13 +91,12 @@ class StochasticRegressionStat(
     /** Live view of the cumulative observation weight folded in. */
     val totalWeights: Double by totalWeightsCell
 
-    /** Live view of the per-observation step counter (driving the learning-rate schedule). */
+    /** Live view of the per-observation step counter. */
     val step: Long by stepCell
 
-    /** Live view of the accumulated per-link loss (SSE for Identity, deviance for Logit / Log). */
+    /** Live view of the accumulated per-link loss. */
     val sse: Double by sseCell
 
-    /** Logical weight at coord [i]: applies the lazy [Penalty] transformation to the stored cell. */
     private fun effectiveWeight(i: Int): Double = when (penalty) {
         Penalty.None -> weightsCell.load(i)
 
@@ -128,11 +108,12 @@ class StochasticRegressionStat(
         }
     }
 
-    private fun requireL2Scale(): StreamDouble = l2ScaleCell ?: error("l2ScaleCell is only allocated under Penalty.L2")
-    private fun requireL1Pending(): StreamDouble =
-        l1PendingCell ?: error("l1PendingCell is only allocated under Penalty.L1")
+    private fun requireL2Scale(): StreamDouble = l2ScaleCell ?: error("l2ScaleCell only under Penalty.L2")
+    private fun requireL1Pending(): StreamDouble = l1PendingCell ?: error("l1PendingCell only under Penalty.L1")
     private fun requireL1LastApplied(): StreamDoubleArray =
-        l1LastApplied ?: error("l1LastApplied is only allocated under Penalty.L1")
+        l1LastApplied ?: error("l1LastApplied only under Penalty.L1")
+    private fun requireSgdLearningRate(): ScalarExpr = sgdLearningRate ?: error("Sgd learning rate required")
+    private fun requireSgdBiasRate(): ScalarExpr = sgdBiasRate ?: error("Sgd bias rate required")
 
     private fun softThreshold(w: Double, threshold: Double): Double = when {
         threshold <= 0.0 -> w
@@ -144,9 +125,7 @@ class StochasticRegressionStat(
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
         if (weight <= 0.0) return@withLock
-        val s = stepCell.addAndGet(1L)
-        val eta = learningRate.eval(s.toDouble())
-        val etaBias = biasRate.eval(s.toDouble())
+        stepCell.addAndGet(1L)
 
         var dot = 0.0
         x.forEachStored { i, v -> dot += effectiveWeight(i) * v }
@@ -157,11 +136,18 @@ class StochasticRegressionStat(
 
         when (val p = penalty) {
             Penalty.None -> {
-                val coeff = -eta * weight * negResidual
-                x.forEachStored { i, v -> weightsCell.add(i, coeff * v) }
+                weightOpt.advance()
+                biasOpt.advance()
+                x.forEachStored { i, v ->
+                    val grad = negResidual * v
+                    weightsCell.add(i, weightOpt.computeDelta(i, grad, weight))
+                }
+                biasCell.add(biasOpt.computeDelta(0, negResidual, weight))
             }
 
             is Penalty.L2 -> {
+                val eta = requireSgdLearningRate().eval(stepCell.load().toDouble())
+                val etaBias = requireSgdBiasRate().eval(stepCell.load().toDouble())
                 val factor = 1.0 - eta * weight * p.lambda
                 require(factor > 0.0) {
                     "L2 decay factor must stay positive: 1 - eta*weight*lambda = $factor"
@@ -169,23 +155,22 @@ class StochasticRegressionStat(
                 val scale = casMultiply(requireL2Scale(), factor)
                 val coeff = -eta * weight * negResidual
                 x.forEachStored { i, v -> weightsCell.add(i, coeff * v / scale) }
-                // Refold before precision dies; one rare dense sweep amortised over many updates.
                 if (scale < 1e-12) foldL2Scale()
+                biasCell.add(-etaBias * weight * negResidual)
             }
 
             is Penalty.L1 -> {
+                val eta = requireSgdLearningRate().eval(stepCell.load().toDouble())
+                val etaBias = requireSgdBiasRate().eval(stepCell.load().toDouble())
                 val pending = requireL1Pending().addAndGet(eta * weight * p.lambda)
                 val coeff = -eta * weight * negResidual
-                x.forEachStored { i, v ->
-                    applyL1AndStep(i, pending, coeff * v)
-                }
+                x.forEachStored { i, v -> applyL1AndStep(i, pending, coeff * v) }
+                biasCell.add(-etaBias * weight * negResidual)
             }
         }
-        biasCell.add(-etaBias * weight * negResidual)
         totalWeightsCell.add(weight)
     }
 
-    /** CAS-multiply a shared scalar. Lock-free under [Concurrency.Relaxed]. */
     private fun casMultiply(cell: StreamDouble, factor: Double): Double {
         while (true) {
             val current = cell.load()
@@ -198,7 +183,6 @@ class StochasticRegressionStat(
         val scaleCell = requireL2Scale()
         val scale = scaleCell.load()
         if (scale == 1.0) return
-        // Lose the CAS race -> another thread is folding; bail rather than double-apply.
         if (!scaleCell.compareAndSet(scale, 1.0)) return
         for (i in 0 until featureSize) {
             while (true) {
@@ -208,7 +192,6 @@ class StochasticRegressionStat(
         }
     }
 
-    /** Apply pending L1 threshold to coord [i] and add the SGD [delta] in one CAS-loop. */
     private fun applyL1AndStep(i: Int, pending: Double, delta: Double) {
         val lastAppliedCell = requireL1LastApplied()
         val threshold = pending - lastAppliedCell.load(i)
@@ -225,7 +208,6 @@ class StochasticRegressionStat(
 
     override fun read(timestampNanos: Long): StochasticRegressionResult = lock.withLock {
         val materialised = DoubleArray(featureSize) { effectiveWeight(it) }
-        // Snapshot returns logical weights, so reset lazy state to match.
         when (penalty) {
             Penalty.None -> {}
 
@@ -254,9 +236,7 @@ class StochasticRegressionStat(
 
     /**
      * Sample-weighted blend of weights and bias. SGD has no second-moment information,
-     * so this is an *approximation*: weight vectors from two streams are correlated
-     * through their gradient trajectories in a way that an exact combine would need to
-     * know about. If you need a principled merge, use [BayesianRegressionStat].
+     * so this is an approximation; for principled merges use [BayesianRegressionStat].
      */
     override fun merge(values: StochasticRegressionResult) {
         require(values.featureSize == featureSize) {
@@ -293,8 +273,10 @@ class StochasticRegressionStat(
         totalWeightsCell.store(0.0)
         stepCell.store(0L)
         sseCell.store(0.0)
+        weightOpt.reset()
+        biasOpt.reset()
     }
 
     override fun create(concurrency: Concurrency?) =
-        StochasticRegressionStat(featureSize, learningRate, biasRate, penalty, link, concurrency ?: this.concurrency)
+        StochasticRegressionStat(featureSize, optimizer, biasOptimizer, penalty, link, concurrency ?: this.concurrency)
 }

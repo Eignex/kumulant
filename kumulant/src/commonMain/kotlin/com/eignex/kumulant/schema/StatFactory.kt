@@ -564,13 +564,13 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
             BayesianRegressionStat(featureSize, priorVariance, link, concurrency)
 
         is StochasticRegression ->
-            StochasticRegressionStat(featureSize, learningRate, biasRate, penalty, link, concurrency)
+            StochasticRegressionStat(featureSize, optimizer, biasOptimizer, penalty, link, concurrency)
 
         is DiagonalRegression ->
             DiagonalRegressionStat(featureSize, priorPrecision, learningRate, penalty, link, concurrency)
 
         is SoftmaxRegression ->
-            SoftmaxRegressionStat(featureSize, numClasses, learningRate, concurrency)
+            SoftmaxRegressionStat(featureSize, numClasses, optimizer, biasOptimizer, concurrency)
 
         is GaussianNaiveBayes ->
             GaussianNaiveBayesStat(featureSize, numClasses, varianceFloor, concurrency)

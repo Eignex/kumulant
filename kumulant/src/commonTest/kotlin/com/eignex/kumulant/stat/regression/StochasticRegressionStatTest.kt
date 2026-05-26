@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.schema.Sgd
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.random.Random
@@ -31,7 +32,7 @@ class StochasticRegressionStatTest {
 
     @Test
     fun `sgd should recover ground truth weights`() {
-        val stat = StochasticRegressionStat(featureSize = 3, learningRate = ConstantRate(0.05))
+        val stat = StochasticRegressionStat(featureSize = 3, optimizer = Sgd(ConstantRate(0.05)))
         val truth = doubleArrayOf(1.5, -2.0, 0.5)
         fitLine(stat, truth, intercept = 0.3)
         val r = stat.read()
@@ -46,8 +47,8 @@ class StochasticRegressionStatTest {
 
     @Test
     fun `merge on SGD blends sample-weighted`() {
-        val a = StochasticRegressionStat(featureSize = 2, learningRate = ConstantRate(0.05))
-        val b = StochasticRegressionStat(featureSize = 2, learningRate = ConstantRate(0.05))
+        val a = StochasticRegressionStat(featureSize = 2, optimizer = Sgd(ConstantRate(0.05)))
+        val b = StochasticRegressionStat(featureSize = 2, optimizer = Sgd(ConstantRate(0.05)))
         val truth = doubleArrayOf(1.0, -1.0)
         fitLine(a, truth, intercept = 0.0, n = 2000, seed = 11L)
         fitLine(b, truth, intercept = 0.0, n = 2000, seed = 22L)
@@ -75,7 +76,7 @@ class StochasticRegressionStatTest {
         val rng = Random(11)
         val stat = StochasticRegressionStat(
             featureSize = 2,
-            learningRate = ConstantRate(0.1),
+            optimizer = Sgd(ConstantRate(0.1)),
             link = Link.Logit,
         )
         repeat(3000) {
@@ -97,7 +98,7 @@ class StochasticRegressionStatTest {
         val rng = Random(3)
         val stat = StochasticRegressionStat(
             featureSize = 2,
-            learningRate = ConstantRate(0.05),
+            optimizer = Sgd(ConstantRate(0.05)),
             concurrency = Concurrency.Relaxed,
         )
         repeat(1000) {
@@ -117,7 +118,7 @@ class StochasticRegressionStatTest {
         // but not so small that irrelevant coords drift far from zero.
         val stat = StochasticRegressionStat(
             featureSize = 3,
-            learningRate = ConstantRate(0.05),
+            optimizer = Sgd(ConstantRate(0.05)),
             penalty = Penalty.L1(0.01),
         )
         // Only coord 0 matters; coords 1, 2 are irrelevant noise.
@@ -145,12 +146,12 @@ class StochasticRegressionStatTest {
         // Strong L2 -> weights stay small even with strong signal.
         val statL2 = StochasticRegressionStat(
             featureSize = 2,
-            learningRate = ConstantRate(0.05),
+            optimizer = Sgd(ConstantRate(0.05)),
             penalty = Penalty.L2(0.5),
         )
         val statNoReg = StochasticRegressionStat(
             featureSize = 2,
-            learningRate = ConstantRate(0.05),
+            optimizer = Sgd(ConstantRate(0.05)),
         )
         repeat(500) {
             val x = doubleArrayOf(rng.nextDouble(), rng.nextDouble())

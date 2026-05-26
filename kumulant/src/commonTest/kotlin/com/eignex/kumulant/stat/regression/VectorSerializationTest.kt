@@ -4,6 +4,7 @@ import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.SparseVector
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.schema.ScalarExpr
+import com.eignex.kumulant.schema.Sgd
 import kotlinx.serialization.json.Json
 import kotlin.math.abs
 import kotlin.random.Random
@@ -115,7 +116,7 @@ class VectorSerializationTest {
         val rng = Random(2026)
         val truth = doubleArrayOf(0.7, -0.3, 1.5)
 
-        val sgd = StochasticRegressionStat(featureSize = 3, learningRate = ConstantRate(0.05))
+        val sgd = StochasticRegressionStat(featureSize = 3, optimizer = Sgd(ConstantRate(0.05)))
         val diag = DiagonalRegressionStat(featureSize = 3, priorPrecision = 0.01)
         val bayes = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         repeat(2000) {

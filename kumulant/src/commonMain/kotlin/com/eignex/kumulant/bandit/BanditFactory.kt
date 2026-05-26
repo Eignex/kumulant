@@ -49,6 +49,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.VectorView
+import com.eignex.kumulant.schema.Sgd
 import com.eignex.kumulant.stat.regression.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.ConstantRate
 import com.eignex.kumulant.stat.regression.DiagonalRegressionStat
@@ -150,7 +151,7 @@ private fun LinearRegressionSpec.materialize(concurrency: Concurrency): Regressi
 
         is LinearRegressionSpec.Stochastic -> StochasticRegressionStat(
             featureSize = featureSize,
-            learningRate = ConstantRate(learningRate),
+            optimizer = Sgd(ConstantRate(learningRate)),
             concurrency = concurrency,
         )
     }

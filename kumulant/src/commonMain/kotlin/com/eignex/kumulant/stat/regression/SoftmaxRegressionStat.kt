@@ -7,7 +7,8 @@ import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.math.forEachStored
-import com.eignex.kumulant.schema.ScalarExpr
+import com.eignex.kumulant.schema.OptimizerSpec
+import com.eignex.kumulant.schema.Sgd
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.getValue
@@ -91,32 +92,30 @@ data class SoftmaxRegressionResult(
  * softmax cross-entropy loss. Generalises [StochasticRegressionStat] with
  * [Link.Logit] from binary to K-way classification.
  *
- * Per observation (true class `c = y.toInt()`, learning rate `eta`):
+ * Update step per observation (true class `c = y.toInt()`):
  *  ```
  *  p[k]      = softmax(W[k] . x + b[k])
- *  grad[k]   = (p[k] - 1[k == c]) * x
- *  W[k]     -= eta * weight * grad[k]
- *  b[k]     -= eta * weight * (p[k] - 1[k == c])
+ *  grad[k]i  = (p[k] - 1[k == c]) * x[i]    // per-coordinate gradient
+ *  W[k]i    += optimizer.computeDelta(k, i, grad[k]i, weight)
+ *  b[k]     += biasOptimizer.computeDelta(k, p[k] - 1[k == c], weight)
  *  ```
  *
- * Updates are sparse over the nonzeros of `x`. Penalties and richer optimisers
- * are out of scope here; reach for [DiagonalRegressionStat] or
- * [BayesianRegressionStat] for binary problems that need uncertainty.
+ * One [OptimizerSpec] is materialised per class for the weight matrix; bias
+ * is a single optimizer over `numClasses` slots.
  *
- * **Memory:** O([numClasses] * [featureSize]) — flat weight matrix plus per-class bias.
- *
+ * **Memory:** O([numClasses] * [featureSize]) for weights + per-optimizer aux state.
  * **Update:** O([numClasses] * nnz(x)) per observation.
- *
- * **Concurrency:** Welford-locked under [Concurrency.Strict] / [Concurrency.HighWrite].
- * [Concurrency.Relaxed] runs lock-free but multi-cell updates may interleave
- * (HOGWILD-style); [Concurrency.None] runs without synchronisation.
+ * **Concurrency:** Welford-locked; the optimizer aux state honours the same
+ * [Concurrency] passed in.
  */
 class SoftmaxRegressionStat(
     override val featureSize: Int,
     /** Number of classes; the input `y` must round to `[0, numClasses)`. */
     val numClasses: Int,
-    /** Per-step learning-rate schedule applied to coefficient and bias updates. */
-    val learningRate: ScalarExpr = ConstantRate(1e-2),
+    /** Per-class weight-matrix optimizer; one instance is materialised per class. */
+    val optimizer: OptimizerSpec = Sgd(),
+    /** Bias optimizer, materialised once over `numClasses` slots. Defaults to [optimizer]. */
+    val biasOptimizer: OptimizerSpec = optimizer,
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<SoftmaxRegressionResult> {
 
@@ -135,6 +134,11 @@ class SoftmaxRegressionStat(
     private val stepCell = mode.newLong(0L)
     private val crossEntropyCell: StreamDouble = mode.newDouble(0.0)
 
+    private val weightOptimizers: Array<Optimizer> = Array(numClasses) {
+        optimizer.materialize(featureSize, concurrency)
+    }
+    private val biasOpt: Optimizer = biasOptimizer.materialize(numClasses, concurrency)
+
     /** Live view of the cumulative observation weight folded in. */
     val totalWeights: Double by totalWeightsCell
 
@@ -149,8 +153,7 @@ class SoftmaxRegressionStat(
         if (weight <= 0.0) return@withLock
         val c = y.toInt()
         if (c !in 0 until numClasses) return@withLock
-        val s = stepCell.addAndGet(1L)
-        val eta = learningRate.eval(s.toDouble())
+        stepCell.addAndGet(1L)
 
         // Softmax over current logits.
         val etas = DoubleArray(numClasses)
@@ -173,12 +176,18 @@ class SoftmaxRegressionStat(
         val logProbC = ln(etas[c].coerceAtLeast(SOFTMAX_EPS))
         crossEntropyCell.add(-logProbC * weight)
 
+        biasOpt.advance()
+        for (k in 0 until numClasses) weightOptimizers[k].advance()
+
         for (k in 0 until numClasses) {
             val target = if (k == c) 1.0 else 0.0
             val dEta = etas[k] - target
-            val coeff = -eta * weight * dEta
-            x.forEachStored { i, v -> weightsCell.add(k * featureSize + i, coeff * v) }
-            biasCell.add(k, coeff)
+            val opt = weightOptimizers[k]
+            x.forEachStored { i, v ->
+                val grad = dEta * v
+                weightsCell.add(k * featureSize + i, opt.computeDelta(i, grad, weight))
+            }
+            biasCell.add(k, biasOpt.computeDelta(k, dEta, weight))
         }
         totalWeightsCell.add(weight)
     }
@@ -227,10 +236,12 @@ class SoftmaxRegressionStat(
         totalWeightsCell.store(0.0)
         stepCell.store(0L)
         crossEntropyCell.store(0.0)
+        for (opt in weightOptimizers) opt.reset()
+        biasOpt.reset()
     }
 
     override fun create(concurrency: Concurrency?) =
-        SoftmaxRegressionStat(featureSize, numClasses, learningRate, concurrency ?: this.concurrency)
+        SoftmaxRegressionStat(featureSize, numClasses, optimizer, biasOptimizer, concurrency ?: this.concurrency)
 
     private companion object {
         const val SOFTMAX_EPS = 1e-15

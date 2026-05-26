@@ -39,6 +39,20 @@ class RegressionSpecsRoundTripTest {
         decoded.materialize(Concurrency.None).update(feat(0.5), y = 1.0)
     }
 
+    @Test fun `StochasticRegression with Adam optimizer round trips`() {
+        val cfg = StochasticRegression(featureSize = 2, optimizer = Adam(beta1 = 0.95, beta2 = 0.999))
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        assertEquals(cfg, SchemaJson.decodeFromString<StatSpec>(json))
+    }
+
+    @Test fun `StochasticRegression with Adagrad and Rmsprop round trip`() {
+        for (opt in listOf(Adagrad(epsilon = 1e-8), Rmsprop(rho = 0.95))) {
+            val cfg = StochasticRegression(featureSize = 2, optimizer = opt)
+            val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+            assertEquals(cfg, SchemaJson.decodeFromString<StatSpec>(json))
+        }
+    }
+
     @Test fun `DiagonalRegression leaf spec round trips`() {
         val cfg = DiagonalRegression(featureSize = 2, priorPrecision = 2.0)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)

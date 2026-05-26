@@ -442,19 +442,19 @@ data class BayesianRegression(
     val link: Link = Link.Identity,
 ) : RegressionStatSpec<CovarianceRegressionResult>
 
-/** Spec for `StochasticRegressionStat`: SGD over the linear weights and bias. */
+/** Spec for `StochasticRegressionStat`: online GLM with a configurable optimizer. */
 @Serializable
 @SerialName("StochasticRegression")
 data class StochasticRegression(
     /** Number of input features. */
     val featureSize: Int,
-    /** Per-step learning rate. */
-    val learningRate: ScalarExpr = ConstantRate(1e-3),
-    /** Per-step bias learning rate; defaults to [learningRate]. */
-    val biasRate: ScalarExpr = ConstantRate(1e-3),
-    /** Gradient-step regulariser. */
+    /** Per-coordinate update rule for the weight vector. */
+    val optimizer: OptimizerSpec = Sgd(),
+    /** Update rule for the bias scalar; defaults to [optimizer]. */
+    val biasOptimizer: OptimizerSpec = optimizer,
+    /** Gradient-step regulariser. Requires [Sgd] optimizers. */
     val penalty: Penalty = Penalty.None,
-    /** GLM link function; `Link.Identity` gives plain OLS-SGD. */
+    /** GLM link function; `Link.Identity` gives plain OLS. */
     val link: Link = Link.Identity,
 ) : RegressionStatSpec<StochasticRegressionResult>
 
@@ -470,7 +470,7 @@ data class GaussianNaiveBayes(
     val varianceFloor: Double = 1e-9,
 ) : RegressionStatSpec<GaussianNaiveBayesResult>
 
-/** Spec for `SoftmaxRegressionStat`: multinomial (K-way) logistic regression by SGD. */
+/** Spec for `SoftmaxRegressionStat`: multinomial (K-way) logistic regression. */
 @Serializable
 @SerialName("SoftmaxRegression")
 data class SoftmaxRegression(
@@ -478,8 +478,10 @@ data class SoftmaxRegression(
     val featureSize: Int,
     /** Number of classes; the input `y` must round to `[0, numClasses)`. */
     val numClasses: Int,
-    /** Per-step learning-rate schedule applied to coefficient and bias updates. */
-    val learningRate: ScalarExpr = ConstantRate(1e-2),
+    /** Per-class weight-matrix optimizer; one instance is materialised per class. */
+    val optimizer: OptimizerSpec = Sgd(),
+    /** Bias optimizer; defaults to [optimizer]. */
+    val biasOptimizer: OptimizerSpec = optimizer,
 ) : RegressionStatSpec<SoftmaxRegressionResult>
 
 /** Spec for `DiagonalRegressionStat`: factorised-Gaussian posterior with per-coordinate precision. */
