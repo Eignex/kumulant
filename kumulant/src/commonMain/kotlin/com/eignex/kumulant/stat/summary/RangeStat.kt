@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasMinMax
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.casMax
@@ -14,10 +15,11 @@ import kotlinx.serialization.Serializable
 @SerialName("RangeResult")
 data class RangeResult(
     /** Running minimum value. */
-    val min: Double,
+    override val min: Double,
     /** Running maximum value. */
-    val max: Double,
-) : Result
+    override val max: Double,
+) : Result,
+    HasMinMax
 
 /**
  * Tracks the minimum and maximum value seen across a stream.

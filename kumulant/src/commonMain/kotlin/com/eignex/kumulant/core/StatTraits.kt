@@ -33,6 +33,19 @@ interface HasCenterScale : Result {
     val scale: Double
 }
 
+/**
+ * Result exposing observed minimum and maximum values. Consumed by the `withFeedback`
+ * `Low` / `High` AST nodes for min-max scaling and any downstream that needs the
+ * observed range.
+ */
+interface HasMinMax : Result {
+    /** Minimum value observed so far. */
+    val min: Double
+
+    /** Maximum value observed so far. */
+    val max: Double
+}
+
 /** Result exposing variance-family quantities derived from [sst] and [totalWeights]. */
 interface HasSampleVariance : Result {
     /** Cumulative weight of observations that contributed to this result. */

@@ -790,6 +790,28 @@ data class WithFeedbackSeries(
 fun <R : Result> SeriesStatSpec<R>.withFeedback(primary: SeriesStatSpec<*>, project: ScalarExpr): SeriesStatSpec<R> =
     WithFeedbackSeries(this, primary, project) as SeriesStatSpec<R>
 
+/**
+ * Z-score the input against a hidden [Variance] primary, then forward the standardized
+ * value to this spec. Wire-portable as a [WithFeedbackSeries] composition. Emits `0`
+ * while the running variance is still zero.
+ */
+fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> =
+    withFeedback(Variance, IfExpr(Scale gt 0.0, (X - Center) / Scale, Const(0.0)))
+
+/**
+ * Min-max scale the input against a hidden [Range] primary into `[targetLow, targetHigh]`,
+ * then forward the mapped value to this spec. Defaults map to `[0, 1]`; pass
+ * `targetLow = -1.0, targetHigh = 1.0` for a `[-1, 1]` mapping. Emits [targetLow] while
+ * the running range is still degenerate.
+ */
+fun <R : Result> SeriesStatSpec<R>.minMaxScaler(targetLow: Double = 0.0, targetHigh: Double = 1.0): SeriesStatSpec<R> {
+    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
+    val span = High - Low
+    val normalized = (X - Low) / span
+    val scaled = normalized * (targetHigh - targetLow) + targetLow
+    return withFeedback(Range, IfExpr(span gt 0.0, scaled, Const(targetLow)))
+}
+
 /** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable
 @SerialName("SampleSeries")

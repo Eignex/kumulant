@@ -1,6 +1,7 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.HasCenterScale
+import com.eignex.kumulant.core.HasMinMax
 import com.eignex.kumulant.core.Result
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -71,6 +72,38 @@ data object Scale : ScalarExpr {
             "Scale requires a HasCenterScale feedback primary; got ${primary?.let { it::class.simpleName }}"
         }
         return primary.scale
+    }
+}
+
+/**
+ * Reads the `min` field of the feedback primary's snapshot. Requires the primary's
+ * result to implement [HasMinMax]; raises [IllegalStateException] when evaluated
+ * without such a primary.
+ */
+@Serializable
+@SerialName("Low")
+data object Low : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
+        check(primary is HasMinMax) {
+            "Low requires a HasMinMax feedback primary; got ${primary?.let { it::class.simpleName }}"
+        }
+        return primary.min
+    }
+}
+
+/**
+ * Reads the `max` field of the feedback primary's snapshot. Requires the primary's
+ * result to implement [HasMinMax]; raises [IllegalStateException] when evaluated
+ * without such a primary.
+ */
+@Serializable
+@SerialName("High")
+data object High : ScalarExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
+        check(primary is HasMinMax) {
+            "High requires a HasMinMax feedback primary; got ${primary?.let { it::class.simpleName }}"
+        }
+        return primary.max
     }
 }
 
