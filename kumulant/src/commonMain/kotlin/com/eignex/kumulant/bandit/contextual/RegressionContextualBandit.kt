@@ -20,10 +20,10 @@ import kotlin.random.Random
  *  - **LinUcb**: any linear regressor + [com.eignex.kumulant.stat.regression.LinUcb].
  *  - **Greedy SGD**: [com.eignex.kumulant.stat.regression.StochasticRegressionStat] +
  *    [com.eignex.kumulant.stat.regression.PointPosterior] with `exploration = 0.0`.
- *  - **Decision-tree bandit**: [com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat]
- *    + a [com.eignex.kumulant.stat.tree.TreePosterior].
- *  - **Random-forest bandit**: [com.eignex.kumulant.stat.tree.RandomForestRegressionStat]
- *    + a [com.eignex.kumulant.stat.tree.ForestPosterior].
+ *  - **Decision-tree bandit**: [com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat]
+ *    + a [com.eignex.kumulant.stat.regression.tree.TreePosterior].
+ *  - **Random-forest bandit**: [com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat]
+ *    + a [com.eignex.kumulant.stat.regression.tree.ForestPosterior].
  *
  * Per-arm regressors are constructed via `template.create(null)` so per-arm
  * state is independent. [exploration] scales the posterior's exploration

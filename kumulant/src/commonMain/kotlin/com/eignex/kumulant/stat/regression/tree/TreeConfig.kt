@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.tree
+package com.eignex.kumulant.stat.regression.tree
 
 import kotlinx.serialization.Serializable
 

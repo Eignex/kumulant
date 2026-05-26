@@ -21,11 +21,18 @@ import com.eignex.kumulant.stat.regression.ConstantRate
 import com.eignex.kumulant.stat.regression.CovarianceRegressionResult
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.DiagonalRegressionResult
+import com.eignex.kumulant.stat.regression.GaussianNaiveBayesResult
 import com.eignex.kumulant.stat.regression.Link
 import com.eignex.kumulant.stat.regression.Penalty
+import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+import com.eignex.kumulant.stat.regression.tree.ForestRegressionResult
+import com.eignex.kumulant.stat.regression.tree.Split
+import com.eignex.kumulant.stat.regression.tree.TreeConfig
+import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult
 import com.eignex.kumulant.stat.score.AucResult
+import com.eignex.kumulant.stat.score.ConfusionMatrixResult
 import com.eignex.kumulant.stat.score.ReliabilityResult
 import com.eignex.kumulant.stat.sketch.BloomFilterResult
 import com.eignex.kumulant.stat.sketch.CountMinSketchResult
@@ -42,10 +49,6 @@ import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SummaryResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
-import com.eignex.kumulant.stat.tree.ForestRegressionResult
-import com.eignex.kumulant.stat.tree.Split
-import com.eignex.kumulant.stat.tree.TreeConfig
-import com.eignex.kumulant.stat.tree.TreeRegressionResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -347,6 +350,19 @@ data class Reliability(
     val numBins: Int,
 ) : PairedStatSpec<ReliabilityResult>
 
+/** Spec for `ConfusionMatrixStat`: K-by-K weighted confusion matrix over (predictedClass, trueClass). */
+@Serializable
+@SerialName("ConfusionMatrix")
+data class ConfusionMatrix(
+    /** Number of classes; indices are `[0, numClasses)`. */
+    val numClasses: Int,
+) : PairedStatSpec<ConfusionMatrixResult>
+
+/** Spec for `AccuracyStat`: weighted classification accuracy over (predictedClass, trueClass). */
+@Serializable
+@SerialName("Accuracy")
+data object Accuracy : PairedStatSpec<WeightedMeanResult>
+
 /** Spec for `HyperLogLogStat`: cardinality sketch with controllable [precision]. */
 @Serializable
 @SerialName("HyperLogLog")
@@ -438,6 +454,30 @@ data class StochasticRegression(
     /** GLM link function; `Link.Identity` gives plain OLS-SGD. */
     val link: Link = Link.Identity,
 ) : RegressionStatSpec<StochasticRegressionResult>
+
+/** Spec for `GaussianNaiveBayesStat`: online Gaussian naive Bayes classifier. */
+@Serializable
+@SerialName("GaussianNaiveBayes")
+data class GaussianNaiveBayes(
+    /** Number of input features. */
+    val featureSize: Int,
+    /** Number of classes. */
+    val numClasses: Int,
+    /** Lower bound applied to per-class variances at predict time. */
+    val varianceFloor: Double = 1e-9,
+) : RegressionStatSpec<GaussianNaiveBayesResult>
+
+/** Spec for `SoftmaxRegressionStat`: multinomial (K-way) logistic regression by SGD. */
+@Serializable
+@SerialName("SoftmaxRegression")
+data class SoftmaxRegression(
+    /** Number of input features. */
+    val featureSize: Int,
+    /** Number of classes; the input `y` must round to `[0, numClasses)`. */
+    val numClasses: Int,
+    /** Per-step learning-rate schedule applied to coefficient and bias updates. */
+    val learningRate: ScalarExpr = ConstantRate(1e-2),
+) : RegressionStatSpec<SoftmaxRegressionResult>
 
 /** Spec for `DiagonalRegressionStat`: factorised-Gaussian posterior with per-coordinate precision. */
 @Serializable

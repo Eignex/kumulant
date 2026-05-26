@@ -232,6 +232,15 @@ class StatsRoundTripTest {
         assertEquals(cfg, roundTrip(cfg))
     }
 
+    @Test fun `confusionMatrixConfig round trips`() {
+        val cfg = ConfusionMatrix(numClasses = 5)
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
+    @Test fun `accuracyConfig round trips`() {
+        assertEquals(Accuracy, roundTrip(Accuracy))
+    }
+
     @Test fun `hyperLogLogConfig round trips`() {
         val cfg = HyperLogLog(precision = 12)
         assertEquals(cfg, roundTrip(cfg))

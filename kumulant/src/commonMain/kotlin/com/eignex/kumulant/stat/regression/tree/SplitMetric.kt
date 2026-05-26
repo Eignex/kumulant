@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.tree
+package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName

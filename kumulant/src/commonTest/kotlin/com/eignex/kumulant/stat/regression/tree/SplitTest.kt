@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.tree
+package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.schema.V

@@ -5,10 +5,10 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.CovarianceRegressionResult
 import com.eignex.kumulant.stat.regression.StochasticRegressionResult
+import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
+import com.eignex.kumulant.stat.regression.tree.TreeConfig
+import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
-import com.eignex.kumulant.stat.tree.ThresholdSplit
-import com.eignex.kumulant.stat.tree.TreeConfig
-import com.eignex.kumulant.stat.tree.TreeRegressionResult
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -44,6 +44,20 @@ class RegressionSpecsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
         decoded.materialize(Concurrency.None).update(feat(1.0, 1.0), y = 1.0)
+    }
+
+    @Test fun `SoftmaxRegression leaf spec round trips`() {
+        val cfg = SoftmaxRegression(featureSize = 2, numClasses = 3)
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
+        decoded.materialize(Concurrency.None).update(feat(1.0, 0.5), y = 1.0)
+    }
+
+    @Test fun `GaussianNaiveBayes leaf spec round trips`() {
+        val cfg = GaussianNaiveBayes(featureSize = 2, numClasses = 3, varianceFloor = 1e-6)
+        val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
+        val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
+        decoded.materialize(Concurrency.None).update(feat(0.5, 0.5), y = 1.0)
     }
 
     @Test fun `DecisionTreeRegression leaf spec round trips with TreeConfig`() {

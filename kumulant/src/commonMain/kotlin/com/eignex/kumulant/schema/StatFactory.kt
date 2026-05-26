@@ -86,10 +86,16 @@ import com.eignex.kumulant.stat.rate.RateStat
 import com.eignex.kumulant.stat.regression.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.CovarianceStat
 import com.eignex.kumulant.stat.regression.DiagonalRegressionStat
+import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
+import com.eignex.kumulant.stat.regression.SoftmaxRegressionStat
 import com.eignex.kumulant.stat.regression.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.UnivariateRegressionStat
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
+import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
+import com.eignex.kumulant.stat.score.AccuracyStat
 import com.eignex.kumulant.stat.score.AucStat
 import com.eignex.kumulant.stat.score.BrierScoreStat
+import com.eignex.kumulant.stat.score.ConfusionMatrixStat
 import com.eignex.kumulant.stat.score.LogLossStat
 import com.eignex.kumulant.stat.score.MaeLossStat
 import com.eignex.kumulant.stat.score.MseLossStat
@@ -113,8 +119,6 @@ import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.SummaryStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
-import com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat
-import com.eignex.kumulant.stat.tree.RandomForestRegressionStat
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -349,6 +353,10 @@ fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is Reliability -> ReliabilityStat(numBins, concurrency)
 
+        is ConfusionMatrix -> ConfusionMatrixStat(numClasses, concurrency)
+
+        Accuracy -> AccuracyStat(concurrency)
+
         is WithWeightPaired ->
             requirePaired(inner, "WithWeightPaired").materialize(concurrency).withWeight(weight)
 
@@ -558,6 +566,12 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
 
         is DiagonalRegression ->
             DiagonalRegressionStat(featureSize, priorPrecision, learningRate, penalty, link, concurrency)
+
+        is SoftmaxRegression ->
+            SoftmaxRegressionStat(featureSize, numClasses, learningRate, concurrency)
+
+        is GaussianNaiveBayes ->
+            GaussianNaiveBayesStat(featureSize, numClasses, varianceFloor, concurrency)
 
         is DecisionTreeRegression ->
             DecisionTreeRegressionStat(

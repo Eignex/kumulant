@@ -2,12 +2,12 @@ package com.eignex.kumulant.bandit.tree
 
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat
-import com.eignex.kumulant.stat.tree.RandomForestRegressionStat
-import com.eignex.kumulant.stat.tree.ThompsonForestPosterior
-import com.eignex.kumulant.stat.tree.ThompsonTreePosterior
-import com.eignex.kumulant.stat.tree.ThresholdSplit
-import com.eignex.kumulant.stat.tree.TreeConfig
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
+import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
+import com.eignex.kumulant.stat.regression.tree.ThompsonForestPosterior
+import com.eignex.kumulant.stat.regression.tree.ThompsonTreePosterior
+import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
+import com.eignex.kumulant.stat.regression.tree.TreeConfig
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertTrue

@@ -12,10 +12,10 @@ import com.eignex.kumulant.stat.regression.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.MultivariateGaussian
 import com.eignex.kumulant.stat.regression.PointPosterior
 import com.eignex.kumulant.stat.regression.StochasticRegressionStat
-import com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat
-import com.eignex.kumulant.stat.tree.MeanTreePosterior
-import com.eignex.kumulant.stat.tree.ThresholdSplit
-import com.eignex.kumulant.stat.tree.TreeConfig
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
+import com.eignex.kumulant.stat.regression.tree.MeanTreePosterior
+import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
+import com.eignex.kumulant.stat.regression.tree.TreeConfig
 import kotlin.random.Random
 
 /**

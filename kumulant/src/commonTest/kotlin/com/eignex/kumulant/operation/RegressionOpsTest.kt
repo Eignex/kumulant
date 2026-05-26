@@ -2,11 +2,11 @@ package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.StochasticRegressionStat
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
+import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
+import com.eignex.kumulant.stat.regression.tree.TreeConfig
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
-import com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat
-import com.eignex.kumulant.stat.tree.ThresholdSplit
-import com.eignex.kumulant.stat.tree.TreeConfig
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals

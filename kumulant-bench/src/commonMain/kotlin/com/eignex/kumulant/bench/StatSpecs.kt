@@ -967,13 +967,13 @@ val reliabilityStatSpec = pairedStatSpec(
 // the natural scalar.
 
 private val treeSplitCandidates = listOf(
-    com.eignex.kumulant.stat.tree.ThresholdSplit(0, 0.5),
+    com.eignex.kumulant.stat.regression.tree.ThresholdSplit(0, 0.5),
 )
 
 val decisionTreeRegressionStatSpec = regressionStatSpec(
     name = "DecisionTreeRegressionStat",
     factory = { c ->
-        com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat(
+        com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat(
             featureSize = 1,
             splitCandidates = treeSplitCandidates,
             concurrency = c,
@@ -987,7 +987,7 @@ val decisionTreeRegressionStatSpec = regressionStatSpec(
 val randomForestRegressionStatSpec = regressionStatSpec(
     name = "RandomForestRegressionStat",
     factory = { c ->
-        com.eignex.kumulant.stat.tree.RandomForestRegressionStat(
+        com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat(
             featureSize = 1,
             splitCandidates = treeSplitCandidates,
             nbrTrees = 4,

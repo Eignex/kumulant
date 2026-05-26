@@ -4,11 +4,11 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.operation.foldRegression
 import com.eignex.kumulant.stat.regression.StochasticRegressionStat
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
-import com.eignex.kumulant.stat.tree.DecisionTreeRegressionStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

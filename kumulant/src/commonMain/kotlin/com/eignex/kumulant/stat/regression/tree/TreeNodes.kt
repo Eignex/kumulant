@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalAtomicApi::class)
 
-package com.eignex.kumulant.stat.tree
+package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.math.VectorView
