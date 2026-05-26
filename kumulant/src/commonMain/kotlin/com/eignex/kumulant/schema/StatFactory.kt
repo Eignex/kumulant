@@ -55,6 +55,9 @@ import com.eignex.kumulant.operation.withTimeAsX
 import com.eignex.kumulant.operation.withTimeAsY
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
+import com.eignex.kumulant.stat.anomaly.GaussianScorerStat
+import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
+import com.eignex.kumulant.stat.anomaly.QuantileFilterStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.change.AdwinStat
@@ -167,6 +170,10 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         Moments -> MomentsStat(concurrency)
 
         Summary -> SummaryStat(concurrency)
+
+        GaussianScorer -> GaussianScorerStat(concurrency)
+
+        is QuantileFilter -> QuantileFilterStat(probability, relativeError, concurrency)
 
         BernoulliSum -> BernoulliSumStat(concurrency)
 
@@ -429,6 +436,16 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
             val tpl = requireSeries(template, "Vectorized").materialize(concurrency) as SeriesStat<Result>
             VectorizedStat(dimensions, tpl, skipZeros)
         }
+
+        is HalfSpaceTrees -> HalfSpaceTreesStat(
+            featureSize = featureSize,
+            featureRanges = featureRanges,
+            numTrees = numTrees,
+            height = height,
+            windowSize = windowSize,
+            randomSeed = randomSeed,
+            concurrency = concurrency,
+        )
 
         is TransformVectorElement -> {
             val m = requireVector(inner, "TransformVectorElement").materialize(concurrency) as VectorStat<Result>

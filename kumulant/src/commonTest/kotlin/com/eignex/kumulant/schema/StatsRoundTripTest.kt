@@ -1,6 +1,7 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.stat.anomaly.FeatureRange
 import com.eignex.kumulant.stat.forecast.SeasonalMode
 import com.eignex.kumulant.stat.regression.glm.Penalty
 import com.eignex.kumulant.stat.summary.MaxResult
@@ -122,6 +123,30 @@ class StatsRoundTripTest {
 
     @Test fun `summaryConfig round trips`() {
         assertEquals(Summary, roundTrip(Summary))
+    }
+
+    @Test fun `gaussianScorerConfig round trips`() {
+        assertEquals(GaussianScorer, roundTrip(GaussianScorer))
+    }
+
+    @Test fun `quantileFilterConfig round trips`() {
+        val cfg = QuantileFilter(probability = 0.97, relativeError = 0.005)
+        assertEquals(cfg, roundTrip(cfg))
+    }
+
+    @Test fun `halfSpaceTreesConfig round trips`() {
+        val cfg = HalfSpaceTrees(
+            featureSize = 2,
+            featureRanges = listOf(
+                FeatureRange(0.0, 10.0),
+                FeatureRange(-5.0, 5.0),
+            ),
+            numTrees = 6,
+            height = 4,
+            windowSize = 50,
+            randomSeed = 13,
+        )
+        assertEquals(cfg, roundTrip(cfg))
     }
 
     @Test fun `bernoulliSumConfig round trips`() {

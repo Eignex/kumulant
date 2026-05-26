@@ -1,5 +1,9 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.kumulant.stat.anomaly.FeatureRange
+import com.eignex.kumulant.stat.anomaly.GaussianScoreResult
+import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesResult
+import com.eignex.kumulant.stat.anomaly.QuantileFilterResult
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.cardinality.LinearCountingResult
 import com.eignex.kumulant.stat.change.AdwinResult
@@ -170,6 +174,21 @@ data object Variance : SeriesStatSpec<WeightedVarianceResult>
 @Serializable
 @SerialName("Moments")
 data object Moments : SeriesStatSpec<MomentsResult>
+
+/** Spec for `GaussianScorerStat`: running mean / variance with `|x - mean| / stdDev` z-score. */
+@Serializable
+@SerialName("GaussianScorer")
+data object GaussianScorer : SeriesStatSpec<GaussianScoreResult>
+
+/** Spec for `QuantileFilterStat`: DDSketch-backed quantile-threshold anomaly detector. */
+@Serializable
+@SerialName("QuantileFilter")
+data class QuantileFilter(
+    /** Probability in `(0, 1)` at which the threshold is evaluated. */
+    val probability: Double = 0.99,
+    /** Relative-error guarantee passed to the underlying DDSketch. */
+    val relativeError: Double = 0.01,
+) : SeriesStatSpec<QuantileFilterResult>
 
 /** Spec for `SummaryStat`: mean / variance / min / max in one result, useful as a primary
  *  for mixed-scaler feedback projections. */
@@ -567,3 +586,21 @@ data class RandomForestClassifier(
     /** PRNG seed shared across trees. */
     val randomSeed: Int = 0,
 ) : RegressionStatSpec<ForestClassificationResult>
+
+/** Spec for `HalfSpaceTreesStat`: online ensemble of random half-space trees for multivariate anomaly scoring. */
+@Serializable
+@SerialName("HalfSpaceTrees")
+data class HalfSpaceTrees(
+    /** Number of input features. */
+    val featureSize: Int,
+    /** Per-feature value ranges used to draw random split thresholds. */
+    val featureRanges: List<FeatureRange>,
+    /** Number of trees in the ensemble. */
+    val numTrees: Int = 25,
+    /** Depth of each tree; each tree has `2^height` leaves. */
+    val height: Int = 8,
+    /** Observations per window before the reference profile rotates. */
+    val windowSize: Int = 250,
+    /** PRNG seed shared across trees. */
+    val randomSeed: Int = 0,
+) : VectorStatSpec<HalfSpaceTreesResult>
