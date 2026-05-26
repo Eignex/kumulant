@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.score
+package com.eignex.kumulant.stat.calibration
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

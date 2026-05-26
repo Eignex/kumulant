@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.score
+package com.eignex.kumulant.stat.calibration
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
@@ -84,7 +84,7 @@ data class ReliabilityResult(
  *
  * **Use cases:** calibration diagnostics for probabilistic forecasters — the
  * raw material for reliability diagrams and Expected Calibration Error.
- * Pair with [BrierScoreStat] for the matching proper-scoring number.
+ * Pair with [com.eignex.kumulant.stat.score.BrierScoreStat] for the matching proper-scoring number.
  *
  * **Memory:** O([numBins]) — three parallel Double arrays per bin.
  *

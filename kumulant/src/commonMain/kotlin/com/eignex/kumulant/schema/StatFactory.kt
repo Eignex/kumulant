@@ -58,6 +58,9 @@ import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.stat.anomaly.GaussianScorerStat
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
 import com.eignex.kumulant.stat.anomaly.QuantileFilterStat
+import com.eignex.kumulant.stat.calibration.IsotonicCalibratorStat
+import com.eignex.kumulant.stat.calibration.PlattCalibratorStat
+import com.eignex.kumulant.stat.calibration.ReliabilityStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.change.AdwinStat
@@ -105,7 +108,6 @@ import com.eignex.kumulant.stat.score.LogLossStat
 import com.eignex.kumulant.stat.score.MaeLossStat
 import com.eignex.kumulant.stat.score.MseLossStat
 import com.eignex.kumulant.stat.score.PinballLossStat
-import com.eignex.kumulant.stat.score.ReliabilityStat
 import com.eignex.kumulant.stat.score.pitHistogram
 import com.eignex.kumulant.stat.sketch.BloomFilterStat
 import com.eignex.kumulant.stat.sketch.CountMinSketchStat
@@ -361,6 +363,10 @@ fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is Auc -> AucStat(numBins, lowerBound, upperBound, concurrency)
 
         is Reliability -> ReliabilityStat(numBins, concurrency)
+
+        is PlattCalibrator -> PlattCalibratorStat(optimizer, concurrency)
+
+        is IsotonicCalibrator -> IsotonicCalibratorStat(numBins, concurrency)
 
         is ConfusionMatrix -> ConfusionMatrixStat(numClasses, concurrency)
 

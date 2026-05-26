@@ -951,7 +951,7 @@ val mseLossStatSpec = pairedStatSpec(
 
 val reliabilityStatSpec = pairedStatSpec(
     name = "ReliabilityStat",
-    factory = { c -> com.eignex.kumulant.stat.score.ReliabilityStat(numBins = 16, concurrency = c) },
+    factory = { c -> com.eignex.kumulant.stat.calibration.ReliabilityStat(numBins = 16, concurrency = c) },
     updates = ::uniformUnitWeights,
     // Reliability tracks bin-wise counts; total weight in the snapshot's bin
     // histogram should equal the stream size.

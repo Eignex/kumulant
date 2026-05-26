@@ -15,7 +15,7 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  *
  * **Use cases:** classifier evaluation with a bounded loss — preferred when
  * confident-and-wrong predictions shouldn't be penalised as savagely as
- * [LogLossStat] does. Pair with [ReliabilityStat] for calibration diagnostics.
+ * [LogLossStat] does. Pair with [com.eignex.kumulant.stat.calibration.ReliabilityStat] for calibration diagnostics.
  *
  * **Memory:** O(1) — backed by a [MeanStat].
  *

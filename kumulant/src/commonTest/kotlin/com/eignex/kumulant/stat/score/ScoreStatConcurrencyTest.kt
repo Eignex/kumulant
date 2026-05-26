@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.score
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.stat.calibration.ReliabilityStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

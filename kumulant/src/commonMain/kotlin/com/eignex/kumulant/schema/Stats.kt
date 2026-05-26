@@ -4,6 +4,9 @@ import com.eignex.kumulant.stat.anomaly.FeatureRange
 import com.eignex.kumulant.stat.anomaly.GaussianScoreResult
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesResult
 import com.eignex.kumulant.stat.anomaly.QuantileFilterResult
+import com.eignex.kumulant.stat.calibration.IsotonicCalibratorResult
+import com.eignex.kumulant.stat.calibration.PlattCalibratorResult
+import com.eignex.kumulant.stat.calibration.ReliabilityResult
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.cardinality.LinearCountingResult
 import com.eignex.kumulant.stat.change.AdwinResult
@@ -40,7 +43,6 @@ import com.eignex.kumulant.stat.regression.tree.TreeClassificationResult
 import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult
 import com.eignex.kumulant.stat.score.AucResult
 import com.eignex.kumulant.stat.score.ConfusionMatrixResult
-import com.eignex.kumulant.stat.score.ReliabilityResult
 import com.eignex.kumulant.stat.sketch.BloomFilterResult
 import com.eignex.kumulant.stat.sketch.CountMinSketchResult
 import com.eignex.kumulant.stat.sketch.HeavyHittersResult
@@ -371,6 +373,22 @@ data class Reliability(
     /** Number of equal-width probability bins. */
     val numBins: Int,
 ) : PairedStatSpec<ReliabilityResult>
+
+/** Spec for `PlattCalibratorStat`: one-feature logistic regression fitting `sigmoid(a*x + b)`. */
+@Serializable
+@SerialName("PlattCalibrator")
+data class PlattCalibrator(
+    /** Optimizer driving the underlying logistic regression. */
+    val optimizer: OptimizerSpec = Sgd(ConstantRate(1e-2)),
+) : PairedStatSpec<PlattCalibratorResult>
+
+/** Spec for `IsotonicCalibratorStat`: binned isotonic calibrator over `[0, 1]`. */
+@Serializable
+@SerialName("IsotonicCalibrator")
+data class IsotonicCalibrator(
+    /** Number of equal-width bins covering `[0, 1]`. */
+    val numBins: Int = 16,
+) : PairedStatSpec<IsotonicCalibratorResult>
 
 /** Spec for `ConfusionMatrixStat`: K-by-K weighted confusion matrix over (predictedClass, trueClass). */
 @Serializable
