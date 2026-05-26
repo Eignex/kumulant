@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stream
+package com.eignex.kumulant.math
 
 import kotlin.math.abs
 import kotlin.test.Test

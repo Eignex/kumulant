@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stream
+package com.eignex.kumulant.math
 
 // 64-bit hashing primitives used by the cardinality and sketch families.
 //

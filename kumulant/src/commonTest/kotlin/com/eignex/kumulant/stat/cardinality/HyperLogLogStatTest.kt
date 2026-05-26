@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.cardinality
 
-import com.eignex.kumulant.stream.splitmix64
+import com.eignex.kumulant.math.splitmix64
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
