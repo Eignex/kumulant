@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.regression
+package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
@@ -8,6 +8,7 @@ import com.eignex.kumulant.math.forEachStored
 import com.eignex.kumulant.schema.OptimizerSpec
 import com.eignex.kumulant.schema.ScalarExpr
 import com.eignex.kumulant.schema.Sgd
+import com.eignex.kumulant.stat.regression.Optimizer
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.getValue

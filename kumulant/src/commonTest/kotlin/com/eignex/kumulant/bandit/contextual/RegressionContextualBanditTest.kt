@@ -1,9 +1,9 @@
 package com.eignex.kumulant.bandit.contextual
 
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.stat.regression.BayesianRegressionStat
-import com.eignex.kumulant.stat.regression.LinUcb
-import com.eignex.kumulant.stat.regression.MultivariateGaussian
+import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
+import com.eignex.kumulant.stat.regression.glm.LinUcb
+import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test

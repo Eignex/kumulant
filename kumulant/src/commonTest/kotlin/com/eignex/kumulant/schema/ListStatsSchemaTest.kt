@@ -2,7 +2,7 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
-import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import kotlin.test.Test
 import kotlin.test.assertEquals

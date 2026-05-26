@@ -1,7 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.stat.regression.StochasticRegressionStat
+import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit

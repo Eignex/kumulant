@@ -50,12 +50,12 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.schema.Sgd
-import com.eignex.kumulant.stat.regression.BayesianRegressionStat
-import com.eignex.kumulant.stat.regression.ConstantRate
-import com.eignex.kumulant.stat.regression.DiagonalRegressionStat
-import com.eignex.kumulant.stat.regression.LinearRegressionResult
 import com.eignex.kumulant.stat.regression.RegressionPosterior
-import com.eignex.kumulant.stat.regression.StochasticRegressionStat
+import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
+import com.eignex.kumulant.stat.regression.glm.ConstantRate
+import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
+import com.eignex.kumulant.stat.regression.glm.LinearRegressionResult
+import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import kotlin.random.Random
 
 /**

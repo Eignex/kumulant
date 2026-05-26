@@ -6,7 +6,7 @@ import com.eignex.kumulant.operation.BandResult
 import com.eignex.kumulant.operation.ResampleAggregator
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.regression.CovarianceResult
-import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
@@ -116,7 +116,7 @@ class OperationsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        val live = com.eignex.kumulant.stat.regression.UnivariateRegressionStat().liveWithFixedX(2.0)
+        val live = com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat().liveWithFixedX(2.0)
 
         listOf(4.0, 6.0, 8.0).forEach {
             rebuilt.update(it)
@@ -176,7 +176,7 @@ class OperationsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as PairedStatSpec<*>).materialize(Concurrency.None)
-        val live = com.eignex.kumulant.stat.regression.UnivariateRegressionStat().liveWithWeight(2.0)
+        val live = com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat().liveWithWeight(2.0)
 
         listOf(1.0 to 2.0, 2.0 to 4.0, 3.0 to 6.0).forEach { (x, y) ->
             rebuilt.update(x, y)
@@ -279,7 +279,7 @@ class OperationsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as VectorStatSpec<*>).materialize(Concurrency.None)
-        val live = com.eignex.kumulant.stat.regression.UnivariateRegressionStat().liveAtIndices(0, 2)
+        val live = com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat().liveAtIndices(0, 2)
 
         // Vector slots: idx 0 is x, idx 1 ignored, idx 2 is y; y = 2x -> slope 2.
         listOf(
@@ -302,7 +302,7 @@ class OperationsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        val live = com.eignex.kumulant.stat.regression.UnivariateRegressionStat().liveWithFixedY(5.0)
+        val live = com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat().liveWithFixedY(5.0)
 
         listOf(1.0, 2.0, 3.0).forEach {
             rebuilt.update(it)

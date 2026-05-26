@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.stat.regression.UnivariateRegressionStat
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.regression
+package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.kumulant.schema.Const
 import com.eignex.kumulant.schema.Exp

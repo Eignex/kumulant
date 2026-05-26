@@ -824,7 +824,7 @@ private val regTrueWeights = doubleArrayOf(2.0, -1.0, 0.5, -0.5, 1.0, 0.1, -0.2,
 
 val univariateRegressionStatSpec = pairedStatSpec(
     name = "UnivariateRegressionStat",
-    factory = { c -> com.eignex.kumulant.stat.regression.UnivariateRegressionStat(concurrency = c) },
+    factory = { c -> com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat(concurrency = c) },
     updates = ::uniformVariableWeights,
     scalar = { it.slope },
     reference = { _ -> 2.0 },
@@ -849,7 +849,7 @@ val covarianceStatSpec = pairedStatSpec(
 val bayesianRegressionStatSpec = regressionStatSpec(
     name = "BayesianRegressionStat",
     factory = { c ->
-        com.eignex.kumulant.stat.regression.BayesianRegressionStat(
+        com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat(
             featureSize = REG_FEATURE_SIZE, concurrency = c,
         )
     },
@@ -863,7 +863,7 @@ val bayesianRegressionStatSpec = regressionStatSpec(
 val diagonalRegressionStatSpec = regressionStatSpec(
     name = "DiagonalRegressionStat",
     factory = { c ->
-        com.eignex.kumulant.stat.regression.DiagonalRegressionStat(
+        com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat(
             featureSize = REG_FEATURE_SIZE, concurrency = c,
         )
     },
@@ -877,7 +877,7 @@ val diagonalRegressionStatSpec = regressionStatSpec(
 val stochasticRegressionStatSpec = regressionStatSpec(
     name = "StochasticRegressionStat",
     factory = { c ->
-        com.eignex.kumulant.stat.regression.StochasticRegressionStat(
+        com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat(
             featureSize = REG_FEATURE_SIZE, concurrency = c,
         )
     },

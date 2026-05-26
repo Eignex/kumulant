@@ -3,8 +3,8 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.stat.regression.CovarianceRegressionResult
-import com.eignex.kumulant.stat.regression.StochasticRegressionResult
+import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult
+import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
 import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult

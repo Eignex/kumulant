@@ -1,4 +1,4 @@
-package com.eignex.kumulant.stat.regression
+package com.eignex.kumulant.stat.regression.glm
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

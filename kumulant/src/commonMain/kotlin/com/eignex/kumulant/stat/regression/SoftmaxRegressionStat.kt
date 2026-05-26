@@ -89,8 +89,8 @@ data class SoftmaxRegressionResult(
 
 /**
  * Online multinomial logistic regression by stochastic gradient descent on the
- * softmax cross-entropy loss. Generalises [StochasticRegressionStat] with
- * [Link.Logit] from binary to K-way classification.
+ * softmax cross-entropy loss. Generalises [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat]
+ * with `Link.Logit` from binary to K-way classification.
  *
  * Update step per observation (true class `c = y.toInt()`):
  *  ```

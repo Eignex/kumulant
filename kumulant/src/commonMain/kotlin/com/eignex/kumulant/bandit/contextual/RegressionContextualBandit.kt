@@ -15,11 +15,11 @@ import kotlin.random.Random
  * the round's context vector, argmaxed across arms. The same machinery
  * covers every regressor in kumulant:
  *
- *  - **Linear Thompson Sampling**: [com.eignex.kumulant.stat.regression.BayesianRegressionStat]
- *    + [com.eignex.kumulant.stat.regression.MultivariateGaussian].
- *  - **LinUcb**: any linear regressor + [com.eignex.kumulant.stat.regression.LinUcb].
- *  - **Greedy SGD**: [com.eignex.kumulant.stat.regression.StochasticRegressionStat] +
- *    [com.eignex.kumulant.stat.regression.PointPosterior] with `exploration = 0.0`.
+ *  - **Linear Thompson Sampling**: [com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat]
+ *    + [com.eignex.kumulant.stat.regression.glm.MultivariateGaussian].
+ *  - **LinUcb**: any linear regressor + [com.eignex.kumulant.stat.regression.glm.LinUcb].
+ *  - **Greedy SGD**: [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat] +
+ *    [com.eignex.kumulant.stat.regression.glm.PointPosterior] with `exploration = 0.0`.
  *  - **Decision-tree bandit**: [com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat]
  *    + a [com.eignex.kumulant.stat.regression.tree.TreePosterior].
  *  - **Random-forest bandit**: [com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat]
@@ -41,7 +41,7 @@ import kotlin.random.Random
  * policy-weighted global bias, approximate joint fit, exploration variance
  * underestimated where the global itself is uncertain. For true hierarchical
  * Bayes use
- * [com.eignex.kumulant.stat.regression.BayesianRegressionStat.fitPopulationPrior].
+ * [com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat.fitPopulationPrior].
  *
  * **Use cases:** parametric and tree-based contextual bandits over scalar
  * rewards; any [RegressionStat] + [RegressionPosterior] pairing that

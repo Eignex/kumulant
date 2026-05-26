@@ -4,6 +4,9 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.operation.mapResult
+import com.eignex.kumulant.stat.regression.glm.Penalty
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
 import com.eignex.kumulant.stat.summary.VarianceResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

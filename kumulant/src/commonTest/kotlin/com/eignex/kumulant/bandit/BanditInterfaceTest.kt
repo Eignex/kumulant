@@ -7,8 +7,8 @@ import com.eignex.kumulant.bandit.univariate.NormalTS
 import com.eignex.kumulant.bandit.univariate.RouletteWheelArmResult
 import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.stat.regression.BayesianRegressionStat
-import com.eignex.kumulant.stat.regression.MultivariateGaussian
+import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
+import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.random.Random
 import kotlin.test.Test

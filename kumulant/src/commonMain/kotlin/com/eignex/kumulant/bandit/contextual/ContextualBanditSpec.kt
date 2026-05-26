@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.kumulant.stat.regression.LinearPosterior
-import com.eignex.kumulant.stat.regression.LinearRegressionResult
+import com.eignex.kumulant.stat.regression.glm.LinearPosterior
+import com.eignex.kumulant.stat.regression.glm.LinearRegressionResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -45,7 +45,7 @@ data class RegressionContextualSpec(
 @Serializable
 sealed interface LinearRegressionSpec {
 
-    /** Spec for [com.eignex.kumulant.stat.regression.BayesianRegressionStat] with isotropic prior. */
+    /** Spec for [com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat] with isotropic prior. */
     @Serializable
     @SerialName("BayesianRegression")
     data class Bayesian(
@@ -55,7 +55,7 @@ sealed interface LinearRegressionSpec {
         val priorVariance: Double = 1.0,
     ) : LinearRegressionSpec
 
-    /** Spec for [com.eignex.kumulant.stat.regression.DiagonalRegressionStat]. */
+    /** Spec for [com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat]. */
     @Serializable
     @SerialName("DiagonalRegression")
     data class Diagonal(
@@ -67,7 +67,7 @@ sealed interface LinearRegressionSpec {
         val learningRate: Double = 1.0,
     ) : LinearRegressionSpec
 
-    /** Spec for [com.eignex.kumulant.stat.regression.StochasticRegressionStat]. */
+    /** Spec for [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat]. */
     @Serializable
     @SerialName("StochasticRegression")
     data class Stochastic(

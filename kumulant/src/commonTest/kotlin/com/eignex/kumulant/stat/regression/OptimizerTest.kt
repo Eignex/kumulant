@@ -5,6 +5,9 @@ import com.eignex.kumulant.schema.Adagrad
 import com.eignex.kumulant.schema.Adam
 import com.eignex.kumulant.schema.Rmsprop
 import com.eignex.kumulant.schema.Sgd
+import com.eignex.kumulant.stat.regression.glm.ConstantRate
+import com.eignex.kumulant.stat.regression.glm.Penalty
+import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test

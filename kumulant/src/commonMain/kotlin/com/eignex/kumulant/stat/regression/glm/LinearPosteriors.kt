@@ -1,10 +1,11 @@
-package com.eignex.kumulant.stat.regression
+package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.math.dot
 import com.eignex.kumulant.math.matVec
 import com.eignex.kumulant.math.nextNormal
+import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt

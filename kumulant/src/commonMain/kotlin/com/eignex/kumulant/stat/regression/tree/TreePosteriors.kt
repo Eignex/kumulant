@@ -10,7 +10,7 @@ import kotlin.random.Random
 /**
  * RegressionTree-aware scorer: routes the query `x` to a leaf snapshot and turns its weighted-
  * variance summary into a single Double. Parallels the linear-side
- * [com.eignex.kumulant.stat.regression.LinearPosterior] family for the tree regressor
+ * [com.eignex.kumulant.stat.regression.glm.LinearPosterior] family for the tree regressor
  * shape.
  *
  * Concrete posteriors differ only in how they consume the leaf's `(mean, variance,

@@ -2,6 +2,10 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
+import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
+import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

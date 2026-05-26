@@ -1,7 +1,7 @@
 // math convention: single-letter matrices L, M, etc.
 @file:Suppress("VariableNaming", "FunctionParameterNaming", "PropertyName")
 
-package com.eignex.kumulant.stat.regression
+package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat

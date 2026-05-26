@@ -3,10 +3,10 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.regression.AdagradOptimizer
 import com.eignex.kumulant.stat.regression.AdamOptimizer
-import com.eignex.kumulant.stat.regression.ConstantRate
 import com.eignex.kumulant.stat.regression.Optimizer
 import com.eignex.kumulant.stat.regression.RmspropOptimizer
 import com.eignex.kumulant.stat.regression.SgdOptimizer
+import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * Wire-portable optimizer spec. Materialises into a live
  * [com.eignex.kumulant.stat.regression.Optimizer] with the requested
  * [Concurrency]. Consumed by online-learning stats
- * ([com.eignex.kumulant.stat.regression.StochasticRegressionStat],
+ * ([com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat],
  * [com.eignex.kumulant.stat.regression.SoftmaxRegressionStat]) to pick the
  * per-coordinate update rule.
  */

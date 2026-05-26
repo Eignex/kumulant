@@ -17,9 +17,9 @@ import com.eignex.kumulant.stat.cardinality.LinearCountingResult
 import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.CovarianceStat
-import com.eignex.kumulant.stat.regression.Penalty
-import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
-import com.eignex.kumulant.stat.regression.UnivariateRegressionStat
+import com.eignex.kumulant.stat.regression.glm.Penalty
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat

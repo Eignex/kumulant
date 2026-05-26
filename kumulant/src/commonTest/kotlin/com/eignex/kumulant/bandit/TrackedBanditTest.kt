@@ -4,12 +4,12 @@ import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.stat.regression.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.CovarianceStat
-import com.eignex.kumulant.stat.regression.MultivariateGaussian
-import com.eignex.kumulant.stat.regression.UnivariateRegressionResult
-import com.eignex.kumulant.stat.regression.UnivariateRegressionStat
+import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
+import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumResult
 import kotlin.random.Random

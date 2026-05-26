@@ -83,13 +83,13 @@ import com.eignex.kumulant.stat.quantile.ThresholdBucketStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
-import com.eignex.kumulant.stat.regression.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.CovarianceStat
-import com.eignex.kumulant.stat.regression.DiagonalRegressionStat
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionStat
-import com.eignex.kumulant.stat.regression.StochasticRegressionStat
-import com.eignex.kumulant.stat.regression.UnivariateRegressionStat
+import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
+import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
+import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeClassifierStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestClassifierStat

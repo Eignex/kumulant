@@ -1,6 +1,8 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.stat.regression.glm.Penalty
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
 import kotlin.math.sqrt
 import kotlin.test.*
 
