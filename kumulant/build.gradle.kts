@@ -61,10 +61,23 @@ kotlin {
 // src/commonTest and are referenced from KDoc with `@sample`.
 dokka {
     moduleName.set("kumulant")
+    dokkaSourceSets.configureEach {
+        sourceLink {
+            localDirectory.set(projectDir.resolve("src"))
+            val sub = projectDir.relativeTo(rootDir).invariantSeparatorsPath
+            val prefix = if (sub.isEmpty()) "src" else "$sub/src"
+            remoteUrl("https://github.com/Eignex/${rootProject.name}/blob/main/$prefix")
+            remoteLineSuffix.set("#L")
+        }
+    }
     dokkaSourceSets.named("commonMain") {
         includes.from(
             "module.md",
             "src/commonMain/kotlin/com/eignex/kumulant/stat/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/stat/anomaly/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/stat/calibration/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/stat/regression/glm/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/stat/regression/tree/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/operation/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/schema/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/bandit/package.md",
