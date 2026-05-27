@@ -17,16 +17,51 @@ import kotlin.math.sqrt
 private val EMPTY_VECTOR = DoubleArray(0)
 
 /**
- * Wire-serializable AST for scalar expressions over the input env: a primary
- * `x`, an optional `y` (paired stats), and an optional `v` (vector stats).
- * Nodes are pure data; evaluation is recursive interpretation.
+ * Wire-serialisable AST for scalar expressions over the per-update input
+ * environment. The library uses these wherever a stat needs to apply a
+ * caller-supplied projection / weight / threshold expression that has to
+ * round-trip on the wire — `weightBy`, `transform`, the per-bin scaler
+ * projections, the `WithFeedback` op, the loss / pinball / quantile
+ * configurations.
  *
- * Polymorphic via skema's `$type` discriminator. The DSL extensions in this
- * file ([Double.times], `infix gt`, etc.) make construction more readable.
+ * ## The input environment
+ *
+ * Every evaluation receives:
+ *
+ * - `x: Double` — the primary scalar input. For series stats it's the
+ *   observation value; for paired stats it's the x-axis; for regression
+ *   stats it's unused (use [V] to access feature vector coordinates).
+ * - `y: Double` — the secondary scalar input. Used by paired stats (the
+ *   y-axis) and regression stats (the response).
+ * - `v: DoubleArray` — the full input vector. Used by vector / regression
+ *   stats; empty otherwise.
+ * - `primary: Result?` — the primary stat's snapshot at evaluation time
+ *   for feedback operators. [Center], [Scale], [Low], [High] read directly
+ *   from this; per-coordinate ops receive an [com.eignex.kumulant.core.IndexedResult]
+ *   to thread the coordinate index through.
+ *
+ * Stats that don't need a particular field pass the default (0.0, empty
+ * array, null).
+ *
+ * ## Construction
+ *
+ * Compose with the DSL operators in this file rather than constructing AST
+ * data classes directly: `X * 2.0`, `(X + Const(1.0)) gt 0.0`,
+ * `IfExpr(X gt 0.0, X, -X)`. The operators return the public sealed
+ * interface and hide the concrete (internal) node types.
+ *
+ * ## Wire format
+ *
+ * Polymorphic via skema's `$type` discriminator. The `@SerialName` on each
+ * concrete node is the wire-format tag; pick stable, unambiguous names if
+ * you add new ones.
  */
 @Serializable
 sealed interface ScalarExpr {
-    /** Evaluate this expression against the per-update inputs. */
+    /**
+     * Evaluate this expression against the per-update inputs. See the class
+     * KDoc for the input-environment convention.
+     */
     fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Double
 }
 
@@ -525,12 +560,32 @@ internal data class VDot(
 }
 
 /**
- * Wire-serializable AST for boolean expressions over the same input env as
- * [ScalarExpr]. Used by filter-config wrappers and as the condition of [IfExpr].
+ * Wire-serialisable AST for boolean predicates over the same input
+ * environment as [ScalarExpr]. Consumed by every spec-side `filter` operator
+ * and by [IfExpr]'s condition slot.
+ *
+ * Build via the comparison operators (`gt` / `ge` / `lt` / `le` / `eq`) on
+ * [ScalarExpr] and the boolean combinators (`and` / `or` / `not`). The
+ * resulting expression round-trips on the wire alongside the rest of the
+ * spec.
+ *
+ * Examples:
+ *
+ * ```kotlin
+ * X gt 0.0                          // positive values only
+ * (X gt 0.0) and (X lt 100.0)       // half-open interval
+ * In(VIndex, listOf(0.0, 2.0, 5.0)) // coordinate index in {0, 2, 5}
+ * ```
+ *
+ * See [ScalarExpr] for the input-environment convention.
  */
 @Serializable
 sealed interface BoolExpr {
-    /** Evaluate this predicate against the per-update inputs. */
+    /**
+     * Evaluate this predicate against the per-update inputs. Returns `true`
+     * to keep an observation under `filter` or to take the `then` branch
+     * under `IfExpr`.
+     */
     fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Boolean
 }
 
@@ -681,15 +736,27 @@ internal data class InRange(
 }
 
 /**
- * Wire-serializable AST for vector-valued expressions over the same input env
- * as [ScalarExpr] / [BoolExpr]. The output length need not match the input -
- * use this for permutations, dimensionality changes, pooling, feature
- * augmentation, etc. For same-length per-element transforms, the simpler
- * `transformElement(ScalarExpr)` config is more direct.
+ * Wire-serialisable AST for vector-valued expressions over the same input
+ * environment as [ScalarExpr] / [BoolExpr]. Used by the spec-side
+ * `transformVector(VectorExpr)` operator when the output is a fresh vector
+ * rather than a per-element transform.
+ *
+ * Output length need not match input length — use [VectorExpr] for
+ * permutations, dimensionality changes, pooling, feature augmentation. For
+ * same-length per-element transforms the simpler
+ * `transformElement(ScalarExpr)` is more direct and pays no extra
+ * allocation.
+ *
+ * See [ScalarExpr] for the input-environment convention.
  */
 @Serializable
 sealed interface VectorExpr {
-    /** Evaluate this expression to produce a fresh vector from the per-update inputs. */
+    /**
+     * Evaluate this expression to produce a fresh `DoubleArray` from the
+     * per-update inputs. Concrete implementations choose the output length;
+     * downstream `transformVector(VectorExpr)` propagates it as the new
+     * vector dimensionality.
+     */
     fun eval(x: Double = 0.0, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): DoubleArray
 }
 
