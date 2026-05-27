@@ -13,41 +13,98 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
- * Decides which arm to play given snapshots of each arm's sufficient statistic [R].
+ * Scoring strategy for a [com.eignex.kumulant.bandit.univariate.MultiArmedBandit].
+ * Decides which arm to play given snapshots of each arm's sufficient statistic
+ * [R]. The bandit calls [evaluate] for every arm and picks the argmax — the
+ * policy is the entire exploration/exploitation knob.
  *
  * The policy owns the per-arm cumulator lifecycle through its [arm] spec:
- *   - [createArm] returns a freshly-prior-seeded [SeriesStat] from `arm.createStat()`;
- *   - [update] folds an observation in, applying `arm.encode` first.
  *
- * Sampling-based policies additionally carry a stateless [Posterior]; UCB-style
- * policies compute their score from the snapshot directly. Per-policy global state
- * (e.g. total samples for UCB) is exposed via [addArm]/[removeArm].
+ * - [createArm] returns a freshly-prior-seeded [SeriesStat] from
+ *   `arm.createStat()`.
+ * - [update] folds an observation in, applying `arm.encode` first so the
+ *   stat sees the encoded value (e.g. `ln(value)` for [LogNormalArm]).
+ * - [evaluate] reads the resulting snapshot.
+ *
+ * Two flavours:
+ *
+ * - **Sampling-based** ([ThompsonSampling]) — score each arm by a draw from
+ *   its conjugate [Posterior] given the snapshot. Exploration is implicit
+ *   in posterior variance: under-explored arms have wider posteriors and
+ *   draw higher scores more often.
+ * - **UCB-based** ([UCB1], [UCB1Normal], [UCB1Tuned], [UcbV], [KlUcb], [Moss])
+ *   — score is `mean + alpha * confidence-bound` derived from the snapshot
+ *   directly. Exploration is explicit in the confidence width.
+ *
+ * Per-policy global state (e.g. total samples for UCB) updates through
+ * [addArm] / [removeArm] when the arm population changes mid-run, and
+ * through [update]'s side effects on each observation.
  */
 interface BanditPolicy<R : Result> {
-    /** Per-arm cumulator spec; determines the prior, encoding, and result shape. */
+    /**
+     * Per-arm cumulator spec; determines the prior pseudo-counts, value
+     * encoding, and result shape that [evaluate] consumes.
+     */
     val arm: Arm<R>
 
-    /** Allocate a fresh per-arm accumulator from the [arm] spec. */
+    /**
+     * Allocate a fresh per-arm accumulator from the [arm] spec. Default
+     * delegates to `arm.createStat()`; override only if the policy needs a
+     * non-standard variant.
+     */
     fun createArm(): SeriesStat<R> = arm.createStat()
 
-    /** Fold an observed reward [value] (with optional [weight]) into the per-arm [stat]. */
+    /**
+     * Fold an observed reward [value] (with optional [weight]) into the
+     * per-arm [stat]. Default applies `arm.encode` first; policies with
+     * global counters (UCB families) override to update their counter
+     * alongside the stat update.
+     */
     fun update(stat: SeriesStat<R>, value: Double, weight: Double = 1.0) {
         stat.update(arm.encode(value), 0L, weight)
     }
 
-    /** Score an arm given its current [snapshot]; higher scores are preferred by the bandit. */
+    /**
+     * Score an arm given its current [snapshot]. Higher scores are preferred
+     * by the bandit. [step] is the global update count (for time-dependent
+     * exploration schedules); [rng] is the bandit's shared
+     * [com.eignex.kumulant.bandit.Bandit.random] (consumed by sampling
+     * policies).
+     */
     fun evaluate(snapshot: R, step: Long, rng: Random): Double
 
-    /** Hook called when a new arm joins the population; default no-op. */
+    /**
+     * Hook called when a new arm joins the population. Lets stateful
+     * policies fold the new arm's snapshot into their global counters
+     * (UCB's total-samples, UCB1Normal's arm count). Default no-op.
+     */
     fun addArm(snapshot: R) {}
 
-    /** Hook called when an arm leaves the population; default no-op. */
+    /**
+     * Hook called when an arm leaves the population. Inverse of [addArm];
+     * lets stateful policies remove the departing arm's contribution from
+     * their global counters. Default no-op.
+     */
     fun removeArm(snapshot: R) {}
 }
 
 /**
- * Thompson sampling: score each arm by a draw from its [posterior] given the snapshot.
- * Pair an [arm] spec with a posterior of the same [R].
+ * Thompson sampling: score each arm by a draw from its conjugate
+ * [posterior] given the snapshot. The bandit then picks the arm with the
+ * highest sample — no explicit exploration knob, the exploration falls out
+ * of posterior variance shrinking as data accumulates.
+ *
+ * Pair an [Arm] with a [Posterior] of the same result type [R]:
+ *
+ * - [BernoulliArm] + [BetaPosterior] — see [BetaBernoulliTS].
+ * - [NormalArm] + [NormalGammaPosterior] — see [NormalTS].
+ * - [LogNormalArm] + [LogNormalGammaPosterior] — see [LogNormalTS].
+ * - [MeanArm] + [PoissonGammaPosterior] / [GeometricBetaPosterior] /
+ *   [ExponentialGammaPosterior] / [GammaScalePosterior] — see [PoissonTS],
+ *   [GeometricTS], [ExponentialTS], [GammaScaleTS].
+ *
+ * Stateless across arms — [addArm] / [removeArm] are no-ops because no
+ * global counter is involved.
  */
 class ThompsonSampling<R : Result>(
     override val arm: Arm<R>,
@@ -92,9 +149,23 @@ fun ExponentialTS(priorMean: Double = 1.0, priorWeight: Double = 0.01) =
 fun GammaScaleTS(fixedShape: Double, priorMean: Double = 1.0, priorWeight: Double = 0.1) =
     ThompsonSampling(MeanArm(priorMean, priorWeight), GammaScalePosterior(fixedShape))
 
-/** Classical UCB1 over a Bernoulli reward with a Beta prior on the success probability. */
+/**
+ * Classical UCB1 (Auer, Cesa-Bianchi, Fischer 2002). Score is
+ * `mean + alpha * sqrt(2 * ln(totalSamples) / armSamples)` — exploitation
+ * (running mean) plus a confidence bound that shrinks as the arm
+ * accumulates pulls. Unexplored arms get `+infinity` so they're tried at
+ * least once.
+ *
+ * Designed for Bernoulli rewards but works on any `[0, 1]`-bounded reward.
+ * The exploration constant [alpha] scales the confidence width; the
+ * theoretical value is 1.0, lower values reduce exploration, higher
+ * increases it.
+ *
+ * Pair this with a [BernoulliArm] beta prior — the prior alpha/beta seed
+ * the snapshot so the first few pulls aren't dominated by integer noise.
+ */
 class UCB1(
-    /** Exploration scale on the confidence-bound term. */
+    /** Exploration scale on the confidence-bound term. Theoretical default is 1.0. */
     val alpha: Double = 1.0,
     priorAlpha: Double = 1.0,
     priorBeta: Double = 1.0,
@@ -120,7 +191,16 @@ class UCB1(
     }
 }
 
-/** UCB1-Normal: Auer et al.'s variance-aware UCB for Gaussian rewards. */
+/**
+ * UCB1-Normal (Auer et al. 2002). Variance-aware UCB for Gaussian rewards;
+ * uses the sample variance derived from the [MomentsResult] snapshot to
+ * scale the confidence bound. Reach for it when rewards are roughly
+ * Gaussian and unbounded — [UCB1]'s `[0, 1]` assumption doesn't hold.
+ *
+ * Forces exploration until each arm has at least `8 * ln(K)` pulls (`K` is
+ * the arm count), then switches to the variance-aware score
+ * `mean + alpha * sqrt(16 * variance * ln(K - 1) / armSamples)`.
+ */
 class UCB1Normal(
     /** Exploration scale on the confidence-bound term. */
     val alpha: Double = 1.0,
@@ -145,7 +225,17 @@ class UCB1Normal(
     }
 }
 
-/** UCB1-Tuned: Auer et al.'s sample-variance-aware UCB, often tighter than plain UCB1. */
+/**
+ * UCB1-Tuned (Auer et al. 2002). Same shape as [UCB1] but the confidence
+ * bound multiplier uses an upper bound on the variance: `min(0.25, v)`
+ * where `v` is the sample variance plus a small padding term. Tighter
+ * bound than plain [UCB1] when the empirical variance is well below
+ * `0.25`; degrades gracefully to [UCB1] when the variance is uninformative.
+ *
+ * Designed for `[0, 1]`-bounded rewards (the `0.25` ceiling assumes
+ * variance can't exceed `1/4`). For Gaussian unbounded rewards reach for
+ * [UCB1Normal] instead.
+ */
 class UCB1Tuned(
     /** Exploration scale on the confidence-bound term. */
     val alpha: Double = 1.0,
@@ -174,14 +264,34 @@ class UCB1Tuned(
     }
 }
 
-/** Pure-exploitation policy: always picks the arm with the highest posterior mean. */
+/**
+ * Pure-exploitation policy: always picks the arm with the highest posterior
+ * mean. No exploration at all — converges fastest to the apparent best arm
+ * but can lock into a suboptimal arm forever if early rewards mislead it.
+ *
+ * Useful as a baseline (regret comparison against random / UCB / Thompson)
+ * and as a quick-and-dirty starting policy when prior beliefs are already
+ * good. For real online learning use one of the exploration-bearing
+ * policies instead.
+ */
 class Greedy(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDeviations: Double = 0.02) :
     BanditPolicy<WeightedVarianceResult> {
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) = snapshot.mean
 }
 
-/** Epsilon-greedy: with probability [epsilon] pick uniformly, otherwise pick the highest mean. */
+/**
+ * Epsilon-greedy: with probability [epsilon] pick a uniformly random arm
+ * (explore), otherwise pick the arm with the highest mean (exploit).
+ * The simplest exploration scheme that actually works — no math machinery,
+ * tune one knob.
+ *
+ * Sensitive to the epsilon value: too low and you under-explore (regret
+ * scales linearly in horizon for the wrong arm); too high and you waste
+ * pulls on known-bad arms. Typical good values are `0.05`–`0.2`. For
+ * automatic tuning use [EpsilonDecreasing], which anneals epsilon toward
+ * zero as samples accumulate.
+ */
 class EpsilonGreedy(
     /** Probability of exploring uniformly instead of exploiting the best mean. */
     val epsilon: Double = 0.1,
