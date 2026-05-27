@@ -29,7 +29,7 @@ import kotlinx.serialization.Serializable
 /** Wire spec for `SeriesStat.withWeight(weight)`: multiplies every update by [weight]. */
 @Serializable
 @SerialName("WithWeightSeries")
-data class WithWeightSeries(
+internal data class WithWeightSeries(
     /** Inner spec whose updates are weighted. */
     val inner: StatSpec,
     /** Per-update weight multiplier. */
@@ -39,7 +39,7 @@ data class WithWeightSeries(
 /** Wire spec for `PairedStat.withWeight(weight)`: multiplies every update by [weight]. */
 @Serializable
 @SerialName("WithWeightPaired")
-data class WithWeightPaired(
+internal data class WithWeightPaired(
     /** Inner spec whose updates are weighted. */
     val inner: StatSpec,
     /** Per-update weight multiplier. */
@@ -49,7 +49,7 @@ data class WithWeightPaired(
 /** Wire spec for `VectorStat.withWeight(weight)`: multiplies every update by [weight]. */
 @Serializable
 @SerialName("WithWeightVector")
-data class WithWeightVector(
+internal data class WithWeightVector(
     /** Inner spec whose updates are weighted. */
     val inner: StatSpec,
     /** Per-update weight multiplier. */
@@ -59,7 +59,7 @@ data class WithWeightVector(
 /** Wire spec for `DiscreteStat.withWeight(weight)`: multiplies every update by [weight]. */
 @Serializable
 @SerialName("WithWeightDiscrete")
-data class WithWeightDiscrete(
+internal data class WithWeightDiscrete(
     /** Inner spec whose updates are weighted. */
     val inner: StatSpec,
     /** Per-update weight multiplier. */
@@ -85,7 +85,7 @@ fun <R : Result> DiscreteStatSpec<R>.withWeight(weight: Double): DiscreteStatSpe
 /** Wire spec for `SeriesStat.withValue(value)`: pins every update to [value]. */
 @Serializable
 @SerialName("WithValueSeries")
-data class WithValueSeries(
+internal data class WithValueSeries(
     /** Inner spec whose updates use the fixed [value]. */
     val inner: StatSpec,
     /** Value pushed into the inner stat on every update. */
@@ -95,7 +95,7 @@ data class WithValueSeries(
 /** Wire spec for `DiscreteStat.withValue(value)`: pins every update to [value]. */
 @Serializable
 @SerialName("WithValueDiscrete")
-data class WithValueDiscrete(
+internal data class WithValueDiscrete(
     /** Inner spec whose updates use the fixed [value]. */
     val inner: StatSpec,
     /** Value pushed into the inner stat on every update. */
@@ -113,7 +113,7 @@ fun <R : Result> DiscreteStatSpec<R>.withValue(value: Long): DiscreteStatSpec<R>
 /** Wire spec for `DiscreteStat.asSeries()`: views a discrete stat as a series stat. */
 @Serializable
 @SerialName("AsSeries")
-data class AsSeries(
+internal data class AsSeries(
     /** Inner discrete spec being adapted to the series modality. */
     val inner: StatSpec,
 ) : SeriesStatSpec<Result>
@@ -121,7 +121,7 @@ data class AsSeries(
 /** Wire spec for `SeriesStat.asDiscrete()`: views a series stat as a discrete stat. */
 @Serializable
 @SerialName("AsDiscrete")
-data class AsDiscrete(
+internal data class AsDiscrete(
     /** Inner series spec being adapted to the discrete modality. */
     val inner: StatSpec,
 ) : DiscreteStatSpec<Result>
@@ -135,7 +135,7 @@ fun <R : Result> SeriesStatSpec<R>.asDiscrete(): DiscreteStatSpec<R> = AsDiscret
 /** Wire spec for `SeriesStat.atX()`: feeds the `x` component of paired updates into a series stat. */
 @Serializable
 @SerialName("AtX")
-data class AtX(
+internal data class AtX(
     /** Inner series spec receiving the `x` component. */
     val inner: StatSpec,
 ) : PairedStatSpec<Result>
@@ -143,7 +143,7 @@ data class AtX(
 /** Wire spec for `SeriesStat.atY()`: feeds the `y` component of paired updates into a series stat. */
 @Serializable
 @SerialName("AtY")
-data class AtY(
+internal data class AtY(
     /** Inner series spec receiving the `y` component. */
     val inner: StatSpec,
 ) : PairedStatSpec<Result>
@@ -151,7 +151,7 @@ data class AtY(
 /** Wire spec for `SeriesStat.atIndex(index)`: feeds `v[index]` of vector updates into a series stat. */
 @Serializable
 @SerialName("AtIndex")
-data class AtIndex(
+internal data class AtIndex(
     /** Inner series spec receiving the indexed coordinate. */
     val inner: StatSpec,
     /** Vector coordinate forwarded to [inner] on each update. */
@@ -161,7 +161,7 @@ data class AtIndex(
 /** Wire spec for `PairedStat.atIndices(indexX, indexY)`: pairs two coordinates from vector updates. */
 @Serializable
 @SerialName("AtIndices")
-data class AtIndices(
+internal data class AtIndices(
     /** Inner paired spec receiving `(v[indexX], v[indexY])`. */
     val inner: StatSpec,
     /** Vector coordinate fed as `x`. */
@@ -186,7 +186,7 @@ fun <R : Result> PairedStatSpec<R>.atIndices(indexX: Int, indexY: Int): VectorSt
 /** Wire spec for `PairedStat.withFixedX(fixedX)`: pins `x` to a constant in every paired update. */
 @Serializable
 @SerialName("WithFixedX")
-data class WithFixedX(
+internal data class WithFixedX(
     /** Inner paired spec whose `x` is held constant. */
     val inner: StatSpec,
     /** Constant value used for `x` on every update. */
@@ -196,7 +196,7 @@ data class WithFixedX(
 /** Wire spec for `PairedStat.withFixedY(fixedY)`: pins `y` to a constant in every paired update. */
 @Serializable
 @SerialName("WithFixedY")
-data class WithFixedY(
+internal data class WithFixedY(
     /** Inner paired spec whose `y` is held constant. */
     val inner: StatSpec,
     /** Constant value used for `y` on every update. */
@@ -206,7 +206,7 @@ data class WithFixedY(
 /** Wire spec for `PairedStat.withTimeAsX()`: feeds the update timestamp as `x`. */
 @Serializable
 @SerialName("WithTimeAsX")
-data class WithTimeAsX(
+internal data class WithTimeAsX(
     /** Inner paired spec whose `x` is the wall-clock timestamp (nanoseconds). */
     val inner: StatSpec,
 ) : SeriesStatSpec<Result>
@@ -214,7 +214,7 @@ data class WithTimeAsX(
 /** Wire spec for `PairedStat.withTimeAsY()`: feeds the update timestamp as `y`. */
 @Serializable
 @SerialName("WithTimeAsY")
-data class WithTimeAsY(
+internal data class WithTimeAsY(
     /** Inner paired spec whose `y` is the wall-clock timestamp (nanoseconds). */
     val inner: StatSpec,
 ) : SeriesStatSpec<Result>
@@ -236,7 +236,7 @@ fun <R : Result> PairedStatSpec<R>.withTimeAsY(): SeriesStatSpec<R> = WithTimeAs
 /** Wire spec for `SeriesStat.windowed(durationMillis, slices)`: sliding time window with [slices] buckets. */
 @Serializable
 @SerialName("WindowedSeries")
-data class WindowedSeries(
+internal data class WindowedSeries(
     /** Inner spec replicated across the window slices. */
     val inner: StatSpec,
     /** Total window span in milliseconds. */
@@ -248,7 +248,7 @@ data class WindowedSeries(
 /** Wire spec for `PairedStat.windowed(durationMillis, slices)`: sliding time window with [slices] buckets. */
 @Serializable
 @SerialName("WindowedPaired")
-data class WindowedPaired(
+internal data class WindowedPaired(
     /** Inner spec replicated across the window slices. */
     val inner: StatSpec,
     /** Total window span in milliseconds. */
@@ -260,7 +260,7 @@ data class WindowedPaired(
 /** Wire spec for `VectorStat.windowed(durationMillis, slices)`: sliding time window with [slices] buckets. */
 @Serializable
 @SerialName("WindowedVector")
-data class WindowedVector(
+internal data class WindowedVector(
     /** Inner spec replicated across the window slices. */
     val inner: StatSpec,
     /** Total window span in milliseconds. */
@@ -272,7 +272,7 @@ data class WindowedVector(
 /** Wire spec for `DiscreteStat.windowed(durationMillis, slices)`: sliding time window with [slices] buckets. */
 @Serializable
 @SerialName("WindowedDiscrete")
-data class WindowedDiscrete(
+internal data class WindowedDiscrete(
     /** Inner spec replicated across the window slices. */
     val inner: StatSpec,
     /** Total window span in milliseconds. */
@@ -300,7 +300,7 @@ fun <R : Result> DiscreteStatSpec<R>.windowed(durationMillis: Long, slices: Int 
 /** Wire spec for `SeriesStat.vectorized(dimensions)`: replicates a series stat across [dimensions] coordinates. */
 @Serializable
 @SerialName("Vectorized")
-data class Vectorized(
+internal data class Vectorized(
     /** Number of vector dimensions; one [template] instance is materialised per dimension. */
     val dimensions: Int,
     /** Series spec replicated independently across every dimension. */
@@ -327,7 +327,7 @@ fun <R : Result> SeriesStatSpec<R>.vectorized(
  */
 @Serializable
 @SerialName("TransformValueSeries")
-data class TransformValueSeries(
+internal data class TransformValueSeries(
     /** Inner spec receiving the transformed value. */
     val inner: StatSpec,
     /** Per-update transform applied before the inner stat sees the input. */
@@ -337,7 +337,7 @@ data class TransformValueSeries(
 /** Wire spec for `DiscreteStat.transform(expr)`: applies [expr] to every update before the inner stat sees it. */
 @Serializable
 @SerialName("TransformValueDiscrete")
-data class TransformValueDiscrete(
+internal data class TransformValueDiscrete(
     /** Inner discrete spec receiving the transformed value. */
     val inner: StatSpec,
     /** Per-update transform applied before the inner stat sees the input. */
@@ -347,7 +347,7 @@ data class TransformValueDiscrete(
 /** Wire spec for `SeriesStat.filter(pred)`: forwards an update only when [pred] evaluates true. */
 @Serializable
 @SerialName("FilterValueSeries")
-data class FilterValueSeries(
+internal data class FilterValueSeries(
     /** Inner spec receiving only the updates that pass [pred]. */
     val inner: StatSpec,
     /** Boolean predicate evaluated on each update; false suppresses the update. */
@@ -357,7 +357,7 @@ data class FilterValueSeries(
 /** Wire spec for `DiscreteStat.filter(pred)`: forwards an update only when [pred] evaluates true. */
 @Serializable
 @SerialName("FilterValueDiscrete")
-data class FilterValueDiscrete(
+internal data class FilterValueDiscrete(
     /** Inner discrete spec receiving only the updates that pass [pred]. */
     val inner: StatSpec,
     /** Boolean predicate evaluated on each update; false suppresses the update. */
@@ -387,7 +387,7 @@ fun <R : Result> DiscreteStatSpec<R>.filter(pred: BoolExpr): DiscreteStatSpec<R>
  */
 @Serializable
 @SerialName("TransformPair")
-data class TransformPair(
+internal data class TransformPair(
     /** Inner paired spec receiving the transformed pair. */
     val inner: StatSpec,
     /** Expression producing the new `x` from the original `(x, y)`. */
@@ -399,7 +399,7 @@ data class TransformPair(
 /** Wire spec for `PairedStat.filter(pred)`: forwards an `(x, y)` pair only when [pred] evaluates true. */
 @Serializable
 @SerialName("FilterPaired")
-data class FilterPaired(
+internal data class FilterPaired(
     /** Inner paired spec receiving only the pairs that pass [pred]. */
     val inner: StatSpec,
     /** Boolean predicate evaluated on each `(x, y)` pair; false suppresses the update. */
@@ -430,7 +430,7 @@ fun <R : Result> PairedStatSpec<R>.filter(pred: BoolExpr): PairedStatSpec<R> =
  */
 @Serializable
 @SerialName("TransformVectorElement")
-data class TransformVectorElement(
+internal data class TransformVectorElement(
     /** Inner vector spec receiving the per-element-transformed vector. */
     val inner: StatSpec,
     /** Per-element transform; sees the current element as `X` and the full vector as `V`. */
@@ -440,7 +440,7 @@ data class TransformVectorElement(
 /** Wire spec for `VectorStat.filter(pred)`: forwards an incoming vector only when [pred] evaluates true. */
 @Serializable
 @SerialName("FilterVector")
-data class FilterVector(
+internal data class FilterVector(
     /** Inner vector spec receiving only the vectors that pass [pred]. */
     val inner: StatSpec,
     /** Boolean predicate evaluated on each vector; false suppresses the update. */
@@ -462,7 +462,7 @@ fun <R : Result> VectorStatSpec<R>.filter(pred: BoolExpr): VectorStatSpec<R> =
  */
 @Serializable
 @SerialName("FoldPaired")
-data class FoldPaired(
+internal data class FoldPaired(
     /** Inner series spec receiving the folded scalar. */
     val inner: StatSpec,
     /** Expression reducing each `(x, y)` pair to a single scalar. */
@@ -476,7 +476,7 @@ data class FoldPaired(
  */
 @Serializable
 @SerialName("FoldVector")
-data class FoldVector(
+internal data class FoldVector(
     /** Inner series spec receiving the folded scalar. */
     val inner: StatSpec,
     /** Expression reducing each vector to a single scalar (typically via [VFold] / [VDot] / [V]). */
@@ -499,7 +499,7 @@ fun <R : Result> SeriesStatSpec<R>.foldVector(expr: ScalarExpr): VectorStatSpec<
  */
 @Serializable
 @SerialName("FoldVectorPaired")
-data class FoldVectorPaired(
+internal data class FoldVectorPaired(
     /** Inner paired spec receiving the folded `(x, y)` pair. */
     val inner: StatSpec,
     /** Expression reducing each vector to the inner stat's `x` argument. */
@@ -523,7 +523,7 @@ fun <R : Result> PairedStatSpec<R>.foldVector(xExpr: ScalarExpr, yExpr: ScalarEx
  */
 @Serializable
 @SerialName("TransformVector")
-data class TransformVector(
+internal data class TransformVector(
     /** Inner vector spec receiving the remapped vector. */
     val inner: StatSpec,
     /** Vector-to-vector expression applied per update; output length may differ from input. */
@@ -537,7 +537,7 @@ fun <R : Result> VectorStatSpec<R>.transformVector(expr: VectorExpr): VectorStat
 /** Wire spec for `SeriesStat.weightBy(expr)`: multiplies each update's weight by `expr.eval(value)`. */
 @Serializable
 @SerialName("WeightByValueSeries")
-data class WeightByValueSeries(
+internal data class WeightByValueSeries(
     /** Inner series spec receiving the reweighted update. */
     val inner: StatSpec,
     /** Expression producing the per-update weight multiplier from the input value. */
@@ -547,7 +547,7 @@ data class WeightByValueSeries(
 /** Wire spec for `PairedStat.weightBy(expr)`: multiplies each update's weight by `expr.eval(x, y)`. */
 @Serializable
 @SerialName("WeightByValuePaired")
-data class WeightByValuePaired(
+internal data class WeightByValuePaired(
     /** Inner paired spec receiving the reweighted update. */
     val inner: StatSpec,
     /** Expression producing the per-update weight multiplier from `(x, y)`. */
@@ -557,7 +557,7 @@ data class WeightByValuePaired(
 /** Wire spec for `VectorStat.weightBy(expr)`: multiplies each update's weight by `expr.eval(0, 0, v)`. */
 @Serializable
 @SerialName("WeightByValueVector")
-data class WeightByValueVector(
+internal data class WeightByValueVector(
     /** Inner vector spec receiving the reweighted update. */
     val inner: StatSpec,
     /** Expression producing the per-update weight multiplier from the vector (bound as `V`). */
@@ -567,7 +567,7 @@ data class WeightByValueVector(
 /** Wire spec for `DiscreteStat.weightBy(expr)`: multiplies each update's weight by `expr.eval(value.toDouble())`. */
 @Serializable
 @SerialName("WeightByValueDiscrete")
-data class WeightByValueDiscrete(
+internal data class WeightByValueDiscrete(
     /** Inner discrete spec receiving the reweighted update. */
     val inner: StatSpec,
     /** Expression producing the per-update weight multiplier from `value.toDouble()`. */
@@ -593,7 +593,7 @@ fun <R : Result> DiscreteStatSpec<R>.weightBy(expr: ScalarExpr): DiscreteStatSpe
 /** Wire spec for `SeriesStat.throttle(every)`: forwards only every [every]th update. */
 @Serializable
 @SerialName("ThrottleSeries")
-data class ThrottleSeries(
+internal data class ThrottleSeries(
     /** Inner series spec receiving the throttled updates. */
     val inner: StatSpec,
     /** Stride: pass one update for every [every] arrivals. */
@@ -603,7 +603,7 @@ data class ThrottleSeries(
 /** Wire spec for `PairedStat.throttle(every)`: forwards only every [every]th update. */
 @Serializable
 @SerialName("ThrottlePaired")
-data class ThrottlePaired(
+internal data class ThrottlePaired(
     /** Inner paired spec receiving the throttled updates. */
     val inner: StatSpec,
     /** Stride: pass one update for every [every] arrivals. */
@@ -613,7 +613,7 @@ data class ThrottlePaired(
 /** Wire spec for `VectorStat.throttle(every)`: forwards only every [every]th update. */
 @Serializable
 @SerialName("ThrottleVector")
-data class ThrottleVector(
+internal data class ThrottleVector(
     /** Inner vector spec receiving the throttled updates. */
     val inner: StatSpec,
     /** Stride: pass one update for every [every] arrivals. */
@@ -623,7 +623,7 @@ data class ThrottleVector(
 /** Wire spec for `DiscreteStat.throttle(every)`: forwards only every [every]th update. */
 @Serializable
 @SerialName("ThrottleDiscrete")
-data class ThrottleDiscrete(
+internal data class ThrottleDiscrete(
     /** Inner discrete spec receiving the throttled updates. */
     val inner: StatSpec,
     /** Stride: pass one update for every [every] arrivals. */
@@ -652,7 +652,7 @@ fun <R : Result> DiscreteStatSpec<R>.throttle(every: Int): DiscreteStatSpec<R> =
  */
 @Serializable
 @SerialName("LagSeries")
-data class LagSeries(
+internal data class LagSeries(
     /** Inner series spec receiving the lagged value. */
     val inner: StatSpec,
     /** Lag depth in updates; must be >= 1. */
@@ -665,7 +665,7 @@ data class LagSeries(
  */
 @Serializable
 @SerialName("DiffSeries")
-data class DiffSeries(
+internal data class DiffSeries(
     /** Inner series spec receiving the k-th difference. */
     val inner: StatSpec,
     /** Lag depth used to form the difference; must be >= 1. */
@@ -679,7 +679,7 @@ data class DiffSeries(
  */
 @Serializable
 @SerialName("DerivativeSeries")
-data class DerivativeSeries(
+internal data class DerivativeSeries(
     /** Inner series spec receiving the time-derivative. */
     val inner: StatSpec,
 ) : SeriesStatSpec<Result>
@@ -699,7 +699,7 @@ fun <R : Result> SeriesStatSpec<R>.derivative(): SeriesStatSpec<R> = DerivativeS
  */
 @Serializable
 @SerialName("HysteresisSeries")
-data class HysteresisSeries(
+internal data class HysteresisSeries(
     /** Inner series spec receiving the debounced 0.0/1.0 stream. */
     val inner: StatSpec,
     /** Lower threshold; transitions to low state when input falls below this. */
@@ -719,7 +719,7 @@ fun <R : Result> SeriesStatSpec<R>.hysteresis(low: Double, high: Double): Series
  */
 @Serializable
 @SerialName("ResampleByTimeSeries")
-data class ResampleByTimeSeries(
+internal data class ResampleByTimeSeries(
     /** Inner series spec receiving one update per closed bucket. */
     val inner: StatSpec,
     /** Bucket length in milliseconds; must be positive. */
@@ -740,7 +740,7 @@ fun <R : Result> SeriesStatSpec<R>.resampleByTime(
  */
 @Serializable
 @SerialName("BandSeries")
-data class BandSeries(
+internal data class BandSeries(
     /** Inner series spec; its result must implement [com.eignex.kumulant.core.HasCenterScale]. */
     val inner: StatSpec,
     /** Scale multiplier. */
@@ -758,7 +758,7 @@ fun SeriesStatSpec<*>.band(k: Double): SeriesStatSpec<BandResult> = BandSeries(t
  */
 @Serializable
 @SerialName("WithSelfLagSeries")
-data class WithSelfLagSeries(
+internal data class WithSelfLagSeries(
     /** Inner paired spec receiving `(current, lag-k)` pairs. */
     val inner: StatSpec,
     /** Lag between paired observations; must be at least 1. */
@@ -777,7 +777,7 @@ fun <R : Result> PairedStatSpec<R>.withSelfLag(k: Int): SeriesStatSpec<R> =
  */
 @Serializable
 @SerialName("WithFeedbackSeries")
-data class WithFeedbackSeries(
+internal data class WithFeedbackSeries(
     /** Inner series spec receiving the projected value. */
     val inner: StatSpec,
     /** Primary series spec maintaining running state. */
@@ -797,7 +797,7 @@ fun <R : Result> SeriesStatSpec<R>.withFeedback(primary: SeriesStatSpec<*>, proj
  */
 @Serializable
 @SerialName("StandardScalerVector")
-data class StandardScalerVector(
+internal data class StandardScalerVector(
     /** Inner vector spec receiving the per-coordinate z-scored vector. */
     val inner: StatSpec,
     /** Number of vector coordinates; must match the primary fan-out size. */
@@ -811,7 +811,7 @@ data class StandardScalerVector(
  */
 @Serializable
 @SerialName("MinMaxScalerVector")
-data class MinMaxScalerVector(
+internal data class MinMaxScalerVector(
     /** Inner vector spec receiving the rescaled vector. */
     val inner: StatSpec,
     /** Number of vector coordinates. */
@@ -843,7 +843,7 @@ fun <R : Result> VectorStatSpec<R>.minMaxScaleFeatures(
  */
 @Serializable
 @SerialName("StandardScalerRegression")
-data class StandardScalerRegression(
+internal data class StandardScalerRegression(
     /** Inner regression spec receiving the per-feature z-scored vector. */
     val inner: StatSpec,
 ) : RegressionStatSpec<Result>
@@ -855,7 +855,7 @@ data class StandardScalerRegression(
  */
 @Serializable
 @SerialName("MinMaxScalerRegression")
-data class MinMaxScalerRegression(
+internal data class MinMaxScalerRegression(
     /** Inner regression spec receiving the rescaled feature vector. */
     val inner: StatSpec,
     /** Lower bound of each coordinate's output range. */
@@ -870,7 +870,7 @@ data class MinMaxScalerRegression(
  */
 @Serializable
 @SerialName("StandardScalerPaired")
-data class StandardScalerPaired(
+internal data class StandardScalerPaired(
     /** Inner paired spec receiving the per-axis z-scored pair. */
     val inner: StatSpec,
 ) : PairedStatSpec<Result>
@@ -881,7 +881,7 @@ data class StandardScalerPaired(
  */
 @Serializable
 @SerialName("MinMaxScalerPaired")
-data class MinMaxScalerPaired(
+internal data class MinMaxScalerPaired(
     /** Inner paired spec receiving the rescaled pair. */
     val inner: StatSpec,
     /** Lower bound of each axis's output range. */
@@ -919,7 +919,7 @@ fun <R : Result> RegressionStatSpec<R>.minMaxScaleFeatures(
  */
 @Serializable
 @SerialName("StandardScaler")
-data class StandardScalerSeries(
+internal data class StandardScalerSeries(
     /** Inner spec receiving the z-scored value. */
     val inner: StatSpec,
 ) : SeriesStatSpec<Result>
@@ -932,7 +932,7 @@ data class StandardScalerSeries(
  */
 @Serializable
 @SerialName("MinMaxScaler")
-data class MinMaxScalerSeries(
+internal data class MinMaxScalerSeries(
     /** Inner spec receiving the rescaled value. */
     val inner: StatSpec,
     /** Lower bound of the output range. */
@@ -961,7 +961,7 @@ fun <R : Result> SeriesStatSpec<R>.minMaxScaler(targetLow: Double = 0.0, targetH
 /** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable
 @SerialName("SampleSeries")
-data class SampleSeries(
+internal data class SampleSeries(
     /** Inner series spec receiving the sampled updates. */
     val inner: StatSpec,
     /** Per-update keep probability in `[0.0, 1.0]`. */
@@ -973,7 +973,7 @@ data class SampleSeries(
 /** Wire spec for `PairedStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable
 @SerialName("SamplePaired")
-data class SamplePaired(
+internal data class SamplePaired(
     /** Inner paired spec receiving the sampled updates. */
     val inner: StatSpec,
     /** Per-update keep probability in `[0.0, 1.0]`. */
@@ -985,7 +985,7 @@ data class SamplePaired(
 /** Wire spec for `VectorStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable
 @SerialName("SampleVector")
-data class SampleVector(
+internal data class SampleVector(
     /** Inner vector spec receiving the sampled updates. */
     val inner: StatSpec,
     /** Per-update keep probability in `[0.0, 1.0]`. */
@@ -997,7 +997,7 @@ data class SampleVector(
 /** Wire spec for `DiscreteStat.sample(rate, random)`: forwards each update with probability [rate]. */
 @Serializable
 @SerialName("SampleDiscrete")
-data class SampleDiscrete(
+internal data class SampleDiscrete(
     /** Inner discrete spec receiving the sampled updates. */
     val inner: StatSpec,
     /** Per-update keep probability in `[0.0, 1.0]`. */
@@ -1026,7 +1026,7 @@ fun <R : Result> DiscreteStatSpec<R>.sample(rate: Double, seed: Long): DiscreteS
  *  `X` is unused (0.0), `Y` is the target y, `V` is the feature vector x. */
 @Serializable
 @SerialName("FilterRegression")
-data class FilterRegression(
+internal data class FilterRegression(
     /** Inner regression spec receiving only the updates that pass [pred]. */
     val inner: StatSpec,
     /** Boolean predicate over `(x = V, y = Y)`; false suppresses the update. */
@@ -1036,7 +1036,7 @@ data class FilterRegression(
 /** Wire spec for `RegressionStat.transformY(expr)`. */
 @Serializable
 @SerialName("TransformYRegression")
-data class TransformYRegression(
+internal data class TransformYRegression(
     /** Inner regression spec receiving the transformed y. */
     val inner: StatSpec,
     /** Expression remapping y; sees `Y` and `V`. */
@@ -1046,7 +1046,7 @@ data class TransformYRegression(
 /** Wire spec for `RegressionStat.transformX(expr)`. */
 @Serializable
 @SerialName("TransformXRegression")
-data class TransformXRegression(
+internal data class TransformXRegression(
     /** Inner regression spec receiving the transformed x. */
     val inner: StatSpec,
     /** Expression producing the new vector; sees `Y` and `V`. */
@@ -1056,7 +1056,7 @@ data class TransformXRegression(
 /** Wire spec for `RegressionStat.withWeight(weight)`: replaces every update's weight. */
 @Serializable
 @SerialName("WithWeightRegression")
-data class WithWeightRegression(
+internal data class WithWeightRegression(
     /** Inner regression spec whose updates are reweighted to [weight]. */
     val inner: StatSpec,
     /** Constant weight applied to every update. */
@@ -1066,7 +1066,7 @@ data class WithWeightRegression(
 /** Wire spec for `RegressionStat.weightBy(expr)`: multiplies each update's weight by `expr.eval(0, y, v)`. */
 @Serializable
 @SerialName("WeightByValueRegression")
-data class WeightByValueRegression(
+internal data class WeightByValueRegression(
     /** Inner regression spec receiving the reweighted update. */
     val inner: StatSpec,
     /** Per-update weight multiplier from `(y = Y, x = V)`. */
@@ -1076,7 +1076,7 @@ data class WeightByValueRegression(
 /** Wire spec for `RegressionStat.throttle(every)`. */
 @Serializable
 @SerialName("ThrottleRegression")
-data class ThrottleRegression(
+internal data class ThrottleRegression(
     /** Inner regression spec receiving the throttled updates. */
     val inner: StatSpec,
     /** Stride; pass one update for every [every] arrivals. */
@@ -1086,7 +1086,7 @@ data class ThrottleRegression(
 /** Wire spec for `RegressionStat.sample(rate, random)`. */
 @Serializable
 @SerialName("SampleRegression")
-data class SampleRegression(
+internal data class SampleRegression(
     /** Inner regression spec receiving the sampled updates. */
     val inner: StatSpec,
     /** Bernoulli keep probability in `[0.0, 1.0]`. */
@@ -1099,7 +1099,7 @@ data class SampleRegression(
  *  into the regression modality by projecting `(x, y)` to a scalar via [project]. */
 @Serializable
 @SerialName("FoldRegression")
-data class FoldRegression(
+internal data class FoldRegression(
     /** Inner series spec receiving the projected scalar. */
     val inner: StatSpec,
     /** Expected x-vector dimension; enforced at update time. */

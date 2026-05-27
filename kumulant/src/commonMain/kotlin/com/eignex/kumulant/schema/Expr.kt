@@ -154,7 +154,7 @@ data class Const(
 /** Wire spec for `l + r`. */
 @Serializable
 @SerialName("Add")
-data class Add(
+internal data class Add(
     /** Left operand. */
     val l: ScalarExpr,
     /** Right operand. */
@@ -171,7 +171,7 @@ data class Add(
 /** Wire spec for `l - r`. */
 @Serializable
 @SerialName("Sub")
-data class Sub(
+internal data class Sub(
     /** Left operand (minuend). */
     val l: ScalarExpr,
     /** Right operand (subtrahend). */
@@ -188,7 +188,7 @@ data class Sub(
 /** Wire spec for `l * r`. */
 @Serializable
 @SerialName("Mul")
-data class Mul(
+internal data class Mul(
     /** Left operand. */
     val l: ScalarExpr,
     /** Right operand. */
@@ -205,7 +205,7 @@ data class Mul(
 /** Wire spec for `l / r`. */
 @Serializable
 @SerialName("Div")
-data class Div(
+internal data class Div(
     /** Dividend. */
     val l: ScalarExpr,
     /** Divisor. */
@@ -222,7 +222,7 @@ data class Div(
 /** Wire spec for `-a`. */
 @Serializable
 @SerialName("Neg")
-data class Neg(
+internal data class Neg(
     /** Operand to negate. */
     val a: ScalarExpr,
 ) : ScalarExpr {
@@ -232,7 +232,7 @@ data class Neg(
 /** Wire spec for `|a|`. */
 @Serializable
 @SerialName("Abs")
-data class Abs(
+internal data class Abs(
     /** Operand whose absolute value is returned. */
     val a: ScalarExpr,
 ) : ScalarExpr {
@@ -242,7 +242,7 @@ data class Abs(
 /** Wire spec for the natural logarithm `ln(a)`. */
 @Serializable
 @SerialName("Log")
-data class Log(
+internal data class Log(
     /** Operand passed to `ln`. */
     val a: ScalarExpr,
 ) : ScalarExpr {
@@ -252,7 +252,7 @@ data class Log(
 /** Wire spec for `exp(a)`. */
 @Serializable
 @SerialName("Exp")
-data class Exp(
+internal data class Exp(
     /** Operand passed to `exp`. */
     val a: ScalarExpr,
 ) : ScalarExpr {
@@ -262,7 +262,7 @@ data class Exp(
 /** Wire spec for `sqrt(a)`. */
 @Serializable
 @SerialName("Sqrt")
-data class Sqrt(
+internal data class Sqrt(
     /** Operand passed to `sqrt`. */
     val a: ScalarExpr,
 ) : ScalarExpr {
@@ -272,7 +272,7 @@ data class Sqrt(
 /** Wire spec for `a ^ b`. */
 @Serializable
 @SerialName("Pow")
-data class Pow(
+internal data class Pow(
     /** Base. */
     val a: ScalarExpr,
     /** Exponent. */
@@ -289,7 +289,7 @@ data class Pow(
 /** Wire spec for `min(l, r)`. */
 @Serializable
 @SerialName("MinExpr")
-data class MinExpr(
+internal data class MinExpr(
     /** Left operand. */
     val l: ScalarExpr,
     /** Right operand. */
@@ -304,7 +304,7 @@ data class MinExpr(
 /** Wire spec for `max(l, r)`. */
 @Serializable
 @SerialName("MaxExpr")
-data class MaxExpr(
+internal data class MaxExpr(
     /** Left operand. */
     val l: ScalarExpr,
     /** Right operand. */
@@ -458,7 +458,7 @@ enum class VFoldOp {
 /** Wire spec for a whole-vector reduction selected by [op]. */
 @Serializable
 @SerialName("VFold")
-data class VFold(
+internal data class VFold(
     /** Reduction operation applied to the vector. */
     val op: VFoldOp,
 ) : ScalarExpr {
@@ -510,7 +510,7 @@ data class VFold(
  */
 @Serializable
 @SerialName("VDot")
-data class VDot(
+internal data class VDot(
     /** Coefficient vector applied element-wise; must match input length at eval. */
     val weights: List<Double>,
 ) : ScalarExpr {
@@ -537,7 +537,7 @@ sealed interface BoolExpr {
 /** Wire spec for `l > r`. */
 @Serializable
 @SerialName("Gt")
-data class Gt(
+internal data class Gt(
     /** Left operand. */
     val l: ScalarExpr,
     /** Right operand. */
@@ -554,7 +554,7 @@ data class Gt(
 /** Wire spec for `l >= r`. */
 @Serializable
 @SerialName("Ge")
-data class Ge(
+internal data class Ge(
     /** Left operand. */
     val l: ScalarExpr,
     /** Right operand. */
@@ -571,7 +571,7 @@ data class Ge(
 /** Wire spec for `l < r`. */
 @Serializable
 @SerialName("Lt")
-data class Lt(
+internal data class Lt(
     /** Left operand. */
     val l: ScalarExpr,
     /** Right operand. */
@@ -588,7 +588,7 @@ data class Lt(
 /** Wire spec for `l <= r`. */
 @Serializable
 @SerialName("Le")
-data class Le(
+internal data class Le(
     /** Left operand. */
     val l: ScalarExpr,
     /** Right operand. */
@@ -605,7 +605,7 @@ data class Le(
 /** Wire spec for `l == r`. Exact floating-point equality; usually you want a tolerance instead. */
 @Serializable
 @SerialName("Eq")
-data class Eq(
+internal data class Eq(
     /** Left operand. */
     val l: ScalarExpr,
     /** Right operand. */
@@ -622,7 +622,7 @@ data class Eq(
 /** Wire spec for `l && r` (short-circuiting). */
 @Serializable
 @SerialName("And")
-data class And(
+internal data class And(
     /** Left operand. */
     val l: BoolExpr,
     /** Right operand; evaluated only when [l] is true. */
@@ -639,7 +639,7 @@ data class And(
 /** Wire spec for `l || r` (short-circuiting). */
 @Serializable
 @SerialName("Or")
-data class Or(
+internal data class Or(
     /** Left operand. */
     val l: BoolExpr,
     /** Right operand; evaluated only when [l] is false. */
@@ -656,7 +656,7 @@ data class Or(
 /** Wire spec for `!a`. */
 @Serializable
 @SerialName("Not")
-data class Not(
+internal data class Not(
     /** Operand to negate. */
     val a: BoolExpr,
 ) : BoolExpr {
@@ -666,7 +666,7 @@ data class Not(
 /** `min <= a <= max` (inclusive). Wire-compact form of `And(Ge(a, min), Le(a, max))`. */
 @Serializable
 @SerialName("InRange")
-data class InRange(
+internal data class InRange(
     /** Value tested against the range. */
     val a: ScalarExpr,
     /** Inclusive lower bound. */
@@ -702,7 +702,7 @@ sealed interface VectorExpr {
  */
 @Serializable
 @SerialName("VElements")
-data class VElements(
+internal data class VElements(
     /** Per-output-coordinate expression; output length = `exprs.size`. */
     val exprs: List<ScalarExpr>,
 ) : VectorExpr {
