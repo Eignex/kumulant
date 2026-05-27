@@ -11,14 +11,21 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 /**
- * Read-only NxM matrix. Sealed alongside [VectorView] so snapshots round-trip
- * through serialisation with their concrete storage preserved. Public surface is
- * read-only: shape, entry access, materialise to `Array<DoubleArray>`. Mutation,
- * factorisations, and arithmetic are `internal`.
+ * Read-only N-by-M matrix. Sealed alongside [VectorView] so snapshots
+ * round-trip through `kotlinx.serialization` with their concrete storage
+ * preserved. Public surface is read-only — shape, entry access, materialise
+ * to `Array<DoubleArray>`. Mutation, factorisations, and arithmetic are
+ * `internal` to kumulant.
  *
- * Only [DenseMatrix] today. A CSR/CSC sparse matrix can land here when a consumer
- * needs it; the only callers today are full-covariance regression stats whose state
- * is intrinsically dense.
+ * Surfaced primarily by the full-covariance regression results:
+ * [com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult]
+ * carries the posterior covariance and its Cholesky factor as `MatrixView`s
+ * so a downstream consumer can sample from the joint posterior without
+ * recomputing the decomposition.
+ *
+ * Only [DenseMatrix] today. A CSR/CSC sparse matrix can land here when a
+ * consumer needs it; the only callers today (full-covariance regression
+ * stats) have intrinsically dense state.
  */
 @Serializable
 sealed interface MatrixView {
@@ -28,21 +35,32 @@ sealed interface MatrixView {
     /** Number of columns. */
     val cols: Int
 
-    /** Read entry at `(i, j)`. */
+    /** Read entry at row [i], column [j]. */
     operator fun get(i: Int, j: Int): Double
 
-    /** Materialise into a fresh row-major `Array<DoubleArray>`. */
+    /**
+     * Materialise into a fresh row-major `Array<DoubleArray>`. Always
+     * allocates; the result is independent of any internal storage.
+     */
     fun toArray(): Array<DoubleArray>
 }
 
 /**
- * Dense row-major matrix backed by a single contiguous `DoubleArray` of length
- * `rows * cols`. Element `(i, j)` lives at `data[i * cols + j]`.
+ * Dense row-major matrix backed by a single contiguous `DoubleArray` of
+ * length `rows * cols`. Element `(i, j)` lives at `data[i * cols + j]`.
  *
- * Flat layout: one heap allocation, cache-friendly across row boundaries, and the
- * SIMD primitives in `Primitives.kt` can sweep long runs without re-fetching row
- * references. The serialisation form is a 2D `Array<DoubleArray>` for readability;
- * the in-memory form is flat. Mutation is `internal`.
+ * Flat layout buys three properties: one heap allocation rather than
+ * `rows` separate row arrays; cache-friendly sweeps across row boundaries;
+ * the SIMD primitives in the internal `Primitives.kt` can stream long runs
+ * without re-fetching row references on each iteration.
+ *
+ * The on-the-wire form is a 2D `Array<DoubleArray>` for readability when
+ * inspecting JSON / CBOR payloads. The in-memory form is flat. The custom
+ * [DenseMatrixSerializer] bridges the two — encoding writes a 2D array,
+ * decoding reads one back and packs it into the flat backing.
+ *
+ * Mutation is `internal` — `DenseMatrix` is effectively immutable from
+ * outside the kumulant module.
  */
 @Serializable(with = DenseMatrixSerializer::class)
 @SerialName("DenseMatrix")

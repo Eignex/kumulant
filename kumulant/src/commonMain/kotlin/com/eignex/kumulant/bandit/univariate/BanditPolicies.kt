@@ -312,7 +312,16 @@ class EpsilonGreedy(
         }
 }
 
-/** Epsilon-greedy with `epsilon_t = min(1, epsilon / totalSamples^decay)`. */
+/**
+ * Annealed epsilon-greedy. Effective exploration probability decreases as
+ * sample count accumulates: `eps(t) = min(1, epsilon / totalSamples^decay)`.
+ *
+ * Solves [EpsilonGreedy]'s fixed-epsilon trade-off: explore aggressively
+ * early, then converge to mostly-greedy once the per-arm posteriors are
+ * well-separated. Theoretical defaults give `decay = 0.5` (Auer et al.
+ * 2002) for a `sqrt(T)` regret bound; lower `decay` keeps exploring
+ * longer, higher `decay` converges to greedy faster.
+ */
 class EpsilonDecreasing(
     /** Initial exploration scale; effective epsilon decays as samples accumulate. */
     val epsilon: Double = 2.0,
@@ -348,7 +357,17 @@ class EpsilonDecreasing(
     }
 }
 
-/** Pure-exploration policy: every evaluate returns a fresh uniform draw. */
+/**
+ * Pure-exploration policy: every evaluate returns a fresh uniform draw,
+ * so the bandit picks arms uniformly at random regardless of observations.
+ * No exploitation at all — the opposite extreme of [Greedy].
+ *
+ * Useful as a regret-comparison baseline (any policy worth its salt
+ * should beat uniform), as a data-collection scheme before switching to
+ * a real policy, and as the inner uniformly-random arm in
+ * [EpsilonGreedy] / [EpsilonDecreasing]. Not a real online-learning
+ * choice on its own.
+ */
 class UniformSelection(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDeviations: Double = 0.02) :
     BanditPolicy<WeightedVarianceResult> {
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
@@ -356,9 +375,20 @@ class UniformSelection(priorMean: Double = 0.0, priorWeight: Double = 0.02, prio
 }
 
 /**
- * KL-UCB (Garivier & Cappé 2011) — UCB variant for Bernoulli arms with a KL-divergence
- * confidence bound. Score is `sup { q in [mean, 1] : n * KL(mean, q) <= ln(t) + c*ln(ln(t)) }`
- * computed by binary search. Asymptotically optimal for Bernoulli rewards.
+ * KL-UCB (Garivier & Cappé 2011). UCB variant for Bernoulli arms with a
+ * KL-divergence confidence bound instead of the Hoeffding bound [UCB1]
+ * uses. Score is the largest `q` in `[mean, 1]` such that
+ * `n * KL(mean, q) <= ln(t) + c * ln(ln(t))`; computed by binary search
+ * with [tolerance] precision.
+ *
+ * Asymptotically optimal for Bernoulli rewards — the bound matches
+ * Lai-Robbins lower regret in the limit. Beats [UCB1] in practice when
+ * rewards are genuinely Bernoulli; falls back to similar regret when
+ * rewards are bounded but not Bernoulli.
+ *
+ * Per-evaluate cost is O(log(1/tolerance)) for the binary search; with
+ * default `tolerance = 1e-6` that's ~20 steps, each constant-time.
+ * Cheaper than full Thompson but more expensive than [UCB1].
  */
 class KlUcb(
     /** Confidence padding: `ln(t) + c * ln(ln(t))`. Default `c = 0` is the standard form. */
@@ -417,10 +447,24 @@ class KlUcb(
 }
 
 /**
- * MOSS (Audibert & Bubeck 2009) — minimax-optimal UCB variant. Score is
- * `mean + sqrt(max(0, ln(t / (K * n))) / n)`. The bound shrinks faster than UCB1
- * once an arm has more than `t / K` samples, eliminating the `log(t)` term's slack.
- * Uses the anytime form (no horizon argument).
+ * MOSS — Minimax Optimal Strategy in the Stochastic case (Audibert & Bubeck
+ * 2009). UCB variant where the confidence bound shrinks faster than [UCB1]
+ * once an arm has accumulated more than `t / K` samples. Score is
+ * `mean + sqrt(max(0, ln(t / (K * n))) / n)`.
+ *
+ * Achieves minimax-optimal regret in the stochastic bandit setting —
+ * tighter worst-case bound than [UCB1] across all reward distributions
+ * the bandit could face. Eliminates the `log(t)` slack term once an arm
+ * is sampled enough.
+ *
+ * Uses the anytime form (no fixed horizon argument). [nbrArms] is needed
+ * to compute the `t / K` denominator; pass the same arm count the
+ * containing [MultiArmedBandit] uses.
+ *
+ * Reach for it when minimax regret matters more than asymptotic optimality
+ * — adversarial reward distributions, settings where the worst case
+ * matters. For Bernoulli rewards specifically, [KlUcb] is asymptotically
+ * tighter.
  */
 class Moss(
     /** Number of arms in the population; used in the bound's `t / (K * n)` term. */
@@ -456,10 +500,19 @@ class Moss(
 }
 
 /**
- * UCB-V (Audibert, Munos, Szepesvári 2009) — variance-aware UCB. Score is
- * `mean + sqrt(2 * V * zeta * ln(t) / n) + 3 * c * zeta * ln(t) / n`. The bias-
- * correction third term makes the bound finite-sample-honest where UCB1-Tuned's
- * variance-aware bound is only asymptotic.
+ * UCB-V — variance-aware UCB with finite-sample honesty (Audibert, Munos,
+ * Szepesvári 2009). Score is
+ * `mean + sqrt(2 * V * zeta * ln(t) / n) + 3 * c * zeta * ln(t) / n`,
+ * where `V` is the running variance from the [MomentsResult] snapshot.
+ *
+ * The third term — a bias correction scaled by [c] — is what distinguishes
+ * UCB-V from [UCB1Tuned]: the bound is honest at finite sample sizes
+ * rather than only asymptotically. Reach for it when sample sizes per arm
+ * stay small (early stopping, expensive arms) and the asymptotic
+ * tightness of [UCB1Tuned] / [KlUcb] doesn't materialise.
+ *
+ * Audibert et al. recommend `zeta in [1, 1.2]`; defaults are at the upper
+ * end of that range.
  */
 class UcbV(
     /** Variance-term scale. Audibert et al. recommend `zeta in [1, 1.2]`. */

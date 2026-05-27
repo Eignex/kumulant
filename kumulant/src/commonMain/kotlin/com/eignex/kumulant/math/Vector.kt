@@ -4,13 +4,28 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Read-only N-vector. Backing storage may be dense or sparse; callers see the same
- * surface either way. The public contract is small: query the size, read an entry
- * by index, materialise to a `DoubleArray`. Dot products, axpy, factorisations,
- * and mutation are `internal` to kumulant. These views are observation snapshots,
- * not a general linear-algebra type.
+ * Read-only N-vector with sealed dense / sparse backing. Callers see the
+ * same surface either way — query the size, read entries by index,
+ * materialise to a `DoubleArray`. The same `VectorView` is used everywhere
+ * a vector observation flows: as the input to
+ * [com.eignex.kumulant.core.VectorStat.update] and
+ * [com.eignex.kumulant.core.RegressionStat.update], as the `weights` of
+ * every fitted [com.eignex.kumulant.core.HasLinearModel] result, as the
+ * argument to every `predict(VectorView)` method.
  *
- * Subtypes are sealed and serialisable so snapshots round-trip through
+ * The split between [DenseVector] and [SparseVector] is purely a backing-
+ * storage choice: dense pays per coordinate, sparse pays per nonzero. Most
+ * library code iterates via the internal `forEachStored` extension to walk
+ * only the populated entries — sparse callers feed sparse vectors without
+ * the cost of dense materialisation, and dense callers walk every index
+ * the same way.
+ *
+ * Dot products, axpy, factorisations, and mutation are `internal` to
+ * kumulant — `VectorView` is an observation snapshot, not a general
+ * linear-algebra type. For ad-hoc math reach for the `DoubleArray`
+ * materialisation via [toDoubleArray].
+ *
+ * Subtypes are sealed and `@Serializable` so snapshots round-trip through
  * `kotlinx.serialization` with their concrete storage preserved.
  */
 @Serializable
@@ -18,14 +33,33 @@ sealed interface VectorView {
     /** Number of entries (including stored zeros for sparse). */
     val size: Int
 
-    /** Read entry at [i]. O(1) for dense, O(nnz) linear scan for sparse. */
+    /**
+     * Read entry at [i]. O(1) for [DenseVector], O(nnz) linear scan for
+     * [SparseVector]. Use the internal `forEachStored` extension when you
+     * want to walk the populated entries without per-index lookup cost.
+     */
     operator fun get(i: Int): Double
 
-    /** Materialise into a fresh dense `DoubleArray`. */
+    /**
+     * Materialise into a fresh dense `DoubleArray`. Always allocates;
+     * the returned array is independent of any internal storage, so the
+     * caller is free to mutate it.
+     */
     fun toDoubleArray(): DoubleArray
 }
 
-/** Dense double-precision vector. Mutation is `internal`. */
+/**
+ * Dense double-precision vector backed by a flat `DoubleArray`. The
+ * default carrier when the caller already has a dense array or expects
+ * most entries to be populated.
+ *
+ * Construction goes through the [Companion] factories: [DenseVector.of]
+ * (copy a `DoubleArray`) or [DenseVector.zero] (allocate a zero vector
+ * of given size). Direct constructors are restricted to keep the
+ * mutable backing array out of caller hands — `DenseVector` is intended
+ * to be effectively immutable after the factory call, even though
+ * internal kumulant code may mutate it for in-place updates.
+ */
 @Serializable
 @SerialName("DenseVector")
 class DenseVector internal constructor(internal val data: DoubleArray) : VectorView {
