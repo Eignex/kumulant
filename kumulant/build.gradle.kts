@@ -90,6 +90,9 @@ dokka {
             "src/commonMain/kotlin/com/eignex/kumulant/stat/calibration/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/stat/regression/glm/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/stat/regression/tree/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/math/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/bandit/univariate/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/bandit/contextual/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/schema/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/bandit/package.md",
         )
