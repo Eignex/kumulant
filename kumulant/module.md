@@ -79,11 +79,3 @@ API docs.
   comparable via `equals`/`hashCode`. The value that comes out of `read()`
   is the same value that goes into `merge()` over the wire.
 
-# Package com.eignex.kumulant.core
-
-Foundation types: the [Stat] / [Result] interfaces, the four modality
-sub-interfaces ([SeriesStat] / [PairedStat] / [VectorStat] /
-[DiscreteStat] / [com.eignex.kumulant.core.RegressionStat]), the
-[Concurrency] enum, and cross-cutting result traits ([HasRate],
-[HasSampleVariance], [HasShapeMoments], [HasLinearModel], [HasSlope],
-[HasRegression], [HasCenterScale], [HasMinMax]).

@@ -73,7 +73,10 @@ dokka {
     dokkaSourceSets.named("commonMain") {
         includes.from(
             "module.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/core/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/stat/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/stat/summary/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/stat/regression/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/stat/anomaly/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/stat/calibration/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/stat/regression/glm/package.md",
