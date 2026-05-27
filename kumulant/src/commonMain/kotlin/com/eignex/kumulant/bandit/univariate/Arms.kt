@@ -16,35 +16,83 @@ import kotlin.math.ln
 import kotlin.math.sqrt
 
 /**
- * Recipe for one bandit arm's *cumulator side*: how to build a freshly-seeded
- * [SeriesStat] for that arm, and how to encode a raw observation before folding it
- * into the stat. [Posterior]s pair with arm specs of the same [R].
+ * Recipe for one bandit arm's cumulator side: how to build a freshly-seeded
+ * [SeriesStat] for that arm, and how to encode a raw observation before
+ * folding it into the stat. [Posterior]s and [BanditPolicy]s pair with arm
+ * specs of the same [R].
  *
  * The split keeps each concern in one place:
- *   - sufficient-statistic accumulation: kumulant [SeriesStat]
- *   - prior pseudo-counts: this spec's [createStat]
- *   - value transformation (e.g. log-reward): this spec's [encode]
- *   - posterior sampling: a stateless [Posterior]
  *
- * Sealed + `@Serializable` so an arm configuration round-trips on the wire.
+ * - **Sufficient-statistic accumulation** — kumulant's [SeriesStat] families.
+ * - **Prior pseudo-counts** — this spec's [createStat] seeds the accumulator
+ *   so a posterior or UCB formula evaluated immediately at empty returns a
+ *   well-defined finite score.
+ * - **Value transformation** — this spec's [encode] maps a raw observation
+ *   onto the scale the stat accumulates. Identity for most arms;
+ *   [LogNormalArm] overrides with `ln` so multiplicative rewards are
+ *   accumulated on a log scale.
+ * - **Posterior sampling** — stateless [Posterior]; consumes the same
+ *   snapshot the stat produces.
+ *
+ * Sealed + `@Serializable` so an arm configuration round-trips on the wire
+ * alongside the rest of the [UnivariateBanditSpec].
+ *
+ * ## Picking an arm
+ *
+ * - [BernoulliArm] — binary reward; result is [BernoulliSumResult]; pairs
+ *   with [BetaPosterior] (Thompson) or [UCB1].
+ * - [MeanArm] — single-moment likelihoods (Poisson, Geometric, Exponential,
+ *   GammaScale); result is [WeightedMeanResult]; pairs with one of the
+ *   single-moment posteriors ([PoissonGammaPosterior],
+ *   [GeometricBetaPosterior], [ExponentialGammaPosterior],
+ *   [GammaScalePosterior]).
+ * - [NormalArm] — Gaussian reward with unknown mean and variance; result is
+ *   [WeightedVarianceResult]; pairs with [NormalGammaPosterior] (Thompson)
+ *   or the mean-based policies ([Greedy], [EpsilonGreedy],
+ *   [EpsilonDecreasing], [UniformSelection]).
+ * - [LogNormalArm] — multiplicative reward (revenue, latency); result is
+ *   [WeightedVarianceResult] on the log scale; pairs with
+ *   [LogNormalGammaPosterior].
+ * - [MomentsArm] — Gaussian with second-moment tracking; result is
+ *   [MomentsResult]; pairs with the variance-aware UCB family
+ *   ([UCB1Normal], [UCB1Tuned], [UcbV]).
  */
 @Serializable
 sealed interface Arm<R : Result> {
-    /** Allocate a fresh per-arm accumulator already seeded with this arm's prior. */
+    /**
+     * Allocate a fresh per-arm accumulator already seeded with this arm's
+     * prior pseudo-counts.
+     */
     fun createStat(): SeriesStat<R>
 
-    /** Map a raw observation onto the scale the stat accumulates. Identity by default;
-     *  [LogNormalArm] overrides with `ln`. */
+    /**
+     * Map a raw observation onto the scale the stat accumulates. Identity
+     * by default; [LogNormalArm] overrides with `ln` so the underlying
+     * stat tracks the log-reward and the Normal-Gamma posterior fits the
+     * log-normal generative model.
+     */
     fun encode(value: Double): Double = value
 }
 
-/** Bernoulli arm with a Beta(`priorAlpha`, `priorBeta`) prior on the success probability. */
+/**
+ * Bernoulli arm. The reward is binary `{0, 1}` and the unknown is the
+ * success probability `p`. A Beta(`priorAlpha`, `priorBeta`) prior is
+ * conjugate to the Bernoulli likelihood; the posterior is
+ * `Beta(priorAlpha + successes, priorBeta + failures)`.
+ *
+ * Default `Beta(1, 1)` is the uniform prior on `p` — neutral, the standard
+ * "I know nothing" starting point. `Beta(1, 9)` is mildly pessimistic
+ * (expecting failures), `Beta(9, 1)` mildly optimistic.
+ *
+ * Pair with [BetaPosterior] for Thompson sampling or [UCB1] for the
+ * confidence-bound family.
+ */
 @Serializable
 @SerialName("BernoulliArm")
 data class BernoulliArm(
-    /** Prior pseudo-count of successes. */
+    /** Prior pseudo-count of successes. Higher = stronger belief that the arm is good. */
     val priorAlpha: Double = 1.0,
-    /** Prior pseudo-count of failures. */
+    /** Prior pseudo-count of failures. Higher = stronger belief that the arm is bad. */
     val priorBeta: Double = 1.0,
 ) : Arm<BernoulliSumResult> {
     override fun createStat(): SeriesStat<BernoulliSumResult> {
@@ -58,12 +106,26 @@ data class BernoulliArm(
     companion object
 }
 
-/** Single-moment arm (no variance tracking). Used by Poisson, Geometric, Exponential,
- *  GammaScale, which only need `sum = mean * totalWeights`. */
+/**
+ * Single-moment arm — tracks the running mean but not variance. The right
+ * pick when the likelihood's sufficient statistic is one running sum (or
+ * equivalently a running mean × count):
+ *
+ * - **Poisson reward** (count data) — pair with [PoissonGammaPosterior].
+ * - **Geometric reward** (trials until success) — pair with
+ *   [GeometricBetaPosterior].
+ * - **Exponential reward** (inter-arrival time) — pair with
+ *   [ExponentialGammaPosterior].
+ * - **Gamma reward with known shape** — pair with [GammaScalePosterior].
+ *
+ * The prior is a pseudo-observation of value [priorMean] with weight
+ * [priorWeight]. Tiny `priorWeight` (default 0.01) makes the prior a soft
+ * suggestion that gets washed out in the first few real observations.
+ */
 @Serializable
 @SerialName("MeanArm")
 data class MeanArm(
-    /** Prior mean reward, seeded as an observation of weight [priorWeight]. */
+    /** Prior mean reward, seeded as a pseudo-observation of weight [priorWeight]. */
     val priorMean: Double = 1.0,
     /** Pseudo-weight of the prior seed; smaller = weaker prior. */
     val priorWeight: Double = 0.01,
@@ -78,7 +140,29 @@ data class MeanArm(
     companion object
 }
 
-/** Gaussian arm with a Normal-Gamma prior (unknown mean and variance). */
+/**
+ * Gaussian arm with a Normal-Gamma prior (unknown mean and variance).
+ * Tracks both the running mean and the sum of squared deviations, which
+ * gives [NormalGammaPosterior] enough to draw `(mean, variance)` jointly
+ * and gives the variance-aware policies ([Greedy], [EpsilonGreedy]) a
+ * reasonable variance estimate.
+ *
+ * The prior is parameterised as a Normal-Gamma:
+ *
+ * - [priorMean] is the prior mean reward.
+ * - [priorWeight] is the pseudo-weight of the prior — how many "phantom
+ *   observations" the prior counts as. Higher = stronger prior, slower to
+ *   move.
+ * - [priorSquaredDeviations] is the prior sum of squared deviations;
+ *   tightens the prior on the variance. Higher = stronger belief that
+ *   variance is large.
+ *
+ * The default prior is mildly informative — `priorWeight = 0.02` washes
+ * out after a few observations.
+ *
+ * For multiplicative rewards (revenue, latency, anything where noise is
+ * log-normal rather than additive Gaussian), use [LogNormalArm] instead.
+ */
 @Serializable
 @SerialName("NormalArm")
 data class NormalArm(
@@ -106,7 +190,25 @@ data class NormalArm(
     companion object
 }
 
-/** Like [NormalArm] but folds `ln(value)` into the stat. Pair with [LogNormalGammaPosterior]. */
+/**
+ * Like [NormalArm] but folds `ln(value)` into the stat via [encode]. The
+ * right pick when rewards are multiplicative rather than additive — revenue
+ * per session, latency in milliseconds, anything where the noise scales
+ * with the magnitude.
+ *
+ * The Normal-Gamma posterior on the log scale corresponds to a log-normal
+ * generative model: `log(reward) ~ Normal(mu, sigma^2)`. The default prior
+ * is broader than [NormalArm]'s (`priorSquaredDeviations = 2.0` vs `0.02`)
+ * because log-scale rewards typically have larger variance per arm than
+ * the linear-scale equivalent.
+ *
+ * Pair with [LogNormalGammaPosterior], which transforms the sampled log-
+ * scale mean back to the original scale via `exp(mean + variance / 2)`.
+ *
+ * **Caveat:** raw rewards must be strictly positive — `ln(0)` is `-inf`
+ * and `ln(negative)` is `NaN`. Pre-filter or clamp non-positive observations
+ * before feeding them to the bandit.
+ */
 @Serializable
 @SerialName("LogNormalArm")
 data class LogNormalArm(
@@ -125,7 +227,21 @@ data class LogNormalArm(
     companion object
 }
 
-/** Moments-tracking arm used by UCB1Normal / UCB1Tuned (needs `m2`, not just variance). */
+/**
+ * Moments-tracking arm. Backs [MomentsStat] under the hood, which means the
+ * snapshot exposes the raw second moment `m2` (in addition to mean and
+ * variance) — required by the variance-aware UCB policies that need
+ * `mean-of-squares` directly:
+ *
+ * - [UCB1Normal] — Auer et al.'s variance-aware UCB for Gaussian rewards.
+ * - [UCB1Tuned] — sample-variance-aware UCB; typically tighter bound than
+ *   plain [UCB1].
+ * - [UcbV] — variance-aware UCB with an explicit exploration constant.
+ *
+ * For pure Thompson sampling on Gaussian rewards, [NormalArm] + the
+ * Normal-Gamma posterior is the right pick — [MomentsArm] earns its place
+ * specifically when the policy needs `m2`.
+ */
 @Serializable
 @SerialName("MomentsArm")
 data class MomentsArm(
