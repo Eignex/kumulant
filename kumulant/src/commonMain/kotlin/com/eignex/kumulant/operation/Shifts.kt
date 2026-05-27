@@ -22,17 +22,17 @@ import com.eignex.kumulant.stream.monotonicMode
 // The wire counterparts live in `schema/Operations.kt` (DiffSeries, LagSeries, DerivativeSeries).
 
 /** Forward the value seen [k] updates ago. The first [k] updates warm the ring and forward nothing. */
-fun <R : Result> SeriesStat<R>.lag(k: Int): SeriesStat<R> = LagSeriesStat(this, k)
+internal fun <R : Result> SeriesStat<R>.lag(k: Int): SeriesStat<R> = LagSeriesStat(this, k)
 
 /** Forward the k-th difference `value - value[t - k]`. The first [k] updates warm the ring and forward nothing. */
-fun <R : Result> SeriesStat<R>.diff(k: Int = 1): SeriesStat<R> = DiffSeriesStat(this, k)
+internal fun <R : Result> SeriesStat<R>.diff(k: Int = 1): SeriesStat<R> = DiffSeriesStat(this, k)
 
 /**
  * Forward the time derivative `(value - prev) / (timestampNanos - prevTimestampNanos)` expressed in
  * units-per-second. The first update warms the cell and forwards nothing. Coincident timestamps
  * are dropped (would otherwise produce infinity).
  */
-fun <R : Result> SeriesStat<R>.derivative(): SeriesStat<R> = DerivativeSeriesStat(this)
+internal fun <R : Result> SeriesStat<R>.derivative(): SeriesStat<R> = DerivativeSeriesStat(this)
 
 private fun requireK(k: Int) = require(k >= 1) { "shift k must be >= 1, got $k" }
 

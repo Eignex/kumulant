@@ -23,7 +23,7 @@ import com.eignex.kumulant.math.forEachStored
  * absent (Mean, Variance); flip it on for additive stats (Sum, Count, Rate)
  * where the two are equivalent.
  */
-class VectorizedStat<R : Result>(
+internal class VectorizedStat<R : Result>(
     val dimensions: Int,
     private val template: SeriesStat<R>,
     val skipZeros: Boolean = false,

@@ -18,28 +18,28 @@ import kotlin.time.Duration
  * slots using the underlying stat's [Stat.merge]. More [slices] smooths the boundary
  * at the cost of memory and merge work per read.
  */
-fun <R : Result> SeriesStat<R>.windowed(
+internal fun <R : Result> SeriesStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
     concurrency: Concurrency = Concurrency.None,
 ): SeriesStat<R> = WindowedSeriesStat(duration, slices, this, concurrency)
 
 /** Paired-stat counterpart of [SeriesStat.windowed]. */
-fun <R : Result> PairedStat<R>.windowed(
+internal fun <R : Result> PairedStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
     concurrency: Concurrency = Concurrency.None,
 ): PairedStat<R> = WindowedPairedStat(duration, slices, this, concurrency)
 
 /** Vector-stat counterpart of [SeriesStat.windowed]. */
-fun <R : Result> VectorStat<R>.windowed(
+internal fun <R : Result> VectorStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
     concurrency: Concurrency = Concurrency.None,
 ): VectorStat<R> = WindowedVectorStat(duration, slices, this, concurrency)
 
 /** Discrete-stat counterpart of [SeriesStat.windowed]. */
-fun <R : Result> DiscreteStat<R>.windowed(
+internal fun <R : Result> DiscreteStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
     concurrency: Concurrency = Concurrency.None,

@@ -25,7 +25,7 @@ import com.eignex.kumulant.stream.monotonicMode
  * The inner paired stat receives `(current, lag-k)` so a covariance / correlation stat
  * naturally computes lag-k autocovariance / autocorrelation.
  */
-fun <R : Result> PairedStat<R>.withSelfLag(k: Int): SeriesStat<R> = WithSelfLagSeriesStat(this, k)
+internal fun <R : Result> PairedStat<R>.withSelfLag(k: Int): SeriesStat<R> = WithSelfLagSeriesStat(this, k)
 
 internal class WithSelfLagSeriesStat<R : Result>(private val delegate: PairedStat<R>, private val k: Int) :
     SeriesStat<R>,

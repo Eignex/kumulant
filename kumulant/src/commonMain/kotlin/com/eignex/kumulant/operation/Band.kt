@@ -29,8 +29,9 @@ data class BandResult(
 ) : Result
 
 /** Wrap this series stat to expose a `[lower, upper]` band of width [k] * scale around center. */
-fun <R> SeriesStat<R>.band(k: Double): SeriesStat<BandResult>
-    where R : HasCenterScale = BandSeriesStat(this, k)
+internal fun <R> SeriesStat<R>.band(k: Double): SeriesStat<BandResult>
+    where R : HasCenterScale =
+    BandSeriesStat(this, k)
 
 internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private val k: Double) :
     SeriesStat<BandResult> where R : HasCenterScale {

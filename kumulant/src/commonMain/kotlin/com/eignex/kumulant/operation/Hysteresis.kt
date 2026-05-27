@@ -22,7 +22,7 @@ import com.eignex.kumulant.stream.monotonicMode
 // slightly different transition trace than a strict serial replay would. Never throws.
 
 /** Debounce a noisy numeric stream into a 0.0/1.0 stream using two-threshold hysteresis. */
-fun <R : Result> SeriesStat<R>.hysteresis(low: Double, high: Double): SeriesStat<R> =
+internal fun <R : Result> SeriesStat<R>.hysteresis(low: Double, high: Double): SeriesStat<R> =
     HysteresisSeriesStat(this, low, high)
 
 internal class HysteresisSeriesStat<R : Result>(

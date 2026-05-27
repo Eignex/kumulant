@@ -20,30 +20,34 @@ import kotlin.random.Random
 // `com.eignex.kumulant.schema.Operations.kt` materialise to these wrappers.
 
 /** Forward only updates that pass [predicate]; the predicate sees `(x, y)`. */
-fun <R : Result> RegressionStat<R>.filter(predicate: (VectorView, Double) -> Boolean): RegressionStat<R> =
+internal fun <R : Result> RegressionStat<R>.filter(predicate: (VectorView, Double) -> Boolean): RegressionStat<R> =
     FilterRegressionStat(this, predicate)
 
 /** Rewrite y before update via [transform]; x and weight pass through unchanged. */
-fun <R : Result> RegressionStat<R>.transformY(transform: (VectorView, Double) -> Double): RegressionStat<R> =
+internal fun <R : Result> RegressionStat<R>.transformY(transform: (VectorView, Double) -> Double): RegressionStat<R> =
     TransformYRegressionStat(this, transform)
 
 /** Rewrite x before update via [transform]; y and weight pass through unchanged. */
-fun <R : Result> RegressionStat<R>.transformX(transform: (VectorView, Double) -> DoubleArray): RegressionStat<R> =
-    TransformXRegressionStat(this, transform)
+internal fun <R : Result> RegressionStat<R>.transformX(
+    transform: (VectorView, Double) -> DoubleArray,
+): RegressionStat<R> = TransformXRegressionStat(this, transform)
 
 /** Replace every update's weight with the constant [weight]. */
-fun <R : Result> RegressionStat<R>.withWeight(weight: Double): RegressionStat<R> =
+internal fun <R : Result> RegressionStat<R>.withWeight(weight: Double): RegressionStat<R> =
     WithWeightRegressionStat(this, weight)
 
 /** Multiply each update's caller-supplied weight by [weighter] over `(x, y)`. */
-fun <R : Result> RegressionStat<R>.weightBy(weighter: (VectorView, Double) -> Double): RegressionStat<R> =
+internal fun <R : Result> RegressionStat<R>.weightBy(weighter: (VectorView, Double) -> Double): RegressionStat<R> =
     WeightByRegressionStat(this, weighter)
 
 /** Forward only every [every]th update; drop the rest. */
-fun <R : Result> RegressionStat<R>.throttle(every: Int): RegressionStat<R> = ThrottleRegressionStat(this, every)
+internal fun <R : Result> RegressionStat<R>.throttle(every: Int): RegressionStat<R> = ThrottleRegressionStat(
+    this,
+    every,
+)
 
 /** Bernoulli-sample each update at probability [rate] using [random] as the PRNG. */
-fun <R : Result> RegressionStat<R>.sample(rate: Double, random: Random): RegressionStat<R> =
+internal fun <R : Result> RegressionStat<R>.sample(rate: Double, random: Random): RegressionStat<R> =
     SampleRegressionStat(this, rate, random)
 
 /**
@@ -55,7 +59,7 @@ fun <R : Result> RegressionStat<R>.sample(rate: Double, random: Random): Regress
  * `featureSize` is the caller-supplied [featureSize] so an x-vector contract is
  * enforced at update time even though the inner stat ignores x.
  */
-fun <R : Result> SeriesStat<R>.foldRegression(
+internal fun <R : Result> SeriesStat<R>.foldRegression(
     featureSize: Int,
     project: (VectorView, Double) -> Double,
 ): RegressionStat<R> = FoldRegressionStat(this, featureSize, project)

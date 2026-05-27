@@ -47,7 +47,7 @@ internal fun minMaxProjection(targetLow: Double, targetHigh: Double): ScalarExpr
  * forward the standardized value to this stat. Wraps a hidden [VarianceStat] primary; while
  * the variance is still zero (the very first update) the scaler emits `0`.
  */
-fun <R : Result> SeriesStat<R>.standardScaler(concurrency: Concurrency = this.concurrency): SeriesStat<R> =
+internal fun <R : Result> SeriesStat<R>.standardScaler(concurrency: Concurrency = this.concurrency): SeriesStat<R> =
     withFeedback(VarianceStat(concurrency), standardScalerProjection)
 
 /**
@@ -56,7 +56,7 @@ fun <R : Result> SeriesStat<R>.standardScaler(concurrency: Concurrency = this.co
  * targetHigh = 1.0` for a `[-1, 1]` mapping. While the range is still degenerate (first
  * update or constant stream) the scaler emits [targetLow].
  */
-fun <R : Result> SeriesStat<R>.minMaxScaler(
+internal fun <R : Result> SeriesStat<R>.minMaxScaler(
     targetLow: Double = 0.0,
     targetHigh: Double = 1.0,
     concurrency: Concurrency = this.concurrency,
@@ -72,7 +72,7 @@ fun <R : Result> SeriesStat<R>.minMaxScaler(
  * variance is still zero.
  */
 @Suppress("UNCHECKED_CAST")
-fun <I : Result> VectorStat<I>.standardScaleFeatures(
+internal fun <I : Result> VectorStat<I>.standardScaleFeatures(
     dimensions: Int,
     concurrency: Concurrency = this.concurrency,
 ): VectorStat<I> {
@@ -88,7 +88,7 @@ fun <I : Result> VectorStat<I>.standardScaleFeatures(
  * to [targetLow] while its range is still degenerate.
  */
 @Suppress("UNCHECKED_CAST")
-fun <I : Result> VectorStat<I>.minMaxScaleFeatures(
+internal fun <I : Result> VectorStat<I>.minMaxScaleFeatures(
     dimensions: Int,
     targetLow: Double = 0.0,
     targetHigh: Double = 1.0,
@@ -106,7 +106,7 @@ fun <I : Result> VectorStat<I>.minMaxScaleFeatures(
  * z-scored vector. `y` and `weight` pass through unchanged.
  */
 @Suppress("UNCHECKED_CAST")
-fun <R : Result> RegressionStat<R>.standardScaleFeatures(
+internal fun <R : Result> RegressionStat<R>.standardScaleFeatures(
     concurrency: Concurrency = this.concurrency,
 ): RegressionStat<R> {
     val primary = VectorizedStat(featureSize, VarianceStat(concurrency))
@@ -120,7 +120,7 @@ fun <R : Result> RegressionStat<R>.standardScaleFeatures(
  * rescaled vector. `y` and `weight` pass through unchanged.
  */
 @Suppress("UNCHECKED_CAST")
-fun <R : Result> RegressionStat<R>.minMaxScaleFeatures(
+internal fun <R : Result> RegressionStat<R>.minMaxScaleFeatures(
     targetLow: Double = 0.0,
     targetHigh: Double = 1.0,
     concurrency: Concurrency = this.concurrency,
@@ -136,7 +136,7 @@ fun <R : Result> RegressionStat<R>.minMaxScaleFeatures(
  * forward the standardized `(x', y')` to the inner. Each axis degrades to `0` while
  * its variance is still zero.
  */
-fun <R : Result> PairedStat<R>.standardScaler(concurrency: Concurrency = this.concurrency): PairedStat<R> =
+internal fun <R : Result> PairedStat<R>.standardScaler(concurrency: Concurrency = this.concurrency): PairedStat<R> =
     withFeedback(VarianceStat(concurrency), VarianceStat(concurrency), standardScalerProjection)
 
 /**
@@ -144,7 +144,7 @@ fun <R : Result> PairedStat<R>.standardScaler(concurrency: Concurrency = this.co
  * `[targetLow, targetHigh]`. Each axis degrades to [targetLow] while its range is still
  * degenerate.
  */
-fun <R : Result> PairedStat<R>.minMaxScaler(
+internal fun <R : Result> PairedStat<R>.minMaxScaler(
     targetLow: Double = 0.0,
     targetHigh: Double = 1.0,
     concurrency: Concurrency = this.concurrency,

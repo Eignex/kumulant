@@ -72,10 +72,13 @@ internal class TransformLongStat<R : Result>(
 }
 
 /** Replace every incoming Double with the constant [value]. */
-fun <R : Result> SeriesStat<R>.withValue(value: Double): SeriesStat<R> = ConstantValueStat(this, value)
+internal fun <R : Result> SeriesStat<R>.withValue(value: Double): SeriesStat<R> = ConstantValueStat(this, value)
 
 /** Replace every incoming Long with the constant [value]. */
-fun <R : Result> DiscreteStat<R>.withValue(value: Long): DiscreteStat<R> = ConstantValueDiscreteStat(this, value)
+internal fun <R : Result> DiscreteStat<R>.withValue(value: Long): DiscreteStat<R> = ConstantValueDiscreteStat(
+    this,
+    value,
+)
 
 internal class ConstantValueStat<R : Result>(private val delegate: SeriesStat<R>, private val value: Double) :
     SeriesStat<R>,
@@ -101,10 +104,10 @@ internal class ConstantValueDiscreteStat<R : Result>(private val delegate: Discr
  * View this [DiscreteStat] as a [SeriesStat] that accepts `Double`. Each Double input
  * is cast via [Double.toLong] (truncates toward zero) before being forwarded.
  */
-fun <R : Result> DiscreteStat<R>.asSeries(): SeriesStat<R> = DiscreteAsSeriesStat(this)
+internal fun <R : Result> DiscreteStat<R>.asSeries(): SeriesStat<R> = DiscreteAsSeriesStat(this)
 
 /** View this [SeriesStat] as a [DiscreteStat] that accepts `Long` (cast to Double via [Long.toDouble]). */
-fun <R : Result> SeriesStat<R>.asDiscrete(): DiscreteStat<R> = SeriesAsDiscreteStat(this)
+internal fun <R : Result> SeriesStat<R>.asDiscrete(): DiscreteStat<R> = SeriesAsDiscreteStat(this)
 
 internal class DiscreteAsSeriesStat<R : Result>(private val delegate: DiscreteStat<R>) :
     SeriesStat<R>,

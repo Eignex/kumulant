@@ -40,7 +40,7 @@ enum class ResampleAggregator {
 
 /** Align this series on fixed wall-clock buckets of [bucket] length and forward one
  *  observation per closed bucket using [aggregator]. */
-fun <R : Result> SeriesStat<R>.resampleByTime(
+internal fun <R : Result> SeriesStat<R>.resampleByTime(
     bucket: Duration,
     aggregator: ResampleAggregator = ResampleAggregator.Mean,
 ): SeriesStat<R> = ResampleByTimeStat(this, bucket, aggregator)

@@ -22,7 +22,7 @@ private fun requireUniqueNames(entries: List<Pair<String, *>>, typeName: String)
  * Internal base shared by [ListStats], [PairedListStats], and [VectorListStats]. Holds the
  * named entries and provides the modality-agnostic [read] / [merge] / [reset] implementations.
  */
-sealed class AbstractListStats<R : Result, S : Stat<out R>>(
+internal sealed class AbstractListStats<R : Result, S : Stat<out R>>(
     protected val entries: List<Pair<String, S>>,
     protected val concurrencyOverride: Concurrency?,
     private val typeName: String,
@@ -61,7 +61,7 @@ sealed class AbstractListStats<R : Result, S : Stat<out R>>(
  *
  * Lighter than [StatGroup] when the [StatKey] / [BoundStat] apparatus isn't needed.
  */
-class ListStats<R : Result>(entries: List<Pair<String, SeriesStat<out R>>>, concurrency: Concurrency? = null) :
+internal class ListStats<R : Result>(entries: List<Pair<String, SeriesStat<out R>>>, concurrency: Concurrency? = null) :
     AbstractListStats<R, SeriesStat<out R>>(entries, concurrency, "ListStats"),
     SeriesStat<ResultList<R>> {
 
@@ -89,12 +89,16 @@ class ListStats<R : Result>(entries: List<Pair<String, SeriesStat<out R>>>, conc
 }
 
 /** Auto-named [ListStats]: each stat keyed by its class `simpleName`. */
-fun <R : Result> seriesListStats(vararg stats: SeriesStat<out R>, concurrency: Concurrency? = null): ListStats<R> =
-    ListStats(stats.map { autoName(it) to it }, concurrency)
+internal fun <R : Result> seriesListStats(
+    vararg stats: SeriesStat<out R>,
+    concurrency: Concurrency? = null,
+): ListStats<R> = ListStats(stats.map { autoName(it) to it }, concurrency)
 
 /** Paired-input counterpart of [ListStats]. */
-class PairedListStats<R : Result>(entries: List<Pair<String, PairedStat<out R>>>, concurrency: Concurrency? = null) :
-    AbstractListStats<R, PairedStat<out R>>(entries, concurrency, "PairedListStats"),
+internal class PairedListStats<R : Result>(
+    entries: List<Pair<String, PairedStat<out R>>>,
+    concurrency: Concurrency? = null,
+) : AbstractListStats<R, PairedStat<out R>>(entries, concurrency, "PairedListStats"),
     PairedStat<ResultList<R>> {
 
     constructor(vararg entries: Pair<String, PairedStat<out R>>, concurrency: Concurrency? = null) :
@@ -121,14 +125,16 @@ class PairedListStats<R : Result>(entries: List<Pair<String, PairedStat<out R>>>
 }
 
 /** Auto-named [PairedListStats]: each stat keyed by its class `simpleName`. */
-fun <R : Result> pairedListStats(
+internal fun <R : Result> pairedListStats(
     vararg stats: PairedStat<out R>,
     concurrency: Concurrency? = null,
 ): PairedListStats<R> = PairedListStats(stats.map { autoName(it) to it }, concurrency)
 
 /** Vector-input counterpart of [ListStats]. */
-class VectorListStats<R : Result>(entries: List<Pair<String, VectorStat<out R>>>, concurrency: Concurrency? = null) :
-    AbstractListStats<R, VectorStat<out R>>(entries, concurrency, "VectorListStats"),
+internal class VectorListStats<R : Result>(
+    entries: List<Pair<String, VectorStat<out R>>>,
+    concurrency: Concurrency? = null,
+) : AbstractListStats<R, VectorStat<out R>>(entries, concurrency, "VectorListStats"),
     VectorStat<ResultList<R>> {
 
     constructor(vararg entries: Pair<String, VectorStat<out R>>, concurrency: Concurrency? = null) :
@@ -155,13 +161,13 @@ class VectorListStats<R : Result>(entries: List<Pair<String, VectorStat<out R>>>
 }
 
 /** Auto-named [VectorListStats]: each stat keyed by its class `simpleName`. */
-fun <R : Result> vectorListStats(
+internal fun <R : Result> vectorListStats(
     vararg stats: VectorStat<out R>,
     concurrency: Concurrency? = null,
 ): VectorListStats<R> = VectorListStats(stats.map { autoName(it) to it }, concurrency)
 
 /** Discrete-input counterpart of [ListStats]. */
-class DiscreteListStats<R : Result>(
+internal class DiscreteListStats<R : Result>(
     entries: List<Pair<String, DiscreteStat<out R>>>,
     concurrency: Concurrency? = null,
 ) : AbstractListStats<R, DiscreteStat<out R>>(entries, concurrency, "DiscreteListStats"),
@@ -191,14 +197,14 @@ class DiscreteListStats<R : Result>(
 }
 
 /** Auto-named [DiscreteListStats]: each stat keyed by its class `simpleName`. */
-fun <R : Result> discreteListStats(
+internal fun <R : Result> discreteListStats(
     vararg stats: DiscreteStat<out R>,
     concurrency: Concurrency? = null,
 ): DiscreteListStats<R> = DiscreteListStats(stats.map { autoName(it) to it }, concurrency)
 
 /** Regression-input counterpart of [ListStats]. Each `(x, y, ts, weight)` update fans
  *  out to every entry; the snapshot is a [ResultList] keyed by name. */
-class RegressionListStats<R : Result>(
+internal class RegressionListStats<R : Result>(
     entries: List<Pair<String, RegressionStat<out R>>>,
     concurrency: Concurrency? = null,
 ) : AbstractListStats<R, RegressionStat<out R>>(entries, concurrency, "RegressionListStats"),
@@ -240,7 +246,7 @@ class RegressionListStats<R : Result>(
 }
 
 /** Auto-named [RegressionListStats]: each stat keyed by its class `simpleName`. */
-fun <R : Result> regressionListStats(
+internal fun <R : Result> regressionListStats(
     vararg stats: RegressionStat<out R>,
     concurrency: Concurrency? = null,
 ): RegressionListStats<R> = RegressionListStats(stats.map { autoName(it) to it }, concurrency)

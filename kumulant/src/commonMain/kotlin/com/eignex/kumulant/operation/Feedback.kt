@@ -33,8 +33,10 @@ import com.eignex.kumulant.schema.ScalarExpr
 
 /** Wrap this inner series stat with a feedback primary; the projection sees the
  *  primary's just-updated snapshot via the [ScalarExpr] AST. */
-fun <P : Result, I : Result> SeriesStat<I>.withFeedback(primary: SeriesStat<P>, project: ScalarExpr): SeriesStat<I> =
-    FeedbackSeriesStat(this, primary, project)
+internal fun <P : Result, I : Result> SeriesStat<I>.withFeedback(
+    primary: SeriesStat<P>,
+    project: ScalarExpr,
+): SeriesStat<I> = FeedbackSeriesStat(this, primary, project)
 
 internal class FeedbackSeriesStat<P : Result, I : Result>(
     private val inner: SeriesStat<I>,
@@ -70,7 +72,7 @@ internal class FeedbackSeriesStat<P : Result, I : Result>(
  * [project] is evaluated per coordinate against its own primary snapshot to produce
  * the transformed vector forwarded to the inner stat.
  */
-fun <P : Result, I : Result> VectorStat<I>.withFeedback(
+internal fun <P : Result, I : Result> VectorStat<I>.withFeedback(
     primary: VectorStat<ResultList<P>>,
     project: ScalarExpr,
 ): VectorStat<I> = FeedbackVectorStat(this, primary, project)
@@ -111,7 +113,7 @@ internal class FeedbackVectorStat<P : Result, I : Result>(
  * coordinate's primary snapshot and the transformed feature vector is forwarded to
  * the inner regressor. `y` and `weight` pass through unchanged.
  */
-fun <P : Result, R : Result> RegressionStat<R>.withFeedback(
+internal fun <P : Result, R : Result> RegressionStat<R>.withFeedback(
     primary: VectorStat<ResultList<P>>,
     project: ScalarExpr,
 ): RegressionStat<R> = FeedbackRegressionStat(this, primary, project)
@@ -155,7 +157,7 @@ internal class FeedbackRegressionStat<P : Result, R : Result>(
  * each against its own primary snapshot) and the transformed `(x', y')` is forwarded
  * to the inner paired stat.
  */
-fun <P : Result, R : Result> PairedStat<R>.withFeedback(
+internal fun <P : Result, R : Result> PairedStat<R>.withFeedback(
     primaryX: SeriesStat<P>,
     primaryY: SeriesStat<P>,
     project: ScalarExpr,
