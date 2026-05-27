@@ -7,7 +7,7 @@ import com.eignex.kumulant.operation.diff
 import com.eignex.kumulant.operation.hysteresis
 import com.eignex.kumulant.operation.lag
 import com.eignex.kumulant.operation.band
-import com.eignex.kumulant.operation.ResampleAggregator
+import com.eignex.kumulant.schema.ResampleAggregator
 import com.eignex.kumulant.operation.resampleByTime
 import com.eignex.kumulant.operation.withSelfLag
 import com.eignex.kumulant.stat.decay.DecayWeighting

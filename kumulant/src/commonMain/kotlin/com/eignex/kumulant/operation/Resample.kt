@@ -4,9 +4,9 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.schema.ResampleAggregator
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.serializedLock
-import kotlinx.serialization.Serializable
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration
@@ -18,25 +18,6 @@ import kotlin.time.Duration
 //
 // Concurrency: coupled per-bucket state and bucket index (category 3). The internal
 // lock keeps the multi-cell transition consistent.
-
-/** Per-bucket reduction used by [resampleByTime]. */
-@Serializable
-enum class ResampleAggregator {
-    /** Forward the arithmetic mean of in-bucket values (unweighted). */
-    Mean,
-
-    /** Forward the sum of in-bucket values. */
-    Sum,
-
-    /** Forward the most recent in-bucket value. */
-    Last,
-
-    /** Forward the minimum in-bucket value. */
-    Min,
-
-    /** Forward the maximum in-bucket value. */
-    Max,
-}
 
 /** Align this series on fixed wall-clock buckets of [bucket] length and forward one
  *  observation per closed bucket using [aggregator]. */

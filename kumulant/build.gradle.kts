@@ -78,7 +78,6 @@ dokka {
             "src/commonMain/kotlin/com/eignex/kumulant/stat/calibration/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/stat/regression/glm/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/stat/regression/tree/package.md",
-            "src/commonMain/kotlin/com/eignex/kumulant/operation/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/schema/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/bandit/package.md",
         )

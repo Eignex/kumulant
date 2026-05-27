@@ -1,32 +1,14 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.kumulant.core.BandResult
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasCenterScale
-import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
 // band derives the center / scale / lower / upper bounds from any inner stat whose
 // result implements [HasCenterScale]. The wrapper forwards update/reset/create to the
 // delegate; read projects to [BandResult]. Merge through the wrapper is intentionally
 // unsupported - merge the inner stat directly when combining replicas.
-
-/** Center plus a configurable multiple of scale, derived from a [HasCenterScale] result. */
-@Serializable
-@SerialName("BandResult")
-data class BandResult(
-    /** Center exposed by the inner result. */
-    val center: Double,
-    /** Scale exposed by the inner result. */
-    val scale: Double,
-    /** Multiplier applied to [scale] when computing [lower] and [upper]. */
-    val k: Double,
-    /** `center - k * scale`. */
-    val lower: Double,
-    /** `center + k * scale`. */
-    val upper: Double,
-) : Result
 
 /** Wrap this series stat to expose a `[lower, upper]` band of width [k] * scale around center. */
 internal fun <R> SeriesStat<R>.band(k: Double): SeriesStat<BandResult>
