@@ -2,14 +2,18 @@
 
 package com.eignex.kumulant.bench
 
-import com.eignex.kumulant.operation.derivative
-import com.eignex.kumulant.operation.diff
-import com.eignex.kumulant.operation.hysteresis
-import com.eignex.kumulant.operation.lag
-import com.eignex.kumulant.operation.band
+import com.eignex.kumulant.schema.Covariance
 import com.eignex.kumulant.schema.ResampleAggregator
-import com.eignex.kumulant.operation.resampleByTime
-import com.eignex.kumulant.operation.withSelfLag
+import com.eignex.kumulant.schema.Sum
+import com.eignex.kumulant.schema.Variance
+import com.eignex.kumulant.schema.band
+import com.eignex.kumulant.schema.derivative
+import com.eignex.kumulant.schema.diff
+import com.eignex.kumulant.schema.hysteresis
+import com.eignex.kumulant.schema.lag
+import com.eignex.kumulant.schema.materialize
+import com.eignex.kumulant.schema.resampleByTime
+import com.eignex.kumulant.schema.withSelfLag
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumStat
@@ -52,8 +56,6 @@ import kotlin.math.min
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 /**
  * Registry of [StatSpec]s — one entry per univariate stat. Tests and benchmarks
@@ -236,7 +238,7 @@ val adwinStatSpec = seriesStatSpec(
 
 val bandSeriesStatSpec = seriesStatSpec(
     name = "BandSeriesStat",
-    factory = { c -> VarianceStat(c).band(k = 2.0) },
+    factory = { c -> Variance.band(k = 2.0).materialize(c) },
     updates = ::uniformVariableWeights,
     // Center of a variance result is the running mean.
     scalar = { it.center },
@@ -254,7 +256,7 @@ val madStatSpec = seriesStatSpec(
 
 val autocorrelationStatSpec = seriesStatSpec(
     name = "Covariance.withSelfLag",
-    factory = { c -> com.eignex.kumulant.stat.regression.CovarianceStat(c).withSelfLag(1) },
+    factory = { c -> Covariance.withSelfLag(1).materialize(c) },
     updates = ::uniformUnitWeights,
     scalar = { it.correlation },
     // For an i.i.d uniform stream the lag-1 autocorrelation tends to zero.
@@ -295,7 +297,7 @@ val sojournStatSpec: StatSpec<SojournStat, SojournResult> = StatSpec(
 
 val lagSeriesStatSpec = seriesStatSpec(
     name = "LagSeriesStat",
-    factory = { c -> SumStat(c).lag(1) },
+    factory = { c -> Sum.lag(1).materialize(c) },
     updates = ::uniformUnitWeights,
     // Inner SumStat receives value[0..n-2]; its sum equals total - value[n-1].
     scalar = { it.sum },
@@ -307,7 +309,7 @@ val lagSeriesStatSpec = seriesStatSpec(
 
 val diffSeriesStatSpec = seriesStatSpec(
     name = "DiffSeriesStat",
-    factory = { c -> SumStat(c).diff(1) },
+    factory = { c -> Sum.diff(1).materialize(c) },
     updates = ::uniformUnitWeights,
     // First differences telescope: sum equals value[n-1] - value[0].
     scalar = { it.sum },
@@ -319,7 +321,7 @@ val diffSeriesStatSpec = seriesStatSpec(
 
 val derivativeSeriesStatSpec = seriesStatSpec(
     name = "DerivativeSeriesStat",
-    factory = { c -> SumStat(c).derivative() },
+    factory = { c -> Sum.derivative().materialize(c) },
     updates = ::timeProgressingUnitWeights,
     scalar = { it.sum },
     // Each derivative sample is (delta / strideSeconds). They telescope to
@@ -335,7 +337,7 @@ val derivativeSeriesStatSpec = seriesStatSpec(
 
 val hysteresisSeriesStatSpec = seriesStatSpec(
     name = "HysteresisSeriesStat",
-    factory = { c -> SumStat(c).hysteresis(low = 0.3, high = 0.7) },
+    factory = { c -> Sum.hysteresis(low = 0.3, high = 0.7).materialize(c) },
     updates = ::uniformUnitWeights,
     scalar = { it.sum },
     reference = { seq ->
@@ -358,10 +360,10 @@ val resampleByTimeSeriesStatSpec = seriesStatSpec(
     name = "ResampleByTimeSeriesStat",
     // Bucket length 2x the inter-update stride so each pair of updates closes a bucket.
     factory = { c ->
-        SumStat(c).resampleByTime(
-            bucket = (2 * TIME_PROGRESSING_STRIDE_NANOS).toDuration(DurationUnit.NANOSECONDS),
+        Sum.resampleByTime(
+            bucketMillis = (2 * TIME_PROGRESSING_STRIDE_NANOS) / 1_000_000L,
             aggregator = ResampleAggregator.Sum,
-        )
+        ).materialize(c)
     },
     updates = ::timeProgressingUnitWeights,
     scalar = { it.sum },
