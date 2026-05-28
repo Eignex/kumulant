@@ -31,8 +31,6 @@ kotlin {
             dependsOn(commonMain.get())
         }
         nativeMain.get().dependsOn(nonJvmMain)
-        jsMain.get().dependsOn(nonJvmMain)
-        wasmJsMain.get().dependsOn(nonJvmMain)
         wasmWasiMain.get().dependsOn(nonJvmMain)
 
         val posixMain by creating { dependsOn(nativeMain.get()) }
