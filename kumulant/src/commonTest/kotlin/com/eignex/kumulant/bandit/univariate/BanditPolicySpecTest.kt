@@ -1,6 +1,7 @@
 package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.bandit.materialize
+import com.eignex.kumulant.core.Result
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,7 +17,7 @@ class BanditPolicySpecTest {
         @Suppress("UNCHECKED_CAST")
         val wrapped: UnivariateBanditSpec = MultiArmedSpec(
             nbrArms = 3,
-            policy = policy as BanditPolicySpec<com.eignex.kumulant.core.Result>,
+            policy = policy as BanditPolicySpec<Result>,
         )
         val encoded = json.encodeToString(UnivariateBanditSpec.serializer(), wrapped)
         val decoded = json.decodeFromString(UnivariateBanditSpec.serializer(), encoded) as MultiArmedSpec<*>

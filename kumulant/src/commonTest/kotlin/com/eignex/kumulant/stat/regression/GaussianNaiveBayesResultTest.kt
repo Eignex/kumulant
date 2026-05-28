@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
+import kotlin.math.PI
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.test.Test
@@ -84,7 +85,7 @@ class GaussianNaiveBayesResultTest {
         )
         // Hand-compute logPosterior at x=0 under floor=0.5
         // log prior = ln(0.5); Gaussian term = -0.5 * (LOG_2PI + ln(0.5) + 0)
-        val logTwoPi = ln(2.0 * kotlin.math.PI)
+        val logTwoPi = ln(2.0 * PI)
         val expectedClass0 = ln(0.5) + -0.5 * (logTwoPi + ln(0.5))
         val expectedClass1 = ln(0.5) + -0.5 * (logTwoPi + ln(0.5) + 100.0 / 0.5)
         assertEquals(expectedClass0, r.logPosterior(DenseVector.of(doubleArrayOf(0.0)), 0), 1e-9)
