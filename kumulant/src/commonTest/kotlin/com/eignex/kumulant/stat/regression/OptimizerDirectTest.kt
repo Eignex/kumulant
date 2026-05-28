@@ -96,7 +96,13 @@ class OptimizerDirectTest {
         val b1 = 0.9
         val b2 = 0.999
         val eps = 1e-8
-        val opt = AdamOptimizer(featureSize = 1, learningRate = ConstantRate(0.1), beta1 = b1, beta2 = b2, epsilon = eps)
+        val opt = AdamOptimizer(
+            featureSize = 1,
+            learningRate = ConstantRate(0.1),
+            beta1 = b1,
+            beta2 = b2,
+            epsilon = eps,
+        )
         opt.advance()
         val g = 2.0
         val mNext = (1.0 - b1) * g

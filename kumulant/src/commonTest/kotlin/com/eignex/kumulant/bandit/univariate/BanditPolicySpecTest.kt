@@ -14,7 +14,10 @@ class BanditPolicySpecTest {
         // Wrap in MultiArmedSpec so the BanditPolicySpec field is serialized polymorphically
         // through the sealed UnivariateBanditSpec hierarchy.
         @Suppress("UNCHECKED_CAST")
-        val wrapped: UnivariateBanditSpec = MultiArmedSpec(nbrArms = 3, policy = policy as BanditPolicySpec<com.eignex.kumulant.core.Result>)
+        val wrapped: UnivariateBanditSpec = MultiArmedSpec(
+            nbrArms = 3,
+            policy = policy as BanditPolicySpec<com.eignex.kumulant.core.Result>,
+        )
         val encoded = json.encodeToString(UnivariateBanditSpec.serializer(), wrapped)
         val decoded = json.decodeFromString(UnivariateBanditSpec.serializer(), encoded) as MultiArmedSpec<*>
         assertEquals(policy, decoded.policy)
