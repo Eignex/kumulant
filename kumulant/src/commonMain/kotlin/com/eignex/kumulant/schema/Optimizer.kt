@@ -63,7 +63,7 @@ sealed interface OptimizerSpec {
  *   don't support penalties).
  * - The per-coordinate gradient scale is roughly uniform across features
  *   (no power-law sparsity).
- * - Convergence speed matters less than memory; [Sgd]'s aux state is one
+ * - Convergence speed matters less than memory: [Sgd]'s aux state is one
  *   global step counter.
  */
 @Serializable

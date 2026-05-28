@@ -123,7 +123,7 @@ interface SeriesStat<R : Result> : Stat<R> {
  * Accumulator over a stream of discrete `Long` values. The `Long` carries
  * two interpretations across the family:
  *
- * - **Opaque keys**; cardinality estimators
+ * - **Opaque keys**: cardinality estimators
  *   ([HyperLogLogStat][com.eignex.kumulant.stat.cardinality.HyperLogLogStat]),
  *   heavy-hitter sketches
  *   ([SpaceSavingStat][com.eignex.kumulant.stat.sketch.SpaceSavingStat]),
@@ -133,7 +133,7 @@ interface SeriesStat<R : Result> : Stat<R> {
  *   Hash domain-specific keys through [com.eignex.kumulant.math.hash64] first
  *   so the input carries uniform 64-bit entropy.
  *
- * - **Integer-valued measurements**; Poisson counts, time deltas, integer
+ * - **Integer-valued measurements**: Poisson counts, time deltas, integer
  *   histograms. Here the value is meaningful and arithmetic is applied to it.
  *
  * Each concrete stat documents which interpretation it uses.

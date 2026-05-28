@@ -17,10 +17,10 @@ estimator produced the snapshot.
 
 All three produce a [RateResult] that exposes:
 
-- `totalWeights`; events folded in.
-- `elapsedNanos`; the wall-clock span the rate is normalised over.
-- `rate`; events per second (via [com.eignex.kumulant.core.HasRate]).
-- `per(duration)`; events per arbitrary `kotlin.time.Duration`.
+- `totalWeights`: events folded in.
+- `elapsedNanos`: the wall-clock span the rate is normalised over.
+- `rate`: events per second (via [com.eignex.kumulant.core.HasRate]).
+- `per(duration)`: events per arbitrary `kotlin.time.Duration`.
 
 ## Time semantics
 
@@ -39,7 +39,7 @@ negative rates.
 
 ## Compose
 
-- `Rate.windowed(duration)` for windowed throughput; the windowed
+- `Rate.windowed(duration)` for windowed throughput: the windowed
   wrapper produces a sliding rate over the configured duration.
 - `DecayingRate.transform(IfExpr(predicate, 1.0, 0.0))` for an
   exponentially-decayed predicate-match rate.

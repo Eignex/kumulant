@@ -2,8 +2,9 @@
 
 Family root for the regression-modality stats and the cross-cutting
 infrastructure they share. The single-output linear-model family lives
-in [glm][com.eignex.kumulant.stat.regression.glm]; the decision-tree
-and random-forest family in [tree][com.eignex.kumulant.stat.regression.tree].
+in [glm][com.eignex.kumulant.stat.regression.glm], the decision-tree
+and random-forest family in
+[tree][com.eignex.kumulant.stat.regression.tree].
 What sits directly in this package is the small set of stats that don't
 fit either subfamily, plus the strategy types both rely on.
 
@@ -30,14 +31,14 @@ metrics).
 multinomial linear models share. The runtime API has four
 implementations:
 
-- [SgdOptimizer]; stateless; `delta = -lr * weight * gradient`.
-- [AdagradOptimizer]; accumulates squared gradients per coordinate.
-- [RmspropOptimizer]; exponential moving average of squared gradients.
-- [AdamOptimizer]; bias-corrected first and second moments
+- [SgdOptimizer]: stateless; `delta = -lr * weight * gradient`.
+- [AdagradOptimizer]: accumulates squared gradients per coordinate.
+- [RmspropOptimizer]: exponential moving average of squared gradients.
+- [AdamOptimizer]: bias-corrected first and second moments
   (Kingma & Ba 2015).
 
 Wire-portable counterparts live in
-[com.eignex.kumulant.schema.OptimizerSpec];
+[com.eignex.kumulant.schema.OptimizerSpec]:
 [com.eignex.kumulant.schema.Sgd], [com.eignex.kumulant.schema.Adagrad],
 [com.eignex.kumulant.schema.Rmsprop], [com.eignex.kumulant.schema.Adam].
 Stats accept the spec and materialise their own optimizer instances
@@ -56,18 +57,18 @@ consume posteriors at choose time.
 Concrete posteriors live with their model families:
 
 - [com.eignex.kumulant.stat.regression.glm.LinearPosterior] for linear
-  models; [PointPosterior][com.eignex.kumulant.stat.regression.glm.PointPosterior],
+  models: [PointPosterior][com.eignex.kumulant.stat.regression.glm.PointPosterior],
   [FactorisedGaussian][com.eignex.kumulant.stat.regression.glm.FactorisedGaussian],
   [MultivariateGaussian][com.eignex.kumulant.stat.regression.glm.MultivariateGaussian],
   [LinUcb][com.eignex.kumulant.stat.regression.glm.LinUcb].
-- `TreePosterior` and `ForestPosterior` for trees; see
+- `TreePosterior` and `ForestPosterior` for trees: see
   [com.eignex.kumulant.stat.regression.tree].
 
 The posterior interface is intentionally minimal so a downstream
 contextual bandit can mix-and-match: one bandit might score arms with a
 GLM under [LinUcb][com.eignex.kumulant.stat.regression.glm.LinUcb] and
 another with a forest under
-`ThompsonForestPosterior`; same code path, different model and
+`ThompsonForestPosterior`: same code path, different model and
 scoring rule.
 
 ## When to reach into which subfamily

@@ -25,13 +25,13 @@ its O(nnz(x)) update cost.
 
 Convenience extensions on `kotlin.random.Random`:
 
-- `nextNormal(mean, std)`; Gaussian. Used by Thompson-sampling
+- `nextNormal(mean, std)`: Gaussian. Used by Thompson-sampling
   posteriors throughout the bandit and regression layers.
-- `nextLogNormal(mean, variance)`; log-normal. Used by composite arms
+- `nextLogNormal(mean, variance)`: log-normal. Used by composite arms
   modelling multiplicative reward.
-- `nextGamma(alpha)`; gamma. Building block for Beta / Dirichlet.
-- `nextBeta(alpha, beta)`; beta. Used by Beta-Bernoulli posteriors.
-- `nextPoissonOne()`; Poisson(1). Used by Oza & Russell online
+- `nextGamma(alpha)`: gamma. Building block for Beta / Dirichlet.
+- `nextBeta(alpha, beta)`: beta. Used by Beta-Bernoulli posteriors.
+- `nextPoissonOne()`: Poisson(1). Used by Oza & Russell online
   bagging in [RandomForestRegressionStat][com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat].
 
 These are mostly internal to the library but exposed in case downstream

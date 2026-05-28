@@ -35,19 +35,19 @@ concrete result is a `@Serializable` data class, so the same value that
 comes out of `read()` goes into `merge()` over the wire. Traits in
 `core.StatTraits` surface on multiple families:
 
-- [com.eignex.kumulant.core.HasRate]; normalised throughput; `rate`
+- [com.eignex.kumulant.core.HasRate]: normalised throughput; `rate`
   (events per second) plus `per(duration)`.
-- [com.eignex.kumulant.core.HasSampleVariance]; `totalWeights`,
+- [com.eignex.kumulant.core.HasSampleVariance]: `totalWeights`,
   `variance`, `stdDev`, `sampleVariance`, `sampleStdDev`.
-- [com.eignex.kumulant.core.HasShapeMoments]; extends
+- [com.eignex.kumulant.core.HasShapeMoments]: extends
   `HasSampleVariance` with `m3`, `m4`, `skewness`, `kurtosis`, and the
   size-adjusted unbiased variants.
-- [com.eignex.kumulant.core.HasLinearModel]; `weights`, `bias`, and
+- [com.eignex.kumulant.core.HasLinearModel]: `weights`, `bias`, and
   `predict(VectorView)` over a fitted hyperplane.
-- [com.eignex.kumulant.core.HasSlope]; univariate special case with
+- [com.eignex.kumulant.core.HasSlope]: univariate special case with
   `slope`, `intercept`, scalar `predict(Double)`; implements
   `HasLinearModel` for free.
-- [com.eignex.kumulant.core.HasRegression]; `sse`, `ssr`, `mse`,
+- [com.eignex.kumulant.core.HasRegression]: `sse`, `ssr`, `mse`,
   `rmse`, `rSquared` on top of `HasSampleVariance`.
 - [com.eignex.kumulant.core.HasCenterScale] / [com.eignex.kumulant.core.HasMinMax]
  ; projection-friendly access to running centre/scale and running

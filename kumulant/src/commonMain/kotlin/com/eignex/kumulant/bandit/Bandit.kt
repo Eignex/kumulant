@@ -11,13 +11,13 @@ import kotlin.random.Random
  *
  * The action and state surfaces are deliberately orthogonal:
  *
- * - **Action surface**; [UnivariateBandit] (indexless arms, `choose()`) and
+ * - **Action surface**: [UnivariateBandit] (indexless arms, `choose()`) and
  *   [ContextualBandit] (per-round context vector, `choose(x)`). Pick the one
  *   that matches the decision shape.
- * - **State surface**; [Snapshotable] (any state shape) with the
+ * - **State surface**: [Snapshotable] (any state shape) with the
  *   [PerArmBandit] convenience for the common case where state is one
  *   [Result] per arm.
- * - **Inspection**; [Scorable] / [ContextualScorable] expose per-arm
+ * - **Inspection**: [Scorable] / [ContextualScorable] expose per-arm
  *   scores; bandits whose selection rule is an argmax-over-independent-scores
  *   implement these. Joint-sampling bandits ([com.eignex.kumulant.bandit.univariate.BoltzmannBandit],
  *   [com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit]) and

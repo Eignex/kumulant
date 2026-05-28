@@ -23,15 +23,15 @@ import kotlin.math.sqrt
  *
  * The split keeps each concern in one place:
  *
- * - **Sufficient-statistic accumulation**; kumulant's [SeriesStat] families.
- * - **Prior pseudo-counts**; this spec's [createStat] seeds the accumulator
+ * - **Sufficient-statistic accumulation**: kumulant's [SeriesStat] families.
+ * - **Prior pseudo-counts**: this spec's [createStat] seeds the accumulator
  *   so a posterior or UCB formula evaluated immediately at empty returns a
  *   well-defined finite score.
- * - **Value transformation**; this spec's [encode] maps a raw observation
+ * - **Value transformation**: this spec's [encode] maps a raw observation
  *   onto the scale the stat accumulates. Identity for most arms;
  *   [LogNormalArm] overrides with `ln` so multiplicative rewards are
  *   accumulated on a log scale.
- * - **Posterior sampling**; stateless [Posterior]; consumes the same
+ * - **Posterior sampling**: stateless [Posterior]; consumes the same
  *   snapshot the stat produces.
  *
  * Sealed + `@Serializable` so an arm configuration round-trips on the wire
@@ -39,21 +39,21 @@ import kotlin.math.sqrt
  *
  * ## Picking an arm
  *
- * - [BernoulliArm]; binary reward; result is [BernoulliSumResult]; pairs
+ * - [BernoulliArm]: binary reward; result is [BernoulliSumResult]; pairs
  *   with [BetaPosterior] (Thompson) or [UCB1].
- * - [MeanArm]; single-moment likelihoods (Poisson, Geometric, Exponential,
+ * - [MeanArm]: single-moment likelihoods (Poisson, Geometric, Exponential,
  *   GammaScale); result is [WeightedMeanResult]; pairs with one of the
  *   single-moment posteriors ([PoissonGammaPosterior],
  *   [GeometricBetaPosterior], [ExponentialGammaPosterior],
  *   [GammaScalePosterior]).
- * - [NormalArm]; Gaussian reward with unknown mean and variance; result is
+ * - [NormalArm]: Gaussian reward with unknown mean and variance; result is
  *   [WeightedVarianceResult]; pairs with [NormalGammaPosterior] (Thompson)
  *   or the mean-based policies ([Greedy], [EpsilonGreedy],
  *   [EpsilonDecreasing], [UniformSelection]).
- * - [LogNormalArm]; multiplicative reward (revenue, latency); result is
+ * - [LogNormalArm]: multiplicative reward (revenue, latency); result is
  *   [WeightedVarianceResult] on the log scale; pairs with
  *   [LogNormalGammaPosterior].
- * - [MomentsArm]; Gaussian with second-moment tracking; result is
+ * - [MomentsArm]: Gaussian with second-moment tracking; result is
  *   [MomentsResult]; pairs with the variance-aware UCB family
  *   ([UCB1Normal], [UCB1Tuned], [UcbV]).
  */
@@ -111,12 +111,12 @@ data class BernoulliArm(
  * pick when the likelihood's sufficient statistic is one running sum (or
  * equivalently a running mean × count):
  *
- * - **Poisson reward** (count data); pair with [PoissonGammaPosterior].
- * - **Geometric reward** (trials until success); pair with
+ * - **Poisson reward** (count data): pair with [PoissonGammaPosterior].
+ * - **Geometric reward** (trials until success): pair with
  *   [GeometricBetaPosterior].
- * - **Exponential reward** (inter-arrival time); pair with
+ * - **Exponential reward** (inter-arrival time): pair with
  *   [ExponentialGammaPosterior].
- * - **Gamma reward with known shape**; pair with [GammaScalePosterior].
+ * - **Gamma reward with known shape**: pair with [GammaScalePosterior].
  *
  * The prior is a pseudo-observation of value [priorMean] with weight
  * [priorWeight]. Tiny `priorWeight` (default 0.01) makes the prior a soft
@@ -150,7 +150,7 @@ data class MeanArm(
  * The prior is parameterised as a Normal-Gamma:
  *
  * - [priorMean] is the prior mean reward.
- * - [priorWeight] is the pseudo-weight of the prior; how many "phantom
+ * - [priorWeight] is the pseudo-weight of the prior: how many "phantom
  *   observations" the prior counts as. Higher = stronger prior, slower to
  *   move.
  * - [priorSquaredDeviations] is the prior sum of squared deviations;
@@ -233,10 +233,10 @@ data class LogNormalArm(
  * variance); required by the variance-aware UCB policies that need
  * `mean-of-squares` directly:
  *
- * - [UCB1Normal]; Auer et al.'s variance-aware UCB for Gaussian rewards.
- * - [UCB1Tuned]; sample-variance-aware UCB; typically tighter bound than
+ * - [UCB1Normal]: Auer et al.'s variance-aware UCB for Gaussian rewards.
+ * - [UCB1Tuned]: sample-variance-aware UCB; typically tighter bound than
  *   plain [UCB1].
- * - [UcbV]; variance-aware UCB with an explicit exploration constant.
+ * - [UcbV]: variance-aware UCB with an explicit exploration constant.
  *
  * For pure Thompson sampling on Gaussian rewards, [NormalArm] + the
  * Normal-Gamma posterior is the right pick; [MomentsArm] earns its place

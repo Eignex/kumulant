@@ -38,10 +38,11 @@ post-process; updates remain `O(1)`. If you already have a
 
 ## Merge support
 
-[ReliabilityStat] merges per-bin sums element-wise; safe across
+[ReliabilityStat] merges per-bin sums element-wise, safe across
 parallel workers. [PlattCalibratorStat] merges sample-weighted weight
-vectors via the inner [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat]
-; same approximation as any SGD merge. [IsotonicCalibratorStat] does
-not support merge directly; the result only carries the threshold step
+vectors via the inner
+[com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat]:
+same approximation as any SGD merge. [IsotonicCalibratorStat] does
+not support merge directly: the result only carries the threshold step
 function, not the bin layout. To pool isotonic calibration across
 workers, merge the underlying [ReliabilityStat] and re-derive.

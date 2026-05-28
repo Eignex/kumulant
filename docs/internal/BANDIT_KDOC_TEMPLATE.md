@@ -68,10 +68,10 @@ Always present, in this order:
 
 Optional, between the summary and the bold sections:
 
-- **Algorithm paragraph**; the policy, the paper, the regret story, the
+- **Algorithm paragraph**: the policy, the paper, the regret story, the
   exploration knob. Skip when the bandit is a thin wrapper or a direct
   re-export of an existing policy.
-- **Configuration paragraph**; non-obvious constructor knobs and their
+- **Configuration paragraph**: non-obvious constructor knobs and their
   tradeoffs. Skip when the bandit takes only `nbrArms`, a policy, and
   `random`.
 

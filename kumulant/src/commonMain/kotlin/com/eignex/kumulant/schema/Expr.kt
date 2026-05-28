@@ -28,14 +28,14 @@ private val EMPTY_VECTOR = DoubleArray(0)
  *
  * Every evaluation receives:
  *
- * - `x: Double`; the primary scalar input. For series stats it's the
+ * - `x: Double`: the primary scalar input. For series stats it's the
  *   observation value; for paired stats it's the x-axis; for regression
  *   stats it's unused (use [V] to access feature vector coordinates).
- * - `y: Double`; the secondary scalar input. Used by paired stats (the
+ * - `y: Double`: the secondary scalar input. Used by paired stats (the
  *   y-axis) and regression stats (the response).
- * - `v: DoubleArray`; the full input vector. Used by vector / regression
+ * - `v: DoubleArray`: the full input vector. Used by vector / regression
  *   stats; empty otherwise.
- * - `primary: Result?`; the primary stat's snapshot at evaluation time
+ * - `primary: Result?`: the primary stat's snapshot at evaluation time
  *   for feedback operators. [Center], [Scale], [Low], [High] read directly
  *   from this; per-coordinate ops receive an [com.eignex.kumulant.core.IndexedResult]
  *   to thread the coordinate index through.

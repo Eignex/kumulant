@@ -81,11 +81,11 @@ the band wrapper, which projects any [HasCenterScale] result into
 and lock strategy that honours it for the stat's mathematical structure.
 The enum's own KDoc covers the four modes in detail; the short version:
 
-- `None`; single-threaded, no synchronisation, default.
-- `Relaxed`; lock-free atomic cells; coupled-state stats may drift
+- `None`: single-threaded, no synchronisation, default.
+- `Relaxed`: lock-free atomic cells; coupled-state stats may drift
   by ULPs under contention but never throw.
-- `Strict`; coarse lock around coupled state; exact arithmetic.
-- `HighWrite`; JVM-only striped adders for naively additive stats
+- `Strict`: coarse lock around coupled state; exact arithmetic.
+- `HighWrite`: JVM-only striped adders for naively additive stats
   under heavy concurrent writes; falls back to `Strict` elsewhere.
 
 To configure a coherent bag of stats with one contract, declare them

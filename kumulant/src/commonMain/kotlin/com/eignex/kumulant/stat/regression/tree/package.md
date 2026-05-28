@@ -39,11 +39,11 @@ the stat into a single global accumulator. The Random forest's
 [TreePosterior] (and its forest counterpart [ForestPosterior]) turn a
 [TreeRegressionResult] / [ForestRegressionResult] into a scalar score:
 
-- [MeanTreePosterior] / [MeanForestPosterior]; deterministic leaf
+- [MeanTreePosterior] / [MeanForestPosterior]: deterministic leaf
   mean.
-- [ThompsonTreePosterior] / [ThompsonForestPosterior]; Normal-Gamma
+- [ThompsonTreePosterior] / [ThompsonForestPosterior]: Normal-Gamma
   draw from the leaf's `(mean, variance, totalWeights)` triplet.
-- [UcbTreePosterior] / [UcbForestPosterior]; UCB-style
+- [UcbTreePosterior] / [UcbForestPosterior]: UCB-style
   `mean + alpha * sqrt(variance / n)`.
 
 These plug into

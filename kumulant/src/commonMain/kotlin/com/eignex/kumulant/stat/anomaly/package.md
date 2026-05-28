@@ -42,7 +42,7 @@ anomalous":
 
 - [GaussianScorerStat]: higher score = more anomalous.
   Threshold against a fixed multiple of standard deviations.
-- [QuantileFilterStat]: binary 0/1; `1.0` means "above the running
+- [QuantileFilterStat]: binary 0/1: `1.0` means "above the running
   quantile."
 - [HalfSpaceTreesStat]: **lower** score = more anomalous. The
   reported number is leaf mass times depth, which is large for inputs

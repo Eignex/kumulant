@@ -9,12 +9,12 @@ posterior over `weights` is maintained.
 
 [Link] is the canonical GLM link. Three variants ship:
 
-- [Link.Identity]; Gaussian regression. `mu = eta`. The default.
-- [Link.Logit]; Bernoulli (binary) regression. `mu = sigmoid(eta)`.
+- [Link.Identity]: Gaussian regression. `mu = eta`. The default.
+- [Link.Logit]: Bernoulli (binary) regression. `mu = sigmoid(eta)`.
   Combine with a stat that exposes `predict(x)` for a calibrated
   probability classifier; with a [com.eignex.kumulant.stat.calibration.PlattCalibratorStat]
   for the canonical post-hoc fix to another classifier's output.
-- [Link.Log]; Poisson regression. `mu = exp(eta)`. The right choice
+- [Link.Log]: Poisson regression. `mu = exp(eta)`. The right choice
   for non-negative count targets.
 
 All three are *canonical* links: the gradient simplifies to
@@ -53,10 +53,10 @@ running covariance.
 [LinearPosterior] adapters turn a [LinearRegressionResult] into a
 scalar score:
 
-- [PointPosterior]; the deterministic point estimate `bias + x . weights`.
-- [FactorisedGaussian]; Thompson sample / UCB from a [DiagonalRegressionResult].
-- [MultivariateGaussian]; Thompson sample from a [CovarianceRegressionResult].
-- [LinUcb]; UCB-style score `bias + alpha * sqrt(xT Sigma x)`.
+- [PointPosterior]: the deterministic point estimate `bias + x . weights`.
+- [FactorisedGaussian]: Thompson sample / UCB from a [DiagonalRegressionResult].
+- [MultivariateGaussian]: Thompson sample from a [CovarianceRegressionResult].
+- [LinUcb]: UCB-style score `bias + alpha * sqrt(xT Sigma x)`.
 
 The posteriors live here (not in `bandit/`) because they're properties
 of the *model*, not the *bandit*. The bandit consumes them.

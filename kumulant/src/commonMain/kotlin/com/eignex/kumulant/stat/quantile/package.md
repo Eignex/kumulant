@@ -40,9 +40,9 @@ shared histogram shape).
   cell-wise bin addition / centroid combination.
 - **LinearHistogram, ThresholdBucket** merge exactly via cell-wise bin
   addition (same bin layout required).
-- **ReservoirHistogram** merges sample-weighted via reservoir union; the
+- **ReservoirHistogram** merges sample-weighted via reservoir union: the
   result is statistically equivalent to one large reservoir.
-- **FrugalQuantile** does not have a clean merge; it averages the two
+- **FrugalQuantile** does not have a clean merge: it averages the two
   point estimates. Use it for single-stream tracking, not distributed
   aggregation.
 

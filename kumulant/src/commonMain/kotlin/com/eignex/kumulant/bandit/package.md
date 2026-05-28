@@ -49,18 +49,18 @@ the same way two parallel mean estimators do.
 The action surface and the state surface are orthogonal, so each bandit
 family implements exactly the pieces that fit.
 
-- `Bandit`; common root: `nbrArms`, `random`, `reset`.
-- `UnivariateBandit`; `choose()` and `update(arm, value, weight)` for
+- `Bandit`: common root: `nbrArms`, `random`, `reset`.
+- `UnivariateBandit`: `choose()` and `update(arm, value, weight)` for
   indexless arms.
-- `ContextualBandit`; `choose(x)` and `update(arm, x, reward, weight)`
+- `ContextualBandit`: `choose(x)` and `update(arm, x, reward, weight)`
   for per-round context vectors.
-- `Snapshotable`; `snapshot`, `merge`, `create(random)`. State shape
+- `Snapshotable`: `snapshot`, `merge`, `create(random)`. State shape
   is whatever the bandit family needs.
-- `PerArmBandit`; convenience for the common case where state is one
+- `PerArmBandit`: convenience for the common case where state is one
   [Result][com.eignex.kumulant.core.Result] per arm; extends
   `Snapshotable` over a list of results and adds a per-arm `armResult`
   accessor.
-- `Scorable`; opt-in: exposes `evaluate(armIndex)` when selection is
+- `Scorable`: opt-in: exposes `evaluate(armIndex)` when selection is
   an argmax over independent per-arm scores. `ContextualScorable` is
   the contextual analogue.
 
@@ -71,13 +71,13 @@ concrete bandit's KDoc states which interfaces it implements and why.
 
 ## Subpackages
 
-- `bandit.univariate`; Indexless arms: epsilon-greedy / decreasing,
+- `bandit.univariate`: Indexless arms: epsilon-greedy / decreasing,
   UCB1 / KL-UCB / MOSS, Thompson, Boltzmann, EXP3, multi-armed shells,
   roulette-wheel selection.
-- `bandit.contextual`; Per-arm regression bandits over the
+- `bandit.contextual`: Per-arm regression bandits over the
   [com.eignex.kumulant.stat.regression] family: linear (Bayesian,
   diagonal, stochastic), kNN, tree- and forest-based.
-- `bandit.policy`; Pluggable scoring policies (Greedy, EpsilonGreedy,
+- `bandit.policy`: Pluggable scoring policies (Greedy, EpsilonGreedy,
   UCB1, ThompsonSampling, KLUcb, MOSS, etc.) shared by univariate
   bandits.
 

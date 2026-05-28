@@ -45,9 +45,9 @@ Always present, in this order:
 
 Optional, between the summary and the bold sections:
 
-- **Algorithm paragraph**; the recurrence, the paper, the math. Skip when the
+- **Algorithm paragraph**: the recurrence, the paper, the math. Skip when the
   stat is a thin wrapper or its formula is in the summary.
-- **Configuration paragraph**; non-obvious constructor knobs and their
+- **Configuration paragraph**: non-obvious constructor knobs and their
   tradeoffs. Skip when the stat has only the standard `concurrency` parameter.
 
 ### Section style

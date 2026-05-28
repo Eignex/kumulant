@@ -28,7 +28,7 @@ import kotlin.random.Random
  *
  * Two flavours:
  *
- * - **Sampling-based** ([ThompsonSampling]); score each arm by a draw from
+ * - **Sampling-based** ([ThompsonSampling]): score each arm by a draw from
  *   its conjugate [Posterior] given the snapshot. Exploration is implicit
  *   in posterior variance: under-explored arms have wider posteriors and
  *   draw higher scores more often.
@@ -96,9 +96,9 @@ interface BanditPolicy<R : Result> {
  *
  * Pair an [Arm] with a [Posterior] of the same result type [R]:
  *
- * - [BernoulliArm] + [BetaPosterior]; see [BetaBernoulliTS].
- * - [NormalArm] + [NormalGammaPosterior]; see [NormalTS].
- * - [LogNormalArm] + [LogNormalGammaPosterior]; see [LogNormalTS].
+ * - [BernoulliArm] + [BetaPosterior]: see [BetaBernoulliTS].
+ * - [NormalArm] + [NormalGammaPosterior]: see [NormalTS].
+ * - [LogNormalArm] + [LogNormalGammaPosterior]: see [LogNormalTS].
  * - [MeanArm] + [PoissonGammaPosterior] / [GeometricBetaPosterior] /
  *   [ExponentialGammaPosterior] / [GammaScalePosterior]; see [PoissonTS],
  *   [GeometricTS], [ExponentialTS], [GammaScaleTS].

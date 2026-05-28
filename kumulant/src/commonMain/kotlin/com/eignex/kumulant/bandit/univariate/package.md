@@ -14,7 +14,7 @@ are just a policy swap on this shell.
 
 | Bandit | Selection rule |
 |--------|----------------|
-| [MultiArmedBandit] | Argmax over per-arm policy scores (or whatever the policy does; joint sampling, etc.). |
+| [MultiArmedBandit] | Argmax over per-arm policy scores, or whatever else the policy implements (joint sampling, etc.). |
 | [BoltzmannBandit] | Softmax over per-arm means with a cooling temperature schedule. |
 | [Exp3Bandit] | Adversarial bandit with exponential-weights updates and a regret bound under non-stationary reward distributions. |
 | [RouletteWheelBandit] | Operator-selection roulette where arm probability is proportional to score. Used in meta-heuristics where each "arm" is a neighbourhood move and the score is the recent improvement rate. |
@@ -55,8 +55,8 @@ etc.). The [GammaScalePosterior] is the canonical example used by
 | [LogNormalArm] | Welford over `log(value)` | Multiplicative rewards (revenue, latency). |
 | [MomentsArm] | [com.eignex.kumulant.stat.summary.MomentsStat] | Higher-order shape matters (skewness / kurtosis aware scoring). |
 
-[CompositeArm] (and [CompositeSubArm]) model multi-component rewards;
-e.g. zero-inflated lognormal revenue; without writing a per-shape arm
+[CompositeArm] (and [CompositeSubArm]) model multi-component rewards
+like zero-inflated lognormal revenue, without writing a per-shape arm
 class. Routing and score combination travel as
 [com.eignex.kumulant.schema.ScalarExpr] expressions, so the whole
 composite round-trips on the wire alongside the rest of the bandit
@@ -67,8 +67,8 @@ config.
 [UnivariateBanditSpec] is the sealed root of wire-portable bandit
 configs:
 
-- [MultiArmedSpec]; bandit + policy + arm list.
-- [RouletteWheelSpec]; roulette-wheel variant.
+- [MultiArmedSpec]: bandit + policy + arm list.
+- [RouletteWheelSpec]: roulette-wheel variant.
 - Other family-specific specs co-located here.
 
 Configurations and policies round-trip through skema-based JSON / CBOR
@@ -79,7 +79,7 @@ for reproducible exploration.
 
 ## Interface hierarchy
 
-See [com.eignex.kumulant.bandit] for the action/state interface split;
+See [com.eignex.kumulant.bandit] for the action/state interface split:
 which bandits expose [com.eignex.kumulant.bandit.Scorable], which
 implement [com.eignex.kumulant.bandit.PerArmBandit], and where joint-
 sampling bandits diverge from the per-arm-score path.

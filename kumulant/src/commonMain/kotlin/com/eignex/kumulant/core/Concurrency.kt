@@ -18,7 +18,7 @@ package com.eignex.kumulant.core
  * - Many writers that can tolerate ULP-level drift on coupled state in exchange
  *   for not blocking should pick [Relaxed].
  * - Many writers that need exact arithmetic should pick [Strict].
- * - Many writers on a sketch should also pick [Strict]; sketches self-serialise
+ * - Many writers on a sketch should also pick [Strict]: sketches self-serialise
  *   and the other modes degrade to it anyway.
  *
  * ## Per-stat concurrency clauses
@@ -26,15 +26,15 @@ package com.eignex.kumulant.core
  * Each stat's KDoc has a `**Concurrency:**` section naming the mechanism and
  * per-level behaviour. Recurring patterns:
  *
- * - A single atomic add per update; exact under every level; swapped for a
+ * - A single atomic add per update: exact under every level; swapped for a
  *   striped adder under [HighWrite].
- * - A single-cell CAS min or max loop; exact under every level; the retry
+ * - A single-cell CAS min or max loop: exact under every level; the retry
  *   serialises racing writers naturally.
- * - Independent striped cells with deterministic bucket assignment; exact under
+ * - Independent striped cells with deterministic bucket assignment: exact under
  *   every level (used by additive histograms, `BernoulliSumStat`, and friends).
- * - Welford-coupled cells without a lock; exact under [None], [Strict], and
+ * - Welford-coupled cells without a lock: exact under [None], [Strict], and
  *   [HighWrite]; [Relaxed] drifts a small amount without throwing.
- * - A body locked under any concurrent level; exact under every level with
+ * - A body locked under any concurrent level: exact under every level with
  *   throughput bounded by lock contention.
  *
  * Bandits inherit the concurrency of their per-arm stat.
