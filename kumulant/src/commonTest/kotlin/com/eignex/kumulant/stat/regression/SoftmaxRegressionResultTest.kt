@@ -8,18 +8,16 @@ import kotlin.test.assertFailsWith
 
 class SoftmaxRegressionResultTest {
 
-    private fun result(
-        weights: Array<DoubleArray>,
-        biases: DoubleArray,
-    ): SoftmaxRegressionResult = SoftmaxRegressionResult(
-        featureSize = weights[0].size,
-        numClasses = weights.size,
-        weights = DenseMatrix.of(weights),
-        biases = DenseVector.of(biases),
-        totalWeights = 0.0,
-        step = 0L,
-        crossEntropy = 0.0,
-    )
+    private fun result(weights: Array<DoubleArray>, biases: DoubleArray): SoftmaxRegressionResult =
+        SoftmaxRegressionResult(
+            featureSize = weights[0].size,
+            numClasses = weights.size,
+            weights = DenseMatrix.of(weights),
+            biases = DenseVector.of(biases),
+            totalWeights = 0.0,
+            step = 0L,
+            crossEntropy = 0.0,
+        )
 
     @Test
     fun `logit computes bias plus weight dot x for the requested class`() {
