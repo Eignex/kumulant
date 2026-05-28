@@ -15,24 +15,24 @@
 [![codecov](https://codecov.io/gh/eignex/kumulant/branch/main/graph/badge.svg)](https://codecov.io/gh/eignex/kumulant)
 [![License](https://img.shields.io/github/license/eignex/kumulant)](https://github.com/eignex/kumulant/blob/main/LICENSE)
 
-Kumulant is a Kotlin multiplatform library for computing statistics over
-data that arrives one observation at a time. You feed values in as you
-see them, ask for a result whenever you want one, and the memory it
-uses stays the same no matter how long the stream runs. Two instances
-of the same statistic can be combined into one, so you can compute in
-parallel and stitch the partial results back together.
+Kumulant is a Kotlin multiplatform library for streaming machine
+learning. Every model runs online: feed observations as they arrive,
+ask for a result any time, and the memory footprint stays bounded no
+matter how long the stream runs. Two instances of the same accumulator
+combine into one, so partial results from independent shards merge
+back without losing fidelity.
 
-It covers the usual summaries like mean and variance, quantile sketches
-for percentiles, cardinality estimators for counting distinct items,
-sketches for set membership and heavy hitters, time-decayed averages,
-online regression, and a handful of scoring metrics for evaluating
-predictions as they come in. Everything runs on the JVM, in the browser,
-in WebAssembly, and on native Linux, macOS, Windows, and iOS.
+It covers online regression and classification (OLS, logistic, softmax,
+naive Bayes, decision trees, random forests), multi-armed and
+contextual bandits, anomaly scoring, post-hoc calibration, and the
+streaming-statistics surface underneath: running summaries, quantile
+sketches, cardinality estimators, heavy-hitter sketches, time-decayed
+averages, change detection, and a scoring-metric family for evaluating
+predictions as they come in. Everything runs on the JVM, in the
+browser, in WebAssembly, and on native Linux, macOS, Windows, and iOS.
 
-The generated [Dokka API site](https://eignex.github.io/kumulant) is the
-canonical reference. The mental model, per-family tour, operation
-catalogue, schema/wire walkthrough, concurrency notes, and bandit hierarchy
-live as module and package overviews in the generated site.
+The [API site](https://eignex.com/docs/kumulant) is the canonical
+reference.
 
 ## Installation
 
@@ -57,6 +57,18 @@ val ols = UnivariateRegressionStat()
 for ((x, y) in pairs) ols.update(x, y)
 val fit = ols.read()
 val yHat = fit.slope * 7.0 + fit.intercept
+
+val classifier = BayesianRegressionStat(featureSize = 8, link = Link.Logit)
+for ((x, label) in labeled) classifier.update(x, label)
+val pHat = classifier.read().predict(features) // sigmoid(eta) under Link.Logit
+
+val platt = PlattCalibratorStat()
+for ((score, label) in scoredLabels) platt.update(score, label)
+val calibrated = platt.read().calibrate(rawScore)
+
+val anomaly = HalfSpaceTreesStat(featureSize = 4, featureRanges = ranges)
+for (x in vectorStream) anomaly.update(x)
+val anomalyScore = anomaly.read().score(point)
 ```
 
 Stats group into families under the `stat.*` subpackages. Each family
@@ -78,29 +90,6 @@ which.
 | Score        | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Accuracy, ConfusionMatrix, PitHistogram |
 | Calibration  | Reliability, PlattCalibrator, IsotonicCalibrator                                |
 | Anomaly      | GaussianScorer, QuantileFilter, HalfSpaceTrees                                  |
-
-Bandits sit on top of the stat layer; each arm owns a kumulant
-accumulator and the bandit picks arms by scoring their snapshots.
-
-```kotlin
-val bandit = MultiArmedBandit(nbrArms = 4, policy = BetaBernoulliTS())
-val arm = bandit.choose()
-bandit.update(arm, value = if (rewardOnArm(arm)) 1.0 else 0.0)
-
-val cb = RegressionContextualBandit(
-    nbrArms = 4,
-    template = BayesianRegressionStat(featureSize = 8),
-    posterior = MultivariateGaussian,
-)
-val a = cb.choose(features)
-cb.update(a, features, reward = 12.7)
-```
-
-| Family       | Bandits                                                                                  |
-|--------------|-------------------------------------------------------------------------------------------|
-| Univariate   | MultiArmedBandit, RouletteWheelBandit, BoltzmannBandit, Exp3Bandit, TopTwoThompsonBandit  |
-| Contextual   | RegressionContextualBandit, KnnContextualBandit, Exp4Bandit                                |
-| Policies     | UCB1, UCB1-Normal, UCB1-Tuned, KL-UCB, MOSS, UCB-V, Thompson sampling, Greedy, EpsilonGreedy, EpsilonDecreasing, UniformSelection |
 
 ## Composing stats
 
@@ -150,6 +139,12 @@ val bandit = MultiArmedBandit(nbrArms = 4, policy = BetaBernoulliTS())
 val arm = bandit.choose()
 bandit.update(arm, value = 1.0)
 ```
+
+| Family       | Bandits                                                                                  |
+|--------------|-------------------------------------------------------------------------------------------|
+| Univariate   | MultiArmedBandit, RouletteWheelBandit, BoltzmannBandit, Exp3Bandit, TopTwoThompsonBandit  |
+| Contextual   | RegressionContextualBandit, KnnContextualBandit, Exp4Bandit                                |
+| Policies     | UCB1, UCB1-Normal, UCB1-Tuned, KL-UCB, MOSS, UCB-V, Thompson sampling, Greedy, EpsilonGreedy, EpsilonDecreasing, UniformSelection |
 
 For context-aware decisions, the contextual bandit wraps one regression
 stat per arm and scores each arm under the round's feature vector.
@@ -206,3 +201,8 @@ site covers the per-stat semantics in more depth.
 val hits = SumStat(concurrency = Concurrency.HighWrite)
 val ols = UnivariateRegressionStat(concurrency = Concurrency.Strict)
 ```
+
+Every stat is exercised under every concurrency mode in the
+[kumulant-bench](kumulant-bench) module, which runs accuracy, drift,
+and throughput benches across the full catalogue so the lock-free
+claims travel with the code.
