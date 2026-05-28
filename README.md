@@ -38,7 +38,7 @@ reference.
 
 ```kotlin
 dependencies {
-    implementation("com.eignex:kumulant:0.2.0")
+    implementation("com.eignex:kumulant:0.3.0")
 }
 ```
 
