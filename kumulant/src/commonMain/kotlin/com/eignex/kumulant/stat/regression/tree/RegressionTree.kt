@@ -24,14 +24,14 @@ import kotlin.random.Random
  * candidate split and, every [RegressionTreeConfig.splitPeriod] observations, evaluate them against
  * the Hoeffding bound to decide whether to convert themselves into a [RegressionSplitNode].
  *
- * Internal split nodes hold no live arm — subtree aggregates (`rootSnapshot`, the `value`
+ * Internal split nodes hold no live arm; subtree aggregates (`rootSnapshot`, the `value`
  * fields on [TreeSplitResult]) are derived by combining descendants at snapshot/merge
  * time. The hot update path therefore touches exactly one arm: the leaf the observation
  * routes to. Under [Concurrency.Strict] this removes the root-arm serialization point
  * that previously bottlenecked multi-threaded throughput.
  *
  * Concurrency: leaf-arm updates run lock-free (the arms themselves honour [concurrency]).
- * The split-conversion path — the only one that mutates tree structure — is serialised
+ * The split-conversion path; the only one that mutates tree structure; is serialised
  * by a single per-tree lock, fired only every [RegressionTreeConfig.splitPeriod] observations per
  * audit leaf. Pointer writes on the hot path are skipped when the child reference is
  * unchanged, so the typical update is pure arm arithmetic.
@@ -71,7 +71,7 @@ class RegressionTree(
         if (next !== current) root = next
     }
 
-    /** Aggregate snapshot at the root — derived by walking leaves and any
+    /** Aggregate snapshot at the root; derived by walking leaves and any
      *  [RegressionSplitNode.carryover] aggregates. Under concurrent updates with active growth,
      *  pointer races at split-time can leak observations into orphaned sub-arms; this
      *  walk is therefore best-effort and may drift by a few ULPs of the configured
@@ -93,7 +93,7 @@ class RegressionTree(
      * Structurally merge [other] into this tree. [other] is consumed (its node references
      * may be grafted into this tree) and must not be used afterwards.
      *
-     *  - **Same split predicate**: recurse on both children — internal aggregates are
+     *  - **Same split predicate**: recurse on both children; internal aggregates are
      *    derived from leaves, so no per-split merge step is needed.
      *  - **Both leaves**: merge arms directly.
      *  - **Self leaf, other split**: adopt other's structure wholesale and fold self's
@@ -103,7 +103,7 @@ class RegressionTree(
      *    self's leftmost leaf.
      *
      * The "leftmost leaf" rule preserves the merged total weight but biases the
-     * un-routable observations into a single bucket — an honest fallback when the
+     * un-routable observations into a single bucket; an honest fallback when the
      * structures don't align.
      */
     fun merge(other: RegressionTree) {
@@ -149,8 +149,8 @@ class RegressionTree(
             a.pos = mergeNodeWithResult(a.pos, b.pos)
             a.neg = mergeNodeWithResult(a.neg, b.neg)
             // b.value carries the full subtree aggregate; the child recursion already
-            // folded the structurally-aligned portion. Pull only the residual — what b's
-            // value holds beyond the sum of its children — into a's carryover.
+            // folded the structurally-aligned portion. Pull only the residual; what b's
+            // value holds beyond the sum of its children; into a's carryover.
             val childSum = mergeWVR(b.pos.value, b.neg.value)
             val residual = subtractWVR(b.value, childSum)
             if (residual.totalWeights > 0.0) foldIntoCarryover(a, residual)

@@ -37,7 +37,7 @@ data class ExcursionResult(
  * **Use cases:** running-high water tracking with drawdown / recovery
  * monitoring, generic excursion analysis.
  *
- * **Memory:** O(1) — six cells plus a lock.
+ * **Memory:** O(1); six cells plus a lock.
  *
  * **Update:** O(1).
  *

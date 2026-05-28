@@ -36,7 +36,7 @@ data class ThresholdSplit(
 /**
  * Route by an arbitrary [BoolExpr] evaluated against the context vector. The expression
  * sees the context's first coordinate as `X`, the second as `Y`, and the full vector
- * via `V(i)` — matching the existing kumulant AST conventions. Wire-portable through
+ * via `V(i)`; matching the existing kumulant AST conventions. Wire-portable through
  * skema's polymorphism on [BoolExpr].
  */
 @Serializable

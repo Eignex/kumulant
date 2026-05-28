@@ -14,14 +14,14 @@ import kotlin.random.Random
  * temperature at round `t` and per-arm means are tracked by independent
  * [com.eignex.kumulant.stat.summary.MeanStat] cells.
  *
- * Default schedule cools as `tau(t) = max(minTau, initialTau / t^decay)` —
+ * Default schedule cools as `tau(t) = max(minTau, initialTau / t^decay)`;
  * Cesa-Bianchi & Fischer's classical recipe with `decay = 1`. Pass a constant
  * schedule (`decay = 0`) for fixed-temperature softmax. High temperature
  * flattens the distribution toward uniform exploration; low temperature
  * sharpens toward greedy exploitation.
  *
  * The play distribution is a softmax over all arms, not an argmax over
- * independent per-arm scores — so this bandit doesn't expose
+ * independent per-arm scores; so this bandit doesn't expose
  * [com.eignex.kumulant.bandit.Scorable], but its per-arm
  * `(mean, totalWeights)` state still fits [PerArmBandit].
  *
@@ -32,9 +32,9 @@ import kotlin.random.Random
  * **Arms:** indexless, `nbrArms` fixed at construction; each arm owns one
  * [com.eignex.kumulant.stat.summary.MeanStat].
  *
- * **Memory:** O(nbrArms) — one mean cell per arm plus a step counter.
+ * **Memory:** O(nbrArms); one mean cell per arm plus a step counter.
  *
- * **Choose:** O(nbrArms) — softmax over per-arm means, inverse-CDF sample.
+ * **Choose:** O(nbrArms); softmax over per-arm means, inverse-CDF sample.
  *
  * **Update:** O(1) on the targeted arm.
  *
@@ -42,7 +42,7 @@ import kotlin.random.Random
  * softmax draw; reproducible under a fixed seed.
  *
  * **Concurrency:** per-arm [com.eignex.kumulant.core.SeriesStat] carries its
- * own concurrency. The step counter is non-atomic — concurrent `choose` calls
+ * own concurrency. The step counter is non-atomic; concurrent `choose` calls
  * race on it and may yield duplicate `t` values; pin to a single thread when
  * the cooling schedule must be exact.
  */

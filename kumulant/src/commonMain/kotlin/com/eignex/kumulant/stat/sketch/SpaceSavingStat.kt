@@ -26,10 +26,10 @@ data class HeavyHittersResult(
 ) : Result
 
 /**
- * Heavy-hitters tracker — keeps the [capacity] most-frequent keys with
+ * Heavy-hitters tracker; keeps the [capacity] most-frequent keys with
  * one-sided overestimate guarantees on their counts.
  *
- * **Use cases:** top-k key discovery under bounded memory — most-frequent
+ * **Use cases:** top-k key discovery under bounded memory; most-frequent
  * users, top error fingerprints, hot cache keys. Pair with [CountMinSketchStat]
  * if you need point-frequency lookups on arbitrary keys, not just the top set.
  *
@@ -51,7 +51,7 @@ data class HeavyHittersResult(
  *  - [Concurrency.Relaxed]: lock-free Misra-Gries variant. On a miss when
  *    full, all counts are decremented by one in best-effort fashion; a freed
  *    slot is claimed via CAS. Counts under this mode are **not** overestimates
- *    — they may underestimate by the number of decrements, and the classic
+ *   ; they may underestimate by the number of decrements, and the classic
  *    overestimate bound does not hold. Heavy hitters still surface; small/cold
  *    keys are bled out.
  */

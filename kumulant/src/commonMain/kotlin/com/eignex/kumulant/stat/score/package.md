@@ -33,7 +33,7 @@ Brier when you want a bounded, calibration-decomposable error.
 
 [AucStat] reports streaming ROC AUC over a fixed-resolution score
 histogram. AUC measures whether positives score higher than negatives
-on average and is calibration-agnostic — a perfectly-discriminative
+on average and is calibration-agnostic; a perfectly-discriminative
 model can still be miscalibrated, and a perfectly-calibrated model can
 have mediocre AUC.
 
@@ -46,7 +46,7 @@ have mediocre AUC.
 
 [AccuracyStat] is the O(1) shortcut when only the scalar accuracy
 matters. [ConfusionMatrixStat] is the full P/R/F1 surface with a
-per-class breakdown — reach for it when accuracy alone hides
+per-class breakdown; reach for it when accuracy alone hides
 class-imbalance effects.
 
 ## Distributional forecast diagnostics
@@ -54,7 +54,7 @@ class-imbalance effects.
 The PIT (probability integral transform) family covers calibration of
 distributional forecasts:
 
-- `pitHistogram(numBins)` (factory in `PitHistogram.kt`) — feeds PIT
+- `pitHistogram(numBins)` (factory in `PitHistogram.kt`); feeds PIT
   values into an equiprobable [LinearHistogramStat][com.eignex.kumulant.stat.quantile.LinearHistogramStat]
   over `[0, 1]`. Under correct distributional forecasts the histogram
   should be uniform; deviations diagnose under- or over-coverage and
@@ -82,5 +82,5 @@ empirical one.
 All paired-mean-shaped metrics (`MseLoss`, `MaeLoss`, `LogLoss`,
 `BrierScore`, `PinballLoss`, `Accuracy`) merge via the underlying
 [MeanStat][com.eignex.kumulant.stat.summary.MeanStat]'s Chan-style
-parallel formula — exact across replicas. [AucStat] and
+parallel formula; exact across replicas. [AucStat] and
 [ConfusionMatrixStat] merge via cell-wise bin / matrix addition.

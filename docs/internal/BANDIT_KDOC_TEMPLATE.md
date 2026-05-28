@@ -12,11 +12,11 @@ have a KDoc that follows this template.
  * arms. Name the reward model (Bernoulli/Gaussian/weighted-mean/regression) if
  * it's load-bearing.>
  *
- * <Algorithm paragraph when non-trivial — name the policy (Thompson sampling,
+ * <Algorithm paragraph when non-trivial; name the policy (Thompson sampling,
  * UCB1, EXP3, Boltzmann, LinUCB, k-NN scoring, ...), cite the paper if
  * relevant, call out the exploration/exploitation knob and any regret bound.>
  *
- * <Configuration paragraph when the constructor has non-obvious knobs — what
+ * <Configuration paragraph when the constructor has non-obvious knobs; what
  * each tunable does, defaults, exploration tradeoffs, history caps.>
  *
  * **Use cases:** <when to reach for this bandit over its peers; reward shape,
@@ -37,7 +37,7 @@ have a KDoc that follows this template.
  * accumulator), `O(D)` (linear gradient), `O(D^2)` (Sherman-Morrison),
  * `O(history)` (reservoir trim).>
  *
- * **Randomness:** <where the bandit pulls from — always [Bandit.random] — and
+ * **Randomness:** <where the bandit pulls from; always [Bandit.random]; and
  * which calls are deterministic given a fixed seed (choose, internal
  * sampling, tie-breaks).>
  *
@@ -51,27 +51,27 @@ class FooBandit(...) : UnivariateBandit, PerArmBandit<FooArmResult> { ... }
 
 Always present, in this order:
 
-1. **Summary** — one sentence, no header. The family, the selection rule, the
+1. **Summary**; one sentence, no header. The family, the selection rule, the
    reward model if non-obvious.
-2. **`**Use cases:**`** — one to three sentences. Which problem shape this
+2. **`**Use cases:**`**; one to three sentences. Which problem shape this
    bandit fits, what its peers are.
-3. **`**Arms:**`** — arm model in one line: indexless vs contextual, feature
+3. **`**Arms:**`**; arm model in one line: indexless vs contextual, feature
    dimension if relevant, whether `nbrArms` is fixed at construction.
-4. **`**Memory:**`** — O-bound, total. Break out the per-arm factor when arms
+4. **`**Memory:**`**; O-bound, total. Break out the per-arm factor when arms
    dominate (e.g. `O(nbrArms · D^2)` rather than `O(D^2)`).
-5. **`**Choose:**`** — O-bound per `choose()` call.
-6. **`**Update:**`** — O-bound per `update()` call.
-7. **`**Randomness:**`** — single source clause; what is reproducible under a
+5. **`**Choose:**`**; O-bound per `choose()` call.
+6. **`**Update:**`**; O-bound per `update()` call.
+7. **`**Randomness:**`**; single source clause; what is reproducible under a
    fixed seed.
-8. **`**Concurrency:**`** — mechanism first, then what's safe across threads,
+8. **`**Concurrency:**`**; mechanism first, then what's safe across threads,
    then caveats. See *Concurrency clauses* below.
 
 Optional, between the summary and the bold sections:
 
-- **Algorithm paragraph** — the policy, the paper, the regret story, the
+- **Algorithm paragraph**; the policy, the paper, the regret story, the
   exploration knob. Skip when the bandit is a thin wrapper or a direct
   re-export of an existing policy.
-- **Configuration paragraph** — non-obvious constructor knobs and their
+- **Configuration paragraph**; non-obvious constructor knobs and their
   tradeoffs. Skip when the bandit takes only `nbrArms`, a policy, and
   `random`.
 
@@ -84,7 +84,7 @@ Optional, between the summary and the bold sections:
 - Declarative, not narrative: *"Per-arm `SeriesStat`s update independently"*
   beats *"We use a per-arm `SeriesStat` because…"*.
 - Per-arm result data classes keep their existing per-field `/** ... */` docs
-  unchanged — the template applies only to the bandit class itself.
+  unchanged; the template applies only to the bandit class itself.
 
 ### Concurrency clauses
 
@@ -93,9 +93,9 @@ standard phrasings so the matrix is grep-able:
 
 | Mechanism                                                         | Behaviour                                                                                                                          |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| *Per-arm `SeriesStat` carries its own concurrency*                | `choose` and `update` are as safe as the arm stat allows. Cross-arm consistency is best-effort — racing updates on different arms never block. |
+| *Per-arm `SeriesStat` carries its own concurrency*                | `choose` and `update` are as safe as the arm stat allows. Cross-arm consistency is best-effort; racing updates on different arms never block. |
 | *Single atomic counter for round index*                           | `choose` increments a shared step counter atomically; concurrent choosers all see distinct `t` values.                              |
-| *Body locked under any concurrent level*                          | All public calls serialise on one lock. Exact, but throughput bound by lock contention — shard for higher write rates.              |
+| *Body locked under any concurrent level*                          | All public calls serialise on one lock. Exact, but throughput bound by lock contention; shard for higher write rates.              |
 | *Lock-free with racing reads of arm snapshots*                    | `choose` reads a fresh snapshot per arm without locking; a concurrent `update` may interleave and the chosen arm reflects either pre- or post-update state. |
 | *Caller-supplied `random` is the synchronisation boundary*        | Thread-safety of `choose` reduces to thread-safety of [Bandit.random]; pass a thread-local or synchronised wrapper for multi-thread choose. |
 
@@ -122,10 +122,10 @@ line: `**Concurrency:** Inherits [MultiArmedBandit]'s concurrency model.`
  * **Arms:** indexless, `nbrArms` fixed at construction; each arm owns one
  * [SeriesStat] from `policy.createArm()`.
  *
- * **Memory:** O(nbrArms · arm-state) — per-arm `SeriesStat` plus a shared
+ * **Memory:** O(nbrArms · arm-state); per-arm `SeriesStat` plus a shared
  * step counter.
  *
- * **Choose:** O(nbrArms) — one `policy.evaluate` per arm, argmax.
+ * **Choose:** O(nbrArms); one `policy.evaluate` per arm, argmax.
  *
  * **Update:** O(1) on the targeted arm, delegated to `policy.update`.
  *

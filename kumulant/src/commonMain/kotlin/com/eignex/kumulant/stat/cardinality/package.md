@@ -5,7 +5,7 @@ opaque `Long` keys ([com.eignex.kumulant.core.DiscreteStat]) and answer
 "how many distinct keys have I seen?" in bounded memory. The right
 pre-step is to hash domain-specific keys through
 [com.eignex.kumulant.math.hash64] / [com.eignex.kumulant.math.Hasher64]
-so the input has uniform 64-bit entropy — `value.hashCode().toLong()`
+so the input has uniform 64-bit entropy; `value.hashCode().toLong()`
 only provides 32 bits and skews the estimators on low-cardinality
 domains.
 

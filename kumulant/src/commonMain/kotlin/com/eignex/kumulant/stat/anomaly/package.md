@@ -31,7 +31,7 @@ distribution shifts the anomaly bar automatically.
 projects the input onto random axis-aligned half-spaces; leaves track
 mass over a sliding *reference* window vs the *latest* window. An
 input whose leaf has tiny reference-window mass falls into a region
-the recent stream rarely visited — anomaly. The reference window
+the recent stream rarely visited; anomaly. The reference window
 rotates every `windowSize` observations so the detector tracks slow
 concept drift.
 
@@ -55,7 +55,7 @@ don't unify the directions accidentally.
 ## Merge support
 
 [GaussianScorerStat] inherits Chan-style parallel merge from
-[com.eignex.kumulant.stat.summary.VarianceStat] — exact across
+[com.eignex.kumulant.stat.summary.VarianceStat]; exact across
 parallel workers. [QuantileFilterStat] and [HalfSpaceTreesStat] do
 **not** support merge directly: the quantile-filter result only
 carries the scalar threshold (the bin layout would need to travel

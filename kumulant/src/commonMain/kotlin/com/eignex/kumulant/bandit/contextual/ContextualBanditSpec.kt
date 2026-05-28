@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  * Materialisation lives in `BanditFactory`.
  *
  * Note: [com.eignex.kumulant.bandit.contextual.Exp4Bandit] is intentionally
- * absent from this hierarchy — its experts are function lambdas with no
+ * absent from this hierarchy; its experts are function lambdas with no
  * obvious wire representation, so it must be constructed programmatically.
  */
 @Serializable
@@ -79,7 +79,7 @@ sealed interface LinearRegressionSpec {
 }
 
 /** Spec for [KnnContextualBandit]. [distance] is a named lookup against a
- *  small built-in registry — currently `"squaredL2"` is the only stock entry. */
+ *  small built-in registry; currently `"squaredL2"` is the only stock entry. */
 @Serializable
 @SerialName("KnnContextual")
 data class KnnContextualSpec(

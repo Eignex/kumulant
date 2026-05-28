@@ -37,7 +37,7 @@ data class SummaryResult(
 }
 
 /**
- * Comprehensive summary stat — Welford mean/variance plus monotonic min/max in one
+ * Comprehensive summary stat; Welford mean/variance plus monotonic min/max in one
  * accumulator. The result implements both [HasCenterScale] (center=mean, scale=stdDev)
  * and [HasMinMax] (min, max), so feedback projections can address Center/Scale and
  * Low/High on the same primary. Use it when a per-coordinate primary fan-out needs to
@@ -46,7 +46,7 @@ data class SummaryResult(
  * **Use cases:** mixed feature scaling in one feedback pipeline; any consumer that
  * wants both moment-based and extremum-based statistics in a single read.
  *
- * **Memory:** O(1) — five doubles plus a lock.
+ * **Memory:** O(1); five doubles plus a lock.
  *
  * **Update:** O(1) per observation.
  *

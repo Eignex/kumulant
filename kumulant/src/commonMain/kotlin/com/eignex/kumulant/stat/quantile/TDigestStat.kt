@@ -66,14 +66,14 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  * the sorted centroid list under the `k1`-difference ≤ 1 merge rule.
  *
  * **Use cases:** approximate percentile estimation with adaptive resolution
- * — tighter near the tails (0.001 / 0.999 percentiles), looser in the middle.
+ *; tighter near the tails (0.001 / 0.999 percentiles), looser in the middle.
  * Reach for this over [DDSketchStat] when you want extreme-quantile accuracy
  * without committing to a relative-error parameter, and over
  * [HdrHistogramStat] when the value range isn't known in advance.
  *
  * **Memory:** O([compression]) centroids (~6 · delta) plus a fixed-size buffer.
  *
- * **Update:** O(1) amortised per observation — a single atomic claim into the
+ * **Update:** O(1) amortised per observation; a single atomic claim into the
  * buffer, with a periodic O([compression] · log [compression]) compress when
  * the buffer fills.
  *
@@ -142,7 +142,7 @@ class TDigestStat(
         val claimed = claimBufferEpoch() ?: return
         // Wait for in-flight commits to land. Under Relaxed an addAndGet that
         // straddles a concurrent reset can leave a stranded claim whose commit
-        // never lands in this epoch's commitIndex — fall back to whatever is
+        // never lands in this epoch's commitIndex; fall back to whatever is
         // committed so far rather than spinning forever. Drift is the Relaxed
         // contract; livelock is not.
         var committed = commitIndex.load().toInt()
@@ -160,7 +160,7 @@ class TDigestStat(
         val snapVal = DoubleArray(drained) { buffer.load(it) }
         val snapW = DoubleArray(drained) { bufferWeights.load(it) }
 
-        // Reset for the next epoch BEFORE compressing — new claimers can start writing
+        // Reset for the next epoch BEFORE compressing; new claimers can start writing
         // into a fresh buffer while we merge the snapshot.
         bufferIndex.store(0L)
         commitIndex.store(0L)

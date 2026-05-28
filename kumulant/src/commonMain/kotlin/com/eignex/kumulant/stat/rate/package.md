@@ -17,10 +17,10 @@ estimator produced the snapshot.
 
 All three produce a [RateResult] that exposes:
 
-- `totalWeights` — events folded in.
-- `elapsedNanos` — the wall-clock span the rate is normalised over.
-- `rate` — events per second (via [com.eignex.kumulant.core.HasRate]).
-- `per(duration)` — events per arbitrary `kotlin.time.Duration`.
+- `totalWeights`; events folded in.
+- `elapsedNanos`; the wall-clock span the rate is normalised over.
+- `rate`; events per second (via [com.eignex.kumulant.core.HasRate]).
+- `per(duration)`; events per arbitrary `kotlin.time.Duration`.
 
 ## Time semantics
 
@@ -46,7 +46,7 @@ negative rates.
 
 ## Concurrency
 
-[RateStat] and [DecayingRateStat] are additive over uncoupled cells —
+[RateStat] and [DecayingRateStat] are additive over uncoupled cells;
 update count and timestamp range are independent. Exact under every
 [com.eignex.kumulant.core.Concurrency] level. [CounterRateStat] is
 Welford-coupled (previous counter reading + current rate) and locks

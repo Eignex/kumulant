@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
  * `get(StatKey)` operators below for type-safe lookup rather than going
  * through [results] by string key.
  *
- * Nested groups produce nested [GroupResult]s — the [get] overloads taking a
+ * Nested groups produce nested [GroupResult]s; the [get] overloads taking a
  * [GroupStatKey] chain through one level at a time.
  *
  * `@Serializable` like every other [Result], so a `GroupResult` produced by
@@ -33,7 +33,7 @@ data class GroupResult(
     /**
      * Typed lookup by [StatKey]. The phantom [R] on the key narrows the return
      * type so the caller doesn't cast. Throws if no result has been recorded
-     * for that key — the error message lists the available keys so a typo is
+     * for that key; the error message lists the available keys so a typo is
      * obvious at the throw site.
      */
     @Suppress("UNCHECKED_CAST")
@@ -47,7 +47,7 @@ data class GroupResult(
     /** Typed lookup into a nested [GroupResult]: `parent[groupKey, innerKey]`. */
     operator fun <R : Result> get(group: StatKey<GroupResult>, key: StatKey<R>): R = this[group][key]
 
-    /** Typed lookup of the nested [GroupResult] itself — first step of dotted access. */
+    /** Typed lookup of the nested [GroupResult] itself; first step of dotted access. */
     operator fun <K> get(group: GroupStatKey<K>): GroupResult = this[group as StatKey<GroupResult>]
 
     /** Typed lookup into a nested [GroupResult]: `parent[groupKey, innerKey]`. */

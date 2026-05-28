@@ -147,7 +147,7 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
 
 /**
  * LinUCB-style confidence-bound scoring: `predict(x) + exploration * sqrt(xT * Sigma * x)`.
- * Deterministic given the snapshot — no random draw at evaluate time — so the
+ * Deterministic given the snapshot; no random draw at evaluate time; so the
  * `exploration` parameter here plays the role of LinUCB's `alpha` (confidence-bound
  * width), not the variance scale used by Thompson-style posteriors. [sample] returns
  * the snapshot's mean weights since UCB has no per-arm randomization; callers that

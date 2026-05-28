@@ -19,7 +19,7 @@ three verbs and one constant:
   [Result][com.eignex.kumulant.core.Result]. Reads never mutate; call them as
   often as you like.
 - `merge(snapshot)` folds another accumulator's snapshot into this one.
-  Snapshots are the merge unit, not live accumulators — that is what lets
+  Snapshots are the merge unit, not live accumulators; that is what lets
   merge cross a process boundary.
 - `concurrency: Concurrency` records the thread-safety contract the stat was
   built for; see [com.eignex.kumulant.core.Concurrency].
@@ -47,21 +47,21 @@ API docs.
 
 ## What's in the library
 
-- [com.eignex.kumulant.core] — the [Stat][com.eignex.kumulant.core.Stat] and
+- [com.eignex.kumulant.core]; the [Stat][com.eignex.kumulant.core.Stat] and
   [Result][com.eignex.kumulant.core.Result] interfaces, the
   [Concurrency][com.eignex.kumulant.core.Concurrency] enum, and the
   cross-cutting result traits.
-- [com.eignex.kumulant.stat] — concrete accumulators grouped by family:
+- [com.eignex.kumulant.stat]; concrete accumulators grouped by family:
   `summary`, `quantile`, `cardinality`, `sketch`, `rate`, `decay`,
   `regression` (with `glm/` and `tree/` subfamilies), `score`, `calibration`,
   `anomaly`, `event`, `change`, `forecast`.
-- [com.eignex.kumulant.operation] — composable wrappers that change how a
+- [com.eignex.kumulant.operation]; composable wrappers that change how a
   stat sees its input (filtering, weighting, windowing, sampling, lagging)
   or how it reports its output (folding, transforming, projecting).
-- [com.eignex.kumulant.schema] — typed, named, wire-portable schemas. Declare
+- [com.eignex.kumulant.schema]; typed, named, wire-portable schemas. Declare
   a bag of stats once, materialise it into a live [StatGroup][com.eignex.kumulant.schema.StatGroup],
   encode the schema to wire and rehydrate on the other side.
-- [com.eignex.kumulant.bandit] — multi-armed and contextual bandits built on
+- [com.eignex.kumulant.bandit]; multi-armed and contextual bandits built on
   the same Stat/Result foundation.
 
 ## Conventions

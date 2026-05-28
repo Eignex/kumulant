@@ -18,7 +18,7 @@ import com.eignex.kumulant.stream.welfordMode
 /**
  * Online generalised linear regression by stochastic gradient descent on the canonical
  * [Link]'s negative log-likelihood plus optional [Penalty]. The cheapest of the
- * multivariate regressors — point estimates only, no posterior, fast updates.
+ * multivariate regressors; point estimates only, no posterior, fast updates.
  *
  * The per-coordinate update rule is owned by [optimizer] ([Sgd] / [com.eignex.kumulant.schema.Adagrad] /
  * [com.eignex.kumulant.schema.Rmsprop] / [com.eignex.kumulant.schema.Adam]). The bias has its own
@@ -34,7 +34,7 @@ import com.eignex.kumulant.stream.welfordMode
  * the per-update cost must stay small. Reach for [DiagonalRegressionStat] when uncertainty
  * is needed; for [BayesianRegressionStat] when the full posterior is needed.
  *
- * **Memory:** O([featureSize]) — weights vector, bias, plus optimizer aux state.
+ * **Memory:** O([featureSize]); weights vector, bias, plus optimizer aux state.
  *
  * **Update:** O(nnz(x)) per observation under [Penalty.None]; the L1/L2 paths add
  * lazy-update bookkeeping with the same asymptotic cost.

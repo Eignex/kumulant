@@ -13,12 +13,12 @@ import kotlin.math.abs
  * scalar alongside the analytical reference and the absolute drift.
  *
  * Useful for inspecting how each level trades safety for cost:
- *  - [Concurrency.None] (serial) — establishes the reference.
- *  - [Concurrency.Relaxed] — drift permitted on coupled stats; this report
+ *  - [Concurrency.None] (serial); establishes the reference.
+ *  - [Concurrency.Relaxed]; drift permitted on coupled stats; this report
  *    quantifies it.
- *  - [Concurrency.Strict] — locked; drift should be the same as serial up to
+ *  - [Concurrency.Strict]; locked; drift should be the same as serial up to
  *    floating-point reorder ULPs.
- *  - [Concurrency.HighWrite] — striped adders on JVM; same as Strict for
+ *  - [Concurrency.HighWrite]; striped adders on JVM; same as Strict for
  *    additive stats, drift may appear on non-additive ones.
  *
  * Per-thread workloads are shifted onto disjoint time windows so rate stats that
@@ -31,7 +31,7 @@ fun main() {
     val updatesPerThread = 2_500
     val total = threadCount * updatesPerThread
 
-    println("Concurrency drift report — $threadCount threads × $updatesPerThread updates each ($total total)")
+    println("Concurrency drift report; $threadCount threads × $updatesPerThread updates each ($total total)")
     println(
         "%-32s  %-10s  %18s  %18s  %14s  %14s".format(
             "stat", "level", "snapshot", "reference", "abs drift", "rel drift",

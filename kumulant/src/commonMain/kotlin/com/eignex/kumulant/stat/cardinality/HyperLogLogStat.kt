@@ -37,11 +37,11 @@ data class HyperLogLogResult(val estimate: Double, val precision: Int, val regis
  * (~ 0.81% at the default `precision = 14`). 64-bit hashing makes the original
  * HLL large-range correction unnecessary.
  *
- * This is plain HLL with the standard small-range linear-counting fix — *not*
+ * This is plain HLL with the standard small-range linear-counting fix; *not*
  * HLL++. The Heule et al. (2013) empirical bias-correction tables are not
  * implemented; empirically, with SplitMix64 prehashing the medium-range bias
  * stays inside `1.04/sqrtm` across `m ... 5*m` (see the accuracy test in
- * `HyperLogLogTest`). The sparse representation is also omitted — the
+ * `HyperLogLogTest`). The sparse representation is also omitted; the
  * linear-counting fallback already gives near-exact estimates at low
  * cardinalities.
  *
@@ -55,7 +55,7 @@ data class HyperLogLogResult(val estimate: Double, val precision: Int, val regis
  *
  * **Concurrency:** Per-register single-cell CAS-max loop on a striped Long
  * array; `totalSeen` is a separate atomic add. Lock-free and exact under
- * every [Concurrency] level — racing writers on the same register preserve
+ * every [Concurrency] level; racing writers on the same register preserve
  * the max-over-incoming-rho invariant via CAS retry.
  */
 class HyperLogLogStat(

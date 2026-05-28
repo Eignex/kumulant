@@ -28,7 +28,7 @@ of state changes and timestamps rather than numeric aggregates.
   current run and the longest observed run.
 
 - **CrossingStat** when the useful signal is "how active is this around
-  a threshold" — zero-crossings of a centred series, threshold-touch
+  a threshold"; zero-crossings of a centred series, threshold-touch
   counts on an SLO, transitions through any level. Reports up-crossings
   and down-crossings separately.
 
@@ -59,6 +59,6 @@ of state changes and timestamps rather than numeric aggregates.
 [CrossingStat] and [RecencyStat] keep a single coupled "previous value
 + counter" pair, locked under [com.eignex.kumulant.core.Concurrency.Strict]
 and [com.eignex.kumulant.core.Concurrency.HighWrite]. [ExcursionStat]
-and [RunLengthStat] track coupled peak/trough or run/longest cells —
+and [RunLengthStat] track coupled peak/trough or run/longest cells;
 also locked. [SojournStat] keeps per-state weight cells plus a current-
 state cell; the state cell is the coupled piece.

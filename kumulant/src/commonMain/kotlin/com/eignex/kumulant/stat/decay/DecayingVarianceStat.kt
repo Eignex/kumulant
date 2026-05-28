@@ -43,13 +43,13 @@ data class DecayingVarianceResult(
  * variance for control charts). Reach for this over [com.eignex.kumulant.stat.summary.VarianceStat] when older
  * observations should fade.
  *
- * **Memory:** O(1) — landmark + three doubles plus a lock.
+ * **Memory:** O(1); landmark + three doubles plus a lock.
  *
  * **Update:** O(1) per observation; one `exp()` decay + Welford increment.
  *
  * **Concurrency:** Body locked under any concurrent [Concurrency] level
  * (no-op under [Concurrency.None]). The multi-cell decay-then-Welford
- * transition cannot survive lock-free CAS — see *Why locked under Relaxed*
+ * transition cannot survive lock-free CAS; see *Why locked under Relaxed*
  * below. Exact under every level up to floating-point reorder ULPs.
  */
 class DecayingVarianceStat(

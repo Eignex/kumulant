@@ -124,7 +124,7 @@ class StandaloneBanditExtraTest {
 
     @Test
     fun `Knn uses custom distance function`() {
-        // Custom distance: always returns 1 — every point looks equidistant.
+        // Custom distance: always returns 1; every point looks equidistant.
         val b = KnnContextualBandit(
             nbrArms = 2,
             k = 2,

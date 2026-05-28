@@ -16,7 +16,7 @@ private const val LOG_LOSS_EPS: Double = 1e-15
  * **Use cases:** regression model evaluation, online MSE tracking on
  * forecasts. Pair with [MaeLossStat] for an L1 view of the same residuals.
  *
- * **Memory:** O(1) — backed by a [MeanStat].
+ * **Memory:** O(1); backed by a [MeanStat].
  *
  * **Update:** O(1) per paired observation.
  *
@@ -44,7 +44,7 @@ class MseLossStat(override val concurrency: Concurrency = Concurrency.None) : Pa
  * **Use cases:** robust regression-error monitoring (less penalising of
  * outliers than MSE). Pair with [MseLossStat] for both views.
  *
- * **Memory:** O(1) — backed by a [MeanStat].
+ * **Memory:** O(1); backed by a [MeanStat].
  *
  * **Update:** O(1) per paired observation.
  *
@@ -71,11 +71,11 @@ class MaeLossStat(override val concurrency: Concurrency = Concurrency.None) : Pa
  * Predictions are clamped into `[1e-15, 1 - 1e-15]` before taking logs to avoid
  * `±inf` on perfectly confident wrong predictions.
  *
- * **Use cases:** classifier evaluation — strictly proper scoring rule that
+ * **Use cases:** classifier evaluation; strictly proper scoring rule that
  * heavily penalises confident-and-wrong predictions. Pair with
  * [BrierScoreStat] for the bounded counterpart.
  *
- * **Memory:** O(1) — backed by a [MeanStat].
+ * **Memory:** O(1); backed by a [MeanStat].
  *
  * **Update:** O(1) per paired observation.
  *

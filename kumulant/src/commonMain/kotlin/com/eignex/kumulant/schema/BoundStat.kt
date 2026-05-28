@@ -5,7 +5,7 @@ import com.eignex.kumulant.core.Stat
 
 /**
  * Pairs a [StatKey] with the live [Stat] that produces results for that slot.
- * The combination is what a [StatGroup] / `ListStats` actually holds — the key
+ * The combination is what a [StatGroup] / `ListStats` actually holds; the key
  * for typed lookup, the stat for accumulation. Carries three type parameters
  * so the key's [R] / [S] / [K] match without erasure shenanigans at the
  * call site:
@@ -16,7 +16,7 @@ import com.eignex.kumulant.core.Stat
  *   accept mismatched modalities at construction.
  * - [K] is the key's own type ([StatKey] / [GroupStatKey]).
  *
- * Most callers don't construct [BoundStat] by hand — the [StatSchema]
+ * Most callers don't construct [BoundStat] by hand; the [StatSchema]
  * declarators ([StatSchema.series], [StatSchema.paired], etc.) produce them.
  * Direct construction is useful when bypassing the schema for ad-hoc groups.
  */
@@ -44,7 +44,7 @@ interface GroupedStat : Stat<GroupResult>
  * ad-hoc groups: `BoundStat(StatKey(name), value)` with type inference.
  *
  * Prefer the [StatSchema] declarators when registering stats at schema
- * construction time — they produce typed [StatKey]s as delegate properties
+ * construction time; they produce typed [StatKey]s as delegate properties
  * for compile-time-safe lookup.
  */
 fun <R : Result, S : Stat<R>> stat(name: String, value: S): BoundStat<R, S, StatKey<R>> =
@@ -53,14 +53,14 @@ fun <R : Result, S : Stat<R>> stat(name: String, value: S): BoundStat<R, S, Stat
 /**
  * Build a [BoundStat] from an existing [StatKey] and a live stat. Used when
  * the key was created elsewhere (e.g. via a [StatSchema] declarator) and you
- * want to pair it with a specific live instance — common in tests and in
+ * want to pair it with a specific live instance; common in tests and in
  * materializer code paths.
  */
 fun <R : Result, S : Stat<R>, K : StatKey<R>> stat(key: K, value: S): BoundStat<R, S, K> = BoundStat(key, value)
 
 /**
  * Build a nested-group [BoundStat]. [build] is invoked with [keys] (the
- * sub-schema's key handle) and must return a [GroupedStat] — typically a
+ * sub-schema's key handle) and must return a [GroupedStat]; typically a
  * [StatGroup] constructed against that sub-schema. The resulting [BoundStat]
  * uses a [GroupStatKey] so dotted lookup `result[outerKey][innerKey]`
  * compiles.

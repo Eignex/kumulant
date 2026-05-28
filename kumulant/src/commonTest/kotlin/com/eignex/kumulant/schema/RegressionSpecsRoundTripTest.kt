@@ -150,7 +150,7 @@ class RegressionSpecsRoundTripTest {
     }
 
     @Test fun `foldRegression lifts a series spec into the regression modality`() {
-        // Project Y through the series spec — the inner Sum sees y per update.
+        // Project Y through the series spec; the inner Sum sees y per update.
         val cfg: RegressionStatSpec<SumResult> = Sum.foldRegression(featureSize = 1, project = Y)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>

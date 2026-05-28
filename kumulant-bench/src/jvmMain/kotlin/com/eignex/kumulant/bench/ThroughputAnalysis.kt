@@ -46,7 +46,7 @@ fun main() {
     val recording = if (jfrEnabled) startRecording(jfrPath, jfrProfile) else null
 
     println(
-        "Throughput report — warmup ${warmupMs}ms, measure ${measureMs}ms per cell, $threads worker threads",
+        "Throughput report; warmup ${warmupMs}ms, measure ${measureMs}ms per cell, $threads worker threads",
     )
     if (recording != null) println("JFR recording: ${jfrPath.toAbsolutePath()} (profile=$jfrProfile)")
     println(

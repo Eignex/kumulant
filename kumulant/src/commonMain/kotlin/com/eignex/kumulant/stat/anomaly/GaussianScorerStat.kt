@@ -54,7 +54,7 @@ data class GaussianScoreResult(
  * This matches the River semantics where `score_one(x)` is computed against
  * the post-update state.
  *
- * **Memory:** O(1) — wraps a [VarianceStat].
+ * **Memory:** O(1); wraps a [VarianceStat].
  *
  * **Update:** O(1) per observation.
  *

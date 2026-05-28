@@ -79,7 +79,7 @@ data class IsotonicCalibratorResult(
  * the only added work is the per-read PAV pass and a linear interpolation in
  * [IsotonicCalibratorResult.calibrate].
  *
- * **Memory:** O([numBins]) — three parallel `Double` arrays via
+ * **Memory:** O([numBins]); three parallel `Double` arrays via
  * [ReliabilityStat].
  *
  * **Update:** O(1) per paired observation.

@@ -16,7 +16,7 @@ import com.eignex.kumulant.stream.currentTimeNanos
  *
  * The full lifecycle (`update` / `read` / `merge`) is shown end-to-end below.
  *
- * @param R The result type returned by [read] — always a [Result] subtype.
+ * @param R The result type returned by [read]; always a [Result] subtype.
  *
  * @sample com.eignex.kumulant.samples.basicMeanLifecycle
  */
@@ -44,14 +44,14 @@ interface Stat<R : Result> {
 
     /**
      * Fold another accumulator's snapshot into this one. The unit of merge is
-     * the immutable [Result] — not a live [Stat] — which is what lets the merge
+     * the immutable [Result]; not a live [Stat]; which is what lets the merge
      * cross a process boundary. Many workers track slices of the same stream,
      * call [read] periodically, ship snapshots to a coordinator, and the
      * coordinator merges them in.
      *
      * Most stat families implement merge exactly (Chan-style parallel formulas
      * for Welford, cell-wise additions for histograms, cell-wise max for HLL).
-     * SGD-based regressors merge approximately — they have no second-moment
+     * SGD-based regressors merge approximately; they have no second-moment
      * information for the principled combine. Each stat's KDoc documents its
      * merge semantics.
      */
@@ -59,7 +59,7 @@ interface Stat<R : Result> {
 
     /**
      * Reset the stat to its prior-seeded baseline. Equivalent to constructing
-     * a fresh stat with the same configuration, but in place — keeps the same
+     * a fresh stat with the same configuration, but in place; keeps the same
      * [Concurrency] and any per-stat tunables.
      */
     fun reset()
@@ -83,7 +83,7 @@ interface Stat<R : Result> {
 
     /**
      * Spawn a fresh accumulator with the same configuration. Optionally
-     * override the [Concurrency] — useful for materialising a wire spec at
+     * override the [Concurrency]; useful for materialising a wire spec at
      * a different concurrency level than the source.
      *
      * The returned stat is independent: its state starts at the configured
@@ -94,7 +94,7 @@ interface Stat<R : Result> {
 }
 
 /**
- * Accumulator over a single scalar time series. The default modality — most
+ * Accumulator over a single scalar time series. The default modality; most
  * descriptive statistics ([MeanStat][com.eignex.kumulant.stat.summary.MeanStat],
  * [VarianceStat][com.eignex.kumulant.stat.summary.VarianceStat], the quantile
  * sketches, the rate family, the decay family) implement this shape.
@@ -112,7 +112,7 @@ interface SeriesStat<R : Result> : Stat<R> {
     /**
      * Record an observation at [timestampNanos] with the given [weight].
      * Stats that consume time (rates, decay, windowing) use this as the
-     * ordering signal — pass a monotonic stamp when feeding from a replay log.
+     * ordering signal; pass a monotonic stamp when feeding from a replay log.
      */
     fun update(value: Double, timestampNanos: Long, weight: Double = 1.0)
 
@@ -123,7 +123,7 @@ interface SeriesStat<R : Result> : Stat<R> {
  * Accumulator over a stream of discrete `Long` values. The `Long` carries
  * two interpretations across the family:
  *
- * - **Opaque keys** — cardinality estimators
+ * - **Opaque keys**; cardinality estimators
  *   ([HyperLogLogStat][com.eignex.kumulant.stat.cardinality.HyperLogLogStat]),
  *   heavy-hitter sketches
  *   ([SpaceSavingStat][com.eignex.kumulant.stat.sketch.SpaceSavingStat]),
@@ -133,7 +133,7 @@ interface SeriesStat<R : Result> : Stat<R> {
  *   Hash domain-specific keys through [com.eignex.kumulant.math.hash64] first
  *   so the input carries uniform 64-bit entropy.
  *
- * - **Integer-valued measurements** — Poisson counts, time deltas, integer
+ * - **Integer-valued measurements**; Poisson counts, time deltas, integer
  *   histograms. Here the value is meaningful and arithmetic is applied to it.
  *
  * Each concrete stat documents which interpretation it uses.
@@ -198,7 +198,7 @@ interface PairedStat<R : Result> : Stat<R> {
  * The K-way classifiers
  * ([SoftmaxRegressionStat][com.eignex.kumulant.stat.regression.SoftmaxRegressionStat],
  * [GaussianNaiveBayesStat][com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat])
- * also use this interface — `y` is the class index in `[0, numClasses)`.
+ * also use this interface; `y` is the class index in `[0, numClasses)`.
  */
 interface RegressionStat<R : Result> : Stat<R> {
     /** Number of features expected in `x` on each [update]. Mismatched lengths throw. */

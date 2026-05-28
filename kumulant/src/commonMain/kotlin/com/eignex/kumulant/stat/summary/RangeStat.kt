@@ -27,11 +27,11 @@ data class RangeResult(
  * **Use cases:** observed range / spread monitoring; pairs with quantile stats
  * to confirm coverage of the range under observation.
  *
- * **Memory:** O(1) — two double cells.
+ * **Memory:** O(1); two double cells.
  *
  * **Update:** O(1) per observation (one CAS-min + one CAS-max).
  *
- * **Concurrency:** Two independent CAS-min/CAS-max cells — each exact under
+ * **Concurrency:** Two independent CAS-min/CAS-max cells; each exact under
  * every [Concurrency] level. A `read()` between the two CAS writes of a
  * single update can briefly observe `min > max` on a never-yet-updated stat
  * under heavy contention, but the per-cell guarantees hold.

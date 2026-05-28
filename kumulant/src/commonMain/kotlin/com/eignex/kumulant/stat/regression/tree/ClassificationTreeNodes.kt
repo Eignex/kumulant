@@ -17,7 +17,7 @@ sealed interface ClassificationNode {
     fun findLeaf(row: VectorView): ClassificationLeafNode
 }
 
-/** Split mirror — predicate routes to [pos] or [neg]; [carryover] absorbs orphan
+/** Split mirror; predicate routes to [pos] or [neg]; [carryover] absorbs orphan
  *  aggregates produced by mixed-structure merges or pre-split snapshots. */
 class ClassificationSplitNode(
     /** Predicate routing observations into [pos] (true) or [neg] (false). */
@@ -39,14 +39,14 @@ class ClassificationSplitNode(
         if (split.direction(row)) pos.findLeaf(row) else neg.findLeaf(row)
 }
 
-/** Leaf — owns a per-class count accumulator. */
+/** Leaf; owns a per-class count accumulator. */
 sealed class ClassificationLeafNode : ClassificationNode {
     /** The leaf's class-count accumulator. */
     abstract val arm: SeriesStat<ClassCountsResult>
     final override fun findLeaf(row: VectorView): ClassificationLeafNode = this
 }
 
-/** Frozen leaf — no further splits considered. */
+/** Frozen leaf; no further splits considered. */
 class ClassificationTerminalLeaf(override val arm: SeriesStat<ClassCountsResult>) : ClassificationLeafNode()
 
 /** Audit leaf tracking per-candidate pos/neg class-count accumulators. */
@@ -69,7 +69,7 @@ class ClassificationAuditLeaf(
     val observationsSinceLastCheck: AtomicLong = AtomicLong(0L)
 }
 
-/** Recursive subtree aggregate — for leaves, the arm's snapshot; for splits, the
+/** Recursive subtree aggregate; for leaves, the arm's snapshot; for splits, the
  *  element-wise merge of both children plus any carryover. */
 internal fun ClassificationNode.subtreeAggregate(): ClassCountsResult = when (this) {
     is ClassificationLeafNode -> arm.read(0L)

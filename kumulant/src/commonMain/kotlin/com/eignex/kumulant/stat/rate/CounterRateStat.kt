@@ -25,7 +25,7 @@ import com.eignex.kumulant.stream.welfordMode
  * OS counter readings, replicated request counts). Pair with a Prometheus-style
  * scraper that periodically samples an external counter.
  *
- * **Memory:** O(1) — total delta + start timestamp + `(lastCounter, lastTs)`.
+ * **Memory:** O(1); total delta + start timestamp + `(lastCounter, lastTs)`.
  *
  * **Update:** O(1) per observation under the per-stat lock.
  *
@@ -40,7 +40,7 @@ class CounterRateStat(
     override val concurrency: Concurrency = Concurrency.None,
     /** When `true` (default), a counter decrease is interpreted as a reset and
      *  the new sample value is counted as post-reset progress. Set to `false`
-     *  to drop decreases entirely — the right choice when the underlying
+     *  to drop decreases entirely; the right choice when the underlying
      *  counter never resets and multiple writers may submit samples out of
      *  value order. */
     val treatDecreaseAsReset: Boolean = true,

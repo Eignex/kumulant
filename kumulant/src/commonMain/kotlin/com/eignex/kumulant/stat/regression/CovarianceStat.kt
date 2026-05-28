@@ -56,7 +56,7 @@ data class CovarianceResult(
  * **Use cases:** monitoring joint variability and correlation between two
  * scalar streams (input metric vs output, feature drift detection).
  *
- * **Memory:** O(1) — same as [UnivariateRegressionStat].
+ * **Memory:** O(1); same as [UnivariateRegressionStat].
  *
  * **Update:** O(1) per paired observation.
  *

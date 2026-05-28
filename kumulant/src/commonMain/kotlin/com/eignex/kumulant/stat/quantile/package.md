@@ -14,7 +14,7 @@ back, or constant memory at the cost of accuracy.
 | [HdrHistogramStat] | O(precision · log(range)) | Strictest precision in a bounded range | The value range is known up front (e.g. latencies between 1 µs and 1 hr) and you want guaranteed precision in that range. |
 | [LinearHistogramStat] | O(binCount) | Equal-width bin precision | Meaningful breakpoints are known up front; you want bins that match them directly with no rebucketing on read. |
 | [ReservoirHistogramStat] | O(capacity) | Raw values back | Downstream needs the actual observations (to feed another stat or compute quantities the sketches don't expose). |
-| [FrugalQuantileStat] | O(1) — two variables | Coarse, single-quantile | You can fit only a few bytes per stat and only care about one percentile. |
+| [FrugalQuantileStat] | O(1); two variables | Coarse, single-quantile | You can fit only a few bytes per stat and only care about one percentile. |
 | [ThresholdBucketStat] | O(thresholds) | Caller-supplied edges | You know the meaningful value buckets ahead of time and want per-bucket counts, not a quantile estimate. |
 
 ## Result shapes
@@ -24,7 +24,7 @@ back, or constant memory at the cost of accuracy.
 | [SketchResult] | DDSketch snapshot: log-spaced bin map + precomputed quantiles at the configured probabilities |
 | [QuantileResult] | FrugalQuantileStat single-quantile scalar |
 | [TDigestResult] | t-digest centroids + precomputed quantiles |
-| [SparseHistogramResult] | Parallel `[lowerBounds, upperBounds)` arrays with weights — produced by [HdrHistogramStat], [LinearHistogramStat], and [SketchResult.toSparseHistogram] |
+| [SparseHistogramResult] | Parallel `[lowerBounds, upperBounds)` arrays with weights; produced by [HdrHistogramStat], [LinearHistogramStat], and [SketchResult.toSparseHistogram] |
 | [ReservoirResult] | Bounded reservoir sample of raw values + the sampling weight |
 | [ThresholdBucketResult] | Per-bucket weighted counts over caller-supplied edges |
 
@@ -42,7 +42,7 @@ shared histogram shape).
   addition (same bin layout required).
 - **ReservoirHistogram** merges sample-weighted via reservoir union; the
   result is statistically equivalent to one large reservoir.
-- **FrugalQuantile** does not have a clean merge — it averages the two
+- **FrugalQuantile** does not have a clean merge; it averages the two
   point estimates. Use it for single-stream tracking, not distributed
   aggregation.
 
@@ -50,7 +50,7 @@ shared histogram shape).
 
 Histogram-shaped stats ([DDSketchStat], [HdrHistogramStat],
 [LinearHistogramStat], [ThresholdBucketStat]) decompose updates into a
-single striped atomic increment on the destination bin — exact under
+single striped atomic increment on the destination bin; exact under
 every [com.eignex.kumulant.core.Concurrency] level. [ReservoirHistogramStat]
 and [FrugalQuantileStat] keep coupled state and self-serialise under
 concurrent access. [TDigestStat] self-serialises through its own lock.

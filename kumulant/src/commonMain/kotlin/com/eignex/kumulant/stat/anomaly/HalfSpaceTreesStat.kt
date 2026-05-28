@@ -78,7 +78,7 @@ data class HalfSpaceTreesResult(
     /**
      * Half-Space-Trees anomaly score for [x]. Routes [x] through every tree to a
      * leaf, sums `referenceMass[leaf] * 2^depth` across trees. Higher score
-     * means [x] falls into densely populated regions of the reference window —
+     * means [x] falls into densely populated regions of the reference window;
      * i.e. it looks normal. Lower score flags an anomaly.
      */
     fun score(x: VectorView): Double {
@@ -126,15 +126,15 @@ data class HalfSpaceTreesResult(
  * of pre-built random half-space trees of fixed depth [height]; each internal
  * node picks a random feature and a random threshold from
  * [featureRanges][HalfSpaceTreesStat.featureRanges] at construction. Trees do
- * not grow; the algorithm tracks two mass profiles per leaf — a *reference*
- * window and the *latest* window — and swaps them every [windowSize]
+ * not grow; the algorithm tracks two mass profiles per leaf; a *reference*
+ * window and the *latest* window; and swaps them every [windowSize]
  * observations. The anomaly score is computed from the reference profile.
  *
  * **Use cases:** non-parametric multivariate anomaly detection on streams
  * where the data distribution may shift slowly (reference window keeps the
  * recent profile fresh). Cheap, fully parallel across trees.
  *
- * **Memory:** O([numTrees] * 2^[height]) — two per-leaf mass arrays plus the
+ * **Memory:** O([numTrees] * 2^[height]); two per-leaf mass arrays plus the
  * immutable tree structure.
  *
  * **Update:** O([numTrees] * [height]) per observation (one tree-walk per

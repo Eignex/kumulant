@@ -15,7 +15,7 @@ import kotlin.math.round
  * rows `(NEG_INFINITY, lowerBound)` and `[upperBound, POS_INFINITY)`.
  *
  * **Use cases:** monitoring distributions over a known range with equal-width
- * buckets — calibration plots, probability histograms, anything with a flat
+ * buckets; calibration plots, probability histograms, anything with a flat
  * resolution requirement. Reach for [HdrHistogramStat] for unbounded values
  * with logarithmic resolution.
  *
@@ -25,7 +25,7 @@ import kotlin.math.round
  * atomic add.
  *
  * **Concurrency:** Striped atomic adds on independent bins. Lock-free and
- * exact under every [Concurrency] level — increments commute and bin
+ * exact under every [Concurrency] level; increments commute and bin
  * assignment is deterministic per value.
  */
 class LinearHistogramStat(

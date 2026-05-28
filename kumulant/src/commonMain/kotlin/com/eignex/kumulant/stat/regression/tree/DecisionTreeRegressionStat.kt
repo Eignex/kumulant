@@ -9,7 +9,7 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.random.Random
 
 /**
- * Online VFDT decision-tree regressor — a piecewise-constant predictor over the feature
+ * Online VFDT decision-tree regressor; a piecewise-constant predictor over the feature
  * space, growing on the fly via the Hoeffding bound. Wraps a [RegressionTree] in the kumulant
  * [RegressionStat] contract so it composes with everything that consumes regressors
  * (the bandit family, schemas, op pipelines).
@@ -19,23 +19,23 @@ import kotlin.random.Random
  * [com.eignex.kumulant.stat.regression.RegressionPosterior] (e.g. `MeanTreePosterior`
  * or `ThompsonTreePosterior`) to score arms at choose time.
  *
- * Reward encoding lives at the call site — pre-transform `y` (e.g. `ln(y)`) before
+ * Reward encoding lives at the call site; pre-transform `y` (e.g. `ln(y)`) before
  * [update]. The internal leaf accumulator is fixed to [VarianceStat]'s
  * [WeightedVarianceResult] so the [VarianceReduction] split metric applies.
  *
  * **Use cases:** non-linear regression where the relationship between context
- * and target is piecewise constant or step-like — bandit reward modelling,
+ * and target is piecewise constant or step-like; bandit reward modelling,
  * contextual stratification, anything where linear regression would miss the
  * structure. Reach for [RandomForestRegressionStat] for ensembled diversity.
  *
- * **Memory:** O(nodes · splitCandidates) — a [VarianceStat] per node plus
+ * **Memory:** O(nodes · splitCandidates); a [VarianceStat] per node plus
  * per-audit-leaf candidate accumulators. Bounded by [RegressionTreeConfig.maxNodes].
  *
- * **Update:** O(depth) per observation — a tree walk to the destination leaf,
+ * **Update:** O(depth) per observation; a tree walk to the destination leaf,
  * then an arm update at that leaf. Splits fire at most once every
  * [RegressionTreeConfig.splitPeriod] observations per audit leaf.
  *
- * **Concurrency:** The hot update path touches exactly one accumulator — the
+ * **Concurrency:** The hot update path touches exactly one accumulator; the
  * leaf the observation routes to. Internal split nodes carry no live arm; subtree
  * aggregates (`rootSnapshot`, `TreeSplitResult.value`) are derived by combining
  * descendants at snapshot time. Each leaf arm is a [VarianceStat] honouring
@@ -43,13 +43,13 @@ import kotlin.random.Random
  * Split conversion takes a per-tree lock fired only at split decisions. Predictions
  * (the load-bearing consumer for bandits) are race-free; the root-level aggregate
  * `TreeRegressionResult.totalWeights` / `rootMean` is best-effort under concurrent
- * growth and may drift by a few ULPs of the workload — single-threaded runs are
+ * growth and may drift by a few ULPs of the workload; single-threaded runs are
  * exact. See [RegressionTree] for the full concurrency design.
  */
 class DecisionTreeRegressionStat(
     override val featureSize: Int,
     /** Candidate splits considered at every audit leaf. Pass an empty list to disable
-     *  growth — the regressor then degenerates to a single global accumulator. */
+     *  growth; the regressor then degenerates to a single global accumulator. */
     val splitCandidates: List<Split>,
     /** Tunables shared with the underlying [RegressionTree]. */
     val config: RegressionTreeConfig = RegressionTreeConfig(),

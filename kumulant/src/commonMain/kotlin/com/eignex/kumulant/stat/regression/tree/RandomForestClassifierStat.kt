@@ -13,7 +13,7 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
- * Online random-forest classifier — the classification counterpart of
+ * Online random-forest classifier; the classification counterpart of
  * [RandomForestRegressionStat]. Same diversity tricks (Oza & Russell bagging,
  * per-leaf mtry), but per-tree leaves are [ClassCountsResult] and ensemble
  * predictions average per-class probabilities across trees.

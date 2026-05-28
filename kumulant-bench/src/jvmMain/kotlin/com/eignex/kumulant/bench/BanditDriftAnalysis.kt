@@ -15,7 +15,7 @@ import kotlin.random.Random
  *
  * The reported drift is `|concurrentTotalReward - serialTotalReward|`. The
  * intent is "does the bandit stay behaviourally consistent under contention",
- * not bit-for-bit equality — the choose path is randomised and order-sensitive.
+ * not bit-for-bit equality; the choose path is randomised and order-sensitive.
  *
  * Driven by these system properties (all optional):
  *  - `bench.threads`        worker thread count, default 4

@@ -87,9 +87,9 @@ data class SeasonalSmoothingResult(
  * **Use cases:** short-horizon forecasting of streams with a recurring cycle on top
  * of a level and trend; pairs with [HoltStat] when no seasonal component is present.
  *
- * **Memory:** O(period) — three scalar cells plus a season array plus a lock.
+ * **Memory:** O(period); three scalar cells plus a season array plus a lock.
  *
- * **Update:** O(1) — single seasonal slot touched per update.
+ * **Update:** O(1); single seasonal slot touched per update.
  *
  * **Concurrency:** Order-dependent recurrence, same model as [HoltStat] and
  * [com.eignex.kumulant.stat.decay.EwmaMeanStat]. [Concurrency.Strict] and

@@ -11,7 +11,7 @@ import kotlin.time.DurationUnit
  * Result trait for accumulators that produce a normalised throughput. Implemented
  * by [com.eignex.kumulant.stat.rate.RateResult] (and friends), so downstream code
  * written against [HasRate] works for any rate-shaped stat regardless of the
- * underlying mechanism — uniform-over-window
+ * underlying mechanism; uniform-over-window
  * ([com.eignex.kumulant.stat.rate.RateStat]), counter-differentiated
  * ([com.eignex.kumulant.stat.rate.CounterRateStat]), or exponentially-decayed
  * ([com.eignex.kumulant.stat.rate.DecayingRateStat]).
@@ -44,10 +44,10 @@ interface HasRate : Result {
  * came from.
  */
 interface HasCenterScale : Result {
-    /** Center of the distribution — typically a mean, median, or smoothed level. */
+    /** Center of the distribution; typically a mean, median, or smoothed level. */
     val center: Double
 
-    /** Scale of the distribution — typically a standard deviation, MAD, or span. */
+    /** Scale of the distribution; typically a standard deviation, MAD, or span. */
     val scale: Double
 }
 
@@ -58,7 +58,7 @@ interface HasCenterScale : Result {
  *
  * Implemented by [com.eignex.kumulant.stat.summary.RangeResult] and
  * [com.eignex.kumulant.stat.summary.SummaryResult]. The pair of `(min, max)`
- * extents that come back are over the entire observed stream — windowed views
+ * extents that come back are over the entire observed stream; windowed views
  * come from wrapping the underlying stat in a `windowed` operator.
  */
 interface HasMinMax : Result {
@@ -112,11 +112,11 @@ interface HasSampleVariance : Result {
 
 /**
  * Result trait for accumulators that expose third and fourth central moments
- * plus skewness and kurtosis. Extends [HasSampleVariance] — every shape moment
+ * plus skewness and kurtosis. Extends [HasSampleVariance]; every shape moment
  * result is also a variance result.
  *
  * Implemented by [com.eignex.kumulant.stat.summary.MomentsResult]. Use it when
- * the *shape* of the distribution matters — heavy tails (kurtosis), asymmetry
+ * the *shape* of the distribution matters; heavy tails (kurtosis), asymmetry
  * (skewness), departures from normality in general.
  *
  * Biased ([skewness], [kurtosis]) and unbiased ([unbiasedSkewness],
@@ -177,8 +177,8 @@ interface HasShapeMoments : HasSampleVariance {
 /**
  * Result trait for accumulators that produce a fitted linear model
  * `y = bias + weights . x`. Covers both the univariate special case
- * ([HasSlope] — slope + intercept) and the multivariate case
- * ([com.eignex.kumulant.stat.regression.glm.LinearRegressionResult] — `weights`
+ * ([HasSlope]; slope + intercept) and the multivariate case
+ * ([com.eignex.kumulant.stat.regression.glm.LinearRegressionResult]; `weights`
  * vector + scalar `bias`) behind one surface.
  *
  * Consumers written against [HasLinearModel] handle any linear model
@@ -243,7 +243,7 @@ interface HasSlope : HasLinearModel {
  *
  * Implemented by [com.eignex.kumulant.stat.regression.glm.LinearRegressionResult].
  * Consumers asking for `HasRegression` don't care which underlying regressor
- * produced the snapshot — SGD, Bayesian, diagonal, or hierarchical all
+ * produced the snapshot; SGD, Bayesian, diagonal, or hierarchical all
  * surface the same `sse / mse / rmse / rSquared` metrics.
  *
  * Under non-identity GLMs ([Link.Logit][com.eignex.kumulant.stat.regression.glm.Link.Logit],

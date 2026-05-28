@@ -8,8 +8,8 @@ two complementary mappings that fix it.
 
 | Stat | Role | Mapping |
 |------|------|---------|
-| [ReliabilityStat] | **Diagnostic.** Bins `(predicted, observed)` pairs into per-bin reliability tiers; result exposes expected calibration error and the per-bin gap. | No mapping — read the result, plot, or pipe into an alarm. |
-| [PlattCalibratorStat] | **Parametric fix.** Fits `sigmoid(slope * x + intercept)` over `(rawScore, label)`. Two parameters. | Smooth global sigmoid. Right when miscalibration is roughly sigmoidal — the classic SVM / boosted-tree pattern. |
+| [ReliabilityStat] | **Diagnostic.** Bins `(predicted, observed)` pairs into per-bin reliability tiers; result exposes expected calibration error and the per-bin gap. | No mapping; read the result, plot, or pipe into an alarm. |
+| [PlattCalibratorStat] | **Parametric fix.** Fits `sigmoid(slope * x + intercept)` over `(rawScore, label)`. Two parameters. | Smooth global sigmoid. Right when miscalibration is roughly sigmoidal; the classic SVM / boosted-tree pattern. |
 | [IsotonicCalibratorStat] | **Non-parametric fix.** Bins raw scores; runs Pool Adjacent Violators at read time to produce a monotone step function. | Arbitrary monotone shape with linear interpolation between bin midpoints. Right when miscalibration has a non-sigmoidal pattern (kinks, plateaus, asymmetric tails). |
 
 ## The diagnostic → fix workflow
@@ -29,7 +29,7 @@ Standard pipeline:
 
 ## Reuse with ReliabilityStat
 
-[IsotonicCalibratorStat] is built on top of [ReliabilityStat] — the
+[IsotonicCalibratorStat] is built on top of [ReliabilityStat]; the
 binned `(positives, total)` book-keeping is exactly what
 [ReliabilityResult] already exposes. The PAV pass is purely a `read`
 post-process; updates remain `O(1)`. If you already have a
@@ -38,10 +38,10 @@ post-process; updates remain `O(1)`. If you already have a
 
 ## Merge support
 
-[ReliabilityStat] merges per-bin sums element-wise — safe across
+[ReliabilityStat] merges per-bin sums element-wise; safe across
 parallel workers. [PlattCalibratorStat] merges sample-weighted weight
 vectors via the inner [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat]
-— same approximation as any SGD merge. [IsotonicCalibratorStat] does
+; same approximation as any SGD merge. [IsotonicCalibratorStat] does
 not support merge directly; the result only carries the threshold step
 function, not the bin layout. To pool isotonic calibration across
 workers, merge the underlying [ReliabilityStat] and re-derive.

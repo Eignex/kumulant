@@ -118,7 +118,7 @@ data class GaussianNaiveBayesResult(
  * useful as a baseline against [SoftmaxRegressionStat] or as a fallback for
  * sparse / high-cardinality feature spaces where SGD is slow to converge.
  *
- * **Memory:** O([numClasses] * [featureSize]) — three flat cells per (class,
+ * **Memory:** O([numClasses] * [featureSize]); three flat cells per (class,
  * feature) pair (mean, M2, totalWeights), plus a per-class weight.
  *
  * **Update:** O([featureSize]) per observation (dense; sparse cost is the same

@@ -18,7 +18,7 @@ import kotlin.random.Random
  * Templates are independent and any subset may be null:
  *
  *  - [chooseTemplate] sees `update(x = context, y = armIndex.toDouble(), weight = 1.0)`
- *    at every `choose`. Models the bandit's *policy* — the distribution of arm
+ *    at every `choose`. Models the bandit's *policy*; the distribution of arm
  *    selections as a function of context.
  *  - [updateJointTemplate] sees `update(x = [armIndex.toDouble()] ++ context,
  *    y = reward, weight)` at every `update`. Joint reward model with the chosen
@@ -30,11 +30,11 @@ import kotlin.random.Random
  *    `featureSize` must equal `contextFeatureSize`.
  *  - [updateArmRewardTemplate] sees `update(x = armIndex.toDouble(),
  *    y = reward, weight)` at every `update`. Per-arm reward distribution
- *    expressed as a paired stat — covariance, correlation, or per-arm slope.
+ *    expressed as a paired stat; covariance, correlation, or per-arm slope.
  *
  * The wrapper itself only satisfies [ContextualBandit]; the underlying bandit is
- * exposed as [inner] typed `B` so callers reach extra interfaces — `snapshot()`,
- * `armResult`, `evaluate(i, x)` — through `tracked.inner.<method>` without losing
+ * exposed as [inner] typed `B` so callers reach extra interfaces; `snapshot()`,
+ * `armResult`, `evaluate(i, x)`; through `tracked.inner.<method>` without losing
  * static type information.
  */
 class TrackedContextualBandit<B : ContextualBandit>(

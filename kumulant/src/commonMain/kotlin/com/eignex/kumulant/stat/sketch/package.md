@@ -27,12 +27,12 @@ first so the input carries uniform 64-bit entropy.
   would blow memory. Counts are biased upward by collisions but exact
   for heavy items, which is fine for top-K-like questions and rate
   monitoring.
-- **SpaceSaving** when you only need the K heaviest keys — viral URLs,
+- **SpaceSaving** when you only need the K heaviest keys; viral URLs,
   hot database rows, top users. Cheaper than a full map: keeps K
   counters and guarantees that any key whose true frequency exceeds
   the K-th largest is in the retained set.
 - **MinHash** for near-duplicate detection over streams. Standard
-  Jaccard-similarity sketch — two sets' MinHash signatures collide on
+  Jaccard-similarity sketch; two sets' MinHash signatures collide on
   hash `j` with probability equal to their Jaccard index.
 
 ## Merge

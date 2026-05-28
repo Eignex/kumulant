@@ -19,12 +19,12 @@ import com.eignex.kumulant.stream.welfordMode
  * [DecayingMeanStat] when the cadence is irregular and you want a per-sample
  * smoothing factor rather than wall-clock decay.
  *
- * **Memory:** O(1) — two doubles plus a lock.
+ * **Memory:** O(1); two doubles plus a lock.
  *
  * **Update:** O(1) per observation.
  *
  * **Concurrency:** Order-dependent recurrence. Even [Concurrency.Strict]
- * (which locks the body) does **not** reproduce a serial reference value — the
+ * (which locks the body) does **not** reproduce a serial reference value; the
  * lock serialises arrival, not the order of arrival, and the result drifts
  * ~3–10% under contention. [Concurrency.Relaxed] additionally drops the lock,
  * compounding the drift. Use [Concurrency.Strict] when correctness matters

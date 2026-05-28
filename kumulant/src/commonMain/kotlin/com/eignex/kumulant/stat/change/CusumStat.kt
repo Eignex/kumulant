@@ -48,7 +48,7 @@ data class CusumResult(
  * **Use cases:** detecting mean shifts in monitored signals (SPC, change-point
  * alarms on metrics, drift detection on model residuals).
  *
- * **Memory:** O(1) — two cells.
+ * **Memory:** O(1); two cells.
  *
  * **Update:** O(1).
  *

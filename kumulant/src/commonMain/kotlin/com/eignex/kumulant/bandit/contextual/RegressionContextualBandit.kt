@@ -34,8 +34,8 @@ import kotlin.random.Random
  * regardless of arm. Per-arm regressors then fit *residuals* against the
  * global's mean prediction, and arm scoring adds the global's mean back in.
  * The global's mean is read via
- * `posterior.evaluate(globalSnapshot, x, rng, exploration = 0.0)` — i.e. the
- * same posterior at zero exploration — so any regressor whose posterior
+ * `posterior.evaluate(globalSnapshot, x, rng, exploration = 0.0)`; i.e. the
+ * same posterior at zero exploration; so any regressor whose posterior
  * implements `exploration = 0` as mean-prediction (every built-in one does)
  * can be pooled. Caveats are the same as the linear-only version:
  * policy-weighted global bias, approximate joint fit, exploration variance
@@ -52,7 +52,7 @@ import kotlin.random.Random
  * global regressor is a single additional cell.
  *
  * **Memory:** O(nbrArms · regressor-state) plus optional O(regressor-state)
- * for the global. The dominant per-arm term depends on the regressor — e.g.
+ * for the global. The dominant per-arm term depends on the regressor; e.g.
  * `O(featureSize^2)` for Bayesian/LinUCB Gram matrices, `O(featureSize)` for
  * SGD, tree-size-dependent for trees and forests.
  *
@@ -133,7 +133,7 @@ class RegressionContextualBandit<R : Result>(
 
     /**
      * Live per-arm regressor. When pooling is on this fits *residuals against the global
-     * mean*, so its predictions are deltas, not full predictions — use [evaluate] for
+     * mean*, so its predictions are deltas, not full predictions; use [evaluate] for
      * the combined score and [globalSnapshot] for the global's state.
      */
     fun armStat(armIndex: Int): RegressionStat<R> = arms[armIndex]

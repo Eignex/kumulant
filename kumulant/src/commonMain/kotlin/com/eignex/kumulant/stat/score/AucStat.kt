@@ -77,18 +77,18 @@ data class AucResult(
  * Default range is `[0, 1]`, suitable for calibrated probability scores. For
  * raw classifier margins, pass a wider range or pre-sigmoid the score.
  *
- * **Use cases:** binary classifier discrimination monitoring — ranking
+ * **Use cases:** binary classifier discrimination monitoring; ranking
  * quality independent of threshold choice. Pair with [BrierScoreStat] or
  * [LogLossStat] for proper-scoring complements.
  *
- * **Memory:** O([numBins]) — two parallel Long arrays for positives and
+ * **Memory:** O([numBins]); two parallel Long arrays for positives and
  * negatives.
  *
  * **Update:** O(1) per paired observation (one atomic add per bin slot).
  * `read()` is O([numBins]) for the trapezoidal sweep.
  *
  * **Concurrency:** Two independent striped atomic adds per update. Lock-free
- * and exact under every [Concurrency] level — bin assignment is
+ * and exact under every [Concurrency] level; bin assignment is
  * deterministic per score and increments commute. The AUC computation at
  * `read()` is a single-threaded sweep of the bin snapshot.
  */

@@ -33,7 +33,7 @@ data class TreeRegressionResult(
     val rootMean: Double get() = root.value.mean
 }
 
-/** Snapshot of a single tree node — split or leaf. */
+/** Snapshot of a single tree node; split or leaf. */
 @Serializable
 sealed interface TreeNodeResult {
     /** Aggregate over every observation routed through this node. */

@@ -34,7 +34,7 @@ data class RateResult(val startTimestampNanos: Long, val totalValue: Double, val
  * **Use cases:** lifetime throughput (requests/sec since start, total bytes
  * divided by uptime). Pair with `withValue(1.0)` for an event-rate counter.
  *
- * **Memory:** O(1) — total value cell + start timestamp.
+ * **Memory:** O(1); total value cell + start timestamp.
  *
  * **Update:** O(1) per observation; one atomic add plus a CAS-loop-min on the
  * start timestamp (loop terminates immediately on the common path).
@@ -51,7 +51,7 @@ class RateStat(override val concurrency: Concurrency = Concurrency.None) : Serie
     private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MIN_VALUE)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        // CAS-loop-min — a plain compareAndSet(MIN_VALUE, ts) would let an arbitrary
+        // CAS-loop-min; a plain compareAndSet(MIN_VALUE, ts) would let an arbitrary
         // first-arriving thread set the start, not the thread with the earliest ts.
         var current = startTimestampNanos.load()
         while (current == Long.MIN_VALUE || current > timestampNanos) {

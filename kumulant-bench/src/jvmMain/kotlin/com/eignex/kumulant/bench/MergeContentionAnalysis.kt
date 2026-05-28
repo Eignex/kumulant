@@ -17,7 +17,7 @@ import kotlin.math.abs
  * This exercises the `merge` path under contention, separate from
  * [ConcurrencyDriftAnalysis] (which exercises `update`). Stats that are
  * exact on update under [Concurrency.Strict] are not automatically exact on
- * concurrent merge — the merge may touch coupled state with different locking
+ * concurrent merge; the merge may touch coupled state with different locking
  * granularity, and some stat families take merge shortcuts that don't survive
  * interleaving.
  *
@@ -28,7 +28,7 @@ fun main() {
     val updatesPerThread = 2_500
 
     println(
-        "Merge contention report — $threadCount per-thread snapshots merged into a shared stat",
+        "Merge contention report; $threadCount per-thread snapshots merged into a shared stat",
     )
     println(
         "%-32s  %-10s  %18s  %18s  %14s  %14s".format(

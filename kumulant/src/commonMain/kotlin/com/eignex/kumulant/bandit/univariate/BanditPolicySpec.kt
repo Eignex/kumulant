@@ -15,7 +15,7 @@ import kotlinx.serialization.Serializable
  * payload mirrors what a Kotlin reader would type. Construction lives in
  * `BanditFactory`.
  *
- * Specs that take an [Arm] or [Posterior] consume them directly — those
+ * Specs that take an [Arm] or [Posterior] consume them directly; those
  * hierarchies are already sealed-and-`@Serializable` so they round-trip on the
  * wire alongside the policy.
  */

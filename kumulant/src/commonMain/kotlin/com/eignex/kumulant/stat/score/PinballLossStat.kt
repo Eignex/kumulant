@@ -17,7 +17,7 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  * the median-loss / MAE-equivalent, `tau` near 0 or 1 to score tail
  * predictions.
  *
- * **Memory:** O(1) — backed by a [MeanStat].
+ * **Memory:** O(1); backed by a [MeanStat].
  *
  * **Update:** O(1) per paired observation.
  *

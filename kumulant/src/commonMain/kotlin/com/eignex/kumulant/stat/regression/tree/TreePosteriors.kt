@@ -17,13 +17,13 @@ import kotlin.random.Random
  * totalWeights)` triplet:
  *  - [MeanTreePosterior]: deterministic leaf mean.
  *  - [ThompsonTreePosterior]: Normal-Gamma draw built from the leaf's first two
- *    moments — the natural Thompson scheme when leaves accumulate normal-like rewards.
+ *    moments; the natural Thompson scheme when leaves accumulate normal-like rewards.
  *  - [UcbTreePosterior]: UCB-style mean + alpha * sqrt(variance / totalWeights) on
  *    the leaf's sampling-distribution-of-the-mean.
  */
 sealed interface TreePosterior : RegressionPosterior<TreeRegressionResult>
 
-/** Score is the leaf's running mean — point estimate, no exploration. */
+/** Score is the leaf's running mean; point estimate, no exploration. */
 data object MeanTreePosterior : TreePosterior {
     override fun evaluate(snapshot: TreeRegressionResult, x: VectorView, rng: Random, exploration: Double): Double =
         snapshot.findLeaf(x).mean
@@ -32,7 +32,7 @@ data object MeanTreePosterior : TreePosterior {
 /**
  * Thompson sampling over the leaf's Normal-Gamma posterior. Given the leaf's pseudo-
  * count `n`, sample mean `m`, and sample variance `v`, draws are `mu ~ N(m, exploration *
- * v / max(n, 1))` — the posterior on the leaf mean assuming a Normal-Gamma conjugate
+ * v / max(n, 1))`; the posterior on the leaf mean assuming a Normal-Gamma conjugate
  * with weak prior. `exploration = 0.0` collapses to the leaf mean.
  */
 data class ThompsonTreePosterior(
@@ -57,7 +57,7 @@ data class ThompsonTreePosterior(
  * keeps the bound finite at empty leaves.
  */
 data class UcbTreePosterior(
-    /** Pseudo-count added to the leaf's totalWeights — floor for empty leaves. */
+    /** Pseudo-count added to the leaf's totalWeights; floor for empty leaves. */
     val priorWeight: Double = 1.0,
     /** Prior variance used when the leaf has no signal yet. */
     val priorVariance: Double = 1.0,
@@ -83,7 +83,7 @@ data object MeanForestPosterior : ForestPosterior {
 
 /** Forest counterpart to [ThompsonTreePosterior]. */
 data class ThompsonForestPosterior(
-    /** Pseudo-count added to the leaf's totalWeights — floor for empty leaves. */
+    /** Pseudo-count added to the leaf's totalWeights; floor for empty leaves. */
     val priorWeight: Double = 1.0,
     /** Prior variance used when the leaf has no signal yet. */
     val priorVariance: Double = 1.0,
@@ -99,7 +99,7 @@ data class ThompsonForestPosterior(
 
 /** Forest counterpart to [UcbTreePosterior]. */
 data class UcbForestPosterior(
-    /** Pseudo-count added to the leaf's totalWeights — floor for empty leaves. */
+    /** Pseudo-count added to the leaf's totalWeights; floor for empty leaves. */
     val priorWeight: Double = 1.0,
     /** Prior variance used when the leaf has no signal yet. */
     val priorVariance: Double = 1.0,

@@ -19,14 +19,14 @@ data class Exp3ArmResult(
 ) : Result
 
 /**
- * EXP3 (Auer, Cesa-Bianchi, Freund, Schapire 2002) — adversarial multi-armed
+ * EXP3 (Auer, Cesa-Bianchi, Freund, Schapire 2002); adversarial multi-armed
  * bandit over a fixed pool of [nbrArms]. Each round: compute play
  * distribution `p[a] = (1 - gamma) · w[a]/Σw + gamma/K`, sample `a ~ p`, then
  * on reward `r ∈ [0,1]` update `w[a] *= exp(eta · r / p[a])` using the
  * importance-sampling-corrected gain.
  *
  * Regret bound is `O(sqrt(T · K · ln K))` under default tunings. Univariate
- * sibling to [com.eignex.kumulant.bandit.contextual.Exp4Bandit] — same
+ * sibling to [com.eignex.kumulant.bandit.contextual.Exp4Bandit]; same
  * machinery without the expert layer. Standalone class (not a
  * [BanditPolicy] under [MultiArmedBandit]) because its sampling distribution
  * is computed across arms, not by independent-per-arm score + argmax.
@@ -42,18 +42,18 @@ data class Exp3ArmResult(
  * **Arms:** indexless, `nbrArms` fixed at construction; per-arm state is one
  * exponential weight.
  *
- * **Memory:** O(nbrArms) — one weight per arm plus a cached play
+ * **Memory:** O(nbrArms); one weight per arm plus a cached play
  * distribution.
  *
- * **Choose:** O(nbrArms) — build the play distribution, inverse-CDF sample.
+ * **Choose:** O(nbrArms); build the play distribution, inverse-CDF sample.
  *
- * **Update:** O(nbrArms) — rebuilds the play distribution to read `p[arm]`,
+ * **Update:** O(nbrArms); rebuilds the play distribution to read `p[arm]`,
  * then multiplicative weight update on the played arm.
  *
  * **Randomness:** every `choose` consumes one `random.nextDouble()`;
  * reproducible under a fixed seed.
  *
- * **Concurrency:** not thread-safe — weights and the cached play
+ * **Concurrency:** not thread-safe; weights and the cached play
  * distribution are mutated without synchronisation. Serialise `choose` and
  * `update` externally for multi-thread use.
  */
@@ -123,7 +123,7 @@ class Exp3Bandit(
         require(other.size == nbrArms) {
             "merge: other.size=${other.size} does not match nbrArms=$nbrArms"
         }
-        // No canonical merge for EXP3 weights — multiply elementwise as a coarse pool,
+        // No canonical merge for EXP3 weights; multiply elementwise as a coarse pool,
         // then renormalise. Use for "roughly combine two parallel runs", not principled
         // aggregation.
         for (i in 0 until nbrArms) weights[i] *= other[i].weight

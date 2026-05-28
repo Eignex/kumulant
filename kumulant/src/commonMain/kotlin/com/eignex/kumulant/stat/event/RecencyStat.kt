@@ -33,9 +33,9 @@ data class RecencyResult(
  *
  * **Use cases:** liveness checks, "last seen" diagnostics, staleness detection.
  *
- * **Memory:** O(1) — two cells.
+ * **Memory:** O(1); two cells.
  *
- * **Update:** O(1) — single CAS on a monotonic timestamp cell.
+ * **Update:** O(1); single CAS on a monotonic timestamp cell.
  *
  * **Concurrency:** Per-cell atomics with bounded drift (category 1). Concurrent updates
  * race on [casMax]; the latest timestamp wins.

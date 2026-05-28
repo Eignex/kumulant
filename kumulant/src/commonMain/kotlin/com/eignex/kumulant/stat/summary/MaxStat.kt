@@ -22,11 +22,11 @@ data class MaxResult(
  * **Use cases:** peak observation tracking, headroom checks, range
  * computation (paired with [MinStat] or directly via [RangeStat]).
  *
- * **Memory:** O(1) — a single double cell.
+ * **Memory:** O(1); a single double cell.
  *
  * **Update:** O(1) per observation.
  *
- * **Concurrency:** Single-cell CAS-max loop — exact under every
+ * **Concurrency:** Single-cell CAS-max loop; exact under every
  * [Concurrency] level. The CAS retry naturally serialises racing writers
  * without a lock.
  */

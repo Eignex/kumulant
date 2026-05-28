@@ -10,7 +10,7 @@ import kotlin.math.abs
  * reference and the absolute/relative error.
  *
  * This is the canonical "how close is the online estimator to the closed-form
- * answer" sweep — useful for inspecting the bias-vs-cost tradeoff on sketches
+ * answer" sweep; useful for inspecting the bias-vs-cost tradeoff on sketches
  * (HyperLogLog standard error, t-digest centroid error, etc.) and for spotting
  * regressions in deterministic stats (Sum, Mean, Variance).
  *
@@ -20,7 +20,7 @@ fun main() {
     val n = 5_000
     val seed = 0xC0FFEE.toInt()
 
-    println("Accuracy report — $n updates, seed=0x${seed.toString(16)}, Concurrency.None")
+    println("Accuracy report; $n updates, seed=0x${seed.toString(16)}, Concurrency.None")
     println(
         "%-32s  %18s  %18s  %14s  %14s".format(
             "stat", "snapshot", "reference", "abs error", "rel error",

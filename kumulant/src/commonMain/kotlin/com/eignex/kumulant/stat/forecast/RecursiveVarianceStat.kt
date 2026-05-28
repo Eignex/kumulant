@@ -34,7 +34,7 @@ data class RecursiveVarianceResult(
  * **Use cases:** generalised variance / volatility recursion; any application that
  * wants the bare three-coefficient form rather than the EWMA special case.
  *
- * **Memory:** O(1) — one double cell.
+ * **Memory:** O(1); one double cell.
  *
  * **Update:** O(1) per observation via a single-cell CAS loop.
  *

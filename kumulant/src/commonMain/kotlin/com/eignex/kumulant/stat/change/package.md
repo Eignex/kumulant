@@ -39,7 +39,7 @@ detector to track the current one without explicit reset.
 ## Output
 
 All three produce a result with the running running statistic plus an
-`alarm: Boolean` field. The alarm doesn't auto-reset — caller decides
+`alarm: Boolean` field. The alarm doesn't auto-reset; caller decides
 what to do (page, reset the stat, write to an event store). Repeated
 alarm reads return the same value until the underlying statistic falls
 back below threshold.

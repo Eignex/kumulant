@@ -16,8 +16,8 @@ import kotlin.math.sqrt
  * (Adam's first/second moments, Adagrad's running squared gradient, etc.).
  *
  * Lifecycle, called by the host stat once per `update`:
- *  1. [advance] — bump per-update counters (Adam's step `t`).
- *  2. For each touched coordinate, [computeDelta] — return the weight delta.
+ *  1. [advance]; bump per-update counters (Adam's step `t`).
+ *  2. For each touched coordinate, [computeDelta]; return the weight delta.
  *  3. The host stat applies the delta to its weight cell.
  *
  * Stateless optimizers (`Sgd`) ignore [advance]. Concurrency: per-coordinate

@@ -38,15 +38,15 @@ import com.eignex.kumulant.stream.serializedLock
  *    threshold scaled by `eta * weight * lambda / precision_i`.
  *
  * **Use cases:** high-dimensional online regression where marginal posteriors
- * suffice (per-coordinate uncertainty without joint covariance) — sparse
+ * suffice (per-coordinate uncertainty without joint covariance); sparse
  * feature spaces, click-prediction style models. Reach for
  * [BayesianRegressionStat] when feature correlations matter; for
  * [StochasticRegressionStat] when SGD's even-cheaper per-update cost is
  * required.
  *
- * **Memory:** O([featureSize]) — weights + per-coord precisions + bias pair.
+ * **Memory:** O([featureSize]); weights + per-coord precisions + bias pair.
  *
- * **Update:** O(nnz(x)) per observation — sparse-aware over the touched
+ * **Update:** O(nnz(x)) per observation; sparse-aware over the touched
  * coordinates of `x` rather than the full feature width.
  *
  * **Concurrency:** Body serialised by an internal lock under any concurrent

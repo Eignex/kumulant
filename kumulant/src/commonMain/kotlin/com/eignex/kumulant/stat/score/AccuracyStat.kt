@@ -14,7 +14,7 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  * [ConfusionMatrixStat]; this stat is the O(1)-memory shortcut when only the
  * scalar accuracy is needed.
  *
- * **Memory:** O(1) — backed by a [MeanStat].
+ * **Memory:** O(1); backed by a [MeanStat].
  *
  * **Update:** O(1) per paired observation.
  *

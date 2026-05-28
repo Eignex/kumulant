@@ -15,21 +15,21 @@ import com.eignex.kumulant.stream.welfordMode
  * Treats observations as unweighted (one unit step per update regardless of
  * weight); scaling the step by raw weight would let a single high-weight
  * observation overshoot the target catastrophically. [merge] averages two
- * estimates as a coarse approximation — frugal sketches do not admit a true
+ * estimates as a coarse approximation; frugal sketches do not admit a true
  * associative combine.
  *
  * **Use cases:** memory-constrained tracking of a single quantile with no
- * accuracy guarantee — IoT-class deployments, debug-only monitoring. For
+ * accuracy guarantee; IoT-class deployments, debug-only monitoring. For
  * production quantile work prefer [DDSketchStat], [TDigestStat], or
  * [HdrHistogramStat].
  *
- * **Memory:** O(1) — one double estimate plus a lock.
+ * **Memory:** O(1); one double estimate plus a lock.
  *
  * **Update:** O(1) per observation.
  *
  * **Concurrency:** Order-dependent random-walk recurrence.
  * [Concurrency.Strict] and [Concurrency.HighWrite] lock each step but do not
- * reproduce a serial reference value — the lock serialises arrival, not
+ * reproduce a serial reference value; the lock serialises arrival, not
  * order. [Concurrency.Relaxed] additionally drops the lock; the single-cell
  * estimate races but stays bounded. Bench reports ~15% absolute error on a
  * `q = 0.5` uniform stream regardless of level.

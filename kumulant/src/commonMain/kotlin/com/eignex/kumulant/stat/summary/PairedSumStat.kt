@@ -34,11 +34,11 @@ data class PairedSumResult(
  * **Use cases:** gradient/Hessian aggregation in histogram boosting (one leaf
  * accumulates `(Sum g, Sum h, n)`), or any two-axis additive flow.
  *
- * **Memory:** O(1) — three double cells.
+ * **Memory:** O(1); three double cells.
  *
  * **Update:** O(1) per observation (three atomic adds).
  *
- * **Concurrency:** Three independent atomic adds per update — exact under
+ * **Concurrency:** Three independent atomic adds per update; exact under
  * every [Concurrency] level. A `read()` interleaved between the writes of a
  * single update can briefly observe partially-applied state, but the per-cell
  * guarantees hold. [Concurrency.HighWrite] switches the cells to striped

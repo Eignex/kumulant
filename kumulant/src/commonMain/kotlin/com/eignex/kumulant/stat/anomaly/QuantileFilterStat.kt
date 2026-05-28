@@ -39,7 +39,7 @@ data class QuantileFilterResult(
  * assumption) or when the metric of interest is "is `x` in the tail of what
  * we've seen?".
  *
- * **Memory:** O(1 / `relativeError`) — backed by a single-probability DDSketch.
+ * **Memory:** O(1 / `relativeError`); backed by a single-probability DDSketch.
  *
  * **Update:** O(1) per observation (one striped bin increment).
  *

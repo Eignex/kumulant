@@ -12,11 +12,11 @@ fit either subfamily, plus the strategy types both rely on.
 | Stat | Modality | Role |
 |------|----------|------|
 | [CovarianceStat] | Paired | Weighted covariance and Pearson correlation between two streams. The building block for both univariate and multivariate regressions. |
-| [SoftmaxRegressionStat] | Regression | Online multinomial logistic regression — K-way classification via softmax cross-entropy. Generalises the GLM with `Link.Logit` from binary to K-way. |
+| [SoftmaxRegressionStat] | Regression | Online multinomial logistic regression; K-way classification via softmax cross-entropy. Generalises the GLM with `Link.Logit` from binary to K-way. |
 | [GaussianNaiveBayesStat] | Regression | Per-class running Welford mean / variance of each feature plus class priors. The cheap non-parametric multiclass classifier. |
 
 Softmax and Naive Bayes implement [com.eignex.kumulant.core.RegressionStat]
-because that interface gives them `update(VectorView, Double)` — the
+because that interface gives them `update(VectorView, Double)`; the
 scalar `y` is the class index. Strictly they are classifiers, not
 regressors, but they share the input shape and the result is consumed
 the same way (a posterior over classes plus calibration / accuracy
@@ -30,14 +30,14 @@ metrics).
 multinomial linear models share. The runtime API has four
 implementations:
 
-- [SgdOptimizer] — stateless; `delta = -lr * weight * gradient`.
-- [AdagradOptimizer] — accumulates squared gradients per coordinate.
-- [RmspropOptimizer] — exponential moving average of squared gradients.
-- [AdamOptimizer] — bias-corrected first and second moments
+- [SgdOptimizer]; stateless; `delta = -lr * weight * gradient`.
+- [AdagradOptimizer]; accumulates squared gradients per coordinate.
+- [RmspropOptimizer]; exponential moving average of squared gradients.
+- [AdamOptimizer]; bias-corrected first and second moments
   (Kingma & Ba 2015).
 
 Wire-portable counterparts live in
-[com.eignex.kumulant.schema.OptimizerSpec] —
+[com.eignex.kumulant.schema.OptimizerSpec];
 [com.eignex.kumulant.schema.Sgd], [com.eignex.kumulant.schema.Adagrad],
 [com.eignex.kumulant.schema.Rmsprop], [com.eignex.kumulant.schema.Adam].
 Stats accept the spec and materialise their own optimizer instances
@@ -56,18 +56,18 @@ consume posteriors at choose time.
 Concrete posteriors live with their model families:
 
 - [com.eignex.kumulant.stat.regression.glm.LinearPosterior] for linear
-  models — [PointPosterior][com.eignex.kumulant.stat.regression.glm.PointPosterior],
+  models; [PointPosterior][com.eignex.kumulant.stat.regression.glm.PointPosterior],
   [FactorisedGaussian][com.eignex.kumulant.stat.regression.glm.FactorisedGaussian],
   [MultivariateGaussian][com.eignex.kumulant.stat.regression.glm.MultivariateGaussian],
   [LinUcb][com.eignex.kumulant.stat.regression.glm.LinUcb].
-- `TreePosterior` and `ForestPosterior` for trees — see
+- `TreePosterior` and `ForestPosterior` for trees; see
   [com.eignex.kumulant.stat.regression.tree].
 
 The posterior interface is intentionally minimal so a downstream
 contextual bandit can mix-and-match: one bandit might score arms with a
 GLM under [LinUcb][com.eignex.kumulant.stat.regression.glm.LinUcb] and
 another with a forest under
-`ThompsonForestPosterior` — same code path, different model and
+`ThompsonForestPosterior`; same code path, different model and
 scoring rule.
 
 ## When to reach into which subfamily

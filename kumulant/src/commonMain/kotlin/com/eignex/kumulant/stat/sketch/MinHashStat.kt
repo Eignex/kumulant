@@ -61,7 +61,7 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
  *
  * Standard error of the Jaccard estimate is roughly `1 / sqrt(numHashes)`.
  *
- * **Use cases:** set-similarity estimation under bounded memory — near-duplicate
+ * **Use cases:** set-similarity estimation under bounded memory; near-duplicate
  * detection, recommender-style "users who like X also like Y", clustering
  * coarse buckets via locality-sensitive hashing.
  *
@@ -71,7 +71,7 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
  * followed by a CAS-min loop.
  *
  * **Concurrency:** Per-slot single-cell CAS-min loop on an atomic Long array.
- * Lock-free and exact under every [Concurrency] level — min over an unordered
+ * Lock-free and exact under every [Concurrency] level; min over an unordered
  * set is the same regardless of writer order.
  */
 class MinHashStat(

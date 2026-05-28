@@ -10,9 +10,9 @@ import kotlin.random.Random
  * trees, and any future regressor type:
  *
  *  - For linear models the score is `bias + x . sample(weights)` (Thompson) or
- *    `bias + alpha * sqrt(xT * Sigma * x)` (UCB) — see [com.eignex.kumulant.stat.regression.glm.LinearPosterior].
+ *    `bias + alpha * sqrt(xT * Sigma * x)` (UCB); see [com.eignex.kumulant.stat.regression.glm.LinearPosterior].
  *  - For tree models the snapshot is routed via `findLeaf(x)` and the leaf's
- *    weighted-variance summary drives the draw — see the `TreePosterior` family.
+ *    weighted-variance summary drives the draw; see the `TreePosterior` family.
  *
  * Used by [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit] and by Bayesian-
  * optimisation acquisition functions that need to score candidate points.

@@ -41,7 +41,7 @@ data class SojournResult(
  * **Use cases:** uptime / availability breakdowns by state, dwell-time
  * accounting, transition counters.
  *
- * **Memory:** O(states) — three arrays of length `states.size` plus a handful of cells.
+ * **Memory:** O(states); three arrays of length `states.size` plus a handful of cells.
  *
  * **Update:** O(states) on transitions for the [Long]-to-index lookup
  * (linear scan over the declared alphabet); O(1) when the state does not change.

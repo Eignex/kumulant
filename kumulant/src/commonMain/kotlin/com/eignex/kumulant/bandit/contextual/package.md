@@ -1,6 +1,6 @@
 # Package com.eignex.kumulant.bandit.contextual
 
-Contextual bandits — each round comes with a feature vector, and the
+Contextual bandits; each round comes with a feature vector, and the
 reward depends on both the chosen arm and the context. Three families,
 covering linear / non-linear / non-parametric reward models plus the
 adversarial-expert case.
@@ -9,8 +9,8 @@ adversarial-expert case.
 
 | Bandit | Reward model | Reach for it when |
 |--------|--------------|-------------------|
-| [RegressionContextualBandit] | One regression stat per arm; scoring rule is a [com.eignex.kumulant.stat.regression.RegressionPosterior] | The relationship between context and reward is structurally linear / tree-shaped — anything modellable by a [com.eignex.kumulant.stat.regression.glm] or [com.eignex.kumulant.stat.regression.tree] regressor. |
-| [KnnContextualBandit] | Nearest-neighbours over a reservoir of `(context, reward)` pairs per arm | The reward surface is non-parametric and hard to model — kNN lets the data speak directly. Memory grows with the reservoir size; pick when the feature space is low-dimensional and observations are scarce. |
+| [RegressionContextualBandit] | One regression stat per arm; scoring rule is a [com.eignex.kumulant.stat.regression.RegressionPosterior] | The relationship between context and reward is structurally linear / tree-shaped; anything modellable by a [com.eignex.kumulant.stat.regression.glm] or [com.eignex.kumulant.stat.regression.tree] regressor. |
+| [KnnContextualBandit] | Nearest-neighbours over a reservoir of `(context, reward)` pairs per arm | The reward surface is non-parametric and hard to model; kNN lets the data speak directly. Memory grows with the reservoir size; pick when the feature space is low-dimensional and observations are scarce. |
 | [Exp4Bandit] | Adversarial expert mixture | The context is itself a set of expert recommendations (or a hand-crafted distribution over arms) and you want a regret bound that holds without distributional assumptions. |
 
 ## RegressionContextualBandit
@@ -22,17 +22,17 @@ regressor's snapshot into a per-arm score at the round's context.
 
 Common combinations:
 
-- **Linear Thompson sampling** — `BayesianRegressionStat` per arm +
+- **Linear Thompson sampling**; `BayesianRegressionStat` per arm +
   [MultivariateGaussian][com.eignex.kumulant.stat.regression.glm.MultivariateGaussian]
   posterior.
-- **LinUCB** — `BayesianRegressionStat` per arm +
+- **LinUCB**; `BayesianRegressionStat` per arm +
   [LinUcb][com.eignex.kumulant.stat.regression.glm.LinUcb] posterior.
-- **High-dimensional sparse** — `DiagonalRegressionStat` per arm +
+- **High-dimensional sparse**; `DiagonalRegressionStat` per arm +
   [FactorisedGaussian][com.eignex.kumulant.stat.regression.glm.FactorisedGaussian]
   posterior; trades full covariance for per-coordinate uncertainty.
-- **Non-linear** — `RandomForestRegressionStat` per arm +
+- **Non-linear**; `RandomForestRegressionStat` per arm +
   `ThompsonForestPosterior` or `UcbForestPosterior`.
-- **Cheap point estimates** — `StochasticRegressionStat` per arm +
+- **Cheap point estimates**; `StochasticRegressionStat` per arm +
   [PointPosterior][com.eignex.kumulant.stat.regression.glm.PointPosterior]
   (no exploration; pure greedy). Useful when paired with an explicit
   exploration policy like epsilon-greedy at a higher layer.
@@ -56,7 +56,7 @@ Reach for it when:
 
 - The feature space is small (kNN cost scales with reservoir × features).
 - The reward surface is genuinely non-linear and hard to parameterise.
-- Cold-start observations are scarce — kNN starts producing reasonable
+- Cold-start observations are scarce; kNN starts producing reasonable
   scores from a handful of samples per arm.
 
 [KnnArmResult] carries the reservoir as a serializable snapshot, so
@@ -65,7 +65,7 @@ processes.
 
 ## Exp4Bandit
 
-EXP4 — exponential weights with experts. The context isn't a feature
+EXP4; exponential weights with experts. The context isn't a feature
 vector but a per-round distribution over arms supplied by each of K
 experts. EXP4 maintains weights over experts (not arms) and selects an
 arm by mixing the expert distributions according to expert weights.
@@ -79,9 +79,9 @@ the contextual case.
 [ContextualBanditSpec] is the sealed root of wire-portable contextual
 configs:
 
-- [RegressionContextualSpec] — wraps a [LinearRegressionSpec]
+- [RegressionContextualSpec]; wraps a [LinearRegressionSpec]
   (Bayesian / Diagonal / Stochastic) and a posterior choice.
-- [KnnContextualSpec] — reservoir size, distance metric, k, optional
+- [KnnContextualSpec]; reservoir size, distance metric, k, optional
   exploration knob.
 
 Both round-trip through skema-based JSON / CBOR and materialise via

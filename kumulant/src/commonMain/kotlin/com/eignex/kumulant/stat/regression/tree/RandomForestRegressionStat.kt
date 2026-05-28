@@ -15,7 +15,7 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
- * Online random-forest regressor — a population of [RegressionTree]s sharing the candidate-split
+ * Online random-forest regressor; a population of [RegressionTree]s sharing the candidate-split
  * pool. Diversity comes from:
  *
  *  - **Oza & Russell online bagging**: per-tree Poisson(1) reweighting at every update.
@@ -26,14 +26,14 @@ import kotlin.random.Random
  * tree-aware posteriors merge per-tree leaf aggregates at score time.
  *
  * **Use cases:** non-linear contextual regression with built-in variance
- * estimation across trees — the natural backbone for Thompson-sampling
+ * estimation across trees; the natural backbone for Thompson-sampling
  * contextual bandits. Reach for [DecisionTreeRegressionStat] alone when a
  * single tree's predictions suffice and ensembled diversity isn't needed.
  *
- * **Memory:** O([nbrTrees] · single-tree memory) — see
+ * **Memory:** O([nbrTrees] · single-tree memory); see
  * [DecisionTreeRegressionStat]. Heavier but parallelisable.
  *
- * **Update:** O([nbrTrees] · depth) per observation — each tree's update is
+ * **Update:** O([nbrTrees] · depth) per observation; each tree's update is
  * independent. Under [bagging] = true, each tree applies a fresh
  * Poisson(1)-reweighted version of the update.
  *
@@ -154,6 +154,6 @@ data class ForestRegressionResult(
     /** Mean of [findLeafMerged]. */
     fun predict(x: VectorView): Double = findLeafMerged(x).mean
 
-    /** Sum of per-tree root totalWeights — `nbrTrees * underlyingWeight` under bagging. */
+    /** Sum of per-tree root totalWeights; `nbrTrees * underlyingWeight` under bagging. */
     val totalWeights: Double get() = trees.sumOf { it.totalWeights }
 }

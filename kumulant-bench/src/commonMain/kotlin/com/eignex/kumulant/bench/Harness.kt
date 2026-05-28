@@ -41,7 +41,7 @@ class StatSpec<S, R : Result>(
         return scalar(readSnapshot(stat, readAt(n)))
     }
 
-    /** Compute the reference for the same workload — exact-math expected value. */
+    /** Compute the reference for the same workload; exact-math expected value. */
     fun expected(seed: Int, n: Int): Double = reference(updates(seed, n))
 }
 
@@ -68,7 +68,7 @@ fun <R : Result> seriesStatSpec(
 /**
  * Build a spec for a [PairedStat]-shaped stat (covariance, AUC, score losses).
  * The y coordinate is derived from [Update.value] by [deriveY], which defaults
- * to `2 * x + 0.1` — a known-slope linear relation suitable for regression and
+ * to `2 * x + 0.1`; a known-slope linear relation suitable for regression and
  * covariance, and a valid logit-style input for the loss family.
  */
 fun <R : Result> pairedStatSpec(

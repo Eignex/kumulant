@@ -62,7 +62,7 @@ fun CountMinSketchResult.estimate(value: Long): Long {
  * **Update:** O([depth]) per observation; [depth] independent atomic adds.
  *
  * **Concurrency:** Striped atomic adds on independent rows. Lock-free and
- * exact under every [Concurrency] level — increments commute, and racing
+ * exact under every [Concurrency] level; increments commute, and racing
  * writers on the same value just bump the same cells.
  */
 class CountMinSketchStat(

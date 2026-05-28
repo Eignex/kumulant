@@ -27,9 +27,9 @@ data class ThresholdBucketResult(
  * **Use cases:** distribution-shape monitoring with caller-chosen bin edges,
  * complementary to the auto-binned quantile sketches.
  *
- * **Memory:** O(K) for K thresholds — one double cell per bucket.
+ * **Memory:** O(K) for K thresholds; one double cell per bucket.
  *
- * **Update:** O(log K) — binary search over the threshold list, single atomic
+ * **Update:** O(log K); binary search over the threshold list, single atomic
  * add into the resolved bucket.
  *
  * **Concurrency:** Per-bucket atomic adds (category 1). Exact under every

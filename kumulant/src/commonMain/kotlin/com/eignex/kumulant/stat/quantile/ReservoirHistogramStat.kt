@@ -104,7 +104,7 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  * keys are retained, giving an unbiased weight-proportional sample.
  *
  * **Use cases:** keeping a representative sample of a stream you intend to
- * post-process — model training over a uniform/weighted subsample, ad-hoc
+ * post-process; model training over a uniform/weighted subsample, ad-hoc
  * percentile lookups via the sample distribution, scratch-pad for
  * downstream analytics that need raw values rather than aggregates.
  *
@@ -116,7 +116,7 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  * **Concurrency:** Under [Concurrency.Relaxed] and [Concurrency.HighWrite]
  * the admit path scans for the min-key slot and CAS-replaces it; concurrent
  * winners on the same slot fall through to a re-scan, and a brief torn-pair
- * window (key updated before value) is possible during a read — the sampling
+ * window (key updated before value) is possible during a read; the sampling
  * distribution stays approximately correct (bounded drift). Under
  * [Concurrency.Strict] an outer lock serialises admit against read for a
  * fully linearized sample. [Concurrency.None] runs without synchronisation.

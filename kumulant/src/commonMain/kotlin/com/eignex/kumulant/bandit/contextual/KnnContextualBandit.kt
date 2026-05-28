@@ -62,19 +62,19 @@ data class KnnArmResult(
  * **Arms:** contextual with caller-defined feature dimension; `nbrArms`
  * fixed at construction. Per-arm reservoir is bounded by [maxHistoryPerArm].
  *
- * **Memory:** O(nbrArms · maxHistoryPerArm · featureSize) — bounded
+ * **Memory:** O(nbrArms · maxHistoryPerArm · featureSize); bounded
  * per-arm history of context copies plus parallel reward/weight arrays.
  *
- * **Choose:** O(nbrArms · maxHistoryPerArm · (featureSize + k)) — linear
+ * **Choose:** O(nbrArms · maxHistoryPerArm · (featureSize + k)); linear
  * scan over each arm's history with a bounded top-k heap.
  *
- * **Update:** O(featureSize) — append context copy and roll the oldest
+ * **Update:** O(featureSize); append context copy and roll the oldest
  * entry off when capped.
  *
  * **Randomness:** [random] is held for API uniformity but currently unused;
  * `choose` is deterministic, breaking ties by lowest arm index.
  *
- * **Concurrency:** not thread-safe — per-arm history mutable lists, the
+ * **Concurrency:** not thread-safe; per-arm history mutable lists, the
  * total-weight array, and the step counter are mutated without
  * synchronisation. Serialise `choose` and `update` externally for
  * multi-thread use.
@@ -86,7 +86,7 @@ class KnnContextualBandit(
     val k: Int = 5,
     /** Maximum observations retained per arm; older entries roll off via FIFO. */
     val maxHistoryPerArm: Int = 1024,
-    /** Optimistic value assigned to arms with no history yet — drives initial exploration. */
+    /** Optimistic value assigned to arms with no history yet; drives initial exploration. */
     val coldStartScore: Double = 1.0,
     /** UCB-style exploration scale on `sqrt(ln(totalSteps) / armWeight)`; `0.0` disables. */
     val exploration: Double = 1.0,

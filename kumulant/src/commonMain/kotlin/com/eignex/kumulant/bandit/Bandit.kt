@@ -11,18 +11,18 @@ import kotlin.random.Random
  *
  * The action and state surfaces are deliberately orthogonal:
  *
- * - **Action surface** — [UnivariateBandit] (indexless arms, `choose()`) and
+ * - **Action surface**; [UnivariateBandit] (indexless arms, `choose()`) and
  *   [ContextualBandit] (per-round context vector, `choose(x)`). Pick the one
  *   that matches the decision shape.
- * - **State surface** — [Snapshotable] (any state shape) with the
+ * - **State surface**; [Snapshotable] (any state shape) with the
  *   [PerArmBandit] convenience for the common case where state is one
  *   [Result] per arm.
- * - **Inspection** — [Scorable] / [ContextualScorable] expose per-arm
+ * - **Inspection**; [Scorable] / [ContextualScorable] expose per-arm
  *   scores; bandits whose selection rule is an argmax-over-independent-scores
  *   implement these. Joint-sampling bandits ([com.eignex.kumulant.bandit.univariate.BoltzmannBandit],
  *   [com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit]) and
  *   exponential-weights bandits ([com.eignex.kumulant.bandit.univariate.Exp3Bandit])
- *   do not — no single per-arm score is meaningful in isolation for them.
+ *   do not; no single per-arm score is meaningful in isolation for them.
  *
  * Each concrete bandit's KDoc states which interfaces it implements and why.
  */
@@ -41,7 +41,7 @@ interface Bandit {
     /**
      * Clear all state back to the prior-seeded baseline. Equivalent to
      * spawning a fresh bandit with the same configuration via
-     * [Snapshotable.create], but in place — keeps the same arm count, policy,
+     * [Snapshotable.create], but in place; keeps the same arm count, policy,
      * concurrency mode, and [random] instance.
      */
     fun reset()
@@ -55,7 +55,7 @@ interface Bandit {
  * 3. Observes a reward.
  * 4. Calls [update] with the arm index and the observed reward.
  *
- * The reward type is `Double` — Bernoulli rewards encode as `0.0` / `1.0`,
+ * The reward type is `Double`; Bernoulli rewards encode as `0.0` / `1.0`,
  * continuous rewards pass through as-is, log-normal rewards may want to be
  * pre-transformed via `ln(value)` before being passed in. Per-arm
  * accumulators interpret the value according to their configured arm type
@@ -77,7 +77,7 @@ interface UnivariateBandit : Bandit {
     /**
      * Fold a single observed reward [value] into the arm at [armIndex] with
      * the given [weight]. Weight is the same observation-weight that runs
-     * through the rest of the library — typically `1.0`, occasionally
+     * through the rest of the library; typically `1.0`, occasionally
      * importance-weighted for off-policy correction.
      *
      * Index out of range throws; some bandits also bound-check the value
@@ -137,14 +137,14 @@ interface ContextualBandit : Bandit {
     /**
      * Fold a single `(x, reward)` observation into the arm at [armIndex].
      * The `weight` is the same observation-weight running through the
-     * library — typically `1.0`, occasionally importance-weighted.
+     * library; typically `1.0`, occasionally importance-weighted.
      */
     fun update(armIndex: Int, x: VectorView, reward: Double, weight: Double = 1.0)
 }
 
 /**
  * State surface for any bandit whose state can be checkpointed, replicated,
- * and merged with a sibling's. Orthogonal to the action surface — every
+ * and merged with a sibling's. Orthogonal to the action surface; every
  * bandit family has its own natural [S]:
  *
  * - Per-arm-stat bandits ([com.eignex.kumulant.bandit.univariate.MultiArmedBandit]
@@ -165,7 +165,7 @@ interface Snapshotable<S> {
      * Materialise the current state as a serialisable snapshot. Reads are
      * non-mutating; call as often as needed without affecting decisions.
      * Same snapshot consistency rules as [com.eignex.kumulant.core.Stat.read]
-     * — under [com.eignex.kumulant.core.Concurrency.Relaxed] coupled cells
+     *; under [com.eignex.kumulant.core.Concurrency.Relaxed] coupled cells
      * may drift by ULPs.
      */
     fun snapshot(): S
@@ -180,7 +180,7 @@ interface Snapshotable<S> {
 
     /**
      * Spawn a fresh bandit with the same configuration; state resets to
-     * the prior seed. The [random] source is replaced — pass the source
+     * the prior seed. The [random] source is replaced; pass the source
      * you want the new bandit to use for exploration (which is independent
      * of merging in another snapshot's state).
      *
@@ -192,7 +192,7 @@ interface Snapshotable<S> {
 
 /**
  * Convenience for the dominant case where bandit state is one [Result]
- * per arm. Adds per-arm access on top of [Snapshotable] — useful for
+ * per arm. Adds per-arm access on top of [Snapshotable]; useful for
  * inspection, debugging, and policies that want to peek at a single
  * arm's posterior without materialising the whole list.
  *
@@ -213,7 +213,7 @@ interface PerArmBandit<R : Result> : Snapshotable<List<R>> {
 /**
  * Opt-in per-arm scoring for inspection / debugging / custom selectors.
  * Bandits whose [UnivariateBandit.choose] is an argmax over independent
- * per-arm scores expose this — UCB1, Thompson, epsilon-greedy, etc.
+ * per-arm scores expose this; UCB1, Thompson, epsilon-greedy, etc.
  *
  * Joint-sampling bandits don't implement [Scorable]: their selection rule
  * doesn't decompose into a per-arm score. Boltzmann samples from a softmax
@@ -225,8 +225,8 @@ interface PerArmBandit<R : Result> : Snapshotable<List<R>> {
 interface Scorable {
     /**
      * Score the arm at [armIndex] under the bandit's current state. The
-     * value's interpretation is policy-specific — UCB upper bound, Thompson
-     * draw, mean estimate, etc. — and what the bandit's `choose` would
+     * value's interpretation is policy-specific; UCB upper bound, Thompson
+     * draw, mean estimate, etc.; and what the bandit's `choose` would
      * compare against the other arms' scores.
      */
     fun evaluate(armIndex: Int): Double
@@ -236,7 +236,7 @@ interface Scorable {
  * Contextual analog of [Scorable]: per-arm score under the current state
  * and a supplied context vector. Implemented by
  * [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit] and
- * [com.eignex.kumulant.bandit.contextual.KnnContextualBandit] — both have
+ * [com.eignex.kumulant.bandit.contextual.KnnContextualBandit]; both have
  * an argmax-shaped selection rule that decomposes into per-arm scores.
  */
 interface ContextualScorable {

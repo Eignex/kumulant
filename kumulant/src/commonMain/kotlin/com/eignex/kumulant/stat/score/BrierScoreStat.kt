@@ -10,14 +10,14 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  * `(probability, outcome)` where `outcome  in  {0, 1}`; aggregated as the mean of
  * `(probability - outcome)^2`.
  *
- * Strictly proper scoring rule for binary classification — the binary
+ * Strictly proper scoring rule for binary classification; the binary
  * counterpart to Gaussian CRPS. Lower is better; the bound is `[0, 1]`.
  *
- * **Use cases:** classifier evaluation with a bounded loss — preferred when
+ * **Use cases:** classifier evaluation with a bounded loss; preferred when
  * confident-and-wrong predictions shouldn't be penalised as savagely as
  * [LogLossStat] does. Pair with [com.eignex.kumulant.stat.calibration.ReliabilityStat] for calibration diagnostics.
  *
- * **Memory:** O(1) — backed by a [MeanStat].
+ * **Memory:** O(1); backed by a [MeanStat].
  *
  * **Update:** O(1) per paired observation.
  *

@@ -65,7 +65,7 @@ class CounterRateStatTest {
         val r = CounterRateStat()
         r.update(100.0, T1)
         // The second sample carries a smaller timestamp than the first but a
-        // larger counter value — a routine occurrence under concurrent
+        // larger counter value; a routine occurrence under concurrent
         // writers. Ordering is by counter value, not timestamp, so this
         // contributes its forward delta of 20 and lowers the start window.
         r.update(120.0, T0)

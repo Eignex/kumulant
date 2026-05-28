@@ -21,13 +21,13 @@ import kotlin.math.pow
  * when the value range is unbounded; over [TDigestStat] when relative-error
  * guarantees are required.
  *
- * **Memory:** O(log(max/min) / log(1+[relativeError])) bins — typically a few
+ * **Memory:** O(log(max/min) / log(1+[relativeError])) bins; typically a few
  * hundred to a few thousand bins for sub-percent error on real-world ranges.
  *
  * **Update:** O(1) per observation; one `log`/bin-assignment + striped atomic add.
  *
  * **Concurrency:** Striped atomic adds on independent bins. Lock-free and
- * exact under every [Concurrency] level — increments commute, bin assignment
+ * exact under every [Concurrency] level; increments commute, bin assignment
  * is deterministic per value.
  */
 class DDSketchStat(

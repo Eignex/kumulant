@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 data class RegressionTreeConfig(
     /** Hoeffding-bound confidence threshold. Lower -> splits require more evidence. */
     val delta: Double = 0.05,
-    /** Multiplicative decay applied to [delta] per depth — slows growth near leaves. */
+    /** Multiplicative decay applied to [delta] per depth; slows growth near leaves. */
     val deltaDecay: Double = 0.9,
     /** If the Hoeffding bound itself shrinks below this, the leaf may split even when
      *  the runner-up is close (the classic VFDT "tie-break" parameter). */

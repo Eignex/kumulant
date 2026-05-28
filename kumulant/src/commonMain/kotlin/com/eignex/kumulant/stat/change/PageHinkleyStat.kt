@@ -56,7 +56,7 @@ data class PageHinkleyResult(
  * loss alarms, online change-point detection where CUSUM's known target value
  * is not available.
  *
- * **Memory:** O(1) — six cells plus a lock.
+ * **Memory:** O(1); six cells plus a lock.
  *
  * **Update:** O(1).
  *

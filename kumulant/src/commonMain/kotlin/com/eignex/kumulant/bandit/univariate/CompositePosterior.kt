@@ -21,7 +21,7 @@ import kotlin.random.Random
  * )
  * ```
  *
- * Combiners are sample-based, not summary-based — they see one draw per sub-posterior,
+ * Combiners are sample-based, not summary-based; they see one draw per sub-posterior,
  * not parameters. Combiners that need raw posterior moments (e.g. `exp(mu + sigma^2/2)`
  * for the lognormal *mean* rather than a draw) fall outside this surface and want a
  * bespoke posterior.

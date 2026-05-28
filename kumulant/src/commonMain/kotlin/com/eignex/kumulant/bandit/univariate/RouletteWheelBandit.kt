@@ -35,7 +35,7 @@ data class RouletteWheelArmResult(
  * re-balance (rather than per-observation) is useful when rewards are noisy
  * and continuous updates would thrash. Only meaningful for
  * reward-maximisation: the weight increase is asymmetric and has no clean
- * "minimise" dual — callers wanting to minimise should negate the reward
+ * "minimise" dual; callers wanting to minimise should negate the reward
  * before [update].
  *
  * Implemented as a direct [UnivariateBandit] rather than a [BanditPolicy]
@@ -49,9 +49,9 @@ data class RouletteWheelArmResult(
  * **Arms:** indexless, `nbrArms` fixed at construction; per-arm state is
  * `(weight, segment score sum, segment call count)`.
  *
- * **Memory:** O(nbrArms) — three parallel arrays plus a segment counter.
+ * **Memory:** O(nbrArms); three parallel arrays plus a segment counter.
  *
- * **Choose:** O(nbrArms) — sum the weights, inverse-CDF sample.
+ * **Choose:** O(nbrArms); sum the weights, inverse-CDF sample.
  *
  * **Update:** O(1) amortised; O(nbrArms) on the segment boundary where the
  * re-balance sweeps every arm.
@@ -60,7 +60,7 @@ data class RouletteWheelArmResult(
  * `nextInt` when all weights collapse to zero); reproducible under a fixed
  * seed.
  *
- * **Concurrency:** not thread-safe — weights, segment scores, and the
+ * **Concurrency:** not thread-safe; weights, segment scores, and the
  * segment counter are mutated without synchronisation. Serialise `choose`
  * and `update` externally for multi-thread use.
  */

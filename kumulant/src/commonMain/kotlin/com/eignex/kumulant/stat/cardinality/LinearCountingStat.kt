@@ -52,7 +52,7 @@ data class LinearCountingResult(
  *
  * **Concurrency:** Atomic OR on a striped Long array; counters are
  * independent atomic ops. Lock-free and exact under every [Concurrency]
- * level — bit sets are idempotent and commutative.
+ * level; bit sets are idempotent and commutative.
  */
 class LinearCountingStat(val bits: Int = 4096, override val concurrency: Concurrency = Concurrency.None) :
     DiscreteStat<LinearCountingResult> {

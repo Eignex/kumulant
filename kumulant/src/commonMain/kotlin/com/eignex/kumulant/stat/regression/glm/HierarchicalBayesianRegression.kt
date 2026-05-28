@@ -8,7 +8,7 @@ import com.eignex.kumulant.math.DenseVector
  * Manager for a population of [BayesianRegressionStat] instances that share an
  * empirical-Bayes prior. New instances inherit the current [populationPrior]; periodic
  * [refit] re-fits the prior from the current per-instance posteriors. Cross-instance
- * transfer happens through that prior — older instances keep accumulating their own
+ * transfer happens through that prior; older instances keep accumulating their own
  * state, but freshly created instances borrow from the population's collective
  * experience.
  *
@@ -72,7 +72,7 @@ class HierarchicalBayesianRegression(
     }
 
     /** Refit [populationPrior] from the current per-instance posteriors. No-op if no
-     *  instances are tracked. Existing instances keep their state — only future
+     *  instances are tracked. Existing instances keep their state; only future
      *  [createInstance] calls see the updated prior. */
     fun refit() {
         if (tracked.isEmpty()) return

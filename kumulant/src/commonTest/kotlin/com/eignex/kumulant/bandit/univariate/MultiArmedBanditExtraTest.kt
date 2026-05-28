@@ -91,7 +91,7 @@ class MultiArmedBanditExtraTest {
         repeat(10) { a.update(0, 1.0) }
         val b = a.create(Random(11))
         assertNotSame(a, b)
-        // Bandit b starts at priors — totalWeights smaller than populated a.
+        // Bandit b starts at priors; totalWeights smaller than populated a.
         assertTrue(a.armResult(0).totalWeights > b.armResult(0).totalWeights)
     }
 

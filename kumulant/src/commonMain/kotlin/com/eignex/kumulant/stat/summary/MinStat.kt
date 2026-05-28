@@ -22,11 +22,11 @@ data class MinResult(
  * **Use cases:** latency floors, smallest-seen monitoring, range computation
  * (paired with [MaxStat] or directly via [RangeStat]).
  *
- * **Memory:** O(1) — a single double cell.
+ * **Memory:** O(1); a single double cell.
  *
  * **Update:** O(1) per observation.
  *
- * **Concurrency:** Single-cell CAS-min loop — exact under every
+ * **Concurrency:** Single-cell CAS-min loop; exact under every
  * [Concurrency] level. The CAS retry naturally serialises racing writers
  * without a lock.
  */

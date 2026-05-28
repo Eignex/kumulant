@@ -20,7 +20,7 @@ import kotlinx.serialization.Serializable
  * A single [OptimizerSpec] materialises into one live
  * [com.eignex.kumulant.stat.regression.Optimizer] per stat. For multi-output
  * stats like [com.eignex.kumulant.stat.regression.SoftmaxRegressionStat],
- * the stat creates one optimizer per output class — each gets its own
+ * the stat creates one optimizer per output class; each gets its own
  * per-coordinate aux state but they all share the same spec configuration.
  *
  * Pick by need:
@@ -37,7 +37,7 @@ import kotlinx.serialization.Serializable
  *
  * Penalties ([com.eignex.kumulant.stat.regression.glm.Penalty]) attach to
  * [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat] only
- * when paired with [Sgd] — the lazy-update tricks (Bottou multiplicative
+ * when paired with [Sgd]; the lazy-update tricks (Bottou multiplicative
  * scaling for L2, cumulative truncated gradient for L1) are SGD-specific
  * and don't extend cleanly to adaptive optimizers.
  */
@@ -46,14 +46,14 @@ sealed interface OptimizerSpec {
     /**
      * Build a live optimizer instance over `featureSize` coordinates at the
      * requested [Concurrency]. Each call returns a fresh optimizer with
-     * empty aux state — stats call this for each weight vector they want to
+     * empty aux state; stats call this for each weight vector they want to
      * track (one per output class for [com.eignex.kumulant.stat.regression.SoftmaxRegressionStat]).
      */
     fun materialize(featureSize: Int, concurrency: Concurrency = Concurrency.None): Optimizer
 }
 
 /**
- * Plain stochastic gradient descent. The default and the cheapest entry —
+ * Plain stochastic gradient descent. The default and the cheapest entry;
  * stateless apart from the global step counter feeding the learning-rate
  * schedule. Per-coordinate update: `w[i] -= lr(step) * weight * grad[i]`.
  *
@@ -75,7 +75,7 @@ data class Sgd(
      * ([com.eignex.kumulant.stat.regression.glm.ConstantRate],
      * [com.eignex.kumulant.stat.regression.glm.StepDecay],
      * [com.eignex.kumulant.stat.regression.glm.ExponentialDecay]) live in
-     * the GLM package. Any [ScalarExpr] works — `1.0 / (1.0 + Const(0.01) * X)`
+     * the GLM package. Any [ScalarExpr] works; `1.0 / (1.0 + Const(0.01) * X)`
      * for an inverse-time decay, for instance.
      */
     val learningRate: ScalarExpr = ConstantRate(1e-3),
@@ -88,7 +88,7 @@ data class Sgd(
  * Adagrad. Per-coordinate adaptive learning rate via accumulated squared
  * gradients: `w[i] -= lr * grad[i] / sqrt(sumG2[i] + epsilon)`.
  *
- * Reach for [Adagrad] when feature occurrence is sparse and uneven —
+ * Reach for [Adagrad] when feature occurrence is sparse and uneven;
  * power-law-distributed categorical features, rarely-seen tokens, anything
  * where you want rare features to take big steps and common features to
  * settle into small ones. The accumulating denominator makes Adagrad's
@@ -113,7 +113,7 @@ data class Adagrad(
  * sliding window instead of a monotone accumulator.
  *
  * Reach for [Rmsprop] when [Adagrad]'s effective learning rate decays
- * faster than you want — non-stationary streams, online problems where the
+ * faster than you want; non-stationary streams, online problems where the
  * data distribution drifts over the lifetime of the optimizer. [rho] near 1
  * gives a long memory (close to [Adagrad]); [rho] near 0 gives a short
  * memory.
@@ -149,7 +149,7 @@ data class Rmsprop(
  * `epsilon = 1e-8` are the standard published values; the only knob most
  * callers touch is [learningRate].
  *
- * Memory cost is two state arrays of `featureSize` doubles per optimizer —
+ * Memory cost is two state arrays of `featureSize` doubles per optimizer;
  * heavier than [Sgd] / [Adagrad] / [Rmsprop] but typically negligible
  * relative to the parameter vector itself.
  */

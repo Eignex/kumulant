@@ -19,13 +19,13 @@ import kotlin.random.Random
 @Serializable
 @SerialName("Exp4State")
 data class Exp4State(
-    /** Unnormalised per-expert weights — element `i` is `exp(eta · cumulative gain_i)`. */
+    /** Unnormalised per-expert weights; element `i` is `exp(eta · cumulative gain_i)`. */
     val weights: DoubleArray,
 ) : Result
 
 /**
  * Maps a context vector to a probability distribution over arms. Implementations are
- * stateless w.r.t. the bandit — they consult only the context and any internal state
+ * stateless w.r.t. the bandit; they consult only the context and any internal state
  * frozen at construction. The returned array must have length `nbrArms` and sum to 1.
  */
 fun interface Exp4Expert {
@@ -34,7 +34,7 @@ fun interface Exp4Expert {
 }
 
 /**
- * EXP4 (Auer, Cesa-Bianchi, Freund, Schapire 2002) — adversarial contextual
+ * EXP4 (Auer, Cesa-Bianchi, Freund, Schapire 2002); adversarial contextual
  * bandit over a fixed pool of [experts]. Each round, every expert returns a
  * distribution over arms for the context; the bandit mixes those
  * distributions weighted by per-expert exponential weights, blends with
@@ -62,20 +62,20 @@ fun interface Exp4Expert {
  * expert's `advise` returns length `nbrArms`); `nbrArms` and `experts.size`
  * fixed at construction.
  *
- * **Memory:** O(experts.size + experts.size · nbrArms) — one weight per
+ * **Memory:** O(experts.size + experts.size · nbrArms); one weight per
  * expert plus a cached last-advice matrix and play distribution.
  *
- * **Choose:** O(experts.size · (advise + nbrArms)) — query every expert and
+ * **Choose:** O(experts.size · (advise + nbrArms)); query every expert and
  * mix their distributions.
  *
- * **Update:** O(experts.size · (advise + nbrArms)) — re-evaluates experts at
+ * **Update:** O(experts.size · (advise + nbrArms)); re-evaluates experts at
  * `x` so the played arm's IPS gain is correct, then multiplicative update
  * across all expert weights.
  *
  * **Randomness:** every `choose` consumes one `random.nextDouble()`;
  * reproducible under a fixed seed when expert `advise` is deterministic.
  *
- * **Concurrency:** not thread-safe — expert weights, the cached advice
+ * **Concurrency:** not thread-safe; expert weights, the cached advice
  * matrix, and the cached play distribution are mutated without
  * synchronisation. Serialise `choose` and `update` externally for
  * multi-thread use.
@@ -166,7 +166,7 @@ class Exp4Bandit(
         require(other.weights.size == experts.size) {
             "merge: state has ${other.weights.size} expert weights, expected ${experts.size}"
         }
-        // No canonical merge for EXP4 expert weights — multiply elementwise as a coarse
+        // No canonical merge for EXP4 expert weights; multiply elementwise as a coarse
         // pool, then renormalise. Use for "roughly combine two parallel runs", not
         // principled aggregation.
         for (i in weights.indices) weights[i] *= other.weights[i]

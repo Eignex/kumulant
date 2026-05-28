@@ -26,7 +26,7 @@ data class RunLengthResult(
  *
  * **Use cases:** streak length, "consecutive failed checks", run-length encoding.
  *
- * **Memory:** O(1) — two cells.
+ * **Memory:** O(1); two cells.
  *
  * **Update:** O(1).
  *

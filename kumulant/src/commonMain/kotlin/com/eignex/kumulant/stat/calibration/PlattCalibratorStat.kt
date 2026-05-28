@@ -53,7 +53,7 @@ data class PlattCalibratorResult(
  * pair with [ReliabilityStat] to monitor the gap before and after applying
  * the learned mapping.
  *
- * **Memory:** O(1) — backed by [StochasticRegressionStat].
+ * **Memory:** O(1); backed by [StochasticRegressionStat].
  *
  * **Update:** O(1) per observation.
  *

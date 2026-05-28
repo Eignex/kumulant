@@ -19,11 +19,11 @@ import kotlinx.serialization.Serializable
  * with [CompositePosterior] to combine sub-arm draws into a single score.
  *
  * Plumbing is AST-driven (no lambdas) so the whole spec is wire-serializable.
- * Per-sub-arm `encode` is still applied after `valueExpr` — e.g. with `LogNormalArm`
+ * Per-sub-arm `encode` is still applied after `valueExpr`; e.g. with `LogNormalArm`
  * + `valueExpr = X` the lognormal's own `encode = ln` runs, so don't double-log via
  * `valueExpr = Log(X)`.
  *
- * Example — zero-inflated lognormal revenue:
+ * Example; zero-inflated lognormal revenue:
  * ```
  * val ziln = CompositeArm(listOf(
  *     CompositeSubArm(BernoulliArm(), valueExpr = IfExpr(X gt 0.0, Const(1.0), Const(0.0))),

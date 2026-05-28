@@ -46,7 +46,7 @@ class TopTwoThompsonBanditTest {
 
     @Test
     fun `top-two spreads play across the top two arms during training`() {
-        // Use a fresh bandit and never let it converge — every choose is at the prior +
+        // Use a fresh bandit and never let it converge; every choose is at the prior +
         // a handful of observations, so resamples land on different arms often.
         val rng = Random(2)
         val b = TopTwoThompsonBandit(nbrArms = 2, policy = NormalTS(), beta = 0.5, random = rng)

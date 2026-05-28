@@ -20,7 +20,7 @@ import kotlin.random.Random
 
 /**
  * Bench-side description of a bandit configuration. Modality (univariate vs
- * contextual) is erased into the closures — there is one generic [BanditSpec]
+ * contextual) is erased into the closures; there is one generic [BanditSpec]
  * class, and the factory functions [univariateBanditSpec] / [contextualBanditSpec]
  * pre-bake the choose/play/update logic. Mirrors the
  * [StatSpec][com.eignex.kumulant.bench.StatSpec] convention used for stat benches.

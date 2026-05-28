@@ -64,7 +64,7 @@ data class HoltResult(
  * **Use cases:** smoothing a noisy series and producing short-horizon forecasts when a
  * non-zero local trend is expected. [com.eignex.kumulant.stat.decay.EwmaMeanStat] is the special case `beta == 0`.
  *
- * **Memory:** O(1) — two doubles plus a lock.
+ * **Memory:** O(1); two doubles plus a lock.
  *
  * **Update:** O(1).
  *

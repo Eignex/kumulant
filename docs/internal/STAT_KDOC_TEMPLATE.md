@@ -9,11 +9,11 @@ or `RegressionStat`) should have a KDoc that follows this template.
 /**
  * <One-sentence summary: what this stat computes and what its snapshot returns.>
  *
- * <Algorithm paragraph when non-trivial — name the recurrence (Welford, Chan's
+ * <Algorithm paragraph when non-trivial; name the recurrence (Welford, Chan's
  * parallel, Hoeffding bound, Sherman-Morrison, ...), cite the paper if relevant,
  * call out numerical-stability caveats.>
  *
- * <Configuration paragraph when the constructor has non-obvious knobs — what
+ * <Configuration paragraph when the constructor has non-obvious knobs; what
  * each tunable does, defaults, accuracy/memory tradeoffs.>
  *
  * **Use cases:** <when to reach for this stat over its peers; common applications.>
@@ -31,23 +31,23 @@ class FooStat(...) : SeriesStat<FooResult> { ... }
 
 Always present, in this order:
 
-1. **Summary** — one sentence, no header. What it computes, what the snapshot
+1. **Summary**; one sentence, no header. What it computes, what the snapshot
    returns.
-2. **`**Use cases:**`** — one to three sentences. Where this stat fits, what
+2. **`**Use cases:**`**; one to three sentences. Where this stat fits, what
    its peers are.
-3. **`**Memory:**`** — O-bound in constructor parameters. Examples:
+3. **`**Memory:**`**; O-bound in constructor parameters. Examples:
    `O(1)`, `O(precision)`, `O(depth · width)`, `O(featureSize^2)`.
-4. **`**Update:**`** — O-bound per `update()` call. Examples:
+4. **`**Update:**`**; O-bound per `update()` call. Examples:
    `O(1)`, `O(featureSize)`, `O(featureSize^2)` (Sherman-Morrison),
    `O(log n)` (bin lookup), `O(numHashes)`.
-5. **`**Concurrency:**`** — mechanism first, then per-`Concurrency` behaviour,
+5. **`**Concurrency:**`**; mechanism first, then per-`Concurrency` behaviour,
    then caveats. See *Concurrency clauses* below.
 
 Optional, between the summary and the bold sections:
 
-- **Algorithm paragraph** — the recurrence, the paper, the math. Skip when the
+- **Algorithm paragraph**; the recurrence, the paper, the math. Skip when the
   stat is a thin wrapper or its formula is in the summary.
-- **Configuration paragraph** — non-obvious constructor knobs and their
+- **Configuration paragraph**; non-obvious constructor knobs and their
   tradeoffs. Skip when the stat has only the standard `concurrency` parameter.
 
 ### Section style
@@ -59,7 +59,7 @@ Optional, between the summary and the bold sections:
 - Declarative, not narrative: *"Locked under any concurrent level"* beats
   *"We lock under any concurrent level because…"*.
 - Result data classes keep their existing per-field `/** ... */` docs
-  unchanged — the template applies only to the stat class itself.
+  unchanged; the template applies only to the stat class itself.
 
 ### Concurrency clauses
 
@@ -72,7 +72,7 @@ Reuse these standard phrasings so the matrix is grep-able:
 | *Single-cell CAS-min/max loop*                  | Exact under every level. The CAS retry naturally serialises racing writers.                                                         |
 | *Independent striped cells with deterministic bucket assignment* | Exact under every level. Increments commute and racing writers on the same value share the cell.                |
 | *Welford-coupled cells (no lock)*               | `None`/`Strict`/`HighWrite` exact; `Relaxed` drifts ~1e-5 relative on coupled state but never throws.                               |
-| *Body locked under any concurrent level*        | Exact under every level. Throughput bound by lock contention — shard and merge for higher write rates.                              |
+| *Body locked under any concurrent level*        | Exact under every level. Throughput bound by lock contention; shard and merge for higher write rates.                              |
 | *Lock-free order-dependent recurrence*          | Even `Strict` does not reproduce a serial reference because the lock serialises arrival, not order. Drift ~X% under contention.     |
 
 Cite measured drift numbers from `:kumulant-bench:analyzeConcurrencyDrift` when
@@ -93,12 +93,12 @@ line: `**Concurrency:** Inherits [SumStat]'s concurrency model.`
  * **Use cases:** dispersion of any scalar quantity; pairs with [MomentsStat]
  * when skewness/kurtosis are also needed.
  *
- * **Memory:** O(1) — three doubles plus a lock.
+ * **Memory:** O(1); three doubles plus a lock.
  *
  * **Update:** O(1) per observation.
  *
  * **Concurrency:** Welford-coupled cells. `Strict` and `HighWrite` lock the
- * body so each update is atomic — exact up to floating-point reorder ULPs.
+ * body so each update is atomic; exact up to floating-point reorder ULPs.
  * `Relaxed` drops the lock and the three cells race independently; the
  * variance drifts ~1e-4 relative under contention but never throws.
  */

@@ -31,7 +31,7 @@ data class CrossingResult(
  * **Use cases:** alarm/recovery counting, level-crossing diagnostics, frequency
  * estimation of band-limited signals.
  *
- * **Memory:** O(1) — three cells plus a baseline flag.
+ * **Memory:** O(1); three cells plus a baseline flag.
  *
  * **Update:** O(1).
  *

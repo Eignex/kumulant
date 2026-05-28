@@ -15,7 +15,7 @@ import kotlin.random.Random
 /**
  * Scoring strategy for a [com.eignex.kumulant.bandit.univariate.MultiArmedBandit].
  * Decides which arm to play given snapshots of each arm's sufficient statistic
- * [R]. The bandit calls [evaluate] for every arm and picks the argmax — the
+ * [R]. The bandit calls [evaluate] for every arm and picks the argmax; the
  * policy is the entire exploration/exploitation knob.
  *
  * The policy owns the per-arm cumulator lifecycle through its [arm] spec:
@@ -28,12 +28,12 @@ import kotlin.random.Random
  *
  * Two flavours:
  *
- * - **Sampling-based** ([ThompsonSampling]) — score each arm by a draw from
+ * - **Sampling-based** ([ThompsonSampling]); score each arm by a draw from
  *   its conjugate [Posterior] given the snapshot. Exploration is implicit
  *   in posterior variance: under-explored arms have wider posteriors and
  *   draw higher scores more often.
  * - **UCB-based** ([UCB1], [UCB1Normal], [UCB1Tuned], [UcbV], [KlUcb], [Moss])
- *   — score is `mean + alpha * confidence-bound` derived from the snapshot
+ *  ; score is `mean + alpha * confidence-bound` derived from the snapshot
  *   directly. Exploration is explicit in the confidence width.
  *
  * Per-policy global state (e.g. total samples for UCB) updates through
@@ -91,19 +91,19 @@ interface BanditPolicy<R : Result> {
 /**
  * Thompson sampling: score each arm by a draw from its conjugate
  * [posterior] given the snapshot. The bandit then picks the arm with the
- * highest sample — no explicit exploration knob, the exploration falls out
+ * highest sample; no explicit exploration knob, the exploration falls out
  * of posterior variance shrinking as data accumulates.
  *
  * Pair an [Arm] with a [Posterior] of the same result type [R]:
  *
- * - [BernoulliArm] + [BetaPosterior] — see [BetaBernoulliTS].
- * - [NormalArm] + [NormalGammaPosterior] — see [NormalTS].
- * - [LogNormalArm] + [LogNormalGammaPosterior] — see [LogNormalTS].
+ * - [BernoulliArm] + [BetaPosterior]; see [BetaBernoulliTS].
+ * - [NormalArm] + [NormalGammaPosterior]; see [NormalTS].
+ * - [LogNormalArm] + [LogNormalGammaPosterior]; see [LogNormalTS].
  * - [MeanArm] + [PoissonGammaPosterior] / [GeometricBetaPosterior] /
- *   [ExponentialGammaPosterior] / [GammaScalePosterior] — see [PoissonTS],
+ *   [ExponentialGammaPosterior] / [GammaScalePosterior]; see [PoissonTS],
  *   [GeometricTS], [ExponentialTS], [GammaScaleTS].
  *
- * Stateless across arms — [addArm] / [removeArm] are no-ops because no
+ * Stateless across arms; [addArm] / [removeArm] are no-ops because no
  * global counter is involved.
  */
 class ThompsonSampling<R : Result>(
@@ -151,7 +151,7 @@ fun GammaScaleTS(fixedShape: Double, priorMean: Double = 1.0, priorWeight: Doubl
 
 /**
  * Classical UCB1 (Auer, Cesa-Bianchi, Fischer 2002). Score is
- * `mean + alpha * sqrt(2 * ln(totalSamples) / armSamples)` — exploitation
+ * `mean + alpha * sqrt(2 * ln(totalSamples) / armSamples)`; exploitation
  * (running mean) plus a confidence bound that shrinks as the arm
  * accumulates pulls. Unexplored arms get `+infinity` so they're tried at
  * least once.
@@ -161,7 +161,7 @@ fun GammaScaleTS(fixedShape: Double, priorMean: Double = 1.0, priorWeight: Doubl
  * theoretical value is 1.0, lower values reduce exploration, higher
  * increases it.
  *
- * Pair this with a [BernoulliArm] beta prior — the prior alpha/beta seed
+ * Pair this with a [BernoulliArm] beta prior; the prior alpha/beta seed
  * the snapshot so the first few pulls aren't dominated by integer noise.
  */
 class UCB1(
@@ -195,7 +195,7 @@ class UCB1(
  * UCB1-Normal (Auer et al. 2002). Variance-aware UCB for Gaussian rewards;
  * uses the sample variance derived from the [MomentsResult] snapshot to
  * scale the confidence bound. Reach for it when rewards are roughly
- * Gaussian and unbounded — [UCB1]'s `[0, 1]` assumption doesn't hold.
+ * Gaussian and unbounded; [UCB1]'s `[0, 1]` assumption doesn't hold.
  *
  * Forces exploration until each arm has at least `8 * ln(K)` pulls (`K` is
  * the arm count), then switches to the variance-aware score
@@ -266,7 +266,7 @@ class UCB1Tuned(
 
 /**
  * Pure-exploitation policy: always picks the arm with the highest posterior
- * mean. No exploration at all — converges fastest to the apparent best arm
+ * mean. No exploration at all; converges fastest to the apparent best arm
  * but can lock into a suboptimal arm forever if early rewards mislead it.
  *
  * Useful as a baseline (regret comparison against random / UCB / Thompson)
@@ -283,7 +283,7 @@ class Greedy(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDe
 /**
  * Epsilon-greedy: with probability [epsilon] pick a uniformly random arm
  * (explore), otherwise pick the arm with the highest mean (exploit).
- * The simplest exploration scheme that actually works — no math machinery,
+ * The simplest exploration scheme that actually works; no math machinery,
  * tune one knob.
  *
  * Sensitive to the epsilon value: too low and you under-explore (regret
@@ -360,7 +360,7 @@ class EpsilonDecreasing(
 /**
  * Pure-exploration policy: every evaluate returns a fresh uniform draw,
  * so the bandit picks arms uniformly at random regardless of observations.
- * No exploitation at all — the opposite extreme of [Greedy].
+ * No exploitation at all; the opposite extreme of [Greedy].
  *
  * Useful as a regret-comparison baseline (any policy worth its salt
  * should beat uniform), as a data-collection scheme before switching to
@@ -381,7 +381,7 @@ class UniformSelection(priorMean: Double = 0.0, priorWeight: Double = 0.02, prio
  * `n * KL(mean, q) <= ln(t) + c * ln(ln(t))`; computed by binary search
  * with [tolerance] precision.
  *
- * Asymptotically optimal for Bernoulli rewards — the bound matches
+ * Asymptotically optimal for Bernoulli rewards; the bound matches
  * Lai-Robbins lower regret in the limit. Beats [UCB1] in practice when
  * rewards are genuinely Bernoulli; falls back to similar regret when
  * rewards are bounded but not Bernoulli.
@@ -447,12 +447,12 @@ class KlUcb(
 }
 
 /**
- * MOSS — Minimax Optimal Strategy in the Stochastic case (Audibert & Bubeck
+ * MOSS; Minimax Optimal Strategy in the Stochastic case (Audibert & Bubeck
  * 2009). UCB variant where the confidence bound shrinks faster than [UCB1]
  * once an arm has accumulated more than `t / K` samples. Score is
  * `mean + sqrt(max(0, ln(t / (K * n))) / n)`.
  *
- * Achieves minimax-optimal regret in the stochastic bandit setting —
+ * Achieves minimax-optimal regret in the stochastic bandit setting;
  * tighter worst-case bound than [UCB1] across all reward distributions
  * the bandit could face. Eliminates the `log(t)` slack term once an arm
  * is sampled enough.
@@ -462,7 +462,7 @@ class KlUcb(
  * containing [MultiArmedBandit] uses.
  *
  * Reach for it when minimax regret matters more than asymptotic optimality
- * — adversarial reward distributions, settings where the worst case
+ *; adversarial reward distributions, settings where the worst case
  * matters. For Bernoulli rewards specifically, [KlUcb] is asymptotically
  * tighter.
  */
@@ -500,12 +500,12 @@ class Moss(
 }
 
 /**
- * UCB-V — variance-aware UCB with finite-sample honesty (Audibert, Munos,
+ * UCB-V; variance-aware UCB with finite-sample honesty (Audibert, Munos,
  * Szepesvári 2009). Score is
  * `mean + sqrt(2 * V * zeta * ln(t) / n) + 3 * c * zeta * ln(t) / n`,
  * where `V` is the running variance from the [MomentsResult] snapshot.
  *
- * The third term — a bias correction scaled by [c] — is what distinguishes
+ * The third term; a bias correction scaled by [c]; is what distinguishes
  * UCB-V from [UCB1Tuned]: the bound is honest at finite sample sizes
  * rather than only asymptotically. Reach for it when sample sizes per arm
  * stay small (early stopping, expensive arms) and the asymptotic

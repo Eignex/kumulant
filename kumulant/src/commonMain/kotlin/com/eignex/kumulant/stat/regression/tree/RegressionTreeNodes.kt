@@ -11,7 +11,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * Internal tree node. The hot update path touches only the leaf an observation routes
- * to — internal split nodes are never written by [RegressionTree.update]. Splits may carry an
+ * to; internal split nodes are never written by [RegressionTree.update]. Splits may carry an
  * optional *carryover* arm: a one-shot snapshot of the pre-split aggregate captured at
  * the moment a leaf converts into a split, plus any orphaned aggregates folded in by
  * mixed-structure merges. Subtree aggregates include the carryover but the hot path
@@ -24,7 +24,7 @@ sealed interface RegressionNode {
 
 /**
  * Routes by [split] to either [pos] (true) or [neg] (false). The optional [carryover]
- * holds aggregates that don't structurally belong to either child — the pre-split data
+ * holds aggregates that don't structurally belong to either child; the pre-split data
  * frozen at split time, or orphans absorbed from a mixed merge. Never written by the
  * update hot path; never read by [findLeaf] or `predict`; included by `subtreeAggregate`.
  */
@@ -51,7 +51,7 @@ class RegressionSplitNode(
         if (split.direction(row)) pos.findLeaf(row) else neg.findLeaf(row)
 }
 
-/** Leaf node — terminus of the tree walk for a given row, and the only node type
+/** Leaf node; terminus of the tree walk for a given row, and the only node type
  *  that owns a live accumulator. */
 sealed class RegressionLeafNode : RegressionNode {
     /** The leaf's weighted-variance accumulator. */
@@ -60,13 +60,13 @@ sealed class RegressionLeafNode : RegressionNode {
     final override fun findLeaf(row: VectorView): RegressionLeafNode = this
 }
 
-/** Frozen leaf — no further splits will be considered. */
+/** Frozen leaf; no further splits will be considered. */
 class RegressionTerminalLeaf(override val arm: SeriesStat<WeightedVarianceResult>) : RegressionLeafNode()
 
 /**
  * Leaf that tracks per-candidate pos/neg stats. When a candidate clears the Hoeffding-
  * bound test, this leaf is replaced by a [RegressionSplitNode]. The candidate subset is per-leaf
- * — picked at leaf birth — so mtry-style random subspace selection lives at the leaf level.
+ *; picked at leaf birth; so mtry-style random subspace selection lives at the leaf level.
  */
 class RegressionAuditLeaf(
     override val arm: SeriesStat<WeightedVarianceResult>,
@@ -121,7 +121,7 @@ internal fun mergeWVR(a: WeightedVarianceResult, b: WeightedVarianceResult): Wei
     return WeightedVarianceResult(w, mean, sst / w)
 }
 
-/** Recursive subtree aggregate — for leaves the arm's snapshot, for splits the merge of
+/** Recursive subtree aggregate; for leaves the arm's snapshot, for splits the merge of
  *  both children's aggregates plus any [RegressionSplitNode.carryover]. Called only on snapshot
  *  and merge paths, never on hot updates. */
 internal fun RegressionNode.subtreeAggregate(): WeightedVarianceResult = when (this) {

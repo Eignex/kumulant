@@ -13,7 +13,7 @@ import kotlinx.serialization.encoding.Encoder
 /**
  * Read-only N-by-M matrix. Sealed alongside [VectorView] so snapshots
  * round-trip through `kotlinx.serialization` with their concrete storage
- * preserved. Public surface is read-only — shape, entry access, materialise
+ * preserved. Public surface is read-only; shape, entry access, materialise
  * to `Array<DoubleArray>`. Mutation, factorisations, and arithmetic are
  * `internal` to kumulant.
  *
@@ -56,10 +56,10 @@ sealed interface MatrixView {
  *
  * The on-the-wire form is a 2D `Array<DoubleArray>` for readability when
  * inspecting JSON / CBOR payloads. The in-memory form is flat. The custom
- * [DenseMatrixSerializer] bridges the two — encoding writes a 2D array,
+ * [DenseMatrixSerializer] bridges the two; encoding writes a 2D array,
  * decoding reads one back and packs it into the flat backing.
  *
- * Mutation is `internal` — `DenseMatrix` is effectively immutable from
+ * Mutation is `internal`; `DenseMatrix` is effectively immutable from
  * outside the kumulant module.
  */
 @Serializable(with = DenseMatrixSerializer::class)

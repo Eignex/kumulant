@@ -28,7 +28,7 @@ data class TreeClassificationResult(
     val numClasses: Int get() = root.value.numClasses
 }
 
-/** Snapshot of a single classification-tree node — split or leaf. */
+/** Snapshot of a single classification-tree node; split or leaf. */
 @Serializable
 sealed interface TreeClassificationNodeResult {
     /** Aggregate over every observation routed through this node. */

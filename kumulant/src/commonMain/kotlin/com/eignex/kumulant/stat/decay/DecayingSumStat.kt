@@ -31,11 +31,11 @@ data class DecayingSumResult(
  *
  * **Use cases:** time-windowed event totals (requests in the last 30s),
  * recency-weighted aggregation for monitoring dashboards. The core time-decay
- * primitive — pair with another [DecayingSumStat] for ratios via
+ * primitive; pair with another [DecayingSumStat] for ratios via
  * [DecayingMeanStat], or with `ln(2)/halfLife` for per-second rates via
  * [com.eignex.kumulant.stat.rate.DecayingRateStat].
  *
- * **Memory:** O(1) — one epoch (`(landmark, accumulator)`) at a time.
+ * **Memory:** O(1); one epoch (`(landmark, accumulator)`) at a time.
  *
  * **Update:** O(1) per observation; one `exp()` + one atomic add. Epoch
  * rotation fires at most once per `ROTATION_HALF_LIVES` half-lives and is

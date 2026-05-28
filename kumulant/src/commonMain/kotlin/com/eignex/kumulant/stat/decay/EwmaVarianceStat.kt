@@ -18,7 +18,7 @@ import com.eignex.kumulant.stream.welfordMode
  * [com.eignex.kumulant.stat.summary.VarianceStat] if you need an
  * order-independent variance under contention.
  *
- * **Memory:** O(1) — three doubles plus a lock.
+ * **Memory:** O(1); three doubles plus a lock.
  *
  * **Update:** O(1) per observation.
  *

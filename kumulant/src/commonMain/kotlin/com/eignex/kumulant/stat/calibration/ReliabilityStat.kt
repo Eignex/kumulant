@@ -82,17 +82,17 @@ data class ReliabilityResult(
  *
  * Predictions outside `[0, 1]` are clamped to the nearest edge bin.
  *
- * **Use cases:** calibration diagnostics for probabilistic forecasters — the
+ * **Use cases:** calibration diagnostics for probabilistic forecasters; the
  * raw material for reliability diagrams and Expected Calibration Error.
  * Pair with [com.eignex.kumulant.stat.score.BrierScoreStat] for the matching proper-scoring number.
  *
- * **Memory:** O([numBins]) — three parallel Double arrays per bin.
+ * **Memory:** O([numBins]); three parallel Double arrays per bin.
  *
  * **Update:** O(1) per paired observation (three atomic adds on the
  * destination bin).
  *
  * **Concurrency:** Three independent striped atomic adds per update.
- * Lock-free and exact under every [Concurrency] level — bin assignment is
+ * Lock-free and exact under every [Concurrency] level; bin assignment is
  * deterministic per prediction and increments commute.
  */
 class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = Concurrency.None) :

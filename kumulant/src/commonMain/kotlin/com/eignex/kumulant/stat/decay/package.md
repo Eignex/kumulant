@@ -15,11 +15,11 @@ time-weighted counterparts of [com.eignex.kumulant.stat.summary.SumStat]
 [com.eignex.kumulant.stat.summary.VarianceStat]. The decay schedule is
 configured via [DecayWeighting]:
 
-- `HalfLife(durationMillis)` — exponential decay specified by the
+- `HalfLife(durationMillis)`; exponential decay specified by the
   half-life of an observation's weight.
-- `TimeConstant(tau)` — exponential decay specified by the time
+- `TimeConstant(tau)`; exponential decay specified by the time
   constant (e-fold) of the weighting function.
-- `Custom(weighting)` — caller-supplied decay function from `(elapsedNanos)`
+- `Custom(weighting)`; caller-supplied decay function from `(elapsedNanos)`
   to a multiplicative weight.
 
 Because weight is a function of the timestamp delta, these handle
@@ -45,7 +45,7 @@ timestamp-based variants instead.
 - **Smooth tracking of a recent signal, irregular timestamps** →
   [DecayingMeanStat] / [DecayingVarianceStat] with a `HalfLife` or
   `TimeConstant`.
-- **Volatility tracking with a long-run baseline** — see
+- **Volatility tracking with a long-run baseline**; see
   [com.eignex.kumulant.stat.forecast.RecursiveVarianceStat], which adds
   a GARCH-style baseline term to [EwmaVarianceStat]'s shape.
 
@@ -53,7 +53,7 @@ timestamp-based variants instead.
 
 [DecayingMeanStat] / [EwmaMeanStat] expose
 [WeightedMeanResult][com.eignex.kumulant.stat.summary.WeightedMeanResult]
-— same shape as the non-decayed [MeanStat][com.eignex.kumulant.stat.summary.MeanStat].
+; same shape as the non-decayed [MeanStat][com.eignex.kumulant.stat.summary.MeanStat].
 [DecayingVarianceStat] / [EwmaVarianceStat] expose
 [WeightedVarianceResult][com.eignex.kumulant.stat.summary.WeightedVarianceResult].
 This is intentional: downstream traits like

@@ -36,12 +36,12 @@ data class WeightedMeanResult(
  * with [com.eignex.kumulant.operation.withValue] / `withWeight` to derive
  * other means (event rate, conditional mean, etc.).
  *
- * **Memory:** O(1) — two doubles plus a lock.
+ * **Memory:** O(1); two doubles plus a lock.
  *
  * **Update:** O(1) per observation.
  *
  * **Concurrency:** Welford-coupled cells. [Concurrency.Strict] and
- * [Concurrency.HighWrite] lock the body — exact match to a serial run up to
+ * [Concurrency.HighWrite] lock the body; exact match to a serial run up to
  * floating-point reorder ULPs. [Concurrency.Relaxed] drops the lock; the
  * coupled `(totalWeights, mean)` pair can drift by ~1e-5 relative under
  * contention but never throws.

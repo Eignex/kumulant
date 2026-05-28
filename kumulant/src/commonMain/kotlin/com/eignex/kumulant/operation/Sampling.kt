@@ -111,7 +111,7 @@ internal class ThrottleDiscreteStat<R : Result>(private val delegate: DiscreteSt
         ThrottleDiscreteStat(delegate.create(concurrency), every)
 }
 
-/** Bernoulli sampling helper. The [random] reference is shared across calls — caller
+/** Bernoulli sampling helper. The [random] reference is shared across calls; caller
  *  is responsible for thread-safety; the spec materialiser hands each stat its own
  *  fresh `Random(seed)`. */
 internal class SampleSeriesStat<R : Result>(

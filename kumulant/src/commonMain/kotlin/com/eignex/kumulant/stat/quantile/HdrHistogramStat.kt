@@ -21,14 +21,14 @@ import kotlin.math.pow
  * is meaningful; over [TDigestStat] when bucket counts (rather than centroids)
  * are wanted in the snapshot.
  *
- * **Memory:** O([significantDigits] · log2(highest/lowest)) buckets — grows
+ * **Memory:** O([significantDigits] · log2(highest/lowest)) buckets; grows
  * to accommodate values past [initialHighestTrackableValue].
  *
  * **Update:** O(1) per observation; bitwise bucket assignment + striped
  * atomic add.
  *
  * **Concurrency:** Striped atomic adds on independent buckets. Lock-free and
- * exact under every [Concurrency] level — bucket increments commute and
+ * exact under every [Concurrency] level; bucket increments commute and
  * assignment is deterministic per value.
  */
 class HdrHistogramStat(

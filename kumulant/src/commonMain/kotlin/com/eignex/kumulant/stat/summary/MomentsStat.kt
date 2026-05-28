@@ -39,12 +39,12 @@ data class MomentsResult(
  * non-Gaussian tail diagnostics). Heavier than [VarianceStat]; reach for it
  * only when third/fourth moments are needed.
  *
- * **Memory:** O(1) — five doubles plus a lock.
+ * **Memory:** O(1); five doubles plus a lock.
  *
  * **Update:** O(1) per observation.
  *
  * **Concurrency:** Welford-coupled cells. [Concurrency.Strict] and
- * [Concurrency.HighWrite] lock the body — exact match to a serial run up to
+ * [Concurrency.HighWrite] lock the body; exact match to a serial run up to
  * floating-point reorder ULPs. [Concurrency.Relaxed] drops the lock; the
  * higher-order moments drift ~1e-4 relative under contention but never throw.
  */

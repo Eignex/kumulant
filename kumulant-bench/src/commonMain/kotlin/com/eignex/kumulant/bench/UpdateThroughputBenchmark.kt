@@ -15,7 +15,7 @@ import kotlinx.benchmark.TearDown
  * Update-loop throughput for every [StatSpec]. The `name` parameter picks the spec
  * by [StatSpec.name]; `concurrency` picks the level. Each invocation pushes
  * [updatesPerInvocation] observations through the spec's `applyUpdate` and JMH
- * reports throughput — divide by [updatesPerInvocation] for per-update cost.
+ * reports throughput; divide by [updatesPerInvocation] for per-update cost.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)

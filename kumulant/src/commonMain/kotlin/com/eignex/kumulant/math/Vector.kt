@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 /**
  * Read-only N-vector with sealed dense / sparse backing. Callers see the
- * same surface either way — query the size, read entries by index,
+ * same surface either way; query the size, read entries by index,
  * materialise to a `DoubleArray`. The same `VectorView` is used everywhere
  * a vector observation flows: as the input to
  * [com.eignex.kumulant.core.VectorStat.update] and
@@ -16,12 +16,12 @@ import kotlinx.serialization.Serializable
  * The split between [DenseVector] and [SparseVector] is purely a backing-
  * storage choice: dense pays per coordinate, sparse pays per nonzero. Most
  * library code iterates via the internal `forEachStored` extension to walk
- * only the populated entries — sparse callers feed sparse vectors without
+ * only the populated entries; sparse callers feed sparse vectors without
  * the cost of dense materialisation, and dense callers walk every index
  * the same way.
  *
  * Dot products, axpy, factorisations, and mutation are `internal` to
- * kumulant — `VectorView` is an observation snapshot, not a general
+ * kumulant; `VectorView` is an observation snapshot, not a general
  * linear-algebra type. For ad-hoc math reach for the `DoubleArray`
  * materialisation via [toDoubleArray].
  *
@@ -56,7 +56,7 @@ sealed interface VectorView {
  * Construction goes through the [Companion] factories: [DenseVector.of]
  * (copy a `DoubleArray`) or [DenseVector.zero] (allocate a zero vector
  * of given size). Direct constructors are restricted to keep the
- * mutable backing array out of caller hands — `DenseVector` is intended
+ * mutable backing array out of caller hands; `DenseVector` is intended
  * to be effectively immutable after the factory call, even though
  * internal kumulant code may mutate it for in-place updates.
  */

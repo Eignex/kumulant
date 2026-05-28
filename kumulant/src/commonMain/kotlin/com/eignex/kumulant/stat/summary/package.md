@@ -6,7 +6,7 @@ parallel workers via Chan-style parallel formulas or commuting cell
 arithmetic.
 
 This is the largest stat family and the one most other packages compose
-against — change detectors run over a [MeanStat] / [VarianceStat] internally,
+against; change detectors run over a [MeanStat] / [VarianceStat] internally,
 calibration runs over outcome means via [MeanStat], regression carries
 covariance through [WeightedVarianceResult]-shaped cells, and so on.
 
@@ -46,13 +46,13 @@ under contention but the stat never throws.
 | [MeanStat] | [WeightedMeanResult] | running mean, total weight |
 | [VarianceStat] | [WeightedVarianceResult] | mean + variance |
 | [MomentsStat] | [MomentsResult] | mean + variance + skewness + kurtosis (third and fourth central moments) |
-| [SummaryStat] | [SummaryResult] | mean + variance + min + max in one accumulator — useful as a primary for mixed-scaler feedback projections |
+| [SummaryStat] | [SummaryResult] | mean + variance + min + max in one accumulator; useful as a primary for mixed-scaler feedback projections |
 
 [WeightedVarianceResult] implements both
 [com.eignex.kumulant.core.HasSampleVariance] and
 [com.eignex.kumulant.core.HasCenterScale]; [SummaryResult] implements
 both of those plus [com.eignex.kumulant.core.HasMinMax], which is what
-makes it valuable as a feedback primary — one accumulator covers both
+makes it valuable as a feedback primary; one accumulator covers both
 the standardize and min-max projections downstream.
 
 ## Robust dispersion
@@ -69,7 +69,7 @@ directly.
 ## Paired
 
 [PairedSumStat] is the analogue of [SumStat] for paired streams: tracks
-per-axis sums of `(x, y)` updates. Not a regression — covariance and
+per-axis sums of `(x, y)` updates. Not a regression; covariance and
 correlation live in [com.eignex.kumulant.stat.regression.CovarianceStat].
 
 ## Composing patterns
@@ -77,15 +77,15 @@ correlation live in [com.eignex.kumulant.stat.regression.CovarianceStat].
 A few recurring patterns built from this family rather than as dedicated
 stats:
 
-- **Fraction meeting a threshold** — for SLO compliance and error
+- **Fraction meeting a threshold**; for SLO compliance and error
   budgets. Compose
   [Mean][com.eignex.kumulant.schema.Mean]`.transform(IfExpr(X gt threshold, 1.0, 0.0)).windowed(window)`.
   Mean over the Bernoulli predicate is exactly the matched fraction.
-- **Lag-k autocorrelation** —
+- **Lag-k autocorrelation**;
   [Covariance][com.eignex.kumulant.schema.Covariance]`.withSelfLag(k)`
   self-pairs each input with the value seen `k` updates ago; the Pearson
   correlation falls out of the running covariance.
-- **Standardised input** — feed any series stat through the
+- **Standardised input**; feed any series stat through the
   [StandardScalerSeries][com.eignex.kumulant.schema.StandardScalerSeries]
   spec or its modality siblings; the scaler reads `center` and `scale`
   off a [VarianceStat] / [MomentsStat] / [MadStat] / [SummaryStat]
@@ -97,7 +97,7 @@ stats:
 |------|--------|--------|-------------|
 | [SumStat], [CountStat], [TotalWeightsStat], [BernoulliSumStat] | O(1) | O(1) | striped-additive under HighWrite, atomic otherwise |
 | [MinStat], [MaxStat], [RangeStat] | O(1) | O(1) | CAS loop on a single cell |
-| [MeanStat] | O(1) | O(1) | Welford-coupled — locked under Strict / HighWrite, racing under Relaxed |
+| [MeanStat] | O(1) | O(1) | Welford-coupled; locked under Strict / HighWrite, racing under Relaxed |
 | [VarianceStat], [SummaryStat] | O(1) | O(1) | Welford-coupled |
 | [MomentsStat] | O(1) | O(1) | Welford-coupled (four cells) |
 | [MadStat] | O(t-digest compression) | O(log compression) | t-digest self-serialises |

@@ -25,10 +25,10 @@ import kotlin.random.Random
  * **Arms:** indexless, `nbrArms` fixed at construction; each arm owns one
  * [SeriesStat] from `policy.createArm()`.
  *
- * **Memory:** O(nbrArms · arm-state) — per-arm [SeriesStat] plus a shared
+ * **Memory:** O(nbrArms · arm-state); per-arm [SeriesStat] plus a shared
  * atomic step counter.
  *
- * **Choose:** O(nbrArms) — one `policy.evaluate` per arm, argmax.
+ * **Choose:** O(nbrArms); one `policy.evaluate` per arm, argmax.
  *
  * **Update:** O(1) on the targeted arm, delegated to `policy.update`.
  *
@@ -38,7 +38,7 @@ import kotlin.random.Random
  * **Concurrency:** per-arm [SeriesStat] carries its own concurrency. The step
  * counter is an atomic so concurrent `choose`s see distinct `t` values;
  * racing `update`s on different arms never block. Cross-arm snapshot
- * consistency is best-effort — a concurrent update may interleave between
+ * consistency is best-effort; a concurrent update may interleave between
  * per-arm reads.
  */
 class MultiArmedBandit<R : Result>(

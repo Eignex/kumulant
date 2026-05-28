@@ -20,7 +20,7 @@ private val EMPTY_VECTOR = DoubleArray(0)
  * Wire-serialisable AST for scalar expressions over the per-update input
  * environment. The library uses these wherever a stat needs to apply a
  * caller-supplied projection / weight / threshold expression that has to
- * round-trip on the wire — `weightBy`, `transform`, the per-bin scaler
+ * round-trip on the wire; `weightBy`, `transform`, the per-bin scaler
  * projections, the `WithFeedback` op, the loss / pinball / quantile
  * configurations.
  *
@@ -28,14 +28,14 @@ private val EMPTY_VECTOR = DoubleArray(0)
  *
  * Every evaluation receives:
  *
- * - `x: Double` — the primary scalar input. For series stats it's the
+ * - `x: Double`; the primary scalar input. For series stats it's the
  *   observation value; for paired stats it's the x-axis; for regression
  *   stats it's unused (use [V] to access feature vector coordinates).
- * - `y: Double` — the secondary scalar input. Used by paired stats (the
+ * - `y: Double`; the secondary scalar input. Used by paired stats (the
  *   y-axis) and regression stats (the response).
- * - `v: DoubleArray` — the full input vector. Used by vector / regression
+ * - `v: DoubleArray`; the full input vector. Used by vector / regression
  *   stats; empty otherwise.
- * - `primary: Result?` — the primary stat's snapshot at evaluation time
+ * - `primary: Result?`; the primary stat's snapshot at evaluation time
  *   for feedback operators. [Center], [Scale], [Low], [High] read directly
  *   from this; per-coordinate ops receive an [com.eignex.kumulant.core.IndexedResult]
  *   to thread the coordinate index through.
@@ -404,7 +404,7 @@ data class Switch(
 
 /**
  * Membership test: `of in values` (exact equality). Use it to flatten chains of
- * `Eq` predicates joined by `Or` — e.g. `VIndex In listOf(0.0, 3.0)`.
+ * `Eq` predicates joined by `Or`; e.g. `VIndex In listOf(0.0, 3.0)`.
  */
 @Serializable
 @SerialName("In")
@@ -741,7 +741,7 @@ internal data class InRange(
  * `transformVector(VectorExpr)` operator when the output is a fresh vector
  * rather than a per-element transform.
  *
- * Output length need not match input length — use [VectorExpr] for
+ * Output length need not match input length; use [VectorExpr] for
  * permutations, dimensionality changes, pooling, feature augmentation. For
  * same-length per-element transforms the simpler
  * `transformElement(ScalarExpr)` is more direct and pays no extra

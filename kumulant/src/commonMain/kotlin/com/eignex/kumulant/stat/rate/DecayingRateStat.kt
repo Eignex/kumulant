@@ -32,11 +32,11 @@ data class DecayingRateResult(
  * last 30 s, recent error rate). Reach for this over [RateStat] when older
  * activity should fade.
  *
- * **Memory:** O(1) — one [DecayingSumStat] plus a scalar projection.
+ * **Memory:** O(1); one [DecayingSumStat] plus a scalar projection.
  *
  * **Update:** O(1) per observation (one [DecayingSumStat.update] call).
  *
- * **Concurrency:** Inherits [DecayingSumStat]'s concurrency model — lock-free
+ * **Concurrency:** Inherits [DecayingSumStat]'s concurrency model; lock-free
  * and exact under every [Concurrency] level.
  */
 class DecayingRateStat(val halfLife: Duration, override val concurrency: Concurrency = Concurrency.None) :

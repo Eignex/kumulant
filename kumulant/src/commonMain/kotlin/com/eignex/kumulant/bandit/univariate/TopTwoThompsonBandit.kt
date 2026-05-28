@@ -7,7 +7,7 @@ import com.eignex.kumulant.core.SeriesStat
 import kotlin.random.Random
 
 /**
- * Top-Two Thompson Sampling (Russo 2020) — pure-exploration variant of
+ * Top-Two Thompson Sampling (Russo 2020); pure-exploration variant of
  * Thompson sampling for best-arm identification: sample every arm's
  * posterior, take the argmax `arm1`, play it with probability [beta], or
  * else resample until the argmax differs from `arm1` and play that runner-up.
@@ -30,7 +30,7 @@ import kotlin.random.Random
  * **Arms:** indexless, `nbrArms ≥ 2` fixed at construction; each arm owns
  * one posterior cell from `policy.createArm()`.
  *
- * **Memory:** O(nbrArms · arm-state) — per-arm posterior plus a step
+ * **Memory:** O(nbrArms · arm-state); per-arm posterior plus a step
  * counter.
  *
  * **Choose:** O(nbrArms) expected; O([maxResamples] · nbrArms) worst case
@@ -43,7 +43,7 @@ import kotlin.random.Random
  * is.
  *
  * **Concurrency:** per-arm [com.eignex.kumulant.core.SeriesStat] carries its
- * own concurrency. The step counter is non-atomic — concurrent `choose`
+ * own concurrency. The step counter is non-atomic; concurrent `choose`
  * calls race on it. Cross-arm snapshot consistency during `choose` is
  * best-effort under racing updates.
  */

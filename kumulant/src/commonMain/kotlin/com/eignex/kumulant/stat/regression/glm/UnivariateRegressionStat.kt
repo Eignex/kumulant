@@ -69,18 +69,18 @@ data class UnivariateRegressionResult(
  * carrying the raw [UnivariateRegressionResult.sxy], so the round trip is exact for
  * every penalty including the L1 case where the regularised slope can be zero.
  *
- * **Use cases:** single-feature streaming regression — calibration of a
+ * **Use cases:** single-feature streaming regression; calibration of a
  * scalar predictor, dose-response curves, anything where `y ~ slope·x +
  * intercept` covers it. For multi-feature regression reach for
  * [DiagonalRegressionStat] (factorised posterior) or [BayesianRegressionStat]
  * (full posterior).
  *
- * **Memory:** O(1) — six doubles plus a lock.
+ * **Memory:** O(1); six doubles plus a lock.
  *
  * **Update:** O(1) per observation.
  *
  * **Concurrency:** Welford-coupled cells. [Concurrency.Strict] and
- * [Concurrency.HighWrite] lock the body — exact match to a serial run up to
+ * [Concurrency.HighWrite] lock the body; exact match to a serial run up to
  * floating-point reorder ULPs. [Concurrency.Relaxed] drops the lock; the six
  * cells race and coefficients drift ~1e-5 relative under contention but
  * never throw.

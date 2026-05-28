@@ -7,7 +7,7 @@ import com.eignex.kumulant.math.VectorView
 import kotlin.random.Random
 
 /**
- * Online VFDT decision-tree classifier — the classification counterpart of
+ * Online VFDT decision-tree classifier; the classification counterpart of
  * [DecisionTreeRegressionStat]. Each leaf carries a [ClassCountsResult] (per-class
  * weighted counts); splits fire when a candidate beats the runner-up by the
  * Hoeffding bound on Gini reduction or information gain.

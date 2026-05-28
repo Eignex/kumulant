@@ -31,11 +31,11 @@ data class BernoulliSumResult(
  * **Use cases:** click/conversion accounting, Beta-Binomial bandit arms, A/B
  * sufficient-statistic logging.
  *
- * **Memory:** O(1) — two double cells.
+ * **Memory:** O(1); two double cells.
  *
  * **Update:** O(1) per observation (two atomic adds).
  *
- * **Concurrency:** Two independent atomic adds per update — exact under every
+ * **Concurrency:** Two independent atomic adds per update; exact under every
  * [Concurrency] level. A `read()` interleaved between the two writes of one
  * update can briefly observe successes/trials mismatched by one observation,
  * but the per-cell guarantees hold. [Concurrency.HighWrite] switches both

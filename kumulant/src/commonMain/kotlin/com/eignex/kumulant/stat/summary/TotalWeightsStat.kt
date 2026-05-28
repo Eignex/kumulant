@@ -5,7 +5,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.operation.withValue
 
 /**
- * Sum of per-update weights — i.e. the effective sample size.
+ * Sum of per-update weights; i.e. the effective sample size.
  *
  * **Use cases:** denominator for weighted means, weighted-sample-count
  * monitoring.

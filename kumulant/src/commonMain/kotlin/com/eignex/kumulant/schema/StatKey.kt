@@ -17,7 +17,7 @@ import com.eignex.kumulant.core.Result
  * Keys come out of the schema's declarators (`series`, `paired`, `vector`,
  * `discrete`, `group`); callers don't usually construct them by hand.
  *
- * The [R] type parameter is a phantom marker — narrows the return type of
+ * The [R] type parameter is a phantom marker; narrows the return type of
  * `GroupResult.get(key)` without affecting the wire format.
  */
 open class StatKey<R : Result>(

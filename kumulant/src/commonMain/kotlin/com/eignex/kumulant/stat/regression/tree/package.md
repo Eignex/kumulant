@@ -15,7 +15,7 @@ one consistent shape.
 | [RandomForestClassifierStat] | Bagged ensemble of classifier trees; predictions average per-class probabilities | One [DecisionTreeClassifierStat] per tree |
 
 Each takes a list of [Split] candidates (axis-aligned thresholds or
-arbitrary [ExprSplit] expressions) and a config —
+arbitrary [ExprSplit] expressions) and a config;
 [RegressionTreeConfig] for the regression side,
 [ClassificationTreeConfig] for the classification side. Splits fire
 when a candidate clears the Hoeffding bound on the configured metric:
@@ -26,7 +26,7 @@ for classification.
 
 [ThresholdSplit] is the standard axis-aligned predicate `x[i] <= t`.
 [ExprSplit] takes any [com.eignex.kumulant.schema.BoolExpr] for
-non-axis-aligned splits — useful when you want a tree to split on a
+non-axis-aligned splits; useful when you want a tree to split on a
 derived feature (`x[0] + x[1] > 0`, `(x[0] - x[1]).abs() > 1`)
 without materialising the feature in the input vector.
 
@@ -39,11 +39,11 @@ the stat into a single global accumulator. The Random forest's
 [TreePosterior] (and its forest counterpart [ForestPosterior]) turn a
 [TreeRegressionResult] / [ForestRegressionResult] into a scalar score:
 
-- [MeanTreePosterior] / [MeanForestPosterior] — deterministic leaf
+- [MeanTreePosterior] / [MeanForestPosterior]; deterministic leaf
   mean.
-- [ThompsonTreePosterior] / [ThompsonForestPosterior] — Normal-Gamma
+- [ThompsonTreePosterior] / [ThompsonForestPosterior]; Normal-Gamma
   draw from the leaf's `(mean, variance, totalWeights)` triplet.
-- [UcbTreePosterior] / [UcbForestPosterior] — UCB-style
+- [UcbTreePosterior] / [UcbForestPosterior]; UCB-style
   `mean + alpha * sqrt(variance / n)`.
 
 These plug into
@@ -54,7 +54,7 @@ choice that the GLM side has via the
 
 ## Concurrency
 
-The hot update path touches exactly one accumulator — the leaf the
+The hot update path touches exactly one accumulator; the leaf the
 observation routes to. Internal split nodes carry no live arm; subtree
 aggregates are derived by combining descendants at snapshot time.
 Each leaf arm honours the [com.eignex.kumulant.core.Concurrency] level

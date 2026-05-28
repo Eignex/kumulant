@@ -17,9 +17,9 @@ running-moment shape.
 
 [HoltStat] tracks two coupled cells:
 
-- `level` — the smoothed running level, updated as
+- `level`; the smoothed running level, updated as
   `level = alpha * value + (1 - alpha) * (priorLevel + priorTrend)`.
-- `trend` — the smoothed level-to-level change, updated as
+- `trend`; the smoothed level-to-level change, updated as
   `trend = beta * (level - priorLevel) + (1 - beta) * priorTrend`.
 
 The result exposes `forecast(steps)` which projects the level forward
@@ -35,10 +35,10 @@ revert.
 [SeasonalSmoothingStat] adds a `seasonal[period]` vector to Holt's
 shape. Each update applies one of two compositions:
 
-- **Additive** — `level + seasonal[t mod period]` (use when the
+- **Additive**; `level + seasonal[t mod period]` (use when the
   seasonal amplitude is independent of level).
-- **Multiplicative** — `level * seasonal[t mod period]` (use when the
-  seasonal amplitude scales with level — typical for ratios, sales,
+- **Multiplicative**; `level * seasonal[t mod period]` (use when the
+  seasonal amplitude scales with level; typical for ratios, sales,
   anything where seasonal effects multiply rather than add).
 
 The result exposes the same `forecast(steps)` projection, now factoring
@@ -49,9 +49,9 @@ in the appropriate seasonal slot for each step.
 [RecursiveVarianceStat] applies the standard GARCH(1,1) recurrence:
 `sigma² = omega + alpha * value² + beta * sigma²`. Three coefficients:
 
-- `omega` — long-run baseline variance.
-- `alpha` — sensitivity to the latest shock (squared value).
-- `beta` — persistence of the prior variance.
+- `omega`; long-run baseline variance.
+- `alpha`; sensitivity to the latest shock (squared value).
+- `beta`; persistence of the prior variance.
 
 `alpha + beta < 1` is the standard stationarity condition; the long-run
 variance is `omega / (1 - alpha - beta)`. Pick this over

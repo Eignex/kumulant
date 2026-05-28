@@ -58,7 +58,7 @@ import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Registry of [StatSpec]s — one entry per univariate stat. Tests and benchmarks
+ * Registry of [StatSpec]s; one entry per univariate stat. Tests and benchmarks
  * iterate over [allSpecs] (or a category subset) so adding a new stat means adding
  * an entry here and nothing else.
  */
@@ -325,7 +325,7 @@ val derivativeSeriesStatSpec = seriesStatSpec(
     updates = ::timeProgressingUnitWeights,
     scalar = { it.sum },
     // Each derivative sample is (delta / strideSeconds). They telescope to
-    // (value[n-1] - value[0]) / strideSeconds — independent of n.
+    // (value[n-1] - value[0]) / strideSeconds; independent of n.
     reference = { seq ->
         val list = seq.toList()
         if (list.size < 2) 0.0 else {
@@ -414,7 +414,7 @@ val bernoulliSumStatSpec = seriesStatSpec(
 )
 
 // Time-driven decay stats are exercised at `timestampNanos = 0` for every update
-// and the read — the decay factor `exp(-alpha*(t - t_i))` collapses to 1 so the
+// and the read; the decay factor `exp(-alpha*(t - t_i))` collapses to 1 so the
 // stat behaves like its non-decaying counterpart and admits a closed-form
 // reference. EWMA-family stats (decay by accumulated weight) require the
 // recursion-based reference and are order-dependent.
@@ -648,7 +648,7 @@ val decayingRateStatSpec = seriesStatSpec(
     scalar = { it.rate },
     reference = ::decayingRateReference,
     readAt = ::readAtFor,
-    // Small decay over the workload window — within 1% of the un-decayed scaled sum.
+    // Small decay over the workload window; within 1% of the un-decayed scaled sum.
 )
 
 // CounterRateStat is semantically one monotonic counter. The bench mirrors that
@@ -690,7 +690,7 @@ private fun counterRateReference(seq: Sequence<Update>): Double {
 }
 
 // Cardinality stats consume Long identifiers. The harness converts each Update
-// value to its IEEE-754 raw bits — that yields well-spread integer IDs from the
+// value to its IEEE-754 raw bits; that yields well-spread integer IDs from the
 // uniform [0, 1) double workload. Reference cardinality is the count of distinct
 // raw-bit IDs in the stream; sketches sit within their stated standard error.
 
@@ -701,7 +701,7 @@ val hyperLogLogStatSpec = discreteStatSpec(
     scalar = { it.estimate },
     reference = { seq -> seq.map { it.value.toRawBits() }.toSet().size.toDouble() },
     // Standard error ~ 1.04/sqrt(2^14) = 0.81%. With 5000 distinct IDs this is
-    // about 40 — allow 100 for safety across seeds and concurrency-induced drift.
+    // about 40; allow 100 for safety across seeds and concurrency-induced drift.
 )
 
 // Sketch stats check the universal "no update was lost" invariant via totalSeen.

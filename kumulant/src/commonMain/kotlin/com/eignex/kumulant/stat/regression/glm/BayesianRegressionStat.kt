@@ -60,15 +60,15 @@ import kotlin.math.sqrt
  * Reach for [DiagonalRegressionStat] when only marginal posteriors are
  * required and dimensions are high.
  *
- * **Memory:** O([featureSize]^2) — weights, covariance, and Cholesky factor.
+ * **Memory:** O([featureSize]^2); weights, covariance, and Cholesky factor.
  *
- * **Update:** O([featureSize]^2) per observation — rank-1 SMW downdate plus
+ * **Update:** O([featureSize]^2) per observation; rank-1 SMW downdate plus
  * Cholesky downdate. Re-Cholesky on overflow is O([featureSize]^3) but rare.
  *
  * **Concurrency:** Body serialised by an internal lock under any concurrent
  * [Concurrency] level (no-op under [Concurrency.None]). Exact under every
  * level up to floating-point reorder ULPs; throughput bound by lock
- * contention — shard and merge for higher write rates.
+ * contention; shard and merge for higher write rates.
  */
 class BayesianRegressionStat(
     override val featureSize: Int,

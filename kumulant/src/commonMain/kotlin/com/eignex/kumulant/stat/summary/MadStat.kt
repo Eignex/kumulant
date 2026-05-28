@@ -27,15 +27,15 @@ data class MadResult(
  * Streaming median absolute deviation, the robust analog of standard deviation. Backed
  * by two [TDigestStat]s: one over raw values (for the running median estimate), one
  * over `|value - median|` (for the MAD itself). The deviation digest is fed against the
- * running median estimate at each update — early observations therefore see a biased
+ * running median estimate at each update; early observations therefore see a biased
  * median, so the MAD takes ~tens to ~hundreds of updates to stabilise.
  *
  * **Use cases:** robust z-scores, IQR-style outlier fences, robust band centers when
  * the input is heavy-tailed and standard deviation overstates spread.
  *
- * **Memory:** O(compression) — two T-digests at the configured [compression].
+ * **Memory:** O(compression); two T-digests at the configured [compression].
  *
- * **Update:** O(1) amortised — two T-digest updates plus one median lookup.
+ * **Update:** O(1) amortised; two T-digest updates plus one median lookup.
  *
  * **Concurrency:** Inherits the underlying T-digest concurrency mode. The pair is
  * loosely coupled (the deviation digest reads the value digest's median on each
