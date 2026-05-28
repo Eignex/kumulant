@@ -53,18 +53,17 @@ val sketch = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.
 for (x in stream) sketch.update(x)
 val r = sketch.read() // r.probabilities and r.quantiles are parallel arrays
 
-val ols = UnivariateRegressionStat()
-for ((x, y) in pairs) ols.update(x, y)
-val fit = ols.read()
-val yHat = fit.slope * 7.0 + fit.intercept
+val cov = CovarianceStat()
+for ((x, y) in pairs) cov.update(x, y)
+val r = cov.read() // r.covariance, r.correlation
 
 val classifier = BayesianRegressionStat(featureSize = 8, link = Link.Logit)
 for ((x, label) in labeled) classifier.update(x, label)
 val pHat = classifier.read().predict(features) // sigmoid(eta) under Link.Logit
 
 val platt = PlattCalibratorStat()
-for ((score, label) in scoredLabels) platt.update(score, label)
-val calibrated = platt.read().calibrate(rawScore)
+for ((x, label) in labeled) platt.update(classifier.read().predict(x), label)
+val calibrated = platt.read().calibrate(pHat)
 
 val anomaly = HalfSpaceTreesStat(featureSize = 4, featureRanges = ranges)
 for (x in vectorStream) anomaly.update(x)
