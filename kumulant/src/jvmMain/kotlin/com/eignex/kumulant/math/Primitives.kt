@@ -19,7 +19,7 @@ import jdk.incubator.vector.VectorOperators
  * get scalar. No extra config required for correctness.
  */
 
-private val simdAvailable: Boolean = try {
+internal val simdAvailable: Boolean = try {
     Class.forName("jdk.incubator.vector.DoubleVector")
     true
 } catch (_: Throwable) {
@@ -37,9 +37,6 @@ internal actual fun denseScale(v: DoubleArray, vOff: Int, alpha: Double, len: In
     if (simdAvailable) Simd.scale(v, vOff, alpha, len) else scalarScale(v, vOff, alpha, len)
 }
 
-/** Identifies the runtime math backend powering the SIMD-like primitives. */
-public actual val mathBackend: String = if (simdAvailable) "simd(${Simd.lanes()} lanes)" else "scalar"
-
 private fun scalarDot(a: DoubleArray, aOff: Int, b: DoubleArray, bOff: Int, len: Int): Double {
     var s = 0.0
     for (i in 0 until len) s += a[aOff + i] * b[bOff + i]
@@ -56,7 +53,7 @@ private fun scalarScale(v: DoubleArray, vOff: Int, alpha: Double, len: Int) {
     for (i in 0 until len) v[vOff + i] *= alpha
 }
 
-private object Simd {
+internal object Simd {
     private val SPECIES = DoubleVector.SPECIES_PREFERRED
     private val LANE = SPECIES.length()
 
