@@ -11,6 +11,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.Hashers
 import com.eignex.kumulant.operation.FilterDiscreteStat
 import com.eignex.kumulant.operation.FilterPairedStat
 import com.eignex.kumulant.operation.FilterSeriesStat
@@ -508,15 +509,15 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
  */
 fun <R : Result> DiscreteStatSpec<R>.materialize(concurrency: Concurrency = Concurrency.None): DiscreteStat<R> {
     val out: DiscreteStat<*> = when (this) {
-        is HyperLogLog -> HyperLogLogStat(precision, concurrency)
+        is HyperLogLog -> HyperLogLogStat(precision, Hashers.resolve(hasher), concurrency)
 
-        is LinearCounting -> LinearCountingStat(bits, concurrency)
+        is LinearCounting -> LinearCountingStat(bits, Hashers.resolve(hasher), concurrency)
 
-        is BloomFilter -> BloomFilterStat(bits, hashes, concurrency)
+        is BloomFilter -> BloomFilterStat(bits, hashes, Hashers.resolve(hasher), concurrency)
 
-        is CountMinSketch -> CountMinSketchStat(depth, width, seed, concurrency)
+        is CountMinSketch -> CountMinSketchStat(depth, width, seed, Hashers.resolve(hasher), concurrency)
 
-        is MinHash -> MinHashStat(numHashes, seed, concurrency)
+        is MinHash -> MinHashStat(numHashes, seed, Hashers.resolve(hasher), concurrency)
 
         is SpaceSaving -> SpaceSavingStat(capacity, concurrency)
 

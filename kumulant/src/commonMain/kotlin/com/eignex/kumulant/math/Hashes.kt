@@ -1,5 +1,8 @@
 package com.eignex.kumulant.math
 
+import kotlin.jvm.JvmInline
+import kotlinx.serialization.Serializable
+
 // 64-bit hashing primitives used by the cardinality and sketch families.
 //
 // Naming convention for additional algorithms: each algorithm exposes top-level
@@ -44,6 +47,72 @@ fun hash64(value: String): Long = hash64(value.encodeToByteArray())
 fun interface Hasher64 {
     /** Return a 64-bit hash of [bytes]. Equal byte arrays must return equal hashes. */
     fun hash(bytes: ByteArray): Long
+}
+
+/**
+ * Pluggable `Long -> Long` mixer used by the discrete sketch family (HyperLogLog,
+ * LinearCounting, MinHash, BloomFilter, CountMinSketch) to spread a key's bits across
+ * the full 64-bit range before bucketing. Distinct from [Hasher64] (`ByteArray -> Long`):
+ * callers reduce a domain key to a `Long` first (e.g. via [hash64]), and the sketch then
+ * mixes that `Long` through here.
+ *
+ * Implementations must be deterministic and pure, and expose a stable [name] so a sketch
+ * can record which mixer produced its summary on the wire. Register a custom mixer with
+ * [Hashers.register] so [Hashers.resolve] can rebuild it from a name after deserialization.
+ */
+interface LongHasher {
+    /** Stable identifier serialized into specs and results, and used as the registry key. */
+    val name: String
+
+    /** Mix [value] into a uniformly spread 64-bit hash. */
+    fun mix(value: Long): Long
+}
+
+/** Canonical name of the default [LongHasher]; the wire default for the sketch specs. */
+const val SplitMix64Name: String = "splitmix64"
+
+/** Default [LongHasher]: the library's [splitmix64] mixer. Pre-registered with [Hashers]. */
+val SplitMix64: LongHasher = object : LongHasher {
+    override val name: String = SplitMix64Name
+    override fun mix(value: Long): Long = splitmix64(value)
+}
+
+/**
+ * Typed, serializable reference to a [LongHasher] by [name]. Carried by the discrete sketch
+ * specs and results in place of a bare string, and resolved to a live mixer via
+ * [Hashers.resolve]. Serializes transparently as its [name], so the wire form stays a plain
+ * string and needs no custom serializer.
+ */
+@Serializable
+@JvmInline
+value class HasherRef(val name: String) {
+    companion object {
+        /** Reference to the default [SplitMix64] mixer. */
+        val SplitMix64: HasherRef = HasherRef(SplitMix64Name)
+    }
+}
+
+/**
+ * Registry resolving a [LongHasher.name] back to its live implementation. The sketch
+ * families serialize only the mixer's name; [resolve] reconstructs the function when a
+ * spec is materialized or a sketch result is queried. [SplitMix64] is pre-registered.
+ *
+ * Custom mixers are not serializable on their own (a lambda cannot round-trip), so the
+ * wire carries the name and this registry supplies the code. Register a custom mixer at
+ * startup on every process that materializes or queries the affected sketches; the entry
+ * is global and not synchronized, so register before concurrent use.
+ */
+object Hashers {
+    private val registry: MutableMap<String, LongHasher> = mutableMapOf(SplitMix64.name to SplitMix64)
+
+    /** Register [hasher] under its [LongHasher.name], replacing any prior entry of that name. */
+    fun register(hasher: LongHasher) {
+        registry[hasher.name] = hasher
+    }
+
+    /** Resolve the [LongHasher] named by [ref], or throw if no mixer was registered under it. */
+    fun resolve(ref: HasherRef): LongHasher =
+        registry[ref.name] ?: error("Unknown LongHasher '${ref.name}'; register it via Hashers.register before use")
 }
 
 /**

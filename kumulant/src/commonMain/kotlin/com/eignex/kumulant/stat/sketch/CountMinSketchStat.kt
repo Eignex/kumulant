@@ -3,6 +3,10 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.math.HasherRef
+import com.eignex.kumulant.math.Hashers
+import com.eignex.kumulant.math.LongHasher
+import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.math.splitmix64
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
@@ -25,16 +29,23 @@ data class CountMinSketchResult(
     val seed: Long,
     val counters: LongArray,
     val totalSeen: Long,
+    /** Reference to the [LongHasher] that produced the counters; resolved by [estimate]. */
+    val hasher: HasherRef = HasherRef.SplitMix64,
 ) : Result
 
-/** Estimated weighted count of [value] - the minimum across rows. */
+/**
+ * Estimated weighted count of [value] - the minimum across rows. Re-derives the per-row
+ * index with the same [LongHasher] the sketch used (resolved by name via [Hashers]), so a
+ * custom hasher must be registered before querying.
+ */
 fun CountMinSketchResult.estimate(value: Long): Long {
     if (counters.isEmpty()) return 0L
     val mask = (width - 1).toLong()
+    val mixer = Hashers.resolve(hasher)
     var min = Long.MAX_VALUE
     for (row in 0 until depth) {
         val salt = splitmix64(seed + row.toLong())
-        val idx = (splitmix64(value xor salt) and mask).toInt()
+        val idx = (mixer.mix(value xor salt) and mask).toInt()
         val c = counters[row * width + idx]
         if (c < min) min = c
     }
@@ -44,8 +55,8 @@ fun CountMinSketchResult.estimate(value: Long): Long {
 /**
  * CountStat-MinStat sketch - a probabilistic frequency estimator over a [depth] x [width] matrix
  * of counters. Each update hashes the value with [depth] independent salts (derived from
- * [seed]) and increments one counter per row; the estimated count for any value is the
- * minimum counter across rows.
+ * [seed]) through the [hasher] (default [SplitMix64]) and increments one counter per row;
+ * the estimated count for any value is the minimum counter across rows.
  *
  * Estimates are one-sided overestimates: `estimate(x) >= true count(x)` always, with the
  * overestimate bounded by `2 * totalSeen / width` with high probability over the salt
@@ -69,6 +80,8 @@ class CountMinSketchStat(
     val depth: Int = 5,
     val width: Int = 1024,
     val seed: Long = -7046029254386353133L, // 0x9e3779b97f4a7c15
+    /** Mixer applied to each `value xor rowSalt`; defaults to [SplitMix64]. */
+    val hasher: LongHasher = SplitMix64,
     override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<CountMinSketchResult> {
 
@@ -90,7 +103,7 @@ class CountMinSketchStat(
         val w = round(weight).toLong()
         if (w <= 0L) return
         for (row in 0 until depth) {
-            val idx = (splitmix64(value xor rowSalts[row]) and mask).toInt()
+            val idx = (hasher.mix(value xor rowSalts[row]) and mask).toInt()
             counters.add(row * width + idx, w)
         }
         totalSeen.add(1L)
@@ -122,6 +135,7 @@ class CountMinSketchStat(
             seed = seed,
             counters = snapshot,
             totalSeen = totalSeen.load(),
+            hasher = HasherRef(hasher.name),
         )
     }
 
@@ -129,6 +143,7 @@ class CountMinSketchStat(
         depth,
         width,
         seed,
+        hasher,
         concurrency ?: this.concurrency,
     )
 }

@@ -3,7 +3,10 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.splitmix64
+import com.eignex.kumulant.math.HasherRef
+import com.eignex.kumulant.math.Hashers
+import com.eignex.kumulant.math.LongHasher
+import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casOr
@@ -26,13 +29,20 @@ data class BloomFilterResult(
     val words: LongArray,
     /** Number of `update(value)` calls absorbed; informational. */
     val totalSeen: Long,
+    /** Reference to the [LongHasher] that produced the bitset; resolved by [contains]. */
+    val hasher: HasherRef = HasherRef.SplitMix64,
 ) : Result
 
-/** True iff every bit set during an `update(value)` is still set in `words`. */
+/**
+ * True iff every bit set during an `update(value)` is still set in `words`. Re-derives the
+ * bit positions with the same [LongHasher] the filter used (resolved by name via [Hashers]),
+ * so a custom hasher must be registered before querying.
+ */
 fun BloomFilterResult.contains(value: Long): Boolean {
     val mask = (bits - 1).toLong()
-    val h1 = splitmix64(value)
-    val h2 = splitmix64(h1)
+    val mixer = Hashers.resolve(hasher)
+    val h1 = mixer.mix(value)
+    val h2 = mixer.mix(h1)
     for (i in 0 until hashes) {
         val pos = (h1 + i.toLong() * h2) and mask
         val wordIdx = (pos ushr 6).toInt()
@@ -44,8 +54,8 @@ fun BloomFilterResult.contains(value: Long): Boolean {
 
 /**
  * Bloom filter - probabilistic set-membership test with no false negatives. [bits] bits
- * are split across [hashes] positions per insert, derived from `splitmix64` via the
- * Kirsch-Mitzenmacher double-hashing scheme.
+ * are split across [hashes] positions per insert, derived from the [hasher] (default
+ * [SplitMix64]) via the Kirsch-Mitzenmacher double-hashing scheme.
  *
  * False-positive rate is approximately `(1 - e^(-hashes * n / bits))^hashes` where `n` is
  * the number of distinct inserts. Memory is `bits / 64` Longs; mergeable element-wise via
@@ -67,6 +77,8 @@ fun BloomFilterResult.contains(value: Long): Boolean {
 class BloomFilterStat(
     val bits: Int = 1 shl 16,
     val hashes: Int = 7,
+    /** Mixer seeding the double-hashing scheme; defaults to [SplitMix64]. */
+    val hasher: LongHasher = SplitMix64,
     override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<BloomFilterResult> {
 
@@ -85,8 +97,8 @@ class BloomFilterStat(
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        val h1 = splitmix64(value)
-        val h2 = splitmix64(h1)
+        val h1 = hasher.mix(value)
+        val h2 = hasher.mix(h1)
         for (i in 0 until hashes) {
             val pos = (h1 + i.toLong() * h2) and mask
             val wordIdx = (pos ushr 6).toInt()
@@ -120,8 +132,9 @@ class BloomFilterStat(
             hashes = hashes,
             words = snapshot,
             totalSeen = totalSeen.load(),
+            hasher = HasherRef(hasher.name),
         )
     }
 
-    override fun create(concurrency: Concurrency?) = BloomFilterStat(bits, hashes, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = BloomFilterStat(bits, hashes, hasher, concurrency ?: this.concurrency)
 }
