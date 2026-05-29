@@ -1,7 +1,7 @@
 package com.eignex.kumulant.math
 
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmInline
 
 // 64-bit hashing primitives used by the cardinality and sketch families.
 //
@@ -69,11 +69,11 @@ interface LongHasher {
 }
 
 /** Canonical name of the default [LongHasher]; the wire default for the sketch specs. */
-const val SplitMix64Name: String = "splitmix64"
+private const val SPLIT_MIX64_NAME: String = "splitmix64"
 
 /** Default [LongHasher]: the library's [splitmix64] mixer. Pre-registered with [Hashers]. */
 val SplitMix64: LongHasher = object : LongHasher {
-    override val name: String = SplitMix64Name
+    override val name: String = SPLIT_MIX64_NAME
     override fun mix(value: Long): Long = splitmix64(value)
 }
 
@@ -86,9 +86,10 @@ val SplitMix64: LongHasher = object : LongHasher {
 @Serializable
 @JvmInline
 value class HasherRef(val name: String) {
+    /** Built-in [HasherRef] constants. */
     companion object {
         /** Reference to the default [SplitMix64] mixer. */
-        val SplitMix64: HasherRef = HasherRef(SplitMix64Name)
+        val SplitMix64: HasherRef = HasherRef(SPLIT_MIX64_NAME)
     }
 }
 
