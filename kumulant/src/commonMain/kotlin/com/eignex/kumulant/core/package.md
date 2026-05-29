@@ -70,10 +70,6 @@ and a multivariate one, or both a `MeanStat` and a `DecayingMeanStat`.
 | [HasCenterScale] | `center: Double`, `scale: Double`; consumed by standardize projections and the band wrapper |
 | [HasMinMax] | `min: Double`, `max: Double`; consumed by min-max projections |
 
-The [BandResult] type lives here because it is the canonical output of
-the band wrapper, which projects any [HasCenterScale] result into
-`(center, scale, k, lower, upper)`.
-
 ## Concurrency contract
 
 [Concurrency] is the deployment knob; `None` / `Relaxed` / `Strict` /
