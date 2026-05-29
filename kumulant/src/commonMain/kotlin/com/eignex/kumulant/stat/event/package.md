@@ -5,7 +5,7 @@ dwell times, last-seen timestamps, level crossings, peak excursions.
 They share the streaming-stats discipline but their results carry counts
 of state changes and timestamps rather than numeric aggregates.
 
-## The five members
+## Picking an event stat
 
 | Stat | Result | Question |
 |------|--------|----------|
@@ -53,6 +53,15 @@ of state changes and timestamps rather than numeric aggregates.
 - `Recency.filter(predicate)` for "time since last matching event".
 - Compose [CrossingStat] with [ExcursionStat] for both "how often" and
   "how far" diagnostics over the same signal.
+
+## Merge
+
+[CrossingStat], [RecencyStat], and [SojournStat] merge exactly: crossing counts
+sum cell-wise, recency takes the later last-seen timestamp, sojourn sums
+per-state nanos and transition counts. [ExcursionStat] and [RunLengthStat] merge
+approximately; peak/trough and run-length state is order-dependent, so the merge
+combines the extremes (max peak, min trough, longest run) without reconstructing
+the exact sequence.
 
 ## Concurrency
 

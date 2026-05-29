@@ -84,3 +84,15 @@ All paired-mean-shaped metrics (`MseLoss`, `MaeLoss`, `LogLoss`,
 [MeanStat][com.eignex.kumulant.stat.summary.MeanStat]'s Chan-style
 parallel formula; exact across replicas. [AucStat] and
 [ConfusionMatrixStat] merge via cell-wise bin / matrix addition.
+
+## Concurrency
+
+The mean-shaped metrics ([AccuracyStat], [BrierScoreStat], [PinballLossStat],
+and the `MseLoss` / `MaeLoss` / `LogLoss` stats in `Loss.kt`) inherit
+[MeanStat][com.eignex.kumulant.stat.summary.MeanStat]'s Welford-coupled model:
+locked under [com.eignex.kumulant.core.Concurrency.Strict] /
+[com.eignex.kumulant.core.Concurrency.HighWrite], drifting by ULPs under
+[com.eignex.kumulant.core.Concurrency.Relaxed] but never throwing. [AucStat] and
+[ConfusionMatrixStat] apply independent striped atomic increments to their
+histogram / matrix cells; lock-free and exact under every level, with the
+trapezoidal / precision-recall read running single-threaded.

@@ -34,7 +34,15 @@ downstream consumer sees depends on which sketch was picked. For a
 uniform downstream interface, project to [SparseHistogramResult] (the
 shared histogram shape).
 
-## Merge story
+## PIT-style equiprobable histogram
+
+The `pitHistogram(numBins)` factory in
+[com.eignex.kumulant.stat.score] is built from this family: a stream of
+PIT values (which are uniform under correct distributional forecasts)
+fed into an equiprobable [LinearHistogramStat] over `[0, 1]` exposes
+the deviation from uniformity that the corresponding PIT test consumes.
+
+## Merge
 
 - **DDSketch, HDR, t-digest** merge exactly across replicas via
   cell-wise bin addition / centroid combination.
@@ -54,11 +62,3 @@ single striped atomic increment on the destination bin; exact under
 every [com.eignex.kumulant.core.Concurrency] level. [ReservoirHistogramStat]
 and [FrugalQuantileStat] keep coupled state and self-serialise under
 concurrent access. [TDigestStat] self-serialises through its own lock.
-
-## PIT-style equiprobable histogram
-
-The `pitHistogram(numBins)` factory in
-[com.eignex.kumulant.stat.score] is built from this family: a stream of
-PIT values (which are uniform under correct distributional forecasts)
-fed into an equiprobable [LinearHistogramStat] over `[0, 1]` exposes
-the deviation from uniformity that the corresponding PIT test consumes.

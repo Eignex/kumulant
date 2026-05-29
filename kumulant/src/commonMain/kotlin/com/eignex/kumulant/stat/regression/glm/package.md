@@ -69,3 +69,30 @@ of the *model*, not the *bandit*. The bandit consumes them.
 learning rate from the current step counter. Wrap them in
 [com.eignex.kumulant.schema.Sgd] (or any other [com.eignex.kumulant.schema.OptimizerSpec])
 to pass through the wire.
+
+## Merge
+
+[UnivariateRegressionStat] merges exactly via Chan-style parallel Welford on its
+running covariance. [DiagonalRegressionStat] and [BayesianRegressionStat] merge
+exactly by combining Gaussian posteriors: per-coordinate precision-weighted for
+the diagonal, full precision add-and-downdate (with Cholesky recomputation) for
+the full covariance. [StochasticRegressionStat] merges approximately; SGD keeps
+no second-moment information, so the combine is a sample-weighted average of the
+weight vectors. [HierarchicalBayesianRegression] does not merge; the manager
+refits the population prior from its tracked instances instead.
+
+## Concurrency
+
+[UnivariateRegressionStat] is Welford-coupled: locked under
+[com.eignex.kumulant.core.Concurrency.Strict] /
+[com.eignex.kumulant.core.Concurrency.HighWrite], racing with bounded drift
+under [com.eignex.kumulant.core.Concurrency.Relaxed]. [StochasticRegressionStat]
+runs lock-free asynchronous SGD (Hogwild) under
+[com.eignex.kumulant.core.Concurrency.Relaxed] and serialises the update body
+under [com.eignex.kumulant.core.Concurrency.Strict] /
+[com.eignex.kumulant.core.Concurrency.HighWrite]. [DiagonalRegressionStat] and
+[BayesianRegressionStat] serialise the whole update under any concurrent level
+(the coupled posterior update has no lock-free form); throughput is
+contention-bound, so shard and merge for higher write rates.
+[HierarchicalBayesianRegression] is a manager, not a hot-path stat; each tracked
+[BayesianRegressionStat] honours its own level.

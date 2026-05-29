@@ -3,7 +3,7 @@
 Structural queries on a stream that aren't shaped like a cardinality or
 a quantile. Four members; each answers a different question.
 
-## What's in the family
+## Picking a sketch
 
 | Stat | Result | Question |
 |------|--------|----------|

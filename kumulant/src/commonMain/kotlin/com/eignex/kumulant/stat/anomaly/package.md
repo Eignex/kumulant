@@ -52,7 +52,7 @@ anomalous":
 This asymmetry tracks the literature; documenting it here so callers
 don't unify the directions accidentally.
 
-## Merge support
+## Merge
 
 [GaussianScorerStat] inherits Chan-style parallel merge from
 [com.eignex.kumulant.stat.summary.VarianceStat]; exact across
@@ -63,3 +63,16 @@ too), and a half-space-trees result only merges when the tree
 structures match (same `randomSeed`). For distributed anomaly
 detection, ship the underlying [com.eignex.kumulant.stat.quantile.DDSketchStat]
 / [HalfSpaceTreesStat] snapshots and merge those.
+
+## Concurrency
+
+[GaussianScorerStat] inherits [com.eignex.kumulant.stat.summary.VarianceStat]'s
+Welford-coupled cells: locked under [com.eignex.kumulant.core.Concurrency.Strict]
+/ [com.eignex.kumulant.core.Concurrency.HighWrite], racing with bounded drift
+under [com.eignex.kumulant.core.Concurrency.Relaxed] but never throwing.
+[QuantileFilterStat] inherits [com.eignex.kumulant.stat.quantile.DDSketchStat]'s
+striped histogram counters; lock-free and exact under every level.
+[HalfSpaceTreesStat] applies independent atomic mass updates per leaf and
+serialises only the periodic reference-window rotation under
+[com.eignex.kumulant.core.Concurrency.Strict] /
+[com.eignex.kumulant.core.Concurrency.HighWrite].

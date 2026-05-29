@@ -72,7 +72,7 @@ directly.
 per-axis sums of `(x, y)` updates. Not a regression; covariance and
 correlation live in [com.eignex.kumulant.stat.regression.CovarianceStat].
 
-## Composing patterns
+## Compose patterns
 
 A few recurring patterns built from this family rather than as dedicated
 stats:
@@ -91,7 +91,17 @@ stats:
   off a [VarianceStat] / [MomentsStat] / [MadStat] / [SummaryStat]
   primary on every update.
 
-## Memory and concurrency at a glance
+## Merge
+
+Every entry merges across parallel workers. The additive stats ([SumStat],
+[CountStat], [TotalWeightsStat], [BernoulliSumStat]) sum cell-wise; [MinStat],
+[MaxStat], and [RangeStat] take cell-wise min/max; the Welford family
+([MeanStat], [VarianceStat], [MomentsStat], [SummaryStat]) uses the Chan-style
+parallel recurrence; [PairedSumStat] sums each axis. All of these are exact.
+[MadStat] is the one approximation: the t-digests carry no round-trippable
+state, so merge re-pushes the `(median, MAD)` pair as a single update.
+
+## Concurrency
 
 | Stat | Memory | Update | Concurrency |
 |------|--------|--------|-------------|

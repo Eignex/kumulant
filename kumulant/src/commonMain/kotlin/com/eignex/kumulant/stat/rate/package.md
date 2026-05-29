@@ -37,12 +37,20 @@ as a counter reset (e.g. process restart, counter rollover) and the
 rate floor is 0. With `treatDecreaseAsReset = false`, decreases produce
 negative rates.
 
-## Compose
+## Compose patterns
 
 - `Rate.windowed(duration)` for windowed throughput: the windowed
   wrapper produces a sliding rate over the configured duration.
 - `DecayingRate.transform(IfExpr(predicate, 1.0, 0.0))` for an
   exponentially-decayed predicate-match rate.
+
+## Merge
+
+All three merge exactly. [RateStat] and [CounterRateStat] sum their event /
+delta totals cell-wise and take the earlier window start; [DecayingRateStat]
+delegates to [com.eignex.kumulant.stat.decay.DecayingSumStat]'s exact merge and
+re-projects the rate. Workers can track slices of the same stream and the
+coordinator merges snapshots without bias.
 
 ## Concurrency
 

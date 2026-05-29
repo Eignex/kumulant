@@ -91,3 +91,26 @@ scoring rule.
   (non-parametric, cheap, no convergence concerns).
 - Need calibrated probabilities? Wrap any of the above's output through
   [com.eignex.kumulant.stat.calibration].
+
+## Merge
+
+Of the stats living directly here, [CovarianceStat] and [GaussianNaiveBayesStat]
+merge exactly (Chan-style parallel Welford on the running covariance and on the
+per-class moments); [SoftmaxRegressionStat] merges approximately via a
+sample-weighted blend of the per-class weight vectors, the usual SGD limitation.
+The [glm][com.eignex.kumulant.stat.regression.glm] and
+[tree][com.eignex.kumulant.stat.regression.tree] subpackages document their own
+merge stories.
+
+## Concurrency
+
+[CovarianceStat] inherits
+[com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat]'s
+Welford-coupled model: locked under [com.eignex.kumulant.core.Concurrency.Strict]
+/ [com.eignex.kumulant.core.Concurrency.HighWrite], racing under
+[com.eignex.kumulant.core.Concurrency.Relaxed]. [SoftmaxRegressionStat] and
+[GaussianNaiveBayesStat] serialise the update body under
+[com.eignex.kumulant.core.Concurrency.Strict] /
+[com.eignex.kumulant.core.Concurrency.HighWrite]; under
+[com.eignex.kumulant.core.Concurrency.Relaxed] the per-class cells race with
+bounded drift. See the subpackages for the glm and tree concurrency designs.

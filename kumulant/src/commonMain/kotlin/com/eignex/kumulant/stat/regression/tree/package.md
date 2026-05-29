@@ -5,7 +5,7 @@ machinery they're built on. The package covers both regression
 (continuous `y`) and classification (`y` in `[0, numClasses)`) under
 one consistent shape.
 
-## The four user-facing stats
+## Picking a tree stat
 
 | Stat | Output | Leaf state |
 |------|--------|-----------|
@@ -51,6 +51,15 @@ These plug into
 non-linear contextual bandits with the same Thompson / UCB / mean
 choice that the GLM side has via the
 [com.eignex.kumulant.stat.regression.glm.LinearPosterior] family.
+
+## Merge
+
+All four merge approximately through `tree.mergeSnapshot()`, which combines
+matching leaf accumulators: weighted Welford per leaf for the regression trees,
+cell-wise class-count sums for the classifiers, per-tree for the forests. The
+combine assumes the tree structures line up (same split history); divergent
+trees merge only their shared leaves. For distributed training, prefer feeding
+one stat the ordered stream and treat merge as a roll-up.
 
 ## Concurrency
 

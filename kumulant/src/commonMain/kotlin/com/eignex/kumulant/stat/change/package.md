@@ -48,6 +48,16 @@ For drift detectors on classification accuracy specifically, feed the
 binary correctness signal `1[predicted == truth]` through one of these
 stats. The same pattern works for any binary signal.
 
+## Merge
+
+All three drift detectors merge only approximately; the state is an
+order-dependent recurrence with no exact parallel combine. [CusumStat] and
+[PageHinkleyStat] average their cumulative-deviation cells (and [PageHinkleyStat]
+weight-averages the running mean); [AdwinStat] carries over the change counter
+without reconstructing the windowed histogram. Treat merge as a roll-up
+convenience; for distributed drift detection, run a detector per stream rather
+than merging partials.
+
 ## Concurrency
 
 All three keep coupled state (running statistic + previous reference)

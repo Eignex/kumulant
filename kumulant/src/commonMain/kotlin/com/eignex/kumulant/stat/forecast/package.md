@@ -5,7 +5,7 @@ Predictive recurrences with multi-cell state. Their results expose
 [decay][com.eignex.kumulant.stat.decay] family's
 running-moment shape.
 
-## The three members
+## Picking a forecaster
 
 | Stat | Output shape | Reach for it when |
 |------|--------------|-------------------|
@@ -58,6 +58,15 @@ variance is `omega / (1 - alpha - beta)`. Pick this over
 [EwmaVarianceStat][com.eignex.kumulant.stat.decay.EwmaVarianceStat]
 when the long-run floor matters or you want to decouple shock and
 persistence.
+
+## Merge
+
+All three forecasters merge only approximately. The smoothing recurrences are
+order-dependent with no exact parallel combine, so the merge averages the
+coupled cells: level and trend for [HoltStat], plus the seasonal factor vector
+for [SeasonalSmoothingStat] and the running variance for [RecursiveVarianceStat].
+Treat merge as a roll-up convenience; for the truest forecast, feed one stat the
+ordered stream.
 
 ## Concurrency
 
