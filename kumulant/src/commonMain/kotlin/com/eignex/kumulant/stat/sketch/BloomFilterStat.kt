@@ -136,5 +136,6 @@ class BloomFilterStat(
         )
     }
 
-    override fun create(concurrency: Concurrency?) = BloomFilterStat(bits, hashes, hasher, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) =
+        BloomFilterStat(bits, hashes, hasher, concurrency ?: this.concurrency)
 }

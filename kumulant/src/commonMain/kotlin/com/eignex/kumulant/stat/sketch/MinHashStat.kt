@@ -130,5 +130,6 @@ class MinHashStat(
         )
     }
 
-    override fun create(concurrency: Concurrency?) = MinHashStat(numHashes, seed, hasher, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) =
+        MinHashStat(numHashes, seed, hasher, concurrency ?: this.concurrency)
 }

@@ -410,7 +410,7 @@ data object Accuracy : PairedStatSpec<WeightedMeanResult>
 data class HyperLogLog(
     /** Number of register-index bits; memory is `2^precision` bytes. */
     val precision: Int = 14,
-    /** Name of the [LongHasher] applied before bucketing; resolved via [Hashers]. */
+    /** [HasherRef] for the mixer applied before bucketing; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<HyperLogLogResult>
 
@@ -420,7 +420,7 @@ data class HyperLogLog(
 data class LinearCounting(
     /** Bitset size; trade-off between memory and accuracy near the saturation cap. */
     val bits: Int = 4096,
-    /** Name of the [LongHasher] applied before indexing; resolved via [Hashers]. */
+    /** [HasherRef] for the mixer applied before indexing; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<LinearCountingResult>
 
@@ -432,7 +432,7 @@ data class BloomFilter(
     val bits: Int = 1 shl 16,
     /** Number of independent hash functions per insert. */
     val hashes: Int = 7,
-    /** Name of the [LongHasher] seeding the double-hashing scheme; resolved via [Hashers]. */
+    /** [HasherRef] for the mixer seeding the double-hashing scheme; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<BloomFilterResult>
 
@@ -446,7 +446,7 @@ data class CountMinSketch(
     val width: Int = 1024,
     /** PRNG seed used to derive the per-row hash salts. */
     val seed: Long = -7046029254386353133L,
-    /** Name of the [LongHasher] applied per row; resolved via [Hashers]. */
+    /** [HasherRef] for the mixer applied per row; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<CountMinSketchResult>
 
@@ -458,7 +458,7 @@ data class MinHash(
     val numHashes: Int = 128,
     /** PRNG seed used to derive the per-hash salts. */
     val seed: Long = -3724518991637283867L,
-    /** Name of the [LongHasher] applied per signature slot; resolved via [Hashers]. */
+    /** [HasherRef] for the mixer applied per signature slot; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<MinHashResult>
 
