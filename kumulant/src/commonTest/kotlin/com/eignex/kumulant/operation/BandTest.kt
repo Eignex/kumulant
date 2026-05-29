@@ -1,6 +1,5 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.core.BandResult
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.math.sqrt
 import kotlin.test.Test

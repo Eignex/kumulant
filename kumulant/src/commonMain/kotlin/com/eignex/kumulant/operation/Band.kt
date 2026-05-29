@@ -1,6 +1,5 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.core.BandResult
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.SeriesStat
