@@ -1,5 +1,6 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.stat.anomaly.FeatureRange
 import com.eignex.kumulant.stat.anomaly.GaussianScoreResult
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesResult
@@ -409,6 +410,8 @@ data object Accuracy : PairedStatSpec<WeightedMeanResult>
 data class HyperLogLog(
     /** Number of register-index bits; memory is `2^precision` bytes. */
     val precision: Int = 14,
+    /** Name of the [LongHasher] applied before bucketing; resolved via [Hashers]. */
+    val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<HyperLogLogResult>
 
 /** Spec for `LinearCountingStat`: cardinality estimator backed by a bitset of [bits] cells. */
@@ -417,6 +420,8 @@ data class HyperLogLog(
 data class LinearCounting(
     /** Bitset size; trade-off between memory and accuracy near the saturation cap. */
     val bits: Int = 4096,
+    /** Name of the [LongHasher] applied before indexing; resolved via [Hashers]. */
+    val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<LinearCountingResult>
 
 /** Spec for `BloomFilterStat`: probabilistic set membership. */
@@ -427,6 +432,8 @@ data class BloomFilter(
     val bits: Int = 1 shl 16,
     /** Number of independent hash functions per insert. */
     val hashes: Int = 7,
+    /** Name of the [LongHasher] seeding the double-hashing scheme; resolved via [Hashers]. */
+    val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<BloomFilterResult>
 
 /** Spec for `CountMinSketchStat`: approximate frequency table for unbounded-cardinality streams. */
@@ -439,6 +446,8 @@ data class CountMinSketch(
     val width: Int = 1024,
     /** PRNG seed used to derive the per-row hash salts. */
     val seed: Long = -7046029254386353133L,
+    /** Name of the [LongHasher] applied per row; resolved via [Hashers]. */
+    val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<CountMinSketchResult>
 
 /** Spec for `MinHashStat`: Jaccard-similarity signature over [numHashes] independent hash functions. */
@@ -449,6 +458,8 @@ data class MinHash(
     val numHashes: Int = 128,
     /** PRNG seed used to derive the per-hash salts. */
     val seed: Long = -3724518991637283867L,
+    /** Name of the [LongHasher] applied per signature slot; resolved via [Hashers]. */
+    val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<MinHashResult>
 
 /** Spec for `SojournStat`: per-state time, transition counts, and current dwell over a declared alphabet. */

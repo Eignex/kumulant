@@ -3,7 +3,8 @@ package com.eignex.kumulant.stat.cardinality
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.splitmix64
+import com.eignex.kumulant.math.LongHasher
+import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casOr
@@ -35,7 +36,8 @@ data class LinearCountingResult(
 /**
  * Linear-counting cardinality estimator over a fixed [bits]-bit bitset.
  *
- * For each input, sets one bit indexed by `splitmix64(value) mod bits`. The cardinality
+ * For each input, sets one bit indexed by `hasher.mix(value) mod bits` (the [hasher]
+ * defaults to [SplitMix64]). The cardinality
  * estimate is `-bits * ln(unsetBits / bits)`. Cheap and accurate for cardinalities up to
  * roughly [bits]; degrades sharply (and saturates to infinity) when the bitset fills.
  * Prefer [HyperLogLogStat] when the cardinality range is unknown.
@@ -54,8 +56,12 @@ data class LinearCountingResult(
  * independent atomic ops. Lock-free and exact under every [Concurrency]
  * level; bit sets are idempotent and commutative.
  */
-class LinearCountingStat(val bits: Int = 4096, override val concurrency: Concurrency = Concurrency.None) :
-    DiscreteStat<LinearCountingResult> {
+class LinearCountingStat(
+    val bits: Int = 4096,
+    /** Mixer applied to each input before indexing; defaults to [SplitMix64]. */
+    val hasher: LongHasher = SplitMix64,
+    override val concurrency: Concurrency = Concurrency.None,
+) : DiscreteStat<LinearCountingResult> {
 
     init {
         require(bits > 0) { "bits must be > 0" }
@@ -71,7 +77,7 @@ class LinearCountingStat(val bits: Int = 4096, override val concurrency: Concurr
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        val hash = splitmix64(value)
+        val hash = hasher.mix(value)
         val pos = hash and mask
         val wordIdx = (pos ushr 6).toInt()
         val bitMask = 1L shl (pos and 63L).toInt()
@@ -118,5 +124,5 @@ class LinearCountingStat(val bits: Int = 4096, override val concurrency: Concurr
         )
     }
 
-    override fun create(concurrency: Concurrency?) = LinearCountingStat(bits, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = LinearCountingStat(bits, hasher, concurrency ?: this.concurrency)
 }

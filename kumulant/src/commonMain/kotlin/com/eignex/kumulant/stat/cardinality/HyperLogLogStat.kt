@@ -3,7 +3,8 @@ package com.eignex.kumulant.stat.cardinality
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.splitmix64
+import com.eignex.kumulant.math.LongHasher
+import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casMax
@@ -30,8 +31,8 @@ data class HyperLogLogResult(val estimate: Double, val precision: Int, val regis
  * Allocates `m = 2^precision` byte-sized registers and uses the standard
  * `alpha_m * m^2 / Sum 2^-Mj` estimator, switching to linear counting on small inputs
  * (`rawE <= 2.5*m` with at least one empty register) to eliminate the well-known
- * HLL bias near zero. Inputs are run through SplitMix64 before bucketing so
- * callers can pass raw IDs without worrying about hash quality.
+ * HLL bias near zero. Inputs are run through the [hasher] (default [SplitMix64]) before
+ * bucketing so callers can pass raw IDs without worrying about hash quality.
  *
  * Memory: `m` Longs (registers) plus a counter. Standard error is ~ `1.04/sqrtm`
  * (~ 0.81% at the default `precision = 14`). 64-bit hashing makes the original
@@ -61,6 +62,8 @@ data class HyperLogLogResult(val estimate: Double, val precision: Int, val regis
 class HyperLogLogStat(
     /** Number of register-index bits; memory is `2^precision` bytes. */
     val precision: Int = 14,
+    /** Mixer applied to each input before bucketing; defaults to [SplitMix64]. */
+    val hasher: LongHasher = SplitMix64,
     override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<HyperLogLogResult> {
 
@@ -82,7 +85,7 @@ class HyperLogLogStat(
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        val hash = splitmix64(value)
+        val hash = hasher.mix(value)
         val idx = (hash ushr (64 - precision)).toInt() and (m - 1)
         val w = hash shl precision
         val rho = (w.countLeadingZeroBits().coerceAtMost(64 - precision)) + 1
@@ -130,5 +133,5 @@ class HyperLogLogStat(
         )
     }
 
-    override fun create(concurrency: Concurrency?) = HyperLogLogStat(precision, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = HyperLogLogStat(precision, hasher, concurrency ?: this.concurrency)
 }

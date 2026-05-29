@@ -3,6 +3,8 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.math.LongHasher
+import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.math.splitmix64
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
@@ -79,6 +81,8 @@ class MinHashStat(
     val numHashes: Int = 128,
     /** PRNG seed used to derive the per-hash salts; must match across instances to compare. */
     val seed: Long = -3724518991637283867L, // 0xcafef00dd15ea5e5
+    /** Mixer applied to each `value xor salt`; defaults to [SplitMix64]. */
+    val hasher: LongHasher = SplitMix64,
     override val concurrency: Concurrency = Concurrency.None,
 ) : DiscreteStat<MinHashResult> {
 
@@ -94,7 +98,7 @@ class MinHashStat(
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
         for (i in 0 until numHashes) {
-            casMin(signatures, i, splitmix64(value xor salts[i]))
+            casMin(signatures, i, hasher.mix(value xor salts[i]))
         }
         totalSeen.add(1L)
     }
@@ -126,5 +130,5 @@ class MinHashStat(
         )
     }
 
-    override fun create(concurrency: Concurrency?) = MinHashStat(numHashes, seed, concurrency ?: this.concurrency)
+    override fun create(concurrency: Concurrency?) = MinHashStat(numHashes, seed, hasher, concurrency ?: this.concurrency)
 }
