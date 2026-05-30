@@ -21,7 +21,7 @@ sealed interface ClassificationNode {
  *  aggregates produced by mixed-structure merges or pre-split snapshots. */
 class ClassificationSplitNode(
     /** Predicate routing observations into [pos] (true) or [neg] (false). */
-    val split: Split,
+    val split: SerializableSplit,
     pos: ClassificationNode,
     neg: ClassificationNode,
     carryover: SeriesStat<ClassCountsResult>? = null,
@@ -53,7 +53,7 @@ class ClassificationTerminalLeaf(override val arm: SeriesStat<ClassCountsResult>
 class ClassificationAuditLeaf(
     override val arm: SeriesStat<ClassCountsResult>,
     /** Candidate splits being evaluated at this leaf. */
-    val candidates: List<Split>,
+    val candidates: List<SerializableSplit>,
     /** Per-candidate accumulator for observations routing true. */
     val pos: List<SeriesStat<ClassCountsResult>>,
     /** Per-candidate accumulator for observations routing false. */

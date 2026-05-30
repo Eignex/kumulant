@@ -3,23 +3,22 @@
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
- * Internal tree node. The hot update path touches only the leaf an observation routes
- * to; internal split nodes are never written by [RegressionTree.update]. Splits may carry an
- * optional *carryover* arm: a one-shot snapshot of the pre-split aggregate captured at
- * the moment a leaf converts into a split, plus any orphaned aggregates folded in by
- * mixed-structure merges. Subtree aggregates include the carryover but the hot path
- * never reads or writes it.
+ * Internal tree node, generic over the feature [Row] the tree routes. The hot update path
+ * touches only the leaf an observation routes to; internal split nodes are never written
+ * by [RegressionTree.update]. Splits may carry an optional *carryover* arm: a one-shot
+ * snapshot of the pre-split aggregate captured at the moment a leaf converts into a split,
+ * plus any orphaned aggregates folded in by mixed-structure merges. Subtree aggregates
+ * include the carryover but the hot path never reads or writes it.
  */
-sealed interface RegressionNode {
+sealed interface RegressionNode<Row> {
     /** Walk to the leaf this row resolves to. */
-    fun findLeaf(row: VectorView): RegressionLeafNode
+    fun findLeaf(row: Row): RegressionLeafNode<Row>
 }
 
 /**
@@ -28,18 +27,18 @@ sealed interface RegressionNode {
  * frozen at split time, or orphans absorbed from a mixed merge. Never written by the
  * update hot path; never read by [findLeaf] or `predict`; included by `subtreeAggregate`.
  */
-class RegressionSplitNode(
+class RegressionSplitNode<Row>(
     /** Predicate routing observations into [pos] (true) or [neg] (false). */
-    val split: Split,
-    pos: RegressionNode,
-    neg: RegressionNode,
+    val split: Split<Row>,
+    pos: RegressionNode<Row>,
+    neg: RegressionNode<Row>,
     carryover: SeriesStat<WeightedVarianceResult>? = null,
-) : RegressionNode {
+) : RegressionNode<Row> {
     @Volatile
-    var pos: RegressionNode = pos
+    var pos: RegressionNode<Row> = pos
 
     @Volatile
-    var neg: RegressionNode = neg
+    var neg: RegressionNode<Row> = neg
 
     /** One-shot carry-over aggregate, or null if the split holds no orphan data.
      *  Mutated only under the owning [RegressionTree]'s split lock during merges; volatile so
@@ -47,36 +46,36 @@ class RegressionSplitNode(
     @Volatile
     var carryover: SeriesStat<WeightedVarianceResult>? = carryover
 
-    override fun findLeaf(row: VectorView): RegressionLeafNode =
+    override fun findLeaf(row: Row): RegressionLeafNode<Row> =
         if (split.direction(row)) pos.findLeaf(row) else neg.findLeaf(row)
 }
 
 /** Leaf node; terminus of the tree walk for a given row, and the only node type
  *  that owns a live accumulator. */
-sealed class RegressionLeafNode : RegressionNode {
+sealed class RegressionLeafNode<Row> : RegressionNode<Row> {
     /** The leaf's weighted-variance accumulator. */
     abstract val arm: SeriesStat<WeightedVarianceResult>
 
-    final override fun findLeaf(row: VectorView): RegressionLeafNode = this
+    final override fun findLeaf(row: Row): RegressionLeafNode<Row> = this
 }
 
 /** Frozen leaf; no further splits will be considered. */
-class RegressionTerminalLeaf(override val arm: SeriesStat<WeightedVarianceResult>) : RegressionLeafNode()
+class RegressionTerminalLeaf<Row>(override val arm: SeriesStat<WeightedVarianceResult>) : RegressionLeafNode<Row>()
 
 /**
  * Leaf that tracks per-candidate pos/neg stats. When a candidate clears the Hoeffding-
  * bound test, this leaf is replaced by a [RegressionSplitNode]. The candidate subset is per-leaf
  *; picked at leaf birth; so mtry-style random subspace selection lives at the leaf level.
  */
-class RegressionAuditLeaf(
+class RegressionAuditLeaf<Row>(
     override val arm: SeriesStat<WeightedVarianceResult>,
     /** Candidate splits being evaluated at this leaf. */
-    val candidates: List<Split>,
+    val candidates: List<Split<Row>>,
     /** Per-candidate accumulator for observations that route true. */
     val pos: List<SeriesStat<WeightedVarianceResult>>,
     /** Per-candidate accumulator for observations that route false. */
     val neg: List<SeriesStat<WeightedVarianceResult>>,
-) : RegressionLeafNode() {
+) : RegressionLeafNode<Row>() {
     init {
         require(candidates.size == pos.size && pos.size == neg.size) {
             "candidates/pos/neg must align: ${candidates.size}/${pos.size}/${neg.size}"
@@ -124,7 +123,7 @@ internal fun mergeWVR(a: WeightedVarianceResult, b: WeightedVarianceResult): Wei
 /** Recursive subtree aggregate; for leaves the arm's snapshot, for splits the merge of
  *  both children's aggregates plus any [RegressionSplitNode.carryover]. Called only on snapshot
  *  and merge paths, never on hot updates. */
-internal fun RegressionNode.subtreeAggregate(): WeightedVarianceResult = when (this) {
+internal fun RegressionNode<*>.subtreeAggregate(): WeightedVarianceResult = when (this) {
     is RegressionLeafNode -> arm.read(0L)
 
     is RegressionSplitNode -> {

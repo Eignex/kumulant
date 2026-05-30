@@ -27,7 +27,7 @@ import kotlin.random.Random
  */
 class ClassificationTree(
     private val numClasses: Int,
-    private val splitCandidates: List<Split>,
+    private val splitCandidates: List<SerializableSplit>,
     private val config: ClassificationTreeConfig = ClassificationTreeConfig(),
     private val concurrency: Concurrency = Concurrency.None,
     private val leafArmFactory: () -> SeriesStat<ClassCountsResult> = { ClassCountsStat(numClasses, concurrency) },
@@ -208,7 +208,7 @@ class ClassificationTree(
         )
     }
 
-    private fun pickCandidates(): List<Split> {
+    private fun pickCandidates(): List<SerializableSplit> {
         val k = config.mtry ?: return splitCandidates
         if (k >= splitCandidates.size) return splitCandidates
         return splitCandidates.shuffled(random).take(k)

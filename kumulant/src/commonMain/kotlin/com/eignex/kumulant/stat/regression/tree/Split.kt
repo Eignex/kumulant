@@ -6,19 +6,29 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Binary predicate routing a context vector to "pos" (true) or "neg" (false).
+ * Growth-time routing predicate over a feature [Row]. The tree engine
+ * ([RegressionTree]) only ever calls [direction] to route an observation to a child, so
+ * any feature representation can drive growth by supplying its own [Split]s — for example
+ * a downstream library's typed, constraint-coupled splits over a non-vector row.
  *
- * Built-in implementations: [ThresholdSplit] (numeric `x[i] <= t`) and [ExprSplit]
- * (wrapping a wire-portable [BoolExpr] over the context vector). The interface is
- * sealed so tree snapshots round-trip cleanly through `kotlinx.serialization`;
- * callers needing custom predicates compose them as [BoolExpr] AST nodes and wrap
- * them in [ExprSplit].
+ * The interface is intentionally **open and non-serializable**: it is the in-memory SPI
+ * for growing trees over arbitrary features. Wire-portable splits over a dense
+ * [VectorView] context live under the [SerializableSplit] hierarchy, which the
+ * serializable tree snapshots ([TreeNodeResult]) embed.
+ */
+interface Split<in Row> {
+    /** Evaluate the predicate against the context [row]; true routes "pos", false "neg". */
+    fun direction(row: Row): Boolean
+}
+
+/**
+ * Wire-portable [Split] over a dense [VectorView] context. Sealed + serializable so tree
+ * snapshots round-trip cleanly through `kotlinx.serialization`. Built-in implementations:
+ * [ThresholdSplit] (numeric `x[i] <= t`) and [ExprSplit] (wrapping a [BoolExpr]); callers
+ * needing custom predicates compose them as [BoolExpr] AST nodes and wrap in [ExprSplit].
  */
 @Serializable
-sealed interface Split {
-    /** Evaluate the predicate against the context [row]. */
-    fun direction(row: VectorView): Boolean
-}
+sealed interface SerializableSplit : Split<VectorView>
 
 /** Route by `row[featureIndex] <= threshold`. Threshold is inclusive on the "pos" side. */
 @Serializable
@@ -28,7 +38,7 @@ data class ThresholdSplit(
     val featureIndex: Int,
     /** Inclusive threshold separating pos (<=) from neg (>). */
     val threshold: Double,
-) : Split {
+) : SerializableSplit {
     override fun direction(row: VectorView): Boolean = row[featureIndex] <= threshold
     override fun toString(): String = "x[$featureIndex] <= $threshold"
 }
@@ -44,7 +54,7 @@ data class ThresholdSplit(
 data class ExprSplit(
     /** Predicate expression over the context vector. */
     val expr: BoolExpr,
-) : Split {
+) : SerializableSplit {
     override fun direction(row: VectorView): Boolean {
         val arr = row.toDoubleArray()
         val x = if (arr.isNotEmpty()) arr[0] else 0.0
