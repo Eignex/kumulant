@@ -9,7 +9,7 @@ class RegressionTreeTest {
 
     private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
-    private fun newTree(candidates: List<Split> = emptyList(), config: RegressionTreeConfig = RegressionTreeConfig()) =
+    private fun newTree(candidates: List<SerializableSplit> = emptyList(), config: RegressionTreeConfig = RegressionTreeConfig()) =
         RegressionTree(splitCandidates = candidates, config = config, randomSeed = 0)
 
     @Test

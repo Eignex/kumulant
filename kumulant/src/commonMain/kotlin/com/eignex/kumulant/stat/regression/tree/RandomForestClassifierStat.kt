@@ -23,7 +23,7 @@ class RandomForestClassifierStat(
     /** Number of classes; `y` must round to `[0, numClasses)`. */
     val numClasses: Int,
     /** Candidate split pool. Used by every tree; the per-leaf mtry filter draws from here. */
-    val splitCandidates: List<Split>,
+    val splitCandidates: List<SerializableSplit>,
     /** Trees in the forest. */
     val nbrTrees: Int = 10,
     config: ClassificationTreeConfig = ClassificationTreeConfig(),

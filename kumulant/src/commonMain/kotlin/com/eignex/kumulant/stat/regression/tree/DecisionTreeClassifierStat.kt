@@ -20,7 +20,7 @@ class DecisionTreeClassifierStat(
     /** Number of classes; the input `y` must round to `[0, numClasses)`. */
     val numClasses: Int,
     /** Candidate splits considered at every audit leaf. */
-    val splitCandidates: List<Split>,
+    val splitCandidates: List<SerializableSplit>,
     /** Tunables shared with the underlying [ClassificationTree]. */
     val config: ClassificationTreeConfig = ClassificationTreeConfig(),
     override val concurrency: Concurrency = Concurrency.None,

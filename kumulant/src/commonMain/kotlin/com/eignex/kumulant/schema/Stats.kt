@@ -39,7 +39,7 @@ import com.eignex.kumulant.stat.regression.tree.ClassificationTreeConfig
 import com.eignex.kumulant.stat.regression.tree.ForestClassificationResult
 import com.eignex.kumulant.stat.regression.tree.ForestRegressionResult
 import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
-import com.eignex.kumulant.stat.regression.tree.Split
+import com.eignex.kumulant.stat.regression.tree.SerializableSplit
 import com.eignex.kumulant.stat.regression.tree.TreeClassificationResult
 import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult
 import com.eignex.kumulant.stat.score.AucResult
@@ -555,7 +555,7 @@ data class DecisionTreeRegression(
     /** Number of input features. */
     val featureSize: Int,
     /** Candidate splits considered at every audit leaf. */
-    val splitCandidates: List<Split>,
+    val splitCandidates: List<SerializableSplit>,
     /** RegressionTree growth tunables. */
     val config: RegressionTreeConfig = RegressionTreeConfig(),
     /** PRNG seed for per-leaf candidate subsampling and bagging. */
@@ -569,7 +569,7 @@ data class RandomForestRegression(
     /** Number of input features. */
     val featureSize: Int,
     /** Candidate split pool. */
-    val splitCandidates: List<Split>,
+    val splitCandidates: List<SerializableSplit>,
     /** Trees in the forest. */
     val nbrTrees: Int = 10,
     /** RegressionTree growth tunables (mtry defaults to `ceil(sqrt(p))` when null). */
@@ -589,7 +589,7 @@ data class DecisionTreeClassifier(
     /** Number of classes; `y` must round to `[0, numClasses)`. */
     val numClasses: Int,
     /** Candidate splits considered at every audit leaf. */
-    val splitCandidates: List<Split>,
+    val splitCandidates: List<SerializableSplit>,
     /** RegressionTree growth tunables. */
     val config: ClassificationTreeConfig = ClassificationTreeConfig(),
     /** PRNG seed. */
@@ -605,7 +605,7 @@ data class RandomForestClassifier(
     /** Number of classes. */
     val numClasses: Int,
     /** Candidate split pool. */
-    val splitCandidates: List<Split>,
+    val splitCandidates: List<SerializableSplit>,
     /** Trees in the forest. */
     val nbrTrees: Int = 10,
     /** RegressionTree growth tunables (mtry defaults to `ceil(sqrt(p))` when null). */

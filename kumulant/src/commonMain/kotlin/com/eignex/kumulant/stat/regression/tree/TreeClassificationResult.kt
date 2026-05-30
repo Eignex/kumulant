@@ -43,7 +43,7 @@ sealed interface TreeClassificationNodeResult {
 @SerialName("TreeClassificationSplitResult")
 data class TreeClassificationSplitResult(
     /** Routing predicate. */
-    val split: Split,
+    val split: SerializableSplit,
     /** Subtree taken when [split] is true. */
     val pos: TreeClassificationNodeResult,
     /** Subtree taken when [split] is false. */

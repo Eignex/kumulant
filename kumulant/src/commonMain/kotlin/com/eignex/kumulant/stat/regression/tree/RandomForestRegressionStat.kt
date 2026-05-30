@@ -45,7 +45,7 @@ import kotlin.random.Random
 class RandomForestRegressionStat(
     override val featureSize: Int,
     /** Candidate split pool. Used by every tree; the per-leaf mtry filter draws from here. */
-    val splitCandidates: List<Split>,
+    val splitCandidates: List<SerializableSplit>,
     /** Trees in the forest. */
     val nbrTrees: Int = 10,
     config: RegressionTreeConfig = RegressionTreeConfig(),
@@ -66,9 +66,9 @@ class RandomForestRegressionStat(
 
     private val seedRng = Random(randomSeed)
     private val baggingRng = Random(seedRng.nextInt())
-    private var trees: Array<RegressionTree> = Array(nbrTrees) { newTree() }
+    private var trees: Array<RegressionTree<VectorView>> = Array(nbrTrees) { newTree() }
 
-    private fun newTree(): RegressionTree = RegressionTree(
+    private fun newTree(): RegressionTree<VectorView> = RegressionTree(
         splitCandidates,
         this.config,
         concurrency,
@@ -114,7 +114,7 @@ class RandomForestRegressionStat(
     )
 
     /** Live underlying trees. Use for inspection. */
-    fun trees(): List<RegressionTree> = trees.toList()
+    fun trees(): List<RegressionTree<VectorView>> = trees.toList()
 
     private fun defaultMtry(p: Int): Int = if (p <= 0) 0 else ceil(sqrt(p.toDouble())).toInt().coerceAtLeast(1)
 }

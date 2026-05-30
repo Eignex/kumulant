@@ -50,7 +50,7 @@ class DecisionTreeRegressionStat(
     override val featureSize: Int,
     /** Candidate splits considered at every audit leaf. Pass an empty list to disable
      *  growth; the regressor then degenerates to a single global accumulator. */
-    val splitCandidates: List<Split>,
+    val splitCandidates: List<SerializableSplit>,
     /** Tunables shared with the underlying [RegressionTree]. */
     val config: RegressionTreeConfig = RegressionTreeConfig(),
     override val concurrency: Concurrency = Concurrency.None,
@@ -64,9 +64,9 @@ class DecisionTreeRegressionStat(
     }
 
     private val seedRng = Random(randomSeed)
-    private var tree: RegressionTree = newTree()
+    private var tree: RegressionTree<VectorView> = newTree()
 
-    private fun newTree(): RegressionTree = RegressionTree(
+    private fun newTree(): RegressionTree<VectorView> = RegressionTree(
         splitCandidates,
         config,
         concurrency,
@@ -99,5 +99,5 @@ class DecisionTreeRegressionStat(
     )
 
     /** Live underlying tree. Use for inspection / pretty-printing. */
-    fun tree(): RegressionTree = tree
+    fun tree(): RegressionTree<VectorView> = tree
 }

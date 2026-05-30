@@ -4,7 +4,6 @@ package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import com.eignex.kumulant.stream.Mutex
@@ -19,16 +18,23 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
- * Online VFDT-style decision tree partitioning context vectors. Each leaf carries a
- * weighted-variance accumulator; audit leaves additionally track pos/neg sub-arms per
- * candidate split and, every [RegressionTreeConfig.splitPeriod] observations, evaluate them against
- * the Hoeffding bound to decide whether to convert themselves into a [RegressionSplitNode].
+ * Online VFDT-style decision tree partitioning feature rows of type [Row]. Each leaf
+ * carries a weighted-variance accumulator; audit leaves additionally track pos/neg
+ * sub-arms per candidate split and, every [RegressionTreeConfig.splitPeriod] observations,
+ * evaluate them against the Hoeffding bound to decide whether to convert themselves into
+ * a [RegressionSplitNode].
+ *
+ * The engine is **generic over the feature representation**: it only ever inspects a row
+ * by calling [Split.direction], so any feature type can drive growth by supplying its own
+ * [Split]s (e.g. a dense [com.eignex.kumulant.math.VectorView] for the built-in stats, or
+ * a typed/constraint-coupled row from a downstream library). Wire-portable serialization
+ * of a snapshot is only meaningful for the [com.eignex.kumulant.math.VectorView] case and
+ * lives in `TreeRegressionResult.kt` as `VectorView`-constrained extensions.
  *
  * Internal split nodes hold no live arm; subtree aggregates (`rootSnapshot`, the `value`
- * fields on [TreeSplitResult]) are derived by combining descendants at snapshot/merge
+ * fields on the snapshot results) are derived by combining descendants at snapshot/merge
  * time. The hot update path therefore touches exactly one arm: the leaf the observation
- * routes to. Under [Concurrency.Strict] this removes the root-arm serialization point
- * that previously bottlenecked multi-threaded throughput.
+ * routes to.
  *
  * Concurrency: leaf-arm updates run lock-free (the arms themselves honour [concurrency]).
  * The split-conversion path; the only one that mutates tree structure; is serialised
@@ -36,36 +42,36 @@ import kotlin.random.Random
  * audit leaf. Pointer writes on the hot path are skipped when the child reference is
  * unchanged, so the typical update is pure arm arithmetic.
  */
-class RegressionTree(
-    private val splitCandidates: List<Split>,
+class RegressionTree<Row>(
+    private val splitCandidates: List<Split<Row>>,
     private val config: RegressionTreeConfig = RegressionTreeConfig(),
     private val concurrency: Concurrency = Concurrency.None,
-    private val leafArmFactory: () -> SeriesStat<WeightedVarianceResult> = { VarianceStat(concurrency) },
+    internal val leafArmFactory: () -> SeriesStat<WeightedVarianceResult> = { VarianceStat(concurrency) },
     randomSeed: Int = 0,
 ) {
     private val random = Random(randomSeed)
     private val canGrow: Boolean = splitCandidates.isNotEmpty()
-    private val splitLock: Mutex = if (concurrency == Concurrency.None) NoopMutex else PlatformMutex()
+    internal val splitLock: Mutex = if (concurrency == Concurrency.None) NoopMutex else PlatformMutex()
 
-    private val nbrNodes: AtomicInt = AtomicInt(1)
+    internal val nbrNodes: AtomicInt = AtomicInt(1)
 
     @Volatile
-    private var root: RegressionNode = newLeaf(depth = 0)
+    internal var root: RegressionNode<Row> = newLeaf(depth = 0)
 
     /** Walk to the leaf [row] resolves to. */
-    fun findLeaf(row: VectorView): RegressionLeafNode = root.findLeaf(row)
+    fun findLeaf(row: Row): RegressionLeafNode<Row> = root.findLeaf(row)
 
     /** Live root node, for snapshotting. */
-    fun rootNode(): RegressionNode = root
+    fun rootNode(): RegressionNode<Row> = root
 
     /** Mean of the leaf [row] resolves to. */
-    fun predict(row: VectorView): Double = findLeaf(row).arm.read(0L).mean
+    fun predict(row: Row): Double = findLeaf(row).arm.read(0L).mean
 
     /** Number of internal + leaf nodes currently in the tree. */
     val nodeCount: Int get() = nbrNodes.load()
 
     /** Fold an observation into the tree, possibly growing it. */
-    fun update(row: VectorView, value: Double, weight: Double = 1.0) {
+    fun update(row: Row, value: Double, weight: Double = 1.0) {
         val current = root
         val next = updateNode(current, row, value, weight, depth = 0)
         if (next !== current) root = next
@@ -106,24 +112,14 @@ class RegressionTree(
      * un-routable observations into a single bucket; an honest fallback when the
      * structures don't align.
      */
-    fun merge(other: RegressionTree) {
+    fun merge(other: RegressionTree<Row>) {
         splitLock.withLock {
             root = mergeNodes(root, other.root)
             nbrNodes.store(countNodes(root))
         }
     }
 
-    /** Snapshot merge using only the immutable result. Falls through to the same rules
-     *  as [merge] but the "other" side is a [TreeNodeResult] tree-of-results rather than
-     *  a live RegressionTree. */
-    fun mergeSnapshot(other: TreeNodeResult) {
-        splitLock.withLock {
-            root = mergeNodeWithResult(root, other)
-            nbrNodes.store(countNodes(root))
-        }
-    }
-
-    private fun mergeNodes(a: RegressionNode, b: RegressionNode): RegressionNode {
+    private fun mergeNodes(a: RegressionNode<Row>, b: RegressionNode<Row>): RegressionNode<Row> {
         if (a is RegressionSplitNode && b is RegressionSplitNode && a.split == b.split) {
             a.pos = mergeNodes(a.pos, b.pos)
             a.neg = mergeNodes(a.neg, b.neg)
@@ -144,33 +140,7 @@ class RegressionTree(
         return a
     }
 
-    private fun mergeNodeWithResult(a: RegressionNode, b: TreeNodeResult): RegressionNode {
-        if (a is RegressionSplitNode && b is TreeSplitResult && a.split == b.split) {
-            a.pos = mergeNodeWithResult(a.pos, b.pos)
-            a.neg = mergeNodeWithResult(a.neg, b.neg)
-            // b.value carries the full subtree aggregate; the child recursion already
-            // folded the structurally-aligned portion. Pull only the residual; what b's
-            // value holds beyond the sum of its children; into a's carryover.
-            val childSum = mergeWVR(b.pos.value, b.neg.value)
-            val residual = subtractWVR(b.value, childSum)
-            if (residual.totalWeights > 0.0) foldIntoCarryover(a, residual)
-            return a
-        }
-        if (a is RegressionLeafNode && b is TreeLeafResult) {
-            a.arm.merge(b.value)
-            return a
-        }
-        if (a is RegressionLeafNode && b is TreeSplitResult) {
-            val cloned = cloneFromResult(b, depth = 0) as RegressionSplitNode
-            foldIntoCarryover(cloned, a.arm.read(0L))
-            return cloned
-        }
-        // a split + b leaf, or splits differ: keep a's structure, fold b's aggregate.
-        foldIntoCarryover(a as RegressionSplitNode, b.value)
-        return a
-    }
-
-    private fun foldIntoCarryover(node: RegressionSplitNode, value: WeightedVarianceResult) {
+    internal fun foldIntoCarryover(node: RegressionSplitNode<Row>, value: WeightedVarianceResult) {
         if (value.totalWeights <= 0.0) return
         val existing = node.carryover
         if (existing != null) {
@@ -182,38 +152,12 @@ class RegressionTree(
         }
     }
 
-    private fun cloneFromResult(node: TreeNodeResult, depth: Int): RegressionNode {
-        nbrNodes.addAndFetch(1)
-        return when (node) {
-            is TreeLeafResult -> {
-                val arm = leafArmFactory()
-                arm.merge(node.value)
-                RegressionTerminalLeaf(arm)
-            }
-
-            is TreeSplitResult -> {
-                val pos = cloneFromResult(node.pos, depth + 1)
-                val neg = cloneFromResult(node.neg, depth + 1)
-                // Re-establish any orphan aggregate the snapshot encodes by comparing the
-                // recorded value against the sum of the cloned children's aggregates.
-                val childSum = mergeWVR(node.pos.value, node.neg.value)
-                val residual = subtractWVR(node.value, childSum)
-                val carry = if (residual.totalWeights > 0.0) {
-                    leafArmFactory().also { it.merge(residual) }
-                } else {
-                    null
-                }
-                RegressionSplitNode(split = node.split, pos = pos, neg = neg, carryover = carry)
-            }
-        }
-    }
-
-    private fun countNodes(node: RegressionNode): Int = when (node) {
+    internal fun countNodes(node: RegressionNode<Row>): Int = when (node) {
         is RegressionSplitNode -> 1 + countNodes(node.pos) + countNodes(node.neg)
         is RegressionLeafNode -> 1
     }
 
-    private fun prettyPrintTo(sb: StringBuilder, node: RegressionNode, indent: String) {
+    private fun prettyPrintTo(sb: StringBuilder, node: RegressionNode<Row>, indent: String) {
         when (node) {
             is RegressionSplitNode -> {
                 sb.append(indent).append("if (").append(node.split.toString()).append(") {\n")
@@ -230,7 +174,7 @@ class RegressionTree(
         }
     }
 
-    private fun newLeaf(depth: Int): RegressionLeafNode {
+    private fun newLeaf(depth: Int): RegressionLeafNode<Row> {
         if (depth >= config.maxDepth || nbrNodes.load() + 1 > config.maxNodes || !canGrow) {
             return RegressionTerminalLeaf(leafArmFactory())
         }
@@ -243,19 +187,19 @@ class RegressionTree(
         )
     }
 
-    private fun pickCandidates(): List<Split> {
+    private fun pickCandidates(): List<Split<Row>> {
         val k = config.mtry ?: return splitCandidates
         if (k >= splitCandidates.size) return splitCandidates
         return splitCandidates.shuffled(random).take(k)
     }
 
     private fun updateNode(
-        node: RegressionNode,
-        row: VectorView,
+        node: RegressionNode<Row>,
+        row: Row,
         value: Double,
         weight: Double,
         depth: Int,
-    ): RegressionNode = when (node) {
+    ): RegressionNode<Row> = when (node) {
         is RegressionSplitNode -> {
             if (node.split.direction(row)) {
                 val child = node.pos
@@ -278,12 +222,12 @@ class RegressionTree(
     }
 
     private fun updateAuditLeaf(
-        leaf: RegressionAuditLeaf,
-        row: VectorView,
+        leaf: RegressionAuditLeaf<Row>,
+        row: Row,
         value: Double,
         weight: Double,
         depth: Int,
-    ): RegressionNode {
+    ): RegressionNode<Row> {
         leaf.arm.update(value, 0L, weight)
         for ((i, split) in leaf.candidates.withIndex()) {
             if (split.direction(row)) {

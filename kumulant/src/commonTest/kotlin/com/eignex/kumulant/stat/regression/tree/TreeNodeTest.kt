@@ -3,6 +3,7 @@
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.kumulant.math.DenseVector
+import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.test.Test
@@ -12,7 +13,7 @@ import kotlin.test.assertSame
 
 class TreeNodeTest {
 
-    private fun wvLeaf() = RegressionTerminalLeaf(VarianceStat())
+    private fun wvLeaf(): RegressionTerminalLeaf<VectorView> = RegressionTerminalLeaf(VarianceStat())
     private fun ccLeaf(numClasses: Int = 2) = ClassificationTerminalLeaf(ClassCountsStat(numClasses))
 
     @Test
@@ -39,7 +40,7 @@ class TreeNodeTest {
     @Test
     fun `RegressionAuditLeaf requires aligned candidate sizes`() {
         val arm = VarianceStat()
-        val candidates = listOf<Split>(ThresholdSplit(0, 0.0))
+        val candidates = listOf<SerializableSplit>(ThresholdSplit(0, 0.0))
         assertFailsWith<IllegalArgumentException> {
             RegressionAuditLeaf(
                 arm = arm,
