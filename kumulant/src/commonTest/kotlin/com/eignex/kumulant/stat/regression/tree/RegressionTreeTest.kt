@@ -9,8 +9,10 @@ class RegressionTreeTest {
 
     private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
-    private fun newTree(candidates: List<SerializableSplit> = emptyList(), config: RegressionTreeConfig = RegressionTreeConfig()) =
-        RegressionTree(splitCandidates = candidates, config = config, randomSeed = 0)
+    private fun newTree(
+        candidates: List<SerializableSplit> = emptyList(),
+        config: RegressionTreeConfig = RegressionTreeConfig(),
+    ) = RegressionTree(splitCandidates = candidates, config = config, randomSeed = 0)
 
     @Test
     fun `update folds into the root arm even without splits`() {
