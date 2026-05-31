@@ -5,9 +5,9 @@ package com.eignex.kumulant.stat.regression.tree
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * Immutable, **wire-portable** snapshot of a [RegressionTree] over a dense [VectorView]
@@ -137,10 +137,7 @@ private fun RegressionTree<VectorView>.mergeNodeWithResult(
     return a
 }
 
-private fun RegressionTree<VectorView>.cloneFromResult(
-    node: TreeNodeResult,
-    depth: Int,
-): RegressionNode<VectorView> {
+private fun RegressionTree<VectorView>.cloneFromResult(node: TreeNodeResult, depth: Int): RegressionNode<VectorView> {
     nbrNodes.addAndFetch(1)
     return when (node) {
         is TreeLeafResult -> {
