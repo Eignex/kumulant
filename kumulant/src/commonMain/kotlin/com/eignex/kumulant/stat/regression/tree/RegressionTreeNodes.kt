@@ -120,6 +120,16 @@ internal fun mergeWVR(a: WeightedVarianceResult, b: WeightedVarianceResult): Wei
     return WeightedVarianceResult(w, mean, sst / w)
 }
 
+/**
+ * Public per-node subtree aggregate over all observations routed through this node
+ * (leaves: the arm snapshot; splits: the exact Chan-merge of both children plus any
+ * [RegressionSplitNode.carryover]). Lets callers score *internal* nodes — e.g. a
+ * Thompson walk-down that picks a branch by its subtree's posterior — without the tree
+ * having to keep a live arm on every split node. Equivalent to a directly-accumulated
+ * internal arm: Chan's parallel merge is exact for weighted-variance aggregates.
+ */
+fun RegressionNode<*>.aggregate(): WeightedVarianceResult = subtreeAggregate()
+
 /** Recursive subtree aggregate; for leaves the arm's snapshot, for splits the merge of
  *  both children's aggregates plus any [RegressionSplitNode.carryover]. Called only on snapshot
  *  and merge paths, never on hot updates. */
