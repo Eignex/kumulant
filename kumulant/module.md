@@ -51,9 +51,8 @@ rendered API docs via `@sample` directives on individual classes.
   [Concurrency][com.eignex.kumulant.core.Concurrency] enum, and the
   cross-cutting result traits.
 - [com.eignex.kumulant.stat]: concrete accumulators grouped by family:
-  `summary`, `quantile`, `cardinality`, `sketch`, `rate`, `decay`,
-  `regression` (with `glm/` and `tree/` subfamilies), `score`, `calibration`,
-  `anomaly`, `event`, `change`, `forecast`.
+  summary, quantile, cardinality, sketch, rate, decay, regression (with glm
+  and tree subfamilies), score, calibration, anomaly, event, change, forecast.
 - [com.eignex.kumulant.operation]: composable wrappers that change how a
   stat sees its input (filtering, weighting, windowing, sampling, lagging)
   or how it reports its output (folding, transforming, projecting).
@@ -70,10 +69,9 @@ rendered API docs via `@sample` directives on individual classes.
   `@Serializable` with `@SerialName` discriminators matching the Kotlin
   class names, so polymorphic JSON / CBOR / Protobuf put the same type
   strings on the wire regardless of format.
-- Every public type has KDoc with a one-sentence summary, then
-  `**Use cases:**`, `**Memory:**`, `**Update:**`, and `**Concurrency:**`
-  sections. See [com.eignex.kumulant.stat.summary.MeanStat] for the
-  canonical shape.
+- Every public type has KDoc with a one-sentence summary, then Use cases,
+  Memory, Update, and Concurrency sections. See
+  [com.eignex.kumulant.stat.summary.MeanStat] for the canonical shape.
 - Results are immutable, sealed where it makes sense, and structurally
   comparable via `equals`/`hashCode`. The value that comes out of `read()`
   is the same value that goes into `merge()` over the wire.
