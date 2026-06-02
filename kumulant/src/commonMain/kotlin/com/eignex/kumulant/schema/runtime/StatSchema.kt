@@ -8,16 +8,16 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.schema.DiscreteStatSpec
 import com.eignex.kumulant.schema.GroupResult
 import com.eignex.kumulant.schema.GroupStatKey
-import com.eignex.kumulant.schema.GroupStatSpec
-import com.eignex.kumulant.schema.PairedStatSpec
-import com.eignex.kumulant.schema.RegressionStatSpec
-import com.eignex.kumulant.schema.SeriesStatSpec
 import com.eignex.kumulant.schema.StatKey
-import com.eignex.kumulant.schema.StatSpec
-import com.eignex.kumulant.schema.VectorStatSpec
+import com.eignex.kumulant.schema.spec.DiscreteStatSpec
+import com.eignex.kumulant.schema.spec.GroupStatSpec
+import com.eignex.kumulant.schema.spec.PairedStatSpec
+import com.eignex.kumulant.schema.spec.RegressionStatSpec
+import com.eignex.kumulant.schema.spec.SeriesStatSpec
+import com.eignex.kumulant.schema.spec.StatSpec
+import com.eignex.kumulant.schema.spec.VectorStatSpec
 import com.eignex.skema.Schema
 
 /**

@@ -84,7 +84,7 @@ concrete bandit's KDoc states which interfaces it implements and why.
 ## Wire portability
 
 A bandit's `BanditSpec` round-trips through the same skema-based
-mechanism as [com.eignex.kumulant.schema.StatSpec]: declare a spec,
+mechanism as [com.eignex.kumulant.schema.spec.StatSpec]: declare a spec,
 encode to JSON / CBOR, ship, decode, materialise. The same data classes
 parameterise both Bandit construction in code and Bandit construction
 from the wire.

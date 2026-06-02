@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.schema.Sgd
+import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test

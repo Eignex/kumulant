@@ -4,8 +4,12 @@ import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.Hashers
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.splitmix64
+import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
+import com.eignex.kumulant.schema.ops.*
+import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.schema.runtime.*
+import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.sketch.contains
 import com.eignex.kumulant.stat.sketch.estimate
 import com.eignex.skema.SchemaJson

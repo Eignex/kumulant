@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.schema.*
+import com.eignex.kumulant.schema.spec.*
 import kotlinx.serialization.Serializable
 
 /**

@@ -7,8 +7,8 @@ import com.eignex.kumulant.math.DenseMatrix
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.math.forEachStored
-import com.eignex.kumulant.schema.OptimizerSpec
-import com.eignex.kumulant.schema.Sgd
+import com.eignex.kumulant.schema.optimizer.OptimizerSpec
+import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.getValue

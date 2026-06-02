@@ -38,9 +38,9 @@ implementations:
   (Kingma & Ba 2015).
 
 Wire-portable counterparts live in
-[com.eignex.kumulant.schema.OptimizerSpec]:
-[com.eignex.kumulant.schema.Sgd], [com.eignex.kumulant.schema.Adagrad],
-[com.eignex.kumulant.schema.Rmsprop], [com.eignex.kumulant.schema.Adam].
+[com.eignex.kumulant.schema.optimizer.OptimizerSpec]:
+[com.eignex.kumulant.schema.optimizer.Sgd], [com.eignex.kumulant.schema.optimizer.Adagrad],
+[com.eignex.kumulant.schema.optimizer.Rmsprop], [com.eignex.kumulant.schema.optimizer.Adam].
 Stats accept the spec and materialise their own optimizer instances
 per-feature-set; per-coordinate aux state honours the stat's
 [com.eignex.kumulant.core.Concurrency] level.
@@ -76,7 +76,7 @@ scoring rule.
 - Need a linear model? Use [glm][com.eignex.kumulant.stat.regression.glm].
   Pick by required output:
   - Point estimates only, fastest path → `StochasticRegressionStat` with
-    [com.eignex.kumulant.schema.Sgd] or [com.eignex.kumulant.schema.Adam].
+    [com.eignex.kumulant.schema.optimizer.Sgd] or [com.eignex.kumulant.schema.optimizer.Adam].
   - Per-coordinate uncertainty → `DiagonalRegressionStat`.
   - Full posterior covariance for Thompson sampling / LinUCB →
     `BayesianRegressionStat`.

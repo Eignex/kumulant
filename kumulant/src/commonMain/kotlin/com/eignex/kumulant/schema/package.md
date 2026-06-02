@@ -1,108 +1,57 @@
 # Package com.eignex.kumulant.schema
 
-Typed, named, wire-portable schemas for declaring bags of stats. A
-[com.eignex.kumulant.schema.runtime.StatSchema] does three things:
+The schema layer lets you declare a named, typed bag of stats once and
+treat it as a single unit: every update fans out to all of them, results
+read back by typed key, and the declaration itself travels on the wire so
+another process can stand up the same bag and merge snapshots back.
 
-1. Lets you read results back by typed [StatKey] instead of by string.
-2. Materialises into a [com.eignex.kumulant.schema.runtime.StatGroup] that fans every update out to every
-   registered stat.
-3. Round-trips on the wire as a `StatSchemaDef` so a remote process can
-   stand up the same bag, run it independently, and ship snapshots back
-   to merge.
+## When you need it
 
-## Declaring a schema
+Reach for the schema layer when you have more than one stat to run
+together, when the choice of stats has to travel as data, a remote
+worker, a stored configuration, a UI that assembles stats from user
+input, or when you want many workers to run the same bag and fold their
+partial results into one. If you only have a single stat in a single
+process, you don't need any of this; construct the stat directly and call
+it. The schema layer earns its keep the moment configuration has to be
+named, grouped, or serialized.
 
-```kotlin
-val telemetry = object : StatSchema(concurrency = Concurrency.Strict) {
-    val latencyMean by series(Mean)
-    val errorRate by series(Rate)
-}
-val group = StatGroup(telemetry)
-group.update(42.0)
-val results = group.read()
-println(results[telemetry.latencyMean].mean)
-```
+The two types that tie it together live in this root package. A
+[GroupResult] is the aggregated snapshot, a map from key to per-stat
+result, and [StatKey] (with [GroupStatKey] for nested groups) is the
+typed handle you read it back with, so a lookup returns the stat's own
+result type rather than an untyped value.
 
-The `series`, `paired`, `vector`, and `discrete` declarators register a
-[StatSpec] of the matching modality and return a [StatKey] carrying the
-result type. The delegate gives you a typed property; you read results by
-passing the key back to the group's `GroupResult`. The `group` declarator
-nests a sub-schema, whose entries materialise as their own [com.eignex.kumulant.schema.runtime.StatGroup]
-keyed by the outer name.
+## How it's organized
 
-## Specs
+The rest of the layer is split into focused subpackages:
 
-Every concrete stat has a sibling [StatSpec]: a data class (or
-`data object` for parameter-less stats) carrying only configuration.
-Specs are `@Serializable` with `@SerialName` discriminators matching the
-Kotlin class names, so polymorphic serialization puts the same type
-strings on the wire regardless of format (JSON, CBOR, Protobuf).
+- [com.eignex.kumulant.schema.spec] is the spec catalog: a pure-data
+  recipe for every stat in the library. This is the vocabulary you author
+  and serialize, the sealed `StatSpec` tree and all its variants.
+- [com.eignex.kumulant.schema.ops] holds the composition operators that
+  wrap one spec into another, filtering, windowing, weighting, scaling,
+  and the modality adapters, each returning a spec so compositions stay
+  serializable.
+- [com.eignex.kumulant.schema.expr] is the serializable expression AST
+  those operators carry when a projection or predicate has to travel on
+  the wire instead of as a live lambda.
+- [com.eignex.kumulant.schema.optimizer] and
+  [com.eignex.kumulant.schema.decay] are the optimizer and
+  decay-weighting strategy configurations that the regression and decay
+  specs reference.
+- [com.eignex.kumulant.schema.runtime] is the materialization and
+  grouping layer: the `StatSchema` you subclass to declare a bag, the
+  `StatGroup` it materializes into, and the materialize functions that
+  turn any spec into a live stat.
 
-Construction lives separately from declaration. Calling
-`spec.materialize(concurrency)` builds the live stat. The schema layer
-calls this for you when you build a [com.eignex.kumulant.schema.runtime.StatGroup] from a schema.
+## The typical flow
 
-Specs carry no [Concurrency][com.eignex.kumulant.core.Concurrency]. The
-concurrency mode is a deployment knob passed at materialize time, so
-the same wire payload can run at `Concurrency.None` in a single-threaded
-test and `Concurrency.Strict` in a contended hot loop.
-
-## Composing specs
-
-Every operation in [com.eignex.kumulant.operation] has a spec form. The
-lambda-bound operations (`filter`, `transform`, `transformPair`,
-`foldVector`, `foldPaired`) take an AST on the spec side so the
-projection / predicate travels as data:
-
-```kotlin
-val positiveMean = Mean.filter(X gt 0.0).withWeight(0.5).windowed(1.minutes)
-```
-
-The AST DSL covers comparison (`gt`, `ge`, `lt`, `le`, `eq`), boolean
-combinators (`and`, `or`), and arithmetic on `X`, `Y`, `V(index)`, and
-`Const(v)`. Sugar nodes such as `Switch`, `In`, `Standardize`, and
-`MinMax` make per-feature projection AST trees readable. Anything that
-cannot be expressed in the AST stays live-only.
-
-## Running a group
-
-`StatGroup` is itself a [com.eignex.kumulant.core.SeriesStat] over
-`GroupResult`. It can be nested inside another stat, windowed, or merged
-with another group's `GroupResult`. `PairedStatGroup`,
-`VectorStatGroup`, and `DiscreteStatGroup` variants fan updates only to
-entries of the matching modality.
-
-## Shipping over the wire
-
-```kotlin
-val spec: StatSpec = Mean
-val json = SchemaJson.encodeToString(spec)
-val decoded = SchemaJson.decodeFromString<StatSpec>(json)
-val live = (decoded as SeriesStatSpec<WeightedMeanResult>).materialize(Concurrency.None)
-live.update(1.0)
-```
-
-The `materializeSeries`, `materializePaired`, `materializeVector`, and
-`materializeDiscrete` variants enforce that every entry matches the
-expected modality. The unfiltered `materialize` returns a list of bound
-stats and leaves the caller to split.
-
-## Merging across processes
-
-Each [Result][com.eignex.kumulant.core.Result] is a serializable data
-class. A common pattern is to have many workers run the same
-[com.eignex.kumulant.schema.runtime.StatGroup], periodically call `read` on the group, and ship the
-`GroupResult` (or its per-entry results) back to a coordinator. The
-coordinator runs its own [com.eignex.kumulant.schema.runtime.StatGroup] of the same shape and folds each
-worker's snapshot in with `merge`. Because `merge` takes a [Result]
-rather than a live [com.eignex.kumulant.core.Stat], the boundary is
-serialisation-friendly and the worker is free to terminate after each
-report.
-
-## Optimizers
-
-Linear-model stats ([com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat],
-[com.eignex.kumulant.stat.regression.SoftmaxRegressionStat]) take an
-[OptimizerSpec] that materialises into an
-[com.eignex.kumulant.stat.regression.Optimizer]. The wire variants are
-[Sgd], [Adagrad], [Rmsprop], and [Adam].
+Declare a schema of specs, composed with operators where you need them,
+in a [com.eignex.kumulant.schema.runtime.StatSchema] subclass. Materialize
+it into a [com.eignex.kumulant.schema.runtime.StatGroup], feed it updates,
+and read a [GroupResult] back by [StatKey]. To cross a process boundary,
+encode the schema's flat
+[com.eignex.kumulant.schema.runtime.StatSchemaDef] form, rebuild the same
+group on the far side, and merge each worker's `GroupResult` into a
+coordinator running the same shape.

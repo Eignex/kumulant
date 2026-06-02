@@ -4,7 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
-import com.eignex.kumulant.schema.ResampleAggregator
+import com.eignex.kumulant.schema.spec.ResampleAggregator
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.serializedLock
 import kotlin.math.max

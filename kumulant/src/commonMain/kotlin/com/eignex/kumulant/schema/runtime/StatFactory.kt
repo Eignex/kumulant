@@ -57,6 +57,7 @@ import com.eignex.kumulant.operation.withTimeAsY
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.schema.*
+import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.anomaly.GaussianScorerStat
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
 import com.eignex.kumulant.stat.anomaly.QuantileFilterStat

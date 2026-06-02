@@ -79,14 +79,14 @@ stats:
 
 - **Fraction meeting a threshold**: for SLO compliance and error
   budgets. Compose
-  [Mean][com.eignex.kumulant.schema.Mean]`.transform(IfExpr(X gt threshold, 1.0, 0.0)).windowed(window)`.
+  [Mean][com.eignex.kumulant.schema.spec.Mean]`.transform(IfExpr(X gt threshold, 1.0, 0.0)).windowed(window)`.
   Mean over the Bernoulli predicate is exactly the matched fraction.
 - **Lag-k autocorrelation**;
-  [Covariance][com.eignex.kumulant.schema.Covariance]`.withSelfLag(k)`
+  [Covariance][com.eignex.kumulant.schema.spec.Covariance]`.withSelfLag(k)`
   self-pairs each input with the value seen `k` updates ago; the Pearson
   correlation falls out of the running covariance.
 - **Standardised input**: feed any series stat through the
-  [StandardScalerSeries][com.eignex.kumulant.schema.StandardScalerSeries]
+  [StandardScalerSeries][com.eignex.kumulant.schema.spec.StandardScalerSeries]
   spec or its modality siblings; the scaler reads `center` and `scale`
   off a [VarianceStat] / [MomentsStat] / [MadStat] / [SummaryStat]
   primary on every update.

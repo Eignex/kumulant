@@ -92,8 +92,12 @@ dokka {
             "src/commonMain/kotlin/com/eignex/kumulant/bandit/univariate/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/bandit/contextual/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/schema/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/schema/spec/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/schema/expr/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/schema/runtime/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/schema/ops/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/schema/optimizer/package.md",
+            "src/commonMain/kotlin/com/eignex/kumulant/schema/decay/package.md",
             "src/commonMain/kotlin/com/eignex/kumulant/bandit/package.md",
         )
         samples.from("src/commonMain/kotlin/com/eignex/kumulant/samples")

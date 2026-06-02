@@ -1,4 +1,4 @@
-package com.eignex.kumulant.schema
+package com.eignex.kumulant.schema.optimizer
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.schema.expr.*

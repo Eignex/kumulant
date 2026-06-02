@@ -2,9 +2,13 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.ResultList
-import com.eignex.kumulant.schema.ResampleAggregator
+import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
+import com.eignex.kumulant.schema.ops.*
+import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.schema.runtime.*
+import com.eignex.kumulant.schema.spec.*
+import com.eignex.kumulant.schema.spec.ResampleAggregator
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult

@@ -3,6 +3,7 @@ package com.eignex.kumulant.schema.runtime
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.schema.*
+import com.eignex.kumulant.schema.spec.*
 
 /**
  * Pairs a [StatKey] with the live [Stat] that produces results for that slot.

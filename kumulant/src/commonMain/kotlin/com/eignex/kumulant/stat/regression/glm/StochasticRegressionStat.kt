@@ -5,9 +5,9 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.math.forEachStored
-import com.eignex.kumulant.schema.OptimizerSpec
-import com.eignex.kumulant.schema.Sgd
 import com.eignex.kumulant.schema.expr.ScalarExpr
+import com.eignex.kumulant.schema.optimizer.OptimizerSpec
+import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.Optimizer
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
@@ -20,8 +20,8 @@ import com.eignex.kumulant.stream.welfordMode
  * [Link]'s negative log-likelihood plus optional [Penalty]. The cheapest of the
  * multivariate regressors; point estimates only, no posterior, fast updates.
  *
- * The per-coordinate update rule is owned by [optimizer] ([Sgd] / [com.eignex.kumulant.schema.Adagrad] /
- * [com.eignex.kumulant.schema.Rmsprop] / [com.eignex.kumulant.schema.Adam]). The bias has its own
+ * The per-coordinate update rule is owned by [optimizer] ([Sgd] / [com.eignex.kumulant.schema.optimizer.Adagrad] /
+ * [com.eignex.kumulant.schema.optimizer.Rmsprop] / [com.eignex.kumulant.schema.optimizer.Adam]). The bias has its own
  * [biasOptimizer] schedule because the intercept usually wants a different cadence than
  * the coefficients.
  *

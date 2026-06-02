@@ -1,10 +1,10 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.schema.Adagrad
-import com.eignex.kumulant.schema.Adam
-import com.eignex.kumulant.schema.Rmsprop
-import com.eignex.kumulant.schema.Sgd
+import com.eignex.kumulant.schema.optimizer.Adagrad
+import com.eignex.kumulant.schema.optimizer.Adam
+import com.eignex.kumulant.schema.optimizer.Rmsprop
+import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import com.eignex.kumulant.stat.regression.glm.Penalty
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat

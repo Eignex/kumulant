@@ -1,7 +1,8 @@
-package com.eignex.kumulant.schema
+package com.eignex.kumulant.schema.spec
 
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.schema.expr.*
+import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.stat.anomaly.FeatureRange
 import com.eignex.kumulant.stat.anomaly.GaussianScoreResult
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesResult

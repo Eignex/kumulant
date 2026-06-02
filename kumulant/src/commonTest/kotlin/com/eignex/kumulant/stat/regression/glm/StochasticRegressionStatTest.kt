@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.regression.glm
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.schema.Sgd
+import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.random.Random

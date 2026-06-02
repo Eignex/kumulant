@@ -3,8 +3,12 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.operation.foldRegression
+import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
+import com.eignex.kumulant.schema.ops.*
+import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.schema.runtime.*
+import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.summary.SumResult

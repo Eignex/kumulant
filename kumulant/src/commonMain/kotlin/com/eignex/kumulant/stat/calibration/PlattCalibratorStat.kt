@@ -4,8 +4,8 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.schema.OptimizerSpec
-import com.eignex.kumulant.schema.Sgd
+import com.eignex.kumulant.schema.optimizer.OptimizerSpec
+import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import com.eignex.kumulant.stat.regression.glm.Link
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult

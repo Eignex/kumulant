@@ -28,7 +28,7 @@ coupled to the Bayesian variants).
 | Stat | When to reach for it |
 |------|----------------------|
 | [UnivariateRegressionStat] | One scalar feature, one scalar response. OLS / ridge / lasso via [Penalty]. The cheapest entry; reach for it for "fit a line to a stream of (x, y) points." |
-| [StochasticRegressionStat] | Online SGD with any [OptimizerSpec][com.eignex.kumulant.schema.OptimizerSpec] (Sgd / Adagrad / RMSProp / Adam). Best when you want point estimates only and the per-update cost must stay small. |
+| [StochasticRegressionStat] | Online SGD with any [OptimizerSpec][com.eignex.kumulant.schema.optimizer.OptimizerSpec] (Sgd / Adagrad / RMSProp / Adam). Best when you want point estimates only and the per-update cost must stay small. |
 | [DiagonalRegressionStat] | Factorised Gaussian posterior; per-coefficient precision without the full covariance matrix. The natural choice for high-dimensional features where the quadratic memory of full Bayesian regression is prohibitive. |
 | [BayesianRegressionStat] | Full Gaussian posterior with covariance matrix and Cholesky factor. Closed-form under [Link.Identity]; online Laplace approximation under [Link.Logit] / [Link.Log]. Reach for it when downstream needs uncertainty quantification; Thompson sampling, LinUCB. |
 | [HierarchicalBayesianRegression] | Pooled estimation across many parallel regressors. Use it when you have one regressor per arm in a bandit (or per group in any stratified problem) and want them to share strength. |
@@ -39,7 +39,7 @@ coupled to the Bayesian variants).
 attach to [StochasticRegressionStat] (only) and use the existing
 lazy-update tricks for sparse efficiency (Bottou multiplicative scaling
 for L2, cumulative truncated gradient for L1). The constructor checks
-that a non-`None` [Penalty] is paired with [com.eignex.kumulant.schema.Sgd]
+that a non-`None` [Penalty] is paired with [com.eignex.kumulant.schema.optimizer.Sgd]
 optimizers; pairing penalties with Adam / Adagrad / RMSProp is not
 supported (folding regularisation into adaptive-method weight decay is
 delicate and would surface as a different config).
@@ -67,7 +67,7 @@ of the *model*, not the *bandit*. The bandit consumes them.
 `LearningRates.kt` are wire-portable
 [com.eignex.kumulant.schema.expr.ScalarExpr] expressions that produce a
 learning rate from the current step counter. Wrap them in
-[com.eignex.kumulant.schema.Sgd] (or any other [com.eignex.kumulant.schema.OptimizerSpec])
+[com.eignex.kumulant.schema.optimizer.Sgd] (or any other [com.eignex.kumulant.schema.optimizer.OptimizerSpec])
 to pass through the wire.
 
 ## Merge

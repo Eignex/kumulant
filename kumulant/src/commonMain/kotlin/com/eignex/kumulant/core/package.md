@@ -43,7 +43,7 @@ serializer round-trip is the merge boundary; workers can ship snapshots
 across a process boundary without sharing live stats.
 
 [ResultList] wraps an ordered list of results with per-entry names; it is
-the result type of fan-out wrappers ([com.eignex.kumulant.schema.Vectorized],
+the result type of fan-out wrappers ([com.eignex.kumulant.schema.spec.Vectorized],
 the various `ListStats` materializations) so consumers can look up
 per-entry snapshots by name or position.
 

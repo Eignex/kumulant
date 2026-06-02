@@ -33,7 +33,7 @@ of state changes and timestamps rather than numeric aggregates.
   and down-crossings separately.
 
 - **RecencyStat** for staleness checks and last-error-seen monitors.
-  Compose with [com.eignex.kumulant.schema.filter] on the spec side for
+  Compose with [com.eignex.kumulant.schema.ops.filter] on the spec side for
   "time since the last matching event" diagnostics. The result reads
   elapsed time at snapshot time, not at update time, so a stale stream
   still reports a growing elapsed time even without new updates.

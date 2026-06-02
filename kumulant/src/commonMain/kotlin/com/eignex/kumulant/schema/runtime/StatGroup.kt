@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.schema.*
+import com.eignex.kumulant.schema.spec.*
 
 /**
  * Internal base shared by [StatGroup], [PairedStatGroup], and [VectorStatGroup]. Holds the

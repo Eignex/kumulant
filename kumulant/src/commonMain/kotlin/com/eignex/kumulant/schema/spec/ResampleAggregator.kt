@@ -1,4 +1,4 @@
-package com.eignex.kumulant.schema
+package com.eignex.kumulant.schema.spec
 
 import kotlinx.serialization.Serializable
 

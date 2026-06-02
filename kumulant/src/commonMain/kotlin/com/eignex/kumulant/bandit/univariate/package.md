@@ -72,7 +72,7 @@ configs:
 - Other family-specific specs co-located here.
 
 Configurations and policies round-trip through skema-based JSON / CBOR
-just like the [com.eignex.kumulant.schema.StatSpec] family. The
+just like the [com.eignex.kumulant.schema.spec.StatSpec] family. The
 materializer in [com.eignex.kumulant.bandit] takes a spec and a
 `Random` and returns the live bandit; pass the same seed across replicas
 for reproducible exploration.

@@ -11,8 +11,12 @@ import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.operation.VectorizedStat
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
+import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
+import com.eignex.kumulant.schema.ops.*
+import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.schema.runtime.*
+import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.cardinality.LinearCountingResult

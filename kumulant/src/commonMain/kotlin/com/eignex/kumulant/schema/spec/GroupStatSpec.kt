@@ -1,5 +1,7 @@
-package com.eignex.kumulant.schema
+package com.eignex.kumulant.schema.spec
 
+import com.eignex.kumulant.schema.GroupResult
+import com.eignex.kumulant.schema.StatKey
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
