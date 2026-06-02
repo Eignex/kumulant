@@ -2,7 +2,6 @@ package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.ResultList
-import com.eignex.kumulant.operation.BandResult
 import com.eignex.kumulant.schema.ResampleAggregator
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.regression.CovarianceResult

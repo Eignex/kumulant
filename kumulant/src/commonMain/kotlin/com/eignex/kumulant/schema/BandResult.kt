@@ -1,4 +1,4 @@
-package com.eignex.kumulant.operation
+package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.Result

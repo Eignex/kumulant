@@ -3,6 +3,7 @@ package com.eignex.kumulant.operation
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.schema.BandResult
 
 // band derives the center / scale / lower / upper bounds from any inner stat whose
 // result implements [HasCenterScale]. The wrapper forwards update/reset/create to the
