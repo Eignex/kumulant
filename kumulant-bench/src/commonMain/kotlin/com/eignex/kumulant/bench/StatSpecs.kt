@@ -2,18 +2,18 @@
 
 package com.eignex.kumulant.bench
 
-import com.eignex.kumulant.schema.Covariance
-import com.eignex.kumulant.schema.ResampleAggregator
-import com.eignex.kumulant.schema.Sum
-import com.eignex.kumulant.schema.Variance
-import com.eignex.kumulant.schema.band
-import com.eignex.kumulant.schema.derivative
-import com.eignex.kumulant.schema.diff
-import com.eignex.kumulant.schema.hysteresis
-import com.eignex.kumulant.schema.lag
-import com.eignex.kumulant.schema.materialize
-import com.eignex.kumulant.schema.resampleByTime
-import com.eignex.kumulant.schema.withSelfLag
+import com.eignex.kumulant.schema.spec.Covariance
+import com.eignex.kumulant.schema.spec.ResampleAggregator
+import com.eignex.kumulant.schema.spec.Sum
+import com.eignex.kumulant.schema.spec.Variance
+import com.eignex.kumulant.schema.ops.band
+import com.eignex.kumulant.schema.ops.derivative
+import com.eignex.kumulant.schema.ops.diff
+import com.eignex.kumulant.schema.ops.hysteresis
+import com.eignex.kumulant.schema.ops.lag
+import com.eignex.kumulant.schema.runtime.materialize
+import com.eignex.kumulant.schema.ops.resampleByTime
+import com.eignex.kumulant.schema.ops.withSelfLag
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumStat
