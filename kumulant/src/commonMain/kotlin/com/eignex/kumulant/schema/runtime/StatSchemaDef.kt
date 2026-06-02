@@ -1,4 +1,4 @@
-package com.eignex.kumulant.schema
+package com.eignex.kumulant.schema.runtime
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.schema.*
 import kotlinx.serialization.Serializable
 
 /**

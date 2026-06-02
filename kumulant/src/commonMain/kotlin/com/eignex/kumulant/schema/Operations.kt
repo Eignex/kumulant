@@ -5,6 +5,7 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.schema.ResampleAggregator
+import com.eignex.kumulant.schema.expr.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -771,7 +772,7 @@ fun <R : Result> PairedStatSpec<R>.withSelfLag(k: Int): SeriesStatSpec<R> =
 /**
  * Wire spec for `SeriesStat.withFeedback(primary, project)`: couples an inner series stat with
  * a state-tracking primary so the projection [ScalarExpr] sees the primary's just-updated
- * snapshot via [com.eignex.kumulant.schema.Center] / [com.eignex.kumulant.schema.Scale]
+ * snapshot via [com.eignex.kumulant.schema.expr.Center] / [com.eignex.kumulant.schema.expr.Scale]
  * (and future primary-aware AST nodes). The wrapper's result is the inner stat's snapshot.
  */
 @Serializable

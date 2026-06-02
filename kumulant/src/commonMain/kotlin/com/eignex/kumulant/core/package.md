@@ -85,7 +85,7 @@ The enum's own KDoc covers the four modes in detail; the short version:
   under heavy concurrent writes; falls back to `Strict` elsewhere.
 
 To configure a coherent bag of stats with one contract, declare them
-inside a [com.eignex.kumulant.schema.StatSchema] with the desired
+inside a [com.eignex.kumulant.schema.runtime.StatSchema] with the desired
 `concurrency`; the schema propagates the choice to every registered stat
 at delegate registration.
 

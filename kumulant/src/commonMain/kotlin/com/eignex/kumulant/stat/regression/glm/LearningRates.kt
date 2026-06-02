@@ -1,13 +1,13 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.kumulant.schema.Const
-import com.eignex.kumulant.schema.Exp
-import com.eignex.kumulant.schema.ScalarExpr
-import com.eignex.kumulant.schema.X
-import com.eignex.kumulant.schema.div
-import com.eignex.kumulant.schema.plus
-import com.eignex.kumulant.schema.times
-import com.eignex.kumulant.schema.unaryMinus
+import com.eignex.kumulant.schema.expr.Const
+import com.eignex.kumulant.schema.expr.Exp
+import com.eignex.kumulant.schema.expr.ScalarExpr
+import com.eignex.kumulant.schema.expr.X
+import com.eignex.kumulant.schema.expr.div
+import com.eignex.kumulant.schema.expr.plus
+import com.eignex.kumulant.schema.expr.times
+import com.eignex.kumulant.schema.expr.unaryMinus
 
 // Convenience constructors for the common learning-rate schedules, expressed as
 // [ScalarExpr] over the step counter `X`. `RegressionStat` implementations evaluate

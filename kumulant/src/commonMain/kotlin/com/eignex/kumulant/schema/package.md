@@ -1,10 +1,10 @@
 # Package com.eignex.kumulant.schema
 
 Typed, named, wire-portable schemas for declaring bags of stats. A
-[StatSchema] does three things:
+[com.eignex.kumulant.schema.runtime.StatSchema] does three things:
 
 1. Lets you read results back by typed [StatKey] instead of by string.
-2. Materialises into a [StatGroup] that fans every update out to every
+2. Materialises into a [com.eignex.kumulant.schema.runtime.StatGroup] that fans every update out to every
    registered stat.
 3. Round-trips on the wire as a `StatSchemaDef` so a remote process can
    stand up the same bag, run it independently, and ship snapshots back
@@ -27,7 +27,7 @@ The `series`, `paired`, `vector`, and `discrete` declarators register a
 [StatSpec] of the matching modality and return a [StatKey] carrying the
 result type. The delegate gives you a typed property; you read results by
 passing the key back to the group's `GroupResult`. The `group` declarator
-nests a sub-schema, whose entries materialise as their own [StatGroup]
+nests a sub-schema, whose entries materialise as their own [com.eignex.kumulant.schema.runtime.StatGroup]
 keyed by the outer name.
 
 ## Specs
@@ -40,7 +40,7 @@ strings on the wire regardless of format (JSON, CBOR, Protobuf).
 
 Construction lives separately from declaration. Calling
 `spec.materialize(concurrency)` builds the live stat. The schema layer
-calls this for you when you build a [StatGroup] from a schema.
+calls this for you when you build a [com.eignex.kumulant.schema.runtime.StatGroup] from a schema.
 
 Specs carry no [Concurrency][com.eignex.kumulant.core.Concurrency]. The
 concurrency mode is a deployment knob passed at materialize time, so
@@ -91,9 +91,9 @@ stats and leaves the caller to split.
 
 Each [Result][com.eignex.kumulant.core.Result] is a serializable data
 class. A common pattern is to have many workers run the same
-[StatGroup], periodically call `read` on the group, and ship the
+[com.eignex.kumulant.schema.runtime.StatGroup], periodically call `read` on the group, and ship the
 `GroupResult` (or its per-entry results) back to a coordinator. The
-coordinator runs its own [StatGroup] of the same shape and folds each
+coordinator runs its own [com.eignex.kumulant.schema.runtime.StatGroup] of the same shape and folds each
 worker's snapshot in with `merge`. Because `merge` takes a [Result]
 rather than a live [com.eignex.kumulant.core.Stat], the boundary is
 serialisation-friendly and the worker is free to terminate after each

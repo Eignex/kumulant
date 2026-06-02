@@ -4,10 +4,10 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.schema.BoolExpr
-import com.eignex.kumulant.schema.Const
-import com.eignex.kumulant.schema.ScalarExpr
-import com.eignex.kumulant.schema.X
+import com.eignex.kumulant.schema.expr.BoolExpr
+import com.eignex.kumulant.schema.expr.Const
+import com.eignex.kumulant.schema.expr.ScalarExpr
+import com.eignex.kumulant.schema.expr.X
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

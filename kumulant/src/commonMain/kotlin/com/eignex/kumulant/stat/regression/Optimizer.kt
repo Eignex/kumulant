@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.schema.ScalarExpr
+import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.StreamLong

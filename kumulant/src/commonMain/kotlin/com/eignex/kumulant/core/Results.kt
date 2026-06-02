@@ -22,7 +22,7 @@ data class IndexedResult(
 
 /**
  * Ordered list of results with per-entry names. Produced by
- * [ListStats][com.eignex.kumulant.schema.ListStats] and the vector expansion helpers.
+ * [ListStats][com.eignex.kumulant.schema.runtime.ListStats] and the vector expansion helpers.
  *
  * Names disambiguate entries for map-style lookup while preserving positional order.
  * Constructing with duplicate names throws - pass explicit names to disambiguate.

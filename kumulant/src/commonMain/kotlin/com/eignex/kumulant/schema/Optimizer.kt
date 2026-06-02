@@ -1,6 +1,7 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.stat.regression.AdagradOptimizer
 import com.eignex.kumulant.stat.regression.AdamOptimizer
 import com.eignex.kumulant.stat.regression.Optimizer

@@ -2,12 +2,12 @@ package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
-import com.eignex.kumulant.schema.Const
-import com.eignex.kumulant.schema.IfExpr
-import com.eignex.kumulant.schema.V
-import com.eignex.kumulant.schema.X
-import com.eignex.kumulant.schema.gt
-import com.eignex.kumulant.schema.times
+import com.eignex.kumulant.schema.expr.Const
+import com.eignex.kumulant.schema.expr.IfExpr
+import com.eignex.kumulant.schema.expr.V
+import com.eignex.kumulant.schema.expr.X
+import com.eignex.kumulant.schema.expr.gt
+import com.eignex.kumulant.schema.expr.times
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.exp

@@ -1,6 +1,8 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.IndexedResult
+import com.eignex.kumulant.schema.expr.*
+import com.eignex.kumulant.schema.runtime.*
 import com.eignex.kumulant.stat.summary.SummaryResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.test.Test

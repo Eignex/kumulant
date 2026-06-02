@@ -1,6 +1,6 @@
 @file:Suppress("UNCHECKED_CAST")
 
-package com.eignex.kumulant.schema
+package com.eignex.kumulant.schema.runtime
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
@@ -56,6 +56,7 @@ import com.eignex.kumulant.operation.withTimeAsX
 import com.eignex.kumulant.operation.withTimeAsY
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
+import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.stat.anomaly.GaussianScorerStat
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
 import com.eignex.kumulant.stat.anomaly.QuantileFilterStat

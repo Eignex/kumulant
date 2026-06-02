@@ -6,7 +6,7 @@ import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.math.dot
 import com.eignex.kumulant.math.forEachStored
-import com.eignex.kumulant.schema.ScalarExpr
+import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.stream.serializedLock
 
 /**

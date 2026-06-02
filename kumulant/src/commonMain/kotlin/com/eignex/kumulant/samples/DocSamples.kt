@@ -6,11 +6,11 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.schema.Mean
 import com.eignex.kumulant.schema.Rate
 import com.eignex.kumulant.schema.SeriesStatSpec
-import com.eignex.kumulant.schema.StatGroup
 import com.eignex.kumulant.schema.StatKey
-import com.eignex.kumulant.schema.StatSchema
 import com.eignex.kumulant.schema.StatSpec
-import com.eignex.kumulant.schema.materialize
+import com.eignex.kumulant.schema.runtime.StatGroup
+import com.eignex.kumulant.schema.runtime.StatSchema
+import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
 import com.eignex.kumulant.stat.summary.MeanStat

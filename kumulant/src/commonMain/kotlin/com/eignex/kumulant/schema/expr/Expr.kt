@@ -1,4 +1,4 @@
-package com.eignex.kumulant.schema
+package com.eignex.kumulant.schema.expr
 
 import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasMinMax

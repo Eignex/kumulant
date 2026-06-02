@@ -25,7 +25,7 @@ for classification.
 ## Split candidates
 
 [ThresholdSplit] is the standard axis-aligned predicate `x[i] <= t`.
-[ExprSplit] takes any [com.eignex.kumulant.schema.BoolExpr] for
+[ExprSplit] takes any [com.eignex.kumulant.schema.expr.BoolExpr] for
 non-axis-aligned splits; useful when you want a tree to split on a
 derived feature (`x[0] + x[1] > 0`, `(x[0] - x[1]).abs() > 1`)
 without materialising the feature in the input vector.

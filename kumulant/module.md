@@ -57,7 +57,7 @@ rendered API docs via `@sample` directives on individual classes.
   stat sees its input (filtering, weighting, windowing, sampling, lagging)
   or how it reports its output (folding, transforming, projecting).
 - [com.eignex.kumulant.schema]: typed, named, wire-portable schemas. Declare
-  a bag of stats once, materialise it into a live [StatGroup][com.eignex.kumulant.schema.StatGroup],
+  a bag of stats once, materialise it into a live [StatGroup][com.eignex.kumulant.schema.runtime.StatGroup],
   encode the schema to wire and rehydrate on the other side.
 - [com.eignex.kumulant.bandit]: multi-armed and contextual bandits built on
   the same Stat/Result foundation.

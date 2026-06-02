@@ -10,14 +10,14 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.math.VectorView
-import com.eignex.kumulant.schema.ScalarExpr
+import com.eignex.kumulant.schema.expr.ScalarExpr
 
 // withFeedback is the streaming-feature-engineering primitive: each update is first sent
 // to a `primary` stat that maintains running state, then the raw value and `primary`'s
 // just-updated snapshot are projected to a transformed value that is forwarded to the
 // inner stat. The projection is a [ScalarExpr] AST node so the whole composition is
-// wire-portable. AST nodes such as [com.eignex.kumulant.schema.Center] and
-// [com.eignex.kumulant.schema.Scale] address fields on the primary's snapshot.
+// wire-portable. AST nodes such as [com.eignex.kumulant.schema.expr.Center] and
+// [com.eignex.kumulant.schema.expr.Scale] address fields on the primary's snapshot.
 //
 // Preprocessing recipes (one-liners on top of withFeedback):
 //   StandardScaler: `inner.withFeedback(VarianceStat()) { (X - Center) / Scale }`

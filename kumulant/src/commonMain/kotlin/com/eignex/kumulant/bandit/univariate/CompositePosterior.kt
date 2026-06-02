@@ -2,7 +2,7 @@ package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
-import com.eignex.kumulant.schema.ScalarExpr
+import com.eignex.kumulant.schema.expr.ScalarExpr
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.random.Random

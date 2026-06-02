@@ -6,7 +6,7 @@ package com.eignex.kumulant.core
  * mathematical structure.
  *
  * Bare-stat construction defaults to [None]. To configure a coherent bag of stats
- * with one contract, declare them inside a [com.eignex.kumulant.schema.StatSchema]
+ * with one contract, declare them inside a [com.eignex.kumulant.schema.runtime.StatSchema]
  * with the desired `concurrency`; the schema propagates the choice to every
  * registered stat at delegate registration.
  *

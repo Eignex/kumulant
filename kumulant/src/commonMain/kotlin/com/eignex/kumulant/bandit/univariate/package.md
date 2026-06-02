@@ -58,7 +58,7 @@ etc.). The [GammaScalePosterior] is the canonical example used by
 [CompositeArm] (and [CompositeSubArm]) model multi-component rewards
 like zero-inflated lognormal revenue, without writing a per-shape arm
 class. Routing and score combination travel as
-[com.eignex.kumulant.schema.ScalarExpr] expressions, so the whole
+[com.eignex.kumulant.schema.expr.ScalarExpr] expressions, so the whole
 composite round-trips on the wire alongside the rest of the bandit
 config.
 

@@ -75,7 +75,7 @@ internal class WithWeightDiscreteStat<R : Result>(private val delegate: Discrete
  * Per-update weight multiplier driven by the input. `weightBy` multiplies the
  * caller-supplied weight by the value [weighter] returns, so it composes with
  * [withWeight] (which replaces weight outright). The spec-layer counterpart in
- * `Operations.kt` takes a [com.eignex.kumulant.schema.ScalarExpr] and materializes the closure at build
+ * `Operations.kt` takes a [com.eignex.kumulant.schema.expr.ScalarExpr] and materializes the closure at build
  * time.
  */
 internal fun <R : Result> SeriesStat<R>.weightBy(weighter: (Double) -> Double): SeriesStat<R> =

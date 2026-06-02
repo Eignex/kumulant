@@ -1,13 +1,13 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.schema.Center
-import com.eignex.kumulant.schema.Const
-import com.eignex.kumulant.schema.IfExpr
-import com.eignex.kumulant.schema.Scale
-import com.eignex.kumulant.schema.X
-import com.eignex.kumulant.schema.div
-import com.eignex.kumulant.schema.gt
-import com.eignex.kumulant.schema.minus
+import com.eignex.kumulant.schema.expr.Center
+import com.eignex.kumulant.schema.expr.Const
+import com.eignex.kumulant.schema.expr.IfExpr
+import com.eignex.kumulant.schema.expr.Scale
+import com.eignex.kumulant.schema.expr.X
+import com.eignex.kumulant.schema.expr.div
+import com.eignex.kumulant.schema.expr.gt
+import com.eignex.kumulant.schema.expr.minus
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat

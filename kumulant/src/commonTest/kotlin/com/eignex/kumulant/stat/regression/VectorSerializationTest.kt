@@ -3,8 +3,8 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.math.SparseVector
 import com.eignex.kumulant.math.VectorView
-import com.eignex.kumulant.schema.ScalarExpr
 import com.eignex.kumulant.schema.Sgd
+import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult

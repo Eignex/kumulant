@@ -3,7 +3,8 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Result
 
 /**
- * Typed handle to one entry in a [StatSchema] / [GroupResult]. Carries the
+ * Typed handle to one entry in a [com.eignex.kumulant.schema.runtime.StatSchema] /
+ * [GroupResult]. Carries the
  * result type [R] as a phantom type so reading back from a [GroupResult]
  * produces a typed value rather than an `Any`:
  *

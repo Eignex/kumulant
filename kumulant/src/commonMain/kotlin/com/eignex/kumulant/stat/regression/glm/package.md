@@ -65,7 +65,7 @@ of the *model*, not the *bandit*. The bandit consumes them.
 
 [ConstantRate], [StepDecay], [ExponentialDecay], and friends in
 `LearningRates.kt` are wire-portable
-[com.eignex.kumulant.schema.ScalarExpr] expressions that produce a
+[com.eignex.kumulant.schema.expr.ScalarExpr] expressions that produce a
 learning rate from the current step counter. Wrap them in
 [com.eignex.kumulant.schema.Sgd] (or any other [com.eignex.kumulant.schema.OptimizerSpec])
 to pass through the wire.
