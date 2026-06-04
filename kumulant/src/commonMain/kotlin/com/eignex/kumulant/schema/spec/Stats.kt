@@ -50,6 +50,8 @@ import com.eignex.kumulant.stat.sketch.BloomFilterResult
 import com.eignex.kumulant.stat.sketch.CountMinSketchResult
 import com.eignex.kumulant.stat.sketch.HeavyHittersResult
 import com.eignex.kumulant.stat.sketch.MinHashResult
+import com.eignex.kumulant.stat.summary.ArgMaxResult
+import com.eignex.kumulant.stat.summary.ArgMinResult
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.MadResult
 import com.eignex.kumulant.stat.summary.MaxResult
@@ -93,6 +95,16 @@ data object Min : SeriesStatSpec<MinResult>
 @Serializable
 @SerialName("Max")
 data object Max : SeriesStatSpec<MaxResult>
+
+/** Spec for `ArgMinStat`: running minimum plus the timestamp at which it occurred. */
+@Serializable
+@SerialName("ArgMin")
+data object ArgMin : SeriesStatSpec<ArgMinResult>
+
+/** Spec for `ArgMaxStat`: running maximum plus the timestamp at which it occurred. */
+@Serializable
+@SerialName("ArgMax")
+data object ArgMax : SeriesStatSpec<ArgMaxResult>
 
 /** Spec for `RangeStat`: running min and max as a pair. */
 @Serializable

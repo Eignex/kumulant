@@ -47,6 +47,14 @@ class StatsRoundTripTest {
         assertEquals(Max, roundTrip(Max))
     }
 
+    @Test fun `argMinConfig round trips`() {
+        assertEquals(ArgMin, roundTrip(ArgMin))
+    }
+
+    @Test fun `argMaxConfig round trips`() {
+        assertEquals(ArgMax, roundTrip(ArgMax))
+    }
+
     @Test fun `rangeConfig round trips`() {
         assertEquals(Range, roundTrip(Range))
     }
