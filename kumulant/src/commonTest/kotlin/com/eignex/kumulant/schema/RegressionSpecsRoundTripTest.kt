@@ -18,7 +18,6 @@ import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 private const val DELTA = 1e-9
 private fun feat(vararg xs: Double) = DenseVector.of(xs)
@@ -135,7 +134,6 @@ class RegressionSpecsRoundTripTest {
         val live = decoded.materialize(Concurrency.None)
         live.update(feat(0.0), y = -1.0) // dropped
         live.update(feat(0.0), y = 1.0) // kept
-        assertTrue(live is RegressionStat<*>)
     }
 
     @Test fun `weightBy decorator spec multiplies weight by AST expression`() {

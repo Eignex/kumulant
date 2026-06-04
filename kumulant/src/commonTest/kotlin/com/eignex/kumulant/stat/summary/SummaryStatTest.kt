@@ -5,7 +5,6 @@ import com.eignex.kumulant.core.HasMinMax
 import com.eignex.kumulant.core.HasSampleVariance
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 private const val DELTA = 1e-9
 
@@ -27,9 +26,6 @@ class SummaryStatTest {
         val s = SummaryStat()
         for (v in 1..4) s.update(v.toDouble())
         val r = s.read()
-        assertTrue(r is HasCenterScale)
-        assertTrue(r is HasMinMax)
-        assertTrue(r is HasSampleVariance)
         assertEquals(r.mean, r.center, DELTA)
         assertEquals(r.stdDev, r.scale, DELTA)
     }

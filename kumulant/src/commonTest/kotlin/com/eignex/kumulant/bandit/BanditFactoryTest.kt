@@ -48,21 +48,18 @@ class BanditFactoryTest {
     fun `RouletteWheel spec materialises`() {
         val b = RouletteWheelSpec(nbrArms = 4, segmentLength = 5).materialize(Random(0))
         assertEquals(4, b.nbrArms)
-        assertTrue(b is RouletteWheelBandit)
     }
 
     @Test
     fun `Boltzmann spec materialises`() {
         val b = BoltzmannSpec(nbrArms = 3).materialize(Random(0))
         assertEquals(3, b.nbrArms)
-        assertTrue(b is BoltzmannBandit)
     }
 
     @Test
     fun `Exp3 spec materialises with default eta and gamma`() {
         val b = Exp3Spec(nbrArms = 3).materialize(Random(0))
         assertEquals(3, b.nbrArms)
-        assertTrue(b is Exp3Bandit)
     }
 
     @Test
@@ -72,7 +69,6 @@ class BanditFactoryTest {
             policy = ThompsonSamplingSpec(NormalArm(), NormalGammaPosterior),
         ).materialize(Random(0))
         assertEquals(3, b.nbrArms)
-        assertTrue(b is TopTwoThompsonBandit<*>)
     }
 
     @Test
@@ -84,14 +80,12 @@ class BanditFactoryTest {
         )
         val b = spec.materialize(Random(0))
         assertEquals(4, b.nbrArms)
-        assertTrue(b is RegressionContextualBandit<*>)
     }
 
     @Test
     fun `KnnContextual spec materialises with the default distance`() {
         val b = KnnContextualSpec(nbrArms = 3).materialize(Random(0))
         assertEquals(3, b.nbrArms)
-        assertTrue(b is KnnContextualBandit)
     }
 
     @Test

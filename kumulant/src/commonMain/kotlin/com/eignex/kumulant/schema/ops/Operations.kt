@@ -1,3 +1,5 @@
+@file:Suppress("UNCHECKED_CAST")
+
 package com.eignex.kumulant.schema.ops
 
 import com.eignex.kumulant.core.Result

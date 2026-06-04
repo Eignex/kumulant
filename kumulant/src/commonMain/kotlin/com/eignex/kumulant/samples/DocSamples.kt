@@ -71,7 +71,7 @@ internal fun specRoundTrip() {
     val spec: StatSpec = Mean
     val json = SchemaJson.encodeToString(spec)
     val decoded = SchemaJson.decodeFromString<StatSpec>(json)
-    val live = (decoded as SeriesStatSpec<WeightedMeanResult>).materialize(Concurrency.None)
+    val live = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
     live.update(1.0)
 }
 

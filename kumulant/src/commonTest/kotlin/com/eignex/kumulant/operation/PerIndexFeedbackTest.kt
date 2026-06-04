@@ -13,7 +13,6 @@ import com.eignex.kumulant.schema.expr.minus
 import com.eignex.kumulant.schema.expr.times
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
-import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -74,7 +73,7 @@ class PerIndexFeedbackTest {
             it.update(1.0)
             it.update(2.0)
         }
-            .read() as WeightedVarianceResult
+            .read()
         assertFailsWith<IllegalStateException> { VIndex.eval(0.0, 0.0, DoubleArray(0), primary) }
     }
 
