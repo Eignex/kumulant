@@ -30,6 +30,8 @@ import com.eignex.kumulant.stat.change.PageHinkleyStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
+import com.eignex.kumulant.stat.summary.ArgMaxStat
+import com.eignex.kumulant.stat.summary.ArgMinStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.MadStat
@@ -141,6 +143,22 @@ val minStatSpec = seriesStatSpec(
 val maxStatSpec = seriesStatSpec(
     name = "MaxStat",
     factory = { c -> MaxStat(c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.max },
+    reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
+)
+
+val argMinStatSpec = seriesStatSpec(
+    name = "ArgMinStat",
+    factory = { c -> ArgMinStat(c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.min },
+    reference = { seq -> seq.fold(Double.POSITIVE_INFINITY) { acc, u -> min(acc, u.value) } },
+)
+
+val argMaxStatSpec = seriesStatSpec(
+    name = "ArgMaxStat",
+    factory = { c -> ArgMaxStat(c) },
     updates = ::uniformUnitWeights,
     scalar = { it.max },
     reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
@@ -1014,6 +1032,8 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     momentsStatSpec,
     minStatSpec,
     maxStatSpec,
+    argMinStatSpec,
+    argMaxStatSpec,
     rangeStatSpec,
     thresholdBucketStatSpec,
     crossingStatSpec,

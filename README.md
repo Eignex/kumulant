@@ -76,7 +76,7 @@ which.
 
 | Family       | Stats                                                                          |
 |--------------|--------------------------------------------------------------------------------|
-| Summary      | Sum, Mean, Min, Max, Range, Variance, Moments, Summary, BernoulliSum, Count, Mad |
+| Summary      | Sum, Mean, Min, Max, ArgMin, ArgMax, Range, Variance, Moments, Summary, BernoulliSum, Count, Mad |
 | Event        | Excursion, RunLength, Crossing, Recency, Sojourn                                |
 | Rate         | Rate, CounterRate, DecayingRate                                                 |
 | Change       | Cusum, PageHinkley, Adwin                                                       |

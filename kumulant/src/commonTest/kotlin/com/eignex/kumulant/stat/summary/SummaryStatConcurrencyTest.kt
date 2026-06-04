@@ -46,6 +46,28 @@ class SummaryStatConcurrencyTest {
     }
 
     @Test
+    fun `ArgMinStat sequential math equal across modes`() {
+        val reads = Concurrency.entries.associateWith { mode ->
+            val s = ArgMinStat(concurrency = mode)
+            for (i in values.indices) s.update(values[i], i.toLong(), weights[i])
+            s.read(0L)
+        }
+        val ref = reads.getValue(Concurrency.None)
+        for ((mode, r) in reads) assertEquals(ref, r, "ArgMinStat mode=$mode")
+    }
+
+    @Test
+    fun `ArgMaxStat sequential math equal across modes`() {
+        val reads = Concurrency.entries.associateWith { mode ->
+            val s = ArgMaxStat(concurrency = mode)
+            for (i in values.indices) s.update(values[i], i.toLong(), weights[i])
+            s.read(0L)
+        }
+        val ref = reads.getValue(Concurrency.None)
+        for ((mode, r) in reads) assertEquals(ref, r, "ArgMaxStat mode=$mode")
+    }
+
+    @Test
     fun `MeanStat sequential math equal across modes`() {
         val reads = sequentialReads { MeanStat(concurrency = it) }
         val ref = reads.getValue(Concurrency.None)

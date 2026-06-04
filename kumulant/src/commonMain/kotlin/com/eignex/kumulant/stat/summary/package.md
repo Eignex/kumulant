@@ -18,6 +18,12 @@ level via independent commuting cell arithmetic ([SumStat]) or a CAS
 loop on a single cell ([MinStat] / [MaxStat]). [RangeStat] is a
 [MinStat] and [MaxStat] tracked together.
 
+[ArgMinStat] and [ArgMaxStat] extend [MinStat] / [MaxStat] with the
+timestamp at which the extreme was observed. The (value, timestamp) pair
+is coupled, so a single-cell CAS no longer suffices; an internal lock
+keeps the pair consistent under concurrency. Merge keeps the pair from
+the smaller (larger) value.
+
 [CountStat], [TotalWeightsStat], and [BernoulliSumStat] look similar but
 answer different questions. [CountStat] counts updates, ignoring weight.
 [TotalWeightsStat] sums weight, ignoring the value. [BernoulliSumStat]
@@ -95,7 +101,9 @@ stats:
 
 Every entry merges across parallel workers. The additive stats ([SumStat],
 [CountStat], [TotalWeightsStat], [BernoulliSumStat]) sum cell-wise; [MinStat],
-[MaxStat], and [RangeStat] take cell-wise min/max; the Welford family
+[MaxStat], and [RangeStat] take cell-wise min/max; [ArgMinStat] and
+[ArgMaxStat] keep the (value, timestamp) pair from the smaller (larger)
+value; the Welford family
 ([MeanStat], [VarianceStat], [MomentsStat], [SummaryStat]) uses the Chan-style
 parallel recurrence; [PairedSumStat] sums each axis. All of these are exact.
 [MadStat] is the one approximation: the t-digests carry no round-trippable
@@ -107,6 +115,7 @@ state, so merge re-pushes the `(median, MAD)` pair as a single update.
 |------|--------|--------|-------------|
 | [SumStat], [CountStat], [TotalWeightsStat], [BernoulliSumStat] | O(1) | O(1) | striped-additive under HighWrite, atomic otherwise |
 | [MinStat], [MaxStat], [RangeStat] | O(1) | O(1) | CAS loop on a single cell |
+| [ArgMinStat], [ArgMaxStat] | O(1) | O(1) | internal lock keeps the (value, timestamp) pair consistent |
 | [MeanStat] | O(1) | O(1) | Welford-coupled; locked under Strict / HighWrite, racing under Relaxed |
 | [VarianceStat], [SummaryStat] | O(1) | O(1) | Welford-coupled |
 | [MomentsStat] | O(1) | O(1) | Welford-coupled (four cells) |
