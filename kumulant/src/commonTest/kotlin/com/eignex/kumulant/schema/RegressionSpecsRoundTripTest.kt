@@ -1,7 +1,6 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*

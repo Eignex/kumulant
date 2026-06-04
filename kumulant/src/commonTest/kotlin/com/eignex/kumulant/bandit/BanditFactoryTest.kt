@@ -1,24 +1,18 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.bandit.contextual.KnnContextualSpec
 import com.eignex.kumulant.bandit.contextual.LinearRegressionSpec
-import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
 import com.eignex.kumulant.bandit.univariate.BernoulliArm
 import com.eignex.kumulant.bandit.univariate.BetaPosterior
-import com.eignex.kumulant.bandit.univariate.BoltzmannBandit
 import com.eignex.kumulant.bandit.univariate.BoltzmannSpec
-import com.eignex.kumulant.bandit.univariate.Exp3Bandit
 import com.eignex.kumulant.bandit.univariate.Exp3Spec
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.bandit.univariate.MultiArmedSpec
 import com.eignex.kumulant.bandit.univariate.NormalArm
 import com.eignex.kumulant.bandit.univariate.NormalGammaPosterior
-import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
 import com.eignex.kumulant.bandit.univariate.RouletteWheelSpec
 import com.eignex.kumulant.bandit.univariate.ThompsonSamplingSpec
-import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonSpec
 import com.eignex.kumulant.bandit.univariate.Ucb1Spec
 import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec

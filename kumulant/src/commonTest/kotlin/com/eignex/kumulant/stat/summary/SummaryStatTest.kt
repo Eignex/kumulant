@@ -1,8 +1,5 @@
 package com.eignex.kumulant.stat.summary
 
-import com.eignex.kumulant.core.HasCenterScale
-import com.eignex.kumulant.core.HasMinMax
-import com.eignex.kumulant.core.HasSampleVariance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
