@@ -49,7 +49,7 @@ per-feature-set; per-coordinate aux state honours the stat's
 
 [RegressionPosterior] is the scoring interface shared by every
 regression family. A posterior projects a [com.eignex.kumulant.core.Result]
-and a query [com.eignex.kumulant.math.VectorView] to a scalar score,
+and a query [com.eignex.koblas.VectorView] to a scalar score,
 parametrised by an `exploration` knob and a `Random`. The contextual
 bandits ([com.eignex.kumulant.bandit.contextual.RegressionContextualBandit])
 consume posteriors at choose time.

@@ -1,25 +1,10 @@
 # Package com.eignex.kumulant.math
 
-Vector / matrix primitives, distribution sampling, and stream-hash
-functions consumed by the rest of the library. The public surface
-splits into three groups; the rest of the package is `internal` SIMD,
-Cholesky, and BLAS-style helpers used by regression and Bayesian stats.
-
-## Vectors and matrices
-
-| Type | Role |
-|------|------|
-| [VectorView] | Sealed read interface; `size`, `operator get(i)`, `forEachStored`. Accepted by [VectorStat][com.eignex.kumulant.core.VectorStat] / [RegressionStat][com.eignex.kumulant.core.RegressionStat] update, by every result's `predict(x: VectorView)` method, and by every spec that consumes a feature vector. |
-| [DenseVector] | Backed by a flat `DoubleArray`. Constructed via `DenseVector.of(doubleArrayOf(...))`. The default carrier when the caller has a dense array on hand. |
-| [SparseVector] | Backed by parallel index/value arrays. Constructed via `SparseVector.of(indices, values, size)`. Forwarded by every regressor's sparse-aware update path; `forEachStored` walks only the nonzero entries. |
-| [MatrixView] | Sealed read interface; `rows`, `cols`, `operator get(i, j)`. Carried by covariance / Cholesky results. |
-| [DenseMatrix] | Row-major flat `DoubleArray` backing. Carried by [com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult] for posterior covariance and Cholesky factors. |
-
-Both vector types accept both dense and sparse on the same API path;
-`forEachStored { i, v -> ... }` is the universal entry point that lets a
-consumer iterate only the populated entries, regardless of the backing.
-That's what gives [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat]
-its O(nnz(x)) update cost.
+Distribution sampling and stream-hash functions consumed by the rest of
+the library. The vector / matrix primitives and BLAS-style linear algebra
+live in the separate [koblas](https://github.com/Eignex/koblas) library
+(`com.eignex.koblas`); this package holds only the sampling and hashing
+helpers.
 
 ## Distribution sampling
 

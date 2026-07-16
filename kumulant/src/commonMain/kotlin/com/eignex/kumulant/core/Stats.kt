@@ -193,7 +193,7 @@ interface PairedStat<R : Result> : Stat<R> {
  * Inputs are passed as [VectorView] so callers can submit sparse feature
  * vectors without materialising them into dense arrays first. The
  * [DoubleArray] convenience overloads wrap the array in a [DenseVector]; the
- * sparse path goes through [com.eignex.kumulant.math.SparseVector].
+ * sparse path goes through [com.eignex.koblas.SparseVector].
  *
  * The K-way classifiers
  * ([SoftmaxRegressionStat][com.eignex.kumulant.stat.regression.SoftmaxRegressionStat],
