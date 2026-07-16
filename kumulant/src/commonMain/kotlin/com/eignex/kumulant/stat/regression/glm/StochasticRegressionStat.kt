@@ -1,10 +1,10 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorView
+import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.VectorView
-import com.eignex.kumulant.math.forEachStored
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd

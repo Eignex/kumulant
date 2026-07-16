@@ -2,8 +2,8 @@
 
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.VectorView
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.test.Test

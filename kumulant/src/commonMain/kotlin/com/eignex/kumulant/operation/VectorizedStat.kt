@@ -1,12 +1,12 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.koblas.VectorView
+import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.math.VectorView
-import com.eignex.kumulant.math.forEachStored
 
 /**
  * Fans each vector observation out to one [SeriesStat] per dimension.

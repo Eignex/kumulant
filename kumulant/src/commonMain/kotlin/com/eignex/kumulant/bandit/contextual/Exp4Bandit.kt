@@ -1,9 +1,9 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.Snapshotable
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.VectorView
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.exp

@@ -2,8 +2,8 @@
 
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.math.VectorView
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi

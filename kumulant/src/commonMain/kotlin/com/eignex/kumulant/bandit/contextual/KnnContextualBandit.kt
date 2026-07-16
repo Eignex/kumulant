@@ -1,13 +1,13 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
+import com.eignex.koblas.VectorView
+import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.SparseVector
-import com.eignex.kumulant.math.VectorView
-import com.eignex.kumulant.math.forEachStored
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.ln

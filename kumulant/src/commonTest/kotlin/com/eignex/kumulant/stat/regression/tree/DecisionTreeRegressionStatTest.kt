@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.math.DenseVector
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals

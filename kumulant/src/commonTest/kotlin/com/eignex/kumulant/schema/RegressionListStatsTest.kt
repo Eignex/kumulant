@@ -1,7 +1,7 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.operation.foldRegression
 import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*

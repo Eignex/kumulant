@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit.tree
 
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
-import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig

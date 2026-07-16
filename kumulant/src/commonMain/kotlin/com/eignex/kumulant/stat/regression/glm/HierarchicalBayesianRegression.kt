@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.math.DenseMatrix
-import com.eignex.kumulant.math.DenseVector
 
 /**
  * Manager for a population of [BayesianRegressionStat] instances that share an

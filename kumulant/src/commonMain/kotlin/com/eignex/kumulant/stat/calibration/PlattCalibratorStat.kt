@@ -1,9 +1,9 @@
 package com.eignex.kumulant.stat.calibration
 
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate

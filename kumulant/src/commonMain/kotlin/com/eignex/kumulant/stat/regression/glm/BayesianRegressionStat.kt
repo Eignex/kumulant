@@ -3,21 +3,21 @@
 
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.MatrixView
+import com.eignex.koblas.VectorView
+import com.eignex.koblas.addOuter
+import com.eignex.koblas.axpy
+import com.eignex.koblas.cholesky
+import com.eignex.koblas.choleskyDowndateInPlace
+import com.eignex.koblas.dot
+import com.eignex.koblas.invertSpd
+import com.eignex.koblas.matVec
+import com.eignex.koblas.scale
+import com.eignex.koblas.solveSpd
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
-import com.eignex.kumulant.math.DenseMatrix
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.MatrixView
-import com.eignex.kumulant.math.VectorView
-import com.eignex.kumulant.math.addOuter
-import com.eignex.kumulant.math.axpy
-import com.eignex.kumulant.math.cholesky
-import com.eignex.kumulant.math.choleskyDowndateInPlace
-import com.eignex.kumulant.math.dot
-import com.eignex.kumulant.math.invertSpd
-import com.eignex.kumulant.math.matVec
-import com.eignex.kumulant.math.scale
-import com.eignex.kumulant.math.solveSpd
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt

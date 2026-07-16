@@ -1,12 +1,12 @@
 package com.eignex.kumulant.bandit
 
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.bandit.univariate.NormalTS
 import com.eignex.kumulant.bandit.univariate.RouletteWheelArmResult
 import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
-import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult

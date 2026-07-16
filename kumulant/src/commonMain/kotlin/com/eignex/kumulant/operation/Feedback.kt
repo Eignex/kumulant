@@ -1,5 +1,6 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.IndexedResult
 import com.eignex.kumulant.core.PairedStat
@@ -9,7 +10,6 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.schema.expr.ScalarExpr
 
 // withFeedback is the streaming-feature-engineering primitive: each update is first sent

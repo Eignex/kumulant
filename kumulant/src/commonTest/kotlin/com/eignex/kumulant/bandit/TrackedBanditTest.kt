@@ -1,9 +1,9 @@
 package com.eignex.kumulant.bandit
 
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
-import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.CovarianceStat
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat

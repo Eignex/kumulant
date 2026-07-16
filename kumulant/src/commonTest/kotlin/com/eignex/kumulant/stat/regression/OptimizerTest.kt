@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.kumulant.math.DenseVector
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.schema.optimizer.Adagrad
 import com.eignex.kumulant.schema.optimizer.Adam
 import com.eignex.kumulant.schema.optimizer.Rmsprop

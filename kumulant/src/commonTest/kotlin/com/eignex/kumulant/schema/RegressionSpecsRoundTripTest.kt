@@ -1,7 +1,7 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.math.DenseVector
 import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.ops.*

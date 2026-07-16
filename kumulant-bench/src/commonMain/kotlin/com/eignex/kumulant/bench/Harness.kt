@@ -6,7 +6,7 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.math.DenseVector
+import com.eignex.koblas.DenseVector
 import kotlin.random.Random
 
 /** Single observation passed to a stat under test. */

@@ -1,8 +1,8 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit.Companion.squaredL2
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.SparseVector
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -39,6 +39,7 @@ kotlin {
         webMain.get().dependsOn(nonJvmMain)
         wasmWasiMain.get().dependsOn(webMain.get())
         commonMain.dependencies {
+            api("com.eignex:koblas:0.1.0")
             api("com.eignex:skema:0.1.1")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
