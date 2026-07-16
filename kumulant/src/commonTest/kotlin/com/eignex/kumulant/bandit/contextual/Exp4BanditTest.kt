@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.VectorView
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorView
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test

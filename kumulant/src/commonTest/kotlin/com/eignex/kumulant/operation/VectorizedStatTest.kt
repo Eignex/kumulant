@@ -1,7 +1,7 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.koblas.SparseVector
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.math.SparseVector
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat

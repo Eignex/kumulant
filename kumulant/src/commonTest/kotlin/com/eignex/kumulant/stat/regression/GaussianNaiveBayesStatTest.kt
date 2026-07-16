@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.kumulant.math.DenseVector
+import com.eignex.koblas.DenseVector
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test

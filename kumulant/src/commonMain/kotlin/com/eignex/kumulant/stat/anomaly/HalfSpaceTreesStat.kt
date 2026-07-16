@@ -2,10 +2,10 @@
 
 package com.eignex.kumulant.stat.anomaly
 
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stream.Mutex
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex

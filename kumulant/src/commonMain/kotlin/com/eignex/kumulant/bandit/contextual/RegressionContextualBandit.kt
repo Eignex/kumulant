@@ -1,11 +1,11 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlin.random.Random
 

@@ -1,11 +1,11 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.DenseMatrix
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.VectorView
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

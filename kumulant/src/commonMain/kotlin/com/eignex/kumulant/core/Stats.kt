@@ -1,7 +1,7 @@
 package com.eignex.kumulant.core
 
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.VectorView
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.stream.currentTimeNanos
 
 /**

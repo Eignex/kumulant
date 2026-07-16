@@ -1,12 +1,12 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.math.VectorView
 
 /**
  * Fold adapters. Constructed by the spec layer's `foldPaired(ScalarExpr)` /

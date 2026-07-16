@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.VectorView
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

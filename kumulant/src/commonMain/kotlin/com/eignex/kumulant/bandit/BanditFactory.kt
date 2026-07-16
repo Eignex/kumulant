@@ -2,6 +2,7 @@
 
 package com.eignex.kumulant.bandit
 
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.contextual.ContextualBanditSpec
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.bandit.contextual.KnnContextualSpec
@@ -48,7 +49,6 @@ import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat

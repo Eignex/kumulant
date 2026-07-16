@@ -1,5 +1,7 @@
 package com.eignex.kumulant.bandit
 
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.contextual.Exp4Bandit
 import com.eignex.kumulant.bandit.contextual.Exp4Expert
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
@@ -7,8 +9,6 @@ import com.eignex.kumulant.bandit.univariate.BoltzmannBandit
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
 import com.eignex.kumulant.bandit.univariate.NormalTS
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.VectorView
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test

@@ -1,11 +1,11 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.DenseMatrix
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.welfordLock

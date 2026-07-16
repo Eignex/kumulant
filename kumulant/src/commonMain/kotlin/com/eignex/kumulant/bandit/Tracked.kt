@@ -1,11 +1,11 @@
 package com.eignex.kumulant.bandit
 
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.math.DenseVector
-import com.eignex.kumulant.math.VectorView
 import kotlin.random.Random
 
 /**

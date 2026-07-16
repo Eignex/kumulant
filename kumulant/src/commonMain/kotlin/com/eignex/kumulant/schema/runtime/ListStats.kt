@@ -1,5 +1,6 @@
 package com.eignex.kumulant.schema.runtime
 
+import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -9,7 +10,6 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.math.VectorView
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.spec.*
 

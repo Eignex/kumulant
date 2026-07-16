@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.kumulant.math.DenseMatrix
-import com.eignex.kumulant.math.DenseVector
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
 import kotlin.math.abs
 import kotlin.math.sqrt
 import kotlin.random.Random
