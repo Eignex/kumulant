@@ -29,7 +29,7 @@ wrappers, decaying accumulators) treat it as the ordering signal; pass a
 monotonic stamp when replaying a log.
 
 [VectorStat] and [RegressionStat] both accept a `VectorView`
-([com.eignex.kumulant.math.VectorView]) so sparse callers can feed sparse
+([com.eignex.koblas.VectorView]) so sparse callers can feed sparse
 vectors without materialising them. Each also exposes a `DoubleArray`
 convenience overload that wraps the array in a `DenseVector` before
 forwarding.
