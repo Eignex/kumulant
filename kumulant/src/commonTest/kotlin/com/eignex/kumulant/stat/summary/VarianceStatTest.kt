@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.summary
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -99,6 +100,50 @@ class VarianceStatTest {
         val v = VarianceStat()
         repeat(100) { v.update(7.0) }
         assertEquals(0.0, v.read().variance, 1e-6)
+    }
+
+    @Test
+    fun `negative weight downdates the variance back to the prior state`() {
+        val v = VarianceStat()
+        v.update(1.0, 1.0)
+        v.update(5.0, 2.5)
+        val before = v.read()
+
+        v.update(11.0, 1.75)
+        v.update(11.0, -1.75)
+
+        val after = v.read()
+        assertEquals(before.totalWeights, after.totalWeights, 1e-9)
+        assertEquals(before.mean, after.mean, 1e-9)
+        assertEquals(before.variance, after.variance, 1e-9)
+    }
+
+    @Test
+    fun `downdate matches a fresh accumulator over the retained values`() {
+        val windowed = VarianceStat()
+        listOf(2.0, 4.0, 6.0, 8.0).forEach { windowed.update(it, 1.0) }
+        windowed.update(2.0, -1.0)
+
+        val fresh = VarianceStat()
+        listOf(4.0, 6.0, 8.0).forEach { fresh.update(it, 1.0) }
+
+        assertEquals(fresh.read().mean, windowed.read().mean, 1e-9)
+        assertEquals(fresh.read().variance, windowed.read().variance, 1e-9)
+    }
+
+    @Test
+    fun `a downdate that would exhaust the accumulated weight throws`() {
+        val v = VarianceStat()
+        v.update(1.0, 1.0)
+        v.update(5.0, 1.0)
+        val before = v.read()
+        assertFailsWith<IllegalArgumentException> { v.update(2.0, -2.0) }
+        val after = v.read()
+        assertEquals(before.totalWeights, after.totalWeights, DELTA)
+        assertEquals(before.mean, after.mean, DELTA)
+        assertEquals(before.variance, after.variance, DELTA)
+        assertFalse(after.variance.isNaN())
+        assertFalse(after.variance.isInfinite())
     }
 
     @Test

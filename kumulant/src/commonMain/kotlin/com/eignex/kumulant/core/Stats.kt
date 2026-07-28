@@ -16,6 +16,26 @@ import com.eignex.kumulant.stream.currentTimeNanos
  *
  * The full lifecycle (`update` / `read` / `merge`) is shown end-to-end below.
  *
+ * Every modality's `update` takes a per-observation `weight`, interpreted
+ * consistently with the stat's mathematical role: weighted means take it as the
+ * observation weight, sums multiply by it, histograms add it to the destination
+ * bin. A weight of 1 (the default) is the unweighted case.
+ *
+ * Two guarantees hold across every stat:
+ *
+ * - A weight of `0.0` is a no-op. The observation is not folded in and no state
+ *   changes, whatever the modality.
+ * - A negative weight carries whatever meaning is standard for that particular
+ *   statistic. For the accumulating families that is a downdate: it removes an
+ *   observation previously folded in. Where a statistic has no sensible inverse,
+ *   or where the update would corrupt the accumulator rather than merely give a
+ *   surprising answer, it throws [IllegalArgumentException] instead. Each stat's
+ *   own KDoc says which applies; there is deliberately no library-wide answer,
+ *   because subtraction is well defined for some statistics and not others.
+ *
+ * Checks beyond that are the caller's responsibility. Stats validate only where
+ * the alternative is corrupted state, not to police inputs.
+ *
  * @param R The result type returned by [read]; always a [Result] subtype.
  *
  * @sample com.eignex.kumulant.samples.basicMeanLifecycle
@@ -99,11 +119,8 @@ interface Stat<R : Result> {
  * [VarianceStat][com.eignex.kumulant.stat.summary.VarianceStat], the quantile
  * sketches, the rate family, the decay family) implement this shape.
  *
- * Implementations interpret the per-observation `weight` consistently with
- * their mathematical role: weighted means take it as the observation weight,
- * sums multiply by it, histograms add it to the destination bin. A weight of
- * 0 typically drops the observation; a weight of 1 (the default) is the
- * unweighted case.
+ * See [Stat] for the per-observation `weight` contract, which is library-wide:
+ * weights must be non-negative, and zero or negative drops the observation.
  */
 interface SeriesStat<R : Result> : Stat<R> {
     /** Record an observation with the given [weight], stamped at the current time. */

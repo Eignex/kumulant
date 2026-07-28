@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -45,6 +46,11 @@ data class WeightedVarianceResult(
  * for control charts, anomaly thresholds, and bandit posteriors. Pairs with
  * [MomentsStat] when skewness/kurtosis are also needed.
  *
+ * **Weights:** zero is a no-op; a negative weight downdates. See [MeanStat] for
+ * the shared contract. The `sst` recurrence inverts exactly: removing `(x, w)`
+ * from total `W` subtracts `W * w * delta^2 / (W - w)`, which is algebraically
+ * the same quantity the forward step added.
+ *
  * **Memory:** O(1); three doubles plus a lock.
  *
  * **Update:** O(1) per observation.
@@ -66,6 +72,7 @@ class VarianceStat(override val concurrency: Concurrency = Concurrency.None) : S
     override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
         if (weight == 0.0) return@withLock
         val priorW = totalWeights.load()
+        requireLiveWeight(priorW, weight)
         val nextW = totalWeights.addAndGet(weight)
         val delta = value - mean.load()
         val r = delta * (weight / nextW)
