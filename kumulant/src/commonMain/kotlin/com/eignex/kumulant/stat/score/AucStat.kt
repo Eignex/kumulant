@@ -12,6 +12,11 @@ import kotlinx.serialization.Serializable
  * AUC snapshot with the per-bin counts needed for merge. [auc] is `NaN` until at
  * least one positive and one negative have been observed; consult
  * [totalPositives] / [totalNegatives] to detect that case.
+ *
+ * [totalPositives] and [totalNegatives] are the sums of [positives] and [negatives]
+ * respectively; they are reported for convenience, not tracked independently. Merge folds
+ * in the per-bin arrays only and recomputes the totals, so a hand-built result whose
+ * totals disagree with its bins contributes its bins and its bins alone.
  */
 @Serializable
 @SerialName("AucResult")
