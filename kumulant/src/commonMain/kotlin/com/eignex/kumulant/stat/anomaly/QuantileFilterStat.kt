@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.anomaly
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import kotlinx.serialization.SerialName
@@ -20,8 +20,8 @@ data class QuantileFilterResult(
     /** Estimated quantile of the input stream at [probability]. */
     val threshold: Double,
     /** Cumulative observation weight folded into the underlying sketch. */
-    val totalWeights: Double,
-) : Result {
+    override val totalWeights: Double,
+) : HasObservationCount {
 
     /** `1.0` when [x] strictly exceeds [threshold], `0.0` otherwise. */
     fun score(x: Double): Double = if (x > threshold) 1.0 else 0.0

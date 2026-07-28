@@ -4,7 +4,7 @@ package com.eignex.kumulant.stat.anomaly
 
 import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.stream.Mutex
 import com.eignex.kumulant.stream.NoopMutex
@@ -50,14 +50,14 @@ data class HalfSpaceTreesResult(
     /** Depth of each tree; each tree has `2^height` leaves. */
     val height: Int,
     /** Cumulative observation weight folded into the reference window. */
-    val totalWeights: Double,
+    override val totalWeights: Double,
     /** Flat `numTrees * (2^height - 1)` array of per-internal-node feature indices. */
     val featureIndices: IntArray,
     /** Flat `numTrees * (2^height - 1)` array of per-internal-node split thresholds. */
     val thresholds: DoubleArray,
     /** Flat `numTrees * 2^height` array of per-leaf masses summed over the reference window. */
     val referenceMass: DoubleArray,
-) : Result {
+) : HasObservationCount {
 
     private val numInternal: Int get() = (1 shl height) - 1
     private val numLeaves: Int get() = 1 shl height

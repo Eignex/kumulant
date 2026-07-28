@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
-import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.operation.mapResult
 import com.eignex.kumulant.stat.regression.glm.Penalty
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
@@ -17,7 +17,7 @@ import kotlin.math.sqrt
 @SerialName("CovarianceResult")
 data class CovarianceResult(
     /** Cumulative observation weight folded in. */
-    val totalWeights: Double,
+    override val totalWeights: Double,
     /** Weighted running mean of `x`. */
     val meanX: Double,
     /** Weighted running mean of `y`. */
@@ -28,7 +28,7 @@ data class CovarianceResult(
     val sxx: Double,
     /** Sum of squared deviations in y: `Sum (y - meanY)^2 * w`. */
     val syy: Double,
-) : Result {
+) : HasObservationCount {
     /** Sample covariance `sxy / totalWeights`. */
     val covariance: Double get() = if (totalWeights > 0.0) sxy / totalWeights else 0.0
 

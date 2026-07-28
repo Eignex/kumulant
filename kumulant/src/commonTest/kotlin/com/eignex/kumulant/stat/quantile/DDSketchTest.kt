@@ -9,12 +9,15 @@ import kotlin.test.assertTrue
 class DDSketchTest {
 
     @Test
-    fun `empty sketch returns zero quantiles`() {
+    fun `empty sketch returns NaN quantiles`() {
         val sketch = DDSketchStat(probabilities = doubleArrayOf(0.5, 0.9))
         val r = sketch.read()
-        assertEquals(0.0, r.quantiles[0])
-        assertEquals(0.0, r.quantiles[1])
+        // NaN, not 0.0: a zero-filled array is indistinguishable from a sketch that observed
+        // real zeros, so an untouched sketch used to report a p99 that read as healthy.
+        assertTrue(r.quantiles[0].isNaN(), "p50 was ${r.quantiles[0]}")
+        assertTrue(r.quantiles[1].isNaN(), "p90 was ${r.quantiles[1]}")
         assertEquals(0.0, r.totalWeights)
+        assertTrue(r.isEmpty)
     }
 
     @Test
@@ -113,7 +116,8 @@ class DDSketchTest {
         sketch.reset()
         val r = sketch.read()
         assertEquals(0.0, r.totalWeights)
-        assertEquals(0.0, r.quantiles[0])
+        assertTrue(r.quantiles[0].isNaN(), "a reset sketch is empty, so the quantile is NaN")
+        assertTrue(r.isEmpty)
     }
 
     @Test

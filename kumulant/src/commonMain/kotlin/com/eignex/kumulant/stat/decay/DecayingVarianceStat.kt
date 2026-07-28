@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.decay
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.currentTimeNanos
 import com.eignex.kumulant.stream.guarded
@@ -22,10 +22,10 @@ data class DecayingVarianceResult(
     /** Time-decayed weighted running variance. */
     val variance: Double,
     /** Effective weight of observations still contributing (decays with time). */
-    val totalWeights: Double,
+    override val totalWeights: Double,
     /** Wall-clock timestamp (nanoseconds) at which the snapshot was taken. */
     val timestampNanos: Long,
-) : Result {
+) : HasObservationCount {
     /** Square root of [variance]. */
     val stdDev: Double get() = sqrt(variance)
 }

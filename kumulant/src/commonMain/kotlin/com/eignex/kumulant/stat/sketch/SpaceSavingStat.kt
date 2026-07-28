@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.sketch
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
@@ -25,7 +25,9 @@ data class HeavyHittersResult(
     val counts: LongArray,
     val errors: LongArray,
     val totalSeen: Long,
-) : Result {
+) : HasObservationCount {
+
+    override val totalWeights: Double get() = totalSeen.toDouble()
     override fun equals(other: Any?): Boolean = other is HeavyHittersResult &&
         capacity == other.capacity &&
         keys.contentEquals(other.keys) &&

@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.decay
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -14,10 +14,10 @@ data class DecayingMeanResult(
     /** Time-decayed weighted running mean. */
     val mean: Double,
     /** Effective weight of observations still contributing (decays with time). */
-    val totalWeights: Double,
+    override val totalWeights: Double,
     /** Wall-clock timestamp (nanoseconds) at which the snapshot was taken. */
     val timestampNanos: Long,
-) : Result
+) : HasObservationCount
 
 /**
  * Exponentially decaying weighted mean: `Sum(v_i*w_i*decay) / Sum(w_i*decay)`.

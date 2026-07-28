@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stream.guarded
@@ -35,7 +35,9 @@ data class TDigestResult(
     val totalWeight: Double,
     /** T-digest compression parameter; lower = more centroids, tighter quantiles. */
     val compression: Double,
-) : Result {
+) : HasObservationCount {
+
+    override val totalWeights: Double get() = totalWeight
     override fun equals(other: Any?): Boolean = other is TDigestResult &&
         probabilities.contentEquals(other.probabilities) &&
         quantiles.contentEquals(other.quantiles) &&
@@ -418,6 +420,11 @@ class TDigestStat(
             val total = totalWeightCell.load()
             val computed = DoubleArray(probabilities.size)
             if (means.isEmpty() || total <= 0.0) {
+                // NaN per quantile rather than 0.0, matching DDSketchStat and AucStat. A
+                // zero-filled array cannot be told apart from a digest that genuinely observed
+                // zeros, so an untouched digest reported a p99 of 0.0 and read as healthy.
+                // [TDigestResult.isEmpty] is the check for callers who would rather branch.
+                computed.fill(Double.NaN)
                 return@guarded TDigestResult(
                     probabilities,
                     computed,

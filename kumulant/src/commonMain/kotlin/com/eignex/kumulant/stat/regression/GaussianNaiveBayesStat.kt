@@ -4,8 +4,8 @@ import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
-import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.guarded
@@ -42,10 +42,10 @@ data class GaussianNaiveBayesResult(
     /** Cumulative observation weight per class; length [numClasses]. */
     val classWeights: DenseVector,
     /** Total cumulative observation weight across all classes. */
-    val totalWeights: Double,
+    override val totalWeights: Double,
     /** Lower bound applied to per-class variances at predict time. */
     val varianceFloor: Double,
-) : Result {
+) : HasObservationCount {
 
     init {
         require(means.rows == numClasses && means.cols == featureSize) {

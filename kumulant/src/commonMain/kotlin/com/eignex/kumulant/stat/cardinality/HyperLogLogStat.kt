@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.cardinality
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
@@ -24,7 +24,9 @@ import kotlin.math.pow
 @Serializable
 @SerialName("HyperLogLogResult")
 data class HyperLogLogResult(val estimate: Double, val precision: Int, val registers: IntArray, val totalSeen: Long) :
-    Result {
+    HasObservationCount {
+
+    override val totalWeights: Double get() = totalSeen.toDouble()
     override fun equals(other: Any?): Boolean = other is HyperLogLogResult &&
         estimate == other.estimate &&
         precision == other.precision &&
