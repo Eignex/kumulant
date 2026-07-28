@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.preview
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.pow
@@ -33,7 +34,36 @@ data class SketchResult(
     val positiveBins: Map<Int, Double>,
     /** Negative-side bin counts keyed by signed log-bucket index. */
     val negativeBins: Map<Int, Double>,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is SketchResult &&
+        probabilities.contentEquals(other.probabilities) &&
+        quantiles.contentEquals(other.quantiles) &&
+        gamma == other.gamma &&
+        totalWeights == other.totalWeights &&
+        zeroCount == other.zeroCount &&
+        positiveBins == other.positiveBins &&
+        negativeBins == other.negativeBins
+
+    override fun hashCode(): Int {
+        var h = probabilities.contentHashCode()
+        h = 31 * h + quantiles.contentHashCode()
+        h = 31 * h + gamma.hashCode()
+        h = 31 * h + totalWeights.hashCode()
+        h = 31 * h + zeroCount.hashCode()
+        h = 31 * h + positiveBins.hashCode()
+        h = 31 * h + negativeBins.hashCode()
+        return h
+    }
+
+    override fun toString(): String = "SketchResult(" +
+        "probabilities=${probabilities.preview()}, " +
+        "quantiles=${quantiles.preview()}, " +
+        "gamma=$gamma, " +
+        "totalWeights=$totalWeights, " +
+        "zeroCount=$zeroCount, " +
+        "positiveBins=$positiveBins, " +
+        "negativeBins=$negativeBins)"
+}
 
 /** Histogram as parallel `[lowerBounds, upperBounds)` bucket arrays with [weights]. */
 @Serializable
@@ -45,7 +75,24 @@ data class SparseHistogramResult(
     val upperBounds: DoubleArray,
     /** Observed weight per bucket; parallel to [lowerBounds] / [upperBounds]. */
     val weights: DoubleArray,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is SparseHistogramResult &&
+        lowerBounds.contentEquals(other.lowerBounds) &&
+        upperBounds.contentEquals(other.upperBounds) &&
+        weights.contentEquals(other.weights)
+
+    override fun hashCode(): Int {
+        var h = lowerBounds.contentHashCode()
+        h = 31 * h + upperBounds.contentHashCode()
+        h = 31 * h + weights.contentHashCode()
+        return h
+    }
+
+    override fun toString(): String = "SparseHistogramResult(" +
+        "lowerBounds=${lowerBounds.preview()}, " +
+        "upperBounds=${upperBounds.preview()}, " +
+        "weights=${weights.preview()})"
+}
 
 /** Project a [SketchResult] into a [SparseHistogramResult] by expanding its bin indices to bucket boundaries. */
 fun SketchResult.toSparseHistogram(): SparseHistogramResult {

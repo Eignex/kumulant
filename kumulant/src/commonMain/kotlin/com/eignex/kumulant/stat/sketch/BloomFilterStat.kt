@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.Hashers
 import com.eignex.kumulant.math.LongHasher
@@ -31,7 +32,26 @@ data class BloomFilterResult(
     val totalSeen: Long,
     /** Reference to the [LongHasher] that produced the bitset; resolved by [contains]. */
     val hasher: HasherRef = HasherRef.SplitMix64,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is BloomFilterResult &&
+        bits == other.bits &&
+        hashes == other.hashes &&
+        words.contentEquals(other.words) &&
+        totalSeen == other.totalSeen &&
+        hasher == other.hasher
+
+    override fun hashCode(): Int {
+        var h = bits.hashCode()
+        h = 31 * h + hashes.hashCode()
+        h = 31 * h + words.contentHashCode()
+        h = 31 * h + totalSeen.hashCode()
+        h = 31 * h + hasher.hashCode()
+        return h
+    }
+
+    override fun toString(): String =
+        "BloomFilterResult(bits=$bits, hashes=$hashes, words=${words.preview()}, totalSeen=$totalSeen, hasher=$hasher)"
+}
 
 /**
  * True iff every bit set during an `update(value)` is still set in `words`. Re-derives the

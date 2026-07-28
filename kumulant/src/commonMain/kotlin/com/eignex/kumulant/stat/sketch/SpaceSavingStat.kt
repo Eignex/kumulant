@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
@@ -23,7 +24,30 @@ data class HeavyHittersResult(
     val counts: LongArray,
     val errors: LongArray,
     val totalSeen: Long,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is HeavyHittersResult &&
+        capacity == other.capacity &&
+        keys.contentEquals(other.keys) &&
+        counts.contentEquals(other.counts) &&
+        errors.contentEquals(other.errors) &&
+        totalSeen == other.totalSeen
+
+    override fun hashCode(): Int {
+        var h = capacity.hashCode()
+        h = 31 * h + keys.contentHashCode()
+        h = 31 * h + counts.contentHashCode()
+        h = 31 * h + errors.contentHashCode()
+        h = 31 * h + totalSeen.hashCode()
+        return h
+    }
+
+    override fun toString(): String = "HeavyHittersResult(" +
+        "capacity=$capacity, " +
+        "keys=${keys.preview()}, " +
+        "counts=${counts.preview()}, " +
+        "errors=${errors.preview()}, " +
+        "totalSeen=$totalSeen)"
+}
 
 /**
  * Heavy-hitters tracker; keeps the [capacity] most-frequent keys with

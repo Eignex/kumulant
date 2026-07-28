@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.Hashers
 import com.eignex.kumulant.math.LongHasher
@@ -31,7 +32,33 @@ data class CountMinSketchResult(
     val totalSeen: Long,
     /** Reference to the [LongHasher] that produced the counters; resolved by [estimate]. */
     val hasher: HasherRef = HasherRef.SplitMix64,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is CountMinSketchResult &&
+        depth == other.depth &&
+        width == other.width &&
+        seed == other.seed &&
+        counters.contentEquals(other.counters) &&
+        totalSeen == other.totalSeen &&
+        hasher == other.hasher
+
+    override fun hashCode(): Int {
+        var h = depth.hashCode()
+        h = 31 * h + width.hashCode()
+        h = 31 * h + seed.hashCode()
+        h = 31 * h + counters.contentHashCode()
+        h = 31 * h + totalSeen.hashCode()
+        h = 31 * h + hasher.hashCode()
+        return h
+    }
+
+    override fun toString(): String = "CountMinSketchResult(" +
+        "depth=$depth, " +
+        "width=$width, " +
+        "seed=$seed, " +
+        "counters=${counters.preview()}, " +
+        "totalSeen=$totalSeen, " +
+        "hasher=$hasher)"
+}
 
 /**
  * Estimated weighted count of [value] - the minimum across rows. Re-derives the per-row

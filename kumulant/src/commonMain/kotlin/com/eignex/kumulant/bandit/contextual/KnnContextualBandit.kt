@@ -8,6 +8,7 @@ import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.preview
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.ln
@@ -33,7 +34,31 @@ data class KnnArmResult(
     val weights: DoubleArray,
     /** Cumulative observation weight folded into this arm. */
     val totalWeight: Double,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is KnnArmResult &&
+        contexts.size == other.contexts.size && contexts.indices.all {
+            contexts[it].contentEquals(
+                other.contexts[it],
+            )
+        } &&
+        rewards.contentEquals(other.rewards) &&
+        weights.contentEquals(other.weights) &&
+        totalWeight == other.totalWeight
+
+    override fun hashCode(): Int {
+        var h = contexts.fold(0) { acc, a -> 31 * acc + a.contentHashCode() }
+        h = 31 * h + rewards.contentHashCode()
+        h = 31 * h + weights.contentHashCode()
+        h = 31 * h + totalWeight.hashCode()
+        return h
+    }
+
+    override fun toString(): String = "KnnArmResult(" +
+        "contexts=List(${contexts.size}), " +
+        "rewards=${rewards.preview()}, " +
+        "weights=${weights.preview()}, " +
+        "totalWeight=$totalWeight)"
+}
 
 /**
  * Non-parametric contextual bandit: each arm keeps a bounded FIFO history of

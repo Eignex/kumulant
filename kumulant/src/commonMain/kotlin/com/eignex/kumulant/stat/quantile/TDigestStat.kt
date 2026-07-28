@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
 import com.eignex.kumulant.stream.spinHint
@@ -33,7 +34,33 @@ data class TDigestResult(
     val totalWeight: Double,
     /** T-digest compression parameter; lower = more centroids, tighter quantiles. */
     val compression: Double,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is TDigestResult &&
+        probabilities.contentEquals(other.probabilities) &&
+        quantiles.contentEquals(other.quantiles) &&
+        means.contentEquals(other.means) &&
+        weights.contentEquals(other.weights) &&
+        totalWeight == other.totalWeight &&
+        compression == other.compression
+
+    override fun hashCode(): Int {
+        var h = probabilities.contentHashCode()
+        h = 31 * h + quantiles.contentHashCode()
+        h = 31 * h + means.contentHashCode()
+        h = 31 * h + weights.contentHashCode()
+        h = 31 * h + totalWeight.hashCode()
+        h = 31 * h + compression.hashCode()
+        return h
+    }
+
+    override fun toString(): String = "TDigestResult(" +
+        "probabilities=${probabilities.preview()}, " +
+        "quantiles=${quantiles.preview()}, " +
+        "means=${means.preview()}, " +
+        "weights=${weights.preview()}, " +
+        "totalWeight=$totalWeight, " +
+        "compression=$compression)"
+}
 
 /** Convert centroids to a sparse histogram with bins centered on each centroid. */
 fun TDigestResult.toSparseHistogram(): SparseHistogramResult {

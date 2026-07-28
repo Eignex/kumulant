@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.cardinality
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.stream.StreamLong
@@ -31,7 +32,30 @@ data class LinearCountingResult(
     val words: LongArray,
     /** Total observations the sketch has absorbed. */
     val totalSeen: Long,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is LinearCountingResult &&
+        estimate == other.estimate &&
+        bits == other.bits &&
+        unsetBits == other.unsetBits &&
+        words.contentEquals(other.words) &&
+        totalSeen == other.totalSeen
+
+    override fun hashCode(): Int {
+        var h = estimate.hashCode()
+        h = 31 * h + bits.hashCode()
+        h = 31 * h + unsetBits.hashCode()
+        h = 31 * h + words.contentHashCode()
+        h = 31 * h + totalSeen.hashCode()
+        return h
+    }
+
+    override fun toString(): String = "LinearCountingResult(" +
+        "estimate=$estimate, " +
+        "bits=$bits, " +
+        "unsetBits=$unsetBits, " +
+        "words=${words.preview()}, " +
+        "totalSeen=$totalSeen)"
+}
 
 /**
  * Linear-counting cardinality estimator over a fixed [bits]-bit bitset.

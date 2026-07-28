@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.cardinality
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.stream.StreamLong
@@ -23,7 +24,27 @@ import kotlin.math.pow
 @Serializable
 @SerialName("HyperLogLogResult")
 data class HyperLogLogResult(val estimate: Double, val precision: Int, val registers: IntArray, val totalSeen: Long) :
-    Result
+    Result {
+    override fun equals(other: Any?): Boolean = other is HyperLogLogResult &&
+        estimate == other.estimate &&
+        precision == other.precision &&
+        registers.contentEquals(other.registers) &&
+        totalSeen == other.totalSeen
+
+    override fun hashCode(): Int {
+        var h = estimate.hashCode()
+        h = 31 * h + precision.hashCode()
+        h = 31 * h + registers.contentHashCode()
+        h = 31 * h + totalSeen.hashCode()
+        return h
+    }
+
+    override fun toString(): String = "HyperLogLogResult(" +
+        "estimate=$estimate, " +
+        "precision=$precision, " +
+        "registers=${registers.preview()}, " +
+        "totalSeen=$totalSeen)"
+}
 
 /**
  * HyperLogLog cardinality estimator with a small-range linear-counting fallback.
