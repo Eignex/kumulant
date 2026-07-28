@@ -34,20 +34,20 @@ data class ReliabilityResult(
         }
     }
 
-    /**
-     * Mean predicted probability per bin (NaN where the bin is empty).
-     *
-     * Clamped into `[0, 1]`: both are probabilities by construction, and clamping means a
-     * snapshot taken mid-update under a lock-free [Concurrency] level can be stale but
-     * never nonsensical.
-     */
+    /** Mean predicted probability per bin (NaN where the bin is empty). */
     val meanProbability: DoubleArray get() = DoubleArray(numBins) { i ->
-        if (totalWeights[i] > 0.0) (sumProbability[i] / totalWeights[i]).coerceIn(0.0, 1.0) else Double.NaN
+        if (totalWeights[i] > 0.0) sumProbability[i] / totalWeights[i] else Double.NaN
     }
 
-    /** Empirical outcome rate per bin (NaN where the bin is empty), clamped as [meanProbability]. */
+    /**
+     * Empirical outcome rate per bin (NaN where the bin is empty).
+     *
+     * Reflects the outcomes as given. `y` is not range-checked on the way in, so a caller
+     * feeding outcomes outside `[0, 1]` gets a rate outside `[0, 1]` back rather than a
+     * silently clamped one.
+     */
     val outcomeRate: DoubleArray get() = DoubleArray(numBins) { i ->
-        if (totalWeights[i] > 0.0) (sumOutcome[i] / totalWeights[i]).coerceIn(0.0, 1.0) else Double.NaN
+        if (totalWeights[i] > 0.0) sumOutcome[i] / totalWeights[i] else Double.NaN
     }
 
     /**
@@ -139,10 +139,12 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
         require(values.numBins == numBins) {
             "numBins mismatch on merge: this=$numBins, other=${values.numBins}"
         }
+        // Denominator first, matching update(), so a concurrent reader cannot observe a
+        // folded-in outcome whose weight has not landed yet.
         for (i in 0 until numBins) {
+            sumW[i].add(values.totalWeights[i])
             sumP[i].add(values.sumProbability[i])
             sumO[i].add(values.sumOutcome[i])
-            sumW[i].add(values.totalWeights[i])
         }
     }
 

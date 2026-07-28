@@ -25,7 +25,12 @@ data class SketchResult(
     val quantiles: DoubleArray,
     /** Multiplicative bin-boundary ratio `(1 + relativeError) / (1 - relativeError)`. */
     val gamma: Double,
-    /** Cumulative observation weight folded in. */
+    /**
+     * Cumulative observation weight folded in, equal to [zeroCount] plus the sum of
+     * [positiveBins] and [negativeBins]. Reported for convenience, not tracked
+     * independently: merge folds in the bins and the zero bucket and recomputes this, so a
+     * hand-built result whose total disagrees with its bins contributes only its bins.
+     */
     val totalWeights: Double,
     /** Weight observed at the zero bin. */
     val zeroCount: Double,
