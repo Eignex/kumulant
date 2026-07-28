@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -36,6 +37,13 @@ data class WeightedMeanResult(
  * with [com.eignex.kumulant.operation.withValue] / `withWeight` to derive
  * other means (event rate, conditional mean, etc.).
  *
+ * **Weights:** zero is a no-op. A negative weight is a downdate: it removes an
+ * observation previously folded in, inverting the update exactly, which is how a
+ * caller drives a sliding window by hand. The one rejected case is a downdate that
+ * would take the accumulated weight to zero or below, since every step divides by
+ * the new total and the accumulator would be left permanently non-finite; that
+ * throws [IllegalArgumentException].
+ *
  * **Memory:** O(1); two doubles plus a lock.
  *
  * **Update:** O(1) per observation.
@@ -55,6 +63,7 @@ class MeanStat(override val concurrency: Concurrency = Concurrency.None) : Serie
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
         if (weight == 0.0) return@withLock
+        requireLiveWeight(totalWeights.load(), weight)
         val nextW = totalWeights.addAndGet(weight)
         val delta = value - mean.load()
         mean.add(delta * (weight / nextW))

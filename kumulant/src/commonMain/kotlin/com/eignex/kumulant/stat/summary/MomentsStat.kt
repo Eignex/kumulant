@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.HasShapeMoments
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -39,6 +40,11 @@ data class MomentsResult(
  * non-Gaussian tail diagnostics). Heavier than [VarianceStat]; reach for it
  * only when third/fourth moments are needed.
  *
+ * **Weights:** the recurrences are the fully weighted Pebay forms, not the
+ * unit-weight specialisations, so any weight is supported. Zero is a no-op. A
+ * negative weight removes a previously folded-in observation and inverts all four
+ * moments exactly; see [MeanStat] for the shared downdate contract.
+ *
  * **Memory:** O(1); five doubles plus a lock.
  *
  * **Update:** O(1) per observation.
@@ -59,8 +65,9 @@ class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : Se
     private val m4 = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
-        if (weight <= 0.0) return@withLock
+        if (weight == 0.0) return@withLock
         val oldW = totalWeights.load()
+        requireLiveWeight(oldW, weight)
         val nextW = totalWeights.addAndGet(weight)
 
         val priorMean = mean.load()
@@ -72,10 +79,15 @@ class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : Se
         val deltaW2 = deltaW * deltaW
         val term1 = delta * deltaW * oldW
 
-        val m4Delta = term1 * deltaW2 * (nextW * nextW - 3 * nextW + 3) +
+        // Weighted Pebay recurrences: the leading coefficients are the merge formulas
+        // below specialised to a second sample of weight `weight` and zero moments.
+        // They reduce to the familiar (n - 2) and (n^2 - 3n + 3) only at weight == 1.
+        // Written as delta/nextW rather than deltaW/weight so a tiny weight doesn't
+        // divide out.
+        val m4Delta = term1 * delta * delta * (oldW * oldW - oldW * weight + weight * weight) / (nextW * nextW) +
             6 * deltaW2 * priorM2 -
             4 * deltaW * priorM3
-        val m3Delta = term1 * deltaW * (nextW - 2) - 3 * deltaW * priorM2
+        val m3Delta = term1 * delta * (oldW - weight) / nextW - 3 * deltaW * priorM2
 
         m4.add(m4Delta)
         m3.add(m3Delta)
