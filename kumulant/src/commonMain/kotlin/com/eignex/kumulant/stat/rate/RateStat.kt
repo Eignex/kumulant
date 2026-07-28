@@ -28,8 +28,8 @@ data class RateResult(val startTimestampNanos: Long, val totalValue: Double, val
  * first update.
  *
  * For time-decaying rates that weight recent observations more heavily, see
- * [DecayingRateStat]. Use [withValue][com.eignex.kumulant.operation.withValue]
- * to count each update as 1.
+ * [DecayingRateStat]. Use [withValue][com.eignex.kumulant.schema.ops.withValue] on
+ * the [Rate][com.eignex.kumulant.schema.spec.Rate] spec to count each update as 1.
  *
  * **Use cases:** lifetime throughput (requests/sec since start, total bytes
  * divided by uptime). Pair with `withValue(1.0)` for an event-rate counter.

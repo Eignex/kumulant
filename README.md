@@ -38,7 +38,7 @@ reference.
 
 ```kotlin
 dependencies {
-    implementation("com.eignex:kumulant:0.3.0")
+    implementation("com.eignex:kumulant:0.3.3")
 }
 ```
 
@@ -94,13 +94,18 @@ which.
 
 You can wrap a stat to change how it sees its input. Time-windowing,
 weighting, filtering, and pre-update transforms all stack on top of
-any stat. See the `operation` package overview on the Dokka site for
-the full adapter surface.
+any stat. Composition happens on the *spec*, then you materialize the
+result into a live accumulator. See the `schema.ops` package overview
+on the Dokka site for the full adapter surface.
 
 ```kotlin
-val recentMean = MeanStat().windowed(1.minutes, slices = 10)
+val recentMean = Mean.windowed(durationMillis = 60_000, slices = 10).materialize()
 val positiveMean = Mean.filter(X gt 0.0).materialize()
 ```
+
+Composing on the spec rather than on a live stat is what lets the same
+composition travel over the wire, since the spec is data and the
+adapters that implement it are an internal detail.
 
 ## Sending stats over the wire
 
@@ -119,10 +124,21 @@ object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
     val uniqueUsers by discrete(HyperLogLog(precision = 14))
 }
 
-val group = StatGroup(Telemetry)
-group.update(value = 12.7)
-val p99 = group.read()[Telemetry.latencyP99]
+val latencies = StatGroup(Telemetry)
+latencies.update(value = 12.7)
+val p99 = latencies.read()[Telemetry.latencyP99]
+
+// A schema can mix modalities, and each one is driven by its own group,
+// because a scalar observation and a discrete key are not the same input.
+val users = DiscreteStatGroup(Telemetry)
+users.update(value = userIdHash)
+val distinctUsers = users.read()[Telemetry.uniqueUsers]
 ```
+
+`StatGroup` covers the `series` entries, `DiscreteStatGroup` the
+`discrete` ones, and `PairedStatGroup` / `VectorStatGroup` the
+remaining modalities. Reading a key from the group that does not own it
+throws, so pick the group that matches the entry.
 
 ## Bandits
 

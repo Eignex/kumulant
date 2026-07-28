@@ -33,8 +33,10 @@ data class WeightedMeanResult(
  * Chan's parallel algorithm.
  *
  * **Use cases:** central-tendency monitoring on any scalar quantity. Compose
- * with [com.eignex.kumulant.operation.withValue] / `withWeight` to derive
- * other means (event rate, conditional mean, etc.).
+ * with [withValue][com.eignex.kumulant.schema.ops.withValue] /
+ * [withWeight][com.eignex.kumulant.schema.ops.withWeight] on the [Mean]
+ * [spec][com.eignex.kumulant.schema.spec.Mean] to derive other means (event rate,
+ * conditional mean, etc.), then `materialize()` the composed spec.
  *
  * **Memory:** O(1); two doubles plus a lock.
  *
