@@ -214,6 +214,53 @@ class TDigestStat(
         }
     }
 
+    // Scratch buffers for the buffer-ordering sort, reused across compressions. Only ever
+    // touched under compressLock, so no synchronisation of their own is needed.
+    private var sortIdx: IntArray = IntArray(0)
+    private var sortTmp: IntArray = IntArray(0)
+
+    /**
+     * Indices `0 until bufLen` ordered by `bufVal`, without boxing.
+     *
+     * This replaced `(0 until bufLen).sortedBy { bufVal[it] }`, which materialised a
+     * `List<Integer>` of `bufLen` boxed indices plus an ArrayList and ran a comparator sort.
+     * At the default compression the buffer holds 500 entries, so every flush allocated
+     * roughly 8 KiB of boxes; amortised over the updates that filled it, TDigest measured
+     * 82 B/op on the update path.
+     *
+     * Bottom-up merge sort keyed on `bufVal`. Stable, `O(n log n)`, and allocation-free after
+     * the first call, which matters because an insertion sort would be `O(n^2)` over a
+     * 500-entry buffer and cost more than the boxing it replaces.
+     */
+    private fun sortedBufferIndices(bufVal: DoubleArray, bufLen: Int): IntArray {
+        if (sortIdx.size < bufLen) {
+            sortIdx = IntArray(bufLen)
+            sortTmp = IntArray(bufLen)
+        }
+        val idx = sortIdx
+        for (i in 0 until bufLen) idx[i] = i
+        var width = 1
+        while (width < bufLen) {
+            var lo = 0
+            while (lo < bufLen) {
+                val mid = minOf(lo + width, bufLen)
+                val hi = minOf(lo + 2 * width, bufLen)
+                var a = lo
+                var b = mid
+                var k = lo
+                while (a < mid && b < hi) {
+                    sortTmp[k++] = if (bufVal[idx[a]] <= bufVal[idx[b]]) idx[a++] else idx[b++]
+                }
+                while (a < mid) sortTmp[k++] = idx[a++]
+                while (b < hi) sortTmp[k++] = idx[b++]
+                lo += 2 * width
+            }
+            sortTmp.copyInto(idx, 0, 0, bufLen)
+            width *= 2
+        }
+        return idx
+    }
+
     /** Merge the snapshot into [means]/[weights] under the k1 difference rule. */
     private fun compressInto(bufVal: DoubleArray, bufW: DoubleArray, bufLen: Int) {
         if (bufLen == 0 && means.isEmpty()) return
@@ -225,7 +272,7 @@ class TDigestStat(
         var i = 0
         var j = 0
         var c = 0
-        val bufIdx = (0 until bufLen).sortedBy { bufVal[it] }
+        val bufIdx = sortedBufferIndices(bufVal, bufLen)
         while (i < means.size && j < bufLen) {
             val bv = bufVal[bufIdx[j]]
             if (means[i] <= bv) {

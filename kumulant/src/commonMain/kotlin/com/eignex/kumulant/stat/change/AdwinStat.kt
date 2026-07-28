@@ -110,10 +110,21 @@ class AdwinStat(
         }
     }
 
-    private fun bucketsOldestToNewest(): List<Bucket> {
-        val out = ArrayList<Bucket>()
-        for (k in rows.indices.reversed()) for (b in rows[k]) out.add(b)
-        return out
+    // Scratch buffer for the oldest-to-newest bucket walk, reused across updates. This used
+    // to allocate a fresh ArrayList plus backing array on every call, and the call happens at
+    // least once per observation, which made it the single largest allocator on the update
+    // path (measured at 277 B/op before this change).
+    private val orderedScratch: MutableList<Bucket> = ArrayList()
+
+    private fun bucketsOldestToNewest(): MutableList<Bucket> {
+        orderedScratch.clear()
+        // Indexed access rather than a for-in loop: kotlin.collections.ArrayDeque is a
+        // MutableList, so this avoids allocating an iterator per row per call.
+        for (k in rows.indices.reversed()) {
+            val row = rows[k]
+            for (i in 0 until row.size) orderedScratch.add(row[i])
+        }
+        return orderedScratch
     }
 
     private fun detectAndShrink(): Boolean {
@@ -123,6 +134,10 @@ class AdwinStat(
         val n = totalN.toDouble()
         val mean = totalSum / n
         val variance = max(0.0, totalSumSquares / n - mean * mean)
+        // Loop-invariant: depends only on deltaPrime, which is fixed for this call. It was
+        // previously recomputed for every candidate cut, so a wide window paid one `ln` per
+        // bucket for no reason.
+        val logTerm = ln(2.0 / deltaPrime)
         var n0 = 0L
         var sum0 = 0.0
         for (i in 0 until ordered.size - 1) {
@@ -134,7 +149,6 @@ class AdwinStat(
             val mean0 = sum0 / n0.toDouble()
             val mean1 = (totalSum - sum0) / n1.toDouble()
             val m = 1.0 / (1.0 / n0.toDouble() + 1.0 / n1.toDouble())
-            val logTerm = ln(2.0 / deltaPrime)
             val epsCut = sqrt(2.0 / m * variance * logTerm) + (2.0 / (3.0 * m)) * logTerm
             if (abs(mean0 - mean1) > epsCut) {
                 dropOldest(i + 1)
