@@ -34,14 +34,20 @@ data class ReliabilityResult(
         }
     }
 
-    /** Mean predicted probability per bin (NaN where the bin is empty). */
+    /**
+     * Mean predicted probability per bin (NaN where the bin is empty).
+     *
+     * Clamped into `[0, 1]`: both are probabilities by construction, and clamping means a
+     * snapshot taken mid-update under a lock-free [Concurrency] level can be stale but
+     * never nonsensical.
+     */
     val meanProbability: DoubleArray get() = DoubleArray(numBins) { i ->
-        if (totalWeights[i] > 0.0) sumProbability[i] / totalWeights[i] else Double.NaN
+        if (totalWeights[i] > 0.0) (sumProbability[i] / totalWeights[i]).coerceIn(0.0, 1.0) else Double.NaN
     }
 
-    /** Empirical outcome rate per bin (NaN where the bin is empty). */
+    /** Empirical outcome rate per bin (NaN where the bin is empty), clamped as [meanProbability]. */
     val outcomeRate: DoubleArray get() = DoubleArray(numBins) { i ->
-        if (totalWeights[i] > 0.0) sumOutcome[i] / totalWeights[i] else Double.NaN
+        if (totalWeights[i] > 0.0) (sumOutcome[i] / totalWeights[i]).coerceIn(0.0, 1.0) else Double.NaN
     }
 
     /**
@@ -111,17 +117,23 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
         if (weight == 0.0) return
         val clamped = x.coerceIn(0.0, 1.0)
         val bin = (clamped * numBins).toInt().coerceIn(0, numBins - 1)
+        // Denominator first, numerators after. Combined with read() loading sumW last,
+        // this keeps sumW >= sumO and sumW >= sumP for any interleaving, so a concurrent
+        // reader cannot compute an outcome rate above 1.0. With the previous order
+        // (sumW written last, loaded last) a reader could pick up an sumO increment whose
+        // matching sumW increment had not landed, and the ratio escaped [0, 1] and
+        // propagated through IsotonicCalibratorStat into a calibrated probability > 1.
+        sumW[bin].add(weight)
         sumP[bin].add(clamped * weight)
         sumO[bin].add(y * weight)
-        sumW[bin].add(weight)
     }
 
-    override fun read(timestampNanos: Long) = ReliabilityResult(
-        numBins,
-        DoubleArray(numBins) { sumP[it].load() },
-        DoubleArray(numBins) { sumO[it].load() },
-        DoubleArray(numBins) { sumW[it].load() },
-    )
+    override fun read(timestampNanos: Long): ReliabilityResult {
+        val p = DoubleArray(numBins) { sumP[it].load() }
+        val o = DoubleArray(numBins) { sumO[it].load() }
+        val w = DoubleArray(numBins) { sumW[it].load() }
+        return ReliabilityResult(numBins, p, o, w)
+    }
 
     override fun merge(values: ReliabilityResult) {
         require(values.numBins == numBins) {

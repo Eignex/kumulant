@@ -186,9 +186,15 @@ class HdrHistogramStat(
     override fun read(timestampNanos: Long): SparseHistogramResult {
         val state = stateRef.load()
 
+        // Snapshot every cell once, then size and fill from that snapshot. Loading the
+        // cells twice let a bucket become populated between the counting pass and the
+        // filling pass, so the fill overran the arrays sized by the first pass and read()
+        // threw IndexOutOfBoundsException from whatever thread was scraping.
+        val snapshot = DoubleArray(state.counts.size) { state.counts[it].load() }
+
         var populatedCount = 0
-        for (i in state.counts.indices) {
-            if (state.counts[i].load() > 0.0) populatedCount++
+        for (w in snapshot) {
+            if (w > 0.0) populatedCount++
         }
 
         val lowers = DoubleArray(populatedCount)
@@ -196,8 +202,8 @@ class HdrHistogramStat(
         val weights = DoubleArray(populatedCount)
 
         var cursor = 0
-        for (i in state.counts.indices) {
-            val w = state.counts[i].load()
+        for (i in snapshot.indices) {
+            val w = snapshot[i]
             if (w > 0.0) {
                 // Divide the internal integer boundaries back down to the original Double scale
                 lowers[cursor] = getLowerBound(i).toDouble() / multiplier

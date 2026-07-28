@@ -11,7 +11,8 @@ import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.StreamLong
-import com.eignex.kumulant.stream.welfordMode
+import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -190,13 +191,22 @@ class HalfSpaceTreesStat(
         }
     }
 
-    private val mode = concurrency.welfordMode()
+    // The mass arrays and the weight cell are pure accumulations, so they take
+    // additiveMode; the window counter needs CAS for addAndGet, so it takes
+    // monotonicMode. Previously all four used welfordMode(), which returns AtomicMode
+    // only for Concurrency.Relaxed and SerialMode for None, Strict and HighWrite. Since
+    // this stat has no lock over the update path, that left Strict and HighWrite doing
+    // plain non-volatile reads and writes: increments were lost outright and the counter
+    // update was not guaranteed visible to other cores, so rotateWindow fired at the
+    // wrong cadence and scores were computed against a half-built reference profile.
+    private val massMode = concurrency.additiveMode()
+    private val counterMode = concurrency.monotonicMode()
     private val swapLock: Mutex = if (concurrency == Concurrency.None) NoopMutex else PlatformMutex()
 
-    private val referenceMass: StreamDoubleArray = mode.newDoubleArray(numTrees * numLeaves)
-    private val latestMass: StreamDoubleArray = mode.newDoubleArray(numTrees * numLeaves)
-    private val windowCounter: StreamLong = mode.newLong(0L)
-    private val totalWeightsCell = mode.newDouble(0.0)
+    private val referenceMass: StreamDoubleArray = massMode.newDoubleArray(numTrees * numLeaves)
+    private val latestMass: StreamDoubleArray = massMode.newDoubleArray(numTrees * numLeaves)
+    private val windowCounter: StreamLong = counterMode.newLong(0L)
+    private val totalWeightsCell = massMode.newDouble(0.0)
 
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         require(vector.size == featureSize) { "vector.size=${vector.size}, expected $featureSize" }

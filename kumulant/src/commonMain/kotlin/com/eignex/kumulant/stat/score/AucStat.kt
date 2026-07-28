@@ -110,8 +110,6 @@ class AucStat(
     private val mode = concurrency.additiveMode()
     private val pos: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
     private val neg: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
-    private val totalPos = mode.newDouble(0.0)
-    private val totalNeg = mode.newDouble(0.0)
     private val binWidth: Double = (upperBound - lowerBound) / numBins
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
@@ -120,21 +118,24 @@ class AucStat(
         val bin = ((clamped - lowerBound) / binWidth).toInt().coerceIn(0, numBins - 1)
         val posWeight = y * weight
         val negWeight = (1.0 - y) * weight
-        if (posWeight != 0.0) {
-            pos[bin].add(posWeight)
-            totalPos.add(posWeight)
-        }
-        if (negWeight != 0.0) {
-            neg[bin].add(negWeight)
-            totalNeg.add(negWeight)
-        }
+        if (posWeight != 0.0) pos[bin].add(posWeight)
+        if (negWeight != 0.0) neg[bin].add(negWeight)
     }
 
     override fun read(timestampNanos: Long): AucResult {
-        val tp = totalPos.load()
-        val tn = totalNeg.load()
+        // The totals are derived from the bin snapshot rather than tracked in their own
+        // cells. Separate total cells could be read out of step with the bins under a
+        // concurrent update, letting the cumulative count exceed the total and pushing
+        // tpr above 1.0 and the reported area above 1.0. Summing the snapshot makes the
+        // result self-consistent by construction, at whatever staleness the snapshot has.
         val posSnap = DoubleArray(numBins) { pos[it].load() }
         val negSnap = DoubleArray(numBins) { neg[it].load() }
+        var tp = 0.0
+        var tn = 0.0
+        for (b in 0 until numBins) {
+            tp += posSnap[b]
+            tn += negSnap[b]
+        }
         if (tp <= 0.0 || tn <= 0.0) {
             return AucResult(Double.NaN, tp, tn, posSnap, negSnap, lowerBound, upperBound)
         }
@@ -163,12 +164,12 @@ class AucStat(
             "AUC merge range mismatch: this=[$lowerBound,$upperBound], " +
                 "other=[${values.lowerBound},${values.upperBound}]"
         }
+        // Only the bins are folded in; the incoming totals are the sum of its own bins,
+        // so they are reconstructed on the next read.
         for (i in 0 until numBins) {
             pos[i].add(values.positives[i])
             neg[i].add(values.negatives[i])
         }
-        totalPos.add(values.totalPositives)
-        totalNeg.add(values.totalNegatives)
     }
 
     override fun reset() {
@@ -176,8 +177,6 @@ class AucStat(
             pos[i].store(0.0)
             neg[i].store(0.0)
         }
-        totalPos.store(0.0)
-        totalNeg.store(0.0)
     }
 
     override fun create(concurrency: Concurrency?): AucStat =
