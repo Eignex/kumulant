@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.math.splitmix64
@@ -29,7 +30,24 @@ data class MinHashResult(
     val signatures: LongArray,
     /** Number of `update(value)` calls absorbed; informational. */
     val totalSeen: Long,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is MinHashResult &&
+        numHashes == other.numHashes &&
+        seed == other.seed &&
+        signatures.contentEquals(other.signatures) &&
+        totalSeen == other.totalSeen
+
+    override fun hashCode(): Int {
+        var h = numHashes.hashCode()
+        h = 31 * h + seed.hashCode()
+        h = 31 * h + signatures.contentHashCode()
+        h = 31 * h + totalSeen.hashCode()
+        return h
+    }
+
+    override fun toString(): String =
+        "MinHashResult(numHashes=$numHashes, seed=$seed, signatures=${signatures.preview()}, totalSeen=$totalSeen)"
+}
 
 /**
  * Estimated Jaccard similarity between the two underlying sets - the fraction of slots

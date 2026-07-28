@@ -13,6 +13,8 @@ interface Result
  * fields (`Center`, `Scale`, `Low`, `High`) via the transparent unwrap performed by
  * those AST nodes.
  */
+@Serializable
+@SerialName("IndexedResult")
 data class IndexedResult(
     /** The per-coordinate primary snapshot. */
     val inner: Result,

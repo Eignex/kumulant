@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
 import com.eignex.kumulant.stream.monotonicMode
@@ -32,7 +33,30 @@ data class ReservoirResult(
     val totalSeen: Long,
     /** Cumulative observation weight folded in. */
     val totalWeight: Double,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is ReservoirResult &&
+        values.contentEquals(other.values) &&
+        keys.contentEquals(other.keys) &&
+        capacity == other.capacity &&
+        totalSeen == other.totalSeen &&
+        totalWeight == other.totalWeight
+
+    override fun hashCode(): Int {
+        var h = values.contentHashCode()
+        h = 31 * h + keys.contentHashCode()
+        h = 31 * h + capacity.hashCode()
+        h = 31 * h + totalSeen.hashCode()
+        h = 31 * h + totalWeight.hashCode()
+        return h
+    }
+
+    override fun toString(): String = "ReservoirResult(" +
+        "values=${values.preview()}, " +
+        "keys=${keys.preview()}, " +
+        "capacity=$capacity, " +
+        "totalSeen=$totalSeen, " +
+        "totalWeight=$totalWeight)"
+}
 
 /** Linear-interpolated quantile at [probability] from a reservoir sample (treats sample as unweighted). */
 fun ReservoirResult.quantile(probability: Double): Double {

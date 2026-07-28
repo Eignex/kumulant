@@ -4,6 +4,7 @@ import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.Snapshotable
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.preview
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.exp
@@ -21,7 +22,14 @@ import kotlin.random.Random
 data class Exp4State(
     /** Unnormalised per-expert weights; element `i` is `exp(eta · cumulative gain_i)`. */
     val weights: DoubleArray,
-) : Result
+) : Result {
+    override fun equals(other: Any?): Boolean = other is Exp4State &&
+        weights.contentEquals(other.weights)
+
+    override fun hashCode(): Int = weights.contentHashCode()
+
+    override fun toString(): String = "Exp4State(weights=${weights.preview()})"
+}
 
 /**
  * Maps a context vector to a probability distribution over arms. Implementations are
