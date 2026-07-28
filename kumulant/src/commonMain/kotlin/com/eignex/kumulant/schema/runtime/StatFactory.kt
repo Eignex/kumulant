@@ -196,7 +196,11 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is CounterRate -> CounterRateStat(concurrency, treatDecreaseAsReset)
 
-        is DDSketch -> DDSketchStat(relativeError, probabilities.toDoubleArray(), concurrency)
+        is DDSketch -> DDSketchStat(
+            relativeError = relativeError,
+            probabilities = probabilities.toDoubleArray(),
+            concurrency = concurrency,
+        )
 
         is FrugalQuantile -> FrugalQuantileStat(q, stepSize, initialEstimate, concurrency)
 
