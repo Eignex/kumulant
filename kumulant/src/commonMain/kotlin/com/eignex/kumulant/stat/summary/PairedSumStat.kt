@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
-import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -17,12 +17,12 @@ import kotlinx.serialization.Serializable
 @SerialName("PairedSumResult")
 data class PairedSumResult(
     /** Cumulative observation weight (`Sum w_i`). */
-    val totalWeights: Double,
+    override val totalWeights: Double,
     /** Weighted `x` sum (`Sum w_i * x_i`). */
     val sumX: Double,
     /** Weighted `y` sum (`Sum w_i * y_i`). */
     val sumY: Double,
-) : Result
+) : HasObservationCount
 
 /**
  * Weighted paired sum `(Sum w_i*x_i, Sum w_i*y_i)` with accumulated weight.

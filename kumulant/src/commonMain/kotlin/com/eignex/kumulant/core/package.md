@@ -92,32 +92,40 @@ at delegate registration.
 ## Reading an empty accumulator
 
 `read()` on a stat that has seen no observations is always legal and never
-throws, but what it reports is per-family rather than uniform. The four
-conventions in use, all observed rather than intended:
+throws. What it reports depends on whether the statistic has a meaningful
+identity element:
 
 | Family | Empty read reports |
 |--------|--------------------|
 | Sum, Count, BernoulliSum | `0.0`, the additive identity |
-| Mean, Variance, Moments | `0.0` for every field |
 | Min, Max | `+Infinity` / `-Infinity`, the comparison identities |
 | HdrHistogram, LinearHistogram, Reservoir | empty arrays |
+| DDSketch, TDigest, Mad | `NaN` per quantile |
 | Auc | `NaN` |
-| DDSketch, TDigest | `0.0` for every requested quantile |
+| Mean, Variance, Moments | `0.0` for every field |
 
-The last row is the one to watch. A p99 of `0.0` from an empty sketch is
-indistinguishable from a p99 of `0.0` computed over real zero-valued data,
-and on a latency dashboard it reads as healthy rather than as absent. Until
-that is unified, gate on the observation count before trusting a quantile:
+Where an identity exists, it is reported: a sum of nothing is genuinely zero,
+and the infinities are the correct starting points for a min/max fold and are
+already distinguishable from real data. Where none exists, the result is `NaN`
+rather than a plausible-looking number. An empty quantile sketch has no p99,
+and reporting `0.0` claimed one; on a latency dashboard that read as excellent
+rather than as absent.
+
+Mean, Variance and Moments still report `0.0` on an empty stream. That has the
+same ambiguity as the quantile case did and is a candidate for the same
+treatment, but changing it is a wider break than the sketches were.
+
+Rather than knowing which field carries the count, gate on
+[com.eignex.kumulant.core.HasObservationCount.isEmpty]:
 
 ```kotlin
 val r = sketch.read()
-val p99 = if (r.totalWeights > 0.0) r.quantiles.last() else null
+if (!r.isEmpty) report(r.quantiles.last())
 ```
 
-Every result carries the count needed for that check, whether as
-`totalWeights`, `totalSeen`, or a per-bin weight array, so the guard is
-always available. The `0.0`-versus-`NaN` divergence is a known
-inconsistency, not a deliberate per-family design.
+The count is spelled `totalWeights` on most results, `totalSeen` on the
+sketches and `totalWeight` on a few others; `HasObservationCount` normalises
+that, so `isEmpty` is the same check everywhere it is implemented.
 
 ## Lifecycle
 

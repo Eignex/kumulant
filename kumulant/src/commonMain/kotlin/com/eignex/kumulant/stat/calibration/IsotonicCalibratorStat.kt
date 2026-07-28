@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.calibration
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
-import com.eignex.kumulant.core.Result
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -26,8 +26,8 @@ data class IsotonicCalibratorResult(
     /** Monotone-non-decreasing calibrated probability per bin. */
     val probabilities: DoubleArray,
     /** Cumulative observation weight folded in. */
-    val totalWeights: Double,
-) : Result {
+    override val totalWeights: Double,
+) : HasObservationCount {
 
     init {
         require(numBins > 0) { "numBins must be > 0; got $numBins" }

@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.sketch
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.Hashers
@@ -32,7 +32,9 @@ data class CountMinSketchResult(
     val totalSeen: Long,
     /** Reference to the [LongHasher] that produced the counters; resolved by [estimate]. */
     val hasher: HasherRef = HasherRef.SplitMix64,
-) : Result {
+) : HasObservationCount {
+
+    override val totalWeights: Double get() = totalSeen.toDouble()
     override fun equals(other: Any?): Boolean = other is CountMinSketchResult &&
         depth == other.depth &&
         width == other.width &&

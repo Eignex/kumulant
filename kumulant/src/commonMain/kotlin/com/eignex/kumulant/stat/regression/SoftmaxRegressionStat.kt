@@ -5,8 +5,8 @@ import com.eignex.koblas.DenseVector
 import com.eignex.koblas.VectorView
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
-import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stream.StreamDouble
@@ -38,12 +38,12 @@ data class SoftmaxRegressionResult(
     /** Per-class intercept; length [numClasses]. */
     val biases: DenseVector,
     /** Cumulative observation weight folded in. */
-    val totalWeights: Double,
+    override val totalWeights: Double,
     /** Number of `update` calls absorbed. */
     val step: Long,
     /** Accumulated weighted negative log-likelihood (cross-entropy) over the stream. */
     val crossEntropy: Double,
-) : Result {
+) : HasObservationCount {
     init {
         require(weights.rows == numClasses && weights.cols == featureSize) {
             "weights must be ${numClasses}x$featureSize; got ${weights.rows}x${weights.cols}"

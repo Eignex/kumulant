@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.preview
 import kotlinx.serialization.SerialName
@@ -32,14 +33,14 @@ data class SketchResult(
      * independently: merge folds in the bins and the zero bucket and recomputes this, so a
      * hand-built result whose total disagrees with its bins contributes only its bins.
      */
-    val totalWeights: Double,
+    override val totalWeights: Double,
     /** Weight observed at the zero bin. */
     val zeroCount: Double,
     /** Positive-side bin counts keyed by signed log-bucket index. */
     val positiveBins: Map<Int, Double>,
     /** Negative-side bin counts keyed by signed log-bucket index. */
     val negativeBins: Map<Int, Double>,
-) : Result {
+) : HasObservationCount {
     override fun equals(other: Any?): Boolean = other is SketchResult &&
         probabilities.contentEquals(other.probabilities) &&
         quantiles.contentEquals(other.quantiles) &&

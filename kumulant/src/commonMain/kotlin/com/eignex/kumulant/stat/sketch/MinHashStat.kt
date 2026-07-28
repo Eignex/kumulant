@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.sketch
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
@@ -30,7 +30,9 @@ data class MinHashResult(
     val signatures: LongArray,
     /** Number of `update(value)` calls absorbed; informational. */
     val totalSeen: Long,
-) : Result {
+) : HasObservationCount {
+
+    override val totalWeights: Double get() = totalSeen.toDouble()
     override fun equals(other: Any?): Boolean = other is MinHashResult &&
         numHashes == other.numHashes &&
         seed == other.seed &&

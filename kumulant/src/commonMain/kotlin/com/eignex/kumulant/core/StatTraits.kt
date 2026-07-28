@@ -70,6 +70,28 @@ interface HasMinMax : Result {
 }
 
 /**
+ * Result trait for snapshots that know how much evidence they are built from.
+ *
+ * Exists so a caller can ask "did this stat see anything?" without knowing which field
+ * carries the answer. The count is spelled `totalWeights` on most results, `totalSeen` on the
+ * sketches and `totalWeight` on a few others, so before this trait the emptiness check was
+ * per-stat knowledge.
+ *
+ * The distinction matters because several results report a numerically plausible value on an
+ * empty stream. A quantile sketch with no observations reports `NaN` per quantile precisely so
+ * that absence is distinguishable, but a mean reports `0.0`, which is not. Gate on [isEmpty]
+ * before trusting any field of a snapshot that might have arrived before the first
+ * observation did.
+ */
+interface HasObservationCount : Result {
+    /** Cumulative weight of observations folded into this result. */
+    val totalWeights: Double
+
+    /** True when no observation has been folded in, so every other field is a placeholder. */
+    val isEmpty: Boolean get() = !(totalWeights > 0.0)
+}
+
+/**
  * Result trait for accumulators that expose variance-family quantities. Derived
  * properties [variance] / [stdDev] / [sampleVariance] / [sampleStdDev] all fall
  * out of [sst] (sum of squared deviations) and [totalWeights] without storing
@@ -85,10 +107,7 @@ interface HasMinMax : Result {
  * from an underlying distribution; use [variance] / [stdDev] when treating
  * the observations as the complete population.
  */
-interface HasSampleVariance : Result {
-    /** Cumulative weight of observations folded into this result. */
-    val totalWeights: Double
-
+interface HasSampleVariance : HasObservationCount {
     /** Sum of squared deviations from the running mean: `Sum (x - mean)^2 * weight`. */
     val sst: Double get() = variance * totalWeights
 

@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stream.NoopMutex
@@ -34,7 +34,9 @@ data class ReservoirResult(
     val totalSeen: Long,
     /** Cumulative observation weight folded in. */
     val totalWeight: Double,
-) : Result {
+) : HasObservationCount {
+
+    override val totalWeights: Double get() = totalWeight
     override fun equals(other: Any?): Boolean = other is ReservoirResult &&
         values.contentEquals(other.values) &&
         keys.contentEquals(other.keys) &&

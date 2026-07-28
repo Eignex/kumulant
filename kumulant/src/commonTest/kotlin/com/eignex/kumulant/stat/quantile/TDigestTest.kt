@@ -9,12 +9,13 @@ import kotlin.test.assertTrue
 class TDigestTest {
 
     @Test
-    fun `empty digest returns zero quantiles`() {
+    fun `empty digest returns NaN quantiles`() {
         val td = TDigestStat(probabilities = doubleArrayOf(0.5, 0.9))
         val r = td.read()
-        assertEquals(0.0, r.quantiles[0])
-        assertEquals(0.0, r.quantiles[1])
+        assertTrue(r.quantiles[0].isNaN(), "p50 was ${r.quantiles[0]}")
+        assertTrue(r.quantiles[1].isNaN(), "p90 was ${r.quantiles[1]}")
         assertEquals(0.0, r.totalWeight)
+        assertTrue(r.isEmpty)
     }
 
     @Test

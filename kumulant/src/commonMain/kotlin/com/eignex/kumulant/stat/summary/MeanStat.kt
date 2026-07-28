@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.requireLiveWeight
@@ -23,10 +24,10 @@ data class MeanResult(
 @SerialName("WeightedMeanResult")
 data class WeightedMeanResult(
     /** Cumulative observation weight folded in. */
-    val totalWeights: Double,
+    override val totalWeights: Double,
     /** Weighted running mean. */
     val mean: Double,
-) : Result
+) : HasObservationCount
 
 /**
  * Weighted arithmetic mean via Welford-style online update.

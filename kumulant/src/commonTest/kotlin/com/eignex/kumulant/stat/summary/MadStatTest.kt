@@ -8,10 +8,12 @@ import kotlin.test.assertTrue
 class MadStatTest {
 
     @Test
-    fun `read before any update reports zero estimates`() {
+    fun `read before any update reports NaN estimates`() {
+        // MadStat is built on two TDigestStats, so it inherits their empty-read sentinel. An
+        // empty sample has no median, and reporting 0.0 claimed one.
         val r = MadStat().read()
-        assertEquals(0.0, r.median)
-        assertEquals(0.0, r.mad)
+        assertTrue(r.median.isNaN(), "median was ${r.median}")
+        assertTrue(r.mad.isNaN(), "mad was ${r.mad}")
     }
 
     @Test
@@ -47,15 +49,16 @@ class MadStatTest {
         val s = MadStat().apply { for (i in 0 until 100) update(i.toDouble()) }
         s.reset()
         val r = s.read()
-        assertEquals(0.0, r.median)
-        assertEquals(0.0, r.mad)
+        // A reset stat is empty again, and an empty sample has no median.
+        assertTrue(r.median.isNaN(), "median was ${r.median}")
+        assertTrue(r.mad.isNaN(), "mad was ${r.mad}")
     }
 
     @Test
     fun `create produces an independent stat`() {
         val tpl = MadStat().apply { for (i in 0 until 100) update(i.toDouble()) }
         val fresh = tpl.create()
-        assertEquals(0.0, fresh.read().median)
-        assertTrue(tpl.read().median != 0.0)
+        assertTrue(fresh.read().median.isNaN(), "a fresh stat has seen nothing, so it has no median")
+        assertTrue(tpl.read().median.isFinite(), "the populated template still reports a median")
     }
 }

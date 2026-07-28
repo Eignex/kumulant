@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.anomaly
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -23,8 +23,8 @@ data class GaussianScoreResult(
     /** Running variance. */
     val variance: Double,
     /** Cumulative observation weight folded in. */
-    val totalWeights: Double,
-) : Result {
+    override val totalWeights: Double,
+) : HasObservationCount {
 
     /** Sample standard deviation. */
     val stdDev: Double get() = sqrt(variance)

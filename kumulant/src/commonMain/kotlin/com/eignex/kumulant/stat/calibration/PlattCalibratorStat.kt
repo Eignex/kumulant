@@ -2,8 +2,8 @@ package com.eignex.kumulant.stat.calibration
 
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
-import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
@@ -28,8 +28,8 @@ data class PlattCalibratorResult(
     /** Sigmoid intercept. */
     val intercept: Double,
     /** Cumulative observation weight folded in. */
-    val totalWeights: Double,
-) : Result {
+    override val totalWeights: Double,
+) : HasObservationCount {
 
     /** Calibrated probability for raw score [x] via `sigmoid(slope * x + intercept)`. */
     fun calibrate(x: Double): Double {
