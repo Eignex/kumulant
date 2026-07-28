@@ -36,6 +36,27 @@ import com.eignex.kumulant.stream.currentTimeNanos
  * Checks beyond that are the caller's responsibility. Stats validate only where
  * the alternative is corrupted state, not to police inputs.
  *
+ * How that resolves per family, surveyed across the catalogue rather than assumed:
+ *
+ * - **Additive** (sums, counts, rates, decayed sums): subtraction, exactly as you
+ *   would expect. Nothing to guard.
+ * - **Welford** (mean, variance, moments): a downdate that inverts the update
+ *   exactly. The one rejected case is a downdate that would take the accumulated
+ *   weight to zero or below, since every step divides by the new total and the
+ *   accumulator would be left permanently non-finite.
+ * - **EWMA and decay**: a downdate. Over-subtracting drives the accumulated weight
+ *   negative, which is reported rather than hidden and recovers as soon as positive
+ *   weight arrives. [DecayingMeanStat][com.eignex.kumulant.stat.decay.DecayingMeanStat]
+ *   reports `NaN` while the decayed weight is negative, since there is no meaningful
+ *   mean of a negative amount of evidence; that is a sentinel, not a wedged state.
+ * - **Counting** (histograms, threshold buckets): the bin is a signed accumulation
+ *   rather than a population count, so subtraction can take a bin below zero.
+ *   Guarding it would break the legitimate case of retracting an earlier observation.
+ * - **Monotone sketches** (HyperLogLog, Bloom, MinHash): no inverse exists, since
+ *   these only ever set bits or take maxima. They ignore non-positive weights.
+ *
+ * `NegativeWeightSemanticsTest` pins each of these.
+ *
  * @param R The result type returned by [read]; always a [Result] subtype.
  *
  * @sample com.eignex.kumulant.samples.basicMeanLifecycle
