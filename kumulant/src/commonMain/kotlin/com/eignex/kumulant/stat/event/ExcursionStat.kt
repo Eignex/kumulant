@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.event
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
@@ -57,7 +58,7 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
     private val maxExcursion = mode.newDouble(0.0)
     private val lastValue = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         lastValue.store(value)
         val seen = initialized.addAndGet(1L)
         if (seen == 1L) {
@@ -65,7 +66,7 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
             peakTs.store(timestampNanos)
             trough.store(value)
             troughTs.store(timestampNanos)
-            return@withLock
+            return@guarded
         }
         if (value > peak.load()) {
             peak.store(value)
@@ -80,7 +81,7 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
         }
     }
 
-    override fun merge(values: ExcursionResult) = lock.withLock {
+    override fun merge(values: ExcursionResult) = lock.guarded {
         val seen = initialized.addAndGet(1L)
         if (seen == 1L) {
             peak.store(values.peak)
@@ -89,7 +90,7 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
             troughTs.store(values.troughTimestampNanos)
             maxExcursion.store(values.maxExcursion)
             lastValue.store(values.peak - values.currentRecovery)
-            return@withLock
+            return@guarded
         }
         if (values.peak > peak.load()) {
             peak.store(values.peak)
@@ -102,7 +103,7 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
         if (values.maxExcursion > maxExcursion.load()) maxExcursion.store(values.maxExcursion)
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         initialized.store(0L)
         peak.store(Double.NEGATIVE_INFINITY)
         peakTs.store(0L)
@@ -112,7 +113,7 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
         lastValue.store(0.0)
     }
 
-    override fun read(timestampNanos: Long) = lock.withLock {
+    override fun read(timestampNanos: Long) = lock.guarded {
         if (initialized.load() == 0L) {
             ExcursionResult(0.0, 0L, 0.0, 0L, 0.0, 0.0)
         } else {

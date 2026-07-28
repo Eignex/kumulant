@@ -12,6 +12,7 @@ import com.eignex.kumulant.stat.regression.Optimizer
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.getValue
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 
@@ -123,9 +124,9 @@ class StochasticRegressionStat(
         else -> 0.0
     }
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0) return@withLock
+        if (weight <= 0.0) return@guarded
         stepCell.addAndGet(1L)
 
         var dot = 0.0
@@ -207,7 +208,7 @@ class StochasticRegressionStat(
         }
     }
 
-    override fun read(timestampNanos: Long): StochasticRegressionResult = lock.withLock {
+    override fun read(timestampNanos: Long): StochasticRegressionResult = lock.guarded {
         val materialised = DoubleArray(featureSize) { effectiveWeight(it) }
         when (penalty) {
             Penalty.None -> {}
@@ -243,7 +244,7 @@ class StochasticRegressionStat(
         require(values.featureSize == featureSize) {
             "merge: featureSize mismatch ${values.featureSize} vs $featureSize"
         }
-        lock.withLock {
+        lock.guarded {
             val w1 = totalWeightsCell.load()
             val w2 = values.totalWeights
             val wNew = w1 + w2
@@ -263,7 +264,7 @@ class StochasticRegressionStat(
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         for (i in 0 until featureSize) {
             weightsCell.store(i, 0.0)
             l1LastApplied?.store(i, 0.0)

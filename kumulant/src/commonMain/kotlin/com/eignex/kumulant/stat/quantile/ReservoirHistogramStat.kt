@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
@@ -181,7 +182,7 @@ class ReservoirHistogramStat(
     private val totalWeightCell = mode.newDouble(0.0)
 
     private fun drawKey(weight: Double): Double {
-        val u = rngLock.withLock { random.nextDouble() }
+        val u = rngLock.guarded { random.nextDouble() }
         return if (weight == 1.0) u else u.pow(1.0 / weight)
     }
 
@@ -211,7 +212,7 @@ class ReservoirHistogramStat(
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0 || value.isNaN()) return
-        outerLock.withLock {
+        outerLock.guarded {
             val key = drawKey(weight)
             admit(value, key)
             totalSeenCell.add(1L)
@@ -229,7 +230,7 @@ class ReservoirHistogramStat(
         require(values.values.size == values.keys.size) {
             "ReservoirResult values/keys size mismatch"
         }
-        outerLock.withLock {
+        outerLock.guarded {
             for (i in values.values.indices) {
                 admit(values.values[i], values.keys[i])
             }
@@ -239,7 +240,7 @@ class ReservoirHistogramStat(
     }
 
     override fun reset() {
-        outerLock.withLock {
+        outerLock.guarded {
             for (i in 0 until capacity) {
                 sampleKeys.store(i, emptyKey)
                 sampleValues.store(i, 0.0)
@@ -249,7 +250,7 @@ class ReservoirHistogramStat(
         }
     }
 
-    override fun read(timestampNanos: Long): ReservoirResult = outerLock.withLock {
+    override fun read(timestampNanos: Long): ReservoirResult = outerLock.guarded {
         // Snapshot under outerLock (strict) or best-effort (relaxed). Filter
         // out unfilled slots by sentinel key.
         var filled = 0

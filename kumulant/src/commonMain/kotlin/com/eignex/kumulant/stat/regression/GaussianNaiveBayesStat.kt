@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -152,11 +153,11 @@ class GaussianNaiveBayesStat(
     private val classWeightCell: StreamDoubleArray = mode.newDoubleArray(numClasses)
     private val totalWeightCell: StreamDouble = mode.newDouble(0.0)
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0) return@withLock
+        if (weight <= 0.0) return@guarded
         val c = y.toInt()
-        if (c !in 0 until numClasses) return@withLock
+        if (c !in 0 until numClasses) return@guarded
         val priorW = classWeightCell.load(c)
         val newW = priorW + weight
         classWeightCell.store(c, newW)
@@ -171,7 +172,7 @@ class GaussianNaiveBayesStat(
         }
     }
 
-    override fun read(timestampNanos: Long): GaussianNaiveBayesResult = lock.withLock {
+    override fun read(timestampNanos: Long): GaussianNaiveBayesResult = lock.guarded {
         val meansFlat = DoubleArray(numClasses * featureSize) { meanCell.load(it) }
         val varsFlat = DoubleArray(numClasses * featureSize) { idx ->
             val c = idx / featureSize
@@ -202,7 +203,7 @@ class GaussianNaiveBayesStat(
         require(values.featureSize == featureSize && values.numClasses == numClasses) {
             "merge: shape mismatch (${values.numClasses}x${values.featureSize}) vs (${numClasses}x$featureSize)"
         }
-        lock.withLock {
+        lock.guarded {
             for (c in 0 until numClasses) {
                 val w1 = classWeightCell.load(c)
                 val w2 = values.classWeights[c]
@@ -226,7 +227,7 @@ class GaussianNaiveBayesStat(
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         for (i in 0 until numClasses * featureSize) {
             meanCell.store(i, 0.0)
             m2Cell.store(i, 0.0)

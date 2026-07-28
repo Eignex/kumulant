@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.decay
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 
@@ -59,7 +60,7 @@ class EwmaVarianceStat(
             return if (correction == 0.0) 0.0 else biasedVar / correction
         }
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         val a = weighting.correction(weight)
 
         val currentRawMean = biasedMean.load()
@@ -73,16 +74,16 @@ class EwmaVarianceStat(
         totalWeights.add(weight)
     }
 
-    override fun merge(values: WeightedVarianceResult) = lock.withLock {
+    override fun merge(values: WeightedVarianceResult) = lock.guarded {
         val remoteWeightRaw = values.totalWeights
-        if (remoteWeightRaw <= 0.0) return@withLock
+        if (remoteWeightRaw <= 0.0) return@guarded
 
         val localWeightRaw = totalWeights.load()
         val w1 = weighting.correction(localWeightRaw)
         val w2 = weighting.correction(remoteWeightRaw)
         val wSum = w1 + w2
 
-        if (wSum == 0.0) return@withLock
+        if (wSum == 0.0) return@guarded
 
         val localMean = this.mean
         val localVar = this.variance
@@ -107,7 +108,7 @@ class EwmaVarianceStat(
         totalWeights.store(0.0)
     }
 
-    override fun read(timestampNanos: Long) = lock.withLock {
+    override fun read(timestampNanos: Long) = lock.guarded {
         WeightedVarianceResult(
             totalWeights.load(),
             mean,

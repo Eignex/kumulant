@@ -12,6 +12,7 @@ import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.getValue
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -148,11 +149,11 @@ class SoftmaxRegressionStat(
     /** Live view of the accumulated weighted cross-entropy. */
     val crossEntropy: Double by crossEntropyCell
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0) return@withLock
+        if (weight <= 0.0) return@guarded
         val c = y.toInt()
-        if (c !in 0 until numClasses) return@withLock
+        if (c !in 0 until numClasses) return@guarded
         stepCell.addAndGet(1L)
 
         // Softmax over current logits.
@@ -169,7 +170,7 @@ class SoftmaxRegressionStat(
             etas[k] = exp(etas[k] - maxEta)
             z += etas[k]
         }
-        if (z <= 0.0) return@withLock
+        if (z <= 0.0) return@guarded
         val invZ = 1.0 / z
         // Probabilities live in etas[] now.
         for (k in 0 until numClasses) etas[k] *= invZ
@@ -192,7 +193,7 @@ class SoftmaxRegressionStat(
         totalWeightsCell.add(weight)
     }
 
-    override fun read(timestampNanos: Long): SoftmaxRegressionResult = lock.withLock {
+    override fun read(timestampNanos: Long): SoftmaxRegressionResult = lock.guarded {
         val w = DoubleArray(numClasses * featureSize) { weightsCell.load(it) }
         val b = DoubleArray(numClasses) { biasCell.load(it) }
         SoftmaxRegressionResult(
@@ -210,7 +211,7 @@ class SoftmaxRegressionStat(
         require(values.featureSize == featureSize && values.numClasses == numClasses) {
             "merge: shape mismatch (${values.numClasses}x${values.featureSize}) vs (${numClasses}x$featureSize)"
         }
-        lock.withLock {
+        lock.guarded {
             val w1 = totalWeightsCell.load()
             val w2 = values.totalWeights
             val wNew = w1 + w2
@@ -230,7 +231,7 @@ class SoftmaxRegressionStat(
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         for (i in 0 until numClasses * featureSize) weightsCell.store(i, 0.0)
         for (k in 0 until numClasses) biasCell.store(k, 0.0)
         totalWeightsCell.store(0.0)

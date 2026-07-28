@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.event
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
@@ -74,18 +75,18 @@ class SojournStat(
         return idx
     }
 
-    override fun update(value: Long, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Long, timestampNanos: Long, weight: Double) = lock.guarded {
         val newIdx = indexOfState(value)
         val curIdx = currentStateIndex.load()
         if (curIdx == NO_STATE) {
             currentStateIndex.store(newIdx.toLong())
             enterTimestamp.store(timestampNanos)
             transitions.store(newIdx, transitions.load(newIdx) + 1L)
-            return@withLock
+            return@guarded
         }
         if (curIdx.toInt() == newIdx) {
             // No transition; dwell extends silently.
-            return@withLock
+            return@guarded
         }
         val priorEnter = enterTimestamp.load()
         val elapsed = (timestampNanos - priorEnter).coerceAtLeast(0L)
@@ -95,13 +96,13 @@ class SojournStat(
         transitions.store(newIdx, transitions.load(newIdx) + 1L)
     }
 
-    override fun merge(values: SojournResult) = lock.withLock {
+    override fun merge(values: SojournResult) = lock.guarded {
         require(values.states == states) { "merge state alphabet ${values.states} != $states" }
         for (i in states.indices) {
             totalNanos.store(i, totalNanos.load(i) + values.totalNanosByState[i])
             transitions.store(i, transitions.load(i) + values.transitionsByState[i])
         }
-        if (!values.hasState) return@withLock
+        if (!values.hasState) return@guarded
         val incomingEnter = values.currentStateEnterTimestampNanos
         val localEnter = enterTimestamp.load()
         if (currentStateIndex.load() == NO_STATE || incomingEnter > localEnter) {
@@ -110,7 +111,7 @@ class SojournStat(
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         for (i in states.indices) {
             totalNanos.store(i, 0L)
             transitions.store(i, 0L)
@@ -119,7 +120,7 @@ class SojournStat(
         enterTimestamp.store(0L)
     }
 
-    override fun read(timestampNanos: Long) = lock.withLock {
+    override fun read(timestampNanos: Long) = lock.guarded {
         val curIdx = currentStateIndex.load()
         val has = curIdx != NO_STATE
         SojournResult(

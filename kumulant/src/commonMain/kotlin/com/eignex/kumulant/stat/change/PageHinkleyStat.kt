@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.change
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -87,7 +88,7 @@ class PageHinkleyStat(
     private val minPos = streamMode.newDouble(0.0)
     private val maxNeg = streamMode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         val n = count.load() + 1L
         count.store(n)
         val prevMean = mean.load()
@@ -102,12 +103,12 @@ class PageHinkleyStat(
         maxNeg.store(max(maxNeg.load(), cn))
     }
 
-    override fun merge(values: PageHinkleyResult) = lock.withLock {
+    override fun merge(values: PageHinkleyResult) = lock.guarded {
         // Approximate merge: weighted-average mean, then average the cumulative-drift cells.
         val localCount = count.load()
         val incomingCount = values.count
         val combinedCount = localCount + incomingCount
-        if (combinedCount == 0L) return@withLock
+        if (combinedCount == 0L) return@guarded
         val combinedMean =
             (mean.load() * localCount + values.mean * incomingCount) / combinedCount.toDouble()
         count.store(combinedCount)
@@ -118,7 +119,7 @@ class PageHinkleyStat(
         maxNeg.store(max(maxNeg.load(), values.maxNegative))
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         count.store(0L)
         mean.store(0.0)
         cumPos.store(0.0)
@@ -127,7 +128,7 @@ class PageHinkleyStat(
         maxNeg.store(0.0)
     }
 
-    override fun read(timestampNanos: Long) = lock.withLock {
+    override fun read(timestampNanos: Long) = lock.guarded {
         val cp = cumPos.load()
         val cn = cumNeg.load()
         val mp = minPos.load()

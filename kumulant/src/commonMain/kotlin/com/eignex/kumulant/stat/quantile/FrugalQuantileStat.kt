@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 
@@ -52,8 +53,8 @@ class FrugalQuantileStat(
     private val lock = concurrency.welfordLock()
     private val quantile = mode.newDouble(initialEstimate)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
-        if (weight <= 0.0) return@withLock
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight <= 0.0) return@guarded
 
         val m = quantile.load()
         val delta = if (value > m) {
@@ -76,7 +77,7 @@ class FrugalQuantileStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: QuantileResult) = lock.withLock {
+    override fun merge(values: QuantileResult) = lock.guarded {
         val current = quantile.load()
         quantile.store((current + values.quantile) / 2.0)
     }

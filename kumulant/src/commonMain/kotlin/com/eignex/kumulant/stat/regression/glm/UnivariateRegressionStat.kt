@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.summary.VarianceResult
 import com.eignex.kumulant.stream.getValue
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -114,8 +115,8 @@ class UnivariateRegressionStat(
     /** Live view of the running mean of `y`. */
     val meanY: Double by my
 
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
-        if (weight <= 0.0) return@withLock
+    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight <= 0.0) return@guarded
 
         val nextW = w.addAndGet(weight)
         val oldW = nextW - weight
@@ -132,9 +133,9 @@ class UnivariateRegressionStat(
         sxy.add(dx * dy * factor)
     }
 
-    override fun merge(values: UnivariateRegressionResult) = lock.withLock {
+    override fun merge(values: UnivariateRegressionResult) = lock.guarded {
         val w2 = values.totalWeights
-        if (w2 <= 0.0) return@withLock
+        if (w2 <= 0.0) return@guarded
 
         val w1 = w.load()
         val nextW = w1 + w2
@@ -156,7 +157,7 @@ class UnivariateRegressionStat(
         w.add(w2)
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         w.store(0.0)
         mx.store(0.0)
         my.store(0.0)
@@ -165,7 +166,7 @@ class UnivariateRegressionStat(
         sxy.store(0.0)
     }
 
-    override fun read(timestampNanos: Long): UnivariateRegressionResult = lock.withLock {
+    override fun read(timestampNanos: Long): UnivariateRegressionResult = lock.guarded {
         val totalW = w.load()
         val meanX = mx.load()
         val meanY = my.load()

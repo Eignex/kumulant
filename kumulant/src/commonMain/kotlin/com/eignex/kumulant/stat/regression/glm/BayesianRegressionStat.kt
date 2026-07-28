@@ -18,6 +18,7 @@ import com.eignex.koblas.scale
 import com.eignex.koblas.solveSpd
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
@@ -125,9 +126,9 @@ class BayesianRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0) return@withLock
+        if (weight <= 0.0) return@guarded
         step++
 
         val etaPred = bias + (x dot weights)
@@ -145,7 +146,7 @@ class BayesianRegressionStat(
         val wc = weight * curvature
         val z = matVec(covariance, x)
         val denom = sqrt(1.0 + wc * (x dot z))
-        if (denom == 0.0) return@withLock
+        if (denom == 0.0) return@guarded
         scale(z, sqrt(wc) / denom)
 
         // Downdate the Cholesky factor; repair on instability.
@@ -174,7 +175,7 @@ class BayesianRegressionStat(
         totalWeights += weight
     }
 
-    override fun read(timestampNanos: Long): CovarianceRegressionResult = lock.withLock {
+    override fun read(timestampNanos: Long): CovarianceRegressionResult = lock.guarded {
         CovarianceRegressionResult(
             weights = DenseVector.of(weights.toDoubleArray()),
             bias = bias,
@@ -211,7 +212,7 @@ class BayesianRegressionStat(
         require(values.featureSize == featureSize) {
             "merge: featureSize mismatch ${values.featureSize} vs $featureSize"
         }
-        lock.withLock {
+        lock.guarded {
             val n = featureSize
 
             val hSelf = invertSpd(covarianceL)
@@ -264,7 +265,7 @@ class BayesianRegressionStat(
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         for (i in 0 until featureSize) weights[i] = initialWeights[i]
         for (k in covariance.data.indices) {
             covariance.data[k] = initialCovariance.data[k]

@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
@@ -40,26 +41,26 @@ class ArgMinStat(override val concurrency: Concurrency = Concurrency.None) : Ser
     private val value = mode.newDouble(Double.POSITIVE_INFINITY)
     private val at = mode.newLong(0L)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         if (value < this.value.load()) {
             this.value.store(value)
             at.store(timestampNanos)
         }
     }
 
-    override fun merge(values: ArgMinResult) = lock.withLock {
+    override fun merge(values: ArgMinResult) = lock.guarded {
         if (values.min < value.load()) {
             value.store(values.min)
             at.store(values.atTimestampNanos)
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         value.store(Double.POSITIVE_INFINITY)
         at.store(0L)
     }
 
-    override fun read(timestampNanos: Long) = lock.withLock {
+    override fun read(timestampNanos: Long) = lock.guarded {
         ArgMinResult(value.load(), at.load())
     }
 

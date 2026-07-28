@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.firstWriterMode
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import com.eignex.kumulant.stream.welfordMode
 
@@ -53,14 +54,14 @@ class CounterRateStat(
     private val lastCounter = mode.newDouble(Double.NaN)
     private val lastTimestampNanos = mode.newLong(Long.MIN_VALUE)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         val previousCounter = lastCounter.load()
         val previousTimestamp = lastTimestampNanos.load()
 
         if (previousCounter.isNaN()) {
             lastCounter.store(value)
             lastTimestampNanos.store(timestampNanos)
-            return@withLock
+            return@guarded
         }
 
         when {
@@ -101,7 +102,7 @@ class CounterRateStat(
     override fun create(concurrency: Concurrency?) =
         CounterRateStat(concurrency ?: this.concurrency, treatDecreaseAsReset)
 
-    override fun read(timestampNanos: Long): RateResult = lock.withLock {
+    override fun read(timestampNanos: Long): RateResult = lock.guarded {
         val start = if (startTimestampNanos.load() == Long.MIN_VALUE) {
             timestampNanos
         } else {
@@ -114,8 +115,8 @@ class CounterRateStat(
         )
     }
 
-    override fun merge(values: RateResult) = lock.withLock {
-        if (values.totalValue == 0.0) return@withLock
+    override fun merge(values: RateResult) = lock.guarded {
+        if (values.totalValue == 0.0) return@guarded
 
         totalDelta.add(values.totalValue)
 
@@ -125,7 +126,7 @@ class CounterRateStat(
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         totalDelta.store(0.0)
         lastCounter.store(Double.NaN)
         lastTimestampNanos.store(Long.MIN_VALUE)
