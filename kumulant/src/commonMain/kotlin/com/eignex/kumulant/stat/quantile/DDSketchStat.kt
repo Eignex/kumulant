@@ -55,7 +55,6 @@ class DDSketchStat(
     private val multiplier: Double = 1.0 / ln(gamma)
 
     private val mode = concurrency.additiveMode()
-    private val totalWeights = mode.newDouble(0.0)
     private val zeroCount = mode.newDouble(0.0)
 
     private val positiveBins = ArrayBins(mode)
@@ -63,7 +62,6 @@ class DDSketchStat(
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        totalWeights.add(weight)
 
         if (value > 0.0) {
             val index = ceil(ln(value) * multiplier).toInt()
@@ -87,7 +85,6 @@ class DDSketchStat(
             "Cannot merge DDSketches with different relative error targets"
         }
 
-        totalWeights.add(values.totalWeights)
         zeroCount.add(values.zeroCount)
 
         values.positiveBins.forEach { (index, weight) ->
@@ -99,7 +96,6 @@ class DDSketchStat(
     }
 
     override fun reset() {
-        totalWeights.store(0.0)
         zeroCount.store(0.0)
         positiveBins.clear()
         negativeBins.clear()
@@ -108,14 +104,23 @@ class DDSketchStat(
     private fun valueFromIndex(index: Int): Double = 2.0 * gamma.pow(index) / (1.0 + gamma)
 
     override fun read(timestampNanos: Long): SketchResult {
-        val total = totalWeights.load()
         val computedQuantiles = DoubleArray(probabilities.size)
 
         val posSnap = positiveBins.snapshot()
         val negSnap = negativeBins.snapshot()
         val zeroSnap = zeroCount.load()
 
-        if (total == 0.0) {
+        // Derive the total from the snapshot instead of loading the totalWeights cell.
+        // update() bumps that cell before it lands the bin, so a concurrent read could
+        // see a total larger than the bins account for, walk off the end of the bin list
+        // and return NaN for a high quantile. reset() has the mirror problem: it cleared
+        // the cell before the bins, so a reader could see total == 0 with populated bins
+        // and report all-zero quantiles.
+        var total = zeroSnap
+        for (w in negSnap.values) total += w
+        for (w in posSnap.values) total += w
+
+        if (total <= 0.0) {
             return SketchResult(
                 probabilities = probabilities,
                 quantiles = computedQuantiles,
@@ -136,12 +141,24 @@ class DDSketchStat(
                 currentRank += weight
                 if (currentRank >= targetRank) return -valueFromIndex(index)
             }
-            currentRank += zeroSnap
-            if (currentRank >= targetRank) return 0.0
+            // Only claim the zero bucket when something actually landed in it. Adding an
+            // empty zeroSnap and testing `0.0 >= 0.0` made p0 report 0.0 on all-positive
+            // data, a value not in the stream and outside the relative-error contract.
+            if (zeroSnap > 0.0) {
+                currentRank += zeroSnap
+                if (currentRank >= targetRank) return 0.0
+            }
             for ((index, weight) in sortedPos) {
                 currentRank += weight
                 if (currentRank >= targetRank) return valueFromIndex(index)
             }
+            // The per-bin weights sum to `total` by construction, so the loops above cover
+            // every reachable rank. Falling through means floating-point summation left
+            // the running rank a hair under the target, which is a rounding artefact
+            // rather than a missing bin: report the largest populated bucket.
+            sortedPos.lastOrNull()?.let { return valueFromIndex(it.key) }
+            if (zeroSnap > 0.0) return 0.0
+            sortedNeg.lastOrNull()?.let { return -valueFromIndex(it.key) }
             return Double.NaN
         }
 
