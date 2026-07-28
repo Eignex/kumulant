@@ -44,15 +44,20 @@ data class UnivariateRegressionResult(
     val covariance: Double get() = if (totalWeights > 0.0) sxy / totalWeights else 0.0
 
     /**
-     * Pearson correlation derived from R^2 and the sign of [sxy]. Reuses [sst]/[sse]
-     * rather than storing the raw quantity.
+     * Pearson correlation of the `x` and `y` streams, `sxy / sqrt(sxx * syy)`.
+     *
+     * Computed from the raw cross-deviation rather than from `1 - sse/sst`, because
+     * [sse] is evaluated at the penalised [slope]: under [Penalty.L1] with a lambda
+     * above the soft-thresholding cut the slope is exactly zero, making `sse == sst`
+     * and yielding a correlation of zero for perfectly correlated data. This is a
+     * property of the two streams and so is independent of [penalty].
      */
     val correlation: Double
         get() {
-            if (sst <= 0.0) return 0.0
-            val r2 = (1.0 - (sse / sst)).coerceAtLeast(0.0)
-            val r = sqrt(r2)
-            return if (sxy >= 0.0) r else -r
+            val sxx = x.variance * totalWeights
+            val syy = y.variance * totalWeights
+            if (sxx <= 0.0 || syy <= 0.0) return 0.0
+            return (sxy / sqrt(sxx * syy)).coerceIn(-1.0, 1.0)
         }
 }
 

@@ -424,6 +424,31 @@ class LassoTest {
     }
 
     @Test
+    fun `correlation describes the streams and ignores the penalty`() {
+        // Correlation is a property of x and y, not of the fitted slope, so a lambda
+        // large enough to soft-threshold the slope to zero must not drag it to zero.
+        val lasso = UnivariateRegressionStat(Penalty.L1(lambda = 1e9))
+        val ols = UnivariateRegressionStat()
+        for (x in 0..9) {
+            lasso.update(x.toDouble(), 2.0 * x + 1.0)
+            ols.update(x.toDouble(), 2.0 * x + 1.0)
+        }
+        val r = lasso.read()
+        assertEquals(0.0, r.slope, EPS, "precondition: lambda should zero the slope")
+        assertEquals(1.0, r.correlation, APPROX)
+        assertEquals(ols.read().correlation, r.correlation, APPROX)
+    }
+
+    @Test
+    fun `correlation stays negative for an anti-correlated stream under L1`() {
+        val lasso = UnivariateRegressionStat(Penalty.L1(lambda = 1e9))
+        for (x in 0..9) lasso.update(x.toDouble(), -3.0 * x + 5.0)
+        val r = lasso.read()
+        assertEquals(0.0, r.slope, EPS)
+        assertEquals(-1.0, r.correlation, APPROX)
+    }
+
+    @Test
     fun `merge of two halves matches a single accumulator`() {
         val full = UnivariateRegressionStat(Penalty.L1(lambda = 1.0)).apply {
             for (x in 0..19) update(x.toDouble(), 3.0 * x + 2.0)
