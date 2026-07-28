@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.requireLiveWeight
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -63,26 +64,26 @@ class MeanStat(override val concurrency: Concurrency = Concurrency.None) : Serie
     private val totalWeights = mode.newDouble(0.0)
     private val mean = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
-        if (weight == 0.0) return@withLock
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0) return@guarded
         requireLiveWeight(totalWeights.load(), weight)
         val nextW = totalWeights.addAndGet(weight)
         val delta = value - mean.load()
         mean.add(delta * (weight / nextW))
     }
 
-    override fun read(timestampNanos: Long): WeightedMeanResult = lock.withLock {
+    override fun read(timestampNanos: Long): WeightedMeanResult = lock.guarded {
         WeightedMeanResult(totalWeights.load(), mean.load())
     }
 
-    override fun merge(values: WeightedMeanResult) = lock.withLock {
-        if (values.totalWeights <= 0.0) return@withLock
+    override fun merge(values: WeightedMeanResult) = lock.guarded {
+        if (values.totalWeights <= 0.0) return@guarded
         val nextW = totalWeights.addAndGet(values.totalWeights)
         val delta = values.mean - mean.load()
         mean.add(delta * (values.totalWeights / nextW))
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         totalWeights.store(0.0)
         mean.store(0.0)
     }

@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.HasShapeMoments
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.requireLiveWeight
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -64,8 +65,8 @@ class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : Se
     private val m3 = mode.newDouble(0.0)
     private val m4 = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
-        if (weight == 0.0) return@withLock
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0) return@guarded
         val oldW = totalWeights.load()
         requireLiveWeight(oldW, weight)
         val nextW = totalWeights.addAndGet(weight)
@@ -95,8 +96,8 @@ class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : Se
         mean.add(deltaW)
     }
 
-    override fun merge(values: MomentsResult) = lock.withLock {
-        if (values.totalWeights <= 0.0) return@withLock
+    override fun merge(values: MomentsResult) = lock.guarded {
+        if (values.totalWeights <= 0.0) return@guarded
         val w1 = totalWeights.load()
         val w2 = values.totalWeights
         val nextW = totalWeights.addAndGet(w2)
@@ -128,7 +129,7 @@ class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : Se
         mean.add(delta * (w2 / nextW))
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         totalWeights.store(0.0)
         mean.store(0.0)
         m2.store(0.0)
@@ -136,7 +137,7 @@ class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : Se
         m4.store(0.0)
     }
 
-    override fun read(timestampNanos: Long): MomentsResult = lock.withLock {
+    override fun read(timestampNanos: Long): MomentsResult = lock.guarded {
         MomentsResult(totalWeights.load(), mean.load(), m2.load(), m3.load(), m4.load())
     }
 

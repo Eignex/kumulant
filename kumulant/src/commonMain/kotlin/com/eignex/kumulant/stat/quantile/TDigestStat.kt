@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.preview
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
 import com.eignex.kumulant.stream.spinHint
@@ -344,7 +345,7 @@ class TDigestStat(
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0 || value.isNaN()) return
-        outerLock.withLock {
+        outerLock.guarded {
             while (true) {
                 val claimed = bufferIndex.addAndGet(1L)
                 val idx = (claimed - 1L).toInt()
@@ -354,12 +355,12 @@ class TDigestStat(
                     totalWeightCell.add(weight)
                     commitIndex.add(1L)
                     if (claimed == bufferCapLong) {
-                        compressLock.withLock { drainLocked() }
+                        compressLock.guarded { drainLocked() }
                     }
-                    return@withLock
+                    return@guarded
                 }
                 // Overflow: a concurrent compress is needed before our claim can land.
-                compressLock.withLock { drainLocked() }
+                compressLock.guarded { drainLocked() }
                 // Loop and retry against the next epoch.
             }
         }
@@ -375,8 +376,8 @@ class TDigestStat(
         require(abs(compression - values.compression) < 1e-9) {
             "Cannot merge TDigests with different compression"
         }
-        outerLock.withLock {
-            compressLock.withLock {
+        outerLock.guarded {
+            compressLock.guarded {
                 // Drain any buffered points first so they appear in the centroid array.
                 drainLocked()
                 // Feed the incoming centroids through the same compress path.
@@ -399,8 +400,8 @@ class TDigestStat(
     }
 
     override fun reset() {
-        outerLock.withLock {
-            compressLock.withLock {
+        outerLock.guarded {
+            compressLock.guarded {
                 bufferIndex.store(0L)
                 commitIndex.store(0L)
                 totalWeightCell.store(0.0)
@@ -410,14 +411,14 @@ class TDigestStat(
         }
     }
 
-    override fun read(timestampNanos: Long): TDigestResult = outerLock.withLock {
-        compressLock.withLock {
+    override fun read(timestampNanos: Long): TDigestResult = outerLock.guarded {
+        compressLock.guarded {
             drainLocked()
 
             val total = totalWeightCell.load()
             val computed = DoubleArray(probabilities.size)
             if (means.isEmpty() || total <= 0.0) {
-                return@withLock TDigestResult(
+                return@guarded TDigestResult(
                     probabilities,
                     computed,
                     means.copyOf(),

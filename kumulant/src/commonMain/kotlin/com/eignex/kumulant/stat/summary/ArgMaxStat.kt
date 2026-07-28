@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
@@ -40,26 +41,26 @@ class ArgMaxStat(override val concurrency: Concurrency = Concurrency.None) : Ser
     private val value = mode.newDouble(Double.NEGATIVE_INFINITY)
     private val at = mode.newLong(0L)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         if (value > this.value.load()) {
             this.value.store(value)
             at.store(timestampNanos)
         }
     }
 
-    override fun merge(values: ArgMaxResult) = lock.withLock {
+    override fun merge(values: ArgMaxResult) = lock.guarded {
         if (values.max > value.load()) {
             value.store(values.max)
             at.store(values.atTimestampNanos)
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         value.store(Double.NEGATIVE_INFINITY)
         at.store(0L)
     }
 
-    override fun read(timestampNanos: Long) = lock.withLock {
+    override fun read(timestampNanos: Long) = lock.guarded {
         ArgMaxResult(value.load(), at.load())
     }
 

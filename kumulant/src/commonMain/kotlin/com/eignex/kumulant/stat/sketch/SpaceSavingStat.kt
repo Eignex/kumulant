@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.preview
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
@@ -190,7 +191,7 @@ class SpaceSavingStat(
             admitMisraGries(value, w, 0L)
             totalSeenCell.add(1L)
         } else {
-            outerLock.withLock {
+            outerLock.guarded {
                 admitClassic(value, w, 0L)
                 totalSeenCell.add(1L)
             }
@@ -207,7 +208,7 @@ class SpaceSavingStat(
             }
             totalSeenCell.add(values.totalSeen)
         } else {
-            outerLock.withLock {
+            outerLock.guarded {
                 for (i in values.keys.indices) {
                     admitClassic(values.keys[i], values.counts[i], values.errors[i])
                 }
@@ -217,7 +218,7 @@ class SpaceSavingStat(
     }
 
     override fun reset() {
-        outerLock.withLock {
+        outerLock.guarded {
             for (i in 0 until capacity) {
                 keys.store(i, 0L)
                 counts.store(i, 0L)
@@ -227,7 +228,7 @@ class SpaceSavingStat(
         }
     }
 
-    override fun read(timestampNanos: Long): HeavyHittersResult = outerLock.withLock {
+    override fun read(timestampNanos: Long): HeavyHittersResult = outerLock.guarded {
         // Filter active slots (count > 0). Snapshot per-slot; under Relaxed a brief
         // torn pair window is possible.
         var active = 0

@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.casMin
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
@@ -71,8 +72,8 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         casMin(minCell, value)
         casMax(maxCell, value)
-        lock.withLock {
-            if (weight == 0.0) return@withLock
+        lock.guarded {
+            if (weight == 0.0) return@guarded
             val priorW = totalWeights.load()
             val nextW = totalWeights.addAndGet(weight)
             val delta = value - mean.load()
@@ -85,8 +86,8 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
     override fun merge(values: SummaryResult) {
         casMin(minCell, values.min)
         casMax(maxCell, values.max)
-        lock.withLock {
-            if (values.totalWeights <= 0.0) return@withLock
+        lock.guarded {
+            if (values.totalWeights <= 0.0) return@guarded
             val w1 = totalWeights.load()
             val w2 = values.totalWeights
             val nextW = totalWeights.addAndGet(w2)
@@ -104,7 +105,7 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
         maxCell.store(Double.NEGATIVE_INFINITY)
     }
 
-    override fun read(timestampNanos: Long): SummaryResult = lock.withLock {
+    override fun read(timestampNanos: Long): SummaryResult = lock.guarded {
         val w = totalWeights.load()
         val variance = if (w > 0.0) sst.load() / w else 0.0
         val lo = minCell.load().let { if (it == Double.POSITIVE_INFINITY) 0.0 else it }

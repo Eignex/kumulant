@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.decay.DecayWeighting
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -154,7 +155,7 @@ class SeasonalSmoothingStat(
     private val seasons = streamMode.newDoubleArray(period) { seasonInit.load() }
     private val slot = streamMode.newLong(0L)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         val seen = initialized.addAndGet(1L)
         val currentSlot = (slot.load() % period).toInt()
         if (seen == 1L) {
@@ -162,7 +163,7 @@ class SeasonalSmoothingStat(
             trend.store(0.0)
             // Leave seasons at their identity (0 additive, 1 multiplicative) and advance the slot.
             slot.store((currentSlot + 1).toLong() % period)
-            return@withLock
+            return@guarded
         }
         val a = alphaWeighting.correction(weight)
         val b = betaWeighting.correction(weight)
@@ -191,7 +192,7 @@ class SeasonalSmoothingStat(
         slot.store((currentSlot + 1).toLong() % period)
     }
 
-    override fun merge(values: SeasonalSmoothingResult) = lock.withLock {
+    override fun merge(values: SeasonalSmoothingResult) = lock.guarded {
         require(values.seasons.size == period) { "merge seasons size ${values.seasons.size} != period $period" }
         if (initialized.addAndGet(1L) == 1L) {
             level.store(values.level)
@@ -207,7 +208,7 @@ class SeasonalSmoothingStat(
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         initialized.store(0L)
         level.store(0.0)
         trend.store(0.0)
@@ -216,7 +217,7 @@ class SeasonalSmoothingStat(
         for (i in 0 until period) seasons.store(i, identity)
     }
 
-    override fun read(timestampNanos: Long) = lock.withLock {
+    override fun read(timestampNanos: Long) = lock.guarded {
         SeasonalSmoothingResult(
             level = level.load(),
             trend = trend.load(),

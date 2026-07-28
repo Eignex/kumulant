@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.currentTimeNanos
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -86,8 +87,8 @@ class DecayingVarianceStat(
         landmarkNanos.store(t)
     }
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
-        if (weight <= 0.0) return@withLock
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight <= 0.0) return@guarded
         advanceTo(timestampNanos)
         val priorW = totalWeights.load()
         val nextW = priorW + weight
@@ -99,7 +100,7 @@ class DecayingVarianceStat(
         m2.add(weight * delta * (value - newMean))
     }
 
-    override fun read(timestampNanos: Long): DecayingVarianceResult = lock.withLock {
+    override fun read(timestampNanos: Long): DecayingVarianceResult = lock.guarded {
         val landmark = landmarkNanos.load()
         val priorW = totalWeights.load()
         val priorM2 = m2.load()
@@ -117,8 +118,8 @@ class DecayingVarianceStat(
         DecayingVarianceResult(mean.load(), variance, w, timestampNanos)
     }
 
-    override fun merge(values: DecayingVarianceResult) = lock.withLock {
-        if (values.totalWeights <= 0.0) return@withLock
+    override fun merge(values: DecayingVarianceResult) = lock.guarded {
+        if (values.totalWeights <= 0.0) return@guarded
         val target = maxOf(landmarkNanos.load(), values.timestampNanos)
         advanceTo(target)
         val remoteDecay = exp(-alpha * (target - values.timestampNanos).toDouble())
@@ -126,7 +127,7 @@ class DecayingVarianceStat(
         val remoteM2 = values.variance * remoteW
         val w1 = totalWeights.load()
         val nextW = w1 + remoteW
-        if (nextW == 0.0) return@withLock
+        if (nextW == 0.0) return@guarded
         val priorMean = mean.load()
         val delta = values.mean - priorMean
         mean.store(priorMean + delta * remoteW / nextW)
@@ -134,7 +135,7 @@ class DecayingVarianceStat(
         m2.add(remoteM2 + delta * delta * w1 * remoteW / nextW)
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         landmarkNanos.store(currentTimeNanos())
         totalWeights.store(0.0)
         mean.store(0.0)

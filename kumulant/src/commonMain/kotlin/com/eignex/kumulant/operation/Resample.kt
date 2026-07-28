@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.schema.spec.ResampleAggregator
 import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlin.math.max
 import kotlin.math.min
@@ -49,17 +50,17 @@ internal class ResampleByTimeStat<R : Result>(
     private val maximum = streamMode.newDouble(Double.NEGATIVE_INFINITY)
     private val bucketEndTimestamp = streamMode.newLong(0L)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         val newBucket = timestampNanos.floorDiv(bucketNanos)
         val cur = currentBucket.load()
         if (cur == NO_BUCKET) {
             currentBucket.store(newBucket)
             seed(value, timestampNanos)
-            return@withLock
+            return@guarded
         }
         if (newBucket == cur) {
             accumulate(value, timestampNanos)
-            return@withLock
+            return@guarded
         }
         // Bucket changed: flush the closed bucket and seed the new one.
         flushLocked()
@@ -98,7 +99,7 @@ internal class ResampleByTimeStat<R : Result>(
         delegate.update(value, bucketEndTimestamp.load(), weight = 1.0)
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         delegate.reset()
         currentBucket.store(NO_BUCKET)
         count.store(0L)

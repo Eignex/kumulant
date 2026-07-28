@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.decay.DecayWeighting
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -106,11 +107,11 @@ class HoltStat(
     private val level = mode.newDouble(0.0)
     private val trend = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         if (initialized.addAndGet(1L) == 1L) {
             level.store(value)
             trend.store(0.0)
-            return@withLock
+            return@guarded
         }
         val a = alphaWeighting.correction(weight)
         val b = betaWeighting.correction(weight)
@@ -122,7 +123,7 @@ class HoltStat(
         trend.store(newTrend)
     }
 
-    override fun merge(values: HoltResult) = lock.withLock {
+    override fun merge(values: HoltResult) = lock.guarded {
         // No principled stat-level merge of two independent Holt traces; take the other's snapshot
         // as the new state once we have anything to merge into. Useful for windowed-slot folds.
         if (initialized.addAndGet(1L) == 1L) {
@@ -134,13 +135,13 @@ class HoltStat(
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         initialized.store(0L)
         level.store(0.0)
         trend.store(0.0)
     }
 
-    override fun read(timestampNanos: Long) = lock.withLock {
+    override fun read(timestampNanos: Long) = lock.guarded {
         HoltResult(level.load(), trend.load(), phi)
     }
 

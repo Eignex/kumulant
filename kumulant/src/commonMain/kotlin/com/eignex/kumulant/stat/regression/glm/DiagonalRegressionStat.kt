@@ -7,6 +7,7 @@ import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.schema.expr.ScalarExpr
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 
 /**
@@ -80,9 +81,9 @@ class DiagonalRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0) return@withLock
+        if (weight <= 0.0) return@guarded
         step++
         val eta = learningRate.eval(step.toDouble())
 
@@ -122,7 +123,7 @@ class DiagonalRegressionStat(
         totalWeights += weight
     }
 
-    override fun read(timestampNanos: Long): DiagonalRegressionResult = lock.withLock {
+    override fun read(timestampNanos: Long): DiagonalRegressionResult = lock.guarded {
         DiagonalRegressionResult(
             weights = DenseVector.of(weights),
             bias = bias,
@@ -144,7 +145,7 @@ class DiagonalRegressionStat(
         require(values.featureSize == featureSize) {
             "merge: featureSize mismatch ${values.featureSize} vs $featureSize"
         }
-        lock.withLock {
+        lock.guarded {
             val otherWeights = values.weights.toDoubleArray()
             val otherPrecision = values.precision.toDoubleArray()
             for (i in 0 until featureSize) {
@@ -167,7 +168,7 @@ class DiagonalRegressionStat(
         }
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         for (i in 0 until featureSize) {
             weights[i] = 0.0
             precision[i] = priorPrecision

@@ -12,6 +12,7 @@ import com.eignex.kumulant.stream.PlatformMutex
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -220,8 +221,8 @@ class HalfSpaceTreesStat(
         if (n >= windowSize) rotateWindow()
     }
 
-    private fun rotateWindow() = swapLock.withLock {
-        if (windowCounter.load() < windowSize) return@withLock
+    private fun rotateWindow() = swapLock.guarded {
+        if (windowCounter.load() < windowSize) return@guarded
         windowCounter.store(0L)
         for (i in 0 until numTrees * numLeaves) {
             val latest = latestMass.load(i)
@@ -267,7 +268,7 @@ class HalfSpaceTreesStat(
         totalWeightsCell.add(values.totalWeights)
     }
 
-    override fun reset() = swapLock.withLock {
+    override fun reset() = swapLock.guarded {
         for (i in 0 until numTrees * numLeaves) {
             referenceMass.store(i, 0.0)
             latestMass.store(i, 0.0)

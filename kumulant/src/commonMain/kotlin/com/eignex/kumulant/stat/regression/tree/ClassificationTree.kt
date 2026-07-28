@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stream.Mutex
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
+import com.eignex.kumulant.stream.guarded
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -74,7 +75,7 @@ class ClassificationTree(
 
     /** Reset to a single fresh leaf. */
     fun reset() {
-        splitLock.withLock {
+        splitLock.guarded {
             nbrNodes.store(1)
             root = newLeaf(depth = 0)
         }
@@ -85,7 +86,7 @@ class ClassificationTree(
 
     /** Structurally merge [other] into this tree; [other] is consumed. */
     fun merge(other: ClassificationTree) {
-        splitLock.withLock {
+        splitLock.guarded {
             root = mergeNodes(root, other.root)
             nbrNodes.store(countNodes(root))
         }
@@ -93,7 +94,7 @@ class ClassificationTree(
 
     /** Snapshot merge: same rules as [merge] but the other side is an immutable result. */
     fun mergeSnapshot(other: TreeClassificationNodeResult) {
-        splitLock.withLock {
+        splitLock.guarded {
             root = mergeNodeWithResult(root, other)
             nbrNodes.store(countNodes(root))
         }
@@ -261,21 +262,21 @@ class ClassificationTree(
         val ticks = leaf.observationsSinceLastCheck.addAndFetch(1L)
         if (ticks < config.splitPeriod) return leaf
 
-        return splitLock.withLock {
-            if (leaf.observationsSinceLastCheck.load() < config.splitPeriod) return@withLock leaf
+        return splitLock.guarded {
+            if (leaf.observationsSinceLastCheck.load() < config.splitPeriod) return@guarded leaf
             leaf.observationsSinceLastCheck.store(0L)
 
             val total = leaf.arm.read(0L)
-            if (total.totalWeights < config.minSamplesSplit) return@withLock leaf
+            if (total.totalWeights < config.minSamplesSplit) return@guarded leaf
             val pos = leaf.pos.map { it.read(0L) }
             val neg = leaf.neg.map { it.read(0L) }
             val ranked = config.metric.rank(total, pos, neg, config.minSamplesSplit, config.minSamplesLeaf)
-            if (ranked.bestIndex < 0 || ranked.top1 <= 0.0) return@withLock leaf
+            if (ranked.bestIndex < 0 || ranked.top1 <= 0.0) return@guarded leaf
 
             val eps = hoeffdingBound(config.delta, total.totalWeights, depth, config.deltaDecay)
             val passesHoeffding = ranked.top1 - ranked.top2 > eps
             val passesTau = eps < config.tau
-            if (!passesHoeffding && !passesTau) return@withLock leaf
+            if (!passesHoeffding && !passesTau) return@guarded leaf
 
             nbrNodes.addAndFetch(2)
             ClassificationSplitNode(

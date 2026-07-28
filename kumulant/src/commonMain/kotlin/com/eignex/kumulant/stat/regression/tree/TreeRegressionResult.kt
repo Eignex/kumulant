@@ -5,6 +5,7 @@ package com.eignex.kumulant.stat.regression.tree
 import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import com.eignex.kumulant.stream.guarded
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -102,7 +103,7 @@ fun RegressionNode<VectorView>.snapshot(): TreeNodeResult = when (this) {
  * only, for the same reason [snapshot] is.
  */
 fun RegressionTree<VectorView>.mergeSnapshot(other: TreeNodeResult) {
-    splitLock.withLock {
+    splitLock.guarded {
         root = mergeNodeWithResult(root, other)
         nbrNodes.store(countNodes(root))
     }

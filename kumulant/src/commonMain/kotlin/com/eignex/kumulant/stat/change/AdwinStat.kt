@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.change
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -84,7 +85,7 @@ class AdwinStat(
     private var changesDetected: Long = 0L
     private var lastUpdateRaisedAlarm: Boolean = false
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
         rows[0].addLast(Bucket(n = 1L, sum = value, sumSquares = value * value))
         totalN += 1L
         totalSum += value
@@ -174,12 +175,12 @@ class AdwinStat(
         while (rows.size > 1 && rows.last().isEmpty()) rows.removeAt(rows.size - 1)
     }
 
-    override fun merge(values: AdwinResult) = lock.withLock {
+    override fun merge(values: AdwinResult) = lock.guarded {
         // No exact structural merge for the exponential histogram; carry over the change counter.
         changesDetected += values.changesDetected
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         rows.clear()
         rows.add(ArrayDeque())
         totalN = 0L
@@ -189,7 +190,7 @@ class AdwinStat(
         lastUpdateRaisedAlarm = false
     }
 
-    override fun read(timestampNanos: Long) = lock.withLock {
+    override fun read(timestampNanos: Long) = lock.guarded {
         val n = totalN
         val mean = if (n > 0L) totalSum / n.toDouble() else 0.0
         val variance = if (n > 0L) max(0.0, totalSumSquares / n.toDouble() - mean * mean) else 0.0

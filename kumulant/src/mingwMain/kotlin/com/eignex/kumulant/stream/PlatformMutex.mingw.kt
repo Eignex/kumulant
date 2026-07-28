@@ -35,4 +35,12 @@ internal actual class PlatformMutex actual constructor() : Mutex {
             LeaveCriticalSection(cs.ptr)
         }
     }
+
+    actual fun enter() {
+        EnterCriticalSection(cs.ptr)
+    }
+
+    actual fun exit() {
+        LeaveCriticalSection(cs.ptr)
+    }
 }

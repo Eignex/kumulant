@@ -9,6 +9,7 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import com.eignex.kumulant.stream.Mutex
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
+import com.eignex.kumulant.stream.guarded
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -86,7 +87,7 @@ class RegressionTree<Row>(
 
     /** Reset to a single fresh leaf. */
     fun reset() {
-        splitLock.withLock {
+        splitLock.guarded {
             nbrNodes.store(1)
             root = newLeaf(depth = 0)
         }
@@ -113,7 +114,7 @@ class RegressionTree<Row>(
      * structures don't align.
      */
     fun merge(other: RegressionTree<Row>) {
-        splitLock.withLock {
+        splitLock.guarded {
             root = mergeNodes(root, other.root)
             nbrNodes.store(countNodes(root))
         }
@@ -239,23 +240,23 @@ class RegressionTree<Row>(
         val ticks = leaf.observationsSinceLastCheck.addAndFetch(1L)
         if (ticks < config.splitPeriod) return leaf
 
-        return splitLock.withLock {
+        return splitLock.guarded {
             // Double-check inside the lock: another thread may have already audited
             // (and reset the counter) or replaced this leaf.
-            if (leaf.observationsSinceLastCheck.load() < config.splitPeriod) return@withLock leaf
+            if (leaf.observationsSinceLastCheck.load() < config.splitPeriod) return@guarded leaf
             leaf.observationsSinceLastCheck.store(0L)
 
             val total = leaf.arm.read(0L)
-            if (total.totalWeights < config.minSamplesSplit) return@withLock leaf
+            if (total.totalWeights < config.minSamplesSplit) return@guarded leaf
             val pos = leaf.pos.map { it.read(0L) }
             val neg = leaf.neg.map { it.read(0L) }
             val ranked = config.metric.rank(total, pos, neg, config.minSamplesSplit, config.minSamplesLeaf)
-            if (ranked.bestIndex < 0 || ranked.top1 <= 0.0) return@withLock leaf
+            if (ranked.bestIndex < 0 || ranked.top1 <= 0.0) return@guarded leaf
 
             val eps = hoeffdingBound(config.delta, total.totalWeights, depth, config.deltaDecay)
             val passesHoeffding = ranked.top1 - ranked.top2 > eps
             val passesTau = eps < config.tau
-            if (!passesHoeffding && !passesTau) return@withLock leaf
+            if (!passesHoeffding && !passesTau) return@guarded leaf
 
             // Stash the pre-split aggregate as the new split's carryover so it shows up
             // in subtree aggregates without burdening the hot path. New leaves start

@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.requireLiveWeight
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
@@ -69,8 +70,8 @@ class VarianceStat(override val concurrency: Concurrency = Concurrency.None) : S
     private val mean = mode.newDouble(0.0)
     private val sst = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.withLock {
-        if (weight == 0.0) return@withLock
+    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0) return@guarded
         val priorW = totalWeights.load()
         requireLiveWeight(priorW, weight)
         val nextW = totalWeights.addAndGet(weight)
@@ -80,8 +81,8 @@ class VarianceStat(override val concurrency: Concurrency = Concurrency.None) : S
         sst.add(priorW * delta * r)
     }
 
-    override fun merge(values: WeightedVarianceResult) = lock.withLock {
-        if (values.totalWeights <= 0.0) return@withLock
+    override fun merge(values: WeightedVarianceResult) = lock.guarded {
+        if (values.totalWeights <= 0.0) return@guarded
         val w1 = totalWeights.load()
         val w2 = values.totalWeights
         val nextW = totalWeights.addAndGet(w2)
@@ -90,13 +91,13 @@ class VarianceStat(override val concurrency: Concurrency = Concurrency.None) : S
         sst.add(values.variance * w2 + (delta * delta) * (w1 * w2 / nextW))
     }
 
-    override fun reset() = lock.withLock {
+    override fun reset() = lock.guarded {
         totalWeights.store(0.0)
         mean.store(0.0)
         sst.store(0.0)
     }
 
-    override fun read(timestampNanos: Long): WeightedVarianceResult = lock.withLock {
+    override fun read(timestampNanos: Long): WeightedVarianceResult = lock.guarded {
         val w = totalWeights.load()
         val m = mean.load()
         val s = sst.load()

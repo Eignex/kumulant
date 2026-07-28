@@ -35,4 +35,12 @@ internal actual class PlatformMutex actual constructor() : Mutex {
             pthread_mutex_unlock(mutex.ptr)
         }
     }
+
+    actual fun enter() {
+        pthread_mutex_lock(mutex.ptr)
+    }
+
+    actual fun exit() {
+        pthread_mutex_unlock(mutex.ptr)
+    }
 }
