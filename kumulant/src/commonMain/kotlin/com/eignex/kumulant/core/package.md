@@ -89,6 +89,36 @@ inside a [com.eignex.kumulant.schema.runtime.StatSchema] with the desired
 `concurrency`; the schema propagates the choice to every registered stat
 at delegate registration.
 
+## Reading an empty accumulator
+
+`read()` on a stat that has seen no observations is always legal and never
+throws, but what it reports is per-family rather than uniform. The four
+conventions in use, all observed rather than intended:
+
+| Family | Empty read reports |
+|--------|--------------------|
+| Sum, Count, BernoulliSum | `0.0`, the additive identity |
+| Mean, Variance, Moments | `0.0` for every field |
+| Min, Max | `+Infinity` / `-Infinity`, the comparison identities |
+| HdrHistogram, LinearHistogram, Reservoir | empty arrays |
+| Auc | `NaN` |
+| DDSketch, TDigest | `0.0` for every requested quantile |
+
+The last row is the one to watch. A p99 of `0.0` from an empty sketch is
+indistinguishable from a p99 of `0.0` computed over real zero-valued data,
+and on a latency dashboard it reads as healthy rather than as absent. Until
+that is unified, gate on the observation count before trusting a quantile:
+
+```kotlin
+val r = sketch.read()
+val p99 = if (r.totalWeights > 0.0) r.quantiles.last() else null
+```
+
+Every result carries the count needed for that check, whether as
+`totalWeights`, `totalSeen`, or a per-bin weight array, so the guard is
+always available. The `0.0`-versus-`NaN` divergence is a known
+inconsistency, not a deliberate per-family design.
+
 ## Lifecycle
 
 @sample com.eignex.kumulant.samples.basicMeanLifecycle
