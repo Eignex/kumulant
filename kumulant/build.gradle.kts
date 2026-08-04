@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     id("com.eignex.kmp") version "1.2.7"
-    kotlin("plugin.serialization") version "2.3.20"
+    kotlin("plugin.serialization") version "2.4.10"
 }
 
 eignexPublish {
@@ -19,7 +19,7 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
     jvm()
-    js(IR) { browser(); nodejs() }
+    js { browser(); nodejs() }
     wasmJs { browser(); nodejs() }
     wasmWasi { nodejs() }
     linuxX64(); linuxArm64()
@@ -41,16 +41,16 @@ kotlin {
         commonMain.dependencies {
             api("com.eignex:koblas:0.1.0")
             api("com.eignex:skema:0.1.1")
-            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
-            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
         }
         jvmMain.dependencies {
             implementation(kotlin("reflect"))
         }
         commonTest.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.10.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.11.0")
         }
     }
 }
