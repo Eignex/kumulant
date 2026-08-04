@@ -23,7 +23,7 @@ kotlin {
     wasmJs { browser(); nodejs() }
     wasmWasi { nodejs() }
     linuxX64(); linuxArm64()
-    macosX64(); macosArm64(); mingwX64()
+    macosArm64(); mingwX64()
     iosX64(); iosArm64(); iosSimulatorArm64()
 
     sourceSets {
@@ -40,7 +40,7 @@ kotlin {
         wasmWasiMain.get().dependsOn(webMain.get())
         commonMain.dependencies {
             api("com.eignex:koblas:0.1.0")
-            api("com.eignex:skema:0.1.1")
+            api("com.eignex:skema:0.3.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
         }
