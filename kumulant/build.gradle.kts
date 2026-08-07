@@ -27,13 +27,13 @@ kotlin {
     iosX64(); iosArm64(); iosSimulatorArm64()
 
     sourceSets {
-        val nonJvmMain by creating {
+        val nonJvmMain = create("nonJvmMain") {
             dependsOn(commonMain.get())
         }
         nativeMain.get().dependsOn(nonJvmMain)
         wasmWasiMain.get().dependsOn(nonJvmMain)
 
-        val posixMain by creating { dependsOn(nativeMain.get()) }
+        val posixMain = create("posixMain") { dependsOn(nativeMain.get()) }
         appleMain.get().dependsOn(posixMain)
         linuxMain.get().dependsOn(posixMain)
         webMain.get().dependsOn(nonJvmMain)
