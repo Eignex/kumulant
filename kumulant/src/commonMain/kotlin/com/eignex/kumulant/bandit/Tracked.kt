@@ -45,7 +45,7 @@ class TrackedContextualBandit<B : ContextualBandit>(
     private val chooseTemplate: RegressionStat<out Result>? = null,
     private val updateJointTemplate: RegressionStat<out Result>? = null,
     private val updateMarginalTemplate: RegressionStat<out Result>? = null,
-    private val updateArmRewardTemplate: PairedStat<out Result>? = null,
+    updateArmRewardTemplate: PairedStat<out Result>? = null,
     private val nowNanos: () -> Long = { 0L },
 ) : ContextualBandit {
 
@@ -142,8 +142,8 @@ class TrackedContextualBandit<B : ContextualBandit>(
 class TrackedUnivariateBandit<B : UnivariateBandit>(
     /** Underlying bandit; exposed for `PerArmBandit` / `Scorable` access. */
     val inner: B,
-    private val chooseTemplate: SeriesStat<out Result>? = null,
-    private val updateArmRewardTemplate: PairedStat<out Result>? = null,
+    chooseTemplate: SeriesStat<out Result>? = null,
+    updateArmRewardTemplate: PairedStat<out Result>? = null,
     private val nowNanos: () -> Long = { 0L },
 ) : UnivariateBandit {
 
