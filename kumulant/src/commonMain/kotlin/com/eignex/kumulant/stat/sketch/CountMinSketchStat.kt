@@ -14,7 +14,7 @@ import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.round
+import kotlin.math.ceil
 
 /**
  * CountStat-MinStat sketch snapshot. [counters] is the [depth] x [width] matrix of counters in
@@ -71,14 +71,17 @@ fun CountMinSketchResult.estimate(value: Long): Long {
     if (counters.isEmpty()) return 0L
     val mask = (width - 1).toLong()
     val mixer = Hashers.resolve(hasher)
+    // No sentinel: Long.MAX_VALUE is a value a counter can legitimately hold (a saturating weight
+    // put it there), and treating it as "no rows visited" made estimate() report 0 for the largest
+    // count representable. depth is always positive, so row 0 seeds the minimum.
     var min = Long.MAX_VALUE
     for (row in 0 until depth) {
         val salt = splitmix64(seed + row.toLong())
         val idx = (mixer.mix(value xor salt) and mask).toInt()
         val c = counters[row * width + idx]
-        if (c < min) min = c
+        if (row == 0 || c < min) min = c
     }
-    return if (min == Long.MAX_VALUE) 0L else min
+    return min
 }
 
 /**
@@ -118,8 +121,15 @@ class CountMinSketchStat(
         require(depth > 0) { "depth must be > 0" }
         require(width > 0) { "width must be > 0" }
         require(width and (width - 1) == 0) { "width must be a power of two" }
+        // depth * width is the counter-array length and is computed in Int. Unvalidated, a large
+        // shape wrapped to zero (or worse, to a small positive value) and construction succeeded
+        // with an array too short for its own indexing, throwing on the first update instead.
+        require(depth.toLong() * width.toLong() <= Int.MAX_VALUE) {
+            "depth * width must fit in an Int; $depth * $width overflows"
+        }
     }
 
+    private val hasherRef: HasherRef = HasherRef(hasher.name)
     private val mask: Long = (width - 1).toLong()
     private val rowSalts: LongArray = LongArray(depth) { splitmix64(seed + it.toLong()) }
     private val counterCount: Int = depth * width
@@ -129,8 +139,11 @@ class CountMinSketchStat(
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        val w = round(weight).toLong()
-        if (w <= 0L) return
+        // Counters are Long, so a fractional weight has to be rounded. Round *up*: rounding to
+        // nearest silently discarded everything below 0.5 - including totalSeen, so the stat denied
+        // observations it had seen - whereas rounding up keeps every observation and leaves the
+        // documented `estimate(x) >= true count(x)` intact, since it can only overshoot.
+        val w = ceil(weight).toLong().coerceIn(1L, MAX_COUNTER_STEP)
         for (row in 0 until depth) {
             val idx = (hasher.mix(value xor rowSalts[row]) and mask).toInt()
             counters.add(row * width + idx, w)
@@ -143,6 +156,15 @@ class CountMinSketchStat(
             "Cannot merge CountMinSketchStat with shape " +
                 "(${values.depth}, ${values.width}, seed=${values.seed}) " +
                 "into ($depth, $width, seed=$seed)"
+        }
+        // The hasher decides which cell a key lands in, so merging across mixers scatters the
+        // incoming counts into cells this sketch will never probe - estimates then come out *below*
+        // the true count, breaking the one-sided guarantee silently.
+        require(values.hasher == hasherRef) {
+            "Cannot merge CountMinSketchStat hashed with ${values.hasher} into one hashed with $hasherRef"
+        }
+        require(values.counters.size == counterCount) {
+            "Cannot merge CountMinSketchStat: expected ${counterCount} counters, got ${values.counters.size}"
         }
         for (i in 0 until counterCount) {
             val incoming = values.counters[i]
@@ -164,7 +186,7 @@ class CountMinSketchStat(
             seed = seed,
             counters = snapshot,
             totalSeen = totalSeen.load(),
-            hasher = HasherRef(hasher.name),
+            hasher = hasherRef,
         )
     }
 
@@ -175,4 +197,13 @@ class CountMinSketchStat(
         hasher,
         concurrency ?: this.concurrency,
     )
+
+    private companion object {
+        /**
+         * Largest single increment a counter accepts. Below Long.MAX_VALUE on purpose: saturating a
+         * counter at the type's ceiling used to make it indistinguishable from an unvisited row and
+         * a second such update wrapped it negative, both of which broke the one-sided guarantee.
+         */
+        const val MAX_COUNTER_STEP: Long = Long.MAX_VALUE / 1024
+    }
 }

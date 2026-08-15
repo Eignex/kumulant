@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.preview
+import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.stream.StreamLong
@@ -23,21 +24,38 @@ import kotlin.math.pow
  */
 @Serializable
 @SerialName("HyperLogLogResult")
-data class HyperLogLogResult(val estimate: Double, val precision: Int, val registers: IntArray, val totalSeen: Long) :
+data class HyperLogLogResult(
+    val estimate: Double,
+    val precision: Int,
+    val registers: IntArray,
+    val totalSeen: Long,
+    /**
+     * Reference to the [com.eignex.kumulant.math.LongHasher] that produced this sketch.
+     *
+     * The mixer decides which register a key touches, so combining sketches built with different
+     * mixers is meaningless - it double-counts the same key. Carried on the wire so [merge] can
+     * refuse it, matching [com.eignex.kumulant.stat.sketch.BloomFilterResult] and
+     * [com.eignex.kumulant.stat.sketch.CountMinSketchResult]. Defaults to the library default so a
+     * payload encoded before the field existed still decodes.
+     */
+    val hasher: HasherRef = HasherRef.SplitMix64,
+) :
     HasObservationCount {
 
     override val totalWeights: Double get() = totalSeen.toDouble()
     override fun equals(other: Any?): Boolean = other is HyperLogLogResult &&
-        estimate == other.estimate &&
+        estimate.equals(other.estimate) &&
         precision == other.precision &&
         registers.contentEquals(other.registers) &&
-        totalSeen == other.totalSeen
+        totalSeen == other.totalSeen &&
+        hasher == other.hasher
 
     override fun hashCode(): Int {
         var h = estimate.hashCode()
         h = 31 * h + precision.hashCode()
         h = 31 * h + registers.contentHashCode()
         h = 31 * h + totalSeen.hashCode()
+        h = 31 * h + hasher.hashCode()
         return h
     }
 
@@ -94,6 +112,7 @@ class HyperLogLogStat(
         require(precision in 4..18) { "precision must be in 4..18" }
     }
 
+    private val hasherRef: HasherRef = HasherRef(hasher.name)
     private val m: Int = 1 shl precision
     private val alpha: Double = when (m) {
         16 -> 0.673
@@ -117,6 +136,12 @@ class HyperLogLogStat(
     }
 
     override fun merge(values: HyperLogLogResult) {
+        require(values.hasher == hasherRef) {
+            "Cannot merge HyperLogLogStat hashed with ${values.hasher} into one hashed with $hasherRef"
+        }
+        require(values.registers.size == m) {
+            "Cannot merge HyperLogLogStat: expected $m registers, got ${values.registers.size}"
+        }
         require(values.precision == precision) {
             "Cannot merge HyperLogLogStat with precision ${values.precision} into $precision"
         }
@@ -153,6 +178,7 @@ class HyperLogLogStat(
             precision = precision,
             registers = snapshot,
             totalSeen = totalSeen.load(),
+            hasher = hasherRef,
         )
     }
 

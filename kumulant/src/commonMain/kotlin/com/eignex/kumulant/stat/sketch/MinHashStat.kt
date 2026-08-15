@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.preview
+import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.math.splitmix64
@@ -30,6 +31,15 @@ data class MinHashResult(
     val signatures: LongArray,
     /** Number of `update(value)` calls absorbed; informational. */
     val totalSeen: Long,
+    /**
+     * Reference to the [com.eignex.kumulant.math.LongHasher] that produced this sketch.
+     *
+     * The mixer decides which signature slot a key touches, so combining sketches built with different mixers
+     * is meaningless. Carried on the wire so [merge] can refuse it, matching
+     * [com.eignex.kumulant.stat.sketch.BloomFilterResult]. Defaults to the library default so a
+     * payload encoded before the field existed still decodes.
+     */
+    val hasher: HasherRef = HasherRef.SplitMix64,
 ) : HasObservationCount {
 
     override val totalWeights: Double get() = totalSeen.toDouble()
@@ -37,13 +47,15 @@ data class MinHashResult(
         numHashes == other.numHashes &&
         seed == other.seed &&
         signatures.contentEquals(other.signatures) &&
-        totalSeen == other.totalSeen
+        totalSeen == other.totalSeen &&
+        hasher == other.hasher
 
     override fun hashCode(): Int {
         var h = numHashes.hashCode()
         h = 31 * h + seed.hashCode()
         h = 31 * h + signatures.contentHashCode()
         h = 31 * h + totalSeen.hashCode()
+        h = 31 * h + hasher.hashCode()
         return h
     }
 
@@ -110,6 +122,7 @@ class MinHashStat(
         require(numHashes > 0) { "numHashes must be > 0" }
     }
 
+    private val hasherRef: HasherRef = HasherRef(hasher.name)
     private val salts: LongArray = LongArray(numHashes) { splitmix64(seed + it.toLong()) }
     private val mode = concurrency.monotonicMode()
     private val signatures: StreamLongArray = mode.newLongArray(numHashes) { Long.MAX_VALUE }
@@ -124,6 +137,12 @@ class MinHashStat(
     }
 
     override fun merge(values: MinHashResult) {
+        require(values.hasher == hasherRef) {
+            "Cannot merge MinHashStat hashed with ${values.hasher} into one hashed with $hasherRef"
+        }
+        require(values.signatures.size == numHashes) {
+            "Cannot merge MinHashStat: expected $numHashes signatures, got ${values.signatures.size}"
+        }
         require(values.numHashes == numHashes && values.seed == seed) {
             "Cannot merge MinHashStat with (numHashes=${values.numHashes}, seed=${values.seed}) " +
                 "into (numHashes=$numHashes, seed=$seed)"
@@ -147,6 +166,7 @@ class MinHashStat(
             seed = seed,
             signatures = snapshot,
             totalSeen = totalSeen.load(),
+            hasher = hasherRef,
         )
     }
 

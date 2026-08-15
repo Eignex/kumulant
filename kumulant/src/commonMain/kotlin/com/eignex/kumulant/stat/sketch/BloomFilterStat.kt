@@ -111,6 +111,7 @@ class BloomFilterStat(
         require(hashes > 0) { "hashes must be > 0" }
     }
 
+    private val hasherRef: HasherRef = HasherRef(hasher.name)
     private val wordCount: Int = bits / 64
     private val mask: Long = (bits - 1).toLong()
     private val mode = concurrency.monotonicMode()
@@ -135,6 +136,15 @@ class BloomFilterStat(
             "Cannot merge BloomFilterStat with (bits=${values.bits}, hashes=${values.hashes}) " +
                 "into (bits=$bits, hashes=$hashes)"
         }
+        // The hasher decides which bits a key sets, so OR-ing in words produced by a different mixer
+        // relabels them as this filter's - and keys that were inserted then read back as absent,
+        // which is the one thing a Bloom filter promises cannot happen.
+        require(values.hasher == hasherRef) {
+            "Cannot merge BloomFilterStat hashed with ${values.hasher} into one hashed with $hasherRef"
+        }
+        require(values.words.size == wordCount) {
+            "Cannot merge BloomFilterStat: expected $wordCount words, got ${values.words.size}"
+        }
         for (i in 0 until wordCount) {
             val incoming = values.words[i]
             if (incoming != 0L) casOr(words, i, incoming)
@@ -154,7 +164,7 @@ class BloomFilterStat(
             hashes = hashes,
             words = snapshot,
             totalSeen = totalSeen.load(),
-            hasher = HasherRef(hasher.name),
+            hasher = hasherRef,
         )
     }
 
