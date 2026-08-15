@@ -69,7 +69,18 @@ Decayed stats with the same schedule merge cleanly: the weight
 formulation makes the Chan-style parallel merge work the same way it
 does for the undecayed Welford family. Stats with different schedules
 (different half-lives, different time constants) cannot be merged
-meaningfully; the merge contract enforces matching configuration.
+meaningfully.
+
+Nothing checks that, and nothing can: `merge` takes a `Result`, and none
+of the decay results carry their schedule on the wire, so a mismatch is
+undetectable at the merge site. Keeping the schedule out of the result
+is deliberate, since it is deployment configuration rather than
+accumulated state, so matching schedules is the caller's responsibility.
+Merging accumulators with different half-lives or alphas produces
+numbers, and they mean nothing. The hashed sketches took the other
+choice and do carry a
+[HasherRef][com.eignex.kumulant.math.HasherRef], because there a
+mismatch silently breaks a guarantee the type itself makes.
 
 ## Concurrency
 

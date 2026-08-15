@@ -122,11 +122,15 @@ class DDSketchStat(
 
         zeroCount.add(values.zeroCount)
 
+        // Clamp exactly as indexOf does on the update path. ArrayBins grows a dense array spanning
+        // min..max index, and these indices come straight off the wire, so a corrupt or hand-built
+        // SketchResult with a matching gamma and an index of ~2e9 would try to allocate that many
+        // cells. The update path clamps for precisely this reason.
         values.positiveBins.forEach { (index, weight) ->
-            if (weight > 0.0) positiveBins.add(index, weight)
+            if (weight > 0.0) positiveBins.add(index.coerceIn(minIndex, maxIndex), weight)
         }
         values.negativeBins.forEach { (index, weight) ->
-            if (weight > 0.0) negativeBins.add(index, weight)
+            if (weight > 0.0) negativeBins.add(index.coerceIn(minIndex, maxIndex), weight)
         }
     }
 

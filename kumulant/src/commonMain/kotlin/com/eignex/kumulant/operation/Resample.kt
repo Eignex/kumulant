@@ -50,36 +50,44 @@ internal class ResampleByTimeStat<R : Result>(
     private val maximum = streamMode.newDouble(Double.NEGATIVE_INFINITY)
     private val bucketEndTimestamp = streamMode.newLong(0L)
 
+    // Total caller weight folded into the open bucket, so Sum and Mean can respect it. The flush
+    // itself always carries weight 1.0: a closed bucket is one derived observation regardless of how
+    // many raw ones went into it.
+    private val bucketWeight = streamMode.newDouble(0.0)
+
     override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0 || value.isNaN()) return@guarded // see Stat for both contracts
         val newBucket = timestampNanos.floorDiv(bucketNanos)
         val cur = currentBucket.load()
         if (cur == NO_BUCKET) {
             currentBucket.store(newBucket)
-            seed(value, timestampNanos)
+            seed(value, timestampNanos, weight)
             return@guarded
         }
         if (newBucket == cur) {
-            accumulate(value, timestampNanos)
+            accumulate(value, timestampNanos, weight)
             return@guarded
         }
         // Bucket changed: flush the closed bucket and seed the new one.
         flushLocked()
         currentBucket.store(newBucket)
-        seed(value, timestampNanos)
+        seed(value, timestampNanos, weight)
     }
 
-    private fun seed(value: Double, timestampNanos: Long) {
+    private fun seed(value: Double, timestampNanos: Long, weight: Double) {
+        bucketWeight.store(weight)
         count.store(1L)
-        sum.store(value)
+        sum.store(value * weight)
         last.store(value)
         minimum.store(value)
         maximum.store(value)
         bucketEndTimestamp.store(timestampNanos)
     }
 
-    private fun accumulate(value: Double, timestampNanos: Long) {
+    private fun accumulate(value: Double, timestampNanos: Long, weight: Double) {
+        bucketWeight.store(bucketWeight.load() + weight)
         count.store(count.load() + 1L)
-        sum.store(sum.load() + value)
+        sum.store(sum.load() + value * weight)
         last.store(value)
         minimum.store(min(minimum.load(), value))
         maximum.store(max(maximum.load(), value))
@@ -90,7 +98,7 @@ internal class ResampleByTimeStat<R : Result>(
         val n = count.load()
         if (n <= 0L) return
         val value = when (aggregator) {
-            ResampleAggregator.Mean -> sum.load() / n.toDouble()
+            ResampleAggregator.Mean -> sum.load() / bucketWeight.load()
             ResampleAggregator.Sum -> sum.load()
             ResampleAggregator.Last -> last.load()
             ResampleAggregator.Min -> minimum.load()
@@ -108,6 +116,7 @@ internal class ResampleByTimeStat<R : Result>(
         minimum.store(Double.POSITIVE_INFINITY)
         maximum.store(Double.NEGATIVE_INFINITY)
         bucketEndTimestamp.store(0L)
+        bucketWeight.store(0.0)
     }
 
     override fun create(concurrency: Concurrency?): SeriesStat<R> =

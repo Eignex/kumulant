@@ -173,6 +173,10 @@ class ConfusionMatrixStat(
         if (x.isNaN() || y.isNaN()) return
         val p = x.toInt()
         val t = y.toInt()
+        // toInt() truncates toward zero, so anything in (-1, 0) became class 0 and then passed the
+        // range check - scoring an out-of-range prediction as a correct class-0 one. The KDoc
+        // promises out-of-range pairs are ignored, so require the label to be the integer it claims.
+        if (p.toDouble() != x || t.toDouble() != y) return
         if (p !in 0 until numClasses || t !in 0 until numClasses) return
         cells[p * numClasses + t].add(weight)
     }

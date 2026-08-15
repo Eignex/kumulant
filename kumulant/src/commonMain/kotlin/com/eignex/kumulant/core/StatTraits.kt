@@ -108,7 +108,13 @@ interface HasObservationCount : Result {
  * the observations as the complete population.
  */
 interface HasSampleVariance : HasObservationCount {
-    /** Sum of squared deviations from the running mean: `Sum (x - mean)^2 * weight`. */
+    /**
+     * Sum of squared deviations from the running mean: `Sum (x - mean)^2 * weight`.
+     *
+     * Implementors must override this or [variance]; the two are defined in terms of each other, so
+     * overriding neither recurses until the stack runs out. Every Result in the library overrides
+     * [sst], which is the cheaper of the two to carry.
+     */
     val sst: Double get() = variance * totalWeights
 
     /** Population variance: `[sst] / [totalWeights]`. Zero on an empty stream. */

@@ -146,6 +146,15 @@ internal class ThrottleRegressionStat<R : Result>(private val delegate: Regressi
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         if (tick.addAndFetch(1L) % every == 0L) delegate.update(x, y, timestampNanos, weight)
     }
+    override fun reset() {
+        // Reset the phase too, not just the delegate: Stat.reset promises the equivalent of a fresh
+        // stat, and `by delegate` forwarded reset straight past this counter, so a reset stat
+        // forwarded on its first update instead of its `every`-th. The sibling wrappers
+        // (LagSeriesStat, DiffSeriesStat, HysteresisSeriesStat, ResampleByTimeStat) all do this.
+        tick.store(0L)
+        delegate.reset()
+    }
+
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
         ThrottleRegressionStat(delegate.create(concurrency), every)
 }

@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
  */
 class RegressionMergeGuardTest {
 
-    private val SPLITS = listOf(ThresholdSplit(0, 4.5))
+    private val splits = listOf(ThresholdSplit(0, 4.5))
 
     @Test
     fun `merging untrained snapshots leaves a trained diagonal fit alone`() {
@@ -103,8 +103,8 @@ class RegressionMergeGuardTest {
 
     @Test
     fun `a zero-weight update leaves a forest and a tree unchanged`() {
-        val clean = RandomForestRegressionStat(featureSize = 1, splitCandidates = SPLITS, nbrTrees = 4)
-        val probed = RandomForestRegressionStat(featureSize = 1, splitCandidates = SPLITS, nbrTrees = 4)
+        val clean = RandomForestRegressionStat(featureSize = 1, splitCandidates = splits, nbrTrees = 4)
+        val probed = RandomForestRegressionStat(featureSize = 1, splitCandidates = splits, nbrTrees = 4)
         for (i in 0 until 200) {
             val x = doubleArrayOf((i % 10).toDouble())
             val y = 2.0 * (i % 10)
@@ -118,8 +118,8 @@ class RegressionMergeGuardTest {
         val at = DenseVector.of(doubleArrayOf(3.0))
         assertEquals(clean.read().predict(at), probed.read().predict(at), 1e-12)
 
-        val tree = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = SPLITS)
-        val treeClean = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = SPLITS)
+        val tree = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = splits)
+        val treeClean = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = splits)
         for (i in 0 until 100) {
             val x = doubleArrayOf((i % 10).toDouble())
             tree.update(x, 2.0 * (i % 10), 0.0)

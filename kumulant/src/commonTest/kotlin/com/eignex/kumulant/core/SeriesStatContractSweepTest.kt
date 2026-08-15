@@ -106,10 +106,9 @@ class SeriesStatContractSweepTest {
     private val readAt = 8_000_000_000L
 
     // A stat fed the same observations at the same timestamps, so results are comparable.
-    private fun primed(spec: SeriesStatSpec<*>): SeriesStat<*> =
-        spec.materialize().also { stat ->
-            samples.forEachIndexed { i, v -> stat.update(v, i.toLong() * 1_000_000_000L, 1.0) }
-        }
+    private fun primed(spec: SeriesStatSpec<*>): SeriesStat<*> = spec.materialize().also { stat ->
+        samples.forEachIndexed { i, v -> stat.update(v, i.toLong() * 1_000_000_000L, 1.0) }
+    }
 
     @Test
     fun `a zero weight is a no-op for every series stat`() {

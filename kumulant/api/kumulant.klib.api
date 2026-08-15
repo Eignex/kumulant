@@ -1151,6 +1151,7 @@ final class com.eignex.kumulant.bandit.contextual/Exp4Bandit : com.eignex.kumula
 
     final object Companion { // com.eignex.kumulant.bandit.contextual/Exp4Bandit.Companion|null[0]
         final fun defaultEta(kotlin/Int, kotlin/Int): kotlin/Double // com.eignex.kumulant.bandit.contextual/Exp4Bandit.Companion.defaultEta|defaultEta(kotlin.Int;kotlin.Int){}[0]
+        final fun defaultGamma(kotlin/Double): kotlin/Double // com.eignex.kumulant.bandit.contextual/Exp4Bandit.Companion.defaultGamma|defaultGamma(kotlin.Double){}[0]
     }
 }
 
@@ -1674,6 +1675,7 @@ final class com.eignex.kumulant.bandit.univariate/Exp3Bandit : com.eignex.kumula
 
     final object Companion { // com.eignex.kumulant.bandit.univariate/Exp3Bandit.Companion|null[0]
         final fun defaultEta(kotlin/Int): kotlin/Double // com.eignex.kumulant.bandit.univariate/Exp3Bandit.Companion.defaultEta|defaultEta(kotlin.Int){}[0]
+        final fun defaultGamma(kotlin/Double): kotlin/Double // com.eignex.kumulant.bandit.univariate/Exp3Bandit.Companion.defaultGamma|defaultGamma(kotlin.Double){}[0]
     }
 }
 
@@ -4777,10 +4779,12 @@ final class com.eignex.kumulant.stat.calibration/ReliabilityStat : com.eignex.ku
 }
 
 final class com.eignex.kumulant.stat.cardinality/HyperLogLogResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.cardinality/HyperLogLogResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Int, kotlin/IntArray, kotlin/Long) // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.<init>|<init>(kotlin.Double;kotlin.Int;kotlin.IntArray;kotlin.Long){}[0]
+    constructor <init>(kotlin/Double, kotlin/Int, kotlin/IntArray, kotlin/Long, com.eignex.kumulant.math/HasherRef = ...) // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.<init>|<init>(kotlin.Double;kotlin.Int;kotlin.IntArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
 
     final val estimate // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.estimate|{}estimate[0]
         final fun <get-estimate>(): kotlin/Double // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.estimate.<get-estimate>|<get-estimate>(){}[0]
+    final val hasher // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.hasher|{}hasher[0]
+        final fun <get-hasher>(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.hasher.<get-hasher>|<get-hasher>(){}[0]
     final val precision // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.precision|{}precision[0]
         final fun <get-precision>(): kotlin/Int // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.precision.<get-precision>|<get-precision>(){}[0]
     final val registers // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.registers|{}registers[0]
@@ -4794,7 +4798,8 @@ final class com.eignex.kumulant.stat.cardinality/HyperLogLogResult : com.eignex.
     final fun component2(): kotlin/Int // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.component2|component2(){}[0]
     final fun component3(): kotlin/IntArray // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.component3|component3(){}[0]
     final fun component4(): kotlin/Long // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.component4|component4(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Int = ..., kotlin/IntArray = ..., kotlin/Long = ...): com.eignex.kumulant.stat.cardinality/HyperLogLogResult // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.copy|copy(kotlin.Double;kotlin.Int;kotlin.IntArray;kotlin.Long){}[0]
+    final fun component5(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.component5|component5(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Int = ..., kotlin/IntArray = ..., kotlin/Long = ..., com.eignex.kumulant.math/HasherRef = ...): com.eignex.kumulant.stat.cardinality/HyperLogLogResult // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.copy|copy(kotlin.Double;kotlin.Int;kotlin.IntArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.cardinality/HyperLogLogResult.toString|toString(){}[0]
@@ -4831,12 +4836,14 @@ final class com.eignex.kumulant.stat.cardinality/HyperLogLogStat : com.eignex.ku
 }
 
 final class com.eignex.kumulant.stat.cardinality/LinearCountingResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.cardinality/LinearCountingResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Int, kotlin/Long, kotlin/LongArray, kotlin/Long) // com.eignex.kumulant.stat.cardinality/LinearCountingResult.<init>|<init>(kotlin.Double;kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long){}[0]
+    constructor <init>(kotlin/Double, kotlin/Int, kotlin/Long, kotlin/LongArray, kotlin/Long, com.eignex.kumulant.math/HasherRef = ...) // com.eignex.kumulant.stat.cardinality/LinearCountingResult.<init>|<init>(kotlin.Double;kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
 
     final val bits // com.eignex.kumulant.stat.cardinality/LinearCountingResult.bits|{}bits[0]
         final fun <get-bits>(): kotlin/Int // com.eignex.kumulant.stat.cardinality/LinearCountingResult.bits.<get-bits>|<get-bits>(){}[0]
     final val estimate // com.eignex.kumulant.stat.cardinality/LinearCountingResult.estimate|{}estimate[0]
         final fun <get-estimate>(): kotlin/Double // com.eignex.kumulant.stat.cardinality/LinearCountingResult.estimate.<get-estimate>|<get-estimate>(){}[0]
+    final val hasher // com.eignex.kumulant.stat.cardinality/LinearCountingResult.hasher|{}hasher[0]
+        final fun <get-hasher>(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.stat.cardinality/LinearCountingResult.hasher.<get-hasher>|<get-hasher>(){}[0]
     final val totalSeen // com.eignex.kumulant.stat.cardinality/LinearCountingResult.totalSeen|{}totalSeen[0]
         final fun <get-totalSeen>(): kotlin/Long // com.eignex.kumulant.stat.cardinality/LinearCountingResult.totalSeen.<get-totalSeen>|<get-totalSeen>(){}[0]
     final val totalWeights // com.eignex.kumulant.stat.cardinality/LinearCountingResult.totalWeights|{}totalWeights[0]
@@ -4851,7 +4858,8 @@ final class com.eignex.kumulant.stat.cardinality/LinearCountingResult : com.eign
     final fun component3(): kotlin/Long // com.eignex.kumulant.stat.cardinality/LinearCountingResult.component3|component3(){}[0]
     final fun component4(): kotlin/LongArray // com.eignex.kumulant.stat.cardinality/LinearCountingResult.component4|component4(){}[0]
     final fun component5(): kotlin/Long // com.eignex.kumulant.stat.cardinality/LinearCountingResult.component5|component5(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Int = ..., kotlin/Long = ..., kotlin/LongArray = ..., kotlin/Long = ...): com.eignex.kumulant.stat.cardinality/LinearCountingResult // com.eignex.kumulant.stat.cardinality/LinearCountingResult.copy|copy(kotlin.Double;kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long){}[0]
+    final fun component6(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.stat.cardinality/LinearCountingResult.component6|component6(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Int = ..., kotlin/Long = ..., kotlin/LongArray = ..., kotlin/Long = ..., com.eignex.kumulant.math/HasherRef = ...): com.eignex.kumulant.stat.cardinality/LinearCountingResult // com.eignex.kumulant.stat.cardinality/LinearCountingResult.copy|copy(kotlin.Double;kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.cardinality/LinearCountingResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.cardinality/LinearCountingResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.cardinality/LinearCountingResult.toString|toString(){}[0]
@@ -5318,10 +5326,12 @@ final class com.eignex.kumulant.stat.event/CrossingStat : com.eignex.kumulant.co
 }
 
 final class com.eignex.kumulant.stat.event/ExcursionResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.event/ExcursionResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Long, kotlin/Double, kotlin/Long, kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.event/ExcursionResult.<init>|<init>(kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Double){}[0]
+    constructor <init>(kotlin/Double, kotlin/Long, kotlin/Double, kotlin/Long, kotlin/Double, kotlin/Double, kotlin/Boolean = ...) // com.eignex.kumulant.stat.event/ExcursionResult.<init>|<init>(kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Double;kotlin.Boolean){}[0]
 
     final val currentRecovery // com.eignex.kumulant.stat.event/ExcursionResult.currentRecovery|{}currentRecovery[0]
         final fun <get-currentRecovery>(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.currentRecovery.<get-currentRecovery>|<get-currentRecovery>(){}[0]
+    final val hasObservation // com.eignex.kumulant.stat.event/ExcursionResult.hasObservation|{}hasObservation[0]
+        final fun <get-hasObservation>(): kotlin/Boolean // com.eignex.kumulant.stat.event/ExcursionResult.hasObservation.<get-hasObservation>|<get-hasObservation>(){}[0]
     final val maxExcursion // com.eignex.kumulant.stat.event/ExcursionResult.maxExcursion|{}maxExcursion[0]
         final fun <get-maxExcursion>(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.maxExcursion.<get-maxExcursion>|<get-maxExcursion>(){}[0]
     final val peak // com.eignex.kumulant.stat.event/ExcursionResult.peak|{}peak[0]
@@ -5339,7 +5349,8 @@ final class com.eignex.kumulant.stat.event/ExcursionResult : com.eignex.kumulant
     final fun component4(): kotlin/Long // com.eignex.kumulant.stat.event/ExcursionResult.component4|component4(){}[0]
     final fun component5(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.component5|component5(){}[0]
     final fun component6(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.component6|component6(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.event/ExcursionResult // com.eignex.kumulant.stat.event/ExcursionResult.copy|copy(kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Double){}[0]
+    final fun component7(): kotlin/Boolean // com.eignex.kumulant.stat.event/ExcursionResult.component7|component7(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Boolean = ...): com.eignex.kumulant.stat.event/ExcursionResult // com.eignex.kumulant.stat.event/ExcursionResult.copy|copy(kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Double;kotlin.Boolean){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.event/ExcursionResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.event/ExcursionResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.event/ExcursionResult.toString|toString(){}[0]
@@ -5419,16 +5430,22 @@ final class com.eignex.kumulant.stat.event/RecencyStat : com.eignex.kumulant.cor
 }
 
 final class com.eignex.kumulant.stat.event/RunLengthResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.event/RunLengthResult|null[0]
-    constructor <init>(kotlin/Long, kotlin/Long) // com.eignex.kumulant.stat.event/RunLengthResult.<init>|<init>(kotlin.Long;kotlin.Long){}[0]
+    constructor <init>(kotlin/Long, kotlin/Long, kotlin/Long = ..., kotlin/Boolean = ...) // com.eignex.kumulant.stat.event/RunLengthResult.<init>|<init>(kotlin.Long;kotlin.Long;kotlin.Long;kotlin.Boolean){}[0]
 
+    final val anyFalsy // com.eignex.kumulant.stat.event/RunLengthResult.anyFalsy|{}anyFalsy[0]
+        final fun <get-anyFalsy>(): kotlin/Boolean // com.eignex.kumulant.stat.event/RunLengthResult.anyFalsy.<get-anyFalsy>|<get-anyFalsy>(){}[0]
     final val current // com.eignex.kumulant.stat.event/RunLengthResult.current|{}current[0]
         final fun <get-current>(): kotlin/Long // com.eignex.kumulant.stat.event/RunLengthResult.current.<get-current>|<get-current>(){}[0]
+    final val leading // com.eignex.kumulant.stat.event/RunLengthResult.leading|{}leading[0]
+        final fun <get-leading>(): kotlin/Long // com.eignex.kumulant.stat.event/RunLengthResult.leading.<get-leading>|<get-leading>(){}[0]
     final val longest // com.eignex.kumulant.stat.event/RunLengthResult.longest|{}longest[0]
         final fun <get-longest>(): kotlin/Long // com.eignex.kumulant.stat.event/RunLengthResult.longest.<get-longest>|<get-longest>(){}[0]
 
     final fun component1(): kotlin/Long // com.eignex.kumulant.stat.event/RunLengthResult.component1|component1(){}[0]
     final fun component2(): kotlin/Long // com.eignex.kumulant.stat.event/RunLengthResult.component2|component2(){}[0]
-    final fun copy(kotlin/Long = ..., kotlin/Long = ...): com.eignex.kumulant.stat.event/RunLengthResult // com.eignex.kumulant.stat.event/RunLengthResult.copy|copy(kotlin.Long;kotlin.Long){}[0]
+    final fun component3(): kotlin/Long // com.eignex.kumulant.stat.event/RunLengthResult.component3|component3(){}[0]
+    final fun component4(): kotlin/Boolean // com.eignex.kumulant.stat.event/RunLengthResult.component4|component4(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Boolean = ...): com.eignex.kumulant.stat.event/RunLengthResult // com.eignex.kumulant.stat.event/RunLengthResult.copy|copy(kotlin.Long;kotlin.Long;kotlin.Long;kotlin.Boolean){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.event/RunLengthResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.event/RunLengthResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.event/RunLengthResult.toString|toString(){}[0]
@@ -7885,8 +7902,10 @@ final class com.eignex.kumulant.stat.sketch/HeavyHittersResult : com.eignex.kumu
 }
 
 final class com.eignex.kumulant.stat.sketch/MinHashResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.sketch/MinHashResult|null[0]
-    constructor <init>(kotlin/Int, kotlin/Long, kotlin/LongArray, kotlin/Long) // com.eignex.kumulant.stat.sketch/MinHashResult.<init>|<init>(kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long){}[0]
+    constructor <init>(kotlin/Int, kotlin/Long, kotlin/LongArray, kotlin/Long, com.eignex.kumulant.math/HasherRef = ...) // com.eignex.kumulant.stat.sketch/MinHashResult.<init>|<init>(kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
 
+    final val hasher // com.eignex.kumulant.stat.sketch/MinHashResult.hasher|{}hasher[0]
+        final fun <get-hasher>(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.stat.sketch/MinHashResult.hasher.<get-hasher>|<get-hasher>(){}[0]
     final val numHashes // com.eignex.kumulant.stat.sketch/MinHashResult.numHashes|{}numHashes[0]
         final fun <get-numHashes>(): kotlin/Int // com.eignex.kumulant.stat.sketch/MinHashResult.numHashes.<get-numHashes>|<get-numHashes>(){}[0]
     final val seed // com.eignex.kumulant.stat.sketch/MinHashResult.seed|{}seed[0]
@@ -7902,7 +7921,8 @@ final class com.eignex.kumulant.stat.sketch/MinHashResult : com.eignex.kumulant.
     final fun component2(): kotlin/Long // com.eignex.kumulant.stat.sketch/MinHashResult.component2|component2(){}[0]
     final fun component3(): kotlin/LongArray // com.eignex.kumulant.stat.sketch/MinHashResult.component3|component3(){}[0]
     final fun component4(): kotlin/Long // com.eignex.kumulant.stat.sketch/MinHashResult.component4|component4(){}[0]
-    final fun copy(kotlin/Int = ..., kotlin/Long = ..., kotlin/LongArray = ..., kotlin/Long = ...): com.eignex.kumulant.stat.sketch/MinHashResult // com.eignex.kumulant.stat.sketch/MinHashResult.copy|copy(kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long){}[0]
+    final fun component5(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.stat.sketch/MinHashResult.component5|component5(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Long = ..., kotlin/LongArray = ..., kotlin/Long = ..., com.eignex.kumulant.math/HasherRef = ...): com.eignex.kumulant.stat.sketch/MinHashResult // com.eignex.kumulant.stat.sketch/MinHashResult.copy|copy(kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.sketch/MinHashResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.sketch/MinHashResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.sketch/MinHashResult.toString|toString(){}[0]

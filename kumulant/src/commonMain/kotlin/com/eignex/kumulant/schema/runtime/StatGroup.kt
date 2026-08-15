@@ -18,7 +18,18 @@ sealed class AbstractStatGroup<S : Stat<*>>(
     protected val stats: List<BoundStat<*, out S, *>>,
     protected val concurrencyOverride: Concurrency?,
 ) : GroupedStat {
-    final override val concurrency: Concurrency get() = concurrencyOverride ?: Concurrency.None
+    /**
+     * The group's effective level: the override when one was given, otherwise the *weakest* level any
+     * child uses.
+     *
+     * Reporting [Concurrency.None] whenever no override was passed was simply untrue for a group of
+     * `Strict` children, and this property is what a caller introspects to decide whether reads need
+     * external synchronisation. The weakest child governs, because the group offers no guarantee its
+     * least-protected member does not - which also avoids claiming [Concurrency.HighWrite] for a
+     * mixed group, since that level trades exactness for throughput rather than strengthening it.
+     */
+    final override val concurrency: Concurrency get() =
+        concurrencyOverride ?: stats.minOfOrNull { (_, stat) -> stat.concurrency } ?: Concurrency.None
 
     final override fun read(timestampNanos: Long): GroupResult =
         GroupResult(stats.associate { (key, stat) -> key.name to stat.read(timestampNanos) })

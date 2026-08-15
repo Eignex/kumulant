@@ -2,6 +2,7 @@ package com.eignex.kumulant.math
 
 import kotlin.math.exp
 import kotlin.math.ln
+import kotlin.math.ln1p
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -44,7 +45,10 @@ private fun Random.standardNormal(): Double {
     while (true) {
         val hz = nextInt()
         val iz = hz and (ZIGGURAT_N - 1)
-        val absHz = if (hz >= 0) hz else -hz
+        // Long, not Int: -Int.MIN_VALUE is still Int.MIN_VALUE, so absHz stayed negative once every
+        // 2^32 draws and the comparison below was trivially true, taking the layer-0 inner-rectangle
+        // fast path where the tail sampler was required.
+        val absHz = if (hz >= 0) hz.toLong() else -hz.toLong()
         // Fast path: ~97% of draws land in the inner rectangle of their layer.
         if (absHz < ZIGGURAT_KN[iz]) return hz * ZIGGURAT_WN[iz]
         // Slow path: tail beyond R (iz == 0) or wedge test.
@@ -105,9 +109,14 @@ private val ZIGGURAT_INIT = run {
 fun Random.nextLogNormal(mean: Double, variance: Double): Double {
     require(mean > 0.0) { "nextLogNormal requires mean > 0; got $mean" }
     require(variance >= 0.0) { "nextLogNormal requires variance >= 0; got $variance" }
-    val phi = sqrt(variance + mean * mean)
-    val mu = ln(mean * mean / phi)
-    val sigma = sqrt(ln(phi * phi / (mean * mean)))
+    // Derive sigma from the coefficient of variation rather than from phi/mean directly: squaring
+    // the mean underflowed to 0.0 well inside the documented domain (mean > 0), which made
+    // ln(phi^2 / mean^2) evaluate 0.0/0.0 and return NaN - and one exponent earlier it could return a
+    // non-positive draw from a strictly positive distribution. variance / mean^2 is the same ratio
+    // with one fewer chance to underflow, and log1p keeps precision when it is small.
+    val cv2 = (variance / mean) / mean
+    val sigma = sqrt(ln1p(cv2))
+    val mu = ln(mean) - 0.5 * sigma * sigma
     return exp(nextNormal(mu, sigma))
 }
 

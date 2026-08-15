@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.schema.BandResult
+import kotlin.time.Duration
 
 // band derives the center / scale / lower / upper bounds from any inner stat whose
 // result implements [HasCenterScale]. The wrapper forwards update/reset/create to the
@@ -32,6 +33,18 @@ internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private va
 
     override fun merge(values: BandResult): Unit =
         error("band wrapper cannot merge BandResult; merge the inner stat directly")
+
+    /**
+     * Rebuild as a band *around* a windowed inner stat rather than a window around a band.
+     *
+     * The two compose to the same thing: this wrapper forwards update / reset / create untouched and
+     * only projects in [read], so windowing the inner stat and banding the result is identical in
+     * meaning. It is not identical in behaviour, because a window reads by merging its slices into a
+     * fresh template - and merging *through* this wrapper throws, so a windowed band threw on every
+     * read once a slice had data. Both wrappers are wire-reachable, so the combination has to work.
+     */
+    internal fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<BandResult> =
+        BandSeriesStat(delegate.windowed(duration, slices, concurrency), k)
 
     override fun reset() = delegate.reset()
 
