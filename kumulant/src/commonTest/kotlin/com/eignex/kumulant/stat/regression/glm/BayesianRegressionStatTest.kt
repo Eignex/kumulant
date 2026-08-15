@@ -48,6 +48,23 @@ class BayesianRegressionStatTest {
     }
 
     @Test
+    fun `the tracked factor keeps reproducing the covariance across updates`() {
+        // The factor is downdated alongside the covariance rather than refactorized, so the two
+        // can only be trusted to agree if every downdate lands. L * LT has to stay equal to S.
+        val stat = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
+        fitLine(stat, doubleArrayOf(0.8, 1.2, -0.5), intercept = 0.3, n = 500)
+        val r = stat.read()
+
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                var s = 0.0
+                for (k in 0..minOf(i, j)) s += r.covarianceL[i, k] * r.covarianceL[j, k]
+                assertEquals(r.covariance[i, j], s, 1e-9, "L * LT disagrees with the covariance at ($i, $j)")
+            }
+        }
+    }
+
+    @Test
     fun `merge on Bayesian combines posteriors via density product`() {
         val a = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         val b = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)

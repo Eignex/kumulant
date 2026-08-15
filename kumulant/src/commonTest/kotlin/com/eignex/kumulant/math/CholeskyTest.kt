@@ -2,6 +2,7 @@ package com.eignex.kumulant.math
 
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
 import com.eignex.koblas.dense.cholesky
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -74,6 +75,66 @@ class CholeskyTest {
         val norm = l.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(3.0, 4.0)))
 
         assertTrue(norm >= 1.0, "expected a rejected downdate, got norm=$norm")
+    }
+
+    @Test
+    fun `downdate reports the norm at the cone boundary rather than silently doing nothing`() {
+        // ||L^-1 x|| == 1 exactly: the downdate cannot proceed, and the factor is left alone.
+        val l = DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(4.0, 0.0),
+                doubleArrayOf(0.0, 4.0),
+            ),
+        ).cholesky().l
+        val before = product(l)
+
+        val norm = l.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(2.0, 0.0)))
+
+        assertEquals(1.0, norm, 1e-12, "the boundary reports rejection, not success")
+        assertMatrixEquals(before, product(l))
+    }
+
+    @Test
+    fun `downdate takes a sparse vector`() {
+        val a = arrayOf(
+            doubleArrayOf(5.0, 1.0, 0.0),
+            doubleArrayOf(1.0, 4.0, 1.0),
+            doubleArrayOf(0.0, 1.0, 3.0),
+        )
+        val l = DenseMatrix.of(a).cholesky().l
+        val x = doubleArrayOf(0.0, 0.4, 0.0)
+
+        val norm = l.choleskyDowndateInPlace(
+            SparseVector.of(size = 3, indices = intArrayOf(1), values = doubleArrayOf(0.4)),
+        )
+
+        assertEquals(0.0, norm)
+        val expected = Array(3) { i -> DoubleArray(3) { j -> a[i][j] - x[i] * x[j] } }
+        assertMatrixEquals(expected, product(l))
+    }
+
+    @Test
+    fun `downdate handles a one by one factor`() {
+        val l = DenseMatrix.of(arrayOf(doubleArrayOf(4.0))).cholesky().l
+
+        assertEquals(0.0, l.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(1.0))))
+
+        assertEquals(3.0, product(l)[0][0], 1e-12)
+    }
+
+    @Test
+    fun `downdate of a zero vector leaves the factor unchanged`() {
+        val l = DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(2.0, 0.5),
+                doubleArrayOf(0.5, 1.0),
+            ),
+        ).cholesky().l
+        val before = product(l)
+
+        assertEquals(0.0, l.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(0.0, 0.0))))
+
+        assertMatrixEquals(before, product(l))
     }
 
     @Test
