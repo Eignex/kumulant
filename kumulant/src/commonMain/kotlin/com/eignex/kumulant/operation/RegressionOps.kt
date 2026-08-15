@@ -114,7 +114,9 @@ internal class WithWeightRegressionStat<R : Result>(
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(x, y, timestampNanos, this.weight)
+        // Zero stays zero, so the library-wide no-op survives the wrapper; see
+        // com.eignex.kumulant.operation.withWeight.
+        delegate.update(x, y, timestampNanos, if (weight == 0.0) 0.0 else this.weight)
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
         WithWeightRegressionStat(delegate.create(concurrency), weight)

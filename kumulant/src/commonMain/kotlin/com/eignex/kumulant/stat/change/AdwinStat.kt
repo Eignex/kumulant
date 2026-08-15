@@ -86,6 +86,7 @@ class AdwinStat(
     private var lastUpdateRaisedAlarm: Boolean = false
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
         rows[0].addLast(Bucket(n = 1L, sum = value, sumSquares = value * value))
         totalN += 1L
         totalSum += value

@@ -61,6 +61,7 @@ class RecursiveVarianceStat(
     private val variance = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight == 0.0 || value.isNaN()) return // zero weight and NaN are both no-ops; see Stat
         val x2 = value * value
         while (true) {
             val current = variance.load()

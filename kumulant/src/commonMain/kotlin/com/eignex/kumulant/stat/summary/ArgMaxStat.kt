@@ -42,6 +42,7 @@ class ArgMaxStat(override val concurrency: Concurrency = Concurrency.None) : Ser
     private val at = mode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
         if (value > this.value.load()) {
             this.value.store(value)
             at.store(timestampNanos)

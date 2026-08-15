@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
+import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -49,9 +50,26 @@ class WeightsTest {
     }
 
     @Test
-    fun `discrete withWeight overrides caller weight`() {
+    fun `discrete withWeight overrides a positive caller weight`() {
         val stat = HyperLogLogStat(precision = 10).withWeight(1.0)
-        for (i in 1L..50L) stat.update(i, weight = 0.0)
+        for (i in 1L..50L) stat.update(i, weight = 0.25)
         assertTrue(stat.read().estimate > 30.0)
+    }
+
+    @Test
+    fun `withWeight passes a zero caller weight through instead of overriding it`() {
+        // This used to override the zero too, which broke the library-wide guarantee on Stat that a
+        // weight of 0.0 changes no state whatever the modality: a zero-weight update to a CountStat
+        // still counted. The override sets the magnitude of a real observation, and "ignore this
+        // observation" is not a magnitude.
+        val discrete = HyperLogLogStat(precision = 10).withWeight(1.0)
+        for (i in 1L..50L) discrete.update(i, weight = 0.0)
+        assertEquals(0.0, discrete.read().estimate, "a zero-weight update must not register")
+
+        val counted = CountStat()
+        counted.update(5.0, weight = 0.0)
+        assertEquals(0.0, counted.read().sum, "CountStat is SumStat.withWeight(1.0) and must not count either")
+        counted.update(5.0, weight = 1.0)
+        assertEquals(1.0, counted.read().sum, "a real observation still counts as exactly one")
     }
 }

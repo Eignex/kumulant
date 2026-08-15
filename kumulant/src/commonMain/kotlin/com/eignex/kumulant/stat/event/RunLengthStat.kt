@@ -16,6 +16,22 @@ data class RunLengthResult(
     val current: Long,
     /** Longest run observed so far. */
     val longest: Long,
+    /**
+     * Length of the run this stream *opened* with, before its first falsy value.
+     *
+     * Only [merge] needs it, and it is what makes merge correct: concatenating two streams can
+     * create a run spanning the join, whose length is the left stream's *trailing* run plus the
+     * right stream's *leading* one. Merge used to add the two trailing runs, which is a length no
+     * run in the data ever had.
+     */
+    val leading: Long = current,
+    /**
+     * False while the stream has been one unbroken run, i.e. [leading] covers all of it.
+     *
+     * Needed because concatenation only extends the leading and trailing runs through a stream that
+     * never broke; otherwise they are pinned by the falsy value that broke it.
+     */
+    val anyFalsy: Boolean = false,
 ) : Result
 
 /**
@@ -39,28 +55,56 @@ class RunLengthStat(override val concurrency: Concurrency = Concurrency.None) : 
     private val mode = concurrency.monotonicMode()
     private val current = mode.newLong(0L)
     private val longest = mode.newLong(0L)
+    private val leading = mode.newLong(0L)
+    private val anyFalsy = mode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        // Deliberately no NaN guard here, unlike the rest of the library: this stat's input is a
+        // predicate projected onto 0.0 / 1.0, not a measurement, so NaN means "not satisfied" and
+        // breaks the run. See the exception noted on Stat.
+        if (weight == 0.0) return // a zero weight is a no-op; see Stat
         if (value != 0.0 && !value.isNaN()) {
             val updated = current.addAndGet(1L)
             casMax(longest, updated)
+            // Still one unbroken run, so the opening run is everything so far.
+            if (anyFalsy.load() == 0L) leading.store(updated)
         } else {
             current.store(0L)
+            anyFalsy.store(1L)
         }
     }
 
     override fun merge(values: RunLengthResult) {
+        val leftCurrent = current.load()
+        val leftLeading = leading.load()
+        val leftBroken = anyFalsy.load() != 0L
+
         casMax(longest, values.longest)
-        casMax(longest, current.load() + values.current)
-        current.add(values.current)
+        // The run spanning the join: this stream's trailing run plus the incoming stream's leading
+        // one. This is the only place the two can combine into something longer than either.
+        casMax(longest, leftCurrent + values.leading)
+
+        // The trailing run carries through the incoming stream only if it never broke.
+        current.store(if (values.anyFalsy) values.current else leftCurrent + values.current)
+        // Symmetrically, the leading run extends into the incoming stream only if *this* one never
+        // broke.
+        if (!leftBroken) leading.store(leftLeading + values.leading)
+        if (leftBroken || values.anyFalsy) anyFalsy.store(1L)
     }
 
     override fun reset() {
         current.store(0L)
         longest.store(0L)
+        leading.store(0L)
+        anyFalsy.store(0L)
     }
 
-    override fun read(timestampNanos: Long) = RunLengthResult(current.load(), longest.load())
+    override fun read(timestampNanos: Long) = RunLengthResult(
+        current = current.load(),
+        longest = longest.load(),
+        leading = leading.load(),
+        anyFalsy = anyFalsy.load() != 0L,
+    )
 
     override fun create(concurrency: Concurrency?) = RunLengthStat(concurrency ?: this.concurrency)
 }

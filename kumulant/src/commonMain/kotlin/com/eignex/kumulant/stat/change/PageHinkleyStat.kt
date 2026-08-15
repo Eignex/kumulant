@@ -89,6 +89,7 @@ class PageHinkleyStat(
     private val maxNeg = streamMode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
         val n = count.load() + 1L
         count.store(n)
         val prevMean = mean.load()

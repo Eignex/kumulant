@@ -25,6 +25,16 @@ data class ExcursionResult(
     val maxExcursion: Double,
     /** `peak - lastValue`; how far the latest observation sits below the all-time peak. */
     val currentRecovery: Double,
+    /**
+     * False until the first [SeriesStat.update] has been recorded, mirroring
+     * [com.eignex.kumulant.stat.event.RecencyResult.hasObservation].
+     *
+     * Without it an untouched stat is indistinguishable from one that observed `0.0` at timestamp
+     * `0`, because [read] reports all zeros for both - and [merge] then folded those zeros in as
+     * real data, dragging the peak of an all-negative stream up to a value never observed. Defaults
+     * to `true` so a payload encoded before the field existed still decodes as real data.
+     */
+    val hasObservation: Boolean = true,
 ) : Result
 
 /**
@@ -59,6 +69,7 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
     private val lastValue = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
         lastValue.store(value)
         val seen = initialized.addAndGet(1L)
         if (seen == 1L) {
@@ -82,6 +93,7 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
     }
 
     override fun merge(values: ExcursionResult) = lock.guarded {
+        if (!values.hasObservation) return@guarded // nothing observed there, so nothing to fold in
         val seen = initialized.addAndGet(1L)
         if (seen == 1L) {
             peak.store(values.peak)
@@ -101,6 +113,10 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
             troughTs.store(values.troughTimestampNanos)
         }
         if (values.maxExcursion > maxExcursion.load()) maxExcursion.store(values.maxExcursion)
+        // currentRecovery is derived from lastValue, which this branch never touched, so a merged
+        // result mixed the incoming peak with the local last value. Adopt the incoming stat's last
+        // value when its peak won, so the pair stays internally consistent.
+        if (values.peak >= peak.load()) lastValue.store(values.peak - values.currentRecovery)
     }
 
     override fun reset() = lock.guarded {
@@ -115,7 +131,7 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
 
     override fun read(timestampNanos: Long) = lock.guarded {
         if (initialized.load() == 0L) {
-            ExcursionResult(0.0, 0L, 0.0, 0L, 0.0, 0.0)
+            ExcursionResult(0.0, 0L, 0.0, 0L, 0.0, 0.0, hasObservation = false)
         } else {
             ExcursionResult(
                 peak = peak.load(),

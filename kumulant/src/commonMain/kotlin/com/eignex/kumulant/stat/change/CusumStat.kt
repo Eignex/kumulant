@@ -76,6 +76,7 @@ class CusumStat(
     private val cusumNeg = streamMode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight == 0.0 || value.isNaN()) return // zero weight and NaN are both no-ops; see Stat
         val deviation = value - target
         while (true) {
             val prev = cusumPos.load()
