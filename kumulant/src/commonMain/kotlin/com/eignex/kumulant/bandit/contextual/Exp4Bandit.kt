@@ -97,8 +97,8 @@ class Exp4Bandit(
      *  with `T = horizon`; pass a static value if the horizon is unknown. */
     val eta: Double = defaultEta(nbrArms, experts.size),
     /** Exploration mix: probability mass distributed uniformly across arms before
-     *  blending in the expert mixture. Defaults to `K * eta`. */
-    val gamma: Double = (nbrArms * eta).coerceAtMost(1.0),
+     *  blending in the expert mixture. Defaults to `min(1, eta)`; see [defaultGamma]. */
+    val gamma: Double = defaultGamma(eta),
     /** Single source of randomness for the round's arm draw. */
     override val random: Random = Random.Default,
 ) : ContextualBandit,
@@ -136,11 +136,19 @@ class Exp4Bandit(
             lastAdvice[i] = xi
             wSum += weights[i]
         }
+        // Nothing to normalise by once every expert weight has underflowed to zero (or one has gone
+        // NaN): `w / wSum` would make the whole distribution NaN, which `choose` resolves to
+        // "always the last arm". Fall back to the unweighted expert mean, which still uses the
+        // advice even though the experts' relative standing has been lost.
+        val usable = wSum > 0.0 && wSum.isFinite()
         val out = DoubleArray(nbrArms)
         val uniform = gamma / nbrArms
         for (a in 0 until nbrArms) {
             var s = 0.0
-            for (i in experts.indices) s += (weights[i] / wSum) * lastAdvice[i][a]
+            for (i in experts.indices) {
+                val share = if (usable) weights[i] / wSum else 1.0 / experts.size
+                s += (if (share.isFinite()) share else 0.0) * lastAdvice[i][a]
+            }
             out[a] = (1.0 - gamma) * s + uniform
         }
         return out
@@ -193,8 +201,13 @@ class Exp4Bandit(
     private fun normalizeIfNeeded() {
         var maxW = 0.0
         for (w in weights) if (w > maxW) maxW = w
-        if (maxW > RENORM_THRESHOLD) {
+        if (maxW > RENORM_THRESHOLD || (maxW > 0.0 && maxW < RENORM_FLOOR)) {
+            // Guard both ends. Only overflow was handled, so a run of large negative rewards drove
+            // every weight to zero with no way back; rescaling by the surviving maximum preserves
+            // the experts' relative standing, which is all the mixture depends on.
             for (i in weights.indices) weights[i] /= maxW
+        } else if (maxW == 0.0) {
+            for (i in weights.indices) weights[i] = 1.0
         }
     }
 
@@ -202,10 +215,22 @@ class Exp4Bandit(
     companion object {
         private const val MIN_PROB = 1e-12
         private const val RENORM_THRESHOLD = 1e100
+        private const val RENORM_FLOOR = 1e-100
 
         /** Default learning rate from the EXP4 regret analysis: `sqrt(ln(N) / (T * K))`
          *  collapsed to a horizon-free form using `T = 1` as a starting heuristic. */
         fun defaultEta(nbrArms: Int, nbrExperts: Int): Double =
             sqrt(ln(nbrExperts.toDouble().coerceAtLeast(2.0)) / nbrArms)
+
+        /**
+         * Default exploration mix `min(1, eta)`.
+         *
+         * This used to be `min(1, K * eta)`, which with the horizon-free [defaultEta] above works
+         * out to `sqrt(K * ln N)` - at least 1.177 for any real configuration, so it clamped to
+         * exactly 1.0 and [playDistribution] became uniform, multiplying the expert mixture by
+         * `1 - gamma == 0`. `K * eta` is only the textbook rule when `eta` still carries the `1/T`
+         * horizon term. Pass `gamma = 1.0` explicitly for pure uniform sampling.
+         */
+        fun defaultGamma(eta: Double): Double = eta.coerceAtMost(1.0)
     }
 }
