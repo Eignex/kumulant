@@ -58,7 +58,18 @@ class DecayingSumStat(
     /** Wall-clock half-life of past contributions. */
     val halfLife: Duration get() = weighting.halfLife
     private val alpha = weighting.alpha
-    private val rotationThresholdNanos = weighting.halfLife.inWholeNanoseconds * ROTATION_HALF_LIVES
+
+    // Saturate rather than wrap: halfLife * 50 overflows Long above ~2135 days, and a negative
+    // threshold makes the rotation test below true for every dt, so update() would rotate the
+    // epoch, retry, find dt == 0 still above the threshold, and spin forever. A half-life that
+    // long needs no rotation at all, so Long.MAX_VALUE (never rotate) is also the right answer.
+    private val rotationThresholdNanos = weighting.halfLife.inWholeNanoseconds.let { halfLifeNanos ->
+        if (halfLifeNanos > Long.MAX_VALUE / ROTATION_HALF_LIVES) {
+            Long.MAX_VALUE
+        } else {
+            halfLifeNanos * ROTATION_HALF_LIVES
+        }
+    }
 
     private class Epoch(val landmarkNanos: Long, val accumulator: StreamDouble)
 
@@ -91,6 +102,21 @@ class DecayingSumStat(
         val dt = (timestampNanos - epoch.landmarkNanos).toDouble()
         val sum = epoch.accumulator.load() * exp(-alpha * dt)
         return DecayingSumResult(sum, timestampNanos)
+    }
+
+    /**
+     * The accumulator as stored, with its landmark, before the read-time decay is applied. Two
+     * sums sharing a weighting and an update stream share a landmark, so their ratio is the same
+     * ratio the decayed values would give - and it survives the decay factor underflowing to
+     * zero, which the decayed values do not. [DecayingMeanStat] needs that to keep reporting a
+     * mean once the shared factor has flushed both of its sums to `0.0`.
+     */
+    internal class Undecayed(val landmarkNanos: Long, val sum: Double)
+
+    /** Single-load snapshot of the current epoch; see [Undecayed]. */
+    internal fun undecayed(): Undecayed {
+        val epoch = epochRef.load()
+        return Undecayed(epoch.landmarkNanos, epoch.accumulator.load())
     }
 
     override fun merge(values: DecayingSumResult) {

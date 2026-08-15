@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.math.exp
 import kotlin.time.Duration
 
 /** Snapshot of an exponentially time-decayed weighted mean at [timestampNanos]. */
@@ -51,6 +52,7 @@ class DecayingMeanStat(
     /** Wall-clock half-life of past contributions. */
     val halfLife: Duration get() = weighting.halfLife
 
+    private val alpha = weighting.alpha
     private val sumX = DecayingSumStat(weighting, concurrency)
     private val sumW = DecayingSumStat(weighting, concurrency)
 
@@ -64,10 +66,32 @@ class DecayingMeanStat(
         val sumW = sumW.read(timestampNanos).sum
         val mean = when {
             sumW > 0.0 -> sumX / sumW
-            sumW == 0.0 -> 0.0
-            else -> Double.NaN
+            sumW < 0.0 -> Double.NaN
+            else -> undecayedRatio()
         }
         return DecayingMeanResult(mean, sumW, timestampNanos)
+    }
+
+    /**
+     * The mean when the decayed denominator has reached zero. Past roughly 1075 half-lives the
+     * shared `exp(-alpha*dt)` underflows and flushes *both* sums to `0.0`, so the ratio the class
+     * is built on is no longer recoverable from them - but it is still there in the undecayed
+     * accumulators, which carry the same factor above and below the line. Reporting the last known
+     * mean beats reporting zero, which is indistinguishable from a genuine mean of zero. The
+     * reported `totalWeights` stays at `0.0` either way, so callers can still see the evidence has
+     * decayed away.
+     */
+    private fun undecayedRatio(): Double {
+        val rawX = sumX.undecayed()
+        val rawW = sumW.undecayed()
+        if (rawW.sum <= 0.0) return 0.0
+        // The two sums are separate instances, so they take their landmarks microseconds apart and
+        // rotate independently. Discounting both to a common time leaves only the landmark
+        // *difference* in the exponent, which is small - unlike the elapsed time, which is what
+        // underflowed in the first place.
+        val offset = exp(-alpha * (rawW.landmarkNanos - rawX.landmarkNanos).toDouble())
+        val ratio = (rawX.sum / rawW.sum) * offset
+        return if (ratio.isFinite()) ratio else 0.0
     }
 
     override fun merge(values: DecayingMeanResult) {
