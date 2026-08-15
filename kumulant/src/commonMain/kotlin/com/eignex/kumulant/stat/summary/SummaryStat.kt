@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.HasMinMax
 import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.casMin
 import com.eignex.kumulant.stream.guarded
@@ -70,11 +71,14 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
     private val maxCell = monotonic.newDouble(Double.NEGATIVE_INFINITY)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        // The guard has to come before the extrema, not just before the Welford body: these two
+        // used to run unconditionally, so a zero-weight observation still moved min and max.
+        if (weight == 0.0 || value.isNaN()) return
         casMin(minCell, value)
         casMax(maxCell, value)
         lock.guarded {
-            if (weight == 0.0) return@guarded
             val priorW = totalWeights.load()
+            requireLiveWeight(priorW, weight)
             val nextW = totalWeights.addAndGet(weight)
             val delta = value - mean.load()
             val r = delta * (weight / nextW)
@@ -84,10 +88,13 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
     }
 
     override fun merge(values: SummaryResult) {
+        // read() sanitises the empty sentinels to 0.0, so an untouched shard reports min = max = 0.0
+        // and folding those in used to drag this stat's min down to a value never observed - and, on
+        // an all-negative stream, its max up. Skip the whole merge when there is nothing to merge.
+        if (values.totalWeights <= 0.0) return
         casMin(minCell, values.min)
         casMax(maxCell, values.max)
         lock.guarded {
-            if (values.totalWeights <= 0.0) return@guarded
             val w1 = totalWeights.load()
             val w2 = values.totalWeights
             val nextW = totalWeights.addAndGet(w2)

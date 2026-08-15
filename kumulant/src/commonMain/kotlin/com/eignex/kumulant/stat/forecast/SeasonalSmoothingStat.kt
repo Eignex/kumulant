@@ -156,6 +156,7 @@ class SeasonalSmoothingStat(
     private val slot = streamMode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
         val seen = initialized.addAndGet(1L)
         val currentSlot = (slot.load() % period).toInt()
         if (seen == 1L) {

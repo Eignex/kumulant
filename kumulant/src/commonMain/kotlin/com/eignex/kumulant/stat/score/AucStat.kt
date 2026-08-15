@@ -46,14 +46,19 @@ data class AucResult(
         }
     }
 
+    // Double.equals, not ==: `auc` is NaN for an empty or freshly reset stat, and IEEE == makes NaN
+    // unequal to itself, so such a result did not equal itself and setOf(it).contains(it) was false
+    // - while hashCode below uses auc.hashCode(), which *is* NaN-stable, so the two disagreed. The
+    // generated data-class equals would have used Double.equals; this one is hand-rolled only to get
+    // contentEquals on the arrays.
     override fun equals(other: Any?): Boolean = other is AucResult &&
-        auc == other.auc &&
-        totalPositives == other.totalPositives &&
-        totalNegatives == other.totalNegatives &&
+        auc.equals(other.auc) &&
+        totalPositives.equals(other.totalPositives) &&
+        totalNegatives.equals(other.totalNegatives) &&
         positives.contentEquals(other.positives) &&
         negatives.contentEquals(other.negatives) &&
-        lowerBound == other.lowerBound &&
-        upperBound == other.upperBound
+        lowerBound.equals(other.lowerBound) &&
+        upperBound.equals(other.upperBound)
 
     override fun hashCode(): Int {
         var h = 1

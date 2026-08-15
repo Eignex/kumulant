@@ -47,6 +47,7 @@ class RecencyStat(override val concurrency: Concurrency = Concurrency.None) : Se
     private val seen = streamMode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight == 0.0 || value.isNaN()) return // zero weight and NaN are both no-ops; see Stat
         casMax(lastObserved, timestampNanos)
         seen.store(1L)
     }

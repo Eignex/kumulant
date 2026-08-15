@@ -76,6 +76,7 @@ class SojournStat(
     }
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0) return@guarded // a zero weight is a no-op; see Stat
         val newIdx = indexOfState(value)
         val curIdx = currentStateIndex.load()
         if (curIdx == NO_STATE) {

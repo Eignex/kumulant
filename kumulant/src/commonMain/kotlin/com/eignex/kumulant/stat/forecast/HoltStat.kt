@@ -108,6 +108,7 @@ class HoltStat(
     private val trend = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
         if (initialized.addAndGet(1L) == 1L) {
             level.store(value)
             trend.store(0.0)

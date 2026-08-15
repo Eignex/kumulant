@@ -53,6 +53,7 @@ class CrossingStat(
     private val downs = additive.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight == 0.0 || value.isNaN()) return // zero weight and NaN are both no-ops; see Stat
         val side = if (value >= level) 1L else 0L
         if (initialized.addAndGet(1L) == 1L) {
             lastSide.store(side)

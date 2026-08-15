@@ -33,6 +33,21 @@ import com.eignex.kumulant.stream.currentTimeNanos
  *   own KDoc says which applies; there is deliberately no library-wide answer,
  *   because subtraction is well defined for some statistics and not others.
  *
+ * A third guarantee covers the observation rather than its weight:
+ *
+ * - A `NaN` observation is dropped, exactly like a zero weight: no state changes.
+ *   `NaN` is absence of a measurement, not a measurement, and it has no position
+ *   in any ordering, so every alternative is worse. Absorbing it silently moves
+ *   extrema and counters (`NaN >= level` is false, so it would land below every
+ *   threshold), and throwing turns a gap in the input into an outage in the
+ *   caller. This applies to the value only; `NaN` in a *weight* is the caller
+ *   asking for nonsense and is not guarded.
+ *
+ * One statistic is deliberately exempt from the `NaN` rule:
+ * [RunLengthStat][com.eignex.kumulant.stat.event.RunLengthStat] takes a predicate
+ * projected onto `0.0` / `1.0` rather than a measurement, so for it `NaN` reads as
+ * "not satisfied" and breaks the run rather than being ignored.
+ *
  * Checks beyond that are the caller's responsibility. Stats validate only where
  * the alternative is corrupted state, not to police inputs.
  *
@@ -141,7 +156,8 @@ interface Stat<R : Result> {
  * sketches, the rate family, the decay family) implement this shape.
  *
  * See [Stat] for the per-observation `weight` contract, which is library-wide:
- * weights must be non-negative, and zero or negative drops the observation.
+ * zero is a no-op, and a negative weight downdates or throws depending on the
+ * statistic.
  */
 interface SeriesStat<R : Result> : Stat<R> {
     /** Record an observation with the given [weight], stamped at the current time. */
