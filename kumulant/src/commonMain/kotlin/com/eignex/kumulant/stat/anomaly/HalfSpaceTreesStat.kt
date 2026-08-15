@@ -168,8 +168,14 @@ class HalfSpaceTreesStat(
             "featureRanges must have length $featureSize; got ${featureRanges.size}"
         }
         require(numTrees > 0) { "numTrees must be positive" }
-        require(height > 0) { "height must be positive" }
+        // Bound the height, not just its sign: the node counts below are `1 shl height` in Int, so
+        // 31 wrapped negative (OutOfMemoryError in the constructor) and 32 wrapped to 1, leaving
+        // numInternal == 0 and an ArrayIndexOutOfBounds on the first update.
+        require(height in 1..MAX_HEIGHT) { "height must be in 1..$MAX_HEIGHT, got $height" }
         require(windowSize > 0) { "windowSize must be positive" }
+        require(numTrees.toLong() * (1L shl height) <= Int.MAX_VALUE) {
+            "numTrees * 2^height must fit in an Int; $numTrees * 2^$height overflows"
+        }
     }
 
     private val numInternal: Int = (1 shl height) - 1
@@ -253,9 +259,14 @@ class HalfSpaceTreesStat(
     )
 
     /**
-     * Merge folds another snapshot's reference-window masses into this stat's
-     * latest window. Tree structures must match exactly; if they don't (e.g.
-     * different seeds), the merge throws.
+     * Merge folds another snapshot's reference-window masses into both this stat's reference and
+     * latest windows. Tree structures must match exactly; if they don't (e.g. different seeds), the
+     * merge throws.
+     *
+     * The reference window is what [score] reads, so folding into the latest window alone left a
+     * merged model scoring every input maximally anomalous until `windowSize` fresh observations
+     * rotated the window - while reporting the source's `totalWeights`, so it looked trained. The
+     * incoming masses *are* a reference profile, so they belong in the reference window too.
      */
     override fun merge(values: HalfSpaceTreesResult) {
         require(values.numTrees == numTrees && values.height == height && values.featureSize == featureSize) {
@@ -264,7 +275,13 @@ class HalfSpaceTreesStat(
         require(values.featureIndices.contentEquals(featureIndices) && values.thresholds.contentEquals(thresholds)) {
             "merge: tree structure must match (different seeds will produce different trees)"
         }
-        for (i in 0 until numTrees * numLeaves) latestMass.add(i, values.referenceMass[i])
+        require(values.referenceMass.size == numTrees * numLeaves) {
+            "merge: expected ${numTrees * numLeaves} masses, got ${values.referenceMass.size}"
+        }
+        for (i in 0 until numTrees * numLeaves) {
+            referenceMass.add(i, values.referenceMass[i])
+            latestMass.add(i, values.referenceMass[i])
+        }
         totalWeightsCell.add(values.totalWeights)
     }
 
@@ -286,4 +303,9 @@ class HalfSpaceTreesStat(
         randomSeed = randomSeed,
         concurrency = concurrency ?: this.concurrency,
     )
+
+    private companion object {
+        /** 2^30 leaves is already far past anything useful and keeps `1 shl height` positive. */
+        const val MAX_HEIGHT = 30
+    }
 }

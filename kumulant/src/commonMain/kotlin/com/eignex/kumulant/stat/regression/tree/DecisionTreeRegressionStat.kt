@@ -76,6 +76,9 @@ class DecisionTreeRegressionStat(
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        // A zero-weight call still advanced the leaves' observationsSinceLastCheck and shifted the
+        // split-audit cadence; see Stat for the contract.
+        if (weight == 0.0 || y.isNaN()) return
         tree.update(x, y, weight)
     }
 

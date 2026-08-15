@@ -78,6 +78,10 @@ class RandomForestRegressionStat(
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        // Return before drawing from baggingRng: a zero-weight call used to consume one draw per
+        // tree, desynchronising every later bagging draw and changing the forest's predictions. The
+        // classifier already guards this.
+        if (weight == 0.0 || y.isNaN()) return
         if (!bagging) {
             for (t in trees) t.update(x, y, weight)
             return
