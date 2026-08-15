@@ -1,5 +1,5 @@
-// math convention: single-letter matrices L, M, etc.
-@file:Suppress("VariableNaming", "FunctionParameterNaming", "PropertyName")
+// math convention: the Cholesky factor is L, as everywhere it is written down.
+@file:Suppress("PropertyName")
 
 package com.eignex.kumulant.math
 

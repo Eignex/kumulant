@@ -215,10 +215,10 @@ class BayesianRegressionStat(
      *
      * For a non-zero prior mean the `H_prior * mu_prior` correction is subtracted
      * from the information vector as well, otherwise the merged posterior would
-     * count the prior shift twice. When `H_new` drifts outside SPD the Cholesky
-     * helper's diagonal clamp catches it and returns a regularised result rather
-     * than NaNs. Bias is merged the same way, treating the intercept as a scalar
-     * Gaussian with zero prior mean.
+     * count the prior shift twice. When `H_new` drifts outside SPD,
+     * `CholeskyPolicy.Regularize` clamps the offending pivot and factors a nearby
+     * matrix rather than returning NaNs. Bias is merged the same way, treating
+     * the intercept as a scalar Gaussian with zero prior mean.
      */
     override fun merge(values: CovarianceRegressionResult) {
         require(values.featureSize == featureSize) {
