@@ -27,6 +27,23 @@ class BayesianRegressionStatTest {
         }
     }
 
+    // The factor is downdated alongside the covariance rather than refactorized, so the two can
+    // only be trusted to agree if every downdate lands. L * LT has to stay equal to S. The
+    // tolerance is relative because the covariance entries span many orders of magnitude across
+    // these tests.
+    private fun assertFactorReproducesCovariance(r: CovarianceRegressionResult, relativeTolerance: Double = 1e-9) {
+        val n = r.featureSize
+        for (i in 0 until n) {
+            for (j in 0 until n) {
+                var s = 0.0
+                for (k in 0..minOf(i, j)) s += r.covarianceL[i, k] * r.covarianceL[j, k]
+                val expected = r.covariance[i, j]
+                val tol = relativeTolerance * maxOf(1.0, abs(expected))
+                assertEquals(expected, s, tol, "L * LT disagrees with the covariance at ($i, $j)")
+            }
+        }
+    }
+
     @Test
     fun `bayesian should recover ground truth and shrink covariance`() {
         val stat = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
@@ -49,19 +66,10 @@ class BayesianRegressionStatTest {
 
     @Test
     fun `the tracked factor keeps reproducing the covariance across updates`() {
-        // The factor is downdated alongside the covariance rather than refactorized, so the two
-        // can only be trusted to agree if every downdate lands. L * LT has to stay equal to S.
         val stat = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         fitLine(stat, doubleArrayOf(0.8, 1.2, -0.5), intercept = 0.3, n = 500)
-        val r = stat.read()
 
-        for (i in 0 until 3) {
-            for (j in 0 until 3) {
-                var s = 0.0
-                for (k in 0..minOf(i, j)) s += r.covarianceL[i, k] * r.covarianceL[j, k]
-                assertEquals(r.covariance[i, j], s, 1e-9, "L * LT disagrees with the covariance at ($i, $j)")
-            }
-        }
+        assertFactorReproducesCovariance(stat.read())
     }
 
     @Test
@@ -73,14 +81,20 @@ class BayesianRegressionStatTest {
 
         stat.update(doubleArrayOf(1.0, 1.0), 1.0, 1e18)
 
-        val r = stat.read()
-        for (i in 0 until 2) {
-            for (j in 0 until 2) {
-                var s = 0.0
-                for (k in 0..minOf(i, j)) s += r.covarianceL[i, k] * r.covarianceL[j, k]
-                assertEquals(r.covariance[i, j], s, 1e-9, "L * LT disagrees with the covariance at ($i, $j)")
-            }
-        }
+        assertFactorReproducesCovariance(stat.read())
+    }
+
+    @Test
+    fun `the factor survives a saturating update that the diagonal bump cannot lift off the cone`() {
+        // A prior this wide puts the repair's 1e-5 diagonal bump below the covariance's own ULP,
+        // so refactorizing reproduces the same factor and the retried downdate saturates at 1.0
+        // again. That is the case the shrink step exists for: it scales z down until the downdate
+        // lands, and the covariance must be downdated by the same scaled z.
+        val stat = BayesianRegressionStat(featureSize = 2, priorVariance = 1e12)
+
+        stat.update(doubleArrayOf(1.0, 1.0), 1.0, 1e18)
+
+        assertFactorReproducesCovariance(stat.read())
     }
 
     @Test
