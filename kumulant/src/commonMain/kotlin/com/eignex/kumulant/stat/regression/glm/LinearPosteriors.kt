@@ -139,7 +139,7 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         exploration: Double,
     ): Double {
         val mean = snapshot.predict(x)
-        val sigmaX = matVec(snapshot.covariance, x)
+        val sigmaX = snapshot.covariance.matVec(x)
         val variance = x dot sigmaX
         return mean + sqrt(exploration * variance) * rng.nextNormal()
     }
@@ -166,7 +166,7 @@ data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
         exploration: Double,
     ): Double {
         val mean = snapshot.predict(x)
-        val sigmaX = matVec(snapshot.covariance, x)
+        val sigmaX = snapshot.covariance.matVec(x)
         val variance = x dot sigmaX
         return mean + exploration * sqrt(variance)
     }
