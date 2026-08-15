@@ -109,6 +109,11 @@ class RouletteWheelBandit(
     override fun evaluate(armIndex: Int): Double = weights[armIndex]
 
     override fun update(armIndex: Int, value: Double, weight: Double) {
+        require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
+        // A zero weight contributes nothing to the score, but the counter and the segment clock
+        // used to advance anyway, so it diluted the arm's average toward zero and could trip a
+        // rebalance. Zero weight means "ignore this observation" library-wide.
+        if (weight == 0.0) return
         accumulatedScores[armIndex] += value * weight
         callCounts[armIndex]++
         picksThisSegment++

@@ -213,8 +213,13 @@ class UCB1Normal(
     override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
         val nj = snapshot.totalWeights
         if (nbrArms <= 1 || nj < 8 * ln(nbrArms.toDouble())) return Double.POSITIVE_INFINITY
-        val mos = snapshot.meanOfSquares()
-        val p1 = (mos - nj * snapshot.mean * snapshot.mean) / (nj - 1)
+        // Auer et al. subtract `n * mean^2` from the SUM of squares, and meanOfSquares() is the
+        // MEAN of squares, so this has to scale up by `nj` first. Subtracting `n * mean^2` from
+        // `E[x^2]` made p1 negative for every arm with a non-zero mean, so the sqrt below was NaN
+        // and `choose` - which seeds its best score at -Infinity, and `NaN > -Inf` is false -
+        // silently degenerated to always picking arm 0.
+        val sumOfSquares = snapshot.meanOfSquares() * nj
+        val p1 = ((sumOfSquares - nj * snapshot.mean * snapshot.mean) / (nj - 1)).coerceAtLeast(0.0)
         return snapshot.mean + alpha * sqrt(16 * p1 * (ln(nbrArms - 1.0) / nj))
     }
     override fun addArm(snapshot: MomentsResult) {

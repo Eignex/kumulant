@@ -63,7 +63,7 @@ class Exp3Bandit(
     /** Learning rate on per-arm gain updates. */
     val eta: Double = defaultEta(nbrArms),
     /** Exploration mix: probability mass distributed uniformly across arms. */
-    val gamma: Double = (nbrArms * eta).coerceAtMost(1.0),
+    val gamma: Double = defaultGamma(eta),
     /** Single source of randomness. */
     override val random: Random = Random.Default,
 ) : UnivariateBandit,
@@ -93,9 +93,17 @@ class Exp3Bandit(
     fun playDistribution(): DoubleArray {
         var sumW = 0.0
         for (w in weights) sumW += w
+        // A NaN reward, a run of large negative rewards that underflows every weight to zero, or a
+        // merge of all-zero arm results leaves nothing to normalise by, and `w / sumW` would make
+        // the whole distribution NaN - which `choose` then resolves to "always the last arm".
+        // Uniform is the honest distribution when no arm has usable evidence.
+        if (!(sumW > 0.0) || !sumW.isFinite()) return DoubleArray(nbrArms) { 1.0 / nbrArms }
         val out = DoubleArray(nbrArms)
         val uniform = gamma / nbrArms
-        for (a in 0 until nbrArms) out[a] = (1.0 - gamma) * (weights[a] / sumW) + uniform
+        for (a in 0 until nbrArms) {
+            val w = weights[a]
+            out[a] = (1.0 - gamma) * (if (w.isFinite()) w / sumW else 0.0) + uniform
+        }
         return out
     }
 
@@ -142,15 +150,41 @@ class Exp3Bandit(
     private fun renormaliseIfNeeded() {
         var maxW = 0.0
         for (w in weights) if (w > maxW) maxW = w
-        if (maxW > RENORM_THRESHOLD) for (i in weights.indices) weights[i] /= maxW
+        if (maxW > RENORM_THRESHOLD) {
+            for (i in weights.indices) weights[i] /= maxW
+            return
+        }
+        // The overflow side was guarded but not the underflow side: a run of large negative rewards
+        // drives every exp(eta*gain) to zero, and once the whole array is zero no later reward can
+        // ever lift it. Rescaling by the surviving maximum keeps the arms' *relative* standing,
+        // which is all the distribution depends on.
+        if (maxW > 0.0 && maxW < RENORM_FLOOR) {
+            for (i in weights.indices) weights[i] /= maxW
+        } else if (maxW == 0.0) {
+            for (i in weights.indices) weights[i] = 1.0
+        }
     }
 
     /** EXP3 tuning defaults from Auer et al. */
     companion object {
         private const val MIN_PROB = 1e-12
         private const val RENORM_THRESHOLD = 1e100
+        private const val RENORM_FLOOR = 1e-100
 
         /** Horizon-free default `eta = sqrt(ln(K) / K)`. */
         fun defaultEta(nbrArms: Int): Double = sqrt(ln(nbrArms.toDouble().coerceAtLeast(2.0)) / nbrArms)
+
+        /**
+         * Horizon-free default exploration mix `min(1, eta)`.
+         *
+         * This used to be `min(1, K * eta)`, which is the textbook mixing rule - but only when
+         * `eta` is the horizon-scaled `sqrt(ln K / (K T))`. Against the horizon-free `eta` above,
+         * `K * eta` is `sqrt(K * ln K)`, which is at least 1.177 for every `K >= 2`, so it clamped
+         * to exactly 1.0 at every arm count and [playDistribution] collapsed to uniform: the
+         * learned weights were multiplied by `1 - gamma == 0`. Using `eta` itself keeps the same
+         * "explore less as evidence per arm grows" shape and tops out at 0.59 for two arms, so it
+         * cannot saturate. Pass `gamma = 1.0` explicitly for pure uniform sampling.
+         */
+        fun defaultGamma(eta: Double): Double = eta.coerceAtMost(1.0)
     }
 }

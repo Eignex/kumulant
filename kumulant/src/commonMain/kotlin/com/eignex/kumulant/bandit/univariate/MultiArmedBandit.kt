@@ -79,6 +79,9 @@ class MultiArmedBandit<R : Result>(
     override fun evaluate(armIndex: Int): Double = policy.evaluate(arms[armIndex].read(0L), step.load(), random)
 
     override fun update(armIndex: Int, value: Double, weight: Double) {
+        // Every sibling bandit validates this; without it a bad index surfaced as a raw
+        // ArrayIndexOutOfBoundsException rather than the documented message.
+        require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
         policy.update(arms[armIndex], value, weight)
     }
 
