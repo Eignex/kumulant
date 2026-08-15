@@ -116,8 +116,15 @@ data class CovarianceRegressionResult(
     override val sse: Double = 0.0,
 ) : LinearRegressionResult {
     init {
-        require(covariance.rows == weights.size && covarianceL.rows == weights.size) {
-            "covariance matrices must be ${weights.size}x${weights.size}"
+        // Check cols too, not just rows: the message promises NxN and every consumer indexes both
+        // dimensions, so a non-square matrix used to slip through and fail later at the read site.
+        require(
+            covariance.rows == weights.size && covariance.cols == weights.size &&
+                covarianceL.rows == weights.size && covarianceL.cols == weights.size,
+        ) {
+            "covariance matrices must be ${weights.size}x${weights.size}; got " +
+                "covariance ${covariance.rows}x${covariance.cols} and " +
+                "covarianceL ${covarianceL.rows}x${covarianceL.cols}"
         }
     }
 }
