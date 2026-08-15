@@ -39,8 +39,7 @@ data class HyperLogLogResult(
      * payload encoded before the field existed still decodes.
      */
     val hasher: HasherRef = HasherRef.SplitMix64,
-) :
-    HasObservationCount {
+) : HasObservationCount {
 
     override val totalWeights: Double get() = totalSeen.toDouble()
     override fun equals(other: Any?): Boolean = other is HyperLogLogResult &&

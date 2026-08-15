@@ -414,8 +414,16 @@ data class In(
     /** Allowed values; exact equality. */
     val values: List<Double>,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        of.eval(x, y, v, primary) in values
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean {
+        // `in values` is List<Double>.contains, which boxes and uses Double.equals: total-order
+        // semantics where NaN == NaN and 0.0 != -0.0. Eq and Switch compare primitives with IEEE ==,
+        // so the three exact-equality selectors disagreed - and In(X, listOf(NaN)), meant to be
+        // unsatisfiable, admitted every NaN. This node exists to flatten Eq chains, so it has to
+        // agree with Eq.
+        val value = of.eval(x, y, v, primary)
+        for (candidate in values) if (value == candidate) return true
+        return false
+    }
 }
 
 /**

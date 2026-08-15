@@ -164,7 +164,7 @@ class CountMinSketchStat(
             "Cannot merge CountMinSketchStat hashed with ${values.hasher} into one hashed with $hasherRef"
         }
         require(values.counters.size == counterCount) {
-            "Cannot merge CountMinSketchStat: expected ${counterCount} counters, got ${values.counters.size}"
+            "Cannot merge CountMinSketchStat: expected $counterCount counters, got ${values.counters.size}"
         }
         for (i in 0 until counterCount) {
             val incoming = values.counters[i]

@@ -22,7 +22,14 @@ internal fun <R : Result> SeriesStat<R>.windowed(
     duration: Duration,
     slices: Int = 10,
     concurrency: Concurrency = Concurrency.None,
-): SeriesStat<R> = WindowedSeriesStat(duration, slices, this, concurrency)
+): SeriesStat<R> = if (this is BandSeriesStat<*>) {
+    // A band cannot be merged, and windowedRead merges, so window the band's inner stat instead and
+    // re-apply the band on top. See BandSeriesStat.windowedInside for why that is the same thing.
+    @Suppress("UNCHECKED_CAST")
+    windowedInside(duration, slices, concurrency) as SeriesStat<R>
+} else {
+    WindowedSeriesStat(duration, slices, this, concurrency)
+}
 
 /** Paired-stat counterpart of [SeriesStat.windowed]. */
 internal fun <R : Result> PairedStat<R>.windowed(

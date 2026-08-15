@@ -135,6 +135,7 @@ public final class com/eignex/kumulant/bandit/contextual/Exp4Bandit : com/eignex
 
 public final class com/eignex/kumulant/bandit/contextual/Exp4Bandit$Companion {
 	public final fun defaultEta (II)D
+	public final fun defaultGamma (D)D
 }
 
 public abstract interface class com/eignex/kumulant/bandit/contextual/Exp4Expert {
@@ -859,6 +860,7 @@ public final class com/eignex/kumulant/bandit/univariate/Exp3Bandit : com/eignex
 
 public final class com/eignex/kumulant/bandit/univariate/Exp3Bandit$Companion {
 	public final fun defaultEta (I)D
+	public final fun defaultGamma (D)D
 }
 
 public final class com/eignex/kumulant/bandit/univariate/Exp3Spec : com/eignex/kumulant/bandit/univariate/UnivariateBanditSpec {
@@ -5169,15 +5171,18 @@ public final class com/eignex/kumulant/stat/calibration/ReliabilityStat : com/ei
 
 public final class com/eignex/kumulant/stat/cardinality/HyperLogLogResult : com/eignex/kumulant/core/HasObservationCount {
 	public static final field Companion Lcom/eignex/kumulant/stat/cardinality/HyperLogLogResult$Companion;
-	public fun <init> (DI[IJ)V
+	public synthetic fun <init> (DI[IJLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (DI[IJLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()D
 	public final fun component2 ()I
 	public final fun component3 ()[I
 	public final fun component4 ()J
-	public final fun copy (DI[IJ)Lcom/eignex/kumulant/stat/cardinality/HyperLogLogResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/cardinality/HyperLogLogResult;DI[IJILjava/lang/Object;)Lcom/eignex/kumulant/stat/cardinality/HyperLogLogResult;
+	public final fun component5-W9PbAR8 ()Ljava/lang/String;
+	public final fun copy-sQj_gg8 (DI[IJLjava/lang/String;)Lcom/eignex/kumulant/stat/cardinality/HyperLogLogResult;
+	public static synthetic fun copy-sQj_gg8$default (Lcom/eignex/kumulant/stat/cardinality/HyperLogLogResult;DI[IJLjava/lang/String;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/cardinality/HyperLogLogResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getEstimate ()D
+	public final fun getHasher-W9PbAR8 ()Ljava/lang/String;
 	public final fun getPrecision ()I
 	public final fun getRegisters ()[I
 	public final fun getTotalSeen ()J
@@ -5223,17 +5228,20 @@ public final class com/eignex/kumulant/stat/cardinality/HyperLogLogStat : com/ei
 
 public final class com/eignex/kumulant/stat/cardinality/LinearCountingResult : com/eignex/kumulant/core/HasObservationCount {
 	public static final field Companion Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult$Companion;
-	public fun <init> (DIJ[JJ)V
+	public synthetic fun <init> (DIJ[JJLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (DIJ[JJLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()D
 	public final fun component2 ()I
 	public final fun component3 ()J
 	public final fun component4 ()[J
 	public final fun component5 ()J
-	public final fun copy (DIJ[JJ)Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;DIJ[JJILjava/lang/Object;)Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;
+	public final fun component6-W9PbAR8 ()Ljava/lang/String;
+	public final fun copy-_HhiAPQ (DIJ[JJLjava/lang/String;)Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;
+	public static synthetic fun copy-_HhiAPQ$default (Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;DIJ[JJLjava/lang/String;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBits ()I
 	public final fun getEstimate ()D
+	public final fun getHasher-W9PbAR8 ()Ljava/lang/String;
 	public final fun getTotalSeen ()J
 	public fun getTotalWeights ()D
 	public final fun getUnsetBits ()J
@@ -5731,17 +5739,20 @@ public final class com/eignex/kumulant/stat/event/CrossingStat : com/eignex/kumu
 
 public final class com/eignex/kumulant/stat/event/ExcursionResult : com/eignex/kumulant/core/Result {
 	public static final field Companion Lcom/eignex/kumulant/stat/event/ExcursionResult$Companion;
-	public fun <init> (DJDJDD)V
+	public fun <init> (DJDJDDZ)V
+	public synthetic fun <init> (DJDJDDZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()D
 	public final fun component2 ()J
 	public final fun component3 ()D
 	public final fun component4 ()J
 	public final fun component5 ()D
 	public final fun component6 ()D
-	public final fun copy (DJDJDD)Lcom/eignex/kumulant/stat/event/ExcursionResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/event/ExcursionResult;DJDJDDILjava/lang/Object;)Lcom/eignex/kumulant/stat/event/ExcursionResult;
+	public final fun component7 ()Z
+	public final fun copy (DJDJDDZ)Lcom/eignex/kumulant/stat/event/ExcursionResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/event/ExcursionResult;DJDJDDZILjava/lang/Object;)Lcom/eignex/kumulant/stat/event/ExcursionResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCurrentRecovery ()D
+	public final fun getHasObservation ()Z
 	public final fun getMaxExcursion ()D
 	public final fun getPeak ()D
 	public final fun getPeakTimestampNanos ()J
@@ -5834,13 +5845,18 @@ public final class com/eignex/kumulant/stat/event/RecencyStat : com/eignex/kumul
 
 public final class com/eignex/kumulant/stat/event/RunLengthResult : com/eignex/kumulant/core/Result {
 	public static final field Companion Lcom/eignex/kumulant/stat/event/RunLengthResult$Companion;
-	public fun <init> (JJ)V
+	public fun <init> (JJJZ)V
+	public synthetic fun <init> (JJJZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()J
 	public final fun component2 ()J
-	public final fun copy (JJ)Lcom/eignex/kumulant/stat/event/RunLengthResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/event/RunLengthResult;JJILjava/lang/Object;)Lcom/eignex/kumulant/stat/event/RunLengthResult;
+	public final fun component3 ()J
+	public final fun component4 ()Z
+	public final fun copy (JJJZ)Lcom/eignex/kumulant/stat/event/RunLengthResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/event/RunLengthResult;JJJZILjava/lang/Object;)Lcom/eignex/kumulant/stat/event/RunLengthResult;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAnyFalsy ()Z
 	public final fun getCurrent ()J
+	public final fun getLeading ()J
 	public final fun getLongest ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -8680,14 +8696,17 @@ public final class com/eignex/kumulant/stat/sketch/HeavyHittersResult$Companion 
 
 public final class com/eignex/kumulant/stat/sketch/MinHashResult : com/eignex/kumulant/core/HasObservationCount {
 	public static final field Companion Lcom/eignex/kumulant/stat/sketch/MinHashResult$Companion;
-	public fun <init> (IJ[JJ)V
+	public synthetic fun <init> (IJ[JJLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (IJ[JJLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
 	public final fun component2 ()J
 	public final fun component3 ()[J
 	public final fun component4 ()J
-	public final fun copy (IJ[JJ)Lcom/eignex/kumulant/stat/sketch/MinHashResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/sketch/MinHashResult;IJ[JJILjava/lang/Object;)Lcom/eignex/kumulant/stat/sketch/MinHashResult;
+	public final fun component5-W9PbAR8 ()Ljava/lang/String;
+	public final fun copy-sQj_gg8 (IJ[JJLjava/lang/String;)Lcom/eignex/kumulant/stat/sketch/MinHashResult;
+	public static synthetic fun copy-sQj_gg8$default (Lcom/eignex/kumulant/stat/sketch/MinHashResult;IJ[JJLjava/lang/String;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/sketch/MinHashResult;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHasher-W9PbAR8 ()Ljava/lang/String;
 	public final fun getNumHashes ()I
 	public final fun getSeed ()J
 	public final fun getSignatures ()[J
