@@ -107,7 +107,13 @@ class AdwinStat(
             val b2 = row.removeFirst()
             val merged = Bucket(n = b1.n + b2.n, sum = b1.sum + b2.sum, sumSquares = b1.sumSquares + b2.sumSquares)
             if (k + 1 >= rows.size) rows.add(ArrayDeque())
-            rows[k + 1].addFirst(merged)
+            // addLast, not addFirst: `merged` came from the two OLDEST buckets of row k, and row
+            // k + 1 holds buckets older still, so within that row the merged one is the newest and
+            // belongs at the back. addFirst reversed every row and left higher-k rows holding newer
+            // data than lower-k ones, so bucketsOldestToNewest() returned a scrambled order, the cut
+            // candidates were not temporal prefixes, and dropOldest() discarded recent data while
+            // keeping stale data - the window stopped being a suffix of the stream.
+            rows[k + 1].addLast(merged)
             k++
         }
     }
