@@ -17,8 +17,11 @@ data class RateResult(val startTimestampNanos: Long, val totalValue: Double, val
     HasRate {
     override val rate: Double
         get() {
-            val durationSeconds = (timestampNanos - startTimestampNanos) / 1e9
-            if (durationSeconds <= 0.0) return 0.0
+            // Subtract in Double, not Long: a large-magnitude negative start against a positive read
+            // timestamp overflows the Long subtraction, and the guard below then read the wrapped
+            // value as a non-positive duration and silently returned 0.0.
+            val durationSeconds = (timestampNanos.toDouble() - startTimestampNanos.toDouble()) / 1e9
+            if (!(durationSeconds > 0.0)) return 0.0
             return totalValue / durationSeconds
         }
 }

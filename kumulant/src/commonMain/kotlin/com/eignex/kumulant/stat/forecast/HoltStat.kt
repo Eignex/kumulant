@@ -9,6 +9,7 @@ import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.math.pow
 
 /**
  * Snapshot from a [HoltStat]: the current level and trend plus the damping factor.
@@ -34,13 +35,9 @@ data class HoltResult(
         require(steps >= 0) { "forecast steps must be >= 0, got $steps" }
         if (steps == 0) return level
         if (phi == 1.0) return level + steps.toDouble() * trend
-        // Geometric series sum: phi * (1 - phi^steps) / (1 - phi).
-        var phiPow = phi
-        var sum = 0.0
-        repeat(steps) {
-            sum += phiPow
-            phiPow *= phi
-        }
+        // Closed form of the geometric series, as the comment always claimed: looping `steps` times
+        // made forecast(Int.MAX_VALUE) stall for seconds for no gain in accuracy.
+        val sum = phi * (1.0 - phi.pow(steps.toDouble())) / (1.0 - phi)
         return level + sum * trend
     }
 }

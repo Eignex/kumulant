@@ -59,6 +59,7 @@ class RecursiveVarianceStat(
 
     private val mode = concurrency.monotonicMode()
     private val variance = mode.newDouble(0.0)
+    private val initialized = mode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight == 0.0 || value.isNaN()) return // zero weight and NaN are both no-ops; see Stat
@@ -66,21 +67,36 @@ class RecursiveVarianceStat(
         while (true) {
             val current = variance.load()
             val next = omega + alpha * x2 + beta * current
-            if (variance.compareAndSet(current, next)) return
+            if (variance.compareAndSet(current, next)) {
+                initialized.store(1L)
+                return
+            }
         }
     }
 
     override fun merge(values: RecursiveVarianceResult) {
         while (true) {
             val current = variance.load()
-            // Treat the remote snapshot as one extra "averaged" observation of the variance.
-            val next = 0.5 * (current + values.variance)
-            if (variance.compareAndSet(current, next)) return
+            // Adopt the snapshot verbatim while empty, matching HoltStat.merge and
+            // SeasonalSmoothingStat.merge. Averaging against a fresh stat's 0.0 halved the first
+            // contribution, so a roll-up that merged N worker snapshots into a new coordinator
+            // systematically understated the first one.
+            val next = if (initialized.load() == 0L) {
+                values.variance
+            } else {
+                // Treat the remote snapshot as one extra "averaged" observation of the variance.
+                0.5 * (current + values.variance)
+            }
+            if (variance.compareAndSet(current, next)) {
+                initialized.store(1L)
+                return
+            }
         }
     }
 
     override fun reset() {
         variance.store(0.0)
+        initialized.store(0L)
     }
 
     override fun read(timestampNanos: Long) = RecursiveVarianceResult(variance.load(), omega, alpha, beta)
