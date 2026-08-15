@@ -9,7 +9,7 @@ import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.round
+import kotlin.math.ceil
 
 /**
  * Space-Saving heavy-hitters snapshot. [keys], [counts], [errors] are parallel arrays of
@@ -187,8 +187,10 @@ class SpaceSavingStat(
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight <= 0.0) return
-        val w = round(weight).toLong()
-        if (w <= 0L) return
+        // Counts are Long, so a fractional weight has to be rounded. Round *up*: rounding to nearest
+        // dropped everything below 0.5 outright, so a key accumulating many small weights never
+        // appeared among the heavy hitters at all. Counts are upper bounds as a result.
+        val w = ceil(weight).toLong().coerceAtLeast(1L)
         if (useMisraGries) {
             admitMisraGries(value, w, 0L)
             totalSeenCell.add(1L)

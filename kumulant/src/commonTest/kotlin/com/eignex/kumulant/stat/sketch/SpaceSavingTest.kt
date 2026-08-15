@@ -102,17 +102,19 @@ class SpaceSavingTest {
     }
 
     @Test
-    fun `fractional weight rounds rather than truncating`() {
-        // Mirrors CountMinSketchStat: weights are rounded so a stream of fractional
-        // weights accumulates into the count instead of being silently dropped.
+    fun `fractional weight rounds up rather than being dropped`() {
+        // Mirrors CountMinSketchStat: counts are Long, so a fractional weight has to be rounded, and
+        // it rounds *up*. Rounding to nearest silently discarded everything below 0.5, so a key
+        // accumulating many small weights never appeared among the heavy hitters at all. Counts are
+        // upper bounds as a result, which is the safe direction for a heavy-hitter summary.
         val ss = SpaceSavingStat(capacity = 5)
         ss.update(7L, weight = 1.7)
         ss.update(7L, weight = 0.6)
-        ss.update(8L, weight = 0.4) // rounds to 0; dropped but totalSeen still advances
+        ss.update(8L, weight = 0.4)
         val r = ss.read()
         val kv = r.keys.zip(r.counts.toList()).toMap()
         assertEquals(3L, kv[7L])
-        assertTrue(8L !in kv.keys)
+        assertEquals(1L, kv[8L], "a positive weight must never vanish entirely")
     }
 
     @Test

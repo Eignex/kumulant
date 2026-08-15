@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.preview
+import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.stream.StreamLong
@@ -32,15 +33,25 @@ data class LinearCountingResult(
     val words: LongArray,
     /** Total observations the sketch has absorbed. */
     val totalSeen: Long,
+    /**
+     * Reference to the [com.eignex.kumulant.math.LongHasher] that produced this sketch.
+     *
+     * The mixer decides which bit a key touches, so combining sketches built with different mixers
+     * is meaningless. Carried on the wire so [merge] can refuse it, matching
+     * [com.eignex.kumulant.stat.sketch.BloomFilterResult]. Defaults to the library default so a
+     * payload encoded before the field existed still decodes.
+     */
+    val hasher: HasherRef = HasherRef.SplitMix64,
 ) : HasObservationCount {
 
     override val totalWeights: Double get() = totalSeen.toDouble()
     override fun equals(other: Any?): Boolean = other is LinearCountingResult &&
-        estimate == other.estimate &&
+        estimate.equals(other.estimate) &&
         bits == other.bits &&
         unsetBits == other.unsetBits &&
         words.contentEquals(other.words) &&
-        totalSeen == other.totalSeen
+        totalSeen == other.totalSeen &&
+        hasher == other.hasher
 
     override fun hashCode(): Int {
         var h = estimate.hashCode()
@@ -48,6 +59,7 @@ data class LinearCountingResult(
         h = 31 * h + unsetBits.hashCode()
         h = 31 * h + words.contentHashCode()
         h = 31 * h + totalSeen.hashCode()
+        h = 31 * h + hasher.hashCode()
         return h
     }
 
@@ -95,6 +107,7 @@ class LinearCountingStat(
         require(bits % 64 == 0) { "bits must be a multiple of 64" }
     }
 
+    private val hasherRef: HasherRef = HasherRef(hasher.name)
     private val wordCount: Int = bits / 64
     private val mask: Long = (bits - 1).toLong()
     private val mode = concurrency.monotonicMode()
@@ -112,6 +125,12 @@ class LinearCountingStat(
     }
 
     override fun merge(values: LinearCountingResult) {
+        require(values.hasher == hasherRef) {
+            "Cannot merge LinearCountingStat hashed with ${values.hasher} into one hashed with $hasherRef"
+        }
+        require(values.words.size == wordCount) {
+            "Cannot merge LinearCountingStat: expected $wordCount words, got ${values.words.size}"
+        }
         require(values.bits == bits) {
             "Cannot merge LinearCountingStat with bits=${values.bits} into $bits"
         }
@@ -147,6 +166,7 @@ class LinearCountingStat(
             unsetBits = unset,
             words = snapshot,
             totalSeen = totalSeen.load(),
+            hasher = hasherRef,
         )
     }
 
