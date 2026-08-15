@@ -65,6 +65,25 @@ class BayesianRegressionStatTest {
     }
 
     @Test
+    fun `the factor survives an update that saturates the downdate at the cone boundary`() {
+        // A weight this large drives the downdate's norm to exactly 1.0, where it rejects and
+        // leaves the factor alone. The repair has to run anyway, or the covariance moves without
+        // its factor.
+        val stat = BayesianRegressionStat(featureSize = 2, priorVariance = 1.0)
+
+        stat.update(doubleArrayOf(1.0, 1.0), 1.0, 1e18)
+
+        val r = stat.read()
+        for (i in 0 until 2) {
+            for (j in 0 until 2) {
+                var s = 0.0
+                for (k in 0..minOf(i, j)) s += r.covarianceL[i, k] * r.covarianceL[j, k]
+                assertEquals(r.covariance[i, j], s, 1e-9, "L * LT disagrees with the covariance at ($i, $j)")
+            }
+        }
+    }
+
+    @Test
     fun `merge on Bayesian combines posteriors via density product`() {
         val a = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         val b = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
