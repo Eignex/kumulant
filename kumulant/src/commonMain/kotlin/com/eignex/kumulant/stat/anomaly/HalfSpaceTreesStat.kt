@@ -263,7 +263,7 @@ class HalfSpaceTreesStat(
      * latest windows. Tree structures must match exactly; if they don't (e.g. different seeds), the
      * merge throws.
      *
-     * The reference window is what [score] reads, so folding into the latest window alone left a
+     * The reference window is what [HalfSpaceTreesResult.score] reads, so folding into the latest window alone left a
      * merged model scoring every input maximally anomalous until `windowSize` fresh observations
      * rotated the window - while reporting the source's `totalWeights`, so it looked trained. The
      * incoming masses *are* a reference profile, so they belong in the reference window too.

@@ -37,7 +37,7 @@ data class LinearCountingResult(
      * Reference to the [com.eignex.kumulant.math.LongHasher] that produced this sketch.
      *
      * The mixer decides which bit a key touches, so combining sketches built with different mixers
-     * is meaningless. Carried on the wire so [merge] can refuse it, matching
+     * is meaningless. Carried on the wire so [LinearCountingStat.merge] can refuse it, matching
      * [com.eignex.kumulant.stat.sketch.BloomFilterResult]. Defaults to the library default so a
      * payload encoded before the field existed still decodes.
      */

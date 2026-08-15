@@ -33,7 +33,7 @@ data class HyperLogLogResult(
      * Reference to the [com.eignex.kumulant.math.LongHasher] that produced this sketch.
      *
      * The mixer decides which register a key touches, so combining sketches built with different
-     * mixers is meaningless - it double-counts the same key. Carried on the wire so [merge] can
+     * mixers is meaningless - it double-counts the same key. Carried on the wire so [HyperLogLogStat.merge] can
      * refuse it, matching [com.eignex.kumulant.stat.sketch.BloomFilterResult] and
      * [com.eignex.kumulant.stat.sketch.CountMinSketchResult]. Defaults to the library default so a
      * payload encoded before the field existed still decodes.
