@@ -26,13 +26,14 @@ data class ExcursionResult(
     /** `peak - lastValue`; how far the latest observation sits below the all-time peak. */
     val currentRecovery: Double,
     /**
-     * False until the first [SeriesStat.update] has been recorded, mirroring
+     * False until the first update has been recorded, mirroring
      * [com.eignex.kumulant.stat.event.RecencyResult.hasObservation].
      *
      * Without it an untouched stat is indistinguishable from one that observed `0.0` at timestamp
-     * `0`, because [read] reports all zeros for both - and [merge] then folded those zeros in as
-     * real data, dragging the peak of an all-negative stream up to a value never observed. Defaults
-     * to `true` so a payload encoded before the field existed still decodes as real data.
+     * `0`, because [ExcursionStat.read] reports all zeros for both - and [ExcursionStat.merge] then
+     * folded those in as real data, dragging the peak of an all-negative stream up to a value never
+     * observed. Defaults to `true` so a payload encoded before the field existed still decodes as
+     * real data.
      */
     val hasObservation: Boolean = true,
 ) : Result
