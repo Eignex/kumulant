@@ -1,10 +1,21 @@
 # Package com.eignex.kumulant.math
 
-Distribution sampling and stream-hash functions consumed by the rest of
-the library. The vector / matrix primitives and BLAS-style linear algebra
-live in the separate [koblas](https://github.com/Eignex/koblas) library
-(`com.eignex.koblas`); this package holds only the sampling and hashing
-helpers.
+Distribution sampling, stream-hash functions, and the few numeric
+routines that sit outside koblas, consumed by the rest of the library.
+The vector / matrix primitives and BLAS-style linear algebra live in the
+separate [koblas](https://github.com/Eignex/koblas) library
+(`com.eignex.koblas`), which covers a defined BLAS/LAPACK subset; what
+falls outside that subset and only kumulant needs lives here.
+
+## Linear-algebra helpers
+
+- `choleskyDowndateInPlace`: rank-1 downdate of a lower-triangular
+  Cholesky factor, so
+  [BayesianRegressionStat][com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat]
+  can track the posterior covariance factor across observations instead
+  of refactorizing per update.
+- `zeroUpperTriangle`: clears the strict upper triangle of a factor,
+  which koblas leaves unspecified, before it is stored in a snapshot.
 
 ## Distribution sampling
 

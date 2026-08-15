@@ -189,8 +189,8 @@ class LinearPosteriorsTest {
                 biasPrecision = 1.0,
                 totalWeights = 0.0,
                 step = 0L,
-                covariance = DenseMatrix(3, 3),
-                covarianceL = DenseMatrix(3, 3),
+                covariance = DenseMatrix.zero(3, 3),
+                covarianceL = DenseMatrix.zero(3, 3),
             )
         }
     }

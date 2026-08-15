@@ -7,17 +7,20 @@ import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.MatrixView
 import com.eignex.koblas.VectorView
-import com.eignex.koblas.addOuter
 import com.eignex.koblas.axpy
-import com.eignex.koblas.cholesky
-import com.eignex.koblas.choleskyDowndateInPlace
+import com.eignex.koblas.dense.CholeskyDecomposition
+import com.eignex.koblas.dense.CholeskyPolicy
+import com.eignex.koblas.dense.cholesky
+import com.eignex.koblas.dense.invert
+import com.eignex.koblas.dense.solve
 import com.eignex.koblas.dot
-import com.eignex.koblas.invertSpd
+import com.eignex.koblas.ger
 import com.eignex.koblas.matVec
 import com.eignex.koblas.scale
-import com.eignex.koblas.solveSpd
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.math.choleskyDowndateInPlace
+import com.eignex.kumulant.math.zeroUpperTriangle
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
@@ -102,10 +105,16 @@ class BayesianRegressionStat(
     private val initialCovariance: DenseMatrix = priorCovariance
         ?.let { DenseMatrix.of(it.toArray()) }
         ?: DenseMatrix.diagonal(featureSize, priorVariance)
-    private val initialCovarianceL: DenseMatrix = initialCovariance.cholesky(regularizeNonPD = false)
+    private val initialCovarianceL: DenseMatrix
 
     // Prior precision H_prior = Sigma_prior^-1, cached so merge() can subtract one prior factor.
-    private val priorPrecisionMatrix: DenseMatrix = invertSpd(initialCovarianceL)
+    private val priorPrecisionMatrix: DenseMatrix
+
+    init {
+        val chol = initialCovariance.cholesky(CholeskyPolicy.Strict)
+        initialCovarianceL = chol.l.zeroUpperTriangle()
+        priorPrecisionMatrix = chol.invert()
+    }
 
     // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
     private val priorInfo: DoubleArray = DoubleArray(featureSize).also { out ->
@@ -144,7 +153,7 @@ class BayesianRegressionStat(
         //   S_new = S - (w_c * S x xT S) / (1 + w_c * xT S x)
         //         = S - z zT, where z = sqrt(w_c) * S x / sqrt(1 + w_c * xT S x).
         val wc = weight * curvature
-        val z = matVec(covariance, x)
+        val z = covariance.matVec(x)
         val denom = sqrt(1.0 + wc * (x dot z))
         if (denom == 0.0) return@guarded
         scale(z, sqrt(wc) / denom)
@@ -153,7 +162,7 @@ class BayesianRegressionStat(
         var norm = covarianceL.choleskyDowndateInPlace(z)
         if (norm > 1.0) {
             for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + 1e-5
-            val Lnew = covariance.cholesky()
+            val Lnew = covariance.cholesky(CholeskyPolicy.Regularize()).l
             for (i in 0 until featureSize) {
                 for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
             }
@@ -165,10 +174,10 @@ class BayesianRegressionStat(
         }
 
         // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
-        addOuter(covariance, -1.0, z, z)
+        ger(-1.0, z, z, covariance)
 
         // Posterior mean update: w += (weight * residual) * S_new * x.
-        axpy(weights, weight * residual, matVec(covariance, x))
+        axpy(weights, weight * residual, covariance.matVec(x))
 
         biasPrecision += wc
         bias += weight * residual / biasPrecision
@@ -215,11 +224,11 @@ class BayesianRegressionStat(
         lock.guarded {
             val n = featureSize
 
-            val hSelf = invertSpd(covarianceL)
-            val hOther = invertSpd(values.covarianceL)
+            val hSelf = CholeskyDecomposition(covarianceL).invert()
+            val hOther = CholeskyDecomposition(values.covarianceL).invert()
 
             // H_new = H_self + H_other - H_prior.
-            val hNew = DenseMatrix(n, n)
+            val hNew = DenseMatrix.zero(n, n)
             for (i in 0 until n) {
                 for (j in 0 until n) {
                     hNew[i, j] = hSelf[i, j] + hOther[i, j] - priorPrecisionMatrix[i, j]
@@ -237,10 +246,10 @@ class BayesianRegressionStat(
             }
 
             // Solve H_new * mu_new = b via chol(H_new); reuse the same factor for Sum_new.
-            val Lh = hNew.cholesky()
-            val muNew = solveSpd(Lh, b)
-            val sigmaNew = invertSpd(Lh)
-            val LsigmaNew = sigmaNew.cholesky()
+            val hChol = hNew.cholesky(CholeskyPolicy.Regularize())
+            val muNew = hChol.solve(b)
+            val sigmaNew = hChol.invert()
+            val LsigmaNew = sigmaNew.cholesky(CholeskyPolicy.Regularize()).l.zeroUpperTriangle()
 
             for (i in 0 until n) {
                 weights[i] = muNew[i]
@@ -329,7 +338,7 @@ class BayesianRegressionStat(
             for (i in 0 until n) muPop[i] /= wTotal
 
             // Sigma_pop = weighted mean of Sigma_i + weighted covariance of (mu_i - mu_pop).
-            val sigmaPop = DenseMatrix(n, n)
+            val sigmaPop = DenseMatrix.zero(n, n)
             for (s in snapshots.indices) {
                 val wi = weights[s] / wTotal
                 val cov = snapshots[s].covariance

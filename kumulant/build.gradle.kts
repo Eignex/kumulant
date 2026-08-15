@@ -13,6 +13,14 @@ eignexPublish {
     githubRepo.set("Eignex/kumulant")
 }
 
+// koblas has no release carrying the reshaped API yet, so the dependency below is a
+// snapshot and needs the snapshot repository alongside the Central one kbuild adds.
+repositories {
+    maven("https://central.sonatype.com/repository/maven-snapshots/") {
+        mavenContent { snapshotsOnly() }
+    }
+}
+
 kotlin {
     applyDefaultHierarchyTemplate()
     compilerOptions {
@@ -39,7 +47,7 @@ kotlin {
         webMain.get().dependsOn(nonJvmMain)
         wasmWasiMain.get().dependsOn(webMain.get())
         commonMain.dependencies {
-            api("com.eignex:koblas:0.1.0")
+            api("com.eignex:koblas:0.1.1-SNAPSHOT")
             api("com.eignex:skema:0.3.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
