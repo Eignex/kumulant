@@ -1,7 +1,9 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.kumulant.bandit.MIN_PLAY_PROB
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.UnivariateBandit
+import com.eignex.kumulant.bandit.renormaliseExponentialWeights
 import com.eignex.kumulant.core.Result
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -111,10 +113,10 @@ class Exp3Bandit(
     override fun update(armIndex: Int, value: Double, weight: Double) {
         require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
         playDistribution().also { lastPlayDist = it }
-        val p = lastPlayDist[armIndex].coerceAtLeast(MIN_PROB)
+        val p = lastPlayDist[armIndex].coerceAtLeast(MIN_PLAY_PROB)
         val gain = (value * weight) / p
         weights[armIndex] *= exp(eta * gain)
-        renormaliseIfNeeded()
+        weights.renormaliseExponentialWeights()
     }
 
     /** Current per-arm weights, normalised to sum to 1. */
@@ -135,7 +137,7 @@ class Exp3Bandit(
         // then renormalise. Use for "roughly combine two parallel runs", not principled
         // aggregation.
         for (i in 0 until nbrArms) weights[i] *= other[i].weight
-        renormaliseIfNeeded()
+        weights.renormaliseExponentialWeights()
     }
 
     /** Reset all weights to uniform. */
@@ -147,30 +149,8 @@ class Exp3Bandit(
     /** Spawn a fresh bandit with the same tunables; weights reset. */
     override fun create(random: Random): Exp3Bandit = Exp3Bandit(nbrArms, eta, gamma, random)
 
-    private fun renormaliseIfNeeded() {
-        var maxW = 0.0
-        for (w in weights) if (w > maxW) maxW = w
-        if (maxW > RENORM_THRESHOLD) {
-            for (i in weights.indices) weights[i] /= maxW
-            return
-        }
-        // The overflow side was guarded but not the underflow side: a run of large negative rewards
-        // drives every exp(eta*gain) to zero, and once the whole array is zero no later reward can
-        // ever lift it. Rescaling by the surviving maximum keeps the arms' *relative* standing,
-        // which is all the distribution depends on.
-        if (maxW > 0.0 && maxW < RENORM_FLOOR) {
-            for (i in weights.indices) weights[i] /= maxW
-        } else if (maxW == 0.0) {
-            for (i in weights.indices) weights[i] = 1.0
-        }
-    }
-
     /** EXP3 tuning defaults from Auer et al. */
     companion object {
-        private const val MIN_PROB = 1e-12
-        private const val RENORM_THRESHOLD = 1e100
-        private const val RENORM_FLOOR = 1e-100
-
         /** Horizon-free default `eta = sqrt(ln(K) / K)`. */
         fun defaultEta(nbrArms: Int): Double = sqrt(ln(nbrArms.toDouble().coerceAtLeast(2.0)) / nbrArms)
 

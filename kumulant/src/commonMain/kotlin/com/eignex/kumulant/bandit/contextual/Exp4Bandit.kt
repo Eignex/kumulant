@@ -2,7 +2,9 @@ package com.eignex.kumulant.bandit.contextual
 
 import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.ContextualBandit
+import com.eignex.kumulant.bandit.MIN_PLAY_PROB
 import com.eignex.kumulant.bandit.Snapshotable
+import com.eignex.kumulant.bandit.renormaliseExponentialWeights
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.preview
 import kotlinx.serialization.SerialName
@@ -159,13 +161,13 @@ class Exp4Bandit(
         require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
         // Re-evaluate experts in case caller calls update without a prior choose at this x.
         playDistribution(x)
-        val pPlayed = lastPlayDist[armIndex].coerceAtLeast(MIN_PROB)
+        val pPlayed = lastPlayDist[armIndex].coerceAtLeast(MIN_PLAY_PROB)
         val gainPlayed = reward / pPlayed
         for (i in experts.indices) {
             val expertGain = lastAdvice[i][armIndex] * gainPlayed
             weights[i] *= exp(eta * expertGain)
         }
-        normalizeIfNeeded()
+        weights.renormaliseExponentialWeights()
     }
 
     /** Current per-expert weights, normalised to sum to 1. */
@@ -186,7 +188,7 @@ class Exp4Bandit(
         // pool, then renormalise. Use for "roughly combine two parallel runs", not
         // principled aggregation.
         for (i in weights.indices) weights[i] *= other.weights[i]
-        normalizeIfNeeded()
+        weights.renormaliseExponentialWeights()
     }
 
     /** Reset all expert weights to uniform. */
@@ -198,25 +200,8 @@ class Exp4Bandit(
     /** Spawn a fresh bandit with the same experts and tunables; weights reset to uniform. */
     override fun create(random: Random): Exp4Bandit = Exp4Bandit(nbrArms, experts, eta, gamma, random)
 
-    private fun normalizeIfNeeded() {
-        var maxW = 0.0
-        for (w in weights) if (w > maxW) maxW = w
-        if (maxW > RENORM_THRESHOLD || (maxW > 0.0 && maxW < RENORM_FLOOR)) {
-            // Guard both ends. Only overflow was handled, so a run of large negative rewards drove
-            // every weight to zero with no way back; rescaling by the surviving maximum preserves
-            // the experts' relative standing, which is all the mixture depends on.
-            for (i in weights.indices) weights[i] /= maxW
-        } else if (maxW == 0.0) {
-            for (i in weights.indices) weights[i] = 1.0
-        }
-    }
-
     /** Default-tuning helpers. */
     companion object {
-        private const val MIN_PROB = 1e-12
-        private const val RENORM_THRESHOLD = 1e100
-        private const val RENORM_FLOOR = 1e-100
-
         /** Default learning rate from the EXP4 regret analysis: `sqrt(ln(N) / (T * K))`
          *  collapsed to a horizon-free form using `T = 1` as a starting heuristic. */
         fun defaultEta(nbrArms: Int, nbrExperts: Int): Double =
