@@ -45,10 +45,20 @@ private fun Random.standardNormal(): Double {
     while (true) {
         val hz = nextInt()
         val iz = hz and (ZIGGURAT_N - 1)
-        // Long, not Int: -Int.MIN_VALUE is still Int.MIN_VALUE, so absHz stayed negative once every
-        // 2^32 draws and the comparison below was trivially true, taking the layer-0 inner-rectangle
-        // fast path where the tail sampler was required.
-        val absHz = if (hz >= 0) hz.toLong() else -hz.toLong()
+        // -Int.MIN_VALUE is still Int.MIN_VALUE, so a plain `-hz` left absHz negative once every 2^32
+        // draws and the comparison below was trivially true, taking the layer-0 inner-rectangle fast
+        // path where the tail sampler was required. Clamping that one input to Int.MAX_VALUE fixes it
+        // without widening to Long: every ZIGGURAT_KN entry is at most Int.MAX_VALUE, so both
+        // Int.MAX_VALUE and the true magnitude 2^31 fail the test identically and fall through to the
+        // tail. Widening would be correct too, but Kotlin/JS emulates Long as a class, which put two
+        // boxed allocations and a compare() call in the 97% fast path of every normal draw.
+        val absHz = if (hz >= 0) {
+            hz
+        } else if (hz == Int.MIN_VALUE) {
+            Int.MAX_VALUE
+        } else {
+            -hz
+        }
         // Fast path: ~97% of draws land in the inner rectangle of their layer.
         if (absHz < ZIGGURAT_KN[iz]) return hz * ZIGGURAT_WN[iz]
         // Slow path: tail beyond R (iz == 0) or wedge test.
