@@ -9,6 +9,7 @@ import com.eignex.kumulant.schema.spec.ConfusionMatrix
 import com.eignex.kumulant.schema.spec.CountMinSketch
 import com.eignex.kumulant.schema.spec.Covariance
 import com.eignex.kumulant.schema.spec.DiscreteStatSpec
+import com.eignex.kumulant.schema.spec.HyperLogLog
 import com.eignex.kumulant.schema.spec.IsotonicCalibrator
 import com.eignex.kumulant.schema.spec.LinearCounting
 import com.eignex.kumulant.schema.spec.LogLoss
@@ -47,6 +48,9 @@ class PairedAndDiscreteContractSweepTest {
     )
 
     private val discreteSpecs: List<Pair<String, DiscreteStatSpec<*>>> = listOf(
+        // HyperLogLog was missing from this catalogue, which is how it stayed the one sketch no sweep
+        // covered even though it carries the same weight guard as the other five.
+        "HyperLogLog" to HyperLogLog(),
         "LinearCounting" to LinearCounting(),
         "BloomFilter" to BloomFilter(),
         "CountMinSketch" to CountMinSketch(),
@@ -134,6 +138,44 @@ class PairedAndDiscreteContractSweepTest {
     }
 
     @Test
+    fun `a negative weight is a no-op for every discrete sketch`() {
+        // The discrete modality is entirely no-inverse: there is no bucket decrement that undoes a
+        // hash insert into a Bloom filter or an HLL register, so these all drop a negative weight
+        // rather than downdating it. Sojourn is the one exception in the catalogue - it accumulates
+        // residence time additively and subtracts, so it guards on isInertWeight like the series
+        // accumulators. See isNotPositiveWeight for why the two predicates are named separately.
+        val violations = mutableListOf<String>()
+        for ((name, spec) in discreteSpecs) {
+            if (name in DOWNDATES) continue
+
+            // A key none of the primed updates used, so a live-weight probe visibly moves every
+            // sketch here; without that the negative-weight assertion below would be vacuous.
+            val absorbing = spec.materialize()
+            keys.forEachIndexed { i, k -> absorbing.update(k, i.toLong() * 1_000_000_000L, 1.0) }
+            val baseline = absorbing.read(readAt)
+            absorbing.update(PROBE_KEY, readAt, 1.0)
+            if (absorbing.read(readAt) == baseline) {
+                violations += "$name ignored a positive-weight key, so the negative case proves nothing"
+                continue
+            }
+
+            val stat = spec.materialize()
+            keys.forEachIndexed { i, k -> stat.update(k, i.toLong() * 1_000_000_000L, 1.0) }
+            val before = stat.read(readAt)
+
+            val thrown = runCatching { stat.update(PROBE_KEY, readAt, -1.0) }.exceptionOrNull()
+            if (thrown != null) {
+                violations += "$name threw on a negative weight: ${thrown.message}"
+                continue
+            }
+
+            val after = stat.read(readAt)
+            if (before != after) violations += "$name absorbed a negative-weight key: $before -> $after"
+        }
+        assertEquals(emptyList(), violations.map { it.take(110) }, "a sketch must drop a negative weight")
+    }
+
+    @Test
     fun `no paired stat throws on a NaN value`() {
         // Both positions separately: a paired stat reaches x and y through different arithmetic, so
         // one being safe is no evidence about the other. A NaN value propagates rather than being
@@ -194,5 +236,16 @@ class PairedAndDiscreteContractSweepTest {
             if (fresh != stat.read(readAt)) violations += "$name: ${stat.read(readAt)} != fresh $fresh"
         }
         assertEquals(emptyList(), violations.toList(), "reset must restore the fresh state")
+    }
+
+    private companion object {
+        /**
+         * The one discrete stat whose accumulation inverts, so a negative weight subtracts rather than
+         * being dropped. Everything else in the catalogue is a hash sketch with no decrement.
+         */
+        val DOWNDATES = setOf("Sojourn")
+
+        /** A key none of the primed updates touch, so a live-weight probe moves every sketch. */
+        const val PROBE_KEY = 97L
     }
 }

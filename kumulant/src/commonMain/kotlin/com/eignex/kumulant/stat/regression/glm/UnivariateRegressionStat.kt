@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.HasSlope
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stat.summary.VarianceResult
 import com.eignex.kumulant.stream.getValue
 import com.eignex.kumulant.stream.guarded
@@ -116,7 +117,7 @@ class UnivariateRegressionStat(
     val meanY: Double by my
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0 || weight.isNaN()) return
+        if (weight.isNotPositiveWeight()) return
         lock.guarded {
             val nextW = w.addAndGet(weight)
             val oldW = nextW - weight

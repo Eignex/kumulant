@@ -156,6 +156,45 @@ class SeriesStatContractSweepTest {
     }
 
     @Test
+    fun `a negative weight is a no-op for every stat that cannot invert it`() {
+        // The third weight case, and the one the other two sweeps left open. Zero and NaN are no-ops
+        // library-wide, but a negative weight partitions the catalogue: a stat whose recurrence
+        // inverts treats it as a downdate, and a stat with no inverse - a sketch, a histogram bucket -
+        // has to drop it, because there is no bucket decrement that undoes a hash insert. Both halves
+        // are correct; what is not correct is a stat picking a third answer, which is what happened
+        // when this predicate was open-coded at twenty sites instead of named once as
+        // isNotPositiveWeight. The negative case is also the reason that helper is not isInertWeight.
+        val violations = mutableListOf<String>()
+        for (name in NO_INVERSE) {
+            val spec = specs.first { it.first == name }.second
+
+            // Vacuity guard first: the probe has to be an observation each stat would visibly absorb,
+            // or "state did not change" proves nothing. Without this the sweep would still pass if
+            // someone made every one of these stats ignore its input entirely.
+            val absorbing = primed(spec)
+            val baseline = absorbing.read(readAt)
+            absorbing.update(PROBE, readAt, 1.0)
+            if (absorbing.read(readAt) == baseline) {
+                violations += "$name ignored a positive-weight $PROBE, so the negative case proves nothing"
+                continue
+            }
+
+            val stat = primed(spec)
+            val before = stat.read(readAt)
+
+            val thrown = runCatching { stat.update(PROBE, readAt, -1.0) }.exceptionOrNull()
+            if (thrown != null) {
+                violations += "$name threw on a negative weight: ${thrown.message}"
+                continue
+            }
+
+            val after = stat.read(readAt)
+            if (before != after) violations += "$name absorbed a negative-weight $PROBE: $before -> $after"
+        }
+        assertEquals(emptyList(), violations.toList(), "a stat with no inverse must drop a negative weight")
+    }
+
+    @Test
     fun `no series stat throws on a NaN value`() {
         // A NaN value is not filtered - it propagates, and the stat reads back NaN. The one thing
         // ruled out is turning a gap in the input into an outage in the caller, which HdrHistogram
@@ -224,5 +263,24 @@ class SeriesStatContractSweepTest {
     private companion object {
         /** Stats that deliberately act on a NaN observation; see the exception noted on [Stat]. */
         val NAN_EXEMPT = setOf("RunLength")
+
+        /**
+         * Series stats whose recurrence has no inverse, so a negative weight is dropped rather than
+         * downdated. Membership is exactly the set that guards on `isNotPositiveWeight`; the rest of
+         * the catalogue guards on `isInertWeight` and subtracts. A new sketch or histogram belongs
+         * here, and adding it to the catalogue without adding it here is the drift this pins down.
+         */
+        val NO_INVERSE = setOf(
+            "DDSketch",
+            "DecayingVariance",
+            "FrugalQuantile",
+            "HdrHistogram",
+            "LinearHistogram",
+            "ReservoirHistogram",
+            "TDigest",
+        )
+
+        /** Outside the primed sample range, so every stat above visibly absorbs it at a live weight. */
+        const val PROBE = 999.0
     }
 }
