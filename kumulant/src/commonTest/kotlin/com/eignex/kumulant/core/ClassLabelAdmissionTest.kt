@@ -1,6 +1,7 @@
 package com.eignex.kumulant.core
 
 import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionStat
 import com.eignex.kumulant.stat.regression.tree.ClassCountsStat
@@ -12,7 +13,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 private const val CLASSES = 3
-private const val DELTA = 1e-12
 
 /**
  * Which `Double`s name a class, checked on the helper and then on every classifier that uses it.

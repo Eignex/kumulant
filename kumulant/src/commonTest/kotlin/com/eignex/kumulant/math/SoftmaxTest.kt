@@ -1,12 +1,11 @@
 package com.eignex.kumulant.math
 
+import com.eignex.kumulant.DELTA
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-12
 
 /**
  * Properties of the shared softmax, which three call sites previously each implemented for themselves.

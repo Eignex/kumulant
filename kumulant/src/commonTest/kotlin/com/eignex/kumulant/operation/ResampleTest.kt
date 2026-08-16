@@ -1,13 +1,12 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.schema.spec.ResampleAggregator
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.time.Duration.Companion.milliseconds
-
-private const val DELTA = 1e-12
 
 class ResampleTest {
 

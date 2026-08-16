@@ -1,10 +1,9 @@
 package com.eignex.kumulant.stat.score
 
+import com.eignex.kumulant.DELTA
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
-private const val DELTA = 1e-9
 
 class ConfusionMatrixStatTest {
 

@@ -1,10 +1,9 @@
 package com.eignex.kumulant.stat.score
 
+import com.eignex.kumulant.DELTA
 import kotlin.math.ln
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
-private const val DELTA = 1e-12
 
 class MseLossTest {
 

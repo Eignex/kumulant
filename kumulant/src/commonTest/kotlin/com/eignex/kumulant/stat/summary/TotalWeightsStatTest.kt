@@ -1,9 +1,8 @@
 package com.eignex.kumulant.stat.summary
 
+import com.eignex.kumulant.DELTA
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
-private const val DELTA = 1e-12
 
 class TotalWeightsStatTest {
 

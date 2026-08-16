@@ -1,10 +1,9 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.DELTA
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-9
 
 class HistogramResultsTest {
 

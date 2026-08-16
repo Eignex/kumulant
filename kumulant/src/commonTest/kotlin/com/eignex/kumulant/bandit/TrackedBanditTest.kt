@@ -1,6 +1,7 @@
 package com.eignex.kumulant.bandit
 
 import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
@@ -19,8 +20,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-9
 
 class TrackedBanditTest {
 

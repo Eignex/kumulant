@@ -1,5 +1,6 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.schema.decay.*
@@ -45,7 +46,6 @@ import com.eignex.kumulant.operation.withWeight as liveWithWeight
  * Round-trip tests for the operation specs in [Operations.kt]: encode, decode,
  * materialize, drive a small fixed input, compare against a live composition.
  */
-private const val DELTA = 1e-12
 
 class OperationsRoundTripTest {
 

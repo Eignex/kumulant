@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import com.eignex.kumulant.stat.summary.CountStat
@@ -9,7 +10,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-private const val DELTA = 1e-12
 private fun sumVector(d: Int) = VectorizedStat(d, SumStat())
 
 class WeightsTest {

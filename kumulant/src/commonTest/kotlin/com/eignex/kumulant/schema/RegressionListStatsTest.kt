@@ -1,6 +1,7 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.operation.foldRegression
 import com.eignex.kumulant.schema.decay.*
@@ -18,7 +19,6 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-private const val DELTA = 1e-9
 private fun feat(vararg xs: Double) = DenseVector.of(xs)
 
 class RegressionListStatsTest {

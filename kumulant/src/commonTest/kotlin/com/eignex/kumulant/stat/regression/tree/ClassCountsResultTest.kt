@@ -1,9 +1,8 @@
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.kumulant.DELTA
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
-private const val DELTA = 1e-9
 
 class ClassCountsResultTest {
 

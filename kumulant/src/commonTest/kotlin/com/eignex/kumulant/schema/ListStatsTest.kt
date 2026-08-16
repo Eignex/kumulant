@@ -1,5 +1,6 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
@@ -19,8 +20,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertSame
-
-private const val DELTA = 1e-12
 
 class ListStatsTest {
 

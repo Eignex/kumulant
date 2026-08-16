@@ -1,13 +1,12 @@
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.kumulant.DELTA
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-12
 
 /**
  * The growth helpers both VFDT trees share, which each tree used to keep its own copy of.

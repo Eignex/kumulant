@@ -1,11 +1,11 @@
 package com.eignex.kumulant.stat.decay
 
+import com.eignex.kumulant.DELTA
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-private const val DELTA = 1e-9
 private const val T0 = 1_000_000_000L
 private const val T1 = 2_000_000_000L
 private const val T3 = 11_000_000_000L

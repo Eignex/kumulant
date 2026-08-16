@@ -1,10 +1,9 @@
 package com.eignex.kumulant.stat.score
 
+import com.eignex.kumulant.DELTA
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-
-private const val DELTA = 1e-12
 
 class PinballLossTest {
 

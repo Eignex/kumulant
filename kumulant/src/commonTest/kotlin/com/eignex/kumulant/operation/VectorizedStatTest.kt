@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.koblas.SparseVector
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumResult
@@ -8,8 +9,6 @@ import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-
-private const val DELTA = 1e-12
 
 private fun sumVector(dimensions: Int): VectorizedStat<SumResult> = VectorizedStat(dimensions, SumStat())
 
