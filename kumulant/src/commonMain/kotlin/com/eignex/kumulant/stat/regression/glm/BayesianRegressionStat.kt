@@ -20,6 +20,7 @@ import com.eignex.koblas.scale
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.math.choleskyDowndateInPlace
 import com.eignex.kumulant.math.zeroUpperTriangle
 import com.eignex.kumulant.stream.guarded
@@ -137,7 +138,7 @@ class BayesianRegressionStat(
     private var sse: Double = 0.0
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
             step++

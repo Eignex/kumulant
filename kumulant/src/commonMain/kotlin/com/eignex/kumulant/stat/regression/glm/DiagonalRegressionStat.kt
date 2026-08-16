@@ -7,6 +7,7 @@ import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
@@ -83,7 +84,7 @@ class DiagonalRegressionStat(
     private var sse: Double = 0.0
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
             step++

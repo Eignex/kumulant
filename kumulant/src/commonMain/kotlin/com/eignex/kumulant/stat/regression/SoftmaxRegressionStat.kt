@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stream.StreamDouble
@@ -54,7 +55,7 @@ data class SoftmaxRegressionResult(
 
     /** Linear predictor for class [k]: `biases[k] + weights[k] . x`. */
     fun logit(x: VectorView, k: Int): Double {
-        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        x.requireFeatureSize(featureSize)
         var s = biases[k]
         for (i in 0 until featureSize) s += weights[k, i] * x[i]
         return s
@@ -151,7 +152,7 @@ class SoftmaxRegressionStat(
     val crossEntropy: Double by crossEntropyCell
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
             // toInt() truncates toward zero, so NaN and anything in (-1, 0) both became class 0 and

@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.stream.Mutex
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
@@ -85,7 +86,7 @@ data class HalfSpaceTreesResult(
      * i.e. it looks normal. Lower score flags an anomaly.
      */
     fun score(x: VectorView): Double {
-        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        x.requireFeatureSize(featureSize)
         var total = 0.0
         val depthFactor = 1 shl height
         for (t in 0 until numTrees) {

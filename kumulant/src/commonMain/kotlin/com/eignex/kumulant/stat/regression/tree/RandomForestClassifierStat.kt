@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.math.nextPoissonOne
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -57,7 +58,7 @@ class RandomForestClassifierStat(
     )
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        x.requireFeatureSize(featureSize)
         if (weight <= 0.0 || y.isNaN()) return
         val c = y.toInt()
         if (c !in 0 until numClasses) return

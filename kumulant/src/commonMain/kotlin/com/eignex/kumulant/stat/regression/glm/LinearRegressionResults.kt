@@ -6,6 +6,7 @@ import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.requireFeatureSize
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -45,7 +46,7 @@ sealed interface LinearRegressionResult :
 
     /** Linear predictor `eta = bias + x . weights`, before the inverse link. */
     fun linearPredictor(x: VectorView): Double {
-        require(x.size == weights.size) { "x.size=${x.size}, expected ${weights.size}" }
+        x.requireFeatureSize(weights.size)
         var sum = bias
         for (i in 0 until weights.size) sum += x[i] * weights[i]
         return sum
