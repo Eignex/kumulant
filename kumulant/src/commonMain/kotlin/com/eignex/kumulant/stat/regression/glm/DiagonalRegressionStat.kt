@@ -113,12 +113,7 @@ class DiagonalRegressionStat(
                     precision[i] += weight * curvature * v * v
                     weights[i] -= eta * weight * (negResidual * v) / precision[i]
                     val threshold = eta * weight * p.lambda / precision[i]
-                    val wi = weights[i]
-                    weights[i] = when {
-                        wi > threshold -> wi - threshold
-                        wi < -threshold -> wi + threshold
-                        else -> 0.0
-                    }
+                    weights[i] = softThreshold(weights[i], threshold)
                 }
             }
             biasPrecision += weight * curvature

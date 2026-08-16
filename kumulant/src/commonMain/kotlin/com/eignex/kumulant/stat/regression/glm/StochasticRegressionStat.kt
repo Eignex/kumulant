@@ -119,13 +119,6 @@ class StochasticRegressionStat(
     private fun requireSgdLearningRate(): ScalarExpr = sgdLearningRate ?: error("Sgd learning rate required")
     private fun requireSgdBiasRate(): ScalarExpr = sgdBiasRate ?: error("Sgd bias rate required")
 
-    private fun softThreshold(w: Double, threshold: Double): Double = when {
-        threshold <= 0.0 -> w
-        w > threshold -> w - threshold
-        w < -threshold -> w + threshold
-        else -> 0.0
-    }
-
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
