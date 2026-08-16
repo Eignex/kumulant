@@ -63,3 +63,31 @@ internal fun requireLiveWeight(currentTotal: Double, weight: Double) {
             "${currentTotal + weight}; a downdate must leave a positive total"
     }
 }
+
+/**
+ * Interpret a `Double` as a class index, or reject it.
+ *
+ * A classifier takes its label through the same `Double` channel every other stat takes a value
+ * through, so it has to decide which `Double`s name a class. [Stat] explains why a label is not a
+ * value: a value is an observation and propagates, whereas a label is an *identifier*, and an
+ * identifier that is not one of the identifiers cannot be folded in at all.
+ *
+ * Round-tripping through `Double` is what does the work, because `toInt()` alone is far too
+ * permissive. It truncates toward zero, so `1.5` becomes class 1 and `-0.5` becomes class 0, and
+ * `NaN.toInt()` is `0`, which means the most obviously invalid label in the language arrives looking
+ * like a perfectly ordinary first class. Demanding `c.toDouble() == this` rejects all three: only a
+ * `Double` that is exactly an integer survives.
+ *
+ * This was open-coded at five sites with three different policies. The two GLM classifiers
+ * round-tripped, the forest and the tree truncated, and `ClassCountsStat` truncated as well - so the
+ * same `y = 1.5` trained as class 1 on the tree path and was refused on the GLM path.
+ *
+ * @param numClasses exclusive upper bound on the index; `numClasses` itself is not a class.
+ * @return the class index, or `-1` if this `Double` does not name one. `-1` rather than `null` to keep
+ *  the check allocation-free on the update path for the targets without escape analysis.
+ */
+@Suppress("NOTHING_TO_INLINE") // as with the weight predicates; the non-JVM targets pay for the call
+internal inline fun Double.asClassLabel(numClasses: Int): Int {
+    val c = toInt()
+    return if (c.toDouble() == this && c >= 0 && c < numClasses) c else -1
+}

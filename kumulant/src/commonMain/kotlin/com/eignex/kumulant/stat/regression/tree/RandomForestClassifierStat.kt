@@ -5,6 +5,8 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.asClassLabel
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.math.nextPoissonOne
 import kotlinx.serialization.SerialName
@@ -57,9 +59,18 @@ class RandomForestClassifierStat(
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
-        if (weight <= 0.0 || y.isNaN()) return
-        val c = y.toInt()
-        if (c !in 0 until numClasses) return
+        // The weight guard used to be `weight <= 0.0`, which is false for NaN, so a NaN weight reached
+        // the leaf counts and pinned one to NaN for good - no later observation could clear it. The
+        // label guard used to truncate, so y = 1.5 trained as class 1 here while the GLM classifiers
+        // refused it. Both now go through the same helpers as every other stat.
+        //
+        // isInertWeight rather than isNotPositiveWeight: a class count subtracts exactly, so a negative
+        // weight is a real downdate here, exactly as it is for the regression forest. Returning before
+        // the bagging draw also matters - an inert call used to consume one Poisson draw per tree and
+        // desynchronise every later one.
+        if (weight.isInertWeight()) return
+        val c = y.asClassLabel(numClasses)
+        if (c < 0) return
         if (!bagging) {
             for (t in trees) t.update(x, c, weight)
             return

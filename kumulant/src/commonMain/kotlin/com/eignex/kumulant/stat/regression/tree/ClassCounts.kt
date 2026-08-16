@@ -3,6 +3,8 @@ package com.eignex.kumulant.stat.regression.tree
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.asClassLabel
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
@@ -108,9 +110,14 @@ class ClassCountsStat(
     private val cells: StreamDoubleArray = mode.newDoubleArray(numClasses)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0 || value.isNaN()) return
-        val c = value.toInt()
-        if (c !in 0 until numClasses) return
+        // The guard checked the NaN *value* but not the NaN *weight*, and `weight == 0.0` is false for
+        // NaN, so a NaN weight reached `cells.add` and pinned a class count to NaN permanently. A
+        // negative weight stays legal: a count cell subtracts exactly, so retracting an observation
+        // that was folded in earlier is a downdate rather than corruption. The label now goes through
+        // asClassLabel like every other classifier's, which is what rejects 1.5 as a class index.
+        if (weight.isInertWeight()) return
+        val c = value.asClassLabel(numClasses)
+        if (c < 0) return
         cells.add(c, weight)
     }
 

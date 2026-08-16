@@ -4,6 +4,8 @@ import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.asClassLabel
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import kotlin.random.Random
 
@@ -48,8 +50,14 @@ class DecisionTreeClassifierStat(
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
-        if (weight <= 0.0 || y.isNaN()) return
-        tree.update(x, y.toInt(), weight)
+        // Was `weight <= 0.0`, which is false for NaN, and `y.toInt()` with no validation at all - the
+        // range check happened downstream in ClassificationTree.update but the truncation did not, so
+        // y = 1.5 arrived as a legitimate class 1. A NaN weight got all the way to the leaf counts.
+        // isInertWeight, like the regression counterpart: a class count downdates exactly.
+        if (weight.isInertWeight()) return
+        val c = y.asClassLabel(numClasses)
+        if (c < 0) return
+        tree.update(x, c, weight)
     }
 
     override fun read(timestampNanos: Long): TreeClassificationResult =
