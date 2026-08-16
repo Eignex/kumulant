@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.guarded
@@ -15,7 +16,6 @@ import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.max
 
@@ -81,14 +81,7 @@ data class GaussianNaiveBayesResult(
     /** Normalised class probabilities via log-sum-exp on the log-posterior. */
     fun probabilities(x: VectorView): DoubleArray {
         val logs = DoubleArray(numClasses) { logPosterior(x, it) }
-        var maxL = logs[0]
-        for (k in 1 until numClasses) if (logs[k] > maxL) maxL = logs[k]
-        var z = 0.0
-        for (k in 0 until numClasses) {
-            logs[k] = exp(logs[k] - maxL)
-            z += logs[k]
-        }
-        if (z > 0.0) for (k in 0 until numClasses) logs[k] /= z
+        logs.softmaxInPlace()
         return logs
     }
 

@@ -9,6 +9,7 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stream.StreamDouble
@@ -19,7 +20,6 @@ import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.exp
 import kotlin.math.ln
 
 /**
@@ -64,14 +64,7 @@ data class SoftmaxRegressionResult(
     /** Softmax probabilities across all classes for [x]; length [numClasses]. */
     fun probabilities(x: VectorView): DoubleArray {
         val etas = DoubleArray(numClasses) { logit(x, it) }
-        var maxEta = etas[0]
-        for (k in 1 until numClasses) if (etas[k] > maxEta) maxEta = etas[k]
-        var z = 0.0
-        for (k in 0 until numClasses) {
-            etas[k] = exp(etas[k] - maxEta)
-            z += etas[k]
-        }
-        if (z > 0.0) for (k in 0 until numClasses) etas[k] /= z
+        etas.softmaxInPlace()
         return etas
     }
 
@@ -170,17 +163,9 @@ class SoftmaxRegressionStat(
                 x.forEachStored { i, v -> dot += weightsCell.load(k * featureSize + i) * v }
                 etas[k] = dot
             }
-            var maxEta = etas[0]
-            for (k in 1 until numClasses) if (etas[k] > maxEta) maxEta = etas[k]
-            var z = 0.0
-            for (k in 0 until numClasses) {
-                etas[k] = exp(etas[k] - maxEta)
-                z += etas[k]
-            }
-            if (z <= 0.0) return@guarded
-            val invZ = 1.0 / z
-            // Probabilities live in etas[] now.
-            for (k in 0 until numClasses) etas[k] *= invZ
+            // Probabilities live in etas[] from here on. A false return means every exponential
+            // underflowed, so there is no distribution to take a gradient against.
+            if (!etas.softmaxInPlace()) return@guarded
             val logProbC = ln(etas[c].coerceAtLeast(SOFTMAX_EPS))
             crossEntropyCell.add(-logProbC * weight)
 
