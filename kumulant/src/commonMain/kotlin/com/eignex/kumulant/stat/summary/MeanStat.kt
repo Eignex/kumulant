@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
@@ -65,12 +66,14 @@ class MeanStat(override val concurrency: Concurrency = Concurrency.None) : Serie
     private val totalWeights = mode.newDouble(0.0)
     private val mean = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0) return@guarded
-        requireLiveWeight(totalWeights.load(), weight)
-        val nextW = totalWeights.addAndGet(weight)
-        val delta = value - mean.load()
-        mean.add(delta * (weight / nextW))
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            requireLiveWeight(totalWeights.load(), weight)
+            val nextW = totalWeights.addAndGet(weight)
+            val delta = value - mean.load()
+            mean.add(delta * (weight / nextW))
+        }
     }
 
     override fun read(timestampNanos: Long): WeightedMeanResult = lock.guarded {

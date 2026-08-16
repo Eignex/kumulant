@@ -4,6 +4,7 @@ import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.Scorable
 import com.eignex.kumulant.bandit.UnivariateBandit
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.isInertWeight
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.random.Random
@@ -113,7 +114,7 @@ class RouletteWheelBandit(
         // A zero weight contributes nothing to the score, but the counter and the segment clock
         // used to advance anyway, so it diluted the arm's average toward zero and could trip a
         // rebalance. Zero weight means "ignore this observation" library-wide.
-        if (weight == 0.0) return
+        if (weight.isInertWeight()) return
         accumulatedScores[armIndex] += value * weight
         callCounts[armIndex]++
         picksThisSegment++

@@ -115,7 +115,7 @@ class LinearCountingStat(
     private val totalSeen: StreamLong = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+        if (weight <= 0.0 || weight.isNaN()) return
         val hash = hasher.mix(value)
         val pos = hash and mask
         val wordIdx = (pos ushr 6).toInt()

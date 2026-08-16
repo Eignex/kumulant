@@ -53,20 +53,21 @@ class FrugalQuantileStat(
     private val lock = concurrency.welfordLock()
     private val quantile = mode.newDouble(initialEstimate)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight <= 0.0) return@guarded
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight <= 0.0 || weight.isNaN()) return
+        lock.guarded {
+            val m = quantile.load()
+            val delta = if (value > m) {
+                stepSize * q
+            } else if (value < m) {
+                -stepSize * (1.0 - q)
+            } else {
+                0.0
+            }
 
-        val m = quantile.load()
-        val delta = if (value > m) {
-            stepSize * q
-        } else if (value < m) {
-            -stepSize * (1.0 - q)
-        } else {
-            0.0
-        }
-
-        if (delta != 0.0) {
-            quantile.add(delta)
+            if (delta != 0.0) {
+                quantile.add(delta)
+            }
         }
     }
 

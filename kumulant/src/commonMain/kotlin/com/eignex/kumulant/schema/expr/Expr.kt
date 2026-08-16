@@ -726,6 +726,25 @@ internal data class Not(
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = !a.eval(x, y, v, primary)
 }
 
+/**
+ * Wire spec for `a is NaN`.
+ *
+ * The only way to express this: `Gt`, `Ge`, `Lt`, `Le` and `Eq` all compare with IEEE semantics, so
+ * every one of them evaluates `false` against a `NaN` and none can single it out. Its purpose is
+ * `filter(!IsNaN(X))`, which is how a caller opts into dropping `NaN` observations -
+ * [Stat][com.eignex.kumulant.core.Stat] leaves them to propagate by default, so a stream that wants
+ * them gone says so here.
+ */
+@Serializable
+@SerialName("IsNaN")
+internal data class IsNaN(
+    /** Value tested for NaN. */
+    val of: ScalarExpr,
+) : BoolExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        of.eval(x, y, v, primary).isNaN()
+}
+
 /** `min <= a <= max` (inclusive). Wire-compact form of `And(Ge(a, min), Le(a, max))`. */
 @Serializable
 @SerialName("InRange")
@@ -862,3 +881,16 @@ infix fun BoolExpr.or(rhs: BoolExpr): BoolExpr = Or(this, rhs)
 
 /** Logical negation. */
 operator fun BoolExpr.not(): BoolExpr = Not(this)
+
+/**
+ * True when this expression evaluates to `NaN`.
+ *
+ * A `NaN` observation propagates through every stat by default; see
+ * [Stat][com.eignex.kumulant.core.Stat]. Pair this with
+ * [not] to drop them instead, which is the supported way to ask for that:
+ *
+ * ```
+ * Mean.filter(!X.isNaN())
+ * ```
+ */
+fun ScalarExpr.isNaN(): BoolExpr = IsNaN(this)

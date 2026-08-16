@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
@@ -41,11 +42,13 @@ class ArgMinStat(override val concurrency: Concurrency = Concurrency.None) : Ser
     private val value = mode.newDouble(Double.POSITIVE_INFINITY)
     private val at = mode.newLong(0L)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
-        if (value < this.value.load()) {
-            this.value.store(value)
-            at.store(timestampNanos)
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            if (value < this.value.load()) {
+                this.value.store(value)
+                at.store(timestampNanos)
+            }
         }
     }
 

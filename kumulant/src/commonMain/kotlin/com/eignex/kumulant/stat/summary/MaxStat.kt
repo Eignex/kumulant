@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
@@ -36,7 +37,7 @@ class MaxStat(override val concurrency: Concurrency = Concurrency.None) : Series
     private val value = mode.newDouble(Double.NEGATIVE_INFINITY)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0 || value.isNaN()) return // zero weight and NaN are both no-ops; see Stat
+        if (weight.isInertWeight()) return
         casMax(this.value, value)
     }
 

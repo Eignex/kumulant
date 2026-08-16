@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.event
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
@@ -69,27 +70,29 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
     private val maxExcursion = mode.newDouble(0.0)
     private val lastValue = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
-        lastValue.store(value)
-        val seen = initialized.addAndGet(1L)
-        if (seen == 1L) {
-            peak.store(value)
-            peakTs.store(timestampNanos)
-            trough.store(value)
-            troughTs.store(timestampNanos)
-            return@guarded
-        }
-        if (value > peak.load()) {
-            peak.store(value)
-            peakTs.store(timestampNanos)
-            trough.store(value)
-            troughTs.store(timestampNanos)
-        } else if (value < trough.load()) {
-            trough.store(value)
-            troughTs.store(timestampNanos)
-            val excursion = peak.load() - value
-            if (excursion > maxExcursion.load()) maxExcursion.store(excursion)
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            lastValue.store(value)
+            val seen = initialized.addAndGet(1L)
+            if (seen == 1L) {
+                peak.store(value)
+                peakTs.store(timestampNanos)
+                trough.store(value)
+                troughTs.store(timestampNanos)
+                return@guarded
+            }
+            if (value > peak.load()) {
+                peak.store(value)
+                peakTs.store(timestampNanos)
+                trough.store(value)
+                troughTs.store(timestampNanos)
+            } else if (value < trough.load()) {
+                trough.store(value)
+                troughTs.store(timestampNanos)
+                val excursion = peak.load() - value
+                if (excursion > maxExcursion.load()) maxExcursion.store(excursion)
+            }
         }
     }
 

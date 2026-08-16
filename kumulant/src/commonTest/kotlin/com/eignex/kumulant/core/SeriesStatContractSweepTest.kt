@@ -48,6 +48,7 @@ import com.eignex.kumulant.schema.spec.TotalWeights
 import com.eignex.kumulant.schema.spec.Variance
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Contracts that hold for every series stat, checked against the whole catalogue rather than a
@@ -130,6 +131,63 @@ class SeriesStatContractSweepTest {
     }
 
     @Test
+    fun `a NaN weight is a no-op for every series stat`() {
+        // The companion of the zero-weight sweep: a weight is the multiplicity of an observation and
+        // NaN is not a multiplicity, so it carries nothing to fold in. This used to be three
+        // different behaviours - the Welford family threw from requireLiveWeight, the sketches
+        // rounded it to a weight of one, and everything else let it poison the accumulator.
+        val violations = mutableListOf<String>()
+        for ((name, spec) in specs) {
+            for (probe in doubleArrayOf(999.0, -999.0)) {
+                val stat = primed(spec)
+                val before = stat.read(readAt)
+
+                val thrown = runCatching { stat.update(probe, readAt, Double.NaN) }.exceptionOrNull()
+                if (thrown != null) {
+                    violations += "$name threw on a NaN weight: ${thrown.message}"
+                    continue
+                }
+
+                val after = stat.read(readAt)
+                if (before != after) violations += "$name absorbed a NaN-weighted $probe: $before -> $after"
+            }
+        }
+        assertEquals(emptyList(), violations.toList(), "a NaN weight must not change state")
+    }
+
+    @Test
+    fun `no series stat throws on a NaN value`() {
+        // A NaN value is not filtered - it propagates, and the stat reads back NaN. The one thing
+        // ruled out is turning a gap in the input into an outage in the caller, which HdrHistogram
+        // did: its `value >= 0.0` check is false for NaN, so it reported a NaN as a negative value.
+        val violations = mutableListOf<String>()
+        for ((name, spec) in specs) {
+            val stat = primed(spec)
+            val thrown = runCatching { stat.update(Double.NaN, readAt, 1.0) }.exceptionOrNull()
+            if (thrown != null) violations += "$name threw on a NaN value: ${thrown.message}"
+            runCatching { stat.read(readAt) }.exceptionOrNull()?.let {
+                violations += "$name threw reading back after a NaN value: ${it.message}"
+            }
+        }
+        assertEquals(emptyList(), violations.toList(), "a NaN value must never throw")
+    }
+
+    @Test
+    fun `a NaN value propagates through the accumulating families`() {
+        // The positive half of the rule, pinned on the stats where propagation is well defined, so
+        // nobody quietly reintroduces a drop guard: these must report NaN, not a stale or zero value.
+        for (name in listOf("Mean", "Sum", "Variance", "Moments", "DecayingSum", "EwmaMean")) {
+            val spec = specs.first { it.first == name }.second
+            val stat = primed(spec)
+
+            stat.update(Double.NaN, readAt, 1.0)
+
+            val after = stat.read(readAt).toString()
+            assertTrue(after.contains("NaN"), "$name swallowed a NaN value instead of propagating: $after")
+        }
+    }
+
+    @Test
     fun `reset returns every series stat to its fresh state`() {
         for ((name, spec) in specs) {
             val stat = primed(spec)
@@ -161,5 +219,10 @@ class SeriesStatContractSweepTest {
 
             assertEquals(first, stat.read(readAt), "$name changed as a result of being read")
         }
+    }
+
+    private companion object {
+        /** Stats that deliberately act on a NaN observation; see the exception noted on [Stat]. */
+        val NAN_EXEMPT = setOf("RunLength")
     }
 }

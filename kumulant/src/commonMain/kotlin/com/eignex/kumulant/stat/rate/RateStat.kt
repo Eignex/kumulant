@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.firstWriterMode
 import kotlinx.serialization.SerialName
@@ -54,6 +55,10 @@ class RateStat(override val concurrency: Concurrency = Concurrency.None) : Serie
     private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MIN_VALUE)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        // Return before the CAS loop, not just before the accumulator: a zero-weight observation must
+        // not anchor the rate window either, or the denominator would count time the numerator never
+        // saw. See Stat.
+        if (weight.isInertWeight()) return
         // CAS-loop-min; a plain compareAndSet(MIN_VALUE, ts) would let an arbitrary
         // first-arriving thread set the start, not the thread with the earliest ts.
         var current = startTimestampNanos.load()

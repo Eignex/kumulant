@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.event
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
@@ -75,26 +76,28 @@ class SojournStat(
         return idx
     }
 
-    override fun update(value: Long, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0) return@guarded // a zero weight is a no-op; see Stat
-        val newIdx = indexOfState(value)
-        val curIdx = currentStateIndex.load()
-        if (curIdx == NO_STATE) {
+    override fun update(value: Long, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            val newIdx = indexOfState(value)
+            val curIdx = currentStateIndex.load()
+            if (curIdx == NO_STATE) {
+                currentStateIndex.store(newIdx.toLong())
+                enterTimestamp.store(timestampNanos)
+                transitions.store(newIdx, transitions.load(newIdx) + 1L)
+                return@guarded
+            }
+            if (curIdx.toInt() == newIdx) {
+                // No transition; dwell extends silently.
+                return@guarded
+            }
+            val priorEnter = enterTimestamp.load()
+            val elapsed = (timestampNanos - priorEnter).coerceAtLeast(0L)
+            totalNanos.store(curIdx.toInt(), totalNanos.load(curIdx.toInt()) + elapsed)
             currentStateIndex.store(newIdx.toLong())
             enterTimestamp.store(timestampNanos)
             transitions.store(newIdx, transitions.load(newIdx) + 1L)
-            return@guarded
         }
-        if (curIdx.toInt() == newIdx) {
-            // No transition; dwell extends silently.
-            return@guarded
-        }
-        val priorEnter = enterTimestamp.load()
-        val elapsed = (timestampNanos - priorEnter).coerceAtLeast(0L)
-        totalNanos.store(curIdx.toInt(), totalNanos.load(curIdx.toInt()) + elapsed)
-        currentStateIndex.store(newIdx.toLong())
-        enterTimestamp.store(timestampNanos)
-        transitions.store(newIdx, transitions.load(newIdx) + 1L)
     }
 
     override fun merge(values: SojournResult) = lock.guarded {

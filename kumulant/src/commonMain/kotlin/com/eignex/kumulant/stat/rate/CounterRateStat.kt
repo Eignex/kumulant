@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.rate
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.guarded
@@ -58,7 +59,7 @@ class CounterRateStat(
         // Return before touching lastCounter: a zero weight contributes no delta, but advancing the
         // high-water mark anyway destroyed the increment for good, so a later sample could never
         // recover it. NaN is dropped for the same reason it is everywhere; see Stat.
-        if (weight == 0.0 || value.isNaN()) return@guarded
+        if (weight.isInertWeight()) return@guarded
         val previousCounter = lastCounter.load()
         val previousTimestamp = lastTimestampNanos.load()
 

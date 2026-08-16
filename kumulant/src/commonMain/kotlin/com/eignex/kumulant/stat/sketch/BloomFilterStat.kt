@@ -119,7 +119,7 @@ class BloomFilterStat(
     private val totalSeen: StreamLong = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+        if (weight <= 0.0 || weight.isNaN()) return
         val h1 = hasher.mix(value)
         val h2 = hasher.mix(h1)
         for (i in 0 until hashes) {

@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.decay
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
@@ -60,7 +61,14 @@ class EwmaVarianceStat(
             return if (correction == 0.0) 0.0 else biasedVar / correction
         }
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            updateLocked(value, weight)
+        }
+    }
+
+    private fun updateLocked(value: Double, weight: Double) {
         val a = weighting.correction(weight)
 
         val currentRawMean = biasedMean.load()

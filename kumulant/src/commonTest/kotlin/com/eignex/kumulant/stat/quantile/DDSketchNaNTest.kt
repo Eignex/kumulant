@@ -1,27 +1,59 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.schema.expr.X
+import com.eignex.kumulant.schema.expr.isNaN
+import com.eignex.kumulant.schema.expr.not
+import com.eignex.kumulant.schema.ops.filter
+import com.eignex.kumulant.schema.runtime.materialize
+import com.eignex.kumulant.schema.spec.DDSketch
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * NaN has no rank, so it cannot be binned. It used to fall through the sign comparisons in
- * `update` into the zero bucket and be counted as an observation of zero, which drags every
- * quantile toward zero. [LinearHistogramStat] already dropped it; this makes DDSketch agree.
+ * What a NaN does to a bucketing stat, and how a caller opts out.
+ *
+ * A NaN has no rank, so there is no bin that belongs to it: it falls through the sign comparisons in
+ * `update` into the zero bucket and drags every quantile toward zero. The library does not filter
+ * that away - see `Stat` for why a NaN value propagates rather than being silently discarded - so
+ * this test pins both halves: the damage is real, and `filter(!X.isNaN())` is what prevents it.
  */
 class DDSketchNaNTest {
 
     @Test
-    fun `NaN is dropped rather than counted as zero`() {
+    fun `a NaN counts as an observation and lands in the zero bucket`() {
         val sketch = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
-        sketch.update(Double.NaN)
-        val empty = sketch.read()
-        assertEquals(0.0, empty.totalWeights, 0.0, "NaN should not register as an observation")
-        assertEquals(0.0, empty.zeroCount, 0.0, "NaN should not land in the zero bucket")
 
         listOf(10.0, 20.0, 30.0).forEach { sketch.update(it) }
         sketch.update(Double.NaN)
+
         val r = sketch.read()
-        assertEquals(3.0, r.totalWeights, 0.0, "NaN should leave the observation count alone")
-        assertEquals(0.0, r.zeroCount, 0.0)
+        assertEquals(4.0, r.totalWeights, 0.0, "a NaN is a real observation and is counted")
+        assertEquals(1.0, r.zeroCount, 0.0, "with no bin of its own, a NaN falls into the zero bucket")
+    }
+
+    @Test
+    fun `filtering NaN upstream keeps the sketch clean`() {
+        // The supported remedy, and the reason IsNaN exists as an expression node: none of the
+        // comparison nodes can single out a NaN, since every IEEE comparison against one is false.
+        val filtered = DDSketch(relativeError = 0.01, probabilities = listOf(0.5))
+            .filter(!X.isNaN())
+            .materialize()
+
+        listOf(10.0, 20.0, 30.0).forEach { filtered.update(it, 0L, 1.0) }
+        filtered.update(Double.NaN, 0L, 1.0)
+
+        val r = filtered.read(0L)
+        assertEquals(3.0, r.totalWeights, 0.0, "the filter must drop the NaN before the sketch sees it")
+        assertEquals(0.0, r.zeroCount, 0.0, "and nothing must reach the zero bucket")
+    }
+
+    @Test
+    fun `a NaN weight is a no-op even though a NaN value is not`() {
+        val sketch = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
+
+        listOf(10.0, 20.0, 30.0).forEach { sketch.update(it) }
+        sketch.update(15.0, 0L, Double.NaN)
+
+        assertEquals(3.0, sketch.read().totalWeights, 0.0, "a NaN weight carries no observation")
     }
 }

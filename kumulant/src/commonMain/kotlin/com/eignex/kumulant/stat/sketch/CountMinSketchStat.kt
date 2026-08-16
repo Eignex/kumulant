@@ -138,7 +138,10 @@ class CountMinSketchStat(
     private val totalSeen: StreamLong = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+        // `weight <= 0.0` is false for NaN, and `ceil(NaN).toLong()` is 0, which the coerce below
+        // lifted to 1 - so a NaN weight silently became a real observation of weight one. Counters
+        // are Long and have no NaN to propagate into, so the observation is dropped; see Stat.
+        if (weight <= 0.0 || weight.isNaN()) return
         // Counters are Long, so a fractional weight has to be rounded. Round *up*: rounding to
         // nearest silently discarded everything below 0.5 - including totalSeen, so the stat denied
         // observations it had seen - whereas rounding up keeps every observation and leaves the

@@ -2342,6 +2342,7 @@ public final class com/eignex/kumulant/schema/expr/ExprKt {
 	public static final fun ge (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun gt (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun gt (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
+	public static final fun isNaN (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun le (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun le (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun lt (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;

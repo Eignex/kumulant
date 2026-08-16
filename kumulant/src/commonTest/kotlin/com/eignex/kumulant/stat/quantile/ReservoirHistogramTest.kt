@@ -43,13 +43,25 @@ class ReservoirHistogramTest {
     }
 
     @Test
-    fun `zero negative or NaN ignored`() {
+    fun `an inert or negative weight is ignored`() {
         val res = ReservoirHistogramStat(capacity = 10, seed = 1)
         res.update(1.0, weight = 0.0)
         res.update(1.0, weight = -1.0)
-        res.update(Double.NaN)
+        res.update(1.0, weight = Double.NaN)
         assertEquals(0, res.read().values.size)
         assertEquals(0L, res.read().totalSeen)
+    }
+
+    @Test
+    fun `a NaN value is sampled like any other rather than ignored`() {
+        // A NaN value is a real observation; the reservoir stores it and the caller filters upstream
+        // if that is unwanted. See Stat for the contract and DDSketchNaNTest for the filter.
+        val res = ReservoirHistogramStat(capacity = 10, seed = 1)
+
+        res.update(Double.NaN)
+
+        assertEquals(1, res.read().values.size, "a NaN value must not be silently discarded")
+        assertEquals(1L, res.read().totalSeen)
     }
 
     @Test

@@ -82,11 +82,21 @@ class TDigestTest {
     }
 
     @Test
-    fun `zero weight ignored`() {
+    fun `an inert weight is ignored`() {
         val td = TDigestStat(probabilities = doubleArrayOf(0.5))
         td.update(100.0, weight = 0.0)
-        td.update(Double.NaN)
+        td.update(100.0, weight = Double.NaN)
         assertEquals(0.0, td.read().totalWeight)
+    }
+
+    @Test
+    fun `a NaN value is absorbed rather than ignored`() {
+        // The value contract is the opposite of the weight one: a NaN value counts. See Stat.
+        val td = TDigestStat(probabilities = doubleArrayOf(0.5))
+
+        td.update(Double.NaN)
+
+        assertEquals(1.0, td.read().totalWeight, "a NaN value must not be silently discarded")
     }
 
     @Test

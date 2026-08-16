@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.math.nextPoissonOne
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -81,7 +82,7 @@ class RandomForestRegressionStat(
         // Return before drawing from baggingRng: a zero-weight call used to consume one draw per
         // tree, desynchronising every later bagging draw and changing the forest's predictions. The
         // classifier already guards this.
-        if (weight == 0.0 || y.isNaN()) return
+        if (weight.isInertWeight()) return
         if (!bagging) {
             for (t in trees) t.update(x, y, weight)
             return

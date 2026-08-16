@@ -8,14 +8,16 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.core.isInertWeight
 
 /**
  * Force every update through this stat to use a constant [weight], discarding caller weight.
  *
- * A caller weight of exactly `0.0` is passed through unchanged rather than replaced. The override
- * sets the *magnitude* of a real observation, and "ignore this observation" is not a magnitude - so
- * the library-wide zero-weight no-op in [Stat] survives the wrapper. Without that, a zero-weight
- * update to a `CountStat` (which is `SumStat.withWeight(1.0)`) still counted.
+ * An inert caller weight - exactly `0.0`, or `NaN` - is passed through unchanged rather than
+ * replaced. The override sets the *magnitude* of a real observation, and neither "ignore this
+ * observation" nor "no multiplicity at all" is a magnitude, so the no-op guarantees in [Stat] survive
+ * the wrapper. Without this, an inert update to a `CountStat` (which is `SumStat.withWeight(1.0)`)
+ * still counted, and the substituted `1.0` meant nothing downstream could tell.
  */
 internal fun <R : Result> SeriesStat<R>.withWeight(weight: Double): SeriesStat<R> = WithWeightStat(this, weight)
 
@@ -31,14 +33,14 @@ internal fun <R : Result> DiscreteStat<R>.withWeight(weight: Double): DiscreteSt
     weight,
 )
 
-/** Zero stays zero; see [withWeight]. Shared by all four modality adapters. */
-private fun Double.orZero(replacement: Double): Double = if (this == 0.0) 0.0 else replacement
+/** An inert weight stays inert; see [withWeight]. Shared by all four modality adapters. */
+private fun Double.orInert(replacement: Double): Double = if (isInertWeight()) this else replacement
 
 /** Adapter implementing the series variant of [withWeight]. */
 internal class WithWeightStat<R : Result>(private val delegate: SeriesStat<R>, private val weight: Double) :
     SeriesStat<R>,
     Stat<R> by delegate {
-    private fun overrideOf(callerWeight: Double) = callerWeight.orZero(weight)
+    private fun overrideOf(callerWeight: Double) = callerWeight.orInert(weight)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(value, timestampNanos, overrideOf(weight))
@@ -51,7 +53,7 @@ internal class WithWeightStat<R : Result>(private val delegate: SeriesStat<R>, p
 internal class WithWeightPairedStat<R : Result>(private val delegate: PairedStat<R>, private val weight: Double) :
     PairedStat<R>,
     Stat<R> by delegate {
-    private fun overrideOf(callerWeight: Double) = callerWeight.orZero(weight)
+    private fun overrideOf(callerWeight: Double) = callerWeight.orInert(weight)
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x, y, timestampNanos, overrideOf(weight))
@@ -65,7 +67,7 @@ internal class WithWeightPairedStat<R : Result>(private val delegate: PairedStat
 internal class WithWeightVectorStat<R : Result>(private val delegate: VectorStat<R>, private val weight: Double) :
     VectorStat<R>,
     Stat<R> by delegate {
-    private fun overrideOf(callerWeight: Double) = callerWeight.orZero(weight)
+    private fun overrideOf(callerWeight: Double) = callerWeight.orInert(weight)
 
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(vector, timestampNanos, overrideOf(weight))
@@ -79,7 +81,7 @@ internal class WithWeightVectorStat<R : Result>(private val delegate: VectorStat
 internal class WithWeightDiscreteStat<R : Result>(private val delegate: DiscreteStat<R>, private val weight: Double) :
     DiscreteStat<R>,
     Stat<R> by delegate {
-    private fun overrideOf(callerWeight: Double) = callerWeight.orZero(weight)
+    private fun overrideOf(callerWeight: Double) = callerWeight.orInert(weight)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         delegate.update(value, timestampNanos, overrideOf(weight))

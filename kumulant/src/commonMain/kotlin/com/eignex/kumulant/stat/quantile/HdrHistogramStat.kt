@@ -118,8 +118,15 @@ class HdrHistogramStat(
     }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
-        require(value >= 0.0) { "HdrHistogramStat only supports non-negative values; got $value" }
+        if (weight <= 0.0 || weight.isNaN()) return
+        // Before the require, which NaN would otherwise fail: every comparison against NaN is false,
+        // so `value >= 0.0` rejected it as a negative value and turned a gap in the input into an
+        // outage in the caller. NaN is dropped like everywhere else; see Stat.
+        // `!(value < 0.0)`, not `value >= 0.0`: both reject a negative value, but every comparison
+        // against NaN is false, so the `>=` form rejected a NaN as though it were negative and threw.
+        // A NaN observation must not become an exception in the caller - it scales to bucket zero and
+        // corrupts this histogram like it corrupts any other accumulator. See Stat.
+        require(!(value < 0.0)) { "HdrHistogramStat only supports non-negative values; got $value" }
 
         // Scale the incoming floating-point value to an internal integer
         val internalValue = (value * multiplier).toLong()

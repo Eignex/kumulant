@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -48,7 +49,7 @@ class BernoulliSumStat(override val concurrency: Concurrency = Concurrency.None)
     private val trials = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0) return
+        if (weight.isInertWeight()) return
         successes.add(value * weight)
         trials.add(weight)
     }

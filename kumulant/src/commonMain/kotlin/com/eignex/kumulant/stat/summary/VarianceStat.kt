@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
@@ -70,15 +71,17 @@ class VarianceStat(override val concurrency: Concurrency = Concurrency.None) : S
     private val mean = mode.newDouble(0.0)
     private val sst = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0) return@guarded
-        val priorW = totalWeights.load()
-        requireLiveWeight(priorW, weight)
-        val nextW = totalWeights.addAndGet(weight)
-        val delta = value - mean.load()
-        val r = delta * (weight / nextW)
-        mean.add(r)
-        sst.add(priorW * delta * r)
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            val priorW = totalWeights.load()
+            requireLiveWeight(priorW, weight)
+            val nextW = totalWeights.addAndGet(weight)
+            val delta = value - mean.load()
+            val r = delta * (weight / nextW)
+            mean.add(r)
+            sst.add(priorW * delta * r)
+        }
     }
 
     override fun merge(values: WeightedVarianceResult) = lock.guarded {

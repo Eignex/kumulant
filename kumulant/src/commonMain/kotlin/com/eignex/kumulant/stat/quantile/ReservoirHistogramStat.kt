@@ -213,7 +213,7 @@ class ReservoirHistogramStat(
     }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0 || value.isNaN()) return
+        if (weight <= 0.0 || weight.isNaN()) return
         outerLock.guarded {
             val key = drawKey(weight)
             admit(value, key)

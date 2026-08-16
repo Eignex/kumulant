@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.calibration
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
@@ -114,7 +115,10 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
     private val sumW: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0) return
+        if (weight.isInertWeight()) return
+        // coerceIn passes a NaN straight through and NaN.toInt() is 0, so a NaN prediction was
+        // credited to the first bin as though it were a confident zero. Backs IsotonicCalibratorStat
+        // too. See Stat.
         val clamped = x.coerceIn(0.0, 1.0)
         val bin = (clamped * numBins).toInt().coerceIn(0, numBins - 1)
         // Denominator first, numerators after. Combined with read() loading sumW last,

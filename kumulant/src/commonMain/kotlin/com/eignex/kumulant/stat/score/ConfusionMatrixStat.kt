@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.score
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
@@ -169,7 +170,7 @@ class ConfusionMatrixStat(
     private val cells: Array<StreamDouble> = Array(numClasses * numClasses) { mode.newDouble(0.0) }
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0) return
+        if (weight.isInertWeight()) return
         if (x.isNaN() || y.isNaN()) return
         val p = x.toInt()
         val t = y.toInt()

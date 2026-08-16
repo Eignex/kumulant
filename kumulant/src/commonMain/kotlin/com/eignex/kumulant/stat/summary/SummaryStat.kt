@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.HasMinMax
 import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.casMin
@@ -73,7 +74,7 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // The guard has to come before the extrema, not just before the Welford body: these two
         // used to run unconditionally, so a zero-weight observation still moved min and max.
-        if (weight == 0.0 || value.isNaN()) return
+        if (weight.isInertWeight()) return
         casMin(minCell, value)
         casMax(maxCell, value)
         lock.guarded {

@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.change
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -76,7 +77,7 @@ class CusumStat(
     private val cusumNeg = streamMode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0 || value.isNaN()) return // zero weight and NaN are both no-ops; see Stat
+        if (weight.isInertWeight()) return
         val deviation = value - target
         while (true) {
             val prev = cusumPos.load()
