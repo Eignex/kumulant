@@ -55,25 +55,4 @@ internal fun ClassificationSplitMetric.rank(
     neg: List<ClassCountsResult>,
     minSamplesSplit: Double,
     minSamplesLeaf: Double,
-): SplitInfo {
-    require(pos.size == neg.size) { "pos and neg lists must align: ${pos.size} vs ${neg.size}" }
-    var top1 = 0.0
-    var top2 = 0.0
-    var bestI = -1
-    for (i in pos.indices) {
-        val wPos = pos[i].totalWeights
-        val wNeg = neg[i].totalWeights
-        if (wPos < minSamplesLeaf || wNeg < minSamplesLeaf || wPos + wNeg < minSamplesSplit) continue
-        val v = score(total, pos[i], neg[i])
-        when {
-            v > top1 -> {
-                top2 = top1
-                top1 = v
-                bestI = i
-            }
-
-            v > top2 -> top2 = v
-        }
-    }
-    return SplitInfo(top1, top2, bestI)
-}
+): SplitInfo = rankCandidates(total, pos, neg, minSamplesSplit, minSamplesLeaf, ::score)

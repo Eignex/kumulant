@@ -122,6 +122,131 @@ class TreeInternalsTest {
         assertEquals(pool, pool.pickCandidates(mtry = null, random = Random(0)))
     }
 
+    // A leaf payload standing in for both real ones, so the ranking tests exercise the shared loop
+    // rather than either metric's arithmetic.
+    private fun counts(vararg c: Double) = ClassCountsResult(c.size, c)
+
+    @Test
+    fun `ranking picks the best candidate and remembers the runner-up`() {
+        // The runner-up is what the Hoeffding test consumes, so losing track of it would not fail any
+        // "did it pick the best one" assertion while breaking the split rule completely.
+        val total = counts(50.0, 50.0)
+        val pos = listOf(counts(40.0, 10.0), counts(30.0, 20.0), counts(26.0, 24.0))
+        val neg = listOf(counts(10.0, 40.0), counts(20.0, 30.0), counts(24.0, 26.0))
+
+        val ranked = rankCandidates(total, pos, neg, minSamplesSplit = 30.0, minSamplesLeaf = 5.0) { t, p, n ->
+            GiniReduction.score(t, p, n)
+        }
+
+        assertEquals(0, ranked.bestIndex, "the most separating candidate should win")
+        assertTrue(ranked.top1 > ranked.top2, "the runner-up should score below the winner")
+        assertTrue(ranked.top2 > 0.0, "the second candidate separates too, so top2 should not be zero")
+    }
+
+    @Test
+    fun `a candidate too thin on one side is skipped rather than scored`() {
+        // A split isolating three observations can score beautifully and predict nothing, so the
+        // thinness gate has to run before the score is even considered - not after, as a tiebreak.
+        val total = counts(50.0, 50.0)
+        val perfectButThin = counts(3.0, 0.0)
+        val theRest = counts(47.0, 50.0)
+
+        val ranked = rankCandidates(
+            total,
+            listOf(perfectButThin),
+            listOf(theRest),
+            minSamplesSplit = 30.0,
+            minSamplesLeaf = 5.0,
+        ) { t, p, n -> GiniReduction.score(t, p, n) }
+
+        assertEquals(-1, ranked.bestIndex, "a candidate with 3 observations on one side was accepted")
+        assertEquals(0.0, ranked.top1, DELTA)
+    }
+
+    @Test
+    fun `mismatched candidate lists are rejected`() {
+        val total = counts(10.0, 10.0)
+        val e = runCatching {
+            rankCandidates(total, listOf(counts(5.0, 5.0)), emptyList(), 1.0, 1.0) { _, _, _ -> 1.0 }
+        }.exceptionOrNull()
+        assertTrue(e is IllegalArgumentException, "expected a rejection, got $e")
+    }
+
+    @Test
+    fun `a leaf below minSamplesSplit does not split`() {
+        val ranked = SplitInfo(top1 = 10.0, top2 = 0.0, bestIndex = 0)
+        val config = ClassificationTreeConfig(minSamplesSplit = 30.0)
+
+        assertEquals(false, shouldSplit(ranked, totalWeight = 29.0, depth = 0, config = config))
+        assertEquals(true, shouldSplit(ranked, totalWeight = 30.0, depth = 0, config = config))
+    }
+
+    @Test
+    fun `a leaf with no qualifying candidate does not split`() {
+        val config = ClassificationTreeConfig()
+        // Nothing scored at all.
+        assertEquals(false, shouldSplit(SplitInfo(0.0, 0.0, -1), 1000.0, 0, config))
+        // Something scored, but no better than not splitting; every metric returns 0 for no signal.
+        assertEquals(false, shouldSplit(SplitInfo(0.0, 0.0, 2), 1000.0, 0, config))
+    }
+
+    @Test
+    fun `the hoeffding test needs the winner to clear the runner-up by the bound`() {
+        val config = ClassificationTreeConfig(tau = 0.0) // tau off, so only the Hoeffding rule applies
+        val bound = hoeffdingBound(config.delta, 1000.0, 0, config.deltaDecay)
+
+        val clears = SplitInfo(top1 = bound * 3.0, top2 = 0.0, bestIndex = 0)
+        val doesNot = SplitInfo(top1 = bound * 3.0, top2 = bound * 3.0 - bound / 2.0, bestIndex = 0)
+
+        assertTrue(shouldSplit(clears, 1000.0, 0, config), "a clear winner should split")
+        assertTrue(
+            !shouldSplit(doesNot, 1000.0, 0, config),
+            "a winner inside the bound of the runner-up should wait",
+        )
+    }
+
+    @Test
+    fun `the tau tie-break breaks a deadlock the hoeffding rule cannot`() {
+        // Two candidates of equal merit never separate by more than any bound, so without tau the leaf
+        // grows forever without splitting. This is the VFDT tie-break, and it is the reason the
+        // decision is a disjunction rather than a single test.
+        val tied = SplitInfo(top1 = 5.0, top2 = 5.0, bestIndex = 0)
+        val bigLeaf = 1_000_000.0
+
+        val withoutTau = ClassificationTreeConfig(tau = 0.0)
+        assertTrue(!shouldSplit(tied, bigLeaf, 0, withoutTau), "with tau off, a tie must never split")
+
+        val withTau = ClassificationTreeConfig(tau = 0.05)
+        assertTrue(shouldSplit(tied, bigLeaf, 0, withTau), "tau should let a well-evidenced tie split")
+
+        // And tau is not a blanket override: the same tie on a small leaf still waits, because the
+        // bound has not shrunk below tau yet.
+        assertTrue(!shouldSplit(tied, 40.0, 0, withTau), "tau should not fire before the bound shrinks")
+    }
+
+    @Test
+    fun `both trees reach the same decision from the same evidence`() {
+        // The point of sharing it. Identical tunables in both config types must produce identical
+        // verdicts, which is exactly what two hand-written copies of the rule could not guarantee.
+        val cases = listOf(
+            SplitInfo(10.0, 0.0, 0),
+            SplitInfo(0.0, 0.0, -1),
+            SplitInfo(5.0, 5.0, 0),
+            SplitInfo(0.001, 0.0005, 1),
+        )
+        for (weight in listOf(29.0, 100.0, 100_000.0)) {
+            for (depth in listOf(0, 4, 12)) {
+                for (ranked in cases) {
+                    assertEquals(
+                        shouldSplit(ranked, weight, depth, RegressionTreeConfig()),
+                        shouldSplit(ranked, weight, depth, ClassificationTreeConfig()),
+                        "the two trees disagreed at weight=$weight depth=$depth on $ranked",
+                    )
+                }
+            }
+        }
+    }
+
     @Test
     fun `both configs expose the shared tunables through one interface`() {
         // What makes the growth logic able to read tunables without knowing which tree it drives.

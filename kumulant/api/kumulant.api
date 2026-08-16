@@ -7449,7 +7449,7 @@ public final class com/eignex/kumulant/stat/regression/glm/UnivariateRegressionS
 	public fun update (DDJD)V
 }
 
-public final class com/eignex/kumulant/stat/regression/tree/ClassCountsResult : com/eignex/kumulant/core/Result {
+public final class com/eignex/kumulant/stat/regression/tree/ClassCountsResult : com/eignex/kumulant/core/HasObservationCount {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult$Companion;
 	public fun <init> (I[D)V
 	public final fun component1 ()I
@@ -7461,8 +7461,9 @@ public final class com/eignex/kumulant/stat/regression/tree/ClassCountsResult : 
 	public final fun getEntropy ()D
 	public final fun getGini ()D
 	public final fun getNumClasses ()I
-	public final fun getTotalWeights ()D
+	public fun getTotalWeights ()D
 	public fun hashCode ()I
+	public fun isEmpty ()Z
 	public final fun predict ()I
 	public final fun probabilities ()[D
 	public fun toString ()Ljava/lang/String;

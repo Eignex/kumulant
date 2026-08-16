@@ -6559,7 +6559,7 @@ final class com.eignex.kumulant.stat.regression.glm/UnivariateRegressionStat : c
     final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/UnivariateRegressionStat.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
 }
 
-final class com.eignex.kumulant.stat.regression.tree/ClassCountsResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.regression.tree/ClassCountsResult|null[0]
+final class com.eignex.kumulant.stat.regression.tree/ClassCountsResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.regression.tree/ClassCountsResult|null[0]
     constructor <init>(kotlin/Int, kotlin/DoubleArray) // com.eignex.kumulant.stat.regression.tree/ClassCountsResult.<init>|<init>(kotlin.Int;kotlin.DoubleArray){}[0]
 
     final val counts // com.eignex.kumulant.stat.regression.tree/ClassCountsResult.counts|{}counts[0]
