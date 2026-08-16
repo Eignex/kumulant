@@ -115,22 +115,23 @@ class UnivariateRegressionStat(
     /** Live view of the running mean of `y`. */
     val meanY: Double by my
 
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight <= 0.0) return@guarded
+    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
+        if (weight <= 0.0 || weight.isNaN()) return
+        lock.guarded {
+            val nextW = w.addAndGet(weight)
+            val oldW = nextW - weight
 
-        val nextW = w.addAndGet(weight)
-        val oldW = nextW - weight
+            val dx = x - mx.load()
+            val dy = y - my.load()
 
-        val dx = x - mx.load()
-        val dy = y - my.load()
+            mx.add(dx * weight / nextW)
+            my.add(dy * weight / nextW)
 
-        mx.add(dx * weight / nextW)
-        my.add(dy * weight / nextW)
-
-        val factor = weight * oldW / nextW
-        sxx.add(dx * dx * factor)
-        syy.add(dy * dy * factor)
-        sxy.add(dx * dy * factor)
+            val factor = weight * oldW / nextW
+            sxx.add(dx * dx * factor)
+            syy.add(dy * dy * factor)
+            sxy.add(dx * dy * factor)
+        }
     }
 
     override fun merge(values: UnivariateRegressionResult) = lock.guarded {

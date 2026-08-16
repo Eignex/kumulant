@@ -1,6 +1,16 @@
 package com.eignex.kumulant.core
 
 /**
+ * True when a weight carries no observation, and the update is therefore a no-op.
+ *
+ * Exactly zero, because every weighted recurrence in the library reduces to the identity at `w = 0`;
+ * and `NaN`, because a weight is the multiplicity of an observation and `NaN` is not a multiplicity.
+ * Note that this is the *weight*, not the value: a `NaN` value is a real observation of an unusable
+ * number and propagates. See [Stat] for the contract and why the two differ.
+ */
+internal fun Double.isInertWeight(): Boolean = this == 0.0 || isNaN()
+
+/**
  * Guard the one negative-weight case that corrupts a Welford accumulator.
  *
  * A negative [weight] is a legitimate downdate: it removes an observation that was
@@ -23,6 +33,10 @@ package com.eignex.kumulant.core
  * @throws IllegalArgumentException if the update would leave a non-positive total.
  */
 internal fun requireLiveWeight(currentTotal: Double, weight: Double) {
+    // Callers drop a NaN weight before reaching here, but keep the guard local too: `NaN > 0.0` is
+    // false, so the require below would fire and report a NaN weight as a downdate emptying the
+    // accumulator - wrong, and the one thing a NaN weight must not do now that it is a no-op.
+    if (weight.isNaN()) return
     require(currentTotal + weight > 0.0) {
         "weight $weight would take the accumulated weight from $currentTotal to " +
             "${currentTotal + weight}; a downdate must leave a positive total"

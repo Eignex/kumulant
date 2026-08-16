@@ -346,7 +346,7 @@ class TDigestStat(
     }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0 || value.isNaN()) return
+        if (weight <= 0.0 || weight.isNaN()) return
         outerLock.guarded {
             while (true) {
                 val claimed = bufferIndex.addAndGet(1L)

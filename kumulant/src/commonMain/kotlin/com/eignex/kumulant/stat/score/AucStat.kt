@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.score
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
@@ -123,7 +124,9 @@ class AucStat(
     private val binWidth: Double = (upperBound - lowerBound) / numBins
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0) return
+        if (weight.isInertWeight()) return
+        // As in ReliabilityStat: coerceIn passes a NaN through and NaN.toInt() is 0, so a NaN score
+        // landed in the bottom bin as a confident negative. See Stat.
         val clamped = x.coerceIn(lowerBound, upperBound)
         val bin = ((clamped - lowerBound) / binWidth).toInt().coerceIn(0, numBins - 1)
         val posWeight = y * weight

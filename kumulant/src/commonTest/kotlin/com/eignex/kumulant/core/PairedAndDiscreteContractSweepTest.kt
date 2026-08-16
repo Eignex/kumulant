@@ -97,6 +97,64 @@ class PairedAndDiscreteContractSweepTest {
     }
 
     @Test
+    fun `a NaN weight is a no-op for every paired and discrete stat`() {
+        val violations = mutableListOf<String>()
+        for ((name, spec) in pairedSpecs) {
+            val stat = spec.materialize()
+            pairs.forEachIndexed { i, (x, y) -> stat.update(x, y, i.toLong() * 1_000_000_000L, 1.0) }
+            val before = stat.read(readAt)
+
+            val thrown = runCatching { stat.update(0.99, 0.0, readAt, Double.NaN) }.exceptionOrNull()
+            if (thrown != null) {
+                violations += "$name threw on a NaN weight: ${thrown.message}"
+                continue
+            }
+
+            val after = stat.read(readAt)
+            if (before != after) violations += "$name absorbed a NaN weight: $before -> $after"
+        }
+        for ((name, spec) in discreteSpecs) {
+            val stat = spec.materialize()
+            keys.forEachIndexed { i, k -> stat.update(k, i.toLong() * 1_000_000_000L, 1.0) }
+            val before = stat.read(readAt)
+
+            // The sketches were the worst case here: `weight <= 0.0` is false for NaN and
+            // `ceil(NaN).toLong()` is 0, which the coerce lifted to 1, so a NaN weight became a real
+            // observation of weight one.
+            val thrown = runCatching { stat.update(2L, readAt, Double.NaN) }.exceptionOrNull()
+            if (thrown != null) {
+                violations += "$name threw on a NaN weight: ${thrown.message}"
+                continue
+            }
+
+            val after = stat.read(readAt)
+            if (before != after) violations += "$name absorbed a NaN weight: $before -> $after"
+        }
+        assertEquals(emptyList(), violations.map { it.take(110) }, "a NaN weight must not change state")
+    }
+
+    @Test
+    fun `no paired stat throws on a NaN value`() {
+        // Both positions separately: a paired stat reaches x and y through different arithmetic, so
+        // one being safe is no evidence about the other. A NaN value propagates rather than being
+        // filtered; the only guarantee is that it does not become an exception.
+        val violations = mutableListOf<String>()
+        for ((name, spec) in pairedSpecs) {
+            for (probe in listOf(Double.NaN to 1.0, 0.5 to Double.NaN, Double.NaN to Double.NaN)) {
+                val stat = spec.materialize()
+                pairs.forEachIndexed { i, (x, y) -> stat.update(x, y, i.toLong() * 1_000_000_000L, 1.0) }
+
+                val thrown = runCatching { stat.update(probe.first, probe.second, readAt, 1.0) }.exceptionOrNull()
+                if (thrown != null) violations += "$name threw on a NaN $probe: ${thrown.message}"
+                runCatching { stat.read(readAt) }.exceptionOrNull()?.let {
+                    violations += "$name threw reading back after a NaN $probe: ${it.message}"
+                }
+            }
+        }
+        assertEquals(emptyList(), violations.map { it.take(110) }, "a NaN value must never throw")
+    }
+
+    @Test
     fun `every result equals itself`() {
         // Reflexivity is not free here: several Results hand-roll equals to get contentEquals on
         // their arrays, and a hand-rolled `a == other.a` on a Double is IEEE comparison, so a field

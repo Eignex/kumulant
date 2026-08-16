@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.change
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
@@ -88,20 +89,22 @@ class PageHinkleyStat(
     private val minPos = streamMode.newDouble(0.0)
     private val maxNeg = streamMode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
-        val n = count.load() + 1L
-        count.store(n)
-        val prevMean = mean.load()
-        val nextMean = prevMean + (value - prevMean) / n.toDouble()
-        mean.store(nextMean)
-        val deviation = value - nextMean
-        val cp = cumPos.load() + deviation - delta
-        val cn = cumNeg.load() + deviation + delta
-        cumPos.store(cp)
-        cumNeg.store(cn)
-        minPos.store(min(minPos.load(), cp))
-        maxNeg.store(max(maxNeg.load(), cn))
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            val n = count.load() + 1L
+            count.store(n)
+            val prevMean = mean.load()
+            val nextMean = prevMean + (value - prevMean) / n.toDouble()
+            mean.store(nextMean)
+            val deviation = value - nextMean
+            val cp = cumPos.load() + deviation - delta
+            val cn = cumNeg.load() + deviation + delta
+            cumPos.store(cp)
+            cumNeg.store(cn)
+            minPos.store(min(minPos.load(), cp))
+            maxNeg.store(max(maxNeg.load(), cn))
+        }
     }
 
     override fun merge(values: PageHinkleyResult) = lock.guarded {

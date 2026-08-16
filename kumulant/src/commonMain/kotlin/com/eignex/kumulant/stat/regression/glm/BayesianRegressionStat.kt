@@ -135,56 +135,58 @@ class BayesianRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0) return@guarded
-        step++
+        if (weight <= 0.0 || weight.isNaN()) return
+        lock.guarded {
+            step++
 
-        val etaPred = bias + (x dot weights)
-        val mu = link.invMean(etaPred)
-        val residual = y - mu
-        val curvature = link.curvature(etaPred)
-        sse += link.loss(etaPred, y) * weight
+            val etaPred = bias + (x dot weights)
+            val mu = link.invMean(etaPred)
+            val residual = y - mu
+            val curvature = link.curvature(etaPred)
+            sse += link.loss(etaPred, y) * weight
 
-        // SMW rank-1 downdate. For canonical-link GLMs the per-observation precision
-        // is `weight * curvature`: 1 under Identity gives the exact conjugate update;
-        // for Logit / Log this is the local Laplace approximation around the current
-        // linear predictor (not the strict closed-form Bayesian update).
-        //   S_new = S - (w_c * S x xT S) / (1 + w_c * xT S x)
-        //         = S - z zT, where z = sqrt(w_c) * S x / sqrt(1 + w_c * xT S x).
-        val wc = weight * curvature
-        val z = covariance.matVec(x)
-        val denom = sqrt(1.0 + wc * (x dot z))
-        if (denom == 0.0) return@guarded
-        scale(z, sqrt(wc) / denom)
+            // SMW rank-1 downdate. For canonical-link GLMs the per-observation precision
+            // is `weight * curvature`: 1 under Identity gives the exact conjugate update;
+            // for Logit / Log this is the local Laplace approximation around the current
+            // linear predictor (not the strict closed-form Bayesian update).
+            //   S_new = S - (w_c * S x xT S) / (1 + w_c * xT S x)
+            //         = S - z zT, where z = sqrt(w_c) * S x / sqrt(1 + w_c * xT S x).
+            val wc = weight * curvature
+            val z = covariance.matVec(x)
+            val denom = sqrt(1.0 + wc * (x dot z))
+            if (denom == 0.0) return@guarded
+            scale(z, sqrt(wc) / denom)
 
-        // Downdate the Cholesky factor; repair on instability. The downdate leaves the factor
-        // untouched for any norm at or above one, so the repair has to trigger on the same
-        // condition: treating an exact 1.0 as success downdates the covariance below without its
-        // factor, and the two never agree again.
-        var norm = covarianceL.choleskyDowndateInPlace(z)
-        if (norm >= 1.0) {
-            for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + 1e-5
-            val Lnew = covariance.cholesky(CholeskyPolicy.Regularize()).l
-            for (i in 0 until featureSize) {
-                for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
-            }
-            norm = covarianceL.choleskyDowndateInPlace(z)
-            while (norm >= 1.0) {
-                scale(z, 1.0 / (norm + 1e-5))
+            // Downdate the Cholesky factor; repair on instability. The downdate leaves the factor
+            // untouched for any norm at or above one, so the repair has to trigger on the same
+            // condition: treating an exact 1.0 as success downdates the covariance below without its
+            // factor, and the two never agree again.
+            var norm = covarianceL.choleskyDowndateInPlace(z)
+            if (norm >= 1.0) {
+                for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + 1e-5
+                val Lnew = covariance.cholesky(CholeskyPolicy.Regularize()).l
+                for (i in 0 until featureSize) {
+                    for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
+                }
                 norm = covarianceL.choleskyDowndateInPlace(z)
+                while (norm >= 1.0) {
+                    scale(z, 1.0 / (norm + 1e-5))
+                    norm = covarianceL.choleskyDowndateInPlace(z)
+                }
             }
+
+            // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
+            ger(-1.0, z, z, covariance)
+
+            // Posterior mean update: w += (weight * residual) * S_new * x.
+            axpy(weights, weight * residual, covariance.matVec(x))
+
+            biasPrecision += wc
+            bias += weight * residual / biasPrecision
+            totalWeights += weight
         }
-
-        // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
-        ger(-1.0, z, z, covariance)
-
-        // Posterior mean update: w += (weight * residual) * S_new * x.
-        axpy(weights, weight * residual, covariance.matVec(x))
-
-        biasPrecision += wc
-        bias += weight * residual / biasPrecision
-        totalWeights += weight
     }
 
     override fun read(timestampNanos: Long): CovarianceRegressionResult = lock.guarded {

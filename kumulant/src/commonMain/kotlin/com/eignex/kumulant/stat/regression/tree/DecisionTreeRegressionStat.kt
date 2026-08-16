@@ -4,6 +4,7 @@ import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.random.Random
@@ -78,7 +79,7 @@ class DecisionTreeRegressionStat(
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
         // A zero-weight call still advanced the leaves' observationsSinceLastCheck and shifted the
         // split-audit cadence; see Stat for the contract.
-        if (weight == 0.0 || y.isNaN()) return
+        if (weight.isInertWeight()) return
         tree.update(x, y, weight)
     }
 

@@ -104,18 +104,21 @@ class DecayingVarianceStat(
         return 1.0
     }
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight <= 0.0) return@guarded
-        val scaledWeight = weight * advanceTo(timestampNanos)
-        if (scaledWeight <= 0.0) return@guarded // the sample is so late its weight underflowed away
-        val priorW = totalWeights.load()
-        val nextW = priorW + scaledWeight
-        val priorMean = mean.load()
-        val delta = value - priorMean
-        val newMean = priorMean + delta * scaledWeight / nextW
-        totalWeights.store(nextW)
-        mean.store(newMean)
-        m2.add(scaledWeight * delta * (value - newMean))
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        // Both before the lock: a dropped observation neither contends for it nor moves the landmark.
+        if (weight <= 0.0 || weight.isNaN()) return // a zero weight is a no-op; see Stat
+        lock.guarded {
+            val scaledWeight = weight * advanceTo(timestampNanos)
+            if (scaledWeight <= 0.0) return@guarded // the sample is so late its weight underflowed away
+            val priorW = totalWeights.load()
+            val nextW = priorW + scaledWeight
+            val priorMean = mean.load()
+            val delta = value - priorMean
+            val newMean = priorMean + delta * scaledWeight / nextW
+            totalWeights.store(nextW)
+            mean.store(newMean)
+            m2.add(scaledWeight * delta * (value - newMean))
+        }
     }
 
     override fun read(timestampNanos: Long): DecayingVarianceResult = lock.guarded {

@@ -129,7 +129,7 @@ class MinHashStat(
     private val totalSeen: StreamLong = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+        if (weight <= 0.0 || weight.isNaN()) return
         for (i in 0 until numHashes) {
             casMin(signatures, i, hasher.mix(value xor salts[i]))
         }

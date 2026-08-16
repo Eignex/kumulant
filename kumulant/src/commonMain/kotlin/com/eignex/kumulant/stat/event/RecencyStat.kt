@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.event
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
@@ -47,7 +48,7 @@ class RecencyStat(override val concurrency: Concurrency = Concurrency.None) : Se
     private val seen = streamMode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0 || value.isNaN()) return // zero weight and NaN are both no-ops; see Stat
+        if (weight.isInertWeight()) return
         casMax(lastObserved, timestampNanos)
         seen.store(1L)
     }

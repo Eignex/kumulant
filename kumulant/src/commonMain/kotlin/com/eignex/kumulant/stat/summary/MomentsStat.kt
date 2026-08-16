@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.HasSampleVariance
 import com.eignex.kumulant.core.HasShapeMoments
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
@@ -65,35 +66,37 @@ class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : Se
     private val m3 = mode.newDouble(0.0)
     private val m4 = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0) return@guarded
-        val oldW = totalWeights.load()
-        requireLiveWeight(oldW, weight)
-        val nextW = totalWeights.addAndGet(weight)
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            val oldW = totalWeights.load()
+            requireLiveWeight(oldW, weight)
+            val nextW = totalWeights.addAndGet(weight)
 
-        val priorMean = mean.load()
-        val priorM2 = m2.load()
-        val priorM3 = m3.load()
+            val priorMean = mean.load()
+            val priorM2 = m2.load()
+            val priorM3 = m3.load()
 
-        val delta = value - priorMean
-        val deltaW = delta * (weight / nextW)
-        val deltaW2 = deltaW * deltaW
-        val term1 = delta * deltaW * oldW
+            val delta = value - priorMean
+            val deltaW = delta * (weight / nextW)
+            val deltaW2 = deltaW * deltaW
+            val term1 = delta * deltaW * oldW
 
-        // Weighted Pebay recurrences: the leading coefficients are the merge formulas
-        // below specialised to a second sample of weight `weight` and zero moments.
-        // They reduce to the familiar (n - 2) and (n^2 - 3n + 3) only at weight == 1.
-        // Written as delta/nextW rather than deltaW/weight so a tiny weight doesn't
-        // divide out.
-        val m4Delta = term1 * delta * delta * (oldW * oldW - oldW * weight + weight * weight) / (nextW * nextW) +
-            6 * deltaW2 * priorM2 -
-            4 * deltaW * priorM3
-        val m3Delta = term1 * delta * (oldW - weight) / nextW - 3 * deltaW * priorM2
+            // Weighted Pebay recurrences: the leading coefficients are the merge formulas
+            // below specialised to a second sample of weight `weight` and zero moments.
+            // They reduce to the familiar (n - 2) and (n^2 - 3n + 3) only at weight == 1.
+            // Written as delta/nextW rather than deltaW/weight so a tiny weight doesn't
+            // divide out.
+            val m4Delta = term1 * delta * delta * (oldW * oldW - oldW * weight + weight * weight) / (nextW * nextW) +
+                6 * deltaW2 * priorM2 -
+                4 * deltaW * priorM3
+            val m3Delta = term1 * delta * (oldW - weight) / nextW - 3 * deltaW * priorM2
 
-        m4.add(m4Delta)
-        m3.add(m3Delta)
-        m2.add(term1)
-        mean.add(deltaW)
+            m4.add(m4Delta)
+            m3.add(m3Delta)
+            m2.add(term1)
+            mean.add(deltaW)
+        }
     }
 
     override fun merge(values: MomentsResult) = lock.guarded {

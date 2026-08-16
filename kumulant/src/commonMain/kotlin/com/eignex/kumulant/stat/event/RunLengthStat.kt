@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.event
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
@@ -59,10 +60,10 @@ class RunLengthStat(override val concurrency: Concurrency = Concurrency.None) : 
     private val anyFalsy = mode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        // Deliberately no NaN guard here, unlike the rest of the library: this stat's input is a
-        // predicate projected onto 0.0 / 1.0, not a measurement, so NaN means "not satisfied" and
-        // breaks the run. See the exception noted on Stat.
-        if (weight == 0.0) return // a zero weight is a no-op; see Stat
+        if (weight.isInertWeight()) return
+        // This stat's input is a predicate projected onto 0.0 / 1.0 rather than a measurement, so a
+        // NaN reads as "not satisfied" and breaks the run. That is propagation, not filtering: a run
+        // length stays a well-defined integer whatever arrives, so there is no NaN to carry forward.
         if (value != 0.0 && !value.isNaN()) {
             val updated = current.addAndGet(1L)
             casMax(longest, updated)

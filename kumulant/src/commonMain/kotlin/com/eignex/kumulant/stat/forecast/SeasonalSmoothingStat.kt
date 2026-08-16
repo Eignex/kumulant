@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.forecast
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
@@ -151,42 +152,44 @@ class SeasonalSmoothingStat(
     private val seasons = streamMode.newDoubleArray(period) { seasonInit.load() }
     private val slot = streamMode.newLong(0L)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
-        val seen = initialized.addAndGet(1L)
-        val currentSlot = (slot.load() % period).toInt()
-        if (seen == 1L) {
-            level.store(value)
-            trend.store(0.0)
-            // Leave seasons at their identity (0 additive, 1 multiplicative) and advance the slot.
-            slot.store((currentSlot + 1).toLong() % period)
-            return@guarded
-        }
-        val a = alphaWeighting.correction(weight)
-        val b = betaWeighting.correction(weight)
-        val g = gammaWeighting.correction(weight)
-        val prevLevel = level.load()
-        val prevTrend = trend.load()
-        val sOld = seasons.load(currentSlot)
-        val newLevel: Double
-        val newSeason: Double
-        when (mode) {
-            SeasonalMode.Additive -> {
-                newLevel = a * (value - sOld) + (1.0 - a) * (prevLevel + phi * prevTrend)
-                newSeason = g * (value - newLevel) + (1.0 - g) * sOld
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            val seen = initialized.addAndGet(1L)
+            val currentSlot = (slot.load() % period).toInt()
+            if (seen == 1L) {
+                level.store(value)
+                trend.store(0.0)
+                // Leave seasons at their identity (0 additive, 1 multiplicative) and advance the slot.
+                slot.store((currentSlot + 1).toLong() % period)
+                return@guarded
             }
+            val a = alphaWeighting.correction(weight)
+            val b = betaWeighting.correction(weight)
+            val g = gammaWeighting.correction(weight)
+            val prevLevel = level.load()
+            val prevTrend = trend.load()
+            val sOld = seasons.load(currentSlot)
+            val newLevel: Double
+            val newSeason: Double
+            when (mode) {
+                SeasonalMode.Additive -> {
+                    newLevel = a * (value - sOld) + (1.0 - a) * (prevLevel + phi * prevTrend)
+                    newSeason = g * (value - newLevel) + (1.0 - g) * sOld
+                }
 
-            SeasonalMode.Multiplicative -> {
-                val effectiveSOld = if (sOld == 0.0) 1.0 else sOld
-                newLevel = a * (value / effectiveSOld) + (1.0 - a) * (prevLevel + phi * prevTrend)
-                newSeason = if (newLevel == 0.0) sOld else g * (value / newLevel) + (1.0 - g) * sOld
+                SeasonalMode.Multiplicative -> {
+                    val effectiveSOld = if (sOld == 0.0) 1.0 else sOld
+                    newLevel = a * (value / effectiveSOld) + (1.0 - a) * (prevLevel + phi * prevTrend)
+                    newSeason = if (newLevel == 0.0) sOld else g * (value / newLevel) + (1.0 - g) * sOld
+                }
             }
+            val newTrend = b * (newLevel - prevLevel) + (1.0 - b) * phi * prevTrend
+            level.store(newLevel)
+            trend.store(newTrend)
+            seasons.store(currentSlot, newSeason)
+            slot.store((currentSlot + 1).toLong() % period)
         }
-        val newTrend = b * (newLevel - prevLevel) + (1.0 - b) * phi * prevTrend
-        level.store(newLevel)
-        trend.store(newTrend)
-        seasons.store(currentSlot, newSeason)
-        slot.store((currentSlot + 1).toLong() % period)
     }
 
     override fun merge(values: SeasonalSmoothingResult) = lock.guarded {

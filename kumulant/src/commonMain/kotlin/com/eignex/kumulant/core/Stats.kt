@@ -21,10 +21,15 @@ import com.eignex.kumulant.stream.currentTimeNanos
  * observation weight, sums multiply by it, histograms add it to the destination
  * bin. A weight of 1 (the default) is the unweighted case.
  *
- * Two guarantees hold across every stat:
+ * Three guarantees hold across every stat:
  *
  * - A weight of `0.0` is a no-op. The observation is not folded in and no state
- *   changes, whatever the modality.
+ *   changes, whatever the modality. This is not a policy choice but an identity:
+ *   every weighted recurrence in the library, evaluated at `w = 0`, reduces to
+ *   the identity, so a stat that moved on a zero weight would simply be wrong.
+ * - A weight of `NaN` is a no-op too, for a related reason: a weight is the
+ *   multiplicity of an observation, and `NaN` is not a multiplicity. It carries no
+ *   observation, so there is nothing to fold in.
  * - A negative weight carries whatever meaning is standard for that particular
  *   statistic. For the accumulating families that is a downdate: it removes an
  *   observation previously folded in. Where a statistic has no sensible inverse,
@@ -33,20 +38,31 @@ import com.eignex.kumulant.stream.currentTimeNanos
  *   own KDoc says which applies; there is deliberately no library-wide answer,
  *   because subtraction is well defined for some statistics and not others.
  *
- * A third guarantee covers the observation rather than its weight:
+ * A `NaN` *value* is the opposite case, and the asymmetry is deliberate: it is
+ * **not** filtered. It is a real observation whose magnitude happens to be
+ * unusable, so it propagates into the accumulator exactly as IEEE-754 and the
+ * standard library propagate it, and the stat reads back `NaN` from then on. No
+ * stat silently discards a value, because a stat that under-reported the data it
+ * was given would be lying about its own sample count, and none of them can know
+ * whether a caller's `NaN` means "no reading" or a bug in the caller's arithmetic.
  *
- * - A `NaN` observation is dropped, exactly like a zero weight: no state changes.
- *   `NaN` is absence of a measurement, not a measurement, and it has no position
- *   in any ordering, so every alternative is worse. Absorbing it silently moves
- *   extrema and counters (`NaN >= level` is false, so it would land below every
- *   threshold), and throwing turns a gap in the input into an outage in the
- *   caller. This applies to the value only; `NaN` in a *weight* is the caller
- *   asking for nonsense and is not guarded.
+ * The one thing every stat does guarantee about a `NaN` value is that it never
+ * *throws*: a gap in the input must not become an outage in the caller. Two
+ * consequences are worth knowing, since a `NaN` compares false against everything:
+ * a `NaN` value lands in whichever bucket a bucketing stat reaches by fallthrough,
+ * and it never displaces a running extremum.
  *
- * One statistic is deliberately exempt from the `NaN` rule:
- * [RunLengthStat][com.eignex.kumulant.stat.event.RunLengthStat] takes a predicate
- * projected onto `0.0` / `1.0` rather than a measurement, so for it `NaN` reads as
- * "not satisfied" and breaks the run rather than being ignored.
+ * Callers who want `NaN` dropped should say so upstream, where the intent is
+ * explicit and reviewable, rather than relying on each stat to guess:
+ *
+ * ```
+ * Mean.filter(!X.isNaN())
+ * ```
+ *
+ * Class labels are a separate matter and not an exception to the above. A stat that
+ * indexes by label requires an exact non-negative integer in range, and `NaN` fails
+ * that requirement alongside `1.5` and `-3`; such observations are ignored, as those
+ * stats' own KDoc states.
  *
  * Checks beyond that are the caller's responsibility. Stats validate only where
  * the alternative is corrupted state, not to police inputs.

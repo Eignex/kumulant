@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -54,6 +55,9 @@ class ThresholdBucketStat(
     private val counts = mode.newDoubleArray(thresholds.size + 1)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        // bucketFor compares against each threshold, and every comparison against NaN is false, so a
+        // NaN fell through to the overflow bucket and was counted as the largest possible value.
+        if (weight.isInertWeight()) return
         counts.add(bucketFor(value), weight)
     }
 

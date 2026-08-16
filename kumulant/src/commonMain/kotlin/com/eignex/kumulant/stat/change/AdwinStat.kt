@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.change
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
@@ -85,18 +86,20 @@ class AdwinStat(
     private var changesDetected: Long = 0L
     private var lastUpdateRaisedAlarm: Boolean = false
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
-        rows[0].addLast(Bucket(n = 1L, sum = value, sumSquares = value * value))
-        totalN += 1L
-        totalSum += value
-        totalSumSquares += value * value
-        compress()
-        // Repeat the cut test until no significant change is found - matches Bifet's outer loop.
-        var anyShrink = false
-        while (detectAndShrink()) anyShrink = true
-        lastUpdateRaisedAlarm = anyShrink
-        if (anyShrink) changesDetected += 1L
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            rows[0].addLast(Bucket(n = 1L, sum = value, sumSquares = value * value))
+            totalN += 1L
+            totalSum += value
+            totalSumSquares += value * value
+            compress()
+            // Repeat the cut test until no significant change is found - matches Bifet's outer loop.
+            var anyShrink = false
+            while (detectAndShrink()) anyShrink = true
+            lastUpdateRaisedAlarm = anyShrink
+            if (anyShrink) changesDetected += 1L
+        }
     }
 
     private fun compress() {

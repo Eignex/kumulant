@@ -153,26 +153,28 @@ class GaussianNaiveBayesStat(
     private val classWeightCell: StreamDoubleArray = mode.newDoubleArray(numClasses)
     private val totalWeightCell: StreamDouble = mode.newDouble(0.0)
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0) return@guarded
-        // toInt() truncates toward zero, so NaN and anything in (-1, 0) both became class 0 and
-        // slipped past the range check below as a valid label. The tree classifiers already guard
-        // this; see Stat for the library-wide NaN rule.
-        if (y.isNaN()) return@guarded
-        val c = y.toInt()
-        if (c.toDouble() != y || c !in 0 until numClasses) return@guarded
-        val priorW = classWeightCell.load(c)
-        val newW = priorW + weight
-        classWeightCell.store(c, newW)
-        totalWeightCell.add(weight)
-        for (i in 0 until featureSize) {
-            val slot = c * featureSize + i
-            val mean = meanCell.load(slot)
-            val delta = x[i] - mean
-            val nextMean = mean + (weight / newW) * delta
-            meanCell.store(slot, nextMean)
-            m2Cell.add(slot, weight * delta * (x[i] - nextMean))
+        if (weight <= 0.0 || weight.isNaN()) return
+        lock.guarded {
+            // toInt() truncates toward zero, so NaN and anything in (-1, 0) both became class 0 and
+            // slipped past the range check below as a valid label. The tree classifiers already guard
+            // this; see Stat for the library-wide NaN rule.
+            if (y.isNaN()) return@guarded
+            val c = y.toInt()
+            if (c.toDouble() != y || c !in 0 until numClasses) return@guarded
+            val priorW = classWeightCell.load(c)
+            val newW = priorW + weight
+            classWeightCell.store(c, newW)
+            totalWeightCell.add(weight)
+            for (i in 0 until featureSize) {
+                val slot = c * featureSize + i
+                val mean = meanCell.load(slot)
+                val delta = x[i] - mean
+                val nextMean = mean + (weight / newW) * delta
+                meanCell.store(slot, nextMean)
+                m2Cell.add(slot, weight * delta * (x[i] - nextMean))
+            }
         }
     }
 

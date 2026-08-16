@@ -92,11 +92,10 @@ class DDSketchStat(
     private val negativeBins = ArrayBins(mode)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+        if (weight <= 0.0 || weight.isNaN()) return
         // NaN has no rank, so it cannot go in a bin. Previously it fell through the sign
         // comparisons into the zero bucket and was silently counted as an observation of
         // zero, which shifts every quantile. LinearHistogramStat already drops it.
-        if (value.isNaN()) return
 
         if (value > 0.0) {
             positiveBins.add(indexOf(value), weight)

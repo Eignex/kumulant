@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.decay
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.currentTimeNanos
@@ -79,6 +80,9 @@ class DecayingSumStat(
     )
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        // Return before the rotation check, so a zero-weight observation cannot move the epoch
+        // landmark. Also covers DecayingMeanStat and DecayingRateStat, built from this stat. See Stat.
+        if (weight.isInertWeight()) return
         while (true) {
             val epoch = epochRef.load()
             if (timestampNanos - epoch.landmarkNanos > rotationThresholdNanos) {

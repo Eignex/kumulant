@@ -149,52 +149,54 @@ class SoftmaxRegressionStat(
     /** Live view of the accumulated weighted cross-entropy. */
     val crossEntropy: Double by crossEntropyCell
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0) return@guarded
-        // toInt() truncates toward zero, so NaN and anything in (-1, 0) both became class 0 and
-        // slipped past the range check below as a valid label. The tree classifiers already guard
-        // this; see Stat for the library-wide NaN rule.
-        if (y.isNaN()) return@guarded
-        val c = y.toInt()
-        if (c.toDouble() != y || c !in 0 until numClasses) return@guarded
-        stepCell.addAndGet(1L)
+        if (weight <= 0.0 || weight.isNaN()) return
+        lock.guarded {
+            // toInt() truncates toward zero, so NaN and anything in (-1, 0) both became class 0 and
+            // slipped past the range check below as a valid label. The tree classifiers already guard
+            // this; see Stat for the library-wide NaN rule.
+            if (y.isNaN()) return@guarded
+            val c = y.toInt()
+            if (c.toDouble() != y || c !in 0 until numClasses) return@guarded
+            stepCell.addAndGet(1L)
 
-        // Softmax over current logits.
-        val etas = DoubleArray(numClasses)
-        for (k in 0 until numClasses) {
-            var dot = biasCell.load(k)
-            x.forEachStored { i, v -> dot += weightsCell.load(k * featureSize + i) * v }
-            etas[k] = dot
-        }
-        var maxEta = etas[0]
-        for (k in 1 until numClasses) if (etas[k] > maxEta) maxEta = etas[k]
-        var z = 0.0
-        for (k in 0 until numClasses) {
-            etas[k] = exp(etas[k] - maxEta)
-            z += etas[k]
-        }
-        if (z <= 0.0) return@guarded
-        val invZ = 1.0 / z
-        // Probabilities live in etas[] now.
-        for (k in 0 until numClasses) etas[k] *= invZ
-        val logProbC = ln(etas[c].coerceAtLeast(SOFTMAX_EPS))
-        crossEntropyCell.add(-logProbC * weight)
-
-        biasOpt.advance()
-        for (k in 0 until numClasses) weightOptimizers[k].advance()
-
-        for (k in 0 until numClasses) {
-            val target = if (k == c) 1.0 else 0.0
-            val dEta = etas[k] - target
-            val opt = weightOptimizers[k]
-            x.forEachStored { i, v ->
-                val grad = dEta * v
-                weightsCell.add(k * featureSize + i, opt.computeDelta(i, grad, weight))
+            // Softmax over current logits.
+            val etas = DoubleArray(numClasses)
+            for (k in 0 until numClasses) {
+                var dot = biasCell.load(k)
+                x.forEachStored { i, v -> dot += weightsCell.load(k * featureSize + i) * v }
+                etas[k] = dot
             }
-            biasCell.add(k, biasOpt.computeDelta(k, dEta, weight))
+            var maxEta = etas[0]
+            for (k in 1 until numClasses) if (etas[k] > maxEta) maxEta = etas[k]
+            var z = 0.0
+            for (k in 0 until numClasses) {
+                etas[k] = exp(etas[k] - maxEta)
+                z += etas[k]
+            }
+            if (z <= 0.0) return@guarded
+            val invZ = 1.0 / z
+            // Probabilities live in etas[] now.
+            for (k in 0 until numClasses) etas[k] *= invZ
+            val logProbC = ln(etas[c].coerceAtLeast(SOFTMAX_EPS))
+            crossEntropyCell.add(-logProbC * weight)
+
+            biasOpt.advance()
+            for (k in 0 until numClasses) weightOptimizers[k].advance()
+
+            for (k in 0 until numClasses) {
+                val target = if (k == c) 1.0 else 0.0
+                val dEta = etas[k] - target
+                val opt = weightOptimizers[k]
+                x.forEachStored { i, v ->
+                    val grad = dEta * v
+                    weightsCell.add(k * featureSize + i, opt.computeDelta(i, grad, weight))
+                }
+                biasCell.add(k, biasOpt.computeDelta(k, dEta, weight))
+            }
+            totalWeightsCell.add(weight)
         }
-        totalWeightsCell.add(weight)
     }
 
     override fun read(timestampNanos: Long): SoftmaxRegressionResult = lock.guarded {

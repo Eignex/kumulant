@@ -124,53 +124,55 @@ class StochasticRegressionStat(
         else -> 0.0
     }
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0) return@guarded
-        stepCell.addAndGet(1L)
+        if (weight <= 0.0 || weight.isNaN()) return
+        lock.guarded {
+            stepCell.addAndGet(1L)
 
-        var dot = 0.0
-        x.forEachStored { i, v -> dot += effectiveWeight(i) * v }
-        val etaPred = biasCell.load() + dot
-        val mu = link.invMean(etaPred)
-        val negResidual = mu - y
-        sseCell.add(link.loss(etaPred, y) * weight)
+            var dot = 0.0
+            x.forEachStored { i, v -> dot += effectiveWeight(i) * v }
+            val etaPred = biasCell.load() + dot
+            val mu = link.invMean(etaPred)
+            val negResidual = mu - y
+            sseCell.add(link.loss(etaPred, y) * weight)
 
-        when (val p = penalty) {
-            Penalty.None -> {
-                weightOpt.advance()
-                biasOpt.advance()
-                x.forEachStored { i, v ->
-                    val grad = negResidual * v
-                    weightsCell.add(i, weightOpt.computeDelta(i, grad, weight))
+            when (val p = penalty) {
+                Penalty.None -> {
+                    weightOpt.advance()
+                    biasOpt.advance()
+                    x.forEachStored { i, v ->
+                        val grad = negResidual * v
+                        weightsCell.add(i, weightOpt.computeDelta(i, grad, weight))
+                    }
+                    biasCell.add(biasOpt.computeDelta(0, negResidual, weight))
                 }
-                biasCell.add(biasOpt.computeDelta(0, negResidual, weight))
-            }
 
-            is Penalty.L2 -> {
-                val eta = requireSgdLearningRate().eval(stepCell.load().toDouble())
-                val etaBias = requireSgdBiasRate().eval(stepCell.load().toDouble())
-                val factor = 1.0 - eta * weight * p.lambda
-                require(factor > 0.0) {
-                    "L2 decay factor must stay positive: 1 - eta*weight*lambda = $factor"
+                is Penalty.L2 -> {
+                    val eta = requireSgdLearningRate().eval(stepCell.load().toDouble())
+                    val etaBias = requireSgdBiasRate().eval(stepCell.load().toDouble())
+                    val factor = 1.0 - eta * weight * p.lambda
+                    require(factor > 0.0) {
+                        "L2 decay factor must stay positive: 1 - eta*weight*lambda = $factor"
+                    }
+                    val scale = casMultiply(requireL2Scale(), factor)
+                    val coeff = -eta * weight * negResidual
+                    x.forEachStored { i, v -> weightsCell.add(i, coeff * v / scale) }
+                    if (scale < 1e-12) foldL2Scale()
+                    biasCell.add(-etaBias * weight * negResidual)
                 }
-                val scale = casMultiply(requireL2Scale(), factor)
-                val coeff = -eta * weight * negResidual
-                x.forEachStored { i, v -> weightsCell.add(i, coeff * v / scale) }
-                if (scale < 1e-12) foldL2Scale()
-                biasCell.add(-etaBias * weight * negResidual)
-            }
 
-            is Penalty.L1 -> {
-                val eta = requireSgdLearningRate().eval(stepCell.load().toDouble())
-                val etaBias = requireSgdBiasRate().eval(stepCell.load().toDouble())
-                val pending = requireL1Pending().addAndGet(eta * weight * p.lambda)
-                val coeff = -eta * weight * negResidual
-                x.forEachStored { i, v -> applyL1AndStep(i, pending, coeff * v) }
-                biasCell.add(-etaBias * weight * negResidual)
+                is Penalty.L1 -> {
+                    val eta = requireSgdLearningRate().eval(stepCell.load().toDouble())
+                    val etaBias = requireSgdBiasRate().eval(stepCell.load().toDouble())
+                    val pending = requireL1Pending().addAndGet(eta * weight * p.lambda)
+                    val coeff = -eta * weight * negResidual
+                    x.forEachStored { i, v -> applyL1AndStep(i, pending, coeff * v) }
+                    biasCell.add(-etaBias * weight * negResidual)
+                }
             }
+            totalWeightsCell.add(weight)
         }
-        totalWeightsCell.add(weight)
     }
 
     private fun casMultiply(cell: StreamDouble, factor: Double): Double {

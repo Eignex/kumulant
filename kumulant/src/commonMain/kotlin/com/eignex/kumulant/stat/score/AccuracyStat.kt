@@ -25,6 +25,9 @@ class AccuracyStat(override val concurrency: Concurrency = Concurrency.None) : P
     private val inner = MeanStat(concurrency)
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
+        // NaN.toLong() is 0, so a NaN label compared equal to a genuine class 0 and was scored as a
+        // correct prediction. The same truncation trap ConfusionMatrixStat guards. See Stat.
+        if (x.isNaN() || y.isNaN()) return
         val match = if (x.toLong() == y.toLong()) 1.0 else 0.0
         inner.update(match, timestampNanos, weight)
     }

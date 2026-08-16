@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.decay
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
@@ -60,10 +61,13 @@ class EwmaMeanStat(
             return if (correction == 0.0) 0.0 else biased / correction
         }
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        val a = weighting.correction(weight)
-        biasedMean.add(a * (value - biasedMean.load()))
-        totalWeights.add(weight)
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            val a = weighting.correction(weight)
+            biasedMean.add(a * (value - biasedMean.load()))
+            totalWeights.add(weight)
+        }
     }
 
     override fun merge(values: WeightedMeanResult) = lock.guarded {

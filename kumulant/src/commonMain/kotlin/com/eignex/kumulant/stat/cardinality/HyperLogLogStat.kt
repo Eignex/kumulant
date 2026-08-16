@@ -125,7 +125,7 @@ class HyperLogLogStat(
     private val totalSeen: StreamLong = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+        if (weight <= 0.0 || weight.isNaN()) return
         val hash = hasher.mix(value)
         val idx = (hash ushr (64 - precision)).toInt() and (m - 1)
         val w = hash shl precision

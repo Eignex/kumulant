@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.event
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
@@ -53,7 +54,7 @@ class CrossingStat(
     private val downs = additive.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight == 0.0 || value.isNaN()) return // zero weight and NaN are both no-ops; see Stat
+        if (weight.isInertWeight()) return
         val side = if (value >= level) 1L else 0L
         if (initialized.addAndGet(1L) == 1L) {
             lastSide.store(side)

@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.forecast
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
@@ -104,21 +105,23 @@ class HoltStat(
     private val level = mode.newDouble(0.0)
     private val trend = mode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0 || value.isNaN()) return@guarded // zero weight and NaN are both no-ops; see Stat
-        if (initialized.addAndGet(1L) == 1L) {
-            level.store(value)
-            trend.store(0.0)
-            return@guarded
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            if (initialized.addAndGet(1L) == 1L) {
+                level.store(value)
+                trend.store(0.0)
+                return@guarded
+            }
+            val a = alphaWeighting.correction(weight)
+            val b = betaWeighting.correction(weight)
+            val prevLevel = level.load()
+            val prevTrend = trend.load()
+            val newLevel = a * value + (1.0 - a) * (prevLevel + phi * prevTrend)
+            val newTrend = b * (newLevel - prevLevel) + (1.0 - b) * phi * prevTrend
+            level.store(newLevel)
+            trend.store(newTrend)
         }
-        val a = alphaWeighting.correction(weight)
-        val b = betaWeighting.correction(weight)
-        val prevLevel = level.load()
-        val prevTrend = trend.load()
-        val newLevel = a * value + (1.0 - a) * (prevLevel + phi * prevTrend)
-        val newTrend = b * (newLevel - prevLevel) + (1.0 - b) * phi * prevTrend
-        level.store(newLevel)
-        trend.store(newTrend)
     }
 
     override fun merge(values: HoltResult) = lock.guarded {

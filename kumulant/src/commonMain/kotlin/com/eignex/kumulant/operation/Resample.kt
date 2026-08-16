@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.schema.spec.ResampleAggregator
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.guarded
@@ -55,23 +56,25 @@ internal class ResampleByTimeStat<R : Result>(
     // many raw ones went into it.
     private val bucketWeight = streamMode.newDouble(0.0)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
-        if (weight == 0.0 || value.isNaN()) return@guarded // see Stat for both contracts
-        val newBucket = timestampNanos.floorDiv(bucketNanos)
-        val cur = currentBucket.load()
-        if (cur == NO_BUCKET) {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
+        lock.guarded {
+            val newBucket = timestampNanos.floorDiv(bucketNanos)
+            val cur = currentBucket.load()
+            if (cur == NO_BUCKET) {
+                currentBucket.store(newBucket)
+                seed(value, timestampNanos, weight)
+                return@guarded
+            }
+            if (newBucket == cur) {
+                accumulate(value, timestampNanos, weight)
+                return@guarded
+            }
+            // Bucket changed: flush the closed bucket and seed the new one.
+            flushLocked()
             currentBucket.store(newBucket)
             seed(value, timestampNanos, weight)
-            return@guarded
         }
-        if (newBucket == cur) {
-            accumulate(value, timestampNanos, weight)
-            return@guarded
-        }
-        // Bucket changed: flush the closed bucket and seed the new one.
-        flushLocked()
-        currentBucket.store(newBucket)
-        seed(value, timestampNanos, weight)
     }
 
     private fun seed(value: Double, timestampNanos: Long, weight: Double) {

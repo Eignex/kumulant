@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -41,6 +42,7 @@ class SumStat(override val concurrency: Concurrency = Concurrency.None) : Series
     private val value = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         this.value.add(value * weight)
     }
 
