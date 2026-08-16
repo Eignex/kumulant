@@ -3,29 +3,23 @@ package com.eignex.kumulant.stat.regression.tree
 import kotlinx.serialization.Serializable
 
 /**
- * Classification analogue of [RegressionTreeConfig]. Same tunables, but the split [metric]
- * defaults to [GiniReduction] and the criterion is a [ClassificationSplitMetric].
+ * Classification analogue of [RegressionTreeConfig]. The same tunables, but the split [metric] defaults
+ * to [GiniReduction] and the criterion is a [ClassificationSplitMetric].
+ *
+ * Every field except [metric] is described on [HoeffdingTreeConfig]. It used to be described here too,
+ * in a copy that had already lost the explanations of what `tau` and `mtry` do.
  */
 @Serializable
 data class ClassificationTreeConfig(
-    /** Hoeffding-bound confidence threshold. */
-    val delta: Double = 0.05,
-    /** Multiplicative decay applied to [delta] per depth. */
-    val deltaDecay: Double = 0.9,
-    /** Hoeffding-bound shrinkage threshold for the VFDT tie-break. */
-    val tau: Double = 0.05,
-    /** Minimum total weighted samples at a leaf before split evaluation. */
-    val minSamplesSplit: Double = 30.0,
-    /** Minimum weighted samples on each side of a candidate split. */
-    val minSamplesLeaf: Double = 5.0,
-    /** Audit every Nth observation rather than every update. */
-    val splitPeriod: Int = 10,
-    /** Hard ceiling on tree depth. */
-    val maxDepth: Int = 16,
-    /** Hard ceiling on internal + leaf nodes. */
-    val maxNodes: Int = 1024,
-    /** Split criterion. */
+    override val delta: Double = 0.05,
+    override val deltaDecay: Double = 0.9,
+    override val tau: Double = 0.05,
+    override val minSamplesSplit: Double = 30.0,
+    override val minSamplesLeaf: Double = 5.0,
+    override val splitPeriod: Int = 10,
+    override val maxDepth: Int = 16,
+    override val maxNodes: Int = 1024,
+    /** Split criterion; ranks candidates by the class impurity they remove. */
     val metric: ClassificationSplitMetric = GiniReduction,
-    /** Breiman-style random-subspace size; `null` disables. */
-    val mtry: Int? = null,
-)
+    override val mtry: Int? = null,
+) : HoeffdingTreeConfig

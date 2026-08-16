@@ -13,9 +13,6 @@ import com.eignex.kumulant.stream.guarded
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.math.ln
-import kotlin.math.pow
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -179,19 +176,13 @@ class RegressionTree<Row>(
         if (depth >= config.maxDepth || nbrNodes.load() + 1 > config.maxNodes || !canGrow) {
             return RegressionTerminalLeaf(leafArmFactory())
         }
-        val subset = pickCandidates()
+        val subset = splitCandidates.pickCandidates(config.mtry, random)
         return RegressionAuditLeaf(
             arm = leafArmFactory(),
             candidates = subset,
             pos = List(subset.size) { leafArmFactory() },
             neg = List(subset.size) { leafArmFactory() },
         )
-    }
-
-    private fun pickCandidates(): List<Split<Row>> {
-        val k = config.mtry ?: return splitCandidates
-        if (k >= splitCandidates.size) return splitCandidates
-        return splitCandidates.shuffled(random).take(k)
     }
 
     private fun updateNode(
@@ -270,11 +261,5 @@ class RegressionTree<Row>(
                 carryover = leaf.arm,
             )
         }
-    }
-
-    private fun hoeffdingBound(delta: Double, n: Double, depth: Int, decay: Double): Double {
-        if (n <= 0.0) return Double.POSITIVE_INFINITY
-        val adjusted = delta * decay.pow(depth.toDouble())
-        return sqrt(-ln(adjusted) / (2.0 * n))
     }
 }

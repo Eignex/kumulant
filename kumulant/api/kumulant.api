@@ -7563,7 +7563,7 @@ public final class com/eignex/kumulant/stat/regression/tree/ClassificationTree {
 	public static synthetic fun update$default (Lcom/eignex/kumulant/stat/regression/tree/ClassificationTree;Lcom/eignex/koblas/VectorView;IDILjava/lang/Object;)V
 }
 
-public final class com/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig {
+public final class com/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig : com/eignex/kumulant/stat/regression/tree/HoeffdingTreeConfig {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig$Companion;
 	public fun <init> ()V
 	public fun <init> (DDDDDIIILcom/eignex/kumulant/stat/regression/tree/ClassificationSplitMetric;Ljava/lang/Integer;)V
@@ -7581,16 +7581,16 @@ public final class com/eignex/kumulant/stat/regression/tree/ClassificationTreeCo
 	public final fun copy (DDDDDIIILcom/eignex/kumulant/stat/regression/tree/ClassificationSplitMetric;Ljava/lang/Integer;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;DDDDDIIILcom/eignex/kumulant/stat/regression/tree/ClassificationSplitMetric;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getDelta ()D
-	public final fun getDeltaDecay ()D
-	public final fun getMaxDepth ()I
-	public final fun getMaxNodes ()I
+	public fun getDelta ()D
+	public fun getDeltaDecay ()D
+	public fun getMaxDepth ()I
+	public fun getMaxNodes ()I
 	public final fun getMetric ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationSplitMetric;
-	public final fun getMinSamplesLeaf ()D
-	public final fun getMinSamplesSplit ()D
-	public final fun getMtry ()Ljava/lang/Integer;
-	public final fun getSplitPeriod ()I
-	public final fun getTau ()D
+	public fun getMinSamplesLeaf ()D
+	public fun getMinSamplesSplit ()D
+	public fun getMtry ()Ljava/lang/Integer;
+	public fun getSplitPeriod ()I
+	public fun getTau ()D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -7758,6 +7758,18 @@ public final class com/eignex/kumulant/stat/regression/tree/GiniReduction : com/
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface class com/eignex/kumulant/stat/regression/tree/HoeffdingTreeConfig {
+	public abstract fun getDelta ()D
+	public abstract fun getDeltaDecay ()D
+	public abstract fun getMaxDepth ()I
+	public abstract fun getMaxNodes ()I
+	public abstract fun getMinSamplesLeaf ()D
+	public abstract fun getMinSamplesSplit ()D
+	public abstract fun getMtry ()Ljava/lang/Integer;
+	public abstract fun getSplitPeriod ()I
+	public abstract fun getTau ()D
+}
+
 public final class com/eignex/kumulant/stat/regression/tree/InformationGain : com/eignex/kumulant/stat/regression/tree/ClassificationSplitMetric {
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/tree/InformationGain;
 	public fun equals (Ljava/lang/Object;)Z
@@ -7886,7 +7898,7 @@ public final class com/eignex/kumulant/stat/regression/tree/RegressionTree {
 	public static synthetic fun update$default (Lcom/eignex/kumulant/stat/regression/tree/RegressionTree;Ljava/lang/Object;DDILjava/lang/Object;)V
 }
 
-public final class com/eignex/kumulant/stat/regression/tree/RegressionTreeConfig {
+public final class com/eignex/kumulant/stat/regression/tree/RegressionTreeConfig : com/eignex/kumulant/stat/regression/tree/HoeffdingTreeConfig {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig$Companion;
 	public fun <init> ()V
 	public fun <init> (DDDDDIIILcom/eignex/kumulant/stat/regression/tree/SplitMetric;Ljava/lang/Integer;)V
@@ -7904,16 +7916,16 @@ public final class com/eignex/kumulant/stat/regression/tree/RegressionTreeConfig
 	public final fun copy (DDDDDIIILcom/eignex/kumulant/stat/regression/tree/SplitMetric;Ljava/lang/Integer;)Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;DDDDDIIILcom/eignex/kumulant/stat/regression/tree/SplitMetric;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getDelta ()D
-	public final fun getDeltaDecay ()D
-	public final fun getMaxDepth ()I
-	public final fun getMaxNodes ()I
+	public fun getDelta ()D
+	public fun getDeltaDecay ()D
+	public fun getMaxDepth ()I
+	public fun getMaxNodes ()I
 	public final fun getMetric ()Lcom/eignex/kumulant/stat/regression/tree/SplitMetric;
-	public final fun getMinSamplesLeaf ()D
-	public final fun getMinSamplesSplit ()D
-	public final fun getMtry ()Ljava/lang/Integer;
-	public final fun getSplitPeriod ()I
-	public final fun getTau ()D
+	public fun getMinSamplesLeaf ()D
+	public fun getMinSamplesSplit ()D
+	public fun getMtry ()Ljava/lang/Integer;
+	public fun getSplitPeriod ()I
+	public fun getTau ()D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
