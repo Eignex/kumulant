@@ -294,6 +294,27 @@ abstract interface com.eignex.kumulant.math/LongHasher { // com.eignex.kumulant.
 
 abstract interface com.eignex.kumulant.schema.runtime/GroupedStat : com.eignex.kumulant.core/Stat<com.eignex.kumulant.schema/GroupResult> // com.eignex.kumulant.schema.runtime/GroupedStat|null[0]
 
+abstract interface com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig { // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig|null[0]
+    abstract val delta // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.delta|{}delta[0]
+        abstract fun <get-delta>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.delta.<get-delta>|<get-delta>(){}[0]
+    abstract val deltaDecay // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.deltaDecay|{}deltaDecay[0]
+        abstract fun <get-deltaDecay>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.deltaDecay.<get-deltaDecay>|<get-deltaDecay>(){}[0]
+    abstract val maxDepth // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.maxDepth|{}maxDepth[0]
+        abstract fun <get-maxDepth>(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.maxDepth.<get-maxDepth>|<get-maxDepth>(){}[0]
+    abstract val maxNodes // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.maxNodes|{}maxNodes[0]
+        abstract fun <get-maxNodes>(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.maxNodes.<get-maxNodes>|<get-maxNodes>(){}[0]
+    abstract val minSamplesLeaf // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.minSamplesLeaf|{}minSamplesLeaf[0]
+        abstract fun <get-minSamplesLeaf>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.minSamplesLeaf.<get-minSamplesLeaf>|<get-minSamplesLeaf>(){}[0]
+    abstract val minSamplesSplit // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.minSamplesSplit|{}minSamplesSplit[0]
+        abstract fun <get-minSamplesSplit>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.minSamplesSplit.<get-minSamplesSplit>|<get-minSamplesSplit>(){}[0]
+    abstract val mtry // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.mtry|{}mtry[0]
+        abstract fun <get-mtry>(): kotlin/Int? // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.mtry.<get-mtry>|<get-mtry>(){}[0]
+    abstract val splitPeriod // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.splitPeriod|{}splitPeriod[0]
+        abstract fun <get-splitPeriod>(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.splitPeriod.<get-splitPeriod>|<get-splitPeriod>(){}[0]
+    abstract val tau // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.tau|{}tau[0]
+        abstract fun <get-tau>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig.tau.<get-tau>|<get-tau>(){}[0]
+}
+
 abstract interface com.eignex.kumulant.stream/Mutex { // com.eignex.kumulant.stream/Mutex|null[0]
     abstract fun <#A1: kotlin/Any?> withLock(kotlin/Function0<#A1>): #A1 // com.eignex.kumulant.stream/Mutex.withLock|withLock(kotlin.Function0<0:0>){0§<kotlin.Any?>}[0]
 }
@@ -6649,7 +6670,7 @@ final class com.eignex.kumulant.stat.regression.tree/ClassificationTree { // com
     final fun update(com.eignex.koblas/VectorView, kotlin/Int, kotlin/Double = ...) // com.eignex.kumulant.stat.regression.tree/ClassificationTree.update|update(com.eignex.koblas.VectorView;kotlin.Int;kotlin.Double){}[0]
 }
 
-final class com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig { // com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig|null[0]
+final class com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig : com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig { // com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., com.eignex.kumulant.stat.regression.tree/ClassificationSplitMetric = ..., kotlin/Int? = ...) // com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;kotlin.Int;kotlin.Int;com.eignex.kumulant.stat.regression.tree.ClassificationSplitMetric;kotlin.Int?){}[0]
 
     final val delta // com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig.delta|{}delta[0]
@@ -6892,7 +6913,7 @@ final class com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat 
     final fun update(com.eignex.koblas/VectorView, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.update|update(com.eignex.koblas.VectorView;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
 }
 
-final class com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig { // com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig|null[0]
+final class com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig : com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig { // com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., com.eignex.kumulant.stat.regression.tree/SplitMetric = ..., kotlin/Int? = ...) // com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;kotlin.Int;kotlin.Int;com.eignex.kumulant.stat.regression.tree.SplitMetric;kotlin.Int?){}[0]
 
     final val delta // com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig.delta|{}delta[0]

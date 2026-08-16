@@ -12,9 +12,6 @@ import com.eignex.kumulant.stream.guarded
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.math.ln
-import kotlin.math.pow
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -200,19 +197,13 @@ class ClassificationTree(
         if (depth >= config.maxDepth || nbrNodes.load() + 1 > config.maxNodes || !canGrow) {
             return ClassificationTerminalLeaf(leafArmFactory())
         }
-        val subset = pickCandidates()
+        val subset = splitCandidates.pickCandidates(config.mtry, random)
         return ClassificationAuditLeaf(
             arm = leafArmFactory(),
             candidates = subset,
             pos = List(subset.size) { leafArmFactory() },
             neg = List(subset.size) { leafArmFactory() },
         )
-    }
-
-    private fun pickCandidates(): List<SerializableSplit> {
-        val k = config.mtry ?: return splitCandidates
-        if (k >= splitCandidates.size) return splitCandidates
-        return splitCandidates.shuffled(random).take(k)
     }
 
     private fun updateNode(
@@ -263,6 +254,8 @@ class ClassificationTree(
         if (ticks < config.splitPeriod) return leaf
 
         return splitLock.guarded {
+            // Double-check inside the lock: another thread may have already audited
+            // (and reset the counter) or replaced this leaf.
             if (leaf.observationsSinceLastCheck.load() < config.splitPeriod) return@guarded leaf
             leaf.observationsSinceLastCheck.store(0L)
 
@@ -278,6 +271,10 @@ class ClassificationTree(
             val passesTau = eps < config.tau
             if (!passesHoeffding && !passesTau) return@guarded leaf
 
+            // Stash the pre-split aggregate as the new split's carryover so it shows up
+            // in subtree aggregates without burdening the hot path. New leaves start
+            // empty so prior-driven Thompson/UCB exploration behaves as it did before
+            // the split fired.
             nbrNodes.addAndFetch(2)
             ClassificationSplitNode(
                 split = leaf.candidates[ranked.bestIndex],
@@ -286,11 +283,5 @@ class ClassificationTree(
                 carryover = leaf.arm,
             )
         }
-    }
-
-    private fun hoeffdingBound(delta: Double, n: Double, depth: Int, decay: Double): Double {
-        if (n <= 0.0) return Double.POSITIVE_INFINITY
-        val adjusted = delta * decay.pow(depth.toDouble())
-        return sqrt(-ln(adjusted) / (2.0 * n))
     }
 }
