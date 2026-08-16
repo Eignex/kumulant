@@ -180,12 +180,7 @@ class UnivariateRegressionStat(
             Penalty.None -> if (ssx > 0.0) ssxy / ssx else 0.0
 
             is Penalty.L1 -> {
-                val threshold = p.lambda * totalW
-                val shrunk = when {
-                    ssxy > threshold -> ssxy - threshold
-                    ssxy < -threshold -> ssxy + threshold
-                    else -> 0.0
-                }
+                val shrunk = softThreshold(ssxy, p.lambda * totalW)
                 if (ssx > 0.0) shrunk / ssx else 0.0
             }
 
