@@ -199,7 +199,8 @@ class UCB1(
  *
  * Forces exploration until each arm has at least `8 * ln(K)` pulls (`K` is
  * the arm count), then switches to the variance-aware score
- * `mean + alpha * sqrt(16 * variance * ln(K - 1) / armSamples)`.
+ * `mean + alpha * sqrt(16 * variance * ln(n - 1) / armSamples)`, where `n` is
+ * the total pull count across all arms.
  */
 class UCB1Normal(
     /** Exploration scale on the confidence-bound term. */
@@ -220,7 +221,13 @@ class UCB1Normal(
         // silently degenerated to always picking arm 0.
         val sumOfSquares = snapshot.meanOfSquares() * nj
         val p1 = ((sumOfSquares - nj * snapshot.mean * snapshot.mean) / (nj - 1)).coerceAtLeast(0.0)
-        return snapshot.mean + alpha * sqrt(16 * p1 * (ln(nbrArms - 1.0) / nj))
+        // `n` in Auer et al. is the total pull count, not the arm count. Against `nbrArms` this was
+        // ln(1) == 0 at K = 2, so the confidence bound vanished and the policy went exactly greedy at
+        // the arm count where exploration matters most. `step` carries the round count, which is why
+        // it is a parameter; this arm's own pulls floor it, since they are part of any total and
+        // `step` stays 0 for a caller that drives update() directly without choose().
+        val totalPulls = maxOf(step.toDouble(), nj)
+        return snapshot.mean + alpha * sqrt(16 * p1 * (ln((totalPulls - 1.0).coerceAtLeast(1.0)) / nj))
     }
     override fun addArm(snapshot: MomentsResult) {
         nbrArms++

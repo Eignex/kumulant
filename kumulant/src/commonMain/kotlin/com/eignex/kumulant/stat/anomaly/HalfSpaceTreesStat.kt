@@ -217,7 +217,7 @@ class HalfSpaceTreesStat(
 
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         require(vector.size == featureSize) { "vector.size=${vector.size}, expected $featureSize" }
-        if (weight <= 0.0) return
+        if (weight <= 0.0 || weight.isNaN()) return
         for (t in 0 until numTrees) {
             val leafIdx = routeToLeaf(t, vector)
             latestMass.add(t * numLeaves + leafIdx, weight)
@@ -267,6 +267,13 @@ class HalfSpaceTreesStat(
      * merged model scoring every input maximally anomalous until `windowSize` fresh observations
      * rotated the window - while reporting the source's `totalWeights`, so it looked trained. The
      * incoming masses *are* a reference profile, so they belong in the reference window too.
+     *
+     * The result is approximate rather than exact, deliberately. Writing the masses into both windows
+     * means the next rotation, which copies latest over reference, counts them a second time; their
+     * influence therefore decays over the following `windowSize` observations instead of ending
+     * cleanly at the rotation. Scoring correctly straight after a merge is worth more than that
+     * exactness, and tracking a per-leaf merged-mass correction to recover it would double the
+     * model's state for a transient. A merged model is a warm start, not a checkpoint restore.
      */
     override fun merge(values: HalfSpaceTreesResult) {
         require(values.numTrees == numTrees && values.height == height && values.featureSize == featureSize) {

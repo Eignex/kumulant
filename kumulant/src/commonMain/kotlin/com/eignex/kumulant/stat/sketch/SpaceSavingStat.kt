@@ -186,11 +186,16 @@ class SpaceSavingStat(
     }
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0) return
+        // As in CountMinSketchStat: NaN passes `weight <= 0.0`, and rounding it lands on 1, so a NaN
+        // weight became a real observation. Counts are Long, so there is nothing to propagate into.
+        if (weight <= 0.0 || weight.isNaN()) return
         // Counts are Long, so a fractional weight has to be rounded. Round *up*: rounding to nearest
         // dropped everything below 0.5 outright, so a key accumulating many small weights never
         // appeared among the heavy hitters at all. Counts are upper bounds as a result.
-        val w = ceil(weight).toLong().coerceAtLeast(1L)
+        // Capped as in CountMinSketchStat, and for the same reason: counts are Long and monotonically
+        // increasing, so an unbounded step saturates a count and the next one wraps it negative,
+        // which would drop a genuine heavy hitter out of the summary entirely.
+        val w = ceil(weight).toLong().coerceIn(1L, MAX_COUNT_STEP)
         if (useMisraGries) {
             admitMisraGries(value, w, 0L)
             totalSeenCell.add(1L)
@@ -262,4 +267,9 @@ class SpaceSavingStat(
     }
 
     override fun create(concurrency: Concurrency?) = SpaceSavingStat(capacity, concurrency ?: this.concurrency)
+
+    private companion object {
+        /** Largest single increment a count accepts; mirrors `CountMinSketchStat.MAX_COUNTER_STEP`. */
+        const val MAX_COUNT_STEP: Long = Long.MAX_VALUE / 1024
+    }
 }
