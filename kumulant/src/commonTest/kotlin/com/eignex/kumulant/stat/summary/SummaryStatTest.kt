@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.summary
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 private const val DELTA = 1e-9
 
@@ -56,5 +57,35 @@ class SummaryStatTest {
         val fresh = tpl.create()
         assertEquals(0.0, fresh.read().mean, DELTA)
         assertEquals(5.0, tpl.read().mean, DELTA)
+    }
+
+    @Test
+    fun `a rejected downdate leaves the extrema untouched`() {
+        // The extrema are CAS cells with no inverse, so a throw that happens after they have moved is
+        // unrecoverable: this used to report max = 1000.0 from an update it had just refused.
+        val s = SummaryStat()
+        s.update(5.0, weight = 1.0)
+
+        assertFailsWith<IllegalArgumentException> { s.update(1000.0, weight = -2.0) }
+
+        val r = s.read()
+        assertEquals(5.0, r.min, DELTA, "min moved on a rejected update")
+        assertEquals(5.0, r.max, DELTA, "max moved on a rejected update")
+        assertEquals(1.0, r.totalWeights, DELTA)
+        assertEquals(5.0, r.mean, DELTA)
+    }
+
+    @Test
+    fun `an inert weight leaves the extrema untouched`() {
+        val s = SummaryStat()
+        s.update(5.0, weight = 1.0)
+
+        s.update(-1000.0, weight = 0.0)
+        s.update(1000.0, weight = Double.NaN)
+
+        val r = s.read()
+        assertEquals(5.0, r.min, DELTA, "min moved on an inert weight")
+        assertEquals(5.0, r.max, DELTA, "max moved on an inert weight")
+        assertEquals(1.0, r.totalWeights, DELTA)
     }
 }

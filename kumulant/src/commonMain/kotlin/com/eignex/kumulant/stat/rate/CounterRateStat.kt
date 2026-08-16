@@ -55,18 +55,23 @@ class CounterRateStat(
     private val lastCounter = mode.newDouble(Double.NaN)
     private val lastTimestampNanos = mode.newLong(Long.MIN_VALUE)
 
-    override fun update(value: Double, timestampNanos: Long, weight: Double) = lock.guarded {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // Return before touching lastCounter: a zero weight contributes no delta, but advancing the
         // high-water mark anyway destroyed the increment for good, so a later sample could never
-        // recover it. NaN is dropped for the same reason it is everywhere; see Stat.
-        if (weight.isInertWeight()) return@guarded
+        // recover it. NaN is dropped for the same reason it is everywhere; see Stat. Outside the
+        // lock, like every other stat's inert guard - a no-op has no state to protect.
+        if (weight.isInertWeight()) return
+        lock.guarded { updateLocked(value, timestampNanos, weight) }
+    }
+
+    private fun updateLocked(value: Double, timestampNanos: Long, weight: Double) {
         val previousCounter = lastCounter.load()
         val previousTimestamp = lastTimestampNanos.load()
 
         if (previousCounter.isNaN()) {
             lastCounter.store(value)
             lastTimestampNanos.store(timestampNanos)
-            return@guarded
+            return
         }
 
         when {

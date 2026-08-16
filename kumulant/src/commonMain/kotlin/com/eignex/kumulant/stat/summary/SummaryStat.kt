@@ -72,14 +72,17 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
     private val maxCell = monotonic.newDouble(Double.NEGATIVE_INFINITY)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        // The guard has to come before the extrema, not just before the Welford body: these two
-        // used to run unconditionally, so a zero-weight observation still moved min and max.
+        // Nothing mutates before the weight has been accepted. Two separate ordering constraints
+        // live here, and both concern the extrema, which have no inverse: an inert weight must not
+        // move min and max (the two CAS calls used to run unconditionally, so a zero-weight
+        // observation still did), and neither must a downdate that requireLiveWeight goes on to
+        // reject, or the stat is left reporting a value from an observation it refused.
         if (weight.isInertWeight()) return
-        casMin(minCell, value)
-        casMax(maxCell, value)
         lock.guarded {
             val priorW = totalWeights.load()
             requireLiveWeight(priorW, weight)
+            casMin(minCell, value)
+            casMax(maxCell, value)
             val nextW = totalWeights.addAndGet(weight)
             val delta = value - mean.load()
             val r = delta * (weight / nextW)
