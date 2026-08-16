@@ -9,8 +9,6 @@ import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.math.nextPoissonOne
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.ceil
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -103,8 +101,6 @@ class RandomForestClassifierStat(
 
     /** Live underlying classification trees. Use for inspection. */
     fun trees(): List<ClassificationTree> = trees.toList()
-
-    private fun defaultMtry(p: Int): Int = if (p <= 0) 0 else ceil(sqrt(p.toDouble())).toInt().coerceAtLeast(1)
 }
 
 /** Snapshot of a [RandomForestClassifierStat]: per-tree immutable snapshots plus

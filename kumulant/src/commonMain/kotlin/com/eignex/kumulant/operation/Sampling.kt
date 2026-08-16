@@ -51,9 +51,16 @@ internal fun <R : Result> VectorStat<R>.sample(rate: Double, random: Random): Ve
 internal fun <R : Result> DiscreteStat<R>.sample(rate: Double, random: Random): DiscreteStat<R> =
     SampleDiscreteStat(this, rate, random)
 
-private fun checkEvery(every: Int) = require(every >= 1) { "throttle every must be >= 1, got $every" }
+/**
+ * Reject a throttle period that would forward nothing or everything unpredictably.
+ *
+ * `internal` rather than file-private because the regression modality's wrappers live over in
+ * `RegressionOps.kt` and had their own byte-identical copy of this and [checkRate].
+ */
+internal fun checkEvery(every: Int) = require(every >= 1) { "throttle every must be >= 1, got $every" }
 
-private fun checkRate(rate: Double) = require(rate in 0.0..1.0) { "sample rate must be in [0, 1], got $rate" }
+/** Reject a sampling rate outside the unit interval; see [checkEvery] on why this is `internal`. */
+internal fun checkRate(rate: Double) = require(rate in 0.0..1.0) { "sample rate must be in [0, 1], got $rate" }
 
 internal class ThrottleSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val every: Int) :
     SeriesStat<R>,
