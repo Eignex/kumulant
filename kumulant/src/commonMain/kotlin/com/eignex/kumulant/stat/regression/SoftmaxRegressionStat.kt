@@ -154,9 +154,9 @@ class SoftmaxRegressionStat(
         if (weight <= 0.0 || weight.isNaN()) return
         lock.guarded {
             // toInt() truncates toward zero, so NaN and anything in (-1, 0) both became class 0 and
-            // slipped past the range check below as a valid label. The tree classifiers already guard
-            // this; see Stat for the library-wide NaN rule.
-            if (y.isNaN()) return@guarded
+            // slipped past the range check as a valid label. Round-tripping through Double is what
+            // rejects them: it demands an exact integer, which NaN fails alongside 1.5 and -0.5. The
+            // tree classifiers already guard this; see Stat on why a label is not a value.
             val c = y.toInt()
             if (c.toDouble() != y || c !in 0 until numClasses) return@guarded
             stepCell.addAndGet(1L)

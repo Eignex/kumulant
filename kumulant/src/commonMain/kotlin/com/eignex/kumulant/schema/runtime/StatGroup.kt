@@ -24,11 +24,20 @@ sealed class AbstractStatGroup<S : Stat<*>>(
      *
      * Reporting [Concurrency.None] whenever no override was passed was simply untrue for a group of
      * `Strict` children, and this property is what a caller introspects to decide whether reads need
-     * external synchronisation. The weakest child governs, because the group offers no guarantee its
-     * least-protected member does not - which also avoids claiming [Concurrency.HighWrite] for a
-     * mixed group, since that level trades exactness for throughput rather than strengthening it.
+     * external synchronisation. The weakest child governs, because the group can promise nothing its
+     * least-protected member does not: one [Concurrency.None] child makes the whole group unsafe to
+     * share, and one [Concurrency.Relaxed] child means a read can drift even if every sibling is
+     * exact.
+     *
+     * The declaration order of [Concurrency] happens to run weakest to strongest, so `minOfOrNull`
+     * picks that child directly. [Concurrency.HighWrite] sorting last is not a claim that it is the
+     * strongest guarantee; it is exactly as exact as [Concurrency.Strict] and falls back to it off the
+     * JVM, so a mixed `Strict` / `HighWrite` group correctly reports `Strict`.
+     *
+     * Computed once: the children are fixed at construction, so there is no reason to walk them again
+     * on every access.
      */
-    final override val concurrency: Concurrency get() =
+    final override val concurrency: Concurrency =
         concurrencyOverride ?: stats.minOfOrNull { (_, stat) -> stat.concurrency } ?: Concurrency.None
 
     final override fun read(timestampNanos: Long): GroupResult =
