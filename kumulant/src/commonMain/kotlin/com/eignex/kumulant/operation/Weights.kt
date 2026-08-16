@@ -33,8 +33,13 @@ internal fun <R : Result> DiscreteStat<R>.withWeight(weight: Double): DiscreteSt
     weight,
 )
 
-/** An inert weight stays inert; see [withWeight]. Shared by all four modality adapters. */
-private fun Double.orInert(replacement: Double): Double = if (isInertWeight()) this else replacement
+/**
+ * An inert weight stays inert; see [withWeight]. Shared by every modality adapter, including
+ * `WithWeightRegressionStat` over in `RegressionOps.kt`, which is why this is `internal` rather than
+ * file-private: that one open-coded the condition, handled only `0.0`, and drifted from the other four.
+ */
+@Suppress("NOTHING_TO_INLINE") // as with isInertWeight; the non-JVM targets pay for the call
+internal inline fun Double.orInert(replacement: Double): Double = if (isInertWeight()) this else replacement
 
 /** Adapter implementing the series variant of [withWeight]. */
 internal class WithWeightStat<R : Result>(private val delegate: SeriesStat<R>, private val weight: Double) :

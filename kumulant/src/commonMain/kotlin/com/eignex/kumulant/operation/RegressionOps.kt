@@ -32,7 +32,12 @@ internal fun <R : Result> RegressionStat<R>.transformX(
     transform: (VectorView, Double) -> DoubleArray,
 ): RegressionStat<R> = TransformXRegressionStat(this, transform)
 
-/** Replace every update's weight with the constant [weight]. */
+/**
+ * Replace every update's weight with the constant [weight].
+ *
+ * An inert caller weight is passed through rather than replaced, exactly as in the other four
+ * modalities; see [com.eignex.kumulant.operation.withWeight] for why.
+ */
 internal fun <R : Result> RegressionStat<R>.withWeight(weight: Double): RegressionStat<R> =
     WithWeightRegressionStat(this, weight)
 
@@ -114,9 +119,11 @@ internal class WithWeightRegressionStat<R : Result>(
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        // Zero stays zero, so the library-wide no-op survives the wrapper; see
-        // com.eignex.kumulant.operation.withWeight.
-        delegate.update(x, y, timestampNanos, if (weight == 0.0) 0.0 else this.weight)
+        // Shares `orInert` with the other four adapters rather than re-testing the condition here.
+        // This site used to spell out `if (weight == 0.0)`, which covered zero but not NaN, so a NaN
+        // caller weight was replaced by the constant and became a real observation - the leaf stats
+        // honoured the no-op and this wrapper undid it.
+        delegate.update(x, y, timestampNanos, weight.orInert(this.weight))
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
         WithWeightRegressionStat(delegate.create(concurrency), weight)

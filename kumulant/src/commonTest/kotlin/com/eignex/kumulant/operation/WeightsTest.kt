@@ -1,6 +1,8 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
+import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
@@ -71,5 +73,34 @@ class WeightsTest {
         assertEquals(0.0, counted.read().sum, "CountStat is SumStat.withWeight(1.0) and must not count either")
         counted.update(5.0, weight = 1.0)
         assertEquals(1.0, counted.read().sum, "a real observation still counts as exactly one")
+    }
+
+    @Test
+    fun `withWeight passes an inert caller weight through for every modality`() {
+        // Zero and NaN are both inert; see Stat. Each modality has its own adapter, and the regression
+        // one open-coded the condition so it covered zero but not NaN - a NaN weight through it became
+        // a real observation of the constant weight, while the leaf stat it wrapped correctly no-opped.
+        // Sweeping all five is what stops the odd one out from drifting again.
+        for (inert in listOf(0.0, Double.NaN)) {
+            val series = SumStat().withWeight(2.0)
+            series.update(3.0, weight = inert)
+            assertEquals(0.0, series.read().sum, DELTA, "series moved on weight $inert")
+
+            val paired = SumStat().atY().withWeight(2.0)
+            paired.update(0.0, 5.0, weight = inert)
+            assertEquals(0.0, paired.read().sum, DELTA, "paired moved on weight $inert")
+
+            val vector = sumVector(2).withWeight(2.0)
+            vector.update(doubleArrayOf(3.0, 4.0), weight = inert)
+            assertEquals(0.0, vector.read().results[0].sum, DELTA, "vector moved on weight $inert")
+
+            val discrete = HyperLogLogStat(precision = 10).withWeight(1.0)
+            for (i in 1L..50L) discrete.update(i, weight = inert)
+            assertEquals(0.0, discrete.read().estimate, "discrete moved on weight $inert")
+
+            val regression = StochasticRegressionStat(featureSize = 2).withWeight(2.0)
+            regression.update(DenseVector.of(doubleArrayOf(1.0, 1.0)), 1.0, weight = inert)
+            assertEquals(0.0, regression.read().totalWeights, DELTA, "regression moved on weight $inert")
+        }
     }
 }
