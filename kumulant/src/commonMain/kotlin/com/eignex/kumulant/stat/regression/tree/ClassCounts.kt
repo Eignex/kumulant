@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
@@ -24,7 +24,7 @@ data class ClassCountsResult(
     val numClasses: Int,
     /** Per-class accumulated weight; length [numClasses]. */
     val counts: DoubleArray,
-) : Result {
+) : HasObservationCount {
 
     init {
         require(numClasses > 0) { "numClasses must be > 0; got $numClasses" }
@@ -32,7 +32,7 @@ data class ClassCountsResult(
     }
 
     /** Total weight summed across all classes. */
-    val totalWeights: Double get() {
+    override val totalWeights: Double get() {
         var s = 0.0
         for (c in counts) s += c
         return s

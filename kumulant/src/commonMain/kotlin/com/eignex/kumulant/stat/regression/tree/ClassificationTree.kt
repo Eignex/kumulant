@@ -260,16 +260,13 @@ class ClassificationTree(
             leaf.observationsSinceLastCheck.store(0L)
 
             val total = leaf.arm.read(0L)
-            if (total.totalWeights < config.minSamplesSplit) return@guarded leaf
             val pos = leaf.pos.map { it.read(0L) }
             val neg = leaf.neg.map { it.read(0L) }
             val ranked = config.metric.rank(total, pos, neg, config.minSamplesSplit, config.minSamplesLeaf)
-            if (ranked.bestIndex < 0 || ranked.top1 <= 0.0) return@guarded leaf
-
-            val eps = hoeffdingBound(config.delta, total.totalWeights, depth, config.deltaDecay)
-            val passesHoeffding = ranked.top1 - ranked.top2 > eps
-            val passesTau = eps < config.tau
-            if (!passesHoeffding && !passesTau) return@guarded leaf
+            // Every gate lives in shouldSplit now. Both trees spelled the three of them out, and the
+            // Hoeffding-versus-tau disjunction in particular is the kind of condition that reads correct
+            // in either copy while the two have quietly stopped meaning the same thing.
+            if (!shouldSplit(ranked, total.totalWeights, depth, config)) return@guarded leaf
 
             // Stash the pre-split aggregate as the new split's carryover so it shows up
             // in subtree aggregates without burdening the hot path. New leaves start
