@@ -14,11 +14,18 @@ repositories {
     }
 }
 
+// :kumulant gets its toolchain from the com.eignex.kmp convention plugin, which this module does not
+// apply (it publishes nothing). Without a matching toolchain here the analysis tasks below inherit
+// whatever JVM Gradle was launched with and die on the library's class files with
+// UnsupportedClassVersionError. Keep this in step with the JDK kbuild targets.
+val benchJdk = 25
+
 kotlin {
     applyDefaultHierarchyTemplate()
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
+    jvmToolchain(benchJdk)
 
     jvm()
     linuxX64()
@@ -72,6 +79,11 @@ fun JavaExec.kumulantBenchSetup() {
     classpath = kotlin.jvm().compilations.getByName("main").let {
         it.output.allOutputs + it.runtimeDependencyFiles
     }
+    // Run on the same JDK the library was compiled with; see benchJdk. A JavaExec otherwise uses the
+    // Gradle launcher JVM, which is unrelated to the toolchain and is usually older.
+    javaLauncher.set(
+        javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(benchJdk)) },
+    )
     jvmArgs("--add-modules=jdk.incubator.vector")
     // Forward `-Dbench.*` from the gradle invocation onto the forked JVM so users
     // can tune cell duration, thread count, and JFR options without editing code.
