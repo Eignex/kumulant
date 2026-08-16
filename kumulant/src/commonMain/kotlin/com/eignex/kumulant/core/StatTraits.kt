@@ -231,7 +231,7 @@ interface HasLinearModel : Result {
      * this is the linear predictor pre-link.
      */
     fun predict(x: VectorView): Double {
-        require(x.size == weights.size) { "x.size=${x.size}, expected ${weights.size}" }
+        x.requireFeatureSize(weights.size)
         var sum = bias
         for (i in 0 until weights.size) sum += x[i] * weights[i]
         return sum

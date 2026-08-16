@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.math.nextPoissonOne
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -78,7 +79,7 @@ class RandomForestRegressionStat(
     )
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        x.requireFeatureSize(featureSize)
         // Return before drawing from baggingRng: a zero-weight call used to consume one draw per
         // tree, desynchronising every later bagging draw and changing the forest's predictions. The
         // classifier already guards this.

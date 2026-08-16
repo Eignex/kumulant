@@ -4,6 +4,7 @@ import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.requireFeatureSize
 import kotlin.random.Random
 
 /**
@@ -46,7 +47,7 @@ class DecisionTreeClassifierStat(
     )
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        x.requireFeatureSize(featureSize)
         if (weight <= 0.0 || y.isNaN()) return
         tree.update(x, y.toInt(), weight)
     }

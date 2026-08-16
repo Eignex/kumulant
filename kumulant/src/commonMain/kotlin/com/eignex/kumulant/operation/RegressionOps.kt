@@ -9,6 +9,7 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.requireFeatureSize
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.random.Random
@@ -193,7 +194,7 @@ internal class FoldRegressionStat<R : Result>(
         require(featureSize > 0) { "featureSize must be positive, got $featureSize" }
     }
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
+        x.requireFeatureSize(featureSize)
         delegate.update(project(x, y), timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =

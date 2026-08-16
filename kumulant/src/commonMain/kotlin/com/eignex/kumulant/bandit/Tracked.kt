@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.requireFeatureSize
 import kotlin.random.Random
 
 /**
@@ -87,14 +88,14 @@ class TrackedContextualBandit<B : ContextualBandit>(
         (updateArmRewardTemplate?.create(null) as PairedStat<Result>?)
 
     override fun choose(x: VectorView): Int {
-        require(x.size == contextFeatureSize) { "x.size=${x.size}, expected $contextFeatureSize" }
+        x.requireFeatureSize(contextFeatureSize)
         val i = inner.choose(x)
         chooseStat?.update(x, i.toDouble(), nowNanos(), 1.0)
         return i
     }
 
     override fun update(armIndex: Int, x: VectorView, reward: Double, weight: Double) {
-        require(x.size == contextFeatureSize) { "x.size=${x.size}, expected $contextFeatureSize" }
+        x.requireFeatureSize(contextFeatureSize)
         inner.update(armIndex, x, reward, weight)
         val ts = nowNanos()
         if (updateJointStat != null) {
