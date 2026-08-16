@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.HasObservationCount
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
@@ -188,7 +189,7 @@ class SpaceSavingStat(
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         // As in CountMinSketchStat: NaN passes `weight <= 0.0`, and rounding it lands on 1, so a NaN
         // weight became a real observation. Counts are Long, so there is nothing to propagate into.
-        if (weight <= 0.0 || weight.isNaN()) return
+        if (weight.isNotPositiveWeight()) return
         // Counts are Long, so a fractional weight has to be rounded. Round *up*: rounding to nearest
         // dropped everything below 0.5 outright, so a key accumulating many small weights never
         // appeared among the heavy hitters at all. Counts are upper bounds as a result.

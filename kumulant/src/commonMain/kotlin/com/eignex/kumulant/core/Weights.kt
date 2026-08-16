@@ -15,6 +15,23 @@ package com.eignex.kumulant.core
 internal inline fun Double.isInertWeight(): Boolean = this == 0.0 || isNaN()
 
 /**
+ * True when a weight is not a live positive observation, for the stats that cannot downdate.
+ *
+ * The sibling of [isInertWeight], and the difference between them is the whole point of having both
+ * named. [isInertWeight] is for a stat whose recurrence inverts, so a negative weight is a legitimate
+ * downdate and only zero and `NaN` are no-ops. This one is for a stat that has no inverse - a sketch,
+ * a histogram bucket, an SGD step - where a negative weight is not a removal but a corruption, and is
+ * dropped alongside the inert cases. See [Stat] for which stats fall on which side.
+ *
+ * Written as a negated comparison rather than `this <= 0.0 || isNaN()` because `NaN > 0.0` is already
+ * false: the `NaN` case falls out of the comparison instead of needing a second clause a caller has to
+ * remember. Twenty call sites used to spell out the two-clause form, and the sites that spelled it out
+ * slightly differently are exactly where the class-label defects lived.
+ */
+@Suppress("NOTHING_TO_INLINE") // as with isInertWeight; the non-JVM targets pay for the call
+internal inline fun Double.isNotPositiveWeight(): Boolean = !(this > 0.0)
+
+/**
  * Guard the one negative-weight case that corrupts a Welford accumulator.
  *
  * A negative [weight] is a legitimate downdate: it removes an observation that was

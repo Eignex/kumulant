@@ -6,6 +6,7 @@ import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.guarded
@@ -155,7 +156,7 @@ class GaussianNaiveBayesStat(
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0 || weight.isNaN()) return
+        if (weight.isNotPositiveWeight()) return
         lock.guarded {
             // toInt() truncates toward zero, so NaN and anything in (-1, 0) both became class 0 and
             // slipped past the range check as a valid label. Round-tripping through Double is what

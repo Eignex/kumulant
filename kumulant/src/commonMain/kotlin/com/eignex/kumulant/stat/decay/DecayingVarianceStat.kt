@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.decay
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.currentTimeNanos
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
@@ -106,7 +107,7 @@ class DecayingVarianceStat(
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // Both before the lock: a dropped observation neither contends for it nor moves the landmark.
-        if (weight <= 0.0 || weight.isNaN()) return // a zero weight is a no-op; see Stat
+        if (weight.isNotPositiveWeight()) return // no inverse here, so a negative drops too; see Stat
         lock.guarded {
             val scaledWeight = weight * advanceTo(timestampNanos)
             if (scaledWeight <= 0.0) return@guarded // the sample is so late its weight underflowed away

@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
@@ -346,7 +347,7 @@ class TDigestStat(
     }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0 || weight.isNaN()) return
+        if (weight.isNotPositiveWeight()) return
         outerLock.guarded {
             while (true) {
                 val claimed = bufferIndex.addAndGet(1L)

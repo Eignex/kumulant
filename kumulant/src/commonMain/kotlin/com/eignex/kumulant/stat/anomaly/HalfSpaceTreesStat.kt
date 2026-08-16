@@ -6,6 +6,7 @@ import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.Mutex
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
@@ -217,7 +218,7 @@ class HalfSpaceTreesStat(
 
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
         require(vector.size == featureSize) { "vector.size=${vector.size}, expected $featureSize" }
-        if (weight <= 0.0 || weight.isNaN()) return
+        if (weight.isNotPositiveWeight()) return
         for (t in 0 until numTrees) {
             val leafIdx = routeToLeaf(t, vector)
             latestMass.add(t * numLeaves + leafIdx, weight)

@@ -5,6 +5,7 @@ import com.eignex.koblas.VectorView
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
@@ -126,7 +127,7 @@ class StochasticRegressionStat(
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         require(x.size == featureSize) { "x.size=${x.size}, expected $featureSize" }
-        if (weight <= 0.0 || weight.isNaN()) return
+        if (weight.isNotPositiveWeight()) return
         lock.guarded {
             stepCell.addAndGet(1L)
 

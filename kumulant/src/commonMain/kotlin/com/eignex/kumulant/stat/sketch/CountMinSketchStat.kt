@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.HasObservationCount
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.Hashers
@@ -141,7 +142,7 @@ class CountMinSketchStat(
         // `weight <= 0.0` is false for NaN, and `ceil(NaN).toLong()` is 0, which the coerce below
         // lifted to 1 - so a NaN weight silently became a real observation of weight one. Counters
         // are Long and have no NaN to propagate into, so the observation is dropped; see Stat.
-        if (weight <= 0.0 || weight.isNaN()) return
+        if (weight.isNotPositiveWeight()) return
         // Counters are Long, so a fractional weight has to be rounded. Round *up*: rounding to
         // nearest silently discarded everything below 0.5 - including totalSeen, so the stat denied
         // observations it had seen - whereas rounding up keeps every observation and leaves the

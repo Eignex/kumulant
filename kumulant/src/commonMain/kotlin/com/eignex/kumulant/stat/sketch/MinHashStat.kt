@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.HasObservationCount
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.LongHasher
@@ -129,7 +130,7 @@ class MinHashStat(
     private val totalSeen: StreamLong = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0 || weight.isNaN()) return
+        if (weight.isNotPositiveWeight()) return
         for (i in 0 until numHashes) {
             casMin(signatures, i, hasher.mix(value xor salts[i]))
         }

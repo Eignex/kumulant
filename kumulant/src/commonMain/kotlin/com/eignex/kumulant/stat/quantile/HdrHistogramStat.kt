@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import kotlin.math.ceil
@@ -118,7 +119,7 @@ class HdrHistogramStat(
     }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0 || weight.isNaN()) return
+        if (weight.isNotPositiveWeight()) return
         // `!(value < 0.0)`, not `value >= 0.0`: both reject a negative value, but every comparison
         // against NaN is false, so the `>=` form rejected a NaN as though it were negative and threw.
         // A NaN observation must not become an exception in the caller - it scales to bucket zero and

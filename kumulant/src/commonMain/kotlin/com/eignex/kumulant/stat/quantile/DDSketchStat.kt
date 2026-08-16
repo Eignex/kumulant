@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.ArrayBins
 import com.eignex.kumulant.stream.additiveMode
 import kotlin.math.abs
@@ -92,7 +93,7 @@ class DDSketchStat(
     private val negativeBins = ArrayBins(mode)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight <= 0.0 || weight.isNaN()) return
+        if (weight.isNotPositiveWeight()) return
         // NaN has no rank, so it cannot go in a bin. Previously it fell through the sign
         // comparisons into the zero bucket and was silently counted as an observation of
         // zero, which shifts every quantile. LinearHistogramStat already drops it.
