@@ -119,6 +119,25 @@ class BanditTuningTest {
     }
 
     @Test
+    fun `UCB1Normal still explores the losing arm at two arms`() {
+        // The confidence term used ln(nbrArms - 1), so at K = 2 it was ln(1) == 0: the bonus vanished
+        // and the policy went exactly greedy at the arm count where exploration matters most. Auer's
+        // `n` is the total pull count, which is what `step` carries.
+        // Rewards have to vary: this policy scales its bonus by the observed variance, so constant
+        // rewards give a zero bonus legitimately and would not tell us anything about the log term.
+        val bandit = MultiArmedBandit(2, UCB1Normal(), Random(7))
+        repeat(50) { i ->
+            bandit.update(0, if (i % 2 == 0) 0.0 else 2.0) // mean 1
+            bandit.update(1, if (i % 2 == 0) 4.0 else 6.0) // mean 5
+        }
+
+        val scores = (0 until 2).map { bandit.evaluate(it) }
+        assertTrue(scores.all { it.isFinite() }, "scores were not finite: $scores")
+        assertTrue(scores[0] > 1.0, "arm 0 has mean ~1.0 but scores ${scores[0]}, so the bonus is missing")
+        assertTrue(scores[1] > 5.0, "arm 1 has mean ~5.0 but scores ${scores[1]}, so the bonus is missing")
+    }
+
+    @Test
     fun `UCB1Normal reports zero variance rather than NaN for identical samples`() {
         val bandit = MultiArmedBandit(2, UCB1Normal(), Random(7))
         repeat(30) {
