@@ -7,6 +7,7 @@ import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.math.softmaxInPlace
@@ -148,12 +149,10 @@ class SoftmaxRegressionStat(
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
-            // toInt() truncates toward zero, so NaN and anything in (-1, 0) both became class 0 and
-            // slipped past the range check as a valid label. Round-tripping through Double is what
-            // rejects them: it demands an exact integer, which NaN fails alongside 1.5 and -0.5. The
-            // tree classifiers already guard this; see Stat on why a label is not a value.
-            val c = y.toInt()
-            if (c.toDouble() != y || c !in 0 until numClasses) return@guarded
+            // See asClassLabel on why an exact integer is required. The tree classifiers used to
+            // truncate instead, so this stat and those disagreed about y = 1.5.
+            val c = y.asClassLabel(numClasses)
+            if (c < 0) return@guarded
             stepCell.addAndGet(1L)
 
             // Softmax over current logits.
