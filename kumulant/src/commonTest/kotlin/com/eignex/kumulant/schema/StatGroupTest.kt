@@ -1,6 +1,7 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.koblas.VectorView
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -37,8 +38,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-12
 
 private fun sumVector(d: Int) = VectorizedStat(d, SumStat())
 private fun meanVector(d: Int) = VectorizedStat(d, MeanStat())

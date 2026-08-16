@@ -1,10 +1,9 @@
 package com.eignex.kumulant.bandit
 
+import com.eignex.kumulant.DELTA
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-12
 
 /**
  * The shared EXP3 / EXP4 weight renormaliser. Both policies had their own copy, spelled with different

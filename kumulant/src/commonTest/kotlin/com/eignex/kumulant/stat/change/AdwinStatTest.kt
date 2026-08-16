@@ -1,13 +1,12 @@
 package com.eignex.kumulant.stat.change
 
+import com.eignex.kumulant.DELTA
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-9
 
 class AdwinStatTest {
 

@@ -1,11 +1,10 @@
 package com.eignex.kumulant.stat.decay
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-9
 
 class EwmaVarianceStatTest {
     private val delta = 1e-9

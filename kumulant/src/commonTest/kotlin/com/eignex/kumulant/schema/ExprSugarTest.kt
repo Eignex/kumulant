@@ -1,5 +1,6 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.IndexedResult
 import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
@@ -14,8 +15,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-9
 
 class ExprSugarTest {
 

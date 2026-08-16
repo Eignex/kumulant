@@ -1,11 +1,10 @@
 package com.eignex.kumulant.stat.summary
 
+import com.eignex.kumulant.DELTA
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-12
 
 class MeanStatTest {
     @Test

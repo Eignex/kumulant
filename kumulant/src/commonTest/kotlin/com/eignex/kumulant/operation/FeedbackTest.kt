@@ -1,5 +1,6 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.schema.expr.Center
 import com.eignex.kumulant.schema.expr.Const
 import com.eignex.kumulant.schema.expr.IfExpr
@@ -16,8 +17,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-9
 
 /** Standard-scaler projection: emits 0 while stdDev is still zero (first update). */
 private val standardScalerExpr = IfExpr(Scale gt 0.0, (X - Center) / Scale, Const(0.0))

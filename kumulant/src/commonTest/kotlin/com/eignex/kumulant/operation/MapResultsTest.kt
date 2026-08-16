@@ -1,12 +1,11 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.summary.MeanResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
-private const val DELTA = 1e-12
 
 class MapResultsTest {
 

@@ -1,12 +1,11 @@
 package com.eignex.kumulant.stat.forecast
 
+import com.eignex.kumulant.DELTA
 import kotlin.math.exp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-9
 
 class HoltStatTest {
 

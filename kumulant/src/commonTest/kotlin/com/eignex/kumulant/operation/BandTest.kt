@@ -1,13 +1,12 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.schema.BandResult
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-
-private const val DELTA = 1e-9
 
 class BandTest {
 

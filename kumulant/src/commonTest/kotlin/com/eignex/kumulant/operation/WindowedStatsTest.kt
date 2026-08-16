@@ -1,5 +1,6 @@
 package com.eignex.kumulant.operation
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
@@ -9,8 +10,6 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
-
-private const val DELTA = 1e-12
 
 private const val T0 = 0L
 private const val T3 = 3_000_000_000L

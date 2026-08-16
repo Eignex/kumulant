@@ -1,13 +1,12 @@
 package com.eignex.kumulant.stream
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
-
-private const val DELTA = 1e-12
 
 class SliceRingMergeAtTest {
 

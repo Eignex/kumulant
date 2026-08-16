@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.random.Random
@@ -8,8 +9,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-12
 
 class SamplingTest {
 

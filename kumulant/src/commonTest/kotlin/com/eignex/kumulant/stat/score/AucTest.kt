@@ -1,11 +1,11 @@
 package com.eignex.kumulant.stat.score
 
+import com.eignex.kumulant.DELTA
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
-private const val DELTA = 1e-6
 
 class AucTest {
 

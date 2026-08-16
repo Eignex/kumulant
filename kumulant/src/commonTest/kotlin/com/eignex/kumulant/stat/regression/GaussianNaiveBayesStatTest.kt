@@ -1,13 +1,12 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.DELTA
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-
-private const val DELTA = 1e-9
 
 class GaussianNaiveBayesStatTest {
 
