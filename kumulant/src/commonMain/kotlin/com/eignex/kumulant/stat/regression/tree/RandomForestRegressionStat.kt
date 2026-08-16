@@ -12,8 +12,6 @@ import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.ceil
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -121,8 +119,6 @@ class RandomForestRegressionStat(
 
     /** Live underlying trees. Use for inspection. */
     fun trees(): List<RegressionTree<VectorView>> = trees.toList()
-
-    private fun defaultMtry(p: Int): Int = if (p <= 0) 0 else ceil(sqrt(p.toDouble())).toInt().coerceAtLeast(1)
 }
 
 /** Snapshot of a [RandomForestRegressionStat]: per-tree immutable snapshots. */

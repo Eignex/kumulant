@@ -70,9 +70,8 @@ internal fun <R : Result> SeriesStat<R>.foldRegression(
     project: (VectorView, Double) -> Double,
 ): RegressionStat<R> = FoldRegressionStat(this, featureSize, project)
 
-private fun checkEvery(every: Int) = require(every >= 1) { "throttle every must be >= 1, got $every" }
-
-private fun checkRate(rate: Double) = require(rate in 0.0..1.0) { "sample rate must be in [0, 1], got $rate" }
+// checkEvery and checkRate now come from Sampling.kt, which owns the other four modalities' throttle
+// and sample wrappers. This file used to carry byte-identical private copies.
 
 internal class FilterRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
