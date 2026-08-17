@@ -148,8 +148,16 @@ class SeasonalSmoothingStat(
     private val initialized = streamMode.newLong(0L)
     private val level = streamMode.newDouble(0.0)
     private val trend = streamMode.newDouble(0.0)
-    private val seasonInit = streamMode.newDouble(if (mode == SeasonalMode.Multiplicative) 1.0 else 0.0)
-    private val seasons = streamMode.newDoubleArray(period) { seasonInit.load() }
+
+    /**
+     * The seasonal identity: 1.0 multiplicatively, 0.0 additively.
+     *
+     * Was a `streamMode.newDouble` cell - an atomic or striped allocation holding a value fixed at
+     * construction - read exactly once, on the line below. `reset` then recomputed the same expression
+     * rather than reading it, so the identity was written twice sixty lines apart.
+     */
+    private val seasonIdentity: Double = if (mode == SeasonalMode.Multiplicative) 1.0 else 0.0
+    private val seasons = streamMode.newDoubleArray(period) { seasonIdentity }
     private val slot = streamMode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -216,7 +224,7 @@ class SeasonalSmoothingStat(
         level.store(0.0)
         trend.store(0.0)
         slot.store(0L)
-        val identity = if (mode == SeasonalMode.Multiplicative) 1.0 else 0.0
+        val identity = seasonIdentity
         for (i in 0 until period) seasons.store(i, identity)
     }
 

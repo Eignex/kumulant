@@ -99,10 +99,6 @@ internal class SerialDoubleArray(val ref: DoubleArray) : StreamDoubleArray {
     override fun add(index: Int, delta: Double) {
         ref[index] += delta
     }
-    override fun addAndGet(index: Int, delta: Double): Double {
-        ref[index] += delta
-        return ref[index]
-    }
     override fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean {
         if (ref[index].toRawBits() == expectedValue.toRawBits()) {
             ref[index] = newValue

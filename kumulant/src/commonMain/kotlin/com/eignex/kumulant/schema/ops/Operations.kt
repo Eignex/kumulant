@@ -7,7 +7,6 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.spec.*
-import com.eignex.kumulant.schema.spec.ResampleAggregator
 
 // Composition operators for the wire specs in [com.eignex.kumulant.schema].
 // Each returns a spec of the same modality, building the internal wrapper

@@ -343,7 +343,6 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is BandSeries -> {
             // The runtime check happens at the first read; the cast is safe iff the inner stat's
             // Result implements HasCenterScale, which is part of BandSeries's documented contract.
-            @Suppress("UNCHECKED_CAST")
             val centerScaleInner = requireSeries(inner, "BandSeries").materialize(concurrency)
                 as SeriesStat<HasCenterScale>
             centerScaleInner.band(k)

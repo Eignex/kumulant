@@ -1,12 +1,9 @@
-@file:Suppress("UNCHECKED_CAST")
-
 package com.eignex.kumulant.schema.spec
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.schema.BandResult
 import com.eignex.kumulant.schema.expr.*
-import com.eignex.kumulant.schema.spec.ResampleAggregator
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

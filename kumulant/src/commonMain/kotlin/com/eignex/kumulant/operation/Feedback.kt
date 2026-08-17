@@ -49,7 +49,7 @@ internal class FeedbackSeriesStat<P : Result, I : Result>(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         primary.update(value, timestampNanos, weight)
         val snapshot = primary.read(timestampNanos)
-        inner.update(project.eval(value, 0.0, EMPTY_VECTOR, snapshot), timestampNanos, weight)
+        inner.update(project.eval(value, primary = snapshot), timestampNanos, weight)
     }
 
     override fun reset() {
@@ -59,10 +59,6 @@ internal class FeedbackSeriesStat<P : Result, I : Result>(
 
     override fun create(concurrency: Concurrency?): SeriesStat<I> =
         FeedbackSeriesStat(inner.create(concurrency), primary.create(concurrency), project)
-
-    companion object {
-        private val EMPTY_VECTOR = DoubleArray(0)
-    }
 }
 
 /**
@@ -89,7 +85,7 @@ internal class FeedbackVectorStat<P : Result, I : Result>(
         primary.update(vector, timestampNanos, weight)
         val snapshot = primary.read(timestampNanos)
         val transformed = DoubleArray(vector.size) { i ->
-            project.eval(vector[i], 0.0, EMPTY_VECTOR, IndexedResult(snapshot.results[i], i))
+            project.eval(vector[i], primary = IndexedResult(snapshot.results[i], i))
         }
         inner.update(transformed, timestampNanos, weight)
     }
@@ -101,10 +97,6 @@ internal class FeedbackVectorStat<P : Result, I : Result>(
 
     override fun create(concurrency: Concurrency?): VectorStat<I> =
         FeedbackVectorStat(inner.create(concurrency), primary.create(concurrency), project)
-
-    companion object {
-        private val EMPTY_VECTOR = DoubleArray(0)
-    }
 }
 
 /**
@@ -132,7 +124,7 @@ internal class FeedbackRegressionStat<P : Result, R : Result>(
         primary.update(x, timestampNanos, weight)
         val snapshot = primary.read(timestampNanos)
         val transformed = DoubleArray(x.size) { i ->
-            project.eval(x[i], 0.0, EMPTY_VECTOR, IndexedResult(snapshot.results[i], i))
+            project.eval(x[i], primary = IndexedResult(snapshot.results[i], i))
         }
         inner.update(transformed, y, timestampNanos, weight)
     }
@@ -144,10 +136,6 @@ internal class FeedbackRegressionStat<P : Result, R : Result>(
 
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
         FeedbackRegressionStat(inner.create(concurrency), primary.create(concurrency), project)
-
-    companion object {
-        private val EMPTY_VECTOR = DoubleArray(0)
-    }
 }
 
 /**
@@ -176,8 +164,8 @@ internal class FeedbackPairedStat<P : Result, R : Result>(
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         primaryX.update(x, timestampNanos, weight)
         primaryY.update(y, timestampNanos, weight)
-        val tx = project.eval(x, 0.0, EMPTY_VECTOR, IndexedResult(primaryX.read(timestampNanos), 0))
-        val ty = project.eval(y, 0.0, EMPTY_VECTOR, IndexedResult(primaryY.read(timestampNanos), 1))
+        val tx = project.eval(x, primary = IndexedResult(primaryX.read(timestampNanos), 0))
+        val ty = project.eval(y, primary = IndexedResult(primaryY.read(timestampNanos), 1))
         inner.update(tx, ty, timestampNanos, weight)
     }
 
@@ -193,8 +181,4 @@ internal class FeedbackPairedStat<P : Result, R : Result>(
         primaryY.create(concurrency),
         project,
     )
-
-    companion object {
-        private val EMPTY_VECTOR = DoubleArray(0)
-    }
 }

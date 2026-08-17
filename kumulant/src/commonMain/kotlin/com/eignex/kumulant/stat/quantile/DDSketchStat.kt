@@ -164,7 +164,8 @@ class DDSketchStat(
             // sketch that genuinely observed zeros, so an untouched sketch used to render as a
             // p99 of 0.0 - which reads as excellent latency rather than as no data. AucStat
             // already returned NaN in the same situation. Callers who want to branch rather
-            // than propagate NaN can check [SketchResult.isEmpty].
+            // than propagate NaN can check `isEmpty` on the result, which every HasObservationCount
+            // gets as an extension.
             computedQuantiles.fill(Double.NaN)
             return SketchResult(
                 probabilities = probabilities,

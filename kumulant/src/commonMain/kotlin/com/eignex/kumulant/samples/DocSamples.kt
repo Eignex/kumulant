@@ -1,4 +1,7 @@
-@file:Suppress("UnusedPrivateMember", "unused", "UNUSED_PARAMETER")
+// The samples are referenced only from KDoc @sample directives, which the compiler does not see as
+// usages. UnusedPrivateMember and UNUSED_PARAMETER were also suppressed here and applied to nothing:
+// every declaration in the file is internal and none takes a parameter.
+@file:Suppress("unused")
 
 package com.eignex.kumulant.samples
 

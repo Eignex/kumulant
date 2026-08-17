@@ -107,7 +107,14 @@ internal interface StreamRef<T> {
     /** Overwrite the referent with [value]. */
     fun store(value: T)
 
-    /** Atomic compare-and-exchange; returns the witnessed prior value. */
+    /**
+     * Atomic compare-and-exchange; returns the witnessed prior value.
+     *
+     * Mirrors the platform atomic's own surface. Production CAS on a reference always uses
+     * [compareAndSet] - the witness is only useful to a retry loop, and the cells that run those
+     * ([StreamDouble], [StreamDoubleArray]) reach for the backing atomic's `compareAndExchange`
+     * directly rather than coming through here. Exercised by `StreamModesTest` and `AtomicModeTest`.
+     */
     fun compareAndExchange(expectedValue: T, newValue: T): T
 
     /** Atomic compare-and-set; returns true iff the swap happened. */
@@ -124,7 +131,6 @@ internal interface StreamDoubleArray {
     fun load(index: Int): Double
     fun store(index: Int, value: Double)
     fun add(index: Int, delta: Double)
-    fun addAndGet(index: Int, delta: Double): Double
     fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean
 }
 
@@ -146,7 +152,15 @@ internal interface StreamLongArray {
     /** Add [delta] in place at [index]. */
     fun add(index: Int, delta: Long)
 
-    /** Add [delta] at [index] and return the new value. */
+    /**
+     * Add [delta] at [index] and return the new value.
+     *
+     * Kept for symmetry with [StreamLong.addAndGet], which production code uses heavily. No stat needs
+     * the returned value from an array slot today, so the only caller is `AtomicModeTest`. Stated here
+     * because the alternative reading - a live API nobody happens to call - is the one that invites
+     * someone to build on it and find the fast paths untested. The `Double` counterpart had no caller
+     * at all, tests included, and was removed.
+     */
     fun addAndGet(index: Int, delta: Long): Long
 
     /** Atomic compare-and-set at [index]; returns true iff the swap happened. */
