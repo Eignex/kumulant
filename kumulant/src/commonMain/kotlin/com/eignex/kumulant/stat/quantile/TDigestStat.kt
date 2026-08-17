@@ -424,8 +424,7 @@ class TDigestStat(
                 // NaN per quantile rather than 0.0, matching DDSketchStat and AucStat. A
                 // zero-filled array cannot be told apart from a digest that genuinely observed
                 // zeros, so an untouched digest reported a p99 of 0.0 and read as healthy.
-                // `isEmpty` on the result is the check for callers who would rather branch; it is an
-                // extension on HasObservationCount, not a member, so it cannot be linked as one.
+                // `isEmpty` on the result is the check for callers who would rather branch.
                 computed.fill(Double.NaN)
                 return@guarded TDigestResult(
                     probabilities,

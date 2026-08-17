@@ -4,11 +4,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /**
- * The tie and NaN conventions of the shared argmax, now that eight call sites depend on them.
+ * The tie and NaN conventions of the shared argmax, which every arm and class-label choice depends on.
  *
- * Both were previously undocumented and inconsistent: four bandits seeded the running best at
- * `-Infinity` and four models seeded it at `score(0)`, which are the same loop except when a score is
- * NaN. Pinning them here is the point of having one helper rather than eight loops.
+ * The two rules interact: seeding the running best at `-Infinity` is what makes a NaN score lose, and
+ * strict `>` is what resolves a tie to the lowest index.
  */
 class ArgMaxTest {
 

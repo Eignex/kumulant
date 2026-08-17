@@ -699,10 +699,7 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
 /**
  * Narrow a wrapper spec's inner spec to the modality the wrapper needs.
  *
- * Five of these existed, one per modality, with identical bodies - and the regression one sat a hundred
- * and twenty lines away from its four siblings rather than beside them. The five names are kept because
- * they read better at the ~50 call sites; only the repeated body is gone. `S::class.simpleName` derives
- * the type name the message used to spell out, so the messages are unchanged.
+ * The five per-modality aliases below exist because they read better at the call sites.
  *
  * @param S the modality the wrapper requires of its inner spec.
  * @param inner the inner spec to narrow.

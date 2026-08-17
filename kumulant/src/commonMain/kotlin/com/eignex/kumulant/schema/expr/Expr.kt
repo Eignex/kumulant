@@ -21,14 +21,9 @@ private val EMPTY_VECTOR = DoubleArray(0)
 /**
  * Narrow a feedback primary to the trait a node needs, unwrapping the per-element indirection first.
  *
- * Six nodes repeated the unwrap and the check verbatim, and the wording had already drifted: `Center`,
- * `Scale`, `Low` and `High` say "feedback primary" while `Standardize` and `MinMax` say just "primary".
- * That divergence is the copy-paste fingerprint, and it is exactly what a caller greps for when a
- * pipeline fails to find its primary.
- *
- * The [IndexedResult] unwrap is the load-bearing half: a vectorised feedback stat hands each coordinate
- * its own primary boxed with the coordinate's index, so a node that checked the box rather than its
- * contents would reject every element-wise pipeline.
+ * The [IndexedResult] unwrap is load-bearing: a vectorised feedback stat hands each coordinate its own
+ * primary boxed with the coordinate's index, so a node that checked the box rather than its contents
+ * would reject every element-wise pipeline.
  */
 private inline fun <reified T> Result?.feedbackPrimary(node: String): T {
     val unwrapped = if (this is IndexedResult) inner else this

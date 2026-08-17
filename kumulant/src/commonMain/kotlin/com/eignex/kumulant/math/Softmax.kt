@@ -41,12 +41,8 @@ internal fun DoubleArray.softmaxInPlace(): Boolean {
 /**
  * Floor and ceiling applied to a probability before taking its logarithm.
  *
- * `ln(0)` is `-Infinity`, which poisons a running mean permanently, so every log-loss-shaped score has to
- * clamp first. The value was declared twice under two names - `LOG_LOSS_EPS` in the score family and
- * `SOFTMAX_EPS` in the softmax regressor - for the same job, plus a third time in prose in a KDoc.
- *
- * `1e-15` rather than something smaller: `ln(1e-15)` is about -34.5, a large but finite penalty, while a
- * clamp near the `2.2e-16` double epsilon would lose the distinction between the clamp and `1.0` at the
- * upper end, where the interesting quantity is `1 - p`.
+ * `ln(0)` is `-Infinity`, which poisons a running mean permanently, so every log-loss-shaped score clamps
+ * first. `1e-15` gives a large but finite penalty at about -34.5, while staying far enough from the
+ * `2.2e-16` double epsilon that `1 - p` is still distinguishable from zero at the upper end.
  */
 internal const val PROBABILITY_FLOOR: Double = 1e-15

@@ -139,8 +139,7 @@ class MinHashStat(
 
     override fun merge(values: MinHashResult) {
         requireSameHasher("MinHashStat", values.hasher, hasherRef)
-        // Shape before array length; see HyperLogLogStat.merge. The signature count shadowed the
-        // numHashes half of the check below, so a mismatched sketch never named its seed.
+        // Shape before array length; see HyperLogLogStat.merge.
         require(values.numHashes == numHashes && values.seed == seed) {
             "Cannot merge MinHashStat with (numHashes=${values.numHashes}, seed=${values.seed}) " +
                 "into (numHashes=$numHashes, seed=$seed)"

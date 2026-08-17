@@ -143,21 +143,16 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
 /**
  * How close two sketch parameters must be before a merge is allowed.
  *
- * [DDSketchStat] compares relative-error targets and [TDigestStat] compares compressions, both against a
- * bare `1e-9`. The comparison is approximate rather than exact because these are `Double`s that may have
- * round-tripped through a wire format, so a sketch merged with a re-decoded copy of itself must still be
- * accepted. It is not a numerical tolerance on the *estimate* - a genuinely different parameter means
- * incompatible bucket layouts and no error bound at all, so anything past this is refused outright.
- *
- * Named because `1e-9` appears in this package with three unrelated meanings: this, the bin-alignment
- * check in [LinearHistogramStat], and [DDSketchStat]'s default `minIndexableValue`.
+ * Approximate rather than exact because these are `Double`s that may have round-tripped through a wire
+ * format, so a sketch must still merge with a re-decoded copy of itself. Not a tolerance on the estimate:
+ * a genuinely different parameter means incompatible bucket layouts, and anything past this is refused.
  */
 internal const val PARAMETER_MATCH_TOLERANCE: Double = 1e-9
 
 /**
  * How closely an incoming bucket edge must land on a bin boundary to be merged into that bin.
  *
- * Distinct from [PARAMETER_MATCH_TOLERANCE] despite the same value: this one is a tolerance on where a
- * bucket edge sits after division, not on whether two configurations match.
+ * Distinct from [PARAMETER_MATCH_TOLERANCE] despite sharing its value: this bounds where an edge sits
+ * after division, not whether two configurations match.
  */
 internal const val BIN_ALIGNMENT_TOLERANCE: Double = 1e-9

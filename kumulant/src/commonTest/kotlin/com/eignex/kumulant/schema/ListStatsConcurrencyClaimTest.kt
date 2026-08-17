@@ -10,14 +10,10 @@ import kotlin.test.assertEquals
 /**
  * A list of stats reports the weakest guarantee its entries offer, not a flat [Concurrency.None].
  *
- * `AbstractStatGroup` carries a long note explaining why: a container is only as safe as its
- * least-protected member, and this property is what a caller introspects to decide whether reads need
- * external synchronisation. Reporting `None` for a list of `Strict` children was simply untrue.
- *
- * `AbstractStatGroup` was fixed. `AbstractListStats`, holding the same kind of children with the same
- * property, was not - so a `StatGroup` and a `ListStats` over identical entries disagreed about what
- * they guaranteed. That is worse than either answer alone, because it makes the property unreliable
- * rather than merely pessimistic.
+ * A container is only as safe as its least-protected member, and this property is what a caller
+ * introspects to decide whether reads need external synchronisation. `AbstractStatGroup` carries the same
+ * rule, and the two must agree over identical entries or the property is unreliable rather than merely
+ * pessimistic.
  */
 class ListStatsConcurrencyClaimTest {
 

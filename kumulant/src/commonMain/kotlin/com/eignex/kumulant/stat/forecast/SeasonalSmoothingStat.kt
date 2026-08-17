@@ -147,13 +147,7 @@ class SeasonalSmoothingStat(
     private val level = streamMode.newDouble(0.0)
     private val trend = streamMode.newDouble(0.0)
 
-    /**
-     * The seasonal identity: 1.0 multiplicatively, 0.0 additively.
-     *
-     * Was a `streamMode.newDouble` cell - an atomic or striped allocation holding a value fixed at
-     * construction - read exactly once, on the line below. `reset` then recomputed the same expression
-     * rather than reading it, so the identity was written twice sixty lines apart.
-     */
+    /** The seasonal identity: 1.0 multiplicatively, 0.0 additively. Used by the initialiser and `reset`. */
     private val seasonIdentity: Double = if (mode == SeasonalMode.Multiplicative) 1.0 else 0.0
     private val seasons = streamMode.newDoubleArray(period) { seasonIdentity }
     private val slot = streamMode.newLong(0L)

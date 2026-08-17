@@ -128,8 +128,7 @@ class LinearCountingStat(
 
     override fun merge(values: LinearCountingResult) {
         requireSameHasher("LinearCountingStat", values.hasher, hasherRef)
-        // Shape before array length; see HyperLogLogStat.merge. `wordCount` is `bits / 64`, so the
-        // bits message was unreachable for any self-consistent payload.
+        // Shape before array length; see HyperLogLogStat.merge. `wordCount` is `bits / 64`.
         require(values.bits == bits) {
             "Cannot merge LinearCountingStat with bits=${values.bits} into $bits"
         }

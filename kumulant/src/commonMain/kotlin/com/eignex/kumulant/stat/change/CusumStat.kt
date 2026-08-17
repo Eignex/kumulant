@@ -102,10 +102,8 @@ class CusumStat(
 
     override fun merge(values: CusumResult) {
         // Adopt the snapshot verbatim while empty, matching RecursiveVarianceStat.merge, HoltStat.merge
-        // and SeasonalSmoothingStat.merge. Averaging against a fresh stat's 0.0 halved the incoming
-        // drift, and halving the drift is not a rounding matter here: `alarmUp` compares the cumulative
-        // sum against `threshold`, so a coordinator that merged a worker's snapshot needed twice the
-        // real shift before it would fire. The baselines were merged exactly, which hid it further.
+        // and SeasonalSmoothingStat.merge. Averaging against a fresh stat's zero would halve the incoming
+        // drift, and `alarmUp` thresholds on that sum directly, so the alarm would need twice the shift.
         val empty = initialized.load() == 0L
         while (true) {
             val prev = cusumPos.load()

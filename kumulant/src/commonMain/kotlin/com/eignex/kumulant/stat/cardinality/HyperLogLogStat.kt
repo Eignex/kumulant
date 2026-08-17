@@ -138,11 +138,9 @@ class HyperLogLogStat(
 
     override fun merge(values: HyperLogLogResult) {
         requireSameHasher("HyperLogLogStat", values.hasher, hasherRef)
-        // Shape before array length. `m` is derived from `precision`, so checking the register count
-        // first made the precision message unreachable: a payload from a differently-sized sketch was
-        // reported as the wrong number of registers rather than as the wrong precision, which is the
-        // thing the caller actually got wrong. BloomFilterStat and CountMinSketchStat already order it
-        // this way; these three did not.
+        // Shape before array length: `m` is derived from `precision`, so checking the register count
+        // first would report a differently-sized sketch as the wrong register count rather than the
+        // wrong precision, which is what the caller actually got wrong.
         require(values.precision == precision) {
             "Cannot merge HyperLogLogStat with precision ${values.precision} into $precision"
         }

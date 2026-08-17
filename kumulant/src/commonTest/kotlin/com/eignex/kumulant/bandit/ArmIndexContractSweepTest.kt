@@ -23,14 +23,9 @@ private const val ARMS = 3
 /**
  * Every arm-indexed entry point on every bandit rejects an out-of-range index.
  *
- * `Scorable`/`PerArmBandit` document an `IllegalArgumentException` for a bad index, and eight of the
- * bandits enforced it by hand-copying the same `require` into their `update`. Copies are not coverage:
- * `RegressionContextualBandit` had the check on none of its four arm-indexed methods, so a bad index
- * there surfaced as whatever `IndexOutOfBoundsException` the first array access happened to raise -
- * while a comment in `MultiArmedBandit.update` claimed "every sibling bandit validates this".
- *
- * The rule is swept rather than restated per bandit, because the failure mode was one member of the
- * family being left out, and a per-bandit test is exactly what leaves one out.
+ * `Scorable` and `PerArmBandit` document an `IllegalArgumentException` for a bad index. Swept across the
+ * whole family rather than restated per bandit, because the failure mode is one member being left out -
+ * which is exactly what a per-bandit test misses.
  */
 class ArmIndexContractSweepTest {
 

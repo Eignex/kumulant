@@ -8,17 +8,10 @@ import kotlin.test.assertTrue
 /**
  * A fresh change detector adopts a merged snapshot rather than averaging against its own zero.
  *
- * Both stats merge approximately, by averaging the drift cells, and that is the documented deal: there
- * is no exact way to combine two CUSUM walks. But averaging is only meaningful between two walks that
- * both happened. Against an empty stat the "other" walk is a zero that no observation produced, so the
- * average halved whatever the worker had accumulated.
- *
- * Halving the drift is not a rounding matter here. `alarmUp` compares the cumulative sum directly
- * against `threshold`, so a coordinator built to fan a stream out to N workers and merge their
- * snapshots back needed twice the real shift before it would fire - and the *baselines* (`target`,
- * `mean`, `minPositive`, `maxNegative`) all merged exactly, so the numbers stayed plausible while the
- * alarm silently stopped tripping. `RecursiveVarianceStat.merge` records the same defect and its fix;
- * these two were the stats that never got it.
+ * Both stats merge approximately by averaging the drift cells, which is only meaningful between two walks
+ * that both happened; against an empty stat the other operand is a zero no observation produced. That
+ * matters because `alarmUp` thresholds on the cumulative sum directly, so a halved drift needs twice the
+ * real shift to fire, while the baselines merge exactly and keep the numbers looking plausible.
  */
 class ChangeStatMergeAdoptionTest {
 

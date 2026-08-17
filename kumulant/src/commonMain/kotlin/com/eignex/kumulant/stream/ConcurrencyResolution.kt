@@ -46,11 +46,8 @@ internal fun Concurrency.welfordLock(): Mutex = when (this) {
 /**
  * The lock a stat takes to serialise a multi-cell update.
  *
- * Delegates to the public [Concurrency.lock] rather than repeating its `when`. The two were
- * byte-identical in two files, and `Mutex.kt` documented the coupling in prose - "the same contract the
- * per-stat `serializedLock` uses" - with nothing enforcing it, so a change to the public mapping would
- * have silently left all thirty-three internal call sites on the old one. The separate name is worth
- * keeping because it says *why* the lock is being taken; the second copy of the mapping was not.
+ * Delegates to [Concurrency.lock] so the mapping lives in one place; the separate name is kept because it
+ * says why the lock is being taken.
  */
 internal fun Concurrency.serializedLock(): Mutex = lock()
 
