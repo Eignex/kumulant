@@ -1,0 +1,41 @@
+# kumulant working notes
+
+Kotlin Multiplatform streaming statistics library.
+
+## Pre-PR gate
+
+Run `./gradlew check lintDocs`.
+
+- check runs tests and some light checks.
+- lintDocs runs detekt and dokka linting.
+- For new/edited files add `--rerun-tasks`, detekt caches per source-set and skips them otherwise.
+
+## Tests
+
+- Test names within backticks, plain ascii, describing the behavior under test.
+- Class almost always named after the file under test (`<FileUnderTest>Test`).
+- One observable behavior per test; assert behavior, not implementation. Follow arrange → act → assert.
+- Mirror existing tests' framework, layout, and assertion style.
+- Reuse existing fixtures/helpers; don't add new ones unless asked.
+- Use the parameterized form for variants of the same behavior; separate tests for semantically different ones.
+- Keep comments minimal and let the test name carry the intent.
+- No JVM test over 300ms.
+
+## Bench
+
+`:kumulant-bench` holds the measurement tasks, each driving the StatSpec registry and printing to stdout:
+
+- `analyzeAccuracy`, `analyzeThroughput`, `analyzeConcurrencyDrift`, `analyzeMergeContention` for stats.
+- `analyzeBanditAccuracy`, `analyzeBanditThroughput`, `analyzeBanditDrift` for bandits.
+- `benchmark` (or `jvmBenchmark` / `linuxX64Benchmark`) runs the JMH suites.
+- Cite drift and throughput numbers in KDoc only when measured from these tasks; drop them otherwise.
+
+## Style
+
+- Prefer clear naming and types over comments. Comments explain *why* (soundness, perf, lifecycle) and never
+  restate the code. Never narrate changes, avoid "now/no longer/previously", and don't cite issues. Keep `TODO`/`FIXME`.
+- KDoc on public API only. Use functional notation for math (`succ(i)`, not `succ[i]`); use `[Symbol]` for links.
+- Stat, bandit, and package KDoc follow the templates in `docs/internal/`.
+- Single-line conventional commits, no scope, no body/trailers:
+  `feat: `, `fix: `, `chore: `, `refactor: `, `docs: `, `test: `.
+- PR body: follow `.github/pull_request_template.md`, with `Closes #NN` on its own line at the top.
