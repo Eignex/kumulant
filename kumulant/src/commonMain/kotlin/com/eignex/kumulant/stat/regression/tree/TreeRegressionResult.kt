@@ -129,7 +129,7 @@ private fun RegressionTree<VectorView>.mergeNodeWithResult(
         return a
     }
     if (a is RegressionLeafNode && b is TreeSplitResult) {
-        val cloned = cloneFromResult(b, depth = 0) as RegressionSplitNode
+        val cloned = cloneFromResult(b) as RegressionSplitNode
         foldIntoCarryover(cloned, a.arm.read(0L))
         return cloned
     }
@@ -138,7 +138,18 @@ private fun RegressionTree<VectorView>.mergeNodeWithResult(
     return a
 }
 
-private fun RegressionTree<VectorView>.cloneFromResult(node: TreeNodeResult, depth: Int): RegressionNode<VectorView> {
+/**
+ * Rebuild a live subtree from a snapshot.
+ *
+ * Carried a `depth` parameter that was threaded through every recursive call and read by none of them.
+ * Removed rather than left in place, because as written it read as a live depth cap and was not one.
+ *
+ * Whether it should be one is a separate question this does not settle: `newLeaf` refuses to grow past
+ * `config.maxDepth`, and nothing here refuses to clone past it. In practice a snapshot comes from a tree
+ * that already honoured its own `maxDepth`, so the two only diverge when the configs differ - which is a
+ * behaviour decision rather than a cleanup.
+ */
+private fun RegressionTree<VectorView>.cloneFromResult(node: TreeNodeResult): RegressionNode<VectorView> {
     nbrNodes.addAndFetch(1)
     return when (node) {
         is TreeLeafResult -> {
@@ -148,8 +159,8 @@ private fun RegressionTree<VectorView>.cloneFromResult(node: TreeNodeResult, dep
         }
 
         is TreeSplitResult -> {
-            val pos = cloneFromResult(node.pos, depth + 1)
-            val neg = cloneFromResult(node.neg, depth + 1)
+            val pos = cloneFromResult(node.pos)
+            val neg = cloneFromResult(node.neg)
             // Re-establish any orphan aggregate the snapshot encodes by comparing the
             // recorded value against the sum of the cloned children's aggregates.
             val childSum = mergeWVR(node.pos.value, node.neg.value)

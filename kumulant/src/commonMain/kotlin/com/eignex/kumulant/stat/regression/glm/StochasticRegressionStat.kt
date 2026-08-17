@@ -45,6 +45,8 @@ import com.eignex.kumulant.stream.welfordMode
  * **Concurrency:** Welford-coupled per-slot atomic under [Concurrency.Relaxed]
  * (HOGWILD-style asynchronous SGD), serialised under [Concurrency.Strict] /
  * [Concurrency.HighWrite].
+ *
+ * @sample com.eignex.kumulant.samples.regressionUpdate
  */
 class StochasticRegressionStat(
     override val featureSize: Int,

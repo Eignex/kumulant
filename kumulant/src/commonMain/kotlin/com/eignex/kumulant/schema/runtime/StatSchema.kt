@@ -98,9 +98,6 @@ internal fun regressionSpecs(schema: StatSchema): List<BoundStat<*, out Regressi
 internal fun <S : Stat<*>> toSpec(key: StatKey<*>, stat: S): BoundStat<*, out S, *> =
     BoundStat(key as StatKey<Result>, stat as Stat<Result>) as BoundStat<*, out S, *>
 
-internal inline fun <reified S : Stat<*>> filterSpecs(specs: List<BoundStat<*, *, *>>): List<BoundStat<*, out S, *>> =
-    specs.mapNotNull { (key, stat) -> if (stat is S) toSpec(key, stat) else null }
-
 @Suppress("UNCHECKED_CAST")
 internal fun mergeEntry(values: GroupResult, key: StatKey<*>, stat: Stat<*>) {
     val result = values.results[key.name] ?: return

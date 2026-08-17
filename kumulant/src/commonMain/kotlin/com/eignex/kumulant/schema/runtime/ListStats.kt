@@ -259,10 +259,4 @@ internal class RegressionListStats<R : Result>(
     }
 }
 
-/** Auto-named [RegressionListStats]: each stat keyed by its class `simpleName`. */
-internal fun <R : Result> regressionListStats(
-    vararg stats: RegressionStat<out R>,
-    concurrency: Concurrency? = null,
-): RegressionListStats<R> = RegressionListStats(stats.map { autoName(it) to it }, concurrency)
-
 private fun autoName(stat: Any): String = stat::class.simpleName ?: "Stat"

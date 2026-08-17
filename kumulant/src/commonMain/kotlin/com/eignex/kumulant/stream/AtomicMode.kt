@@ -115,16 +115,6 @@ internal value class AtomicDoubleCellArray(val ref: KAtomicLongArray) : StreamDo
             currentBits = witness
         }
     }
-    override fun addAndGet(index: Int, delta: Double): Double {
-        var currentBits = ref.loadAt(index)
-        while (true) {
-            val nextVal = Double.fromBits(currentBits) + delta
-            val nextBits = nextVal.toRawBits()
-            val witness = ref.compareAndExchangeAt(index, currentBits, nextBits)
-            if (witness == currentBits) return nextVal
-            currentBits = witness
-        }
-    }
     override fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean =
         ref.compareAndSetAt(index, expectedValue.toRawBits(), newValue.toRawBits())
 }

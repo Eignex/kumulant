@@ -131,7 +131,7 @@ class ClassificationTree(
             return a
         }
         if (a is ClassificationLeafNode && b is TreeClassificationSplitResult) {
-            val cloned = cloneFromResult(b, depth = 0) as ClassificationSplitNode
+            val cloned = cloneFromResult(b) as ClassificationSplitNode
             foldIntoCarryover(cloned, a.arm.read(0L))
             return cloned
         }
@@ -151,7 +151,18 @@ class ClassificationTree(
         }
     }
 
-    private fun cloneFromResult(node: TreeClassificationNodeResult, depth: Int): ClassificationNode {
+    /**
+     * Rebuild a live subtree from a snapshot.
+     *
+     * Carried a `depth` parameter that was threaded through every recursive call and read by none of them.
+     * Removed rather than left in place, because as written it read as a live depth cap and was not one.
+     *
+     * Whether it should be one is a separate question this does not settle: `newLeaf` refuses to grow past
+     * `config.maxDepth`, and nothing here refuses to clone past it. In practice a snapshot comes from a tree
+     * that already honoured its own `maxDepth`, so the two only diverge when the configs differ - which is a
+     * behaviour decision rather than a cleanup.
+     */
+    private fun cloneFromResult(node: TreeClassificationNodeResult): ClassificationNode {
         nbrNodes.addAndFetch(1)
         return when (node) {
             is TreeClassificationLeafResult -> {
@@ -161,8 +172,8 @@ class ClassificationTree(
             }
 
             is TreeClassificationSplitResult -> {
-                val pos = cloneFromResult(node.pos, depth + 1)
-                val neg = cloneFromResult(node.neg, depth + 1)
+                val pos = cloneFromResult(node.pos)
+                val neg = cloneFromResult(node.neg)
                 val childSum = mergeCC(node.pos.value, node.neg.value)
                 val residual = subtractCC(node.value, childSum)
                 val carry = if (residual.totalWeights > 0.0) leafArmFactory().also { it.merge(residual) } else null
