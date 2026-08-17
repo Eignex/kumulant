@@ -1,8 +1,8 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.kumulant.feat
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.ops.*
@@ -18,7 +18,6 @@ import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
 
 class RegressionSpecsRoundTripTest {
 

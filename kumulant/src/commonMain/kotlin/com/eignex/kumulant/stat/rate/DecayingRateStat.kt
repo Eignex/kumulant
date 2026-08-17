@@ -5,11 +5,12 @@ import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.operation.mapResult
+import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingSumResult
 import com.eignex.kumulant.stat.decay.DecayingSumStat
+import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.ln
 import kotlin.time.Duration
 
 /** Exponentially time-decayed rate snapshot. */
@@ -42,7 +43,16 @@ data class DecayingRateResult(
 class DecayingRateStat(val halfLife: Duration, override val concurrency: Concurrency = Concurrency.None) :
     SeriesStat<DecayingRateResult> by decayingRateDelegate(halfLife, concurrency)
 
-private fun rateScale(halfLife: Duration): Double = (ln(2.0) / halfLife.inWholeNanoseconds.toDouble()) * 1e9
+/**
+ * Per-second rate scale for a half-life, via [DecayWeighting.HalfLife].
+ *
+ * This recomputed `ln(2) / halfLife` itself rather than reading the one place that already derives it,
+ * and the copy had no validation: `inWholeNanoseconds` truncates, so a sub-nanosecond half-life gave an
+ * infinite scale instead of the documented error. It only ever looked correct because the
+ * `DecayingSumStat` constructed on the next line happens to throw first - an ordering the compiler does
+ * not enforce and nothing recorded.
+ */
+private fun rateScale(halfLife: Duration): Double = DecayWeighting.HalfLife(halfLife).alpha * NANOS_PER_SECOND
 
 private fun decayingRateDelegate(halfLife: Duration, concurrency: Concurrency): SeriesStat<DecayingRateResult> {
     val scale = rateScale(halfLife)

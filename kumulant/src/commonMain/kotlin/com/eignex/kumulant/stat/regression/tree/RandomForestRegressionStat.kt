@@ -135,22 +135,23 @@ data class ForestRegressionResult(
     /** Merge the leaves that [x] routes to across every tree into a single weighted-
      *  variance aggregate. Useful for ensembled scoring. */
     fun findLeafMerged(x: VectorView): WeightedVarianceResult {
-        var totalW = 0.0
-        var mean = 0.0
-        var sst = 0.0
+        // Via mergeWVR, which is the same Chan recurrence this used to inline and the one every other
+        // aggregate path in the tree package already goes through.
+        //
+        // The `w2 <= 0.0` skip stays here rather than moving into mergeWVR, and the difference is not
+        // cosmetic: mergeWVR short-circuits only on an exactly-zero weight, so a leaf left with negative
+        // total weight by an over-reaching downdate would be folded in, and against a positive sibling
+        // of equal magnitude the combined weight is zero - a division producing NaN for the whole
+        // forest. Dropping such a leaf loses information; folding it in loses the answer. Deciding
+        // which of those is right for corrupted state is a separate question from removing the
+        // duplicated recurrence, so this preserves the existing behaviour exactly.
+        var acc = WeightedVarianceResult(0.0, 0.0, 0.0)
         for (t in trees) {
             val leaf = t.findLeaf(x)
-            val w2 = leaf.totalWeights
-            if (w2 <= 0.0) continue
-            val w1 = totalW
-            val nextW = w1 + w2
-            val delta = leaf.mean - mean
-            mean += delta * (w2 / nextW)
-            sst += leaf.variance * w2 + (delta * delta) * (w1 * w2 / nextW)
-            totalW = nextW
+            if (leaf.totalWeights <= 0.0) continue
+            acc = mergeWVR(acc, leaf)
         }
-        val variance = if (totalW > 0.0) sst / totalW else 0.0
-        return WeightedVarianceResult(totalW, mean, variance)
+        return acc
     }
 
     /** Mean of [findLeafMerged]. */

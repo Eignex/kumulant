@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit.tree
 
-import com.eignex.kumulant.feat
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
@@ -13,7 +13,6 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class RegressionContextualBanditTreeTest {
-
 
     @Test
     fun `drives tree-based arms`() {

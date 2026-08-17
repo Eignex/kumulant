@@ -1,6 +1,5 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.kumulant.feat
 import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.contextual.Exp4Bandit
 import com.eignex.kumulant.bandit.contextual.Exp4Expert
@@ -9,6 +8,7 @@ import com.eignex.kumulant.bandit.univariate.BoltzmannBandit
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
 import com.eignex.kumulant.bandit.univariate.NormalTS
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
+import com.eignex.kumulant.feat
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
@@ -18,7 +18,6 @@ import kotlin.test.assertTrue
 /** Edge cases across Exp3, Exp4, Boltzmann, Knn, TopTwoTS that the per-class
  *  tests don't already cover. */
 class StandaloneBanditExtraTest {
-
 
     @Test
     fun `Exp3 gamma=1 produces uniform play distribution regardless of weights`() {

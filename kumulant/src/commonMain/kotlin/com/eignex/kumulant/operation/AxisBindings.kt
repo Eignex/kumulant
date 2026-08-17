@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.*
+import com.eignex.kumulant.stream.NANOS_PER_SECOND
 
 /** Lift a paired stat into a series stat that feeds its x from the event timestamp (seconds). */
 internal fun <R : Result> PairedStat<R>.withTimeAsX(): SeriesStat<R> = WithTimeAsXStat(this)
@@ -20,7 +21,7 @@ internal class WithTimeAsXStat<R : Result>(private val delegate: PairedStat<R>) 
     Stat<R> by delegate {
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(
-            x = timestampNanos / 1e9,
+            x = timestampNanos / NANOS_PER_SECOND,
             y = value,
             timestampNanos,
             weight,
@@ -37,7 +38,7 @@ internal class WithTimeAsYStat<R : Result>(private val delegate: PairedStat<R>) 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         delegate.update(
             x = value,
-            y = timestampNanos / 1e9,
+            y = timestampNanos / NANOS_PER_SECOND,
             timestampNanos,
             weight,
         )

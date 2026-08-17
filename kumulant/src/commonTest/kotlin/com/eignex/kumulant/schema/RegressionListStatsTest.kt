@@ -1,8 +1,8 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.kumulant.feat
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.operation.foldRegression
 import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
@@ -18,7 +18,6 @@ import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
-
 
 class RegressionListStatsTest {
 

@@ -1,9 +1,8 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.kumulant.fitLine
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.fitLine
 import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
 import kotlin.math.exp

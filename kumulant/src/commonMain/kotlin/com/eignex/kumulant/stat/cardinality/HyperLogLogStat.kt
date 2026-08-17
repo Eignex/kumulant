@@ -139,11 +139,16 @@ class HyperLogLogStat(
         require(values.hasher == hasherRef) {
             "Cannot merge HyperLogLogStat hashed with ${values.hasher} into one hashed with $hasherRef"
         }
-        require(values.registers.size == m) {
-            "Cannot merge HyperLogLogStat: expected $m registers, got ${values.registers.size}"
-        }
+        // Shape before array length. `m` is derived from `precision`, so checking the register count
+        // first made the precision message unreachable: a payload from a differently-sized sketch was
+        // reported as the wrong number of registers rather than as the wrong precision, which is the
+        // thing the caller actually got wrong. BloomFilterStat and CountMinSketchStat already order it
+        // this way; these three did not.
         require(values.precision == precision) {
             "Cannot merge HyperLogLogStat with precision ${values.precision} into $precision"
+        }
+        require(values.registers.size == m) {
+            "Cannot merge HyperLogLogStat: expected $m registers, got ${values.registers.size}"
         }
         for (i in 0 until m) {
             val incoming = values.registers[i].toLong()

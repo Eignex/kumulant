@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.monotonicMode
 
@@ -123,8 +124,4 @@ internal class DerivativeSeriesStat<R : Result>(private val delegate: SeriesStat
     }
 
     override fun create(concurrency: Concurrency?): SeriesStat<R> = DerivativeSeriesStat(delegate.create(concurrency))
-
-    companion object {
-        private const val NANOS_PER_SECOND: Double = 1_000_000_000.0
-    }
 }

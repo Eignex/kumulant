@@ -141,12 +141,14 @@ class MinHashStat(
         require(values.hasher == hasherRef) {
             "Cannot merge MinHashStat hashed with ${values.hasher} into one hashed with $hasherRef"
         }
-        require(values.signatures.size == numHashes) {
-            "Cannot merge MinHashStat: expected $numHashes signatures, got ${values.signatures.size}"
-        }
+        // Shape before array length; see HyperLogLogStat.merge. The signature count shadowed the
+        // numHashes half of the check below, so a mismatched sketch never named its seed.
         require(values.numHashes == numHashes && values.seed == seed) {
             "Cannot merge MinHashStat with (numHashes=${values.numHashes}, seed=${values.seed}) " +
                 "into (numHashes=$numHashes, seed=$seed)"
+        }
+        require(values.signatures.size == numHashes) {
+            "Cannot merge MinHashStat: expected $numHashes signatures, got ${values.signatures.size}"
         }
         for (i in 0 until numHashes) {
             val incoming = values.signatures[i]

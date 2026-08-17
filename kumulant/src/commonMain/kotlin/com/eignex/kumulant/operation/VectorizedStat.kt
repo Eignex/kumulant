@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.core.requireFeatureSize
 
 /**
  * Fans each vector observation out to one [SeriesStat] per dimension.
@@ -35,9 +36,7 @@ internal class VectorizedStat<R : Result>(
     override val concurrency: Concurrency get() = template.concurrency
 
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
-        require(vector.size == dimensions) {
-            "Vector size ${vector.size} does not match expected dimensions $dimensions"
-        }
+        vector.requireFeatureSize(dimensions)
         if (skipZeros) {
             vector.forEachStored { i, v -> stats[i].update(v, timestampNanos, weight) }
         } else {
@@ -53,7 +52,12 @@ internal class VectorizedStat<R : Result>(
         VectorizedStat(dimensions, template.create(concurrency), skipZeros)
 
     override fun merge(values: ResultList<R>) {
-        require(values.results.size == dimensions)
+        // Had no message at all, which on a wire-reachable path - every `Vectorized` spec and all four
+        // `*ScaleFeatures` scalers materialise through here - meant an arity mismatch surfaced as a bare
+        // "Failed requirement." with nothing naming the two numbers involved.
+        require(values.results.size == dimensions) {
+            "merge: results.size=${values.results.size}, expected $dimensions"
+        }
         for (i in 0 until dimensions) {
             stats[i].merge(values.results[i])
         }

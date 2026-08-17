@@ -1,7 +1,7 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.kumulant.feat
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
@@ -12,7 +12,6 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-
 
 class RegressionOpsTest {
 

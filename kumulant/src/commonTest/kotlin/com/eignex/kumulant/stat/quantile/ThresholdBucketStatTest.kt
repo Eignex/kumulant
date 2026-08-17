@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.quantile
 
-import com.eignex.kumulant.assertModesAgree
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.assertModesAgree
 import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -33,7 +33,19 @@ internal sealed class AbstractListStats<R : Result, S : Stat<out R>>(
         requireUniqueNames(entries, typeName)
     }
 
-    final override val concurrency: Concurrency get() = concurrencyOverride ?: Concurrency.None
+    /**
+     * The weakest guarantee any entry offers, matching [AbstractStatGroup.concurrency].
+     *
+     * This reported [Concurrency.None] whenever no override was passed, which was simply untrue for a
+     * list of `Strict` entries - and this property is what a caller introspects to decide whether reads
+     * need external synchronisation. `AbstractStatGroup` was fixed; the sibling class holding the same
+     * kind of children kept the old answer, so `StatGroup(schema)` and `ListStats(schema)` over the
+     * very same schema disagreed about what they guaranteed.
+     *
+     * Computed once rather than per access: the entries are fixed at construction.
+     */
+    final override val concurrency: Concurrency =
+        concurrencyOverride ?: entries.minOfOrNull { (_, stat) -> stat.concurrency } ?: Concurrency.None
 
     final override fun read(timestampNanos: Long): ResultList<R> =
         ResultList(entries.map { it.first }, entries.map { it.second.read(timestampNanos) })

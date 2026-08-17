@@ -8,9 +8,9 @@ import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.isInertWeight
-import kotlin.random.Random
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.random.Random
 
 /**
  * Per-arm state snapshot for [RouletteWheelBandit]. Exposes the current weight plus the

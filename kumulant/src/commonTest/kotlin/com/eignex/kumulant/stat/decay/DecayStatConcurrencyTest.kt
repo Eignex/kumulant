@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.decay
 
-import com.eignex.kumulant.timedReads
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.timedReads
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
@@ -9,7 +9,6 @@ import kotlin.time.Duration.Companion.seconds
 /** Cross-mode smoke tests for decay stats; math must match across modes under
  *  sequential single-threaded updates. */
 class DecayStatConcurrencyTest {
-
 
     @Test
     fun `EwmaMeanStat sequential math equal across modes`() {

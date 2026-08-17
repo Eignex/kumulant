@@ -1,13 +1,12 @@
 package com.eignex.kumulant.stat.forecast
 
-import com.eignex.kumulant.timedReads
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.timedReads
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 /** Cross-mode smoke tests for the forecast family. */
 class ForecastStatConcurrencyTest {
-
 
     @Test
     fun `HoltStat sequential math equal across modes`() {

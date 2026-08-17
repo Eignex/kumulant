@@ -9,12 +9,12 @@ import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.preview
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
 /**
  * Snapshot of [com.eignex.kumulant.bandit.contextual.Exp4Bandit]'s state: the per-expert exponential weights. The

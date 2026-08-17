@@ -52,14 +52,21 @@ class LinearHistogramStat(
     private val binWidth: Double = (upperBound - lowerBound) / binCount
 
     private val mode = concurrency.additiveMode()
-    private val totalWeights = mode.newDouble(0.0)
     private val underflow = mode.newDouble(0.0)
     private val overflow = mode.newDouble(0.0)
     private val bins = ArrayBins(mode)
 
+    /**
+     * The bin a value falls in, clamped to the array.
+     *
+     * Written out twice, in `update` and in `merge`. The two have to agree exactly or a merged bucket
+     * lands somewhere a directly-observed value of the same magnitude would not, which shows up as a
+     * histogram that disagrees with itself depending on how the observations arrived.
+     */
+    private fun binOf(value: Double): Int = ((value - lowerBound) / binWidth).toInt().coerceIn(0, binCount - 1)
+
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isNotPositiveWeight()) return
-        totalWeights.add(weight)
 
         when {
             value < lowerBound -> underflow.add(weight)
@@ -67,8 +74,7 @@ class LinearHistogramStat(
             value >= upperBound -> overflow.add(weight)
 
             else -> {
-                val idx = ((value - lowerBound) / binWidth).toInt().coerceIn(0, binCount - 1)
-                bins.add(idx, weight)
+                bins.add(binOf(value), weight)
             }
         }
     }
@@ -88,19 +94,15 @@ class LinearHistogramStat(
             val hi = values.upperBounds[i]
             when {
                 !lo.isFinite() && hi == lowerBound -> {
-                    totalWeights.add(w)
                     underflow.add(w)
                 }
 
                 lo == upperBound && !hi.isFinite() -> {
-                    totalWeights.add(w)
                     overflow.add(w)
                 }
 
                 lo.isFinite() && hi.isFinite() && matchesLayout(lo, hi) -> {
-                    totalWeights.add(w)
-                    val idx = ((lo - lowerBound) / binWidth).toInt().coerceIn(0, binCount - 1)
-                    bins.add(idx, w)
+                    bins.add(binOf(lo), w)
                 }
 
                 else -> {
@@ -124,7 +126,6 @@ class LinearHistogramStat(
     }
 
     override fun reset() {
-        totalWeights.store(0.0)
         underflow.store(0.0)
         overflow.store(0.0)
         bins.clear()
