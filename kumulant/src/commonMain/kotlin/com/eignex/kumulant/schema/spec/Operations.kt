@@ -356,21 +356,21 @@ internal data class FoldPaired(
 /**
  * Lift a [SeriesStatSpec] to a [VectorStatSpec] by reducing each vector to
  * a scalar via [expr] before driving the inner stat. The expression typically
- * uses [VFold] / [VDot] / [V] to consume the vector.
+ * uses [vFold] / [vDot] / [V] to consume the vector.
  */
 @Serializable
 @SerialName("FoldVector")
 internal data class FoldVector(
     /** Inner series spec receiving the folded scalar. */
     val inner: StatSpec,
-    /** Expression reducing each vector to a single scalar (typically via [VFold] / [VDot] / [V]). */
+    /** Expression reducing each vector to a single scalar (typically via [vFold] / [vDot] / [V]). */
     val expr: ScalarExpr,
 ) : VectorStatSpec<Result>
 
 /**
  * Lift a [PairedStatSpec] to a [VectorStatSpec] by reducing each incoming vector to a
  * pair `(xExpr, yExpr)` of scalars before driving the inner paired stat. Both
- * expressions typically use [VFold] / [VDot] / [V] to consume the vector; e.g.
+ * expressions typically use [vFold] / [vDot] / [V] to consume the vector; e.g.
  * `OLS().foldVector(xExpr = V(0), yExpr = V(1))` correlates the first two coordinates.
  */
 @Serializable

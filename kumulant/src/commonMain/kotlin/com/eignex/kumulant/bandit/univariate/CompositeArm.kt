@@ -21,7 +21,7 @@ import kotlinx.serialization.Serializable
  * Plumbing is AST-driven (no lambdas) so the whole spec is wire-serializable.
  * Per-sub-arm `encode` is still applied after `valueExpr`; e.g. with `LogNormalArm`
  * + `valueExpr = X` the lognormal's own `encode = ln` runs, so don't double-log via
- * `valueExpr = Log(X)`.
+ * `valueExpr = X.ln()`.
  *
  * Example; zero-inflated lognormal revenue:
  * ```

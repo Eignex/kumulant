@@ -2347,6 +2347,7 @@ public final class com/eignex/kumulant/schema/expr/Const$Companion {
 }
 
 public final class com/eignex/kumulant/schema/expr/ExprKt {
+	public static final fun abs (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun allFinite ()Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun and (Lcom/eignex/kumulant/schema/expr/BoolExpr;Lcom/eignex/kumulant/schema/expr/BoolExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun div (DLcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
@@ -2354,16 +2355,23 @@ public final class com/eignex/kumulant/schema/expr/ExprKt {
 	public static final fun div (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun eq (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun eq (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
+	public static final fun exp (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun ge (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun ge (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun gt (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun gt (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
+	public static final fun inRange (Lcom/eignex/kumulant/schema/expr/ScalarExpr;DD)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun isFinite (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun isNaN (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun le (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun le (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
+	public static final fun ln (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun lt (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun lt (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
+	public static final fun max (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun max (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun min (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun min (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun minus (DLcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun minus (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun minus (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
@@ -2372,10 +2380,18 @@ public final class com/eignex/kumulant/schema/expr/ExprKt {
 	public static final fun plus (DLcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun plus (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun plus (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun pow (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun pow (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun sqrt (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun times (DLcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun times (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun times (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun unaryMinus (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun vDot (Ljava/util/List;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun vDot ([D)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun vFold (Lcom/eignex/kumulant/schema/expr/VFoldOp;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun vectorOf (Ljava/util/List;)Lcom/eignex/kumulant/schema/expr/VectorExpr;
+	public static final fun vectorOf ([Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/VectorExpr;
 }
 
 public final class com/eignex/kumulant/schema/expr/High : com/eignex/kumulant/schema/expr/ScalarExpr {
