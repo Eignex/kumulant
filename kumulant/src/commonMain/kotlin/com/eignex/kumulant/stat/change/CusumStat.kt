@@ -5,10 +5,10 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.monotonicMode
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlin.math.max
 import kotlin.math.min
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /** Snapshot from a two-sided [CusumStat] change-point detector. */
 @Serializable
@@ -76,6 +76,14 @@ class CusumStat(
     private val cusumPos = streamMode.newDouble(0.0)
     private val cusumNeg = streamMode.newDouble(0.0)
 
+    /**
+     * Whether anything has landed yet, which the two cells cannot tell us on their own.
+     *
+     * `cusumPos` clamps at zero and `cusumNeg` at zero from below, so "no observation yet" and "the
+     * drift has walked back to zero" are the same pair of numbers. [merge] has to distinguish them.
+     */
+    private val initialized = streamMode.newLong(0L)
+
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
         val deviation = value - target
@@ -89,24 +97,33 @@ class CusumStat(
             val next = min(0.0, prev + deviation + referenceValue)
             if (cusumNeg.compareAndSet(prev, next)) break
         }
+        initialized.store(1L)
     }
 
     override fun merge(values: CusumResult) {
+        // Adopt the snapshot verbatim while empty, matching RecursiveVarianceStat.merge, HoltStat.merge
+        // and SeasonalSmoothingStat.merge. Averaging against a fresh stat's 0.0 halved the incoming
+        // drift, and halving the drift is not a rounding matter here: `alarmUp` compares the cumulative
+        // sum against `threshold`, so a coordinator that merged a worker's snapshot needed twice the
+        // real shift before it would fire. The baselines were merged exactly, which hid it further.
+        val empty = initialized.load() == 0L
         while (true) {
             val prev = cusumPos.load()
-            val next = 0.5 * (prev + values.cusumPositive)
+            val next = if (empty) values.cusumPositive else 0.5 * (prev + values.cusumPositive)
             if (cusumPos.compareAndSet(prev, next)) break
         }
         while (true) {
             val prev = cusumNeg.load()
-            val next = 0.5 * (prev + values.cusumNegative)
+            val next = if (empty) values.cusumNegative else 0.5 * (prev + values.cusumNegative)
             if (cusumNeg.compareAndSet(prev, next)) break
         }
+        initialized.store(1L)
     }
 
     override fun reset() {
         cusumPos.store(0.0)
         cusumNeg.store(0.0)
+        initialized.store(0L)
     }
 
     override fun read(timestampNanos: Long): CusumResult {

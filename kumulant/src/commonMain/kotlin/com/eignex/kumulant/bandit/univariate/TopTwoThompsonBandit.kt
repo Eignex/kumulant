@@ -2,6 +2,8 @@ package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.UnivariateBandit
+import com.eignex.kumulant.bandit.requireArmIndex
+import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import kotlin.random.Random
@@ -96,7 +98,7 @@ class TopTwoThompsonBandit<R : Result>(
     }
 
     override fun update(armIndex: Int, value: Double, weight: Double) {
-        require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
+        requireArmIndex(armIndex, nbrArms)
         policy.update(stats[armIndex], value, weight)
     }
 
@@ -110,9 +112,7 @@ class TopTwoThompsonBandit<R : Result>(
     }
 
     override fun merge(other: List<R>) {
-        require(other.size == nbrArms) {
-            "merge: other.size=${other.size} does not match nbrArms=$nbrArms"
-        }
+        requireMergeSize(other.size, nbrArms)
         for (i in 0 until nbrArms) stats[i].merge(other[i])
     }
 

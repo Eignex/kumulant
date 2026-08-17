@@ -7,13 +7,16 @@ import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
+import com.eignex.kumulant.bandit.requireArmIndex
+import com.eignex.kumulant.bandit.requireMergeSize
+import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.preview
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * Per-arm snapshot for [KnnContextualBandit]: the retained history of
@@ -123,7 +126,7 @@ class KnnContextualBandit(
     PerArmBandit<KnnArmResult>,
     ContextualScorable {
     init {
-        require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
+        requireNbrArms(nbrArms)
         require(k > 0) { "k must be positive, got $k" }
         require(maxHistoryPerArm > 0) { "maxHistoryPerArm must be positive, got $maxHistoryPerArm" }
         require(exploration >= 0.0) { "exploration must be non-negative, got $exploration" }
@@ -152,7 +155,7 @@ class KnnContextualBandit(
 
     /** Score arm [armIndex] at context [x]: k-NN mean reward + UCB bonus. */
     override fun evaluate(armIndex: Int, x: VectorView): Double {
-        require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
+        requireArmIndex(armIndex, nbrArms)
         val ctx = historyContexts[armIndex]
         if (ctx.size < k) return coldStartScore + ucbBonus(armIndex)
         val mean = knnMean(armIndex, x)
@@ -161,7 +164,7 @@ class KnnContextualBandit(
 
     /** Append `(x, reward, weight)` to arm [armIndex]'s history; oldest entry drops if full. */
     override fun update(armIndex: Int, x: VectorView, reward: Double, weight: Double) {
-        require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
+        requireArmIndex(armIndex, nbrArms)
         val ctxs = historyContexts[armIndex]
         val rs = historyRewards[armIndex]
         val ws = historyWeights[armIndex]
@@ -178,10 +181,16 @@ class KnnContextualBandit(
     }
 
     /** Live arm history size for [armIndex]. */
-    fun historySize(armIndex: Int): Int = historyContexts[armIndex].size
+    fun historySize(armIndex: Int): Int {
+        requireArmIndex(armIndex, nbrArms)
+        return historyContexts[armIndex].size
+    }
 
     /** Cumulative observation weight folded into arm [armIndex]. */
-    fun armWeight(armIndex: Int): Double = totalWeights[armIndex]
+    fun armWeight(armIndex: Int): Double {
+        requireArmIndex(armIndex, nbrArms)
+        return totalWeights[armIndex]
+    }
 
     override fun snapshot(): List<KnnArmResult> = List(nbrArms) { a ->
         KnnArmResult(
@@ -193,9 +202,7 @@ class KnnContextualBandit(
     }
 
     override fun merge(other: List<KnnArmResult>) {
-        require(other.size == nbrArms) {
-            "merge: other.size=${other.size} does not match nbrArms=$nbrArms"
-        }
+        requireMergeSize(other.size, nbrArms)
         for (a in 0 until nbrArms) {
             val arm = other[a]
             for (i in arm.contexts.indices) {

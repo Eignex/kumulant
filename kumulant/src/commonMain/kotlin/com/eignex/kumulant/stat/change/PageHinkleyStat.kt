@@ -7,10 +7,10 @@ import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlin.math.max
 import kotlin.math.min
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /** Snapshot from a [PageHinkleyStat] change-point detector. */
 @Serializable
@@ -117,8 +117,13 @@ class PageHinkleyStat(
             (mean.load() * localCount + values.mean * incomingCount) / combinedCount.toDouble()
         count.store(combinedCount)
         mean.store(combinedMean)
-        cumPos.store(0.5 * (cumPos.load() + values.cumulativePositive))
-        cumNeg.store(0.5 * (cumNeg.load() + values.cumulativeNegative))
+        // Adopt verbatim while empty. The mean above already does this implicitly - a `localCount` of
+        // zero weights it out - but the drift cells did not, so a fresh coordinator merging a worker's
+        // snapshot halved exactly the two quantities `alarmUp`/`alarmDown` threshold against while
+        // taking the mean and both extremes exactly. Same defect RecursiveVarianceStat.merge records.
+        val empty = localCount == 0L
+        cumPos.store(if (empty) values.cumulativePositive else 0.5 * (cumPos.load() + values.cumulativePositive))
+        cumNeg.store(if (empty) values.cumulativeNegative else 0.5 * (cumNeg.load() + values.cumulativeNegative))
         minPos.store(min(minPos.load(), values.minPositive))
         maxNeg.store(max(maxNeg.load(), values.maxNegative))
     }
