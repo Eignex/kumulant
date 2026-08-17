@@ -21,7 +21,7 @@ import com.eignex.kumulant.stream.currentTimeNanos
  * observation weight, sums multiply by it, histograms add it to the destination
  * bin. A weight of 1 (the default) is the unweighted case.
  *
- * Three guarantees hold across every stat:
+ * Four guarantees hold across every stat:
  *
  * - A weight of `0.0` is a no-op. The observation is not folded in and no state
  *   changes, whatever the modality. This is not a policy choice but an identity:
@@ -30,6 +30,13 @@ import com.eignex.kumulant.stream.currentTimeNanos
  * - A weight of `NaN` is a no-op too, for a related reason: a weight is the
  *   multiplicity of an observation, and `NaN` is not a multiplicity. It carries no
  *   observation, so there is nothing to fold in.
+ * - A weight of `+Infinity` or `-Infinity` is a no-op, by the same argument: an
+ *   infinity is not a multiplicity either. `+Infinity` has a tempting reading, since
+ *   the weighted-mean update tends to 1 and so the mean would tend to the observed
+ *   value, but the recurrences reach that limit through `Infinity / Infinity` and
+ *   report `NaN` rather than the limit. Pinning a stat to a value is a different
+ *   operation and deserves to be asked for directly rather than encoded as an
+ *   infinite weight. A non-finite *value* still propagates; see below.
  * - A negative weight carries whatever meaning is standard for that particular
  *   statistic. For the accumulating families that is a downdate: it removes an
  *   observation previously folded in. Where a statistic has no sensible inverse,
@@ -172,8 +179,8 @@ interface Stat<R : Result> {
  * sketches, the rate family, the decay family) implement this shape.
  *
  * See [Stat] for the per-observation `weight` contract, which is library-wide:
- * zero is a no-op, and a negative weight downdates or throws depending on the
- * statistic.
+ * any non-finite weight is a no-op, as is zero, and a negative weight downdates or
+ * throws depending on the statistic.
  */
 interface SeriesStat<R : Result> : Stat<R> {
     /** Record an observation with the given [weight], stamped at the current time. */

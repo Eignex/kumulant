@@ -138,6 +138,44 @@ class PairedAndDiscreteContractSweepTest {
     }
 
     @Test
+    fun `an infinite weight is a no-op for every paired and discrete stat`() {
+        // The paired modality was the worst of the three here: nine of its twelve stats reported NaN
+        // after a `+Infinity` weight, because a loss or a calibration curve divides an accumulated total
+        // by an accumulated weight and both had gone infinite. See isInertWeight on why an infinity is
+        // not a multiplicity and why the limit was not worth chasing.
+        val violations = mutableListOf<String>()
+        for (weight in doubleArrayOf(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
+            for ((name, spec) in pairedSpecs) {
+                val stat = spec.materialize()
+                pairs.forEachIndexed { i, (x, y) -> stat.update(x, y, i.toLong() * 1_000_000_000L, 1.0) }
+                val before = stat.read(readAt)
+
+                val thrown = runCatching { stat.update(0.99, 0.0, readAt, weight) }.exceptionOrNull()
+                if (thrown != null) {
+                    violations += "$name threw on a weight of $weight: ${thrown.message}"
+                    continue
+                }
+
+                if (stat.read(readAt) != before) violations += "$name absorbed a $weight weight"
+            }
+            for ((name, spec) in discreteSpecs) {
+                val stat = spec.materialize()
+                keys.forEachIndexed { i, k -> stat.update(k, i.toLong() * 1_000_000_000L, 1.0) }
+                val before = stat.read(readAt)
+
+                val thrown = runCatching { stat.update(2L, readAt, weight) }.exceptionOrNull()
+                if (thrown != null) {
+                    violations += "$name threw on a weight of $weight: ${thrown.message}"
+                    continue
+                }
+
+                if (stat.read(readAt) != before) violations += "$name absorbed a $weight weight"
+            }
+        }
+        assertEquals(emptyList(), violations.map { it.take(110) }, "an infinite weight must not change state")
+    }
+
+    @Test
     fun `a negative weight is a no-op for every discrete sketch`() {
         // The discrete modality is entirely no-inverse: there is no bucket decrement that undoes a
         // hash insert into a Bloom filter or an HLL register, so these all drop a negative weight
