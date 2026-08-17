@@ -6,24 +6,13 @@ import java.lang.management.ManagementFactory
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * The bounded-memory claim, enforced.
- *
- * DDSketch assigns a bin per distinct log-bucket index and its bin array spans the whole
- * range between the smallest and largest index seen, allocating a cell for every index in
- * between. With an unbounded index, two observations at opposite ends of the Double range
- * were enough to force an enormous array. Measured before [DDSketchStat.minIndexableValue]
- * and [DDSketchStat.maxIndexableValue] existed, from exactly two updates:
- *
- * | relativeError | heap growth |
- * |---------------|-------------|
- * | 0.01          | 2472 KiB    |
- * | 0.001         | 28195 KiB   |
- * | 0.0001        | 220521 KiB  |
- *
- * Beyond that, at a tight enough error target the index saturates `Int`, `maxIndex` overflows
- * negative, the resize is skipped and previously accumulated bins are silently dropped.
- */
+// DDSketch assigns a bin per distinct log-bucket index and its bin array spans the whole range
+// between the smallest and largest index seen, allocating a cell for every index in between. Without
+// [DDSketchStat.minIndexableValue] and [DDSketchStat.maxIndexableValue], two observations at opposite
+// ends of the Double range force an enormous array - measured from exactly two updates at 2472 KiB
+// for a relative error of 0.01, 28195 KiB at 0.001 and 220521 KiB at 0.0001. Tighter still and the
+// index saturates `Int`, `maxIndex` overflows negative, the resize is skipped and accumulated bins
+// are silently dropped.
 class DDSketchMemoryBoundTest {
 
     private val bean = ManagementFactory.getThreadMXBean() as ThreadMXBean

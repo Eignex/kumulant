@@ -9,20 +9,16 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * Edge cases at the ends of the decay family's parameter and time ranges, where the arithmetic
- * stops being well conditioned: half-lives long enough to overflow the rotation threshold, short
- * enough to truncate to zero, timestamps that arrive out of order, and reads so late that the
- * shared decay factor has underflowed to zero.
- */
+// Edge cases at the ends of the decay family's parameter and time ranges, where the arithmetic
+// stops being well conditioned.
 class DecayEdgeCaseTest {
 
     private val t0 = 1_000_000_000L
 
     @Test
     fun `a half-life too long to fit the rotation threshold still updates`() {
-        // halfLife * 50 overflows Long above ~2135 days. It used to wrap negative, which made the
-        // rotation test true for every dt and span update() forever.
+        // halfLife * 50 overflows Long above ~2135 days; a wrapped negative threshold makes the
+        // rotation test true for every dt.
         for (halfLife in listOf(2136.days, 3650.days, Duration.INFINITE)) {
             val stat = DecayingSumStat(halfLife = halfLife)
 
@@ -81,7 +77,6 @@ class DecayEdgeCaseTest {
             variance.update(10.0, t0, 1.0)
         }
 
-        // Both used to be reachable here; mean reported NaN and variance reported 0.0.
         assertEquals(0.0, mean.read(t0).mean)
         assertEquals(0.0, variance.read(t0).mean)
     }

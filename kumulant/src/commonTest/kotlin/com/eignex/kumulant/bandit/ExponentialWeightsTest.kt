@@ -5,10 +5,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * The shared EXP3 / EXP4 weight renormaliser. Both policies had their own copy, spelled with different
- * branch structure, and the tests below are the ratio-preservation argument that makes the rescale safe.
- */
 class ExponentialWeightsTest {
 
     @Test
@@ -36,9 +32,8 @@ class ExponentialWeightsTest {
 
     @Test
     fun `an underflowing array is rescaled rather than left to die`() {
-        // The half that used to be unguarded in EXP3. A run of large negative rewards drives every
-        // exp(eta * gain) toward zero; if the array is left there, one more step reaches exactly zero
-        // and no later reward can lift it, because every update multiplies.
+        // A run of large negative rewards drives every exp(eta * gain) toward zero; left there, one
+        // more step reaches exactly zero and no later reward can lift it, since every update multiplies.
         val w = doubleArrayOf(1e-200, 5e-201, 2e-200)
         val ratioBefore = w[0] / w[2]
 

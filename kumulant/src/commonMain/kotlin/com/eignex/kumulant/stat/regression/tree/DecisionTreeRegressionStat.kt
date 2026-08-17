@@ -79,8 +79,8 @@ class DecisionTreeRegressionStat(
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
-        // A zero-weight call still advanced the leaves' observationsSinceLastCheck and shifted the
-        // split-audit cadence; see Stat for the contract.
+        // Return before touching the tree: a zero-weight call would still advance the leaves'
+        // observationsSinceLastCheck and shift the split-audit cadence.
         if (weight.isInertWeight()) return
         tree.update(x, y, weight)
     }

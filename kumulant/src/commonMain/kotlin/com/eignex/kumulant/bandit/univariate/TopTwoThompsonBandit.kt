@@ -72,7 +72,6 @@ class TopTwoThompsonBandit<R : Result>(
     private val stats: Array<SeriesStat<R>> = Array(nbrArms) { policy.createArm() }
     private var step: Long = 0L
 
-    /** Choose an arm via the top-two protocol. */
     override fun choose(): Int {
         val arm1 = sampleArgmax()
         if (random.nextDouble() < beta) return arm1

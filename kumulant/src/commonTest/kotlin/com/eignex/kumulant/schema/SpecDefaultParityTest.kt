@@ -45,20 +45,15 @@ import com.eignex.kumulant.stat.summary.MadStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * A default-constructed spec materialises to the same stat a default-constructed stat gives you.
- *
- * `schema/spec/Stats.kt` declares that spec defaults match the underlying stat's primary constructor, so
- * authored payloads stay terse under `encodeDefaults = false`. Nothing else enforces it, and editing
- * either side alone compiles clean.
- *
- * Behavioural rather than field-by-field, so it needs no reflection - which common Kotlin cannot rely on
- * across thirteen targets - and so it covers defaults added after this file was written. Feed both stats
- * the same stream and their reads must agree.
- *
- * `ReservoirHistogram` is excluded: its stat defaults the seed to `Random.Default.nextLong()`, so two
- * instances legitimately disagree.
- */
+// `schema/spec/Stats.kt` declares that spec defaults match the underlying stat's primary constructor,
+// so authored payloads stay terse under `encodeDefaults = false`. Nothing else enforces it, and editing
+// either side alone compiles clean.
+//
+// The comparison is behavioural rather than field-by-field, so it needs no reflection - which common
+// Kotlin cannot rely on across thirteen targets - and so it covers defaults added later.
+//
+// `ReservoirHistogram` is excluded: its stat defaults the seed to `Random.Default.nextLong()`, so two
+// instances legitimately disagree.
 class SpecDefaultParityTest {
 
     private val values = doubleArrayOf(0.1, 1.2, 3.7, 0.5, 2.8, 1.0, 4.5, 0.3, 2.1, 1.7, 3.0, 0.8)

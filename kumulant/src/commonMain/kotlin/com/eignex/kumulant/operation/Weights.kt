@@ -16,8 +16,7 @@ import com.eignex.kumulant.core.isInertWeight
  * An inert caller weight - exactly `0.0`, or `NaN` - is passed through unchanged rather than
  * replaced. The override sets the *magnitude* of a real observation, and neither "ignore this
  * observation" nor "no multiplicity at all" is a magnitude, so the no-op guarantees in [Stat] survive
- * the wrapper. Without this, an inert update to a `CountStat` (which is `SumStat.withWeight(1.0)`)
- * still counted, and the substituted `1.0` meant nothing downstream could tell.
+ * the wrapper.
  */
 internal fun <R : Result> SeriesStat<R>.withWeight(weight: Double): SeriesStat<R> = WithWeightStat(this, weight)
 
@@ -34,14 +33,12 @@ internal fun <R : Result> DiscreteStat<R>.withWeight(weight: Double): DiscreteSt
 )
 
 /**
- * An inert weight stays inert; see [withWeight]. Shared by every modality adapter, including
- * `WithWeightRegressionStat` over in `RegressionOps.kt`, which is why this is `internal` rather than
- * file-private: that one open-coded the condition, handled only `0.0`, and drifted from the other four.
+ * An inert weight stays inert; see [withWeight]. `internal` rather than file-private so every
+ * modality adapter shares one definition, including `WithWeightRegressionStat` in `RegressionOps.kt`.
  */
 @Suppress("NOTHING_TO_INLINE") // as with isInertWeight; the non-JVM targets pay for the call
 internal inline fun Double.orInert(replacement: Double): Double = if (isInertWeight()) this else replacement
 
-/** Adapter implementing the series variant of [withWeight]. */
 internal class WithWeightStat<R : Result>(private val delegate: SeriesStat<R>, private val weight: Double) :
     SeriesStat<R>,
     Stat<R> by delegate {
@@ -52,7 +49,6 @@ internal class WithWeightStat<R : Result>(private val delegate: SeriesStat<R>, p
     override fun create(concurrency: Concurrency?): SeriesStat<R> = WithWeightStat(delegate.create(concurrency), weight)
 }
 
-/** Adapter implementing the paired variant of [withWeight]. */
 internal class WithWeightPairedStat<R : Result>(private val delegate: PairedStat<R>, private val weight: Double) :
     PairedStat<R>,
     Stat<R> by delegate {
@@ -64,7 +60,6 @@ internal class WithWeightPairedStat<R : Result>(private val delegate: PairedStat
         WithWeightPairedStat(delegate.create(concurrency), weight)
 }
 
-/** Adapter implementing the vector variant of [withWeight]. */
 internal class WithWeightVectorStat<R : Result>(private val delegate: VectorStat<R>, private val weight: Double) :
     VectorStat<R>,
     Stat<R> by delegate {
@@ -76,7 +71,6 @@ internal class WithWeightVectorStat<R : Result>(private val delegate: VectorStat
         WithWeightVectorStat(delegate.create(concurrency), weight)
 }
 
-/** Adapter implementing the discrete variant of [withWeight]. */
 internal class WithWeightDiscreteStat<R : Result>(private val delegate: DiscreteStat<R>, private val weight: Double) :
     DiscreteStat<R>,
     Stat<R> by delegate {

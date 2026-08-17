@@ -15,7 +15,6 @@ internal fun <R : Result> PairedStat<R>.withFixedX(fixedX: Double): SeriesStat<R
 /** Lift a paired stat into a series stat that always feeds [fixedY] as the y coordinate. */
 internal fun <R : Result> PairedStat<R>.withFixedY(fixedY: Double): SeriesStat<R> = WithFixedYStat(this, fixedY)
 
-/** Series-adapter implementation for [withTimeAsX]. */
 internal class WithTimeAsXStat<R : Result>(private val delegate: PairedStat<R>) :
     SeriesStat<R>,
     Stat<R> by delegate {
@@ -31,7 +30,6 @@ internal class WithTimeAsXStat<R : Result>(private val delegate: PairedStat<R>) 
     override fun create(concurrency: Concurrency?): SeriesStat<R> = WithTimeAsXStat(delegate.create(concurrency))
 }
 
-/** Series-adapter implementation for [withTimeAsY]. */
 internal class WithTimeAsYStat<R : Result>(private val delegate: PairedStat<R>) :
     SeriesStat<R>,
     Stat<R> by delegate {
@@ -47,7 +45,6 @@ internal class WithTimeAsYStat<R : Result>(private val delegate: PairedStat<R>) 
     override fun create(concurrency: Concurrency?): SeriesStat<R> = WithTimeAsYStat(delegate.create(concurrency))
 }
 
-/** Series-adapter implementation for [withFixedX]. */
 internal class WithFixedXStat<R : Result>(private val delegate: PairedStat<R>, private val fixedX: Double) :
     SeriesStat<R>,
     Stat<R> by delegate {
@@ -58,7 +55,6 @@ internal class WithFixedXStat<R : Result>(private val delegate: PairedStat<R>, p
     override fun create(concurrency: Concurrency?): SeriesStat<R> = WithFixedXStat(delegate.create(concurrency), fixedX)
 }
 
-/** Series-adapter implementation for [withFixedY]. */
 internal class WithFixedYStat<R : Result>(private val delegate: PairedStat<R>, private val fixedY: Double) :
     SeriesStat<R>,
     Stat<R> by delegate {

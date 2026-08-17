@@ -73,9 +73,8 @@ interface HasMinMax : Result {
  * Result trait for snapshots that know how much evidence they are built from.
  *
  * Exists so a caller can ask "did this stat see anything?" without knowing which field
- * carries the answer. The count is spelled `totalWeights` on most results, `totalSeen` on the
- * sketches and `totalWeight` on a few others, so before this trait the emptiness check was
- * per-stat knowledge.
+ * carries the answer; the count is spelled `totalWeights` on most results, `totalSeen` on the
+ * sketches and `totalWeight` on a few others.
  *
  * The distinction matters because several results report a numerically plausible value on an
  * empty stream. A quantile sketch with no observations reports `NaN` per quantile precisely so

@@ -33,13 +33,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Every AST node is reachable from Kotlin, and the Kotlin form agrees with the wire form.
- *
- * The library's rule is that an expression must be both serializable and constructable in Kotlin. The
- * round trip is the half that makes the pairing meaningful: a factory that produced a node the wire
- * could not carry, or a serial name that decoded to something else, would satisfy neither.
- */
+// The library's rule is that an expression must be both serializable and constructable in Kotlin. The
+// round trip is the half that makes the pairing meaningful: a factory producing a node the wire could
+// not carry, or a serial name decoding to something else, would satisfy neither.
 class ExprKotlinConstructionTest {
 
     private val v = doubleArrayOf(2.0, 3.0, 4.0)
@@ -112,7 +108,7 @@ class ExprKotlinConstructionTest {
             VFoldOp.Norm2 to kotlin.math.sqrt(29.0),
         )
         // Driven off VFoldOp.entries, not a hand-written list, so a new op added later fails here
-        // rather than going untested. That is how Norm2 was caught when this test was first written.
+        // rather than going untested.
         val violations = mutableListOf<String>()
         for (op in VFoldOp.entries) {
             val expr = vFold(op)
@@ -140,8 +136,6 @@ class ExprKotlinConstructionTest {
 
     @Test
     fun `vectorOf is a Kotlin constructor for VectorExpr`() {
-        // VectorExpr had no public implementation at all, so `transformVector` and `transformX` - both
-        // public - could not be called from Kotlin. This is the constructor that closes that.
         val permute: VectorExpr = vectorOf(V(2), V(0), V(1))
 
         assertEquals(listOf(4.0, 2.0, 3.0), permute.eval(0.0, 0.0, v).toList())
@@ -158,8 +152,8 @@ class ExprKotlinConstructionTest {
 
     @Test
     fun `a nested expression built entirely in Kotlin round-trips whole`() {
-        // The nodes have to compose, not merely exist: this is one tree mixing seven of the new
-        // factories with the pre-existing operator sugar.
+        // The nodes have to compose, not merely exist: one tree mixing seven factories with the
+        // operator sugar.
         val expr = X.abs().sqrt().min(vDot(1.0, 0.0, 0.0)).max(Const(0.5)).pow(2.0) + vFold(VFoldOp.Mean)
 
         val direct = expr.eval(-16.0, 0.0, v)
@@ -171,8 +165,6 @@ class ExprKotlinConstructionTest {
 
     @Test
     fun `the vector transforms are now reachable from Kotlin end to end`() {
-        // The point of the exercise. `transformVector` and `transformX` are public and take a
-        // VectorExpr, which had no public implementation, so neither could be called from Kotlin at all.
         // Materialising and driving one proves the whole path works, not just that the type exists.
         val reordered = Vectorized(dimensions = 3, template = Sum).transformVector(vectorOf(V(2), V(0), V(1)))
         val stat = reordered.materialize()

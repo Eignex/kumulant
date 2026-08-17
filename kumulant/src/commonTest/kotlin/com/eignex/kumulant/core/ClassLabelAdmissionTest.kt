@@ -14,26 +14,16 @@ import kotlin.test.assertTrue
 
 private const val CLASSES = 3
 
-/**
- * Which `Double`s name a class, checked on the helper and then on every classifier that uses it.
- *
- * The five call sites disagreed before this: two round-tripped through `Double`, three truncated, and
- * they used three different weight predicates between them. The sweep is the part that matters, because
- * the helper being right does not help if a stat stops calling it.
- */
 class ClassLabelAdmissionTest {
 
-    /** One classifier, with a way to feed it and a way to see whether it moved. */
     private class Probe(val name: String, val update: (Double, Double) -> Unit, val snapshot: () -> String)
 
     private val splits = listOf(ThresholdSplit(featureIndex = 0, threshold = 0.5))
     private val x = DenseVector.of(DoubleArray(2) { 1.0 })
 
     // Fresh instances per test. Every snapshot reads the learned numbers out explicitly rather than
-    // stringifying the result: ClassCountsResult has no toString override, so on the JVM a snapshot
-    // taken that way is a fresh identity hash every time and compares unequal to itself, which made an
-    // earlier version of the "still absorbed" test pass without proving anything. Kotlin/JS renders
-    // those objects differently and failed honestly, which is how it was caught.
+    // stringifying the result: ClassCountsResult has no toString override, so on the JVM a stringified
+    // snapshot is a fresh identity hash every time and compares unequal to itself.
     private fun probes(): List<Probe> {
         val softmax = SoftmaxRegressionStat(featureSize = 2, numClasses = CLASSES)
         val gnb = GaussianNaiveBayesStat(featureSize = 2, numClasses = CLASSES)
@@ -78,8 +68,7 @@ class ClassLabelAdmissionTest {
 
     @Test
     fun `asClassLabel rejects a label that is not an integer`() {
-        // The case that used to differ between the tree path and the GLM path: toInt() truncates, so
-        // 1.5 arrived as a perfectly ordinary class 1 on three of the five sites.
+        // toInt() truncates, so an unvalidated 1.5 would arrive as a perfectly ordinary class 1.
         for (y in listOf(0.5, 1.5, 2.5, -0.5, 1.0000001, 0.9999999)) {
             assertEquals(-1, y.asClassLabel(CLASSES), "$y was accepted as a class index")
         }
@@ -126,10 +115,9 @@ class ClassLabelAdmissionTest {
 
     @Test
     fun `every classifier treats a NaN weight as a no-op`() {
-        // The half of this that was a live defect rather than an inconsistency. `weight <= 0.0` and
-        // `weight == 0.0` are both false for NaN, so on three of the five paths a NaN weight reached
-        // the leaf counts and pinned one to NaN permanently: a later valid observation could not clear
-        // it, because every subsequent add started from NaN.
+        // `weight <= 0.0` and `weight == 0.0` are both false for NaN, so an unguarded NaN weight reaches
+        // the leaf counts and pins one to NaN permanently: a later valid observation cannot clear it,
+        // because every subsequent add starts from NaN.
         val violations = mutableListOf<String>()
         for (probe in probes()) {
             probe.update(1.0, 1.0)
@@ -163,8 +151,6 @@ class ClassLabelAdmissionTest {
     fun `a class count still downdates on a negative weight`() {
         // ClassCounts guards on isInertWeight rather than isNotPositiveWeight, because a count cell
         // subtracts exactly: retracting an observation folded in earlier is a downdate, not corruption.
-        // The regression trees already worked this way and the classification side now matches, so the
-        // fix to the NaN-weight hole did not cost the legitimate negative-weight case.
         val counts = ClassCountsStat(CLASSES)
         counts.update(1.0, weight = 3.0)
         counts.update(1.0, weight = -1.0)

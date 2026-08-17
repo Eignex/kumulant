@@ -6,8 +6,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
 
-/** Cross-mode smoke tests for decay stats; math must match across modes under
- *  sequential single-threaded updates. */
 class DecayStatConcurrencyTest {
 
     @Test

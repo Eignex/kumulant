@@ -36,11 +36,9 @@ internal sealed class AbstractListStats<R : Result, S : Stat<out R>>(
     /**
      * The weakest guarantee any entry offers, matching [AbstractStatGroup.concurrency].
      *
-     * This reported [Concurrency.None] whenever no override was passed, which was simply untrue for a
-     * list of `Strict` entries - and this property is what a caller introspects to decide whether reads
-     * need external synchronisation. `AbstractStatGroup` was fixed; the sibling class holding the same
-     * kind of children kept the old answer, so `StatGroup(schema)` and `ListStats(schema)` over the
-     * very same schema disagreed about what they guaranteed.
+     * Callers introspect this to decide whether reads need external synchronisation, so
+     * `StatGroup(schema)` and `ListStats(schema)` over the very same schema have to agree about what
+     * they guarantee.
      *
      * Computed once rather than per access: the entries are fixed at construction.
      */

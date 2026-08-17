@@ -60,8 +60,8 @@ class SummaryStatTest {
 
     @Test
     fun `a rejected downdate leaves the extrema untouched`() {
-        // The extrema are CAS cells with no inverse, so a throw that happens after they have moved is
-        // unrecoverable: this used to report max = 1000.0 from an update it had just refused.
+        // The extrema are CAS cells with no inverse, so a throw that happens after they have moved
+        // is unrecoverable.
         val s = SummaryStat()
         s.update(5.0, weight = 1.0)
 

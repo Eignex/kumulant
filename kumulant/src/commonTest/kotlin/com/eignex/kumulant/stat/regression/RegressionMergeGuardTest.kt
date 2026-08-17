@@ -14,10 +14,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-/**
- * Model merges and out-of-domain labels. The theme is that a model must not silently get *worse* by
- * folding in a snapshot that carries no information, and must not train on a label that is not one.
- */
+// A model must not silently get *worse* by folding in a snapshot that carries no information, and
+// must not train on a label that is not one.
 class RegressionMergeGuardTest {
 
     private val splits = listOf(ThresholdSplit(0, 4.5))
@@ -31,9 +29,8 @@ class RegressionMergeGuardTest {
         repeat(20) { stat.merge(DiagonalRegressionStat(featureSize = 1).read()) }
 
         val after = stat.read()
-        // Every replica seeds its precision at priorPrecision, so pooling additively counted the
-        // prior once per merge: this used to shift the weight 39% toward zero and inflate precision
-        // from 31 to 51 while folding in snapshots that contained no data at all.
+        // Every replica seeds its precision at priorPrecision, so an additive pool would count the
+        // prior once per merge while folding in snapshots that contain no data at all.
         assertEquals(before.weights[0], after.weights[0], 1e-9, "an empty snapshot moved the weights")
         assertEquals(before.precision[0], after.precision[0], 1e-9, "an empty snapshot moved the precision")
         assertEquals(before.totalWeights, after.totalWeights, 1e-9)
@@ -66,8 +63,8 @@ class RegressionMergeGuardTest {
         val target = source.create()
         target.merge(source.read())
 
-        // The reference window is what score() reads, so folding into the latest window alone left a
-        // merged model scoring every input maximally anomalous while reporting the source's weight.
+        // The reference window is what score() reads, so folding into the latest window alone would
+        // leave a merged model scoring every input maximally anomalous.
         val mergedScore = target.read().score(DenseVector.of(doubleArrayOf(0.5)))
         assertTrue(mergedScore > 0.0, "a merged model scored $mergedScore, i.e. maximally anomalous")
         assertEquals(sourceScore, mergedScore, sourceScore * 1e-9)
@@ -76,8 +73,7 @@ class RegressionMergeGuardTest {
     @Test
     fun `an absurd half-space-trees height is rejected at construction`() {
         val ranges = List(1) { FeatureRange(0.0, 1.0) }
-        // 31 wrapped `1 shl height` negative and 32 wrapped it to 1, so one threw OutOfMemoryError in
-        // the constructor and the other threw ArrayIndexOutOfBounds on the first update.
+        // 31 wraps `1 shl height` negative and 32 wraps it to 1, so neither can allocate a node array.
         assertFailsWith<IllegalArgumentException> {
             HalfSpaceTreesStat(featureSize = 1, featureRanges = ranges, height = 31)
         }
@@ -96,7 +92,8 @@ class RegressionMergeGuardTest {
         softmax.update(doubleArrayOf(100.0), Double.NaN)
         softmax.update(doubleArrayOf(100.0), -0.7)
 
-        // toInt() truncates toward zero, so both used to land in class 0 and pass the range check.
+        // toInt() truncates toward zero, so an unguarded label would land in class 0 and pass the
+        // range check.
         assertEquals(0.0, gnb.read().totalWeights, "GaussianNaiveBayes trained on a non-label")
         assertEquals(0.0, softmax.read().totalWeights, "SoftmaxRegression trained on a non-label")
     }
@@ -113,8 +110,8 @@ class RegressionMergeGuardTest {
             probed.update(x, y, 1.0)
         }
 
-        // Each zero-weight call used to draw once per tree from baggingRng, desynchronising every
-        // later draw and changing the forest's predictions.
+        // A zero-weight call that drew once per tree from baggingRng would desynchronise every later
+        // draw and change the forest's predictions.
         val at = DenseVector.of(doubleArrayOf(3.0))
         assertEquals(clean.read().predict(at), probed.read().predict(at), 1e-12)
 

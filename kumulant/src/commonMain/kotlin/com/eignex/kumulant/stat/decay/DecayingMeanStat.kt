@@ -69,10 +69,10 @@ class DecayingMeanStat(
 
             sumW < 0.0 -> Double.NaN
 
-            // A NaN denominator is neither greater nor less than zero, so it used to fall into the
-            // underflow branch below and be reported as a mean of exactly 0.0 - indistinguishable
-            // from a genuine zero. The underflow branch is for a denominator that decayed to 0.0,
-            // which is a different state and the only one with a recoverable answer.
+            // A NaN denominator is neither greater nor less than zero, so without this branch it
+            // falls through to the underflow branch and reports a mean of exactly 0.0,
+            // indistinguishable from a genuine zero. The underflow branch is for a denominator that
+            // decayed to 0.0, which is a different state and the only one with a recoverable answer.
             sumW.isNaN() -> Double.NaN
 
             else -> undecayedRatio()

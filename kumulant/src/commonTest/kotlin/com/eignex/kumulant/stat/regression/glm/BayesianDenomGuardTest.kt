@@ -5,14 +5,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * The SMW downdate refuses an observation whose scale factor is not a usable number.
- *
- * `Link.Log.curvature` is `exp(eta)`, which overflows to `+Infinity` for a large linear predictor, making
- * the scale factor `Infinity / Infinity`. Every input below is finite, so the NaN is manufactured by the
- * stat's own arithmetic rather than propagated - and it would land in the covariance, which every later
- * prediction reads through.
- */
+// `Link.Log.curvature` is `exp(eta)`, which overflows to `+Infinity` for a large linear predictor,
+// making the scale factor `Infinity / Infinity`. Every input below is finite, so the NaN is
+// manufactured by the stat's own arithmetic rather than propagated.
 class BayesianDenomGuardTest {
 
     @Test

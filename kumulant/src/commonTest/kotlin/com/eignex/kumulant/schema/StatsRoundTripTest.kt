@@ -18,12 +18,8 @@ import com.eignex.skema.SchemaJson
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
-/**
- * Round-trip tests for every [StatSpec]. For each modality, build a schema
- * with a config-only entry, encode, decode, materialize, drive a small fixed
- * input through both the original live stat and the rehydrated stat, and
- * compare results.
- */
+// For each modality: build a schema with a config-only entry, encode, decode, materialize, drive a
+// small fixed input through both the original live stat and the rehydrated stat, and compare results.
 class StatsRoundTripTest {
 
     private inline fun <reified C : StatSpec> roundTrip(config: C): C {

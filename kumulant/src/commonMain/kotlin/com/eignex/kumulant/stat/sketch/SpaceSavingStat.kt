@@ -165,7 +165,6 @@ class SpaceSavingStat(
      * (None: trivially; Strict/HighWrite: via [outerLock]).
      */
     private fun admitClassic(key: Long, addCount: Long, addError: Long) {
-        // Match existing key
         for (i in 0 until capacity) {
             if (counts.load(i) > 0L && keys.load(i) == key) {
                 counts.add(i, addCount)
@@ -173,7 +172,6 @@ class SpaceSavingStat(
                 return
             }
         }
-        // Find empty slot (count == 0)
         for (i in 0 until capacity) {
             if (counts.load(i) == 0L) {
                 keys.store(i, key)
@@ -182,7 +180,6 @@ class SpaceSavingStat(
                 return
             }
         }
-        // Evict min-count slot
         var minIdx = 0
         var minCount = counts.load(0)
         for (i in 1 until capacity) {
@@ -246,15 +243,15 @@ class SpaceSavingStat(
     }
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        // As in CountMinSketchStat: NaN passes `weight <= 0.0`, and rounding it lands on 1, so a NaN
-        // weight became a real observation. Counts are Long, so there is nothing to propagate into.
+        // As in CountMinSketchStat: NaN passes `weight <= 0.0`, and rounding it lands on 1, which
+        // would make a NaN weight a real observation. Counts are Long, so there is nothing to
+        // propagate into.
         if (weight.isNotPositiveWeight()) return
         // Counts are Long, so a fractional weight has to be rounded. Round *up*: rounding to nearest
-        // dropped everything below 0.5 outright, so a key accumulating many small weights never
-        // appeared among the heavy hitters at all. Counts are upper bounds as a result.
-        // Capped as in CountMinSketchStat, and for the same reason: counts are Long and monotonically
-        // increasing, so an unbounded step saturates a count and the next one wraps it negative,
-        // which would drop a genuine heavy hitter out of the summary entirely.
+        // would drop everything below 0.5, so a key accumulating many small weights never surfaces
+        // as a heavy hitter. Capped as in CountMinSketchStat, and for the same reason: counts are
+        // Long and monotonically increasing, so an unbounded step saturates a count and the next one
+        // wraps it negative, dropping a genuine heavy hitter out of the summary entirely.
         val w = weight.toCounterStep()
         if (useMisraGries) {
             admitMisraGries(value, w, 0L)

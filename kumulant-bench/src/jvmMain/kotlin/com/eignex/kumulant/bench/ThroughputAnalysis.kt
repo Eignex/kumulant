@@ -51,9 +51,8 @@ fun main() {
     // A single run is not a measurement. Running the same commit twice at the default settings gave
     // per-cell ratios spanning 0.36x to 2.16x (p10 0.61, p90 1.44, median 0.974, n=449), so anything
     // inside that band is noise, and a diff between two branches read from one run each is worthless.
-    // Comparing PR #45 against main showed a 1.146x median on the first pair and 1.013x on the second,
-    // which is the whole point. Raise -Dbench.warmupMs / -Dbench.measureMs, or take a median over
-    // several runs, before believing a regression.
+    // Raise -Dbench.warmupMs / -Dbench.measureMs, or take a median over several runs, before
+    // believing a regression.
     println(
         "Single-run cells carry roughly +/-40% noise at these settings; re-run the same commit twice " +
             "to see the floor before reading any difference as signal.",

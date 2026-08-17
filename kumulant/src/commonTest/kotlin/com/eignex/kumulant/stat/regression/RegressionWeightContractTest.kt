@@ -17,34 +17,18 @@ import kotlin.test.assertTrue
 private const val FEATURES = 2
 private const val CLASSES = 2
 
-/**
- * The weight contract and the non-finite value guarantee, over the regression modality.
- *
- * The series, paired, and discrete modalities each have a contract sweep. Regression had none, which is
- * how it stayed the modality where nobody had checked what a non-finite input does to a model - and
- * unlike a histogram bucket, a model absorbs one into state that no later observation can clean.
- *
- * The two halves are deliberately different in strength. A non-finite *weight* must be inert, because a
- * weight is a multiplicity and an infinity is not one. A non-finite *value* only has to not throw: it may
- * poison the model, because the observation really did arrive and really was unusable, and `filterFinite()`
- * is how a caller declines to see such observations at all.
- */
+// The two halves are deliberately different in strength. A non-finite *weight* must be inert, because
+// a weight is a multiplicity and an infinity is not one. A non-finite *value* only has to not throw: it
+// may poison the model, because the observation really did arrive and really was unusable, and
+// `filterFinite()` is how a caller declines to see such observations at all.
 class RegressionWeightContractTest {
 
-    /**
-     * One model, with a way to train it and a way to read its learned numbers back.
-     *
-     * The snapshot reads fields explicitly rather than stringifying the result, and that is not
-     * fastidiousness: `ClassCountsResult` holds a `DoubleArray`, whose `toString` is an identity hash, so
-     * a stringified tree snapshot differs from itself on every read. An earlier version of this test did
-     * exactly that and passed on the JVM while proving nothing. Kotlin/JS renders arrays differently and
-     * failed honestly, which is the second time in this work that JS caught a vacuous JVM assertion.
-     */
+    // `snapshot` reads fields explicitly rather than stringifying the result: `ClassCountsResult` holds
+    // a `DoubleArray`, whose `toString` is an identity hash, so a stringified tree snapshot would differ
+    // from itself on every read.
     private class Model(
         val name: String,
-        /** The y this model expects: a target for the regressors, a class label for the classifiers. */
         val y: Double,
-        /** Full entry point, so the feature vector and the y can be varied as well as the weight. */
         val update: (VectorView, Double, Double) -> Unit,
         val snapshot: () -> String,
     )
@@ -113,10 +97,8 @@ class RegressionWeightContractTest {
 
     @Test
     fun `an inert weight leaves every model untouched`() {
-        // Zero, NaN, and both infinities. The infinities are the ones that were unguarded:
-        // `isInertWeight` tested only zero and NaN, and `+Infinity > 0.0` is true, so
-        // `isNotPositiveWeight` let an infinite weight through as an ordinary live observation and into
-        // the gradient step.
+        // Zero, NaN, and both infinities. The infinities are the subtle ones: `+Infinity > 0.0` is
+        // true, so a positivity test alone lets one through as an ordinary live observation.
         val inert = doubleArrayOf(0.0, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)
         val violations = mutableListOf<String>()
         for (weight in inert) {
@@ -138,11 +120,8 @@ class RegressionWeightContractTest {
 
     @Test
     fun `no weight puts a non-finite number into a model`() {
-        // Stated in terms of what a caller sees, and the reason this modality matters most: a NaN in a
-        // weight vector is permanent. Every later update multiplies it forward, so unlike a bad quantile
-        // bucket there is no recovery and no way for the caller to tell the model is dead. An infinity is
-        // no better, because it looks like a number a caller might trust and becomes NaN on the next
-        // update via Infinity minus Infinity.
+        // A NaN in a weight vector is permanent: every later update multiplies it forward, so unlike a
+        // bad quantile bucket there is no recovery and no way for the caller to tell the model is dead.
         val weights = doubleArrayOf(0.0, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, -1.0)
         val violations = mutableListOf<String>()
         for (weight in weights) {
@@ -167,10 +146,8 @@ class RegressionWeightContractTest {
 
     @Test
     fun `a non-finite feature or target never throws`() {
-        // The one guarantee the library makes about a non-finite value, over the modality that had no
-        // sweep at all. It is explicitly allowed to poison the model - and it does, permanently, because
-        // every later gradient step multiplies the NaN forward - but it must not become an exception.
-        // A caller who needs the guarantee to be stronger than that uses `filterFinite()`.
+        // A non-finite value is explicitly allowed to poison the model, but must not become an
+        // exception. A caller who needs a stronger guarantee uses `filterFinite()`.
         val nonFinite = doubleArrayOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)
         val violations = mutableListOf<String>()
         for (bad in nonFinite) {

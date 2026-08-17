@@ -12,14 +12,11 @@ import kotlin.math.exp
  * In place because all three call sites already own a scratch array they built for this, so returning a
  * fresh one would add an allocation per observation on the softmax training path.
  *
- * @return `true` if the array now holds probabilities. The `false` case is carried over from the three
- *  copies this replaces, all of which guarded on the sum being positive, and it is retained so this
- *  behaves exactly as they did - but it cannot currently fire. The shift guarantees one element is
- *  `exp(0) == 1`, so a finite input always sums to at least 1; and a non-finite input makes the sum
- *  `NaN`, which fails `<= 0.0` too. A `NaN` logit therefore returns `true` with a `NaN` array, which is
- *  how a single `NaN` feature poisons a softmax model's weights for good. That is a real defect, older
- *  than this function and unchanged by it, and fixing it means deciding what a model should do with an
- *  unusable feature rather than tightening this guard alone.
+ * @return `true` if the array now holds probabilities. The non-empty `false` case cannot fire: the shift
+ *  guarantees one element is `exp(0) == 1`, so a finite input always sums to at least 1, and a non-finite
+ *  input makes the sum `NaN`, which fails `<= 0.0` too. A `NaN` logit therefore returns `true` with a
+ *  `NaN` array, which is how a single `NaN` feature poisons a softmax model's weights for good. Fixing
+ *  that means deciding what a model should do with an unusable feature, not tightening this guard.
  */
 internal fun DoubleArray.softmaxInPlace(): Boolean {
     if (isEmpty()) return false
@@ -32,7 +29,7 @@ internal fun DoubleArray.softmaxInPlace(): Boolean {
     }
     if (z <= 0.0) return false
     // One reciprocal and a multiply per element rather than a divide per element; this runs once per
-    // observation on the training path, and the update site already spelled it this way.
+    // observation on the training path.
     val invZ = 1.0 / z
     for (i in indices) this[i] *= invZ
     return true

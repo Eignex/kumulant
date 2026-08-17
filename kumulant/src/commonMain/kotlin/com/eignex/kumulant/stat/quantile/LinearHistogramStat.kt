@@ -56,13 +56,8 @@ class LinearHistogramStat(
     private val overflow = mode.newDouble(0.0)
     private val bins = ArrayBins(mode)
 
-    /**
-     * The bin a value falls in, clamped to the array.
-     *
-     * Written out twice, in `update` and in `merge`. The two have to agree exactly or a merged bucket
-     * lands somewhere a directly-observed value of the same magnitude would not, which shows up as a
-     * histogram that disagrees with itself depending on how the observations arrived.
-     */
+    // Shared by update and merge: the two paths have to agree exactly or a merged bucket lands
+    // somewhere a directly-observed value of the same magnitude would not.
     private fun binOf(value: Double): Int = ((value - lowerBound) / binWidth).toInt().coerceIn(0, binCount - 1)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {

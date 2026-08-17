@@ -108,8 +108,7 @@ class RouletteWheelBandit(
         return nbrArms - 1
     }
 
-    /** Returns the arm's current weight. Used by `choose` is computed inline; this is
-     *  the [Scorable] view exposed for inspection / debugging. */
+    /** The arm's current weight; `choose` computes the same quantity inline. */
     override fun evaluate(armIndex: Int): Double {
         requireArmIndex(armIndex, nbrArms)
         return weights[armIndex]
@@ -117,9 +116,9 @@ class RouletteWheelBandit(
 
     override fun update(armIndex: Int, value: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
-        // A zero weight contributes nothing to the score, but the counter and the segment clock
-        // used to advance anyway, so it diluted the arm's average toward zero and could trip a
-        // rebalance. Zero weight means "ignore this observation" library-wide.
+        // Return before the counter and the segment clock, not just before the score: advancing them
+        // on a zero-weight observation would dilute the arm's average and could trip a rebalance.
+        // Zero weight means "ignore this observation" library-wide.
         if (weight.isInertWeight()) return
         accumulatedScores[armIndex] += value * weight
         callCounts[armIndex]++

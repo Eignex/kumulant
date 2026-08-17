@@ -21,11 +21,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * The discrete sketch specs carry a [LongHasher] by name; a custom mixer is supplied through
- * the [Hashers] registry and referenced by that name on the wire. These tests cover the full
- * path: register, serialize, materialize, and re-query via the result-side helpers.
- */
+// The discrete sketch specs carry a [LongHasher] by name; a custom mixer is supplied through the
+// [Hashers] registry and referenced by that name on the wire.
 class HasherConfigTest {
 
     private object SaltedSplitMix : LongHasher {

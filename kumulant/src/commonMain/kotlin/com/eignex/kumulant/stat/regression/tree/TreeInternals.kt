@@ -10,11 +10,10 @@ import kotlin.random.Random
 /**
  * Breiman's default random-subspace size: `ceil(sqrt(p))` candidates drawn per audit leaf.
  *
- * Both forests default `mtry` to this when the caller leaves it null, and both used to carry their own
- * private copy of the expression. The clamp matters at the small end - `ceil(sqrt(1))` is already 1, but
- * `coerceAtLeast(1)` keeps an mtry of zero from disabling growth silently if the arithmetic is ever
- * changed - and `p <= 0` returns 0 rather than 1 because an empty candidate pool means no growth at all
- * rather than growth on one candidate that does not exist.
+ * Both forests default `mtry` to this when the caller leaves it null. The clamp matters at the small end
+ * - `ceil(sqrt(1))` is already 1, but `coerceAtLeast(1)` keeps an mtry of zero from disabling growth
+ * silently if the arithmetic is ever changed - and `p <= 0` returns 0 rather than 1 because an empty
+ * candidate pool means no growth at all rather than growth on one candidate that does not exist.
  *
  * @param p size of the tree's full candidate-split pool.
  */
@@ -31,8 +30,6 @@ internal fun defaultMtry(p: Int): Int = if (p <= 0) 0 else ceil(sqrt(p.toDouble(
  * [delta] is decayed by [decay] raised to [depth] before use: a deeper leaf sees less of the stream, so
  * holding confidence fixed would let it split on proportionally thinner evidence. An empty leaf returns
  * an infinite bound, so no margin can ever clear it and the leaf cannot split on no data.
- *
- * Both trees carried a byte-identical private copy of this.
  *
  * @param delta confidence threshold before depth decay.
  * @param n total observation weight at the leaf.
@@ -54,7 +51,7 @@ internal fun hoeffdingBound(delta: Double, n: Double, depth: Int, decay: Double)
  * offered different candidates.
  *
  * Generic in the split type because the regression tree is generic in its row type while the
- * classification tree is fixed to `VectorView`; both trees had their own copy of this.
+ * classification tree is fixed to `VectorView`.
  *
  * @param S the split type, which differs between the two trees.
  * @param mtry subspace size, or null for the full pool.
@@ -69,9 +66,8 @@ internal fun <S> List<S>.pickCandidates(mtry: Int?, random: Random): List<S> {
 /**
  * Score every candidate split at a leaf and return the winner, the runner-up, and the winner's index.
  *
- * Generic in the leaf payload, which is the only thing that differed between the regression and
- * classification copies of this loop. Both needed `totalWeights` and a scoring function and nothing
- * else, so both are supplied here rather than reached through a payload-specific metric type.
+ * Generic in the leaf payload: the loop needs only `totalWeights` and a scoring function, so both are
+ * supplied here rather than reached through a payload-specific metric type.
  *
  * A candidate is skipped, not scored, when either side is thinner than [minSamplesLeaf] or the two
  * sides together are thinner than [minSamplesSplit]: a split that isolates three observations may score
@@ -122,8 +118,6 @@ internal fun <R : HasObservationCount> rankCandidates(
 
 /**
  * The VFDT split decision: given ranked candidates, has the leaf earned the right to split?
- *
- * Three gates, and all three used to be written out twice with nothing keeping them in step.
  *
  * A candidate must exist and be worth taking: `bestIndex < 0` means every candidate was too thin to
  * score, and `top1 <= 0.0` means the best one does not improve on not splitting at all, since every

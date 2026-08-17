@@ -15,17 +15,12 @@ import java.lang.management.ManagementFactory
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * Allocation on the update path, measured rather than assumed.
- *
- * kotlinx-benchmark 0.4.13 does not expose JMH's `gc` profiler - its `advanced` options are
- * limited to fork and bridge settings - so per-operation allocation is invisible to the
- * benchmark suite. This measures it directly through the HotSpot thread allocation counter,
- * which is exact for a single-threaded loop and cheap enough to run as an ordinary test.
- *
- * Thresholds are ceilings meant to catch a regression, not exact figures. Measured values at
- * the time of writing are in each assertion's message.
- */
+// kotlinx-benchmark 0.4.13 does not expose JMH's `gc` profiler - its `advanced` options are limited
+// to fork and bridge settings - so per-operation allocation is invisible to the benchmark suite. It
+// is measured here through the HotSpot thread allocation counter, which is exact for a
+// single-threaded loop and cheap enough to run as an ordinary test.
+//
+// Thresholds are ceilings meant to catch a regression, not exact figures.
 class UpdateAllocationTest {
 
     private val bean = ManagementFactory.getThreadMXBean() as ThreadMXBean
@@ -75,23 +70,14 @@ class UpdateAllocationTest {
         assertUpdateAllocation("MomentsStat", 0.0, MomentsStat(Concurrency.None))
     }
 
-    /**
-     * Taking a lock must not allocate.
-     *
-     * `update` bodies used to be written `lock.withLock { ... }`. `withLock` is a non-inline
-     * interface method taking a function, so each call constructed a capturing lambda. The JIT
-     * scalar-replaced it only while the call site stayed monomorphic: measured alone this test
-     * reported 0 B/update under [Concurrency.Strict], but in a full-suite run, where both
-     * `NoopMutex` and `PlatformMutex` have been used, escape analysis gave up and it was
-     * 32 B/update. A production process looks like the second case.
-     *
-     * The bodies now use the inlining `guarded`, which expands to a direct
-     * `enter`/`try`/`finally`/`exit` and constructs nothing, so these are exact zeroes in both
-     * contexts rather than only in isolation. Kotlin platforms without escape analysis, which
-     * this counter cannot measure, benefit unconditionally.
-     */
     @Test
     fun `taking a lock does not allocate on the update path`() {
+        // `update` bodies use the inlining `guarded`, which expands to a direct
+        // `enter`/`try`/`finally`/`exit` and constructs nothing. A `lock.withLock { ... }` would
+        // construct a capturing lambda that the JIT scalar-replaces only while the call site stays
+        // monomorphic, so it measures 0 B/update in isolation and 32 B/update in a full-suite run,
+        // where both `NoopMutex` and `PlatformMutex` have been seen. A production process looks like
+        // the second case.
         assertUpdateAllocation("MeanStat[None]", 0.0, MeanStat(Concurrency.None))
         assertUpdateAllocation("MeanStat[Strict]", 0.0, MeanStat(Concurrency.Strict))
         assertUpdateAllocation("MomentsStat[Strict]", 0.0, MomentsStat(Concurrency.Strict))
@@ -103,26 +89,17 @@ class UpdateAllocationTest {
         assertUpdateAllocation("HdrHistogramStat", 0.0, HdrHistogramStat(concurrency = Concurrency.None))
     }
 
-    /**
-     * Ceilings for the two stats that allocate by design, as tripwires against a large
-     * regression rather than as precise figures.
-     *
-     * These have headroom but are no longer loose. They used to need a wide margin because the
-     * figures moved with the JIT state left behind by preceding tests - TDigest measured ~55
-     * B/op alone and ~86 B/op in a full-suite run. That gap was the lock lambda, and with
-     * `guarded` inlining it away both stats now report the same number under every
-     * [Concurrency] level in either context, so the remaining allocation is purely structural:
-     * one Bucket per observation for Adwin, the merged centroid arrays per compression epoch
-     * for TDigest.
-     */
     @Test
     fun `the amortised allocators stay under their ceiling`() {
-        // AdwinStat allocates one Bucket per observation by design, and its bucket-walk scratch
-        // buffer grows with the window. Measured 277 B/op before the scratch buffer was made
-        // reusable, 75 B/op after, and the same under Strict now that the lock does not allocate.
+        // Ceilings for the two stats that allocate by design, as tripwires against a large regression
+        // rather than as precise figures. Both allocate the same amount under every [Concurrency]
+        // level, so what is left is structural.
+        //
+        // AdwinStat allocates one Bucket per observation, and its bucket-walk scratch buffer grows
+        // with the window. Measured 75 B/op.
         assertUpdateAllocation("AdwinStat", 110.0, AdwinStat(concurrency = Concurrency.None))
         // TDigestStat allocates the merged centroid arrays once per compression epoch, amortised
-        // over the buffer. Measured 82 B/op before the index sort stopped boxing, 54 B/op after.
+        // over the buffer. Measured 54 B/op.
         assertUpdateAllocation("TDigestStat", 80.0, TDigestStat(concurrency = Concurrency.None), span = 9973)
     }
 }

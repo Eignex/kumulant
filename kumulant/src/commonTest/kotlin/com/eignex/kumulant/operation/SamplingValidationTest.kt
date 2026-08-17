@@ -8,13 +8,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-/**
- * Argument validation on `throttle` and `sample`, across all five modalities.
- *
- * The regression modality carried its own byte-identical copies of these two checks, which is the kind
- * of duplication that only shows up when one copy is deleted and nothing fails. Nothing did fail,
- * because neither check had a test; these are that test.
- */
 class SamplingValidationTest {
 
     @Test

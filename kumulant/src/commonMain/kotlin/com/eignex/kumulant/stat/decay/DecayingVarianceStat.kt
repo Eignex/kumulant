@@ -51,8 +51,8 @@ data class DecayingVarianceResult(
  *
  * **Concurrency:** Body locked under any concurrent [Concurrency] level
  * (no-op under [Concurrency.None]). The multi-cell decay-then-Welford
- * transition cannot survive lock-free CAS; see *Why locked under Relaxed*
- * below. Exact under every level up to floating-point reorder ULPs.
+ * transition cannot survive lock-free CAS. Exact under every level up to
+ * floating-point reorder ULPs.
  */
 class DecayingVarianceStat(
     /** Time-decay schedule applied to past contributions. */

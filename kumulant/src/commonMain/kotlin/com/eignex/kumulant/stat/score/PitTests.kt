@@ -89,13 +89,8 @@ fun SparseHistogramResult.pitKsDistance(numBins: Int): Double {
     return ks
 }
 
-/**
- * True for the histogram's `[1.0, +Inf)` overflow row.
- *
- * A PIT value of exactly 1.0 is legitimate - the forecast CDF evaluated at the observation can reach
- * its top - but [pitHistogram] is bounded `[0, 1)`, so 1.0 lands in the overflow row. Both tests below
- * skip non-finite-bound rows, which silently dropped those observations from the uniformity statistic
- * and biased both tests toward "calibrated" for exactly the over-confident forecaster they exist to
- * catch. Fold the row into the top bin instead.
- */
+// True for the histogram's `[1.0, +Inf)` overflow row. A PIT of exactly 1.0 is legitimate but
+// `pitHistogram` is bounded `[0, 1)`, so it lands there; both tests fold the row into the top bin
+// rather than skipping it with the other non-finite-bound rows, which would drop exactly the
+// over-confident forecaster they exist to catch.
 private fun isTopEdgeRow(lower: Double, upper: Double): Boolean = lower == 1.0 && upper == Double.POSITIVE_INFINITY

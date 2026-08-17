@@ -30,7 +30,7 @@ import kotlin.math.pow
  * [relativeError].
  *
  * **Update:** O(1) per observation; one `log`/bin-assignment + striped atomic add.
- * `NaN` is dropped, since it has no rank to bin.
+ * `NaN` has no bin of its own and falls into the zero bucket.
  *
  * **Concurrency:** Striped atomic adds on independent bins. Lock-free and
  * exact under every [Concurrency] level; increments commute, bin assignment
@@ -74,13 +74,12 @@ class DDSketchStat(
     private val gamma: Double = (1.0 + relativeError) / (1.0 - relativeError)
     private val multiplier: Double = 1.0 / ln(gamma)
 
-    // Bin indices are clamped to the band spanned by the indexable range. Without this the
-    // index is unbounded: the bin array spans min..max observed index and allocates a cell
-    // per index in between, so a single denormal next to a single huge value forces an
-    // enormous array. Measured before this bound, from exactly two observations: 2.4 MiB at
-    // the default relativeError, 28 MiB at 0.001, and 220 MiB at 1e-4. Far enough out the
-    // index also overflows Int and the resize is skipped, silently dropping the bins that
-    // had already accumulated.
+    // Bin indices are clamped to the band spanned by the indexable range. Unclamped the index
+    // is unbounded: the bin array spans min..max observed index and allocates a cell per index
+    // in between, so a single denormal next to a single huge value forces an enormous array -
+    // 2.4 MiB at the default relativeError from two observations, 28 MiB at 0.001, 220 MiB at
+    // 1e-4. Far enough out the index overflows Int and the resize is skipped, silently dropping
+    // the bins already accumulated.
     private val minIndex: Int = ceil(ln(minIndexableValue) * multiplier).toInt()
     private val maxIndex: Int = ceil(ln(maxIndexableValue) * multiplier).toInt()
 
@@ -94,10 +93,6 @@ class DDSketchStat(
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isNotPositiveWeight()) return
-        // NaN has no rank, so it cannot go in a bin. Previously it fell through the sign
-        // comparisons into the zero bucket and was silently counted as an observation of
-        // zero, which shifts every quantile. LinearHistogramStat already drops it.
-
         if (value > 0.0) {
             positiveBins.add(indexOf(value), weight)
         } else if (value < 0.0) {
@@ -149,22 +144,18 @@ class DDSketchStat(
         val negSnap = negativeBins.snapshot()
         val zeroSnap = zeroCount.load()
 
-        // Derive the total from the snapshot instead of loading the totalWeights cell.
-        // update() bumps that cell before it lands the bin, so a concurrent read could
-        // see a total larger than the bins account for, walk off the end of the bin list
-        // and return NaN for a high quantile. reset() has the mirror problem: it cleared
-        // the cell before the bins, so a reader could see total == 0 with populated bins
-        // and report all-zero quantiles.
+        // Derive the total from the snapshot rather than from a separate weight cell: any cell
+        // updated out of step with the bins lets a concurrent reader see a total the bins do not
+        // account for, and walk off the end of the bin list or report all-zero quantiles.
         var total = zeroSnap
         for (w in negSnap.values) total += w
         for (w in posSnap.values) total += w
 
         if (total <= 0.0) {
-            // NaN per quantile rather than 0.0. A zero-filled array is indistinguishable from a
-            // sketch that genuinely observed zeros, so an untouched sketch used to render as a
-            // p99 of 0.0 - which reads as excellent latency rather than as no data. AucStat
-            // already returned NaN in the same situation. Callers who want to branch rather
-            // than propagate NaN can check `isEmpty` on the result.
+            // NaN per quantile rather than 0.0: a zero-filled array is indistinguishable from a
+            // sketch that genuinely observed zeros, so an untouched sketch would render a p99 of
+            // 0.0, which reads as excellent latency rather than as no data. Callers who want to
+            // branch rather than propagate NaN can check `isEmpty` on the result.
             computedQuantiles.fill(Double.NaN)
             return SketchResult(
                 probabilities = probabilities,
@@ -186,9 +177,9 @@ class DDSketchStat(
                 currentRank += weight
                 if (currentRank >= targetRank) return -valueFromIndex(index)
             }
-            // Only claim the zero bucket when something actually landed in it. Adding an
-            // empty zeroSnap and testing `0.0 >= 0.0` made p0 report 0.0 on all-positive
-            // data, a value not in the stream and outside the relative-error contract.
+            // Only claim the zero bucket when something actually landed in it; an empty zeroSnap
+            // would satisfy `0.0 >= 0.0` and make p0 report 0.0 on all-positive data, a value not
+            // in the stream and outside the relative-error contract.
             if (zeroSnap > 0.0) {
                 currentRank += zeroSnap
                 if (currentRank >= targetRank) return 0.0

@@ -72,8 +72,8 @@ fun CountMinSketchResult.estimate(value: Long): Long {
     val mask = (width - 1).toLong()
     val mixer = Hashers.resolve(hasher)
     // No sentinel: Long.MAX_VALUE is a value a counter can legitimately hold (a saturating weight
-    // put it there), and treating it as "no rows visited" made estimate() report 0 for the largest
-    // count representable. depth is always positive, so row 0 seeds the minimum.
+    // puts it there), so treating it as "no rows visited" would report 0 for the largest count
+    // representable. depth is always positive, so row 0 seeds the minimum.
     var min = Long.MAX_VALUE
     for (row in 0 until depth) {
         val salt = splitmix64(seed + row.toLong())
@@ -122,8 +122,8 @@ class CountMinSketchStat(
         require(width > 0) { "width must be > 0" }
         require(width and (width - 1) == 0) { "width must be a power of two" }
         // depth * width is the counter-array length and is computed in Int. Unvalidated, a large
-        // shape wrapped to zero (or worse, to a small positive value) and construction succeeded
-        // with an array too short for its own indexing, throwing on the first update instead.
+        // shape wraps to zero (or worse, to a small positive value) and construction succeeds with
+        // an array too short for its own indexing, throwing on the first update instead.
         require(depth.toLong() * width.toLong() <= Int.MAX_VALUE) {
             "depth * width must fit in an Int; $depth * $width overflows"
         }
@@ -139,13 +139,12 @@ class CountMinSketchStat(
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         // `weight <= 0.0` is false for NaN, and `ceil(NaN).toLong()` is 0, which the coerce below
-        // lifted to 1 - so a NaN weight silently became a real observation of weight one. Counters
-        // are Long and have no NaN to propagate into, so the observation is dropped; see Stat.
+        // would lift to 1, making a NaN weight a real observation of weight one. Counters are Long
+        // and have no NaN to propagate into, so the observation is dropped; see Stat.
         if (weight.isNotPositiveWeight()) return
         // Counters are Long, so a fractional weight has to be rounded. Round *up*: rounding to
-        // nearest silently discarded everything below 0.5 - including totalSeen, so the stat denied
-        // observations it had seen - whereas rounding up keeps every observation and leaves the
-        // documented `estimate(x) >= true count(x)` intact, since it can only overshoot.
+        // nearest would discard everything below 0.5, whereas rounding up keeps every observation
+        // and leaves `estimate(x) >= true count(x)` intact, since it can only overshoot.
         val w = weight.toCounterStep()
         for (row in 0 until depth) {
             val idx = (hasher.mix(value xor rowSalts[row]) and mask).toInt()

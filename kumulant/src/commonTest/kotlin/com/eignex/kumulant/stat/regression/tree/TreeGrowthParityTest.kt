@@ -5,25 +5,13 @@ import com.eignex.kumulant.feat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Pins the behaviour the shared [TreeGrowth] engine must not change: the regression and classification
- * trees grow the *same* tree from the same stream.
- *
- * Both are fed identical rows, with the regression target being the 0/1 class label as a Double. On binary
- * labels the two split criteria are proportional (Bernoulli variance is exactly half the Gini impurity),
- * so the candidate ranking is identical and both trees must reach the same structure: the same node count,
- * the same split predicate at every internal node, and the same total weight.
- *
- * Nothing else in the suite compares the two trees against each other, so this is the only guard on the
- * shared engine treating its two instantiations alike.
- */
+// Both trees are fed identical rows, with the regression target being the 0/1 class label as a Double.
+// On binary labels the two split criteria are proportional (Bernoulli variance is exactly half the Gini
+// impurity), so the candidate ranking is identical and both trees must reach the same structure.
 class TreeGrowthParityTest {
 
-    /**
-     * Row pattern: feature 0 decides the label for three quarters of the stream, feature 1 resolves the
-     * remaining quarter. That makes feature 0 the strictly better root candidate and feature 1 the only
-     * useful candidate below it, so the grown tree is a root split, one nested split, and three leaves.
-     */
+    // Feature 0 decides the label for three quarters of the stream, feature 1 resolves the remaining
+    // quarter, so the grown tree is a root split, one nested split, and three leaves.
     private val rows = listOf(
         feat(1.0, 0.0) to 1,
         feat(1.0, 0.0) to 1,

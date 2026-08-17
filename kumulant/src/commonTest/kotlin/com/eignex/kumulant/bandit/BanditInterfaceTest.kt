@@ -15,11 +15,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
-/**
- * Polymorphic checks against the joint [Bandit] interface plus the [PerArmBandit]
- * convenience; anything that targets the per-arm state surface should work
- * uniformly across univariate and contextual flavours.
- */
+
 class BanditInterfaceTest {
 
     @Test

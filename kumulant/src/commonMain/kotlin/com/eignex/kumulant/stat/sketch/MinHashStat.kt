@@ -38,7 +38,7 @@ data class MinHashResult(
      * The mixer decides which signature slot a key touches, so combining sketches built with different mixers
      * is meaningless. Carried on the wire so [MinHashStat.merge] can refuse it, matching
      * [com.eignex.kumulant.stat.sketch.BloomFilterResult]. Defaults to the library default so a
-     * payload encoded before the field existed still decodes.
+     * payload without the field still decodes.
      */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : HasObservationCount {

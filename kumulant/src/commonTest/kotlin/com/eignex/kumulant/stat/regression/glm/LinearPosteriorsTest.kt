@@ -156,7 +156,6 @@ class LinearPosteriorsTest {
         val alpha = 2.0
         val score = LinUcb.evaluate(snap, x, Random(0), exploration = alpha)
         val mean = snap.predict(x)
-        // Bound check: score should strictly exceed the mean for non-zero alpha and non-degenerate covariance.
         assertTrue(score > mean, "LinUcb should add positive UCB term; score=$score, mean=$mean")
     }
 
@@ -166,7 +165,6 @@ class LinearPosteriorsTest {
         val draw1 = LinUcb.sample(snap, Random(0)).toDoubleArray()
         val draw2 = LinUcb.sample(snap, Random(99)).toDoubleArray()
         assertTrue(draw1.contentEquals(draw2), "LinUcb sample is deterministic")
-        // And matches the snapshot's weights
         val w = snap.weights.toDoubleArray()
         assertTrue(draw1.contentEquals(w), "LinUcb sample returns snap.weights")
     }

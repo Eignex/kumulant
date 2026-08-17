@@ -154,13 +154,12 @@ class Exp3Bandit(
         /**
          * Horizon-free default exploration mix `min(1, eta)`.
          *
-         * This used to be `min(1, K * eta)`, which is the textbook mixing rule - but only when
-         * `eta` is the horizon-scaled `sqrt(ln K / (K T))`. Against the horizon-free `eta` above,
-         * `K * eta` is `sqrt(K * ln K)`, which is at least 1.177 for every `K >= 2`, so it clamped
-         * to exactly 1.0 at every arm count and [playDistribution] collapsed to uniform: the
-         * learned weights were multiplied by `1 - gamma == 0`. Using `eta` itself keeps the same
-         * "explore less as evidence per arm grows" shape and tops out at 0.59 for two arms, so it
-         * cannot saturate. Pass `gamma = 1.0` explicitly for pure uniform sampling.
+         * The textbook mixing rule `min(1, K * eta)` holds only when `eta` is the horizon-scaled
+         * `sqrt(ln K / (K T))`. Against the horizon-free `eta` above, `K * eta` is `sqrt(K * ln K)`,
+         * at least 1.177 for every `K >= 2`, so it would clamp to exactly 1.0 at every arm count and
+         * collapse [playDistribution] to uniform. Using `eta` itself keeps the same "explore less as
+         * evidence per arm grows" shape and tops out at 0.59 for two arms, so it cannot saturate.
+         * Pass `gamma = 1.0` explicitly for pure uniform sampling.
          */
         fun defaultGamma(eta: Double): Double = eta.coerceAtMost(1.0)
     }

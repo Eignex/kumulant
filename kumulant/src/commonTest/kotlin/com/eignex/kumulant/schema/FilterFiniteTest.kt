@@ -21,15 +21,9 @@ import kotlin.test.assertTrue
 
 private val NON_FINITE = doubleArrayOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)
 
-/**
- * `filterFinite`, the supported way to keep non-finite observations out of a stat.
- *
- * [Stat][com.eignex.kumulant.core.Stat] guarantees only that a non-finite value will not throw. It is
- * explicitly allowed to poison the stat, and for an accumulator it does: a `NaN` folded into a mean is
- * reported for ever. That is the right default, because the observation genuinely arrived and genuinely
- * was unusable, and hiding it would turn a gap in the input into a silently plausible answer. A caller
- * who would rather drop such observations says so with this filter.
- */
+// [Stat][com.eignex.kumulant.core.Stat] guarantees only that a non-finite value will not throw; it is
+// explicitly allowed to poison the stat, and for an accumulator it does. `filterFinite` is the
+// supported way for a caller to drop such observations instead.
 class FilterFiniteTest {
 
     @Test

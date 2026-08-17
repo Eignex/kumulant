@@ -42,7 +42,6 @@ class OptimizerDirectTest {
         // Second hit on coord 0 accumulates: acc = 4 + 9 = 13
         val d2 = opt.computeDelta(0, gradient = 3.0, observationWeight = 1.0)
         approx(-1.0 * 3.0 / sqrt(13.0 + 1e-10), d2)
-        // Coord 1 untouched
         val d3 = opt.computeDelta(1, gradient = 1.0, observationWeight = 1.0)
         approx(-1.0 * 1.0 / sqrt(1.0 + 1e-10), d3)
     }

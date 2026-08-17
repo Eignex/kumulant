@@ -11,12 +11,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Schemas are pure description; the deployment-knob [Concurrency] flows
- * through `config.materialize(schema.concurrency)` inside the
- * `*StatGroup(schema)` / `*ListStats(schema)` constructors. These tests
- * assert post-materialize concurrency propagates correctly.
- */
+// Schemas are pure description; the deployment-knob [Concurrency] flows through
+// `config.materialize(schema.concurrency)` inside the `*StatGroup(schema)` / `*ListStats(schema)`
+// constructors.
 class StatSchemaConcurrencyTest {
 
     @Test

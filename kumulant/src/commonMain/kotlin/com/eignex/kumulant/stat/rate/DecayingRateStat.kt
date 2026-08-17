@@ -43,15 +43,8 @@ data class DecayingRateResult(
 class DecayingRateStat(val halfLife: Duration, override val concurrency: Concurrency = Concurrency.None) :
     SeriesStat<DecayingRateResult> by decayingRateDelegate(halfLife, concurrency)
 
-/**
- * Per-second rate scale for a half-life, via [DecayWeighting.HalfLife].
- *
- * This recomputed `ln(2) / halfLife` itself rather than reading the one place that already derives it,
- * and the copy had no validation: `inWholeNanoseconds` truncates, so a sub-nanosecond half-life gave an
- * infinite scale instead of the documented error. It only ever looked correct because the
- * `DecayingSumStat` constructed on the next line happens to throw first - an ordering the compiler does
- * not enforce and nothing recorded.
- */
+// Per-second rate scale for a half-life. Derived through DecayWeighting.HalfLife so a sub-nanosecond
+// half-life raises the documented error rather than yielding an infinite scale.
 private fun rateScale(halfLife: Duration): Double = DecayWeighting.HalfLife(halfLife).alpha * NANOS_PER_SECOND
 
 private fun decayingRateDelegate(halfLife: Duration, concurrency: Concurrency): SeriesStat<DecayingRateResult> {

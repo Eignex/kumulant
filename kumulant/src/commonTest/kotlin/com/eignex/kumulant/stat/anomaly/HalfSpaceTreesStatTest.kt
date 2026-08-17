@@ -25,7 +25,6 @@ class HalfSpaceTreesStatTest {
             randomSeed = 7,
         )
         val rng = Random(11L)
-        // Build up a reference window of inliers clustered around (3, 3).
         repeat(400) {
             stat.update(doubleArrayOf(3.0 + rng.nextDouble() * 0.5, 3.0 + rng.nextDouble() * 0.5))
         }
@@ -51,9 +50,7 @@ class HalfSpaceTreesStatTest {
         assertEquals(2, r.height)
         assertEquals(3 * 3, r.featureIndices.size) // numTrees * (2^height - 1)
         assertEquals(3 * 4, r.referenceMass.size) // numTrees * 2^height
-        // All feature indices are within range.
         for (f in r.featureIndices) assertTrue(f in 0 until 2, "feature index out of range: $f")
-        // All thresholds fall within configured per-feature ranges.
         for (i in r.thresholds.indices) {
             val f = r.featureIndices[i]
             val range = ranges[f]

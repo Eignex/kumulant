@@ -15,17 +15,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-/**
- * The default tunings, and the degenerate states they can reach. A policy that silently stops
- * learning is worse than one that fails loudly, so these assert on what `choose` actually does
- * rather than on the internal weights, which is where the EXP3 defect hid.
- */
+// A policy that silently stops learning is worse than one that fails loudly, so these assert on
+// what `choose` actually does rather than on the internal weights.
 class BanditTuningTest {
 
     @Test
     fun `the default EXP3 gamma leaves room for the learned weights`() {
-        // gamma used to be min(1, K*eta) = sqrt(K*ln K), which is >= 1.177 for every K >= 2, so it
-        // clamped to 1.0 at every arm count and the weights were multiplied by 1 - gamma == 0.
         for (k in listOf(2, 3, 5, 10, 100)) {
             val gamma = Exp3Bandit(nbrArms = k).gamma
             assertTrue(gamma < 1.0, "gamma saturated at $gamma for $k arms")
@@ -100,8 +95,6 @@ class BanditTuningTest {
 
     @Test
     fun `UCB1Normal scores finitely and prefers the best arm`() {
-        // p1 mixed a mean of squares with a sum of squares, so it went negative for any arm with a
-        // non-zero mean and every score was NaN; choose then always returned arm 0.
         val bandit = MultiArmedBandit(3, UCB1Normal(), Random(7))
         repeat(30) {
             bandit.update(0, 1.0)
@@ -120,9 +113,6 @@ class BanditTuningTest {
 
     @Test
     fun `UCB1Normal still explores the losing arm at two arms`() {
-        // The confidence term used ln(nbrArms - 1), so at K = 2 it was ln(1) == 0: the bonus vanished
-        // and the policy went exactly greedy at the arm count where exploration matters most. Auer's
-        // `n` is the total pull count, which is what `step` carries.
         // Rewards have to vary: this policy scales its bonus by the observed variance, so constant
         // rewards give a zero bonus legitimately and would not tell us anything about the log term.
         val bandit = MultiArmedBandit(2, UCB1Normal(), Random(7))

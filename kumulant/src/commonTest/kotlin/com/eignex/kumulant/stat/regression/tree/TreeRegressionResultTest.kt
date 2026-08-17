@@ -53,7 +53,6 @@ class TreeRegressionResultTest {
 
     @Test
     fun `RegressionNode snapshot freezes structure`() {
-        // Verify snapshot round-trip preserves split predicates and leaf values.
         val live = RegressionTree(
             splitCandidates = listOf(ThresholdSplit(0, 0.0)),
             config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),

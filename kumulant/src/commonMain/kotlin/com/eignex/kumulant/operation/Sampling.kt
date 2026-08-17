@@ -50,8 +50,8 @@ internal fun <R : Result> DiscreteStat<R>.sample(rate: Double, random: Random): 
 /**
  * Reject a throttle period that would forward nothing or everything unpredictably.
  *
- * `internal` rather than file-private because the regression modality's wrappers live over in
- * `RegressionOps.kt` and had their own byte-identical copy of this and [checkRate].
+ * `internal` rather than file-private so the regression modality's wrappers in `RegressionOps.kt`
+ * can share it.
  */
 internal fun checkEvery(every: Int) = require(every >= 1) { "throttle every must be >= 1, got $every" }
 

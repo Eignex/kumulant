@@ -59,7 +59,6 @@ private class MappedResultCore<R1 : Result, R2 : Result>(
         error("MappedResultCore.create is not used; the modality adapter rebuilds itself")
 }
 
-/** Adapter implementing the series-stat variant of [mapResult]. */
 internal class MapResultSeriesStat<R1 : Result, R2 : Result>(
     private val delegate: SeriesStat<R1>,
     private val forward: (R1) -> R2,
@@ -72,7 +71,6 @@ internal class MapResultSeriesStat<R1 : Result, R2 : Result>(
         MapResultSeriesStat(delegate.create(concurrency), forward, reverse)
 }
 
-/** Adapter implementing the paired-stat variant of [mapResult]. */
 internal class MapResultPairedStat<R1 : Result, R2 : Result>(
     private val delegate: PairedStat<R1>,
     private val forward: (R1) -> R2,
@@ -85,7 +83,6 @@ internal class MapResultPairedStat<R1 : Result, R2 : Result>(
         MapResultPairedStat(delegate.create(concurrency), forward, reverse)
 }
 
-/** Adapter implementing the vector-stat variant of [mapResult]. */
 internal class MapResultVectorStat<R1 : Result, R2 : Result>(
     private val delegate: VectorStat<R1>,
     private val forward: (R1) -> R2,
@@ -98,7 +95,6 @@ internal class MapResultVectorStat<R1 : Result, R2 : Result>(
         MapResultVectorStat(delegate.create(concurrency), forward, reverse)
 }
 
-/** Adapter implementing the discrete-stat variant of [mapResult]. */
 internal class MapResultDiscreteStat<R1 : Result, R2 : Result>(
     private val delegate: DiscreteStat<R1>,
     private val forward: (R1) -> R2,

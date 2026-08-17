@@ -39,7 +39,6 @@ class RegressionOpsTest {
     fun `transformX rewrites the feature vector`() {
         val inner = StochasticRegressionStat(featureSize = 2)
         val stat = inner.transformX { v, _ -> doubleArrayOf(v[0] * 2.0, v[1] + 1.0) }
-        // Drive a few updates and verify featureSize is unchanged.
         repeat(3) { stat.update(feat(1.0, 2.0), y = 5.0) }
         assertEquals(2, stat.featureSize)
     }

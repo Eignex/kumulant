@@ -49,10 +49,8 @@ data class AucResult(
     }
 
     // Double.equals, not ==: `auc` is NaN for an empty or freshly reset stat, and IEEE == makes NaN
-    // unequal to itself, so such a result did not equal itself and setOf(it).contains(it) was false
-    // - while hashCode below uses auc.hashCode(), which *is* NaN-stable, so the two disagreed. The
-    // generated data-class equals would have used Double.equals; this one is hand-rolled only to get
-    // contentEquals on the arrays.
+    // unequal to itself, which would contradict the NaN-stable hashCode below. Hand-rolled only to
+    // get contentEquals on the arrays.
     override fun equals(other: Any?): Boolean = other is AucResult &&
         auc.equals(other.auc) &&
         totalPositives.equals(other.totalPositives) &&
@@ -93,7 +91,7 @@ data class AucResult(
  * quality independent of threshold choice. Pair with [BrierScoreStat] or
  * [LogLossStat] for proper-scoring complements.
  *
- * **Memory:** O([numBins]); two parallel Long arrays for positives and
+ * **Memory:** O([numBins]); two parallel double-cell arrays for positives and
  * negatives.
  *
  * **Update:** O(1) per paired observation (one atomic add per bin slot).
@@ -127,7 +125,7 @@ class AucStat(
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
         // As in ReliabilityStat: coerceIn passes a NaN through and NaN.toInt() is 0, so a NaN score
-        // landed in the bottom bin as a confident negative. See Stat.
+        // lands in the bottom bin as a confident negative.
         val clamped = x.coerceIn(lowerBound, upperBound)
         val bin = ((clamped - lowerBound) / binWidth).toInt().coerceIn(0, numBins - 1)
         val posWeight = y * weight

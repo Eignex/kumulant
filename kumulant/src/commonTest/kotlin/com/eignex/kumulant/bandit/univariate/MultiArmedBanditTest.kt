@@ -6,11 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-/**
- * Behavioural checks for [MultiArmedBandit.evaluate]: it should be a read-only
- * scoring op (no step increment, no policy state mutation) and agree with the
- * value the policy would have used for that arm inside [choose].
- */
+
 class MultiArmedBanditTest {
 
     @Test
@@ -28,8 +24,6 @@ class MultiArmedBanditTest {
 
     @Test
     fun `evaluate does not mutate arm state`() {
-        // evaluate is a read-only scoring op: it consumes the RNG but never touches
-        // policy/arm sufficient statistics. Confirm via snapshot equality before/after.
         val mab = MultiArmedBandit(nbrArms = 3, policy = BetaBernoulliTS(), random = Random(42))
         mab.update(0, 1.0)
         mab.update(1, 1.0)

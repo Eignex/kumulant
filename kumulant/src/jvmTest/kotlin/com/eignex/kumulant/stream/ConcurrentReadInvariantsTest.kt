@@ -20,21 +20,15 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
-/**
- * Concurrent read-path invariants across the catalogue.
- *
- * The pre-existing per-stat `*ConcurrencyTest` files in `commonTest` are single-threaded:
- * they replay a fixed sequence under each [Concurrency] level and compare against
- * [Concurrency.None]. That catches mode-wiring mistakes but structurally cannot catch a
- * missing lock (the sequential arithmetic is identical either way) or a torn read (there
- * is no concurrent reader). This suite covers exactly that gap.
- *
- * The shape is N writers plus one reader, and the assertions are *invariants* rather than
- * exact values: under a lock-free level a snapshot is allowed to be stale, but it is never
- * allowed to be impossible. An AUC above 1.0, a NaN quantile on a populated sketch, a
- * calibrated probability above 1.0, or an exception thrown out of `read()` are all bugs at
- * every level, and none of them are excused by the documented drift allowance.
- */
+// The per-stat `*ConcurrencyTest` files in `commonTest` are single-threaded, so they structurally
+// cannot catch a missing lock (the sequential arithmetic is identical either way) or a torn read
+// (there is no concurrent reader). This suite covers exactly that gap.
+//
+// The shape is N writers plus one reader, and the assertions are *invariants* rather than exact
+// values: under a lock-free level a snapshot is allowed to be stale, but it is never allowed to be
+// impossible. An AUC above 1.0, a NaN quantile on a populated sketch, a calibrated probability above
+// 1.0, or an exception thrown out of `read()` are all bugs at every level, and none of them are
+// excused by the documented drift allowance.
 class ConcurrentReadInvariantsTest {
 
     private val levels = listOf(Concurrency.Strict, Concurrency.Relaxed, Concurrency.HighWrite)
@@ -267,15 +261,11 @@ class ConcurrentReadInvariantsTest {
 
     @Test
     fun `TDigestStat never reports weight it cannot answer from`() {
-        // The state behind the intermittent failure of the test below: `read` fills every quantile with
-        // NaN when it has no centroids, but returned `totalWeight` unchanged, so a snapshot could claim
-        // to have observed weight while being unable to answer a single quantile. That is not staleness,
-        // which the Relaxed contract allows - it is a snapshot contradicting itself.
-        //
-        // It arose because `update` counted a value's weight before publishing the value, and
-        // `drainLocked` may strand a claim it cannot prove committed. The weight stayed; the value did
-        // not. Asserted as an invariant rather than by reproducing the interleaving, which needs a
-        // preemption long enough to exhaust drainLocked's spin budget.
+        // `read` fills every quantile with NaN when it has no centroids, so a snapshot reporting weight
+        // it has no centroids for would claim to have observed something it cannot answer a single
+        // quantile from. That is not staleness, which the Relaxed contract allows - it is a snapshot
+        // contradicting itself. Asserted as an invariant rather than by reproducing the interleaving,
+        // which needs a preemption long enough to exhaust drainLocked's spin budget.
         for (level in levels) {
             val stat = TDigestStat(concurrency = level)
             assertReadInvariants("TDigestStat[$level] weight-vs-centroids", stat, write = { t, i ->

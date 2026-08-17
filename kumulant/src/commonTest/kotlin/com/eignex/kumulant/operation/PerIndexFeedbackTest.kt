@@ -48,7 +48,6 @@ class PerIndexFeedbackTest {
         )
         for (u in updates) scaled.update(u)
 
-        // Reproduce expected per-coord behaviour.
         val refVar = VarianceStat()
         var expectedCoord0 = 0.0
         for (u in updates) {
@@ -67,7 +66,6 @@ class PerIndexFeedbackTest {
 
     @Test
     fun `VIndex outside a feedback context throws`() {
-        // Direct invocation with a non-IndexedResult primary should fail loudly.
         val primary = VarianceStat().also {
             it.update(1.0)
             it.update(2.0)
@@ -78,8 +76,7 @@ class PerIndexFeedbackTest {
 
     @Test
     fun `paired feedback exposes axis index via VIndex`() {
-        // Paired feedback evaluates X axis with VIndex=0, Y axis with VIndex=1.
-        // Use an expr that returns VIndex for inspection by piping into a paired sum.
+        // Paired feedback evaluates the x axis with VIndex=0 and the y axis with VIndex=1.
         val pair = com.eignex.kumulant.stat.summary.PairedSumStat().withFeedback(
             VarianceStat(),
             VarianceStat(),
@@ -87,7 +84,6 @@ class PerIndexFeedbackTest {
         )
         pair.update(99.0, 123.0)
         val r = pair.read()
-        // x-axis projection emits VIndex=0, y-axis projection emits VIndex=1.
         assertEquals(0.0, r.sumX, DELTA)
         assertEquals(1.0, r.sumY, DELTA)
     }

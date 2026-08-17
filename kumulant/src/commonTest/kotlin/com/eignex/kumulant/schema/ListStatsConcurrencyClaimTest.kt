@@ -7,14 +7,10 @@ import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * A list of stats reports the weakest guarantee its entries offer, not a flat [Concurrency.None].
- *
- * A container is only as safe as its least-protected member, and this property is what a caller
- * introspects to decide whether reads need external synchronisation. `AbstractStatGroup` carries the same
- * rule, and the two must agree over identical entries or the property is unreliable rather than merely
- * pessimistic.
- */
+// A container is only as safe as its least-protected member, and this property is what a caller
+// introspects to decide whether reads need external synchronisation. `AbstractStatGroup` carries the
+// same rule, and the two must agree over identical entries or the property is unreliable rather than
+// merely pessimistic.
 class ListStatsConcurrencyClaimTest {
 
     @Test

@@ -20,16 +20,10 @@ import kotlin.test.assertEquals
 
 private const val ARMS = 3
 
-/**
- * Every arm-indexed entry point on every bandit rejects an out-of-range index.
- *
- * `Scorable` and `PerArmBandit` document an `IllegalArgumentException` for a bad index. Swept across the
- * whole family rather than restated per bandit, because the failure mode is one member being left out -
- * which is exactly what a per-bandit test misses.
- */
+// Swept across the whole family rather than restated per bandit, because the failure mode is one
+// member being left out - which is exactly what a per-bandit test misses.
 class ArmIndexContractSweepTest {
 
-    /** One bandit plus every way to name an arm on it. */
     private class Probe(val name: String, val calls: List<Pair<String, (Int) -> Any?>>)
 
     private val x: VectorView = feat(1.0, 1.0)

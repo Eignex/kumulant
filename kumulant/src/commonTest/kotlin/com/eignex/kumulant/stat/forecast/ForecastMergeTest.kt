@@ -4,11 +4,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Rolling worker snapshots up into a fresh coordinator stat. None of the three smoothing stats has a
- * principled merge of two independent traces, but all three must at least adopt the first snapshot
- * verbatim rather than averaging it against their own empty state.
- */
+// None of the three smoothing stats has a principled merge of two independent traces, but all three
+// must at least adopt the first snapshot verbatim rather than averaging it against an empty state.
 class ForecastMergeTest {
 
     @Test
@@ -20,7 +17,6 @@ class ForecastMergeTest {
         val fresh = source.create()
         fresh.merge(source.read())
 
-        // This used to average against the fresh stat's 0.0 and halve the contribution.
         assertEquals(expected, fresh.read().variance, 1e-12)
     }
 
@@ -59,8 +55,8 @@ class ForecastMergeTest {
 
         a.merge(b.read())
 
-        // The averaged factors came from b, so the slot has to be b's too; keeping a's silently
-        // paired the factors with a mismatched phase.
+        // The averaged factors came from b, so the slot has to be b's too or the factors sit against
+        // a mismatched phase.
         assertEquals(target, a.read().currentSlot)
     }
 

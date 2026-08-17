@@ -93,8 +93,13 @@ data class SoftmaxRegressionResult(
  * One [OptimizerSpec] is materialised per class for the weight matrix; bias
  * is a single optimizer over `numClasses` slots.
  *
+ * **Use cases:** K-way online classification with calibrated probabilities; the
+ * discriminative counterpart to [GaussianNaiveBayesStat].
+ *
  * **Memory:** O([numClasses] * [featureSize]) for weights + per-optimizer aux state.
+ *
  * **Update:** O([numClasses] * nnz(x)) per observation.
+ *
  * **Concurrency:** Welford-locked; the optimizer aux state honours the same
  * [Concurrency] passed in.
  */
@@ -142,8 +147,7 @@ class SoftmaxRegressionStat(
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
-            // See asClassLabel on why an exact integer is required. The tree classifiers used to
-            // truncate instead, so this stat and those disagreed about y = 1.5.
+            // See asClassLabel on why an exact integer is required.
             val c = y.asClassLabel(numClasses)
             if (c < 0) return@guarded
             stepCell.addAndGet(1L)

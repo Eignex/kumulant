@@ -12,16 +12,8 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * What a negative weight means, per family.
- *
- * The contract is that zero is a no-op and a negative weight does whatever is standard for
- * the specific statistic, throwing only where the alternative is a corrupted accumulator.
- * These tests pin the behaviour that was measured across the catalogue rather than assumed:
- * every family surveyed treats a negative weight as a downdate, stays finite, and recovers
- * when weight is added back. No family needed a new guard beyond the Welford summary stats,
- * where an exhausted total is genuinely unrecoverable.
- */
+// The contract: zero is a no-op, and a negative weight does whatever is standard for the specific
+// statistic, throwing only where the alternative is a corrupted accumulator.
 class NegativeWeightSemanticsTest {
 
     @Test

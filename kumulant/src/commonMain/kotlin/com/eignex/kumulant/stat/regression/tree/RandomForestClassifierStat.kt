@@ -62,14 +62,9 @@ class RandomForestClassifierStat(
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
-        // The weight guard used to be `weight <= 0.0`, which is false for NaN, so a NaN weight reached
-        // the leaf counts and pinned one to NaN for good - no later observation could clear it. The
-        // label guard used to truncate, so y = 1.5 trained as class 1 here while the GLM classifiers
-        // refused it. Both now go through the same helpers as every other stat.
-        //
         // isInertWeight rather than isNotPositiveWeight: a class count subtracts exactly, so a negative
         // weight is a real downdate here, exactly as it is for the regression forest. Returning before
-        // the bagging draw also matters - an inert call used to consume one Poisson draw per tree and
+        // the bagging draw also matters - an inert call that consumed one Poisson draw per tree would
         // desynchronise every later one.
         if (weight.isInertWeight()) return
         val c = y.asClassLabel(numClasses)

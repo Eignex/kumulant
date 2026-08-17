@@ -112,19 +112,15 @@ class AdwinStat(
             if (k + 1 >= rows.size) rows.add(ArrayDeque())
             // addLast, not addFirst: `merged` came from the two OLDEST buckets of row k, and row
             // k + 1 holds buckets older still, so within that row the merged one is the newest and
-            // belongs at the back. addFirst reversed every row and left higher-k rows holding newer
-            // data than lower-k ones, so bucketsOldestToNewest() returned a scrambled order, the cut
-            // candidates were not temporal prefixes, and dropOldest() discarded recent data while
-            // keeping stale data - the window stopped being a suffix of the stream.
+            // belongs at the back. Any other placement scrambles bucketsOldestToNewest(), so the cut
+            // candidates stop being temporal prefixes and the window stops being a stream suffix.
             rows[k + 1].addLast(merged)
             k++
         }
     }
 
-    // Scratch buffer for the oldest-to-newest bucket walk, reused across updates. This used
-    // to allocate a fresh ArrayList plus backing array on every call, and the call happens at
-    // least once per observation, which made it the single largest allocator on the update
-    // path (measured at 277 B/op before this change).
+    // Scratch buffer for the oldest-to-newest bucket walk, reused across updates. The walk runs at
+    // least once per observation, so a fresh list per call dominates update-path allocation.
     private val orderedScratch: MutableList<Bucket> = ArrayList()
 
     private fun bucketsOldestToNewest(): MutableList<Bucket> {
@@ -145,9 +141,8 @@ class AdwinStat(
         val n = totalN.toDouble()
         val mean = totalSum / n
         val variance = max(0.0, totalSumSquares / n - mean * mean)
-        // Loop-invariant: depends only on deltaPrime, which is fixed for this call. It was
-        // previously recomputed for every candidate cut, so a wide window paid one `ln` per
-        // bucket for no reason.
+        // Loop-invariant: depends only on deltaPrime, so hoisting it keeps a wide window from
+        // paying one `ln` per candidate cut.
         val logTerm = ln(2.0 / deltaPrime)
         var n0 = 0L
         var sum0 = 0.0

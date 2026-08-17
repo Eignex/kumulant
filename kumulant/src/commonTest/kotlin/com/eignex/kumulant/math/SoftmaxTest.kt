@@ -7,9 +7,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-/**
- * Properties of the shared softmax, which three call sites previously each implemented for themselves.
- */
 class SoftmaxTest {
 
     @Test
@@ -90,9 +87,8 @@ class SoftmaxTest {
     @Test
     fun `a NaN logit yields NaN rather than being rejected`() {
         // Pinned as the current behaviour, not as desirable behaviour. The post-shift sum is NaN,
-        // which fails the `<= 0.0` guard the three previous copies all carried, so this returns true
-        // with an unusable array - and on the training path that NaN reaches the weights and stays
-        // there. Kept exactly as it was so this extraction changes nothing; the fix is its own task.
+        // which fails the `<= 0.0` guard, so this returns true with an unusable array - and on the
+        // training path that NaN reaches the weights and stays there.
         val p = doubleArrayOf(1.0, Double.NaN, 2.0)
 
         assertTrue(p.softmaxInPlace(), "the sum guard cannot catch a NaN, so this still reports success")

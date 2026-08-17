@@ -139,8 +139,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * one cast at the boundary - sealed-hierarchy exhaustiveness keeps the cast safe.
  *
  * The wrapper-spec branches narrow the wrapped `inner` spec to the expected modality
- * at runtime; on mismatch they raise the same `IllegalArgumentException` the previous
- * per-spec `materialize` overrides did.
+ * at runtime, raising `IllegalArgumentException` on mismatch.
  */
 fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concurrency.None): SeriesStat<R> {
     val out: SeriesStat<*> = when (this) {

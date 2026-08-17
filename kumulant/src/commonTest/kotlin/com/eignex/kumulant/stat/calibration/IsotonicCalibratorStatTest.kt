@@ -27,7 +27,6 @@ class IsotonicCalibratorStatTest {
                 "non-monotone at $i: ${r.probabilities[i - 1]} -> ${r.probabilities[i]}",
             )
         }
-        // Endpoint sanity: small raw scores map low, large raw scores map high.
         assertTrue(r.calibrate(0.05) < r.calibrate(0.95))
     }
 

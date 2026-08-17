@@ -61,10 +61,6 @@ class BanditFactoryTest {
 
     @Test
     fun `a spec-built Exp3 resolves the same gamma as the constructor`() {
-        // The factory inlined `min(K * eta, 1)`, which saturates at 1.0 for every arm count, so a
-        // spec-built EXP3 mixed in pure exploration and never consulted its weights - while the same
-        // bandit built directly got the corrected default and learned. Asserting on nbrArms alone,
-        // as the test above does, cannot see that: the two disagreed on the only field that matters.
         for (arms in 2..12) {
             val fromSpec = Exp3Spec(nbrArms = arms).materialize(Random(0))
             val direct = Exp3Bandit(nbrArms = arms, random = Random(0))
@@ -75,8 +71,6 @@ class BanditFactoryTest {
 
     @Test
     fun `a spec-built Exp3 lets its weights steer the play distribution`() {
-        // The consequence, stated the way a caller would notice it. With gamma at 1.0 every arm gets
-        // exactly 1/K no matter what it earned, so this is what the saturation actually cost.
         val b = Exp3Spec(nbrArms = 3).materialize(Random(0))
         repeat(50) { b.update(armIndex = 0, value = 1.0) }
 

@@ -9,18 +9,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * The README's composition and schema examples, compiled and executed.
- *
- * These were both wrong before. The composition example called `MeanStat().windowed(...)`,
- * but every `windowed` overload on a live stat is `internal`, so the snippet did not compile
- * for a consumer at all. The schema example built a single `StatGroup` from a schema that
- * mixes `series` and `discrete` entries, but `StatGroup` binds only the series specs, so the
- * `discrete` entry was silently never updated and reading it threw.
- *
- * Keeping them here as a test is the only thing that stops that recurring: a README snippet
- * nothing compiles is indistinguishable from a correct one until someone tries it.
- */
+// The README's composition and schema examples, compiled and executed: a snippet nothing compiles is
+// indistinguishable from a correct one until someone tries it.
 class ReadmeExamplesTest {
 
     private object Telemetry : StatSchema(concurrency = Concurrency.Strict) {

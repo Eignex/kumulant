@@ -9,15 +9,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-/**
- * The lock must be released when the guarded body throws.
- *
- * `Mutex.withLock` gave this for free. The `enter`/`exit` split that replaced it on the hot
- * path relies on an explicit `finally`, so a mistake there would not show up as a wrong
- * answer: it would leave the mutex held and deadlock the next writer. Several stats throw
- * from inside the guarded body - the weight guards in the Welford family, the dimension
- * checks in the vector family - so this is a reachable path, not a hypothetical.
- */
+// The `enter`/`exit` split on the hot path relies on an explicit `finally`, so a mistake there would
+// not show up as a wrong answer: it would leave the mutex held and deadlock the next writer. Several
+// stats throw from inside the guarded body - the weight guards in the Welford family, the dimension
+// checks in the vector family - so this is a reachable path, not a hypothetical.
 class GuardedLockReleaseTest {
 
     @Test

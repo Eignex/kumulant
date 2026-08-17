@@ -40,7 +40,6 @@ internal fun <P : Result, I : Result> SeriesStat<I>.withFeedback(
 
 internal class FeedbackSeriesStat<P : Result, I : Result>(
     private val inner: SeriesStat<I>,
-    /** Primary state-tracking stat owned by the wrapper. Exposed for snapshot inspection. */
     val primary: SeriesStat<P>,
     private val project: ScalarExpr,
 ) : SeriesStat<I>,
@@ -75,7 +74,6 @@ internal fun <P : Result, I : Result> VectorStat<I>.withFeedback(
 
 internal class FeedbackVectorStat<P : Result, I : Result>(
     private val inner: VectorStat<I>,
-    /** Per-coordinate primary state-tracking stat owned by the wrapper. */
     val primary: VectorStat<ResultList<P>>,
     private val project: ScalarExpr,
 ) : VectorStat<I>,
@@ -112,7 +110,6 @@ internal fun <P : Result, R : Result> RegressionStat<R>.withFeedback(
 
 internal class FeedbackRegressionStat<P : Result, R : Result>(
     private val inner: RegressionStat<R>,
-    /** Per-coordinate primary state-tracking stat owned by the wrapper. */
     val primary: VectorStat<ResultList<P>>,
     private val project: ScalarExpr,
 ) : RegressionStat<R>,
@@ -153,9 +150,7 @@ internal fun <P : Result, R : Result> PairedStat<R>.withFeedback(
 
 internal class FeedbackPairedStat<P : Result, R : Result>(
     private val inner: PairedStat<R>,
-    /** x-axis state-tracking stat owned by the wrapper. */
     val primaryX: SeriesStat<P>,
-    /** y-axis state-tracking stat owned by the wrapper. */
     val primaryY: SeriesStat<P>,
     private val project: ScalarExpr,
 ) : PairedStat<R>,

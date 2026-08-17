@@ -3,9 +3,6 @@ package com.eignex.kumulant.stat.regression.tree
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Breiman's `ceil(sqrt(p))` subspace default, which both forests previously computed for themselves.
- */
 class DefaultMtryTest {
 
     @Test

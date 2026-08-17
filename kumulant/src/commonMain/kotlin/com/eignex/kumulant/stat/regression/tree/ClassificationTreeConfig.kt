@@ -6,8 +6,7 @@ import kotlinx.serialization.Serializable
  * Classification analogue of [RegressionTreeConfig]. The same tunables, but the split [metric] defaults
  * to [GiniReduction] and the criterion is a [ClassificationSplitMetric].
  *
- * Every field except [metric] is described on [HoeffdingTreeConfig]. It used to be described here too,
- * in a copy that had already lost the explanations of what `tau` and `mtry` do.
+ * Every field except [metric] is described on [HoeffdingTreeConfig].
  */
 @Serializable
 data class ClassificationTreeConfig(
