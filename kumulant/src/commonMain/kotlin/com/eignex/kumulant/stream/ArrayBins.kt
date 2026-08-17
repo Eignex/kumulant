@@ -32,15 +32,15 @@ internal class ArrayBins(private val mode: StreamMode) {
             val newOffset: Int
 
             if (length == 0) {
-                newLength = 128
-                newOffset = index - 64
+                newLength = INITIAL_BINS
+                newOffset = index - INITIAL_CENTER_OFFSET
             } else {
                 newOffset = min(offset, index)
                 val maxIndex = max(offset + length - 1, index)
 
                 var capacity = length
                 while (newOffset + capacity <= maxIndex) {
-                    capacity = (capacity * 1.5).toInt() + 1
+                    capacity = (capacity * GROWTH_FACTOR).toInt() + 1
                 }
                 newLength = capacity
             }
@@ -78,3 +78,21 @@ internal class ArrayBins(private val mode: StreamMode) {
         stateRef.store(State(0, emptyArray()))
     }
 }
+
+/**
+ * Bins allocated the first time an index arrives.
+ *
+ * These three governed the memory profile of every [com.eignex.kumulant.stat.quantile.DDSketchStat] and
+ * [com.eignex.kumulant.stat.quantile.LinearHistogramStat] as three bare literals - `128`, `64`, `1.5` -
+ * with the `64 = 128 / 2` relationship left as a coincidence a reader had to notice. It is not a
+ * coincidence: the first index is placed at the *centre* of the initial span so that the next index in
+ * either direction fits without regrowing, and an offset that was not half the span would make one
+ * direction re-grow immediately.
+ */
+private const val INITIAL_BINS: Int = 128
+
+/** Half of [INITIAL_BINS], so the first index lands in the middle of the initial span. */
+private const val INITIAL_CENTER_OFFSET: Int = INITIAL_BINS / 2
+
+/** Geometric growth factor when the span has to widen. */
+private const val GROWTH_FACTOR: Double = 1.5

@@ -12,6 +12,7 @@ import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
+import com.eignex.kumulant.math.PROBABILITY_FLOOR
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
@@ -157,7 +158,7 @@ class SoftmaxRegressionStat(
             // Probabilities live in etas[] from here on. A false return means every exponential
             // underflowed, so there is no distribution to take a gradient against.
             if (!etas.softmaxInPlace()) return@guarded
-            val logProbC = ln(etas[c].coerceAtLeast(SOFTMAX_EPS))
+            val logProbC = ln(etas[c].coerceAtLeast(PROBABILITY_FLOOR))
             crossEntropyCell.add(-logProbC * weight)
 
             biasOpt.advance()
@@ -227,8 +228,4 @@ class SoftmaxRegressionStat(
 
     override fun create(concurrency: Concurrency?) =
         SoftmaxRegressionStat(featureSize, numClasses, optimizer, biasOptimizer, concurrency ?: this.concurrency)
-
-    private companion object {
-        const val SOFTMAX_EPS = 1e-15
-    }
 }

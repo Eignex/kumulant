@@ -122,7 +122,7 @@ class LinearHistogramStat(
         if (abs(span - binWidth) > binWidth * 1e-12) return false
         val ratio = (lo - lowerBound) / binWidth
         val rounded = round(ratio)
-        return abs(ratio - rounded) < 1e-9 && rounded >= 0.0 && rounded < binCount
+        return abs(ratio - rounded) < BIN_ALIGNMENT_TOLERANCE && rounded >= 0.0 && rounded < binCount
     }
 
     override fun reset() {

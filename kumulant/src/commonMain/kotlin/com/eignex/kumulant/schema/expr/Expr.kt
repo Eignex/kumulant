@@ -4,6 +4,8 @@ import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasMinMax
 import com.eignex.kumulant.core.IndexedResult
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.stream.DEFAULT_TARGET_HIGH
+import com.eignex.kumulant.stream.DEFAULT_TARGET_LOW
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
@@ -457,9 +459,9 @@ data object Standardize : ScalarExpr {
 @SerialName("MinMax")
 data class MinMax(
     /** Lower bound of the output range. */
-    val targetLow: Double = 0.0,
+    val targetLow: Double = DEFAULT_TARGET_LOW,
     /** Upper bound of the output range. */
-    val targetHigh: Double = 1.0,
+    val targetHigh: Double = DEFAULT_TARGET_HIGH,
 ) : ScalarExpr {
     init {
         require(targetHigh > targetLow) { "MinMax targetHigh ($targetHigh) must be > targetLow ($targetLow)" }

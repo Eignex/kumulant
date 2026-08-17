@@ -7,6 +7,9 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.spec.*
+import com.eignex.kumulant.stream.DEFAULT_TARGET_HIGH
+import com.eignex.kumulant.stream.DEFAULT_TARGET_LOW
+import com.eignex.kumulant.stream.DEFAULT_WINDOW_SLICES
 
 // Composition operators for the wire specs in [com.eignex.kumulant.schema].
 // Each returns a spec of the same modality, building the internal wrapper
@@ -70,20 +73,28 @@ fun <R : Result> PairedStatSpec<R>.withTimeAsX(): SeriesStatSpec<R> = WithTimeAs
 fun <R : Result> PairedStatSpec<R>.withTimeAsY(): SeriesStatSpec<R> = WithTimeAsY(this) as SeriesStatSpec<R>
 
 /** Wrap this series spec in a sliding time window of [durationMillis] split into [slices] buckets. */
-fun <R : Result> SeriesStatSpec<R>.windowed(durationMillis: Long, slices: Int = 10): SeriesStatSpec<R> =
-    WindowedSeries(this, durationMillis, slices) as SeriesStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.windowed(
+    durationMillis: Long,
+    slices: Int = DEFAULT_WINDOW_SLICES,
+): SeriesStatSpec<R> = WindowedSeries(this, durationMillis, slices) as SeriesStatSpec<R>
 
 /** Wrap this paired spec in a sliding time window of [durationMillis] split into [slices] buckets. */
-fun <R : Result> PairedStatSpec<R>.windowed(durationMillis: Long, slices: Int = 10): PairedStatSpec<R> =
-    WindowedPaired(this, durationMillis, slices) as PairedStatSpec<R>
+fun <R : Result> PairedStatSpec<R>.windowed(
+    durationMillis: Long,
+    slices: Int = DEFAULT_WINDOW_SLICES,
+): PairedStatSpec<R> = WindowedPaired(this, durationMillis, slices) as PairedStatSpec<R>
 
 /** Wrap this vector spec in a sliding time window of [durationMillis] split into [slices] buckets. */
-fun <R : Result> VectorStatSpec<R>.windowed(durationMillis: Long, slices: Int = 10): VectorStatSpec<R> =
-    WindowedVector(this, durationMillis, slices) as VectorStatSpec<R>
+fun <R : Result> VectorStatSpec<R>.windowed(
+    durationMillis: Long,
+    slices: Int = DEFAULT_WINDOW_SLICES,
+): VectorStatSpec<R> = WindowedVector(this, durationMillis, slices) as VectorStatSpec<R>
 
 /** Wrap this discrete spec in a sliding time window of [durationMillis] split into [slices] buckets. */
-fun <R : Result> DiscreteStatSpec<R>.windowed(durationMillis: Long, slices: Int = 10): DiscreteStatSpec<R> =
-    WindowedDiscrete(this, durationMillis, slices) as DiscreteStatSpec<R>
+fun <R : Result> DiscreteStatSpec<R>.windowed(
+    durationMillis: Long,
+    slices: Int = DEFAULT_WINDOW_SLICES,
+): DiscreteStatSpec<R> = WindowedDiscrete(this, durationMillis, slices) as DiscreteStatSpec<R>
 
 /** Lift a series spec to a vector spec by replicating it across every coordinate of an N-dim input. */
 fun <R : Result> SeriesStatSpec<R>.vectorized(
@@ -217,8 +228,8 @@ fun <R : Result> VectorStatSpec<R>.standardScaleFeatures(dimensions: Int): Vecto
 /** Element-wise min-max scale a vector spec against a hidden per-coordinate [Range] primary. */
 fun <R : Result> VectorStatSpec<R>.minMaxScaleFeatures(
     dimensions: Int,
-    targetLow: Double = 0.0,
-    targetHigh: Double = 1.0,
+    targetLow: Double = DEFAULT_TARGET_LOW,
+    targetHigh: Double = DEFAULT_TARGET_HIGH,
 ): VectorStatSpec<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
     return MinMaxScalerVector(this, dimensions, targetLow, targetHigh) as VectorStatSpec<R>
@@ -228,7 +239,10 @@ fun <R : Result> VectorStatSpec<R>.minMaxScaleFeatures(
 fun <R : Result> PairedStatSpec<R>.standardScaler(): PairedStatSpec<R> = StandardScalerPaired(this) as PairedStatSpec<R>
 
 /** Min-max scale both axes of a paired spec against per-axis [Range] primaries. */
-fun <R : Result> PairedStatSpec<R>.minMaxScaler(targetLow: Double = 0.0, targetHigh: Double = 1.0): PairedStatSpec<R> {
+fun <R : Result> PairedStatSpec<R>.minMaxScaler(
+    targetLow: Double = DEFAULT_TARGET_LOW,
+    targetHigh: Double = DEFAULT_TARGET_HIGH,
+): PairedStatSpec<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
     return MinMaxScalerPaired(this, targetLow, targetHigh) as PairedStatSpec<R>
 }
@@ -239,8 +253,8 @@ fun <R : Result> RegressionStatSpec<R>.standardScaleFeatures(): RegressionStatSp
 
 /** Element-wise min-max scale a regression spec's feature vector. */
 fun <R : Result> RegressionStatSpec<R>.minMaxScaleFeatures(
-    targetLow: Double = 0.0,
-    targetHigh: Double = 1.0,
+    targetLow: Double = DEFAULT_TARGET_LOW,
+    targetHigh: Double = DEFAULT_TARGET_HIGH,
 ): RegressionStatSpec<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
     return MinMaxScalerRegression(this, targetLow, targetHigh) as RegressionStatSpec<R>
@@ -258,7 +272,10 @@ fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> = Standar
  * `targetLow = -1.0, targetHigh = 1.0` for a `[-1, 1]` mapping. Emits [targetLow] while
  * the running range is still degenerate.
  */
-fun <R : Result> SeriesStatSpec<R>.minMaxScaler(targetLow: Double = 0.0, targetHigh: Double = 1.0): SeriesStatSpec<R> {
+fun <R : Result> SeriesStatSpec<R>.minMaxScaler(
+    targetLow: Double = DEFAULT_TARGET_LOW,
+    targetHigh: Double = DEFAULT_TARGET_HIGH,
+): SeriesStatSpec<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
     return MinMaxScalerSeries(this, targetLow, targetHigh) as SeriesStatSpec<R>
 }

@@ -116,7 +116,7 @@ class DDSketchStat(
     )
 
     override fun merge(values: SketchResult) {
-        require(abs(this.gamma - values.gamma) < 1e-9) {
+        require(abs(this.gamma - values.gamma) < PARAMETER_MATCH_TOLERANCE) {
             "Cannot merge DDSketches with different relative error targets"
         }
 
