@@ -72,7 +72,6 @@ class HdrHistogramStat(
             emptyArray(),
         ),
     )
-    private val totalWeights = mode.newDouble(0.0)
 
     private fun createState(internalHighest: Long, oldCounts: Array<StreamDouble>): State {
         // Ensure the internal highest is at least 2 to prevent bitwise math collapse
@@ -129,8 +128,6 @@ class HdrHistogramStat(
         // Scale the incoming floating-point value to an internal integer
         val internalValue = (value * multiplier).toLong()
 
-        totalWeights.add(weight)
-
         while (true) {
             val state = stateRef.load()
 
@@ -161,7 +158,6 @@ class HdrHistogramStat(
     }
 
     override fun reset() {
-        totalWeights.store(0.0)
         while (true) {
             val state = stateRef.load()
             val fresh = createState(

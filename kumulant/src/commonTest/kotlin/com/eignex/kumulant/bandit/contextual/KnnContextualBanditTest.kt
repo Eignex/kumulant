@@ -1,9 +1,9 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.kumulant.feat
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit.Companion.squaredL2
+import com.eignex.kumulant.feat
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,7 +11,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class KnnContextualBanditTest {
-
 
     @Test
     fun `KnnContextualBandit rejects bad inputs`() {

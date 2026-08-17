@@ -2,9 +2,9 @@ package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.WEIGHTED_VALUES
 import com.eignex.kumulant.WEIGHTED_WEIGHTS
-import com.eignex.kumulant.weightedReads
 import com.eignex.kumulant.assertModesAgree
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.weightedReads
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -15,7 +15,6 @@ import kotlin.test.assertEquals
  * before the bench-side concurrency tests exercise actual contention.
  */
 class SummaryStatConcurrencyTest {
-
 
     @Test
     fun `SumStat sequential math equal across modes`() {

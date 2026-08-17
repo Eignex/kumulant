@@ -7,7 +7,6 @@ import kotlin.test.assertTrue
 
 class RegressionTreeTest {
 
-
     private fun newTree(
         candidates: List<SerializableSplit> = emptyList(),
         config: RegressionTreeConfig = RegressionTreeConfig(),

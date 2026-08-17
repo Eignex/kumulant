@@ -9,7 +9,6 @@ import kotlin.test.assertTrue
 
 class RandomForestRegressionStatTest {
 
-
     @Test
     fun `predict averages across trees`() {
         val stat = RandomForestRegressionStat(

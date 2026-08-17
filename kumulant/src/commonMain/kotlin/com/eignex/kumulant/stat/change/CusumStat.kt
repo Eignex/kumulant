@@ -5,10 +5,10 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.monotonicMode
-import kotlin.math.max
-import kotlin.math.min
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.math.max
+import kotlin.math.min
 
 /** Snapshot from a two-sided [CusumStat] change-point detector. */
 @Serializable

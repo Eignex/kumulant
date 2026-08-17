@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit
 
-/**
+/*
  * The three preconditions every bandit shares, each stated once.
  *
  * They were spelled out inline instead: the arm-count message at eight sites, the bounds message at

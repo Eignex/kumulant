@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.firstWriterMode
 import kotlinx.serialization.SerialName
@@ -21,7 +22,7 @@ data class RateResult(val startTimestampNanos: Long, val totalValue: Double, val
             // Subtract in Double, not Long: a large-magnitude negative start against a positive read
             // timestamp overflows the Long subtraction, and the guard below then read the wrapped
             // value as a non-positive duration and silently returned 0.0.
-            val durationSeconds = (timestampNanos.toDouble() - startTimestampNanos.toDouble()) / 1e9
+            val durationSeconds = (timestampNanos.toDouble() - startTimestampNanos.toDouble()) / NANOS_PER_SECOND
             if (!(durationSeconds > 0.0)) return 0.0
             return totalValue / durationSeconds
         }

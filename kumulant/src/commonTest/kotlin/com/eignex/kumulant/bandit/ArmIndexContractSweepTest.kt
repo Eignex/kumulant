@@ -12,8 +12,8 @@ import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
 import com.eignex.kumulant.bandit.univariate.ThompsonSampling
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
 import com.eignex.kumulant.feat
-import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
+import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -53,37 +53,58 @@ class ArmIndexContractSweepTest {
             random = Random(0),
         )
         return listOf(
-            Probe("MultiArmedBandit", listOf(
-                "update" to { i -> multiArmed.update(i, 1.0) },
-                "evaluate" to { i -> multiArmed.evaluate(i) },
-                "armResult" to { i -> multiArmed.armResult(i) },
-                "armStat" to { i -> multiArmed.armStat(i) },
-            )),
-            Probe("RouletteWheelBandit", listOf(
-                "update" to { i -> roulette.update(i, 1.0) },
-                "evaluate" to { i -> roulette.evaluate(i) },
-            )),
-            Probe("BoltzmannBandit", listOf(
-                "update" to { i -> boltzmann.update(i, 1.0) },
-            )),
-            Probe("Exp3Bandit", listOf(
-                "update" to { i -> exp3.update(i, 1.0) },
-            )),
-            Probe("TopTwoThompsonBandit", listOf(
-                "update" to { i -> topTwo.update(i, 1.0) },
-            )),
-            Probe("KnnContextualBandit", listOf(
-                "update" to { i -> knn.update(i, x, 1.0) },
-                "evaluate" to { i -> knn.evaluate(i, x) },
-                "historySize" to { i -> knn.historySize(i) },
-                "armWeight" to { i -> knn.armWeight(i) },
-            )),
-            Probe("RegressionContextualBandit", listOf(
-                "update" to { i -> regression.update(i, x, 1.0) },
-                "evaluate" to { i -> regression.evaluate(i, x) },
-                "armResult" to { i -> regression.armResult(i) },
-                "armStat" to { i -> regression.armStat(i) },
-            )),
+            Probe(
+                "MultiArmedBandit",
+                listOf(
+                    "update" to { i -> multiArmed.update(i, 1.0) },
+                    "evaluate" to { i -> multiArmed.evaluate(i) },
+                    "armResult" to { i -> multiArmed.armResult(i) },
+                    "armStat" to { i -> multiArmed.armStat(i) },
+                ),
+            ),
+            Probe(
+                "RouletteWheelBandit",
+                listOf(
+                    "update" to { i -> roulette.update(i, 1.0) },
+                    "evaluate" to { i -> roulette.evaluate(i) },
+                ),
+            ),
+            Probe(
+                "BoltzmannBandit",
+                listOf(
+                    "update" to { i -> boltzmann.update(i, 1.0) },
+                ),
+            ),
+            Probe(
+                "Exp3Bandit",
+                listOf(
+                    "update" to { i -> exp3.update(i, 1.0) },
+                ),
+            ),
+            Probe(
+                "TopTwoThompsonBandit",
+                listOf(
+                    "update" to { i -> topTwo.update(i, 1.0) },
+                ),
+            ),
+            Probe(
+                "KnnContextualBandit",
+                listOf(
+                    "update" to { i -> knn.update(i, x, 1.0) },
+                    "evaluate" to { i -> knn.evaluate(i, x) },
+                    "historySize" to { i -> knn.historySize(i) },
+                    "armWeight" to { i -> knn.armWeight(i) },
+                ),
+            ),
+            Probe(
+                "RegressionContextualBandit",
+                listOf(
+                    "update" to { i -> regression.update(i, x, 1.0) },
+                    "evaluate" to { i -> regression.evaluate(i, x) },
+                    "armResult" to { i -> regression.armResult(i) },
+                    "armStat" to { i -> regression.armStat(i) },
+                ),
+            ),
         )
     }
 
@@ -98,6 +119,7 @@ class ArmIndexContractSweepTest {
                     val thrown = runCatching { invoke(bad) }.exceptionOrNull()
                     when {
                         thrown == null -> violations += "${probe.name}.$call accepted index $bad"
+
                         thrown !is IllegalArgumentException ->
                             violations += "${probe.name}.$call threw ${thrown::class.simpleName} for $bad"
                     }

@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.kumulant.fitLine
-import com.eignex.kumulant.core.RegressionStat
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test

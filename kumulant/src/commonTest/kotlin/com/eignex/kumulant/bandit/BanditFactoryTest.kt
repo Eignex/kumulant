@@ -18,11 +18,11 @@ import com.eignex.kumulant.bandit.univariate.TopTwoThompsonSpec
 import com.eignex.kumulant.bandit.univariate.Ucb1Spec
 import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec
 import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
+import kotlinx.serialization.json.Json
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.serialization.json.Json
 
 class BanditFactoryTest {
 

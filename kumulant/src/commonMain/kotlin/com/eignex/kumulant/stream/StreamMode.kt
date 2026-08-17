@@ -8,6 +8,16 @@ private val monoStart = TimeSource.Monotonic.markNow()
 internal fun currentTimeNanos(): Long = monoStart.elapsedNow().inWholeNanoseconds
 
 /**
+ * Nanoseconds per second, the conversion every rate and time-axis binding needs.
+ *
+ * Every timestamp in the library is nanoseconds, and five sites converted to seconds: one named it,
+ * the other four wrote `1e9` inline. Same value either way, but a named constant next to
+ * [currentTimeNanos] puts the unit contract where the clock is rather than leaving a bare literal to be
+ * read as a tolerance or a capacity.
+ */
+internal const val NANOS_PER_SECOND: Double = 1_000_000_000.0
+
+/**
  * Internal factory for the mutable scalar cells that back stat accumulators. Users
  * configure stats via [com.eignex.kumulant.core.Concurrency]; each stat translates that
  * intent into the cell encoding it needs.

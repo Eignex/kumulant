@@ -1,9 +1,9 @@
 package com.eignex.kumulant.stat.event
 
 import com.eignex.kumulant.WEIGHTED_WEIGHTS
-import com.eignex.kumulant.weightedReads
 import com.eignex.kumulant.assertModesAgree
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.weightedReads
 import kotlin.test.Test
 
 /**
@@ -11,7 +11,6 @@ import kotlin.test.Test
  * under sequential single-threaded updates regardless of the [Concurrency] mode chosen.
  */
 class EventStatConcurrencyTest {
-
 
     @Test
     fun `ExcursionStat sequential math equal across modes`() {

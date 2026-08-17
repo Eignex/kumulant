@@ -8,12 +8,12 @@ import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 
 /** Per-arm snapshot for [Exp3Bandit]: the exponential-weight cell for one arm. */
 @Serializable

@@ -15,13 +15,7 @@ import kotlin.random.Random
  *
  * Typed against [RegressionStat] rather than a concrete stat because every caller only needs `update`.
  */
-internal fun fitLine(
-    stat: RegressionStat<*>,
-    slope: DoubleArray,
-    intercept: Double,
-    n: Int = 4000,
-    seed: Long = 42L,
-) {
+internal fun fitLine(stat: RegressionStat<*>, slope: DoubleArray, intercept: Double, n: Int = 4000, seed: Long = 42L) {
     val rng = Random(seed)
     repeat(n) {
         val x = DoubleArray(slope.size) { rng.nextDouble() * 2.0 - 1.0 }

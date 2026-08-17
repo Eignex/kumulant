@@ -15,6 +15,9 @@ import com.eignex.koblas.VectorView
  * site left spelling it out is `HalfSpaceTreesStat.update`, whose receiver is named `vector` and whose
  * message says so.
  *
+ * `VectorizedStat.update` was a second such site, with a third wording again, until it was migrated
+ * here - so treat the count above as something to re-check rather than trust.
+ *
  * @param expected the model's feature count.
  * @throws IllegalArgumentException if [VectorView.size] differs from [expected].
  */

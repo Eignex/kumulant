@@ -8,7 +8,6 @@ import kotlin.test.assertTrue
 
 class TreeRegressionResultTest {
 
-
     @Test
     fun `findLeaf returns the leaf value for a flat tree`() {
         val leafVal = WeightedVarianceResult(5.0, 2.0, 0.5)

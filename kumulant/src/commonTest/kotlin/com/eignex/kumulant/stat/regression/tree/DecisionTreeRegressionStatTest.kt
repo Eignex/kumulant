@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.kumulant.feat
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.feat
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,7 +9,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class DecisionTreeRegressionStatTest {
-
 
     @Test
     fun `rejects bad featureSize`() {

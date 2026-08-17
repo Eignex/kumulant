@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.kumulant.feat
 import com.eignex.koblas.VectorView
+import com.eignex.kumulant.feat
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
@@ -9,7 +9,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class Exp4BanditTest {
-
 
     @Test
     fun `Exp4Bandit rejects bad inputs`() {

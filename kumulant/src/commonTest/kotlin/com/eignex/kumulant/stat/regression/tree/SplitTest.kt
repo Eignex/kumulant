@@ -11,7 +11,6 @@ import kotlin.test.assertTrue
 
 class SplitTest {
 
-
     @Test
     fun `ThresholdSplit routes by inclusive less-than-or-equal`() {
         val s = ThresholdSplit(featureIndex = 0, threshold = 0.5)

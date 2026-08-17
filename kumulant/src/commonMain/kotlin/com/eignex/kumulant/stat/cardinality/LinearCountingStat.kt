@@ -129,11 +129,13 @@ class LinearCountingStat(
         require(values.hasher == hasherRef) {
             "Cannot merge LinearCountingStat hashed with ${values.hasher} into one hashed with $hasherRef"
         }
-        require(values.words.size == wordCount) {
-            "Cannot merge LinearCountingStat: expected $wordCount words, got ${values.words.size}"
-        }
+        // Shape before array length; see HyperLogLogStat.merge. `wordCount` is `bits / 64`, so the
+        // bits message was unreachable for any self-consistent payload.
         require(values.bits == bits) {
             "Cannot merge LinearCountingStat with bits=${values.bits} into $bits"
+        }
+        require(values.words.size == wordCount) {
+            "Cannot merge LinearCountingStat: expected $wordCount words, got ${values.words.size}"
         }
         for (i in 0 until wordCount) {
             val incoming = values.words[i]

@@ -10,7 +10,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 class TreePosteriorsTest {
 
-
     private fun snap(value: WeightedVarianceResult): TreeRegressionResult = TreeRegressionResult(TreeLeafResult(value))
 
     private fun split(
