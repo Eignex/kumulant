@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.nextPoissonOne
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -144,9 +145,7 @@ data class ForestClassificationResult(
     /** Argmax over [probabilities]. */
     fun predict(x: VectorView): Int {
         val p = probabilities(x)
-        var best = 0
-        for (k in 1 until numClasses) if (p[k] > p[best]) best = k
-        return best
+        return argMaxOf(numClasses) { k -> p[k] }
     }
 
     /** Sum of per-tree root totalWeights. */

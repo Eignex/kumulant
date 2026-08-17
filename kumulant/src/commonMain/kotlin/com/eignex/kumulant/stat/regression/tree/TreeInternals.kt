@@ -147,3 +147,27 @@ internal fun shouldSplit(ranked: SplitInfo, totalWeight: Double, depth: Int, con
     val eps = hoeffdingBound(config.delta, totalWeight, depth, config.deltaDecay)
     return ranked.top1 - ranked.top2 > eps || eps < config.tau
 }
+
+/**
+ * Parent impurity minus the weight-averaged impurity of the two children.
+ *
+ * All three split criteria kumulant ships are this one expression over a different impurity measure:
+ * [VarianceReduction] over `variance`, [GiniReduction] over `gini`, [InformationGain] over `entropy`.
+ * The five lines were written out three times, including the `w <= 0.0` guard that keeps an empty split
+ * scoring zero rather than NaN - the part a fourth criterion would be most likely to get wrong.
+ *
+ * The `data object`s stay exactly as they are, so no serial name or public signature moves.
+ */
+internal inline fun <R : HasObservationCount> impurityReduction(
+    total: R,
+    pos: R,
+    neg: R,
+    impurity: (R) -> Double,
+): Double {
+    val wPos = pos.totalWeights
+    val wNeg = neg.totalWeights
+    val w = wPos + wNeg
+    if (w <= 0.0) return 0.0
+    val weighted = (wPos / w) * impurity(pos) + (wNeg / w) * impurity(neg)
+    return impurity(total) - weighted
+}

@@ -9,6 +9,7 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
@@ -87,18 +88,7 @@ data class GaussianNaiveBayesResult(
     }
 
     /** Argmax class index for [x]. */
-    fun predict(x: VectorView): Int {
-        var best = 0
-        var bestL = logPosterior(x, 0)
-        for (k in 1 until numClasses) {
-            val l = logPosterior(x, k)
-            if (l > bestL) {
-                bestL = l
-                best = k
-            }
-        }
-        return best
-    }
+    fun predict(x: VectorView): Int = argMaxOf(numClasses) { k -> logPosterior(x, k) }
 
     private companion object {
         const val SMALL_PROB: Double = 1e-300

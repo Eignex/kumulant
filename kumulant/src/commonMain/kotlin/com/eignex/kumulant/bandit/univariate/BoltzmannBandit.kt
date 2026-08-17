@@ -5,9 +5,10 @@ import com.eignex.kumulant.bandit.UnivariateBandit
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
+import com.eignex.kumulant.bandit.sampleFromDistribution
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
-import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.random.Random
 
@@ -80,31 +81,20 @@ class BoltzmannBandit(
     /** Sample arm from the softmax of per-arm means at the current temperature. */
     override fun choose(): Int {
         val p = playDistribution()
-        var u = random.nextDouble()
-        for (a in 0 until nbrArms) {
-            u -= p[a]
-            if (u <= 0.0) return a
-        }
-        return nbrArms - 1
+        return random.sampleFromDistribution(p)
     }
 
     /** Current play distribution: `softmax(mean / tau(t))`. Also advances the internal step. */
     fun playDistribution(): DoubleArray {
         step++
         val tau = temperature()
-        val means = DoubleArray(nbrArms) { stats[it].read(0L).mean }
-        // Stable softmax: subtract the max before exp.
-        var maxM = means[0]
-        for (m in means) if (m > maxM) maxM = m
-        val out = DoubleArray(nbrArms)
-        var sum = 0.0
-        for (a in 0 until nbrArms) {
-            val e = exp((means[a] - maxM) / tau)
-            out[a] = e
-            sum += e
-        }
-        for (a in 0 until nbrArms) out[a] /= sum
-        return out
+        // Via softmaxInPlace, the shared max-subtracting softmax. This was a fourth hand-rolled copy,
+        // missed when the other three were consolidated. Dividing by tau before the shift rather than
+        // after is the same arithmetic - tau > 0 is enforced at construction, so
+        // `max(means)/tau == max(means/tau)` - and it costs one array instead of two.
+        val logits = DoubleArray(nbrArms) { stats[it].read(0L).mean / tau }
+        logits.softmaxInPlace()
+        return logits
     }
 
     /** Fold `(arm, reward)` into the per-arm mean. */

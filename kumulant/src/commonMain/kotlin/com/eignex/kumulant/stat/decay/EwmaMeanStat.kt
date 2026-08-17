@@ -51,14 +51,7 @@ class EwmaMeanStat(
 
     private val mean: Double
         get() {
-            val biased = biasedMean.load()
-            val w = totalWeights.load()
-            if (w == 0.0) return 0.0
-            val correction = weighting.correction(w)
-            // Reachable only for `alpha == 0.0`, i.e. no smoothing at all, where `biasedMean` has
-            // never moved off zero and the ratio is 0/0. Report the unmoved accumulator rather than
-            // NaN, matching EwmaVarianceStat on the same state; the two used to disagree here.
-            return if (correction == 0.0) 0.0 else biased / correction
+            return weighting.debias(biasedMean.load(), totalWeights.load())
         }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {

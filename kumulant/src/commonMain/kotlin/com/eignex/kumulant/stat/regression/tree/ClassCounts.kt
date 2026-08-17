@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
@@ -46,17 +47,7 @@ data class ClassCountsResult(
     }
 
     /** Argmax class index; ties resolve to the lowest index. */
-    fun predict(): Int {
-        var best = 0
-        var bestCount = counts[0]
-        for (k in 1 until numClasses) {
-            if (counts[k] > bestCount) {
-                bestCount = counts[k]
-                best = k
-            }
-        }
-        return best
-    }
+    fun predict(): Int = argMaxOf(numClasses) { k -> counts[k] }
 
     /** Shannon entropy of the empirical class distribution, in nats. Zero on an empty leaf. */
     val entropy: Double get() {

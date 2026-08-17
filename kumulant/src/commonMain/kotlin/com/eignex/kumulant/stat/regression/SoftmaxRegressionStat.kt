@@ -10,6 +10,7 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
@@ -70,18 +71,7 @@ data class SoftmaxRegressionResult(
     }
 
     /** Argmax class index for [x]. */
-    fun predict(x: VectorView): Int {
-        var best = 0
-        var bestEta = logit(x, 0)
-        for (k in 1 until numClasses) {
-            val e = logit(x, k)
-            if (e > bestEta) {
-                bestEta = e
-                best = k
-            }
-        }
-        return best
-    }
+    fun predict(x: VectorView): Int = argMaxOf(numClasses) { k -> logit(x, k) }
 }
 
 /**

@@ -5,6 +5,7 @@ package com.eignex.kumulant.bandit.univariate
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.Scorable
 import com.eignex.kumulant.bandit.UnivariateBandit
+import com.eignex.kumulant.bandit.argmaxArm
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
@@ -67,16 +68,7 @@ class MultiArmedBandit<R : Result>(
 
     override fun choose(): Int {
         val t = step.addAndFetch(1L) - 1L
-        var bestIdx = 0
-        var bestScore = Double.NEGATIVE_INFINITY
-        for (i in 0 until nbrArms) {
-            val score = policy.evaluate(arms[i].read(0L), t, random)
-            if (score > bestScore) {
-                bestScore = score
-                bestIdx = i
-            }
-        }
-        return bestIdx
+        return argmaxArm(nbrArms) { i -> policy.evaluate(arms[i].read(0L), t, random) }
     }
 
     override fun evaluate(armIndex: Int): Double {

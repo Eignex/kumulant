@@ -27,14 +27,7 @@ data object VarianceReduction : SplitMetric {
         total: WeightedVarianceResult,
         pos: WeightedVarianceResult,
         neg: WeightedVarianceResult,
-    ): Double {
-        val wPos = pos.totalWeights
-        val wNeg = neg.totalWeights
-        val w = wPos + wNeg
-        if (w <= 0.0) return 0.0
-        val weighted = (wPos / w) * pos.variance + (wNeg / w) * neg.variance
-        return total.variance - weighted
-    }
+    ): Double = impurityReduction(total, pos, neg) { it.variance }
 }
 
 /** Result of evaluating all candidate splits at a leaf: best score, runner-up, best index. */

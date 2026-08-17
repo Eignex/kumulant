@@ -7,6 +7,7 @@ import com.eignex.kumulant.bandit.Snapshotable
 import com.eignex.kumulant.bandit.renormaliseExponentialWeights
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireNbrArms
+import com.eignex.kumulant.bandit.sampleFromDistribution
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.preview
 import kotlinx.serialization.SerialName
@@ -122,12 +123,7 @@ class Exp4Bandit(
     override fun choose(x: VectorView): Int {
         val p = playDistribution(x)
         lastPlayDist = p
-        var u = random.nextDouble()
-        for (a in 0 until nbrArms) {
-            u -= p[a]
-            if (u <= 0.0) return a
-        }
-        return nbrArms - 1
+        return random.sampleFromDistribution(p)
     }
 
     /** Mean of expert distributions at [x] weighted by current weights, blended with

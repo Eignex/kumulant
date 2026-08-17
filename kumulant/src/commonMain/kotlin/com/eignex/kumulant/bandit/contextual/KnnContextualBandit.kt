@@ -7,6 +7,7 @@ import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
+import com.eignex.kumulant.bandit.argmaxArm
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
@@ -140,15 +141,7 @@ class KnnContextualBandit(
 
     /** Argmax over per-arm [evaluate] scores. Ties broken by lowest index. */
     override fun choose(x: VectorView): Int {
-        var bestIdx = 0
-        var bestScore = Double.NEGATIVE_INFINITY
-        for (a in 0 until nbrArms) {
-            val s = evaluate(a, x)
-            if (s > bestScore) {
-                bestScore = s
-                bestIdx = a
-            }
-        }
+        val bestIdx = argmaxArm(nbrArms) { a -> evaluate(a, x) }
         step++
         return bestIdx
     }

@@ -90,21 +90,10 @@ data class HalfSpaceTreesResult(
         var total = 0.0
         val depthFactor = 1 shl height
         for (t in 0 until numTrees) {
-            val leafIdx = routeToLeaf(t, x)
+            val leafIdx = routeToLeaf(featureIndices, thresholds, height, numInternal, t, x)
             total += referenceMass[t * numLeaves + leafIdx] * depthFactor
         }
         return total
-    }
-
-    private fun routeToLeaf(treeIdx: Int, x: VectorView): Int {
-        val treeOffset = treeIdx * numInternal
-        var node = 0
-        repeat(height) {
-            val featureIdx = featureIndices[treeOffset + node]
-            val threshold = thresholds[treeOffset + node]
-            node = if (x[featureIdx] < threshold) 2 * node + 1 else 2 * node + 2
-        }
-        return node - numInternal
     }
 
     override fun equals(other: Any?): Boolean = other is HalfSpaceTreesResult &&
@@ -221,7 +210,7 @@ class HalfSpaceTreesStat(
         require(vector.size == featureSize) { "vector.size=${vector.size}, expected $featureSize" }
         if (weight.isNotPositiveWeight()) return
         for (t in 0 until numTrees) {
-            val leafIdx = routeToLeaf(t, vector)
+            val leafIdx = routeToLeaf(featureIndices, thresholds, height, numInternal, t, vector)
             latestMass.add(t * numLeaves + leafIdx, weight)
         }
         totalWeightsCell.add(weight)
@@ -237,17 +226,6 @@ class HalfSpaceTreesStat(
             referenceMass.store(i, latest)
             latestMass.store(i, 0.0)
         }
-    }
-
-    private fun routeToLeaf(treeIdx: Int, x: VectorView): Int {
-        val treeOffset = treeIdx * numInternal
-        var node = 0
-        repeat(height) {
-            val featureIdx = featureIndices[treeOffset + node]
-            val threshold = thresholds[treeOffset + node]
-            node = if (x[featureIdx] < threshold) 2 * node + 1 else 2 * node + 2
-        }
-        return node - numInternal
     }
 
     override fun read(timestampNanos: Long): HalfSpaceTreesResult = HalfSpaceTreesResult(
@@ -317,4 +295,31 @@ class HalfSpaceTreesStat(
         /** 2^30 leaves is already far past anything useful and keeps `1 shl height` positive. */
         const val MAX_HEIGHT = 30
     }
+}
+
+/**
+ * Walk [x] down one tree to its leaf, returning the leaf's index within that tree.
+ *
+ * The result class and the stat carried this identically - same text, same variable names - over
+ * identically-named fields. Scoring routes through the result's copy and updating through the stat's,
+ * so the two had to agree exactly or a mass bucket would be credited on update and read back from a
+ * different one, which shows up as a score that drifts for no visible reason. The `2n+1 / 2n+2`
+ * heap layout and the `- numInternal` rebase to leaf-space are the parts that must not diverge.
+ */
+private fun routeToLeaf(
+    featureIndices: IntArray,
+    thresholds: DoubleArray,
+    height: Int,
+    numInternal: Int,
+    treeIdx: Int,
+    x: VectorView,
+): Int {
+    val treeOffset = treeIdx * numInternal
+    var node = 0
+    repeat(height) {
+        val featureIdx = featureIndices[treeOffset + node]
+        val threshold = thresholds[treeOffset + node]
+        node = if (x[featureIdx] < threshold) 2 * node + 1 else 2 * node + 2
+    }
+    return node - numInternal
 }

@@ -7,6 +7,7 @@ import com.eignex.kumulant.bandit.renormaliseExponentialWeights
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
+import com.eignex.kumulant.bandit.sampleFromDistribution
 import com.eignex.kumulant.core.Result
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -86,12 +87,7 @@ class Exp3Bandit(
     override fun choose(): Int {
         val p = playDistribution()
         lastPlayDist = p
-        var u = random.nextDouble()
-        for (a in 0 until nbrArms) {
-            u -= p[a]
-            if (u <= 0.0) return a
-        }
-        return nbrArms - 1
+        return random.sampleFromDistribution(p)
     }
 
     /** Current play distribution: weight-normalised softmax blended with uniform [gamma]. */

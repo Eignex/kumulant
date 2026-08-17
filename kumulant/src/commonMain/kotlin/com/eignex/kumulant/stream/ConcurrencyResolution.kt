@@ -43,10 +43,16 @@ internal fun Concurrency.welfordLock(): Mutex = when (this) {
     else -> NoopMutex
 }
 
-internal fun Concurrency.serializedLock(): Mutex = when (this) {
-    Concurrency.None -> NoopMutex
-    else -> PlatformMutex()
-}
+/**
+ * The lock a stat takes to serialise a multi-cell update.
+ *
+ * Delegates to the public [Concurrency.lock] rather than repeating its `when`. The two were
+ * byte-identical in two files, and `Mutex.kt` documented the coupling in prose - "the same contract the
+ * per-stat `serializedLock` uses" - with nothing enforcing it, so a change to the public mapping would
+ * have silently left all thirty-three internal call sites on the old one. The separate name is worth
+ * keeping because it says *why* the lock is being taken; the second copy of the mapping was not.
+ */
+internal fun Concurrency.serializedLock(): Mutex = lock()
 
 /** Cell mode for a single first-writer-wins field that needs CAS (e.g. a stat's
  *  lazily-initialised start timestamp). HighWrite's striped adders don't support
