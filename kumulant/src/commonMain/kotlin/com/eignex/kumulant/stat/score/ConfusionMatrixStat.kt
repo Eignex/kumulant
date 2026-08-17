@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
@@ -30,7 +31,7 @@ data class ConfusionMatrixResult(
 ) : Result {
 
     init {
-        require(numClasses > 0) { "numClasses must be > 0; got $numClasses" }
+        requireAtLeastTwoClasses(numClasses)
         require(counts.size == numClasses * numClasses) {
             "counts must be numClasses^2 = ${numClasses * numClasses}; got ${counts.size}"
         }
@@ -164,7 +165,7 @@ class ConfusionMatrixStat(
 ) : PairedStat<ConfusionMatrixResult> {
 
     init {
-        require(numClasses > 0) { "numClasses must be > 0; got $numClasses" }
+        requireAtLeastTwoClasses(numClasses)
     }
 
     private val mode = concurrency.additiveMode()

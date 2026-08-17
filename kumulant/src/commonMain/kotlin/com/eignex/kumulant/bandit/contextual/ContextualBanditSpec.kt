@@ -78,8 +78,24 @@ sealed interface LinearRegressionSpec {
     ) : LinearRegressionSpec
 }
 
-/** Spec for [KnnContextualBandit]. [distance] is a named lookup against a
- *  small built-in registry; currently `"squaredL2"` is the only stock entry. */
+/**
+ * A distance function a [KnnContextualSpec] can name on the wire.
+ *
+ * Sealed rather than a string against a registry, so an unknown metric is a compile error and the wire
+ * format admits only metrics that exist. A caller wanting a metric that is not here passes a function to
+ * the [KnnContextualBandit] constructor directly; that path cannot round-trip through the wire format,
+ * which is the reason this hierarchy is closed.
+ */
+@Serializable
+sealed interface KnnDistance {
+
+    /** Squared Euclidean distance. Skips the square root, which no ranking needs. */
+    @Serializable
+    @SerialName("SquaredL2")
+    data object SquaredL2 : KnnDistance
+}
+
+/** Spec for [KnnContextualBandit]. */
 @Serializable
 @SerialName("KnnContextual")
 data class KnnContextualSpec(
@@ -93,6 +109,6 @@ data class KnnContextualSpec(
     val coldStartScore: Double = 1.0,
     /** UCB-style exploration scale. */
     val exploration: Double = 1.0,
-    /** Name of the distance function in the factory's registry. */
-    val distance: String = "squaredL2",
+    /** Distance metric used to find neighbours. */
+    val distance: KnnDistance = KnnDistance.SquaredL2,
 ) : ContextualBanditSpec

@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.score
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.asClassLabel
+import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 
@@ -33,7 +34,7 @@ class AccuracyStat(
 ) : PairedStat<WeightedMeanResult> {
 
     init {
-        require(numClasses > 0) { "numClasses must be > 0; got $numClasses" }
+        requireAtLeastTwoClasses(numClasses)
     }
 
     private val inner = MeanStat(concurrency)

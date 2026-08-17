@@ -6,6 +6,7 @@ import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.contextual.ContextualBanditSpec
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.bandit.contextual.KnnContextualSpec
+import com.eignex.kumulant.bandit.contextual.KnnDistance
 import com.eignex.kumulant.bandit.contextual.LinearRegressionSpec
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
@@ -175,20 +176,14 @@ fun RegressionContextualSpec.materialize(
     )
 }
 
-/** Built-in distance functions referenced by [KnnContextualSpec.distance]. Extend
- *  by passing a custom map when constructing the bandit programmatically. */
-val knnDistanceRegistry: Map<String, (VectorView, VectorView) -> Double> = mapOf(
-    "squaredL2" to KnnContextualBandit.Companion::squaredL2,
-)
+/** Resolve a wire-named distance metric to the function that computes it. */
+private fun KnnDistance.resolve(): (VectorView, VectorView) -> Double = when (this) {
+    KnnDistance.SquaredL2 -> KnnContextualBandit.Companion::squaredL2
+}
 
-/** Build a live [KnnContextualBandit] from its spec, resolving the distance
- *  function via [distanceRegistry] (defaults to [knnDistanceRegistry]). */
-fun KnnContextualSpec.materialize(
-    random: Random = Random.Default,
-    distanceRegistry: Map<String, (VectorView, VectorView) -> Double> = knnDistanceRegistry,
-): KnnContextualBandit {
-    val dist = distanceRegistry[distance]
-        ?: error("Unknown KnnContextualSpec.distance '$distance'. Known: ${distanceRegistry.keys}")
+/** Build a live [KnnContextualBandit] from its spec. */
+fun KnnContextualSpec.materialize(random: Random = Random.Default): KnnContextualBandit {
+    val dist = distance.resolve()
     return KnnContextualBandit(
         nbrArms = nbrArms,
         k = k,

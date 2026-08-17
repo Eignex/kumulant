@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.additiveMode
@@ -28,7 +29,7 @@ data class ClassCountsResult(
 ) : HasObservationCount {
 
     init {
-        require(numClasses > 0) { "numClasses must be > 0; got $numClasses" }
+        requireAtLeastTwoClasses(numClasses)
         require(counts.size == numClasses) { "counts must have length $numClasses; got ${counts.size}" }
     }
 
@@ -94,7 +95,7 @@ class ClassCountsStat(
 ) : SeriesStat<ClassCountsResult> {
 
     init {
-        require(numClasses > 0) { "numClasses must be > 0; got $numClasses" }
+        requireAtLeastTwoClasses(numClasses)
     }
 
     private val mode = concurrency.additiveMode()

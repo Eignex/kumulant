@@ -401,6 +401,21 @@ sealed interface com.eignex.kumulant.bandit.contextual/ContextualBanditSpec { //
     }
 }
 
+sealed interface com.eignex.kumulant.bandit.contextual/KnnDistance { // com.eignex.kumulant.bandit.contextual/KnnDistance|null[0]
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.bandit.contextual/KnnDistance.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.contextual/KnnDistance> // com.eignex.kumulant.bandit.contextual/KnnDistance.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.bandit.contextual/KnnDistance.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+
+    final object SquaredL2 : com.eignex.kumulant.bandit.contextual/KnnDistance, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.bandit.contextual/KnnDistance.SquaredL2|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.contextual/KnnDistance.SquaredL2.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.contextual/KnnDistance.SquaredL2.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.contextual/KnnDistance.SquaredL2> // com.eignex.kumulant.bandit.contextual/KnnDistance.SquaredL2.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.bandit.contextual/KnnDistance.SquaredL2.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // com.eignex.kumulant.bandit.contextual/KnnDistance.SquaredL2.toString|toString(){}[0]
+    }
+}
+
 sealed interface com.eignex.kumulant.bandit.contextual/LinearRegressionSpec { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec|null[0]
     final class Bayesian : com.eignex.kumulant.bandit.contextual/LinearRegressionSpec { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian|null[0]
         constructor <init>(kotlin/Int, kotlin/Double = ...) // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.<init>|<init>(kotlin.Int;kotlin.Double){}[0]
@@ -1273,12 +1288,12 @@ final class com.eignex.kumulant.bandit.contextual/KnnContextualBandit : com.eign
 }
 
 final class com.eignex.kumulant.bandit.contextual/KnnContextualSpec : com.eignex.kumulant.bandit.contextual/ContextualBanditSpec { // com.eignex.kumulant.bandit.contextual/KnnContextualSpec|null[0]
-    constructor <init>(kotlin/Int, kotlin/Int = ..., kotlin/Int = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/String = ...) // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Double;kotlin.Double;kotlin.String){}[0]
+    constructor <init>(kotlin/Int, kotlin/Int = ..., kotlin/Int = ..., kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.bandit.contextual/KnnDistance = ...) // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Double;kotlin.Double;com.eignex.kumulant.bandit.contextual.KnnDistance){}[0]
 
     final val coldStartScore // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.coldStartScore|{}coldStartScore[0]
         final fun <get-coldStartScore>(): kotlin/Double // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.coldStartScore.<get-coldStartScore>|<get-coldStartScore>(){}[0]
     final val distance // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.distance|{}distance[0]
-        final fun <get-distance>(): kotlin/String // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.distance.<get-distance>|<get-distance>(){}[0]
+        final fun <get-distance>(): com.eignex.kumulant.bandit.contextual/KnnDistance // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.distance.<get-distance>|<get-distance>(){}[0]
     final val exploration // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.exploration|{}exploration[0]
         final fun <get-exploration>(): kotlin/Double // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.exploration.<get-exploration>|<get-exploration>(){}[0]
     final val k // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.k|{}k[0]
@@ -1293,8 +1308,8 @@ final class com.eignex.kumulant.bandit.contextual/KnnContextualSpec : com.eignex
     final fun component3(): kotlin/Int // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.component3|component3(){}[0]
     final fun component4(): kotlin/Double // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.component4|component4(){}[0]
     final fun component5(): kotlin/Double // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.component5|component5(){}[0]
-    final fun component6(): kotlin/String // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.component6|component6(){}[0]
-    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/String = ...): com.eignex.kumulant.bandit.contextual/KnnContextualSpec // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Double;kotlin.Double;kotlin.String){}[0]
+    final fun component6(): com.eignex.kumulant.bandit.contextual/KnnDistance // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.component6|component6(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.bandit.contextual/KnnDistance = ...): com.eignex.kumulant.bandit.contextual/KnnContextualSpec // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Double;kotlin.Double;com.eignex.kumulant.bandit.contextual.KnnDistance){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.toString|toString(){}[0]
@@ -1309,6 +1324,8 @@ final class com.eignex.kumulant.bandit.contextual/KnnContextualSpec : com.eignex
     }
 
     final object Companion { // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.Companion|null[0]
+        final val $childSerializers // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.Companion.$childSerializers|{}$childSerializers[0]
+
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.contextual/KnnContextualSpec> // com.eignex.kumulant.bandit.contextual/KnnContextualSpec.Companion.serializer|serializer(){}[0]
     }
 }
@@ -9183,13 +9200,11 @@ final object com.eignex.kumulant.stat.regression.tree/VarianceReduction : com.ei
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/VarianceReduction.toString|toString(){}[0]
 }
 
-final val com.eignex.kumulant.bandit/knnDistanceRegistry // com.eignex.kumulant.bandit/knnDistanceRegistry|{}knnDistanceRegistry[0]
-    final fun <get-knnDistanceRegistry>(): kotlin.collections/Map<kotlin/String, kotlin/Function2<com.eignex.koblas/VectorView, com.eignex.koblas/VectorView, kotlin/Double>> // com.eignex.kumulant.bandit/knnDistanceRegistry.<get-knnDistanceRegistry>|<get-knnDistanceRegistry>(){}[0]
 final val com.eignex.kumulant.math/SplitMix64 // com.eignex.kumulant.math/SplitMix64|{}SplitMix64[0]
     final fun <get-SplitMix64>(): com.eignex.kumulant.math/LongHasher // com.eignex.kumulant.math/SplitMix64.<get-SplitMix64>|<get-SplitMix64>(){}[0]
 
 final fun (com.eignex.kumulant.bandit.contextual/ContextualBanditSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ..., com.eignex.kumulant.core/Concurrency = ...): com.eignex.kumulant.bandit/Bandit // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.ContextualBanditSpec(kotlin.random.Random;com.eignex.kumulant.core.Concurrency){}[0]
-final fun (com.eignex.kumulant.bandit.contextual/KnnContextualSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ..., kotlin.collections/Map<kotlin/String, kotlin/Function2<com.eignex.koblas/VectorView, com.eignex.koblas/VectorView, kotlin/Double>> = ...): com.eignex.kumulant.bandit.contextual/KnnContextualBandit // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.KnnContextualSpec(kotlin.random.Random;kotlin.collections.Map<kotlin.String,kotlin.Function2<com.eignex.koblas.VectorView,com.eignex.koblas.VectorView,kotlin.Double>>){}[0]
+final fun (com.eignex.kumulant.bandit.contextual/KnnContextualSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ...): com.eignex.kumulant.bandit.contextual/KnnContextualBandit // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.KnnContextualSpec(kotlin.random.Random){}[0]
 final fun (com.eignex.kumulant.bandit.contextual/RegressionContextualSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ..., com.eignex.kumulant.core/Concurrency = ...): com.eignex.kumulant.bandit.contextual/RegressionContextualBandit<out com.eignex.kumulant.stat.regression.glm/LinearRegressionResult> // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.RegressionContextualSpec(kotlin.random.Random;com.eignex.kumulant.core.Concurrency){}[0]
 final fun (com.eignex.kumulant.bandit.univariate/BernoulliArm.Companion).com.eignex.kumulant.bandit.univariate/warmStart(com.eignex.kumulant.stat.summary/BernoulliSumResult, kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/BernoulliArm // com.eignex.kumulant.bandit.univariate/warmStart|warmStart@com.eignex.kumulant.bandit.univariate.BernoulliArm.Companion(com.eignex.kumulant.stat.summary.BernoulliSumResult;kotlin.Double){}[0]
 final fun (com.eignex.kumulant.bandit.univariate/BoltzmannSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ...): com.eignex.kumulant.bandit.univariate/BoltzmannBandit // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.univariate.BoltzmannSpec(kotlin.random.Random){}[0]

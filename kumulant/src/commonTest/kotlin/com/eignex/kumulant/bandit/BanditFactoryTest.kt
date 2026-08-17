@@ -1,6 +1,8 @@
 package com.eignex.kumulant.bandit
 
+import com.eignex.kumulant.bandit.contextual.ContextualBanditSpec
 import com.eignex.kumulant.bandit.contextual.KnnContextualSpec
+import com.eignex.kumulant.bandit.contextual.KnnDistance
 import com.eignex.kumulant.bandit.contextual.LinearRegressionSpec
 import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
 import com.eignex.kumulant.bandit.univariate.BernoulliArm
@@ -106,6 +108,28 @@ class BanditFactoryTest {
     fun `KnnContextual spec materialises with the default distance`() {
         val b = KnnContextualSpec(nbrArms = 3).materialize(Random(0))
         assertEquals(3, b.nbrArms)
+    }
+
+    @Test
+    fun `the knn distance survives a round trip and is not a bare string`() {
+        // A sealed metric means an unknown one is a compile error, and the wire format admits only
+        // metrics that exist rather than any string at all.
+        val spec: ContextualBanditSpec = KnnContextualSpec(nbrArms = 3, distance = KnnDistance.SquaredL2)
+
+        // `json` here omits defaults, and SquaredL2 is the default, so a second encoder is needed to see
+        // the metric on the wire at all. That it round-trips under the terse encoder is the other half.
+        val verbose = Json { encodeDefaults = true }
+        val encoded = verbose.encodeToString(ContextualBanditSpec.serializer(), spec)
+        assertTrue("SquaredL2" in encoded, "the metric did not reach the wire: $encoded")
+
+        assertEquals(spec, verbose.decodeFromString(ContextualBanditSpec.serializer(), encoded))
+        assertEquals(
+            spec,
+            json.decodeFromString(
+                ContextualBanditSpec.serializer(),
+                json.encodeToString(ContextualBanditSpec.serializer(), spec),
+            ),
+        )
     }
 
     @Test

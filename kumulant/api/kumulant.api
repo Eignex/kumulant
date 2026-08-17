@@ -5,9 +5,8 @@ public abstract interface class com/eignex/kumulant/bandit/Bandit {
 }
 
 public final class com/eignex/kumulant/bandit/BanditFactoryKt {
-	public static final fun getKnnDistanceRegistry ()Ljava/util/Map;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/bandit/Bandit;
-	public static final fun materialize (Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec;Lkotlin/random/Random;Ljava/util/Map;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualBandit;
+	public static final fun materialize (Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/contextual/RegressionContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/bandit/contextual/RegressionContextualBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/BanditPolicySpec;)Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannBandit;
@@ -17,7 +16,7 @@ public final class com/eignex/kumulant/bandit/BanditFactoryKt {
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Bandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/Bandit;
-	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec;Lkotlin/random/Random;Ljava/util/Map;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualBandit;
+	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/RegressionContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/contextual/RegressionContextualBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/Exp3Spec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/Exp3Bandit;
@@ -235,19 +234,19 @@ public final class com/eignex/kumulant/bandit/contextual/KnnContextualBandit$Com
 
 public final class com/eignex/kumulant/bandit/contextual/KnnContextualSpec : com/eignex/kumulant/bandit/contextual/ContextualBanditSpec {
 	public static final field Companion Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec$Companion;
-	public fun <init> (IIIDDLjava/lang/String;)V
-	public synthetic fun <init> (IIIDDLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IIIDDLcom/eignex/kumulant/bandit/contextual/KnnDistance;)V
+	public synthetic fun <init> (IIIDDLcom/eignex/kumulant/bandit/contextual/KnnDistance;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
 	public final fun component2 ()I
 	public final fun component3 ()I
 	public final fun component4 ()D
 	public final fun component5 ()D
-	public final fun component6 ()Ljava/lang/String;
-	public final fun copy (IIIDDLjava/lang/String;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec;IIIDDLjava/lang/String;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec;
+	public final fun component6 ()Lcom/eignex/kumulant/bandit/contextual/KnnDistance;
+	public final fun copy (IIIDDLcom/eignex/kumulant/bandit/contextual/KnnDistance;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec;IIIDDLcom/eignex/kumulant/bandit/contextual/KnnDistance;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualSpec;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getColdStartScore ()D
-	public final fun getDistance ()Ljava/lang/String;
+	public final fun getDistance ()Lcom/eignex/kumulant/bandit/contextual/KnnDistance;
 	public final fun getExploration ()D
 	public final fun getK ()I
 	public final fun getMaxHistoryPerArm ()I
@@ -269,6 +268,22 @@ public final synthetic class com/eignex/kumulant/bandit/contextual/KnnContextual
 
 public final class com/eignex/kumulant/bandit/contextual/KnnContextualSpec$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class com/eignex/kumulant/bandit/contextual/KnnDistance {
+	public static final field Companion Lcom/eignex/kumulant/bandit/contextual/KnnDistance$Companion;
+}
+
+public final class com/eignex/kumulant/bandit/contextual/KnnDistance$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/bandit/contextual/KnnDistance$SquaredL2 : com/eignex/kumulant/bandit/contextual/KnnDistance {
+	public static final field INSTANCE Lcom/eignex/kumulant/bandit/contextual/KnnDistance$SquaredL2;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class com/eignex/kumulant/bandit/contextual/LinearRegressionSpec {
