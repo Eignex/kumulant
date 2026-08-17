@@ -382,7 +382,7 @@ fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is ConfusionMatrix -> ConfusionMatrixStat(numClasses, concurrency)
 
-        Accuracy -> AccuracyStat(concurrency)
+        is Accuracy -> AccuracyStat(numClasses, concurrency)
 
         is WithWeightPaired ->
             requirePaired(inner, "WithWeightPaired").materialize(concurrency).withWeight(weight)

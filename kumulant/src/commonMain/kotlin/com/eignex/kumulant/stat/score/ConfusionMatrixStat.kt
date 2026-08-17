@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.score
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
@@ -171,14 +172,14 @@ class ConfusionMatrixStat(
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
-        if (x.isNaN() || y.isNaN()) return
-        val p = x.toInt()
-        val t = y.toInt()
-        // toInt() truncates toward zero, so anything in (-1, 0) became class 0 and then passed the
-        // range check - scoring an out-of-range prediction as a correct class-0 one. The KDoc
-        // promises out-of-range pairs are ignored, so require the label to be the integer it claims.
-        if (p.toDouble() != x || t.toDouble() != y) return
-        if (p !in 0 until numClasses || t !in 0 until numClasses) return
+        // Via asClassLabel, which is this exact policy already extracted: round-trip through Double to
+        // reject a truncating label, then bound the index. The separate NaN guard this replaces could
+        // not fire - `NaN.toInt()` is 0 and `0.0 == NaN` is false, so the round-trip check already
+        // rejected it - and AccuracyStat now shares the helper, which is what makes the two agree about
+        // which observations count rather than only about how they are counted.
+        val p = x.asClassLabel(numClasses)
+        val t = y.asClassLabel(numClasses)
+        if (p < 0 || t < 0) return
         cells[p * numClasses + t].add(weight)
     }
 

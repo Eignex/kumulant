@@ -3052,11 +3052,30 @@ public final class com/eignex/kumulant/schema/runtime/VectorStatGroup : com/eign
 }
 
 public final class com/eignex/kumulant/schema/spec/Accuracy : com/eignex/kumulant/schema/spec/PairedStatSpec {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/Accuracy;
+	public static final field Companion Lcom/eignex/kumulant/schema/spec/Accuracy$Companion;
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/eignex/kumulant/schema/spec/Accuracy;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/Accuracy;IILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/Accuracy;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNumClasses ()I
 	public fun hashCode ()I
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/schema/spec/Accuracy$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/Accuracy$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/Accuracy;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/Accuracy;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/Accuracy$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/eignex/kumulant/schema/spec/Adwin : com/eignex/kumulant/schema/spec/SeriesStatSpec {
@@ -8320,13 +8339,13 @@ public final class com/eignex/kumulant/stat/regression/tree/VarianceReduction : 
 }
 
 public final class com/eignex/kumulant/stat/score/AccuracyStat : com/eignex/kumulant/core/PairedStat {
-	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> (ILcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/AccuracyStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public final fun getNumClasses ()I
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;

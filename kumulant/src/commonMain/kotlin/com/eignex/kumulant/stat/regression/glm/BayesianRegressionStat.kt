@@ -160,7 +160,22 @@ class BayesianRegressionStat(
             val wc = weight * curvature
             val z = covariance.matVec(x)
             val denom = sqrt(1.0 + wc * (x dot z))
-            if (denom == 0.0) return@guarded
+            // Non-finite as well as zero. Testing only `denom == 0.0` guarded a case that cannot arise
+            // and let through the two that can:
+            //
+            //  - `xT S x` is non-negative for a positive-definite `S` and `wc` is non-negative
+            //    (`weight > 0` is enforced above, and every `Link.curvature` is non-negative), so
+            //    `denom >= 1`. Reaching exactly zero needs `wc * xT S x == -1.0`, i.e. an `S` already
+            //    outside the cone - and in that regime the argument goes *negative*, so `sqrt` returns
+            //    NaN and `NaN == 0.0` is false.
+            //  - `Link.Log.curvature` is `exp(eta)`, which overflows to `+Infinity` for a large linear
+            //    predictor. Then `wc` is infinite, `denom` is infinite, and the scale below is
+            //    `Infinity / Infinity`, i.e. NaN. This one needs no instability at all.
+            //
+            // Either way the NaN reached `scale(z, ...)` and then `ger`, poisoning the covariance
+            // permanently - and a covariance of NaN yields NaN predictions with no way for a caller to
+            // tell the model is dead. Skipping the observation keeps the posterior usable.
+            if (!denom.isFinite() || denom == 0.0) return@guarded
             scale(z, sqrt(wc) / denom)
 
             // Downdate the Cholesky factor; repair on instability. The downdate leaves the factor

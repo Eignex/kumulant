@@ -49,6 +49,14 @@ matters. [ConfusionMatrixStat] is the full P/R/F1 surface with a
 per-class breakdown; reach for it when accuracy alone hides
 class-imbalance effects.
 
+Both take a `numClasses` and resolve labels the same way: a pair is
+scored only if both sides are exactly an integer in `[0, numClasses)`,
+and is ignored otherwise. That is what makes
+[ConfusionMatrixResult.accuracy] and [AccuracyStat]'s mean comparable on
+the same stream. A fractional label such as `1.5`, an out-of-range one,
+and `NaN` are all ignored by both rather than truncated into a class by
+one and refused by the other.
+
 ## Distributional forecast diagnostics
 
 The PIT (probability integral transform) family covers calibration of

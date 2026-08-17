@@ -286,7 +286,7 @@ class StatsRoundTripTest {
     }
 
     @Test fun `accuracyConfig round trips`() {
-        assertEquals(Accuracy, roundTrip(Accuracy))
+        assertEquals(Accuracy(numClasses = 4), roundTrip(Accuracy(numClasses = 4)))
     }
 
     @Test fun `hyperLogLogConfig round trips`() {

@@ -413,10 +413,20 @@ data class ConfusionMatrix(
     val numClasses: Int,
 ) : PairedStatSpec<ConfusionMatrixResult>
 
-/** Spec for `AccuracyStat`: weighted classification accuracy over (predictedClass, trueClass). */
+/**
+ * Spec for `AccuracyStat`: weighted classification accuracy over (predictedClass, trueClass).
+ *
+ * Was a `data object`. It gained [numClasses] because the stat did: accuracy is only comparable with
+ * `ConfusionMatrix` over the same stream if both agree on which labels name a class, and that agreement
+ * needs a bound. A payload authored against the old shape will fail to decode, which is the intended
+ * outcome - the alternative is silently defaulting a bound and scoring labels the author never declared.
+ */
 @Serializable
 @SerialName("Accuracy")
-data object Accuracy : PairedStatSpec<WeightedMeanResult>
+data class Accuracy(
+    /** Number of classes; class indices are `[0, numClasses)`. */
+    val numClasses: Int,
+) : PairedStatSpec<WeightedMeanResult>
 
 /** Spec for `HyperLogLogStat`: cardinality sketch with controllable [precision]. */
 @Serializable

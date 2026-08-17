@@ -44,7 +44,7 @@ class PairedAndDiscreteContractSweepTest {
         "PlattCalibrator" to PlattCalibrator(),
         "IsotonicCalibrator" to IsotonicCalibrator(),
         "ConfusionMatrix" to ConfusionMatrix(numClasses = 3),
-        "Accuracy" to Accuracy,
+        "Accuracy" to Accuracy(numClasses = 3),
     )
 
     private val discreteSpecs: List<Pair<String, DiscreteStatSpec<*>>> = listOf(
