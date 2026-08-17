@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.assertModesAgree
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
@@ -96,7 +97,6 @@ class ThresholdBucketStatTest {
             for (v in values) s.update(v)
             s.read()
         }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) assertEquals(ref, r, "ThresholdBucketStat mode=$mode")
+        assertModesAgree("ThresholdBucketStat", reads)
     }
 }

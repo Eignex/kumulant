@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.rate
 
+import com.eignex.kumulant.assertModesAgree
 import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,8 +18,7 @@ class RateStatConcurrencyTest {
             for (i in values.indices) s.update(values[i], timestamps[i])
             s.read(timestamps.last())
         }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) assertEquals(ref, r, "RateStat mode=$mode")
+        assertModesAgree("RateStat", reads)
     }
 
     @Test
@@ -29,8 +29,7 @@ class RateStatConcurrencyTest {
             for (i in counters.indices) s.update(counters[i], timestamps[i])
             s.read(timestamps.last())
         }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) assertEquals(ref, r, "CounterRateStat mode=$mode")
+        assertModesAgree("CounterRateStat", reads)
     }
 
     @Test

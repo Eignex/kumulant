@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.schema.expr.V
 import com.eignex.kumulant.schema.expr.X
 import com.eignex.kumulant.schema.expr.gt
@@ -11,7 +11,6 @@ import kotlin.test.assertTrue
 
 class SplitTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     @Test
     fun `ThresholdSplit routes by inclusive less-than-or-equal`() {

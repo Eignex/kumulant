@@ -7,14 +7,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class EwmaMeanStatTest {
-    private val delta = 1e-9
 
     @Test
     fun `EwmaMeanStat create produces fresh independent stat`() {
         val m1 = EwmaMeanStat(alpha = 0.5).apply { update(10.0) }
         val m2 = m1.create()
         repeat(10) { m1.update(10.0) }
-        assertEquals(0.0, m2.read().mean, delta)
+        assertEquals(0.0, m2.read().mean, DELTA)
         assertTrue(m1.read().mean > 0.0)
     }
 
@@ -26,7 +25,7 @@ class EwmaMeanStatTest {
 
         d1.merge(d2)
 
-        assertEquals(15.0, d1.read().mean, delta)
+        assertEquals(15.0, d1.read().mean, DELTA)
     }
 
     @Test
@@ -46,7 +45,7 @@ class EwmaMeanStatTest {
         val meanStat = EwmaMeanStat(alpha = 0.5)
         meanStat.update(10.0)
         meanStat.reset()
-        assertEquals(0.0, meanStat.read().mean, delta)
+        assertEquals(0.0, meanStat.read().mean, DELTA)
     }
 
     @Test

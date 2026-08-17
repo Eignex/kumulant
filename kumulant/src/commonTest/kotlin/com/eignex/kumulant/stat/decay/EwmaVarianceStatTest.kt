@@ -7,7 +7,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class EwmaVarianceStatTest {
-    private val delta = 1e-9
 
     @Test
     fun `EwmaVarianceStat create produces fresh independent stat`() {
@@ -17,7 +16,7 @@ class EwmaVarianceStatTest {
         }
         val v2 = v1.create()
         repeat(10) { v1.update(1000.0) }
-        assertEquals(0.0, v2.read().totalWeights, delta)
+        assertEquals(0.0, v2.read().totalWeights, DELTA)
         assertTrue(v1.read().totalWeights > 0.0)
     }
 
@@ -43,15 +42,15 @@ class EwmaVarianceStatTest {
 
         stat.merge(WeightedVarianceResult(0.0, 0.0, 0.0))
 
-        assertEquals(currentVar, stat.read().variance, delta)
+        assertEquals(currentVar, stat.read().variance, DELTA)
     }
 
     @Test
     fun `EwmaVarianceStat bias correction prevents zero division`() {
         val stat = EwmaVarianceStat(alpha = 0.1)
 
-        assertEquals(0.0, stat.read().mean, delta)
-        assertEquals(0.0, stat.read().variance, delta)
+        assertEquals(0.0, stat.read().mean, DELTA)
+        assertEquals(0.0, stat.read().variance, DELTA)
     }
 
     @Test
@@ -60,9 +59,9 @@ class EwmaVarianceStatTest {
         varStat.update(10.0)
         varStat.update(20.0)
         varStat.reset()
-        assertEquals(0.0, varStat.read().mean, delta)
-        assertEquals(0.0, varStat.read().variance, delta)
-        assertEquals(0.0, varStat.read().totalWeights, delta)
+        assertEquals(0.0, varStat.read().mean, DELTA)
+        assertEquals(0.0, varStat.read().variance, DELTA)
+        assertEquals(0.0, varStat.read().totalWeights, DELTA)
     }
 
     @Test

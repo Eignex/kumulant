@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.score
 
+import com.eignex.kumulant.assertModesAgree
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
 import kotlin.test.Test
@@ -82,7 +83,6 @@ class ScoreStatConcurrencyTest {
             for (i in preds.indices) s.update(preds[i], obs[i])
             s.read(0L)
         }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) assertEquals(ref, r, "ReliabilityStat mode=$mode")
+        assertModesAgree("ReliabilityStat", reads)
     }
 }

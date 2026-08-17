@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -10,7 +10,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 class TreePosteriorsTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     private fun snap(value: WeightedVarianceResult): TreeRegressionResult = TreeRegressionResult(TreeLeafResult(value))
 

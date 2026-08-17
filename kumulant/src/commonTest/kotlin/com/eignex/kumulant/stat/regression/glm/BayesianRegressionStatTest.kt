@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.kumulant.fitLine
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.RegressionStat
 import kotlin.math.abs
@@ -9,23 +10,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 class BayesianRegressionStatTest {
-
-    private fun fitLine(
-        stat: RegressionStat<*>,
-        slope: DoubleArray,
-        intercept: Double,
-        n: Int = 4000,
-        seed: Long = 42L,
-    ) {
-        val rng = Random(seed)
-        repeat(n) {
-            val x = DoubleArray(slope.size) { rng.nextDouble() * 2.0 - 1.0 }
-            var y = intercept
-            for (i in slope.indices) y += slope[i] * x[i]
-            y += rng.nextDouble() * 0.02 - 0.01 // small noise
-            stat.update(x, y, 1.0)
-        }
-    }
 
     // The factor is downdated alongside the covariance rather than refactorized, so the two can
     // only be trusted to agree if every downdate lands. L * LT has to stay equal to S. The
