@@ -37,8 +37,6 @@ Run `./gradlew check lintDocs`.
 - Weights: zero is a no-op, negative downdates where the metric has an inverse and throws where it
   doesn't. Guard against corruption only, not surprising numbers.
 - Stats stay generic primitives; no domain-named stats (Apdex, Sharpe, MTBF, RSI).
-- Breaking changes are fine, kumulant is unreleased. Regenerate `kumulant/api/*.api` via
-  `:kumulant:updateKotlinAbi` and check the delta is what you intended.
 
 ## Style
 
