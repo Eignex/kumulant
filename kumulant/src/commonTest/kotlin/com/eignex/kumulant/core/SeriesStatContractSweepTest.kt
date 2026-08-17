@@ -156,6 +156,39 @@ class SeriesStatContractSweepTest {
     }
 
     @Test
+    fun `an infinite weight is a no-op for every series stat`() {
+        // The fourth and last weight case, and the one nothing guarded. Both predicates let an infinity
+        // through: `isInertWeight` tested only zero and NaN, and `+Infinity > 0.0` is true, so
+        // `isNotPositiveWeight` waved it past as an ordinary live observation.
+        //
+        // A weight is the multiplicity of an observation, and an infinity is no more a multiplicity than
+        // a NaN is, so it belongs with the other inert cases. `+Infinity` does have a clean reading -
+        // the update `w / (W + w)` tends to 1, so the mean tends to the value - but essentially nothing
+        // here computed that limit. The recurrences evaluated `Infinity / Infinity` and `Infinity * 0`
+        // and published the NaN as a result, in 22 stat and weight combinations across three modalities.
+        // See isInertWeight for why supporting the limit was not worth eleven rewritten recurrences.
+        val violations = mutableListOf<String>()
+        for ((name, spec) in specs) {
+            for (weight in doubleArrayOf(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
+                for (probe in doubleArrayOf(999.0, -999.0)) {
+                    val stat = primed(spec)
+                    val before = stat.read(readAt)
+
+                    val thrown = runCatching { stat.update(probe, readAt, weight) }.exceptionOrNull()
+                    if (thrown != null) {
+                        violations += "$name threw on a weight of $weight: ${thrown.message}"
+                        continue
+                    }
+
+                    val after = stat.read(readAt)
+                    if (before != after) violations += "$name absorbed a $weight-weighted $probe: $after"
+                }
+            }
+        }
+        assertEquals(emptyList(), violations.map { it.take(110) }, "an infinite weight must not change state")
+    }
+
+    @Test
     fun `a negative weight is a no-op for every stat that cannot invert it`() {
         // The third weight case, and the one the other two sweeps left open. Zero and NaN are no-ops
         // library-wide, but a negative weight partitions the catalogue: a stat whose recurrence

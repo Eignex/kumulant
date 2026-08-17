@@ -4,15 +4,27 @@ package com.eignex.kumulant.core
  * True when a weight carries no observation, and the update is therefore a no-op.
  *
  * Exactly zero, because every weighted recurrence in the library reduces to the identity at `w = 0`;
- * and `NaN`, because a weight is the multiplicity of an observation and `NaN` is not a multiplicity.
- * Note that this is the *weight*, not the value: a `NaN` value is a real observation of an unusable
- * number and propagates. See [Stat] for the contract and why the two differ.
+ * and any non-finite weight, because a weight is the multiplicity of an observation and neither `NaN`
+ * nor an infinity is a multiplicity.
+ *
+ * The infinities are the less obvious half. `+Infinity` does have a clean mathematical reading - the
+ * weighted mean update `w / (W + w)` tends to 1, so the mean tends to the observed value and the
+ * variance to zero - but almost nothing in the library computed that limit. The recurrences evaluate
+ * `Infinity / Infinity` and `Infinity * 0` and reported the resulting `NaN` as an answer, in 22 stat and
+ * weight combinations across three modalities. Supporting the limit properly would mean rewriting eleven
+ * recurrences, up to and including the third and fourth moments, and would still leave every affected
+ * stat with `totalWeights = Infinity` permanently, wedging the bias corrections that divide by it. A
+ * caller who wants to pin a stat to a value is better served by saying so than by smuggling an infinity
+ * through the weight channel.
+ *
+ * Note that this is the *weight*, not the value: a `NaN` or infinite value is a real observation of an
+ * unusable number and propagates. See [Stat] for the contract and why the two differ.
  */
 // Inlined against the compiler's advice: it judges the impact by JVM standards, where the JIT would
 // have inlined this anyway. The targets that matter here are the others - this call showed up once per
 // update in the generated JS, across every stat that guards on it.
 @Suppress("NOTHING_TO_INLINE")
-internal inline fun Double.isInertWeight(): Boolean = this == 0.0 || isNaN()
+internal inline fun Double.isInertWeight(): Boolean = !isFinite() || this == 0.0
 
 /**
  * True when a weight is not a live positive observation, for the stats that cannot downdate.
@@ -23,13 +35,17 @@ internal inline fun Double.isInertWeight(): Boolean = this == 0.0 || isNaN()
  * a histogram bucket, an SGD step - where a negative weight is not a removal but a corruption, and is
  * dropped alongside the inert cases. See [Stat] for which stats fall on which side.
  *
- * Written as a negated comparison rather than `this <= 0.0 || isNaN()` because `NaN > 0.0` is already
- * false: the `NaN` case falls out of the comparison instead of needing a second clause a caller has to
- * remember. Twenty call sites used to spell out the two-clause form, and the sites that spelled it out
- * slightly differently are exactly where the class-label defects lived.
+ * `!(this > 0.0)` rather than `this <= 0.0 || isNaN()` because `NaN > 0.0` is already false: the `NaN`
+ * case falls out of the comparison instead of needing a second clause a caller has to remember. Twenty
+ * call sites used to spell out the two-clause form, and the sites that spelled it out slightly
+ * differently are exactly where the class-label defects lived.
+ *
+ * The `isFinite` clause is not redundant with that: `+Infinity > 0.0` is true, so an infinite weight
+ * used to pass here as an ordinary live observation and land in a histogram bucket or a sketch register
+ * as infinite mass. See [isInertWeight] for why an infinity is not a multiplicity.
  */
 @Suppress("NOTHING_TO_INLINE") // as with isInertWeight; the non-JVM targets pay for the call
-internal inline fun Double.isNotPositiveWeight(): Boolean = !(this > 0.0)
+internal inline fun Double.isNotPositiveWeight(): Boolean = !(this > 0.0) || !isFinite()
 
 /**
  * Guard the one negative-weight case that corrupts a Welford accumulator.
@@ -54,10 +70,12 @@ internal inline fun Double.isNotPositiveWeight(): Boolean = !(this > 0.0)
  * @throws IllegalArgumentException if the update would leave a non-positive total.
  */
 internal fun requireLiveWeight(currentTotal: Double, weight: Double) {
-    // Callers drop a NaN weight before reaching here, but keep the guard local too: `NaN > 0.0` is
-    // false, so the require below would fire and report a NaN weight as a downdate emptying the
-    // accumulator - wrong, and the one thing a NaN weight must not do now that it is a no-op.
-    if (weight.isNaN()) return
+    // Callers drop a non-finite weight before reaching here, but keep the guard local too. `NaN > 0.0`
+    // is false, so the require below would fire and report a NaN weight as a downdate emptying the
+    // accumulator - wrong, and the one thing a NaN weight must not do now that it is a no-op. A
+    // `-Infinity` weight would trip it for the same spurious reason, reporting an unrepresentable
+    // downdate rather than the inert weight it now is.
+    if (!weight.isFinite()) return
     require(currentTotal + weight > 0.0) {
         "weight $weight would take the accumulated weight from $currentTotal to " +
             "${currentTotal + weight}; a downdate must leave a positive total"
