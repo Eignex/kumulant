@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
@@ -485,7 +486,7 @@ class Moss(
     priorWeight: Double = 0.02,
 ) : BanditPolicy<WeightedMeanResult> {
     init {
-        require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
+        requireNbrArms(nbrArms)
     }
     override val arm = MeanArm(priorMean, priorWeight)
     private var totalSamples: Double = 0.0

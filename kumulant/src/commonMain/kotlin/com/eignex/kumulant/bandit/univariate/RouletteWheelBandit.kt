@@ -3,11 +3,14 @@ package com.eignex.kumulant.bandit.univariate
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.Scorable
 import com.eignex.kumulant.bandit.UnivariateBandit
+import com.eignex.kumulant.bandit.requireArmIndex
+import com.eignex.kumulant.bandit.requireMergeSize
+import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.isInertWeight
+import kotlin.random.Random
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.random.Random
 
 /**
  * Per-arm state snapshot for [RouletteWheelBandit]. Exposes the current weight plus the
@@ -82,7 +85,7 @@ class RouletteWheelBandit(
     Scorable {
 
     init {
-        require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
+        requireNbrArms(nbrArms)
         require(reactionFactor in 0.0..1.0) { "reactionFactor must be in [0, 1], got $reactionFactor" }
         require(segmentLength > 0) { "segmentLength must be positive, got $segmentLength" }
         require(minWeight > 0.0) { "minWeight must be positive, got $minWeight" }
@@ -107,10 +110,13 @@ class RouletteWheelBandit(
 
     /** Returns the arm's current weight. Used by `choose` is computed inline; this is
      *  the [Scorable] view exposed for inspection / debugging. */
-    override fun evaluate(armIndex: Int): Double = weights[armIndex]
+    override fun evaluate(armIndex: Int): Double {
+        requireArmIndex(armIndex, nbrArms)
+        return weights[armIndex]
+    }
 
     override fun update(armIndex: Int, value: Double, weight: Double) {
-        require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
+        requireArmIndex(armIndex, nbrArms)
         // A zero weight contributes nothing to the score, but the counter and the segment clock
         // used to advance anyway, so it diluted the arm's average toward zero and could trip a
         // rebalance. Zero weight means "ignore this observation" library-wide.
@@ -147,9 +153,7 @@ class RouletteWheelBandit(
      * for "roughly combine two parallel runs" rather than for principled aggregation.
      */
     override fun merge(other: List<RouletteWheelArmResult>) {
-        require(other.size == nbrArms) {
-            "merge: other.size=${other.size} does not match nbrArms=$nbrArms"
-        }
+        requireMergeSize(other.size, nbrArms)
         for (i in 0 until nbrArms) {
             weights[i] = ((weights[i] + other[i].weight) / 2.0).coerceAtLeast(minWeight)
             accumulatedScores[i] += other[i].accumulatedScore

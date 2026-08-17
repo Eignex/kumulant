@@ -2,6 +2,9 @@ package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.UnivariateBandit
+import com.eignex.kumulant.bandit.requireArmIndex
+import com.eignex.kumulant.bandit.requireMergeSize
+import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import kotlin.math.exp
@@ -64,7 +67,7 @@ class BoltzmannBandit(
 ) : UnivariateBandit,
     PerArmBandit<WeightedMeanResult> {
     init {
-        require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
+        requireNbrArms(nbrArms)
         require(initialTau > 0.0) { "initialTau must be positive, got $initialTau" }
         require(minTau > 0.0) { "minTau must be positive, got $minTau" }
         require(decay >= 0.0) { "decay must be non-negative, got $decay" }
@@ -106,7 +109,7 @@ class BoltzmannBandit(
 
     /** Fold `(arm, reward)` into the per-arm mean. */
     override fun update(armIndex: Int, value: Double, weight: Double) {
-        require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
+        requireArmIndex(armIndex, nbrArms)
         stats[armIndex].update(value, 0L, weight)
     }
 
@@ -115,9 +118,7 @@ class BoltzmannBandit(
     override fun snapshot(): List<WeightedMeanResult> = stats.map { it.read(0L) }
 
     override fun merge(other: List<WeightedMeanResult>) {
-        require(other.size == nbrArms) {
-            "merge: other.size=${other.size} does not match nbrArms=$nbrArms"
-        }
+        requireMergeSize(other.size, nbrArms)
         for (i in 0 until nbrArms) stats[i].merge(other[i])
     }
 

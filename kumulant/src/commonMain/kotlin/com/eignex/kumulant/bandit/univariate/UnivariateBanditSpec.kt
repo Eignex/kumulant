@@ -67,7 +67,7 @@ data class Exp3Spec(
     val nbrArms: Int,
     /** Learning rate on per-arm gain updates; `null` selects `sqrt(ln(K)/K)`. */
     val eta: Double? = null,
-    /** Exploration mix probability; `null` selects `min(K * eta, 1)`. */
+    /** Exploration mix probability; `null` selects `min(eta, 1)`. */
     val gamma: Double? = null,
 ) : UnivariateBanditSpec
 

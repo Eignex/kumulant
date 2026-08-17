@@ -110,7 +110,10 @@ fun BoltzmannSpec.materialize(random: Random = Random.Default): BoltzmannBandit 
 /** Build a live [Exp3Bandit] from its spec, resolving null `eta` / `gamma` to defaults. */
 fun Exp3Spec.materialize(random: Random = Random.Default): Exp3Bandit {
     val resolvedEta = eta ?: Exp3Bandit.defaultEta(nbrArms)
-    val resolvedGamma = gamma ?: (nbrArms * resolvedEta).coerceAtMost(1.0)
+    // Via defaultGamma, not the `K * eta` rule this used to inline. See its KDoc: against the
+    // horizon-free eta above that formula saturates at 1.0 for every arm count, and a gamma of 1.0
+    // makes playDistribution exactly uniform, so every EXP3 built from a spec ignored its weights.
+    val resolvedGamma = gamma ?: Exp3Bandit.defaultGamma(resolvedEta)
     return Exp3Bandit(nbrArms, resolvedEta, resolvedGamma, random)
 }
 

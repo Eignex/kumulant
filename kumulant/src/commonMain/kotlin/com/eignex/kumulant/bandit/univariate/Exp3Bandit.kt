@@ -4,13 +4,16 @@ import com.eignex.kumulant.bandit.MIN_PLAY_PROB
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.UnivariateBandit
 import com.eignex.kumulant.bandit.renormaliseExponentialWeights
+import com.eignex.kumulant.bandit.requireArmIndex
+import com.eignex.kumulant.bandit.requireMergeSize
+import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /** Per-arm snapshot for [Exp3Bandit]: the exponential-weight cell for one arm. */
 @Serializable
@@ -71,7 +74,7 @@ class Exp3Bandit(
 ) : UnivariateBandit,
     PerArmBandit<Exp3ArmResult> {
     init {
-        require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
+        requireNbrArms(nbrArms)
         require(eta > 0.0) { "eta must be positive, got $eta" }
         require(gamma in 0.0..1.0) { "gamma must lie in [0, 1], got $gamma" }
     }
@@ -111,7 +114,7 @@ class Exp3Bandit(
 
     /** Fold a `(arm, reward)` observation into the played arm's weight. */
     override fun update(armIndex: Int, value: Double, weight: Double) {
-        require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
+        requireArmIndex(armIndex, nbrArms)
         playDistribution().also { lastPlayDist = it }
         val p = lastPlayDist[armIndex].coerceAtLeast(MIN_PLAY_PROB)
         val gain = (value * weight) / p
@@ -130,9 +133,7 @@ class Exp3Bandit(
     override fun snapshot(): List<Exp3ArmResult> = List(nbrArms) { Exp3ArmResult(weights[it]) }
 
     override fun merge(other: List<Exp3ArmResult>) {
-        require(other.size == nbrArms) {
-            "merge: other.size=${other.size} does not match nbrArms=$nbrArms"
-        }
+        requireMergeSize(other.size, nbrArms)
         // No canonical merge for EXP3 weights; multiply elementwise as a coarse pool,
         // then renormalise. Use for "roughly combine two parallel runs", not principled
         // aggregation.

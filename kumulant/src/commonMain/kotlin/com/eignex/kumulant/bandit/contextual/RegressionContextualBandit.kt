@@ -4,6 +4,9 @@ import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
+import com.eignex.kumulant.bandit.requireArmIndex
+import com.eignex.kumulant.bandit.requireMergeSize
+import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.regression.RegressionPosterior
@@ -90,7 +93,7 @@ class RegressionContextualBandit<R : Result>(
     ContextualScorable {
 
     init {
-        require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
+        requireNbrArms(nbrArms)
     }
 
     private val arms: Array<RegressionStat<R>> = Array(nbrArms) { template.create(null) }
@@ -113,10 +116,13 @@ class RegressionContextualBandit<R : Result>(
         return bestIdx
     }
 
-    override fun evaluate(armIndex: Int, x: VectorView): Double =
-        globalMean(x) + posterior.evaluate(arms[armIndex].read(0L), x, random, exploration)
+    override fun evaluate(armIndex: Int, x: VectorView): Double {
+        requireArmIndex(armIndex, nbrArms)
+        return globalMean(x) + posterior.evaluate(arms[armIndex].read(0L), x, random, exploration)
+    }
 
     override fun update(armIndex: Int, x: VectorView, reward: Double, weight: Double) {
+        requireArmIndex(armIndex, nbrArms)
         val g = global
         if (g == null) {
             arms[armIndex].update(x, reward, weight)
@@ -129,14 +135,20 @@ class RegressionContextualBandit<R : Result>(
 
     override fun snapshot(): List<R> = arms.map { it.read(0L) }
 
-    override fun armResult(armIndex: Int): R = arms[armIndex].read(0L)
+    override fun armResult(armIndex: Int): R {
+        requireArmIndex(armIndex, nbrArms)
+        return arms[armIndex].read(0L)
+    }
 
     /**
      * Live per-arm regressor. When pooling is on this fits *residuals against the global
      * mean*, so its predictions are deltas, not full predictions; use [evaluate] for
      * the combined score and [globalSnapshot] for the global's state.
      */
-    fun armStat(armIndex: Int): RegressionStat<R> = arms[armIndex]
+    fun armStat(armIndex: Int): RegressionStat<R> {
+        requireArmIndex(armIndex, nbrArms)
+        return arms[armIndex]
+    }
 
     /** Current global pooling snapshot, or `null` if pooling is disabled. */
     fun globalSnapshot(): R? = global?.read(0L)
@@ -145,9 +157,7 @@ class RegressionContextualBandit<R : Result>(
     fun globalStat(): RegressionStat<R>? = global
 
     override fun merge(other: List<R>) {
-        require(other.size == nbrArms) {
-            "merge: other.size=${other.size} does not match nbrArms=$nbrArms"
-        }
+        requireMergeSize(other.size, nbrArms)
         for (i in 0 until nbrArms) arms[i].merge(other[i])
     }
 

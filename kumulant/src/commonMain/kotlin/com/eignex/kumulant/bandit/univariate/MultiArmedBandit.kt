@@ -5,6 +5,9 @@ package com.eignex.kumulant.bandit.univariate
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.Scorable
 import com.eignex.kumulant.bandit.UnivariateBandit
+import com.eignex.kumulant.bandit.requireArmIndex
+import com.eignex.kumulant.bandit.requireMergeSize
+import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import kotlin.concurrent.atomics.AtomicLong
@@ -52,7 +55,7 @@ class MultiArmedBandit<R : Result>(
     Scorable {
 
     init {
-        require(nbrArms > 0) { "nbrArms must be positive, got $nbrArms" }
+        requireNbrArms(nbrArms)
     }
 
     private val step = AtomicLong(0L)
@@ -76,23 +79,25 @@ class MultiArmedBandit<R : Result>(
         return bestIdx
     }
 
-    override fun evaluate(armIndex: Int): Double = policy.evaluate(arms[armIndex].read(0L), step.load(), random)
+    override fun evaluate(armIndex: Int): Double {
+        requireArmIndex(armIndex, nbrArms)
+        return policy.evaluate(arms[armIndex].read(0L), step.load(), random)
+    }
 
     override fun update(armIndex: Int, value: Double, weight: Double) {
-        // Every sibling bandit validates this; without it a bad index surfaced as a raw
-        // ArrayIndexOutOfBoundsException rather than the documented message.
-        require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }
+        requireArmIndex(armIndex, nbrArms)
         policy.update(arms[armIndex], value, weight)
     }
 
     override fun snapshot(): List<R> = arms.map { it.read(0L) }
 
-    override fun armResult(armIndex: Int): R = arms[armIndex].read(0L)
+    override fun armResult(armIndex: Int): R {
+        requireArmIndex(armIndex, nbrArms)
+        return arms[armIndex].read(0L)
+    }
 
     override fun merge(other: List<R>) {
-        require(other.size == nbrArms) {
-            "merge: other.size=${other.size} does not match nbrArms=$nbrArms"
-        }
+        requireMergeSize(other.size, nbrArms)
         for (i in 0 until nbrArms) {
             val oldSnap = arms[i].read(0L)
             policy.removeArm(oldSnap)
@@ -120,5 +125,8 @@ class MultiArmedBandit<R : Result>(
      * [BanditPolicy.update] (use [MultiArmedBandit.update] for that); the returned reference
      * is intended for read-side and composition, not for bypassing the policy.
      */
-    fun armStat(armIndex: Int): SeriesStat<R> = arms[armIndex]
+    fun armStat(armIndex: Int): SeriesStat<R> {
+        requireArmIndex(armIndex, nbrArms)
+        return arms[armIndex]
+    }
 }
