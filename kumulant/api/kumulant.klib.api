@@ -2857,6 +2857,32 @@ final class com.eignex.kumulant.schema.runtime/VectorStatGroup : com.eignex.kumu
     final fun update(com.eignex.koblas/VectorView, kotlin/Long, kotlin/Double) // com.eignex.kumulant.schema.runtime/VectorStatGroup.update|update(com.eignex.koblas.VectorView;kotlin.Long;kotlin.Double){}[0]
 }
 
+final class com.eignex.kumulant.schema.spec/Accuracy : com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.schema.spec/Accuracy|null[0]
+    constructor <init>(kotlin/Int) // com.eignex.kumulant.schema.spec/Accuracy.<init>|<init>(kotlin.Int){}[0]
+
+    final val numClasses // com.eignex.kumulant.schema.spec/Accuracy.numClasses|{}numClasses[0]
+        final fun <get-numClasses>(): kotlin/Int // com.eignex.kumulant.schema.spec/Accuracy.numClasses.<get-numClasses>|<get-numClasses>(){}[0]
+
+    final fun component1(): kotlin/Int // com.eignex.kumulant.schema.spec/Accuracy.component1|component1(){}[0]
+    final fun copy(kotlin/Int = ...): com.eignex.kumulant.schema.spec/Accuracy // com.eignex.kumulant.schema.spec/Accuracy.copy|copy(kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/Accuracy.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/Accuracy.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/Accuracy.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/Accuracy> { // com.eignex.kumulant.schema.spec/Accuracy.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.schema.spec/Accuracy.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/Accuracy.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/Accuracy.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/Accuracy // com.eignex.kumulant.schema.spec/Accuracy.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/Accuracy) // com.eignex.kumulant.schema.spec/Accuracy.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.Accuracy){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.schema.spec/Accuracy.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/Accuracy> // com.eignex.kumulant.schema.spec/Accuracy.Companion.serializer|serializer(){}[0]
+    }
+}
+
 final class com.eignex.kumulant.schema.spec/Adwin : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.change/AdwinResult> { // com.eignex.kumulant.schema.spec/Adwin|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/Int = ...) // com.eignex.kumulant.schema.spec/Adwin.<init>|<init>(kotlin.Double;kotlin.Int){}[0]
 
@@ -7551,10 +7577,12 @@ final class com.eignex.kumulant.stat.regression/SoftmaxRegressionStat : com.eign
 }
 
 final class com.eignex.kumulant.stat.score/AccuracyStat : com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.stat.score/AccuracyStat|null[0]
-    constructor <init>(com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.score/AccuracyStat.<init>|<init>(com.eignex.kumulant.core.Concurrency){}[0]
+    constructor <init>(kotlin/Int, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.score/AccuracyStat.<init>|<init>(kotlin.Int;com.eignex.kumulant.core.Concurrency){}[0]
 
     final val concurrency // com.eignex.kumulant.stat.score/AccuracyStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.score/AccuracyStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
+    final val numClasses // com.eignex.kumulant.stat.score/AccuracyStat.numClasses|{}numClasses[0]
+        final fun <get-numClasses>(): kotlin/Int // com.eignex.kumulant.stat.score/AccuracyStat.numClasses.<get-numClasses>|<get-numClasses>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.score/AccuracyStat // com.eignex.kumulant.stat.score/AccuracyStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     final fun merge(com.eignex.kumulant.stat.summary/WeightedMeanResult) // com.eignex.kumulant.stat.score/AccuracyStat.merge|merge(com.eignex.kumulant.stat.summary.WeightedMeanResult){}[0]
@@ -8880,14 +8908,6 @@ final object com.eignex.kumulant.schema.expr/Y : com.eignex.kumulant.schema.expr
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/Y> // com.eignex.kumulant.schema.expr/Y.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.expr/Y.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.expr/Y.toString|toString(){}[0]
-}
-
-final object com.eignex.kumulant.schema.spec/Accuracy : com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.spec/Accuracy|null[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/Accuracy.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/Accuracy.hashCode|hashCode(){}[0]
-    final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/Accuracy> // com.eignex.kumulant.schema.spec/Accuracy.serializer|serializer(){}[0]
-    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.spec/Accuracy.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/Accuracy.toString|toString(){}[0]
 }
 
 final object com.eignex.kumulant.schema.spec/ArgMax : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.summary/ArgMaxResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.spec/ArgMax|null[0]
