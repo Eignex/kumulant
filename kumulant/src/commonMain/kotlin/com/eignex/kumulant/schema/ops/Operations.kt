@@ -284,6 +284,35 @@ fun <R : Result> DiscreteStatSpec<R>.sample(rate: Double, seed: Long): DiscreteS
 fun <R : Result> RegressionStatSpec<R>.filter(pred: BoolExpr): RegressionStatSpec<R> =
     FilterRegression(this, pred) as RegressionStatSpec<R>
 
+/**
+ * Drop any update carrying a non-finite input, so the stat only ever sees real numbers.
+ *
+ * [Stat][com.eignex.kumulant.core.Stat] guarantees one thing about a non-finite value: it will not
+ * throw. It does not guarantee the stat stays usable. An accumulator folds a `NaN` in and reports `NaN`
+ * from then on, and no later observation clears it - which is correct, because the observation really did
+ * arrive and really was unusable. This is the supported way to say the stream should not contain such
+ * observations in the first place.
+ *
+ * Applies to whichever inputs the modality has: the value for a series stat, both coordinates for a
+ * paired stat, every coordinate for a vector stat, and the target plus every feature for a regression
+ * stat. There is no discrete counterpart because a `Long` cannot be non-finite.
+ *
+ * ```
+ * Mean.filterFinite()
+ * StochasticRegression(featureSize = 8).filterFinite()
+ * ```
+ */
+fun <R : Result> SeriesStatSpec<R>.filterFinite(): SeriesStatSpec<R> = filter(allFinite())
+
+/** Paired counterpart of [SeriesStatSpec.filterFinite]; both `x` and `y` must be finite. */
+fun <R : Result> PairedStatSpec<R>.filterFinite(): PairedStatSpec<R> = filter(allFinite())
+
+/** Vector counterpart of [SeriesStatSpec.filterFinite]; every coordinate must be finite. */
+fun <R : Result> VectorStatSpec<R>.filterFinite(): VectorStatSpec<R> = filter(allFinite())
+
+/** Regression counterpart of [SeriesStatSpec.filterFinite]; the target and every feature must be finite. */
+fun <R : Result> RegressionStatSpec<R>.filterFinite(): RegressionStatSpec<R> = filter(allFinite())
+
 /** Wrap this regression spec so y is remapped by [expr] before the inner stat sees it. */
 fun <R : Result> RegressionStatSpec<R>.transformY(expr: ScalarExpr): RegressionStatSpec<R> =
     TransformYRegression(this, expr) as RegressionStatSpec<R>

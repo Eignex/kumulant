@@ -745,6 +745,49 @@ internal data class IsNaN(
         of.eval(x, y, v, primary).isNaN()
 }
 
+/**
+ * Wire spec for `a is finite`, meaning neither `NaN` nor an infinity.
+ *
+ * Strictly stronger than `!IsNaN(a)`, and the difference matters: an infinity compares normally under
+ * `Gt` and `Lt`, so a range check can be written that an infinity passes, and `1e400` parses to
+ * `Infinity` without complaint. A caller that wants only real numbers wants this, not the `NaN` test.
+ */
+@Serializable
+@SerialName("IsFinite")
+internal data class IsFinite(
+    /** Value tested for finiteness. */
+    val of: ScalarExpr,
+) : BoolExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        of.eval(x, y, v, primary).isFinite()
+}
+
+/**
+ * Wire spec for "every input to this update is finite", whatever the modality.
+ *
+ * One node covers all five because of how the filter wrappers bind `eval`: a series stat passes its
+ * value as `x`, a paired stat passes `x` and `y`, a vector stat passes the coordinates in `v`, a
+ * regression stat passes the target as `y` and the features in `v`, and a discrete stat passes a `Long`
+ * widened to `x`, which cannot be non-finite. Unused slots default to `0.0`, which is finite, so
+ * checking all of them is correct everywhere rather than merely harmless.
+ *
+ * This exists because a per-coordinate test cannot express it. `V(0).isFinite()` checks one coordinate,
+ * and a feature vector needs all of them; there is no way to write a fold over `v` in the AST.
+ *
+ * [Stat][com.eignex.kumulant.core.Stat] guarantees only that a non-finite value will not throw. What a
+ * stat then does with it is the stat's business, and for an accumulator that means propagating it for
+ * good. This is the supported way to opt out of that.
+ */
+@Serializable
+@SerialName("AllFinite")
+internal data object AllFinite : BoolExpr {
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean {
+        if (!x.isFinite() || !y.isFinite()) return false
+        for (c in v) if (!c.isFinite()) return false
+        return true
+    }
+}
+
 /** `min <= a <= max` (inclusive). Wire-compact form of `And(Ge(a, min), Le(a, max))`. */
 @Serializable
 @SerialName("InRange")
@@ -894,3 +937,23 @@ operator fun BoolExpr.not(): BoolExpr = Not(this)
  * ```
  */
 fun ScalarExpr.isNaN(): BoolExpr = IsNaN(this)
+
+/**
+ * True when this expression evaluates to a finite number: not `NaN`, and not an infinity.
+ *
+ * Stronger than `!isNaN()`. Prefer it whenever the intent is "a real number", since an infinity passes
+ * every ordering comparison the AST can express.
+ *
+ * ```
+ * Mean.filter(X.isFinite())
+ * ```
+ */
+fun ScalarExpr.isFinite(): BoolExpr = IsFinite(this)
+
+/**
+ * True when every input to the update is finite, whichever modality the stat is.
+ *
+ * Use it through the `filterFinite()` shorthand on each spec type rather than by hand. Unlike
+ * [isFinite], this covers a whole feature vector, which no per-coordinate expression can.
+ */
+fun allFinite(): BoolExpr = AllFinite
