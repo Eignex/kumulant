@@ -74,6 +74,22 @@ final enum class com.eignex.kumulant.stat.forecast/SeasonalMode : kotlin/Enum<co
     }
 }
 
+final enum class com.eignex.kumulant.stat.sketch/AdmissionPolicy : kotlin/Enum<com.eignex.kumulant.stat.sketch/AdmissionPolicy> { // com.eignex.kumulant.stat.sketch/AdmissionPolicy|null[0]
+    enum entry Classic // com.eignex.kumulant.stat.sketch/AdmissionPolicy.Classic|null[0]
+    enum entry MisraGries // com.eignex.kumulant.stat.sketch/AdmissionPolicy.MisraGries|null[0]
+
+    final val entries // com.eignex.kumulant.stat.sketch/AdmissionPolicy.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<com.eignex.kumulant.stat.sketch/AdmissionPolicy> // com.eignex.kumulant.stat.sketch/AdmissionPolicy.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): com.eignex.kumulant.stat.sketch/AdmissionPolicy // com.eignex.kumulant.stat.sketch/AdmissionPolicy.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<com.eignex.kumulant.stat.sketch/AdmissionPolicy> // com.eignex.kumulant.stat.sketch/AdmissionPolicy.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.sketch/AdmissionPolicy.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.sketch/AdmissionPolicy> // com.eignex.kumulant.stat.sketch/AdmissionPolicy.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.sketch/AdmissionPolicy.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
 abstract fun interface com.eignex.kumulant.bandit.contextual/Exp4Expert { // com.eignex.kumulant.bandit.contextual/Exp4Expert|null[0]
     abstract fun advise(com.eignex.koblas/VectorView, kotlin/Int): kotlin/DoubleArray // com.eignex.kumulant.bandit.contextual/Exp4Expert.advise|advise(com.eignex.koblas.VectorView;kotlin.Int){}[0]
 }
@@ -7928,16 +7944,20 @@ final class com.eignex.kumulant.stat.sketch/CountMinSketchStat : com.eignex.kumu
 }
 
 final class com.eignex.kumulant.stat.sketch/HeavyHittersResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.sketch/HeavyHittersResult|null[0]
-    constructor <init>(kotlin/Int, kotlin/LongArray, kotlin/LongArray, kotlin/LongArray, kotlin/Long) // com.eignex.kumulant.stat.sketch/HeavyHittersResult.<init>|<init>(kotlin.Int;kotlin.LongArray;kotlin.LongArray;kotlin.LongArray;kotlin.Long){}[0]
+    constructor <init>(kotlin/Int, kotlin/LongArray, kotlin/LongArray, kotlin/LongArray, kotlin/Long, com.eignex.kumulant.stat.sketch/AdmissionPolicy = ..., kotlin/Long = ...) // com.eignex.kumulant.stat.sketch/HeavyHittersResult.<init>|<init>(kotlin.Int;kotlin.LongArray;kotlin.LongArray;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.stat.sketch.AdmissionPolicy;kotlin.Long){}[0]
 
     final val capacity // com.eignex.kumulant.stat.sketch/HeavyHittersResult.capacity|{}capacity[0]
         final fun <get-capacity>(): kotlin/Int // com.eignex.kumulant.stat.sketch/HeavyHittersResult.capacity.<get-capacity>|<get-capacity>(){}[0]
     final val counts // com.eignex.kumulant.stat.sketch/HeavyHittersResult.counts|{}counts[0]
         final fun <get-counts>(): kotlin/LongArray // com.eignex.kumulant.stat.sketch/HeavyHittersResult.counts.<get-counts>|<get-counts>(){}[0]
+    final val deficit // com.eignex.kumulant.stat.sketch/HeavyHittersResult.deficit|{}deficit[0]
+        final fun <get-deficit>(): kotlin/Long // com.eignex.kumulant.stat.sketch/HeavyHittersResult.deficit.<get-deficit>|<get-deficit>(){}[0]
     final val errors // com.eignex.kumulant.stat.sketch/HeavyHittersResult.errors|{}errors[0]
         final fun <get-errors>(): kotlin/LongArray // com.eignex.kumulant.stat.sketch/HeavyHittersResult.errors.<get-errors>|<get-errors>(){}[0]
     final val keys // com.eignex.kumulant.stat.sketch/HeavyHittersResult.keys|{}keys[0]
         final fun <get-keys>(): kotlin/LongArray // com.eignex.kumulant.stat.sketch/HeavyHittersResult.keys.<get-keys>|<get-keys>(){}[0]
+    final val policy // com.eignex.kumulant.stat.sketch/HeavyHittersResult.policy|{}policy[0]
+        final fun <get-policy>(): com.eignex.kumulant.stat.sketch/AdmissionPolicy // com.eignex.kumulant.stat.sketch/HeavyHittersResult.policy.<get-policy>|<get-policy>(){}[0]
     final val totalSeen // com.eignex.kumulant.stat.sketch/HeavyHittersResult.totalSeen|{}totalSeen[0]
         final fun <get-totalSeen>(): kotlin/Long // com.eignex.kumulant.stat.sketch/HeavyHittersResult.totalSeen.<get-totalSeen>|<get-totalSeen>(){}[0]
     final val totalWeights // com.eignex.kumulant.stat.sketch/HeavyHittersResult.totalWeights|{}totalWeights[0]
@@ -7948,7 +7968,9 @@ final class com.eignex.kumulant.stat.sketch/HeavyHittersResult : com.eignex.kumu
     final fun component3(): kotlin/LongArray // com.eignex.kumulant.stat.sketch/HeavyHittersResult.component3|component3(){}[0]
     final fun component4(): kotlin/LongArray // com.eignex.kumulant.stat.sketch/HeavyHittersResult.component4|component4(){}[0]
     final fun component5(): kotlin/Long // com.eignex.kumulant.stat.sketch/HeavyHittersResult.component5|component5(){}[0]
-    final fun copy(kotlin/Int = ..., kotlin/LongArray = ..., kotlin/LongArray = ..., kotlin/LongArray = ..., kotlin/Long = ...): com.eignex.kumulant.stat.sketch/HeavyHittersResult // com.eignex.kumulant.stat.sketch/HeavyHittersResult.copy|copy(kotlin.Int;kotlin.LongArray;kotlin.LongArray;kotlin.LongArray;kotlin.Long){}[0]
+    final fun component6(): com.eignex.kumulant.stat.sketch/AdmissionPolicy // com.eignex.kumulant.stat.sketch/HeavyHittersResult.component6|component6(){}[0]
+    final fun component7(): kotlin/Long // com.eignex.kumulant.stat.sketch/HeavyHittersResult.component7|component7(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/LongArray = ..., kotlin/LongArray = ..., kotlin/LongArray = ..., kotlin/Long = ..., com.eignex.kumulant.stat.sketch/AdmissionPolicy = ..., kotlin/Long = ...): com.eignex.kumulant.stat.sketch/HeavyHittersResult // com.eignex.kumulant.stat.sketch/HeavyHittersResult.copy|copy(kotlin.Int;kotlin.LongArray;kotlin.LongArray;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.stat.sketch.AdmissionPolicy;kotlin.Long){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.sketch/HeavyHittersResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.sketch/HeavyHittersResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.sketch/HeavyHittersResult.toString|toString(){}[0]
@@ -7963,6 +7985,8 @@ final class com.eignex.kumulant.stat.sketch/HeavyHittersResult : com.eignex.kumu
     }
 
     final object Companion { // com.eignex.kumulant.stat.sketch/HeavyHittersResult.Companion|null[0]
+        final val $childSerializers // com.eignex.kumulant.stat.sketch/HeavyHittersResult.Companion.$childSerializers|{}$childSerializers[0]
+
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.sketch/HeavyHittersResult> // com.eignex.kumulant.stat.sketch/HeavyHittersResult.Companion.serializer|serializer(){}[0]
     }
 }

@@ -12,10 +12,38 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
+ * Which admission algorithm produced a [HeavyHittersResult], and so which bound its counts carry.
+ *
+ * The two are freely mergeable - both are `(key, count, error)` triples over the same key space - so a
+ * mismatch is not refused. What it costs is tightness, and [Classic] plus [MisraGries] merges to
+ * [MisraGries], the weaker of the two, on the same weakest-member rule as
+ * [com.eignex.kumulant.schema.runtime.AbstractStatGroup.concurrency].
+ */
+@Serializable
+enum class AdmissionPolicy {
+    /** Space-Saving (Metwally et al. 2005). Counts never underestimate; [HeavyHittersResult.errors] bounds
+     *  how far each may overestimate. */
+    Classic,
+
+    /** Lock-free Misra-Gries. Counts never overestimate; [HeavyHittersResult.deficit] bounds how far any
+     *  may underestimate. */
+    MisraGries,
+}
+
+/**
  * Space-Saving heavy-hitters snapshot. [keys], [counts], [errors] are parallel arrays of
- * length <= [capacity]; for each tracked key, [counts] is the (over)estimated weighted
- * count and [errors] is the Space-Saving overestimate bound (the count is at most this
- * much above the true count). [totalSeen] is the unweighted update count.
+ * length <= [capacity]. [totalSeen] is the unweighted update count.
+ *
+ * The true weighted count of a tracked key lies in `[counts[i] - errors[i], counts[i] + deficit]`. Each
+ * bound closes one direction, and which one is slack depends on [policy]:
+ *
+ *  - Under [AdmissionPolicy.Classic] a count can only overestimate. [errors] carries the per-key bound
+ *    inherited from the evicted minimum, and [deficit] is zero.
+ *  - Under [AdmissionPolicy.MisraGries] a count can only underestimate, because it is only ever
+ *    incremented exactly or decremented in bulk. [errors] is zero - correctly, not for want of a bound -
+ *    and [deficit] carries the number of decrement rounds, which bounds the shortfall for every key.
+ *
+ * A merge that mixes the two accumulates [deficit] and degrades [policy], so both bounds stay sound.
  */
 @Serializable
 @SerialName("HeavyHittersResult")
@@ -25,10 +53,16 @@ data class HeavyHittersResult(
     val counts: LongArray,
     val errors: LongArray,
     val totalSeen: Long,
+    /** Which algorithm produced these counts, and so which direction their slack runs in. */
+    val policy: AdmissionPolicy = AdmissionPolicy.Classic,
+    /** Bulk-decrement rounds absorbed; bounds how far any count may fall below the true count. */
+    val deficit: Long = 0L,
 ) : HasObservationCount {
 
     override val totalWeights: Double get() = totalSeen.toDouble()
     override fun equals(other: Any?): Boolean = other is HeavyHittersResult &&
+        policy == other.policy &&
+        deficit == other.deficit &&
         capacity == other.capacity &&
         keys.contentEquals(other.keys) &&
         counts.contentEquals(other.counts) &&
@@ -41,6 +75,8 @@ data class HeavyHittersResult(
         h = 31 * h + counts.contentHashCode()
         h = 31 * h + errors.contentHashCode()
         h = 31 * h + totalSeen.hashCode()
+        h = 31 * h + policy.hashCode()
+        h = 31 * h + deficit.hashCode()
         return h
     }
 
@@ -49,7 +85,7 @@ data class HeavyHittersResult(
         "keys=${keys.preview()}, " +
         "counts=${counts.preview()}, " +
         "errors=${errors.preview()}, " +
-        "totalSeen=$totalSeen)"
+        "totalSeen=$totalSeen, policy=$policy, deficit=$deficit)"
 }
 
 /**
@@ -77,10 +113,10 @@ data class HeavyHittersResult(
  *
  *  - [Concurrency.Relaxed]: lock-free Misra-Gries variant. On a miss when
  *    full, all counts are decremented by one in best-effort fashion; a freed
- *    slot is claimed via CAS. Counts under this mode are **not** overestimates
- *   ; they may underestimate by the number of decrements, and the classic
- *    overestimate bound does not hold. Heavy hitters still surface; small/cold
- *    keys are bled out.
+ *    slot is claimed via CAS. Counts under this mode are **not** overestimates;
+ *    they underestimate by at most the number of decrement rounds, which
+ *    [HeavyHittersResult.deficit] reports. Heavy hitters still surface;
+ *    small/cold keys are bled out.
  */
 class SpaceSavingStat(
     /** Maximum number of distinct keys tracked; smaller capacity means looser
@@ -97,7 +133,27 @@ class SpaceSavingStat(
 
     // Noop under None/Relaxed; real under Strict/HighWrite.
     private val outerLock = concurrency.welfordLock()
-    private val useMisraGries: Boolean = concurrency == Concurrency.Relaxed
+
+    /**
+     * Classic Space-Saving needs a consistent read of the minimum slot to evict and inherit its count,
+     * which cannot be done lock-free, so [Concurrency.Relaxed] gets Misra-Gries instead.
+     */
+    private val policy: AdmissionPolicy =
+        if (concurrency == Concurrency.Relaxed) AdmissionPolicy.MisraGries else AdmissionPolicy.Classic
+    private val useMisraGries: Boolean = policy == AdmissionPolicy.MisraGries
+
+    /**
+     * Bulk-decrement rounds, plus any absorbed from a merged snapshot.
+     *
+     * On the Misra-Gries path this is the only thing bounding how far a count can fall below the truth.
+     * It lives off the hot path: a decrement round runs only when the table is full with no free slot,
+     * not on every update.
+     *
+     * Sticky across a policy change, because a `Classic` stat that has merged a Misra-Gries snapshot is
+     * carrying that snapshot's shortfall and must keep reporting it.
+     */
+    private val deficitCell = mode.newLong(0L)
+    private val absorbedMisraGries = mode.newLong(0L)
 
     private val keys = mode.newLongArray(capacity)
     private val counts = mode.newLongArray(capacity)
@@ -181,6 +237,10 @@ class SpaceSavingStat(
             //    step 2 on the next iteration accepts the resulting non-positive
             //    counts.
             for (i in 0 until capacity) counts.add(i, -1L)
+            // Every count just moved one below where the stream put it, so the shortfall bound grows by
+            // one for every key. Concurrent rounds each count themselves, which is the conservative
+            // direction: the bound may exceed the true shortfall, never fall short of it.
+            deficitCell.add(1L)
             // Loop and retry.
         }
     }
@@ -211,6 +271,14 @@ class SpaceSavingStat(
         require(values.capacity == capacity) {
             "Cannot merge HeavyHitters with capacity=${values.capacity} into $capacity"
         }
+        // A policy mismatch is not refused. Unlike a hasher mismatch, which makes two sketches'
+        // arrays incomparable, both policies produce (key, count, error) triples over the same key
+        // space - only the tightness differs. Refusing would also break the obvious topology of many
+        // Relaxed workers feeding one Strict coordinator. So the snapshot is absorbed and the bounds
+        // are widened to stay sound: the incoming shortfall is added, and the reported policy degrades
+        // to the weaker of the two.
+        if (values.policy == AdmissionPolicy.MisraGries) absorbedMisraGries.store(1L)
+        deficitCell.add(values.deficit)
         if (useMisraGries) {
             for (i in values.keys.indices) {
                 admitMisraGries(values.keys[i], values.counts[i], values.errors[i])
@@ -234,8 +302,14 @@ class SpaceSavingStat(
                 errors.store(i, 0L)
             }
             totalSeenCell.store(0L)
+            deficitCell.store(0L)
+            absorbedMisraGries.store(0L)
         }
     }
+
+    /** This stat's own policy, weakened if it has absorbed a Misra-Gries snapshot. */
+    private fun effectivePolicy(): AdmissionPolicy =
+        if (useMisraGries || absorbedMisraGries.load() != 0L) AdmissionPolicy.MisraGries else policy
 
     override fun read(timestampNanos: Long): HeavyHittersResult = outerLock.guarded {
         // Filter active slots (count > 0). Snapshot per-slot; under Relaxed a brief
@@ -263,6 +337,8 @@ class SpaceSavingStat(
             counts = outC.copyOf(cursor),
             errors = outE.copyOf(cursor),
             totalSeen = totalSeenCell.load(),
+            policy = effectivePolicy(),
+            deficit = deficitCell.load(),
         )
     }
 
