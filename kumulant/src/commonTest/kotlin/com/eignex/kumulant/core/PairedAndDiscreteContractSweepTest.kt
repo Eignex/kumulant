@@ -214,24 +214,34 @@ class PairedAndDiscreteContractSweepTest {
     }
 
     @Test
-    fun `no paired stat throws on a NaN value`() {
+    fun `no paired stat throws on a non-finite value`() {
         // Both positions separately: a paired stat reaches x and y through different arithmetic, so
-        // one being safe is no evidence about the other. A NaN value propagates rather than being
-        // filtered; the only guarantee is that it does not become an exception.
+        // one being safe is no evidence about the other. A non-finite value propagates rather than being
+        // filtered, and may poison the stat; the only guarantee is that it does not become an exception.
+        // `filterFinite()` is how a caller opts out.
         val violations = mutableListOf<String>()
         for ((name, spec) in pairedSpecs) {
-            for (probe in listOf(Double.NaN to 1.0, 0.5 to Double.NaN, Double.NaN to Double.NaN)) {
+            val inf = Double.POSITIVE_INFINITY
+            val probes = listOf(
+                Double.NaN to 1.0,
+                0.5 to Double.NaN,
+                Double.NaN to Double.NaN,
+                inf to 1.0,
+                0.5 to inf,
+                -inf to -inf,
+            )
+            for (probe in probes) {
                 val stat = spec.materialize()
                 pairs.forEachIndexed { i, (x, y) -> stat.update(x, y, i.toLong() * 1_000_000_000L, 1.0) }
 
                 val thrown = runCatching { stat.update(probe.first, probe.second, readAt, 1.0) }.exceptionOrNull()
-                if (thrown != null) violations += "$name threw on a NaN $probe: ${thrown.message}"
+                if (thrown != null) violations += "$name threw on $probe: ${thrown.message}"
                 runCatching { stat.read(readAt) }.exceptionOrNull()?.let {
-                    violations += "$name threw reading back after a NaN $probe: ${it.message}"
+                    violations += "$name threw reading back after $probe: ${it.message}"
                 }
             }
         }
-        assertEquals(emptyList(), violations.map { it.take(110) }, "a NaN value must never throw")
+        assertEquals(emptyList(), violations.map { it.take(110) }, "a non-finite value must never throw")
     }
 
     @Test

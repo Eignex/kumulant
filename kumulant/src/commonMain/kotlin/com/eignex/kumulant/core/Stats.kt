@@ -45,19 +45,36 @@ import com.eignex.kumulant.stream.currentTimeNanos
  *   own KDoc says which applies; there is deliberately no library-wide answer,
  *   because subtraction is well defined for some statistics and not others.
  *
- * A `NaN` *value* is the opposite case, and the asymmetry is deliberate: it is
- * **not** filtered. It is a real observation whose magnitude happens to be
- * unusable, so it propagates into the accumulator exactly as IEEE-754 and the
- * standard library propagate it, and the stat reads back `NaN` from then on. No
- * stat silently discards a value, because a stat that under-reported the data it
- * was given would be lying about its own sample count, and none of them can know
- * whether a caller's `NaN` means "no reading" or a bug in the caller's arithmetic.
+ * A non-finite *value* - `NaN` or either infinity - is the opposite case, and the
+ * asymmetry is deliberate: it is **not** filtered. It is a real observation whose
+ * magnitude happens to be unusable, so it propagates into the accumulator exactly
+ * as IEEE-754 and the standard library propagate it, and the stat reads back a
+ * non-finite number from then on. No stat silently discards a value, because a stat
+ * that under-reported the data it was given would be lying about its own sample
+ * count, and none of them can know whether a caller's `NaN` means "no reading" or a
+ * bug in the caller's arithmetic.
  *
- * The one thing every stat does guarantee about a `NaN` value is that it never
- * *throws*: a gap in the input must not become an outage in the caller. Two
- * consequences are worth knowing, since a `NaN` compares false against everything:
- * a `NaN` value lands in whichever bucket a bucketing stat reaches by fallthrough,
- * and it never displaces a running extremum.
+ * Exactly one thing is guaranteed here, and it is worth being blunt about how narrow
+ * it is: **a non-finite value never throws**. That is the whole of it. Such a value
+ * is allowed to poison the stat permanently, and in the accumulating families it
+ * does - a `NaN` folded into a mean is reported for ever, and no later observation
+ * clears it. What is ruled out is a gap in the input becoming an outage in the
+ * caller. Beyond that, what a stat does with a non-finite value is the stat's own
+ * business, and the behaviour legitimately differs: an accumulator propagates it, a
+ * counting stat records an observation it cannot represent, and an extremum ignores
+ * it because `NaN` compares false against everything. That last property also means
+ * a `NaN` lands in whichever bucket a bucketing stat reaches by fallthrough.
+ *
+ * A caller who needs more than the no-throw guarantee asks for it explicitly, with
+ * [filterFinite][com.eignex.kumulant.schema.ops.filterFinite]. That drops any update
+ * carrying a non-finite input, across whichever inputs the modality has, and it is
+ * the supported way to keep such observations out of a stat. Note that it is
+ * stronger than filtering on `NaN` alone: an infinity passes every ordering
+ * comparison the expression AST can express, so `!isNaN()` lets one through.
+ *
+ * Domain restrictions are a separate matter and still apply. `HdrHistogramStat`
+ * takes non-negative values only, so it refuses `-Infinity` for the same reason it
+ * refuses `-5.0`. That is the stat's domain, not a non-finiteness rule.
  *
  * Callers who want `NaN` dropped should say so upstream, where the intent is
  * explicit and reviewable, rather than relying on each stat to guess:

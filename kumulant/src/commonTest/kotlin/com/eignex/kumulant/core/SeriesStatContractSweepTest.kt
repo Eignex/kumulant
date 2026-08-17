@@ -228,20 +228,48 @@ class SeriesStatContractSweepTest {
     }
 
     @Test
-    fun `no series stat throws on a NaN value`() {
-        // A NaN value is not filtered - it propagates, and the stat reads back NaN. The one thing
-        // ruled out is turning a gap in the input into an outage in the caller, which HdrHistogram
-        // did: its `value >= 0.0` check is false for NaN, so it reported a NaN as a negative value.
+    fun `no series stat throws on a non-finite value`() {
+        // The *only* guarantee the library makes about a non-finite value, and the reason this sweep
+        // exists rather than a per-stat rule. A non-finite value is allowed to propagate and allowed to
+        // poison the stat for good - it was a real observation of something unusable, and hiding that
+        // would turn a gap in the input into a confidently wrong answer. What is ruled out is turning it
+        // into an outage in the caller. HdrHistogram used to: its `value >= 0.0` check is false for NaN,
+        // so it rejected a NaN as if it were a negative value.
+        //
+        // Both infinities are swept alongside NaN, because they reach different code. An infinity passes
+        // every ordering comparison, so a range check that a NaN fails will let an infinity through and
+        // fail somewhere further in. A caller who wants none of them uses `filterFinite()`.
+        // What is asserted is precisely that *non-finiteness* is not what causes a throw, which is not the
+        // same as "every value is accepted". A stat may legitimately restrict its domain - HdrHistogram
+        // takes non-negative values only - and `-Infinity` is negative, so refusing it there is the same
+        // rule that refuses -5.0 rather than a non-finite defect. Each infinity is therefore paired with a
+        // finite value of the same sign, and a stat that rejects both is exercising its domain rather than
+        // tripping over the infinity. NaN has no signed analogue, so it must never throw at all: it is the
+        // case that broke before, when a `value >= 0.0` guard read a NaN as negative.
+        val probes = listOf(
+            Double.NaN to null,
+            Double.POSITIVE_INFINITY to 1e6,
+            Double.NEGATIVE_INFINITY to -1e6,
+        )
         val violations = mutableListOf<String>()
         for ((name, spec) in specs) {
-            val stat = primed(spec)
-            val thrown = runCatching { stat.update(Double.NaN, readAt, 1.0) }.exceptionOrNull()
-            if (thrown != null) violations += "$name threw on a NaN value: ${thrown.message}"
-            runCatching { stat.read(readAt) }.exceptionOrNull()?.let {
-                violations += "$name threw reading back after a NaN value: ${it.message}"
+            for ((value, finiteAnalogue) in probes) {
+                val thrown = runCatching { primed(spec).update(value, readAt, 1.0) }.exceptionOrNull()
+                if (thrown != null) {
+                    val analogueThrows = finiteAnalogue != null &&
+                        runCatching { primed(spec).update(finiteAnalogue, readAt, 1.0) }.exceptionOrNull() != null
+                    if (!analogueThrows) violations += "$name threw on $value but accepts $finiteAnalogue"
+                    continue
+                }
+
+                val stat = primed(spec)
+                stat.update(value, readAt, 1.0)
+                runCatching { stat.read(readAt) }.exceptionOrNull()?.let {
+                    violations += "$name threw reading back after a value of $value: ${it.message}"
+                }
             }
         }
-        assertEquals(emptyList(), violations.toList(), "a NaN value must never throw")
+        assertEquals(emptyList(), violations.map { it.take(110) }, "non-finiteness must not be what throws")
     }
 
     @Test
