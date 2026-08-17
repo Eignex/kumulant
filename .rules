@@ -30,12 +30,25 @@ Run `./gradlew check lintDocs`.
 - `benchmark` (or `jvmBenchmark` / `linuxX64Benchmark`) runs the JMH suites.
 - Cite drift and throughput numbers in KDoc only when measured from these tasks; drop them otherwise.
 
+## Design
+
+- A concurrent stat may drift, but must never throw, tear, or drop an update. Put a new stat in one of
+  the four categories in `stream/ConcurrencyResolution.kt` and use its helper; don't invent a fifth.
+- Weights: zero is a no-op, negative downdates where the metric has an inverse and throws where it
+  doesn't. Guard against corruption only, not surprising numbers.
+- Stats stay generic primitives; no domain-named stats (Apdex, Sharpe, MTBF, RSI).
+- Breaking changes are fine, kumulant is unreleased. Regenerate `kumulant/api/*.api` via
+  `:kumulant:updateKotlinAbi` and check the delta is what you intended.
+
 ## Style
 
 - Prefer clear naming and types over comments. Comments explain *why* (soundness, perf, lifecycle) and never
   restate the code. Never narrate changes, avoid "now/no longer/previously", and don't cite issues. Keep `TODO`/`FIXME`.
 - KDoc on public API only. Use functional notation for math (`succ(i)`, not `succ[i]`); use `[Symbol]` for links.
-- Stat, bandit, and package KDoc follow the templates in `docs/internal/`.
+- Stat, bandit, and package-page KDoc follow `docs/internal/STAT_KDOC_TEMPLATE.md`,
+  `BANDIT_KDOC_TEMPLATE.md`, and `STAT_PACKAGE_TEMPLATE.md`. Read the matching one before writing docs.
+- No em dashes in prose that lands in the repo or a release (PR bodies, release notes, docs).
+- Don't edit anything under `.github/` unless asked directly.
 - Single-line conventional commits, no scope, no body/trailers:
   `feat: `, `fix: `, `chore: `, `refactor: `, `docs: `, `test: `.
 - PR body: follow `.github/pull_request_template.md`, with `Closes #NN` on its own line at the top.
