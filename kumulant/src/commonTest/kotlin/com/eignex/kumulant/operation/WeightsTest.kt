@@ -60,10 +60,9 @@ class WeightsTest {
 
     @Test
     fun `withWeight passes a zero caller weight through instead of overriding it`() {
-        // This used to override the zero too, which broke the library-wide guarantee on Stat that a
-        // weight of 0.0 changes no state whatever the modality: a zero-weight update to a CountStat
-        // still counted. The override sets the magnitude of a real observation, and "ignore this
-        // observation" is not a magnitude.
+        // Overriding the zero would break the library-wide guarantee on Stat that a weight of 0.0
+        // changes no state whatever the modality. The override sets the magnitude of a real
+        // observation, and "ignore this observation" is not a magnitude.
         val discrete = HyperLogLogStat(precision = 10).withWeight(1.0)
         for (i in 1L..50L) discrete.update(i, weight = 0.0)
         assertEquals(0.0, discrete.read().estimate, "a zero-weight update must not register")
@@ -77,10 +76,8 @@ class WeightsTest {
 
     @Test
     fun `withWeight passes an inert caller weight through for every modality`() {
-        // Zero and NaN are both inert; see Stat. Each modality has its own adapter, and the regression
-        // one open-coded the condition so it covered zero but not NaN - a NaN weight through it became
-        // a real observation of the constant weight, while the leaf stat it wrapped correctly no-opped.
-        // Sweeping all five is what stops the odd one out from drifting again.
+        // Zero and NaN are both inert; see Stat. Each modality has its own adapter, so sweeping all
+        // five is what stops one of them drifting from the rest.
         for (inert in listOf(0.0, Double.NaN)) {
             val series = SumStat().withWeight(2.0)
             series.update(3.0, weight = inert)

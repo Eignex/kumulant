@@ -121,8 +121,8 @@ class IsotonicCalibratorStat(
      */
     private fun pav(values: DoubleArray, weights: DoubleArray): DoubleArray {
         val n = values.size
-        // Pools stored as parallel arrays in `out` and `wSum`; `starts` tracks the
-        // first-index covered by each pool so we can fill back at the end.
+        // Pools held as parallel arrays; poolStart records the first index each pool
+        // covers so the means can be fanned back out at the end.
         val poolMean = DoubleArray(n)
         val poolWeight = DoubleArray(n)
         val poolStart = IntArray(n)

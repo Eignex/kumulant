@@ -5,15 +5,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * A heavy-hitters snapshot says which algorithm produced it and bounds its counts in both directions.
- *
- * The stat runs classic Space-Saving under most levels and a lock-free Misra-Gries variant under
- * [Concurrency.Relaxed], because classic's evict-and-inherit needs a consistent read of the minimum slot.
- * The two bound their counts in opposite directions, and the snapshot used to carry neither the policy nor
- * the Misra-Gries shortfall - so a caller could not tell which guarantee applied, and a mixed merge
- * silently republished counts under the wrong one.
- */
+// The stat runs classic Space-Saving under most levels and a lock-free Misra-Gries variant under
+// Concurrency.Relaxed, because classic's evict-and-inherit needs a consistent read of the minimum
+// slot. The two bound their counts in opposite directions.
 class SpaceSavingAdmissionPolicyTest {
 
     private fun feed(stat: SpaceSavingStat, distinctKeys: Int, perKey: Int) {
@@ -58,8 +52,7 @@ class SpaceSavingAdmissionPolicyTest {
 
     @Test
     fun `misra-gries reports the shortfall its decrements cause`() {
-        // Far more distinct keys than slots, so the table fills and decrement rounds have to run. Without
-        // a deficit the all-zero `errors` array read as "these counts are exact", which they are not.
+        // Far more distinct keys than slots, so the table fills and decrement rounds have to run.
         val stat = SpaceSavingStat(capacity = 4, concurrency = Concurrency.Relaxed)
         feed(stat, distinctKeys = 40, perKey = 2)
 
@@ -71,11 +64,9 @@ class SpaceSavingAdmissionPolicyTest {
 
     @Test
     fun `the reported bounds actually contain the true counts`() {
-        // The point of tracking the deficit. One key is fed heavily and the rest are noise, so the heavy
-        // key survives eviction; its true count must lie inside [count - error, count + deficit].
-        // The two directions are not interchangeable: `errors` is how far a count may sit ABOVE the
-        // truth, so it opens the lower bound, and `deficit` is how far it may sit BELOW, so it opens
-        // the upper one. Swapping that pair is what this assertion caught when it was first written.
+        // One key is fed heavily and the rest are noise, so the heavy key survives eviction. The two
+        // directions are not interchangeable: `errors` is how far a count may sit ABOVE the truth, so
+        // it opens the lower bound, and `deficit` is how far it may sit BELOW, so it opens the upper.
         for (level in listOf(Concurrency.None, Concurrency.Relaxed)) {
             val stat = SpaceSavingStat(capacity = 8, concurrency = level)
             val heavy = 7L

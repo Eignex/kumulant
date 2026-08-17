@@ -22,11 +22,8 @@ class HierarchicalBayesianRegressionTest {
         val pop = HierarchicalBayesianRegression(featureSize = 3, initialPriorVariance = 2.0)
         val prior = pop.populationPrior
         assertEquals(3, prior.mean.size)
-        // Default mean is zero
         for (i in 0 until 3) assertEquals(0.0, prior.mean[i])
-        // Diagonal = 2.0
         for (i in 0 until 3) assertEquals(2.0, prior.covariance[i, i])
-        // Off-diagonals = 0
         for (i in 0 until 3) {
             for (j in 0 until 3) {
                 if (i != j) assertEquals(0.0, prior.covariance[i, j])
@@ -40,10 +37,8 @@ class HierarchicalBayesianRegressionTest {
         val pop = HierarchicalBayesianRegression(featureSize = 2, initialPriorVariance = 5.0)
         val inst = pop.createInstance()
         val snap = inst.read()
-        // Fresh instance: weights start at prior mean (zeros)
         assertEquals(0.0, snap.weights[0])
         assertEquals(0.0, snap.weights[1])
-        // And totalWeights is 0 (no observations folded in yet)
         assertEquals(0.0, snap.totalWeights)
     }
 

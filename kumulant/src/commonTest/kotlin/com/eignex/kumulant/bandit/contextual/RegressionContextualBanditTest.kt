@@ -94,7 +94,6 @@ class RegressionContextualBanditTest {
         )
         bandit.update(0, feat(1.0, 0.0), 5.0)
         bandit.update(0, feat(1.0, 0.0), 5.0)
-        // Reading via armStat must match armResult and snapshot.
         assertEquals(bandit.armResult(0), bandit.armStat(0).read(0L))
         assertEquals(bandit.snapshot()[0], bandit.armResult(0))
     }
@@ -179,7 +178,6 @@ class RegressionContextualBanditTest {
         val fresh = original.create(original.random)
         assertEquals(4, fresh.nbrArms)
         assertEquals(0.0, fresh.armResult(0).totalWeights, "fresh instance has no data")
-        // Original is untouched.
         assertTrue(original.armResult(0).totalWeights > 0.0)
     }
 
@@ -285,7 +283,6 @@ class RegressionContextualBanditTest {
         val otherGlobal = BayesianRegressionStat(featureSize = 2).also {
             it.update(doubleArrayOf(1.0, 0.0), 1.0)
         }.read()
-        // Should not throw
         bandit.mergeGlobal(otherGlobal)
         assertNull(bandit.globalSnapshot())
     }

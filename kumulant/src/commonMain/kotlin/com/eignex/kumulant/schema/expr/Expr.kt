@@ -421,10 +421,8 @@ data class In(
 ) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean {
         // `in values` is List<Double>.contains, which boxes and uses Double.equals: total-order
-        // semantics where NaN == NaN and 0.0 != -0.0. Eq and Switch compare primitives with IEEE ==,
-        // so the three exact-equality selectors disagreed - and In(X, listOf(NaN)), meant to be
-        // unsatisfiable, admitted every NaN. This node exists to flatten Eq chains, so it has to
-        // agree with Eq.
+        // semantics where NaN == NaN and 0.0 != -0.0. This node exists to flatten Eq chains, so it
+        // has to compare primitives with IEEE == the way Eq and Switch do.
         val value = of.eval(x, y, v, primary)
         for (candidate in values) if (value == candidate) return true
         return false
@@ -1005,9 +1003,7 @@ fun ScalarExpr.inRange(min: Double, max: Double): BoolExpr = InRange(this, min, 
 /**
  * Reduce the whole feature vector to one scalar with [op].
  *
- * The vector-consuming half of the AST. `VectorExpr` and this family had no Kotlin constructor at all,
- * which left [VFoldOp] a public enum with no reachable consumer and made `transformVector` and
- * `transformX` uncallable outside the module despite both being public.
+ * The vector-consuming half of the AST, and the only Kotlin-side consumer of [VFoldOp].
  */
 fun vFold(op: VFoldOp): ScalarExpr = VFold(op)
 

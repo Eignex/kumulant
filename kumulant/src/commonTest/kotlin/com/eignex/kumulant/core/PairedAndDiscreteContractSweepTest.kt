@@ -25,11 +25,9 @@ import com.eignex.kumulant.schema.spec.SpaceSaving
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * The same library-wide contracts as [SeriesStatContractSweepTest], over the paired and discrete
- * modalities. [Stat] states the zero-weight guarantee holds "whatever the modality", so the sweep
- * has to cross modalities to be worth anything.
- */
+// The same library-wide contracts as [SeriesStatContractSweepTest], over the paired and discrete
+// modalities. [Stat] states the zero-weight guarantee holds "whatever the modality", so the sweep
+// has to cross modalities to be worth anything.
 class PairedAndDiscreteContractSweepTest {
 
     private val pairedSpecs: List<Pair<String, PairedStatSpec<*>>> = listOf(
@@ -48,8 +46,6 @@ class PairedAndDiscreteContractSweepTest {
     )
 
     private val discreteSpecs: List<Pair<String, DiscreteStatSpec<*>>> = listOf(
-        // HyperLogLog was missing from this catalogue, which is how it stayed the one sketch no sweep
-        // covered even though it carries the same weight guard as the other five.
         "HyperLogLog" to HyperLogLog(),
         "LinearCounting" to LinearCounting(),
         "BloomFilter" to BloomFilter(),
@@ -122,9 +118,9 @@ class PairedAndDiscreteContractSweepTest {
             keys.forEachIndexed { i, k -> stat.update(k, i.toLong() * 1_000_000_000L, 1.0) }
             val before = stat.read(readAt)
 
-            // The sketches were the worst case here: `weight <= 0.0` is false for NaN and
-            // `ceil(NaN).toLong()` is 0, which the coerce lifted to 1, so a NaN weight became a real
-            // observation of weight one.
+            // The sketches are the delicate case: `weight <= 0.0` is false for NaN and
+            // `ceil(NaN).toLong()` is 0, which a coerce would lift to 1, turning a NaN weight into a
+            // real observation of weight one.
             val thrown = runCatching { stat.update(2L, readAt, Double.NaN) }.exceptionOrNull()
             if (thrown != null) {
                 violations += "$name threw on a NaN weight: ${thrown.message}"
@@ -139,10 +135,9 @@ class PairedAndDiscreteContractSweepTest {
 
     @Test
     fun `an infinite weight is a no-op for every paired and discrete stat`() {
-        // The paired modality was the worst of the three here: nine of its twelve stats reported NaN
-        // after a `+Infinity` weight, because a loss or a calibration curve divides an accumulated total
-        // by an accumulated weight and both had gone infinite. See isInertWeight on why an infinity is
-        // not a multiplicity and why the limit was not worth chasing.
+        // The paired modality is the delicate one: a loss or a calibration curve divides an accumulated
+        // total by an accumulated weight, so an absorbed infinity turns both infinite and the read NaN.
+        // See isInertWeight on why an infinity is not a multiplicity.
         val violations = mutableListOf<String>()
         for (weight in doubleArrayOf(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
             for ((name, spec) in pairedSpecs) {

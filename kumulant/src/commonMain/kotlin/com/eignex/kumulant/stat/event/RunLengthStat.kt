@@ -22,8 +22,7 @@ data class RunLengthResult(
      *
      * Only [RunLengthStat.merge] needs it, and it is what makes that merge correct: concatenating
      * two streams can create a run spanning the join, whose length is the left stream's *trailing*
-     * run plus the right stream's *leading* one. Merge used to add the two trailing runs, which is a
-     * length no run in the data ever had.
+     * run plus the right stream's *leading* one.
      */
     val leading: Long = current,
     /**

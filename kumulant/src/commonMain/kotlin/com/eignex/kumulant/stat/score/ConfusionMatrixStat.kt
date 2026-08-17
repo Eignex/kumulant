@@ -146,10 +146,11 @@ data class ConfusionMatrixResult(
 
 /**
  * Streaming K-by-K confusion matrix over paired `(predictedClass, trueClass)`
- * observations. Inputs are class indices in `[0, numClasses)`; the doubles are
- * truncated to ints via `toInt()` and out-of-range pairs are ignored. Use for
- * online classifier evaluation; pair with the metric getters on
- * [ConfusionMatrixResult] for accuracy, per-class P/R/F1, macro F1, and MCC.
+ * observations. Class indices are resolved by [asClassLabel]; pairs naming anything
+ * outside `[0, numClasses)` are ignored.
+ *
+ * **Use cases:** online classifier evaluation; the metric getters on
+ * [ConfusionMatrixResult] give accuracy, per-class P/R/F1, macro F1, and MCC.
  *
  * **Memory:** O([numClasses]^2) striped atomic cells.
  *

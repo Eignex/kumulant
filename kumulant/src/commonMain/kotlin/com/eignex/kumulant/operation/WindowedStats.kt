@@ -64,7 +64,6 @@ private fun <R : Result, S : Stat<R>> windowedRead(template: S, ring: SliceRing<
     return acc.read(timestampNanos)
 }
 
-/** Implementation of [SeriesStat.windowed]; see that function for behavior. */
 internal class WindowedSeriesStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
@@ -87,7 +86,6 @@ internal class WindowedSeriesStat<R : Result>(
     override fun reset() = ring.reset()
 }
 
-/** Implementation of [PairedStat.windowed]; see that function for behavior. */
 internal class WindowedPairedStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
@@ -110,7 +108,6 @@ internal class WindowedPairedStat<R : Result>(
     override fun reset() = ring.reset()
 }
 
-/** Implementation of [DiscreteStat.windowed]; see that function for behavior. */
 internal class WindowedDiscreteStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,
@@ -137,7 +134,6 @@ internal class WindowedDiscreteStat<R : Result>(
     override fun reset() = ring.reset()
 }
 
-/** Implementation of [VectorStat.windowed]; see that function for behavior. */
 internal class WindowedVectorStat<R : Result>(
     private val windowDuration: Duration,
     private val slices: Int,

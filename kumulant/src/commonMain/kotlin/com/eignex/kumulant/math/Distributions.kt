@@ -45,13 +45,13 @@ private fun Random.standardNormal(): Double {
     while (true) {
         val hz = nextInt()
         val iz = hz and (ZIGGURAT_N - 1)
-        // -Int.MIN_VALUE is still Int.MIN_VALUE, so a plain `-hz` left absHz negative once every 2^32
-        // draws and the comparison below was trivially true, taking the layer-0 inner-rectangle fast
-        // path where the tail sampler was required. Clamping that one input to Int.MAX_VALUE fixes it
-        // without widening to Long: every ZIGGURAT_KN entry is at most Int.MAX_VALUE, so both
-        // Int.MAX_VALUE and the true magnitude 2^31 fail the test identically and fall through to the
-        // tail. Widening would be correct too, but Kotlin/JS emulates Long as a class, which put two
-        // boxed allocations and a compare() call in the 97% fast path of every normal draw.
+        // -Int.MIN_VALUE is still Int.MIN_VALUE, so a plain `-hz` would leave absHz negative once every
+        // 2^32 draws, making the comparison below trivially true and taking the layer-0 inner-rectangle
+        // fast path where the tail sampler is required. Clamping that one input to Int.MAX_VALUE avoids
+        // widening to Long: every ZIGGURAT_KN entry is at most Int.MAX_VALUE, so both Int.MAX_VALUE and
+        // the true magnitude 2^31 fail the test identically and fall through to the tail. Widening is
+        // correct too, but Kotlin/JS emulates Long as a class, putting two boxed allocations and a
+        // compare() call in the 97% fast path of every normal draw.
         val absHz = if (hz >= 0) {
             hz
         } else if (hz == Int.MIN_VALUE) {
@@ -119,9 +119,9 @@ private val ZIGGURAT_INIT = run {
 fun Random.nextLogNormal(mean: Double, variance: Double): Double {
     require(mean > 0.0) { "nextLogNormal requires mean > 0; got $mean" }
     require(variance >= 0.0) { "nextLogNormal requires variance >= 0; got $variance" }
-    // Derive sigma from the coefficient of variation rather than from phi/mean directly: squaring
-    // the mean underflowed to 0.0 well inside the documented domain (mean > 0), which made
-    // ln(phi^2 / mean^2) evaluate 0.0/0.0 and return NaN - and one exponent earlier it could return a
+    // Derive sigma from the coefficient of variation rather than from phi/mean directly: squaring the
+    // mean underflows to 0.0 well inside the documented domain (mean > 0), which makes
+    // ln(phi^2 / mean^2) evaluate 0.0/0.0 and return NaN, and one exponent earlier yields a
     // non-positive draw from a strictly positive distribution. variance / mean^2 is the same ratio
     // with one fewer chance to underflow, and log1p keeps precision when it is small.
     val cv2 = (variance / mean) / mean

@@ -6,10 +6,6 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.weightedReads
 import kotlin.test.Test
 
-/**
- * Cross-mode smoke tests for the event family: each stat should produce identical math
- * under sequential single-threaded updates regardless of the [Concurrency] mode chosen.
- */
 class EventStatConcurrencyTest {
 
     @Test

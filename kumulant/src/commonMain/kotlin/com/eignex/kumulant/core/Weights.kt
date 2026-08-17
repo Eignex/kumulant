@@ -9,13 +9,11 @@ package com.eignex.kumulant.core
  *
  * The infinities are the less obvious half. `+Infinity` does have a clean mathematical reading - the
  * weighted mean update `w / (W + w)` tends to 1, so the mean tends to the observed value and the
- * variance to zero - but almost nothing in the library computed that limit. The recurrences evaluate
- * `Infinity / Infinity` and `Infinity * 0` and reported the resulting `NaN` as an answer, in 22 stat and
- * weight combinations across three modalities. Supporting the limit properly would mean rewriting eleven
- * recurrences, up to and including the third and fourth moments, and would still leave every affected
- * stat with `totalWeights = Infinity` permanently, wedging the bias corrections that divide by it. A
- * caller who wants to pin a stat to a value is better served by saying so than by smuggling an infinity
- * through the weight channel.
+ * variance to zero - but the recurrences do not reach that limit: they evaluate `Infinity / Infinity`
+ * and `Infinity * 0` and yield `NaN`. Supporting the limit would mean special-casing every recurrence
+ * up to the fourth moment, and would still leave the stat with `totalWeights = Infinity` permanently,
+ * wedging the bias corrections that divide by it. A caller who wants to pin a stat to a value is better
+ * served by saying so than by smuggling an infinity through the weight channel.
  *
  * Note that this is the *weight*, not the value: a `NaN` or infinite value is a real observation of an
  * unusable number and propagates. See [Stat] for the contract and why the two differ.
@@ -36,12 +34,10 @@ internal inline fun Double.isInertWeight(): Boolean = !isFinite() || this == 0.0
  * dropped alongside the inert cases. See [Stat] for which stats fall on which side.
  *
  * `!(this > 0.0)` rather than `this <= 0.0 || isNaN()` because `NaN > 0.0` is already false: the `NaN`
- * case falls out of the comparison instead of needing a second clause a caller has to remember. Twenty
- * call sites used to spell out the two-clause form, and the sites that spelled it out slightly
- * differently are exactly where the class-label defects lived.
+ * case falls out of the comparison instead of needing a second clause a caller has to remember.
  *
- * The `isFinite` clause is not redundant with that: `+Infinity > 0.0` is true, so an infinite weight
- * used to pass here as an ordinary live observation and land in a histogram bucket or a sketch register
+ * The `isFinite` clause is not redundant with that: `+Infinity > 0.0` is true, so without it an infinite
+ * weight would pass as an ordinary live observation and land in a histogram bucket or a sketch register
  * as infinite mass. See [isInertWeight] for why an infinity is not a multiplicity.
  */
 @Suppress("NOTHING_TO_INLINE") // as with isInertWeight; the non-JVM targets pay for the call
@@ -71,10 +67,9 @@ internal inline fun Double.isNotPositiveWeight(): Boolean = !(this > 0.0) || !is
  */
 internal fun requireLiveWeight(currentTotal: Double, weight: Double) {
     // Callers drop a non-finite weight before reaching here, but keep the guard local too. `NaN > 0.0`
-    // is false, so the require below would fire and report a NaN weight as a downdate emptying the
-    // accumulator - wrong, and the one thing a NaN weight must not do now that it is a no-op. A
-    // `-Infinity` weight would trip it for the same spurious reason, reporting an unrepresentable
-    // downdate rather than the inert weight it now is.
+    // is false, so the require below would otherwise fire and report a NaN weight as a downdate emptying
+    // the accumulator - wrong, since a NaN weight is a no-op. A `-Infinity` weight would trip it for the
+    // same spurious reason.
     if (!weight.isFinite()) return
     require(currentTotal + weight > 0.0) {
         "weight $weight would take the accumulated weight from $currentTotal to " +
@@ -95,10 +90,6 @@ internal fun requireLiveWeight(currentTotal: Double, weight: Double) {
  * `NaN.toInt()` is `0`, which means the most obviously invalid label in the language arrives looking
  * like a perfectly ordinary first class. Demanding `c.toDouble() == this` rejects all three: only a
  * `Double` that is exactly an integer survives.
- *
- * This was open-coded at five sites with three different policies. The two GLM classifiers
- * round-tripped, the forest and the tree truncated, and `ClassCountsStat` truncated as well - so the
- * same `y = 1.5` trained as class 1 on the tree path and was refused on the GLM path.
  *
  * @param numClasses exclusive upper bound on the index; `numClasses` itself is not a class.
  * @return the class index, or `-1` if this `Double` does not name one. `-1` rather than `null` to keep

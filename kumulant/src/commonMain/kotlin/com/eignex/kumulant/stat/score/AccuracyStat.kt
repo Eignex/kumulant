@@ -17,8 +17,8 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  * That agreement is why [numClasses] is required: [ConfusionMatrixResult.accuracy] exists so a caller can
  * cross-check the two, which only means anything if both bound the labels identically.
  *
- * For the full P/R/F1 surface and a per-class breakdown reach for [ConfusionMatrixStat]; this stat is the
- * O(1)-memory shortcut when only the scalar accuracy is needed.
+ * **Use cases:** scalar accuracy monitoring for a classifier. Reach for [ConfusionMatrixStat] when the
+ * full P/R/F1 surface or a per-class breakdown is needed; this stat is the O(1)-memory shortcut.
  *
  * **Memory:** O(1); backed by a [MeanStat]. [numClasses] only bounds the labels, it never allocates -
  * that is the saving over [ConfusionMatrixStat]'s `numClasses^2` cells.
@@ -41,8 +41,7 @@ class AccuracyStat(
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         // No separate NaN guard: asClassLabel already rejects NaN, because `NaN.toInt()` is 0 and
-        // `0.0 == NaN` is false, so the round-trip check fails. ConfusionMatrixStat carried a redundant
-        // one for the same reason.
+        // `0.0 == NaN` is false, so the round-trip check fails.
         val predicted = x.asClassLabel(numClasses)
         val truth = y.asClassLabel(numClasses)
         if (predicted < 0 || truth < 0) return

@@ -149,9 +149,8 @@ class DiagonalRegressionStat(
             val otherPrecision = values.precision.toDoubleArray()
             // Subtract one copy of the prior, as BayesianRegressionStat.merge does with
             // H_new = H_self + H_other - H_prior. Every replica seeds its precision at
-            // priorPrecision, so pooling additively counted the prior once per replica: merging an
-            // *untrained* snapshot (precision == priorPrecision, weights == 0) pulled the trained
-            // weights toward zero and inflated the reported precision. The prior mean is zero, so it
+            // priorPrecision, so pooling additively would count the prior once per replica and let an
+            // *untrained* snapshot pull the trained weights toward zero. The prior mean is zero, so it
             // contributes nothing to the information vector and only the denominator changes.
             for (i in 0 until featureSize) {
                 val p1 = precision[i]

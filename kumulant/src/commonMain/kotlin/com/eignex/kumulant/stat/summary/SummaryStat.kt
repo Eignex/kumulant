@@ -72,11 +72,9 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
     private val maxCell = monotonic.newDouble(Double.NEGATIVE_INFINITY)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        // Nothing mutates before the weight has been accepted. Two separate ordering constraints
-        // live here, and both concern the extrema, which have no inverse: an inert weight must not
-        // move min and max (the two CAS calls used to run unconditionally, so a zero-weight
-        // observation still did), and neither must a downdate that requireLiveWeight goes on to
-        // reject, or the stat is left reporting a value from an observation it refused.
+        // The extrema have no inverse, so nothing may move min or max before the weight is accepted:
+        // neither an inert weight nor a downdate requireLiveWeight goes on to reject, or the stat is
+        // left reporting a value from an observation it refused.
         if (weight.isInertWeight()) return
         lock.guarded {
             val priorW = totalWeights.load()
@@ -92,9 +90,8 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
     }
 
     override fun merge(values: SummaryResult) {
-        // read() sanitises the empty sentinels to 0.0, so an untouched shard reports min = max = 0.0
-        // and folding those in used to drag this stat's min down to a value never observed - and, on
-        // an all-negative stream, its max up. Skip the whole merge when there is nothing to merge.
+        // read() sanitises the empty sentinels to 0.0, so folding in an untouched shard would drag
+        // min down (or, on an all-negative stream, max up) to a value never observed.
         if (values.totalWeights <= 0.0) return
         casMin(minCell, values.min)
         casMax(maxCell, values.max)

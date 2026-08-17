@@ -26,13 +26,10 @@ internal const val RENORM_FLOOR: Double = 1e-100
  * by its maximum is free: it changes no arm's or expert's relative standing. That is what makes both
  * ends of the range recoverable rather than just the top one.
  *
- * Both ends need guarding, and only the overflow end used to be. A run of large negative rewards drives
- * every `exp(eta * gain)` toward zero, and once the array is *entirely* zero no later reward can lift
- * it: every subsequent update multiplies zero by something. Rescaling by the surviving maximum keeps
- * the array alive; the fully collapsed case has no ratios left to preserve, so it resets to uniform.
- *
- * EXP3 and EXP4 carried separate copies of this, spelled with different branch structure - EXP3 tested
- * the ceiling and the floor in two `if`s, EXP4 in one disjunction - but they compute the same thing.
+ * Both ends need guarding. A run of large negative rewards drives every `exp(eta * gain)` toward zero,
+ * and once the array is *entirely* zero no later reward can lift it: every subsequent update multiplies
+ * zero by something. Rescaling by the surviving maximum keeps the array alive; the fully collapsed case
+ * has no ratios left to preserve, so it resets to uniform.
  */
 internal fun DoubleArray.renormaliseExponentialWeights() {
     var maxW = 0.0

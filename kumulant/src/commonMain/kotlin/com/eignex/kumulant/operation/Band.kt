@@ -35,13 +35,11 @@ internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private va
         error("band wrapper cannot merge BandResult; merge the inner stat directly")
 
     /**
-     * Rebuild as a band *around* a windowed inner stat rather than a window around a band.
+     * Band *around* a windowed inner stat rather than a window around a band.
      *
-     * The two compose to the same thing: this wrapper forwards update / reset / create untouched and
-     * only projects in [read], so windowing the inner stat and banding the result is identical in
-     * meaning. It is not identical in behaviour, because a window reads by merging its slices into a
-     * fresh template - and merging *through* this wrapper throws, so a windowed band threw on every
-     * read once a slice had data. Both wrappers are wire-reachable, so the combination has to work.
+     * The two orders mean the same thing, since this wrapper only projects in [read], but only this
+     * one works: a window reads by merging its slices into a fresh template, and merging *through*
+     * this wrapper throws.
      */
     internal fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<BandResult> =
         BandSeriesStat(delegate.windowed(duration, slices, concurrency), k)

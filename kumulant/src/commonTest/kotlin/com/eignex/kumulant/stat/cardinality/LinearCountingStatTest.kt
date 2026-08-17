@@ -44,7 +44,6 @@ class LinearCountingStatTest {
     @Test
     fun `saturated bitset returns positive infinity`() {
         val lc = LinearCountingStat(bits = 64)
-        // Push enough distinct values to set every bit.
         for (i in 1L..10_000L) lc.update(i)
         val r = lc.read()
         assertEquals(Double.POSITIVE_INFINITY, r.estimate)

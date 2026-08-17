@@ -9,11 +9,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-/**
- * Custom prior + empirical-Bayes population fitting for [BayesianRegressionStat].
- * The custom prior is what lets klause persist a posterior across solver calls -
- * the previous read() snapshot is fed back in as the next instance's prior.
- */
+
+// The custom prior is what lets klause persist a posterior across solver calls: an earlier read()
+// snapshot is fed back in as the next instance's prior.
 class BayesianRegressionStatPriorTest {
 
     @Test

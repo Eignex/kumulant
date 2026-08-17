@@ -175,7 +175,6 @@ class CompositeArmTest {
             }
             mab.update(arm, reward)
         }
-        // Snapshot should be three ResultLists with two sub-results each
         val snap = mab.snapshot()
         assertEquals(3, snap.size)
         for (s in snap) {

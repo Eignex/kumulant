@@ -15,15 +15,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * What a stat reports before it has seen anything.
- *
- * The convention: report the identity element where the statistic has one, and `NaN` where it
- * does not. The quantile family previously reported `0.0` per quantile on an empty sketch,
- * which is indistinguishable from a sketch that observed real zeros - so an untouched service
- * rendered a p99 of zero and read as healthy rather than as having no data. [AucStat] already
- * used `NaN` for the same case, so the library disagreed with itself.
- */
+// The empty-read convention: report the identity element where the statistic has one, and `NaN` where
+// it does not, because a `0.0` quantile is indistinguishable from a sketch that observed real zeros.
 class EmptyReadSemanticsTest {
 
     @Test
@@ -51,8 +44,7 @@ class EmptyReadSemanticsTest {
         val digest = TDigestStat(probabilities = doubleArrayOf(0.5, 0.99)).read()
         assertTrue(digest.quantiles.all { it.isNaN() }, "TDigest reported ${digest.quantiles.toList()}")
 
-        // MadStat is built on two TDigests, so it inherits the sentinel: an empty sample has no
-        // median, and reporting 0.0 claimed one.
+        // MadStat is built on two TDigests, so it inherits the sentinel: an empty sample has no median.
         val mad = MadStat().read()
         assertTrue(mad.median.isNaN(), "Mad median was ${mad.median}")
         assertTrue(mad.mad.isNaN(), "Mad mad was ${mad.mad}")

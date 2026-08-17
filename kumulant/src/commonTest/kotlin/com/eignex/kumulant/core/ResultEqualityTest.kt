@@ -17,14 +17,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
-/**
- * Structural equality for the array-bearing result types.
- *
- * A Kotlin `data class` derives `equals` from its components, and array components compare
- * by reference, so two structurally identical snapshots of these types used to be unequal.
- * That contradicts the documented promise that results are structurally comparable, and it
- * quietly made any `assertEquals` over them unable to pass.
- */
+// A Kotlin `data class` derives `equals` from its components and array components compare by
+// reference, so the array-bearing results have to hand-roll it to keep the documented promise that
+// results are structurally comparable.
 class ResultEqualityTest {
 
     private fun sketch(quantiles: DoubleArray) = SketchResult(

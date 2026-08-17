@@ -120,12 +120,10 @@ class HdrHistogramStat(
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isNotPositiveWeight()) return
         // `!(value < 0.0)`, not `value >= 0.0`: both reject a negative value, but every comparison
-        // against NaN is false, so the `>=` form rejected a NaN as though it were negative and threw.
-        // A NaN observation must not become an exception in the caller - it scales to bucket zero and
-        // corrupts this histogram like it corrupts any other accumulator. See Stat.
+        // against NaN is false, so the `>=` form would reject NaN as though it were negative and
+        // throw. A NaN observation must not become an exception in the caller. See Stat.
         require(!(value < 0.0)) { "HdrHistogramStat only supports non-negative values; got $value" }
 
-        // Scale the incoming floating-point value to an internal integer
         val internalValue = (value * multiplier).toLong()
 
         while (true) {
@@ -187,10 +185,9 @@ class HdrHistogramStat(
     override fun read(timestampNanos: Long): SparseHistogramResult {
         val state = stateRef.load()
 
-        // Snapshot every cell once, then size and fill from that snapshot. Loading the
-        // cells twice let a bucket become populated between the counting pass and the
-        // filling pass, so the fill overran the arrays sized by the first pass and read()
-        // threw IndexOutOfBoundsException from whatever thread was scraping.
+        // Snapshot every cell once, then size and fill from that snapshot. Loading the cells
+        // twice would let a bucket become populated between the counting and filling passes, so
+        // the fill overruns the arrays sized by the first pass.
         val snapshot = DoubleArray(state.counts.size) { state.counts[it].load() }
 
         var populatedCount = 0
@@ -206,7 +203,6 @@ class HdrHistogramStat(
         for (i in snapshot.indices) {
             val w = snapshot[i]
             if (w > 0.0) {
-                // Divide the internal integer boundaries back down to the original Double scale
                 lowers[cursor] = getLowerBound(i).toDouble() / multiplier
                 uppers[cursor] = getUpperBound(i).toDouble() / multiplier
                 weights[cursor] = w

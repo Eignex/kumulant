@@ -15,8 +15,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-/** Edge cases across Exp3, Exp4, Boltzmann, Knn, TopTwoTS that the per-class
- *  tests don't already cover. */
+
 class StandaloneBanditExtraTest {
 
     @Test

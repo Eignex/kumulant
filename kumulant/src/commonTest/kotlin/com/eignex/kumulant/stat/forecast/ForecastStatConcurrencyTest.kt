@@ -5,7 +5,6 @@ import com.eignex.kumulant.timedReads
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/** Cross-mode smoke tests for the forecast family. */
 class ForecastStatConcurrencyTest {
 
     @Test

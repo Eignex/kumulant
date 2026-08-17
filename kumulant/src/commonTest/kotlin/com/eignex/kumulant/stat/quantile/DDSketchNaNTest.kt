@@ -9,14 +9,9 @@ import com.eignex.kumulant.schema.spec.DDSketch
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * What a NaN does to a bucketing stat, and how a caller opts out.
- *
- * A NaN has no rank, so there is no bin that belongs to it: it falls through the sign comparisons in
- * `update` into the zero bucket and drags every quantile toward zero. The library does not filter
- * that away - see `Stat` for why a NaN value propagates rather than being silently discarded - so
- * this test pins both halves: the damage is real, and `filter(!X.isNaN())` is what prevents it.
- */
+// A NaN has no rank, so no bin belongs to it: it falls through the sign comparisons in `update` into
+// the zero bucket and drags every quantile toward zero. See `Stat` for why the library propagates a
+// NaN value rather than silently discarding it.
 class DDSketchNaNTest {
 
     @Test

@@ -190,14 +190,11 @@ class HalfSpaceTreesStat(
         }
     }
 
-    // The mass arrays and the weight cell are pure accumulations, so they take
-    // additiveMode; the window counter needs CAS for addAndGet, so it takes
-    // monotonicMode. Previously all four used welfordMode(), which returns AtomicMode
-    // only for Concurrency.Relaxed and SerialMode for None, Strict and HighWrite. Since
-    // this stat has no lock over the update path, that left Strict and HighWrite doing
-    // plain non-volatile reads and writes: increments were lost outright and the counter
-    // update was not guaranteed visible to other cores, so rotateWindow fired at the
-    // wrong cadence and scores were computed against a half-built reference profile.
+    // The mass arrays and the weight cell are pure accumulations, so they take additiveMode; the
+    // window counter needs CAS for addAndGet, so it takes monotonicMode. Neither may take
+    // welfordMode: that hands Strict and HighWrite a SerialMode, and with no lock over the update
+    // path plain non-volatile cells lose increments and hide the counter from other cores, so
+    // rotateWindow fires at the wrong cadence and scores read a half-built reference profile.
     private val massMode = concurrency.additiveMode()
     private val counterMode = concurrency.monotonicMode()
     private val swapLock: Mutex = if (concurrency == Concurrency.None) NoopMutex else PlatformMutex()
@@ -298,15 +295,9 @@ class HalfSpaceTreesStat(
     }
 }
 
-/**
- * Walk [x] down one tree to its leaf, returning the leaf's index within that tree.
- *
- * The result class and the stat carried this identically - same text, same variable names - over
- * identically-named fields. Scoring routes through the result's copy and updating through the stat's,
- * so the two had to agree exactly or a mass bucket would be credited on update and read back from a
- * different one, which shows up as a score that drifts for no visible reason. The `2n+1 / 2n+2`
- * heap layout and the `- numInternal` rebase to leaf-space are the parts that must not diverge.
- */
+// Walk x down one tree to its leaf, returning the leaf's index within that tree. Shared by the stat's
+// update path and the result's score path: both must route identically, or a mass bucket credited on
+// update is read back from a different one and the score drifts for no visible reason.
 private fun routeToLeaf(
     featureIndices: IntArray,
     thresholds: DoubleArray,

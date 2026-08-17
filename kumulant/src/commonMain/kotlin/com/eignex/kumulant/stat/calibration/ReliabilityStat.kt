@@ -124,10 +124,9 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
         val bin = (clamped * numBins).toInt().coerceIn(0, numBins - 1)
         // Denominator first, numerators after. Combined with read() loading sumW last,
         // this keeps sumW >= sumO and sumW >= sumP for any interleaving, so a concurrent
-        // reader cannot compute an outcome rate above 1.0. With the previous order
-        // (sumW written last, loaded last) a reader could pick up an sumO increment whose
-        // matching sumW increment had not landed, and the ratio escaped [0, 1] and
-        // propagated through IsotonicCalibratorStat into a calibrated probability > 1.
+        // reader cannot pick up a sumO increment whose matching sumW increment has not landed
+        // and compute an outcome rate above 1.0, which IsotonicCalibratorStat would carry
+        // through into a calibrated probability > 1.
         sumW[bin].add(weight)
         sumP[bin].add(clamped * weight)
         sumO[bin].add(y * weight)

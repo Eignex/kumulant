@@ -55,8 +55,6 @@ class ThresholdBucketStat(
     private val counts = mode.newDoubleArray(thresholds.size + 1)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        // bucketFor compares against each threshold, and every comparison against NaN is false, so a
-        // NaN fell through to the overflow bucket and was counted as the largest possible value.
         if (weight.isInertWeight()) return
         counts.add(bucketFor(value), weight)
     }

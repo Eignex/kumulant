@@ -8,9 +8,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * The growth helpers both VFDT trees share, which each tree used to keep its own copy of.
- */
 class TreeInternalsTest {
 
     @Test
@@ -183,7 +180,6 @@ class TreeInternalsTest {
     @Test
     fun `a leaf with no qualifying candidate does not split`() {
         val config = ClassificationTreeConfig()
-        // Nothing scored at all.
         assertEquals(false, shouldSplit(SplitInfo(0.0, 0.0, -1), 1000.0, 0, config))
         // Something scored, but no better than not splitting; every metric returns 0 for no signal.
         assertEquals(false, shouldSplit(SplitInfo(0.0, 0.0, 2), 1000.0, 0, config))
@@ -225,8 +221,7 @@ class TreeInternalsTest {
 
     @Test
     fun `both trees reach the same decision from the same evidence`() {
-        // The point of sharing it. Identical tunables in both config types must produce identical
-        // verdicts, which is exactly what two hand-written copies of the rule could not guarantee.
+        // Identical tunables in both config types must produce identical verdicts.
         val cases = listOf(
             SplitInfo(10.0, 0.0, 0),
             SplitInfo(0.0, 0.0, -1),

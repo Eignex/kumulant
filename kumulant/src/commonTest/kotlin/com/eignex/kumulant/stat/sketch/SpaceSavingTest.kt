@@ -104,9 +104,8 @@ class SpaceSavingTest {
     @Test
     fun `fractional weight rounds up rather than being dropped`() {
         // Mirrors CountMinSketchStat: counts are Long, so a fractional weight has to be rounded, and
-        // it rounds *up*. Rounding to nearest silently discarded everything below 0.5, so a key
-        // accumulating many small weights never appeared among the heavy hitters at all. Counts are
-        // upper bounds as a result, which is the safe direction for a heavy-hitter summary.
+        // it rounds *up*. Rounding to nearest would drop everything below 0.5, hiding a key that
+        // accumulates many small weights. Counts become upper bounds, the safe direction here.
         val ss = SpaceSavingStat(capacity = 5)
         ss.update(7L, weight = 1.7)
         ss.update(7L, weight = 0.6)

@@ -10,18 +10,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * [IndexedResult] was the only result type in the library without `@Serializable` and
- * `@SerialName`, so it had no generated serializer and no stable wire name while every
- * sibling had both.
- *
- * Note what this does and does not establish. The annotations give it a serializer and a
- * stable discriminator, which is what this test pins. Encoding it still requires the caller
- * to supply a [SerializersModule] covering its `inner` field, because that field is typed as
- * the open [Result] interface and so resolves polymorphically. This test registers the one
- * subclass it needs; the library does not currently ship a module covering the whole result
- * catalogue.
- */
+// Encoding an [IndexedResult] needs a caller-supplied [SerializersModule] covering its `inner` field,
+// which is typed as the open [Result] interface and so resolves polymorphically. The module below
+// registers the one subclass these tests need.
 class IndexedResultSerializationTest {
 
     private val json = Json {

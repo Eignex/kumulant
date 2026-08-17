@@ -4,12 +4,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * ADWIN's window has to stay a *suffix* of the stream: whatever it keeps must be the most recent
- * observations, never a scrambled mix. The bucket rows encode that ordering, and getting it wrong is
- * invisible in the window length while making the reported mean describe data the stream has moved
- * past.
- */
+// ADWIN's window has to stay a suffix of the stream, and the bucket rows encode that ordering.
+// Getting it wrong is invisible in the window length while the reported mean describes data the
+// stream has moved past.
 class AdwinWindowTest {
 
     @Test
@@ -22,8 +19,7 @@ class AdwinWindowTest {
         val r = stat.read()
 
         // Every one of the last 600 observations was 0.0, so any window that is a suffix of the
-        // stream must have mean 0. The buckets used to come back reverse-ordered, leaving samples
-        // from the abandoned 10.0 regime inside the window and reporting a mean of 1.43.
+        // stream must have mean 0.
         assertEquals(0.0, r.mean, 1e-9, "window of length ${r.windowLength} still holds stale data")
         assertEquals(0.0, r.variance, 1e-9)
     }

@@ -16,15 +16,9 @@ import kotlin.test.assertTrue
 
 private const val FEATURES = 3
 
-/**
- * Arity of the context vector, swept across the regression catalogue.
- *
- * A wrong-arity vector is the one input error that does not announce itself: a *short* vector reads
- * fewer coordinates and returns a perfectly plausible number from the wrong model, so a caller that
- * reshapes its features and forgets to reshape the stat gets silently degraded predictions rather than
- * an error. Every stat here guards its `update`, but the guard used to be fourteen hand-written copies
- * of the same `require`; this sweep is what stops one of them going missing when a stat is added.
- */
+// A wrong-arity vector is the one input error that does not announce itself: a *short* vector reads
+// fewer coordinates and returns a perfectly plausible number from the wrong model. Swept across the
+// catalogue so a stat added later cannot go missing its guard.
 class RegressionArityGuardTest {
 
     private val splits = listOf(ThresholdSplit(featureIndex = 0, threshold = 0.5))
@@ -64,8 +58,7 @@ class RegressionArityGuardTest {
     @Test
     fun `the rejection names both the size it got and the size it wanted`() {
         // Pinned because the message is the only thing that tells a caller which of the two numbers to
-        // change, and because RegressionOpsTest greps it. requireFeatureSize keeps the wording that the
-        // hand-written copies had for exactly this reason.
+        // change, and because RegressionOpsTest greps it.
         for ((name, stat) in stats) {
             val thrown = runCatching {
                 stat.update(DenseVector.of(doubleArrayOf(1.0)), 1.0)

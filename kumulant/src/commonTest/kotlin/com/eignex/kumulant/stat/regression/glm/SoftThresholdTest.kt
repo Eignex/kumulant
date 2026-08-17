@@ -5,9 +5,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * The shared L1 proximal operator, and the one case where the three copies it replaces disagreed.
- */
 class SoftThresholdTest {
 
     @Test
@@ -36,10 +33,9 @@ class SoftThresholdTest {
     fun `a negative threshold leaves the coefficient alone instead of growing it`() {
         // Penalty.L1 puts no positivity requirement on lambda, and every host multiplies lambda by
         // something positive to get its threshold, so a negative threshold is reachable from a
-        // negative lambda. Two of the three copies of this operator lacked the guard, and without it
-        // the branches read inside out: at w = 0.0 and threshold = -0.5 the first comparison matches
-        // and returns +0.5, so a negative lambda pushed coefficients *away* from zero. Shrinking by a
-        // negative amount is not shrinking, so the penalty does nothing at all.
+        // negative lambda. Without the guard the branches read inside out: at w = 0.0 and
+        // threshold = -0.5 the first comparison matches and returns +0.5, pushing coefficients *away*
+        // from zero.
         assertEquals(0.0, softThreshold(0.0, -0.5), DELTA)
         assertEquals(1.0, softThreshold(1.0, -0.5), DELTA)
         assertEquals(-1.0, softThreshold(-1.0, -0.5), DELTA)
@@ -66,10 +62,7 @@ class SoftThresholdTest {
 
     @Test
     fun `the three hosts now agree on a negative lambda`() {
-        // The behaviour this extraction changed, pinned end to end rather than on the helper alone.
-        // The univariate and diagonal fits used to grow their coefficients under a negative lambda
-        // while the stochastic fit ignored it; all three now ignore it. A negative lambda remains a
-        // caller error - this only settles what happens when one is passed.
+        // A negative lambda remains a caller error; this only settles what happens when one is passed.
         val univariate = UnivariateRegressionStat(penalty = Penalty.L1(lambda = -1.0))
         val unpenalised = UnivariateRegressionStat()
         repeat(6) { i ->
@@ -99,8 +92,7 @@ class SoftThresholdTest {
 
     @Test
     fun `a positive lambda still shrinks each host`() {
-        // Guards the guard: if the negative case now no-ops, the positive case has to still bite, or
-        // the change above would have quietly disabled L1 everywhere.
+        // Guards the guard: with the negative case a no-op, the positive case has to still bite.
         val penalised = UnivariateRegressionStat(penalty = Penalty.L1(lambda = 0.5))
         val unpenalised = UnivariateRegressionStat()
         repeat(6) { i ->

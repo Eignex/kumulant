@@ -673,9 +673,9 @@ val decayingRateStatSpec = seriesStatSpec(
 // by binding the factory's stat to an [AtomicLong] that serializes all writers
 // behind a globally-monotonic sequence: each call to [applyUpdate] increments
 // the shared counter and feeds its new value to the stat. Under concurrent
-// writers the stat now sees true monotonic input regardless of thread
-// interleaving, isolating the stat's own concurrency primitives from the
-// "two independent counters" misuse pattern.
+// writers the stat sees truly monotonic input regardless of thread interleaving,
+// isolating the stat's own concurrency primitives from the "two independent
+// counters" misuse pattern.
 class CounterRateBag internal constructor(val stat: CounterRateStat, val counter: AtomicLong)
 
 val counterRateStatSpec: StatSpec<CounterRateBag, com.eignex.kumulant.stat.rate.RateResult> = StatSpec(

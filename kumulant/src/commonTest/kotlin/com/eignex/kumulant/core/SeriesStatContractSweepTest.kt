@@ -50,11 +50,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Contracts that hold for every series stat, checked against the whole catalogue rather than a
- * survey of it. The per-family tests pin behaviour one stat at a time; this sweep is what catches
- * a stat that quietly opts out of a rule the rest of the library follows.
- */
+// Contracts that hold for every series stat, checked against the whole catalogue rather than a
+// survey of it: the per-family tests pin behaviour one stat at a time, so only a sweep catches a
+// stat that quietly opts out of a rule the rest of the library follows.
 class SeriesStatContractSweepTest {
 
     // Every SeriesStatSpec variant, built with parameters in each stat's valid range.
@@ -133,9 +131,7 @@ class SeriesStatContractSweepTest {
     @Test
     fun `a NaN weight is a no-op for every series stat`() {
         // The companion of the zero-weight sweep: a weight is the multiplicity of an observation and
-        // NaN is not a multiplicity, so it carries nothing to fold in. This used to be three
-        // different behaviours - the Welford family threw from requireLiveWeight, the sketches
-        // rounded it to a weight of one, and everything else let it poison the accumulator.
+        // NaN is not a multiplicity, so it carries nothing to fold in.
         val violations = mutableListOf<String>()
         for ((name, spec) in specs) {
             for (probe in doubleArrayOf(999.0, -999.0)) {
@@ -157,16 +153,11 @@ class SeriesStatContractSweepTest {
 
     @Test
     fun `an infinite weight is a no-op for every series stat`() {
-        // The fourth and last weight case, and the one nothing guarded. Both predicates let an infinity
-        // through: `isInertWeight` tested only zero and NaN, and `+Infinity > 0.0` is true, so
-        // `isNotPositiveWeight` waved it past as an ordinary live observation.
-        //
         // A weight is the multiplicity of an observation, and an infinity is no more a multiplicity than
         // a NaN is, so it belongs with the other inert cases. `+Infinity` does have a clean reading -
-        // the update `w / (W + w)` tends to 1, so the mean tends to the value - but essentially nothing
-        // here computed that limit. The recurrences evaluated `Infinity / Infinity` and `Infinity * 0`
-        // and published the NaN as a result, in 22 stat and weight combinations across three modalities.
-        // See isInertWeight for why supporting the limit was not worth eleven rewritten recurrences.
+        // the update `w / (W + w)` tends to 1, so the mean tends to the value - but an unguarded
+        // recurrence evaluates `Infinity / Infinity` and `Infinity * 0` and publishes the NaN instead.
+        // See isInertWeight for why the limit is not worth chasing.
         val violations = mutableListOf<String>()
         for ((name, spec) in specs) {
             for (weight in doubleArrayOf(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
@@ -190,13 +181,11 @@ class SeriesStatContractSweepTest {
 
     @Test
     fun `a negative weight is a no-op for every stat that cannot invert it`() {
-        // The third weight case, and the one the other two sweeps left open. Zero and NaN are no-ops
-        // library-wide, but a negative weight partitions the catalogue: a stat whose recurrence
-        // inverts treats it as a downdate, and a stat with no inverse - a sketch, a histogram bucket -
-        // has to drop it, because there is no bucket decrement that undoes a hash insert. Both halves
-        // are correct; what is not correct is a stat picking a third answer, which is what happened
-        // when this predicate was open-coded at twenty sites instead of named once as
-        // isNotPositiveWeight. The negative case is also the reason that helper is not isInertWeight.
+        // Zero and NaN are no-ops library-wide, but a negative weight partitions the catalogue: a stat
+        // whose recurrence inverts treats it as a downdate, and a stat with no inverse - a sketch, a
+        // histogram bucket - has to drop it, because there is no bucket decrement that undoes a hash
+        // insert. Both halves are correct; what is not correct is a stat picking a third answer. The
+        // negative case is also the reason isNotPositiveWeight is named apart from isInertWeight.
         val violations = mutableListOf<String>()
         for (name in NO_INVERSE) {
             val spec = specs.first { it.first == name }.second
@@ -233,8 +222,7 @@ class SeriesStatContractSweepTest {
         // exists rather than a per-stat rule. A non-finite value is allowed to propagate and allowed to
         // poison the stat for good - it was a real observation of something unusable, and hiding that
         // would turn a gap in the input into a confidently wrong answer. What is ruled out is turning it
-        // into an outage in the caller. HdrHistogram used to: its `value >= 0.0` check is false for NaN,
-        // so it rejected a NaN as if it were a negative value.
+        // into an outage in the caller.
         //
         // Both infinities are swept alongside NaN, because they reach different code. An infinity passes
         // every ordering comparison, so a range check that a NaN fails will let an infinity through and
@@ -244,8 +232,8 @@ class SeriesStatContractSweepTest {
         // takes non-negative values only - and `-Infinity` is negative, so refusing it there is the same
         // rule that refuses -5.0 rather than a non-finite defect. Each infinity is therefore paired with a
         // finite value of the same sign, and a stat that rejects both is exercising its domain rather than
-        // tripping over the infinity. NaN has no signed analogue, so it must never throw at all: it is the
-        // case that broke before, when a `value >= 0.0` guard read a NaN as negative.
+        // tripping over the infinity. NaN has no signed analogue, so it must never throw at all - a
+        // `value >= 0.0` domain guard is false for NaN and would read it as negative.
         val probes = listOf(
             Double.NaN to null,
             Double.POSITIVE_INFINITY to 1e6,

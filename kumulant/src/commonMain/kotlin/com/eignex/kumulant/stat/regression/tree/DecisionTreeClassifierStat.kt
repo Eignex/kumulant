@@ -18,7 +18,7 @@ import kotlin.random.Random
  * Hoeffding bound on Gini reduction or information gain.
  *
  * Input is fed through [RegressionStat]: `x` is the feature vector, `y` is the
- * class index in `[0, numClasses)` (truncated via `toInt()`).
+ * class index in `[0, numClasses)`, resolved by [asClassLabel].
  */
 class DecisionTreeClassifierStat(
     override val featureSize: Int,
@@ -52,10 +52,8 @@ class DecisionTreeClassifierStat(
 
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
-        // Was `weight <= 0.0`, which is false for NaN, and `y.toInt()` with no validation at all - the
-        // range check happened downstream in ClassificationTree.update but the truncation did not, so
-        // y = 1.5 arrived as a legitimate class 1. A NaN weight got all the way to the leaf counts.
-        // isInertWeight, like the regression counterpart: a class count downdates exactly.
+        // isInertWeight rather than `weight <= 0.0`, which is false for NaN: a class count downdates
+        // exactly, so a negative weight is a real retraction while a NaN would pin a count for good.
         if (weight.isInertWeight()) return
         val c = y.asClassLabel(numClasses)
         if (c < 0) return

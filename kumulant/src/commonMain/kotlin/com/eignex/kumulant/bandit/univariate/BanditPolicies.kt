@@ -216,16 +216,15 @@ class UCB1Normal(
         val nj = snapshot.totalWeights
         if (nbrArms <= 1 || nj < 8 * ln(nbrArms.toDouble())) return Double.POSITIVE_INFINITY
         // Auer et al. subtract `n * mean^2` from the SUM of squares, and meanOfSquares() is the
-        // MEAN of squares, so this has to scale up by `nj` first. Subtracting `n * mean^2` from
-        // `E[x^2]` made p1 negative for every arm with a non-zero mean, so the sqrt below was NaN
-        // and `choose` - which seeds its best score at -Infinity, and `NaN > -Inf` is false -
-        // silently degenerated to always picking arm 0.
+        // MEAN of squares, so this has to scale up by `nj` first. Subtracting from `E[x^2]` instead
+        // drives p1 negative for every arm with a non-zero mean, and the sqrt below turns NaN, which
+        // `choose` resolves to always picking arm 0 (`NaN > -Inf` is false).
         val sumOfSquares = snapshot.meanOfSquares() * nj
         val p1 = ((sumOfSquares - nj * snapshot.mean * snapshot.mean) / (nj - 1)).coerceAtLeast(0.0)
-        // `n` in Auer et al. is the total pull count, not the arm count. Against `nbrArms` this was
-        // ln(1) == 0 at K = 2, so the confidence bound vanished and the policy went exactly greedy at
-        // the arm count where exploration matters most. `step` carries the round count, which is why
-        // it is a parameter; this arm's own pulls floor it, since they are part of any total and
+        // `n` in Auer et al. is the total pull count, not the arm count. Against `nbrArms` the log
+        // term is ln(1) == 0 at K = 2, so the confidence bound vanishes and the policy goes exactly
+        // greedy at the arm count where exploration matters most. `step` carries the round count,
+        // which is why it is a parameter; this arm's own pulls floor it, since they are part of any total and
         // `step` stays 0 for a caller that drives update() directly without choose().
         val totalPulls = maxOf(step.toDouble(), nj)
         return snapshot.mean + alpha * sqrt(16 * p1 * (ln((totalPulls - 1.0).coerceAtLeast(1.0)) / nj))

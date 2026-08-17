@@ -16,10 +16,6 @@ class SliceRingMergeAtTest {
         concurrency = Concurrency.None,
     ) { c -> SumStat(c) }
 
-    /**
-     * Two merges into the same slice land in the same slot and sum together.
-     * Sanity check that mergeAt routes by timestamp.
-     */
     @Test
     fun `merges within one slice sum into the same slot`() {
         val ring = newRing()
@@ -31,28 +27,17 @@ class SliceRingMergeAtTest {
         assertEquals(7.0, total, DELTA)
     }
 
-    /**
-     * If a later thread has already rotated the bucket past expectedStart (so
-     * bucketRef.load() returns a slot whose startNanos > expectedStart), mergeAt
-     * must not merge into that future slot. The pre-fix code's fallback
-     * `bucketRef.load()` would do exactly that. We simulate the post-rotation
-     * state by calling mergeAt on a newer timestamp first to install the future
-     * slot, then mergeAt on an older timestamp that targets the same bucket index.
-     */
     @Test
     fun `merge at a stale timestamp does not contaminate a newer slot`() {
         val ring = newRing()
         val sliceNanos = 1_000_000_000L
-        // 10 buckets, so slice index 10 collides with index 0 in the ring.
-        // Install slot for slice 10 first (start = 10 * sliceNanos).
+        // 10 buckets, so slice index 10 collides with index 0 in the ring. Installing slice 10 first
+        // simulates a bucket another thread has already rotated past expectedStart.
         val newerStart = 10 * sliceNanos
         ring.mergeAt(newerStart + 100, SumResult(5.0))
-        // Now try to merge at a timestamp belonging to slice 0 (start = 0).
-        // This shares the bucket with slice 10. The slot currently in that
-        // bucket has startNanos = 10*sliceNanos, which is > expectedStart = 0.
-        // mergeAt must skip the merge rather than overwriting the newer slot.
+        // Slice 0 shares that bucket, whose slot has startNanos = 10 * sliceNanos > expectedStart = 0,
+        // so mergeAt must skip the merge rather than overwrite the newer slot.
         ring.mergeAt(50, SumResult(99.0))
-        // Read the newer slice's contents - must still be 5.0, not 5+99.
         var total = 0.0
         ring.forEachActive(newerStart + 500) { total += it.read().sum }
         assertEquals(5.0, total, DELTA)

@@ -55,7 +55,6 @@ class BoltzmannBanditTest {
         repeat(20) { b.update(0, 1.0) }
         b.choose()
         b.reset()
-        // After reset, temperature returns to initial after the first call.
         b.playDistribution()
         assertTrue(abs(b.temperature() - 1.0) < 1e-9)
     }

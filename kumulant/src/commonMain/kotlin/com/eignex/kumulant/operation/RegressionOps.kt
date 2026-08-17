@@ -67,9 +67,6 @@ internal fun <R : Result> SeriesStat<R>.foldRegression(
     project: (VectorView, Double) -> Double,
 ): RegressionStat<R> = FoldRegressionStat(this, featureSize, project)
 
-// checkEvery and checkRate now come from Sampling.kt, which owns the other four modalities' throttle
-// and sample wrappers. This file used to carry byte-identical private copies.
-
 internal class FilterRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
     private val predicate: (VectorView, Double) -> Boolean,
@@ -116,10 +113,8 @@ internal class WithWeightRegressionStat<R : Result>(
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        // Shares `orInert` with the other four adapters rather than re-testing the condition here.
-        // This site used to spell out `if (weight == 0.0)`, which covered zero but not NaN, so a NaN
-        // caller weight was replaced by the constant and became a real observation - the leaf stats
-        // honoured the no-op and this wrapper undid it.
+        // `orInert` covers NaN as well as zero, so an inert caller weight stays a no-op rather than
+        // being replaced by the constant and becoming a real observation.
         delegate.update(x, y, timestampNanos, weight.orInert(this.weight))
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =

@@ -8,12 +8,8 @@ import com.eignex.kumulant.weightedReads
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * Cross-mode smoke tests: each summary stat should produce identical math under
- * sequential single-threaded updates regardless of the [Concurrency] mode chosen.
- * Catches mode-branch wiring bugs (wrong cell type, missing lock, etc.) cheaply
- * before the bench-side concurrency tests exercise actual contention.
- */
+// Catches mode-branch wiring bugs (wrong cell type, missing lock) cheaply, before the bench-side
+// concurrency tests exercise actual contention.
 class SummaryStatConcurrencyTest {
 
     @Test

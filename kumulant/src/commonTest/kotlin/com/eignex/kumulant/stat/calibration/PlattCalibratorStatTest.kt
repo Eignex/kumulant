@@ -18,8 +18,7 @@ class PlattCalibratorStatTest {
 
     @Test
     fun `learns a monotone mapping from raw scores to labels`() {
-        // Underlying truth: label is more likely as raw score grows. Calibrator should
-        // converge to a positive slope.
+        // Underlying truth: the label is more likely as the raw score grows.
         val stat = PlattCalibratorStat()
         val rng = Random(7L)
         repeat(5000) {
@@ -30,7 +29,6 @@ class PlattCalibratorStatTest {
         }
         val r = stat.read()
         assertTrue(r.slope > 0.0, "slope=${r.slope} should be positive")
-        // Calibrated probability at the top of the range should beat the bottom.
         assertTrue(r.calibrate(0.9) > r.calibrate(0.1))
     }
 }

@@ -7,12 +7,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-/**
- * Statistical sanity tests for the random-variate generators. Each test draws ~10k
- * samples and compares sample moments against analytic moments with generous slack.
- * Not a full distributional fit test - just enough to catch sign errors and
- * algorithmic mistakes.
- */
+// Sample moments are compared against analytic moments with generous slack: not a full
+// distributional fit test, just enough to catch sign errors and algorithmic mistakes.
 class DistributionsTest {
 
     @Test

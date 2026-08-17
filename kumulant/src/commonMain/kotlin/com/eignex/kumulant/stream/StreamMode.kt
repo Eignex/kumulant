@@ -146,11 +146,10 @@ internal interface StreamLongArray {
     /**
      * Add [delta] at [index] and return the new value.
      *
-     * Kept for symmetry with [StreamLong.addAndGet], which production code uses heavily. No stat needs
-     * the returned value from an array slot today, so the only caller is `AtomicModeTest`. Stated here
+     * Present for symmetry with [StreamLong.addAndGet], which production code uses heavily. No stat
+     * needs the returned value from an array slot, so the only caller is `AtomicModeTest`. Stated here
      * because the alternative reading - a live API nobody happens to call - is the one that invites
-     * someone to build on it and find the fast paths untested. The `Double` counterpart had no caller
-     * at all, tests included, and was removed.
+     * someone to build on it and find the fast paths untested.
      */
     fun addAndGet(index: Int, delta: Long): Long
 

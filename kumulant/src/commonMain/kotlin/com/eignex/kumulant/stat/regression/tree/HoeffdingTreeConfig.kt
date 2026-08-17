@@ -3,9 +3,7 @@ package com.eignex.kumulant.stat.regression.tree
 /**
  * Growth tunables common to both VFDT trees.
  *
- * [RegressionTreeConfig] and [ClassificationTreeConfig] were field-for-field identical except for the
- * split criterion, and their KDoc had already drifted apart - the classification copy lost the
- * explanations of what [tau] and [mtry] actually do. They stay separate types because each is
+ * [RegressionTreeConfig] and [ClassificationTreeConfig] stay separate types because each is
  * `@Serializable` and part of the wire format, and because [RegressionTreeConfig.metric] and
  * [ClassificationTreeConfig.metric] have different types; this interface is where the shared half is
  * described once, and it is what lets the growth logic read tunables without knowing which tree it is

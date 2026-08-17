@@ -3,12 +3,8 @@ package com.eignex.kumulant.math
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/**
- * The tie and NaN conventions of the shared argmax, which every arm and class-label choice depends on.
- *
- * The two rules interact: seeding the running best at `-Infinity` is what makes a NaN score lose, and
- * strict `>` is what resolves a tie to the lowest index.
- */
+// The two conventions interact: seeding the running best at `-Infinity` is what makes a NaN score
+// lose, and strict `>` is what resolves a tie to the lowest index.
 class ArgMaxTest {
 
     @Test
@@ -25,9 +21,8 @@ class ArgMaxTest {
 
     @Test
     fun `a NaN score loses rather than winning`() {
-        // The convention that actually changed. Seeding from `score(0)` made a NaN first score
-        // unbeatable, because every comparison against NaN is false, so one poisoned class decided
-        // every later prediction. A NaN must lose to any finite score, wherever it sits.
+        // Seeding from `score(0)` would make a NaN first score unbeatable, because every comparison
+        // against NaN is false, so one poisoned class would decide every later prediction.
         assertEquals(1, argMaxOf(3) { doubleArrayOf(Double.NaN, 2.0, 1.0)[it] })
         assertEquals(0, argMaxOf(3) { doubleArrayOf(2.0, Double.NaN, 1.0)[it] })
     }

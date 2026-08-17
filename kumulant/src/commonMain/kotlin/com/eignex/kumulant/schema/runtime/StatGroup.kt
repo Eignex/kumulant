@@ -22,12 +22,10 @@ sealed class AbstractStatGroup<S : Stat<*>>(
      * The group's effective level: the override when one was given, otherwise the *weakest* level any
      * child uses.
      *
-     * Reporting [Concurrency.None] whenever no override was passed was simply untrue for a group of
-     * `Strict` children, and this property is what a caller introspects to decide whether reads need
-     * external synchronisation. The weakest child governs, because the group can promise nothing its
-     * least-protected member does not: one [Concurrency.None] child makes the whole group unsafe to
-     * share, and one [Concurrency.Relaxed] child means a read can drift even if every sibling is
-     * exact.
+     * Callers introspect this to decide whether reads need external synchronisation, so the weakest
+     * child has to govern: the group can promise nothing its least-protected member does not. One
+     * [Concurrency.None] child makes the whole group unsafe to share, and one [Concurrency.Relaxed]
+     * child means a read can drift even if every sibling is exact.
      *
      * The declaration order of [Concurrency] happens to run weakest to strongest, so `minOfOrNull`
      * picks that child directly. [Concurrency.HighWrite] sorting last is not a claim that it is the

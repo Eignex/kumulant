@@ -14,11 +14,8 @@ import com.eignex.kumulant.stat.summary.SumResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-/**
- * Schema-aware constructors for the four `*ListStats` classes. They walk the
- * matching modality helper (`seriesSpecs`/`pairedSpecs`/...) and turn it into
- * positional `(name, stat)` entries.
- */
+// The schema-aware `*ListStats` constructors walk the matching modality helper
+// (`seriesSpecs`/`pairedSpecs`/...) and turn it into positional `(name, stat)` entries.
 
 class ListStatsSchemaTest {
 

@@ -14,7 +14,6 @@ class MultiArmedBanditExtraTest {
         val mab = MultiArmedBandit(nbrArms = 2, policy = NormalTS(), random = Random(0))
         val stat = mab.armStat(1)
         repeat(5) { mab.update(1, 4.0) }
-        // The handed-out stat reflects updates fed through the bandit.
         val view = stat.read(0L)
         assertTrue(view.totalWeights >= 5.0)
     }

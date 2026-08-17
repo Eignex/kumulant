@@ -208,11 +208,10 @@ class Exp4Bandit(
         /**
          * Default exploration mix `min(1, eta)`.
          *
-         * This used to be `min(1, K * eta)`, which with the horizon-free [defaultEta] above works
-         * out to `sqrt(K * ln N)` - at least 1.177 for any real configuration, so it clamped to
-         * exactly 1.0 and [playDistribution] became uniform, multiplying the expert mixture by
-         * `1 - gamma == 0`. `K * eta` is only the textbook rule when `eta` still carries the `1/T`
-         * horizon term. Pass `gamma = 1.0` explicitly for pure uniform sampling.
+         * `min(1, K * eta)` is the textbook rule only while `eta` still carries the `1/T` horizon
+         * term. With the horizon-free [defaultEta] above it works out to `sqrt(K * ln N)`, at least
+         * 1.177 for any real configuration, so it would clamp to exactly 1.0 and leave
+         * [playDistribution] uniform. Pass `gamma = 1.0` explicitly for pure uniform sampling.
          */
         fun defaultGamma(eta: Double): Double = eta.coerceAtMost(1.0)
     }

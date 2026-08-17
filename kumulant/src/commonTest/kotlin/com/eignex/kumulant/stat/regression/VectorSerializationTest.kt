@@ -23,11 +23,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * End-to-end checks for the sealed VectorView abstraction: sparse inputs flow through
- * regression-stat updates without materialisation, and snapshots round-trip through
- * kotlinx.serialization preserving the concrete dense/sparse subtype.
- */
 private inline fun mean(n: Int, draw: () -> Double): Double {
     var s = 0.0
     repeat(n) { s += draw() }

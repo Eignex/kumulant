@@ -9,8 +9,7 @@ class MadStatTest {
 
     @Test
     fun `read before any update reports NaN estimates`() {
-        // MadStat is built on two TDigestStats, so it inherits their empty-read sentinel. An
-        // empty sample has no median, and reporting 0.0 claimed one.
+        // MadStat is built on two TDigestStats, so it inherits their empty-read sentinel.
         val r = MadStat().read()
         assertTrue(r.median.isNaN(), "median was ${r.median}")
         assertTrue(r.mad.isNaN(), "mad was ${r.mad}")

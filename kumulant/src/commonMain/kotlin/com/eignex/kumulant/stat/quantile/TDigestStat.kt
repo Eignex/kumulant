@@ -96,8 +96,8 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  * Updates buffer values until the internal `bufferCap` is reached, then fold them into
  * the sorted centroid list under the `k1`-difference ≤ 1 merge rule.
  *
- * **Use cases:** approximate percentile estimation with adaptive resolution
- *; tighter near the tails (0.001 / 0.999 percentiles), looser in the middle.
+ * **Use cases:** approximate percentile estimation with adaptive resolution;
+ * tighter near the tails (0.001 / 0.999 percentiles), looser in the middle.
  * Reach for this over [DDSketchStat] when you want extreme-quantile accuracy
  * without committing to a relative-error parameter, and over
  * [HdrHistogramStat] when the value range isn't known in advance.
@@ -223,19 +223,10 @@ class TDigestStat(
     private var sortIdx: IntArray = IntArray(0)
     private var sortTmp: IntArray = IntArray(0)
 
-    /**
-     * Indices `0 until bufLen` ordered by `bufVal`, without boxing.
-     *
-     * This replaced `(0 until bufLen).sortedBy { bufVal[it] }`, which materialised a
-     * `List<Integer>` of `bufLen` boxed indices plus an ArrayList and ran a comparator sort.
-     * At the default compression the buffer holds 500 entries, so every flush allocated
-     * roughly 8 KiB of boxes; amortised over the updates that filled it, TDigest measured
-     * 82 B/op on the update path.
-     *
-     * Bottom-up merge sort keyed on `bufVal`. Stable, `O(n log n)`, and allocation-free after
-     * the first call, which matters because an insertion sort would be `O(n^2)` over a
-     * 500-entry buffer and cost more than the boxing it replaces.
-     */
+    // Bottom-up merge sort of the buffer indices keyed on `bufVal`: stable, `O(n log n)`, and
+    // allocation-free after the first call. A comparator sort over an index list would box every
+    // index (~8 KiB per flush at the default compression), and an insertion sort would be `O(n^2)`
+    // over a 500-entry buffer.
     private fun sortedBufferIndices(bufVal: DoubleArray, bufLen: Int): IntArray {
         if (sortIdx.size < bufLen) {
             sortIdx = IntArray(bufLen)
@@ -356,12 +347,9 @@ class TDigestStat(
                     buffer.store(idx, value)
                     bufferWeights.store(idx, weight)
                     // Publish the value before counting its weight, not after. `drainLocked` can
-                    // strand a claim it cannot prove committed, discarding the value; if the weight
-                    // were already counted, that weight would stay in `totalWeightCell` with nothing
-                    // in the digest behind it. Reached before any successful drain, that left
-                    // `means` empty while `total` was positive, and `read` answers that state with
-                    // NaN for every quantile while still reporting the positive weight - a snapshot
-                    // that claims to have observed data it cannot answer from.
+                    // strand a claim it cannot prove committed, discarding the value; a weight
+                    // counted first would stay in `totalWeightCell` with nothing in the digest
+                    // behind it, so `read` reports positive weight with NaN for every quantile.
                     //
                     // The reverse skew this admits is benign and self-correcting: a drained value
                     // whose weight has not landed yet makes `total` low, so a rank clamps toward
@@ -432,10 +420,10 @@ class TDigestStat(
             val total = totalWeightCell.load()
             val computed = DoubleArray(probabilities.size)
             if (means.isEmpty() || total <= 0.0) {
-                // NaN per quantile rather than 0.0, matching DDSketchStat and AucStat. A
-                // zero-filled array cannot be told apart from a digest that genuinely observed
-                // zeros, so an untouched digest reported a p99 of 0.0 and read as healthy.
-                // `isEmpty` on the result is the check for callers who would rather branch.
+                // NaN per quantile rather than 0.0, matching DDSketchStat. A zero-filled array
+                // cannot be told apart from a digest that genuinely observed zeros, so an untouched
+                // digest would report a p99 of 0.0 and read as healthy. `isEmpty` on the result is
+                // the check for callers who would rather branch.
                 computed.fill(Double.NaN)
                 return@guarded TDigestResult(
                     probabilities,

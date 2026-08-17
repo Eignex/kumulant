@@ -22,7 +22,6 @@ class GaussianScorerStatTest {
     @Test
     fun `score grows with deviation from the running mean`() {
         val s = GaussianScorerStat()
-        // Calibrate distribution around mean 0, stdDev ~ 1.
         val samples = doubleArrayOf(-1.0, -0.5, 0.0, 0.0, 0.5, 1.0)
         for (x in samples) s.update(x)
         val r = s.read()

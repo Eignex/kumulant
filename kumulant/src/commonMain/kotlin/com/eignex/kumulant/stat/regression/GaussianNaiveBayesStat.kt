@@ -145,8 +145,7 @@ class GaussianNaiveBayesStat(
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
-            // See asClassLabel on why an exact integer is required. The tree classifiers used to
-            // truncate instead, so this stat and those disagreed about y = 1.5.
+            // See asClassLabel on why an exact integer is required.
             val c = y.asClassLabel(numClasses)
             if (c < 0) return@guarded
             val priorW = classWeightCell.load(c)

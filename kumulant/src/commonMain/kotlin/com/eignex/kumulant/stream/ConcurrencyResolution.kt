@@ -44,10 +44,8 @@ internal fun Concurrency.welfordLock(): Mutex = when (this) {
 }
 
 /**
- * The lock a stat takes to serialise a multi-cell update.
- *
- * Delegates to [Concurrency.lock] so the mapping lives in one place; the separate name is kept because it
- * says why the lock is being taken.
+ * The lock a stat takes to serialise a multi-cell update. Delegates to [Concurrency.lock]; the separate
+ * name says why the lock is being taken.
  */
 internal fun Concurrency.serializedLock(): Mutex = lock()
 

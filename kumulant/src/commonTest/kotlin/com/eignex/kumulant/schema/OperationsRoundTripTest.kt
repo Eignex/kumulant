@@ -42,10 +42,8 @@ import com.eignex.kumulant.operation.withFixedY as liveWithFixedY
 import com.eignex.kumulant.operation.withSelfLag as liveWithSelfLag
 import com.eignex.kumulant.operation.withValue as liveWithValue
 import com.eignex.kumulant.operation.withWeight as liveWithWeight
-/**
- * Round-trip tests for the operation specs in [Operations.kt]: encode, decode,
- * materialize, drive a small fixed input, compare against a live composition.
- */
+// Each spec is encoded, decoded, materialized, driven over a small fixed input, and compared against
+// the equivalent live composition.
 
 class OperationsRoundTripTest {
 
