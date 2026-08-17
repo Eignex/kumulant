@@ -956,3 +956,75 @@ fun ScalarExpr.isFinite(): BoolExpr = IsFinite(this)
  * [isFinite], this covers a whole feature vector, which no per-coordinate expression can.
  */
 fun allFinite(): BoolExpr = AllFinite
+
+/**
+ * Absolute value of this expression.
+ *
+ * The unary and binary maths nodes follow the same rule as the arithmetic operators above: the node
+ * itself stays `internal` so only its `@SerialName` is a contract, and this factory is the Kotlin way
+ * to build one. Every node in this file must be reachable both ways - from Kotlin and from the wire -
+ * and a pipeline that can only be authored as JSON is not usable from Kotlin at all.
+ */
+fun ScalarExpr.abs(): ScalarExpr = Abs(this)
+
+/** Natural logarithm of this expression. `ln(0)` is `-Infinity` and a negative input gives `NaN`. */
+fun ScalarExpr.ln(): ScalarExpr = Log(this)
+
+/** `e` raised to this expression. Overflows to `+Infinity` well before `Double` runs out of range. */
+fun ScalarExpr.exp(): ScalarExpr = Exp(this)
+
+/** Square root of this expression. A negative input gives `NaN`. */
+fun ScalarExpr.sqrt(): ScalarExpr = Sqrt(this)
+
+/** This expression raised to [exponent]. */
+fun ScalarExpr.pow(exponent: ScalarExpr): ScalarExpr = Pow(this, exponent)
+
+/** This expression raised to a constant [exponent]. */
+fun ScalarExpr.pow(exponent: Double): ScalarExpr = Pow(this, Const(exponent))
+
+/** The smaller of this expression and [other]. */
+fun ScalarExpr.min(other: ScalarExpr): ScalarExpr = MinExpr(this, other)
+
+/** The smaller of this expression and a constant [other]. */
+fun ScalarExpr.min(other: Double): ScalarExpr = MinExpr(this, Const(other))
+
+/** The larger of this expression and [other]. */
+fun ScalarExpr.max(other: ScalarExpr): ScalarExpr = MaxExpr(this, other)
+
+/** The larger of this expression and a constant [other]. */
+fun ScalarExpr.max(other: Double): ScalarExpr = MaxExpr(this, Const(other))
+
+/**
+ * True when this expression falls within `[min, max]`, both ends inclusive.
+ *
+ * Distinct from `x ge min and (x le max)`, which builds three nodes and evaluates this expression
+ * twice; a filter runs on every update, so the single-node form is the one to reach for.
+ */
+fun ScalarExpr.inRange(min: Double, max: Double): BoolExpr = InRange(this, min, max)
+
+/**
+ * Reduce the whole feature vector to one scalar with [op].
+ *
+ * The vector-consuming half of the AST. `VectorExpr` and this family had no Kotlin constructor at all,
+ * which left [VFoldOp] a public enum with no reachable consumer and made `transformVector` and
+ * `transformX` uncallable outside the module despite both being public.
+ */
+fun vFold(op: VFoldOp): ScalarExpr = VFold(op)
+
+/** Weighted sum of the feature vector. [weights] must match the vector length at evaluation time. */
+fun vDot(weights: List<Double>): ScalarExpr = VDot(weights)
+
+/** Weighted sum of the feature vector, varargs form. */
+fun vDot(vararg weights: Double): ScalarExpr = VDot(weights.toList())
+
+/**
+ * Build an output vector by evaluating each expression in order; output length is `exprs.size`.
+ *
+ * The only [VectorExpr] constructor, and so the only way to reach `transformVector` / `transformX` from
+ * Kotlin. Reference input coordinates with [V]: `vectorOf(V(2), V(0), V(1))` permutes,
+ * `vectorOf((V(0) + V(1)) / 2.0)` pools, and a shorter list than the input reduces dimensionality.
+ */
+fun vectorOf(exprs: List<ScalarExpr>): VectorExpr = VElements(exprs)
+
+/** Build an output vector from expressions in order, varargs form. */
+fun vectorOf(vararg exprs: ScalarExpr): VectorExpr = VElements(exprs.toList())
