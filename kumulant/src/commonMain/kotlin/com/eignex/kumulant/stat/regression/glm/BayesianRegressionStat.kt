@@ -21,6 +21,8 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.core.requireMergeFeatureSize
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.choleskyDowndateInPlace
 import com.eignex.kumulant.math.zeroUpperTriangle
 import com.eignex.kumulant.stream.guarded
@@ -88,7 +90,7 @@ class BayesianRegressionStat(
 ) : RegressionStat<CovarianceRegressionResult> {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive" }
+        requirePositiveFeatureSize(featureSize)
         require(priorVariance > 0.0) { "priorVariance must be positive, got $priorVariance" }
         require(priorMean == null || priorMean.size == featureSize) {
             "priorMean.size=${priorMean?.size}, expected $featureSize"
@@ -225,9 +227,7 @@ class BayesianRegressionStat(
      * the intercept as a scalar Gaussian with zero prior mean.
      */
     override fun merge(values: CovarianceRegressionResult) {
-        require(values.featureSize == featureSize) {
-            "merge: featureSize mismatch ${values.featureSize} vs $featureSize"
-        }
+        requireMergeFeatureSize(values.featureSize, featureSize)
         lock.guarded {
             val n = featureSize
 

@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.score
 
+import com.eignex.kumulant.core.requirePositiveBins
 import com.eignex.kumulant.stat.quantile.SparseHistogramResult
 import kotlin.math.abs
 
@@ -15,7 +16,7 @@ import kotlin.math.abs
  * test on `[0, 1]`. Returns 0 if total finite weight is non-positive.
  */
 fun SparseHistogramResult.pitChiSquared(numBins: Int): Double {
-    require(numBins > 0) { "numBins must be > 0; got $numBins" }
+    requirePositiveBins(numBins)
     var total = 0.0
     var observedFinite = 0
     for (i in lowerBounds.indices) {
@@ -58,7 +59,7 @@ fun SparseHistogramResult.pitChiSquared(numBins: Int): Double {
  * overflow rows are excluded. Returns 0 when total finite weight is non-positive.
  */
 fun SparseHistogramResult.pitKsDistance(numBins: Int): Double {
-    require(numBins > 0) { "numBins must be > 0; got $numBins" }
+    requirePositiveBins(numBins)
     val width = 1.0 / numBins
     val weightPerBin = DoubleArray(numBins)
     var total = 0.0

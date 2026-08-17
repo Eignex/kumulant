@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.calibration
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.requirePositiveBins
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -30,7 +31,7 @@ data class IsotonicCalibratorResult(
 ) : HasObservationCount {
 
     init {
-        require(numBins > 0) { "numBins must be > 0; got $numBins" }
+        requirePositiveBins(numBins)
         require(binMidpoints.size == numBins && probabilities.size == numBins) {
             "binMidpoints and probabilities must have length $numBins"
         }
@@ -93,7 +94,7 @@ class IsotonicCalibratorStat(
 ) : PairedStat<IsotonicCalibratorResult> {
 
     init {
-        require(numBins > 0) { "numBins must be > 0; got $numBins" }
+        requirePositiveBins(numBins)
     }
 
     private val inner = ReliabilityStat(numBins, concurrency)

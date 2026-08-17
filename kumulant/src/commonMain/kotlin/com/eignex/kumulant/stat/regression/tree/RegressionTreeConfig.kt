@@ -11,14 +11,14 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class RegressionTreeConfig(
-    override val delta: Double = 0.05,
-    override val deltaDecay: Double = 0.9,
-    override val tau: Double = 0.05,
-    override val minSamplesSplit: Double = 30.0,
-    override val minSamplesLeaf: Double = 5.0,
-    override val splitPeriod: Int = 10,
-    override val maxDepth: Int = 16,
-    override val maxNodes: Int = 1024,
+    override val delta: Double = HoeffdingDefaults.DELTA,
+    override val deltaDecay: Double = HoeffdingDefaults.DELTA_DECAY,
+    override val tau: Double = HoeffdingDefaults.TAU,
+    override val minSamplesSplit: Double = HoeffdingDefaults.MIN_SAMPLES_SPLIT,
+    override val minSamplesLeaf: Double = HoeffdingDefaults.MIN_SAMPLES_LEAF,
+    override val splitPeriod: Int = HoeffdingDefaults.SPLIT_PERIOD,
+    override val maxDepth: Int = HoeffdingDefaults.MAX_DEPTH,
+    override val maxNodes: Int = HoeffdingDefaults.MAX_NODES,
     /** Split criterion; ranks candidates by the variance they remove. */
     val metric: SplitMetric = VarianceReduction,
     override val mtry: Int? = null,

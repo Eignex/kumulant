@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
@@ -89,7 +90,7 @@ class AdagradOptimizer(
 ) : Optimizer {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive" }
+        requirePositiveFeatureSize(featureSize)
         require(epsilon > 0.0) { "epsilon must be positive" }
     }
 
@@ -134,7 +135,7 @@ class RmspropOptimizer(
 ) : Optimizer {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive" }
+        requirePositiveFeatureSize(featureSize)
         require(rho in 0.0..1.0) { "rho must be in [0, 1]; got $rho" }
         require(epsilon > 0.0) { "epsilon must be positive" }
     }
@@ -182,7 +183,7 @@ class AdamOptimizer(
 ) : Optimizer {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive" }
+        requirePositiveFeatureSize(featureSize)
         require(beta1 in 0.0..1.0) { "beta1 must be in [0, 1]; got $beta1" }
         require(beta2 in 0.0..1.0) { "beta2 must be in [0, 1]; got $beta2" }
         require(epsilon > 0.0) { "epsilon must be positive" }

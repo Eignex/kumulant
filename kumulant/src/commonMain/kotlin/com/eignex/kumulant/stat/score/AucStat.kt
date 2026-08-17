@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.requirePositiveBins
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
@@ -114,7 +115,7 @@ class AucStat(
 ) : PairedStat<AucResult> {
 
     init {
-        require(numBins > 0) { "numBins must be > 0; got $numBins" }
+        requirePositiveBins(numBins)
         require(upperBound > lowerBound) { "upperBound must be > lowerBound" }
     }
 

@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.random.Random
@@ -62,7 +63,7 @@ class DecisionTreeRegressionStat(
 ) : RegressionStat<TreeRegressionResult> {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive, got $featureSize" }
+        requirePositiveFeatureSize(featureSize)
     }
 
     private val seedRng = Random(randomSeed)

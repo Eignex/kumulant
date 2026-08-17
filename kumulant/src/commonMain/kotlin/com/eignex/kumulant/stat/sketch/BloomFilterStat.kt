@@ -140,9 +140,7 @@ class BloomFilterStat(
         // The hasher decides which bits a key sets, so OR-ing in words produced by a different mixer
         // relabels them as this filter's - and keys that were inserted then read back as absent,
         // which is the one thing a Bloom filter promises cannot happen.
-        require(values.hasher == hasherRef) {
-            "Cannot merge BloomFilterStat hashed with ${values.hasher} into one hashed with $hasherRef"
-        }
+        requireSameHasher("BloomFilterStat", values.hasher, hasherRef)
         require(values.words.size == wordCount) {
             "Cannot merge BloomFilterStat: expected $wordCount words, got ${values.words.size}"
         }

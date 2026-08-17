@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.stream.Mutex
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
@@ -65,7 +66,7 @@ data class HalfSpaceTreesResult(
     private val numLeaves: Int get() = 1 shl height
 
     init {
-        require(featureSize > 0) { "featureSize must be positive" }
+        requirePositiveFeatureSize(featureSize)
         require(numTrees > 0) { "numTrees must be positive" }
         require(height > 0) { "height must be positive" }
         require(featureIndices.size == numTrees * numInternal) {
@@ -154,7 +155,7 @@ class HalfSpaceTreesStat(
 ) : VectorStat<HalfSpaceTreesResult> {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive" }
+        requirePositiveFeatureSize(featureSize)
         require(featureRanges.size == featureSize) {
             "featureRanges must have length $featureSize; got ${featureRanges.size}"
         }

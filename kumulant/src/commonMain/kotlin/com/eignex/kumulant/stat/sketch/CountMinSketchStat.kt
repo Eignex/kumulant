@@ -15,7 +15,6 @@ import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.ceil
 
 /**
  * CountStat-MinStat sketch snapshot. [counters] is the [depth] x [width] matrix of counters in
@@ -147,7 +146,7 @@ class CountMinSketchStat(
         // nearest silently discarded everything below 0.5 - including totalSeen, so the stat denied
         // observations it had seen - whereas rounding up keeps every observation and leaves the
         // documented `estimate(x) >= true count(x)` intact, since it can only overshoot.
-        val w = ceil(weight).toLong().coerceIn(1L, MAX_COUNTER_STEP)
+        val w = weight.toCounterStep()
         for (row in 0 until depth) {
             val idx = (hasher.mix(value xor rowSalts[row]) and mask).toInt()
             counters.add(row * width + idx, w)
@@ -164,9 +163,7 @@ class CountMinSketchStat(
         // The hasher decides which cell a key lands in, so merging across mixers scatters the
         // incoming counts into cells this sketch will never probe - estimates then come out *below*
         // the true count, breaking the one-sided guarantee silently.
-        require(values.hasher == hasherRef) {
-            "Cannot merge CountMinSketchStat hashed with ${values.hasher} into one hashed with $hasherRef"
-        }
+        requireSameHasher("CountMinSketchStat", values.hasher, hasherRef)
         require(values.counters.size == counterCount) {
             "Cannot merge CountMinSketchStat: expected $counterCount counters, got ${values.counters.size}"
         }
@@ -201,13 +198,4 @@ class CountMinSketchStat(
         hasher,
         concurrency ?: this.concurrency,
     )
-
-    private companion object {
-        /**
-         * Largest single increment a counter accepts. Below Long.MAX_VALUE on purpose: saturating a
-         * counter at the type's ceiling used to make it indistinguishable from an unvisited row and
-         * a second such update wrapped it negative, both of which broke the one-sided guarantee.
-         */
-        const val MAX_COUNTER_STEP: Long = Long.MAX_VALUE / 1024
-    }
 }

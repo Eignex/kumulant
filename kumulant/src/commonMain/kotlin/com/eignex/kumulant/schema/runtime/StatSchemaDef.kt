@@ -67,22 +67,19 @@ fun StatSchemaDef.materializeDiscrete(
     bindDiscrete(name, config.materialize(concurrency))
 }
 
-@Suppress("UNCHECKED_CAST")
-private fun bind(name: String, stat: Stat<*>): BoundStat<*, *, *> =
-    BoundStat(StatKey<Result>(name), stat as Stat<Result>) as BoundStat<*, *, *>
+// All five of these are `toSpec(StatKey(name), stat)` spelled out longhand - same package, same cast,
+// same suppression. Delegating drops five copies of the unchecked cast along with the five annotations
+// justifying it, and leaves one place where the erasure argument has to hold.
+private fun bind(name: String, stat: Stat<*>): BoundStat<*, *, *> = toSpec(StatKey<Result>(name), stat)
 
-@Suppress("UNCHECKED_CAST")
 private fun bindSeries(name: String, stat: SeriesStat<*>): BoundStat<*, out SeriesStat<*>, *> =
-    BoundStat(StatKey<Result>(name), stat as SeriesStat<Result>) as BoundStat<*, out SeriesStat<*>, *>
+    toSpec(StatKey<Result>(name), stat)
 
-@Suppress("UNCHECKED_CAST")
 private fun bindPaired(name: String, stat: PairedStat<*>): BoundStat<*, out PairedStat<*>, *> =
-    BoundStat(StatKey<Result>(name), stat as PairedStat<Result>) as BoundStat<*, out PairedStat<*>, *>
+    toSpec(StatKey<Result>(name), stat)
 
-@Suppress("UNCHECKED_CAST")
 private fun bindVector(name: String, stat: VectorStat<*>): BoundStat<*, out VectorStat<*>, *> =
-    BoundStat(StatKey<Result>(name), stat as VectorStat<Result>) as BoundStat<*, out VectorStat<*>, *>
+    toSpec(StatKey<Result>(name), stat)
 
-@Suppress("UNCHECKED_CAST")
 private fun bindDiscrete(name: String, stat: DiscreteStat<*>): BoundStat<*, out DiscreteStat<*>, *> =
-    BoundStat(StatKey<Result>(name), stat as DiscreteStat<Result>) as BoundStat<*, out DiscreteStat<*>, *>
+    toSpec(StatKey<Result>(name), stat)

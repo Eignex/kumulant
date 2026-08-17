@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.requirePositiveBins
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
@@ -106,7 +107,7 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
     PairedStat<ReliabilityResult> {
 
     init {
-        require(numBins > 0) { "numBins must be > 0; got $numBins" }
+        requirePositiveBins(numBins)
     }
 
     private val mode = concurrency.additiveMode()

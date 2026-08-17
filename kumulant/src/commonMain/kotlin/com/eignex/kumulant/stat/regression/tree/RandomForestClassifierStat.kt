@@ -7,7 +7,9 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.nextPoissonOne
 import kotlinx.serialization.SerialName
@@ -37,8 +39,8 @@ class RandomForestClassifierStat(
 ) : RegressionStat<ForestClassificationResult> {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive, got $featureSize" }
-        require(numClasses >= 2) { "numClasses must be >= 2; got $numClasses" }
+        requirePositiveFeatureSize(featureSize)
+        requireAtLeastTwoClasses(numClasses)
         require(nbrTrees > 0) { "nbrTrees must be positive, got $nbrTrees" }
     }
 
