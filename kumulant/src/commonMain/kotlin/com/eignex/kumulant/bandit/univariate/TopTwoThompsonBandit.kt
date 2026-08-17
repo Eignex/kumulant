@@ -2,6 +2,7 @@ package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.UnivariateBandit
+import com.eignex.kumulant.bandit.argmaxArm
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.core.Result
@@ -85,16 +86,7 @@ class TopTwoThompsonBandit<R : Result>(
     /** Single posterior sample per arm; return the argmax. */
     fun sampleArgmax(): Int {
         val t = step++
-        var bestIdx = 0
-        var bestScore = Double.NEGATIVE_INFINITY
-        for (a in 0 until nbrArms) {
-            val s = policy.evaluate(stats[a].read(0L), t, random)
-            if (s > bestScore) {
-                bestScore = s
-                bestIdx = a
-            }
-        }
-        return bestIdx
+        return argmaxArm(nbrArms) { a -> policy.evaluate(stats[a].read(0L), t, random) }
     }
 
     override fun update(armIndex: Int, value: Double, weight: Double) {

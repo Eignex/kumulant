@@ -69,3 +69,22 @@ fun halfLife(halfLife: Duration): DecayWeighting.HalfLife = DecayWeighting.HalfL
 
 /** Shorthand for [DecayWeighting.Alpha] - usable as a shared weighting across stats. */
 fun alpha(alpha: Double): DecayWeighting.Alpha = DecayWeighting.Alpha(alpha)
+
+/**
+ * Divide a biased accumulator by its [DecayWeighting.correction], reporting an unmoved accumulator as
+ * zero.
+ *
+ * Three getters across [EwmaMeanStat] and [EwmaVarianceStat] spelled this out. The zero branch is
+ * reachable only for `alpha == 0.0` - no smoothing at all - where the accumulator has never left zero and
+ * the ratio is 0/0; reporting the accumulator beats reporting NaN. `EwmaMeanStat` records that the two
+ * stats "used to disagree here", and the fix was applied by copying rather than by extracting, which
+ * left the mean version carrying an extra `w == 0.0` guard the variance version does without. That guard
+ * was redundant either way, since `correction(0.0)` is already `0.0`.
+ *
+ * An extension rather than an interface member: [DecayWeighting] is public API, and this is a convenience
+ * for three internal call sites, not something the sealed hierarchy should publish.
+ */
+internal fun DecayWeighting.debias(biased: Double, totalWeight: Double): Double {
+    val correction = correction(totalWeight)
+    return if (correction == 0.0) 0.0 else biased / correction
+}

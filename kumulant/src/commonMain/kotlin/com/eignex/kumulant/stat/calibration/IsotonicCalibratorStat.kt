@@ -103,9 +103,8 @@ class IsotonicCalibratorStat(
 
     override fun read(timestampNanos: Long): IsotonicCalibratorResult {
         val r = inner.read(timestampNanos)
-        val raw = DoubleArray(numBins) {
-            if (r.totalWeights[it] > 0.0) r.sumOutcome[it] / r.totalWeights[it] else Double.NaN
-        }
+        // ReliabilityResult already derives this, with the same zero-weight NaN convention.
+        val raw = r.outcomeRate
         val weights = r.totalWeights
         val midpoints = DoubleArray(numBins) { (it + 0.5) / numBins }
         val monotone = pav(raw, weights)

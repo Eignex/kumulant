@@ -21,28 +21,20 @@ sealed interface ClassificationSplitMetric {
 @Serializable
 @SerialName("GiniReduction")
 data object GiniReduction : ClassificationSplitMetric {
-    override fun score(total: ClassCountsResult, pos: ClassCountsResult, neg: ClassCountsResult): Double {
-        val wPos = pos.totalWeights
-        val wNeg = neg.totalWeights
-        val w = wPos + wNeg
-        if (w <= 0.0) return 0.0
-        val weighted = (wPos / w) * pos.gini + (wNeg / w) * neg.gini
-        return total.gini - weighted
-    }
+    override fun score(total: ClassCountsResult, pos: ClassCountsResult, neg: ClassCountsResult): Double =
+        impurityReduction(total, pos, neg) {
+            it.gini
+        }
 }
 
 /** Information-gain split criterion: parent entropy minus weighted children entropy. */
 @Serializable
 @SerialName("InformationGain")
 data object InformationGain : ClassificationSplitMetric {
-    override fun score(total: ClassCountsResult, pos: ClassCountsResult, neg: ClassCountsResult): Double {
-        val wPos = pos.totalWeights
-        val wNeg = neg.totalWeights
-        val w = wPos + wNeg
-        if (w <= 0.0) return 0.0
-        val weighted = (wPos / w) * pos.entropy + (wNeg / w) * neg.entropy
-        return total.entropy - weighted
-    }
+    override fun score(total: ClassCountsResult, pos: ClassCountsResult, neg: ClassCountsResult): Double =
+        impurityReduction(total, pos, neg) {
+            it.entropy
+        }
 }
 
 /**

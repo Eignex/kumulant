@@ -10,7 +10,6 @@ import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.pow
 
 /** Additive vs multiplicative seasonal coupling. */
 @Serializable
@@ -48,10 +47,9 @@ data class SeasonalSmoothingResult(
      * wraps around the [seasons] vector.
      */
     fun forecast(steps: Int): Double {
-        require(steps >= 0) { "forecast steps must be >= 0, got $steps" }
+        requireForecastSteps(steps)
         if (steps == 0) return level
-        val sum = if (phi == 1.0) steps.toDouble() else phi * (1.0 - phi.pow(steps.toDouble())) / (1.0 - phi)
-        val trendPart = level + sum * trend
+        val trendPart = level + dampedTrendSum(phi, steps) * trend
         val seasonIndex = ((currentSlot + steps - 1) % period + period) % period
         val seasonFactor = seasons[seasonIndex]
         return when (mode) {
@@ -131,7 +129,7 @@ class SeasonalSmoothingStat(
 
     init {
         require(period >= 2) { "period must be >= 2, got $period" }
-        require(phi > 0.0 && phi <= 1.0) { "phi must be in (0, 1], got $phi" }
+        requirePhi(phi)
     }
 
     /** Level smoothing factor. */

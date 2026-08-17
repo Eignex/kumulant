@@ -4,6 +4,7 @@ import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
+import com.eignex.kumulant.bandit.argmaxArm
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
@@ -104,16 +105,7 @@ class RegressionContextualBandit<R : Result>(
 
     override fun choose(x: VectorView): Int {
         val gMean = globalMean(x)
-        var bestIdx = 0
-        var bestScore = Double.NEGATIVE_INFINITY
-        for (i in 0 until nbrArms) {
-            val score = gMean + posterior.evaluate(arms[i].read(0L), x, random, exploration)
-            if (score > bestScore) {
-                bestScore = score
-                bestIdx = i
-            }
-        }
-        return bestIdx
+        return argmaxArm(nbrArms) { i -> gMean + posterior.evaluate(arms[i].read(0L), x, random, exploration) }
     }
 
     override fun evaluate(armIndex: Int, x: VectorView): Double {

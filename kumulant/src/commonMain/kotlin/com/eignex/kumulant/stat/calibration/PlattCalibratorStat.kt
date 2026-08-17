@@ -10,9 +10,9 @@ import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import com.eignex.kumulant.stat.regression.glm.Link
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
+import com.eignex.kumulant.stat.regression.glm.sigmoid
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.exp
 
 /**
  * Snapshot from [PlattCalibratorStat]: the learned sigmoid parameters and a
@@ -32,10 +32,7 @@ data class PlattCalibratorResult(
 ) : HasObservationCount {
 
     /** Calibrated probability for raw score [x] via `sigmoid(slope * x + intercept)`. */
-    fun calibrate(x: Double): Double {
-        val eta = slope * x + intercept
-        return if (eta >= 0.0) 1.0 / (1.0 + exp(-eta)) else exp(eta) / (1.0 + exp(eta))
-    }
+    fun calibrate(x: Double): Double = sigmoid(slope * x + intercept)
 }
 
 /**

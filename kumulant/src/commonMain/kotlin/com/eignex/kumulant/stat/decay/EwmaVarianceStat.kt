@@ -49,16 +49,12 @@ class EwmaVarianceStat(
 
     private val mean: Double
         get() {
-            val biased = biasedMean.load()
-            val correction = weighting.correction(totalWeights.load())
-            return if (correction == 0.0) 0.0 else biased / correction
+            return weighting.debias(biasedMean.load(), totalWeights.load())
         }
 
     private val variance: Double
         get() {
-            val biasedVar = biasedM2.load()
-            val correction = weighting.correction(totalWeights.load())
-            return if (correction == 0.0) 0.0 else biasedVar / correction
+            return weighting.debias(biasedM2.load(), totalWeights.load())
         }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
