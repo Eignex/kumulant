@@ -1,14 +1,10 @@
-@file:OptIn(ExperimentalAtomicApi::class)
-
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.koblas.VectorView
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
-import com.eignex.kumulant.stream.guarded
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * Immutable, **wire-portable** snapshot of a [RegressionTree] over a dense [VectorView]
@@ -101,76 +97,24 @@ fun RegressionNode<VectorView>.snapshot(): TreeNodeResult = when (this) {
  * Snapshot merge using only the immutable result. Mirrors [RegressionTree.merge] but the
  * "other" side is a [TreeNodeResult] tree-of-results rather than a live tree. `VectorView`
  * only, for the same reason [snapshot] is.
+ *
+ * An extension rather than a member because it exists only at `Row = VectorView`, which a member of a
+ * generic class cannot be constrained to. The algorithm is [TreeGrowth.mergeSnapshot].
  */
 fun RegressionTree<VectorView>.mergeSnapshot(other: TreeNodeResult) {
-    splitLock.guarded {
-        root = mergeNodeWithResult(root, other)
-        nbrNodes.store(countNodes(root))
-    }
+    growth.mergeSnapshot(other, RegressionResultShape)
 }
 
-private fun RegressionTree<VectorView>.mergeNodeWithResult(
-    a: RegressionNode<VectorView>,
-    b: TreeNodeResult,
-): RegressionNode<VectorView> {
-    if (a is RegressionSplitNode && b is TreeSplitResult && a.split == b.split) {
-        a.pos = mergeNodeWithResult(a.pos, b.pos)
-        a.neg = mergeNodeWithResult(a.neg, b.neg)
-        // b.value carries the full subtree aggregate; the child recursion already
-        // folded the structurally-aligned portion. Pull only the residual; what b's
-        // value holds beyond the sum of its children; into a's carryover.
-        val childSum = mergeWVR(b.pos.value, b.neg.value)
-        val residual = subtractWVR(b.value, childSum)
-        if (residual.totalWeights > 0.0) foldIntoCarryover(a, residual)
-        return a
-    }
-    if (a is RegressionLeafNode && b is TreeLeafResult) {
-        a.arm.merge(b.value)
-        return a
-    }
-    if (a is RegressionLeafNode && b is TreeSplitResult) {
-        val cloned = cloneFromResult(b) as RegressionSplitNode
-        foldIntoCarryover(cloned, a.arm.read(0L))
-        return cloned
-    }
-    // a split + b leaf, or splits differ: keep a's structure, fold b's aggregate.
-    foldIntoCarryover(a as RegressionSplitNode, b.value)
-    return a
-}
+/** Reads the immutable regression snapshot hierarchy on the growth engine's behalf. */
+private object RegressionResultShape :
+    TreeResultShape<Split<VectorView>, TreeNodeResult, TreeSplitResult, WeightedVarianceResult> {
+    override fun asSplitResult(node: TreeNodeResult): TreeSplitResult? = node as? TreeSplitResult
 
-/**
- * Rebuild a live subtree from a snapshot.
- *
- * Carried a `depth` parameter that was threaded through every recursive call and read by none of them.
- * Removed rather than left in place, because as written it read as a live depth cap and was not one.
- *
- * Whether it should be one is a separate question this does not settle: `newLeaf` refuses to grow past
- * `config.maxDepth`, and nothing here refuses to clone past it. In practice a snapshot comes from a tree
- * that already honoured its own `maxDepth`, so the two only diverge when the configs differ - which is a
- * behaviour decision rather than a cleanup.
- */
-private fun RegressionTree<VectorView>.cloneFromResult(node: TreeNodeResult): RegressionNode<VectorView> {
-    nbrNodes.addAndFetch(1)
-    return when (node) {
-        is TreeLeafResult -> {
-            val arm = leafArmFactory()
-            arm.merge(node.value)
-            RegressionTerminalLeaf(arm)
-        }
+    override fun splitOf(node: TreeSplitResult): Split<VectorView> = node.split
 
-        is TreeSplitResult -> {
-            val pos = cloneFromResult(node.pos)
-            val neg = cloneFromResult(node.neg)
-            // Re-establish any orphan aggregate the snapshot encodes by comparing the
-            // recorded value against the sum of the cloned children's aggregates.
-            val childSum = mergeWVR(node.pos.value, node.neg.value)
-            val residual = subtractWVR(node.value, childSum)
-            val carry = if (residual.totalWeights > 0.0) {
-                leafArmFactory().also { it.merge(residual) }
-            } else {
-                null
-            }
-            RegressionSplitNode(split = node.split, pos = pos, neg = neg, carryover = carry)
-        }
-    }
+    override fun posOf(node: TreeSplitResult): TreeNodeResult = node.pos
+
+    override fun negOf(node: TreeSplitResult): TreeNodeResult = node.neg
+
+    override fun valueOf(node: TreeNodeResult): WeightedVarianceResult = node.value
 }
