@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.nextPoissonOne
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -57,7 +58,7 @@ class RandomForestRegressionStat(
 ) : RegressionStat<ForestRegressionResult> {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive, got $featureSize" }
+        requirePositiveFeatureSize(featureSize)
         require(nbrTrees > 0) { "nbrTrees must be positive, got $nbrTrees" }
     }
 

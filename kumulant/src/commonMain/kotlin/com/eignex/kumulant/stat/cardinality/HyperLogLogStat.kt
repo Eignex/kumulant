@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
+import com.eignex.kumulant.stat.sketch.requireSameHasher
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casMax
@@ -136,9 +137,7 @@ class HyperLogLogStat(
     }
 
     override fun merge(values: HyperLogLogResult) {
-        require(values.hasher == hasherRef) {
-            "Cannot merge HyperLogLogStat hashed with ${values.hasher} into one hashed with $hasherRef"
-        }
+        requireSameHasher("HyperLogLogStat", values.hasher, hasherRef)
         // Shape before array length. `m` is derived from `precision`, so checking the register count
         // first made the precision message unreachable: a payload from a differently-sized sketch was
         // reported as the wrong number of registers rather than as the wrong precision, which is the

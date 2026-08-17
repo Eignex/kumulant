@@ -10,7 +10,6 @@ import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.ceil
 
 /**
  * Space-Saving heavy-hitters snapshot. [keys], [counts], [errors] are parallel arrays of
@@ -196,7 +195,7 @@ class SpaceSavingStat(
         // Capped as in CountMinSketchStat, and for the same reason: counts are Long and monotonically
         // increasing, so an unbounded step saturates a count and the next one wraps it negative,
         // which would drop a genuine heavy hitter out of the summary entirely.
-        val w = ceil(weight).toLong().coerceIn(1L, MAX_COUNT_STEP)
+        val w = weight.toCounterStep()
         if (useMisraGries) {
             admitMisraGries(value, w, 0L)
             totalSeenCell.add(1L)
@@ -268,9 +267,4 @@ class SpaceSavingStat(
     }
 
     override fun create(concurrency: Concurrency?) = SpaceSavingStat(capacity, concurrency ?: this.concurrency)
-
-    private companion object {
-        /** Largest single increment a count accepts; mirrors `CountMinSketchStat.MAX_COUNTER_STEP`. */
-        const val MAX_COUNT_STEP: Long = Long.MAX_VALUE / 1024
-    }
 }

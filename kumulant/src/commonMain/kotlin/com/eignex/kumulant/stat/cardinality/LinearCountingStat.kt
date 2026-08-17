@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
+import com.eignex.kumulant.stat.sketch.requireSameHasher
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casOr
@@ -126,9 +127,7 @@ class LinearCountingStat(
     }
 
     override fun merge(values: LinearCountingResult) {
-        require(values.hasher == hasherRef) {
-            "Cannot merge LinearCountingStat hashed with ${values.hasher} into one hashed with $hasherRef"
-        }
+        requireSameHasher("LinearCountingStat", values.hasher, hasherRef)
         // Shape before array length; see HyperLogLogStat.merge. `wordCount` is `bits / 64`, so the
         // bits message was unreachable for any self-consistent payload.
         require(values.bits == bits) {

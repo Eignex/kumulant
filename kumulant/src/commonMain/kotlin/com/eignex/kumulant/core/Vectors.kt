@@ -25,3 +25,34 @@ import com.eignex.koblas.VectorView
 internal inline fun VectorView.requireFeatureSize(expected: Int) {
     require(size == expected) { "x.size=$size, expected $expected" }
 }
+
+/**
+ * Reject a non-positive feature count at construction.
+ *
+ * Sixteen sites spelled this out, in *two* spellings: the GLM stats said `"featureSize must be positive"`
+ * and the tree stats appended `", got $featureSize"`. Standardised on the with-value form, since a
+ * message naming the offending number is strictly more useful and no test matched either one.
+ */
+internal fun requirePositiveFeatureSize(featureSize: Int) {
+    require(featureSize > 0) { "featureSize must be positive, got $featureSize" }
+}
+
+/** Reject a class count below two. One class is not a classification problem. Nine identical sites. */
+internal fun requireAtLeastTwoClasses(numClasses: Int) {
+    require(numClasses >= 2) { "numClasses must be >= 2; got $numClasses" }
+}
+
+/** Reject a non-positive bin count. Six identical sites across the score and calibration families. */
+internal fun requirePositiveBins(numBins: Int) {
+    require(numBins > 0) { "numBins must be > 0; got $numBins" }
+}
+
+/**
+ * Reject a merge between two models of different arity.
+ *
+ * Distinct from [requireFeatureSize], which guards an incoming observation: this guards an incoming
+ * *snapshot*, where the mismatch means the two models were never the same model. Three identical sites.
+ */
+internal fun requireMergeFeatureSize(incoming: Int, own: Int) {
+    require(incoming == own) { "merge: featureSize mismatch $incoming vs $own" }
+}

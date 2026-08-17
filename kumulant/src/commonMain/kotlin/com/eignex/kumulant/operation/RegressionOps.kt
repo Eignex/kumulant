@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalAtomicApi::class)
-
 package com.eignex.kumulant.operation
 
 import com.eignex.koblas.DenseVector
@@ -10,8 +8,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.requireFeatureSize
-import kotlin.concurrent.atomics.AtomicLong
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 import kotlin.random.Random
 
 // Decorator surface for [RegressionStat], mirroring the live ops on the other modalities.
@@ -145,20 +142,13 @@ internal class WeightByRegressionStat<R : Result>(
 internal class ThrottleRegressionStat<R : Result>(private val delegate: RegressionStat<R>, private val every: Int) :
     RegressionStat<R>,
     Stat<R> by delegate {
-    init {
-        checkEvery(every)
-    }
     override val featureSize: Int = delegate.featureSize
-    private val tick = AtomicLong(0L)
+    private val gate = ThrottleGate(every, delegate.concurrency)
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        if (tick.addAndFetch(1L) % every == 0L) delegate.update(x, y, timestampNanos, weight)
+        if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
     }
     override fun reset() {
-        // Reset the phase too, not just the delegate: Stat.reset promises the equivalent of a fresh
-        // stat, and `by delegate` forwarded reset straight past this counter, so a reset stat
-        // forwarded on its first update instead of its `every`-th. The sibling wrappers
-        // (LagSeriesStat, DiffSeriesStat, HysteresisSeriesStat, ResampleByTimeStat) all do this.
-        tick.store(0L)
+        gate.reset()
         delegate.reset()
     }
 
@@ -172,12 +162,10 @@ internal class SampleRegressionStat<R : Result>(
     private val random: Random,
 ) : RegressionStat<R>,
     Stat<R> by delegate {
-    init {
-        checkRate(rate)
-    }
+    private val gate = SampleGate(rate, random)
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
-        if (random.nextDouble() < rate) delegate.update(x, y, timestampNanos, weight)
+        if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
         SampleRegressionStat(delegate.create(concurrency), rate, random)
@@ -190,7 +178,7 @@ internal class FoldRegressionStat<R : Result>(
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     init {
-        require(featureSize > 0) { "featureSize must be positive, got $featureSize" }
+        requirePositiveFeatureSize(featureSize)
     }
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)

@@ -17,6 +17,26 @@ import kotlin.math.sqrt
 private val EMPTY_VECTOR = DoubleArray(0)
 
 /**
+ * Narrow a feedback primary to the trait a node needs, unwrapping the per-element indirection first.
+ *
+ * Six nodes repeated the unwrap and the check verbatim, and the wording had already drifted: `Center`,
+ * `Scale`, `Low` and `High` say "feedback primary" while `Standardize` and `MinMax` say just "primary".
+ * That divergence is the copy-paste fingerprint, and it is exactly what a caller greps for when a
+ * pipeline fails to find its primary.
+ *
+ * The [IndexedResult] unwrap is the load-bearing half: a vectorised feedback stat hands each coordinate
+ * its own primary boxed with the coordinate's index, so a node that checked the box rather than its
+ * contents would reject every element-wise pipeline.
+ */
+private inline fun <reified T> Result?.feedbackPrimary(node: String): T {
+    val unwrapped = if (this is IndexedResult) inner else this
+    check(unwrapped is T) {
+        "$node requires a ${T::class.simpleName} feedback primary; got ${unwrapped?.let { it::class.simpleName }}"
+    }
+    return unwrapped
+}
+
+/**
  * Wire-serialisable AST for scalar expressions over the per-update input
  * environment. The library uses these wherever a stat needs to apply a
  * caller-supplied projection / weight / threshold expression that has to
@@ -88,10 +108,7 @@ data object Y : ScalarExpr {
 @SerialName("Center")
 data object Center : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = if (primary is IndexedResult) primary.inner else primary
-        check(unwrapped is HasCenterScale) {
-            "Center requires a HasCenterScale feedback primary; got ${unwrapped?.let { it::class.simpleName }}"
-        }
+        val unwrapped = primary.feedbackPrimary<HasCenterScale>("Center")
         return unwrapped.center
     }
 }
@@ -105,10 +122,7 @@ data object Center : ScalarExpr {
 @SerialName("Scale")
 data object Scale : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = if (primary is IndexedResult) primary.inner else primary
-        check(unwrapped is HasCenterScale) {
-            "Scale requires a HasCenterScale feedback primary; got ${unwrapped?.let { it::class.simpleName }}"
-        }
+        val unwrapped = primary.feedbackPrimary<HasCenterScale>("Scale")
         return unwrapped.scale
     }
 }
@@ -122,10 +136,7 @@ data object Scale : ScalarExpr {
 @SerialName("Low")
 data object Low : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = if (primary is IndexedResult) primary.inner else primary
-        check(unwrapped is HasMinMax) {
-            "Low requires a HasMinMax feedback primary; got ${unwrapped?.let { it::class.simpleName }}"
-        }
+        val unwrapped = primary.feedbackPrimary<HasMinMax>("Low")
         return unwrapped.min
     }
 }
@@ -139,10 +150,7 @@ data object Low : ScalarExpr {
 @SerialName("High")
 data object High : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = if (primary is IndexedResult) primary.inner else primary
-        check(unwrapped is HasMinMax) {
-            "High requires a HasMinMax feedback primary; got ${unwrapped?.let { it::class.simpleName }}"
-        }
+        val unwrapped = primary.feedbackPrimary<HasMinMax>("High")
         return unwrapped.max
     }
 }
@@ -434,10 +442,7 @@ data class In(
 @SerialName("Standardize")
 data object Standardize : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = if (primary is IndexedResult) primary.inner else primary
-        check(unwrapped is HasCenterScale) {
-            "Standardize requires a HasCenterScale primary; got ${unwrapped?.let { it::class.simpleName }}"
-        }
+        val unwrapped = primary.feedbackPrimary<HasCenterScale>("Standardize")
         val scale = unwrapped.scale
         return if (scale > 0.0) (x - unwrapped.center) / scale else 0.0
     }
@@ -461,10 +466,7 @@ data class MinMax(
     }
 
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = if (primary is IndexedResult) primary.inner else primary
-        check(unwrapped is HasMinMax) {
-            "MinMax requires a HasMinMax primary; got ${unwrapped?.let { it::class.simpleName }}"
-        }
+        val unwrapped = primary.feedbackPrimary<HasMinMax>("MinMax")
         val lo = unwrapped.min
         val hi = unwrapped.max
         val span = hi - lo

@@ -334,10 +334,10 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         }
 
         is StandardScalerSeries ->
-            requireSeries(inner, "StandardScaler").materialize(concurrency).standardScaler(concurrency)
+            requireSeries(inner, "StandardScalerSeries").materialize(concurrency).standardScaler(concurrency)
 
         is MinMaxScalerSeries ->
-            requireSeries(inner, "MinMaxScaler").materialize(concurrency)
+            requireSeries(inner, "MinMaxScalerSeries").materialize(concurrency)
                 .minMaxScaler(targetLow, targetHigh, concurrency)
 
         is BandSeries -> {
@@ -583,13 +583,6 @@ fun StatSpec.materialize(concurrency: Concurrency = Concurrency.None): Stat<*> =
     is RegressionStatSpec<*> -> materialize(concurrency)
 }
 
-private fun requireRegression(inner: StatSpec, op: String): RegressionStatSpec<*> {
-    require(inner is RegressionStatSpec<*>) {
-        "$op expects a RegressionStatSpec inner; got ${inner::class.simpleName}"
-    }
-    return inner
-}
-
 /**
  * Construct a live [RegressionStat] from a [RegressionStatSpec]. See [SeriesStatSpec.materialize].
  */
@@ -703,30 +696,29 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
     return out as RegressionStat<R>
 }
 
-private fun requireSeries(inner: StatSpec, op: String): SeriesStatSpec<*> {
-    require(inner is SeriesStatSpec<*>) {
-        "$op expects a SeriesStatSpec inner; got ${inner::class.simpleName}"
-    }
+/**
+ * Narrow a wrapper spec's inner spec to the modality the wrapper needs.
+ *
+ * Five of these existed, one per modality, with identical bodies - and the regression one sat a hundred
+ * and twenty lines away from its four siblings rather than beside them. The five names are kept because
+ * they read better at the ~50 call sites; only the repeated body is gone. `S::class.simpleName` derives
+ * the type name the message used to spell out, so the messages are unchanged.
+ *
+ * @param S the modality the wrapper requires of its inner spec.
+ * @param inner the inner spec to narrow.
+ * @param op the wrapper's own name, for the message.
+ */
+private inline fun <reified S : StatSpec> requireInner(inner: StatSpec, op: String): S {
+    require(inner is S) { "$op expects a ${S::class.simpleName} inner; got ${inner::class.simpleName}" }
     return inner
 }
 
-private fun requirePaired(inner: StatSpec, op: String): PairedStatSpec<*> {
-    require(inner is PairedStatSpec<*>) {
-        "$op expects a PairedStatSpec inner; got ${inner::class.simpleName}"
-    }
-    return inner
-}
+private fun requireSeries(inner: StatSpec, op: String): SeriesStatSpec<*> = requireInner(inner, op)
 
-private fun requireVector(inner: StatSpec, op: String): VectorStatSpec<*> {
-    require(inner is VectorStatSpec<*>) {
-        "$op expects a VectorStatSpec inner; got ${inner::class.simpleName}"
-    }
-    return inner
-}
+private fun requirePaired(inner: StatSpec, op: String): PairedStatSpec<*> = requireInner(inner, op)
 
-private fun requireDiscrete(inner: StatSpec, op: String): DiscreteStatSpec<*> {
-    require(inner is DiscreteStatSpec<*>) {
-        "$op expects a DiscreteStatSpec inner; got ${inner::class.simpleName}"
-    }
-    return inner
-}
+private fun requireVector(inner: StatSpec, op: String): VectorStatSpec<*> = requireInner(inner, op)
+
+private fun requireDiscrete(inner: StatSpec, op: String): DiscreteStatSpec<*> = requireInner(inner, op)
+
+private fun requireRegression(inner: StatSpec, op: String): RegressionStatSpec<*> = requireInner(inner, op)

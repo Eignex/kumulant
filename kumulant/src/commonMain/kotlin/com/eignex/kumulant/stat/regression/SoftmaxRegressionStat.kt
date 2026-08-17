@@ -9,7 +9,9 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
@@ -107,8 +109,8 @@ class SoftmaxRegressionStat(
 ) : RegressionStat<SoftmaxRegressionResult> {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive" }
-        require(numClasses >= 2) { "numClasses must be >= 2; got $numClasses" }
+        requirePositiveFeatureSize(featureSize)
+        requireAtLeastTwoClasses(numClasses)
     }
 
     private val mode = concurrency.welfordMode()

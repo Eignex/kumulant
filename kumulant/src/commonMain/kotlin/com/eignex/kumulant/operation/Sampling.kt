@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalAtomicApi::class)
-
 package com.eignex.kumulant.operation
 
 import com.eignex.koblas.VectorView
@@ -10,8 +8,6 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
-import kotlin.concurrent.atomics.AtomicLong
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.random.Random
 
 // Throttle / sample adapters. Each wraps an inner stat, intercepts at the update
@@ -65,19 +61,12 @@ internal fun checkRate(rate: Double) = require(rate in 0.0..1.0) { "sample rate 
 internal class ThrottleSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val every: Int) :
     SeriesStat<R>,
     Stat<R> by delegate {
-    init {
-        checkEvery(every)
-    }
-    private val tick = AtomicLong(0L)
+    private val gate = ThrottleGate(every, delegate.concurrency)
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (tick.addAndFetch(1L) % every == 0L) delegate.update(value, timestampNanos, weight)
+        if (gate.pass()) delegate.update(value, timestampNanos, weight)
     }
     override fun reset() {
-        // Reset the phase too, not just the delegate: Stat.reset promises the equivalent of a fresh
-        // stat, and `by delegate` forwarded reset straight past this counter, so a reset stat
-        // forwarded on its first update instead of its `every`-th. The sibling wrappers
-        // (LagSeriesStat, DiffSeriesStat, HysteresisSeriesStat, ResampleByTimeStat) all do this.
-        tick.store(0L)
+        gate.reset()
         delegate.reset()
     }
 
@@ -88,19 +77,12 @@ internal class ThrottleSeriesStat<R : Result>(private val delegate: SeriesStat<R
 internal class ThrottlePairedStat<R : Result>(private val delegate: PairedStat<R>, private val every: Int) :
     PairedStat<R>,
     Stat<R> by delegate {
-    init {
-        checkEvery(every)
-    }
-    private val tick = AtomicLong(0L)
+    private val gate = ThrottleGate(every, delegate.concurrency)
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        if (tick.addAndFetch(1L) % every == 0L) delegate.update(x, y, timestampNanos, weight)
+        if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
     }
     override fun reset() {
-        // Reset the phase too, not just the delegate: Stat.reset promises the equivalent of a fresh
-        // stat, and `by delegate` forwarded reset straight past this counter, so a reset stat
-        // forwarded on its first update instead of its `every`-th. The sibling wrappers
-        // (LagSeriesStat, DiffSeriesStat, HysteresisSeriesStat, ResampleByTimeStat) all do this.
-        tick.store(0L)
+        gate.reset()
         delegate.reset()
     }
 
@@ -111,19 +93,12 @@ internal class ThrottlePairedStat<R : Result>(private val delegate: PairedStat<R
 internal class ThrottleVectorStat<R : Result>(private val delegate: VectorStat<R>, private val every: Int) :
     VectorStat<R>,
     Stat<R> by delegate {
-    init {
-        checkEvery(every)
-    }
-    private val tick = AtomicLong(0L)
+    private val gate = ThrottleGate(every, delegate.concurrency)
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
-        if (tick.addAndFetch(1L) % every == 0L) delegate.update(vector, timestampNanos, weight)
+        if (gate.pass()) delegate.update(vector, timestampNanos, weight)
     }
     override fun reset() {
-        // Reset the phase too, not just the delegate: Stat.reset promises the equivalent of a fresh
-        // stat, and `by delegate` forwarded reset straight past this counter, so a reset stat
-        // forwarded on its first update instead of its `every`-th. The sibling wrappers
-        // (LagSeriesStat, DiffSeriesStat, HysteresisSeriesStat, ResampleByTimeStat) all do this.
-        tick.store(0L)
+        gate.reset()
         delegate.reset()
     }
 
@@ -134,19 +109,12 @@ internal class ThrottleVectorStat<R : Result>(private val delegate: VectorStat<R
 internal class ThrottleDiscreteStat<R : Result>(private val delegate: DiscreteStat<R>, private val every: Int) :
     DiscreteStat<R>,
     Stat<R> by delegate {
-    init {
-        checkEvery(every)
-    }
-    private val tick = AtomicLong(0L)
+    private val gate = ThrottleGate(every, delegate.concurrency)
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        if (tick.addAndFetch(1L) % every == 0L) delegate.update(value, timestampNanos, weight)
+        if (gate.pass()) delegate.update(value, timestampNanos, weight)
     }
     override fun reset() {
-        // Reset the phase too, not just the delegate: Stat.reset promises the equivalent of a fresh
-        // stat, and `by delegate` forwarded reset straight past this counter, so a reset stat
-        // forwarded on its first update instead of its `every`-th. The sibling wrappers
-        // (LagSeriesStat, DiffSeriesStat, HysteresisSeriesStat, ResampleByTimeStat) all do this.
-        tick.store(0L)
+        gate.reset()
         delegate.reset()
     }
 
@@ -163,11 +131,9 @@ internal class SampleSeriesStat<R : Result>(
     private val random: Random,
 ) : SeriesStat<R>,
     Stat<R> by delegate {
-    init {
-        checkRate(rate)
-    }
+    private val gate = SampleGate(rate, random)
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (random.nextDouble() < rate) delegate.update(value, timestampNanos, weight)
+        if (gate.pass()) delegate.update(value, timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): SeriesStat<R> =
         SampleSeriesStat(delegate.create(concurrency), rate, random)
@@ -179,11 +145,9 @@ internal class SamplePairedStat<R : Result>(
     private val random: Random,
 ) : PairedStat<R>,
     Stat<R> by delegate {
-    init {
-        checkRate(rate)
-    }
+    private val gate = SampleGate(rate, random)
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        if (random.nextDouble() < rate) delegate.update(x, y, timestampNanos, weight)
+        if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): PairedStat<R> =
         SamplePairedStat(delegate.create(concurrency), rate, random)
@@ -195,11 +159,9 @@ internal class SampleVectorStat<R : Result>(
     private val random: Random,
 ) : VectorStat<R>,
     Stat<R> by delegate {
-    init {
-        checkRate(rate)
-    }
+    private val gate = SampleGate(rate, random)
     override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
-        if (random.nextDouble() < rate) delegate.update(vector, timestampNanos, weight)
+        if (gate.pass()) delegate.update(vector, timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         SampleVectorStat(delegate.create(concurrency), rate, random)
@@ -211,11 +173,9 @@ internal class SampleDiscreteStat<R : Result>(
     private val random: Random,
 ) : DiscreteStat<R>,
     Stat<R> by delegate {
-    init {
-        checkRate(rate)
-    }
+    private val gate = SampleGate(rate, random)
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        if (random.nextDouble() < rate) delegate.update(value, timestampNanos, weight)
+        if (gate.pass()) delegate.update(value, timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): DiscreteStat<R> =
         SampleDiscreteStat(delegate.create(concurrency), rate, random)

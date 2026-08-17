@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.regression.glm
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 
 /**
  * Manager for a population of [BayesianRegressionStat] instances that share an
@@ -40,7 +41,7 @@ class HierarchicalBayesianRegression(
     initialPriorCovariance: DenseMatrix? = null,
 ) {
     init {
-        require(featureSize > 0) { "featureSize must be positive" }
+        requirePositiveFeatureSize(featureSize)
     }
 
     private val tracked = mutableListOf<BayesianRegressionStat>()

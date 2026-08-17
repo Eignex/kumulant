@@ -8,6 +8,8 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.core.requireMergeFeatureSize
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
@@ -70,7 +72,7 @@ class DiagonalRegressionStat(
 ) : RegressionStat<DiagonalRegressionResult> {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive" }
+        requirePositiveFeatureSize(featureSize)
         require(priorPrecision > 0.0) { "priorPrecision must be positive, got $priorPrecision" }
     }
 
@@ -141,9 +143,7 @@ class DiagonalRegressionStat(
      * with the diagonal model.
      */
     override fun merge(values: DiagonalRegressionResult) {
-        require(values.featureSize == featureSize) {
-            "merge: featureSize mismatch ${values.featureSize} vs $featureSize"
-        }
+        requireMergeFeatureSize(values.featureSize, featureSize)
         lock.guarded {
             val otherWeights = values.weights.toDoubleArray()
             val otherPrecision = values.precision.toDoubleArray()

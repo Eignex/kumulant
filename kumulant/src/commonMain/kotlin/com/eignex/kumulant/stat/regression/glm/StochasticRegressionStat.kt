@@ -7,6 +7,8 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.core.requireMergeFeatureSize
+import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
@@ -62,7 +64,7 @@ class StochasticRegressionStat(
 ) : RegressionStat<StochasticRegressionResult> {
 
     init {
-        require(featureSize > 0) { "featureSize must be positive" }
+        requirePositiveFeatureSize(featureSize)
         require(penalty == Penalty.None || (optimizer is Sgd && biasOptimizer is Sgd)) {
             "Penalty.L1 / Penalty.L2 require Sgd optimizers; got optimizer=${optimizer::class.simpleName}"
         }
@@ -240,9 +242,7 @@ class StochasticRegressionStat(
      * so this is an approximation; for principled merges use [BayesianRegressionStat].
      */
     override fun merge(values: StochasticRegressionResult) {
-        require(values.featureSize == featureSize) {
-            "merge: featureSize mismatch ${values.featureSize} vs $featureSize"
-        }
+        requireMergeFeatureSize(values.featureSize, featureSize)
         lock.guarded {
             val w1 = totalWeightsCell.load()
             val w2 = values.totalWeights
