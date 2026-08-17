@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.feat
 import com.eignex.koblas.VectorView
 import com.eignex.kumulant.bandit.contextual.Exp4Bandit
 import com.eignex.kumulant.bandit.contextual.Exp4Expert
@@ -19,7 +19,6 @@ import kotlin.test.assertTrue
  *  tests don't already cover. */
 class StandaloneBanditExtraTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     @Test
     fun `Exp3 gamma=1 produces uniform play distribution regardless of weights`() {

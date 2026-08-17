@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.core.Concurrency
 import kotlin.random.Random
 import kotlin.test.Test
@@ -10,7 +10,6 @@ import kotlin.test.assertTrue
 
 class DecisionTreeRegressionStatTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     @Test
     fun `rejects bad featureSize`() {

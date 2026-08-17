@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.kumulant.feat
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.LinUcb
@@ -15,7 +16,6 @@ import kotlin.test.assertTrue
 
 class RegressionContextualBanditTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     @Test
     fun `constructor rejects non-positive nbrArms`() {

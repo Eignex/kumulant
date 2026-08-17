@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.kumulant.fitLine
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
@@ -12,23 +13,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class StochasticRegressionStatTest {
-
-    private fun fitLine(
-        stat: RegressionStat<*>,
-        slope: DoubleArray,
-        intercept: Double,
-        n: Int = 4000,
-        seed: Long = 42L,
-    ) {
-        val rng = Random(seed)
-        repeat(n) {
-            val x = DoubleArray(slope.size) { rng.nextDouble() * 2.0 - 1.0 }
-            var y = intercept
-            for (i in slope.indices) y += slope[i] * x[i]
-            y += rng.nextDouble() * 0.02 - 0.01 // small noise
-            stat.update(x, y, 1.0)
-        }
-    }
 
     @Test
     fun `sgd should recover ground truth weights`() {

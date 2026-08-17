@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.kumulant.fitLine
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.schema.optimizer.Adagrad
 import com.eignex.kumulant.schema.optimizer.Adam
@@ -15,23 +16,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class OptimizerTest {
-
-    private fun fitLine(
-        stat: StochasticRegressionStat,
-        truth: DoubleArray,
-        intercept: Double,
-        n: Int = 4000,
-        seed: Long = 42L,
-    ) {
-        val rng = Random(seed)
-        repeat(n) {
-            val x = DoubleArray(truth.size) { rng.nextDouble() * 2.0 - 1.0 }
-            var y = intercept
-            for (i in truth.indices) y += truth[i] * x[i]
-            y += rng.nextDouble() * 0.02 - 0.01
-            stat.update(x, y, 1.0)
-        }
-    }
 
     private fun assertConverges(stat: StochasticRegressionStat, truth: DoubleArray, intercept: Double, tol: Double) {
         fitLine(stat, truth, intercept)

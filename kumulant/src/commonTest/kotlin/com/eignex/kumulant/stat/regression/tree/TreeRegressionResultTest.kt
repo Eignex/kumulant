@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -8,7 +8,6 @@ import kotlin.test.assertTrue
 
 class TreeRegressionResultTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     @Test
     fun `findLeaf returns the leaf value for a flat tree`() {

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.tree
 
-import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
@@ -14,7 +14,6 @@ import kotlin.test.assertTrue
 
 class RegressionContextualBanditTreeTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     @Test
     fun `drives tree-based arms`() {

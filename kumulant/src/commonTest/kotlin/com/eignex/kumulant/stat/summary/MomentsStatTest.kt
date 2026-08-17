@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.summary
 
+import com.eignex.kumulant.DELTA
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -7,7 +8,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class MomentsStatTest {
-    private val delta = 1e-9
 
     @Test
     fun `create produces fresh independent stat`() {
@@ -18,8 +18,8 @@ class MomentsStatTest {
         }
         val m2 = m1.create()
         m1.update(4.0)
-        assertEquals(4.0, m1.read().totalWeights, delta)
-        assertEquals(0.0, m2.read().totalWeights, delta)
+        assertEquals(4.0, m1.read().totalWeights, DELTA)
+        assertEquals(0.0, m2.read().totalWeights, DELTA)
     }
 
     @Test
@@ -29,8 +29,8 @@ class MomentsStatTest {
         val data = listOf(1.0, 2.0, 3.0, 4.0, 5.0)
         data.forEach { stat.update(it, 1.0) }
 
-        assertEquals(3.0, stat.read().mean, delta)
-        assertEquals(0.0, stat.read().skewness, delta)
+        assertEquals(3.0, stat.read().mean, DELTA)
+        assertEquals(0.0, stat.read().skewness, DELTA)
     }
 
     @Test
@@ -79,8 +79,8 @@ class MomentsStatTest {
 
         m1.merge(m2.read())
 
-        assertEquals(60.5, m1.read().mean, delta)
-        assertEquals(4.0, m1.read().totalWeights, delta)
+        assertEquals(60.5, m1.read().mean, DELTA)
+        assertEquals(4.0, m1.read().totalWeights, DELTA)
     }
 
     @Test
@@ -90,11 +90,11 @@ class MomentsStatTest {
         stat.update(20.0)
         stat.reset()
 
-        assertEquals(0.0, stat.read().totalWeights, delta)
-        assertEquals(0.0, stat.read().mean, delta)
-        assertEquals(0.0, stat.read().variance, delta)
-        assertEquals(0.0, stat.read().skewness, delta)
-        assertEquals(0.0, stat.read().kurtosis, delta)
+        assertEquals(0.0, stat.read().totalWeights, DELTA)
+        assertEquals(0.0, stat.read().mean, DELTA)
+        assertEquals(0.0, stat.read().variance, DELTA)
+        assertEquals(0.0, stat.read().skewness, DELTA)
+        assertEquals(0.0, stat.read().kurtosis, DELTA)
     }
 
     @Test
@@ -102,33 +102,33 @@ class MomentsStatTest {
         val stat = MomentsStat()
         listOf(2.0, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0).forEach { stat.update(it, 1.0) }
         val r = stat.read()
-        assertEquals(5.0, r.mean, delta)
-        assertEquals(4.0, r.variance, delta)
-        assertEquals(32.0 / 7.0, r.sampleVariance, delta)
-        assertEquals(sqrt(32.0 / 7.0), r.sampleStdDev, delta)
+        assertEquals(5.0, r.mean, DELTA)
+        assertEquals(4.0, r.variance, DELTA)
+        assertEquals(32.0 / 7.0, r.sampleVariance, DELTA)
+        assertEquals(sqrt(32.0 / 7.0), r.sampleStdDev, DELTA)
     }
 
     @Test
     fun `sampleVariance is zero when totalWeights le 1`() {
         val empty = MomentsStat().read()
-        assertEquals(0.0, empty.sampleVariance, delta)
-        assertEquals(0.0, empty.sampleStdDev, delta)
+        assertEquals(0.0, empty.sampleVariance, DELTA)
+        assertEquals(0.0, empty.sampleStdDev, DELTA)
 
         val one = MomentsStat().apply { update(42.0, 1.0) }.read()
-        assertEquals(0.0, one.sampleVariance, delta)
-        assertEquals(0.0, one.sampleStdDev, delta)
+        assertEquals(0.0, one.sampleVariance, DELTA)
+        assertEquals(0.0, one.sampleStdDev, DELTA)
     }
 
     @Test
     fun `unbiasedSkewness is zero with two or fewer samples`() {
         val empty = MomentsStat().read()
-        assertEquals(0.0, empty.unbiasedSkewness, delta)
+        assertEquals(0.0, empty.unbiasedSkewness, DELTA)
 
         val two = MomentsStat().apply {
             update(1.0, 1.0)
             update(3.0, 1.0)
         }.read()
-        assertEquals(0.0, two.unbiasedSkewness, delta)
+        assertEquals(0.0, two.unbiasedSkewness, DELTA)
     }
 
     @Test
@@ -138,7 +138,7 @@ class MomentsStatTest {
         val r = stat.read()
         val n = r.totalWeights
         val expected = (sqrt(n * (n - 1)) / (n - 2)) * r.skewness
-        assertEquals(expected, r.unbiasedSkewness, delta)
+        assertEquals(expected, r.unbiasedSkewness, DELTA)
         assertTrue(r.unbiasedSkewness > r.skewness)
     }
 
@@ -149,7 +149,7 @@ class MomentsStatTest {
             update(2.0, 1.0)
             update(3.0, 1.0)
         }.read()
-        assertEquals(0.0, three.unbiasedKurtosis, delta)
+        assertEquals(0.0, three.unbiasedKurtosis, DELTA)
     }
 
     @Test
@@ -159,7 +159,7 @@ class MomentsStatTest {
         val r = stat.read()
         val n = r.totalWeights
         val expected = ((n - 1) / ((n - 2) * (n - 3))) * ((n + 1) * r.kurtosis + 6.0)
-        assertEquals(expected, r.unbiasedKurtosis, delta)
+        assertEquals(expected, r.unbiasedKurtosis, DELTA)
     }
 
     /** Weighted central moments computed directly, as the reference for the recurrences. */
@@ -174,7 +174,7 @@ class MomentsStatTest {
         return MomentsResult(w, mean, central(2), central(3), central(4))
     }
 
-    private fun assertMomentsEqual(expected: MomentsResult, actual: MomentsResult, tolerance: Double = delta) {
+    private fun assertMomentsEqual(expected: MomentsResult, actual: MomentsResult, tolerance: Double = DELTA) {
         assertEquals(expected.totalWeights, actual.totalWeights, tolerance, "totalWeights")
         assertEquals(expected.mean, actual.mean, tolerance, "mean")
         assertEquals(expected.m2, actual.m2, tolerance, "m2")
@@ -218,8 +218,8 @@ class MomentsStatTest {
         val values = listOf(1.0, 1.0, 1.0, 2.0, 10.0)
         val unit = MomentsStat().apply { values.forEach { update(it, 1.0) } }.read()
         val scaled = MomentsStat().apply { values.forEach { update(it, 7.0) } }.read()
-        assertEquals(unit.skewness, scaled.skewness, delta)
-        assertEquals(unit.kurtosis, scaled.kurtosis, delta)
+        assertEquals(unit.skewness, scaled.skewness, DELTA)
+        assertEquals(unit.kurtosis, scaled.kurtosis, DELTA)
     }
 
     @Test

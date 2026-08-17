@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.kumulant.feat
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit.Companion.squaredL2
@@ -11,7 +12,6 @@ import kotlin.test.assertTrue
 
 class KnnContextualBanditTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     @Test
     fun `KnnContextualBandit rejects bad inputs`() {

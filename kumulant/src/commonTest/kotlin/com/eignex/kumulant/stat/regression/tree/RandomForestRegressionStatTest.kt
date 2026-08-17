@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.feat
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,7 +9,6 @@ import kotlin.test.assertTrue
 
 class RandomForestRegressionStatTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     @Test
     fun `predict averages across trees`() {

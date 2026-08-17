@@ -1,13 +1,12 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.feat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class RegressionTreeTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     private fun newTree(
         candidates: List<SerializableSplit> = emptyList(),

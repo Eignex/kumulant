@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.DenseVector
+import com.eignex.kumulant.feat
 import com.eignex.koblas.VectorView
 import kotlin.math.abs
 import kotlin.random.Random
@@ -10,7 +10,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class Exp4BanditTest {
 
-    private fun feat(vararg xs: Double): DenseVector = DenseVector.of(xs)
 
     @Test
     fun `Exp4Bandit rejects bad inputs`() {
