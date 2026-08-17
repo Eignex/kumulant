@@ -2,12 +2,11 @@ package com.eignex.kumulant.stat.score
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.math.PROBABILITY_FLOOR
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import kotlin.math.abs
 import kotlin.math.ln
-
-private const val LOG_LOSS_EPS: Double = 1e-15
 
 /**
  * Streaming mean squared error: paired `(prediction, truth)` aggregated as the
@@ -86,7 +85,7 @@ class LogLossStat(override val concurrency: Concurrency = Concurrency.None) : Pa
     private val inner = MeanStat(concurrency)
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        val p = x.coerceIn(LOG_LOSS_EPS, 1.0 - LOG_LOSS_EPS)
+        val p = x.coerceIn(PROBABILITY_FLOOR, 1.0 - PROBABILITY_FLOOR)
         val loss = -(y * ln(p) + (1.0 - y) * ln(1.0 - p))
         inner.update(loss, timestampNanos, weight)
     }

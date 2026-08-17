@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.stream.DEFAULT_WINDOW_SLICES
 import com.eignex.kumulant.stream.SliceRing
 import kotlin.time.Duration
 
@@ -20,7 +21,7 @@ import kotlin.time.Duration
  */
 internal fun <R : Result> SeriesStat<R>.windowed(
     duration: Duration,
-    slices: Int = 10,
+    slices: Int = DEFAULT_WINDOW_SLICES,
     concurrency: Concurrency = Concurrency.None,
 ): SeriesStat<R> = if (this is BandSeriesStat<*>) {
     // A band cannot be merged, and windowedRead merges, so window the band's inner stat instead and
@@ -34,21 +35,21 @@ internal fun <R : Result> SeriesStat<R>.windowed(
 /** Paired-stat counterpart of [SeriesStat.windowed]. */
 internal fun <R : Result> PairedStat<R>.windowed(
     duration: Duration,
-    slices: Int = 10,
+    slices: Int = DEFAULT_WINDOW_SLICES,
     concurrency: Concurrency = Concurrency.None,
 ): PairedStat<R> = WindowedPairedStat(duration, slices, this, concurrency)
 
 /** Vector-stat counterpart of [SeriesStat.windowed]. */
 internal fun <R : Result> VectorStat<R>.windowed(
     duration: Duration,
-    slices: Int = 10,
+    slices: Int = DEFAULT_WINDOW_SLICES,
     concurrency: Concurrency = Concurrency.None,
 ): VectorStat<R> = WindowedVectorStat(duration, slices, this, concurrency)
 
 /** Discrete-stat counterpart of [SeriesStat.windowed]. */
 internal fun <R : Result> DiscreteStat<R>.windowed(
     duration: Duration,
-    slices: Int = 10,
+    slices: Int = DEFAULT_WINDOW_SLICES,
     concurrency: Concurrency = Concurrency.None,
 ): DiscreteStat<R> = WindowedDiscreteStat(duration, slices, this, concurrency)
 

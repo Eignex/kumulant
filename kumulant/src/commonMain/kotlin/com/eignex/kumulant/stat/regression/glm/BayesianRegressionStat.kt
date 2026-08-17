@@ -169,14 +169,14 @@ class BayesianRegressionStat(
             // factor, and the two never agree again.
             var norm = covarianceL.choleskyDowndateInPlace(z)
             if (norm >= 1.0) {
-                for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + 1e-5
+                for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + COVARIANCE_RIDGE
                 val Lnew = covariance.cholesky(CholeskyPolicy.Regularize()).l
                 for (i in 0 until featureSize) {
                     for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
                 }
                 norm = covarianceL.choleskyDowndateInPlace(z)
                 while (norm >= 1.0) {
-                    scale(z, 1.0 / (norm + 1e-5))
+                    scale(z, 1.0 / (norm + DOWNDATE_SHRINK))
                     norm = covarianceL.choleskyDowndateInPlace(z)
                 }
             }
@@ -381,3 +381,15 @@ data class PopulationPrior(
     /** Number of per-instance posteriors that contributed to this prior. */
     val instanceCount: Int,
 )
+
+/**
+ * Ridge added to the covariance diagonal when a downdate pushes it out of the positive-definite cone.
+ *
+ * Written as a bare `1e-5` twelve lines from an unrelated bare `1e-5` ([DOWNDATE_SHRINK]), so a reader had
+ * no way to tell whether the coincidence was meaningful. It is not: these damp different quantities and
+ * either could be retuned alone.
+ */
+private const val COVARIANCE_RIDGE: Double = 1e-5
+
+/** Floor on the downdate vector's norm, so a near-zero direction cannot blow the step up. */
+private const val DOWNDATE_SHRINK: Double = 1e-5

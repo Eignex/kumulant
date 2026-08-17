@@ -376,7 +376,7 @@ class TDigestStat(
     )
 
     override fun merge(values: TDigestResult) {
-        require(abs(compression - values.compression) < 1e-9) {
+        require(abs(compression - values.compression) < PARAMETER_MATCH_TOLERANCE) {
             "Cannot merge TDigests with different compression"
         }
         outerLock.guarded {

@@ -116,3 +116,29 @@ internal class SliceRing<R : Result, S : Stat<R>>(
         }
     }
 }
+
+/**
+ * Slices a sliding window is divided into when the caller does not say.
+ *
+ * Declared twelve times: four live `Windowed*Stat` classes, four `windowed` DSL functions, and four
+ * `Windowed*` wire specs. The live and wire copies must agree or a materialised spec windows differently
+ * than the equivalent direct call, which is the same class of divergence that made a spec-built EXP3
+ * behave unlike a directly-built one.
+ *
+ * Ten is a resolution choice, not a tuning constant: it fixes the granularity at which the window can
+ * expire, so a one-minute window drops observations in six-second steps. More slices means finer expiry
+ * and proportionally more per-slice state.
+ */
+internal const val DEFAULT_WINDOW_SLICES: Int = 10
+
+/**
+ * Bounds a min-max scaler projects onto when the caller does not say.
+ *
+ * Declared thirteen times across the AST node, the four specs, the four DSL functions and the four live
+ * scalers. The unit interval is the only default that makes the scaler composable with the probability
+ * consumers - calibration, log loss, AUC - which all require `[0, 1]`.
+ */
+internal const val DEFAULT_TARGET_LOW: Double = 0.0
+
+/** Upper end of [DEFAULT_TARGET_LOW]'s interval. */
+internal const val DEFAULT_TARGET_HIGH: Double = 1.0

@@ -4,6 +4,9 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.schema.BandResult
 import com.eignex.kumulant.schema.expr.*
+import com.eignex.kumulant.stream.DEFAULT_TARGET_HIGH
+import com.eignex.kumulant.stream.DEFAULT_TARGET_LOW
+import com.eignex.kumulant.stream.DEFAULT_WINDOW_SLICES
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -183,7 +186,7 @@ internal data class WindowedSeries(
     /** Total window span in milliseconds. */
     val durationMillis: Long,
     /** Number of equal-length buckets inside the window. */
-    val slices: Int = 10,
+    val slices: Int = DEFAULT_WINDOW_SLICES,
 ) : SeriesStatSpec<Result>
 
 /** Wire spec for `PairedStat.windowed(durationMillis, slices)`: sliding time window with [slices] buckets. */
@@ -195,7 +198,7 @@ internal data class WindowedPaired(
     /** Total window span in milliseconds. */
     val durationMillis: Long,
     /** Number of equal-length buckets inside the window. */
-    val slices: Int = 10,
+    val slices: Int = DEFAULT_WINDOW_SLICES,
 ) : PairedStatSpec<Result>
 
 /** Wire spec for `VectorStat.windowed(durationMillis, slices)`: sliding time window with [slices] buckets. */
@@ -207,7 +210,7 @@ internal data class WindowedVector(
     /** Total window span in milliseconds. */
     val durationMillis: Long,
     /** Number of equal-length buckets inside the window. */
-    val slices: Int = 10,
+    val slices: Int = DEFAULT_WINDOW_SLICES,
 ) : VectorStatSpec<Result>
 
 /** Wire spec for `DiscreteStat.windowed(durationMillis, slices)`: sliding time window with [slices] buckets. */
@@ -219,7 +222,7 @@ internal data class WindowedDiscrete(
     /** Total window span in milliseconds. */
     val durationMillis: Long,
     /** Number of equal-length buckets inside the window. */
-    val slices: Int = 10,
+    val slices: Int = DEFAULT_WINDOW_SLICES,
 ) : DiscreteStatSpec<Result>
 
 /** Wire spec for `SeriesStat.vectorized(dimensions)`: replicates a series stat across [dimensions] coordinates. */
@@ -617,9 +620,9 @@ internal data class MinMaxScalerVector(
     /** Number of vector coordinates. */
     val dimensions: Int,
     /** Lower bound of each coordinate's output range. */
-    val targetLow: Double = 0.0,
+    val targetLow: Double = DEFAULT_TARGET_LOW,
     /** Upper bound of each coordinate's output range. */
-    val targetHigh: Double = 1.0,
+    val targetHigh: Double = DEFAULT_TARGET_HIGH,
 ) : VectorStatSpec<Result>
 
 /**
@@ -645,9 +648,9 @@ internal data class MinMaxScalerRegression(
     /** Inner regression spec receiving the rescaled feature vector. */
     val inner: StatSpec,
     /** Lower bound of each coordinate's output range. */
-    val targetLow: Double = 0.0,
+    val targetLow: Double = DEFAULT_TARGET_LOW,
     /** Upper bound of each coordinate's output range. */
-    val targetHigh: Double = 1.0,
+    val targetHigh: Double = DEFAULT_TARGET_HIGH,
 ) : RegressionStatSpec<Result>
 
 /**
@@ -671,9 +674,9 @@ internal data class MinMaxScalerPaired(
     /** Inner paired spec receiving the rescaled pair. */
     val inner: StatSpec,
     /** Lower bound of each axis's output range. */
-    val targetLow: Double = 0.0,
+    val targetLow: Double = DEFAULT_TARGET_LOW,
     /** Upper bound of each axis's output range. */
-    val targetHigh: Double = 1.0,
+    val targetHigh: Double = DEFAULT_TARGET_HIGH,
 ) : PairedStatSpec<Result>
 
 /**
@@ -700,9 +703,9 @@ internal data class MinMaxScalerSeries(
     /** Inner spec receiving the rescaled value. */
     val inner: StatSpec,
     /** Lower bound of the output range. */
-    val targetLow: Double = 0.0,
+    val targetLow: Double = DEFAULT_TARGET_LOW,
     /** Upper bound of the output range. */
-    val targetHigh: Double = 1.0,
+    val targetHigh: Double = DEFAULT_TARGET_HIGH,
 ) : SeriesStatSpec<Result>
 
 /** Wire spec for `SeriesStat.sample(rate, random)`: forwards each update with probability [rate]. */

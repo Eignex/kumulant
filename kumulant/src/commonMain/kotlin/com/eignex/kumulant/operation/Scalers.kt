@@ -22,6 +22,8 @@ import com.eignex.kumulant.schema.expr.plus
 import com.eignex.kumulant.schema.expr.times
 import com.eignex.kumulant.stat.summary.RangeStat
 import com.eignex.kumulant.stat.summary.VarianceStat
+import com.eignex.kumulant.stream.DEFAULT_TARGET_HIGH
+import com.eignex.kumulant.stream.DEFAULT_TARGET_LOW
 
 // Standard streaming feature scalers built on top of `withFeedback`. Each scaler couples the
 // inner stat with a small running-statistics primary so the projected input is rescaled per
@@ -57,8 +59,8 @@ internal fun <R : Result> SeriesStat<R>.standardScaler(concurrency: Concurrency 
  * update or constant stream) the scaler emits [targetLow].
  */
 internal fun <R : Result> SeriesStat<R>.minMaxScaler(
-    targetLow: Double = 0.0,
-    targetHigh: Double = 1.0,
+    targetLow: Double = DEFAULT_TARGET_LOW,
+    targetHigh: Double = DEFAULT_TARGET_HIGH,
     concurrency: Concurrency = this.concurrency,
 ): SeriesStat<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
@@ -90,8 +92,8 @@ internal fun <I : Result> VectorStat<I>.standardScaleFeatures(
 @Suppress("UNCHECKED_CAST")
 internal fun <I : Result> VectorStat<I>.minMaxScaleFeatures(
     dimensions: Int,
-    targetLow: Double = 0.0,
-    targetHigh: Double = 1.0,
+    targetLow: Double = DEFAULT_TARGET_LOW,
+    targetHigh: Double = DEFAULT_TARGET_HIGH,
     concurrency: Concurrency = this.concurrency,
 ): VectorStat<I> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
@@ -121,8 +123,8 @@ internal fun <R : Result> RegressionStat<R>.standardScaleFeatures(
  */
 @Suppress("UNCHECKED_CAST")
 internal fun <R : Result> RegressionStat<R>.minMaxScaleFeatures(
-    targetLow: Double = 0.0,
-    targetHigh: Double = 1.0,
+    targetLow: Double = DEFAULT_TARGET_LOW,
+    targetHigh: Double = DEFAULT_TARGET_HIGH,
     concurrency: Concurrency = this.concurrency,
 ): RegressionStat<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
@@ -145,8 +147,8 @@ internal fun <R : Result> PairedStat<R>.standardScaler(concurrency: Concurrency 
  * degenerate.
  */
 internal fun <R : Result> PairedStat<R>.minMaxScaler(
-    targetLow: Double = 0.0,
-    targetHigh: Double = 1.0,
+    targetLow: Double = DEFAULT_TARGET_LOW,
+    targetHigh: Double = DEFAULT_TARGET_HIGH,
     concurrency: Concurrency = this.concurrency,
 ): PairedStat<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
