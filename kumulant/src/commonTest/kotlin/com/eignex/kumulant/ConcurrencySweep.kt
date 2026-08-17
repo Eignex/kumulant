@@ -6,17 +6,12 @@ import com.eignex.kumulant.core.SeriesStat
 import kotlin.test.assertEquals
 
 /**
- * The cross-mode agreement sweep, which eleven test files were each spelling out for themselves.
+ * The cross-mode agreement sweep.
  *
  * Every [Concurrency] mode is a different set of state cells behind the same recurrence, so under purely
- * sequential updates all of them must produce bit-identical results. That is the cheap check that catches
- * a mode branch wired to the wrong cell type or missing a lock, before the bench-side tests go looking for
- * real contention.
- *
- * The invariant was stated forty-nine times as an inline `getValue(Concurrency.None)` plus a loop. Written
- * out that often it stops reading as an invariant and starts reading as boilerplate, which is how a file
- * ends up quietly comparing only one field. Naming it makes the sweep something a new stat family opts
- * into rather than re-derives.
+ * sequential updates all of them must produce bit-identical results. That is the cheap check for a mode
+ * branch wired to the wrong cell type or missing a lock, before the bench-side tests look for real
+ * contention.
  */
 internal fun <R> assertModesAgree(label: String, reads: Map<Concurrency, R>) {
     val ref = reads.getValue(Concurrency.None)

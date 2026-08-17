@@ -29,9 +29,7 @@ class AccuracyStatTest {
 
     @Test
     fun `a non-integral label is not a class and is ignored`() {
-        // This is what changed. Labels were compared on `toLong()`, which truncates, so 1.5 and 1.9 both
-        // named class 1 and matched each other - while ConfusionMatrixStat, documented as computing the
-        // same accuracy, rejected both observations outright.
+        // A truncating comparison would make 1.5 and 1.9 both name class 1 and match each other.
         val s = AccuracyStat(numClasses = 3)
         s.update(1.0, 1.0)
         s.update(1.5, 1.9)
@@ -42,7 +40,7 @@ class AccuracyStatTest {
 
     @Test
     fun `a label outside the declared range is ignored`() {
-        // The other half of what numClasses buys: the old stat was unbounded, so any label at all counted.
+        // The other half of what numClasses buys: an unbounded stat would count any label at all.
         val s = AccuracyStat(numClasses = 3)
         s.update(1.0, 1.0)
         s.update(7.0, 7.0)
@@ -53,8 +51,8 @@ class AccuracyStatTest {
 
     @Test
     fun `a NaN label is ignored rather than scored as class zero`() {
-        // `NaN.toLong()` is 0, so a NaN prediction against a NaN truth used to score as a correct
-        // class-0 prediction. asClassLabel rejects it via the same round-trip that rejects 1.5.
+        // `NaN.toLong()` is 0, so a truncating comparison would score a NaN pair as a correct class-0
+        // prediction. asClassLabel rejects it via the same round-trip that rejects 1.5.
         val s = AccuracyStat(numClasses = 3)
         s.update(0.0, 1.0)
         s.update(Double.NaN, Double.NaN)
@@ -65,8 +63,8 @@ class AccuracyStatTest {
 
     @Test
     fun `it agrees with ConfusionMatrixStat on the same stream`() {
-        // The invariant the change exists for. ConfusionMatrixResult.accuracy is offered so a caller can
-        // cross-check the two, and that was only meaningful on a stream of clean in-range integer labels.
+        // ConfusionMatrixResult.accuracy is offered so a caller can cross-check the two, which requires
+        // that they agree on which observations count, not merely on how they are counted.
         val accuracy = AccuracyStat(numClasses = 3)
         val matrix = ConfusionMatrixStat(numClasses = 3)
         val pairs = listOf(

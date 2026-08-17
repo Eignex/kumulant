@@ -1,16 +1,8 @@
 package com.eignex.kumulant.bandit
 
 /*
- * The three preconditions every bandit shares, each stated once.
- *
- * They were spelled out inline instead: the arm-count message at eight sites, the bounds message at
- * eight, and the merge-arity message at seven. That is not merely repetitive - the bounds check was
- * *missing* from [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit] entirely, on all
- * four of its arm-indexed entry points, while a comment in `MultiArmedBandit.update` asserted that
- * "every sibling bandit validates this". Twenty-three hand-copied `require` calls are exactly the
- * shape in which one of them goes missing and the comments keep claiming otherwise.
- *
- * The messages are preserved byte for byte, since they are what the tests match on.
+ * The preconditions every bandit shares. Every arm-indexed entry point on every bandit is expected to
+ * call requireArmIndex; ArmIndexContractSweepTest enforces that across the family.
  */
 
 /** Guards the constructor: a bandit with no arms has nothing to choose between. */
@@ -19,10 +11,8 @@ internal fun requireNbrArms(nbrArms: Int) {
 }
 
 /**
- * Guards every entry point that takes an arm index.
- *
- * Without it a bad index surfaces as a raw `IndexOutOfBoundsException` from whatever array happens to
- * be indexed first, rather than the `IllegalArgumentException` the interfaces document.
+ * Guards every entry point that takes an arm index, so a bad index raises the
+ * `IllegalArgumentException` the interfaces document rather than a raw `IndexOutOfBoundsException`.
  */
 internal fun requireArmIndex(armIndex: Int, nbrArms: Int) {
     require(armIndex in 0 until nbrArms) { "armIndex out of bounds: $armIndex" }

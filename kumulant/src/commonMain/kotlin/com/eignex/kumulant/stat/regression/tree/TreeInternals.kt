@@ -151,12 +151,9 @@ internal fun shouldSplit(ranked: SplitInfo, totalWeight: Double, depth: Int, con
 /**
  * Parent impurity minus the weight-averaged impurity of the two children.
  *
- * All three split criteria kumulant ships are this one expression over a different impurity measure:
- * [VarianceReduction] over `variance`, [GiniReduction] over `gini`, [InformationGain] over `entropy`.
- * The five lines were written out three times, including the `w <= 0.0` guard that keeps an empty split
- * scoring zero rather than NaN - the part a fourth criterion would be most likely to get wrong.
- *
- * The `data object`s stay exactly as they are, so no serial name or public signature moves.
+ * Every split criterion kumulant ships is this expression over a different impurity measure:
+ * [VarianceReduction] over `variance`, [GiniReduction] over `gini`, [InformationGain] over `entropy`. The
+ * `w <= 0.0` guard is what keeps an empty split scoring zero rather than NaN.
  */
 internal inline fun <R : HasObservationCount> impurityReduction(
     total: R,

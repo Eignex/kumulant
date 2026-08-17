@@ -88,10 +88,8 @@ class BoltzmannBandit(
     fun playDistribution(): DoubleArray {
         step++
         val tau = temperature()
-        // Via softmaxInPlace, the shared max-subtracting softmax. This was a fourth hand-rolled copy,
-        // missed when the other three were consolidated. Dividing by tau before the shift rather than
-        // after is the same arithmetic - tau > 0 is enforced at construction, so
-        // `max(means)/tau == max(means/tau)` - and it costs one array instead of two.
+        // Dividing by tau before the max-shift is the same arithmetic, since tau > 0 is enforced at
+        // construction and so `max(means)/tau == max(means/tau)`, and it costs one array instead of two.
         val logits = DoubleArray(nbrArms) { stats[it].read(0L).mean / tau }
         logits.softmaxInPlace()
         return logits

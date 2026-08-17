@@ -172,11 +172,8 @@ class ConfusionMatrixStat(
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
-        // Via asClassLabel, which is this exact policy already extracted: round-trip through Double to
-        // reject a truncating label, then bound the index. The separate NaN guard this replaces could
-        // not fire - `NaN.toInt()` is 0 and `0.0 == NaN` is false, so the round-trip check already
-        // rejected it - and AccuracyStat now shares the helper, which is what makes the two agree about
-        // which observations count rather than only about how they are counted.
+        // asClassLabel rejects a NaN via its own round-trip, so no separate NaN guard is needed.
+        // AccuracyStat shares it, which is what makes the two agree on which observations count.
         val p = x.asClassLabel(numClasses)
         val t = y.asClassLabel(numClasses)
         if (p < 0 || t < 0) return

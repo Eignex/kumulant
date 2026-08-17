@@ -117,10 +117,8 @@ class PageHinkleyStat(
             (mean.load() * localCount + values.mean * incomingCount) / combinedCount.toDouble()
         count.store(combinedCount)
         mean.store(combinedMean)
-        // Adopt verbatim while empty. The mean above already does this implicitly - a `localCount` of
-        // zero weights it out - but the drift cells did not, so a fresh coordinator merging a worker's
-        // snapshot halved exactly the two quantities `alarmUp`/`alarmDown` threshold against while
-        // taking the mean and both extremes exactly. Same defect RecursiveVarianceStat.merge records.
+        // Adopt verbatim while empty, as the count-weighted mean above already does implicitly. Halving
+        // these would halve exactly the two quantities `alarmUp`/`alarmDown` threshold against.
         val empty = localCount == 0L
         cumPos.store(if (empty) values.cumulativePositive else 0.5 * (cumPos.load() + values.cumulativePositive))
         cumNeg.store(if (empty) values.cumulativeNegative else 0.5 * (cumNeg.load() + values.cumulativeNegative))

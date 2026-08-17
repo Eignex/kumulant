@@ -43,10 +43,8 @@ class TrackedContextualBandit<B : ContextualBandit>(
     val inner: B,
     /** Context vector dimension validated against templates and incoming updates. */
     val contextFeatureSize: Int,
-    // Plain parameters, not `private val`s. All three are read only in `init` and in the property
-    // initialisers just below, both of which run at construction, so retaining them kept a template
-    // regressor alive for the lifetime of every tracked bandit for nothing. `updateArmRewardTemplate`
-    // below and both templates on TrackedUnivariateBandit already had it right.
+    // Plain parameters, not `private val`s: these are read only during construction, so holding them
+    // would keep a template regressor alive for the lifetime of every tracked bandit.
     chooseTemplate: RegressionStat<out Result>? = null,
     updateJointTemplate: RegressionStat<out Result>? = null,
     updateMarginalTemplate: RegressionStat<out Result>? = null,

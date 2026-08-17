@@ -6,14 +6,8 @@ import kotlin.random.Random
 /**
  * Trains [stat] on a noisy linear ground truth, so a test can then assert the coefficients came back.
  *
- * Four test files carried this identical body, and the duplication was not harmless: the convergence
- * assertions downstream of it are tuned to *these* numbers. `n = 4000` draws, features uniform on
- * `[-1, 1]`, and noise uniform on `[-0.01, 0.01]` are what make a tolerance of `0.05` the right call
- * rather than a coin flip, and a fixed [seed] is what stops the whole family flaking one run in fifty.
- * With four copies, tightening the noise in one file silently changed what its tolerance meant while the
- * other three kept the old bargain.
- *
- * Typed against [RegressionStat] rather than a concrete stat because every caller only needs `update`.
+ * The convergence tolerances downstream are tuned to these numbers: `n = 4000` draws, features uniform on
+ * `[-1, 1]`, noise uniform on `[-0.01, 0.01]`, and a fixed [seed] so the family cannot flake.
  */
 internal fun fitLine(stat: RegressionStat<*>, slope: DoubleArray, intercept: Double, n: Int = 4000, seed: Long = 42L) {
     val rng = Random(seed)

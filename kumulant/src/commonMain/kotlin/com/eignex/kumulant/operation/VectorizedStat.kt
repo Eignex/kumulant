@@ -52,9 +52,6 @@ internal class VectorizedStat<R : Result>(
         VectorizedStat(dimensions, template.create(concurrency), skipZeros)
 
     override fun merge(values: ResultList<R>) {
-        // Had no message at all, which on a wire-reachable path - every `Vectorized` spec and all four
-        // `*ScaleFeatures` scalers materialise through here - meant an arity mismatch surfaced as a bare
-        // "Failed requirement." with nothing naming the two numbers involved.
         require(values.results.size == dimensions) {
             "merge: results.size=${values.results.size}, expected $dimensions"
         }

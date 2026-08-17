@@ -67,9 +67,6 @@ fun StatSchemaDef.materializeDiscrete(
     bindDiscrete(name, config.materialize(concurrency))
 }
 
-// All five of these are `toSpec(StatKey(name), stat)` spelled out longhand - same package, same cast,
-// same suppression. Delegating drops five copies of the unchecked cast along with the five annotations
-// justifying it, and leaves one place where the erasure argument has to hold.
 private fun bind(name: String, stat: Stat<*>): BoundStat<*, *, *> = toSpec(StatKey<Result>(name), stat)
 
 private fun bindSeries(name: String, stat: SeriesStat<*>): BoundStat<*, out SeriesStat<*>, *> =

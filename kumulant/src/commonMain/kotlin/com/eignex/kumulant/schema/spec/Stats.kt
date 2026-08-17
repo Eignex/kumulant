@@ -416,10 +416,9 @@ data class ConfusionMatrix(
 /**
  * Spec for `AccuracyStat`: weighted classification accuracy over (predictedClass, trueClass).
  *
- * Was a `data object`. It gained [numClasses] because the stat did: accuracy is only comparable with
- * `ConfusionMatrix` over the same stream if both agree on which labels name a class, and that agreement
- * needs a bound. A payload authored against the old shape will fail to decode, which is the intended
- * outcome - the alternative is silently defaulting a bound and scoring labels the author never declared.
+ * [numClasses] is required rather than defaulted: accuracy is only comparable with `ConfusionMatrix` over
+ * the same stream if both bound the labels the same way, and defaulting a bound would silently score
+ * labels the author never declared.
  */
 @Serializable
 @SerialName("Accuracy")

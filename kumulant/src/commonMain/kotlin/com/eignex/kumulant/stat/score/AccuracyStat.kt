@@ -13,18 +13,14 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  * Labels are resolved by [asClassLabel], the same rule [ConfusionMatrixStat] applies, so a pair either
  * names two classes in `[0, numClasses)` or is ignored entirely.
  *
- * That agreement is the reason [numClasses] is required here. This stat used to compare labels on
- * `toLong()`, which truncates: it scored `1.5` and `1.9` as a matching class 1, and being unbounded it
- * accepted any label at all. [ConfusionMatrixStat] on the identical stream rejected both observations
- * outright. The two are documented as computing the same number - [ConfusionMatrixResult.accuracy] exists
- * so a caller can cross-check them - and they disagreed about which observations even counted, which made
- * that cross-check meaningless on any stream with a non-integral or out-of-range label.
+ * That agreement is why [numClasses] is required: [ConfusionMatrixResult.accuracy] exists so a caller can
+ * cross-check the two, which only means anything if both bound the labels identically.
  *
  * For the full P/R/F1 surface and a per-class breakdown reach for [ConfusionMatrixStat]; this stat is the
  * O(1)-memory shortcut when only the scalar accuracy is needed.
  *
- * **Memory:** O(1); backed by a [MeanStat]. This is what it buys over [ConfusionMatrixStat], whose state
- * is `numClasses^2` cells; [numClasses] is used only to bound the labels, never to allocate.
+ * **Memory:** O(1); backed by a [MeanStat]. [numClasses] only bounds the labels, it never allocates -
+ * that is the saving over [ConfusionMatrixStat]'s `numClasses^2` cells.
  *
  * **Update:** O(1) per paired observation.
  *

@@ -8,21 +8,10 @@ import kotlin.test.assertTrue
 /**
  * The SMW downdate refuses an observation whose scale factor is not a usable number.
  *
- * The guard used to read `if (denom == 0.0)`, which is the one case that cannot occur: `xT S x` is
- * non-negative for a positive-definite `S` and the per-observation precision is non-negative, so `denom`
- * is at least 1. Hitting exactly zero requires an `S` already outside the cone, and in that regime the
- * argument to `sqrt` is *negative*, so the result is NaN and `NaN == 0.0` is false. The guard's only
- * reachable input was the one it failed to catch.
- *
- * The cheaper path to the same failure needs no instability at all: `Link.Log.curvature` is `exp(eta)`,
- * which overflows to `+Infinity` for a large linear predictor. Then the numerator and denominator are
- * both infinite and their ratio is NaN.
- *
- * Why it matters more here than elsewhere: the NaN does not stop at the rejected observation. It reaches
- * `ger`, which writes it into the covariance, and every later prediction reads through that covariance.
- * The model is dead from then on with nothing in the result saying so. A non-finite value is allowed to
- * poison a stat under [com.eignex.kumulant.core.Stat]'s contract, but here it is the *stat's own*
- * arithmetic manufacturing the NaN out of finite inputs, which is a defect rather than propagation.
+ * `Link.Log.curvature` is `exp(eta)`, which overflows to `+Infinity` for a large linear predictor, making
+ * the scale factor `Infinity / Infinity`. Every input below is finite, so the NaN is manufactured by the
+ * stat's own arithmetic rather than propagated - and it would land in the covariance, which every later
+ * prediction reads through.
  */
 class BayesianDenomGuardTest {
 
@@ -42,16 +31,8 @@ class BayesianDenomGuardTest {
 
     @Test
     fun `the fit survives the first observation instead of collapsing on the second`() {
-        // Measured behaviour, before and after. On the unfixed code the first observation lands and the
-        // *second* turns every field to NaN, permanently:
-        //
-        //     i=1  w=99998.90001187997  cov=0.9999990001088008
-        //     i=2  w=NaN                cov=NaN
-        //
-        // With the guard widened, the fit from the first observation stays put and each later one is
-        // refused, because `exp(eta)` for that linear predictor is infinite and there is no finite
-        // update to apply. Frozen at a real fit beats NaN: the caller still gets the numbers the data
-        // supported, and `totalWeights` still says how many observations were absorbed.
+        // The fit from the first observation stays put and each later one is refused, since `exp(eta)`
+        // for that linear predictor is infinite and there is no finite update to apply.
         val stat = BayesianRegressionStat(featureSize = 1, link = Link.Log, priorVariance = 1e6)
 
         stat.update(feat(1.0), 1e5, 1.0)
@@ -63,9 +44,8 @@ class BayesianDenomGuardTest {
         assertTrue(!r.covariance[0, 0].isNaN(), "the covariance collapsed to NaN")
         assertEquals(afterFirst, r.weights[0], "the refused observations should have left the fit alone")
 
-        // `predict` is `exp(eta)` under the Log link, so it overflows to Infinity for a linear predictor
-        // this large. That is the correct answer for the fitted model, not corruption - the distinction
-        // the assertions above are drawn around. A NaN would mean the arithmetic broke.
+        // `predict` is `exp(eta)` under the Log link, so Infinity is the correct answer for a linear
+        // predictor this large. A NaN would mean the arithmetic broke.
         assertTrue(!r.predict(feat(1.0)).isNaN(), "prediction is NaN, so the covariance is still poisoned")
     }
 

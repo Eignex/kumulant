@@ -71,14 +71,9 @@ interface HoeffdingTreeConfig {
 /**
  * The growth defaults both VFDT trees use.
  *
- * [HoeffdingTreeConfig] is an interface, so it can describe these fields but cannot carry their values -
- * and so [RegressionTreeConfig] and [ClassificationTreeConfig] each declared all nine numbers. A tuning
- * change to one tree silently left the other behind, and `TreeInternalsTest` already asserts that
- * `shouldSplit` agrees between the two default configs, which means the test suite depended on that
- * duplication being kept in sync by hand.
- *
- * Referencing a `const` from a constructor default is not an ABI change: the value is compiled into the
- * synthetic defaults method exactly as the literal was.
+ * [HoeffdingTreeConfig] is an interface and cannot carry values, so [RegressionTreeConfig] and
+ * [ClassificationTreeConfig] both default from here. `TreeInternalsTest` asserts `shouldSplit` agrees
+ * between the two default configs, which only holds while they share these.
  */
 internal object HoeffdingDefaults {
     /** See [HoeffdingTreeConfig.delta]. */

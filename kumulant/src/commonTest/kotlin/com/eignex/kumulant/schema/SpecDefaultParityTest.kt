@@ -48,23 +48,16 @@ import kotlin.test.assertEquals
 /**
  * A default-constructed spec materialises to the same stat a default-constructed stat gives you.
  *
- * `schema/spec/Stats.kt` states the policy in a comment - "Defaults match the underlying stat's primary
- * constructor so authored payloads stay terse under `encodeDefaults = false`" - and nothing enforced it.
- * Roughly fifty defaulted spec fields are hand-copied second declarations of a value that lives in a stat
- * constructor, and editing either side alone compiles clean and passes every other test.
+ * `schema/spec/Stats.kt` declares that spec defaults match the underlying stat's primary constructor, so
+ * authored payloads stay terse under `encodeDefaults = false`. Nothing else enforces it, and editing
+ * either side alone compiles clean.
  *
- * That is not hypothetical. `Exp3Spec.materialize` resolved its default `gamma` with a formula the
- * bandit's own `defaultGamma` had been *fixed* to stop using, so every EXP3 built from a wire spec was a
- * uniform random sampler while the same bandit constructed directly learned normally. It went unnoticed
- * because the factory test asserted only on `nbrArms`.
+ * Behavioural rather than field-by-field, so it needs no reflection - which common Kotlin cannot rely on
+ * across thirteen targets - and so it covers defaults added after this file was written. Feed both stats
+ * the same stream and their reads must agree.
  *
- * The check is behavioural rather than field-by-field on purpose: it needs no reflection, which common
- * Kotlin code cannot rely on across thirteen targets, and it catches a drift in *any* default - including
- * ones added later - without this file having to enumerate them. Feed both stats the same stream and their
- * reads must agree; a default that drifts changes an output.
- *
- * Deliberately excluded: `ReservoirHistogram`, whose stat defaults its seed to `Random.Default.nextLong()`
- * so two instances legitimately disagree. That omission is the spec layer getting it right, not a gap.
+ * `ReservoirHistogram` is excluded: its stat defaults the seed to `Random.Default.nextLong()`, so two
+ * instances legitimately disagree.
  */
 class SpecDefaultParityTest {
 

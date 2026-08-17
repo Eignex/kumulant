@@ -7,14 +7,7 @@ private val monoStart = TimeSource.Monotonic.markNow()
 
 internal fun currentTimeNanos(): Long = monoStart.elapsedNow().inWholeNanoseconds
 
-/**
- * Nanoseconds per second, the conversion every rate and time-axis binding needs.
- *
- * Every timestamp in the library is nanoseconds, and five sites converted to seconds: one named it,
- * the other four wrote `1e9` inline. Same value either way, but a named constant next to
- * [currentTimeNanos] puts the unit contract where the clock is rather than leaving a bare literal to be
- * read as a tolerance or a capacity.
- */
+/** Nanoseconds per second: every timestamp in the library is nanoseconds, every rate is per second. */
 internal const val NANOS_PER_SECOND: Double = 1_000_000_000.0
 
 /**
@@ -110,10 +103,8 @@ internal interface StreamRef<T> {
     /**
      * Atomic compare-and-exchange; returns the witnessed prior value.
      *
-     * Mirrors the platform atomic's own surface. Production CAS on a reference always uses
-     * [compareAndSet] - the witness is only useful to a retry loop, and the cells that run those
-     * ([StreamDouble], [StreamDoubleArray]) reach for the backing atomic's `compareAndExchange`
-     * directly rather than coming through here. Exercised by `StreamModesTest` and `AtomicModeTest`.
+     * Present for parity with the platform atomic. No stat needs the witness on a reference cell, so
+     * this is exercised only by the mode tests; [compareAndSet] is the production entry point.
      */
     fun compareAndExchange(expectedValue: T, newValue: T): T
 

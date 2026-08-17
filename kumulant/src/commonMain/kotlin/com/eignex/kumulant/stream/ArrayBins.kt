@@ -82,12 +82,8 @@ internal class ArrayBins(private val mode: StreamMode) {
 /**
  * Bins allocated the first time an index arrives.
  *
- * These three governed the memory profile of every [com.eignex.kumulant.stat.quantile.DDSketchStat] and
- * [com.eignex.kumulant.stat.quantile.LinearHistogramStat] as three bare literals - `128`, `64`, `1.5` -
- * with the `64 = 128 / 2` relationship left as a coincidence a reader had to notice. It is not a
- * coincidence: the first index is placed at the *centre* of the initial span so that the next index in
- * either direction fits without regrowing, and an offset that was not half the span would make one
- * direction re-grow immediately.
+ * [INITIAL_CENTER_OFFSET] must stay half of this: the first index is placed at the centre of the span so
+ * the next one in either direction fits without regrowing.
  */
 private const val INITIAL_BINS: Int = 128
 
