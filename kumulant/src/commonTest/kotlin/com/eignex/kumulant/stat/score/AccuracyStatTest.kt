@@ -80,7 +80,10 @@ class AccuracyStatTest {
     }
 
     @Test
-    fun `a non-positive class count is refused`() {
+    fun `a class count below two is refused`() {
+        // One class is not a classification problem, and the counters used to accept it while every
+        // model required two. A binary problem is `numClasses = 2`.
         assertFailsWith<IllegalArgumentException> { AccuracyStat(numClasses = 0) }
+        assertFailsWith<IllegalArgumentException> { AccuracyStat(numClasses = 1) }
     }
 }
