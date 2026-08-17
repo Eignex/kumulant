@@ -47,7 +47,6 @@ Run `./gradlew check lintDocs`.
 - KDoc on public API only. Use functional notation for math (`succ(i)`, not `succ[i]`); use `[Symbol]` for links.
 - Stat, bandit, and package-page KDoc follow `docs/internal/STAT_KDOC_TEMPLATE.md`,
   `BANDIT_KDOC_TEMPLATE.md`, and `STAT_PACKAGE_TEMPLATE.md`. Read the matching one before writing docs.
-- No em dashes in prose that lands in the repo or a release (PR bodies, release notes, docs).
 - Don't edit anything under `.github/` unless asked directly.
 - Single-line conventional commits, no scope, no body/trailers:
   `feat: `, `fix: `, `chore: `, `refactor: `, `docs: `, `test: `.
