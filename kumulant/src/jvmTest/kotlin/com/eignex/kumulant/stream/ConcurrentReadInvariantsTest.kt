@@ -266,6 +266,38 @@ class ConcurrentReadInvariantsTest {
     }
 
     @Test
+    fun `TDigestStat never reports weight it cannot answer from`() {
+        // The state behind the intermittent failure of the test below: `read` fills every quantile with
+        // NaN when it has no centroids, but returned `totalWeight` unchanged, so a snapshot could claim
+        // to have observed weight while being unable to answer a single quantile. That is not staleness,
+        // which the Relaxed contract allows - it is a snapshot contradicting itself.
+        //
+        // It arose because `update` counted a value's weight before publishing the value, and
+        // `drainLocked` may strand a claim it cannot prove committed. The weight stayed; the value did
+        // not. Asserted as an invariant rather than by reproducing the interleaving, which needs a
+        // preemption long enough to exhaust drainLocked's spin budget.
+        for (level in levels) {
+            val stat = TDigestStat(concurrency = level)
+            assertReadInvariants("TDigestStat[$level] weight-vs-centroids", stat, write = { t, i ->
+                stat.update(1.0 + ((t * 13 + i * 17) % 10_000))
+            }) { r ->
+                if (r.totalWeight > 0.0) {
+                    assertTrue(
+                        r.weights.isNotEmpty(),
+                        "totalWeight=${r.totalWeight} with no centroids, so every quantile is NaN",
+                    )
+                }
+                if (r.weights.isEmpty()) {
+                    assertTrue(
+                        r.totalWeight <= 0.0,
+                        "no centroids but totalWeight=${r.totalWeight}",
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
     fun `TDigestStat quantiles stay ordered and finite under a concurrent reader`() {
         for (level in levels) {
             val stat = TDigestStat(concurrency = level)

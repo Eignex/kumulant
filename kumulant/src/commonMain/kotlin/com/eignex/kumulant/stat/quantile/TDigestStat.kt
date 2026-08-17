@@ -355,8 +355,19 @@ class TDigestStat(
                 if (claimed <= bufferCapLong) {
                     buffer.store(idx, value)
                     bufferWeights.store(idx, weight)
-                    totalWeightCell.add(weight)
+                    // Publish the value before counting its weight, not after. `drainLocked` can
+                    // strand a claim it cannot prove committed, discarding the value; if the weight
+                    // were already counted, that weight would stay in `totalWeightCell` with nothing
+                    // in the digest behind it. Reached before any successful drain, that left
+                    // `means` empty while `total` was positive, and `read` answers that state with
+                    // NaN for every quantile while still reporting the positive weight - a snapshot
+                    // that claims to have observed data it cannot answer from.
+                    //
+                    // The reverse skew this admits is benign and self-correcting: a drained value
+                    // whose weight has not landed yet makes `total` low, so a rank clamps toward
+                    // `means[0]`, which is finite and ordered.
                     commitIndex.add(1L)
+                    totalWeightCell.add(weight)
                     if (claimed == bufferCapLong) {
                         compressLock.guarded { drainLocked() }
                     }
