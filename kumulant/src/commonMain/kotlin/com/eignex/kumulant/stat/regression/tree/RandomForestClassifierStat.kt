@@ -21,6 +21,22 @@ import kotlin.random.Random
  * [RandomForestRegressionStat]. Same diversity tricks (Oza & Russell bagging,
  * per-leaf mtry), but per-tree leaves are [ClassCountsResult] and ensemble
  * predictions average per-class probabilities across trees.
+ *
+ * **Use cases:** online classification wanting ensembled diversity and a
+ * per-class probability estimate averaged across trees. Reach for
+ * [DecisionTreeClassifierStat] alone when a single tree suffices.
+ *
+ * **Memory:** O([nbrTrees] · single-tree memory); see
+ * [DecisionTreeClassifierStat]. Heavier but parallelisable.
+ *
+ * **Update:** O([nbrTrees] · depth) per observation; each tree's update is
+ * independent. Under [bagging] = true, each tree applies a fresh
+ * Poisson(1)-reweighted version of the update.
+ *
+ * **Concurrency:** Inherits [DecisionTreeClassifierStat]'s per-tree
+ * concurrency model. Trees are updated sequentially within a single
+ * `update()` call (no inner parallelism); concurrent callers each contend for
+ * each tree's split lock independently.
  */
 class RandomForestClassifierStat(
     override val featureSize: Int,

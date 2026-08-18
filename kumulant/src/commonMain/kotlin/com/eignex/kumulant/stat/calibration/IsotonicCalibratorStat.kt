@@ -80,6 +80,11 @@ data class IsotonicCalibratorResult(
  * the only added work is the per-read PAV pass and a linear interpolation in
  * [IsotonicCalibratorResult.calibrate].
  *
+ * **Use cases:** calibrating classifier scores whose miscalibration is
+ * monotone but not sigmoid-shaped. Reach for [PlattCalibratorStat] when
+ * observations are scarce, since two fitted parameters need far less data than
+ * a per-bin histogram.
+ *
  * **Memory:** O([numBins]); three parallel `Double` arrays via
  * [ReliabilityStat].
  *

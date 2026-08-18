@@ -30,7 +30,9 @@ import kotlin.math.pow
  * [relativeError].
  *
  * **Update:** O(1) per observation; one `log`/bin-assignment + striped atomic add.
- * `NaN` has no bin of its own and falls into the zero bucket.
+ * A `NaN` weight is inert, as everywhere in the library. A `NaN` *value* is a real
+ * observation with no bin of its own, so it falls into the zero bucket; filter it
+ * upstream with `!X.isNaN()` when that is not wanted.
  *
  * **Concurrency:** Striped atomic adds on independent bins. Lock-free and
  * exact under every [Concurrency] level; increments commute, bin assignment

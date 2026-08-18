@@ -54,6 +54,11 @@ data class GaussianScoreResult(
  * This matches the River semantics where `score_one(x)` is computed against
  * the post-update state.
  *
+ * **Use cases:** univariate anomaly scoring on a stream whose bulk is roughly
+ * Gaussian; alerting on "how many sigmas out is this?". Reach for
+ * [QuantileFilterStat] when the distribution is skewed or heavy-tailed and no
+ * Gaussianity assumption is safe.
+ *
  * **Memory:** O(1); wraps a [VarianceStat].
  *
  * **Update:** O(1) per observation.

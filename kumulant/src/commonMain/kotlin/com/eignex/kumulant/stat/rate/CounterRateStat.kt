@@ -57,7 +57,7 @@ class CounterRateStat(
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // Return before touching lastCounter: a zero weight contributes no delta, but advancing the
-        // high-water mark anyway destroyed the increment for good, so a later sample could never
+        // high-water mark anyway would destroy the increment for good, so no later sample could
         // recover it. NaN is dropped for the same reason it is everywhere; see Stat. Outside the
         // lock, like every other stat's inert guard - a no-op has no state to protect.
         if (weight.isInertWeight()) return
@@ -88,9 +88,9 @@ class CounterRateStat(
             treatDecreaseAsReset -> {
                 val scaledDelta = (value * weight).coerceAtLeast(0.0)
                 if (scaledDelta > 0.0) {
-                    // Re-anchoring the window without clearing the total divided every pre-reset
-                    // increment by the short post-reset duration, so a counter that advanced 105
-                    // units over 11s reported 210/s. The window and the total describe the same
+                    // Re-anchoring the window without clearing the total would divide every
+                    // pre-reset increment by the short post-reset duration: a counter advancing 105
+                    // units over 11s would report 210/s. The window and the total describe the same
                     // span, so they have to be reset together.
                     totalDelta.store(scaledDelta)
                     startTimestampNanos.store(timestampNanos)

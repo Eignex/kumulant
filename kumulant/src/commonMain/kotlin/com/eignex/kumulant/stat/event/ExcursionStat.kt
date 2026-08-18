@@ -117,9 +117,9 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
             troughTs.store(values.troughTimestampNanos)
         }
         if (values.maxExcursion > maxExcursion.load()) maxExcursion.store(values.maxExcursion)
-        // currentRecovery is derived from lastValue, which this branch never touched, so a merged
-        // result mixed the incoming peak with the local last value. Adopt the incoming stat's last
-        // value when its peak won, so the pair stays internally consistent.
+        // currentRecovery is derived from lastValue, which this branch never touches, so leaving it
+        // alone would mix the incoming peak with the local last value. Adopt the incoming stat's last
+        // value when its peak wins, so the pair stays internally consistent.
         if (values.peak >= peak.load()) lastValue.store(values.peak - values.currentRecovery)
     }
 
