@@ -131,7 +131,6 @@ import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.SummaryStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
-import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -302,7 +301,7 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
             requireSeries(inner, "ThrottleSeries").materialize(concurrency).throttle(every)
 
         is SampleSeries ->
-            requireSeries(inner, "SampleSeries").materialize(concurrency).sample(rate, Random(seed))
+            requireSeries(inner, "SampleSeries").materialize(concurrency).sample(rate, seed)
 
         is LagSeries ->
             requireSeries(inner, "LagSeries").materialize(concurrency).lag(k)
@@ -419,7 +418,7 @@ fun <R : Result> PairedStatSpec<R>.materialize(concurrency: Concurrency = Concur
             requirePaired(inner, "ThrottlePaired").materialize(concurrency).throttle(every)
 
         is SamplePaired ->
-            requirePaired(inner, "SamplePaired").materialize(concurrency).sample(rate, Random(seed))
+            requirePaired(inner, "SamplePaired").materialize(concurrency).sample(rate, seed)
 
         is StandardScalerPaired ->
             requirePaired(inner, "StandardScalerPaired").materialize(concurrency).standardScaler(concurrency)
@@ -501,7 +500,7 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
             requireVector(inner, "ThrottleVector").materialize(concurrency).throttle(every)
 
         is SampleVector ->
-            requireVector(inner, "SampleVector").materialize(concurrency).sample(rate, Random(seed))
+            requireVector(inner, "SampleVector").materialize(concurrency).sample(rate, seed)
 
         is StandardScalerVector ->
             requireVector(inner, "StandardScalerVector").materialize(concurrency)
@@ -564,7 +563,7 @@ fun <R : Result> DiscreteStatSpec<R>.materialize(concurrency: Concurrency = Conc
             requireDiscrete(inner, "ThrottleDiscrete").materialize(concurrency).throttle(every)
 
         is SampleDiscrete ->
-            requireDiscrete(inner, "SampleDiscrete").materialize(concurrency).sample(rate, Random(seed))
+            requireDiscrete(inner, "SampleDiscrete").materialize(concurrency).sample(rate, seed)
     }
     return out as DiscreteStat<R>
 }
@@ -677,7 +676,7 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
             requireRegression(
                 inner,
                 "SampleRegression",
-            ).materialize(concurrency).sample(rate, Random(seed))
+            ).materialize(concurrency).sample(rate, seed)
 
         is FoldRegression -> {
             val m = requireSeries(inner, "FoldRegression").materialize(concurrency) as SeriesStat<Result>

@@ -26,6 +26,20 @@ fun splitmix64(value: Long): Long {
 }
 
 /**
+ * Seed for the [ordinal]-th copy of a stat seeded with [seed].
+ *
+ * A stat that draws on its update path cannot hand its own seed to the copies
+ * [Stat.create][com.eignex.kumulant.core.Stat.create] makes, or
+ * every window slice replays one accept/reject sequence and an observation's fate depends only on its
+ * position within its slice. Callers pass a counter as [ordinal]; mixing it before it reaches the seed
+ * keeps a child seed from colliding with one of the parent's own draw inputs, which would overlap the
+ * two streams rather than separate them.
+ *
+ * `internal` because it is a construction detail rather than something a caller composes with.
+ */
+internal fun deriveChildSeed(seed: Long, ordinal: Long): Long = splitmix64(seed xor splitmix64(ordinal))
+
+/**
  * Default 64-bit hash of [bytes] for cardinality / sketch families. Currently
  * delegates to [SplitMixChunkHasher] - pin to that hasher directly if you need a
  * stable byte stream across library versions.

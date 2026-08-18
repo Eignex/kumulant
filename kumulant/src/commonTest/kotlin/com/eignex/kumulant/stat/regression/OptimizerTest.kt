@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.fitLine
+import com.eignex.kumulant.schema.expr.Const
 import com.eignex.kumulant.schema.optimizer.Adagrad
 import com.eignex.kumulant.schema.optimizer.Adam
 import com.eignex.kumulant.schema.optimizer.Rmsprop
@@ -96,6 +97,35 @@ class OptimizerTest {
             if (r.predict(x) == c) correct++
         }
         assertTrue(correct.toDouble() / 300.0 > 0.9, "accuracy=${correct / 300.0}")
+    }
+
+    @Test
+    fun `Adam rejects a beta of one rather than learning nothing`() {
+        // At beta == 1.0 the bias correction 1 - beta^t is exactly zero while the moment it corrects
+        // is identically zero too, so every delta would be 0/0 and the weights would stay NaN for
+        // the life of the stat. The bound is half-open to keep that unreachable.
+        assertFailsWith<IllegalArgumentException> { AdamOptimizer(2, Const(0.1), beta1 = 1.0) }
+        assertFailsWith<IllegalArgumentException> { AdamOptimizer(2, Const(0.1), beta2 = 1.0) }
+    }
+
+    @Test
+    fun `Adam still accepts a beta of zero`() {
+        // The other end stays closed: beta1 = 0 is plain SGD on the first moment, which is degenerate
+        // but well defined, and the bias correction is 1 - 0^t = 1.
+        AdamOptimizer(2, Const(0.1), beta1 = 0.0, beta2 = 0.0)
+    }
+
+    @Test
+    fun `RMSProp rejects a rho of one rather than diverging`() {
+        // rho == 1.0 freezes the squared-gradient EMA at zero, so the effective step becomes
+        // lr / sqrt(epsilon) - four orders of magnitude larger than intended - on every update.
+        assertFailsWith<IllegalArgumentException> { RmspropOptimizer(2, Const(0.1), rho = 1.0) }
+    }
+
+    @Test
+    fun `Sgd rejects a non-positive feature size like its siblings`() {
+        assertFailsWith<IllegalArgumentException> { SgdOptimizer(0, Const(0.1)) }
+        assertFailsWith<IllegalArgumentException> { SgdOptimizer(-1, Const(0.1)) }
     }
 
     @Test

@@ -8,7 +8,6 @@ import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
-import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -72,7 +71,7 @@ class RegressionOpsTest {
     fun `sample keeps roughly the rate fraction`() {
         val n = 10_000
         val inner = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = emptyList())
-        val stat = inner.sample(rate = 0.25, random = Random(7))
+        val stat = inner.sample(rate = 0.25, seed = 7L)
         repeat(n) { stat.update(feat(0.0), y = 1.0) }
         val kept = stat.read(0L).totalWeights
         assertTrue(kept in 2_000.0..3_000.0, "expected ~2500, got $kept")

@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.monotonicMode
 
 // withSelfLag lifts a PairedStat<R> into a SeriesStat<R> by self-pairing each input
@@ -13,6 +14,10 @@ import com.eignex.kumulant.stream.monotonicMode
 //
 // Use case: lag-k autocorrelation is Pearson correlation of the (current, lag-k) pair,
 // so CovarianceStat.withSelfLag(k) is the streaming autocorrelation primitive.
+//
+// An inert weight is dropped before the ring is touched: the ring is what the lagged half of
+// each pair is read back out of, so admitting an observation that carries no multiplicity would
+// pair it with a real one later at that update's weight. See [Stat].
 //
 // Concurrency: per-cell atomics with bounded drift (category 1). The ring slot may briefly
 // observe an out-of-order write under contention but the paired stat always sees some
@@ -40,6 +45,7 @@ internal class WithSelfLagSeriesStat<R : Result>(private val delegate: PairedSta
     private val ring = mode.newDoubleArray(k)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         val n = tick.addAndGet(1L)
         val slot = ((n - 1L) % k).toInt()
         val past = ring.load(slot)

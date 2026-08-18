@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.monotonicMode
 
 // Hysteresis adapter: maps a noisy numeric stream onto a debounced 0.0/1.0 signal.
@@ -16,6 +17,10 @@ import com.eignex.kumulant.stream.monotonicMode
 //
 // Each call forwards the current debounced state (not just transitions), so downstream
 // stats that consume a series naturally observe per-update progress.
+//
+// An inert weight is dropped before the state cell is read: the debounced state persists across
+// updates, so a value admitted with no multiplicity would flip the state and change what every
+// later update forwards. See [Stat].
 //
 // Concurrency: per-cell atomics with bounded drift (category 1). The state cell may
 // briefly observe stale reads under contention; rapid bouncing values can produce a
@@ -40,6 +45,7 @@ internal class HysteresisSeriesStat<R : Result>(
     private val state = mode.newLong(STATE_UNSET)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         val current = state.load()
         val next = when {
             value > high -> STATE_HIGH

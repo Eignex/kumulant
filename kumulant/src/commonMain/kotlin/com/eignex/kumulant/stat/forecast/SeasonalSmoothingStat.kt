@@ -38,6 +38,16 @@ data class SeasonalSmoothingResult(
     /** Seasonal coupling. */
     val mode: SeasonalMode,
 ) : Result {
+    init {
+        // Validated here rather than in merge, because the slot indexes [seasons] on the stat's
+        // update path: a decoded result carrying a negative slot merges without complaint and then
+        // takes the *next* update out with an index-out-of-bounds, which no stat may throw.
+        require(seasons.isNotEmpty()) { "seasons must not be empty" }
+        require(currentSlot in seasons.indices) {
+            "currentSlot must be in 0..${seasons.size - 1}; got $currentSlot"
+        }
+    }
+
     /** Length of the seasonal cycle. */
     val period: Int get() = seasons.size
 

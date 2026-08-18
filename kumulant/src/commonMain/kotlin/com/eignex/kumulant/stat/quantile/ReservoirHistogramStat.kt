@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
+import com.eignex.kumulant.math.deriveChildSeed
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
 import com.eignex.kumulant.stream.guarded
@@ -176,6 +177,9 @@ class ReservoirHistogramStat(
     }
     private val random = Random(seed)
 
+    // Copies made by `create`, so each gets its own admission stream. See `create`.
+    private val copies = mode.newLong(0L)
+
     // Sentinel key for "empty slot"; any real A-Res key (in (0, 1]) beats it.
     private val emptyKey = Double.NEGATIVE_INFINITY
 
@@ -223,9 +227,17 @@ class ReservoirHistogramStat(
         }
     }
 
+    /**
+     * Derives the copy's seed rather than passing this stat's own.
+     *
+     * A windowed reservoir builds one of these per slice, and slices sharing a seed would draw the
+     * same admission keys in the same order - so whether an observation survived would turn on its
+     * position within its slice rather than on its weight. The trees and forests derive for the same
+     * reason; advancing a counter here is what makes each copy distinct.
+     */
     override fun create(concurrency: Concurrency?) = ReservoirHistogramStat(
         capacity,
-        seed,
+        deriveChildSeed(seed, copies.addAndGet(1L)),
         concurrency ?: this.concurrency,
     )
 

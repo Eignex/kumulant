@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ReservoirHistogramTest {
@@ -81,6 +82,21 @@ class ReservoirHistogramTest {
         val b = a.create()
         assertEquals(0, b.read().values.size)
         assertTrue(a.read().values.isNotEmpty())
+    }
+
+    @Test
+    fun `copies draw independent admission streams`() {
+        // A windowed reservoir builds one slice per copy. Sharing the parent's seed would give every
+        // slice the same admission keys in the same order, so surviving would turn on an
+        // observation's position within its slice rather than on its weight.
+        val template = ReservoirHistogramStat(capacity = 8, seed = 99)
+        val first = template.create()
+        val second = template.create()
+        for (i in 1..200) {
+            first.update(i.toDouble())
+            second.update(i.toDouble())
+        }
+        assertFalse(first.read().values.contentEquals(second.read().values))
     }
 
     @Test
