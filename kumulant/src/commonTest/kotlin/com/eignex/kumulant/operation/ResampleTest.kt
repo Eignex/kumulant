@@ -83,6 +83,47 @@ class ResampleTest {
     }
 
     @Test
+    fun `a downdate emptying the open bucket is rejected`() {
+        // The same guard MeanStat and the other Welford stats apply. Without it the flush divides by a
+        // bucket weight of exactly zero and forwards an infinity the delegate never recovers from.
+        val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
+        stat.update(value = 10.0, timestampNanos = 10_000_000L, weight = 1.0)
+        assertFailsWith<IllegalArgumentException> {
+            stat.update(value = 20.0, timestampNanos = 50_000_000L, weight = -1.0)
+        }
+    }
+
+    @Test
+    fun `a downdate opening a bucket is rejected`() {
+        // A bucket not yet open holds nothing, so there is no observation for the downdate to remove.
+        val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
+        assertFailsWith<IllegalArgumentException> {
+            stat.update(value = 10.0, timestampNanos = 10_000_000L, weight = -1.0)
+        }
+    }
+
+    @Test
+    fun `a rejected downdate leaves the bucket as it was`() {
+        // The guard runs before any cell is written, so the open bucket must still flush the value it
+        // held before the rejected call.
+        val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
+        stat.update(value = 10.0, timestampNanos = 10_000_000L, weight = 1.0)
+        runCatching { stat.update(value = 20.0, timestampNanos = 50_000_000L, weight = -1.0) }
+        stat.update(value = 7.0, timestampNanos = 150_000_000L, weight = 1.0)
+        assertEquals(10.0, stat.read().sum, DELTA)
+    }
+
+    @Test
+    fun `a partial downdate is honoured as a weighted removal`() {
+        // Weights 2.0 then -1.0 leave the bucket at 1.0, so the mean is (10*2 - 20*1) / 1 = 0.0.
+        val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
+        stat.update(value = 10.0, timestampNanos = 10_000_000L, weight = 2.0)
+        stat.update(value = 20.0, timestampNanos = 50_000_000L, weight = -1.0)
+        stat.update(value = 7.0, timestampNanos = 150_000_000L, weight = 1.0)
+        assertEquals(0.0, stat.read().sum, DELTA)
+    }
+
+    @Test
     fun `negative bucket duration is rejected`() {
         assertFailsWith<IllegalArgumentException> {
             SumStat().resampleByTime(bucket = (-1L).milliseconds, aggregator = ResampleAggregator.Mean)

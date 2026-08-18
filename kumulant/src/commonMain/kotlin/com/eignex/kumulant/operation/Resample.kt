@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.schema.spec.ResampleAggregator
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.guarded
@@ -77,6 +78,14 @@ internal class ResampleByTimeStat<R : Result>(
         lock.guarded {
             val newBucket = timestampNanos.floorDiv(bucketNanos)
             val cur = currentBucket.load()
+            // The same guard the Welford stats downstream apply, for the same reason: Mean divides by
+            // the bucket's accumulated weight, so a downdate that takes it to zero publishes an
+            // infinity that every later read inherits. A downdate can only remove what the open bucket
+            // already holds, and a bucket not yet open holds nothing, hence the zero prior.
+            //
+            // Checked before any cell is written, so a rejected update leaves the stat as it was
+            // rather than half-applied.
+            requireLiveWeight(if (cur == newBucket) bucketWeight.load() else 0.0, weight)
             if (cur == NO_BUCKET) {
                 currentBucket.store(newBucket)
                 seed(value, timestampNanos, weight)
