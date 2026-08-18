@@ -13,8 +13,6 @@ eignexPublish {
     githubRepo.set("Eignex/kumulant")
 }
 
-// koblas has no release carrying the reshaped API yet, so the dependency below is a
-// snapshot and needs the snapshot repository alongside the Central one kbuild adds.
 repositories {
     maven("https://central.sonatype.com/repository/maven-snapshots/") {
         mavenContent { snapshotsOnly() }
