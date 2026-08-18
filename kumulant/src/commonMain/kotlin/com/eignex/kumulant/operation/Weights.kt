@@ -13,10 +13,11 @@ import com.eignex.kumulant.core.isInertWeight
 /**
  * Force every update through this stat to use a constant [weight], discarding caller weight.
  *
- * An inert caller weight - exactly `0.0`, or `NaN` - is passed through unchanged rather than
- * replaced. The override sets the *magnitude* of a real observation, and neither "ignore this
- * observation" nor "no multiplicity at all" is a magnitude, so the no-op guarantees in [Stat] survive
- * the wrapper.
+ * An inert caller weight is passed through unchanged rather than replaced: that is every weight
+ * [isInertWeight] names, so `0.0`, `NaN`, and either infinity. The override sets the *magnitude* of a
+ * real observation, and none of "ignore this observation", "no multiplicity at all", or an infinity
+ * that is not a multiplicity either is a magnitude, so the no-op guarantees in [Stat] survive the
+ * wrapper.
  */
 internal fun <R : Result> SeriesStat<R>.withWeight(weight: Double): SeriesStat<R> = WithWeightStat(this, weight)
 

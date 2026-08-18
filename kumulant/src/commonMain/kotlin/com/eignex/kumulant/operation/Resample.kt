@@ -15,14 +15,30 @@ import kotlin.time.Duration
 
 // resampleByTime aligns the input stream onto fixed wall-clock buckets and forwards
 // one observation per closed bucket to the delegate stat. The per-bucket value is
-// determined by [ResampleAggregator]; the in-progress bucket is held until an update
-// arrives in a later bucket (or a flush is requested).
+// determined by [ResampleAggregator].
+//
+// An update in a later bucket is the only thing that closes the open one. There is no
+// flush, and `read` does not close it either, so the newest bucket is never visible: a
+// reader always sees the stream as of the last bucket boundary an update crossed. That
+// is what makes the operator's output independent of when it is read, which a windowed
+// or periodically-scraped consumer depends on - a flush on read would emit a partial
+// bucket whose value then changed as the rest of it arrived.
 //
 // Concurrency: coupled per-bucket state and bucket index (category 3). The internal
 // lock keeps the multi-cell transition consistent.
 
-/** Align this series on fixed wall-clock buckets of [bucket] length and forward one
- *  observation per closed bucket using [aggregator]. */
+/**
+ * Align this series on fixed wall-clock buckets of [bucket] length and forward one
+ * observation per closed bucket using [aggregator].
+ *
+ * A bucket closes when an update arrives in a later one, so the delegate lags the input by up to one
+ * bucket and the open bucket is never readable. Reads are therefore stable: the same read repeated
+ * returns the same value until an update crosses a boundary.
+ *
+ * Caller weight folds into the open bucket rather than passing through: [ResampleAggregator.Sum] and
+ * [ResampleAggregator.Mean] weight the observations they combine, and the closed bucket then reaches
+ * the delegate as a single observation of weight `1.0` however many raw ones went into it.
+ */
 internal fun <R : Result> SeriesStat<R>.resampleByTime(
     bucket: Duration,
     aggregator: ResampleAggregator = ResampleAggregator.Mean,
