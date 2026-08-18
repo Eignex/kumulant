@@ -7,9 +7,9 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
-import kotlin.random.Random
 
 // Decorator surface for [RegressionStat], mirroring the live ops on the other modalities.
 // Every wrapper delegates `read` / `merge` / `reset` / `concurrency` / `featureSize` to
@@ -49,9 +49,9 @@ internal fun <R : Result> RegressionStat<R>.throttle(every: Int): RegressionStat
     every,
 )
 
-/** Bernoulli-sample each update at probability [rate] using [random] as the PRNG. */
-internal fun <R : Result> RegressionStat<R>.sample(rate: Double, random: Random): RegressionStat<R> =
-    SampleRegressionStat(this, rate, random)
+/** Bernoulli-sample each update at probability [rate], drawing from [seed]. */
+internal fun <R : Result> RegressionStat<R>.sample(rate: Double, seed: Long): RegressionStat<R> =
+    SampleRegressionStat(this, rate, seed)
 
 /**
  * Lift a scalar [SeriesStat] into a [RegressionStat] by projecting `(x, y)` to a
@@ -140,6 +140,7 @@ internal class ThrottleRegressionStat<R : Result>(private val delegate: Regressi
     override val featureSize: Int = delegate.featureSize
     private val gate = ThrottleGate(every, delegate.concurrency)
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
     }
     override fun reset() {
@@ -154,16 +155,23 @@ internal class ThrottleRegressionStat<R : Result>(private val delegate: Regressi
 internal class SampleRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
     private val rate: Double,
-    private val random: Random,
+    private val seed: Long,
 ) : RegressionStat<R>,
     Stat<R> by delegate {
-    private val gate = SampleGate(rate, random)
+    private val gate = SampleGate(rate, seed, delegate.concurrency)
     override val featureSize: Int = delegate.featureSize
     override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
     }
+
+    override fun reset() {
+        gate.reset()
+        delegate.reset()
+    }
+
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
-        SampleRegressionStat(delegate.create(concurrency), rate, random)
+        SampleRegressionStat(delegate.create(concurrency), rate, gate.childSeed())
 }
 
 internal class FoldRegressionStat<R : Result>(

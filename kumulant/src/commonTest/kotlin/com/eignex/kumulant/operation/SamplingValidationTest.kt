@@ -2,7 +2,6 @@ package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import com.eignex.kumulant.stat.summary.SumStat
-import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -44,16 +43,16 @@ class SamplingValidationTest {
     fun `sample rejects a rate outside the unit interval in every modality`() {
         for (rate in listOf(-0.1, 1.1, Double.NaN)) {
             assertFailsWith<IllegalArgumentException>("series accepted rate=$rate") {
-                SumStat().sample(rate, Random(0))
+                SumStat().sample(rate, 0L)
             }
             assertFailsWith<IllegalArgumentException>("paired accepted rate=$rate") {
-                SumStat().atY().sample(rate, Random(0))
+                SumStat().atY().sample(rate, 0L)
             }
             assertFailsWith<IllegalArgumentException>("vector accepted rate=$rate") {
-                VectorizedStat(2, SumStat()).sample(rate, Random(0))
+                VectorizedStat(2, SumStat()).sample(rate, 0L)
             }
             assertFailsWith<IllegalArgumentException>("regression accepted rate=$rate") {
-                StochasticRegressionStat(featureSize = 2).sample(rate, Random(0))
+                StochasticRegressionStat(featureSize = 2).sample(rate, 0L)
             }
         }
     }
@@ -61,11 +60,11 @@ class SamplingValidationTest {
     @Test
     fun `sample accepts both endpoints`() {
         // Zero and one are the drop-everything and keep-everything ends, both legitimate.
-        val none = SumStat().sample(0.0, Random(0))
+        val none = SumStat().sample(0.0, 0L)
         repeat(20) { none.update(1.0) }
         assertEquals(0.0, none.read().sum, 1e-12, "a rate of zero should drop every update")
 
-        val all = SumStat().sample(1.0, Random(0))
+        val all = SumStat().sample(1.0, 0L)
         repeat(20) { all.update(1.0) }
         assertEquals(20.0, all.read().sum, 1e-12, "a rate of one should keep every update")
     }
@@ -76,7 +75,7 @@ class SamplingValidationTest {
         assertTrue("throttle every must be >= 1" in every.message.orEmpty(), "unhelpful: ${every.message}")
         assertTrue("got 0" in every.message.orEmpty(), "did not name the value: ${every.message}")
 
-        val rate = assertFailsWith<IllegalArgumentException> { SumStat().sample(1.5, Random(0)) }
+        val rate = assertFailsWith<IllegalArgumentException> { SumStat().sample(1.5, 0L) }
         assertTrue("sample rate must be in [0, 1]" in rate.message.orEmpty(), "unhelpful: ${rate.message}")
         assertTrue("got 1.5" in rate.message.orEmpty(), "did not name the value: ${rate.message}")
     }

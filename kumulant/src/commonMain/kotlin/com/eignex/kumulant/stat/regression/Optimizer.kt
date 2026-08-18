@@ -53,6 +53,10 @@ class SgdOptimizer(
     concurrency: Concurrency = Concurrency.None,
 ) : Optimizer {
 
+    init {
+        requirePositiveFeatureSize(featureSize)
+    }
+
     private val mode = concurrency.welfordMode()
     private val stepCell: StreamLong = mode.newLong(0L)
     private val cachedLr: StreamDouble = mode.newDouble(0.0)
@@ -136,7 +140,9 @@ class RmspropOptimizer(
 
     init {
         requirePositiveFeatureSize(featureSize)
-        require(rho in 0.0..1.0) { "rho must be in [0, 1]; got $rho" }
+        // Half-open at the top: rho == 1.0 freezes emaG2 at its initial zero, so the effective
+        // learning rate becomes lr / sqrt(epsilon) on every step and the weights diverge.
+        require(rho >= 0.0 && rho < 1.0) { "rho must be in [0, 1); got $rho" }
         require(epsilon > 0.0) { "epsilon must be positive" }
     }
 
@@ -184,8 +190,11 @@ class AdamOptimizer(
 
     init {
         requirePositiveFeatureSize(featureSize)
-        require(beta1 in 0.0..1.0) { "beta1 must be in [0, 1]; got $beta1" }
-        require(beta2 in 0.0..1.0) { "beta2 must be in [0, 1]; got $beta2" }
+        // Half-open at the top, because Adam's bias correction divides by 1 - beta^t. At beta == 1.0
+        // that denominator is exactly zero while the moment it corrects is identically zero too, so
+        // every delta is 0/0 = NaN and the weights never recover.
+        require(beta1 >= 0.0 && beta1 < 1.0) { "beta1 must be in [0, 1); got $beta1" }
+        require(beta2 >= 0.0 && beta2 < 1.0) { "beta2 must be in [0, 1); got $beta2" }
         require(epsilon > 0.0) { "epsilon must be positive" }
     }
 

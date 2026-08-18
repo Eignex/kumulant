@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.monotonicMode
@@ -15,6 +16,10 @@ import com.eignex.kumulant.stream.monotonicMode
 // Until enough history accumulates the operators suppress forwarding entirely: the first k
 // (for lag/diff) or first single (for derivative) updates are absorbed silently while the
 // buffer warms up.
+//
+// An inert weight is dropped before the ring is touched. The ring is state, and it is state the
+// stream is read back out of: an observation admitted with no multiplicity would not merely be
+// absorbed, it would be forwarded to the delegate at a later update's weight. See [Stat].
 //
 // Concurrency: per-cell atomics with bounded drift (category 1). Concurrent updates may briefly
 // observe an out-of-order ring slot but never throw; the forwarded value is always some value
@@ -49,6 +54,7 @@ internal class LagSeriesStat<R : Result>(private val delegate: SeriesStat<R>, pr
     private val ring = mode.newDoubleArray(k)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         val n = tick.addAndGet(1L)
         val slot = ((n - 1L) % k).toInt()
         val past = ring.load(slot)
@@ -77,6 +83,7 @@ internal class DiffSeriesStat<R : Result>(private val delegate: SeriesStat<R>, p
     private val ring = mode.newDoubleArray(k)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         val n = tick.addAndGet(1L)
         val slot = ((n - 1L) % k).toInt()
         val past = ring.load(slot)
@@ -104,6 +111,7 @@ internal class DerivativeSeriesStat<R : Result>(private val delegate: SeriesStat
     private val lastTimestamp = tsMode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         val seen = initialized.addAndGet(1L)
         val prevValue = lastValue.load()
         val prevTs = lastTimestamp.load()
