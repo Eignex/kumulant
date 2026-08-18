@@ -25,7 +25,16 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
     jvm()
-    js { browser(); nodejs() }
+    // Mocha on the js node task, which otherwise runs Kotlin's builtin framework - and that one has
+    // no timeout at all, so a hung test wedges the gate rather than failing it. kbuild bounds Mocha at
+    // 120s through onTestFrameworkSet, so the value is not restated here; measured as 120s, not
+    // Mocha's 2s default, which would be worse than no timeout.
+    //
+    // Not applied to wasmJs or wasmWasi: the Kotlin plugin rejects Mocha on wasm ("Mocha test
+    // framework for Wasm target is not supported. For KotlinWasmNode used") and falls back silently,
+    // so asking for it there buys a warning and nothing else. Those two stay unbounded. The browser
+    // tasks are Karma, which kbuild bounds through a generated config.
+    js { browser(); nodejs { testTask { useMocha() } } }
     wasmJs { browser(); nodejs() }
     wasmWasi { nodejs() }
     linuxX64(); linuxArm64()
