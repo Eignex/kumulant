@@ -9,7 +9,7 @@ import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
-import kotlin.random.Random
+import com.eignex.kumulant.math.CounterRandom
 
 /**
  * Online VFDT decision-tree classifier; the classification counterpart of
@@ -57,7 +57,7 @@ class DecisionTreeClassifierStat(
         requireAtLeastTwoClasses(numClasses)
     }
 
-    private val seedRng = Random(randomSeed)
+    private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
     private var tree: ClassificationTree = newTree()
 
     private fun newTree(): ClassificationTree = ClassificationTree(
@@ -89,7 +89,13 @@ class DecisionTreeClassifierStat(
         tree.mergeSnapshot(values.root)
     }
 
+    /**
+     * Restarts the seed stream too, so the rebuilt tree is the one a fresh stat would have grown.
+     * Without it a reset stat draws its next seed from wherever construction left off, and `reset`
+     * promises the equivalent of a fresh stat rather than merely an empty one.
+     */
     override fun reset() {
+        seedRng.reset()
         tree = newTree()
     }
 
@@ -100,7 +106,7 @@ class DecisionTreeClassifierStat(
         config = config,
         concurrency = concurrency ?: this.concurrency,
         leafArmFactory = leafArmFactory,
-        randomSeed = seedRng.nextInt(),
+        randomSeed = seedRng.childSeed().toInt(),
     )
 
     /** Live underlying classification tree. Use for inspection / pretty-printing. */
