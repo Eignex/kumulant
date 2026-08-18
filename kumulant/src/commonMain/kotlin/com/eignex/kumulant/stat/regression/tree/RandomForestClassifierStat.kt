@@ -10,11 +10,11 @@ import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
+import com.eignex.kumulant.math.CounterRandom
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.nextPoissonOne
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.random.Random
 
 /**
  * Online random-forest classifier; the classification counterpart of
@@ -63,8 +63,11 @@ class RandomForestClassifierStat(
     /** [ClassificationTreeConfig] with [ClassificationTreeConfig.mtry] defaulted to `ceil(sqrt(p))` when null. */
     val config: ClassificationTreeConfig = config.copy(mtry = config.mtry ?: defaultMtry(splitCandidates.size))
 
-    private val seedRng = Random(randomSeed)
-    private val baggingRng = Random(seedRng.nextInt())
+    private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
+
+    // Drawn from on the update path, once per tree, with no lock over it - so it has to be a generator
+    // that concurrent updates can share. See CounterRandom.
+    private val baggingRng = CounterRandom(seedRng.childSeed(), concurrency)
     private var trees: Array<ClassificationTree> = Array(nbrTrees) { newTree() }
 
     private fun newTree(): ClassificationTree = ClassificationTree(
@@ -108,7 +111,14 @@ class RandomForestClassifierStat(
         for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root)
     }
 
+    /**
+     * Restarts both seed streams, so the rebuilt forest is the one a fresh stat would have grown and
+     * the bagging draws resume from the start rather than from wherever the old forest left off.
+     * `reset` promises the equivalent of a fresh stat, not merely an emptied one.
+     */
     override fun reset() {
+        seedRng.reset()
+        baggingRng.reset()
         trees = Array(nbrTrees) { newTree() }
     }
 
@@ -121,7 +131,7 @@ class RandomForestClassifierStat(
         bagging = bagging,
         concurrency = concurrency ?: this.concurrency,
         leafArmFactory = leafArmFactory,
-        randomSeed = seedRng.nextInt(),
+        randomSeed = seedRng.childSeed().toInt(),
     )
 
     /** Live underlying classification trees. Use for inspection. */
