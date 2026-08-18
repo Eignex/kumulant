@@ -34,10 +34,11 @@ data class QuantileFilterResult(
  *
  * The threshold adapts with the stream: as new observations arrive, the
  * quantile drifts, so the same input value may flip between anomalous and
- * normal as the distribution shifts. Use [QuantileFilterStat] when you want a
- * non-parametric alternative to [GaussianScorerStat] (no Gaussianity
- * assumption) or when the metric of interest is "is `x` in the tail of what
- * we've seen?".
+ * normal as the distribution shifts.
+ *
+ * **Use cases:** tail detection on a skewed or heavy-tailed stream, where the
+ * question is "is `x` in the tail of what we've seen?". The non-parametric
+ * alternative to [GaussianScorerStat], which assumes Gaussianity.
  *
  * **Memory:** O(1 / `relativeError`); backed by a single-probability DDSketch.
  *

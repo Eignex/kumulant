@@ -19,6 +19,25 @@ import kotlin.random.Random
  *
  * Input is fed through [RegressionStat]: `x` is the feature vector, `y` is the
  * class index in `[0, numClasses)`, resolved by [asClassLabel].
+ *
+ * **Use cases:** online classification where the decision boundary is
+ * axis-aligned and piecewise constant, and the model must grow with the stream
+ * rather than be refit. Reach for [RandomForestClassifierStat] for ensembled
+ * diversity, or [DecisionTreeRegressionStat] when the target is continuous.
+ *
+ * **Memory:** O(nodes · [splitCandidates]); a [ClassCountsStat] per node plus
+ * per-audit-leaf candidate accumulators. Bounded by
+ * [ClassificationTreeConfig.maxNodes].
+ *
+ * **Update:** O(depth) per observation; a tree walk to the destination leaf,
+ * then a leaf-arm update. Splits fire at most once every
+ * [ClassificationTreeConfig.splitPeriod] observations per audit leaf.
+ *
+ * **Concurrency:** Inherits [DecisionTreeRegressionStat]'s concurrency model,
+ * with [ClassCountsStat] leaf arms in place of variance accumulators. The update path
+ * touches exactly one leaf, so threads landing in different leaves never
+ * contend; split conversion takes a per-tree lock fired only at split
+ * decisions. See [ClassificationTree] for the full design.
  */
 class DecisionTreeClassifierStat(
     override val featureSize: Int,

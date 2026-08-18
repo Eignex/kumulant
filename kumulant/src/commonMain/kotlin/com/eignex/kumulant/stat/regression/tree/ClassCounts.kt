@@ -83,13 +83,26 @@ data class ClassCountsResult(
 }
 
 /**
- * Series stat over discrete class-index inputs. `update(value, weight)` interprets
- * `value.toInt()` as the class index; out-of-range values are dropped. Each class
- * cell is an independent striped atomic adder so updates commute under any
- * [Concurrency] level.
+ * Series stat over discrete class-index inputs; the snapshot is a weighted
+ * per-class count vector. `update(value, weight)` resolves `value` to a class
+ * index via [asClassLabel], so only a `Double` that is exactly an integer in
+ * `[0, numClasses)` counts; anything else is dropped.
+ *
+ * **Use cases:** the leaf aggregate behind [ClassificationTree], and standalone
+ * wherever a weighted class histogram, majority vote, or empirical class
+ * distribution is wanted over a discrete stream.
+ *
+ * **Memory:** O([numClasses]); one adder cell per class.
+ *
+ * **Update:** O(1) per observation; one class-label resolution and a single
+ * cell add.
+ *
+ * **Concurrency:** Independent striped cells with deterministic bucket
+ * assignment. Exact under every level; increments commute and racing writers on
+ * the same class share the cell.
  */
 class ClassCountsStat(
-    /** Number of classes; `value.toInt()` must round into `[0, numClasses)`. */
+    /** Number of classes; `value` must be exactly an integer in `[0, numClasses)`. */
     val numClasses: Int,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<ClassCountsResult> {

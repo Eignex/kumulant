@@ -206,7 +206,7 @@ class SeasonalSmoothingStat(
                 seasons.store(i, 0.5 * (seasons.load(i) + values.seasons[i]))
             }
             // The factors just came from the incoming trace, so the phase has to come with them;
-            // keeping the local slot silently paired averaged factors with a mismatched phase.
+            // keeping the local slot would silently pair averaged factors with a mismatched phase.
             slot.store(values.currentSlot.toLong())
         }
     }
