@@ -71,4 +71,21 @@ class RouletteWheelBanditTest {
         bandit.evaluate(0)
         assertEquals(1.0, bandit.evaluate(0))
     }
+
+    @Test
+    fun `segment rebalance is invariant to a uniform observation weight`() {
+        fun weightAfter(observationWeight: Double): Double {
+            val bandit = RouletteWheelBandit(
+                nbrArms = 2,
+                reactionFactor = 0.5,
+                segmentLength = 2,
+                initialWeight = 1.0,
+                random = Random(1),
+            )
+            bandit.update(0, 1.0, observationWeight)
+            bandit.update(0, 1.0, observationWeight)
+            return bandit.snapshot()[0].weight
+        }
+        assertEquals(weightAfter(1.0), weightAfter(3.0))
+    }
 }
