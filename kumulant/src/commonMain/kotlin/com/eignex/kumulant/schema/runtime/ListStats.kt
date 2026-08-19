@@ -81,9 +81,9 @@ internal class ListStats<R : Result>(entries: List<Pair<String, SeriesStat<out R
         this(entries.toList(), concurrency)
 
     @Suppress("UNCHECKED_CAST")
-    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+    constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
         this(
-            entries = seriesSpecs(schema).map { it.key.name to (it.stat as SeriesStat<out R>) },
+            entries = seriesSpecs(schema, concurrency).map { it.key.name to (it.stat as SeriesStat<out R>) },
             concurrency = concurrency,
         )
 
@@ -117,9 +117,9 @@ internal class PairedListStats<R : Result>(
         this(entries.toList(), concurrency)
 
     @Suppress("UNCHECKED_CAST")
-    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+    constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
         this(
-            entries = pairedSpecs(schema).map { it.key.name to (it.stat as PairedStat<out R>) },
+            entries = pairedSpecs(schema, concurrency).map { it.key.name to (it.stat as PairedStat<out R>) },
             concurrency = concurrency,
         )
 
@@ -153,9 +153,9 @@ internal class VectorListStats<R : Result>(
         this(entries.toList(), concurrency)
 
     @Suppress("UNCHECKED_CAST")
-    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+    constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
         this(
-            entries = vectorSpecs(schema).map { it.key.name to (it.stat as VectorStat<out R>) },
+            entries = vectorSpecs(schema, concurrency).map { it.key.name to (it.stat as VectorStat<out R>) },
             concurrency = concurrency,
         )
 
@@ -189,9 +189,9 @@ internal class DiscreteListStats<R : Result>(
         this(entries.toList(), concurrency)
 
     @Suppress("UNCHECKED_CAST")
-    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+    constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
         this(
-            entries = discreteSpecs(schema).map { it.key.name to (it.stat as DiscreteStat<out R>) },
+            entries = discreteSpecs(schema, concurrency).map { it.key.name to (it.stat as DiscreteStat<out R>) },
             concurrency = concurrency,
         )
 
@@ -226,9 +226,9 @@ internal class RegressionListStats<R : Result>(
         this(entries.toList(), concurrency)
 
     @Suppress("UNCHECKED_CAST")
-    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
+    constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
         this(
-            entries = regressionSpecs(schema).map {
+            entries = regressionSpecs(schema, concurrency).map {
                 it.key.name to (it.stat as RegressionStat<out R>)
             },
             concurrency = concurrency,

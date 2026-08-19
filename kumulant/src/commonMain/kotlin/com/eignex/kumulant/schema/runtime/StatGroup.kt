@@ -71,8 +71,8 @@ class StatGroup(stats: List<BoundStat<*, out SeriesStat<*>, *>>, concurrency: Co
         concurrency: Concurrency? = null,
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
-    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
-        this(stats = seriesSpecs(schema), concurrency = concurrency)
+    constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
+        this(stats = seriesSpecs(schema, concurrency), concurrency = concurrency)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(value, timestampNanos, weight)
@@ -100,8 +100,8 @@ class PairedStatGroup(stats: List<BoundStat<*, out PairedStat<*>, *>>, concurren
         concurrency: Concurrency? = null,
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
-    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
-        this(stats = pairedSpecs(schema), concurrency = concurrency)
+    constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
+        this(stats = pairedSpecs(schema, concurrency), concurrency = concurrency)
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(x, y, timestampNanos, weight)
@@ -129,8 +129,8 @@ class VectorStatGroup(stats: List<BoundStat<*, out VectorStat<*>, *>>, concurren
         concurrency: Concurrency? = null,
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
-    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
-        this(stats = vectorSpecs(schema), concurrency = concurrency)
+    constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
+        this(stats = vectorSpecs(schema, concurrency), concurrency = concurrency)
 
     override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(vector, timestampNanos, weight)
@@ -158,8 +158,8 @@ class DiscreteStatGroup(stats: List<BoundStat<*, out DiscreteStat<*>, *>>, concu
         concurrency: Concurrency? = null,
     ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
 
-    constructor(schema: StatSchema, concurrency: Concurrency? = null) :
-        this(stats = discreteSpecs(schema), concurrency = concurrency)
+    constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
+        this(stats = discreteSpecs(schema, concurrency), concurrency = concurrency)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(value, timestampNanos, weight)

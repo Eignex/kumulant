@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 // indistinguishable from a correct one until someone tries it.
 class ReadmeExamplesTest {
 
-    private object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
+    private object Telemetry : StatSchema() {
         val latencyMean by series(Mean)
         val latencyP99 by series(DDSketch(probabilities = listOf(0.99)))
         val errorRate by series(Rate)
@@ -38,14 +38,14 @@ class ReadmeExamplesTest {
 
     @Test
     fun `each modality in a mixed schema is driven by its own group`() {
-        val latencies = StatGroup(Telemetry)
+        val latencies = StatGroup(Telemetry, concurrency = Concurrency.Strict)
         latencies.update(value = 12.7)
         latencies.update(value = 31.4)
         val p99 = latencies.read()[Telemetry.latencyP99]
         assertTrue(p99.quantiles.isNotEmpty(), "expected the sketch to report a p99")
         assertEquals(2.0, latencies.read()[Telemetry.latencyMean].totalWeights, 1e-9)
 
-        val users = DiscreteStatGroup(Telemetry)
+        val users = DiscreteStatGroup(Telemetry, concurrency = Concurrency.Strict)
         users.update(value = 0x9E3779B97F4A7C15uL.toLong())
         users.update(value = 0x243F6A8885A308D3uL.toLong())
         val distinct = users.read()[Telemetry.uniqueUsers]

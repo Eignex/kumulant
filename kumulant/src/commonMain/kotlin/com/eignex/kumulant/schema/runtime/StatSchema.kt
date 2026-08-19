@@ -33,15 +33,16 @@ import com.eignex.skema.Schema
  * stat), build a [StatGroup] / `*ListStats` directly with the vararg `Pair`
  * constructor - bypass the schema layer entirely.
  *
- * The schema-level [concurrency] is the deployment knob: every config materializes
- * via `config.materialize(concurrency)` inside the [StatGroup] / `*ListStats`
- * constructor.
+ * A schema describes stats and nothing else. [com.eignex.kumulant.core.Concurrency] is a deployment
+ * choice, so it is supplied where the stats are built - the [StatGroup] / `*ListStats` constructor -
+ * and applies to the whole tree, nested groups included. One schema can therefore back a sharded
+ * worker and its coordinator at different levels.
  *
  * @sample com.eignex.kumulant.samples.schemaDeclarationAndRead
  */
 @Suppress("AbstractClassCanBeConcreteClass") // concrete class would expose `register` and the modality
 // helpers to direct callers; abstract enforces the "extend and declare stats" usage pattern.
-abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) : Schema<StatSpec>() {
+abstract class StatSchema : Schema<StatSpec>() {
 
     /** Pure-data, serializable view of this schema using kumulant's wire field `stats`. */
     fun statSchemaDef(): StatSchemaDef = StatSchemaDef(definition().entries)
@@ -56,51 +57,47 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) : Sch
 
     protected fun <R : Result> regression(config: RegressionStatSpec<R>) = register(config) { StatKey<R>(it) }
 
-    /**
-     * Nest a sub-schema as a [GroupStatSpec]; materialization recurses at the parent's group construction.
-     *
-     * The nested schema contributes its stats, never its [concurrency]: that is a deployment knob applied
-     * at materialization, not part of the wire description, so the whole tree materializes at whatever
-     * concurrency the parent is materialized with. Set it on the outermost schema.
-     */
+    /** Nest a sub-schema as a [GroupStatSpec]; materialization recurses at the parent's group construction. */
     protected fun <T : StatSchema> group(nestedSchema: T) =
         register(GroupStatSpec(nestedSchema.statSchemaDef().stats)) { GroupStatKey(it, nestedSchema) }
 }
 
-/** Series-modality specs from a schema, materialized at the schema's [concurrency][StatSchema.concurrency]. */
-internal fun seriesSpecs(schema: StatSchema): List<BoundStat<*, out SeriesStat<*>, *>> =
+/** Series-modality specs from a schema, materialized at [concurrency]. */
+internal fun seriesSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out SeriesStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is SeriesStatSpec<*>) return@mapNotNull null
-        toSpec<SeriesStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
+        toSpec<SeriesStat<*>>(StatKey<Result>(name), config.materialize(concurrency))
     }
 
 /** Paired-modality specs from a schema. */
-internal fun pairedSpecs(schema: StatSchema): List<BoundStat<*, out PairedStat<*>, *>> =
+internal fun pairedSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out PairedStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is PairedStatSpec<*>) return@mapNotNull null
-        toSpec<PairedStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
+        toSpec<PairedStat<*>>(StatKey<Result>(name), config.materialize(concurrency))
     }
 
 /** Vector-modality specs from a schema. */
-internal fun vectorSpecs(schema: StatSchema): List<BoundStat<*, out VectorStat<*>, *>> =
+internal fun vectorSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out VectorStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is VectorStatSpec<*>) return@mapNotNull null
-        toSpec<VectorStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
+        toSpec<VectorStat<*>>(StatKey<Result>(name), config.materialize(concurrency))
     }
 
 /** Discrete-modality specs from a schema. */
-internal fun discreteSpecs(schema: StatSchema): List<BoundStat<*, out DiscreteStat<*>, *>> =
+internal fun discreteSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out DiscreteStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is DiscreteStatSpec<*>) return@mapNotNull null
-        toSpec<DiscreteStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
+        toSpec<DiscreteStat<*>>(StatKey<Result>(name), config.materialize(concurrency))
     }
 
 /** Regression-modality specs from a schema. */
-internal fun regressionSpecs(schema: StatSchema): List<BoundStat<*, out RegressionStat<*>, *>> =
-    schema.entries.mapNotNull { (name, config) ->
-        if (config !is RegressionStatSpec<*>) return@mapNotNull null
-        toSpec<RegressionStat<*>>(StatKey<Result>(name), config.materialize(schema.concurrency))
-    }
+internal fun regressionSpecs(
+    schema: StatSchema,
+    concurrency: Concurrency,
+): List<BoundStat<*, out RegressionStat<*>, *>> = schema.entries.mapNotNull { (name, config) ->
+    if (config !is RegressionStatSpec<*>) return@mapNotNull null
+    toSpec<RegressionStat<*>>(StatKey<Result>(name), config.materialize(concurrency))
+}
 
 @Suppress("UNCHECKED_CAST")
 internal fun <S : Stat<*>> toSpec(key: StatKey<*>, stat: S): BoundStat<*, out S, *> =
