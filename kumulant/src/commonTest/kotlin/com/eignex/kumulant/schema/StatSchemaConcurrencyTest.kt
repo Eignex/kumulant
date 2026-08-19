@@ -51,7 +51,7 @@ class StatSchemaConcurrencyTest {
     }
 
     @Test
-    fun `nested schema keeps its own concurrency independent of parent`() {
+    fun `nested schema reports its own concurrency when materialized directly`() {
         val inner = object : StatSchema(Concurrency.Strict) {
             val mean by series(Mean)
         }
@@ -64,5 +64,17 @@ class StatSchemaConcurrencyTest {
         val innerSpecs = seriesSpecs(inner)
         assertTrue(innerSpecs.isNotEmpty())
         assertEquals(Concurrency.Strict, innerSpecs.single().stat.concurrency)
+    }
+
+    @Test
+    fun `a nested schema materializes at its parent's concurrency`() {
+        val inner = object : StatSchema(Concurrency.Strict) {
+            val mean by series(Mean)
+        }
+        val parent = object : StatSchema(Concurrency.None) {
+            val nested by group(inner)
+        }
+        val nested = seriesSpecs(parent).single().stat
+        assertEquals(Concurrency.None, nested.concurrency)
     }
 }
