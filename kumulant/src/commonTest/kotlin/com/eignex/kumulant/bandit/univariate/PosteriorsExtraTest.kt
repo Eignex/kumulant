@@ -71,12 +71,12 @@ class PosteriorsExtraTest {
     }
 
     @Test
-    fun `GeometricBetaPosterior samples in 0_1`() {
+    fun `GeometricBetaPosterior samples exceed one trial`() {
         val snap = WeightedMeanResult(totalWeights = 20.0, mean = 2.0)
         val rng = Random(5)
         repeat(50) {
             val s = GeometricBetaPosterior.sample(snap, rng)
-            assertTrue(s in 0.0..1.0, "got $s")
+            assertTrue(s.isFinite() && s > 1.0, "got $s")
         }
     }
 

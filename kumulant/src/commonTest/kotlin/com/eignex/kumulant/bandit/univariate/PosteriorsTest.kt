@@ -39,18 +39,22 @@ class PosteriorsTest {
     }
 
     @Test
-    fun `GeometricBetaPosterior samples are in 0_1`() {
-        val snap = WeightedMeanResult(totalWeights = 6.0, mean = 3.0)
+    fun `GeometricBetaPosterior samples center on the observed trial count`() {
+        val snap = WeightedMeanResult(totalWeights = 400.0, mean = 3.0)
         val rng = Random(3)
-        repeat(200) {
+        var sum = 0.0
+        val n = 3000
+        repeat(n) {
             val s = GeometricBetaPosterior.sample(snap, rng)
-            assertTrue(s.isFinite() && s in 0.0..1.0)
+            assertTrue(s.isFinite() && s > 1.0)
+            sum += s
         }
+        assertTrue(abs(sum / n - 3.0) < 0.15)
     }
 
     @Test
-    fun `ExponentialGammaPosterior samples are positive finite`() {
-        val snap = WeightedMeanResult(totalWeights = 5.0, mean = 2.0)
+    fun `ExponentialGammaPosterior samples center on the observed reward mean`() {
+        val snap = WeightedMeanResult(totalWeights = 200.0, mean = 2.0)
         val rng = Random(4)
         var sum = 0.0
         val n = 3000
@@ -59,7 +63,7 @@ class PosteriorsTest {
             assertTrue(s.isFinite() && s > 0.0)
             sum += s
         }
-        assertTrue(abs(sum / n - 0.5) < 0.05)
+        assertTrue(abs(sum / n - 2.0) < 0.1)
     }
 
     @Test
@@ -87,9 +91,9 @@ class PosteriorsTest {
     }
 
     @Test
-    fun `GammaScalePosterior samples are positive finite`() {
+    fun `GammaScalePosterior samples center on the observed reward mean`() {
         val pos = GammaScalePosterior(fixedShape = 2.0)
-        val snap = WeightedMeanResult(totalWeights = 5.0, mean = 1.0)
+        val snap = WeightedMeanResult(totalWeights = 200.0, mean = 1.0)
         val rng = Random(7)
         var sum = 0.0
         val n = 2000
@@ -98,6 +102,28 @@ class PosteriorsTest {
             assertTrue(s.isFinite() && s > 0.0)
             sum += s
         }
-        assertTrue(abs(sum / n - 2.0) < 0.2)
+        assertTrue(abs(sum / n - 1.0) < 0.1)
+    }
+
+    @Test
+    fun `ExponentialTS prefers the arm with the larger reward`() {
+        val mab = MultiArmedBandit(nbrArms = 2, policy = ExponentialTS(), random = Random(11))
+        repeat(200) {
+            mab.update(0, 10.0)
+            mab.update(1, 1.0)
+        }
+        val picks = (0 until 1000).count { mab.choose() == 0 }
+        assertTrue(picks > 900, "arm 0 chosen $picks/1000")
+    }
+
+    @Test
+    fun `GeometricTS prefers the arm with the larger reward`() {
+        val mab = MultiArmedBandit(nbrArms = 2, policy = GeometricTS(), random = Random(12))
+        repeat(200) {
+            mab.update(0, 8.0)
+            mab.update(1, 2.0)
+        }
+        val picks = (0 until 1000).count { mab.choose() == 0 }
+        assertTrue(picks > 900, "arm 0 chosen $picks/1000")
     }
 }
