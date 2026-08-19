@@ -38,6 +38,11 @@ internal object NoopMutex : Mutex {
  *   the native handle is freed on GC via `kotlin.native.ref.createCleaner`.
  * - mingwX64: backed by a Win32 `CRITICAL_SECTION`, similarly cleanered.
  * - JS / Wasm: noop - these runtimes are single-threaded.
+ *
+ * Not reentrant. The posix actual is a default `pthread_mutex_t`, so a thread that re-acquires a lock
+ * it already holds deadlocks on Linux and Apple targets while the reentrant JVM and Win32 backings let
+ * the same code through; a stat must never call back into itself while holding its own lock. Nesting
+ * two *different* locks is fine, which is what an operator holding its lock across a delegate call does.
  */
 internal expect class PlatformMutex() : Mutex {
     override fun <R> withLock(block: () -> R): R
