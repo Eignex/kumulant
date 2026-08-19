@@ -150,11 +150,17 @@ internal fun mergeCC(a: ClassCountsResult, b: ClassCountsResult): ClassCountsRes
     return ClassCountsResult(a.numClasses, out)
 }
 
-/** Inverse of [mergeCC]: element-wise subtraction, floor at zero. */
+/**
+ * Inverse of [mergeCC]: element-wise subtraction.
+ *
+ * Deliberately unclamped. A count cell downdates, so a class can legitimately hold a negative total,
+ * and flooring each class separately would invent mass in one class to cancel a downdate in another.
+ * Callers drop a residual with no weight left rather than relying on a per-class floor.
+ */
 internal fun subtractCC(total: ClassCountsResult, part: ClassCountsResult): ClassCountsResult {
     require(total.numClasses == part.numClasses) {
         "numClasses mismatch: ${total.numClasses} vs ${part.numClasses}"
     }
-    val out = DoubleArray(total.numClasses) { (total.counts[it] - part.counts[it]).coerceAtLeast(0.0) }
+    val out = DoubleArray(total.numClasses) { total.counts[it] - part.counts[it] }
     return ClassCountsResult(total.numClasses, out)
 }
