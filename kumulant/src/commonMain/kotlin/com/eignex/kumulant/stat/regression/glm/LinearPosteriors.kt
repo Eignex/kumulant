@@ -37,12 +37,16 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
      * [com.eignex.kumulant.bandit.univariate.BanditPolicy.evaluate] for the multivariate
      * setting: an outer "pick the best x" loop calls this once per candidate.
      *
-     * Default is `bias + (x dot sample(...))`. Concrete subtypes may override with
-     * a specialised formula (e.g. drawing only `xT * Sigma * x` worth of variance
+     * Default is `invMean(bias + (x dot sample(...)))`. Concrete subtypes may override
+     * with a specialised formula (e.g. drawing only `xT * Sigma * x` worth of variance
      * instead of the full weight vector).
+     *
+     * The draw is uncertainty over the coefficients, which live in the linear-predictor
+     * space, so the noise is added before the inverse link, never after: a score has to
+     * come back on the same scale as the reward being maximised.
      */
     override fun evaluate(snapshot: R, x: VectorView, rng: Random, exploration: Double): Double =
-        snapshot.bias + (x dot sample(snapshot, rng, exploration))
+        snapshot.link.invMean(snapshot.bias + (x dot sample(snapshot, rng, exploration)))
 }
 
 /**
@@ -62,7 +66,7 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
         return DenseVector.of(out)
     }
 
-    /** Closes to `predict(x) + sd * ||x|| * N(0,1)` since the per-coord noise terms
+    /** Closes to `invMean(eta(x) + sd * ||x|| * N(0,1))` since the per-coord noise terms
      *  are iid; one Gaussian draw instead of one per coordinate. */
     override fun evaluate(
         snapshot: StochasticRegressionResult,
@@ -70,10 +74,10 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
         rng: Random,
         exploration: Double,
     ): Double {
-        val mean = snapshot.predict(x)
-        if (exploration <= 0.0) return mean
+        val eta = snapshot.linearPredictor(x)
+        if (exploration <= 0.0) return snapshot.link.invMean(eta)
         val xNormSq = x dot x
-        return mean + sqrt(exploration * xNormSq) * rng.nextNormal()
+        return snapshot.link.invMean(eta + sqrt(exploration * xNormSq) * rng.nextNormal())
     }
 }
 
@@ -94,15 +98,15 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
         return DenseVector.of(out)
     }
 
-    /** Sum of independent normals: `predict(x) + sqrt(exploration * Sum x_i^2 / precision[i]) * N(0,1)`. */
+    /** Sum of independent normals: `invMean(eta(x) + sqrt(exploration * Sum x_i^2 / precision[i]) * N(0,1))`. */
     override fun evaluate(snapshot: DiagonalRegressionResult, x: VectorView, rng: Random, exploration: Double): Double {
-        val mean = snapshot.predict(x)
+        val eta = snapshot.linearPredictor(x)
         var variance = 0.0
         for (i in 0 until x.size) {
             val xi = x[i]
             variance += xi * xi / snapshot.precision[i]
         }
-        return mean + sqrt(exploration * variance) * rng.nextNormal()
+        return snapshot.link.invMean(eta + sqrt(exploration * variance) * rng.nextNormal())
     }
 }
 
@@ -130,7 +134,7 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         return DenseVector.of(out)
     }
 
-    /** Closes to `predict(x) + sqrt(exploration * xT * Sigma * x) * N(0,1)`; one
+    /** Closes to `invMean(eta(x) + sqrt(exploration * xT * Sigma * x) * N(0,1))`; one
      *  `matVec` and one `dot` instead of sampling the full weight vector. */
     override fun evaluate(
         snapshot: CovarianceRegressionResult,
@@ -138,15 +142,15 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         rng: Random,
         exploration: Double,
     ): Double {
-        val mean = snapshot.predict(x)
+        val eta = snapshot.linearPredictor(x)
         val sigmaX = snapshot.covariance.matVec(x)
         val variance = x dot sigmaX
-        return mean + sqrt(exploration * variance) * rng.nextNormal()
+        return snapshot.link.invMean(eta + sqrt(exploration * variance) * rng.nextNormal())
     }
 }
 
 /**
- * LinUCB-style confidence-bound scoring: `predict(x) + exploration * sqrt(xT * Sigma * x)`.
+ * LinUCB-style confidence-bound scoring: `invMean(eta(x) + exploration * sqrt(xT * Sigma * x))`.
  * Deterministic given the snapshot; no random draw at evaluate time; so the
  * `exploration` parameter here plays the role of LinUCB's `alpha` (confidence-bound
  * width), not the variance scale used by Thompson-style posteriors. [sample] returns
@@ -165,9 +169,9 @@ data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
         rng: Random,
         exploration: Double,
     ): Double {
-        val mean = snapshot.predict(x)
+        val eta = snapshot.linearPredictor(x)
         val sigmaX = snapshot.covariance.matVec(x)
         val variance = x dot sigmaX
-        return mean + exploration * sqrt(variance)
+        return snapshot.link.invMean(eta + exploration * sqrt(variance))
     }
 }
