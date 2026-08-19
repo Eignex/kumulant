@@ -6,6 +6,7 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class TreeInternalsTest {
@@ -256,5 +257,13 @@ class TreeInternalsTest {
             assertEquals(1024, config.maxNodes)
             assertEquals(null, config.mtry)
         }
+    }
+
+    @Test
+    fun `tree configs reject bound parameters that disable splitting`() {
+        assertFailsWith<IllegalArgumentException> { RegressionTreeConfig(delta = 1.0) }
+        assertFailsWith<IllegalArgumentException> { RegressionTreeConfig(deltaDecay = 1.5) }
+        assertFailsWith<IllegalArgumentException> { ClassificationTreeConfig(delta = 1.0) }
+        assertFailsWith<IllegalArgumentException> { ClassificationTreeConfig(deltaDecay = 1.5) }
     }
 }
