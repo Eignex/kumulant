@@ -25,8 +25,12 @@ sealed class AbstractStatGroup<S : Stat<*>>(
     }
 
     /**
-     * The group's effective level: the override when one was given, otherwise the *weakest* level any
-     * child uses.
+     * The group's effective level: the one it was built with when a caller supplied it, otherwise the
+     * *weakest* level any child uses.
+     *
+     * The two agree on the schema path, since a schema group builds every child at the level it was
+     * handed. They can diverge only when a caller supplies stats it built itself, which is what the
+     * vararg `Pair` constructor is for, and there the weakest child is the honest answer.
      *
      * Callers introspect this to decide whether reads need external synchronisation, so the weakest
      * child has to govern: the group can promise nothing its least-protected member does not. One
