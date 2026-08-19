@@ -10,6 +10,7 @@ import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
+import kotlin.time.Duration
 
 // Pre-update shift adapters: forward a value derived from the stream's recent history to the
 // delegate. Each operator keeps a tiny per-instance ring (or single-cell) buffer of past values
@@ -46,6 +47,7 @@ private fun requireK(k: Int) = require(k >= 1) { "shift k must be >= 1, got $k" 
 
 internal class LagSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val k: Int) :
     SeriesStat<R>,
+    WindowsInside<R>,
     Stat<R> by delegate {
     init {
         requireK(k)
@@ -76,11 +78,15 @@ internal class LagSeriesStat<R : Result>(private val delegate: SeriesStat<R>, pr
         for (i in 0 until k) ring.store(i, 0.0)
     }
 
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
+        LagSeriesStat(delegate.windowed(duration, slices, concurrency), k)
+
     override fun create(concurrency: Concurrency?): SeriesStat<R> = LagSeriesStat(delegate.create(concurrency), k)
 }
 
 internal class DiffSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val k: Int) :
     SeriesStat<R>,
+    WindowsInside<R>,
     Stat<R> by delegate {
     init {
         requireK(k)
@@ -110,11 +116,15 @@ internal class DiffSeriesStat<R : Result>(private val delegate: SeriesStat<R>, p
         for (i in 0 until k) ring.store(i, 0.0)
     }
 
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
+        DiffSeriesStat(delegate.windowed(duration, slices, concurrency), k)
+
     override fun create(concurrency: Concurrency?): SeriesStat<R> = DiffSeriesStat(delegate.create(concurrency), k)
 }
 
 internal class DerivativeSeriesStat<R : Result>(private val delegate: SeriesStat<R>) :
     SeriesStat<R>,
+    WindowsInside<R>,
     Stat<R> by delegate {
 
     private val mode = delegate.concurrency.monotonicMode()
@@ -148,6 +158,9 @@ internal class DerivativeSeriesStat<R : Result>(private val delegate: SeriesStat
         lastValue.store(0.0)
         lastTimestamp.store(0L)
     }
+
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
+        DerivativeSeriesStat(delegate.windowed(duration, slices, concurrency))
 
     override fun create(concurrency: Concurrency?): SeriesStat<R> = DerivativeSeriesStat(delegate.create(concurrency))
 }

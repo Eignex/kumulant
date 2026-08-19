@@ -9,6 +9,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.core.isInertWeight
+import kotlin.time.Duration
 
 // Throttle / sample adapters. Each wraps an inner stat, intercepts at the update
 // boundary, and drops some updates before they reach the delegate. State per
@@ -63,6 +64,7 @@ internal fun checkRate(rate: Double) = require(rate in 0.0..1.0) { "sample rate 
 
 internal class ThrottleSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val every: Int) :
     SeriesStat<R>,
+    WindowsInside<R>,
     Stat<R> by delegate {
     private val gate = ThrottleGate(every, delegate.concurrency)
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -73,6 +75,9 @@ internal class ThrottleSeriesStat<R : Result>(private val delegate: SeriesStat<R
         gate.reset()
         delegate.reset()
     }
+
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
+        ThrottleSeriesStat(delegate.windowed(duration, slices, concurrency), every)
 
     override fun create(concurrency: Concurrency?): SeriesStat<R> =
         ThrottleSeriesStat(delegate.create(concurrency), every)

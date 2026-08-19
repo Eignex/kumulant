@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.monotonicMode
+import kotlin.time.Duration
 
 // Hysteresis adapter: maps a noisy numeric stream onto a debounced 0.0/1.0 signal.
 //
@@ -35,6 +36,7 @@ internal class HysteresisSeriesStat<R : Result>(
     private val low: Double,
     private val high: Double,
 ) : SeriesStat<R>,
+    WindowsInside<R>,
     Stat<R> by delegate {
 
     init {
@@ -61,6 +63,9 @@ internal class HysteresisSeriesStat<R : Result>(
         delegate.reset()
         state.store(STATE_UNSET)
     }
+
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
+        HysteresisSeriesStat(delegate.windowed(duration, slices, concurrency), low, high)
 
     override fun create(concurrency: Concurrency?): SeriesStat<R> =
         HysteresisSeriesStat(delegate.create(concurrency), low, high)

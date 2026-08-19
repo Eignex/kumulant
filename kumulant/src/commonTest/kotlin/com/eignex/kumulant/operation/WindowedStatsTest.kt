@@ -179,4 +179,18 @@ class WindowedStatsTest {
             SumStat().windowed(duration = 1.nanoseconds, slices = 2)
         }
     }
+
+    @Test
+    fun `a stateful operator inside a window keeps its state across slice rotations`() {
+        // Observations land further apart than one slice, so a per-slice diff would never warm up.
+        val windowed = SumStat().diff(1).windowed(60.seconds)
+        val plain = SumStat().diff(1)
+        var t = 0L
+        repeat(6) {
+            windowed.update(it.toDouble(), t)
+            plain.update(it.toDouble(), t)
+            t += 8_000_000_000L
+        }
+        assertEquals(plain.read(t).sum, windowed.read(t).sum, DELTA)
+    }
 }
