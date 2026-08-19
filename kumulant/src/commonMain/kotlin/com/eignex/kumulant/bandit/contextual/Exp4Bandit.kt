@@ -117,13 +117,21 @@ class Exp4Bandit(
 
     private val weights: DoubleArray = DoubleArray(experts.size) { 1.0 }
     private val lastAdvice: Array<DoubleArray> = Array(experts.size) { DoubleArray(nbrArms) }
-    private var lastPlayDist: DoubleArray = DoubleArray(nbrArms) { 1.0 / nbrArms }
+
+    // The probability each arm was last played with, and how many of its pulls are still awaiting
+    // feedback. The importance weight has to divide by the probability in force when the arm was
+    // drawn; expert weights move on every update, so recomputing it at update time is only correct
+    // when no other feedback arrived in between.
+    private val pendingPropensity = DoubleArray(nbrArms)
+    private val pendingPulls = IntArray(nbrArms)
 
     /** Build the round's play distribution and sample an arm. */
     override fun choose(x: F64VectorView): Int {
         val p = playDistribution(x)
-        lastPlayDist = p
-        return random.sampleFromDistribution(p)
+        val chosen = random.sampleFromDistribution(p)
+        pendingPropensity[chosen] = p[chosen]
+        pendingPulls[chosen]++
+        return chosen
     }
 
     /** Mean of expert distributions at [x] weighted by current weights, blended with
@@ -159,13 +167,25 @@ class Exp4Bandit(
         requireArmIndex(armIndex, nbrArms)
         // Re-evaluate experts in case caller calls update without a prior choose at this x.
         playDistribution(x)
-        val pPlayed = lastPlayDist[armIndex].coerceAtLeast(MIN_PLAY_PROB)
+        val pPlayed = propensityOf(armIndex, x).coerceAtLeast(MIN_PLAY_PROB)
         val gainPlayed = (reward * weight) / pPlayed
         for (i in experts.indices) {
             val expertGain = lastAdvice[i][armIndex] * gainPlayed
             weights[i] *= exp(eta * expertGain)
         }
         weights.renormaliseExponentialWeights()
+    }
+
+    /**
+     * Probability [armIndex] was drawn with, consuming one outstanding pull.
+     *
+     * Falls back to the distribution at [x] when the caller updates an arm it never chose, which is
+     * the best available estimate and what an off-policy caller implicitly asks for.
+     */
+    private fun propensityOf(armIndex: Int, x: F64VectorView): Double {
+        if (pendingPulls[armIndex] <= 0) return playDistribution(x)[armIndex]
+        pendingPulls[armIndex]--
+        return pendingPropensity[armIndex]
     }
 
     /** Current per-expert weights, normalised to sum to 1. */
@@ -192,7 +212,8 @@ class Exp4Bandit(
     /** Reset all expert weights to uniform. */
     override fun reset() {
         for (i in weights.indices) weights[i] = 1.0
-        lastPlayDist = DoubleArray(nbrArms) { 1.0 / nbrArms }
+        pendingPropensity.fill(0.0)
+        pendingPulls.fill(0)
     }
 
     /** Spawn a fresh bandit with the same experts and tunables; weights reset to uniform. */

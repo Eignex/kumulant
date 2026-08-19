@@ -21,9 +21,10 @@ import com.eignex.kumulant.stream.serializedLock
 // each pair is read back out of, so admitting an observation that carries no multiplicity would
 // pair it with a real one later at that update's weight. See [Stat].
 //
-// Concurrency: per-cell atomics with bounded drift (category 1). The ring slot may briefly
-// observe an out-of-order write under contention but the paired stat always sees some
-// (current, past) pair the stream actually emitted.
+// Concurrency: the ring update is serialised behind the level's lock, which is a noop only under
+// Concurrency.None. Claiming the tick, reading the ring slot and storing into it is one indivisible
+// step: split apart, the paired stat receives (current, 0.0), a pair the stream never emitted, which
+// is an unbounded error rather than the bounded drift the concurrent levels promise.
 
 /**
  * Lift a paired stat into a series stat by self-pairing each input with the value seen

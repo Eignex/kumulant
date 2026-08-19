@@ -81,13 +81,21 @@ class Exp3Bandit(
     }
 
     private val weights: DoubleArray = DoubleArray(nbrArms) { 1.0 }
-    private var lastPlayDist: DoubleArray = DoubleArray(nbrArms) { 1.0 / nbrArms }
+
+    // The probability each arm was last played with, and how many of its pulls are still awaiting
+    // feedback. The importance weight has to divide by the probability in force when the arm was
+    // drawn, and the play distribution moves on every update, so recovering it at update time is
+    // only correct when no other arm's feedback arrived in between.
+    private val pendingPropensity = DoubleArray(nbrArms)
+    private val pendingPulls = IntArray(nbrArms)
 
     /** Build the round's play distribution and sample an arm. */
     override fun choose(): Int {
         val p = playDistribution()
-        lastPlayDist = p
-        return random.sampleFromDistribution(p)
+        val chosen = random.sampleFromDistribution(p)
+        pendingPropensity[chosen] = p[chosen]
+        pendingPulls[chosen]++
+        return chosen
     }
 
     /** Current play distribution: weight-normalised softmax blended with uniform [gamma]. */
@@ -111,13 +119,22 @@ class Exp3Bandit(
     /** Fold a `(arm, reward)` observation into the played arm's weight. */
     override fun update(armIndex: Int, value: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
-        // Recomputed rather than reused from choose: one field cannot carry the propensity of
-        // every arm chosen since, so a stale distribution would be wrong more often than a fresh one.
-        playDistribution().also { lastPlayDist = it }
-        val p = lastPlayDist[armIndex].coerceAtLeast(MIN_PLAY_PROB)
+        val p = propensityOf(armIndex).coerceAtLeast(MIN_PLAY_PROB)
         val gain = (value * weight) / p
         weights[armIndex] *= exp(eta * gain)
         weights.renormaliseExponentialWeights()
+    }
+
+    /**
+     * Probability [armIndex] was drawn with, consuming one outstanding pull.
+     *
+     * Falls back to the current distribution when the caller updates an arm it never chose, which is
+     * the best available estimate and what an off-policy caller implicitly asks for.
+     */
+    private fun propensityOf(armIndex: Int): Double {
+        if (pendingPulls[armIndex] <= 0) return playDistribution()[armIndex]
+        pendingPulls[armIndex]--
+        return pendingPropensity[armIndex]
     }
 
     /** Current per-arm weights, normalised to sum to 1. */
@@ -142,7 +159,8 @@ class Exp3Bandit(
     /** Reset all weights to uniform. */
     override fun reset() {
         for (i in weights.indices) weights[i] = 1.0
-        lastPlayDist = DoubleArray(nbrArms) { 1.0 / nbrArms }
+        pendingPropensity.fill(0.0)
+        pendingPulls.fill(0)
     }
 
     /** Spawn a fresh bandit with the same tunables; weights reset. */

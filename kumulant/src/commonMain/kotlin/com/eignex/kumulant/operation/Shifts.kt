@@ -24,9 +24,12 @@ import kotlin.time.Duration
 // stream is read back out of: an observation admitted with no multiplicity would not merely be
 // absorbed, it would be forwarded to the delegate at a later update's weight. See [Stat].
 //
-// Concurrency: per-cell atomics with bounded drift (category 1). Concurrent updates may briefly
-// observe an out-of-order ring slot but never throw; the forwarded value is always some value
-// the stream actually emitted.
+// Concurrency: lag and diff serialise the ring update behind the level's lock, which is a noop only
+// under Concurrency.None. Claiming the tick, reading the ring slot and storing into it is one
+// indivisible step: split apart, a second writer reads a slot its writer has not filled yet and
+// forwards the ring's initial 0.0, an outlier the size of the stream itself rather than the bounded
+// drift the concurrent levels promise. Derivative keeps per-cell atomics (category 1); a torn read
+// there surfaces as a non-positive time delta, which it drops.
 //
 // The wire counterparts live in `schema/Operations.kt` (DiffSeries, LagSeries, DerivativeSeries).
 
