@@ -138,8 +138,12 @@ class DecayingSumStat(
     }
 
     override fun reset() {
-        val current = epochRef.load()
-        epochRef.compareAndSet(current, Epoch(currentTimeNanos(), mode.newDouble(0.0)))
+        // Retried, unlike a single attempt: losing the race to a concurrent rotation would drop the
+        // reset silently and leave the stat carrying everything it had accumulated.
+        while (true) {
+            val current = epochRef.load()
+            if (epochRef.compareAndSet(current, Epoch(currentTimeNanos(), mode.newDouble(0.0)))) return
+        }
     }
 
     override fun create(concurrency: Concurrency?) = DecayingSumStat(weighting, concurrency ?: this.concurrency)
