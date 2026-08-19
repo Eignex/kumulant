@@ -40,7 +40,9 @@ internal fun DenseMatrix.choleskyDowndateInPlace(x: VectorView): Double {
     trsv(this, s, lower = true)
 
     val norm = norm2(DenseVector.wrap(s))
-    if (norm <= 0.0 || norm >= 1.0) return norm
+    // Negated so a NaN norm bails too: falling through would write NaN across the whole factor
+    // and still report success.
+    if (!(norm > 0.0 && norm < 1.0)) return norm
 
     val c = DoubleArray(n)
     var alpha = sqrt(1.0 - norm * norm)
