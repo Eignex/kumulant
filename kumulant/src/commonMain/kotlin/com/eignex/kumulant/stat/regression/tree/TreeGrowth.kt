@@ -286,13 +286,21 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
             if (ticks.load() < config.splitPeriod) return@guarded node
             ticks.store(0L)
 
-            // A merged leaf holds mass in `arm` that no candidate arm ever saw, so this weight can
-            // exceed the candidates'. Sound anyway: rankCandidates gates on the attributed weight.
-            val total = arm.read(0L)
-            val ranked = shape.rank(total, posArms.map { it.read(0L) }, negArms.map { it.read(0L) })
+            // Every candidate partitions the same locally routed observations, so either side of the
+            // first one sums back to exactly what this leaf can attribute. That, not the leaf arm, is
+            // the evidence a split decision rests on: a merge folds mass into the arm that no
+            // candidate ever saw, and a larger n both shrinks the Hoeffding bound and clears the
+            // weight floor on data the comparison never examined.
+            // An audit leaf is only ever born with a non-empty candidate subset (canGrow gates that),
+            // but mtry is caller data, so index nothing without checking.
+            if (candidates.isEmpty()) return@guarded node
+            val posResults = posArms.map { it.read(0L) }
+            val negResults = negArms.map { it.read(0L) }
+            val attributed = shape.mergePayload(posResults[0], negResults[0])
+            val ranked = shape.rank(attributed, posResults, negResults)
             // shouldSplit holds every gate: the weight floor, a scorable winner, and the
             // Hoeffding-versus-tau disjunction.
-            if (!shouldSplit(ranked, total.totalWeights, depth, config)) return@guarded node
+            if (!shouldSplit(ranked, attributed.totalWeights, depth, config)) return@guarded node
 
             // Stash the pre-split aggregate as the new split's carryover so it shows up in subtree
             // aggregates without burdening the hot path. New leaves start empty, so prior-driven

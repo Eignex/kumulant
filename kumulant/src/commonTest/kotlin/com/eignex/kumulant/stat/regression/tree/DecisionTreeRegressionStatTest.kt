@@ -228,4 +228,36 @@ class DecisionTreeRegressionStatTest {
             "node count stuck at $afterMerge after merging a snapshot",
         )
     }
+
+    @Test
+    fun `merged mass does not tighten the hoeffding bound`() {
+        // Two candidates that split the stream equally well, so the margin is zero and the decision
+        // rests entirely on the bound. tau sits between the bound at 10 observations (0.387) and at
+        // 20 (0.274), so counting the donor's merged mass as evidence is the only way to clear it.
+        val candidates = listOf(ThresholdSplit(0, 0.0), ThresholdSplit(0, 0.5))
+        fun newStat(seed: Int) = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = candidates,
+            config = RegressionTreeConfig(
+                splitPeriod = 10,
+                minSamplesSplit = 8.0,
+                minSamplesLeaf = 2.0,
+                tau = 0.30,
+            ),
+            randomSeed = seed,
+        )
+        fun drive(stat: DecisionTreeRegressionStat, n: Int) {
+            repeat(n) { stat.update(feat(if (it % 2 == 0) -1.0 else 1.0), if (it % 2 == 0) -1.0 else 1.0) }
+        }
+
+        val donor = newStat(11)
+        drive(donor, 10)
+        val merged = newStat(12)
+        merged.merge(donor.read(0L))
+        drive(merged, 10)
+
+        val control = newStat(12)
+        drive(control, 10)
+        assertEquals(control.tree().nodeCount, merged.tree().nodeCount)
+    }
 }
