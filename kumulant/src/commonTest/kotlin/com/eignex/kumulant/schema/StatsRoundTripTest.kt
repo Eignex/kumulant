@@ -9,6 +9,7 @@ import com.eignex.kumulant.schema.runtime.*
 import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.anomaly.FeatureRange
 import com.eignex.kumulant.stat.forecast.SeasonalMode
+import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.regression.glm.Penalty
 import com.eignex.kumulant.stat.summary.MaxResult
 import com.eignex.kumulant.stat.summary.MinResult
@@ -18,6 +19,7 @@ import com.eignex.skema.SchemaJson
 import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 // For each modality: build a schema with a config-only entry, encode, decode, materialize, drive a
 // small fixed input through both the original live stat and the rehydrated stat, and compare results.
 class StatsRoundTripTest {
@@ -377,5 +379,13 @@ class StatsRoundTripTest {
         )
         assertEquals(live0[schema.min].min, rebuilt0[StatKey<MinResult>("min")].min)
         assertEquals(live0[schema.max].max, rebuilt0[StatKey<MaxResult>("max")].max)
+    }
+
+    @Test
+    fun `DDSketch spec carries a non-default indexable range through materialize`() {
+        val stat = DDSketch(minIndexableValue = 1e-3, maxIndexableValue = 1e6).materialize(Concurrency.None)
+        val sketch = assertIs<DDSketchStat>(stat)
+        assertEquals(1e-3, sketch.minIndexableValue)
+        assertEquals(1e6, sketch.maxIndexableValue)
     }
 }

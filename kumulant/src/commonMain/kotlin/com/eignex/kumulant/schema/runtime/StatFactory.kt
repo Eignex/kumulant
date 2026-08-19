@@ -197,6 +197,8 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         is DDSketch -> DDSketchStat(
             relativeError = relativeError,
             probabilities = probabilities.toDoubleArray(),
+            minIndexableValue = minIndexableValue,
+            maxIndexableValue = maxIndexableValue,
             concurrency = concurrency,
         )
 
