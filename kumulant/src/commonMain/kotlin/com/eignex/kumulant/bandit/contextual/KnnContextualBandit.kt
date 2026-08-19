@@ -12,6 +12,7 @@ import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.preview
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -158,6 +159,8 @@ class KnnContextualBandit(
     /** Append `(x, reward, weight)` to arm [armIndex]'s history; oldest entry drops if full. */
     override fun update(armIndex: Int, x: VectorView, reward: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
+        // An inert observation must not consume a history slot; the eviction below would drop real data.
+        if (weight.isInertWeight()) return
         val ctxs = historyContexts[armIndex]
         val rs = historyRewards[armIndex]
         val ws = historyWeights[armIndex]
@@ -308,8 +311,9 @@ class KnnContextualBandit(
                 val d = v - b[i]
                 s += d * d
             }
+            // Membership, not value: a stored zero is already covered by the first loop.
             b.forEachStored { i, v ->
-                if (a[i] == 0.0) s += v * v
+                if (i !in a.indices) s += v * v
             }
             return s
         }
