@@ -96,6 +96,12 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
         }
     }
 
+    /**
+     * Approximate merge: extremes combine element-wise and [ExcursionResult.maxExcursion] is the larger
+     * of the two, never a peak-to-trough span spanning both replicas. Two shards of one stream have no
+     * common order, so a cross-replica excursion cannot be shown to have happened peak-then-trough.
+     * A merged snapshot can therefore report `peak - trough` wider than its own `maxExcursion`.
+     */
     override fun merge(values: ExcursionResult) = lock.guarded {
         if (!values.hasObservation) return@guarded // nothing observed there, so nothing to fold in
         val seen = initialized.addAndGet(1L)
