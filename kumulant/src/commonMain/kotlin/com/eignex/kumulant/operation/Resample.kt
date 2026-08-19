@@ -91,11 +91,13 @@ internal class ResampleByTimeStat<R : Result>(
                 seed(value, timestampNanos, weight)
                 return@guarded
             }
-            if (newBucket == cur) {
+            if (newBucket <= cur) {
+                // A late arrival joins the open bucket rather than closing it: its own bucket was
+                // already emitted, and closing on any change would emit the open one twice.
                 accumulate(value, timestampNanos, weight)
                 return@guarded
             }
-            // Bucket changed: flush the closed bucket and seed the new one.
+            // Time moved on: flush the closed bucket and seed the new one.
             flushLocked()
             currentBucket.store(newBucket)
             seed(value, timestampNanos, weight)
@@ -116,10 +118,14 @@ internal class ResampleByTimeStat<R : Result>(
         bucketWeight.store(bucketWeight.load() + weight)
         count.store(count.load() + 1L)
         sum.store(sum.load() + value * weight)
-        last.store(value)
         minimum.store(min(minimum.load(), value))
         maximum.store(max(maximum.load(), value))
-        bucketEndTimestamp.store(timestampNanos)
+        // Guarded against a late arrival: it must not become the bucket's "last" value, nor drag the
+        // bucket's end timestamp backwards.
+        if (timestampNanos >= bucketEndTimestamp.load()) {
+            last.store(value)
+            bucketEndTimestamp.store(timestampNanos)
+        }
     }
 
     private fun flushLocked() {
