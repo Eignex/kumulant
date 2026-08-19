@@ -87,6 +87,14 @@ interface BanditPolicy<R : Result> {
      * their global counters. Default no-op.
      */
     fun removeArm(snapshot: R) {}
+
+    /**
+     * Fresh policy carrying the same configuration but no accumulated global state.
+     * A replica bandit must not share counters with the bandit it was created from,
+     * so any policy holding mutable state has to override this; the default returns
+     * `this` because a stateless policy is safe to share.
+     */
+    fun createPolicy(): BanditPolicy<R> = this
 }
 
 /**
@@ -173,6 +181,7 @@ class UCB1(
 ) : BanditPolicy<BernoulliSumResult> {
     override val arm = BernoulliArm(priorAlpha, priorBeta)
     private var totalSamples: Double = 0.0
+    override fun createPolicy() = UCB1(alpha, arm.priorAlpha, arm.priorBeta)
 
     override fun update(stat: SeriesStat<BernoulliSumResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
@@ -211,6 +220,7 @@ class UCB1Normal(
 ) : BanditPolicy<MomentsResult> {
     override val arm = MomentsArm(priorMean, priorWeight)
     private var nbrArms = 0
+    override fun createPolicy() = UCB1Normal(alpha, arm.priorMean, arm.priorWeight)
 
     override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
         val nj = snapshot.totalWeights
@@ -256,6 +266,7 @@ class UCB1Tuned(
 ) : BanditPolicy<MomentsResult> {
     override val arm = MomentsArm(priorMean, priorWeight)
     private var totalSamples: Double = 0.0
+    override fun createPolicy() = UCB1Tuned(alpha, arm.priorMean, arm.priorWeight)
 
     override fun update(stat: SeriesStat<MomentsResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
@@ -348,6 +359,8 @@ class EpsilonDecreasing(
     }
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
     private var totalSamples: Double = 0.0
+    override fun createPolicy() =
+        EpsilonDecreasing(epsilon, decay, arm.priorMean, arm.priorWeight, arm.priorSquaredDeviations)
 
     override fun update(stat: SeriesStat<WeightedVarianceResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
@@ -412,6 +425,7 @@ class KlUcb(
 ) : BanditPolicy<BernoulliSumResult> {
     override val arm = BernoulliArm(priorAlpha, priorBeta)
     private var totalSamples: Double = 0.0
+    override fun createPolicy() = KlUcb(c, tolerance, arm.priorAlpha, arm.priorBeta)
 
     override fun update(stat: SeriesStat<BernoulliSumResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
@@ -489,6 +503,7 @@ class Moss(
     }
     override val arm = MeanArm(priorMean, priorWeight)
     private var totalSamples: Double = 0.0
+    override fun createPolicy() = Moss(nbrArms, arm.priorMean, arm.priorWeight)
 
     override fun update(stat: SeriesStat<WeightedMeanResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
@@ -539,6 +554,7 @@ class UcbV(
     }
     override val arm = MomentsArm(priorMean, priorWeight)
     private var totalSamples: Double = 0.0
+    override fun createPolicy() = UcbV(zeta, c, arm.priorMean, arm.priorWeight)
 
     override fun update(stat: SeriesStat<MomentsResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)

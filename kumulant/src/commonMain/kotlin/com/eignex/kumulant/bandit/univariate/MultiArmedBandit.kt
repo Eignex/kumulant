@@ -107,7 +107,7 @@ class MultiArmedBandit<R : Result>(
         step.store(0L)
     }
 
-    override fun create(random: Random): MultiArmedBandit<R> = MultiArmedBandit(nbrArms, policy, random)
+    override fun create(random: Random): MultiArmedBandit<R> = MultiArmedBandit(nbrArms, policy.createPolicy(), random)
 
     /**
      * Live per-arm accumulator owned by this bandit. Exposed so callers can compose with

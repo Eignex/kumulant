@@ -114,7 +114,7 @@ class UnivariateBanditTest {
     }
 
     @Test
-    fun `RouletteWheelBandit update accepts custom weight argument`() {
+    fun `RouletteWheelBandit rebalances on the weighted mean of the segment`() {
         val bandit = RouletteWheelBandit(
             nbrArms = 1,
             reactionFactor = 1.0,
@@ -125,7 +125,7 @@ class UnivariateBanditTest {
         )
         bandit.update(0, 2.0, weight = 3.0)
         bandit.update(0, 0.0, weight = 1.0)
-        assertEquals(3.0, bandit.snapshot()[0].weight)
+        assertEquals(1.5, bandit.snapshot()[0].weight)
     }
 
     @Test
