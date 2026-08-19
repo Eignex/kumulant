@@ -67,6 +67,18 @@ interface HoeffdingTreeConfig {
 }
 
 /**
+ * Reject growth tunables that would silently disable splitting.
+ *
+ * `hoeffdingBound` takes `-ln(delta * deltaDecay^depth)`: at `delta >= 1` the bound collapses to zero
+ * or NaN, and every `shouldSplit` comparison against NaN is false, so the tree stops growing with no
+ * error to show for it.
+ */
+internal fun HoeffdingTreeConfig.requireValidBoundParameters() {
+    require(delta > 0.0 && delta < 1.0) { "delta must be in (0, 1), got $delta" }
+    require(deltaDecay > 0.0 && deltaDecay <= 1.0) { "deltaDecay must be in (0, 1], got $deltaDecay" }
+}
+
+/**
  * The growth defaults both VFDT trees use.
  *
  * [HoeffdingTreeConfig] is an interface and cannot carry values, so [RegressionTreeConfig] and

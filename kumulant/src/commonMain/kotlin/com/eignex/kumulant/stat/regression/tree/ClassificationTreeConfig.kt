@@ -21,4 +21,8 @@ data class ClassificationTreeConfig(
     /** Split criterion; ranks candidates by the class impurity they remove. */
     val metric: ClassificationSplitMetric = GiniReduction,
     override val mtry: Int? = null,
-) : HoeffdingTreeConfig
+) : HoeffdingTreeConfig {
+    init {
+        requireValidBoundParameters()
+    }
+}

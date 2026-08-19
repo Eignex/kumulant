@@ -22,4 +22,8 @@ data class RegressionTreeConfig(
     /** Split criterion; ranks candidates by the variance they remove. */
     val metric: SplitMetric = VarianceReduction,
     override val mtry: Int? = null,
-) : HoeffdingTreeConfig
+) : HoeffdingTreeConfig {
+    init {
+        requireValidBoundParameters()
+    }
+}
