@@ -19,6 +19,7 @@ import com.eignex.kumulant.stream.getValue
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
+import kotlin.math.pow
 
 /**
  * Online generalised linear regression by stochastic gradient descent on the canonical
@@ -150,10 +151,13 @@ class StochasticRegressionStat(
                 is Penalty.L2 -> {
                     val eta = requireSgdLearningRate().eval(stepCell.load().toDouble())
                     val etaBias = requireSgdBiasRate().eval(stepCell.load().toDouble())
-                    val factor = 1.0 - eta * weight * p.lambda
-                    require(factor > 0.0) {
-                        "L2 decay factor must stay positive: 1 - eta*weight*lambda = $factor"
+                    // Compounded over the weight rather than linearised: a weight-w observation is
+                    // w unit updates, and 1 - eta*w*lambda goes non-positive on legal caller data.
+                    val decay = 1.0 - eta * p.lambda
+                    require(decay > 0.0) {
+                        "L2 decay factor must stay positive: 1 - eta*lambda = $decay"
                     }
+                    val factor = decay.pow(weight)
                     val scale = casMultiply(requireL2Scale(), factor)
                     val coeff = -eta * weight * negResidual
                     x.forEachStored { i, v -> weightsCell.add(i, coeff * v / scale) }
