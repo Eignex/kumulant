@@ -105,6 +105,7 @@ abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.ban
     abstract fun evaluate(#A, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/BanditPolicy.evaluate|evaluate(1:0;kotlin.Long;kotlin.random.Random){}[0]
     open fun addArm(#A) // com.eignex.kumulant.bandit.univariate/BanditPolicy.addArm|addArm(1:0){}[0]
     open fun createArm(): com.eignex.kumulant.core/SeriesStat<#A> // com.eignex.kumulant.bandit.univariate/BanditPolicy.createArm|createArm(){}[0]
+    open fun createPolicy(): com.eignex.kumulant.bandit.univariate/BanditPolicy<#A> // com.eignex.kumulant.bandit.univariate/BanditPolicy.createPolicy|createPolicy(){}[0]
     open fun removeArm(#A) // com.eignex.kumulant.bandit.univariate/BanditPolicy.removeArm|removeArm(1:0){}[0]
     open fun update(com.eignex.kumulant.core/SeriesStat<#A>, kotlin/Double, kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/BanditPolicy.update|update(com.eignex.kumulant.core.SeriesStat<1:0>;kotlin.Double;kotlin.Double){}[0]
 }
@@ -1591,6 +1592,7 @@ final class com.eignex.kumulant.bandit.univariate/EpsilonDecreasing : com.eignex
         final fun <get-epsilon>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.epsilon.<get-epsilon>|<get-epsilon>(){}[0]
 
     final fun addArm(com.eignex.kumulant.stat.summary/WeightedVarianceResult) // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.addArm|addArm(com.eignex.kumulant.stat.summary.WeightedVarianceResult){}[0]
+    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/EpsilonDecreasing // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.createPolicy|createPolicy(){}[0]
     final fun evaluate(com.eignex.kumulant.stat.summary/WeightedVarianceResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.evaluate|evaluate(com.eignex.kumulant.stat.summary.WeightedVarianceResult;kotlin.Long;kotlin.random.Random){}[0]
     final fun removeArm(com.eignex.kumulant.stat.summary/WeightedVarianceResult) // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.removeArm|removeArm(com.eignex.kumulant.stat.summary.WeightedVarianceResult){}[0]
     final fun update(com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/WeightedVarianceResult>, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.update|update(com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.WeightedVarianceResult>;kotlin.Double;kotlin.Double){}[0]
@@ -1844,6 +1846,7 @@ final class com.eignex.kumulant.bandit.univariate/KlUcb : com.eignex.kumulant.ba
         final fun <get-tolerance>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/KlUcb.tolerance.<get-tolerance>|<get-tolerance>(){}[0]
 
     final fun addArm(com.eignex.kumulant.stat.summary/BernoulliSumResult) // com.eignex.kumulant.bandit.univariate/KlUcb.addArm|addArm(com.eignex.kumulant.stat.summary.BernoulliSumResult){}[0]
+    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/KlUcb // com.eignex.kumulant.bandit.univariate/KlUcb.createPolicy|createPolicy(){}[0]
     final fun evaluate(com.eignex.kumulant.stat.summary/BernoulliSumResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/KlUcb.evaluate|evaluate(com.eignex.kumulant.stat.summary.BernoulliSumResult;kotlin.Long;kotlin.random.Random){}[0]
     final fun removeArm(com.eignex.kumulant.stat.summary/BernoulliSumResult) // com.eignex.kumulant.bandit.univariate/KlUcb.removeArm|removeArm(com.eignex.kumulant.stat.summary.BernoulliSumResult){}[0]
     final fun update(com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/BernoulliSumResult>, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/KlUcb.update|update(com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.BernoulliSumResult>;kotlin.Double;kotlin.Double){}[0]
@@ -1992,6 +1995,7 @@ final class com.eignex.kumulant.bandit.univariate/Moss : com.eignex.kumulant.ban
         final fun <get-nbrArms>(): kotlin/Int // com.eignex.kumulant.bandit.univariate/Moss.nbrArms.<get-nbrArms>|<get-nbrArms>(){}[0]
 
     final fun addArm(com.eignex.kumulant.stat.summary/WeightedMeanResult) // com.eignex.kumulant.bandit.univariate/Moss.addArm|addArm(com.eignex.kumulant.stat.summary.WeightedMeanResult){}[0]
+    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/Moss // com.eignex.kumulant.bandit.univariate/Moss.createPolicy|createPolicy(){}[0]
     final fun evaluate(com.eignex.kumulant.stat.summary/WeightedMeanResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/Moss.evaluate|evaluate(com.eignex.kumulant.stat.summary.WeightedMeanResult;kotlin.Long;kotlin.random.Random){}[0]
     final fun removeArm(com.eignex.kumulant.stat.summary/WeightedMeanResult) // com.eignex.kumulant.bandit.univariate/Moss.removeArm|removeArm(com.eignex.kumulant.stat.summary.WeightedMeanResult){}[0]
     final fun update(com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/WeightedMeanResult>, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/Moss.update|update(com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.WeightedMeanResult>;kotlin.Double;kotlin.Double){}[0]
@@ -2063,19 +2067,19 @@ final class com.eignex.kumulant.bandit.univariate/NormalArm : com.eignex.kumulan
 }
 
 final class com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Int) // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
+    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
 
     final val accumulatedScore // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.accumulatedScore|{}accumulatedScore[0]
         final fun <get-accumulatedScore>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.accumulatedScore.<get-accumulatedScore>|<get-accumulatedScore>(){}[0]
-    final val callCount // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.callCount|{}callCount[0]
-        final fun <get-callCount>(): kotlin/Int // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.callCount.<get-callCount>|<get-callCount>(){}[0]
+    final val totalWeights // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.totalWeights|{}totalWeights[0]
+        final fun <get-totalWeights>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.totalWeights.<get-totalWeights>|<get-totalWeights>(){}[0]
     final val weight // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.weight|{}weight[0]
         final fun <get-weight>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.weight.<get-weight>|<get-weight>(){}[0]
 
     final fun component1(): kotlin/Double // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.component1|component1(){}[0]
     final fun component2(): kotlin/Double // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.component2|component2(){}[0]
-    final fun component3(): kotlin/Int // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.component3|component3(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ...): com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
+    final fun component3(): kotlin/Double // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.component3|component3(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/RouletteWheelArmResult.toString|toString(){}[0]
@@ -2166,6 +2170,7 @@ final class com.eignex.kumulant.bandit.univariate/UCB1 : com.eignex.kumulant.ban
         final fun <get-arm>(): com.eignex.kumulant.bandit.univariate/BernoulliArm // com.eignex.kumulant.bandit.univariate/UCB1.arm.<get-arm>|<get-arm>(){}[0]
 
     final fun addArm(com.eignex.kumulant.stat.summary/BernoulliSumResult) // com.eignex.kumulant.bandit.univariate/UCB1.addArm|addArm(com.eignex.kumulant.stat.summary.BernoulliSumResult){}[0]
+    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/UCB1 // com.eignex.kumulant.bandit.univariate/UCB1.createPolicy|createPolicy(){}[0]
     final fun evaluate(com.eignex.kumulant.stat.summary/BernoulliSumResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/UCB1.evaluate|evaluate(com.eignex.kumulant.stat.summary.BernoulliSumResult;kotlin.Long;kotlin.random.Random){}[0]
     final fun removeArm(com.eignex.kumulant.stat.summary/BernoulliSumResult) // com.eignex.kumulant.bandit.univariate/UCB1.removeArm|removeArm(com.eignex.kumulant.stat.summary.BernoulliSumResult){}[0]
     final fun update(com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/BernoulliSumResult>, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/UCB1.update|update(com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.BernoulliSumResult>;kotlin.Double;kotlin.Double){}[0]
@@ -2180,6 +2185,7 @@ final class com.eignex.kumulant.bandit.univariate/UCB1Normal : com.eignex.kumula
         final fun <get-arm>(): com.eignex.kumulant.bandit.univariate/MomentsArm // com.eignex.kumulant.bandit.univariate/UCB1Normal.arm.<get-arm>|<get-arm>(){}[0]
 
     final fun addArm(com.eignex.kumulant.stat.summary/MomentsResult) // com.eignex.kumulant.bandit.univariate/UCB1Normal.addArm|addArm(com.eignex.kumulant.stat.summary.MomentsResult){}[0]
+    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/UCB1Normal // com.eignex.kumulant.bandit.univariate/UCB1Normal.createPolicy|createPolicy(){}[0]
     final fun evaluate(com.eignex.kumulant.stat.summary/MomentsResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/UCB1Normal.evaluate|evaluate(com.eignex.kumulant.stat.summary.MomentsResult;kotlin.Long;kotlin.random.Random){}[0]
     final fun removeArm(com.eignex.kumulant.stat.summary/MomentsResult) // com.eignex.kumulant.bandit.univariate/UCB1Normal.removeArm|removeArm(com.eignex.kumulant.stat.summary.MomentsResult){}[0]
 }
@@ -2193,6 +2199,7 @@ final class com.eignex.kumulant.bandit.univariate/UCB1Tuned : com.eignex.kumulan
         final fun <get-arm>(): com.eignex.kumulant.bandit.univariate/MomentsArm // com.eignex.kumulant.bandit.univariate/UCB1Tuned.arm.<get-arm>|<get-arm>(){}[0]
 
     final fun addArm(com.eignex.kumulant.stat.summary/MomentsResult) // com.eignex.kumulant.bandit.univariate/UCB1Tuned.addArm|addArm(com.eignex.kumulant.stat.summary.MomentsResult){}[0]
+    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/UCB1Tuned // com.eignex.kumulant.bandit.univariate/UCB1Tuned.createPolicy|createPolicy(){}[0]
     final fun evaluate(com.eignex.kumulant.stat.summary/MomentsResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/UCB1Tuned.evaluate|evaluate(com.eignex.kumulant.stat.summary.MomentsResult;kotlin.Long;kotlin.random.Random){}[0]
     final fun removeArm(com.eignex.kumulant.stat.summary/MomentsResult) // com.eignex.kumulant.bandit.univariate/UCB1Tuned.removeArm|removeArm(com.eignex.kumulant.stat.summary.MomentsResult){}[0]
     final fun update(com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/MomentsResult>, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/UCB1Tuned.update|update(com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.MomentsResult>;kotlin.Double;kotlin.Double){}[0]
@@ -2305,6 +2312,7 @@ final class com.eignex.kumulant.bandit.univariate/UcbV : com.eignex.kumulant.ban
         final fun <get-zeta>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/UcbV.zeta.<get-zeta>|<get-zeta>(){}[0]
 
     final fun addArm(com.eignex.kumulant.stat.summary/MomentsResult) // com.eignex.kumulant.bandit.univariate/UcbV.addArm|addArm(com.eignex.kumulant.stat.summary.MomentsResult){}[0]
+    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/UcbV // com.eignex.kumulant.bandit.univariate/UcbV.createPolicy|createPolicy(){}[0]
     final fun evaluate(com.eignex.kumulant.stat.summary/MomentsResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/UcbV.evaluate|evaluate(com.eignex.kumulant.stat.summary.MomentsResult;kotlin.Long;kotlin.random.Random){}[0]
     final fun removeArm(com.eignex.kumulant.stat.summary/MomentsResult) // com.eignex.kumulant.bandit.univariate/UcbV.removeArm|removeArm(com.eignex.kumulant.stat.summary.MomentsResult){}[0]
     final fun update(com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/MomentsResult>, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/UcbV.update|update(com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.MomentsResult>;kotlin.Double;kotlin.Double){}[0]
