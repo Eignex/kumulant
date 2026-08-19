@@ -23,8 +23,8 @@ data class RouletteWheelArmResult(
     val weight: Double,
     /** Sum of rewards observed for this arm since the last segment rebalance. */
     val accumulatedScore: Double,
-    /** Number of updates observed for this arm since the last segment rebalance. */
-    val callCount: Int,
+    /** Total observation weight recorded for this arm since the last segment rebalance. */
+    val totalWeights: Double,
 ) : Result
 
 /**
@@ -34,7 +34,7 @@ data class RouletteWheelArmResult(
  *
  * After every [segmentLength] [update] calls, weights re-balance via
  * `w_i = w_i · (1 - reactionFactor) + reactionFactor · avgScore_i`, where
- * `avgScore_i` is the mean reward per call of arm `i` over the segment,
+ * `avgScore_i` is the weight-normalised mean reward of arm `i` over the segment,
  * floored at [minWeight] so no arm is permanently extinguished. Batched
  * re-balance (rather than per-observation) is useful when rewards are noisy
  * and continuous updates would thrash. Only meaningful for
@@ -51,7 +51,7 @@ data class RouletteWheelArmResult(
  * operators matters more than fine-grained per-step tracking.
  *
  * **Arms:** indexless, `nbrArms` fixed at construction; per-arm state is
- * `(weight, segment score sum, segment call count)`.
+ * `(weight, segment score sum, segment weight sum)`.
  *
  * **Memory:** O(nbrArms); three parallel arrays plus a segment counter.
  *
@@ -93,7 +93,7 @@ class RouletteWheelBandit(
 
     private val weights = DoubleArray(nbrArms) { initialWeight }
     private val accumulatedScores = DoubleArray(nbrArms)
-    private val callCounts = IntArray(nbrArms)
+    private val segmentWeights = DoubleArray(nbrArms)
     private var picksThisSegment = 0
 
     override fun choose(): Int {
@@ -121,7 +121,7 @@ class RouletteWheelBandit(
         // Zero weight means "ignore this observation" library-wide.
         if (weight.isInertWeight()) return
         accumulatedScores[armIndex] += value * weight
-        callCounts[armIndex]++
+        segmentWeights[armIndex] += weight
         picksThisSegment++
         if (picksThisSegment >= segmentLength) {
             rebalance()
@@ -131,22 +131,22 @@ class RouletteWheelBandit(
 
     private fun rebalance() {
         for (i in weights.indices) {
-            if (callCounts[i] > 0) {
-                val avg = accumulatedScores[i] / callCounts[i]
+            if (segmentWeights[i] > 0.0) {
+                val avg = accumulatedScores[i] / segmentWeights[i]
                 weights[i] = (weights[i] * (1.0 - reactionFactor) + reactionFactor * avg)
                     .coerceAtLeast(minWeight)
             }
             accumulatedScores[i] = 0.0
-            callCounts[i] = 0
+            segmentWeights[i] = 0.0
         }
     }
 
     override fun snapshot(): List<RouletteWheelArmResult> =
-        List(nbrArms) { RouletteWheelArmResult(weights[it], accumulatedScores[it], callCounts[it]) }
+        List(nbrArms) { RouletteWheelArmResult(weights[it], accumulatedScores[it], segmentWeights[it]) }
 
     /**
      * Heuristic merge: weights are arithmetically averaged across replicas; scores and
-     * call counts are summed (treating the other replica's segment as additional
+     * segment weights are summed (treating the other replica's segment as additional
      * unobserved data). Roulette-wheel adaptive selection has no canonical merge
      * semantics - the segment-based rebalance is inherently sequential - so use this
      * for "roughly combine two parallel runs" rather than for principled aggregation.
@@ -156,7 +156,7 @@ class RouletteWheelBandit(
         for (i in 0 until nbrArms) {
             weights[i] = ((weights[i] + other[i].weight) / 2.0).coerceAtLeast(minWeight)
             accumulatedScores[i] += other[i].accumulatedScore
-            callCounts[i] += other[i].callCount
+            segmentWeights[i] += other[i].totalWeights
         }
     }
 
@@ -164,7 +164,7 @@ class RouletteWheelBandit(
         for (i in 0 until nbrArms) {
             weights[i] = initialWeight
             accumulatedScores[i] = 0.0
-            callCounts[i] = 0
+            segmentWeights[i] = 0.0
         }
         picksThisSegment = 0
     }
