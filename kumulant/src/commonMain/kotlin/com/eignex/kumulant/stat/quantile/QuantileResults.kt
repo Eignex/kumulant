@@ -156,3 +156,6 @@ internal const val PARAMETER_MATCH_TOLERANCE: Double = 1e-9
  * after division, not whether two configurations match.
  */
 internal const val BIN_ALIGNMENT_TOLERANCE: Double = 1e-9
+
+/** No bucket of the receiving layout matches the incoming edges. */
+internal const val NO_BIN: Int = -1

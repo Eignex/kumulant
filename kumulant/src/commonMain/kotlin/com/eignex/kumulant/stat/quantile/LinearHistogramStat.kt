@@ -56,8 +56,8 @@ class LinearHistogramStat(
     private val overflow = mode.newDouble(0.0)
     private val bins = ArrayBins(mode)
 
-    // Shared by update and merge: the two paths have to agree exactly or a merged bucket lands
-    // somewhere a directly-observed value of the same magnitude would not.
+    // Only the update path: merge resolves its bucket from the emitted edge instead, because
+    // `lowerBound + i * binWidth` divided back by binWidth routinely lands just under `i`.
     private fun binOf(value: Double): Int = ((value - lowerBound) / binWidth).toInt().coerceIn(0, binCount - 1)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -87,6 +87,7 @@ class LinearHistogramStat(
             if (w <= 0.0) continue
             val lo = values.lowerBounds[i]
             val hi = values.upperBounds[i]
+            val aligned = if (lo.isFinite() && hi.isFinite()) alignedBin(lo, hi) else NO_BIN
             when {
                 !lo.isFinite() && hi == lowerBound -> {
                     underflow.add(w)
@@ -96,8 +97,8 @@ class LinearHistogramStat(
                     overflow.add(w)
                 }
 
-                lo.isFinite() && hi.isFinite() && matchesLayout(lo, hi) -> {
-                    bins.add(binOf(lo), w)
+                aligned >= 0 -> {
+                    bins.add(aligned, w)
                 }
 
                 else -> {
@@ -112,12 +113,14 @@ class LinearHistogramStat(
         }
     }
 
-    private fun matchesLayout(lo: Double, hi: Double): Boolean {
+    /** Index this bucket was emitted from, or [NO_BIN] when its edges do not match our layout. */
+    private fun alignedBin(lo: Double, hi: Double): Int {
         val span = hi - lo
-        if (abs(span - binWidth) > binWidth * 1e-12) return false
+        if (abs(span - binWidth) > binWidth * 1e-12) return NO_BIN
         val ratio = (lo - lowerBound) / binWidth
         val rounded = round(ratio)
-        return abs(ratio - rounded) < BIN_ALIGNMENT_TOLERANCE && rounded >= 0.0 && rounded < binCount
+        if (abs(ratio - rounded) >= BIN_ALIGNMENT_TOLERANCE || rounded < 0.0 || rounded >= binCount) return NO_BIN
+        return rounded.toInt()
     }
 
     override fun reset() {
