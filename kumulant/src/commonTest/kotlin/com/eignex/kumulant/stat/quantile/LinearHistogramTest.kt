@@ -109,4 +109,13 @@ class LinearHistogramTest {
         assertFailsWith<IllegalArgumentException> { LinearHistogramStat(0.0, 10.0, 0) }
         assertFailsWith<IllegalArgumentException> { LinearHistogramStat(0.0, 10.0, -1) }
     }
+
+    @Test
+    fun `merging a snapshot reproduces the source histogram`() {
+        val source = LinearHistogramStat(0.0, 1.0, 100)
+        for (v in listOf(0.295, 0.585, 0.135, 0.905)) source.update(v)
+        val target = LinearHistogramStat(0.0, 1.0, 100)
+        target.merge(source.read(0L))
+        assertEquals(source.read(0L), target.read(0L))
+    }
 }
