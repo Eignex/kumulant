@@ -6,7 +6,9 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.kumulant.stream.serializedLock
 
 // withSelfLag lifts a PairedStat<R> into a SeriesStat<R> by self-pairing each input
 // with the value seen k updates ago. The first k updates only warm the ring buffer
@@ -41,16 +43,21 @@ internal class WithSelfLagSeriesStat<R : Result>(private val delegate: PairedSta
     }
 
     private val mode = delegate.concurrency.monotonicMode()
+    private val lock = delegate.concurrency.serializedLock()
     private val tick = mode.newLong(0L)
     private val ring = mode.newDoubleArray(k)
 
+    // Serialised: a torn read of the ring would pair the current value with the initial 0.0, which
+    // the stream never emitted, and feed that pair into the delegate as a real observation.
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
-        val n = tick.addAndGet(1L)
-        val slot = ((n - 1L) % k).toInt()
-        val past = ring.load(slot)
-        ring.store(slot, value)
-        if (n > k) delegate.update(x = value, y = past, timestampNanos = timestampNanos, weight = weight)
+        lock.guarded {
+            val n = tick.addAndGet(1L)
+            val slot = ((n - 1L) % k).toInt()
+            val past = ring.load(slot)
+            ring.store(slot, value)
+            if (n > k) delegate.update(x = value, y = past, timestampNanos = timestampNanos, weight = weight)
+        }
     }
 
     override fun reset() {
