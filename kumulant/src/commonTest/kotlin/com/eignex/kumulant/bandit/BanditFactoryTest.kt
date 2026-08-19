@@ -11,6 +11,7 @@ import com.eignex.kumulant.bandit.univariate.BoltzmannSpec
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
 import com.eignex.kumulant.bandit.univariate.Exp3Spec
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
+import com.eignex.kumulant.bandit.univariate.MossSpec
 import com.eignex.kumulant.bandit.univariate.MultiArmedSpec
 import com.eignex.kumulant.bandit.univariate.NormalArm
 import com.eignex.kumulant.bandit.univariate.NormalGammaPosterior
@@ -24,6 +25,7 @@ import kotlinx.serialization.json.Json
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class BanditFactoryTest {
@@ -135,5 +137,12 @@ class BanditFactoryTest {
         val encoded = json.encodeToString(UnivariateBanditSpec.serializer(), spec)
         val decoded = json.decodeFromString(UnivariateBanditSpec.serializer(), encoded)
         assertEquals(spec, decoded)
+    }
+
+    @Test
+    fun `MultiArmedSpec rejects a Moss policy with a different arm count`() {
+        assertFailsWith<IllegalArgumentException> {
+            MultiArmedSpec(nbrArms = 3, policy = MossSpec(nbrArms = 5)).materialize()
+        }
     }
 }

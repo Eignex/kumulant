@@ -94,11 +94,17 @@ fun <R : Result> BanditPolicySpec<R>.materialize(): BanditPolicy<R> = when (this
 }
 
 /** Build a live [UnivariateBandit] from its spec. */
-fun MultiArmedSpec<*>.materialize(random: Random = Random.Default): MultiArmedBandit<Result> = MultiArmedBandit(
-    nbrArms = nbrArms,
-    policy = policy.materialize() as BanditPolicy<Result>,
-    random = random,
-)
+fun MultiArmedSpec<*>.materialize(random: Random = Random.Default): MultiArmedBandit<Result> {
+    val moss = policy as? MossSpec
+    require(moss == null || moss.nbrArms == nbrArms) {
+        "MossSpec.nbrArms (${moss?.nbrArms}) must match MultiArmedSpec.nbrArms ($nbrArms)"
+    }
+    return MultiArmedBandit(
+        nbrArms = nbrArms,
+        policy = policy.materialize() as BanditPolicy<Result>,
+        random = random,
+    )
+}
 
 /** Build a live [RouletteWheelBandit] from its spec. */
 fun RouletteWheelSpec.materialize(random: Random = Random.Default): RouletteWheelBandit =
