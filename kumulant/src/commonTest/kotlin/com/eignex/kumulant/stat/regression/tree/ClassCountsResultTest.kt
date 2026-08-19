@@ -44,4 +44,11 @@ class ClassCountsResultTest {
         assertEquals(0.0, r.counts[1], DELTA)
         assertEquals(3.0, r.counts[2], DELTA)
     }
+
+    @Test
+    fun `subtractCC inverts mergeCC when a class count is negative`() {
+        val a = ClassCountsResult(2, doubleArrayOf(6.0, -5.0))
+        val b = ClassCountsResult(2, doubleArrayOf(4.0, 2.0))
+        assertEquals(a, subtractCC(mergeCC(a, b), b))
+    }
 }
