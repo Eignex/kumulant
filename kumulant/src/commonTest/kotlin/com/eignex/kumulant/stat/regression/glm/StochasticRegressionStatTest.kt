@@ -147,4 +147,16 @@ class StochasticRegressionStatTest {
         assertTrue(abs(l2.weights[0]) <= abs(no.weights[0]) + 0.05)
         assertTrue(abs(l2.weights[1]) <= abs(no.weights[1]) + 0.05)
     }
+
+    @Test
+    fun `l2 accepts a large observation weight`() {
+        val stat = StochasticRegressionStat(
+            featureSize = 2,
+            optimizer = Sgd(ConstantRate(0.01)),
+            penalty = Penalty.L2(0.1),
+        )
+        stat.update(DenseVector.of(doubleArrayOf(1.0, 0.5)), 1.0, 0L, weight = 1000.0)
+        val w = stat.read().weights.toDoubleArray()
+        for (v in w) assertTrue(v.isFinite(), "weight $v not finite")
+    }
 }
