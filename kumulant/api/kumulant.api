@@ -3034,10 +3034,7 @@ public final class com/eignex/kumulant/schema/runtime/StatGroup : com/eignex/kum
 
 public abstract class com/eignex/kumulant/schema/runtime/StatSchema : com/eignex/skema/Schema {
 	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	protected final fun discrete (Lcom/eignex/kumulant/schema/spec/DiscreteStatSpec;)Lkotlin/properties/PropertyDelegateProvider;
-	public final fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	protected final fun group (Lcom/eignex/kumulant/schema/runtime/StatSchema;)Lkotlin/properties/PropertyDelegateProvider;
 	protected final fun paired (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;)Lkotlin/properties/PropertyDelegateProvider;
 	protected final fun regression (Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;)Lkotlin/properties/PropertyDelegateProvider;

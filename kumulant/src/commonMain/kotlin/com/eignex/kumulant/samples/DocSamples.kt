@@ -53,11 +53,11 @@ internal fun perStatConcurrency() {
  * reading results back by typed [StatKey].
  */
 internal fun schemaDeclarationAndRead() {
-    val telemetry = object : StatSchema(concurrency = Concurrency.Strict) {
+    val telemetry = object : StatSchema() {
         val latencyMean by series(Mean)
         val errorRate by series(Rate)
     }
-    val group = StatGroup(telemetry)
+    val group = StatGroup(telemetry, concurrency = Concurrency.Strict)
     group.update(42.0)
     val results = group.read()
     println(results[telemetry.latencyMean].mean)

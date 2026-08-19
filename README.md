@@ -117,20 +117,20 @@ the snapshots in as they arrive. See the
 family.
 
 ```kotlin
-object Telemetry : StatSchema(concurrency = Concurrency.Strict) {
+object Telemetry : StatSchema() {
     val latencyMean by series(Mean)
     val latencyP99 by series(DDSketch(probabilities = listOf(0.99)))
     val errorRate by series(Rate)
     val uniqueUsers by discrete(HyperLogLog(precision = 14))
 }
 
-val latencies = StatGroup(Telemetry)
+val latencies = StatGroup(Telemetry, concurrency = Concurrency.Strict)
 latencies.update(value = 12.7)
 val p99 = latencies.read()[Telemetry.latencyP99]
 
 // A schema can mix modalities, and each one is driven by its own group,
 // because a scalar observation and a discrete key are not the same input.
-val users = DiscreteStatGroup(Telemetry)
+val users = DiscreteStatGroup(Telemetry, concurrency = Concurrency.Strict)
 users.update(value = userIdHash)
 val distinctUsers = users.read()[Telemetry.uniqueUsers]
 ```
