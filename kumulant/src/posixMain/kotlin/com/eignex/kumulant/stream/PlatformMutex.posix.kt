@@ -17,17 +17,19 @@ import platform.posix.pthread_mutexattr_init
 import platform.posix.pthread_mutexattr_settype
 import platform.posix.pthread_mutexattr_t
 import kotlin.experimental.ExperimentalNativeApi
+import kotlin.native.Platform
 import kotlin.native.ref.createCleaner
 
 internal actual class PlatformMutex actual constructor() : Mutex {
     private val arena = Arena()
 
-    // Error-checking rather than the default type. A thread that re-acquires a lock it already holds
-    // is a defect either way, but a default mutex answers it by hanging with no stack to read, on the
-    // only targets that do not tolerate it. This turns that into a thrown error naming the mistake.
+    // Error-checking in a debug binary, the default type in a release one. Re-acquiring a lock this
+    // thread already holds is a defect either way, and a default mutex answers it by hanging with no
+    // stack to read; error-checking turns that into a thrown error naming the mistake. A release
+    // build pays nothing for a check whose whole value is at development time.
     private val attr = arena.alloc<pthread_mutexattr_t>().also {
         pthread_mutexattr_init(it.ptr)
-        pthread_mutexattr_settype(it.ptr, ERRORCHECK_MUTEX_TYPE)
+        if (Platform.isDebugBinary) pthread_mutexattr_settype(it.ptr, ERRORCHECK_MUTEX_TYPE)
     }
 
     private val mutex = arena.alloc<pthread_mutex_t>().also {
