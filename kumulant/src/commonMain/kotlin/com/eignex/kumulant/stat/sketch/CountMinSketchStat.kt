@@ -148,7 +148,7 @@ class CountMinSketchStat(
         val w = weight.toCounterStep()
         for (row in 0 until depth) {
             val idx = (hasher.mix(value xor rowSalts[row]) and mask).toInt()
-            counters.add(row * width + idx, w)
+            counters.addSaturating(row * width + idx, w)
         }
         totalSeen.add(1L)
     }
@@ -166,11 +166,9 @@ class CountMinSketchStat(
         require(values.counters.size == counterCount) {
             "Cannot merge CountMinSketchStat: expected $counterCount counters, got ${values.counters.size}"
         }
-        // Unclamped by design: MAX_COUNTER_STEP bounds one increment, never the running total, which
-        // an ordinary update stream grows past the same bound just as merging does.
         for (i in 0 until counterCount) {
             val incoming = values.counters[i]
-            if (incoming != 0L) counters.add(i, incoming)
+            if (incoming != 0L) counters.addSaturating(i, incoming)
         }
         totalSeen.add(values.totalSeen)
     }
