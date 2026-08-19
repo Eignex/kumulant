@@ -54,7 +54,13 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) : Sch
 
     protected fun <R : Result> discrete(config: DiscreteStatSpec<R>) = register(config) { StatKey<R>(it) }
 
-    /** Nest a sub-schema as a [GroupStatSpec]; materialization recurses at the parent's group construction. */
+    /**
+     * Nest a sub-schema as a [GroupStatSpec]; materialization recurses at the parent's group construction.
+     *
+     * The nested schema contributes its stats, never its [concurrency]: that is a deployment knob applied
+     * at materialization, not part of the wire description, so the whole tree materializes at whatever
+     * concurrency the parent is materialized with. Set it on the outermost schema.
+     */
     protected fun <T : StatSchema> group(nestedSchema: T) =
         register(GroupStatSpec(nestedSchema.statSchemaDef().stats)) { GroupStatKey(it, nestedSchema) }
 }
