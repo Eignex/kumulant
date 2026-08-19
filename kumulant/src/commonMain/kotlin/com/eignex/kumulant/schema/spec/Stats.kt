@@ -253,6 +253,10 @@ data class DDSketch(
     val relativeError: Double = 0.01,
     /** Quantiles to evaluate at read time. */
     val probabilities: List<Double> = listOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
+    /** Smallest magnitude given its own bin; smaller non-zero values fold into the bottom bin. */
+    val minIndexableValue: Double = 1e-9,
+    /** Largest magnitude given its own bin; larger values fold into the top bin. */
+    val maxIndexableValue: Double = 1e12,
 ) : SeriesStatSpec<SketchResult>
 
 /** Spec for `FrugalQuantileStat`: O(1)-memory single-quantile estimator. */
