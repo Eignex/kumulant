@@ -198,7 +198,7 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
     /** Snapshot merge: the same rules as [mergeTree], but the other side is an immutable snapshot. */
     fun <R : Any, RS : R> mergeSnapshot(other: R, results: TreeResultShape<S, R, RS, P>) {
         splitLock.guarded {
-            root = mergeNodeWithResult(root, other, results)
+            root = mergeNodeWithResult(root, other, results, depth = 0)
             nbrNodes.store(countNodes(root))
         }
     }
@@ -331,7 +331,12 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
         return a
     }
 
-    private fun <R : Any, RS : R> mergeNodeWithResult(a: N, b: R, results: TreeResultShape<S, R, RS, P>): N {
+    private fun <R : Any, RS : R> mergeNodeWithResult(
+        a: N,
+        b: R,
+        results: TreeResultShape<S, R, RS, P>,
+        depth: Int,
+    ): N {
         val bSplit = results.asSplitResult(b)
         val aArm = shape.leafArm(a)
         if (aArm != null) {
@@ -339,15 +344,15 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
                 aArm.merge(results.valueOf(b))
                 return a
             }
-            val cloned = cloneFromResult(b, results)
+            val cloned = cloneFromResult(b, results, depth)
             val clonedSplit = shape.asSplitNode(cloned) ?: return cloned
             foldIntoCarryover(clonedSplit, aArm.read(0L))
             return cloned
         }
         val aSplit = shape.asSplitNode(a) ?: return a
         if (bSplit != null && shape.splitOf(aSplit) == results.splitOf(bSplit)) {
-            shape.setPos(aSplit, mergeNodeWithResult(shape.posOf(aSplit), results.posOf(bSplit), results))
-            shape.setNeg(aSplit, mergeNodeWithResult(shape.negOf(aSplit), results.negOf(bSplit), results))
+            shape.setPos(aSplit, mergeNodeWithResult(shape.posOf(aSplit), results.posOf(bSplit), results, depth + 1))
+            shape.setNeg(aSplit, mergeNodeWithResult(shape.negOf(aSplit), results.negOf(bSplit), results, depth + 1))
             // b's value carries the full subtree aggregate; the child recursion already folded the
             // structurally-aligned portion. Pull only the residual, what b's value holds beyond the sum
             // of its children, into a's carryover.
@@ -367,16 +372,18 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
      * snapshot's shape whatever it is. A snapshot normally comes from a tree that already respected its own
      * `maxDepth`, so the two only diverge when the two configs differ.
      */
-    private fun <R : Any, RS : R> cloneFromResult(node: R, results: TreeResultShape<S, R, RS, P>): N {
+    private fun <R : Any, RS : R> cloneFromResult(node: R, results: TreeResultShape<S, R, RS, P>, depth: Int): N {
         nbrNodes.addAndFetch(1)
         val split = results.asSplitResult(node)
         if (split == null) {
-            val arm = shape.emptyArm()
-            arm.merge(results.valueOf(node))
-            return shape.makeTerminalLeaf(arm)
+            // newLeaf, not makeTerminalLeaf: a cloned leaf that cannot audit would freeze the merged
+            // tree at the shape of whatever snapshot it adopted.
+            val leaf = newLeaf(depth)
+            shape.leafArm(leaf)?.merge(results.valueOf(node))
+            return leaf
         }
-        val pos = cloneFromResult(results.posOf(split), results)
-        val neg = cloneFromResult(results.negOf(split), results)
+        val pos = cloneFromResult(results.posOf(split), results, depth + 1)
+        val neg = cloneFromResult(results.negOf(split), results, depth + 1)
         // Re-establish any orphan aggregate the snapshot encodes by comparing the recorded
         // value against the sum of the cloned children's aggregates.
         val residual = residualOf(split, results)

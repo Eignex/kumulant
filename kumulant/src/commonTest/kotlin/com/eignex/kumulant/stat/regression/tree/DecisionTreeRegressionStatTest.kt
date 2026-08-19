@@ -195,4 +195,37 @@ class DecisionTreeRegressionStatTest {
         val leaf = replica.tree().rootNode() as RegressionLeafNode
         assertEquals(Concurrency.Strict, leaf.arm.concurrency)
     }
+
+    @Test
+    fun `a tree merged from a snapshot can still grow`() {
+        val candidates = listOf(ThresholdSplit(0, -0.5), ThresholdSplit(0, 0.0), ThresholdSplit(0, 0.5))
+        fun newStat(seed: Int) = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = candidates,
+            config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0, tau = 1.0),
+            randomSeed = seed,
+        )
+        val xs = listOf(-1.0, -0.2, 0.2, 1.0)
+        fun drive(stat: DecisionTreeRegressionStat, n: Int) {
+            repeat(n) {
+                val x = xs[it % xs.size]
+                stat.update(feat(x), x)
+            }
+        }
+
+        val worker = newStat(4)
+        drive(worker, 8)
+        val accumulator = newStat(5)
+        accumulator.merge(worker.read(0L))
+        val afterMerge = accumulator.tree().nodeCount
+        drive(accumulator, 400)
+
+        val control = newStat(5)
+        drive(control, 400)
+        assertTrue(control.tree().nodeCount > 1, "control tree never grew, the fixture cannot detect a freeze")
+        assertTrue(
+            accumulator.tree().nodeCount > afterMerge,
+            "node count stuck at $afterMerge after merging a snapshot",
+        )
+    }
 }
