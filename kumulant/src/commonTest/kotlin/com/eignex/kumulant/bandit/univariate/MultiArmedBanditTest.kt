@@ -115,4 +115,14 @@ class MultiArmedBanditTest {
         val origTrials = original.armResult(0).trials
         assertTrue(origTrials > freshTrials)
     }
+
+    @Test
+    fun `create yields a replica whose updates leave the parent score alone`() {
+        val parent = MultiArmedBandit(nbrArms = 3, policy = UCB1(), random = Random(3))
+        for (i in 0 until 3) parent.update(i, 1.0)
+        val before = parent.evaluate(0)
+        val child = parent.create(Random(4))
+        repeat(100) { child.update(0, 1.0) }
+        assertEquals(before, parent.evaluate(0))
+    }
 }
