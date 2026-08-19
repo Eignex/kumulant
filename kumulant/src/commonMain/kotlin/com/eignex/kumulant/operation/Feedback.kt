@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.IndexedResult
 import com.eignex.kumulant.core.PairedStat
@@ -79,7 +79,7 @@ internal class FeedbackVectorStat<P : Result, I : Result>(
 ) : VectorStat<I>,
     Stat<I> by inner {
 
-    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
         primary.update(vector, timestampNanos, weight)
         val snapshot = primary.read(timestampNanos)
         val transformed = DoubleArray(vector.size) { i ->
@@ -117,7 +117,7 @@ internal class FeedbackRegressionStat<P : Result, R : Result>(
 
     override val featureSize: Int get() = inner.featureSize
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         primary.update(x, timestampNanos, weight)
         val snapshot = primary.read(timestampNanos)
         val transformed = DoubleArray(x.size) { i ->

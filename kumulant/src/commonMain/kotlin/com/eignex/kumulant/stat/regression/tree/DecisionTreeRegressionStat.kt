@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
@@ -71,9 +71,9 @@ class DecisionTreeRegressionStat(
     // Resolved per instance, not captured in the constructor default: create() has to be able
     // to rebind the default arm to the replica's concurrency.
     private val armFactory: () -> SeriesStat<WeightedVarianceResult> = leafArmFactory ?: { VarianceStat(concurrency) }
-    private var tree: RegressionTree<VectorView> = newTree()
+    private var tree: RegressionTree<F64VectorView> = newTree()
 
-    private fun newTree(): RegressionTree<VectorView> = RegressionTree(
+    private fun newTree(): RegressionTree<F64VectorView> = RegressionTree(
         splitCandidates,
         config,
         concurrency,
@@ -81,7 +81,7 @@ class DecisionTreeRegressionStat(
         seedRng.nextInt(),
     )
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         // Return before touching the tree: a zero-weight call would still advance the leaves'
         // observationsSinceLastCheck and shift the split-audit cadence.
@@ -115,5 +115,5 @@ class DecisionTreeRegressionStat(
     )
 
     /** Live underlying tree. Use for inspection / pretty-printing. */
-    fun tree(): RegressionTree<VectorView> = tree
+    fun tree(): RegressionTree<F64VectorView> = tree
 }

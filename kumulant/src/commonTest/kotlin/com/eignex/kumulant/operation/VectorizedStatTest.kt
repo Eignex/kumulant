@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.SparseVector
+import com.eignex.koblas.F64SparseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.summary.CountStat
@@ -81,8 +81,8 @@ class VectorizedStatTest {
     @Test
     fun `skipZeros with sparse input only touches stored entries`() {
         val stat = VectorizedStat(dimensions = 5, template = CountStat(), skipZeros = true)
-        stat.update(SparseVector.of(size = 5, indices = intArrayOf(1, 3), values = doubleArrayOf(2.5, 7.0)))
-        stat.update(SparseVector.of(size = 5, indices = intArrayOf(3), values = doubleArrayOf(1.0)))
+        stat.update(F64SparseVector.of(size = 5, indices = intArrayOf(1, 3), values = doubleArrayOf(2.5, 7.0)))
+        stat.update(F64SparseVector.of(size = 5, indices = intArrayOf(3), values = doubleArrayOf(1.0)))
         val r = stat.read()
         assertEquals(0.0, r.results[0].sum, DELTA)
         assertEquals(1.0, r.results[1].sum, DELTA)

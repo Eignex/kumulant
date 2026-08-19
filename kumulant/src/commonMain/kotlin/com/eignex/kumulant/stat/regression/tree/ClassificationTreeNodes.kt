@@ -2,7 +2,7 @@
 
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.SeriesStat
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicLong
@@ -14,7 +14,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  */
 sealed interface ClassificationNode {
     /** Walk to the leaf this row resolves to. */
-    fun findLeaf(row: VectorView): ClassificationLeafNode
+    fun findLeaf(row: F64VectorView): ClassificationLeafNode
 }
 
 /** Split mirror; predicate routes to [pos] or [neg]; [carryover] absorbs orphan
@@ -35,7 +35,7 @@ class ClassificationSplitNode(
     @Volatile
     var carryover: SeriesStat<ClassCountsResult>? = carryover
 
-    override fun findLeaf(row: VectorView): ClassificationLeafNode =
+    override fun findLeaf(row: F64VectorView): ClassificationLeafNode =
         if (split.direction(row)) pos.findLeaf(row) else neg.findLeaf(row)
 }
 
@@ -43,7 +43,7 @@ class ClassificationSplitNode(
 sealed class ClassificationLeafNode : ClassificationNode {
     /** The leaf's class-count accumulator. */
     abstract val arm: SeriesStat<ClassCountsResult>
-    final override fun findLeaf(row: VectorView): ClassificationLeafNode = this
+    final override fun findLeaf(row: F64VectorView): ClassificationLeafNode = this
 }
 
 /** Frozen leaf; no further splits considered. */

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
@@ -88,7 +88,7 @@ class RandomForestClassifierStat(
         randomSeed = seedRng.nextInt(),
     )
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         // isInertWeight rather than isNotPositiveWeight: a class count subtracts exactly, so a negative
         // weight is a real downdate here, exactly as it is for the regression forest. Returning before
@@ -163,7 +163,7 @@ data class ForestClassificationResult(
     }
 
     /** Average per-class probability across trees for the leaf each tree routes [x] to. */
-    fun probabilities(x: VectorView): DoubleArray {
+    fun probabilities(x: F64VectorView): DoubleArray {
         val acc = DoubleArray(numClasses)
         for (t in trees) {
             val p = t.probabilities(x)
@@ -175,7 +175,7 @@ data class ForestClassificationResult(
     }
 
     /** Argmax over [probabilities]. */
-    fun predict(x: VectorView): Int {
+    fun predict(x: F64VectorView): Int {
         val p = probabilities(x)
         return argMaxOf(numClasses) { k -> p[k] }
     }

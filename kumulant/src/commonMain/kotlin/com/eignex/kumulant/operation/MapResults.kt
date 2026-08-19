@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -89,7 +89,7 @@ internal class MapResultVectorStat<R1 : Result, R2 : Result>(
     private val reverse: (R2) -> R1,
 ) : VectorStat<R2>,
     Stat<R2> by MappedResultCore(delegate, forward, reverse) {
-    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) =
+    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) =
         delegate.update(vector, timestampNanos, weight)
     override fun create(concurrency: Concurrency?): VectorStat<R2> =
         MapResultVectorStat(delegate.create(concurrency), forward, reverse)

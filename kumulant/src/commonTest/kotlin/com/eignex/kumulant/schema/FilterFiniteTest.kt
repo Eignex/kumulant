@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.schema.expr.X
 import com.eignex.kumulant.schema.expr.isFinite
@@ -74,11 +74,11 @@ class FilterFiniteTest {
         // The modality where this matters most, because a poisoned coefficient never recovers: every
         // later gradient step multiplies the NaN forward.
         for (bad in NON_FINITE) {
-            val good = DenseVector.of(doubleArrayOf(1.0, 1.0))
+            val good = F64DenseVector.of(doubleArrayOf(1.0, 1.0))
 
             val onFeature = StochasticRegression(featureSize = 2).filterFinite().materialize()
             onFeature.update(good, 1.0)
-            onFeature.update(DenseVector.of(doubleArrayOf(bad, 1.0)), 1.0)
+            onFeature.update(F64DenseVector.of(doubleArrayOf(bad, 1.0)), 1.0)
             onFeature.update(good, 1.0)
             val f = onFeature.read()
             assertEquals(2.0, f.totalWeights, DELTA, "a non-finite feature ($bad) was absorbed")
@@ -100,10 +100,10 @@ class FilterFiniteTest {
         // rather than as sugar over V(0).isFinite(): the bad coordinate can be any of them.
         for (index in 0 until 4) {
             val stat = StochasticRegression(featureSize = 4).filterFinite().materialize()
-            stat.update(DenseVector.of(DoubleArray(4) { 1.0 }), 1.0)
+            stat.update(F64DenseVector.of(DoubleArray(4) { 1.0 }), 1.0)
 
             val poisoned = DoubleArray(4) { if (it == index) Double.NaN else 1.0 }
-            stat.update(DenseVector.of(poisoned), 1.0)
+            stat.update(F64DenseVector.of(poisoned), 1.0)
 
             assertEquals(1.0, stat.read().totalWeights, DELTA, "a NaN at coordinate $index slipped through")
         }

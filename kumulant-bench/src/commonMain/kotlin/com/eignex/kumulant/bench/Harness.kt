@@ -6,7 +6,7 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import kotlin.random.Random
 
 /** Single observation passed to a stat under test. */
@@ -119,7 +119,7 @@ fun <R : Result> regressionStatSpec(
             var y = bias
             var i = 0
             while (i < featureSize) { y += trueWeights[i] * x[i]; i++ }
-            s.update(DenseVector.of(x), y, u.timestampNanos, u.weight)
+            s.update(F64DenseVector.of(x), y, u.timestampNanos, u.weight)
         },
         readSnapshot = { s, ts -> s.read(ts) },
         merge = { s, r -> s.merge(r) },

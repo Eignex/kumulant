@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.anomaly
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -29,8 +29,8 @@ class HalfSpaceTreesStatTest {
             stat.update(doubleArrayOf(3.0 + rng.nextDouble() * 0.5, 3.0 + rng.nextDouble() * 0.5))
         }
         val r = stat.read()
-        val inlierScore = r.score(DenseVector.of(doubleArrayOf(3.2, 3.4)))
-        val outlierScore = r.score(DenseVector.of(doubleArrayOf(9.0, 9.0)))
+        val inlierScore = r.score(F64DenseVector.of(doubleArrayOf(3.2, 3.4)))
+        val outlierScore = r.score(F64DenseVector.of(doubleArrayOf(9.0, 9.0)))
         // Outliers route to leaves with little reference-window mass.
         assertTrue(inlierScore > outlierScore, "inlier=$inlierScore outlier=$outlierScore")
     }

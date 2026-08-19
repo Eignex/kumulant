@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 class TreeClassificationResultTest {
 
     private fun counts(vararg c: Double) = ClassCountsResult(c.size, c)
-    private fun vec(vararg xs: Double) = DenseVector.of(xs)
+    private fun vec(vararg xs: Double) = F64DenseVector.of(xs)
 
     private fun stubTree(): TreeClassificationResult {
         // x[0] <= 0 routes pos (class 0 dominant); otherwise neg (class 1 dominant)

@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseMatrix
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.stat.anomaly.FeatureRange
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
 import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult
@@ -58,14 +58,14 @@ class RegressionMergeGuardTest {
         val ranges = List(1) { FeatureRange(0.0, 1.0) }
         val source = HalfSpaceTreesStat(featureSize = 1, featureRanges = ranges, windowSize = 50)
         repeat(200) { source.update(doubleArrayOf(0.5)) }
-        val sourceScore = source.read().score(DenseVector.of(doubleArrayOf(0.5)))
+        val sourceScore = source.read().score(F64DenseVector.of(doubleArrayOf(0.5)))
 
         val target = source.create()
         target.merge(source.read())
 
         // The reference window is what score() reads, so folding into the latest window alone would
         // leave a merged model scoring every input maximally anomalous.
-        val mergedScore = target.read().score(DenseVector.of(doubleArrayOf(0.5)))
+        val mergedScore = target.read().score(F64DenseVector.of(doubleArrayOf(0.5)))
         assertTrue(mergedScore > 0.0, "a merged model scored $mergedScore, i.e. maximally anomalous")
         assertEquals(sourceScore, mergedScore, sourceScore * 1e-9)
     }
@@ -112,7 +112,7 @@ class RegressionMergeGuardTest {
 
         // A zero-weight call that drew once per tree from baggingRng would desynchronise every later
         // draw and change the forest's predictions.
-        val at = DenseVector.of(doubleArrayOf(3.0))
+        val at = F64DenseVector.of(doubleArrayOf(3.0))
         assertEquals(clean.read().predict(at), probed.read().predict(at), 1e-12)
 
         val tree = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = splits)
@@ -130,13 +130,13 @@ class RegressionMergeGuardTest {
     fun `a non-square covariance is rejected by name`() {
         val error = assertFailsWith<IllegalArgumentException> {
             CovarianceRegressionResult(
-                weights = DenseVector.of(doubleArrayOf(1.0, 2.0)),
+                weights = F64DenseVector.of(doubleArrayOf(1.0, 2.0)),
                 bias = 0.0,
                 biasPrecision = 1.0,
                 totalWeights = 1.0,
                 step = 1L,
-                covariance = DenseMatrix.zero(2, 3),
-                covarianceL = DenseMatrix.zero(2, 2),
+                covariance = F64DenseMatrix.zero(2, 3),
+                covarianceL = F64DenseMatrix.zero(2, 2),
             )
         }
         assertTrue(error.message?.contains("2x3") == true, "expected the shape in the message, got ${error.message}")

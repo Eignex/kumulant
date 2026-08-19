@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BernoulliArm
@@ -26,7 +26,7 @@ class ArmIndexContractSweepTest {
 
     private class Probe(val name: String, val calls: List<Pair<String, (Int) -> Any?>>)
 
-    private val x: VectorView = feat(1.0, 1.0)
+    private val x: F64VectorView = feat(1.0, 1.0)
 
     private fun probes(): List<Probe> {
         val multiArmed = MultiArmedBandit(ARMS, ThompsonSampling(BernoulliArm(), BetaPosterior), Random(0))

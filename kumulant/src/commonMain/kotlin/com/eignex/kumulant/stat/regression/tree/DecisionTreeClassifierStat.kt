@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
@@ -78,7 +78,7 @@ class DecisionTreeClassifierStat(
         randomSeed = seedRng.nextInt(),
     )
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         // isInertWeight rather than `weight <= 0.0`, which is false for NaN: a class count downdates
         // exactly, so a negative weight is a real retraction while a NaN would pin a count for good.

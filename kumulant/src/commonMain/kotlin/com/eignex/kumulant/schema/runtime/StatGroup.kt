@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema.runtime
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -132,7 +132,7 @@ class VectorStatGroup(stats: List<BoundStat<*, out VectorStat<*>, *>>, concurren
     constructor(schema: StatSchema, concurrency: Concurrency? = null) :
         this(stats = vectorSpecs(schema), concurrency = concurrency)
 
-    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(vector, timestampNanos, weight)
     }
 

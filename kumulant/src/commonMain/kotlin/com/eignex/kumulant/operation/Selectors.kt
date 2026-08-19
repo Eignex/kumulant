@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
@@ -31,7 +31,7 @@ internal class AtYStat<R : Result>(private val delegate: SeriesStat<R>) :
 internal class AtIndexStat<R : Result>(private val delegate: SeriesStat<R>, private val index: Int) :
     VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(vector[index], timestampNanos, weight)
     }
 
@@ -44,7 +44,7 @@ internal class AtIndicesStat<R : Result>(
     private val indexY: Int,
 ) : VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
         delegate.update(vector[indexX], vector[indexY], timestampNanos, weight)
     }
 

@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.SparseVector
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64SparseVector
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
@@ -46,9 +46,9 @@ class VectorSerializationTest {
             var y = 0.0
             for (i in 0 until 5) y += truth[i] * xArr[i]
             y += rng.nextDouble() * 0.02 - 0.01
-            dense.update(DenseVector.of(xArr), y, 1.0)
+            dense.update(F64DenseVector.of(xArr), y, 1.0)
             val nz = (0 until 5).filter { idx -> xArr[idx] != 0.0 }
-            val xs = SparseVector.of(5, nz.toIntArray(), nz.map { idx -> xArr[idx] }.toDoubleArray())
+            val xs = F64SparseVector.of(5, nz.toIntArray(), nz.map { idx -> xArr[idx] }.toDoubleArray())
             sparse.update(xs, y, 1.0)
         }
         val rd = dense.read()
@@ -62,20 +62,20 @@ class VectorSerializationTest {
     }
 
     @Test
-    fun `DenseVector round-trips through JSON`() {
-        val v: VectorView = DenseVector.of(doubleArrayOf(1.0, -2.5, 3.14, 0.0))
-        val wire = json.encodeToString(VectorView.serializer(), v)
-        val decoded = json.decodeFromString(VectorView.serializer(), wire)
-        assertTrue(decoded is DenseVector)
+    fun `F64DenseVector round-trips through JSON`() {
+        val v: F64VectorView = F64DenseVector.of(doubleArrayOf(1.0, -2.5, 3.14, 0.0))
+        val wire = json.encodeToString(F64VectorView.serializer(), v)
+        val decoded = json.decodeFromString(F64VectorView.serializer(), wire)
+        assertTrue(decoded is F64DenseVector)
         assertEquals(v, decoded)
     }
 
     @Test
-    fun `SparseVector round-trips through JSON`() {
-        val v: VectorView = SparseVector.of(10, intArrayOf(2, 5, 9), doubleArrayOf(1.0, -2.0, 0.5))
-        val wire = json.encodeToString(VectorView.serializer(), v)
-        val decoded = json.decodeFromString(VectorView.serializer(), wire)
-        assertTrue(decoded is SparseVector)
+    fun `F64SparseVector round-trips through JSON`() {
+        val v: F64VectorView = F64SparseVector.of(10, intArrayOf(2, 5, 9), doubleArrayOf(1.0, -2.0, 0.5))
+        val wire = json.encodeToString(F64VectorView.serializer(), v)
+        val decoded = json.decodeFromString(F64VectorView.serializer(), wire)
+        assertTrue(decoded is F64SparseVector)
         assertEquals(v, decoded)
     }
 
@@ -133,7 +133,7 @@ class VectorSerializationTest {
             diag.update(xArr, y, 1.0)
             bayes.update(xArr, y, 1.0)
         }
-        val queryX = DenseVector.of(doubleArrayOf(0.4, -0.2, 0.6))
+        val queryX = F64DenseVector.of(doubleArrayOf(0.4, -0.2, 0.6))
         val analyticMean = 0.7 * 0.4 + -0.3 * -0.2 + 1.5 * 0.6
 
         for ((label, m) in listOf(

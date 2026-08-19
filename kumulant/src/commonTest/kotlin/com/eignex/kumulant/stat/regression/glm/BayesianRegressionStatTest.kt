@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.fitLine
 import kotlin.math.abs
 import kotlin.math.exp
@@ -126,7 +126,7 @@ class BayesianRegressionStatTest {
         assertEquals(Link.Identity, stat.link)
         val snap = stat.read()
         assertEquals(Link.Identity, snap.link)
-        val x = DenseVector.of(doubleArrayOf(0.5, -0.3))
+        val x = F64DenseVector.of(doubleArrayOf(0.5, -0.3))
         assertEquals(snap.linearPredictor(x), snap.predict(x))
     }
 
@@ -142,10 +142,10 @@ class BayesianRegressionStatTest {
             stat.update(x, y, 1.0)
         }
         val snap = stat.read()
-        val p1 = snap.predict(DenseVector.of(doubleArrayOf(1.0, 0.0)))
+        val p1 = snap.predict(F64DenseVector.of(doubleArrayOf(1.0, 0.0)))
         assertTrue(p1 in 0.0..1.0, "predict returned $p1, expected probability")
         assertTrue(p1 > 0.7, "predicted P(positive | (1,0)) = $p1, expected > 0.7")
-        val pNeg = snap.predict(DenseVector.of(doubleArrayOf(-1.0, 1.0)))
+        val pNeg = snap.predict(F64DenseVector.of(doubleArrayOf(-1.0, 1.0)))
         assertTrue(pNeg < 0.3, "predicted P(positive | (-1,1)) = $pNeg, expected < 0.3")
     }
 
@@ -159,7 +159,7 @@ class BayesianRegressionStatTest {
             stat.update(x, rate, 1.0)
         }
         val snap = stat.read()
-        val x = DenseVector.of(doubleArrayOf(0.5, 0.5))
+        val x = F64DenseVector.of(doubleArrayOf(0.5, 0.5))
         val pred = snap.predict(x)
         val expected = exp(0.75)
         assertTrue(abs(pred - expected) / expected < 0.3, "pred=$pred, expected $expected")
@@ -170,7 +170,7 @@ class BayesianRegressionStatTest {
         val stat = BayesianRegressionStat(featureSize = 2, link = Link.Logit)
         stat.update(doubleArrayOf(1.0, 0.5), 1.0, 5.0)
         val snap = stat.read()
-        val x = DenseVector.of(doubleArrayOf(0.7, -0.3))
+        val x = F64DenseVector.of(doubleArrayOf(0.7, -0.3))
         val eta = snap.linearPredictor(x)
         val expected = 1.0 / (1.0 + exp(-eta))
         assertEquals(expected, snap.predict(x), absoluteTolerance = 1e-12)
@@ -181,7 +181,7 @@ class BayesianRegressionStatTest {
         val stat = BayesianRegressionStat(featureSize = 2, link = Link.Log)
         stat.update(doubleArrayOf(0.3, 0.4), 2.0, 1.0)
         val snap = stat.read()
-        val x = DenseVector.of(doubleArrayOf(0.1, 0.2))
+        val x = F64DenseVector.of(doubleArrayOf(0.1, 0.2))
         val eta = snap.linearPredictor(x)
         assertEquals(exp(eta), snap.predict(x), absoluteTolerance = 1e-12)
     }

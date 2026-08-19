@@ -1,8 +1,8 @@
 package com.eignex.kumulant.math
 
-import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.SparseVector
+import com.eignex.koblas.F64DenseMatrix
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64SparseVector
 import com.eignex.koblas.dense.cholesky
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 class CholeskyTest {
 
     // Reconstruct A = L * LT from the lower triangle of a factor.
-    private fun product(l: DenseMatrix): Array<DoubleArray> {
+    private fun product(l: F64DenseMatrix): Array<DoubleArray> {
         val n = l.rows
         return Array(n) { i ->
             DoubleArray(n) { j ->
@@ -37,9 +37,9 @@ class CholeskyTest {
             doubleArrayOf(1.0, 3.0),
         )
         val x = doubleArrayOf(0.5, 0.25)
-        val l = DenseMatrix.of(a).cholesky().l
+        val l = F64DenseMatrix.of(a).cholesky().l
 
-        val norm = l.choleskyDowndateInPlace(DenseVector.of(x))
+        val norm = l.choleskyDowndateInPlace(F64DenseVector.of(x))
 
         assertEquals(0.0, norm, "downdate inside the cone reports success")
         val expected = Array(2) { i -> DoubleArray(2) { j -> a[i][j] - x[i] * x[j] } }
@@ -54,9 +54,9 @@ class CholeskyTest {
             doubleArrayOf(0.5, 2.0, 4.0),
         )
         val x = doubleArrayOf(0.3, -0.6, 0.2)
-        val l = DenseMatrix.of(a).cholesky().l
+        val l = F64DenseMatrix.of(a).cholesky().l
 
-        assertEquals(0.0, l.choleskyDowndateInPlace(DenseVector.of(x)))
+        assertEquals(0.0, l.choleskyDowndateInPlace(F64DenseVector.of(x)))
 
         val expected = Array(3) { i -> DoubleArray(3) { j -> a[i][j] - x[i] * x[j] } }
         assertMatrixEquals(expected, product(l))
@@ -64,7 +64,7 @@ class CholeskyTest {
 
     @Test
     fun `downdate reports a norm at or above one when it would leave the cone`() {
-        val l = DenseMatrix.of(
+        val l = F64DenseMatrix.of(
             arrayOf(
                 doubleArrayOf(1.0, 0.0),
                 doubleArrayOf(0.0, 1.0),
@@ -72,7 +72,7 @@ class CholeskyTest {
         ).cholesky().l
 
         // x with ||L^-1 x|| >= 1 cannot be subtracted and stay positive-definite.
-        val norm = l.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(3.0, 4.0)))
+        val norm = l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(3.0, 4.0)))
 
         assertTrue(norm >= 1.0, "expected a rejected downdate, got norm=$norm")
     }
@@ -80,7 +80,7 @@ class CholeskyTest {
     @Test
     fun `downdate reports the norm at the cone boundary rather than silently doing nothing`() {
         // ||L^-1 x|| == 1 exactly: the downdate cannot proceed, and the factor is left alone.
-        val l = DenseMatrix.of(
+        val l = F64DenseMatrix.of(
             arrayOf(
                 doubleArrayOf(4.0, 0.0),
                 doubleArrayOf(0.0, 4.0),
@@ -88,7 +88,7 @@ class CholeskyTest {
         ).cholesky().l
         val before = product(l)
 
-        val norm = l.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(2.0, 0.0)))
+        val norm = l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(2.0, 0.0)))
 
         assertEquals(1.0, norm, 1e-12, "the boundary reports rejection, not success")
         assertMatrixEquals(before, product(l))
@@ -101,11 +101,11 @@ class CholeskyTest {
             doubleArrayOf(1.0, 4.0, 1.0),
             doubleArrayOf(0.0, 1.0, 3.0),
         )
-        val l = DenseMatrix.of(a).cholesky().l
+        val l = F64DenseMatrix.of(a).cholesky().l
         val x = doubleArrayOf(0.0, 0.4, 0.0)
 
         val norm = l.choleskyDowndateInPlace(
-            SparseVector.of(size = 3, indices = intArrayOf(1), values = doubleArrayOf(0.4)),
+            F64SparseVector.of(size = 3, indices = intArrayOf(1), values = doubleArrayOf(0.4)),
         )
 
         assertEquals(0.0, norm)
@@ -115,16 +115,16 @@ class CholeskyTest {
 
     @Test
     fun `downdate handles a one by one factor`() {
-        val l = DenseMatrix.of(arrayOf(doubleArrayOf(4.0))).cholesky().l
+        val l = F64DenseMatrix.of(arrayOf(doubleArrayOf(4.0))).cholesky().l
 
-        assertEquals(0.0, l.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(1.0))))
+        assertEquals(0.0, l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(1.0))))
 
         assertEquals(3.0, product(l)[0][0], 1e-12)
     }
 
     @Test
     fun `downdate of a zero vector leaves the factor unchanged`() {
-        val l = DenseMatrix.of(
+        val l = F64DenseMatrix.of(
             arrayOf(
                 doubleArrayOf(2.0, 0.5),
                 doubleArrayOf(0.5, 1.0),
@@ -132,14 +132,14 @@ class CholeskyTest {
         ).cholesky().l
         val before = product(l)
 
-        assertEquals(0.0, l.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(0.0, 0.0))))
+        assertEquals(0.0, l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(0.0, 0.0))))
 
         assertMatrixEquals(before, product(l))
     }
 
     @Test
     fun `zeroUpperTriangle clears everything above the diagonal`() {
-        val m = DenseMatrix.of(
+        val m = F64DenseMatrix.of(
             arrayOf(
                 doubleArrayOf(1.0, 2.0, 3.0),
                 doubleArrayOf(4.0, 5.0, 6.0),
@@ -160,13 +160,13 @@ class CholeskyTest {
 
     @Test
     fun `downdate through a singular factor leaves the factor finite`() {
-        val l = DenseMatrix.of(
+        val l = F64DenseMatrix.of(
             arrayOf(
                 doubleArrayOf(0.0, 0.0),
                 doubleArrayOf(0.0, 1.0),
             ),
         )
-        l.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(1.0, 0.0)))
+        l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(1.0, 0.0)))
         for (i in 0 until 2) {
             for (j in 0 until 2) assertTrue(l[i, j].isFinite(), "entry ($i, $j) = ${l[i, j]}")
         }

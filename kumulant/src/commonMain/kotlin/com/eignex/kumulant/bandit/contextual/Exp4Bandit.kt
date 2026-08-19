@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.MIN_PLAY_PROB
 import com.eignex.kumulant.bandit.Snapshotable
@@ -43,7 +43,7 @@ data class Exp4State(
  */
 fun interface Exp4Expert {
     /** Distribution over arms for [x]. Result must sum to 1 and have length `nbrArms`. */
-    fun advise(x: VectorView, nbrArms: Int): DoubleArray
+    fun advise(x: F64VectorView, nbrArms: Int): DoubleArray
 }
 
 /**
@@ -120,7 +120,7 @@ class Exp4Bandit(
     private var lastPlayDist: DoubleArray = DoubleArray(nbrArms) { 1.0 / nbrArms }
 
     /** Build the round's play distribution and sample an arm. */
-    override fun choose(x: VectorView): Int {
+    override fun choose(x: F64VectorView): Int {
         val p = playDistribution(x)
         lastPlayDist = p
         return random.sampleFromDistribution(p)
@@ -128,7 +128,7 @@ class Exp4Bandit(
 
     /** Mean of expert distributions at [x] weighted by current weights, blended with
      *  uniform exploration via [gamma]. */
-    fun playDistribution(x: VectorView): DoubleArray {
+    fun playDistribution(x: F64VectorView): DoubleArray {
         var wSum = 0.0
         for (i in experts.indices) {
             val xi = experts[i].advise(x, nbrArms)
@@ -155,7 +155,7 @@ class Exp4Bandit(
     }
 
     /** Fold a `(context, reward)` observation back into the expert weights. */
-    override fun update(armIndex: Int, x: VectorView, reward: Double, weight: Double) {
+    override fun update(armIndex: Int, x: F64VectorView, reward: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
         // Re-evaluate experts in case caller calls update without a prior choose at this x.
         playDistribution(x)

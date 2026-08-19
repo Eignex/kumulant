@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64VectorView
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
@@ -124,7 +124,7 @@ class StochasticRegressionStat(
     private fun requireSgdLearningRate(): ScalarExpr = sgdLearningRate ?: error("Sgd learning rate required")
     private fun requireSgdBiasRate(): ScalarExpr = sgdBiasRate ?: error("Sgd bias rate required")
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
@@ -232,7 +232,7 @@ class StochasticRegressionStat(
             }
         }
         StochasticRegressionResult(
-            weights = DenseVector.of(materialised),
+            weights = F64DenseVector.of(materialised),
             bias = biasCell.load(),
             totalWeights = totalWeightsCell.load(),
             step = stepCell.load(),

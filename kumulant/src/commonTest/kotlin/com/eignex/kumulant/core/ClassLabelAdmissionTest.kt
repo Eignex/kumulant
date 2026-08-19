@@ -1,6 +1,6 @@
 package com.eignex.kumulant.core
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionStat
@@ -19,7 +19,7 @@ class ClassLabelAdmissionTest {
     private class Probe(val name: String, val update: (Double, Double) -> Unit, val snapshot: () -> String)
 
     private val splits = listOf(ThresholdSplit(featureIndex = 0, threshold = 0.5))
-    private val x = DenseVector.of(DoubleArray(2) { 1.0 })
+    private val x = F64DenseVector.of(DoubleArray(2) { 1.0 })
 
     // Fresh instances per test. Every snapshot reads the learned numbers out explicitly rather than
     // stringifying the result: ClassCountsResult has no toString override, so on the JVM a stringified

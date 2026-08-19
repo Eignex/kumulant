@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
@@ -29,12 +29,12 @@ class RegressionWeightContractTest {
     private class Model(
         val name: String,
         val y: Double,
-        val update: (VectorView, Double, Double) -> Unit,
+        val update: (F64VectorView, Double, Double) -> Unit,
         val snapshot: () -> String,
     )
 
     private val splits = listOf(ThresholdSplit(featureIndex = 0, threshold = 0.5))
-    private val x = DenseVector.of(DoubleArray(FEATURES) { 1.0 })
+    private val x = F64DenseVector.of(DoubleArray(FEATURES) { 1.0 })
 
     // Bagging is off on the two forests. With it on, each tree draws Poisson(1) per observation and can
     // legitimately draw zero, so a single update may reach no tree at all. The early return that stops an
@@ -151,7 +151,7 @@ class RegressionWeightContractTest {
         val nonFinite = doubleArrayOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)
         val violations = mutableListOf<String>()
         for (bad in nonFinite) {
-            val badFeatures = DenseVector.of(doubleArrayOf(bad, 1.0))
+            val badFeatures = F64DenseVector.of(doubleArrayOf(bad, 1.0))
             for (model in models()) {
                 // Feature position. The model is trained first so the bad input meets real state rather
                 // than a fresh accumulator, which is where the arithmetic has more ways to go wrong.

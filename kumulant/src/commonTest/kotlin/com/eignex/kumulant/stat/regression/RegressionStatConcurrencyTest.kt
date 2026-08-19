@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
@@ -56,7 +56,7 @@ class RegressionStatConcurrencyTest {
     fun `StochasticRegressionStat sequential math equal across modes`() {
         val reads = Concurrency.entries.associateWith { mode ->
             val s = StochasticRegressionStat(featureSize = 2, concurrency = mode)
-            for (i in mvX.indices) s.update(DenseVector.of(mvX[i]), ys[i])
+            for (i in mvX.indices) s.update(F64DenseVector.of(mvX[i]), ys[i])
             s.read(0L)
         }
         val ref = reads.getValue(Concurrency.None)
@@ -70,7 +70,7 @@ class RegressionStatConcurrencyTest {
     fun `DiagonalRegressionStat sequential math equal across modes`() {
         val reads = Concurrency.entries.associateWith { mode ->
             val s = DiagonalRegressionStat(featureSize = 2, concurrency = mode)
-            for (i in mvX.indices) s.update(DenseVector.of(mvX[i]), ys[i])
+            for (i in mvX.indices) s.update(F64DenseVector.of(mvX[i]), ys[i])
             s.read(0L)
         }
         val ref = reads.getValue(Concurrency.None)
@@ -84,7 +84,7 @@ class RegressionStatConcurrencyTest {
     fun `BayesianRegressionStat sequential math equal across modes`() {
         val reads = Concurrency.entries.associateWith { mode ->
             val s = BayesianRegressionStat(featureSize = 2, concurrency = mode)
-            for (i in mvX.indices) s.update(DenseVector.of(mvX[i]), ys[i])
+            for (i in mvX.indices) s.update(F64DenseVector.of(mvX[i]), ys[i])
             s.read(0L)
         }
         val ref = reads.getValue(Concurrency.None)

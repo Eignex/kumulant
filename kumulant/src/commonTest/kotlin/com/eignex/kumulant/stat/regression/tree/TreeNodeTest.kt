@@ -2,8 +2,8 @@
 
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.test.Test
@@ -13,7 +13,7 @@ import kotlin.test.assertSame
 
 class TreeNodeTest {
 
-    private fun wvLeaf(): RegressionTerminalLeaf<VectorView> = RegressionTerminalLeaf(VarianceStat())
+    private fun wvLeaf(): RegressionTerminalLeaf<F64VectorView> = RegressionTerminalLeaf(VarianceStat())
     private fun ccLeaf(numClasses: Int = 2) = ClassificationTerminalLeaf(ClassCountsStat(numClasses))
 
     @Test
@@ -21,10 +21,10 @@ class TreeNodeTest {
         val pos = wvLeaf()
         val neg = wvLeaf()
         val node = RegressionSplitNode(ThresholdSplit(0, 0.0), pos = pos, neg = neg)
-        assertSame(pos, node.findLeaf(DenseVector.of(doubleArrayOf(-1.0))))
-        assertSame(neg, node.findLeaf(DenseVector.of(doubleArrayOf(1.0))))
+        assertSame(pos, node.findLeaf(F64DenseVector.of(doubleArrayOf(-1.0))))
+        assertSame(neg, node.findLeaf(F64DenseVector.of(doubleArrayOf(1.0))))
         // Threshold is inclusive on the pos side.
-        assertSame(pos, node.findLeaf(DenseVector.of(doubleArrayOf(0.0))))
+        assertSame(pos, node.findLeaf(F64DenseVector.of(doubleArrayOf(0.0))))
     }
 
     @Test
@@ -34,7 +34,7 @@ class TreeNodeTest {
         val node = RegressionSplitNode(ThresholdSplit(0, 0.0), pos = original, neg = wvLeaf())
         assertSame(original, node.pos)
         node.pos = replacement
-        assertSame(replacement, node.findLeaf(DenseVector.of(doubleArrayOf(-1.0))))
+        assertSame(replacement, node.findLeaf(F64DenseVector.of(doubleArrayOf(-1.0))))
     }
 
     @Test
@@ -67,8 +67,8 @@ class TreeNodeTest {
         val pos = ccLeaf()
         val neg = ccLeaf()
         val node = ClassificationSplitNode(ThresholdSplit(0, 0.5), pos = pos, neg = neg)
-        assertSame(pos, node.findLeaf(DenseVector.of(doubleArrayOf(0.0))))
-        assertSame(neg, node.findLeaf(DenseVector.of(doubleArrayOf(1.0))))
+        assertSame(pos, node.findLeaf(F64DenseVector.of(doubleArrayOf(0.0))))
+        assertSame(neg, node.findLeaf(F64DenseVector.of(doubleArrayOf(1.0))))
     }
 
     @Test

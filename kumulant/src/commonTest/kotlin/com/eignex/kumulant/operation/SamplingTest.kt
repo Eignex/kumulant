@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumStat
@@ -66,7 +66,7 @@ class SamplingTest {
     @Test
     fun `vector throttle forwards every Nth update`() {
         val stat = VectorizedStat(2, SumStat()).throttle(every = 2)
-        repeat(6) { stat.update(DenseVector.of(doubleArrayOf(1.0, 1.0))) }
+        repeat(6) { stat.update(F64DenseVector.of(doubleArrayOf(1.0, 1.0))) }
         assertEquals(3.0, stat.read().results[0].sum, DELTA)
     }
 

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
@@ -74,9 +74,9 @@ class RandomForestRegressionStat(
     // Drawn from on the update path, once per tree, with no lock over it - so it has to be a generator
     // that concurrent updates can share. See CounterRandom.
     private val baggingRng = CounterRandom(seedRng.childSeed(), concurrency)
-    private var trees: Array<RegressionTree<VectorView>> = Array(nbrTrees) { newTree() }
+    private var trees: Array<RegressionTree<F64VectorView>> = Array(nbrTrees) { newTree() }
 
-    private fun newTree(): RegressionTree<VectorView> = RegressionTree(
+    private fun newTree(): RegressionTree<F64VectorView> = RegressionTree(
         splitCandidates,
         this.config,
         concurrency,
@@ -84,7 +84,7 @@ class RandomForestRegressionStat(
         seedRng.nextInt(),
     )
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         // Return before drawing from baggingRng: an inert call that consumed one draw per tree would
         // desynchronise every later bagging draw and change the forest's predictions.
@@ -132,7 +132,7 @@ class RandomForestRegressionStat(
     )
 
     /** Live underlying trees. Use for inspection. */
-    fun trees(): List<RegressionTree<VectorView>> = trees.toList()
+    fun trees(): List<RegressionTree<F64VectorView>> = trees.toList()
 }
 
 /** Snapshot of a [RandomForestRegressionStat]: per-tree immutable snapshots. */
@@ -148,7 +148,7 @@ data class ForestRegressionResult(
 
     /** Merge the leaves that [x] routes to across every tree into a single weighted-
      *  variance aggregate. Useful for ensembled scoring. */
-    fun findLeafMerged(x: VectorView): WeightedVarianceResult {
+    fun findLeafMerged(x: F64VectorView): WeightedVarianceResult {
         // The `w2 <= 0.0` skip stays here rather than moving into mergeWVR, which short-circuits only
         // on an exactly-zero weight: a leaf left with negative total weight by an over-reaching
         // downdate would otherwise be folded in, and against a positive sibling of equal magnitude the
@@ -163,7 +163,7 @@ data class ForestRegressionResult(
     }
 
     /** Mean of [findLeafMerged]. */
-    fun predict(x: VectorView): Double = findLeafMerged(x).mean
+    fun predict(x: F64VectorView): Double = findLeafMerged(x).mean
 
     /** Sum of per-tree root totalWeights; `nbrTrees * underlyingWeight` under bagging. */
     val totalWeights: Double get() = trees.sumOf { it.totalWeights }

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
@@ -39,7 +39,7 @@ class TrackedBanditTest {
             updateMarginalTemplate = BayesianRegressionStat(featureSize = 1),
             updateArmRewardTemplate = CovarianceStat(),
         )
-        val x = DenseVector.of(doubleArrayOf(0.3))
+        val x = F64DenseVector.of(doubleArrayOf(0.3))
         tracked.update(0, x, reward = 1.0)
         tracked.update(0, x, reward = 0.5)
         tracked.update(1, x, reward = 0.0)
@@ -82,7 +82,7 @@ class TrackedBanditTest {
             random = Random(7),
         )
         val tracked = TrackedContextualBandit(inner = inner, contextFeatureSize = 1)
-        val x = DenseVector.of(doubleArrayOf(0.1))
+        val x = F64DenseVector.of(doubleArrayOf(0.1))
         tracked.update(0, x, reward = 1.0)
         tracked.choose(x)
         assertNull(tracked.chooseResult())

@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseMatrix
+import com.eignex.koblas.F64DenseVector
 import kotlin.math.abs
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -27,8 +27,8 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `custom prior seeds the initial weights and covariance`() {
-        val mean = DenseVector.of(doubleArrayOf(0.5, -1.0, 2.0))
-        val cov = DenseMatrix.of(
+        val mean = F64DenseVector.of(doubleArrayOf(0.5, -1.0, 2.0))
+        val cov = F64DenseMatrix.of(
             arrayOf(
                 doubleArrayOf(1.0, 0.3, 0.0),
                 doubleArrayOf(0.3, 1.0, 0.0),
@@ -50,7 +50,7 @@ class BayesianRegressionStatPriorTest {
     @Test
     fun `non positive definite prior covariance is rejected at construction`() {
         // Diagonal with a negative entry - immediately non-PD.
-        val bad = DenseMatrix.of(
+        val bad = F64DenseMatrix.of(
             arrayOf(
                 doubleArrayOf(1.0, 0.0),
                 doubleArrayOf(0.0, -0.1),
@@ -63,8 +63,8 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `reset restores configured prior`() {
-        val mean = DenseVector.of(doubleArrayOf(1.0, -0.5))
-        val cov = DenseMatrix.diagonal(2, 0.25)
+        val mean = F64DenseVector.of(doubleArrayOf(1.0, -0.5))
+        val cov = F64DenseMatrix.diagonal(2, 0.25)
         val blr = BayesianRegressionStat(featureSize = 2, priorMean = mean, priorCovariance = cov)
         val rng = Random(7)
         repeat(200) {
@@ -86,11 +86,11 @@ class BayesianRegressionStatPriorTest {
     fun `custom prior converges to truth with enough data`() {
         // A confident-but-wrong prior should still be overridden by data.
         val truth = doubleArrayOf(0.5, -1.0, 0.7)
-        val wrongMean = DenseVector.of(doubleArrayOf(-2.0, 3.0, -1.0))
+        val wrongMean = F64DenseVector.of(doubleArrayOf(-2.0, 3.0, -1.0))
         val blr = BayesianRegressionStat(
             featureSize = 3,
             priorMean = wrongMean,
-            priorCovariance = DenseMatrix.diagonal(3, 0.1),
+            priorCovariance = F64DenseMatrix.diagonal(3, 0.1),
         )
         val rng = Random(42)
         repeat(5000) {
@@ -110,8 +110,8 @@ class BayesianRegressionStatPriorTest {
         // Property: merging two instances trained on disjoint data should agree with
         // a single instance trained on the union - independent of the prior, as long
         // as both branches start from the same prior.
-        val priorMean = DenseVector.of(doubleArrayOf(0.2, -0.1))
-        val priorCov = DenseMatrix.of(
+        val priorMean = F64DenseVector.of(doubleArrayOf(0.2, -0.1))
+        val priorCov = F64DenseMatrix.of(
             arrayOf(
                 doubleArrayOf(0.5, 0.1),
                 doubleArrayOf(0.1, 0.5),
@@ -151,15 +151,15 @@ class BayesianRegressionStatPriorTest {
     @Test
     fun `fitPopulationPrior returns the simple mean for identical posteriors`() {
         val mean = doubleArrayOf(1.0, -0.5)
-        val cov = DenseMatrix.diagonal(2, 0.4)
+        val cov = F64DenseMatrix.diagonal(2, 0.4)
         val snap = CovarianceRegressionResult(
-            weights = DenseVector.of(mean),
+            weights = F64DenseVector.of(mean),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 100.0,
             step = 100L,
-            covariance = DenseMatrix.of(cov.toArray()),
-            covarianceL = cov.let { c -> DenseMatrix.diagonal(2, sqrt(0.4)) },
+            covariance = F64DenseMatrix.of(cov.toArray()),
+            covarianceL = cov.let { c -> F64DenseMatrix.diagonal(2, sqrt(0.4)) },
             sse = 0.0,
         )
         val prior = BayesianRegressionStat.fitPopulationPrior(List(5) { snap })
@@ -175,16 +175,16 @@ class BayesianRegressionStatPriorTest {
     fun `fitPopulationPrior captures between-instance spread`() {
         // Two posteriors with very different means and tight covariance: the population
         // covariance should be dominated by the between-instance term (~ (mu_diff/2)^2).
-        val tight = DenseMatrix.diagonal(2, 0.01)
+        val tight = F64DenseMatrix.diagonal(2, 0.01)
         val sqrt01 = sqrt(0.01)
         fun snap(mu: DoubleArray) = CovarianceRegressionResult(
-            weights = DenseVector.of(mu),
+            weights = F64DenseVector.of(mu),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 100.0,
             step = 100L,
-            covariance = DenseMatrix.of(tight.toArray()),
-            covarianceL = DenseMatrix.diagonal(2, sqrt01),
+            covariance = F64DenseMatrix.of(tight.toArray()),
+            covarianceL = F64DenseMatrix.diagonal(2, sqrt01),
             sse = 0.0,
         )
         val a = snap(doubleArrayOf(1.0, 0.0))
@@ -201,7 +201,7 @@ class BayesianRegressionStatPriorTest {
     fun `fitPopulationPrior result seeds a new BLR`() {
         // The output is exactly the shape BLR's constructor wants - feed it straight in
         // and confirm the new instance starts at the fitted population mean.
-        val cov = DenseMatrix.diagonal(2, 0.5)
+        val cov = F64DenseMatrix.diagonal(2, 0.5)
         val sqrt05 = sqrt(0.5)
         val snaps = listOf(
             doubleArrayOf(0.5, 1.0),
@@ -209,13 +209,13 @@ class BayesianRegressionStatPriorTest {
             doubleArrayOf(0.4, 1.2),
         ).map {
             CovarianceRegressionResult(
-                weights = DenseVector.of(it),
+                weights = F64DenseVector.of(it),
                 bias = 0.0,
                 biasPrecision = 1.0,
                 totalWeights = 50.0,
                 step = 50L,
-                covariance = DenseMatrix.of(cov.toArray()),
-                covarianceL = DenseMatrix.diagonal(2, sqrt05),
+                covariance = F64DenseMatrix.of(cov.toArray()),
+                covarianceL = F64DenseMatrix.diagonal(2, sqrt05),
                 sse = 0.0,
             )
         }
@@ -246,16 +246,16 @@ class BayesianRegressionStatPriorTest {
     fun `fitPopulationPrior honours custom weight selector`() {
         // With weight selector returning 1.0 for the first snapshot and 0.0 for the
         // second, the result should equal the first snapshot in isolation.
-        val cov = DenseMatrix.diagonal(2, 0.3)
+        val cov = F64DenseMatrix.diagonal(2, 0.3)
         val sqrt03 = sqrt(0.3)
         fun snap(mu: DoubleArray) = CovarianceRegressionResult(
-            weights = DenseVector.of(mu),
+            weights = F64DenseVector.of(mu),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 1.0,
             step = 1L,
-            covariance = DenseMatrix.of(cov.toArray()),
-            covarianceL = DenseMatrix.diagonal(2, sqrt03),
+            covariance = F64DenseMatrix.of(cov.toArray()),
+            covarianceL = F64DenseMatrix.diagonal(2, sqrt03),
             sse = 0.0,
         )
         val a = snap(doubleArrayOf(2.0, -2.0))
@@ -273,15 +273,15 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `fitPopulationPrior with a single snapshot has zero between-instance variance`() {
-        val cov = DenseMatrix.diagonal(2, 0.4)
+        val cov = F64DenseMatrix.diagonal(2, 0.4)
         val snap = CovarianceRegressionResult(
-            weights = DenseVector.of(doubleArrayOf(0.7, -0.3)),
+            weights = F64DenseVector.of(doubleArrayOf(0.7, -0.3)),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 50.0,
             step = 50L,
-            covariance = DenseMatrix.of(cov.toArray()),
-            covarianceL = DenseMatrix.diagonal(2, sqrt(0.4)),
+            covariance = F64DenseMatrix.of(cov.toArray()),
+            covarianceL = F64DenseMatrix.diagonal(2, sqrt(0.4)),
             sse = 0.0,
         )
         val prior = BayesianRegressionStat.fitPopulationPrior(listOf(snap))
@@ -298,8 +298,8 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `create propagates the configured prior to the clone`() {
-        val mean = DenseVector.of(doubleArrayOf(0.4, 1.1))
-        val cov = DenseMatrix.diagonal(2, 0.3)
+        val mean = F64DenseVector.of(doubleArrayOf(0.4, 1.1))
+        val cov = F64DenseMatrix.diagonal(2, 0.3)
         val original = BayesianRegressionStat(
             featureSize = 2,
             priorMean = mean,
@@ -320,7 +320,7 @@ class BayesianRegressionStatPriorTest {
         assertFailsWith<IllegalArgumentException> {
             BayesianRegressionStat(
                 featureSize = 3,
-                priorMean = DenseVector.of(doubleArrayOf(1.0, 2.0)),
+                priorMean = F64DenseVector.of(doubleArrayOf(1.0, 2.0)),
             )
         }
     }
@@ -330,7 +330,7 @@ class BayesianRegressionStatPriorTest {
         assertFailsWith<IllegalArgumentException> {
             BayesianRegressionStat(
                 featureSize = 3,
-                priorCovariance = DenseMatrix.diagonal(2, 1.0),
+                priorCovariance = F64DenseMatrix.diagonal(2, 1.0),
             )
         }
     }
@@ -339,8 +339,8 @@ class BayesianRegressionStatPriorTest {
     fun `strong prior dominates with very little data`() {
         // 5 noisy observations vs a very tight prior at the wrong mean: posterior
         // should sit much closer to the prior than to the data-only UnivariateRegression() fit.
-        val priorMean = DenseVector.of(doubleArrayOf(0.0, 0.0))
-        val tight = DenseMatrix.diagonal(2, 1e-4)
+        val priorMean = F64DenseVector.of(doubleArrayOf(0.0, 0.0))
+        val tight = F64DenseMatrix.diagonal(2, 1e-4)
         val blr = BayesianRegressionStat(
             featureSize = 2,
             priorMean = priorMean,
@@ -363,13 +363,13 @@ class BayesianRegressionStatPriorTest {
     @Test
     fun `PopulationPrior round-trips through JSON`() {
         val snap = CovarianceRegressionResult(
-            weights = DenseVector.of(doubleArrayOf(0.5, -0.5)),
+            weights = F64DenseVector.of(doubleArrayOf(0.5, -0.5)),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 10.0,
             step = 10L,
-            covariance = DenseMatrix.diagonal(2, 0.5),
-            covarianceL = DenseMatrix.diagonal(2, sqrt(0.5)),
+            covariance = F64DenseMatrix.diagonal(2, 0.5),
+            covarianceL = F64DenseMatrix.diagonal(2, sqrt(0.5)),
             sse = 0.0,
         )
         val prior = BayesianRegressionStat.fitPopulationPrior(listOf(snap, snap))

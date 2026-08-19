@@ -3,9 +3,9 @@
 
 package com.eignex.kumulant.math
 
-import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseMatrix
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64VectorView
 import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.norm2
@@ -26,7 +26,7 @@ import kotlin.math.sqrt
  * rotations to the rows of L to absorb `s` without breaking triangularity. The rotation loop is
  * carried in `xx` and stays scalar; the substitution goes through the backend's `trsv`.
  */
-internal fun DenseMatrix.choleskyDowndateInPlace(x: VectorView): Double {
+internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorView): Double {
     require(rows == cols) { "choleskyDowndateInPlace requires a square matrix; got ${rows}x$cols" }
     require(rows == x.size) { "x size ${x.size} must match matrix dim $rows" }
     if (rows == 0) return 0.0 // an empty downdate stays in the cone trivially
@@ -39,7 +39,7 @@ internal fun DenseMatrix.choleskyDowndateInPlace(x: VectorView): Double {
     x.forEachStored { i, v -> s[i] = v }
     trsv(this, s, lower = true)
 
-    val norm = norm2(DenseVector.wrap(s))
+    val norm = norm2(F64DenseVector.wrap(s))
     // Negated so a NaN norm bails too: falling through would write NaN across the whole factor
     // and still report success.
     if (!(norm > 0.0 && norm < 1.0)) return norm
@@ -76,7 +76,7 @@ internal fun DenseMatrix.choleskyDowndateInPlace(x: VectorView): Double {
  * that gets stored in a snapshot is cleaned first: the snapshots are compared and serialised, and
  * two mathematically equal posteriors have to agree entry for entry.
  */
-internal fun DenseMatrix.zeroUpperTriangle(): DenseMatrix {
+internal fun F64DenseMatrix.zeroUpperTriangle(): F64DenseMatrix {
     for (j in 1 until cols) {
         for (i in 0 until minOf(j, rows)) this[i, j] = 0.0
     }

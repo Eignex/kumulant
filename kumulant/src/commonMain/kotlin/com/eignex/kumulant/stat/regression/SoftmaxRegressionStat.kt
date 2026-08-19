@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseMatrix
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64VectorView
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
@@ -41,9 +41,9 @@ data class SoftmaxRegressionResult(
     /** Number of classes (rows of [weights] and length of [biases]). */
     val numClasses: Int,
     /** K-by-p weight matrix; `weights[k][i]` is the coefficient on feature `i` for class `k`. */
-    val weights: DenseMatrix,
+    val weights: F64DenseMatrix,
     /** Per-class intercept; length [numClasses]. */
-    val biases: DenseVector,
+    val biases: F64DenseVector,
     /** Cumulative observation weight folded in. */
     override val totalWeights: Double,
     /** Number of `update` calls absorbed. */
@@ -59,7 +59,7 @@ data class SoftmaxRegressionResult(
     }
 
     /** Linear predictor for class [k]: `biases[k] + weights[k] . x`. */
-    fun logit(x: VectorView, k: Int): Double {
+    fun logit(x: F64VectorView, k: Int): Double {
         x.requireFeatureSize(featureSize)
         var s = biases[k]
         for (i in 0 until featureSize) s += weights[k, i] * x[i]
@@ -67,14 +67,14 @@ data class SoftmaxRegressionResult(
     }
 
     /** Softmax probabilities across all classes for [x]; length [numClasses]. */
-    fun probabilities(x: VectorView): DoubleArray {
+    fun probabilities(x: F64VectorView): DoubleArray {
         val etas = DoubleArray(numClasses) { logit(x, it) }
         etas.softmaxInPlace()
         return etas
     }
 
     /** Argmax class index for [x]. */
-    fun predict(x: VectorView): Int = argMaxOf(numClasses) { k -> logit(x, k) }
+    fun predict(x: F64VectorView): Int = argMaxOf(numClasses) { k -> logit(x, k) }
 }
 
 /**
@@ -143,7 +143,7 @@ class SoftmaxRegressionStat(
     /** Live view of the accumulated weighted cross-entropy. */
     val crossEntropy: Double by crossEntropyCell
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
@@ -188,8 +188,10 @@ class SoftmaxRegressionStat(
         SoftmaxRegressionResult(
             featureSize = featureSize,
             numClasses = numClasses,
-            weights = DenseMatrix.of(Array(numClasses) { k -> w.copyOfRange(k * featureSize, (k + 1) * featureSize) }),
-            biases = DenseVector.of(b),
+            weights = F64DenseMatrix.of(
+                Array(numClasses) { k -> w.copyOfRange(k * featureSize, (k + 1) * featureSize) },
+            ),
+            biases = F64DenseVector.of(b),
             totalWeights = totalWeightsCell.load(),
             step = stepCell.load(),
             crossEntropy = crossEntropyCell.load(),

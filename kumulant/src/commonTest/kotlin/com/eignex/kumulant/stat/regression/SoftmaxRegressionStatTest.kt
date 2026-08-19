@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseMatrix
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import kotlin.math.abs
@@ -17,23 +17,23 @@ class SoftmaxRegressionStatTest {
         val r = SoftmaxRegressionResult(
             featureSize = 2,
             numClasses = 3,
-            weights = DenseMatrix.of(
+            weights = F64DenseMatrix.of(
                 arrayOf(
                     doubleArrayOf(1.0, 0.0),
                     doubleArrayOf(0.0, 1.0),
                     doubleArrayOf(-1.0, -1.0),
                 ),
             ),
-            biases = DenseVector.of(doubleArrayOf(0.0, 0.0, 0.0)),
+            biases = F64DenseVector.of(doubleArrayOf(0.0, 0.0, 0.0)),
             totalWeights = 0.0,
             step = 0L,
             crossEntropy = 0.0,
         )
-        val p = r.probabilities(DenseVector.of(doubleArrayOf(2.0, 1.0)))
+        val p = r.probabilities(F64DenseVector.of(doubleArrayOf(2.0, 1.0)))
         val total = p.sum()
         assertEquals(1.0, total, 1e-9)
         // Class 0 has the largest logit (eta = 2), so argmax must be 0.
-        assertEquals(0, r.predict(DenseVector.of(doubleArrayOf(2.0, 1.0))))
+        assertEquals(0, r.predict(F64DenseVector.of(doubleArrayOf(2.0, 1.0))))
     }
 
     @Test
@@ -60,7 +60,7 @@ class SoftmaxRegressionStatTest {
         val n = 600
         repeat(n) {
             val c = rng.nextInt(3)
-            val x = DenseVector.of(
+            val x = F64DenseVector.of(
                 doubleArrayOf(
                     centers[c][0] + rng.nextDouble() * 0.4 - 0.2,
                     centers[c][1] + rng.nextDouble() * 0.4 - 0.2,

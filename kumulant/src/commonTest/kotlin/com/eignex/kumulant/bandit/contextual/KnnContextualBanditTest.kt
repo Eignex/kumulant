@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.SparseVector
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64SparseVector
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit.Companion.squaredL2
 import com.eignex.kumulant.feat
 import kotlin.random.Random
@@ -86,14 +86,14 @@ class KnnContextualBanditTest {
 
     @Test
     fun `squaredL2 dense and sparse agree across storage combinations`() {
-        val aDense = DenseVector.of(doubleArrayOf(1.0, 0.0, -2.0, 3.0, 0.0))
-        val bDense = DenseVector.of(doubleArrayOf(0.0, 4.0, -2.0, 1.0, 5.0))
-        val aSparse = SparseVector.of(
+        val aDense = F64DenseVector.of(doubleArrayOf(1.0, 0.0, -2.0, 3.0, 0.0))
+        val bDense = F64DenseVector.of(doubleArrayOf(0.0, 4.0, -2.0, 1.0, 5.0))
+        val aSparse = F64SparseVector.of(
             size = 5,
             indices = intArrayOf(0, 2, 3),
             values = doubleArrayOf(1.0, -2.0, 3.0),
         )
-        val bSparse = SparseVector.of(
+        val bSparse = F64SparseVector.of(
             size = 5,
             indices = intArrayOf(1, 2, 3, 4),
             values = doubleArrayOf(4.0, -2.0, 1.0, 5.0),
@@ -114,11 +114,11 @@ class KnnContextualBanditTest {
             doubleArrayOf(0.5, 0.0, 0.0, 1.5) to 1.0,
         )
         for ((x, r) in rows) {
-            denseInput.update(0, DenseVector.of(x), r)
+            denseInput.update(0, F64DenseVector.of(x), r)
             val nz = x.withIndex().filter { it.value != 0.0 }
             sparseInput.update(
                 0,
-                SparseVector.of(
+                F64SparseVector.of(
                     size = x.size,
                     indices = nz.map { it.index }.toIntArray(),
                     values = nz.map { it.value }.toDoubleArray(),
@@ -126,7 +126,7 @@ class KnnContextualBanditTest {
                 r,
             )
         }
-        val q = DenseVector.of(doubleArrayOf(0.5, 0.0, 0.0, 1.5))
+        val q = F64DenseVector.of(doubleArrayOf(0.5, 0.0, 0.0, 1.5))
         assertEquals(denseInput.evaluate(0, q), sparseInput.evaluate(0, q), 1e-12)
     }
 
@@ -142,8 +142,8 @@ class KnnContextualBanditTest {
 
     @Test
     fun `squaredL2 counts a stored zero once`() {
-        val a = SparseVector.of(2, intArrayOf(0), doubleArrayOf(0.0))
-        val b = SparseVector.of(2, intArrayOf(0), doubleArrayOf(3.0))
+        val a = F64SparseVector.of(2, intArrayOf(0), doubleArrayOf(0.0))
+        val b = F64SparseVector.of(2, intArrayOf(0), doubleArrayOf(3.0))
         assertEquals(9.0, squaredL2(a, b))
     }
 }

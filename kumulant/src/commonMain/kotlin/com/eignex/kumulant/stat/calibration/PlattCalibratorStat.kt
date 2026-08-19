@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.calibration
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
@@ -70,7 +70,7 @@ class PlattCalibratorStat(
     )
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        inner.update(DenseVector.of(doubleArrayOf(x)), y, timestampNanos, weight)
+        inner.update(F64DenseVector.of(doubleArrayOf(x)), y, timestampNanos, weight)
     }
 
     override fun read(timestampNanos: Long): PlattCalibratorResult {
@@ -89,7 +89,7 @@ class PlattCalibratorStat(
      */
     override fun merge(values: PlattCalibratorResult) {
         val snapshot = StochasticRegressionResult(
-            weights = DenseVector.of(doubleArrayOf(values.slope)),
+            weights = F64DenseVector.of(doubleArrayOf(values.slope)),
             bias = values.intercept,
             totalWeights = values.totalWeights,
             step = 0L,

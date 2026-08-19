@@ -1,6 +1,6 @@
 package com.eignex.kumulant.core
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 
 /**
  * Reject a context vector whose arity does not match the model's.
@@ -13,10 +13,10 @@ import com.eignex.koblas.VectorView
  * spells its own check out instead, because its receiver is named `vector` and its message says so.
  *
  * @param expected the model's feature count.
- * @throws IllegalArgumentException if [VectorView.size] differs from [expected].
+ * @throws IllegalArgumentException if [F64VectorView.size] differs from [expected].
  */
 @Suppress("NOTHING_TO_INLINE") // as with the weight predicates; the non-JVM targets pay for the call
-internal inline fun VectorView.requireFeatureSize(expected: Int) {
+internal inline fun F64VectorView.requireFeatureSize(expected: Int) {
     require(size == expected) { "x.size=$size, expected $expected" }
 }
 
