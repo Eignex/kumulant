@@ -15,19 +15,19 @@ import com.eignex.kumulant.stream.DEFAULT_WINDOW_SLICES
 // Each returns a spec of the same modality, building the internal wrapper
 // spec it corresponds to; AST-backed ops carry a ScalarExpr / BoolExpr.
 
-/** Wrap this series spec so every update applies the per-observation [weight] multiplier. */
+/** Wrap this series spec so every update uses [weight] regardless of caller input. */
 fun <R : Result> SeriesStatSpec<R>.withWeight(weight: Double): SeriesStatSpec<R> =
     WithWeightSeries(this, weight) as SeriesStatSpec<R>
 
-/** Wrap this paired spec so every update applies the per-observation [weight] multiplier. */
+/** Wrap this paired spec so every update uses [weight] regardless of caller input. */
 fun <R : Result> PairedStatSpec<R>.withWeight(weight: Double): PairedStatSpec<R> =
     WithWeightPaired(this, weight) as PairedStatSpec<R>
 
-/** Wrap this vector spec so every update applies the per-observation [weight] multiplier. */
+/** Wrap this vector spec so every update uses [weight] regardless of caller input. */
 fun <R : Result> VectorStatSpec<R>.withWeight(weight: Double): VectorStatSpec<R> =
     WithWeightVector(this, weight) as VectorStatSpec<R>
 
-/** Wrap this discrete spec so every update applies the per-observation [weight] multiplier. */
+/** Wrap this discrete spec so every update uses [weight] regardless of caller input. */
 fun <R : Result> DiscreteStatSpec<R>.withWeight(weight: Double): DiscreteStatSpec<R> =
     WithWeightDiscrete(this, weight) as DiscreteStatSpec<R>
 
