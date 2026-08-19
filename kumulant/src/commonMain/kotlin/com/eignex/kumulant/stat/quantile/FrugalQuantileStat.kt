@@ -84,8 +84,8 @@ class FrugalQuantileStat(
         quantile.store((current + values.quantile) / 2.0)
     }
 
-    override fun reset() {
-        quantile.store(initialEstimate)
+    override fun reset() = lock.guarded {
+            quantile.store(initialEstimate)
     }
 
     override fun read(timestampNanos: Long) = QuantileResult(q, quantile.load())
