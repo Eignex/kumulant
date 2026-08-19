@@ -67,7 +67,12 @@ class RandomForestClassifierStat(
 
     // Resolved per instance, not captured in the constructor default: create() has to be able
     // to rebind the default arm to the replica's concurrency.
-    private val armFactory: () -> SeriesStat<ClassCountsResult> = leafArmFactory ?: { ClassCountsStat(numClasses, concurrency) }
+    private val armFactory: () -> SeriesStat<ClassCountsResult> = leafArmFactory ?: {
+        ClassCountsStat(
+            numClasses,
+            concurrency,
+        )
+    }
 
     // Drawn from on the update path, once per tree, with no lock over it - so it has to be a generator
     // that concurrent updates can share. See CounterRandom.

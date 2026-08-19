@@ -61,7 +61,12 @@ class DecisionTreeClassifierStat(
 
     // Resolved per instance, not captured in the constructor default: create() has to be able
     // to rebind the default arm to the replica's concurrency.
-    private val armFactory: () -> SeriesStat<ClassCountsResult> = leafArmFactory ?: { ClassCountsStat(numClasses, concurrency) }
+    private val armFactory: () -> SeriesStat<ClassCountsResult> = leafArmFactory ?: {
+        ClassCountsStat(
+            numClasses,
+            concurrency,
+        )
+    }
     private var tree: ClassificationTree = newTree()
 
     private fun newTree(): ClassificationTree = ClassificationTree(
