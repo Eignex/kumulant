@@ -167,8 +167,8 @@ class SpaceSavingStat(
     private fun admitClassic(key: Long, addCount: Long, addError: Long) {
         for (i in 0 until capacity) {
             if (counts.load(i) > 0L && keys.load(i) == key) {
-                counts.add(i, addCount)
-                errors.add(i, addError)
+                counts.addSaturating(i, addCount)
+                errors.addSaturating(i, addError)
                 return
             }
         }
@@ -190,8 +190,8 @@ class SpaceSavingStat(
             }
         }
         keys.store(minIdx, key)
-        counts.store(minIdx, minCount + addCount)
-        errors.store(minIdx, minCount + addError)
+        counts.store(minIdx, saturatingPlus(minCount, addCount))
+        errors.store(minIdx, saturatingPlus(minCount, addError))
     }
 
     /**
@@ -204,8 +204,8 @@ class SpaceSavingStat(
             var matched = false
             for (i in 0 until capacity) {
                 if (counts.load(i) > 0L && keys.load(i) == key) {
-                    counts.add(i, addCount)
-                    errors.add(i, addError)
+                    counts.addSaturating(i, addCount)
+                    errors.addSaturating(i, addError)
                     matched = true
                     break
                 }

@@ -135,4 +135,14 @@ class CountMinSketchTest {
         assertFailsWith<IllegalArgumentException> { CountMinSketchStat(depth = 5, width = 0) }
         assertFailsWith<IllegalArgumentException> { CountMinSketchStat(depth = 5, width = 1000) }
     }
+
+    @Test
+    fun `a saturating counter never reads below the true count`() {
+        val cms = CountMinSketchStat(depth = 5, width = 1024)
+        // MAX_COUNTER_STEP is the largest single increment, so a little over 1024 of them is what it
+        // takes to run a counter past Long.MAX_VALUE.
+        val step = (Long.MAX_VALUE / 1024).toDouble()
+        repeat(1100) { cms.update(42L, weight = step) }
+        assertEquals(Long.MAX_VALUE, cms.read(0L).estimate(42L))
+    }
 }
