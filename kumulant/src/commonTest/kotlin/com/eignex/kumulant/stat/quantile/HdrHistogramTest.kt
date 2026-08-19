@@ -181,4 +181,13 @@ class HdrHistogramTest {
         val r = h.read()
         assertEquals(1.0, r.weights.sum(), 1e-9)
     }
+
+    @Test
+    fun `merging a snapshot reproduces the source histogram`() {
+        val source = HdrHistogramStat()
+        for (v in listOf(1.0015, 1.0035, 1.5005, 2.0)) source.update(v)
+        val target = HdrHistogramStat()
+        target.merge(source.read(0L))
+        assertEquals(source.read(0L), target.read(0L))
+    }
 }

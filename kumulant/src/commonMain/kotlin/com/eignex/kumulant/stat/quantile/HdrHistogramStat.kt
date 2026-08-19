@@ -8,6 +8,7 @@ import com.eignex.kumulant.stream.additiveMode
 import kotlin.math.ceil
 import kotlin.math.log2
 import kotlin.math.pow
+import kotlin.math.round
 
 /**
  * Auto-resizing High Dynamic Range (HDR) Histogram with native Double support.
@@ -124,8 +125,10 @@ class HdrHistogramStat(
         // throw. A NaN observation must not become an exception in the caller. See Stat.
         require(!(value < 0.0)) { "HdrHistogramStat only supports non-negative values; got $value" }
 
-        val internalValue = (value * multiplier).toLong()
+        addInternal((value * multiplier).toLong(), weight)
+    }
 
+    private fun addInternal(internalValue: Long, weight: Double) {
         while (true) {
             val state = stateRef.load()
 
@@ -150,7 +153,9 @@ class HdrHistogramStat(
         for (i in values.lowerBounds.indices) {
             val weight = values.weights[i]
             if (weight > 0.0) {
-                update(values.lowerBounds[i], weight)
+                // Rounded, not truncated: a bound this histogram emitted is an exact bucket floor
+                // divided by the multiplier, and multiplying it back lands a hair under the integer.
+                addInternal(round(values.lowerBounds[i] * multiplier).toLong(), weight)
             }
         }
     }
