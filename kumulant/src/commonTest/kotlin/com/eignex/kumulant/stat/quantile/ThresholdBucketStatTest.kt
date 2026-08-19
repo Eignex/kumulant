@@ -99,4 +99,11 @@ class ThresholdBucketStatTest {
         }
         assertModesAgree("ThresholdBucketStat", reads)
     }
+
+    @Test
+    fun `merge rejects a snapshot taken over different thresholds`() {
+        val stat = ThresholdBucketStat(doubleArrayOf(1.0, 2.0, 3.0))
+        val foreign = ThresholdBucketResult(listOf(100.0, 200.0, 300.0), listOf(0.0, 0.0, 0.0, 7.0))
+        assertFailsWith<IllegalArgumentException> { stat.merge(foreign) }
+    }
 }
