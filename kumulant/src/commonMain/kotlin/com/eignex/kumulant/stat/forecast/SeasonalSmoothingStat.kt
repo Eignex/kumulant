@@ -86,9 +86,12 @@ data class SeasonalSmoothingResult(
  * ```
  *
  * Multiplicative is the same shape with subtraction replaced by division and addition by
- * multiplication. The first [period] updates seed the seasonal vector (additive: from
- * the residual `value - level`; multiplicative: from `value / level`, falling back to
- * `1.0` if `level == 0.0`).
+ * multiplication; a zero season falls back to `1.0` and a zero level leaves the season as it was, so
+ * neither path divides by zero.
+ *
+ * The first update seeds the level and leaves the seasonal vector at its identity (0 additive, 1
+ * multiplicative); every later update runs the recurrence above. Nothing seeds the seasonal vector
+ * separately, so the first cycle carries little seasonal signal.
  *
  * **Use cases:** short-horizon forecasting of streams with a recurring cycle on top
  * of a level and trend; pairs with [HoltStat] when no seasonal component is present.

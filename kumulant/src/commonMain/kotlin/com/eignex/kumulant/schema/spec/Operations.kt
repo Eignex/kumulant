@@ -27,43 +27,43 @@ import kotlinx.serialization.Serializable
 // Lambda-only live forms (`mapResult`, the lambda overloads of
 // `transformValue`/`transformPair`/`filter`) stay in the live-stat package only.
 
-/** Wire spec for `SeriesStat.withWeight(weight)`: multiplies every update by [weight]. */
+/** Wire spec for `SeriesStat.withWeight(weight)`: every update uses [weight] regardless of caller input. */
 @Serializable
 @SerialName("WithWeightSeries")
 internal data class WithWeightSeries(
     /** Inner spec whose updates are weighted. */
     val inner: StatSpec,
-    /** Per-update weight multiplier. */
+    /** Weight used for every update, in place of the caller's. */
     val weight: Double,
 ) : SeriesStatSpec<Result>
 
-/** Wire spec for `PairedStat.withWeight(weight)`: multiplies every update by [weight]. */
+/** Wire spec for `PairedStat.withWeight(weight)`: every update uses [weight] regardless of caller input. */
 @Serializable
 @SerialName("WithWeightPaired")
 internal data class WithWeightPaired(
     /** Inner spec whose updates are weighted. */
     val inner: StatSpec,
-    /** Per-update weight multiplier. */
+    /** Weight used for every update, in place of the caller's. */
     val weight: Double,
 ) : PairedStatSpec<Result>
 
-/** Wire spec for `VectorStat.withWeight(weight)`: multiplies every update by [weight]. */
+/** Wire spec for `VectorStat.withWeight(weight)`: every update uses [weight] regardless of caller input. */
 @Serializable
 @SerialName("WithWeightVector")
 internal data class WithWeightVector(
     /** Inner spec whose updates are weighted. */
     val inner: StatSpec,
-    /** Per-update weight multiplier. */
+    /** Weight used for every update, in place of the caller's. */
     val weight: Double,
 ) : VectorStatSpec<Result>
 
-/** Wire spec for `DiscreteStat.withWeight(weight)`: multiplies every update by [weight]. */
+/** Wire spec for `DiscreteStat.withWeight(weight)`: every update uses [weight] regardless of caller input. */
 @Serializable
 @SerialName("WithWeightDiscrete")
 internal data class WithWeightDiscrete(
     /** Inner spec whose updates are weighted. */
     val inner: StatSpec,
-    /** Per-update weight multiplier. */
+    /** Weight used for every update, in place of the caller's. */
     val weight: Double,
 ) : DiscreteStatSpec<Result>
 
@@ -165,7 +165,7 @@ internal data class WithFixedY(
 @Serializable
 @SerialName("WithTimeAsX")
 internal data class WithTimeAsX(
-    /** Inner paired spec whose `x` is the wall-clock timestamp (nanoseconds). */
+    /** Inner paired spec whose `x` is the wall-clock timestamp in fractional seconds. */
     val inner: StatSpec,
 ) : SeriesStatSpec<Result>
 
@@ -173,7 +173,7 @@ internal data class WithTimeAsX(
 @Serializable
 @SerialName("WithTimeAsY")
 internal data class WithTimeAsY(
-    /** Inner paired spec whose `y` is the wall-clock timestamp (nanoseconds). */
+    /** Inner paired spec whose `y` is the wall-clock timestamp in fractional seconds. */
     val inner: StatSpec,
 ) : SeriesStatSpec<Result>
 
