@@ -56,11 +56,11 @@ class BanditPoliciesTest {
     }
 
     @Test
-    fun `GeometricTS evaluate in 0_1`() {
+    fun `GeometricTS evaluate is a finite trial count`() {
         val mab = drive(GeometricTS(), listOf(2.0, 3.0, 4.0, 1.0))
         repeat(20) {
             val s = mab.evaluate(0)
-            assertTrue(s.isFinite() && s in 0.0..1.0)
+            assertTrue(s.isFinite() && s > 1.0)
         }
     }
 
