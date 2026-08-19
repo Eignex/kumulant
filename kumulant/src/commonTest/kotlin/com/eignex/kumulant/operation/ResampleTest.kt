@@ -140,4 +140,16 @@ class ResampleTest {
         stat.update(value = 9.0, timestampNanos = 250_000_000L) // forwards bucket 0 -> 5.0
         assertEquals(5.0, stat.read().sum, DELTA)
     }
+
+    @Test
+    fun `a late arrival joins the open bucket instead of closing it twice`() {
+        val stat = SumStat().resampleByTime(bucket = 1000.milliseconds, aggregator = ResampleAggregator.Last)
+        stat.update(value = 1.0, timestampNanos = 0L)
+        stat.update(value = 2.0, timestampNanos = 2_000_000_000L)
+        stat.update(value = 3.0, timestampNanos = 1_000_000_000L)
+        stat.update(value = 4.0, timestampNanos = 2_500_000_000L)
+        stat.update(value = 5.0, timestampNanos = 3_000_000_000L)
+        // Bucket 0 closes as 1.0 and bucket 2 as 4.0; the late 3.0 joins the open bucket.
+        assertEquals(5.0, stat.read().sum, DELTA)
+    }
 }
