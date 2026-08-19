@@ -44,4 +44,24 @@ class Exp3BanditTest {
         assertEquals(0.5, w[0], 1e-9)
         assertEquals(0.5, w[1], 1e-9)
     }
+
+    @Test
+    fun `feedback order does not change the weight an arm earns`() {
+        fun weightsAfter(delayed: Boolean): List<Double> {
+            val bandit = Exp3Bandit(nbrArms = 2, random = Random(1))
+            bandit.choose()
+            bandit.choose()
+            if (delayed) {
+                bandit.update(0, 1.0)
+                bandit.update(1, 1.0)
+            } else {
+                bandit.update(1, 1.0)
+                bandit.update(0, 1.0)
+            }
+            return bandit.armWeights().toList()
+        }
+        val direct = weightsAfter(delayed = false)
+        val delayed = weightsAfter(delayed = true)
+        for (i in direct.indices) assertTrue(abs(direct[i] - delayed[i]) < 1e-9, "arm $i: $direct vs $delayed")
+    }
 }
