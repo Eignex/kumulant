@@ -72,4 +72,21 @@ class EwmaVarianceStatTest {
         assertEquals(0.0, r.mean, DELTA)
         assertEquals(0.0, r.variance, DELTA)
     }
+
+    @Test
+    fun `a constant stream has zero variance whatever its level`() {
+        val stat = EwmaVarianceStat(alpha = 0.1)
+        repeat(25) { stat.update(100.0) }
+        assertEquals(0.0, stat.read(0L).variance, 1e-9)
+    }
+
+    @Test
+    fun `variance is invariant to shifting the whole stream`() {
+        fun varianceOf(offset: Double): Double {
+            val stat = EwmaVarianceStat(alpha = 0.2)
+            for (v in listOf(1.0, 3.0, 2.0, 5.0, 4.0)) stat.update(v + offset)
+            return stat.read(0L).variance
+        }
+        assertEquals(varianceOf(0.0), varianceOf(1000.0), 1e-6)
+    }
 }
