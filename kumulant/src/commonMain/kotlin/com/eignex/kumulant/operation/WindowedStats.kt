@@ -23,11 +23,11 @@ internal fun <R : Result> SeriesStat<R>.windowed(
     duration: Duration,
     slices: Int = DEFAULT_WINDOW_SLICES,
     concurrency: Concurrency = Concurrency.None,
-): SeriesStat<R> = if (this is BandSeriesStat<*>) {
-    // A band cannot be merged, and windowedRead merges, so window the band's inner stat instead and
-    // re-apply the band on top. See BandSeriesStat.windowedInside for why that is the same thing.
+): SeriesStat<R> = if (this is WindowsInside<*>) {
+    // Wrap the operator's delegate, not the operator: see WindowsInside for why a slice rotation
+    // would otherwise restart the operator's state, and BandSeriesStat for the merge-side reason.
     @Suppress("UNCHECKED_CAST")
-    windowedInside(duration, slices, concurrency) as SeriesStat<R>
+    (this as WindowsInside<R>).windowedInside(duration, slices, concurrency)
 } else {
     WindowedSeriesStat(duration, slices, this, concurrency)
 }

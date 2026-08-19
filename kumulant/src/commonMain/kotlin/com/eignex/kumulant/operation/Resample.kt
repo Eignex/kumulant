@@ -50,6 +50,7 @@ internal class ResampleByTimeStat<R : Result>(
     private val bucket: Duration,
     private val aggregator: ResampleAggregator,
 ) : SeriesStat<R>,
+    WindowsInside<R>,
     Stat<R> by delegate {
 
     private val bucketNanos: Long = bucket.inWholeNanoseconds
@@ -152,6 +153,9 @@ internal class ResampleByTimeStat<R : Result>(
         bucketEndTimestamp.store(0L)
         bucketWeight.store(0.0)
     }
+
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
+        ResampleByTimeStat(delegate.windowed(duration, slices, concurrency), bucket, aggregator)
 
     override fun create(concurrency: Concurrency?): SeriesStat<R> =
         ResampleByTimeStat(delegate.create(concurrency), bucket, aggregator)

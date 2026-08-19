@@ -17,6 +17,7 @@ internal fun <R> SeriesStat<R>.band(k: Double): SeriesStat<BandResult>
     BandSeriesStat(this, k)
 
 internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private val k: Double) :
+    WindowsInside<BandResult>,
     SeriesStat<BandResult> where R : HasCenterScale {
 
     override val concurrency: Concurrency get() = delegate.concurrency
@@ -41,7 +42,7 @@ internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private va
      * one works: a window reads by merging its slices into a fresh template, and merging *through*
      * this wrapper throws.
      */
-    internal fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<BandResult> =
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<BandResult> =
         BandSeriesStat(delegate.windowed(duration, slices, concurrency), k)
 
     override fun reset() = delegate.reset()
