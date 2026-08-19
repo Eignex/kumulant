@@ -129,4 +129,21 @@ class KnnContextualBanditTest {
         val q = DenseVector.of(doubleArrayOf(0.5, 0.0, 0.0, 1.5))
         assertEquals(denseInput.evaluate(0, q), sparseInput.evaluate(0, q), 1e-12)
     }
+
+    @Test
+    fun `zero-weight update does not displace real history`() {
+        val bandit = KnnContextualBandit(nbrArms = 1, k = 1, maxHistoryPerArm = 2, exploration = 0.0)
+        val x = feat(0.0)
+        bandit.update(0, x, 9.0, weight = 1.0)
+        bandit.update(0, x, 0.0, weight = 0.0)
+        bandit.update(0, x, 0.0, weight = 0.0)
+        assertEquals(9.0, bandit.evaluate(0, x))
+    }
+
+    @Test
+    fun `squaredL2 counts a stored zero once`() {
+        val a = SparseVector.of(2, intArrayOf(0), doubleArrayOf(0.0))
+        val b = SparseVector.of(2, intArrayOf(0), doubleArrayOf(3.0))
+        assertEquals(9.0, squaredL2(a, b))
+    }
 }
