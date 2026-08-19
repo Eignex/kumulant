@@ -160,7 +160,7 @@ class Exp4Bandit(
         // Re-evaluate experts in case caller calls update without a prior choose at this x.
         playDistribution(x)
         val pPlayed = lastPlayDist[armIndex].coerceAtLeast(MIN_PLAY_PROB)
-        val gainPlayed = reward / pPlayed
+        val gainPlayed = (reward * weight) / pPlayed
         for (i in experts.indices) {
             val expertGain = lastAdvice[i][armIndex] * gainPlayed
             weights[i] *= exp(eta * expertGain)
