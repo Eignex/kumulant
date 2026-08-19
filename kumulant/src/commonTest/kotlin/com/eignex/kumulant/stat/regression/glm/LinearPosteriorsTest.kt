@@ -248,4 +248,19 @@ class LinearPosteriorsTest {
         val r = b.read()
         assertEquals(4, r.weights.size)
     }
+
+    @Test
+    fun `evaluate stays inside the link range under a logit link`() {
+        val point = sgdSnapshot().copy(link = Link.Logit)
+        val diagonal = diagonalSnapshot().copy(link = Link.Logit)
+        val bayesian = bayesianSnapshot().copy(link = Link.Logit)
+        val x = DenseVector.of(doubleArrayOf(1.0, 1.0))
+        val rng = Random(3)
+        repeat(100) {
+            assertTrue(PointPosterior.evaluate(point, x, rng, exploration = 4.0) in 0.0..1.0)
+            assertTrue(FactorisedGaussian.evaluate(diagonal, x, rng, exploration = 4.0) in 0.0..1.0)
+            assertTrue(MultivariateGaussian.evaluate(bayesian, x, rng, exploration = 4.0) in 0.0..1.0)
+            assertTrue(LinUcb.evaluate(bayesian, x, rng, exploration = 4.0) in 0.0..1.0)
+        }
+    }
 }
