@@ -187,4 +187,12 @@ class DecisionTreeRegressionStatTest {
         }
         assertEquals(expected, stat.read(0L).totalWeights, 1e-9)
     }
+
+    @Test
+    fun `create rebuilds leaf arms at the requested concurrency`() {
+        val stat = DecisionTreeRegressionStat(featureSize = 2, splitCandidates = emptyList())
+        val replica = stat.create(Concurrency.Strict)
+        val leaf = replica.tree().rootNode() as RegressionLeafNode
+        assertEquals(Concurrency.Strict, leaf.arm.concurrency)
+    }
 }
