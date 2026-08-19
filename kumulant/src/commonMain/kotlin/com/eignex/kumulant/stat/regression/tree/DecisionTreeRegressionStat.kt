@@ -58,7 +58,7 @@ class DecisionTreeRegressionStat(
     val config: RegressionTreeConfig = RegressionTreeConfig(),
     override val concurrency: Concurrency = Concurrency.None,
     /** Leaf-arm factory; defaults to a fresh [VarianceStat] honouring the regressor's [concurrency]. */
-    private val leafArmFactory: () -> SeriesStat<WeightedVarianceResult> = { VarianceStat(concurrency) },
+    private val leafArmFactory: (() -> SeriesStat<WeightedVarianceResult>)? = null,
     randomSeed: Int = 0,
 ) : RegressionStat<TreeRegressionResult> {
 
@@ -67,13 +67,17 @@ class DecisionTreeRegressionStat(
     }
 
     private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
+
+    // Resolved per instance, not captured in the constructor default: create() has to be able
+    // to rebind the default arm to the replica's concurrency.
+    private val armFactory: () -> SeriesStat<WeightedVarianceResult> = leafArmFactory ?: { VarianceStat(concurrency) }
     private var tree: RegressionTree<VectorView> = newTree()
 
     private fun newTree(): RegressionTree<VectorView> = RegressionTree(
         splitCandidates,
         config,
         concurrency,
-        leafArmFactory,
+        armFactory,
         seedRng.nextInt(),
     )
 

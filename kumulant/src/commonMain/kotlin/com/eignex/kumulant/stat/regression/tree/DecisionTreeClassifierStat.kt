@@ -48,7 +48,7 @@ class DecisionTreeClassifierStat(
     /** Tunables shared with the underlying [ClassificationTree]. */
     val config: ClassificationTreeConfig = ClassificationTreeConfig(),
     override val concurrency: Concurrency = Concurrency.None,
-    private val leafArmFactory: () -> SeriesStat<ClassCountsResult> = { ClassCountsStat(numClasses, concurrency) },
+    private val leafArmFactory: (() -> SeriesStat<ClassCountsResult>)? = null,
     randomSeed: Int = 0,
 ) : RegressionStat<TreeClassificationResult> {
 
@@ -58,6 +58,10 @@ class DecisionTreeClassifierStat(
     }
 
     private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
+
+    // Resolved per instance, not captured in the constructor default: create() has to be able
+    // to rebind the default arm to the replica's concurrency.
+    private val armFactory: () -> SeriesStat<ClassCountsResult> = leafArmFactory ?: { ClassCountsStat(numClasses, concurrency) }
     private var tree: ClassificationTree = newTree()
 
     private fun newTree(): ClassificationTree = ClassificationTree(
@@ -65,7 +69,7 @@ class DecisionTreeClassifierStat(
         splitCandidates = splitCandidates,
         config = config,
         concurrency = concurrency,
-        leafArmFactory = leafArmFactory,
+        leafArmFactory = armFactory,
         randomSeed = seedRng.nextInt(),
     )
 
