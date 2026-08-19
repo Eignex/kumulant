@@ -113,4 +113,26 @@ class Exp4BanditTest {
         val w = bandit.expertWeights()
         assertTrue(w[0] > w[1], "left expert should dominate: $w")
     }
+
+    @Test
+    fun `zero-weight update leaves the expert weights untouched`() {
+        val expertA = Exp4Expert { _, n -> DoubleArray(n).also { it[0] = 1.0 } }
+        val expertB = Exp4Expert { _, n -> DoubleArray(n).also { it[1] = 1.0 } }
+        val bandit = Exp4Bandit(nbrArms = 2, experts = listOf(expertA, expertB), random = Random(1))
+        val before = bandit.expertWeights().toList()
+        bandit.update(0, feat(0.0), 1.0, weight = 0.0)
+        assertEquals(before, bandit.expertWeights().toList())
+    }
+
+    @Test
+    fun `observation weight scales the expert weight update`() {
+        fun weightsAfter(observationWeight: Double): List<Double> {
+            val expertA = Exp4Expert { _, n -> DoubleArray(n).also { it[0] = 1.0 } }
+            val expertB = Exp4Expert { _, n -> DoubleArray(n).also { it[1] = 1.0 } }
+            val bandit = Exp4Bandit(nbrArms = 2, experts = listOf(expertA, expertB), random = Random(1))
+            bandit.update(0, feat(0.0), 1.0, weight = observationWeight)
+            return bandit.expertWeights().toList()
+        }
+        assertTrue(weightsAfter(5.0)[0] > weightsAfter(1.0)[0])
+    }
 }
