@@ -1,6 +1,7 @@
 package com.eignex.kumulant.bandit
 
 import com.eignex.kumulant.DELTA
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -89,5 +90,13 @@ class ExponentialWeightsTest {
     private fun DoubleArray.all(predicate: (Double) -> Boolean): Boolean {
         for (v in this) if (!predicate(v)) return false
         return true
+    }
+
+    @Test
+    fun `sampleFromDistribution skips a zero-probability leading arm`() {
+        val alwaysZero = object : Random() {
+            override fun nextBits(bitCount: Int): Int = 0
+        }
+        assertEquals(1, alwaysZero.sampleFromDistribution(doubleArrayOf(0.0, 1.0)))
     }
 }

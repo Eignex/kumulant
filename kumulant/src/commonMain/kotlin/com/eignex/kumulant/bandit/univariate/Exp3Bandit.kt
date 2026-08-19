@@ -111,6 +111,8 @@ class Exp3Bandit(
     /** Fold a `(arm, reward)` observation into the played arm's weight. */
     override fun update(armIndex: Int, value: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
+        // Recomputed rather than reused from choose: one field cannot carry the propensity of
+        // every arm chosen since, so a stale distribution would be wrong more often than a fresh one.
         playDistribution().also { lastPlayDist = it }
         val p = lastPlayDist[armIndex].coerceAtLeast(MIN_PLAY_PROB)
         val gain = (value * weight) / p

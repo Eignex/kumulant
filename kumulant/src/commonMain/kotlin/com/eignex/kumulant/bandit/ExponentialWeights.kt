@@ -52,7 +52,7 @@ internal fun Random.sampleFromDistribution(p: DoubleArray): Int {
     var u = nextDouble()
     for (a in p.indices) {
         u -= p[a]
-        if (u <= 0.0) return a
+        if (u < 0.0) return a
     }
     return p.size - 1
 }
