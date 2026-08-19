@@ -816,6 +816,7 @@ abstract class com.eignex.kumulant.schema.runtime/StatSchema : com.eignex.skema/
 
     final fun <#A1: com.eignex.kumulant.core/Result> discrete(com.eignex.kumulant.schema.spec/DiscreteStatSpec<#A1>): kotlin.properties/PropertyDelegateProvider<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, kotlin.properties/ReadOnlyProperty<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, com.eignex.kumulant.schema/StatKey<#A1>>> // com.eignex.kumulant.schema.runtime/StatSchema.discrete|discrete(com.eignex.kumulant.schema.spec.DiscreteStatSpec<0:0>){0§<com.eignex.kumulant.core.Result>}[0]
     final fun <#A1: com.eignex.kumulant.core/Result> paired(com.eignex.kumulant.schema.spec/PairedStatSpec<#A1>): kotlin.properties/PropertyDelegateProvider<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, kotlin.properties/ReadOnlyProperty<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, com.eignex.kumulant.schema/StatKey<#A1>>> // com.eignex.kumulant.schema.runtime/StatSchema.paired|paired(com.eignex.kumulant.schema.spec.PairedStatSpec<0:0>){0§<com.eignex.kumulant.core.Result>}[0]
+    final fun <#A1: com.eignex.kumulant.core/Result> regression(com.eignex.kumulant.schema.spec/RegressionStatSpec<#A1>): kotlin.properties/PropertyDelegateProvider<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, kotlin.properties/ReadOnlyProperty<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, com.eignex.kumulant.schema/StatKey<#A1>>> // com.eignex.kumulant.schema.runtime/StatSchema.regression|regression(com.eignex.kumulant.schema.spec.RegressionStatSpec<0:0>){0§<com.eignex.kumulant.core.Result>}[0]
     final fun <#A1: com.eignex.kumulant.core/Result> series(com.eignex.kumulant.schema.spec/SeriesStatSpec<#A1>): kotlin.properties/PropertyDelegateProvider<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, kotlin.properties/ReadOnlyProperty<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, com.eignex.kumulant.schema/StatKey<#A1>>> // com.eignex.kumulant.schema.runtime/StatSchema.series|series(com.eignex.kumulant.schema.spec.SeriesStatSpec<0:0>){0§<com.eignex.kumulant.core.Result>}[0]
     final fun <#A1: com.eignex.kumulant.core/Result> vector(com.eignex.kumulant.schema.spec/VectorStatSpec<#A1>): kotlin.properties/PropertyDelegateProvider<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, kotlin.properties/ReadOnlyProperty<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, com.eignex.kumulant.schema/StatKey<#A1>>> // com.eignex.kumulant.schema.runtime/StatSchema.vector|vector(com.eignex.kumulant.schema.spec.VectorStatSpec<0:0>){0§<com.eignex.kumulant.core.Result>}[0]
     final fun <#A1: com.eignex.kumulant.schema.runtime/StatSchema> group(#A1): kotlin.properties/PropertyDelegateProvider<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, kotlin.properties/ReadOnlyProperty<com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec>, com.eignex.kumulant.schema/GroupStatKey<#A1>>> // com.eignex.kumulant.schema.runtime/StatSchema.group|group(0:0){0§<com.eignex.kumulant.schema.runtime.StatSchema>}[0]
@@ -3197,8 +3198,12 @@ final class com.eignex.kumulant.schema.spec/Cusum : com.eignex.kumulant.schema.s
 }
 
 final class com.eignex.kumulant.schema.spec/DDSketch : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.quantile/SketchResult> { // com.eignex.kumulant.schema.spec/DDSketch|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin.collections/List<kotlin/Double> = ...) // com.eignex.kumulant.schema.spec/DDSketch.<init>|<init>(kotlin.Double;kotlin.collections.List<kotlin.Double>){}[0]
+    constructor <init>(kotlin/Double = ..., kotlin.collections/List<kotlin/Double> = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.spec/DDSketch.<init>|<init>(kotlin.Double;kotlin.collections.List<kotlin.Double>;kotlin.Double;kotlin.Double){}[0]
 
+    final val maxIndexableValue // com.eignex.kumulant.schema.spec/DDSketch.maxIndexableValue|{}maxIndexableValue[0]
+        final fun <get-maxIndexableValue>(): kotlin/Double // com.eignex.kumulant.schema.spec/DDSketch.maxIndexableValue.<get-maxIndexableValue>|<get-maxIndexableValue>(){}[0]
+    final val minIndexableValue // com.eignex.kumulant.schema.spec/DDSketch.minIndexableValue|{}minIndexableValue[0]
+        final fun <get-minIndexableValue>(): kotlin/Double // com.eignex.kumulant.schema.spec/DDSketch.minIndexableValue.<get-minIndexableValue>|<get-minIndexableValue>(){}[0]
     final val probabilities // com.eignex.kumulant.schema.spec/DDSketch.probabilities|{}probabilities[0]
         final fun <get-probabilities>(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.schema.spec/DDSketch.probabilities.<get-probabilities>|<get-probabilities>(){}[0]
     final val relativeError // com.eignex.kumulant.schema.spec/DDSketch.relativeError|{}relativeError[0]
@@ -3206,7 +3211,9 @@ final class com.eignex.kumulant.schema.spec/DDSketch : com.eignex.kumulant.schem
 
     final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/DDSketch.component1|component1(){}[0]
     final fun component2(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.schema.spec/DDSketch.component2|component2(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin.collections/List<kotlin/Double> = ...): com.eignex.kumulant.schema.spec/DDSketch // com.eignex.kumulant.schema.spec/DDSketch.copy|copy(kotlin.Double;kotlin.collections.List<kotlin.Double>){}[0]
+    final fun component3(): kotlin/Double // com.eignex.kumulant.schema.spec/DDSketch.component3|component3(){}[0]
+    final fun component4(): kotlin/Double // com.eignex.kumulant.schema.spec/DDSketch.component4|component4(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin.collections/List<kotlin/Double> = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.schema.spec/DDSketch // com.eignex.kumulant.schema.spec/DDSketch.copy|copy(kotlin.Double;kotlin.collections.List<kotlin.Double>;kotlin.Double;kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/DDSketch.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/DDSketch.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/DDSketch.toString|toString(){}[0]
@@ -8199,32 +8206,6 @@ final class com.eignex.kumulant.stat.summary/BernoulliSumStat : com.eignex.kumul
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.summary/BernoulliSumStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
 }
 
-final class com.eignex.kumulant.stat.summary/CountResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.summary/CountResult|null[0]
-    constructor <init>(kotlin/Long) // com.eignex.kumulant.stat.summary/CountResult.<init>|<init>(kotlin.Long){}[0]
-
-    final val count // com.eignex.kumulant.stat.summary/CountResult.count|{}count[0]
-        final fun <get-count>(): kotlin/Long // com.eignex.kumulant.stat.summary/CountResult.count.<get-count>|<get-count>(){}[0]
-
-    final fun component1(): kotlin/Long // com.eignex.kumulant.stat.summary/CountResult.component1|component1(){}[0]
-    final fun copy(kotlin/Long = ...): com.eignex.kumulant.stat.summary/CountResult // com.eignex.kumulant.stat.summary/CountResult.copy|copy(kotlin.Long){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.summary/CountResult.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.summary/CountResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.summary/CountResult.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.summary/CountResult> { // com.eignex.kumulant.stat.summary/CountResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.summary/CountResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.summary/CountResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.summary/CountResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.summary/CountResult // com.eignex.kumulant.stat.summary/CountResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.summary/CountResult) // com.eignex.kumulant.stat.summary/CountResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.summary.CountResult){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.summary/CountResult.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.summary/CountResult> // com.eignex.kumulant.stat.summary/CountResult.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.stat.summary/CountStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/SumResult> { // com.eignex.kumulant.stat.summary/CountStat|null[0]
     constructor <init>(com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.summary/CountStat.<init>|<init>(com.eignex.kumulant.core.Concurrency){}[0]
 
@@ -9287,6 +9268,7 @@ final fun (com.eignex.kumulant.schema.expr/ScalarExpr).com.eignex.kumulant.schem
 final fun (com.eignex.kumulant.schema.runtime/StatSchemaDef).com.eignex.kumulant.schema.runtime/materialize(com.eignex.kumulant.core/Concurrency = ...): kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, *, *>> // com.eignex.kumulant.schema.runtime/materialize|materialize@com.eignex.kumulant.schema.runtime.StatSchemaDef(com.eignex.kumulant.core.Concurrency){}[0]
 final fun (com.eignex.kumulant.schema.runtime/StatSchemaDef).com.eignex.kumulant.schema.runtime/materializeDiscrete(com.eignex.kumulant.core/Concurrency = ...): kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, out com.eignex.kumulant.core/DiscreteStat<*>, *>> // com.eignex.kumulant.schema.runtime/materializeDiscrete|materializeDiscrete@com.eignex.kumulant.schema.runtime.StatSchemaDef(com.eignex.kumulant.core.Concurrency){}[0]
 final fun (com.eignex.kumulant.schema.runtime/StatSchemaDef).com.eignex.kumulant.schema.runtime/materializePaired(com.eignex.kumulant.core/Concurrency = ...): kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, out com.eignex.kumulant.core/PairedStat<*>, *>> // com.eignex.kumulant.schema.runtime/materializePaired|materializePaired@com.eignex.kumulant.schema.runtime.StatSchemaDef(com.eignex.kumulant.core.Concurrency){}[0]
+final fun (com.eignex.kumulant.schema.runtime/StatSchemaDef).com.eignex.kumulant.schema.runtime/materializeRegression(com.eignex.kumulant.core/Concurrency = ...): kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, out com.eignex.kumulant.core/RegressionStat<*>, *>> // com.eignex.kumulant.schema.runtime/materializeRegression|materializeRegression@com.eignex.kumulant.schema.runtime.StatSchemaDef(com.eignex.kumulant.core.Concurrency){}[0]
 final fun (com.eignex.kumulant.schema.runtime/StatSchemaDef).com.eignex.kumulant.schema.runtime/materializeSeries(com.eignex.kumulant.core/Concurrency = ...): kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, out com.eignex.kumulant.core/SeriesStat<*>, *>> // com.eignex.kumulant.schema.runtime/materializeSeries|materializeSeries@com.eignex.kumulant.schema.runtime.StatSchemaDef(com.eignex.kumulant.core.Concurrency){}[0]
 final fun (com.eignex.kumulant.schema.runtime/StatSchemaDef).com.eignex.kumulant.schema.runtime/materializeVector(com.eignex.kumulant.core/Concurrency = ...): kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, out com.eignex.kumulant.core/VectorStat<*>, *>> // com.eignex.kumulant.schema.runtime/materializeVector|materializeVector@com.eignex.kumulant.schema.runtime.StatSchemaDef(com.eignex.kumulant.core.Concurrency){}[0]
 final fun (com.eignex.kumulant.schema.spec/SeriesStatSpec<*>).com.eignex.kumulant.schema.ops/band(kotlin/Double): com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.schema/BandResult> // com.eignex.kumulant.schema.ops/band|band@com.eignex.kumulant.schema.spec.SeriesStatSpec<*>(kotlin.Double){}[0]

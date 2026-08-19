@@ -3040,6 +3040,7 @@ public abstract class com/eignex/kumulant/schema/runtime/StatSchema : com/eignex
 	public final fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	protected final fun group (Lcom/eignex/kumulant/schema/runtime/StatSchema;)Lkotlin/properties/PropertyDelegateProvider;
 	protected final fun paired (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;)Lkotlin/properties/PropertyDelegateProvider;
+	protected final fun regression (Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;)Lkotlin/properties/PropertyDelegateProvider;
 	protected final fun series (Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;)Lkotlin/properties/PropertyDelegateProvider;
 	public final fun statSchemaDef ()Lcom/eignex/kumulant/schema/runtime/StatSchemaDef;
 	protected final fun vector (Lcom/eignex/kumulant/schema/spec/VectorStatSpec;)Lkotlin/properties/PropertyDelegateProvider;
@@ -3079,6 +3080,8 @@ public final class com/eignex/kumulant/schema/runtime/StatSchemaDefKt {
 	public static synthetic fun materializeDiscrete$default (Lcom/eignex/kumulant/schema/runtime/StatSchemaDef;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Ljava/util/List;
 	public static final fun materializePaired (Lcom/eignex/kumulant/schema/runtime/StatSchemaDef;Lcom/eignex/kumulant/core/Concurrency;)Ljava/util/List;
 	public static synthetic fun materializePaired$default (Lcom/eignex/kumulant/schema/runtime/StatSchemaDef;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Ljava/util/List;
+	public static final fun materializeRegression (Lcom/eignex/kumulant/schema/runtime/StatSchemaDef;Lcom/eignex/kumulant/core/Concurrency;)Ljava/util/List;
+	public static synthetic fun materializeRegression$default (Lcom/eignex/kumulant/schema/runtime/StatSchemaDef;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Ljava/util/List;
 	public static final fun materializeSeries (Lcom/eignex/kumulant/schema/runtime/StatSchemaDef;Lcom/eignex/kumulant/core/Concurrency;)Ljava/util/List;
 	public static synthetic fun materializeSeries$default (Lcom/eignex/kumulant/schema/runtime/StatSchemaDef;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Ljava/util/List;
 	public static final fun materializeVector (Lcom/eignex/kumulant/schema/runtime/StatSchemaDef;Lcom/eignex/kumulant/core/Concurrency;)Ljava/util/List;
@@ -3458,13 +3461,17 @@ public final class com/eignex/kumulant/schema/spec/Cusum$Companion {
 public final class com/eignex/kumulant/schema/spec/DDSketch : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/DDSketch$Companion;
 	public fun <init> ()V
-	public fun <init> (DLjava/util/List;)V
-	public synthetic fun <init> (DLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (DLjava/util/List;DD)V
+	public synthetic fun <init> (DLjava/util/List;DDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()D
 	public final fun component2 ()Ljava/util/List;
-	public final fun copy (DLjava/util/List;)Lcom/eignex/kumulant/schema/spec/DDSketch;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DDSketch;DLjava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DDSketch;
+	public final fun component3 ()D
+	public final fun component4 ()D
+	public final fun copy (DLjava/util/List;DD)Lcom/eignex/kumulant/schema/spec/DDSketch;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DDSketch;DLjava/util/List;DDILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DDSketch;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxIndexableValue ()D
+	public final fun getMinIndexableValue ()D
 	public final fun getProbabilities ()Ljava/util/List;
 	public final fun getRelativeError ()D
 	public fun hashCode ()I
@@ -9017,33 +9024,6 @@ public final class com/eignex/kumulant/stat/summary/BernoulliSumStat : com/eigne
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
-}
-
-public final class com/eignex/kumulant/stat/summary/CountResult : com/eignex/kumulant/core/Result {
-	public static final field Companion Lcom/eignex/kumulant/stat/summary/CountResult$Companion;
-	public fun <init> (J)V
-	public final fun component1 ()J
-	public final fun copy (J)Lcom/eignex/kumulant/stat/summary/CountResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/summary/CountResult;JILjava/lang/Object;)Lcom/eignex/kumulant/stat/summary/CountResult;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCount ()J
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/stat/summary/CountResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/summary/CountResult$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/summary/CountResult;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/summary/CountResult;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/summary/CountResult$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/eignex/kumulant/stat/summary/CountStat : com/eignex/kumulant/core/SeriesStat {
