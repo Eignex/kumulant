@@ -73,6 +73,9 @@ class ThresholdBucketStat(
         require(values.counts.size == thresholds.size + 1) {
             "merge counts length ${values.counts.size} != ${thresholds.size + 1}"
         }
+        require(values.thresholds.size == thresholds.size && values.thresholds.indices.all { values.thresholds[it] == thresholds[it] }) {
+            "merge thresholds ${values.thresholds} != ${thresholds.toList()}"
+        }
         values.counts.forEachIndexed { i, c -> counts.add(i, c) }
     }
 
