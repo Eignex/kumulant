@@ -301,6 +301,13 @@ class StatGroupTest {
         assertEquals(1.0, clonedAfterReset[schema.requests].sum, DELTA)
         assertEquals(10.0, clonedAfterReset[schema.billableMsTotal].sum, DELTA)
     }
+
+    @Test
+    fun `StatGroup rejects duplicate stat names`() {
+        assertFailsWith<IllegalArgumentException> {
+            StatGroup(StatKey<SumResult>("hits") to SumStat(), StatKey<SumResult>("hits") to SumStat())
+        }
+    }
 }
 
 class PairedStatGroupTest {

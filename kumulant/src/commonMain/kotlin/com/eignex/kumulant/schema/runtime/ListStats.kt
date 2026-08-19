@@ -13,7 +13,7 @@ import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.spec.*
 
-private fun requireUniqueNames(entries: List<Pair<String, *>>, typeName: String) {
+internal fun requireUniqueNames(entries: List<Pair<String, *>>, typeName: String) {
     val duplicates = entries.map { it.first }.groupingBy { it }.eachCount().filter { it.value > 1 }.keys
     require(duplicates.isEmpty()) {
         "Duplicate stat names in $typeName: $duplicates - pass explicit Pair<String, ...> to disambiguate"

@@ -18,6 +18,12 @@ sealed class AbstractStatGroup<S : Stat<*>>(
     protected val stats: List<BoundStat<*, out S, *>>,
     protected val concurrencyOverride: Concurrency?,
 ) : GroupedStat {
+    init {
+        // read() keys results by name, so a duplicate would silently drop one stat's result and then
+        // feed the survivor's back into both on merge.
+        requireUniqueNames(stats.map { (key, _) -> key.name to key }, this::class.simpleName ?: "StatGroup")
+    }
+
     /**
      * The group's effective level: the override when one was given, otherwise the *weakest* level any
      * child uses.
