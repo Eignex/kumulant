@@ -115,11 +115,16 @@ internal class DerivativeSeriesStat<R : Result>(private val delegate: SeriesStat
         val seen = initialized.addAndGet(1L)
         val prevValue = lastValue.load()
         val prevTs = lastTimestamp.load()
-        lastValue.store(value)
-        lastTimestamp.store(timestampNanos)
-        if (seen <= 1L) return
         val deltaNanos = timestampNanos - prevTs
-        if (deltaNanos == 0L) return
+        // Stored unless the stamp is older than the reference: at the same instant the newer value
+        // is the series value there, but an out-of-order arrival must not drag the reference back.
+        if (seen <= 1L || deltaNanos >= 0L) {
+            lastValue.store(value)
+            lastTimestamp.store(timestampNanos)
+        }
+        if (seen <= 1L) return
+        // Not just `== 0L`: a negative delta divides through to a rate of the wrong sign.
+        if (deltaNanos <= 0L) return
         val rate = (value - prevValue) * NANOS_PER_SECOND / deltaNanos
         delegate.update(rate, timestampNanos, weight)
     }

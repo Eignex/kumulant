@@ -97,4 +97,15 @@ class ShiftsTest {
         assertFailsWith<IllegalArgumentException> { SumStat().lag(0) }
         assertFailsWith<IllegalArgumentException> { SumStat().diff(0) }
     }
+
+    @Test
+    fun `derivative skips an out-of-order observation and keeps its reference point`() {
+        val stat = SumStat().derivative()
+        stat.update(value = 10.0, timestampNanos = 100L)
+        stat.update(value = 20.0, timestampNanos = 300L)
+        stat.update(value = 30.0, timestampNanos = 200L)
+        stat.update(value = 40.0, timestampNanos = 400L)
+        // 5e7 from the second update, then 2e8 measured from (20.0, 300) rather than the skipped one.
+        assertEquals(2.5e8, stat.read().sum, DELTA)
+    }
 }
