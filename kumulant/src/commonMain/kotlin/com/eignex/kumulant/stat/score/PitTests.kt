@@ -17,35 +17,28 @@ import kotlin.math.abs
  */
 fun SparseHistogramResult.pitChiSquared(numBins: Int): Double {
     requirePositiveBins(numBins)
+    val width = 1.0 / numBins
+    val weightPerBin = DoubleArray(numBins)
     var total = 0.0
-    var observedFinite = 0
     for (i in lowerBounds.indices) {
-        if (lowerBounds[i].isFinite() && upperBounds[i].isFinite()) {
+        if (isTopEdgeRow(lowerBounds[i], upperBounds[i])) {
+            weightPerBin[numBins - 1] += weights[i]
             total += weights[i]
-            observedFinite++
-        } else if (isTopEdgeRow(lowerBounds[i], upperBounds[i])) {
-            total += weights[i]
+            continue
         }
+        if (!lowerBounds[i].isFinite() || !upperBounds[i].isFinite()) continue
+        // Map a finite bin to its slot via its upper bound, with a small ulp guard so the
+        // top edge (upperBounds == 1.0) doesn't round into a non-existent bin numBins.
+        val idx = ((upperBounds[i] - 1e-12) / width).toInt().coerceIn(0, numBins - 1)
+        weightPerBin[idx] += weights[i]
+        total += weights[i]
     }
     if (total <= 0.0) return 0.0
     val expected = total / numBins
     var x2 = 0.0
-    var topEdgeWeight = 0.0
-    for (i in lowerBounds.indices) {
-        if (isTopEdgeRow(lowerBounds[i], upperBounds[i])) topEdgeWeight += weights[i]
-    }
-    for (i in lowerBounds.indices) {
-        if (!lowerBounds[i].isFinite() || !upperBounds[i].isFinite()) continue
-        // The top bin absorbs the `[1.0, +Inf)` row, so it is the one bin whose observed weight is
-        // not just its own.
-        val observed = weights[i] + if (upperBounds[i] == 1.0) topEdgeWeight else 0.0
-        val d = observed - expected
+    for (w in weightPerBin) {
+        val d = w - expected
         x2 += d * d / expected
-    }
-    val emptyBins = numBins - observedFinite
-    if (emptyBins > 0) {
-        // Each empty bin contributes (0 - expected)^2 / expected = expected.
-        x2 += emptyBins * expected
     }
     return x2
 }

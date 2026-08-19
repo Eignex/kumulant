@@ -53,4 +53,13 @@ class PitTestsTest {
         assertEquals(0.0, res.pitChiSquared(numBins = 1), DELTA)
         assertEquals(0.0, res.pitKsDistance(numBins = 1), DELTA)
     }
+
+    @Test
+    fun `chi squared counts the top edge row when its bin is otherwise empty`() {
+        val h = pitHistogram(2)
+        h.update(0.25)
+        h.update(1.0)
+        val res = h.read(0L)
+        assertEquals(0.0, res.pitChiSquared(2), DELTA)
+    }
 }
