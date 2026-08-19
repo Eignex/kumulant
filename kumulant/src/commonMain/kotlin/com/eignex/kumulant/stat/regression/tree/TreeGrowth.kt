@@ -286,6 +286,8 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
             if (ticks.load() < config.splitPeriod) return@guarded node
             ticks.store(0L)
 
+            // A merged leaf holds mass in `arm` that no candidate arm ever saw, so this weight can
+            // exceed the candidates'. Sound anyway: rankCandidates gates on the attributed weight.
             val total = arm.read(0L)
             val ranked = shape.rank(total, posArms.map { it.read(0L) }, negArms.map { it.read(0L) })
             // shouldSplit holds every gate: the weight floor, a scorable winner, and the
