@@ -68,12 +68,18 @@ class EwmaVarianceStat(
         val a = weighting.correction(weight)
 
         val currentRawMean = biasedMean.load()
-        val delta = value - currentRawMean
-        val increment = a * delta
+        val increment = a * (value - currentRawMean)
         val newRawMean = currentRawMean + increment
 
+        // Centred on the debiased means, never the raw accumulators: those still carry the zero seed
+        // they started from, which would enter the variance as a term proportional to mean^2 and only
+        // decay at the smoothing rate. read() debiases M2, so the two sides have to agree.
+        val oldWeight = totalWeights.load()
+        val oldMean = weighting.debias(currentRawMean, oldWeight)
+        val newMean = weighting.debias(newRawMean, oldWeight + weight)
+
         val currentBiasedM2 = biasedM2.load()
-        biasedM2.add(a * (delta * (value - newRawMean) - currentBiasedM2))
+        biasedM2.add(a * ((value - oldMean) * (value - newMean) - currentBiasedM2))
         biasedMean.add(increment)
         totalWeights.add(weight)
     }
