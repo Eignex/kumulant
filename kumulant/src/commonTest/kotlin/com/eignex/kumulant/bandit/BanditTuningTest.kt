@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.bandit.contextual.Exp4Bandit
 import com.eignex.kumulant.bandit.contextual.Exp4Expert
 import com.eignex.kumulant.bandit.univariate.Exp3ArmResult
@@ -48,7 +48,7 @@ class BanditTuningTest {
         val alwaysFirst = Exp4Expert { _, k -> DoubleArray(k) { if (it == 0) 1.0 else 0.0 } }
         val alwaysSecond = Exp4Expert { _, k -> DoubleArray(k) { if (it == 1) 1.0 else 0.0 } }
         val bandit = Exp4Bandit(nbrArms = 2, experts = listOf(alwaysFirst, alwaysSecond), random = Random(3))
-        val x: VectorView = DenseVector.of(doubleArrayOf(1.0))
+        val x: F64VectorView = F64DenseVector.of(doubleArrayOf(1.0))
 
         repeat(500) {
             bandit.update(0, x, 1.0)

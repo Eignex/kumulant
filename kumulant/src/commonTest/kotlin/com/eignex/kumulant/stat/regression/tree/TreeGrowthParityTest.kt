@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.feat
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -21,7 +21,7 @@ class TreeGrowthParityTest {
 
     private val candidates = listOf(ThresholdSplit(0, 0.5), ThresholdSplit(1, 0.5))
 
-    private fun regressionStructure(node: RegressionNode<VectorView>): String = when (node) {
+    private fun regressionStructure(node: RegressionNode<F64VectorView>): String = when (node) {
         is RegressionSplitNode -> "(${node.split} ? ${regressionStructure(node.pos)}" +
             " : ${regressionStructure(node.neg)})"
 
@@ -35,8 +35,8 @@ class TreeGrowthParityTest {
         is ClassificationLeafNode -> "leaf"
     }
 
-    private fun grownPair(observations: Int): Pair<RegressionTree<VectorView>, ClassificationTree> {
-        val regression = RegressionTree<VectorView>(splitCandidates = candidates, randomSeed = 7)
+    private fun grownPair(observations: Int): Pair<RegressionTree<F64VectorView>, ClassificationTree> {
+        val regression = RegressionTree<F64VectorView>(splitCandidates = candidates, randomSeed = 7)
         val classification = ClassificationTree(
             numClasses = 2,
             splitCandidates = candidates,
@@ -71,7 +71,7 @@ class TreeGrowthParityTest {
 
     @Test
     fun `neither tree splits while the candidates carry no signal`() {
-        val regression = RegressionTree<VectorView>(splitCandidates = candidates, randomSeed = 7)
+        val regression = RegressionTree<F64VectorView>(splitCandidates = candidates, randomSeed = 7)
         val classification = ClassificationTree(numClasses = 2, splitCandidates = candidates, randomSeed = 7)
         // A constant label leaves every candidate at zero impurity reduction, so shouldSplit must refuse
         // in both trees no matter how much weight piles up.
@@ -88,7 +88,7 @@ class TreeGrowthParityTest {
     fun `snapshot merge into a fresh tree reproduces the grown shape on both sides`() {
         val (regression, classification) = grownPair(observations = 4000)
 
-        val freshRegression = RegressionTree<VectorView>(splitCandidates = candidates, randomSeed = 9)
+        val freshRegression = RegressionTree<F64VectorView>(splitCandidates = candidates, randomSeed = 9)
         freshRegression.mergeSnapshot(regression.rootNode().snapshot())
 
         val freshClassification = ClassificationTree(numClasses = 2, splitCandidates = candidates, randomSeed = 9)

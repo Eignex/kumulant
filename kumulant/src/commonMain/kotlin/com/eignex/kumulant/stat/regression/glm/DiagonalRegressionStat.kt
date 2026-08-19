@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64VectorView
 import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
@@ -85,14 +85,14 @@ class DiagonalRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
             step++
             val eta = learningRate.eval(step.toDouble())
 
-            val etaPred = bias + (x dot DenseVector.wrap(weights))
+            val etaPred = bias + (x dot F64DenseVector.wrap(weights))
             val mu = link.invMean(etaPred)
             val negResidual = mu - y
             val curvature = link.curvature(etaPred)
@@ -126,12 +126,12 @@ class DiagonalRegressionStat(
 
     override fun read(timestampNanos: Long): DiagonalRegressionResult = lock.guarded {
         DiagonalRegressionResult(
-            weights = DenseVector.of(weights),
+            weights = F64DenseVector.of(weights),
             bias = bias,
             biasPrecision = biasPrecision,
             totalWeights = totalWeights,
             step = step,
-            precision = DenseVector.of(precision),
+            precision = F64DenseVector.of(precision),
             link = link,
             sse = sse,
         )

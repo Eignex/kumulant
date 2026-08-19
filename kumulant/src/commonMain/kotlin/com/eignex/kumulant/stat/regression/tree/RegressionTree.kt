@@ -34,9 +34,9 @@ internal typealias RegressionShapeSpi<Row> = TreeShape<
  *
  * The engine is **generic over the feature representation**: it only ever inspects a row
  * by calling [Split.direction], so any feature type can drive growth by supplying its own
- * [Split]s (e.g. a dense [com.eignex.koblas.VectorView] for the built-in stats, or
+ * [Split]s (e.g. a dense [com.eignex.koblas.F64VectorView] for the built-in stats, or
  * a typed/constraint-coupled row from a downstream library). Wire-portable serialization
- * of a snapshot is only meaningful for the [com.eignex.koblas.VectorView] case and
+ * of a snapshot is only meaningful for the [com.eignex.koblas.F64VectorView] case and
  * lives in `TreeRegressionResult.kt` as `VectorView`-constrained extensions.
  *
  * Internal split nodes hold no live arm; subtree aggregates (`rootSnapshot`, the `value`

@@ -1,8 +1,8 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.SparseVector
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64SparseVector
+import com.eignex.koblas.F64VectorView
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
@@ -31,7 +31,7 @@ import kotlin.random.Random
 @Serializable
 @SerialName("KnnArmResult")
 data class KnnArmResult(
-    /** Retained contexts (each a copy of the submitted [VectorView]). */
+    /** Retained contexts (each a copy of the submitted [F64VectorView]). */
     val contexts: List<DoubleArray>,
     /** Per-sample rewards, parallel to [contexts]. */
     val rewards: DoubleArray,
@@ -121,7 +121,7 @@ class KnnContextualBandit(
     /** UCB-style exploration scale on `sqrt(ln(totalSteps) / armWeight)`; `0.0` disables. */
     val exploration: Double = 1.0,
     /** Pairwise distance between context vectors; defaults to squared L2. */
-    val distance: (VectorView, VectorView) -> Double = ::squaredL2,
+    val distance: (F64VectorView, F64VectorView) -> Double = ::squaredL2,
     /** Single source of randomness; used only for tie-breaking, currently deterministic. */
     override val random: Random = Random.Default,
 ) : ContextualBandit,
@@ -134,21 +134,21 @@ class KnnContextualBandit(
         require(exploration >= 0.0) { "exploration must be non-negative, got $exploration" }
     }
 
-    private val historyContexts: Array<MutableList<VectorView>> = Array(nbrArms) { mutableListOf() }
+    private val historyContexts: Array<MutableList<F64VectorView>> = Array(nbrArms) { mutableListOf() }
     private val historyRewards: Array<MutableList<Double>> = Array(nbrArms) { mutableListOf() }
     private val historyWeights: Array<MutableList<Double>> = Array(nbrArms) { mutableListOf() }
     private val totalWeights: DoubleArray = DoubleArray(nbrArms)
     private var step: Long = 0L
 
     /** Argmax over per-arm [evaluate] scores. Ties broken by lowest index. */
-    override fun choose(x: VectorView): Int {
+    override fun choose(x: F64VectorView): Int {
         val bestIdx = argmaxArm(nbrArms) { a -> evaluate(a, x) }
         step++
         return bestIdx
     }
 
     /** Score arm [armIndex] at context [x]: k-NN mean reward + UCB bonus. */
-    override fun evaluate(armIndex: Int, x: VectorView): Double {
+    override fun evaluate(armIndex: Int, x: F64VectorView): Double {
         requireArmIndex(armIndex, nbrArms)
         val ctx = historyContexts[armIndex]
         if (ctx.size < k) return coldStartScore + ucbBonus(armIndex)
@@ -157,7 +157,7 @@ class KnnContextualBandit(
     }
 
     /** Append `(x, reward, weight)` to arm [armIndex]'s history; oldest entry drops if full. */
-    override fun update(armIndex: Int, x: VectorView, reward: Double, weight: Double) {
+    override fun update(armIndex: Int, x: F64VectorView, reward: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
         // An inert observation must not consume a history slot; the eviction below would drop real data.
         if (weight.isInertWeight()) return
@@ -202,7 +202,7 @@ class KnnContextualBandit(
         for (a in 0 until nbrArms) {
             val arm = other[a]
             for (i in arm.contexts.indices) {
-                update(a, DenseVector.of(arm.contexts[i]), arm.rewards[i], arm.weights[i])
+                update(a, F64DenseVector.of(arm.contexts[i]), arm.rewards[i], arm.weights[i])
             }
         }
     }
@@ -230,7 +230,7 @@ class KnnContextualBandit(
         return exploration * sqrt(ln(t) / w)
     }
 
-    private fun knnMean(armIndex: Int, x: VectorView): Double {
+    private fun knnMean(armIndex: Int, x: F64VectorView): Double {
         val ctxs = historyContexts[armIndex]
         val rs = historyRewards[armIndex]
         val ws = historyWeights[armIndex]
@@ -270,17 +270,17 @@ class KnnContextualBandit(
          * stored entries and accumulates dense-only contributions via a baseline
          * pass; sparse/sparse iterates the union of stored indices on both sides.
          */
-        fun squaredL2(a: VectorView, b: VectorView): Double {
+        fun squaredL2(a: F64VectorView, b: F64VectorView): Double {
             require(a.size == b.size) { "size mismatch: ${a.size} vs ${b.size}" }
             return when {
-                a is DenseVector && b is DenseVector -> denseSquaredL2(a, b)
-                a is SparseVector && b is SparseVector -> sparseSquaredL2(a, b)
-                a is SparseVector -> mixedSquaredL2(a, b)
-                else -> mixedSquaredL2(b as SparseVector, a)
+                a is F64DenseVector && b is F64DenseVector -> denseSquaredL2(a, b)
+                a is F64SparseVector && b is F64SparseVector -> sparseSquaredL2(a, b)
+                a is F64SparseVector -> mixedSquaredL2(a, b)
+                else -> mixedSquaredL2(b as F64SparseVector, a)
             }
         }
 
-        private fun denseSquaredL2(a: DenseVector, b: DenseVector): Double {
+        private fun denseSquaredL2(a: F64DenseVector, b: F64DenseVector): Double {
             var s = 0.0
             for (i in 0 until a.size) {
                 val d = a[i] - b[i]
@@ -289,7 +289,7 @@ class KnnContextualBandit(
             return s
         }
 
-        private fun mixedSquaredL2(sparse: SparseVector, dense: VectorView): Double {
+        private fun mixedSquaredL2(sparse: F64SparseVector, dense: F64VectorView): Double {
             // Start from the dense side's full squared norm, then correct the sparse-indexed
             // entries to use (sparse_v - dense_v)^2 instead of dense_v^2.
             var s = 0.0
@@ -305,7 +305,7 @@ class KnnContextualBandit(
             return s
         }
 
-        private fun sparseSquaredL2(a: SparseVector, b: SparseVector): Double {
+        private fun sparseSquaredL2(a: F64SparseVector, b: F64SparseVector): Double {
             var s = 0.0
             a.forEachStored { i, v ->
                 val d = v - b[i]
@@ -319,10 +319,10 @@ class KnnContextualBandit(
         }
     }
 
-    private fun copyOf(x: VectorView): VectorView = when (x) {
-        is DenseVector -> DenseVector.of(x.toDoubleArray())
+    private fun copyOf(x: F64VectorView): F64VectorView = when (x) {
+        is F64DenseVector -> F64DenseVector.of(x.toDoubleArray())
 
-        is SparseVector -> {
+        is F64SparseVector -> {
             val keepIdx = IntArray(x.size)
             val keepVal = DoubleArray(x.size)
             var n = 0
@@ -331,7 +331,7 @@ class KnnContextualBandit(
                 keepVal[n] = v
                 n++
             }
-            SparseVector.of(x.size, keepIdx.copyOf(n), keepVal.copyOf(n))
+            F64SparseVector.of(x.size, keepIdx.copyOf(n), keepVal.copyOf(n))
         }
     }
 }

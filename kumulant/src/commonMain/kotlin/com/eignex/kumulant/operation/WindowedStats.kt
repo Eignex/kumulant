@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -144,7 +144,7 @@ internal class WindowedVectorStat<R : Result>(
     private val template = template.create(concurrency = this.concurrency)
     private val ring = SliceRing<R, VectorStat<R>>(windowDuration, slices, concurrency) { c -> this.template.create(c) }
 
-    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
         ring.slotFor(timestampNanos)?.update(vector, timestampNanos, weight)
     }
 

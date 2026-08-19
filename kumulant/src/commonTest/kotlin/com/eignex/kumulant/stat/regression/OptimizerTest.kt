@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.fitLine
 import com.eignex.kumulant.schema.expr.Const
 import com.eignex.kumulant.schema.optimizer.Adagrad
@@ -88,7 +88,7 @@ class OptimizerTest {
         var correct = 0
         repeat(300) {
             val c = rng.nextInt(3)
-            val x = DenseVector.of(
+            val x = F64DenseVector.of(
                 doubleArrayOf(
                     centers[c][0] + rng.nextDouble() * 0.4 - 0.2,
                     centers[c][1] + rng.nextDouble() * 0.4 - 0.2,

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
@@ -100,7 +100,7 @@ class BanditInterfaceTest {
             posterior = MultivariateGaussian,
             random = Random(5),
         )
-        val x = DenseVector.of(doubleArrayOf(1.0, 0.0))
+        val x = F64DenseVector.of(doubleArrayOf(1.0, 0.0))
         cb.update(1, x, 2.0)
         val asBandit: PerArmBandit<*> = cb
         assertEquals(asBandit.snapshot()[1], asBandit.armResult(1))

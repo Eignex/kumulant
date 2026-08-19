@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema.runtime
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -159,7 +159,7 @@ internal class VectorListStats<R : Result>(
             concurrency = concurrency,
         )
 
-    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(vector, timestampNanos, weight)
     }
 
@@ -244,7 +244,7 @@ internal class RegressionListStats<R : Result>(
         }
     }
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(x, y, timestampNanos, weight)
     }
 

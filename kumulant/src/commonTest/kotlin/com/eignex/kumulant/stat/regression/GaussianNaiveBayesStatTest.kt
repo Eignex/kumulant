@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.DELTA
 import kotlin.math.abs
 import kotlin.random.Random
@@ -56,7 +56,7 @@ class GaussianNaiveBayesStatTest {
         val n = 300
         repeat(n) {
             val c = rng.nextInt(3)
-            val x = DenseVector.of(
+            val x = F64DenseVector.of(
                 doubleArrayOf(
                     centers[c][0] + rng.nextDouble() - 0.5,
                     centers[c][1] + rng.nextDouble() - 0.5,
@@ -73,10 +73,10 @@ class GaussianNaiveBayesStatTest {
         repeat(10) { stat.update(doubleArrayOf(0.0), 0.0) }
         repeat(10) { stat.update(doubleArrayOf(10.0), 1.0) }
         val r = stat.read()
-        val p = r.probabilities(DenseVector.of(doubleArrayOf(9.5)))
+        val p = r.probabilities(F64DenseVector.of(doubleArrayOf(9.5)))
         assertEquals(1.0, p.sum(), 1e-9)
         assertTrue(p[1] > p[0])
-        assertEquals(1, r.predict(DenseVector.of(doubleArrayOf(9.5))))
+        assertEquals(1, r.predict(F64DenseVector.of(doubleArrayOf(9.5))))
     }
 
     @Test

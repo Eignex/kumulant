@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Result
 import kotlin.random.Random
 
@@ -108,7 +108,7 @@ interface UnivariateBandit : Bandit {
  *
  * The standard contextual lifecycle:
  *
- * 1. Caller observes `x: VectorView` (e.g. a user feature vector).
+ * 1. Caller observes `x: F64VectorView` (e.g. a user feature vector).
  * 2. Caller calls [choose] with `x`; the bandit picks an arm by combining
  *    the per-arm model with the context.
  * 3. Caller plays the arm and observes a reward.
@@ -132,14 +132,14 @@ interface ContextualBandit : Bandit {
      * configurable [com.eignex.kumulant.stat.regression.RegressionPosterior]
      * (or analogue) and returns the argmax / sampled choice.
      */
-    fun choose(x: VectorView): Int
+    fun choose(x: F64VectorView): Int
 
     /**
      * Fold a single `(x, reward)` observation into the arm at [armIndex].
      * The `weight` is the same observation-weight running through the
      * library; typically `1.0`, occasionally importance-weighted.
      */
-    fun update(armIndex: Int, x: VectorView, reward: Double, weight: Double = 1.0)
+    fun update(armIndex: Int, x: F64VectorView, reward: Double, weight: Double = 1.0)
 }
 
 /**
@@ -241,5 +241,5 @@ interface Scorable {
  */
 interface ContextualScorable {
     /** Score the arm at [armIndex] under the current state and context [x]. */
-    fun evaluate(armIndex: Int, x: VectorView): Double
+    fun evaluate(armIndex: Int, x: F64VectorView): Double
 }

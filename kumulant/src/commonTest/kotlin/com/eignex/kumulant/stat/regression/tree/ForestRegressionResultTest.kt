@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -21,7 +21,7 @@ class ForestRegressionResultTest {
                 leaf(3.0, 5.0, 1.0),
             ),
         )
-        val r = forest.findLeafMerged(DenseVector.of(doubleArrayOf(0.0)))
+        val r = forest.findLeafMerged(F64DenseVector.of(doubleArrayOf(0.0)))
         val w = 5.0
         val expectedMean = (2.0 * 1.0 + 3.0 * 5.0) / w
         val delta = 5.0 - 1.0
@@ -39,7 +39,7 @@ class ForestRegressionResultTest {
                 leaf(4.0, 2.0, 1.0),
             ),
         )
-        val r = forest.findLeafMerged(DenseVector.of(doubleArrayOf(0.0)))
+        val r = forest.findLeafMerged(F64DenseVector.of(doubleArrayOf(0.0)))
         assertEquals(4.0, r.totalWeights, 1e-12)
         assertEquals(2.0, r.mean, 1e-12)
         assertEquals(1.0, r.variance, 1e-12)
@@ -50,7 +50,7 @@ class ForestRegressionResultTest {
         val forest = ForestRegressionResult(
             trees = listOf(leaf(1.0, 3.0, 0.0), leaf(1.0, 5.0, 0.0)),
         )
-        assertEquals(4.0, forest.predict(DenseVector.of(doubleArrayOf(0.0))), 1e-12)
+        assertEquals(4.0, forest.predict(F64DenseVector.of(doubleArrayOf(0.0))), 1e-12)
     }
 
     @Test
@@ -71,7 +71,7 @@ class ForestRegressionResultTest {
         val forest = ForestRegressionResult(
             trees = listOf(leaf(0.0, 0.0, 0.0), leaf(0.0, 0.0, 0.0)),
         )
-        val r = forest.findLeafMerged(DenseVector.of(doubleArrayOf(0.0)))
+        val r = forest.findLeafMerged(F64DenseVector.of(doubleArrayOf(0.0)))
         assertEquals(0.0, r.totalWeights, 1e-12)
         assertEquals(0.0, r.variance, 1e-12)
     }

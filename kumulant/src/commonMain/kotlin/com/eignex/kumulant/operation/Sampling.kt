@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -104,7 +104,7 @@ internal class ThrottleVectorStat<R : Result>(private val delegate: VectorStat<R
     VectorStat<R>,
     Stat<R> by delegate {
     private val gate = ThrottleGate(every, delegate.concurrency)
-    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
         if (gate.pass()) delegate.update(vector, timestampNanos, weight)
     }
@@ -183,7 +183,7 @@ internal class SampleVectorStat<R : Result>(
 ) : VectorStat<R>,
     Stat<R> by delegate {
     private val gate = SampleGate(rate, seed, delegate.concurrency)
-    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
         if (gate.pass()) delegate.update(vector, timestampNanos, weight)
     }

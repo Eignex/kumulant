@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -37,13 +37,13 @@ class RandomForestClassifierStatTest {
             stat.update(doubleArrayOf(x0, x1), label.toDouble())
         }
         val r = stat.read()
-        val p = r.probabilities(DenseVector.of(doubleArrayOf(0.5, 0.5)))
+        val p = r.probabilities(F64DenseVector.of(doubleArrayOf(0.5, 0.5)))
         assertEquals(1.0, p.sum(), 1e-9)
         val correct = (0 until 200).count {
             val x0 = rng.nextDouble() * 2.0 - 1.0
             val x1 = rng.nextDouble() * 2.0 - 1.0
             val label = if (x0 > 0.0) 1 else 0
-            r.predict(DenseVector.of(doubleArrayOf(x0, x1))) == label
+            r.predict(F64DenseVector.of(doubleArrayOf(x0, x1))) == label
         }
         assertTrue(correct > 170, "accuracy=$correct/200")
     }

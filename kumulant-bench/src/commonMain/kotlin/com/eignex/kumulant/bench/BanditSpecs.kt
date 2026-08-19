@@ -7,7 +7,7 @@ import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.bandit.univariate.UCB1
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
 import com.eignex.kumulant.stat.regression.glm.PointPosterior
@@ -100,14 +100,14 @@ fun contextualBanditSpec(
     build = build,
     cycle = { bandit, oracle ->
         val ctx = sampleContext(oracle)
-        val x = DenseVector.of(ctx)
+        val x = F64DenseVector.of(ctx)
         val i = bandit.choose(x)
         val r = sampleReward(i, ctx, oracle)
         bandit.update(i, x, r)
     },
     regretCycle = { bandit, oracle, ref ->
         val ctx = sampleContext(oracle)
-        val x = DenseVector.of(ctx)
+        val x = F64DenseVector.of(ctx)
         val i = bandit.choose(x)
         val r = sampleReward(i, ctx, oracle)
         bandit.update(i, x, r)

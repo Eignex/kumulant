@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
@@ -42,7 +42,7 @@ class RegressionArityGuardTest {
         val violations = mutableListOf<String>()
         for ((name, stat) in stats) {
             for (size in listOf(FEATURES - 1, FEATURES + 1)) {
-                val x = DenseVector.of(DoubleArray(size) { 1.0 })
+                val x = F64DenseVector.of(DoubleArray(size) { 1.0 })
                 val thrown = runCatching { stat.update(x, 1.0) }.exceptionOrNull()
                 when {
                     thrown == null -> violations += "$name accepted a vector of size $size"
@@ -61,7 +61,7 @@ class RegressionArityGuardTest {
         // change, and because RegressionOpsTest greps it.
         for ((name, stat) in stats) {
             val thrown = runCatching {
-                stat.update(DenseVector.of(doubleArrayOf(1.0)), 1.0)
+                stat.update(F64DenseVector.of(doubleArrayOf(1.0)), 1.0)
             }.exceptionOrNull()
             val message = thrown?.message.orEmpty()
             assertTrue("x.size=1" in message, "$name did not report the size it got: $message")
@@ -73,7 +73,7 @@ class RegressionArityGuardTest {
     fun `a correctly sized vector is still accepted`() {
         // Guards the guard: a require that rejected everything would satisfy both tests above.
         for ((name, stat) in stats) {
-            val x = DenseVector.of(DoubleArray(FEATURES) { 1.0 })
+            val x = F64DenseVector.of(DoubleArray(FEATURES) { 1.0 })
             val thrown = runCatching { stat.update(x, 1.0) }.exceptionOrNull()
             assertEquals(null, thrown?.message, "$name rejected a correctly sized vector")
         }

@@ -3,10 +3,10 @@
 
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.MatrixView
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseMatrix
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64MatrixView
+import com.eignex.koblas.F64VectorView
 import com.eignex.koblas.axpy
 import com.eignex.koblas.dense.CholeskyDecomposition
 import com.eignex.koblas.dense.CholeskyPolicy
@@ -85,8 +85,8 @@ class BayesianRegressionStat(
     /** Canonical GLM link function; [Link.Identity] is the strict closed-form Gaussian posterior. */
     val link: Link = Link.Identity,
     override val concurrency: Concurrency = Concurrency.None,
-    priorMean: VectorView? = null,
-    priorCovariance: MatrixView? = null,
+    priorMean: F64VectorView? = null,
+    priorCovariance: F64MatrixView? = null,
 ) : RegressionStat<CovarianceRegressionResult> {
 
     init {
@@ -106,13 +106,13 @@ class BayesianRegressionStat(
     // `initialCovarianceL` is validated up front via strict (non-regularising) Cholesky
     // so a non-PD user prior throws at construction rather than silently corrupting fits.
     private val initialWeights: DoubleArray = priorMean?.toDoubleArray() ?: DoubleArray(featureSize)
-    private val initialCovariance: DenseMatrix = priorCovariance
-        ?.let { DenseMatrix.of(it.toArray()) }
-        ?: DenseMatrix.diagonal(featureSize, priorVariance)
-    private val initialCovarianceL: DenseMatrix
+    private val initialCovariance: F64DenseMatrix = priorCovariance
+        ?.let { F64DenseMatrix.of(it.toArray()) }
+        ?: F64DenseMatrix.diagonal(featureSize, priorVariance)
+    private val initialCovarianceL: F64DenseMatrix
 
     // Prior precision H_prior = Sigma_prior^-1, cached so merge() can subtract one prior factor.
-    private val priorPrecisionMatrix: DenseMatrix
+    private val priorPrecisionMatrix: F64DenseMatrix
 
     init {
         val chol = initialCovariance.cholesky(CholeskyPolicy.Strict)
@@ -130,16 +130,16 @@ class BayesianRegressionStat(
     }
 
     private val lock = concurrency.serializedLock()
-    private val weights = DenseVector.of(initialWeights.copyOf())
-    private val covariance = DenseMatrix.of(initialCovariance.toArray())
-    private val covarianceL = DenseMatrix.of(initialCovarianceL.toArray())
+    private val weights = F64DenseVector.of(initialWeights.copyOf())
+    private val covariance = F64DenseMatrix.of(initialCovariance.toArray())
+    private val covarianceL = F64DenseMatrix.of(initialCovarianceL.toArray())
     private var bias: Double = 0.0
     private var biasPrecision: Double = 1.0 / priorVariance
     private var totalWeights: Double = 0.0
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
@@ -200,13 +200,13 @@ class BayesianRegressionStat(
 
     override fun read(timestampNanos: Long): CovarianceRegressionResult = lock.guarded {
         CovarianceRegressionResult(
-            weights = DenseVector.of(weights.toDoubleArray()),
+            weights = F64DenseVector.of(weights.toDoubleArray()),
             bias = bias,
             biasPrecision = biasPrecision,
             totalWeights = totalWeights,
             step = step,
-            covariance = DenseMatrix.of(covariance.toArray()),
-            covarianceL = DenseMatrix.of(covarianceL.toArray()),
+            covariance = F64DenseMatrix.of(covariance.toArray()),
+            covarianceL = F64DenseMatrix.of(covarianceL.toArray()),
             link = link,
             sse = sse,
         )
@@ -240,7 +240,7 @@ class BayesianRegressionStat(
             val hOther = CholeskyDecomposition(values.covarianceL).invert()
 
             // H_new = H_self + H_other - H_prior.
-            val hNew = DenseMatrix.zero(n, n)
+            val hNew = F64DenseMatrix.zero(n, n)
             for (i in 0 until n) {
                 for (j in 0 until n) {
                     hNew[i, j] = hSelf[i, j] + hOther[i, j] - priorPrecisionMatrix[i, j]
@@ -304,8 +304,8 @@ class BayesianRegressionStat(
         priorVariance = priorVariance,
         link = link,
         concurrency = concurrency ?: this.concurrency,
-        priorMean = DenseVector.of(initialWeights.copyOf()),
-        priorCovariance = DenseMatrix.of(initialCovariance.toArray()),
+        priorMean = F64DenseVector.of(initialWeights.copyOf()),
+        priorCovariance = F64DenseMatrix.of(initialCovariance.toArray()),
     )
 
     /** Empirical-Bayes / hierarchical helpers that operate on populations of fitted snapshots. */
@@ -350,7 +350,7 @@ class BayesianRegressionStat(
             for (i in 0 until n) muPop[i] /= wTotal
 
             // Sigma_pop = weighted mean of Sigma_i + weighted covariance of (mu_i - mu_pop).
-            val sigmaPop = DenseMatrix.zero(n, n)
+            val sigmaPop = F64DenseMatrix.zero(n, n)
             for (s in snapshots.indices) {
                 val wi = weights[s] / wTotal
                 val cov = snapshots[s].covariance
@@ -364,7 +364,7 @@ class BayesianRegressionStat(
             }
 
             return PopulationPrior(
-                mean = DenseVector.of(muPop),
+                mean = F64DenseVector.of(muPop),
                 covariance = sigmaPop,
                 instanceCount = snapshots.size,
             )
@@ -380,9 +380,9 @@ class BayesianRegressionStat(
 @Serializable
 data class PopulationPrior(
     /** Population mean of the per-instance posterior means. */
-    val mean: DenseVector,
+    val mean: F64DenseVector,
     /** Population covariance: within-instance posterior + between-instance mean spread. */
-    val covariance: DenseMatrix,
+    val covariance: F64DenseMatrix,
     /** Number of per-instance posteriors that contributed to this prior. */
     val instanceCount: Int,
 )

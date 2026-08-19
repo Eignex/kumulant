@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stream
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.Stat
@@ -193,7 +193,7 @@ class ConcurrentReadInvariantsTest {
             val writers = 6
             val iters = 3_000
             assertReadInvariants("HalfSpaceTreesStat[$level]", stat, writers = writers, iters = iters, write = { t, i ->
-                val v = DenseVector.of(
+                val v = F64DenseVector.of(
                     doubleArrayOf(
                         ((t * 7 + i) % 100) / 100.0,
                         ((t * 13 + i * 3) % 100) / 100.0,
@@ -204,7 +204,7 @@ class ConcurrentReadInvariantsTest {
             }) { r ->
                 assertTrue(r.totalWeights >= 0.0, "totalWeights=${r.totalWeights}")
                 for (m in r.referenceMass) assertTrue(m >= 0.0 && m.isFinite(), "referenceMass entry $m")
-                val s = r.score(DenseVector.of(doubleArrayOf(0.5, 0.5, 0.5)))
+                val s = r.score(F64DenseVector.of(doubleArrayOf(0.5, 0.5, 0.5)))
                 assertTrue(s.isFinite() && s >= 0.0, "score=$s")
             }
             val fed = (writers * iters).toDouble()

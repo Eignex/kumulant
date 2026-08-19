@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
@@ -96,7 +96,7 @@ class WeightsTest {
             assertEquals(0.0, discrete.read().estimate, "discrete moved on weight $inert")
 
             val regression = StochasticRegressionStat(featureSize = 2).withWeight(2.0)
-            regression.update(DenseVector.of(doubleArrayOf(1.0, 1.0)), 1.0, weight = inert)
+            regression.update(F64DenseVector.of(doubleArrayOf(1.0, 1.0)), 1.0, weight = inert)
             assertEquals(0.0, regression.read().totalWeights, DELTA, "regression moved on weight $inert")
         }
     }

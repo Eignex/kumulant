@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Result
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,13 +13,13 @@ data class TreeClassificationResult(
     val root: TreeClassificationNodeResult,
 ) : Result {
     /** Walk to the leaf the context [x] resolves to and return its class-count snapshot. */
-    fun findLeaf(x: VectorView): ClassCountsResult = root.findLeaf(x)
+    fun findLeaf(x: F64VectorView): ClassCountsResult = root.findLeaf(x)
 
     /** Class probabilities at the leaf [x] resolves to. */
-    fun probabilities(x: VectorView): DoubleArray = findLeaf(x).probabilities()
+    fun probabilities(x: F64VectorView): DoubleArray = findLeaf(x).probabilities()
 
     /** Argmax class index at the leaf [x] resolves to. */
-    fun predict(x: VectorView): Int = findLeaf(x).predict()
+    fun predict(x: F64VectorView): Int = findLeaf(x).predict()
 
     /** Cumulative weight folded into the tree. */
     val totalWeights: Double get() = root.value.totalWeights
@@ -35,7 +35,7 @@ sealed interface TreeClassificationNodeResult {
     val value: ClassCountsResult
 
     /** Route [x] to the leaf this subtree assigns it to. */
-    fun findLeaf(x: VectorView): ClassCountsResult
+    fun findLeaf(x: F64VectorView): ClassCountsResult
 }
 
 /** Immutable classification split-node snapshot. */
@@ -50,7 +50,7 @@ data class TreeClassificationSplitResult(
     val neg: TreeClassificationNodeResult,
     override val value: ClassCountsResult,
 ) : TreeClassificationNodeResult {
-    override fun findLeaf(x: VectorView): ClassCountsResult =
+    override fun findLeaf(x: F64VectorView): ClassCountsResult =
         if (split.direction(x)) pos.findLeaf(x) else neg.findLeaf(x)
 }
 
@@ -58,7 +58,7 @@ data class TreeClassificationSplitResult(
 @Serializable
 @SerialName("TreeClassificationLeafResult")
 data class TreeClassificationLeafResult(override val value: ClassCountsResult) : TreeClassificationNodeResult {
-    override fun findLeaf(x: VectorView): ClassCountsResult = value
+    override fun findLeaf(x: F64VectorView): ClassCountsResult = value
 }
 
 /** Freeze a live classification-tree node into an immutable snapshot. */

@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseMatrix
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 
@@ -37,8 +37,8 @@ class HierarchicalBayesianRegression(
     /** Concurrency level forwarded to each instance. */
     val concurrency: Concurrency = Concurrency.None,
     initialPriorVariance: Double = 1.0,
-    initialPriorMean: DenseVector? = null,
-    initialPriorCovariance: DenseMatrix? = null,
+    initialPriorMean: F64DenseVector? = null,
+    initialPriorCovariance: F64DenseMatrix? = null,
 ) {
     init {
         requirePositiveFeatureSize(featureSize)
@@ -52,8 +52,8 @@ class HierarchicalBayesianRegression(
      * call [refit] to update it from the current per-instance posteriors.
      */
     var populationPrior: PopulationPrior = PopulationPrior(
-        mean = initialPriorMean ?: DenseVector.zero(featureSize),
-        covariance = initialPriorCovariance ?: DenseMatrix.diagonal(featureSize, initialPriorVariance),
+        mean = initialPriorMean ?: F64DenseVector.zero(featureSize),
+        covariance = initialPriorCovariance ?: F64DenseMatrix.diagonal(featureSize, initialPriorVariance),
         instanceCount = 0,
     )
         private set

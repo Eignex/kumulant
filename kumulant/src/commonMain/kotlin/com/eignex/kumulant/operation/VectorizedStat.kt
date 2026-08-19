@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64VectorView
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
@@ -17,7 +17,7 @@ import com.eignex.kumulant.core.requireFeatureSize
  * entries; incoming vectors must match [dimensions] exactly.
  *
  * When [skipZeros] is `true`, only the stored entries of the input vector are
- * forwarded to their per-dimension stats. For a [com.eignex.koblas.SparseVector]
+ * forwarded to their per-dimension stats. For a [com.eignex.koblas.F64SparseVector]
  * this turns the per-update cost from `O(dimensions)` into `O(nnz)`, and an
  * unobserved index is treated as "no update" rather than "update with 0.0".
  * Keep the default (`false`) for stats whose semantics distinguish zero from
@@ -35,7 +35,7 @@ internal class VectorizedStat<R : Result>(
 
     override val concurrency: Concurrency get() = template.concurrency
 
-    override fun update(vector: VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
         vector.requireFeatureSize(dimensions)
         if (skipZeros) {
             vector.forEachStored { i, v -> stats[i].update(v, timestampNanos, weight) }

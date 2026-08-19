@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
@@ -131,7 +131,7 @@ class HierarchicalBayesianRegressionTest {
 
     @Test
     fun `caller-supplied initial prior is honoured`() {
-        val seedMean = DenseVector.of(doubleArrayOf(7.0, -3.0))
+        val seedMean = F64DenseVector.of(doubleArrayOf(7.0, -3.0))
         val pop = HierarchicalBayesianRegression(
             featureSize = 2,
             initialPriorMean = seedMean,

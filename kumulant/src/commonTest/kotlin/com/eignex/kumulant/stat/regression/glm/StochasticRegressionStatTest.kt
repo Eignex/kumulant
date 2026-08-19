@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.fitLine
 import com.eignex.kumulant.schema.optimizer.Sgd
@@ -72,7 +72,7 @@ class StochasticRegressionStatTest {
         val snap = stat.read()
         assertTrue(snap.weights[0] > 0.0, "w[0] = ${snap.weights[0]} should be positive")
         assertTrue(snap.weights[1] < 0.0, "w[1] = ${snap.weights[1]} should be negative")
-        val p1 = snap.predict(DenseVector.of(doubleArrayOf(1.0, -1.0)))
+        val p1 = snap.predict(F64DenseVector.of(doubleArrayOf(1.0, -1.0)))
         assertTrue(p1 in 0.0..1.0)
     }
 
@@ -155,7 +155,7 @@ class StochasticRegressionStatTest {
             optimizer = Sgd(ConstantRate(0.01)),
             penalty = Penalty.L2(0.1),
         )
-        stat.update(DenseVector.of(doubleArrayOf(1.0, 0.5)), 1.0, 0L, weight = 1000.0)
+        stat.update(F64DenseVector.of(doubleArrayOf(1.0, 0.5)), 1.0, 0L, weight = 1000.0)
         val w = stat.read().weights.toDoubleArray()
         for (v in w) assertTrue(v.isFinite(), "weight $v not finite")
     }

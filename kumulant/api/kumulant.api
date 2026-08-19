@@ -27,17 +27,17 @@ public final class com/eignex/kumulant/bandit/BanditFactoryKt {
 }
 
 public abstract interface class com/eignex/kumulant/bandit/ContextualBandit : com/eignex/kumulant/bandit/Bandit {
-	public abstract fun choose (Lcom/eignex/koblas/VectorView;)I
-	public abstract fun update (ILcom/eignex/koblas/VectorView;DD)V
-	public static synthetic fun update$default (Lcom/eignex/kumulant/bandit/ContextualBandit;ILcom/eignex/koblas/VectorView;DDILjava/lang/Object;)V
+	public abstract fun choose (Lcom/eignex/koblas/F64VectorView;)I
+	public abstract fun update (ILcom/eignex/koblas/F64VectorView;DD)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/bandit/ContextualBandit;ILcom/eignex/koblas/F64VectorView;DDILjava/lang/Object;)V
 }
 
 public final class com/eignex/kumulant/bandit/ContextualBandit$DefaultImpls {
-	public static synthetic fun update$default (Lcom/eignex/kumulant/bandit/ContextualBandit;ILcom/eignex/koblas/VectorView;DDILjava/lang/Object;)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/bandit/ContextualBandit;ILcom/eignex/koblas/F64VectorView;DDILjava/lang/Object;)V
 }
 
 public abstract interface class com/eignex/kumulant/bandit/ContextualScorable {
-	public abstract fun evaluate (ILcom/eignex/koblas/VectorView;)D
+	public abstract fun evaluate (ILcom/eignex/koblas/F64VectorView;)D
 }
 
 public abstract interface class com/eignex/kumulant/bandit/PerArmBandit : com/eignex/kumulant/bandit/Snapshotable {
@@ -61,14 +61,14 @@ public abstract interface class com/eignex/kumulant/bandit/Snapshotable {
 public final class com/eignex/kumulant/bandit/TrackedContextualBandit : com/eignex/kumulant/bandit/ContextualBandit {
 	public fun <init> (Lcom/eignex/kumulant/bandit/ContextualBandit;ILcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/kumulant/core/PairedStat;Lkotlin/jvm/functions/Function0;)V
 	public synthetic fun <init> (Lcom/eignex/kumulant/bandit/ContextualBandit;ILcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/kumulant/core/PairedStat;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun choose (Lcom/eignex/koblas/VectorView;)I
+	public fun choose (Lcom/eignex/koblas/F64VectorView;)I
 	public final fun chooseResult ()Lcom/eignex/kumulant/core/Result;
 	public final fun getContextFeatureSize ()I
 	public final fun getInner ()Lcom/eignex/kumulant/bandit/ContextualBandit;
 	public fun getNbrArms ()I
 	public fun getRandom ()Lkotlin/random/Random;
 	public fun reset ()V
-	public fun update (ILcom/eignex/koblas/VectorView;DD)V
+	public fun update (ILcom/eignex/koblas/F64VectorView;DD)V
 	public final fun updateArmRewardResult ()Lcom/eignex/kumulant/core/Result;
 	public final fun updateJointResult ()Lcom/eignex/kumulant/core/Result;
 	public final fun updateMarginalResult ()Lcom/eignex/kumulant/core/Result;
@@ -114,7 +114,7 @@ public final class com/eignex/kumulant/bandit/contextual/Exp4Bandit : com/eignex
 	public static final field Companion Lcom/eignex/kumulant/bandit/contextual/Exp4Bandit$Companion;
 	public fun <init> (ILjava/util/List;DDLkotlin/random/Random;)V
 	public synthetic fun <init> (ILjava/util/List;DDLkotlin/random/Random;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun choose (Lcom/eignex/koblas/VectorView;)I
+	public fun choose (Lcom/eignex/koblas/F64VectorView;)I
 	public synthetic fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Snapshotable;
 	public fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/contextual/Exp4Bandit;
 	public final fun expertWeights ()[D
@@ -125,11 +125,11 @@ public final class com/eignex/kumulant/bandit/contextual/Exp4Bandit : com/eignex
 	public fun getRandom ()Lkotlin/random/Random;
 	public fun merge (Lcom/eignex/kumulant/bandit/contextual/Exp4State;)V
 	public synthetic fun merge (Ljava/lang/Object;)V
-	public final fun playDistribution (Lcom/eignex/koblas/VectorView;)[D
+	public final fun playDistribution (Lcom/eignex/koblas/F64VectorView;)[D
 	public fun reset ()V
 	public fun snapshot ()Lcom/eignex/kumulant/bandit/contextual/Exp4State;
 	public synthetic fun snapshot ()Ljava/lang/Object;
-	public fun update (ILcom/eignex/koblas/VectorView;DD)V
+	public fun update (ILcom/eignex/koblas/F64VectorView;DD)V
 }
 
 public final class com/eignex/kumulant/bandit/contextual/Exp4Bandit$Companion {
@@ -138,7 +138,7 @@ public final class com/eignex/kumulant/bandit/contextual/Exp4Bandit$Companion {
 }
 
 public abstract interface class com/eignex/kumulant/bandit/contextual/Exp4Expert {
-	public abstract fun advise (Lcom/eignex/koblas/VectorView;I)[D
+	public abstract fun advise (Lcom/eignex/koblas/F64VectorView;I)[D
 }
 
 public final class com/eignex/kumulant/bandit/contextual/Exp4State : com/eignex/kumulant/core/Result {
@@ -208,10 +208,10 @@ public final class com/eignex/kumulant/bandit/contextual/KnnContextualBandit : c
 	public fun armResult (I)Lcom/eignex/kumulant/bandit/contextual/KnnArmResult;
 	public synthetic fun armResult (I)Lcom/eignex/kumulant/core/Result;
 	public final fun armWeight (I)D
-	public fun choose (Lcom/eignex/koblas/VectorView;)I
+	public fun choose (Lcom/eignex/koblas/F64VectorView;)I
 	public synthetic fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Snapshotable;
 	public fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualBandit;
-	public fun evaluate (ILcom/eignex/koblas/VectorView;)D
+	public fun evaluate (ILcom/eignex/koblas/F64VectorView;)D
 	public final fun getColdStartScore ()D
 	public final fun getDistance ()Lkotlin/jvm/functions/Function2;
 	public final fun getExploration ()D
@@ -225,11 +225,11 @@ public final class com/eignex/kumulant/bandit/contextual/KnnContextualBandit : c
 	public fun reset ()V
 	public synthetic fun snapshot ()Ljava/lang/Object;
 	public fun snapshot ()Ljava/util/List;
-	public fun update (ILcom/eignex/koblas/VectorView;DD)V
+	public fun update (ILcom/eignex/koblas/F64VectorView;DD)V
 }
 
 public final class com/eignex/kumulant/bandit/contextual/KnnContextualBandit$Companion {
-	public final fun squaredL2 (Lcom/eignex/koblas/VectorView;Lcom/eignex/koblas/VectorView;)D
+	public final fun squaredL2 (Lcom/eignex/koblas/F64VectorView;Lcom/eignex/koblas/F64VectorView;)D
 }
 
 public final class com/eignex/kumulant/bandit/contextual/KnnContextualSpec : com/eignex/kumulant/bandit/contextual/ContextualBanditSpec {
@@ -391,10 +391,10 @@ public final class com/eignex/kumulant/bandit/contextual/RegressionContextualBan
 	public synthetic fun <init> (ILcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/kumulant/stat/regression/RegressionPosterior;DLcom/eignex/kumulant/core/RegressionStat;Lkotlin/random/Random;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun armResult (I)Lcom/eignex/kumulant/core/Result;
 	public final fun armStat (I)Lcom/eignex/kumulant/core/RegressionStat;
-	public fun choose (Lcom/eignex/koblas/VectorView;)I
+	public fun choose (Lcom/eignex/koblas/F64VectorView;)I
 	public synthetic fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Snapshotable;
 	public fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/contextual/RegressionContextualBandit;
-	public fun evaluate (ILcom/eignex/koblas/VectorView;)D
+	public fun evaluate (ILcom/eignex/koblas/F64VectorView;)D
 	public final fun getExploration ()D
 	public fun getNbrArms ()I
 	public final fun getPosterior ()Lcom/eignex/kumulant/stat/regression/RegressionPosterior;
@@ -407,7 +407,7 @@ public final class com/eignex/kumulant/bandit/contextual/RegressionContextualBan
 	public fun reset ()V
 	public synthetic fun snapshot ()Ljava/lang/Object;
 	public fun snapshot ()Ljava/util/List;
-	public fun update (ILcom/eignex/koblas/VectorView;DD)V
+	public fun update (ILcom/eignex/koblas/F64VectorView;DD)V
 }
 
 public final class com/eignex/kumulant/bandit/contextual/RegressionContextualSpec : com/eignex/kumulant/bandit/contextual/ContextualBanditSpec {
@@ -1840,13 +1840,13 @@ public abstract interface class com/eignex/kumulant/core/HasCenterScale : com/ei
 public abstract interface class com/eignex/kumulant/core/HasLinearModel : com/eignex/kumulant/core/Result {
 	public abstract fun getBias ()D
 	public fun getFeatureSize ()I
-	public abstract fun getWeights ()Lcom/eignex/koblas/VectorView;
-	public fun predict (Lcom/eignex/koblas/VectorView;)D
+	public abstract fun getWeights ()Lcom/eignex/koblas/F64VectorView;
+	public fun predict (Lcom/eignex/koblas/F64VectorView;)D
 }
 
 public final class com/eignex/kumulant/core/HasLinearModel$DefaultImpls {
 	public static fun getFeatureSize (Lcom/eignex/kumulant/core/HasLinearModel;)I
-	public static fun predict (Lcom/eignex/kumulant/core/HasLinearModel;Lcom/eignex/koblas/VectorView;)D
+	public static fun predict (Lcom/eignex/kumulant/core/HasLinearModel;Lcom/eignex/koblas/F64VectorView;)D
 }
 
 public abstract interface class com/eignex/kumulant/core/HasMinMax : com/eignex/kumulant/core/Result {
@@ -1939,16 +1939,16 @@ public abstract interface class com/eignex/kumulant/core/HasSlope : com/eignex/k
 	public fun getFeatureSize ()I
 	public abstract fun getIntercept ()D
 	public abstract fun getSlope ()D
-	public fun getWeights ()Lcom/eignex/koblas/VectorView;
+	public fun getWeights ()Lcom/eignex/koblas/F64VectorView;
 	public fun predict (D)D
 }
 
 public final class com/eignex/kumulant/core/HasSlope$DefaultImpls {
 	public static fun getBias (Lcom/eignex/kumulant/core/HasSlope;)D
 	public static fun getFeatureSize (Lcom/eignex/kumulant/core/HasSlope;)I
-	public static fun getWeights (Lcom/eignex/kumulant/core/HasSlope;)Lcom/eignex/koblas/VectorView;
+	public static fun getWeights (Lcom/eignex/kumulant/core/HasSlope;)Lcom/eignex/koblas/F64VectorView;
 	public static fun predict (Lcom/eignex/kumulant/core/HasSlope;D)D
-	public static fun predict (Lcom/eignex/kumulant/core/HasSlope;Lcom/eignex/koblas/VectorView;)D
+	public static fun predict (Lcom/eignex/kumulant/core/HasSlope;Lcom/eignex/koblas/F64VectorView;)D
 }
 
 public final class com/eignex/kumulant/core/IndexedResult : com/eignex/kumulant/core/Result {
@@ -1999,22 +1999,22 @@ public abstract interface class com/eignex/kumulant/core/RegressionStat : com/ei
 	public abstract fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/RegressionStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public abstract fun getFeatureSize ()I
-	public fun update (Lcom/eignex/koblas/VectorView;DD)V
-	public abstract fun update (Lcom/eignex/koblas/VectorView;DJD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public abstract fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
-	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/VectorView;DDILjava/lang/Object;)V
-	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/VectorView;DJDILjava/lang/Object;)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/F64VectorView;DDILjava/lang/Object;)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/F64VectorView;DJDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;[DDDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;[DDJDILjava/lang/Object;)V
 }
 
 public final class com/eignex/kumulant/core/RegressionStat$DefaultImpls {
-	public static fun update (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/VectorView;DD)V
+	public static fun update (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/F64VectorView;DD)V
 	public static fun update (Lcom/eignex/kumulant/core/RegressionStat;[DDD)V
 	public static fun update (Lcom/eignex/kumulant/core/RegressionStat;[DDJD)V
-	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/VectorView;DDILjava/lang/Object;)V
-	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/VectorView;DJDILjava/lang/Object;)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/F64VectorView;DDILjava/lang/Object;)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/F64VectorView;DJDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;[DDDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;[DDJDILjava/lang/Object;)V
 }
@@ -2086,22 +2086,22 @@ public final class com/eignex/kumulant/core/Stat$DefaultImpls {
 public abstract interface class com/eignex/kumulant/core/VectorStat : com/eignex/kumulant/core/Stat {
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public abstract fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/VectorStat;
-	public fun update (Lcom/eignex/koblas/VectorView;D)V
-	public abstract fun update (Lcom/eignex/koblas/VectorView;JD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;D)V
+	public abstract fun update (Lcom/eignex/koblas/F64VectorView;JD)V
 	public fun update ([DD)V
 	public fun update ([DJD)V
-	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/VectorView;DILjava/lang/Object;)V
-	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/VectorView;JDILjava/lang/Object;)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/F64VectorView;DILjava/lang/Object;)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/F64VectorView;JDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;[DDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;[DJDILjava/lang/Object;)V
 }
 
 public final class com/eignex/kumulant/core/VectorStat$DefaultImpls {
-	public static fun update (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/VectorView;D)V
+	public static fun update (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/F64VectorView;D)V
 	public static fun update (Lcom/eignex/kumulant/core/VectorStat;[DD)V
 	public static fun update (Lcom/eignex/kumulant/core/VectorStat;[DJD)V
-	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/VectorView;DILjava/lang/Object;)V
-	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/VectorView;JDILjava/lang/Object;)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/F64VectorView;DILjava/lang/Object;)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/F64VectorView;JDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;[DDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;[DJDILjava/lang/Object;)V
 }
@@ -3099,8 +3099,8 @@ public final class com/eignex/kumulant/schema/runtime/VectorStatGroup : com/eign
 	public synthetic fun <init> ([Lkotlin/Pair;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/VectorStat;
-	public fun update (Lcom/eignex/koblas/VectorView;D)V
-	public fun update (Lcom/eignex/koblas/VectorView;JD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;D)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;JD)V
 	public fun update ([DD)V
 	public fun update ([DJD)V
 }
@@ -5001,7 +5001,7 @@ public final class com/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult : com/e
 	public fun getTotalWeights ()D
 	public fun hashCode ()I
 	public fun isEmpty ()Z
-	public final fun score (Lcom/eignex/koblas/VectorView;)D
+	public final fun score (Lcom/eignex/koblas/F64VectorView;)D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -5038,8 +5038,8 @@ public final class com/eignex/kumulant/stat/anomaly/HalfSpaceTreesStat : com/eig
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult;
 	public fun reset ()V
-	public fun update (Lcom/eignex/koblas/VectorView;D)V
-	public fun update (Lcom/eignex/koblas/VectorView;JD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;D)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;JD)V
 	public fun update ([DD)V
 	public fun update ([DJD)V
 }
@@ -6770,30 +6770,30 @@ public final class com/eignex/kumulant/stat/regression/CovarianceStat : com/eign
 }
 
 public final class com/eignex/kumulant/stat/regression/GaussianNaiveBayesResult : com/eignex/kumulant/core/HasObservationCount {
-	public fun <init> (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DD)V
+	public fun <init> (IILcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseVector;DD)V
 	public final fun component1 ()I
 	public final fun component2 ()I
-	public final fun component3 ()Lcom/eignex/koblas/DenseMatrix;
-	public final fun component4 ()Lcom/eignex/koblas/DenseMatrix;
-	public final fun component5 ()Lcom/eignex/koblas/DenseVector;
+	public final fun component3 ()Lcom/eignex/koblas/F64DenseMatrix;
+	public final fun component4 ()Lcom/eignex/koblas/F64DenseMatrix;
+	public final fun component5 ()Lcom/eignex/koblas/F64DenseVector;
 	public final fun component6 ()D
 	public final fun component7 ()D
-	public final fun copy (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DD)Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;
+	public final fun copy (IILcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseVector;DD)Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;IILcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseVector;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getClassWeights ()Lcom/eignex/koblas/DenseVector;
+	public final fun getClassWeights ()Lcom/eignex/koblas/F64DenseVector;
 	public final fun getFeatureSize ()I
-	public final fun getMeans ()Lcom/eignex/koblas/DenseMatrix;
+	public final fun getMeans ()Lcom/eignex/koblas/F64DenseMatrix;
 	public final fun getNumClasses ()I
 	public fun getTotalWeights ()D
 	public final fun getVarianceFloor ()D
-	public final fun getVariances ()Lcom/eignex/koblas/DenseMatrix;
+	public final fun getVariances ()Lcom/eignex/koblas/F64DenseMatrix;
 	public fun hashCode ()I
 	public fun isEmpty ()Z
-	public final fun logPosterior (Lcom/eignex/koblas/VectorView;I)D
-	public final fun predict (Lcom/eignex/koblas/VectorView;)I
+	public final fun logPosterior (Lcom/eignex/koblas/F64VectorView;I)D
+	public final fun predict (Lcom/eignex/koblas/F64VectorView;)I
 	public final fun prior (I)D
-	public final fun probabilities (Lcom/eignex/koblas/VectorView;)[D
+	public final fun probabilities (Lcom/eignex/koblas/F64VectorView;)[D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -6823,8 +6823,8 @@ public final class com/eignex/kumulant/stat/regression/GaussianNaiveBayesStat : 
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;
 	public fun reset ()V
-	public fun update (Lcom/eignex/koblas/VectorView;DD)V
-	public fun update (Lcom/eignex/koblas/VectorView;DJD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
 }
@@ -6841,12 +6841,12 @@ public final class com/eignex/kumulant/stat/regression/Optimizer$DefaultImpls {
 }
 
 public abstract interface class com/eignex/kumulant/stat/regression/RegressionPosterior {
-	public abstract fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public static synthetic fun evaluate$default (Lcom/eignex/kumulant/stat/regression/RegressionPosterior;Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;DILjava/lang/Object;)D
+	public abstract fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public static synthetic fun evaluate$default (Lcom/eignex/kumulant/stat/regression/RegressionPosterior;Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;DILjava/lang/Object;)D
 }
 
 public final class com/eignex/kumulant/stat/regression/RegressionPosterior$DefaultImpls {
-	public static synthetic fun evaluate$default (Lcom/eignex/kumulant/stat/regression/RegressionPosterior;Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;DILjava/lang/Object;)D
+	public static synthetic fun evaluate$default (Lcom/eignex/kumulant/stat/regression/RegressionPosterior;Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;DILjava/lang/Object;)D
 }
 
 public final class com/eignex/kumulant/stat/regression/RmspropOptimizer : com/eignex/kumulant/stat/regression/Optimizer {
@@ -6874,29 +6874,29 @@ public final class com/eignex/kumulant/stat/regression/SgdOptimizer : com/eignex
 
 public final class com/eignex/kumulant/stat/regression/SoftmaxRegressionResult : com/eignex/kumulant/core/HasObservationCount {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult$Companion;
-	public fun <init> (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DJD)V
+	public fun <init> (IILcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseVector;DJD)V
 	public final fun component1 ()I
 	public final fun component2 ()I
-	public final fun component3 ()Lcom/eignex/koblas/DenseMatrix;
-	public final fun component4 ()Lcom/eignex/koblas/DenseVector;
+	public final fun component3 ()Lcom/eignex/koblas/F64DenseMatrix;
+	public final fun component4 ()Lcom/eignex/koblas/F64DenseVector;
 	public final fun component5 ()D
 	public final fun component6 ()J
 	public final fun component7 ()D
-	public final fun copy (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DJD)Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DJDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;
+	public final fun copy (IILcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseVector;DJD)Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;IILcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseVector;DJDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getBiases ()Lcom/eignex/koblas/DenseVector;
+	public final fun getBiases ()Lcom/eignex/koblas/F64DenseVector;
 	public final fun getCrossEntropy ()D
 	public final fun getFeatureSize ()I
 	public final fun getNumClasses ()I
 	public final fun getStep ()J
 	public fun getTotalWeights ()D
-	public final fun getWeights ()Lcom/eignex/koblas/DenseMatrix;
+	public final fun getWeights ()Lcom/eignex/koblas/F64DenseMatrix;
 	public fun hashCode ()I
 	public fun isEmpty ()Z
-	public final fun logit (Lcom/eignex/koblas/VectorView;I)D
-	public final fun predict (Lcom/eignex/koblas/VectorView;)I
-	public final fun probabilities (Lcom/eignex/koblas/VectorView;)[D
+	public final fun logit (Lcom/eignex/koblas/F64VectorView;I)D
+	public final fun predict (Lcom/eignex/koblas/F64VectorView;)I
+	public final fun probabilities (Lcom/eignex/koblas/F64VectorView;)[D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -6934,16 +6934,16 @@ public final class com/eignex/kumulant/stat/regression/SoftmaxRegressionStat : c
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;
 	public fun reset ()V
-	public fun update (Lcom/eignex/koblas/VectorView;DD)V
-	public fun update (Lcom/eignex/koblas/VectorView;DJD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/BayesianRegressionStat : com/eignex/kumulant/core/RegressionStat {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/BayesianRegressionStat$Companion;
-	public fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/kumulant/core/Concurrency;Lcom/eignex/koblas/VectorView;Lcom/eignex/koblas/MatrixView;)V
-	public synthetic fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/kumulant/core/Concurrency;Lcom/eignex/koblas/VectorView;Lcom/eignex/koblas/MatrixView;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/kumulant/core/Concurrency;Lcom/eignex/koblas/F64VectorView;Lcom/eignex/koblas/F64MatrixView;)V
+	public synthetic fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/kumulant/core/Concurrency;Lcom/eignex/koblas/F64VectorView;Lcom/eignex/koblas/F64MatrixView;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/RegressionStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/regression/glm/BayesianRegressionStat;
@@ -6956,8 +6956,8 @@ public final class com/eignex/kumulant/stat/regression/glm/BayesianRegressionSta
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;
 	public fun reset ()V
-	public fun update (Lcom/eignex/koblas/VectorView;DD)V
-	public fun update (Lcom/eignex/koblas/VectorView;DJD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
 }
@@ -6969,24 +6969,24 @@ public final class com/eignex/kumulant/stat/regression/glm/BayesianRegressionSta
 
 public final class com/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult : com/eignex/kumulant/stat/regression/glm/LinearRegressionResult {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult$Companion;
-	public fun <init> (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;D)V
-	public synthetic fun <init> (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/eignex/koblas/DenseVector;
+	public fun <init> (Lcom/eignex/koblas/F64DenseVector;DDDJLcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;D)V
+	public synthetic fun <init> (Lcom/eignex/koblas/F64DenseVector;DDDJLcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/eignex/koblas/F64DenseVector;
 	public final fun component2 ()D
 	public final fun component3 ()D
 	public final fun component4 ()D
 	public final fun component5 ()J
-	public final fun component6 ()Lcom/eignex/koblas/DenseMatrix;
-	public final fun component7 ()Lcom/eignex/koblas/DenseMatrix;
+	public final fun component6 ()Lcom/eignex/koblas/F64DenseMatrix;
+	public final fun component7 ()Lcom/eignex/koblas/F64DenseMatrix;
 	public final fun component8 ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public final fun component9 ()D
-	public final fun copy (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;D)Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;DILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;
+	public final fun copy (Lcom/eignex/koblas/F64DenseVector;DDDJLcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;D)Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/F64DenseVector;DDDJLcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/koblas/F64DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;DILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getBias ()D
 	public final fun getBiasPrecision ()D
-	public final fun getCovariance ()Lcom/eignex/koblas/DenseMatrix;
-	public final fun getCovarianceL ()Lcom/eignex/koblas/DenseMatrix;
+	public final fun getCovariance ()Lcom/eignex/koblas/F64DenseMatrix;
+	public final fun getCovarianceL ()Lcom/eignex/koblas/F64DenseMatrix;
 	public fun getFeatureSize ()I
 	public fun getLink ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public fun getMse ()D
@@ -7001,12 +7001,12 @@ public final class com/eignex/kumulant/stat/regression/glm/CovarianceRegressionR
 	public fun getStep ()J
 	public fun getTotalWeights ()D
 	public fun getVariance ()D
-	public fun getWeights ()Lcom/eignex/koblas/DenseVector;
-	public synthetic fun getWeights ()Lcom/eignex/koblas/VectorView;
+	public fun getWeights ()Lcom/eignex/koblas/F64DenseVector;
+	public synthetic fun getWeights ()Lcom/eignex/koblas/F64VectorView;
 	public fun hashCode ()I
 	public fun isEmpty ()Z
-	public fun linearPredictor (Lcom/eignex/koblas/VectorView;)D
-	public fun predict (Lcom/eignex/koblas/VectorView;)D
+	public fun linearPredictor (Lcom/eignex/koblas/F64VectorView;)D
+	public fun predict (Lcom/eignex/koblas/F64VectorView;)D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -7027,25 +7027,25 @@ public final class com/eignex/kumulant/stat/regression/glm/CovarianceRegressionR
 
 public final class com/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult : com/eignex/kumulant/stat/regression/glm/LinearRegressionResult {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult$Companion;
-	public fun <init> (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;D)V
-	public synthetic fun <init> (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/eignex/koblas/DenseVector;
+	public fun <init> (Lcom/eignex/koblas/F64DenseVector;DDDJLcom/eignex/koblas/F64DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;D)V
+	public synthetic fun <init> (Lcom/eignex/koblas/F64DenseVector;DDDJLcom/eignex/koblas/F64DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/eignex/koblas/F64DenseVector;
 	public final fun component2 ()D
 	public final fun component3 ()D
 	public final fun component4 ()D
 	public final fun component5 ()J
-	public final fun component6 ()Lcom/eignex/koblas/DenseVector;
+	public final fun component6 ()Lcom/eignex/koblas/F64DenseVector;
 	public final fun component7 ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public final fun component8 ()D
-	public final fun copy (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;D)Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;DILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;
+	public final fun copy (Lcom/eignex/koblas/F64DenseVector;DDDJLcom/eignex/koblas/F64DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;D)Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lcom/eignex/koblas/F64DenseVector;DDDJLcom/eignex/koblas/F64DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;DILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getBias ()D
 	public final fun getBiasPrecision ()D
 	public fun getFeatureSize ()I
 	public fun getLink ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public fun getMse ()D
-	public final fun getPrecision ()Lcom/eignex/koblas/DenseVector;
+	public final fun getPrecision ()Lcom/eignex/koblas/F64DenseVector;
 	public fun getRSquared ()D
 	public fun getRmse ()D
 	public fun getSampleStdDev ()D
@@ -7057,12 +7057,12 @@ public final class com/eignex/kumulant/stat/regression/glm/DiagonalRegressionRes
 	public fun getStep ()J
 	public fun getTotalWeights ()D
 	public fun getVariance ()D
-	public fun getWeights ()Lcom/eignex/koblas/DenseVector;
-	public synthetic fun getWeights ()Lcom/eignex/koblas/VectorView;
+	public fun getWeights ()Lcom/eignex/koblas/F64DenseVector;
+	public synthetic fun getWeights ()Lcom/eignex/koblas/F64VectorView;
 	public fun hashCode ()I
 	public fun isEmpty ()Z
-	public fun linearPredictor (Lcom/eignex/koblas/VectorView;)D
-	public fun predict (Lcom/eignex/koblas/VectorView;)D
+	public fun linearPredictor (Lcom/eignex/koblas/F64VectorView;)D
+	public fun predict (Lcom/eignex/koblas/F64VectorView;)D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -7098,8 +7098,8 @@ public final class com/eignex/kumulant/stat/regression/glm/DiagonalRegressionSta
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;
 	public fun reset ()V
-	public fun update (Lcom/eignex/koblas/VectorView;DD)V
-	public fun update (Lcom/eignex/koblas/VectorView;DJD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
 }
@@ -7107,19 +7107,19 @@ public final class com/eignex/kumulant/stat/regression/glm/DiagonalRegressionSta
 public final class com/eignex/kumulant/stat/regression/glm/FactorisedGaussian : com/eignex/kumulant/stat/regression/glm/LinearPosterior {
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/glm/FactorisedGaussian;
 	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
 	public fun hashCode ()I
-	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/VectorView;
-	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/VectorView;
+	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/F64VectorView;
+	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/F64VectorView;
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/HierarchicalBayesianRegression {
-	public fun <init> (ILcom/eignex/kumulant/stat/regression/glm/Link;DLcom/eignex/kumulant/core/Concurrency;DLcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;)V
-	public synthetic fun <init> (ILcom/eignex/kumulant/stat/regression/glm/Link;DLcom/eignex/kumulant/core/Concurrency;DLcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILcom/eignex/kumulant/stat/regression/glm/Link;DLcom/eignex/kumulant/core/Concurrency;DLcom/eignex/koblas/F64DenseVector;Lcom/eignex/koblas/F64DenseMatrix;)V
+	public synthetic fun <init> (ILcom/eignex/kumulant/stat/regression/glm/Link;DLcom/eignex/kumulant/core/Concurrency;DLcom/eignex/koblas/F64DenseVector;Lcom/eignex/koblas/F64DenseMatrix;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun createInstance ()Lcom/eignex/kumulant/stat/regression/glm/BayesianRegressionStat;
 	public final fun getBiasPriorVariance ()D
 	public final fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
@@ -7143,22 +7143,22 @@ public final class com/eignex/kumulant/stat/regression/glm/LearningRatesKt {
 public final class com/eignex/kumulant/stat/regression/glm/LinUcb : com/eignex/kumulant/stat/regression/glm/LinearPosterior {
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/glm/LinUcb;
 	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
 	public fun hashCode ()I
-	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/VectorView;
-	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/VectorView;
+	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/F64VectorView;
+	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/F64VectorView;
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class com/eignex/kumulant/stat/regression/glm/LinearPosterior : com/eignex/kumulant/stat/regression/RegressionPosterior {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior$Companion;
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public abstract fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/VectorView;
-	public static synthetic fun sample$default (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;DILjava/lang/Object;)Lcom/eignex/koblas/VectorView;
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public abstract fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/F64VectorView;
+	public static synthetic fun sample$default (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;DILjava/lang/Object;)Lcom/eignex/koblas/F64VectorView;
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/LinearPosterior$Companion {
@@ -7166,8 +7166,8 @@ public final class com/eignex/kumulant/stat/regression/glm/LinearPosterior$Compa
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/LinearPosterior$DefaultImpls {
-	public static fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public static synthetic fun sample$default (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;DILjava/lang/Object;)Lcom/eignex/koblas/VectorView;
+	public static fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public static synthetic fun sample$default (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;DILjava/lang/Object;)Lcom/eignex/koblas/F64VectorView;
 }
 
 public abstract interface class com/eignex/kumulant/stat/regression/glm/LinearRegressionResult : com/eignex/kumulant/core/HasLinearModel, com/eignex/kumulant/core/HasRegression, com/eignex/kumulant/core/Result {
@@ -7176,9 +7176,9 @@ public abstract interface class com/eignex/kumulant/stat/regression/glm/LinearRe
 	public abstract fun getLink ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public abstract fun getStep ()J
 	public abstract fun getTotalWeights ()D
-	public abstract fun getWeights ()Lcom/eignex/koblas/VectorView;
-	public fun linearPredictor (Lcom/eignex/koblas/VectorView;)D
-	public fun predict (Lcom/eignex/koblas/VectorView;)D
+	public abstract fun getWeights ()Lcom/eignex/koblas/F64VectorView;
+	public fun linearPredictor (Lcom/eignex/koblas/F64VectorView;)D
+	public fun predict (Lcom/eignex/koblas/F64VectorView;)D
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/LinearRegressionResult$Companion {
@@ -7197,8 +7197,8 @@ public final class com/eignex/kumulant/stat/regression/glm/LinearRegressionResul
 	public static fun getStdDev (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;)D
 	public static fun getVariance (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;)D
 	public static fun isEmpty (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;)Z
-	public static fun linearPredictor (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/VectorView;)D
-	public static fun predict (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/VectorView;)D
+	public static fun linearPredictor (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/F64VectorView;)D
+	public static fun predict (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/F64VectorView;)D
 }
 
 public abstract interface class com/eignex/kumulant/stat/regression/glm/Link {
@@ -7248,12 +7248,12 @@ public final class com/eignex/kumulant/stat/regression/glm/Link$Logit : com/eign
 public final class com/eignex/kumulant/stat/regression/glm/MultivariateGaussian : com/eignex/kumulant/stat/regression/glm/LinearPosterior {
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/glm/MultivariateGaussian;
 	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
 	public fun hashCode ()I
-	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/VectorView;
-	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/VectorView;
+	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/F64VectorView;
+	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/F64VectorView;
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
 }
@@ -7331,28 +7331,28 @@ public final class com/eignex/kumulant/stat/regression/glm/Penalty$None : com/ei
 public final class com/eignex/kumulant/stat/regression/glm/PointPosterior : com/eignex/kumulant/stat/regression/glm/LinearPosterior {
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/glm/PointPosterior;
 	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
 	public fun hashCode ()I
-	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/VectorView;
-	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/VectorView;
+	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/F64VectorView;
+	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/F64VectorView;
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/PopulationPrior {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior$Companion;
-	public fun <init> (Lcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;I)V
-	public final fun component1 ()Lcom/eignex/koblas/DenseVector;
-	public final fun component2 ()Lcom/eignex/koblas/DenseMatrix;
+	public fun <init> (Lcom/eignex/koblas/F64DenseVector;Lcom/eignex/koblas/F64DenseMatrix;I)V
+	public final fun component1 ()Lcom/eignex/koblas/F64DenseVector;
+	public final fun component2 ()Lcom/eignex/koblas/F64DenseMatrix;
 	public final fun component3 ()I
-	public final fun copy (Lcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;I)Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;Lcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;IILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;
+	public final fun copy (Lcom/eignex/koblas/F64DenseVector;Lcom/eignex/koblas/F64DenseMatrix;I)Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;Lcom/eignex/koblas/F64DenseVector;Lcom/eignex/koblas/F64DenseMatrix;IILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCovariance ()Lcom/eignex/koblas/DenseMatrix;
+	public final fun getCovariance ()Lcom/eignex/koblas/F64DenseMatrix;
 	public final fun getInstanceCount ()I
-	public final fun getMean ()Lcom/eignex/koblas/DenseVector;
+	public final fun getMean ()Lcom/eignex/koblas/F64DenseVector;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -7374,17 +7374,17 @@ public final class com/eignex/kumulant/stat/regression/glm/PopulationPrior$Compa
 
 public final class com/eignex/kumulant/stat/regression/glm/StochasticRegressionResult : com/eignex/kumulant/stat/regression/glm/LinearRegressionResult {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult$Companion;
-	public fun <init> (Lcom/eignex/koblas/DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;)V
-	public synthetic fun <init> (Lcom/eignex/koblas/DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/eignex/koblas/DenseVector;
+	public fun <init> (Lcom/eignex/koblas/F64DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;)V
+	public synthetic fun <init> (Lcom/eignex/koblas/F64DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/eignex/koblas/F64DenseVector;
 	public final fun component2 ()D
 	public final fun component3 ()D
 	public final fun component4 ()J
 	public final fun component5 ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public final fun component6 ()D
 	public final fun component7 ()Ljava/util/List;
-	public final fun copy (Lcom/eignex/koblas/DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;)Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lcom/eignex/koblas/DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;
+	public final fun copy (Lcom/eignex/koblas/F64DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;)Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lcom/eignex/koblas/F64DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getBias ()D
 	public fun getFeatureSize ()I
@@ -7402,12 +7402,12 @@ public final class com/eignex/kumulant/stat/regression/glm/StochasticRegressionR
 	public fun getTotalWeights ()D
 	public final fun getUpdaterState ()Ljava/util/List;
 	public fun getVariance ()D
-	public fun getWeights ()Lcom/eignex/koblas/DenseVector;
-	public synthetic fun getWeights ()Lcom/eignex/koblas/VectorView;
+	public fun getWeights ()Lcom/eignex/koblas/F64DenseVector;
+	public synthetic fun getWeights ()Lcom/eignex/koblas/F64VectorView;
 	public fun hashCode ()I
 	public fun isEmpty ()Z
-	public fun linearPredictor (Lcom/eignex/koblas/VectorView;)D
-	public fun predict (Lcom/eignex/koblas/VectorView;)D
+	public fun linearPredictor (Lcom/eignex/koblas/F64VectorView;)D
+	public fun predict (Lcom/eignex/koblas/F64VectorView;)D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -7447,8 +7447,8 @@ public final class com/eignex/kumulant/stat/regression/glm/StochasticRegressionS
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;
 	public fun reset ()V
-	public fun update (Lcom/eignex/koblas/VectorView;DD)V
-	public fun update (Lcom/eignex/koblas/VectorView;DJD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
 }
@@ -7486,13 +7486,13 @@ public final class com/eignex/kumulant/stat/regression/glm/UnivariateRegressionR
 	public final fun getSxy ()D
 	public fun getTotalWeights ()D
 	public fun getVariance ()D
-	public fun getWeights ()Lcom/eignex/koblas/VectorView;
+	public fun getWeights ()Lcom/eignex/koblas/F64VectorView;
 	public final fun getX ()Lcom/eignex/kumulant/stat/summary/VarianceResult;
 	public final fun getY ()Lcom/eignex/kumulant/stat/summary/VarianceResult;
 	public fun hashCode ()I
 	public fun isEmpty ()Z
 	public fun predict (D)D
-	public fun predict (Lcom/eignex/koblas/VectorView;)D
+	public fun predict (Lcom/eignex/koblas/F64VectorView;)D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -7594,12 +7594,12 @@ public final class com/eignex/kumulant/stat/regression/tree/ClassificationAuditL
 }
 
 public abstract class com/eignex/kumulant/stat/regression/tree/ClassificationLeafNode : com/eignex/kumulant/stat/regression/tree/ClassificationNode {
-	public final fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationLeafNode;
+	public final fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationLeafNode;
 	public abstract fun getArm ()Lcom/eignex/kumulant/core/SeriesStat;
 }
 
 public abstract interface class com/eignex/kumulant/stat/regression/tree/ClassificationNode {
-	public abstract fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationLeafNode;
+	public abstract fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationLeafNode;
 }
 
 public abstract interface class com/eignex/kumulant/stat/regression/tree/ClassificationSplitMetric {
@@ -7614,7 +7614,7 @@ public final class com/eignex/kumulant/stat/regression/tree/ClassificationSplitM
 public final class com/eignex/kumulant/stat/regression/tree/ClassificationSplitNode : com/eignex/kumulant/stat/regression/tree/ClassificationNode {
 	public fun <init> (Lcom/eignex/kumulant/stat/regression/tree/SerializableSplit;Lcom/eignex/kumulant/stat/regression/tree/ClassificationNode;Lcom/eignex/kumulant/stat/regression/tree/ClassificationNode;Lcom/eignex/kumulant/core/SeriesStat;)V
 	public synthetic fun <init> (Lcom/eignex/kumulant/stat/regression/tree/SerializableSplit;Lcom/eignex/kumulant/stat/regression/tree/ClassificationNode;Lcom/eignex/kumulant/stat/regression/tree/ClassificationNode;Lcom/eignex/kumulant/core/SeriesStat;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationLeafNode;
+	public fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationLeafNode;
 	public final fun getCarryover ()Lcom/eignex/kumulant/core/SeriesStat;
 	public final fun getNeg ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationNode;
 	public final fun getPos ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationNode;
@@ -7632,19 +7632,19 @@ public final class com/eignex/kumulant/stat/regression/tree/ClassificationTermin
 public final class com/eignex/kumulant/stat/regression/tree/ClassificationTree {
 	public fun <init> (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;I)V
 	public synthetic fun <init> (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationLeafNode;
+	public final fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationLeafNode;
 	public final fun getNodeCount ()I
 	public final fun merge (Lcom/eignex/kumulant/stat/regression/tree/ClassificationTree;)V
 	public final fun mergeSnapshot (Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;)V
-	public final fun predict (Lcom/eignex/koblas/VectorView;)I
+	public final fun predict (Lcom/eignex/koblas/F64VectorView;)I
 	public final fun prettyPrint (Ljava/lang/String;)Ljava/lang/String;
 	public static synthetic fun prettyPrint$default (Lcom/eignex/kumulant/stat/regression/tree/ClassificationTree;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
-	public final fun probabilities (Lcom/eignex/koblas/VectorView;)[D
+	public final fun probabilities (Lcom/eignex/koblas/F64VectorView;)[D
 	public final fun reset ()V
 	public final fun rootNode ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationNode;
 	public final fun rootSnapshot ()Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
-	public final fun update (Lcom/eignex/koblas/VectorView;ID)V
-	public static synthetic fun update$default (Lcom/eignex/kumulant/stat/regression/tree/ClassificationTree;Lcom/eignex/koblas/VectorView;IDILjava/lang/Object;)V
+	public final fun update (Lcom/eignex/koblas/F64VectorView;ID)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/stat/regression/tree/ClassificationTree;Lcom/eignex/koblas/F64VectorView;IDILjava/lang/Object;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig : com/eignex/kumulant/stat/regression/tree/HoeffdingTreeConfig {
@@ -7711,8 +7711,8 @@ public final class com/eignex/kumulant/stat/regression/tree/DecisionTreeClassifi
 	public fun read (J)Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationResult;
 	public fun reset ()V
 	public final fun tree ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationTree;
-	public fun update (Lcom/eignex/koblas/VectorView;DD)V
-	public fun update (Lcom/eignex/koblas/VectorView;DJD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
 }
@@ -7733,8 +7733,8 @@ public final class com/eignex/kumulant/stat/regression/tree/DecisionTreeRegressi
 	public fun read (J)Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;
 	public fun reset ()V
 	public final fun tree ()Lcom/eignex/kumulant/stat/regression/tree/RegressionTree;
-	public fun update (Lcom/eignex/koblas/VectorView;DD)V
-	public fun update (Lcom/eignex/koblas/VectorView;DJD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
 }
@@ -7745,7 +7745,7 @@ public final class com/eignex/kumulant/stat/regression/tree/ExprSplit : com/eign
 	public final fun component1 ()Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public final fun copy (Lcom/eignex/kumulant/schema/expr/BoolExpr;)Lcom/eignex/kumulant/stat/regression/tree/ExprSplit;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/ExprSplit;Lcom/eignex/kumulant/schema/expr/BoolExpr;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/ExprSplit;
-	public fun direction (Lcom/eignex/koblas/VectorView;)Z
+	public fun direction (Lcom/eignex/koblas/F64VectorView;)Z
 	public synthetic fun direction (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getExpr ()Lcom/eignex/kumulant/schema/expr/BoolExpr;
@@ -7780,8 +7780,8 @@ public final class com/eignex/kumulant/stat/regression/tree/ForestClassification
 	public final fun getTotalWeights ()D
 	public final fun getTrees ()Ljava/util/List;
 	public fun hashCode ()I
-	public final fun predict (Lcom/eignex/koblas/VectorView;)I
-	public final fun probabilities (Lcom/eignex/koblas/VectorView;)[D
+	public final fun predict (Lcom/eignex/koblas/F64VectorView;)I
+	public final fun probabilities (Lcom/eignex/koblas/F64VectorView;)[D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -7810,11 +7810,11 @@ public final class com/eignex/kumulant/stat/regression/tree/ForestRegressionResu
 	public final fun copy (Ljava/util/List;)Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Ljava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun findLeafMerged (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
+	public final fun findLeafMerged (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
 	public final fun getTotalWeights ()D
 	public final fun getTrees ()Ljava/util/List;
 	public fun hashCode ()I
-	public final fun predict (Lcom/eignex/koblas/VectorView;)D
+	public final fun predict (Lcom/eignex/koblas/F64VectorView;)D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -7866,8 +7866,8 @@ public final class com/eignex/kumulant/stat/regression/tree/InformationGain : co
 public final class com/eignex/kumulant/stat/regression/tree/MeanForestPosterior : com/eignex/kumulant/stat/regression/tree/ForestPosterior {
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/tree/MeanForestPosterior;
 	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -7875,8 +7875,8 @@ public final class com/eignex/kumulant/stat/regression/tree/MeanForestPosterior 
 public final class com/eignex/kumulant/stat/regression/tree/MeanTreePosterior : com/eignex/kumulant/stat/regression/tree/TreePosterior {
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/tree/MeanTreePosterior;
 	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -7900,8 +7900,8 @@ public final class com/eignex/kumulant/stat/regression/tree/RandomForestClassifi
 	public fun read (J)Lcom/eignex/kumulant/stat/regression/tree/ForestClassificationResult;
 	public fun reset ()V
 	public final fun trees ()Ljava/util/List;
-	public fun update (Lcom/eignex/koblas/VectorView;DD)V
-	public fun update (Lcom/eignex/koblas/VectorView;DJD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
 }
@@ -7924,8 +7924,8 @@ public final class com/eignex/kumulant/stat/regression/tree/RandomForestRegressi
 	public fun read (J)Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;
 	public fun reset ()V
 	public final fun trees ()Ljava/util/List;
-	public fun update (Lcom/eignex/koblas/VectorView;DD)V
-	public fun update (Lcom/eignex/koblas/VectorView;DJD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
 }
@@ -8082,8 +8082,8 @@ public final class com/eignex/kumulant/stat/regression/tree/ThompsonForestPoster
 	public final fun copy (DD)Lcom/eignex/kumulant/stat/regression/tree/ThompsonForestPosterior;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/ThompsonForestPosterior;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/ThompsonForestPosterior;
 	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
 	public final fun getPriorVariance ()D
 	public final fun getPriorWeight ()D
 	public fun hashCode ()I
@@ -8099,8 +8099,8 @@ public final class com/eignex/kumulant/stat/regression/tree/ThompsonTreePosterio
 	public final fun copy (DD)Lcom/eignex/kumulant/stat/regression/tree/ThompsonTreePosterior;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/ThompsonTreePosterior;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/ThompsonTreePosterior;
 	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
 	public final fun getPriorVariance ()D
 	public final fun getPriorWeight ()D
 	public fun hashCode ()I
@@ -8114,7 +8114,7 @@ public final class com/eignex/kumulant/stat/regression/tree/ThresholdSplit : com
 	public final fun component2 ()D
 	public final fun copy (ID)Lcom/eignex/kumulant/stat/regression/tree/ThresholdSplit;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/ThresholdSplit;IDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/ThresholdSplit;
-	public fun direction (Lcom/eignex/koblas/VectorView;)Z
+	public fun direction (Lcom/eignex/koblas/F64VectorView;)Z
 	public synthetic fun direction (Ljava/lang/Object;)Z
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getFeatureIndex ()I
@@ -8145,7 +8145,7 @@ public final class com/eignex/kumulant/stat/regression/tree/TreeClassificationLe
 	public final fun copy (Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;)Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationLeafResult;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationLeafResult;Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationLeafResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
+	public fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
 	public fun getValue ()Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -8168,7 +8168,7 @@ public final class com/eignex/kumulant/stat/regression/tree/TreeClassificationLe
 
 public abstract interface class com/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult$Companion;
-	public abstract fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
+	public abstract fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
 	public abstract fun getValue ()Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
 }
 
@@ -8183,13 +8183,13 @@ public final class com/eignex/kumulant/stat/regression/tree/TreeClassificationRe
 	public final fun copy (Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;)Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationResult;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationResult;Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
+	public final fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
 	public final fun getNumClasses ()I
 	public final fun getRoot ()Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;
 	public final fun getTotalWeights ()D
 	public fun hashCode ()I
-	public final fun predict (Lcom/eignex/koblas/VectorView;)I
-	public final fun probabilities (Lcom/eignex/koblas/VectorView;)[D
+	public final fun predict (Lcom/eignex/koblas/F64VectorView;)I
+	public final fun probabilities (Lcom/eignex/koblas/F64VectorView;)[D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -8218,7 +8218,7 @@ public final class com/eignex/kumulant/stat/regression/tree/TreeClassificationSp
 	public final fun copy (Lcom/eignex/kumulant/stat/regression/tree/SerializableSplit;Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;)Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationSplitResult;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationSplitResult;Lcom/eignex/kumulant/stat/regression/tree/SerializableSplit;Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationSplitResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
+	public fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;
 	public final fun getNeg ()Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;
 	public final fun getPos ()Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;
 	public final fun getSplit ()Lcom/eignex/kumulant/stat/regression/tree/SerializableSplit;
@@ -8249,7 +8249,7 @@ public final class com/eignex/kumulant/stat/regression/tree/TreeLeafResult : com
 	public final fun copy (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)Lcom/eignex/kumulant/stat/regression/tree/TreeLeafResult;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/TreeLeafResult;Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/TreeLeafResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
+	public fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
 	public fun getValue ()Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -8272,7 +8272,7 @@ public final class com/eignex/kumulant/stat/regression/tree/TreeLeafResult$Compa
 
 public abstract interface class com/eignex/kumulant/stat/regression/tree/TreeNodeResult {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult$Companion;
-	public abstract fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
+	public abstract fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
 	public abstract fun getValue ()Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
 }
 
@@ -8290,12 +8290,12 @@ public final class com/eignex/kumulant/stat/regression/tree/TreeRegressionResult
 	public final fun copy (Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;)Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
+	public final fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
 	public final fun getRoot ()Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;
 	public final fun getRootMean ()D
 	public final fun getTotalWeights ()D
 	public fun hashCode ()I
-	public final fun predict (Lcom/eignex/koblas/VectorView;)D
+	public final fun predict (Lcom/eignex/koblas/F64VectorView;)D
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -8329,7 +8329,7 @@ public final class com/eignex/kumulant/stat/regression/tree/TreeSplitResult : co
 	public final fun copy (Lcom/eignex/kumulant/stat/regression/tree/SerializableSplit;Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)Lcom/eignex/kumulant/stat/regression/tree/TreeSplitResult;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/TreeSplitResult;Lcom/eignex/kumulant/stat/regression/tree/SerializableSplit;Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/TreeSplitResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public fun findLeaf (Lcom/eignex/koblas/VectorView;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
+	public fun findLeaf (Lcom/eignex/koblas/F64VectorView;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
 	public final fun getNeg ()Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;
 	public final fun getPos ()Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;
 	public final fun getSplit ()Lcom/eignex/kumulant/stat/regression/tree/SerializableSplit;
@@ -8362,8 +8362,8 @@ public final class com/eignex/kumulant/stat/regression/tree/UcbForestPosterior :
 	public final fun copy (DD)Lcom/eignex/kumulant/stat/regression/tree/UcbForestPosterior;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/UcbForestPosterior;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/UcbForestPosterior;
 	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
 	public final fun getPriorVariance ()D
 	public final fun getPriorWeight ()D
 	public fun hashCode ()I
@@ -8379,8 +8379,8 @@ public final class com/eignex/kumulant/stat/regression/tree/UcbTreePosterior : c
 	public final fun copy (DD)Lcom/eignex/kumulant/stat/regression/tree/UcbTreePosterior;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/UcbTreePosterior;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/UcbTreePosterior;
 	public fun equals (Ljava/lang/Object;)Z
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/VectorView;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/F64VectorView;Lkotlin/random/Random;D)D
 	public final fun getPriorVariance ()D
 	public final fun getPriorWeight ()D
 	public fun hashCode ()I

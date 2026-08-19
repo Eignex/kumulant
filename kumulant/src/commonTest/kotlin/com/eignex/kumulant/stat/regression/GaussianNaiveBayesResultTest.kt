@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseMatrix
+import com.eignex.koblas.F64DenseVector
 import kotlin.math.PI
 import kotlin.math.ln
 import kotlin.math.sqrt
@@ -23,9 +23,9 @@ class GaussianNaiveBayesResultTest {
     ) = GaussianNaiveBayesResult(
         featureSize = featureSize,
         numClasses = numClasses,
-        means = DenseMatrix.of(means),
-        variances = DenseMatrix.of(variances),
-        classWeights = DenseVector.of(classWeights),
+        means = F64DenseMatrix.of(means),
+        variances = F64DenseMatrix.of(variances),
+        classWeights = F64DenseVector.of(classWeights),
         totalWeights = totalWeights,
         varianceFloor = varianceFloor,
     )
@@ -88,16 +88,16 @@ class GaussianNaiveBayesResultTest {
         val logTwoPi = ln(2.0 * PI)
         val expectedClass0 = ln(0.5) + -0.5 * (logTwoPi + ln(0.5))
         val expectedClass1 = ln(0.5) + -0.5 * (logTwoPi + ln(0.5) + 100.0 / 0.5)
-        assertEquals(expectedClass0, r.logPosterior(DenseVector.of(doubleArrayOf(0.0)), 0), 1e-9)
-        assertEquals(expectedClass1, r.logPosterior(DenseVector.of(doubleArrayOf(0.0)), 1), 1e-9)
-        assertEquals(0, r.predict(DenseVector.of(doubleArrayOf(0.0))))
+        assertEquals(expectedClass0, r.logPosterior(F64DenseVector.of(doubleArrayOf(0.0)), 0), 1e-9)
+        assertEquals(expectedClass1, r.logPosterior(F64DenseVector.of(doubleArrayOf(0.0)), 1), 1e-9)
+        assertEquals(0, r.predict(F64DenseVector.of(doubleArrayOf(0.0))))
     }
 
     @Test
     fun `logPosterior rejects wrong feature size`() {
         val r = result(numClasses = 2, featureSize = 2)
         assertFailsWith<IllegalArgumentException> {
-            r.logPosterior(DenseVector.of(doubleArrayOf(1.0)), 0)
+            r.logPosterior(F64DenseVector.of(doubleArrayOf(1.0)), 0)
         }
     }
 
@@ -111,7 +111,7 @@ class GaussianNaiveBayesResultTest {
             classWeights = doubleArrayOf(1.0, 2.0, 1.0),
             totalWeights = 4.0,
         )
-        val p = r.probabilities(DenseVector.of(doubleArrayOf(0.3)))
+        val p = r.probabilities(F64DenseVector.of(doubleArrayOf(0.3)))
         assertEquals(1.0, p.sum(), 1e-12)
         for (pk in p) assertTrue(pk in 0.0..1.0, "prob out of [0,1]: $pk")
         // Sanity: stddev away from each mean still leaves nonzero mass everywhere.

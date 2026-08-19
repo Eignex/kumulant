@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.koblas.DenseVector
+import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.schema.expr.BoolExpr
 import com.eignex.kumulant.schema.expr.Const
@@ -168,14 +168,14 @@ class ExprKotlinConstructionTest {
         // Materialising and driving one proves the whole path works, not just that the type exists.
         val reordered = Vectorized(dimensions = 3, template = Sum).transformVector(vectorOf(V(2), V(0), V(1)))
         val stat = reordered.materialize()
-        stat.update(DenseVector.of(doubleArrayOf(1.0, 2.0, 3.0)))
+        stat.update(F64DenseVector.of(doubleArrayOf(1.0, 2.0, 3.0)))
 
         // Coordinate 0 of the output is input coordinate 2.
         assertEquals(3.0, stat.read().results[0].let { (it as com.eignex.kumulant.stat.summary.SumResult).sum }, DELTA)
 
         val regression = StochasticRegression(featureSize = 3).transformX(vectorOf(V(0), V(1), V(2)))
         val model = regression.materialize()
-        model.update(DenseVector.of(doubleArrayOf(1.0, 1.0, 1.0)), 1.0)
+        model.update(F64DenseVector.of(doubleArrayOf(1.0, 1.0, 1.0)), 1.0)
         assertEquals(1.0, model.read().totalWeights, DELTA, "the regression transform did not accept an update")
     }
 }

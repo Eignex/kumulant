@@ -1,7 +1,7 @@
 package com.eignex.kumulant.core
 
-import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorView
+import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.stream.currentTimeNanos
 
 /**
@@ -284,10 +284,10 @@ interface PairedStat<R : Result> : Stat<R> {
  * ([DecisionTreeRegressionStat][com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat]).
  * They share the update shape and differ in what they expose on [read].
  *
- * Inputs are passed as [VectorView] so callers can submit sparse feature
+ * Inputs are passed as [F64VectorView] so callers can submit sparse feature
  * vectors without materialising them into dense arrays first. The
- * [DoubleArray] convenience overloads wrap the array in a [DenseVector]; the
- * sparse path goes through [com.eignex.koblas.SparseVector].
+ * [DoubleArray] convenience overloads wrap the array in a [F64DenseVector]; the
+ * sparse path goes through [com.eignex.koblas.F64SparseVector].
  *
  * The K-way classifiers
  * ([SoftmaxRegressionStat][com.eignex.kumulant.stat.regression.SoftmaxRegressionStat],
@@ -299,18 +299,18 @@ interface RegressionStat<R : Result> : Stat<R> {
     val featureSize: Int
 
     /** Record an `(x, y)` observation with the given [weight] at the current time. */
-    fun update(x: VectorView, y: Double, weight: Double = 1.0) = update(x, y, currentTimeNanos(), weight)
+    fun update(x: F64VectorView, y: Double, weight: Double = 1.0) = update(x, y, currentTimeNanos(), weight)
 
     /** Record an `(x, y)` observation at [timestampNanos] with the given [weight]. */
-    fun update(x: VectorView, y: Double, timestampNanos: Long, weight: Double = 1.0)
+    fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double = 1.0)
 
-    /** Convenience overload that wraps `x` as a [DenseVector]. */
+    /** Convenience overload that wraps `x` as a [F64DenseVector]. */
     fun update(x: DoubleArray, y: Double, weight: Double = 1.0) =
-        update(DenseVector.of(x), y, currentTimeNanos(), weight)
+        update(F64DenseVector.of(x), y, currentTimeNanos(), weight)
 
-    /** Timestamped convenience overload that wraps `x` as a [DenseVector]. */
+    /** Timestamped convenience overload that wraps `x` as a [F64DenseVector]. */
     fun update(x: DoubleArray, y: Double, timestampNanos: Long, weight: Double = 1.0) =
-        update(DenseVector.of(x), y, timestampNanos, weight)
+        update(F64DenseVector.of(x), y, timestampNanos, weight)
 
     override fun create(concurrency: Concurrency?): RegressionStat<R>
 }
@@ -323,23 +323,27 @@ interface RegressionStat<R : Result> : Stat<R> {
  * detector
  * ([HalfSpaceTreesStat][com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat]).
  *
- * Like [RegressionStat], inputs are passed as [VectorView] so sparse callers
+ * Like [RegressionStat], inputs are passed as [F64VectorView] so sparse callers
  * don't pay for dense materialisation. The [DoubleArray] convenience
- * overloads wrap the array in a [DenseVector].
+ * overloads wrap the array in a [F64DenseVector].
  */
 interface VectorStat<R : Result> : Stat<R> {
     /** Record a [vector] observation with the given [weight] at the current time. */
-    fun update(vector: VectorView, weight: Double = 1.0) = update(vector, currentTimeNanos(), weight)
+    fun update(vector: F64VectorView, weight: Double = 1.0) = update(vector, currentTimeNanos(), weight)
 
     /** Record a [vector] observation at [timestampNanos] with the given [weight]. */
-    fun update(vector: VectorView, timestampNanos: Long, weight: Double = 1.0)
+    fun update(vector: F64VectorView, timestampNanos: Long, weight: Double = 1.0)
 
-    /** Convenience overload that wraps [vector] as a [DenseVector]. */
-    fun update(vector: DoubleArray, weight: Double = 1.0) = update(DenseVector.of(vector), currentTimeNanos(), weight)
+    /** Convenience overload that wraps [vector] as a [F64DenseVector]. */
+    fun update(vector: DoubleArray, weight: Double = 1.0) = update(
+        F64DenseVector.of(vector),
+        currentTimeNanos(),
+        weight,
+    )
 
-    /** Timestamped convenience overload that wraps [vector] as a [DenseVector]. */
+    /** Timestamped convenience overload that wraps [vector] as a [F64DenseVector]. */
     fun update(vector: DoubleArray, timestampNanos: Long, weight: Double = 1.0) =
-        update(DenseVector.of(vector), timestampNanos, weight)
+        update(F64DenseVector.of(vector), timestampNanos, weight)
 
     override fun create(concurrency: Concurrency?): VectorStat<R>
 }
