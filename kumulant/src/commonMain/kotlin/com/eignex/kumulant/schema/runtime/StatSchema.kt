@@ -54,6 +54,8 @@ abstract class StatSchema(val concurrency: Concurrency = Concurrency.None) : Sch
 
     protected fun <R : Result> discrete(config: DiscreteStatSpec<R>) = register(config) { StatKey<R>(it) }
 
+    protected fun <R : Result> regression(config: RegressionStatSpec<R>) = register(config) { StatKey<R>(it) }
+
     /**
      * Nest a sub-schema as a [GroupStatSpec]; materialization recurses at the parent's group construction.
      *

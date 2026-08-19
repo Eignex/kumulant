@@ -60,4 +60,23 @@ class RegressionListStatsTest {
         val sum = byName["marginalY"] as SumResult
         assertEquals(12.0, sum.sum, DELTA)
     }
+
+    @Test
+    fun `a schema can declare regression stats and build RegressionListStats`() {
+        val schema = object : StatSchema() {
+            val sgd by regression(StochasticRegression(featureSize = 1))
+        }
+        val stats = RegressionListStats<Result>(schema)
+        for (y in doubleArrayOf(1.0, 2.0, 3.0)) stats.update(feat(0.5), y)
+        assertEquals(listOf("sgd"), stats.read(0L).names)
+    }
+
+    @Test
+    fun `a schema definition materializes its regression entries`() {
+        val schema = object : StatSchema() {
+            val sgd by regression(StochasticRegression(featureSize = 1))
+        }
+        val bound = schema.statSchemaDef().materializeRegression()
+        assertEquals(listOf("sgd"), bound.map { it.key.name })
+    }
 }

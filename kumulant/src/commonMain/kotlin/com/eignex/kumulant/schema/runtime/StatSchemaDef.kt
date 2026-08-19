@@ -3,6 +3,7 @@ package com.eignex.kumulant.schema.runtime
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
@@ -67,6 +68,16 @@ fun StatSchemaDef.materializeDiscrete(
     bindDiscrete(name, config.materialize(concurrency))
 }
 
+/** Materialize regression-modality entries only; throws if any entry isn't regression. */
+fun StatSchemaDef.materializeRegression(
+    concurrency: Concurrency = Concurrency.None,
+): List<BoundStat<*, out RegressionStat<*>, *>> = stats.map { (name, config) ->
+    require(config is RegressionStatSpec<*>) {
+        "Entry '$name' has config ${config::class.simpleName}, expected a RegressionStatSpec"
+    }
+    bindRegression(name, config.materialize(concurrency))
+}
+
 private fun bind(name: String, stat: Stat<*>): BoundStat<*, *, *> = toSpec(StatKey<Result>(name), stat)
 
 private fun bindSeries(name: String, stat: SeriesStat<*>): BoundStat<*, out SeriesStat<*>, *> =
@@ -79,4 +90,7 @@ private fun bindVector(name: String, stat: VectorStat<*>): BoundStat<*, out Vect
     toSpec(StatKey<Result>(name), stat)
 
 private fun bindDiscrete(name: String, stat: DiscreteStat<*>): BoundStat<*, out DiscreteStat<*>, *> =
+    toSpec(StatKey<Result>(name), stat)
+
+private fun bindRegression(name: String, stat: RegressionStat<*>): BoundStat<*, out RegressionStat<*>, *> =
     toSpec(StatKey<Result>(name), stat)
