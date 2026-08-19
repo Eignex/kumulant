@@ -29,6 +29,11 @@ into one result, read back by typed key rather than by string. The
 [PairedStatGroup], [VectorStatGroup], and [DiscreteStatGroup] variants
 fan updates only to entries of their own modality.
 
+The group constructor is where [Concurrency][com.eignex.kumulant.core.Concurrency]
+is chosen. A schema describes stats and nothing else, so the level passed
+there is what every stat it describes is built with, nested groups
+included, and a group never reports a level its members were not built at.
+
 A schema flattens to its pure-data form as a [StatSchemaDef], which is
 the part that crosses the wire. A coordinator can stand up the same group
 from a definition, run it independently, and fold workers' snapshots back

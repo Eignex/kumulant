@@ -84,10 +84,12 @@ The enum's own KDoc covers the four modes in detail; the short version:
 - `HighWrite`: JVM-only striped adders for naively additive stats
   under heavy concurrent writes; falls back to `Strict` elsewhere.
 
-To configure a coherent bag of stats with one contract, declare them
-inside a [com.eignex.kumulant.schema.runtime.StatSchema] with the desired
-`concurrency`; the schema propagates the choice to every registered stat
-at delegate registration.
+To give a coherent bag of stats one contract, declare them in a
+[com.eignex.kumulant.schema.runtime.StatSchema] and pass the level to the
+group that materializes it, which applies it to every stat the schema
+describes, nested groups included. The schema carries no level of its own,
+so the same one can back a single-threaded shard and a contended
+coordinator.
 
 ## Reading an empty accumulator
 

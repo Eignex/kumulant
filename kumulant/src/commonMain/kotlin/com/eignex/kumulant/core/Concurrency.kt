@@ -5,10 +5,11 @@ package com.eignex.kumulant.core
  * into a cell-encoding and lock strategy that honours it for that stat's
  * mathematical structure.
  *
- * Bare-stat construction defaults to [None]. To configure a coherent bag of stats
- * with one contract, declare them inside a [com.eignex.kumulant.schema.runtime.StatSchema]
- * with the desired `concurrency`; the schema propagates the choice to every
- * registered stat at delegate registration.
+ * Bare-stat construction defaults to [None]. To give a coherent bag of stats one
+ * contract, declare them in a [com.eignex.kumulant.schema.runtime.StatSchema] and pass
+ * the level to the group that materializes it, which applies it to every stat the schema
+ * describes. The schema itself carries no level, so the same one can back a single-threaded
+ * shard and a contended coordinator.
  *
  * ## Picking a mode
  *
