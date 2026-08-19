@@ -157,4 +157,18 @@ class CholeskyTest {
         assertEquals(4.0, m[1, 0])
         assertEquals(9.0, m[2, 2])
     }
+
+    @Test
+    fun `downdate through a singular factor leaves the factor finite`() {
+        val l = DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(0.0, 0.0),
+                doubleArrayOf(0.0, 1.0),
+            ),
+        )
+        l.choleskyDowndateInPlace(DenseVector.of(doubleArrayOf(1.0, 0.0)))
+        for (i in 0 until 2) {
+            for (j in 0 until 2) assertTrue(l[i, j].isFinite(), "entry ($i, $j) = ${l[i, j]}")
+        }
+    }
 }
