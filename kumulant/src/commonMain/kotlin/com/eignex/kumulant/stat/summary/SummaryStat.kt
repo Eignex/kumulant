@@ -105,12 +105,12 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
         }
     }
 
-    override fun reset() {
-        totalWeights.store(0.0)
-        mean.store(0.0)
-        sst.store(0.0)
-        minCell.store(Double.POSITIVE_INFINITY)
-        maxCell.store(Double.NEGATIVE_INFINITY)
+    override fun reset() = lock.guarded {
+            totalWeights.store(0.0)
+            mean.store(0.0)
+            sst.store(0.0)
+            minCell.store(Double.POSITIVE_INFINITY)
+            maxCell.store(Double.NEGATIVE_INFINITY)
     }
 
     override fun read(timestampNanos: Long): SummaryResult = lock.guarded {

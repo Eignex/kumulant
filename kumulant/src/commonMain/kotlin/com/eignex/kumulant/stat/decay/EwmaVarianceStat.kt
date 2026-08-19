@@ -112,10 +112,10 @@ class EwmaVarianceStat(
         totalWeights.add(remoteWeightRaw)
     }
 
-    override fun reset() {
-        biasedMean.store(0.0)
-        biasedM2.store(0.0)
-        totalWeights.store(0.0)
+    override fun reset() = lock.guarded {
+            biasedMean.store(0.0)
+            biasedM2.store(0.0)
+            totalWeights.store(0.0)
     }
 
     override fun read(timestampNanos: Long) = lock.guarded {
