@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.rate
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.guarded
@@ -56,11 +56,13 @@ class CounterRateStat(
     private val lastTimestampNanos = mode.newLong(Long.MIN_VALUE)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        // Return before touching lastCounter: a zero weight contributes no delta, but advancing the
-        // high-water mark anyway would destroy the increment for good, so no later sample could
-        // recover it. NaN is dropped for the same reason it is everywhere; see Stat. Outside the
-        // lock, like every other stat's inert guard - a no-op has no state to protect.
-        if (weight.isInertWeight()) return
+        // Return before touching lastCounter: a weight that contributes no delta would still advance
+        // the high-water mark, destroying the increment for good so no later sample could recover it.
+        // A negative weight is dropped rather than downdated for the same reason - the mark has no
+        // inverse, and the clamp below would swallow the delta while the mark moved on anyway. NaN is
+        // dropped as it is everywhere; see Stat. Outside the lock, like every other stat's inert
+        // guard - a no-op has no state to protect.
+        if (weight.isNotPositiveWeight()) return
         lock.guarded { updateLocked(value, timestampNanos, weight) }
     }
 
@@ -86,15 +88,17 @@ class CounterRateStat(
             }
 
             treatDecreaseAsReset -> {
-                val scaledDelta = (value * weight).coerceAtLeast(0.0)
-                if (scaledDelta > 0.0) {
-                    // Re-anchoring the window without clearing the total would divide every
-                    // pre-reset increment by the short post-reset duration: a counter advancing 105
-                    // units over 11s would report 210/s. The window and the total describe the same
-                    // span, so they have to be reset together.
-                    totalDelta.store(scaledDelta)
-                    startTimestampNanos.store(timestampNanos)
-                }
+                // Registered for any decrease, including a restart to exactly 0.0 - the most common
+                // one a *_total counter makes. Gating on post-reset progress would conflate "the
+                // reset has produced nothing yet" with "no reset happened", keeping every pre-reset
+                // increment and the old anchor while the high-water mark moved on regardless.
+                //
+                // Re-anchoring the window without clearing the total would divide every pre-reset
+                // increment by the short post-reset duration: a counter advancing 105 units over 11s
+                // would report 210/s. The window and the total describe the same span, so they have
+                // to be reset together.
+                totalDelta.store((value * weight).coerceAtLeast(0.0))
+                startTimestampNanos.store(timestampNanos)
                 lastCounter.store(value)
                 lastTimestampNanos.store(timestampNanos)
             }
@@ -129,9 +133,11 @@ class CounterRateStat(
     }
 
     override fun merge(values: RateResult) = lock.guarded {
-        if (values.totalValue == 0.0) return@guarded
-
         totalDelta.add(values.totalValue)
+
+        // See RateStat.merge: an untouched shard reports its read timestamp as the start and so has no
+        // window to adopt, but a zero total does not imply an untouched shard.
+        if (values.startTimestampNanos >= values.timestampNanos) return@guarded
 
         val currentStart = startTimestampNanos.load()
         if (currentStart == Long.MIN_VALUE || values.startTimestampNanos < currentStart) {

@@ -114,3 +114,17 @@ class SojournStatTest {
         assertEquals(1L, fresh.read(1_000L).currentState)
     }
 }
+
+class SojournLateArrivalTest {
+
+    @Test
+    fun `an out-of-order stamp does not rewind the entry landmark`() {
+        val s = SojournStat(states = listOf(0L, 1L))
+        s.update(0L, timestampNanos = 100L)
+        s.update(1L, timestampNanos = 50L)
+        s.update(0L, timestampNanos = 200L)
+        val dwell = s.read(200L).totalNanosByState
+        // The stream's stamps span 100..200, so no more than 100ns of dwell can have been observed.
+        assertEquals(100L, dwell.sum())
+    }
+}

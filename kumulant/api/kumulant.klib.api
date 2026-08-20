@@ -5371,10 +5371,12 @@ final class com.eignex.kumulant.stat.decay/EwmaVarianceStat : com.eignex.kumulan
 }
 
 final class com.eignex.kumulant.stat.event/CrossingResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.event/CrossingResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Long, kotlin/Long) // com.eignex.kumulant.stat.event/CrossingResult.<init>|<init>(kotlin.Double;kotlin.Long;kotlin.Long){}[0]
+    constructor <init>(kotlin/Double, kotlin/Long, kotlin/Long, kotlin/Boolean? = ...) // com.eignex.kumulant.stat.event/CrossingResult.<init>|<init>(kotlin.Double;kotlin.Long;kotlin.Long;kotlin.Boolean?){}[0]
 
     final val downCrossings // com.eignex.kumulant.stat.event/CrossingResult.downCrossings|{}downCrossings[0]
         final fun <get-downCrossings>(): kotlin/Long // com.eignex.kumulant.stat.event/CrossingResult.downCrossings.<get-downCrossings>|<get-downCrossings>(){}[0]
+    final val endedAtOrAboveLevel // com.eignex.kumulant.stat.event/CrossingResult.endedAtOrAboveLevel|{}endedAtOrAboveLevel[0]
+        final fun <get-endedAtOrAboveLevel>(): kotlin/Boolean? // com.eignex.kumulant.stat.event/CrossingResult.endedAtOrAboveLevel.<get-endedAtOrAboveLevel>|<get-endedAtOrAboveLevel>(){}[0]
     final val level // com.eignex.kumulant.stat.event/CrossingResult.level|{}level[0]
         final fun <get-level>(): kotlin/Double // com.eignex.kumulant.stat.event/CrossingResult.level.<get-level>|<get-level>(){}[0]
     final val upCrossings // com.eignex.kumulant.stat.event/CrossingResult.upCrossings|{}upCrossings[0]
@@ -5383,7 +5385,8 @@ final class com.eignex.kumulant.stat.event/CrossingResult : com.eignex.kumulant.
     final fun component1(): kotlin/Double // com.eignex.kumulant.stat.event/CrossingResult.component1|component1(){}[0]
     final fun component2(): kotlin/Long // com.eignex.kumulant.stat.event/CrossingResult.component2|component2(){}[0]
     final fun component3(): kotlin/Long // com.eignex.kumulant.stat.event/CrossingResult.component3|component3(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Long = ..., kotlin/Long = ...): com.eignex.kumulant.stat.event/CrossingResult // com.eignex.kumulant.stat.event/CrossingResult.copy|copy(kotlin.Double;kotlin.Long;kotlin.Long){}[0]
+    final fun component4(): kotlin/Boolean? // com.eignex.kumulant.stat.event/CrossingResult.component4|component4(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Boolean? = ...): com.eignex.kumulant.stat.event/CrossingResult // com.eignex.kumulant.stat.event/CrossingResult.copy|copy(kotlin.Double;kotlin.Long;kotlin.Long;kotlin.Boolean?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.event/CrossingResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.event/CrossingResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.event/CrossingResult.toString|toString(){}[0]

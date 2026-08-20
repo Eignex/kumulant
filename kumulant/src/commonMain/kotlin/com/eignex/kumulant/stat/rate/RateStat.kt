@@ -86,9 +86,13 @@ class RateStat(override val concurrency: Concurrency = Concurrency.None) : Serie
     }
 
     override fun merge(values: RateResult) {
-        if (values.totalValue == 0.0) return
-
         totalValues.add(values.totalValue)
+
+        // A shard that never observed anything reports its read timestamp as the start (see read), so
+        // it has no window to contribute. A zero total is not the same test: a shard that observed only
+        // zero-valued events, or values that cancel, covers a real span, and dropping that span leaves
+        // the merged denominator shorter than the observations it is dividing.
+        if (values.startTimestampNanos >= values.timestampNanos) return
 
         val currentStart = startTimestampNanos.load()
         if (currentStart == Long.MIN_VALUE || values.startTimestampNanos < currentStart) {

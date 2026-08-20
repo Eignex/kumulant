@@ -85,6 +85,17 @@ class DecayingSumStat(
         if (weight.isInertWeight()) return
         while (true) {
             val epoch = epochRef.load()
+            // While empty the landmark snaps back to the observation: it starts at process uptime, and
+            // a replay stream numbering from its own epoch is legitimately far behind that. Left alone,
+            // `exp(alpha*dt)` for so negative a dt flushes the contribution to zero and read's matching
+            // positive exponent then multiplies that zero by an infinity, so the stat reports NaN.
+            // DecayingVarianceStat.advanceTo snaps for the same reason. Only backwards, and only while
+            // there is no sum to protect: forwards is what the rotation below is for, and once there is
+            // history a stamp behind the landmark is a late arrival rather than a rewind.
+            if (timestampNanos < epoch.landmarkNanos && epoch.accumulator.load() == 0.0) {
+                epochRef.compareAndSet(epoch, Epoch(timestampNanos, mode.newDouble(0.0)))
+                continue
+            }
             if (timestampNanos - epoch.landmarkNanos > rotationThresholdNanos) {
                 tryRotateEpoch(epoch, timestampNanos)
                 continue
@@ -97,15 +108,38 @@ class DecayingSumStat(
 
     private fun tryRotateEpoch(old: Epoch, now: Long) {
         val dt = now - old.landmarkNanos
-        val carried = old.accumulator.load() * exp(-alpha * dt)
-        epochRef.compareAndSet(old, Epoch(now, mode.newDouble(carried)))
+        val next = Epoch(now, mode.newDouble(0.0))
+        if (!epochRef.compareAndSet(old, next)) return
+        // Drain the retired accumulator rather than snapshotting it: an update that loaded the old
+        // epoch and adds after the swap would otherwise land in a cell nothing reads again. Taking the
+        // residue out before folding it in means a racing add is either still there for the next pass
+        // or already counted here, never both, so no observation is dropped. The loop is bounded by
+        // the writers that were in flight when the swap landed.
+        val factor = exp(-alpha * dt)
+        while (true) {
+            val residue = old.accumulator.load()
+            if (residue == 0.0) return
+            old.accumulator.add(-residue)
+            next.accumulator.add(residue * factor)
+        }
     }
 
     override fun read(timestampNanos: Long): DecayingSumResult {
         val epoch = epochRef.load()
+        val stored = epoch.accumulator.load()
         val dt = (timestampNanos - epoch.landmarkNanos).toDouble()
-        val sum = epoch.accumulator.load() * exp(-alpha * dt)
-        return DecayingSumResult(sum, timestampNanos)
+        return DecayingSumResult(decayTo(stored, dt), timestampNanos)
+    }
+
+    /**
+     * Apply the read-time decay factor without letting the two ends of the exponent meet as
+     * `0.0 * Infinity`. An accumulator flushed to zero by an underflowing `exp(alpha*dt)` on the
+     * update side stays zero here, and one that overflowed stays infinite, rather than both
+     * turning into a NaN that every later read inherits.
+     */
+    private fun decayTo(stored: Double, dt: Double): Double {
+        if (stored == 0.0) return 0.0
+        return stored * exp(-alpha * dt)
     }
 
     /**

@@ -111,3 +111,33 @@ class RateStatTest {
         assertEquals(10.0, r1.read(T1).totalValue, DELTA)
     }
 }
+
+class RateMergeWindowTest {
+
+    @Test
+    fun `merging a shard that observed only zeros keeps its window`() {
+        val shardA = RateStat()
+        for (t in 0..8) shardA.update(0.0, timestampNanos = t * 1_000_000_000L)
+        val shardB = RateStat()
+        shardB.update(100.0, timestampNanos = 9_000_000_000L)
+
+        val merged = RateStat()
+        merged.merge(shardA.read(10_000_000_000L))
+        merged.merge(shardB.read(10_000_000_000L))
+
+        val single = RateStat()
+        for (t in 0..8) single.update(0.0, timestampNanos = t * 1_000_000_000L)
+        single.update(100.0, timestampNanos = 9_000_000_000L)
+
+        assertEquals(single.read(10_000_000_000L).rate, merged.read(10_000_000_000L).rate, DELTA)
+    }
+
+    @Test
+    fun `merging an untouched shard does not stretch the window`() {
+        val empty = RateStat()
+        val merged = RateStat()
+        merged.update(100.0, timestampNanos = 9_000_000_000L)
+        merged.merge(empty.read(10_000_000_000L))
+        assertEquals(9_000_000_000L, merged.read(10_000_000_000L).startTimestampNanos)
+    }
+}
