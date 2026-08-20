@@ -60,7 +60,12 @@ data class SeasonalSmoothingResult(
         requireForecastSteps(steps)
         if (steps == 0) return level
         val trendPart = level + dampedTrendSum(phi, steps) * trend
-        val seasonIndex = ((currentSlot + steps - 1) % period + period) % period
+        // Long: `currentSlot + steps - 1` overflows Int at a large horizon, and the renormalisation
+        // below keeps the wrapped value in range rather than throwing, so the wrong slot is picked
+        // silently whenever period is not a power of two. dampedTrendSum has a closed form precisely
+        // so a large horizon is cheap, which makes one reachable by design.
+        val ahead = currentSlot.toLong() + steps.toLong() - 1L
+        val seasonIndex = ((ahead % period + period) % period).toInt()
         val seasonFactor = seasons[seasonIndex]
         return when (mode) {
             SeasonalMode.Additive -> trendPart + seasonFactor

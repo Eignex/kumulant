@@ -75,3 +75,36 @@ class PageHinkleyStatTest {
         assertTrue(tpl.read().count > 0)
     }
 }
+
+class PageHinkleyMergeAlarmTest {
+
+    @Test
+    fun `merging two traces that saw no upward drift does not raise one`() {
+        val downwardShift = PageHinkleyStat()
+        repeat(60) { downwardShift.update(0.0) }
+        repeat(60) { downwardShift.update(-5.0) }
+        val flat = PageHinkleyStat()
+        repeat(120) { flat.update(0.0) }
+
+        assertFalse(downwardShift.read().alarmUp, "the downward-shift trace already alarmed up")
+        assertFalse(flat.read().alarmUp, "the flat trace already alarmed up")
+
+        downwardShift.merge(flat.read())
+        assertFalse(downwardShift.read().alarmUp, "merging two quiet traces manufactured an upward alarm")
+    }
+
+    @Test
+    fun `merging two traces that saw no downward drift does not raise one`() {
+        val upwardShift = PageHinkleyStat()
+        repeat(60) { upwardShift.update(0.0) }
+        repeat(60) { upwardShift.update(5.0) }
+        val flat = PageHinkleyStat()
+        repeat(120) { flat.update(0.0) }
+
+        assertFalse(upwardShift.read().alarmDown, "the upward-shift trace already alarmed down")
+        assertFalse(flat.read().alarmDown, "the flat trace already alarmed down")
+
+        upwardShift.merge(flat.read())
+        assertFalse(upwardShift.read().alarmDown, "merging two quiet traces manufactured a downward alarm")
+    }
+}

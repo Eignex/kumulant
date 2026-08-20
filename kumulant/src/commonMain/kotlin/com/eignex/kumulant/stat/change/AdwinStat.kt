@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.change
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
@@ -87,7 +87,10 @@ class AdwinStat(
     private var lastUpdateRaisedAlarm: Boolean = false
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: this recurrence has no inverse -
+        // a bucket is appended, never taken back out - so the body below would run a
+        // downdate forwards, as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         lock.guarded {
             rows[0].addLast(Bucket(n = 1L, sum = value, sumSquares = value * value))
             totalN += 1L

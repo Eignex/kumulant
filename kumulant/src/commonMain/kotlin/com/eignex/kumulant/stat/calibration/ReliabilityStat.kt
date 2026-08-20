@@ -117,9 +117,12 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
-        // coerceIn passes a NaN straight through and NaN.toInt() is 0, so a NaN prediction was
-        // credited to the first bin as though it were a confident zero. Backs IsotonicCalibratorStat
-        // too. See Stat.
+        // A NaN prediction belongs to no bin, so it is dropped rather than binned. coerceIn passes NaN
+        // straight through and NaN.toInt() is 0, which credited it to the first bin as though it were a
+        // confident zero - and while this stat's own mean and ECE would go NaN with it, sumO and sumW
+        // receive finite values, so IsotonicCalibratorStat's outcome rate loses the NaN entirely and
+        // reports a bin trained on predictions that were never made. See Stat.
+        if (x.isNaN()) return
         val clamped = x.coerceIn(0.0, 1.0)
         val bin = (clamped * numBins).toInt().coerceIn(0, numBins - 1)
         // Denominator first, numerators after. Combined with read() loading sumW last,

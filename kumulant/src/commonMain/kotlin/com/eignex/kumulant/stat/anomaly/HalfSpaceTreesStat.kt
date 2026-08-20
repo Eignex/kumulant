@@ -219,22 +219,32 @@ class HalfSpaceTreesStat(
     private fun rotateWindow() = swapLock.guarded {
         if (windowCounter.load() < windowSize) return@guarded
         windowCounter.store(0L)
+        // Relative adds, not stores: `update` deliberately runs without this lock, so a blind store
+        // would discard any per-leaf add that landed between the load and the write - a dropped
+        // observation, and one that leaves totalWeights recording mass the profile no longer holds.
+        // Expressed as deltas, a racing add either survives in the latest window for the next rotation
+        // or is already counted here, never neither.
         for (i in 0 until numTrees * numLeaves) {
             val latest = latestMass.load(i)
-            referenceMass.store(i, latest)
-            latestMass.store(i, 0.0)
+            referenceMass.add(i, latest - referenceMass.load(i))
+            latestMass.add(i, -latest)
         }
     }
 
-    override fun read(timestampNanos: Long): HalfSpaceTreesResult = HalfSpaceTreesResult(
-        featureSize = featureSize,
-        numTrees = numTrees,
-        height = height,
-        totalWeights = totalWeightsCell.load(),
-        featureIndices = featureIndices.copyOf(),
-        thresholds = thresholds.copyOf(),
-        referenceMass = DoubleArray(numTrees * numLeaves) { referenceMass.load(it) },
-    )
+    // Guarded because the profile is a coupled structure, not a set of independent cells: a snapshot
+    // taken while rotateWindow is partway through its sweep would mix leaves from the new window with
+    // leaves from the previous reference, a profile the stream never held.
+    override fun read(timestampNanos: Long): HalfSpaceTreesResult = swapLock.guarded {
+        HalfSpaceTreesResult(
+            featureSize = featureSize,
+            numTrees = numTrees,
+            height = height,
+            totalWeights = totalWeightsCell.load(),
+            featureIndices = featureIndices.copyOf(),
+            thresholds = thresholds.copyOf(),
+            referenceMass = DoubleArray(numTrees * numLeaves) { referenceMass.load(it) },
+        )
+    }
 
     /**
      * Merge folds another snapshot's reference-window masses into both this stat's reference and
@@ -263,11 +273,15 @@ class HalfSpaceTreesStat(
         require(values.referenceMass.size == numTrees * numLeaves) {
             "merge: expected ${numTrees * numLeaves} masses, got ${values.referenceMass.size}"
         }
-        for (i in 0 until numTrees * numLeaves) {
-            referenceMass.add(i, values.referenceMass[i])
-            latestMass.add(i, values.referenceMass[i])
+        // Under the same lock as the rotation and the read: the masses go in as adds, so they compose
+        // with a concurrent update, but a reader must not catch the profile half-merged.
+        swapLock.guarded {
+            for (i in 0 until numTrees * numLeaves) {
+                referenceMass.add(i, values.referenceMass[i])
+                latestMass.add(i, values.referenceMass[i])
+            }
+            totalWeightsCell.add(values.totalWeights)
         }
-        totalWeightsCell.add(values.totalWeights)
     }
 
     override fun reset() = swapLock.guarded {
