@@ -49,6 +49,10 @@ internal class SerialDouble(var ref: Double) : StreamDouble {
     }
 
     override fun add(delta: Double) {
+        // Same short-circuit AtomicMode takes, so a cell holding -0.0 keeps its sign at every level
+        // rather than flipping to +0.0 here and staying -0.0 under Relaxed and Strict. Nothing else in
+        // the primitive differs by mode, and the reported sign of a zero should not either.
+        if (delta == 0.0) return
         ref += delta
     }
 
@@ -97,6 +101,8 @@ internal class SerialDoubleArray(val ref: DoubleArray) : StreamDoubleArray {
         ref[index] = value
     }
     override fun add(index: Int, delta: Double) {
+        // See SerialDouble.add.
+        if (delta == 0.0) return
         ref[index] += delta
     }
     override fun compareAndSet(index: Int, expectedValue: Double, newValue: Double): Boolean {
