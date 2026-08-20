@@ -300,6 +300,11 @@ abstract interface com.eignex.kumulant.core/HasSlope : com.eignex.kumulant.core/
     open fun predict(kotlin/Double): kotlin/Double // com.eignex.kumulant.core/HasSlope.predict|predict(kotlin.Double){}[0]
 }
 
+abstract interface com.eignex.kumulant.core/RefusesMerge { // com.eignex.kumulant.core/RefusesMerge|null[0]
+    abstract val mergeRefusal // com.eignex.kumulant.core/RefusesMerge.mergeRefusal|{}mergeRefusal[0]
+        abstract fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.core/RefusesMerge.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
+}
+
 abstract interface com.eignex.kumulant.core/Result // com.eignex.kumulant.core/Result|null[0]
 
 abstract interface com.eignex.kumulant.math/LongHasher { // com.eignex.kumulant.math/LongHasher|null[0]
@@ -2848,6 +2853,19 @@ final class com.eignex.kumulant.schema.runtime/PairedStatGroup : com.eignex.kumu
     final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.schema.runtime/PairedStatGroup.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
 }
 
+final class com.eignex.kumulant.schema.runtime/RegressionStatGroup : com.eignex.kumulant.core/RegressionStat<com.eignex.kumulant.schema/GroupResult>, com.eignex.kumulant.schema.runtime/AbstractStatGroup<com.eignex.kumulant.core/RegressionStat<*>> { // com.eignex.kumulant.schema.runtime/RegressionStatGroup|null[0]
+    constructor <init>(com.eignex.kumulant.schema.runtime/StatSchema, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.schema.runtime/RegressionStatGroup.<init>|<init>(com.eignex.kumulant.schema.runtime.StatSchema;com.eignex.kumulant.core.Concurrency){}[0]
+    constructor <init>(kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, out com.eignex.kumulant.core/RegressionStat<*>, *>>, com.eignex.kumulant.core/Concurrency? = ...) // com.eignex.kumulant.schema.runtime/RegressionStatGroup.<init>|<init>(kotlin.collections.List<com.eignex.kumulant.schema.runtime.BoundStat<*,out|com.eignex.kumulant.core.RegressionStat<*>,*>>;com.eignex.kumulant.core.Concurrency?){}[0]
+    constructor <init>(kotlin/Array<out com.eignex.kumulant.schema.runtime/BoundStat<*, out com.eignex.kumulant.core/RegressionStat<*>, *>>..., com.eignex.kumulant.core/Concurrency? = ...) // com.eignex.kumulant.schema.runtime/RegressionStatGroup.<init>|<init>(kotlin.Array<out|com.eignex.kumulant.schema.runtime.BoundStat<*,out|com.eignex.kumulant.core.RegressionStat<*>,*>>...;com.eignex.kumulant.core.Concurrency?){}[0]
+    constructor <init>(kotlin/Array<out kotlin/Pair<com.eignex.kumulant.schema/StatKey<*>, com.eignex.kumulant.core/RegressionStat<*>>>..., com.eignex.kumulant.core/Concurrency? = ...) // com.eignex.kumulant.schema.runtime/RegressionStatGroup.<init>|<init>(kotlin.Array<out|kotlin.Pair<com.eignex.kumulant.schema.StatKey<*>,com.eignex.kumulant.core.RegressionStat<*>>>...;com.eignex.kumulant.core.Concurrency?){}[0]
+
+    final val featureSize // com.eignex.kumulant.schema.runtime/RegressionStatGroup.featureSize|{}featureSize[0]
+        final fun <get-featureSize>(): kotlin/Int // com.eignex.kumulant.schema.runtime/RegressionStatGroup.featureSize.<get-featureSize>|<get-featureSize>(){}[0]
+
+    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.core/RegressionStat<com.eignex.kumulant.schema/GroupResult> // com.eignex.kumulant.schema.runtime/RegressionStatGroup.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
+    final fun update(com.eignex.koblas/F64VectorView, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.schema.runtime/RegressionStatGroup.update|update(com.eignex.koblas.F64VectorView;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+}
+
 final class com.eignex.kumulant.schema.runtime/StatGroup : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.schema/GroupResult>, com.eignex.kumulant.schema.runtime/AbstractStatGroup<com.eignex.kumulant.core/SeriesStat<*>> { // com.eignex.kumulant.schema.runtime/StatGroup|null[0]
     constructor <init>(com.eignex.kumulant.schema.runtime/StatSchema, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.schema.runtime/StatGroup.<init>|<init>(com.eignex.kumulant.schema.runtime.StatSchema;com.eignex.kumulant.core.Concurrency){}[0]
     constructor <init>(kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, out com.eignex.kumulant.core/SeriesStat<*>, *>>, com.eignex.kumulant.core/Concurrency? = ...) // com.eignex.kumulant.schema.runtime/StatGroup.<init>|<init>(kotlin.collections.List<com.eignex.kumulant.schema.runtime.BoundStat<*,out|com.eignex.kumulant.core.SeriesStat<*>,*>>;com.eignex.kumulant.core.Concurrency?){}[0]
@@ -4725,11 +4743,13 @@ final class com.eignex.kumulant.stat.anomaly/QuantileFilterResult : com.eignex.k
     }
 }
 
-final class com.eignex.kumulant.stat.anomaly/QuantileFilterStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.anomaly/QuantileFilterResult> { // com.eignex.kumulant.stat.anomaly/QuantileFilterStat|null[0]
+final class com.eignex.kumulant.stat.anomaly/QuantileFilterStat : com.eignex.kumulant.core/RefusesMerge, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.anomaly/QuantileFilterResult> { // com.eignex.kumulant.stat.anomaly/QuantileFilterStat|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.anomaly/QuantileFilterStat.<init>|<init>(kotlin.Double;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
 
     final val concurrency // com.eignex.kumulant.stat.anomaly/QuantileFilterStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.anomaly/QuantileFilterStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
+    final val mergeRefusal // com.eignex.kumulant.stat.anomaly/QuantileFilterStat.mergeRefusal|{}mergeRefusal[0]
+        final fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.stat.anomaly/QuantileFilterStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
     final val probability // com.eignex.kumulant.stat.anomaly/QuantileFilterStat.probability|{}probability[0]
         final fun <get-probability>(): kotlin/Double // com.eignex.kumulant.stat.anomaly/QuantileFilterStat.probability.<get-probability>|<get-probability>(){}[0]
     final val relativeError // com.eignex.kumulant.stat.anomaly/QuantileFilterStat.relativeError|{}relativeError[0]
@@ -4778,11 +4798,13 @@ final class com.eignex.kumulant.stat.calibration/IsotonicCalibratorResult : com.
     }
 }
 
-final class com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat : com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.calibration/IsotonicCalibratorResult> { // com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat|null[0]
+final class com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat : com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.calibration/IsotonicCalibratorResult>, com.eignex.kumulant.core/RefusesMerge { // com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat|null[0]
     constructor <init>(kotlin/Int = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat.<init>|<init>(kotlin.Int;com.eignex.kumulant.core.Concurrency){}[0]
 
     final val concurrency // com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
+    final val mergeRefusal // com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat.mergeRefusal|{}mergeRefusal[0]
+        final fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
     final val numBins // com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat.numBins|{}numBins[0]
         final fun <get-numBins>(): kotlin/Int // com.eignex.kumulant.stat.calibration/IsotonicCalibratorStat.numBins.<get-numBins>|<get-numBins>(){}[0]
 
@@ -9362,7 +9384,7 @@ final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec
 final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>).com.eignex.kumulant.schema.ops/sample(kotlin/Double, kotlin/Long): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> // com.eignex.kumulant.schema.ops/sample|sample@com.eignex.kumulant.schema.spec.RegressionStatSpec<0:0>(kotlin.Double;kotlin.Long){0§<com.eignex.kumulant.core.Result>}[0]
 final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>).com.eignex.kumulant.schema.ops/standardScaleFeatures(): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> // com.eignex.kumulant.schema.ops/standardScaleFeatures|standardScaleFeatures@com.eignex.kumulant.schema.spec.RegressionStatSpec<0:0>(){0§<com.eignex.kumulant.core.Result>}[0]
 final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>).com.eignex.kumulant.schema.ops/throttle(kotlin/Int): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> // com.eignex.kumulant.schema.ops/throttle|throttle@com.eignex.kumulant.schema.spec.RegressionStatSpec<0:0>(kotlin.Int){0§<com.eignex.kumulant.core.Result>}[0]
-final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>).com.eignex.kumulant.schema.ops/transformX(com.eignex.kumulant.schema.expr/VectorExpr): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> // com.eignex.kumulant.schema.ops/transformX|transformX@com.eignex.kumulant.schema.spec.RegressionStatSpec<0:0>(com.eignex.kumulant.schema.expr.VectorExpr){0§<com.eignex.kumulant.core.Result>}[0]
+final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>).com.eignex.kumulant.schema.ops/transformX(com.eignex.kumulant.schema.expr/VectorExpr, kotlin/Int? = ...): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> // com.eignex.kumulant.schema.ops/transformX|transformX@com.eignex.kumulant.schema.spec.RegressionStatSpec<0:0>(com.eignex.kumulant.schema.expr.VectorExpr;kotlin.Int?){0§<com.eignex.kumulant.core.Result>}[0]
 final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>).com.eignex.kumulant.schema.ops/transformY(com.eignex.kumulant.schema.expr/ScalarExpr): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> // com.eignex.kumulant.schema.ops/transformY|transformY@com.eignex.kumulant.schema.spec.RegressionStatSpec<0:0>(com.eignex.kumulant.schema.expr.ScalarExpr){0§<com.eignex.kumulant.core.Result>}[0]
 final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>).com.eignex.kumulant.schema.ops/weightBy(com.eignex.kumulant.schema.expr/ScalarExpr): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> // com.eignex.kumulant.schema.ops/weightBy|weightBy@com.eignex.kumulant.schema.spec.RegressionStatSpec<0:0>(com.eignex.kumulant.schema.expr.ScalarExpr){0§<com.eignex.kumulant.core.Result>}[0]
 final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>).com.eignex.kumulant.schema.ops/withWeight(kotlin/Double): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> // com.eignex.kumulant.schema.ops/withWeight|withWeight@com.eignex.kumulant.schema.spec.RegressionStatSpec<0:0>(kotlin.Double){0§<com.eignex.kumulant.core.Result>}[0]

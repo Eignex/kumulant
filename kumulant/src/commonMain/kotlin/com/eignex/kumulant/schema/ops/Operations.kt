@@ -333,9 +333,15 @@ fun <R : Result> RegressionStatSpec<R>.filterFinite(): RegressionStatSpec<R> = f
 fun <R : Result> RegressionStatSpec<R>.transformY(expr: ScalarExpr): RegressionStatSpec<R> =
     TransformYRegression(this, expr) as RegressionStatSpec<R>
 
-/** Wrap this regression spec so x is remapped by [expr] before the inner stat sees it. */
-fun <R : Result> RegressionStatSpec<R>.transformX(expr: VectorExpr): RegressionStatSpec<R> =
-    TransformXRegression(this, expr) as RegressionStatSpec<R>
+/**
+ * Wrap this regression spec so x is remapped by [expr] before the inner stat sees it.
+ *
+ * Pass [featureSize] whenever [expr] changes the vector's length: it is the width callers must supply,
+ * and the wrapper reports it as its own `featureSize`. Left null the inner regressor's width is reported,
+ * which is only right when the transform preserves length.
+ */
+fun <R : Result> RegressionStatSpec<R>.transformX(expr: VectorExpr, featureSize: Int? = null): RegressionStatSpec<R> =
+    TransformXRegression(this, expr, featureSize) as RegressionStatSpec<R>
 
 /** Wrap this regression spec so every update uses [weight] regardless of caller input. */
 fun <R : Result> RegressionStatSpec<R>.withWeight(weight: Double): RegressionStatSpec<R> =

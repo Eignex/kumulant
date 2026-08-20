@@ -785,6 +785,14 @@ internal data class TransformXRegression(
     val inner: StatSpec,
     /** Expression producing the new vector; sees `Y` and `V`. */
     val expr: VectorExpr,
+    /**
+     * Width expected in `x` on each update, before the transform.
+     *
+     * Carried separately because the transform may change the length, so the inner regressor's width is
+     * not what a caller must supply - the same reason [FoldRegression] carries one. Null keeps the
+     * inner width, which is right whenever the transform preserves length.
+     */
+    val featureSize: Int? = null,
 ) : RegressionStatSpec<Result>
 
 /** Wire spec for `RegressionStat.withWeight(weight)`: replaces every update's weight. */

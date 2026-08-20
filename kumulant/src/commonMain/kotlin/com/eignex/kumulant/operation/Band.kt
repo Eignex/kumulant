@@ -2,6 +2,7 @@ package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasCenterScale
+import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.schema.BandResult
 import kotlin.time.Duration
@@ -18,6 +19,7 @@ internal fun <R> SeriesStat<R>.band(k: Double): SeriesStat<BandResult>
 
 internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private val k: Double) :
     WindowsInside<BandResult, SeriesStat<BandResult>>,
+    RefusesMerge,
     SeriesStat<BandResult> where R : HasCenterScale {
 
     override val concurrency: Concurrency get() = delegate.concurrency
@@ -32,8 +34,9 @@ internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private va
         return BandResult(center = c, scale = s, k = k, lower = c - k * s, upper = c + k * s)
     }
 
-    override fun merge(values: BandResult): Unit =
-        error("band wrapper cannot merge BandResult; merge the inner stat directly")
+    override val mergeRefusal: String = "band wrapper cannot merge BandResult; merge the inner stat directly"
+
+    override fun merge(values: BandResult): Unit = error(mergeRefusal)
 
     /**
      * Band *around* a windowed inner stat rather than a window around a band.

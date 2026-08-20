@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.calibration
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.requirePositiveBins
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -96,7 +97,8 @@ class IsotonicCalibratorStat(
     /** Number of equal-width bins over `[0, 1]`. */
     val numBins: Int = 16,
     override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<IsotonicCalibratorResult> {
+) : PairedStat<IsotonicCalibratorResult>,
+    RefusesMerge {
 
     init {
         requirePositiveBins(numBins)
@@ -166,9 +168,10 @@ class IsotonicCalibratorStat(
         return out
     }
 
-    override fun merge(values: IsotonicCalibratorResult): Nothing = throw UnsupportedOperationException(
-        "IsotonicCalibratorStat does not support merge; merge the underlying ReliabilityStat directly",
-    )
+    override val mergeRefusal: String =
+        "IsotonicCalibratorStat does not support merge; merge the underlying ReliabilityStat directly"
+
+    override fun merge(values: IsotonicCalibratorResult): Nothing = throw UnsupportedOperationException(mergeRefusal)
 
     override fun reset() = inner.reset()
 

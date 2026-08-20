@@ -9,6 +9,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.operation.VectorizedStat
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
@@ -930,5 +931,104 @@ class DiscreteListStatsTest {
         target.merge(source.read())
         val merged = assertIs<HyperLogLogResult>(target.read().results[0])
         assertTrue(merged.estimate > 100.0, "estimate=${merged.estimate}")
+    }
+}
+
+class GroupMergeAtomicityTest {
+
+    private object MergeHostile : StatSchema() {
+        val hits by series(Sum)
+        val p99 by series(QuantileFilter())
+        val total by series(Count)
+    }
+
+    @Test
+    fun `a refused merge leaves every entry untouched`() {
+        val local = StatGroup(MergeHostile)
+        val remote = StatGroup(MergeHostile)
+        repeat(3) { local.update(1.0) }
+        repeat(5) { remote.update(1.0) }
+
+        val hitsBefore = local.read()[MergeHostile.hits].sum
+        val totalBefore = local.read()[MergeHostile.total].sum
+
+        assertFailsWith<UnsupportedOperationException> { local.merge(remote.read()) }
+
+        assertEquals(hitsBefore, local.read()[MergeHostile.hits].sum, DELTA)
+        assertEquals(totalBefore, local.read()[MergeHostile.total].sum, DELTA)
+    }
+
+    @Test
+    fun `a group with no refusing entry still merges`() {
+        val mergeable = object : StatSchema() {
+            val hits by series(Sum)
+            val total by series(Count)
+        }
+        val local = StatGroup(mergeable)
+        val remote = StatGroup(mergeable)
+        repeat(3) { local.update(1.0) }
+        repeat(5) { remote.update(1.0) }
+        local.merge(remote.read())
+        assertEquals(8.0, local.read()[mergeable.hits].sum, DELTA)
+        assertEquals(8.0, local.read()[mergeable.total].sum, DELTA)
+    }
+}
+
+class BandAndTransformSpecGuardTest {
+
+    @Test
+    fun `band rejects an inner stat with no center and scale at materialize time`() {
+        val schema = object : StatSchema() {
+            val bad by series(Sum.band(2.0))
+        }
+        assertFailsWith<IllegalArgumentException> { StatGroup(schema) }
+    }
+
+    @Test
+    fun `band still accepts an inner stat that has a center and scale`() {
+        val schema = object : StatSchema() {
+            val ok by series(Variance.band(2.0))
+        }
+        val group = StatGroup(schema)
+        group.update(1.0)
+        group.update(3.0)
+        assertTrue(group.read()[schema.ok].upper >= group.read()[schema.ok].lower)
+    }
+
+    @Test
+    fun `transformX reports the width callers must supply`() {
+        val expanded = StochasticRegression(featureSize = 3)
+            .transformX(vectorOf(V(0), V(1), V(0) * V(1)), featureSize = 2)
+        val stat = expanded.materialize()
+        assertEquals(2, stat.featureSize)
+    }
+}
+
+class SchemaModalityReachabilityTest {
+
+    private object MixedInner : StatSchema() {
+        val hits by series(Sum)
+        val users by discrete(HyperLogLog())
+    }
+
+    @Test
+    fun `a nested schema holding a non-series entry is rejected at declaration`() {
+        assertFailsWith<IllegalArgumentException> {
+            val nested = object : StatSchema() {
+                val inner by group(MixedInner)
+            }
+            nested.statSchemaDef()
+        }
+    }
+
+    @Test
+    fun `a schema-declared regression entry has a group to materialize into`() {
+        val schema = object : StatSchema() {
+            val model by regression(StochasticRegression(featureSize = 2))
+        }
+        val group = RegressionStatGroup(schema)
+        group.update(feat(1.0, 2.0), 3.0)
+        assertEquals(2, group.featureSize)
+        assertTrue(group.read()[schema.model].totalWeights > 0.0)
     }
 }

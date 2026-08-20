@@ -1995,6 +1995,10 @@ public final class com/eignex/kumulant/core/PairedStat$DefaultImpls {
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/PairedStat;DDJDILjava/lang/Object;)V
 }
 
+public abstract interface class com/eignex/kumulant/core/RefusesMerge {
+	public abstract fun getMergeRefusal ()Ljava/lang/String;
+}
+
 public abstract interface class com/eignex/kumulant/core/RegressionStat : com/eignex/kumulant/core/Stat {
 	public abstract fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/RegressionStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
@@ -2761,7 +2765,8 @@ public final class com/eignex/kumulant/schema/ops/OperationsKt {
 	public static final fun transformPair (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
 	public static final fun transformVector (Lcom/eignex/kumulant/schema/spec/VectorStatSpec;Lcom/eignex/kumulant/schema/expr/VectorExpr;)Lcom/eignex/kumulant/schema/spec/VectorStatSpec;
 	public static final fun transformX (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
-	public static final fun transformX (Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/expr/VectorExpr;)Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
+	public static final fun transformX (Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/expr/VectorExpr;Ljava/lang/Integer;)Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
+	public static synthetic fun transformX$default (Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/expr/VectorExpr;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
 	public static final fun transformY (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
 	public static final fun transformY (Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
 	public static final fun vectorized (Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;IZ)Lcom/eignex/kumulant/schema/spec/VectorStatSpec;
@@ -3000,6 +3005,24 @@ public final class com/eignex/kumulant/schema/runtime/PairedStatGroup : com/eign
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun update (DDD)V
 	public fun update (DDJD)V
+}
+
+public final class com/eignex/kumulant/schema/runtime/RegressionStatGroup : com/eignex/kumulant/schema/runtime/AbstractStatGroup, com/eignex/kumulant/core/RegressionStat {
+	public fun <init> (Lcom/eignex/kumulant/schema/runtime/StatSchema;Lcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> (Lcom/eignex/kumulant/schema/runtime/StatSchema;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/util/List;Lcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> (Ljava/util/List;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> ([Lcom/eignex/kumulant/schema/runtime/BoundStat;Lcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> ([Lcom/eignex/kumulant/schema/runtime/BoundStat;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> ([Lkotlin/Pair;Lcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> ([Lkotlin/Pair;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/RegressionStat;
+	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
+	public fun getFeatureSize ()I
+	public fun update (Lcom/eignex/koblas/F64VectorView;DD)V
+	public fun update (Lcom/eignex/koblas/F64VectorView;DJD)V
+	public fun update ([DDD)V
+	public fun update ([DDJD)V
 }
 
 public final class com/eignex/kumulant/schema/runtime/StatFactoryKt {
@@ -5101,7 +5124,7 @@ public final class com/eignex/kumulant/stat/anomaly/QuantileFilterResult$Compani
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/anomaly/QuantileFilterStat : com/eignex/kumulant/core/SeriesStat {
+public final class com/eignex/kumulant/stat/anomaly/QuantileFilterStat : com/eignex/kumulant/core/RefusesMerge, com/eignex/kumulant/core/SeriesStat {
 	public fun <init> ()V
 	public fun <init> (DDLcom/eignex/kumulant/core/Concurrency;)V
 	public synthetic fun <init> (DDLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5109,6 +5132,7 @@ public final class com/eignex/kumulant/stat/anomaly/QuantileFilterStat : com/eig
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/anomaly/QuantileFilterStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getProbability ()D
 	public final fun getRelativeError ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
@@ -5155,7 +5179,7 @@ public final class com/eignex/kumulant/stat/calibration/IsotonicCalibratorResult
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/calibration/IsotonicCalibratorStat : com/eignex/kumulant/core/PairedStat {
+public final class com/eignex/kumulant/stat/calibration/IsotonicCalibratorStat : com/eignex/kumulant/core/PairedStat, com/eignex/kumulant/core/RefusesMerge {
 	public fun <init> ()V
 	public fun <init> (ILcom/eignex/kumulant/core/Concurrency;)V
 	public synthetic fun <init> (ILcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5163,6 +5187,7 @@ public final class com/eignex/kumulant/stat/calibration/IsotonicCalibratorStat :
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/calibration/IsotonicCalibratorStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumBins ()I
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/calibration/IsotonicCalibratorResult;)Ljava/lang/Void;
