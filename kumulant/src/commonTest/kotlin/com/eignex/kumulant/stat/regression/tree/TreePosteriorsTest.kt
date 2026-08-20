@@ -150,3 +150,31 @@ class TreePosteriorsTest {
         return sqrt(s / (xs.size - 1))
     }
 }
+
+class SingleObservationLeafPosteriorTest {
+
+    private fun oneObservationTree(y: Double): DecisionTreeRegressionStat {
+        val t = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = emptyList())
+        t.update(feat(1.0), y)
+        return t
+    }
+
+    @Test
+    fun `Thompson still spreads on a leaf holding one observation`() {
+        val snapshot = oneObservationTree(0.0).read()
+        val x = feat(1.0)
+        val rng = Random(1)
+        val draws = (0 until 200).map {
+            ThompsonTreePosterior().evaluate(snapshot, x, rng, exploration = 1.0)
+        }
+        assertTrue(draws.toSet().size > 1, "every draw was ${draws.first()}")
+    }
+
+    @Test
+    fun `UCB still gives a bonus on a leaf holding one observation`() {
+        val snapshot = oneObservationTree(0.0).read()
+        val x = feat(1.0)
+        val score = UcbTreePosterior().evaluate(snapshot, x, Random(1), exploration = 1.0)
+        assertTrue(score > snapshot.findLeaf(x).mean, "score=$score had no confidence bonus")
+    }
+}

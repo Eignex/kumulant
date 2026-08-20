@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
@@ -15,6 +16,7 @@ import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.nextPoissonOne
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.concurrent.Volatile
 
 /**
  * Online random-forest classifier; the classification counterpart of
@@ -77,6 +79,11 @@ class RandomForestClassifierStat(
     // Drawn from on the update path, once per tree, with no lock over it - so it has to be a generator
     // that concurrent updates can share. See CounterRandom.
     private val baggingRng = CounterRandom(seedRng.childSeed(), concurrency)
+
+    // Volatile like TreeGrowth.root, and for the same reason: this reference is read on the update
+    // path and rewritten by reset, so without it a concurrent updater can go on writing into the
+    // pre-reset tree indefinitely, never observing the replacement.
+    @Volatile
     private var trees: Array<ClassificationTree> = Array(nbrTrees) { newTree() }
 
     private fun newTree(): ClassificationTree = ClassificationTree(
@@ -90,11 +97,14 @@ class RandomForestClassifierStat(
 
     override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
-        // isInertWeight rather than isNotPositiveWeight: a class count subtracts exactly, so a negative
-        // weight is a real downdate here, exactly as it is for the regression forest. Returning before
-        // the bagging draw also matters - an inert call that consumed one Poisson draw per tree would
-        // desynchronise every later one.
-        if (weight.isInertWeight()) return
+        // A negative weight is a real downdate only when bagging is off: a class count and a Welford
+        // accumulator both subtract exactly. Under bagging each arrival draws its own Poisson
+        // multiplier, so a retraction is scaled by a different k than the insertion it undoes - leaving
+        // a leaf with negative mass, or tripping the weight guard inside it - and keying the multiplier
+        // off the observation instead would hand repeated identical observations the same k and bias the
+        // resampling. Either way the guard returns before the first draw, since consuming one would
+        // desynchronise every later bagging draw and change the forest's predictions.
+        if (if (bagging) weight.isNotPositiveWeight() else weight.isInertWeight()) return
         val c = y.asClassLabel(numClasses)
         if (c < 0) return
         if (!bagging) {

@@ -173,14 +173,18 @@ class BayesianRegressionStat(
             // condition: treating an exact 1.0 as success downdates the covariance below without its
             // factor, and the two never agree again.
             var norm = covarianceL.choleskyDowndateInPlace(z)
-            if (norm >= 1.0) {
+            // Negated, so a NaN norm bails into the repair too. choleskyDowndateInPlace was hardened to
+            // return a NaN rather than write one through the factor, and `norm >= 1.0` is false for NaN -
+            // which would fall straight through to the covariance downdate below and desynchronise it
+            // from its factor permanently, the exact failure the comment above describes.
+            if (!(norm < 1.0)) {
                 for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + COVARIANCE_RIDGE
                 val Lnew = covariance.cholesky(CholeskyPolicy.Regularize()).l
                 for (i in 0 until featureSize) {
                     for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
                 }
                 norm = covarianceL.choleskyDowndateInPlace(z)
-                while (norm >= 1.0) {
+                while (!(norm < 1.0)) {
                     scale(z, 1.0 / (norm + DOWNDATE_SHRINK))
                     norm = covarianceL.choleskyDowndateInPlace(z)
                 }

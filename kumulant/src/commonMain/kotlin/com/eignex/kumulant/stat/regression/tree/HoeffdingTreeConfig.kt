@@ -72,10 +72,18 @@ interface HoeffdingTreeConfig {
  * `hoeffdingBound` takes `-ln(delta * deltaDecay^depth)`: at `delta >= 1` the bound collapses to zero
  * or NaN, and every `shouldSplit` comparison against NaN is false, so the tree stops growing with no
  * error to show for it.
+ *
+ * `mtry` is checked only for negativity. Zero is deliberate and pinned by `defaultMtry`: a tree built with
+ * no split candidates reports zero rather than clamping to one and drawing from an empty pool, so growth
+ * is off because there is nothing to split on. A negative value has no such meaning and would throw from
+ * `List.take` inside `pickCandidates` at leaf birth, naming neither `mtry` nor the tree.
  */
 internal fun HoeffdingTreeConfig.requireValidBoundParameters() {
     require(delta > 0.0 && delta < 1.0) { "delta must be in (0, 1), got $delta" }
     require(deltaDecay > 0.0 && deltaDecay <= 1.0) { "deltaDecay must be in (0, 1], got $deltaDecay" }
+    // Null means "use the modality default", which is always positive; only an explicit value can be bad.
+    val requestedMtry = mtry
+    require(requestedMtry == null || requestedMtry >= 0) { "mtry cannot be negative, got $requestedMtry" }
 }
 
 /**

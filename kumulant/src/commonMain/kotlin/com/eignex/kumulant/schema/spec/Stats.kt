@@ -37,6 +37,7 @@ import com.eignex.kumulant.stat.regression.glm.Link
 import com.eignex.kumulant.stat.regression.glm.Penalty
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
+import com.eignex.kumulant.stat.regression.tree.ClassCountsResult
 import com.eignex.kumulant.stat.regression.tree.ClassificationTreeConfig
 import com.eignex.kumulant.stat.regression.tree.ForestClassificationResult
 import com.eignex.kumulant.stat.regression.tree.ForestRegressionResult
@@ -191,6 +192,14 @@ data object Variance : SeriesStatSpec<WeightedVarianceResult>
 @Serializable
 @SerialName("Moments")
 data object Moments : SeriesStatSpec<MomentsResult>
+
+/** Spec for `ClassCountsStat`: weighted count per class over a discrete label stream. */
+@Serializable
+@SerialName("ClassCounts")
+data class ClassCounts(
+    /** Number of classes; each observed value must be exactly an integer in `[0, numClasses)`. */
+    val numClasses: Int,
+) : SeriesStatSpec<ClassCountsResult>
 
 /** Spec for `GaussianScorerStat`: running mean / variance with `|x - mean| / stdDev` z-score. */
 @Serializable

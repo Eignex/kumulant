@@ -70,3 +70,42 @@ class RandomForestClassifierStatTest {
         assertEquals(2, r.numClasses)
     }
 }
+
+class ForestBaggingDowndateTest {
+
+    @Test
+    fun `a retraction under bagging does not leave a negative class probability`() {
+        // Swept over seeds: whether the retraction's Poisson multiplier exceeds the insertion's is a
+        // property of the draw sequence, so a single seed can miss it.
+        for (seed in 1..20) {
+            val f = RandomForestClassifierStat(
+                featureSize = 1,
+                numClasses = 2,
+                nbrTrees = 1,
+                bagging = true,
+                randomSeed = seed,
+                splitCandidates = emptyList(),
+            )
+            val x = F64DenseVector.of(doubleArrayOf(1.0))
+            f.update(x, 0.0, weight = 1.0)
+            f.update(x, 0.0, weight = -1.0)
+            f.update(x, 1.0, weight = 5.0)
+            val p = f.read().probabilities(x)
+            assertTrue(p.all { it >= 0.0 }, "seed=$seed probabilities=${p.toList()}")
+        }
+    }
+
+    @Test
+    fun `a retraction under bagging does not throw out of the regression forest`() {
+        val f = RandomForestRegressionStat(
+            featureSize = 1,
+            nbrTrees = 1,
+            bagging = true,
+            randomSeed = 1,
+            splitCandidates = emptyList(),
+        )
+        val x = F64DenseVector.of(doubleArrayOf(1.0))
+        f.update(x, 2.0, weight = 1.0)
+        f.update(x, 2.0, weight = -1.0)
+    }
+}

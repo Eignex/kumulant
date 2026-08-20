@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.regression.tree
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class DefaultMtryTest {
 
@@ -65,5 +66,21 @@ class DefaultMtryTest {
                 nbrTrees = 2,
             ).config.mtry,
         )
+    }
+}
+
+class MtryValidationTest {
+
+    @Test
+    fun `a negative mtry is rejected at construction`() {
+        for (bad in listOf(-1, -7)) {
+            assertFailsWith<IllegalArgumentException>("mtry=$bad was accepted") {
+                DecisionTreeRegressionStat(
+                    featureSize = 2,
+                    splitCandidates = emptyList(),
+                    config = RegressionTreeConfig(mtry = bad),
+                )
+            }
+        }
     }
 }

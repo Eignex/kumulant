@@ -99,6 +99,7 @@ import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
+import com.eignex.kumulant.stat.regression.tree.ClassCountsStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeClassifierStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestClassifierStat
@@ -179,6 +180,8 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
         Moments -> MomentsStat(concurrency)
 
         Summary -> SummaryStat(concurrency)
+
+        is ClassCounts -> ClassCountsStat(numClasses, concurrency)
 
         GaussianScorer -> GaussianScorerStat(concurrency)
 

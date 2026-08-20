@@ -10,6 +10,7 @@ import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.CounterRandom
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlin.concurrent.Volatile
 
 /**
  * Online VFDT decision-tree regressor; a piecewise-constant predictor over the feature
@@ -71,6 +72,11 @@ class DecisionTreeRegressionStat(
     // Resolved per instance, not captured in the constructor default: create() has to be able
     // to rebind the default arm to the replica's concurrency.
     private val armFactory: () -> SeriesStat<WeightedVarianceResult> = leafArmFactory ?: { VarianceStat(concurrency) }
+
+    // Volatile like TreeGrowth.root, and for the same reason: this reference is read on the update
+    // path and rewritten by reset, so without it a concurrent updater can go on writing into the
+    // pre-reset tree indefinitely, never observing the replacement.
+    @Volatile
     private var tree: RegressionTree<F64VectorView> = newTree()
 
     private fun newTree(): RegressionTree<F64VectorView> = RegressionTree(

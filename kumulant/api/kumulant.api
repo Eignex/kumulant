@@ -3289,6 +3289,33 @@ public final class com/eignex/kumulant/schema/spec/BrierScore : com/eignex/kumul
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/eignex/kumulant/schema/spec/ClassCounts : com/eignex/kumulant/schema/spec/SeriesStatSpec {
+	public static final field Companion Lcom/eignex/kumulant/schema/spec/ClassCounts$Companion;
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lcom/eignex/kumulant/schema/spec/ClassCounts;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/ClassCounts;IILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/ClassCounts;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNumClasses ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/schema/spec/ClassCounts$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/ClassCounts$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/ClassCounts;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/ClassCounts;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/ClassCounts$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class com/eignex/kumulant/schema/spec/ConfusionMatrix : com/eignex/kumulant/schema/spec/PairedStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/ConfusionMatrix$Companion;
 	public fun <init> (I)V

@@ -143,11 +143,19 @@ internal fun shouldSplit(ranked: SplitInfo, totalWeight: Double, depth: Int, con
 }
 
 /**
- * Parent impurity minus the weight-averaged impurity of the two children.
+ * The fraction of the parent's impurity that splitting removes.
  *
  * Every split criterion kumulant ships is this expression over a different impurity measure:
  * [VarianceReduction] over `variance`, [GiniReduction] over `gini`, [InformationGain] over `entropy`. The
  * `w <= 0.0` guard is what keeps an empty split scoring zero rather than NaN.
+ *
+ * Reported as a fraction rather than an absolute reduction because [hoeffdingBound] assumes a criterion
+ * whose range is 1. Absolute variance reduction is in units of the variance of `y` and so unbounded: on a
+ * stream with a spread of 100 two candidates split on pure noise differ by far more than any bound, so the
+ * test passes trivially and the tree splits on noise, while on a stream inside `[0, 1]` the differences
+ * never reach the bound and every split comes from the tie-break instead - the tree splits on a schedule
+ * rather than on evidence. Entropy in nats has range `ln(K)` and misses in the other direction. Dividing
+ * by the parent impurity puts all three in `[0, 1]`, which is the range the bound is derived for.
  */
 internal inline fun <R : HasObservationCount> impurityReduction(
     total: R,
@@ -159,6 +167,9 @@ internal inline fun <R : HasObservationCount> impurityReduction(
     val wNeg = neg.totalWeights
     val w = wPos + wNeg
     if (w <= 0.0) return 0.0
+    val parent = impurity(total)
+    // An already-pure parent has nothing to remove, so no candidate improves on not splitting.
+    if (parent <= 0.0) return 0.0
     val weighted = (wPos / w) * impurity(pos) + (wNeg / w) * impurity(neg)
-    return impurity(total) - weighted
+    return (parent - weighted) / parent
 }

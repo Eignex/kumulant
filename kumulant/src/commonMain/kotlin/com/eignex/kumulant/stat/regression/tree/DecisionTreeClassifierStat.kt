@@ -10,6 +10,7 @@ import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.CounterRandom
+import kotlin.concurrent.Volatile
 
 /**
  * Online VFDT decision-tree classifier; the classification counterpart of
@@ -67,6 +68,11 @@ class DecisionTreeClassifierStat(
             concurrency,
         )
     }
+
+    // Volatile like TreeGrowth.root, and for the same reason: this reference is read on the update
+    // path and rewritten by reset, so without it a concurrent updater can go on writing into the
+    // pre-reset tree indefinitely, never observing the replacement.
+    @Volatile
     private var tree: ClassificationTree = newTree()
 
     private fun newTree(): ClassificationTree = ClassificationTree(

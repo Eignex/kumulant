@@ -41,6 +41,12 @@ sealed interface Link {
     data object Identity : Link {
         override fun invMean(eta: Double) = eta
         override fun curvature(eta: Double) = 1.0
+
+        // Squared error, which is twice the Gaussian negative log-likelihood: `sse` is accumulated from
+        // this and `mse`/`rSquared` are defined against squared error, so halving it to match `curvature`
+        // - the second derivative of the halved form - would change what those report. The two therefore
+        // differ by a factor of two on this link, which matters only to a consumer comparing `sse` across
+        // links or pairing `loss` with `curvature` in a line search.
         override fun loss(eta: Double, y: Double): Double {
             val r = eta - y
             return r * r
