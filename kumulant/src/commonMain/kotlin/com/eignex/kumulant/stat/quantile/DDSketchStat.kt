@@ -106,7 +106,7 @@ class DDSketchStat(
 
     override fun create(concurrency: Concurrency?) = DDSketchStat(
         relativeError,
-        probabilities,
+        probabilities.copyOf(),
         minIndexableValue,
         maxIndexableValue,
         concurrency ?: this.concurrency,
@@ -160,7 +160,7 @@ class DDSketchStat(
             // branch rather than propagate NaN can check `isEmpty` on the result.
             computedQuantiles.fill(Double.NaN)
             return SketchResult(
-                probabilities = probabilities,
+                probabilities = probabilities.copyOf(),
                 quantiles = computedQuantiles,
                 gamma = gamma,
                 totalWeights = total,
@@ -205,7 +205,10 @@ class DDSketchStat(
         }
 
         return SketchResult(
-            probabilities = probabilities,
+            // Copied on the way out, the way ThresholdBucketStat copies its thresholds: the array is a
+            // constructor property, so handing the same instance to every snapshot and every replica lets
+            // one caller's edit re-label this stat's quantiles and those of every replica in a fan-out.
+            probabilities = probabilities.copyOf(),
             quantiles = computedQuantiles,
             gamma = gamma,
             totalWeights = total,

@@ -191,3 +191,28 @@ class HdrHistogramTest {
         assertEquals(source.read(0L), target.read(0L))
     }
 }
+
+class HdrHistogramNegativeMergeTest {
+
+    @Test
+    fun `merge rejects a negative bucket bound the way update rejects a negative value`() {
+        val hdr = HdrHistogramStat()
+        val negative = SparseHistogramResult(
+            lowerBounds = doubleArrayOf(-5.0),
+            upperBounds = doubleArrayOf(-4.0),
+            weights = doubleArrayOf(1.0),
+        )
+        assertFailsWith<IllegalArgumentException> { hdr.merge(negative) }
+    }
+
+    @Test
+    fun `merge rejects an infinite bucket bound instead of filing it in bucket zero`() {
+        val hdr = HdrHistogramStat()
+        val underflow = SparseHistogramResult(
+            lowerBounds = doubleArrayOf(Double.NEGATIVE_INFINITY),
+            upperBounds = doubleArrayOf(0.0),
+            weights = doubleArrayOf(1.0),
+        )
+        assertFailsWith<IllegalArgumentException> { hdr.merge(underflow) }
+    }
+}

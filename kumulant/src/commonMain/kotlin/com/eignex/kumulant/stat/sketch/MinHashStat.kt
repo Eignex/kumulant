@@ -66,7 +66,7 @@ data class MinHashResult(
 
 /**
  * Estimated Jaccard similarity between the two underlying sets - the fraction of slots
- * where signatures agree. Requires matching `numHashes` and `seed`.
+ * where signatures agree. Requires matching `numHashes`, `seed` and hasher.
  */
 fun MinHashResult.jaccard(other: MinHashResult): Double {
     require(numHashes == other.numHashes) {
@@ -74,6 +74,12 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
     }
     require(seed == other.seed) {
         "Cannot compare MinHashStat with seed=${other.seed} to $seed"
+    }
+    // The same check merge makes, for the same reason: the mixer decides which slot a key lands in, so
+    // signatures built with different ones are not comparable slot by slot. Two sketches over identical
+    // sets would agree only on accidental collisions and report a similarity near zero.
+    require(hasher == other.hasher) {
+        "Cannot compare MinHashStat hashed with ${other.hasher} to one hashed with $hasher"
     }
     if (numHashes == 0) return 0.0
     var matches = 0

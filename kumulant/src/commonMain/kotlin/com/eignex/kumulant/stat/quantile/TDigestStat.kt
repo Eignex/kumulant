@@ -370,7 +370,7 @@ class TDigestStat(
 
     override fun create(concurrency: Concurrency?) = TDigestStat(
         compression,
-        probabilities,
+        probabilities.copyOf(),
         concurrency ?: this.concurrency,
     )
 
@@ -426,7 +426,7 @@ class TDigestStat(
                 // the check for callers who would rather branch.
                 computed.fill(Double.NaN)
                 return@guarded TDigestResult(
-                    probabilities,
+                    probabilities.copyOf(),
                     computed,
                     means.copyOf(),
                     weights.copyOf(),
@@ -466,8 +466,9 @@ class TDigestStat(
                 computed[pi] = q
             }
 
+            // See DDSketchStat.read on why this is copied.
             TDigestResult(
-                probabilities = probabilities,
+                probabilities = probabilities.copyOf(),
                 quantiles = computed,
                 means = means.copyOf(),
                 weights = weights.copyOf(),

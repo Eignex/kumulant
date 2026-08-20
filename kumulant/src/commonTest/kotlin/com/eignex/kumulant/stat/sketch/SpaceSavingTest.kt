@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.sketch
 
+import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -166,5 +167,31 @@ class SpaceSavingTest {
     fun `invalid args throw`() {
         assertFailsWith<IllegalArgumentException> { SpaceSavingStat(capacity = 0) }
         assertFailsWith<IllegalArgumentException> { SpaceSavingStat(capacity = -1) }
+    }
+}
+
+class SpaceSavingLargeCountAdmissionTest {
+
+    @Test
+    fun `admitting against very large counts terminates`() {
+        // The eviction round has to subtract the smallest count, not one: a unit decrement runs once per
+        // unit of that minimum, so at this magnitude the admission below would take days to return.
+        val s = SpaceSavingStat(capacity = 2, concurrency = Concurrency.Relaxed)
+        s.update(1L, weight = 1e12)
+        s.update(2L, weight = 1e12)
+        s.update(3L, weight = 1.0)
+        assertTrue(s.read().deficit > 0L, "no eviction round ran")
+    }
+
+    @Test
+    fun `merging shards with very large counts terminates`() {
+        val a = SpaceSavingStat(capacity = 2, concurrency = Concurrency.Relaxed)
+        a.update(1L, weight = 1e12)
+        a.update(2L, weight = 1e12)
+        val b = SpaceSavingStat(capacity = 2, concurrency = Concurrency.Relaxed)
+        b.update(3L, weight = 1e12)
+        b.update(4L, weight = 1e12)
+        a.merge(b.read())
+        assertTrue(a.read().keys.isNotEmpty())
     }
 }

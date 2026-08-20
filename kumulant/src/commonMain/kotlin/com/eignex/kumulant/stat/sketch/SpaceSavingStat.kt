@@ -229,15 +229,26 @@ class SpaceSavingStat(
             }
             if (claimed) return
 
-            // 3. No free slot found - best-effort decrement of every count. A
-            //    concurrent admit may decrement in parallel; both progress, and
-            //    step 2 on the next iteration accepts the resulting non-positive
-            //    counts.
-            for (i in 0 until capacity) counts.add(i, -1L)
-            // Every count just moved one below where the stream put it, so the shortfall bound grows by
-            // one for every key. Concurrent rounds each count themselves, which is the conservative
-            // direction: the bound may exceed the true shortfall, never fall short of it.
-            deficitCell.add(1L)
+            // 3. No free slot found - best-effort subtraction of the smallest count from every count,
+            //    which drives at least the slot holding that minimum to zero and so frees it for step 2
+            //    on the next iteration. A concurrent admit may subtract in parallel; both progress, and
+            //    step 2 accepts the resulting non-positive counts.
+            //
+            //    By the minimum rather than by one: a unit decrement makes this loop run once per unit
+            //    of the smallest count, so admitting a single key against a table holding counts of 1e15
+            //    - reachable through the weight contract, since toCounterStep caps one step at
+            //    Long.MAX_VALUE/1024 - would never return. Classic Misra-Gries subtracts the minimum in
+            //    one round for the same reason, which is what makes its amortised cost constant.
+            var minCount = Long.MAX_VALUE
+            for (i in 0 until capacity) minCount = minOf(minCount, counts.load(i))
+            // At least one, so a table that a concurrent round already drove non-positive still makes
+            // forward progress rather than subtracting nothing and spinning.
+            val decrement = maxOf(minCount, 1L)
+            for (i in 0 until capacity) counts.add(i, -decrement)
+            // Every count just moved that far below where the stream put it, so the shortfall bound grows
+            // by the same amount for every key. Concurrent rounds each count themselves, which is the
+            // conservative direction: the bound may exceed the true shortfall, never fall short of it.
+            deficitCell.add(decrement)
             // Loop and retry.
         }
     }
@@ -274,8 +285,14 @@ class SpaceSavingStat(
         // Relaxed workers feeding one Strict coordinator. So the snapshot is absorbed and the bounds
         // are widened to stay sound: the incoming shortfall is added, and the reported policy degrades
         // to the weaker of the two.
-        if (values.policy == AdmissionPolicy.MisraGries) absorbedMisraGries.store(1L)
-        deficitCell.add(values.deficit)
+        // Guarded because reset clears both of these together and read observes both together: left
+        // outside, a reset landing between them leaves an empty table reporting a degraded policy with
+        // no deficit, or a deficit with no policy. Written before the counts they bound, so a reader
+        // that catches the merge partway sees a bound too loose for the data rather than too tight.
+        outerLock.guarded {
+            if (values.policy == AdmissionPolicy.MisraGries) absorbedMisraGries.store(1L)
+            deficitCell.add(values.deficit)
+        }
         if (useMisraGries) {
             for (i in values.keys.indices) {
                 admitMisraGries(values.keys[i], values.counts[i], values.errors[i])
