@@ -31,7 +31,13 @@ internal object AdderMode : StreamMode {
         AtomicMode.newDoubleArray(size, init)
 }
 
-/** [StreamDouble] backed by a striped `java.util.concurrent.atomic.DoubleAdder`. */
+/**
+ * [StreamDouble] backed by a striped `java.util.concurrent.atomic.DoubleAdder`.
+ *
+ * `sum` accumulates from a `+0.0` base, so this cell cannot represent a negative zero: seeding it with
+ * `-0.0` reports `+0.0`. Only the sign of a reported zero is affected, and it is inherent to a striped
+ * counter rather than something the operations below can preserve.
+ */
 @JvmInline
 internal value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
 
@@ -43,15 +49,29 @@ internal value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
 
     override fun load(): Double = ref.sum()
 
+    // One relative add rather than reset-then-add. `reset` zeroes the base and then each cell in turn
+    // while `sum` walks the same table, so a concurrent reader can pick up a partial residue that was
+    // never the total at any instant - and DoubleAdder.reset is documented as effective only with no
+    // concurrent updates, while StreamDouble.store promises an overwrite. Expressed as a delta, every
+    // observation stays a real total and a racing add is folded in rather than discarded. Two racing
+    // stores still leave one of them plus drift, which is what a striped counter can offer.
     override fun store(value: Double) {
-        ref.reset()
-        ref.add(value)
+        ref.add(value - ref.sum())
     }
 
     override fun add(delta: Double) {
+        // Same short-circuit AtomicMode takes, so a cell holding -0.0 keeps its sign under every level
+        // rather than flipping to +0.0 here and staying -0.0 under Relaxed and Strict.
+        if (delta == 0.0) return
         ref.add(delta)
     }
 
+    // Add then sum, which is deliberately not linearizable: a striped counter has no atomic
+    // read-modify-write, and the returned total may already include a concurrent writer's delta. Safe
+    // for "add and report roughly where we are", but NOT for the `addAndGet(1) == 1` first-writer
+    // election used elsewhere in the library - two threads racing it can both observe 2, so neither
+    // wins and the baseline is never seeded. Every election site sits on monotonicMode or
+    // firstWriterMode, both of which resolve to AtomicMode, where the operation is a single atomic.
     override fun addAndGet(delta: Double): Double {
         ref.add(delta)
         return ref.sum()
@@ -69,15 +89,29 @@ internal value class LongAdder(val ref: JLongAdder) : StreamLong {
 
     override fun load(): Long = ref.sum()
 
+    // One relative add rather than reset-then-add. `reset` zeroes the base and then each cell in turn
+    // while `sum` walks the same table, so a concurrent reader can pick up a partial residue that was
+    // never the total at any instant - and DoubleAdder.reset is documented as effective only with no
+    // concurrent updates, while StreamDouble.store promises an overwrite. Expressed as a delta, every
+    // observation stays a real total and a racing add is folded in rather than discarded. Two racing
+    // stores still leave one of them plus drift, which is what a striped counter can offer.
     override fun store(value: Long) {
-        ref.reset()
-        ref.add(value)
+        ref.add(value - ref.sum())
     }
 
     override fun add(delta: Long) {
+        // Same short-circuit AtomicMode takes, so a cell holding -0L keeps its sign under every level
+        // rather than flipping to +0L here and staying -0L under Relaxed and Strict.
+        if (delta == 0L) return
         ref.add(delta)
     }
 
+    // Add then sum, which is deliberately not linearizable: a striped counter has no atomic
+    // read-modify-write, and the returned total may already include a concurrent writer's delta. Safe
+    // for "add and report roughly where we are", but NOT for the `addAndGet(1) == 1` first-writer
+    // election used elsewhere in the library - two threads racing it can both observe 2, so neither
+    // wins and the baseline is never seeded. Every election site sits on monotonicMode or
+    // firstWriterMode, both of which resolve to AtomicMode, where the operation is a single atomic.
     override fun addAndGet(delta: Long): Long {
         ref.add(delta)
         return ref.sum()
