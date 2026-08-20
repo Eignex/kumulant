@@ -36,7 +36,7 @@ internal class HysteresisSeriesStat<R : Result>(
     private val low: Double,
     private val high: Double,
 ) : SeriesStat<R>,
-    WindowsInside<R>,
+    WindowsInside<R, SeriesStat<R>>,
     Stat<R> by delegate {
 
     init {

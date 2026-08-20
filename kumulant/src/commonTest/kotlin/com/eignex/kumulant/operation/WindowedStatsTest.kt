@@ -194,3 +194,15 @@ class WindowedStatsTest {
         assertEquals(plain.read(t).sum, windowed.read(t).sum, DELTA)
     }
 }
+
+class WindowedRingPoisoningTest {
+
+    @Test
+    fun `a future timestamp does not silence the bucket it lands in`() {
+        val w = SumStat().windowed(duration = 10.seconds, slices = 10)
+        w.update(1.0, T0)
+        w.update(1.0, 60_003_000_000_000L)
+        w.update(5.0, T3)
+        assertEquals(6.0, w.read(T9).sum, DELTA)
+    }
+}

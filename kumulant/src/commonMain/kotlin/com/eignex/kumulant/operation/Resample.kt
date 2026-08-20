@@ -50,7 +50,7 @@ internal class ResampleByTimeStat<R : Result>(
     private val bucket: Duration,
     private val aggregator: ResampleAggregator,
 ) : SeriesStat<R>,
-    WindowsInside<R>,
+    WindowsInside<R, SeriesStat<R>>,
     Stat<R> by delegate {
 
     private val bucketNanos: Long = bucket.inWholeNanoseconds
@@ -81,18 +81,23 @@ internal class ResampleByTimeStat<R : Result>(
             val cur = currentBucket.load()
             // The same guard the Welford stats downstream apply, for the same reason: Mean divides by
             // the bucket's accumulated weight, so a downdate that takes it to zero publishes an
-            // infinity that every later read inherits. A downdate can only remove what the open bucket
-            // already holds, and a bucket not yet open holds nothing, hence the zero prior.
+            // infinity that every later read inherits.
+            //
+            // The prior is whatever the bucket this weight will actually land in already holds. A late
+            // arrival joins the open bucket rather than its own, so charging it against a zero prior
+            // would reject a downdate the open bucket can absorb, on the strength of a timestamp the
+            // operator then ignores. Only the seed paths start from nothing.
             //
             // Checked before any cell is written, so a rejected update leaves the stat as it was
             // rather than half-applied.
-            requireLiveWeight(if (cur == newBucket) bucketWeight.load() else 0.0, weight)
+            val joinsOpenBucket = cur != NO_BUCKET && newBucket <= cur
+            requireLiveWeight(if (joinsOpenBucket) bucketWeight.load() else 0.0, weight)
             if (cur == NO_BUCKET) {
                 currentBucket.store(newBucket)
                 seed(value, timestampNanos, weight)
                 return@guarded
             }
-            if (newBucket <= cur) {
+            if (joinsOpenBucket) {
                 // A late arrival joins the open bucket rather than closing it: its own bucket was
                 // already emitted, and closing on any change would emit the open one twice.
                 accumulate(value, timestampNanos, weight)

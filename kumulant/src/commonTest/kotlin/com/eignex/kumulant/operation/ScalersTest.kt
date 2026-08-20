@@ -1,12 +1,15 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 class ScalersTest {
 
@@ -86,5 +89,15 @@ class ScalersTest {
         s.update(5.0)
         // First post-reset update is again the warm-up zero.
         assertEquals(0.0, s.read().sum, DELTA)
+    }
+}
+
+class ScalerWindowedTest {
+
+    @Test
+    fun `a windowed standard scaler keeps one primary for the whole stream`() {
+        val s = MeanStat().standardScaler().windowed(duration = 60.seconds, slices = 10)
+        for (i in 0 until 6) s.update(100.0 * (i + 1), timestampNanos = i * 10_000_000_000L)
+        assertNotEquals(0.0, s.read(50_000_000_000L).mean, "every observation was standardized against a fresh primary")
     }
 }

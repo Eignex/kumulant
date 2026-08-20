@@ -50,7 +50,7 @@ private fun requireK(k: Int) = require(k >= 1) { "shift k must be >= 1, got $k" 
 
 internal class LagSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val k: Int) :
     SeriesStat<R>,
-    WindowsInside<R>,
+    WindowsInside<R, SeriesStat<R>>,
     Stat<R> by delegate {
     init {
         requireK(k)
@@ -75,7 +75,7 @@ internal class LagSeriesStat<R : Result>(private val delegate: SeriesStat<R>, pr
         }
     }
 
-    override fun reset() {
+    override fun reset() = lock.guarded {
         delegate.reset()
         tick.store(0L)
         for (i in 0 until k) ring.store(i, 0.0)
@@ -89,7 +89,7 @@ internal class LagSeriesStat<R : Result>(private val delegate: SeriesStat<R>, pr
 
 internal class DiffSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val k: Int) :
     SeriesStat<R>,
-    WindowsInside<R>,
+    WindowsInside<R, SeriesStat<R>>,
     Stat<R> by delegate {
     init {
         requireK(k)
@@ -113,7 +113,7 @@ internal class DiffSeriesStat<R : Result>(private val delegate: SeriesStat<R>, p
         }
     }
 
-    override fun reset() {
+    override fun reset() = lock.guarded {
         delegate.reset()
         tick.store(0L)
         for (i in 0 until k) ring.store(i, 0.0)
@@ -127,7 +127,7 @@ internal class DiffSeriesStat<R : Result>(private val delegate: SeriesStat<R>, p
 
 internal class DerivativeSeriesStat<R : Result>(private val delegate: SeriesStat<R>) :
     SeriesStat<R>,
-    WindowsInside<R>,
+    WindowsInside<R, SeriesStat<R>>,
     Stat<R> by delegate {
 
     private val mode = delegate.concurrency.monotonicMode()

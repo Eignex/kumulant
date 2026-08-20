@@ -9,6 +9,7 @@ import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
+import kotlin.time.Duration
 
 // withSelfLag lifts a PairedStat<R> into a SeriesStat<R> by self-pairing each input
 // with the value seen k updates ago. The first k updates only warm the ring buffer
@@ -37,6 +38,7 @@ internal fun <R : Result> PairedStat<R>.withSelfLag(k: Int): SeriesStat<R> = Wit
 
 internal class WithSelfLagSeriesStat<R : Result>(private val delegate: PairedStat<R>, private val k: Int) :
     SeriesStat<R>,
+    WindowsInside<R, SeriesStat<R>>,
     Stat<R> by delegate {
 
     init {
@@ -61,11 +63,14 @@ internal class WithSelfLagSeriesStat<R : Result>(private val delegate: PairedSta
         }
     }
 
-    override fun reset() {
+    override fun reset() = lock.guarded {
         delegate.reset()
         tick.store(0L)
         for (i in 0 until k) ring.store(i, 0.0)
     }
+
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
+        WithSelfLagSeriesStat(delegate.windowed(duration, slices, concurrency), k)
 
     override fun create(concurrency: Concurrency?): SeriesStat<R> =
         WithSelfLagSeriesStat(delegate.create(concurrency), k)

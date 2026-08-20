@@ -11,6 +11,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.schema.expr.ScalarExpr
+import kotlin.time.Duration
 
 // withFeedback is the streaming-feature-engineering primitive: each update is first sent
 // to a `primary` stat that maintains running state, then the raw value and `primary`'s
@@ -25,6 +26,12 @@ import com.eignex.kumulant.schema.expr.ScalarExpr
 //
 // The primary stat is owned by the wrapper. To inspect its snapshot directly, read it
 // through the [primary] property (the wrapper exposes its primary instance).
+//
+// Windowing wraps the inner stat and leaves the primary whole-stream: the primary is the running
+// state the projection is measured against, and a slice rotation that rebuilt it would hand every
+// slice's first observation a degenerate snapshot, which the scaler projections answer with their
+// neutral value. So `Mean.standardScaler().windowed(d)` is the windowed mean of z-scores taken
+// against the whole stream's distribution. See [WindowsInside].
 //
 // Concurrency: order-dependent cascade. Each update touches primary then inner in
 // sequence; the effective model is the stricter of primary's and inner's. Under
@@ -43,6 +50,7 @@ internal class FeedbackSeriesStat<P : Result, I : Result>(
     val primary: SeriesStat<P>,
     private val project: ScalarExpr,
 ) : SeriesStat<I>,
+    WindowsInside<I, SeriesStat<I>>,
     Stat<I> by inner {
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -55,6 +63,9 @@ internal class FeedbackSeriesStat<P : Result, I : Result>(
         primary.reset()
         inner.reset()
     }
+
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<I> =
+        FeedbackSeriesStat(inner.windowed(duration, slices, concurrency), primary, project)
 
     override fun create(concurrency: Concurrency?): SeriesStat<I> =
         FeedbackSeriesStat(inner.create(concurrency), primary.create(concurrency), project)
@@ -77,6 +88,7 @@ internal class FeedbackVectorStat<P : Result, I : Result>(
     val primary: VectorStat<ResultList<P>>,
     private val project: ScalarExpr,
 ) : VectorStat<I>,
+    WindowsInside<I, VectorStat<I>>,
     Stat<I> by inner {
 
     override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
@@ -92,6 +104,9 @@ internal class FeedbackVectorStat<P : Result, I : Result>(
         primary.reset()
         inner.reset()
     }
+
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<I> =
+        FeedbackVectorStat(inner.windowed(duration, slices, concurrency), primary, project)
 
     override fun create(concurrency: Concurrency?): VectorStat<I> =
         FeedbackVectorStat(inner.create(concurrency), primary.create(concurrency), project)
@@ -154,6 +169,7 @@ internal class FeedbackPairedStat<P : Result, R : Result>(
     val primaryY: SeriesStat<P>,
     private val project: ScalarExpr,
 ) : PairedStat<R>,
+    WindowsInside<R, PairedStat<R>>,
     Stat<R> by inner {
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
@@ -169,6 +185,9 @@ internal class FeedbackPairedStat<P : Result, R : Result>(
         primaryY.reset()
         inner.reset()
     }
+
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
+        FeedbackPairedStat(inner.windowed(duration, slices, concurrency), primaryX, primaryY, project)
 
     override fun create(concurrency: Concurrency?): PairedStat<R> = FeedbackPairedStat(
         inner.create(concurrency),

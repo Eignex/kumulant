@@ -6,6 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 class WithSelfLagTest {
 
@@ -57,5 +58,15 @@ class WithSelfLagTest {
         val fresh = tpl.create()
         assertEquals(0.0, fresh.read().totalWeights, DELTA)
         assertTrue(tpl.read().totalWeights > 0.0)
+    }
+}
+
+class WithSelfLagWindowedTest {
+
+    @Test
+    fun `windowing pairs across slice boundaries`() {
+        val s = CovarianceStat().withSelfLag(k = 1).windowed(duration = 60.seconds, slices = 10)
+        for (i in 0 until 6) s.update(1.0 + i, timestampNanos = i * 10_000_000_000L)
+        assertTrue(s.read(50_000_000_000L).totalWeights > 0.0, "no pair ever spanned a slice boundary")
     }
 }
