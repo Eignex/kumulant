@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.event
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class CrossingStatTest {
 
@@ -80,5 +81,28 @@ class CrossingStatTest {
     fun `result carries the configured level`() {
         val r = CrossingStat(level = 3.14).read()
         assertEquals(3.14, r.level)
+    }
+}
+
+class CrossingMergeLevelTest {
+
+    @Test
+    fun `merge rejects a snapshot measured against another level`() {
+        val s = CrossingStat(level = 0.0)
+        val other = CrossingStat(level = 100.0)
+        other.update(150.0)
+        other.update(50.0)
+        assertFailsWith<IllegalArgumentException> { s.merge(other.read()) }
+    }
+
+    @Test
+    fun `the first update after a merge is compared against the merged side`() {
+        val donor = CrossingStat(level = 0.0)
+        donor.update(5.0)
+        donor.update(-5.0)
+        val s = CrossingStat(level = 0.0)
+        s.merge(donor.read())
+        s.update(5.0)
+        assertEquals(2L, s.read().upCrossings + s.read().downCrossings)
     }
 }

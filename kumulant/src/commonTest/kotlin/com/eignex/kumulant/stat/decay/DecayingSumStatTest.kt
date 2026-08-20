@@ -4,6 +4,7 @@ import com.eignex.kumulant.DELTA
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 private const val T0 = 1_000_000_000L
@@ -77,5 +78,27 @@ class DecayingSumStatTest {
         val s2 = s1.create()
         s2.update(10.0, T1)
         assertTrue(s1.read(T2).sum < s2.read(T2).sum)
+    }
+}
+
+class DecayingSumLandmarkTest {
+
+    // A stream numbered far behind the landmark: the landmark starts at process uptime, so this is
+    // what a replay stream numbering from its own epoch looks like once the process has been up
+    // longer than ~1075 half-lives. A negative stamp reaches the same offset without the wait.
+    private val farBehind = -200_000_000_000L
+
+    @Test
+    fun `a stream far behind the landmark reports a finite sum`() {
+        val s = DecayingSumStat(halfLife = 100.milliseconds)
+        s.update(5.0, timestampNanos = farBehind)
+        assertEquals(5.0, s.read(farBehind).sum, DELTA)
+    }
+
+    @Test
+    fun `a stream far behind the landmark keeps the mean finite`() {
+        val s = DecayingMeanStat(halfLife = 100.milliseconds)
+        s.update(5.0, timestampNanos = farBehind)
+        assertEquals(5.0, s.read(farBehind).mean, DELTA)
     }
 }

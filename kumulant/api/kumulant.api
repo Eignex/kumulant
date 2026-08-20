@@ -5772,14 +5772,17 @@ public final class com/eignex/kumulant/stat/decay/EwmaVarianceStat : com/eignex/
 
 public final class com/eignex/kumulant/stat/event/CrossingResult : com/eignex/kumulant/core/Result {
 	public static final field Companion Lcom/eignex/kumulant/stat/event/CrossingResult$Companion;
-	public fun <init> (DJJ)V
+	public fun <init> (DJJLjava/lang/Boolean;)V
+	public synthetic fun <init> (DJJLjava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()D
 	public final fun component2 ()J
 	public final fun component3 ()J
-	public final fun copy (DJJ)Lcom/eignex/kumulant/stat/event/CrossingResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/event/CrossingResult;DJJILjava/lang/Object;)Lcom/eignex/kumulant/stat/event/CrossingResult;
+	public final fun component4 ()Ljava/lang/Boolean;
+	public final fun copy (DJJLjava/lang/Boolean;)Lcom/eignex/kumulant/stat/event/CrossingResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/event/CrossingResult;DJJLjava/lang/Boolean;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/event/CrossingResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDownCrossings ()J
+	public final fun getEndedAtOrAboveLevel ()Ljava/lang/Boolean;
 	public final fun getLevel ()D
 	public final fun getUpCrossings ()J
 	public fun hashCode ()I

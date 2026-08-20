@@ -95,7 +95,10 @@ class SojournStat(
             val elapsed = (timestampNanos - priorEnter).coerceAtLeast(0L)
             totalNanos.store(curIdx.toInt(), totalNanos.load(curIdx.toInt()) + elapsed)
             currentStateIndex.store(newIdx.toLong())
-            enterTimestamp.store(timestampNanos)
+            // A stamp behind the landmark is a late arrival, not a rewind: committing it would measure
+            // the next transition's dwell from before this one happened, so the stat could report more
+            // dwell than the stream's stamps span. The clamp above already gave this arrival no dwell.
+            if (timestampNanos > priorEnter) enterTimestamp.store(timestampNanos)
             transitions.store(newIdx, transitions.load(newIdx) + 1L)
         }
     }

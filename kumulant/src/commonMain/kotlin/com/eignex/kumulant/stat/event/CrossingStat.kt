@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,6 +20,14 @@ data class CrossingResult(
     val upCrossings: Long,
     /** Number of strict transitions from `value >= level` to `value < level`. */
     val downCrossings: Long,
+    /**
+     * Whether the last observed value was at or above [level], or `null` before any observation.
+     *
+     * Carried so a merge into a stat with no baseline of its own can continue from the side the
+     * snapshot left off on, instead of spending its next update establishing one afresh and losing
+     * the crossing that update represents.
+     */
+    val endedAtOrAboveLevel: Boolean? = null,
 ) : Result
 
 /**
@@ -68,8 +77,19 @@ class CrossingStat(
     }
 
     override fun merge(values: CrossingResult) {
+        // The counts only mean anything against the level they were measured at: folding a snapshot
+        // taken at another level in would report crossings of a different predicate as this one's.
+        require(values.level == level) { "merge level ${values.level} != $level" }
         ups.add(values.upCrossings)
         downs.add(values.downCrossings)
+        // Adopt the baseline only when there is none, the way SojournStat keeps its own current state
+        // over an incoming one: with a baseline already established, the local stream's side is the
+        // live one and the snapshot's is a parallel shard's, which nothing here can order against it.
+        val endedAbove = values.endedAtOrAboveLevel ?: return
+        if (initialized.load() == 0L) {
+            lastSide.store(if (endedAbove) 1L else 0L)
+            casMax(initialized, 1L)
+        }
     }
 
     override fun reset() {
@@ -79,7 +99,12 @@ class CrossingStat(
         downs.store(0L)
     }
 
-    override fun read(timestampNanos: Long) = CrossingResult(level, ups.load(), downs.load())
+    override fun read(timestampNanos: Long) = CrossingResult(
+        level = level,
+        upCrossings = ups.load(),
+        downCrossings = downs.load(),
+        endedAtOrAboveLevel = if (initialized.load() == 0L) null else lastSide.load() == 1L,
+    )
 
     override fun create(concurrency: Concurrency?) = CrossingStat(level, concurrency ?: this.concurrency)
 }

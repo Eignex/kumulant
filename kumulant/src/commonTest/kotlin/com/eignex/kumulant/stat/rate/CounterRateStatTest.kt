@@ -101,3 +101,28 @@ class CounterRateStatTest {
         assertEquals(0.0, r.read(T2).totalValue, DELTA)
     }
 }
+
+class CounterRateZeroResetTest {
+
+    @Test
+    fun `a counter restarting at zero re-anchors the window`() {
+        val s = CounterRateStat()
+        s.update(0.0, timestampNanos = 0L)
+        s.update(100.0, timestampNanos = 10_000_000_000L)
+        s.update(0.0, timestampNanos = 20_000_000_000L)
+        s.update(30.0, timestampNanos = 30_000_000_000L)
+
+        val r = s.read(30_000_000_000L)
+        assertEquals(30.0, r.totalValue, DELTA)
+        assertEquals(20_000_000_000L, r.startTimestampNanos)
+    }
+
+    @Test
+    fun `a negative weight leaves the counter increment recoverable`() {
+        val s = CounterRateStat()
+        s.update(0.0, timestampNanos = 0L, weight = 1.0)
+        s.update(100.0, timestampNanos = 1_000_000_000L, weight = -1.0)
+        s.update(200.0, timestampNanos = 2_000_000_000L, weight = 1.0)
+        assertEquals(200.0, s.read(2_000_000_000L).totalValue, DELTA)
+    }
+}
