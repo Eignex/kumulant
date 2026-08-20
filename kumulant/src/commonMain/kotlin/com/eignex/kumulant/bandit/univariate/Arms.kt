@@ -174,6 +174,11 @@ data class NormalArm(
     val priorSquaredDeviations: Double = 0.02,
 ) : Arm<WeightedVarianceResult> {
     override fun createStat(): SeriesStat<WeightedVarianceResult> {
+        // Three seed points carrying priorWeight, priorWeight/2 and priorWeight/2, so the stat ends up
+        // with 2 * priorWeight of total weight and a squared-deviation sum of exactly
+        // priorSquaredDeviations - hence a reported variance of priorSquaredDeviations / (2 *
+        // priorWeight). Anything deriving one of these parameters from the other has to account for
+        // both factors; see NormalArm.warmStart.
         val s = VarianceStat()
         if (priorWeight > 0.0) {
             s.update(priorMean, 0L, priorWeight)
@@ -298,11 +303,16 @@ fun MeanArm.Companion.warmStart(global: WeightedMeanResult, shrinkage: Double = 
  *  variance is preserved from the global; only the prior weight is shrunk. */
 fun NormalArm.Companion.warmStart(global: WeightedVarianceResult, shrinkage: Double = 1.0): NormalArm {
     require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
-    val priorWeight = global.totalWeights * shrinkage
+    // createStat seeds 2 * priorWeight of total weight and reports
+    // priorSquaredDeviations / (2 * priorWeight) as the variance, so both parameters are halved
+    // relative to the weight the seeded stat should end up carrying. Passing the shrunk weight
+    // straight through would seed twice the evidence at half the global's spread, leaving a
+    // warm-started arm roughly 2.8x over-confident and under-explored by Thompson sampling.
+    val seededWeight = global.totalWeights * shrinkage
     return NormalArm(
         priorMean = global.mean,
-        priorWeight = priorWeight,
-        priorSquaredDeviations = global.variance * priorWeight,
+        priorWeight = seededWeight / 2.0,
+        priorSquaredDeviations = global.variance * seededWeight,
     )
 }
 
@@ -310,11 +320,16 @@ fun NormalArm.Companion.warmStart(global: WeightedVarianceResult, shrinkage: Dou
  *  scale (caller is responsible for ensuring the snapshot is over `ln(reward)`). */
 fun LogNormalArm.Companion.warmStart(global: WeightedVarianceResult, shrinkage: Double = 1.0): LogNormalArm {
     require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
-    val priorWeight = global.totalWeights * shrinkage
+    // createStat seeds 2 * priorWeight of total weight and reports
+    // priorSquaredDeviations / (2 * priorWeight) as the variance, so both parameters are halved
+    // relative to the weight the seeded stat should end up carrying. Passing the shrunk weight
+    // straight through would seed twice the evidence at half the global's spread, leaving a
+    // warm-started arm roughly 2.8x over-confident and under-explored by Thompson sampling.
+    val seededWeight = global.totalWeights * shrinkage
     return LogNormalArm(
         priorMean = global.mean,
-        priorWeight = priorWeight,
-        priorSquaredDeviations = global.variance * priorWeight,
+        priorWeight = seededWeight / 2.0,
+        priorSquaredDeviations = global.variance * seededWeight,
     )
 }
 

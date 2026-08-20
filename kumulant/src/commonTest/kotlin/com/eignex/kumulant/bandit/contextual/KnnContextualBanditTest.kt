@@ -147,3 +147,24 @@ class KnnContextualBanditTest {
         assertEquals(9.0, squaredL2(a, b))
     }
 }
+
+class KnnContextDimensionTest {
+
+    @Test
+    fun `update rejects a context of the wrong width at the entry point`() {
+        val b = KnnContextualBandit(nbrArms = 2, k = 5)
+        b.update(0, feat(1.0, 2.0, 3.0), 1.0)
+        assertFailsWith<IllegalArgumentException> {
+            b.update(0, feat(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0), 1.0)
+        }
+    }
+
+    @Test
+    fun `a negative weight does not spend a history slot`() {
+        val b = KnnContextualBandit(nbrArms = 2, k = 1)
+        val x = feat(1.0, 2.0)
+        b.update(0, x, 10.0, weight = 1.0)
+        b.update(0, x, 10.0, weight = -1.0)
+        assertEquals(1, b.historySize(0))
+    }
+}

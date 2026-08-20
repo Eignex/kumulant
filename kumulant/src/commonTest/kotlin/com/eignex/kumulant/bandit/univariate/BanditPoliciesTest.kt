@@ -231,3 +231,31 @@ class BanditPoliciesTest {
         assertTrue(abs(mean - 5.0 / 7.0) < 0.03, "mean=$mean")
     }
 }
+
+class EpsilonPolicyRandomnessTest {
+
+    private val snapshot = WeightedVarianceResult(totalWeights = 10.0, mean = 5.0, variance = 1.0)
+
+    @Test
+    fun `the explore decision depends on the caller's rng`() {
+        val decisions = (1..50).map { seed ->
+            EpsilonGreedy(epsilon = 0.5).evaluate(snapshot, step = 7L, rng = Random(seed)) == snapshot.mean
+        }
+        assertTrue(decisions.toSet().size > 1, "the decision at a fixed step is the same for every seed")
+    }
+
+    @Test
+    fun `the explore decision is shared by every arm in a round`() {
+        for (seed in 1..20) {
+            val policy = EpsilonGreedy(epsilon = 0.5)
+            val rng = Random(seed)
+            val first = policy.evaluate(snapshot, step = 7L, rng = rng)
+            val second = policy.evaluate(snapshot, step = 7L, rng = rng)
+            assertEquals(
+                first == snapshot.mean,
+                second == snapshot.mean,
+                "arms in one round disagreed on exploring, seed=$seed",
+            )
+        }
+    }
+}

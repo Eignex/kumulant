@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
@@ -150,11 +151,10 @@ class ArmsTest {
             mean = 4.0,
             variance = 9.0,
         )
-        val arm = NormalArm.warmStart(global, shrinkage = 0.5)
-        assertEquals(4.0, arm.priorMean)
-        assertEquals(100.0, arm.priorWeight)
-        // priorSquaredDeviations = variance * shrunkWeight = 9 * 100 = 900
-        assertEquals(900.0, arm.priorSquaredDeviations)
+        val seeded = NormalArm.warmStart(global, shrinkage = 0.5).createStat().read(0L)
+        assertEquals(100.0, seeded.totalWeights, DELTA)
+        assertEquals(4.0, seeded.mean, DELTA)
+        assertEquals(9.0, seeded.variance, DELTA)
     }
 
     @Test
@@ -164,10 +164,10 @@ class ArmsTest {
             mean = 1.5,
             variance = 4.0,
         )
-        val arm = LogNormalArm.warmStart(global, shrinkage = 0.25)
-        assertEquals(1.5, arm.priorMean)
-        assertEquals(20.0, arm.priorWeight)
-        assertEquals(80.0, arm.priorSquaredDeviations)
+        val seeded = LogNormalArm.warmStart(global, shrinkage = 0.25).createStat().read(0L)
+        assertEquals(20.0, seeded.totalWeights, DELTA)
+        assertEquals(1.5, seeded.mean, DELTA)
+        assertEquals(4.0, seeded.variance, DELTA)
     }
 
     @Test

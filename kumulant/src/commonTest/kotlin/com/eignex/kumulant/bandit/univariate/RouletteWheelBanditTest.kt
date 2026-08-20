@@ -89,3 +89,23 @@ class RouletteWheelBanditTest {
         assertEquals(weightAfter(1.0), weightAfter(3.0))
     }
 }
+
+class RouletteWheelNonFiniteRewardTest {
+
+    @Test
+    fun `a NaN reward does not pin choose to the last arm`() {
+        val b = RouletteWheelBandit(nbrArms = 3, segmentLength = 10, random = Random(0))
+        repeat(9) { b.update(it % 3, 1.0) }
+        b.update(0, Double.NaN)
+        val picks = (0 until 200).map { b.choose() }.toSet()
+        assertTrue(picks.size > 1, "every choose returned ${picks.first()}")
+    }
+
+    @Test
+    fun `a NaN reward does not leave an arm weight non-finite`() {
+        val b = RouletteWheelBandit(nbrArms = 3, segmentLength = 10, random = Random(0))
+        repeat(9) { b.update(it % 3, 1.0) }
+        b.update(0, Double.NaN)
+        assertTrue(b.snapshot().all { it.weight.isFinite() }, "weights=${b.snapshot()}")
+    }
+}

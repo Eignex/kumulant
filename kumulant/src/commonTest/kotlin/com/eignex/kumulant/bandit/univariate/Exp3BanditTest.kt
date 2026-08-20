@@ -3,6 +3,7 @@ package com.eignex.kumulant.bandit.univariate
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -63,5 +64,22 @@ class Exp3BanditTest {
         val direct = weightsAfter(delayed = false)
         val delayed = weightsAfter(delayed = true)
         for (i in direct.indices) assertTrue(abs(direct[i] - delayed[i]) < 1e-9, "arm $i: $direct vs $delayed")
+    }
+}
+
+class Exp3InertWeightTest {
+
+    @Test
+    fun `a zero-weight update does not consume a recorded propensity`() {
+        fun run(withInertUpdate: Boolean): DoubleArray {
+            val b = Exp3Bandit(nbrArms = 2, eta = 0.5, gamma = 0.1, random = Random(1))
+            b.choose()
+            b.choose()
+            if (withInertUpdate) b.update(0, 1.0, 0.0)
+            b.update(1, 1.0, 1.0)
+            b.update(0, 1.0, 1.0)
+            return b.armWeights()
+        }
+        assertContentEquals(run(withInertUpdate = false).toList(), run(withInertUpdate = true).toList())
     }
 }

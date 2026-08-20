@@ -9,6 +9,7 @@ import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.bandit.sampleFromDistribution
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.isInertWeight
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.exp
@@ -119,6 +120,11 @@ class Exp3Bandit(
     /** Fold a `(arm, reward)` observation into the played arm's weight. */
     override fun update(armIndex: Int, value: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
+        // Return before propensityOf, which consumes an outstanding pull. The exponential weights are
+        // already untouched by a zero gain, but spending the recorded propensity is not a no-op: the
+        // real feedback for that pull would then fall back to the current distribution and be divided
+        // by the wrong probability, which is an unbounded error in the importance weight. See Stat.
+        if (weight.isInertWeight()) return
         val p = propensityOf(armIndex).coerceAtLeast(MIN_PLAY_PROB)
         val gain = (value * weight) / p
         weights[armIndex] *= exp(eta * gain)

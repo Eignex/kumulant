@@ -91,6 +91,12 @@ class BoltzmannBandit(
         // Dividing by tau before the max-shift is the same arithmetic, since tau > 0 is enforced at
         // construction and so `max(means)/tau == max(means/tau)`, and it costs one array instead of two.
         val logits = DoubleArray(nbrArms) { stats[it].read(0L).mean / tau }
+        // A single NaN reward makes that arm's mean NaN for good, and one NaN logit takes the whole
+        // softmax with it - the max-shift leaves NaN alone and the sum is NaN, which softmaxInPlace
+        // still reports as usable. `choose` then resolves an all-NaN distribution to "always the last
+        // arm", with no way back. Uniform is the honest distribution when no arm has usable evidence,
+        // as it is for Exp3Bandit and Exp4Bandit.
+        if (logits.any { !it.isFinite() }) return DoubleArray(nbrArms) { 1.0 / nbrArms }
         logits.softmaxInPlace()
         return logits
     }
