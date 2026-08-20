@@ -23,12 +23,7 @@ internal fun <R : Result> SeriesStat<R>.windowed(
     duration: Duration,
     slices: Int = DEFAULT_WINDOW_SLICES,
     concurrency: Concurrency = Concurrency.None,
-): SeriesStat<R> = if (this is WindowsInside<*>) {
-    // Wrap the operator's delegate, not the operator: see WindowsInside for why a slice rotation
-    // would otherwise restart the operator's state, and BandSeriesStat for the merge-side reason.
-    @Suppress("UNCHECKED_CAST")
-    (this as WindowsInside<R>).windowedInside(duration, slices, concurrency)
-} else {
+): SeriesStat<R> = windowedOutsideOrInside(duration, slices, concurrency) {
     WindowedSeriesStat(duration, slices, this, concurrency)
 }
 
@@ -37,21 +32,46 @@ internal fun <R : Result> PairedStat<R>.windowed(
     duration: Duration,
     slices: Int = DEFAULT_WINDOW_SLICES,
     concurrency: Concurrency = Concurrency.None,
-): PairedStat<R> = WindowedPairedStat(duration, slices, this, concurrency)
+): PairedStat<R> = windowedOutsideOrInside(duration, slices, concurrency) {
+    WindowedPairedStat(duration, slices, this, concurrency)
+}
 
 /** Vector-stat counterpart of [SeriesStat.windowed]. */
 internal fun <R : Result> VectorStat<R>.windowed(
     duration: Duration,
     slices: Int = DEFAULT_WINDOW_SLICES,
     concurrency: Concurrency = Concurrency.None,
-): VectorStat<R> = WindowedVectorStat(duration, slices, this, concurrency)
+): VectorStat<R> = windowedOutsideOrInside(duration, slices, concurrency) {
+    WindowedVectorStat(duration, slices, this, concurrency)
+}
 
 /** Discrete-stat counterpart of [SeriesStat.windowed]. */
 internal fun <R : Result> DiscreteStat<R>.windowed(
     duration: Duration,
     slices: Int = DEFAULT_WINDOW_SLICES,
     concurrency: Concurrency = Concurrency.None,
-): DiscreteStat<R> = WindowedDiscreteStat(duration, slices, this, concurrency)
+): DiscreteStat<R> = windowedOutsideOrInside(duration, slices, concurrency) {
+    WindowedDiscreteStat(duration, slices, this, concurrency)
+}
+
+/**
+ * Route a stateful operator to [WindowsInside.windowedInside] and everything else to [outside].
+ *
+ * Wrapping the operator's delegate rather than the operator itself is what keeps one instance of the
+ * operator's state for the whole stream: see [WindowsInside] for why a slice rotation would otherwise
+ * restart it, and BandSeriesStat for the merge-side reason.
+ */
+private inline fun <R : Result, S : Stat<R>> S.windowedOutsideOrInside(
+    duration: Duration,
+    slices: Int,
+    concurrency: Concurrency,
+    outside: () -> S,
+): S = if (this is WindowsInside<*, *>) {
+    @Suppress("UNCHECKED_CAST")
+    (this as WindowsInside<R, S>).windowedInside(duration, slices, concurrency)
+} else {
+    outside()
+}
 
 /**
  * Build a fresh single-threaded accumulator from [template], merge in every active

@@ -25,6 +25,11 @@ internal class SliceRing<R : Result, S : Stat<R>>(
 
     private val ringMode: StreamMode = concurrency.additiveMode()
 
+    // Newest slice start the ring has admitted, so a stamp implausibly far ahead of the stream can be
+    // told apart from a stream that has simply been idle. CAS'd, hence monotonicMode rather than the
+    // ring's additive one, whose striped-adder cells do not support compareAndSet.
+    private val newestStart = concurrency.monotonicMode().newLong(Long.MIN_VALUE)
+
     init {
         require(slices > 0) { "SliceRing requires at least 1 slice" }
         windowDurationNanos = windowDuration.inWholeNanoseconds
@@ -44,6 +49,15 @@ internal class SliceRing<R : Result, S : Stat<R>>(
     private fun expectedSliceStart(timestampNanos: Long): Long =
         timestampNanos.floorDiv(sliceDurationNanos) * sliceDurationNanos
 
+    // A stamp more than a full window past everything seen so far cannot belong to the window the ring
+    // represents. Rotating a bucket onto it would evict a live slice and then reject every genuine stamp
+    // that maps there, costing one slice's share of the stream for as long as the bogus start stood.
+    // The first observation has nothing to be measured against, so it always establishes the reference.
+    private fun isBeyondReach(expectedStart: Long): Boolean {
+        val newest = newestStart.load()
+        return newest != Long.MIN_VALUE && expectedStart - newest > windowDurationNanos
+    }
+
     private fun bucketIndex(expectedStart: Long): Int {
         val raw = (expectedStart.floorDiv(sliceDurationNanos) % buckets.size).toInt()
         return if (raw < 0) raw + buckets.size else raw
@@ -56,13 +70,17 @@ internal class SliceRing<R : Result, S : Stat<R>>(
      */
     fun slotFor(timestampNanos: Long): S? {
         val expectedStart = expectedSliceStart(timestampNanos)
+        if (isBeyondReach(expectedStart)) return null
         val bucketRef = buckets[bucketIndex(expectedStart)]
         while (true) {
             val currentSlot = bucketRef.load()
             if (currentSlot.startNanos == expectedStart) return currentSlot.stat
             if (currentSlot.startNanos < expectedStart) {
                 val newSlot = Slot<R, S>(expectedStart, factory(concurrency))
-                if (bucketRef.compareAndSet(currentSlot, newSlot)) return newSlot.stat
+                if (bucketRef.compareAndSet(currentSlot, newSlot)) {
+                    casMax(newestStart, expectedStart)
+                    return newSlot.stat
+                }
             } else {
                 return null
             }
@@ -81,6 +99,7 @@ internal class SliceRing<R : Result, S : Stat<R>>(
      */
     fun mergeAt(timestampNanos: Long, values: R) {
         val expectedStart = expectedSliceStart(timestampNanos)
+        if (isBeyondReach(expectedStart)) return
         val bucketRef = buckets[bucketIndex(expectedStart)]
         while (true) {
             val currentSlot = bucketRef.load()
@@ -94,6 +113,7 @@ internal class SliceRing<R : Result, S : Stat<R>>(
             }
             val newSlot = Slot<R, S>(expectedStart, factory(concurrency))
             if (bucketRef.compareAndSet(currentSlot, newSlot)) {
+                casMax(newestStart, expectedStart)
                 newSlot.stat.merge(values)
                 return
             }
@@ -114,6 +134,7 @@ internal class SliceRing<R : Result, S : Stat<R>>(
         for (bucketRef in buckets) {
             bucketRef.store(Slot(Long.MIN_VALUE, factory(concurrency)))
         }
+        newestStart.store(Long.MIN_VALUE)
     }
 }
 

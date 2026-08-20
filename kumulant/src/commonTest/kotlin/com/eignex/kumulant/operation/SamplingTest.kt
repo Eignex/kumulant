@@ -2,12 +2,15 @@ package com.eignex.kumulant.operation
 
 import com.eignex.koblas.F64DenseVector
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
+import com.eignex.kumulant.stat.regression.CovarianceStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 class SamplingTest {
 
@@ -125,5 +128,22 @@ class SamplingTest {
         val stat = SumStat().asDiscrete().weightBy { v -> v.toDouble() }
         stat.update(value = 3L, weight = 2.0) // 3 * 2 * 3 = 18
         assertEquals(18.0, stat.read().sum, DELTA)
+    }
+}
+
+class ThrottleWindowedTest {
+
+    @Test
+    fun `a windowed paired throttle keeps one gate for the whole stream`() {
+        val s = CovarianceStat().throttle(every = 10).windowed(duration = 60.seconds, slices = 10)
+        for (i in 0 until 60) s.update(1.0 + i, 2.0 + i, timestampNanos = i * 1_000_000_000L)
+        assertTrue(s.read(59_000_000_000L).totalWeights > 0.0, "the gate never fired in any slice")
+    }
+
+    @Test
+    fun `a windowed discrete throttle keeps one gate for the whole stream`() {
+        val s = HyperLogLogStat().throttle(every = 10).windowed(duration = 60.seconds, slices = 10)
+        for (i in 0 until 60) s.update(i.toLong(), timestampNanos = i * 1_000_000_000L)
+        assertTrue(s.read(59_000_000_000L).estimate > 0.0, "the gate never fired in any slice")
     }
 }

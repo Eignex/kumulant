@@ -6,6 +6,7 @@ import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.time.Duration.Companion.microseconds
 import kotlin.time.Duration.Companion.milliseconds
 
 class ResampleTest {
@@ -151,5 +152,17 @@ class ResampleTest {
         stat.update(value = 5.0, timestampNanos = 3_000_000_000L)
         // Bucket 0 closes as 1.0 and bucket 2 as 4.0; the late 3.0 joins the open bucket.
         assertEquals(5.0, stat.read().sum, DELTA)
+    }
+}
+
+class ResampleDowndateGuardTest {
+
+    @Test
+    fun `a late downdate is charged against the bucket it lands in`() {
+        val s = SumStat().resampleByTime(bucket = 1.microseconds, aggregator = ResampleAggregator.Mean)
+        s.update(10.0, timestampNanos = 100L, weight = 1.0)
+        s.update(20.0, timestampNanos = 1100L, weight = 3.0)
+        s.update(20.0, timestampNanos = 500L, weight = -1.0)
+        assertEquals(10.0, s.read(1200L).sum, DELTA)
     }
 }

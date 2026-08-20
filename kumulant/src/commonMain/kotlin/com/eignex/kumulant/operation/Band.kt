@@ -17,7 +17,7 @@ internal fun <R> SeriesStat<R>.band(k: Double): SeriesStat<BandResult>
     BandSeriesStat(this, k)
 
 internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private val k: Double) :
-    WindowsInside<BandResult>,
+    WindowsInside<BandResult, SeriesStat<BandResult>>,
     SeriesStat<BandResult> where R : HasCenterScale {
 
     override val concurrency: Concurrency get() = delegate.concurrency
