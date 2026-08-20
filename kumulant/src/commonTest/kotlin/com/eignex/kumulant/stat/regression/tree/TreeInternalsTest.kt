@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.ln
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -265,5 +266,25 @@ class TreeInternalsTest {
         assertFailsWith<IllegalArgumentException> { RegressionTreeConfig(deltaDecay = 1.5) }
         assertFailsWith<IllegalArgumentException> { ClassificationTreeConfig(delta = 1.0) }
         assertFailsWith<IllegalArgumentException> { ClassificationTreeConfig(deltaDecay = 1.5) }
+    }
+}
+
+class ImpurityReductionScaleTest {
+
+    @Test
+    fun `variance reduction does not depend on the scale of y`() {
+        val small = WeightedVarianceResult(totalWeights = 100.0, mean = 0.5, variance = 0.08)
+        val smallPos = WeightedVarianceResult(totalWeights = 50.0, mean = 0.2, variance = 0.01)
+        val smallNeg = WeightedVarianceResult(totalWeights = 50.0, mean = 0.8, variance = 0.01)
+
+        fun scaled(r: WeightedVarianceResult, k: Double) =
+            WeightedVarianceResult(r.totalWeights, r.mean * k, r.variance * k * k)
+
+        val k = 100.0
+        assertEquals(
+            impurityReduction(small, smallPos, smallNeg) { it.variance },
+            impurityReduction(scaled(small, k), scaled(smallPos, k), scaled(smallNeg, k)) { it.variance },
+            DELTA,
+        )
     }
 }

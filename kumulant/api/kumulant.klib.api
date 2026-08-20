@@ -3049,6 +3049,32 @@ final class com.eignex.kumulant.schema.spec/BloomFilter : com.eignex.kumulant.sc
     }
 }
 
+final class com.eignex.kumulant.schema.spec/ClassCounts : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.regression.tree/ClassCountsResult> { // com.eignex.kumulant.schema.spec/ClassCounts|null[0]
+    constructor <init>(kotlin/Int) // com.eignex.kumulant.schema.spec/ClassCounts.<init>|<init>(kotlin.Int){}[0]
+
+    final val numClasses // com.eignex.kumulant.schema.spec/ClassCounts.numClasses|{}numClasses[0]
+        final fun <get-numClasses>(): kotlin/Int // com.eignex.kumulant.schema.spec/ClassCounts.numClasses.<get-numClasses>|<get-numClasses>(){}[0]
+
+    final fun component1(): kotlin/Int // com.eignex.kumulant.schema.spec/ClassCounts.component1|component1(){}[0]
+    final fun copy(kotlin/Int = ...): com.eignex.kumulant.schema.spec/ClassCounts // com.eignex.kumulant.schema.spec/ClassCounts.copy|copy(kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/ClassCounts.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/ClassCounts.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/ClassCounts.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/ClassCounts> { // com.eignex.kumulant.schema.spec/ClassCounts.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.schema.spec/ClassCounts.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/ClassCounts.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/ClassCounts.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/ClassCounts // com.eignex.kumulant.schema.spec/ClassCounts.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/ClassCounts) // com.eignex.kumulant.schema.spec/ClassCounts.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.ClassCounts){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.schema.spec/ClassCounts.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/ClassCounts> // com.eignex.kumulant.schema.spec/ClassCounts.Companion.serializer|serializer(){}[0]
+    }
+}
+
 final class com.eignex.kumulant.schema.spec/ConfusionMatrix : com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.score/ConfusionMatrixResult> { // com.eignex.kumulant.schema.spec/ConfusionMatrix|null[0]
     constructor <init>(kotlin/Int) // com.eignex.kumulant.schema.spec/ConfusionMatrix.<init>|<init>(kotlin.Int){}[0]
 

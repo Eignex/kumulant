@@ -1,6 +1,9 @@
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.schema.runtime.StatGroup
+import com.eignex.kumulant.schema.runtime.StatSchema
+import com.eignex.kumulant.schema.spec.ClassCounts
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -50,5 +53,20 @@ class ClassCountsResultTest {
         val a = ClassCountsResult(2, doubleArrayOf(6.0, -5.0))
         val b = ClassCountsResult(2, doubleArrayOf(4.0, 2.0))
         assertEquals(a, subtractCC(mergeCC(a, b), b))
+    }
+}
+
+class ClassCountsSpecTest {
+
+    @Test
+    fun `a schema-declared class histogram materializes and reads back`() {
+        val schema = object : StatSchema() {
+            val labels by series(ClassCounts(numClasses = 3))
+        }
+        val group = StatGroup(schema)
+        group.update(0.0)
+        group.update(2.0)
+        group.update(2.0)
+        assertEquals(listOf(1.0, 0.0, 2.0), group.read()[schema.labels].counts.toList())
     }
 }

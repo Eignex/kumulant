@@ -30,10 +30,39 @@ data object MeanTreePosterior : TreePosterior {
 }
 
 /**
+ * Merged-leaf weight deflated by the number of trees that contributed it.
+ *
+ * [ForestRegressionResult.findLeafMerged] folds the leaf every tree routes `x` to into one accumulator,
+ * but under bagging those are N correlated views of a single sample rather than N samples, so the merged
+ * weight overstates the evidence by roughly the tree count. Dividing it back out keeps the posterior's
+ * standard error at the honest `sqrt(variance / observations)` instead of shrinking it by
+ * `sqrt(nbrTrees)` and under-exploring by the same factor.
+ */
+private fun effectiveWeight(leaf: WeightedVarianceResult, snapshot: ForestRegressionResult): Double =
+    leaf.totalWeights / snapshot.trees.size
+
+/**
+ * Leaf variance blended with [priorVariance] on a [priorWeight] pseudo-count.
+ *
+ * Swapping in the prior only for a completely empty leaf leaves a hole one observation wide: a leaf
+ * holding exactly one sample reports `totalWeights = 1` with a variance of exactly `0`, so a Thompson
+ * draw collapses to a point and a UCB bound loses its bonus - on the leaves that need exploration most.
+ * Driving a contextual bandit, an arm whose single observation was unlucky is then never picked again,
+ * so the leaf never gets a second observation and the state is absorbing. Blending also removes the
+ * discontinuity at `totalWeights == 0`, where the two branches disagreed.
+ */
+private fun blendedVariance(leaf: WeightedVarianceResult, priorWeight: Double, priorVariance: Double): Double {
+    val n = leaf.totalWeights + priorWeight
+    if (n <= 0.0) return priorVariance
+    return (priorWeight * priorVariance + leaf.totalWeights * leaf.variance) / n
+}
+
+/**
  * Thompson sampling over the leaf's Normal-Gamma posterior. Given the leaf's pseudo-
  * count `n`, sample mean `m`, and sample variance `v`, draws are `mu ~ N(m, exploration *
- * v / max(n, 1))`; the posterior on the leaf mean assuming a Normal-Gamma conjugate
- * with weak prior. `exploration = 0.0` collapses to the leaf mean.
+ * v / max(n, 1))`; the posterior on the leaf mean assuming a Normal-Gamma conjugate. The variance is
+ * blended with [priorVariance] on a [priorWeight] pseudo-count, so a leaf holding one observation - whose
+ * sample variance is exactly zero - still has spread. `exploration = 0.0` collapses to the leaf mean.
  */
 data class ThompsonTreePosterior(
     /** Pseudo-count added to the leaf's totalWeights to avoid divide-by-zero on empty leaves. */
@@ -45,8 +74,7 @@ data class ThompsonTreePosterior(
         val leaf = snapshot.findLeaf(x)
         if (exploration <= 0.0) return leaf.mean
         val n = leaf.totalWeights + priorWeight
-        val v = if (leaf.totalWeights > 0.0) leaf.variance else priorVariance
-        val sd = sqrt(exploration * v / n)
+        val sd = sqrt(exploration * blendedVariance(leaf, priorWeight, priorVariance) / n)
         return rng.nextNormal(leaf.mean, sd)
     }
 }
@@ -65,8 +93,7 @@ data class UcbTreePosterior(
     override fun evaluate(snapshot: TreeRegressionResult, x: F64VectorView, rng: Random, exploration: Double): Double {
         val leaf = snapshot.findLeaf(x)
         val n = leaf.totalWeights + priorWeight
-        val v = if (leaf.totalWeights > 0.0) leaf.variance else priorVariance
-        return leaf.mean + exploration * sqrt(v / n)
+        return leaf.mean + exploration * sqrt(blendedVariance(leaf, priorWeight, priorVariance) / n)
     }
 }
 
@@ -100,9 +127,8 @@ data class ThompsonForestPosterior(
     ): Double {
         val leaf: WeightedVarianceResult = snapshot.findLeafMerged(x)
         if (exploration <= 0.0) return leaf.mean
-        val n = leaf.totalWeights + priorWeight
-        val v = if (leaf.totalWeights > 0.0) leaf.variance else priorVariance
-        return rng.nextNormal(leaf.mean, sqrt(exploration * v / n))
+        val n = effectiveWeight(leaf, snapshot) + priorWeight
+        return rng.nextNormal(leaf.mean, sqrt(exploration * blendedVariance(leaf, priorWeight, priorVariance) / n))
     }
 }
 
@@ -120,8 +146,7 @@ data class UcbForestPosterior(
         exploration: Double,
     ): Double {
         val leaf = snapshot.findLeafMerged(x)
-        val n = leaf.totalWeights + priorWeight
-        val v = if (leaf.totalWeights > 0.0) leaf.variance else priorVariance
-        return leaf.mean + exploration * sqrt(v / n)
+        val n = effectiveWeight(leaf, snapshot) + priorWeight
+        return leaf.mean + exploration * sqrt(blendedVariance(leaf, priorWeight, priorVariance) / n)
     }
 }
