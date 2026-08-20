@@ -347,3 +347,17 @@ interface VectorStat<R : Result> : Stat<R> {
 
     override fun create(concurrency: Concurrency?): VectorStat<R>
 }
+
+/**
+ * A stat whose [Stat.merge] always throws, declared so a container can find out before it starts.
+ *
+ * A group merges its children in declaration order with no way to undo one, so a child that throws
+ * partway leaves the group permanently inconsistent: the entries before it carry both shards and the
+ * entries after it carry one. Declaring the refusal lets the group check every child first and throw
+ * without touching any of them, and lets the message name the offending key instead of surfacing from
+ * whichever stat happened to be reached.
+ */
+interface RefusesMerge {
+    /** Why this stat cannot merge, and what to merge instead. */
+    val mergeRefusal: String
+}

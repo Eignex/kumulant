@@ -57,9 +57,37 @@ abstract class StatSchema : Schema<StatSpec>() {
 
     protected fun <R : Result> regression(config: RegressionStatSpec<R>) = register(config) { StatKey<R>(it) }
 
-    /** Nest a sub-schema as a [GroupStatSpec]; materialization recurses at the parent's group construction. */
+    /**
+     * Nest a sub-schema as a [GroupStatSpec]; materialization recurses at the parent's group construction.
+     *
+     * Series-only, and checked here rather than at materialization. [GroupStatSpec] is itself a
+     * [SeriesStatSpec], so a nested schema holding another modality has no consistent home: the series
+     * view of the parent rejects the child at materialize time, while the discrete or vector view skips
+     * the whole subtree - reporting no error and no entries, and leaving the nested results unreachable
+     * by any means. A mixed schema is legal at the root, where each modality's view picks its own
+     * entries, so failing at the declaration is what tells the two cases apart.
+     */
     protected fun <T : StatSchema> group(nestedSchema: T) =
-        register(GroupStatSpec(nestedSchema.statSchemaDef().stats)) { GroupStatKey(it, nestedSchema) }
+        register(seriesOnlyGroupSpec(nestedSchema)) { GroupStatKey(it, nestedSchema) }
+}
+
+/**
+ * [GroupStatSpec] over a nested schema, rejecting any entry that is not series.
+ *
+ * [GroupStatSpec] is itself a [SeriesStatSpec], so a nested schema holding another modality has no
+ * consistent home: the series view of the parent rejects the child at materialize time, while the
+ * discrete or vector view skips the whole subtree - reporting no error and no entries, and leaving the
+ * nested results unreachable by any means. A mixed schema is legal at the root, where each modality's
+ * view picks out its own entries, so failing at the declaration is what tells the two cases apart.
+ */
+private fun seriesOnlyGroupSpec(nestedSchema: StatSchema): GroupStatSpec {
+    val nested = nestedSchema.statSchemaDef().stats
+    for ((name, config) in nested) {
+        require(config is SeriesStatSpec<*>) {
+            "nested group entry '$name' is ${config::class.simpleName}; a nested schema must be series-only"
+        }
+    }
+    return GroupStatSpec(nested)
 }
 
 /** Series-modality specs from a schema, materialized at [concurrency]. */

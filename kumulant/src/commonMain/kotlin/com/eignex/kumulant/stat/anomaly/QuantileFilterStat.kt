@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.anomaly
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
+import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import kotlinx.serialization.SerialName
@@ -53,7 +54,11 @@ class QuantileFilterStat(
     /** Relative-error guarantee passed to the underlying DDSketch. */
     val relativeError: Double = 0.01,
     override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<QuantileFilterResult> {
+) : SeriesStat<QuantileFilterResult>,
+    RefusesMerge {
+
+    override val mergeRefusal: String =
+        "QuantileFilterStat does not support merge; merge a DDSketch directly"
 
     init {
         require(probability > 0.0 && probability < 1.0) {
@@ -83,8 +88,7 @@ class QuantileFilterStat(
      * not typically sharded across streams; if you need a distributed
      * quantile, merge a [DDSketchStat] directly and project here.
      */
-    override fun merge(values: QuantileFilterResult): Nothing =
-        throw UnsupportedOperationException("QuantileFilterStat does not support merge; merge a DDSketch directly")
+    override fun merge(values: QuantileFilterResult): Nothing = throw UnsupportedOperationException(mergeRefusal)
 
     override fun reset() = inner.reset()
 

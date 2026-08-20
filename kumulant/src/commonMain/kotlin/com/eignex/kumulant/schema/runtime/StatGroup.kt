@@ -4,6 +4,8 @@ import com.eignex.koblas.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.RefusesMerge
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
@@ -52,6 +54,16 @@ sealed class AbstractStatGroup<S : Stat<*>>(
         GroupResult(stats.associate { (key, stat) -> key.name to stat.read(timestampNanos) })
 
     final override fun merge(values: GroupResult) {
+        // Checked across every entry before any of them is touched. Merging in declaration order with no
+        // way to undo one means a child that refuses partway leaves the group permanently inconsistent -
+        // the entries ahead of it carrying both shards and the ones behind it carrying one - and a caller
+        // that catches the exception around a shard roll-up has no way to tell. Throwing first also names
+        // the key, instead of surfacing from whichever stat happened to be reached.
+        for ((key, stat) in stats) {
+            val refusal = (stat as? RefusesMerge)?.mergeRefusal ?: continue
+            if (values.results[key.name] == null) continue
+            throw UnsupportedOperationException("cannot merge group entry '${key.name}': $refusal")
+        }
         for ((key, stat) in stats) mergeEntry(values, key, stat)
     }
 
@@ -144,6 +156,54 @@ class VectorStatGroup(stats: List<BoundStat<*, out VectorStat<*>, *>>, concurren
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveConcurrency)) }
         return VectorStatGroup(stats = newStats, concurrency = effectiveConcurrency)
+    }
+}
+
+/**
+ * [StatGroup] variant over regression inputs, so a schema's `regression` entries have a home.
+ *
+ * Without it the declarator was reachable but unusable: every other group filters the schema by modality
+ * with `mapNotNull`, so a regression entry was silently skipped and the failure surfaced only as a missing
+ * key at read time.
+ *
+ * Every entry must expect the same feature width, since one update fans out to all of them.
+ */
+class RegressionStatGroup(stats: List<BoundStat<*, out RegressionStat<*>, *>>, concurrency: Concurrency? = null) :
+    AbstractStatGroup<RegressionStat<*>>(stats, concurrency),
+    RegressionStat<GroupResult> {
+
+    constructor(
+        vararg stats: BoundStat<*, out RegressionStat<*>, *>,
+        concurrency: Concurrency? = null,
+    ) : this(stats = stats.asList(), concurrency = concurrency)
+
+    constructor(
+        vararg stats: Pair<StatKey<*>, RegressionStat<*>>,
+        concurrency: Concurrency? = null,
+    ) : this(stats = stats.map { toSpec(it.first, it.second) }, concurrency = concurrency)
+
+    constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
+        this(stats = regressionSpecs(schema, concurrency), concurrency = concurrency)
+
+    override val featureSize: Int = stats.firstOrNull()?.let { (_, stat) -> stat.featureSize }
+        ?: error("RegressionStatGroup requires at least one entry")
+
+    init {
+        for ((key, stat) in stats) {
+            require(stat.featureSize == featureSize) {
+                "RegressionStatGroup entry '${key.name}' has featureSize=${stat.featureSize}, expected $featureSize"
+            }
+        }
+    }
+
+    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+        for ((_, stat) in stats) stat.update(x, y, timestampNanos, weight)
+    }
+
+    override fun create(concurrency: Concurrency?): RegressionStat<GroupResult> {
+        val effectiveConcurrency = concurrency ?: this.concurrencyOverride
+        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveConcurrency)) }
+        return RegressionStatGroup(stats = newStats, concurrency = effectiveConcurrency)
     }
 }
 

@@ -26,10 +26,16 @@ internal fun <R : Result> RegressionStat<R>.transformY(
     transform: (F64VectorView, Double) -> Double,
 ): RegressionStat<R> = TransformYRegressionStat(this, transform)
 
-/** Rewrite x before update via [transform]; y and weight pass through unchanged. */
+/**
+ * Rewrite x before update via [transform]; y and weight pass through unchanged.
+ *
+ * [inputFeatureSize] is the width callers must supply, which differs from the inner regressor's whenever
+ * the transform changes the length. Null keeps the inner width.
+ */
 internal fun <R : Result> RegressionStat<R>.transformX(
+    inputFeatureSize: Int? = null,
     transform: (F64VectorView, Double) -> DoubleArray,
-): RegressionStat<R> = TransformXRegressionStat(this, transform)
+): RegressionStat<R> = TransformXRegressionStat(this, inputFeatureSize, transform)
 
 /**
  * Replace every update's weight with the constant [weight].
@@ -96,15 +102,23 @@ internal class TransformYRegressionStat<R : Result>(
 
 internal class TransformXRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
+    private val inputFeatureSize: Int?,
     private val transform: (F64VectorView, Double) -> DoubleArray,
 ) : RegressionStat<R>,
     Stat<R> by delegate {
-    override val featureSize: Int = delegate.featureSize
+    // The width expected in `x`, which is what RegressionStat.featureSize means - not the inner
+    // regressor's. A transform that changes the length made the wrapper advertise the post-transform
+    // width, so a caller sizing its input from this sent the wrong number of coordinates and the extras
+    // were silently dropped, while RegressionListStats rejected the honest pairing as a mismatch.
+    override val featureSize: Int = inputFeatureSize ?: delegate.featureSize
+
     override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+        x.requireFeatureSize(featureSize)
         delegate.update(F64DenseVector.of(transform(x, y)), y, timestampNanos, weight)
     }
+
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
-        TransformXRegressionStat(delegate.create(concurrency), transform)
+        TransformXRegressionStat(delegate.create(concurrency), inputFeatureSize, transform)
 }
 
 internal class WithWeightRegressionStat<R : Result>(

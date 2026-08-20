@@ -344,11 +344,18 @@ fun <R : Result> SeriesStatSpec<R>.materialize(concurrency: Concurrency = Concur
                 .minMaxScaler(targetLow, targetHigh, concurrency)
 
         is BandSeries -> {
-            // The runtime check happens at the first read; the cast is safe iff the inner stat's
-            // Result implements HasCenterScale, which is part of BandSeries's documented contract.
-            val centerScaleInner = requireSeries(inner, "BandSeries").materialize(concurrency)
-                as SeriesStat<HasCenterScale>
-            centerScaleInner.band(k)
+            val innerStat = requireSeries(inner, "BandSeries").materialize(concurrency)
+            // Checked here rather than left to the cast. The HasCenterScale bound is enforced on the live
+            // operator but erased on the spec path, so `Sum.band(2.0)` compiles, materializes and accepts
+            // updates, and only the first read throws a bare ClassCastException - naming neither the
+            // operator nor the schema key, and taking a whole group's read down with it. Every stat
+            // returns a well-formed result before its first update, so the probe costs one read.
+            val probe = innerStat.read(0L)
+            require(probe is HasCenterScale) {
+                "BandSeries requires an inner stat whose result has a center and scale, got $inner"
+            }
+            @Suppress("UNCHECKED_CAST")
+            (innerStat as SeriesStat<HasCenterScale>).band(k)
         }
     }
     return out as SeriesStat<R>
@@ -660,7 +667,7 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
 
         is TransformXRegression -> {
             val m = requireRegression(inner, "TransformXRegression").materialize(concurrency) as RegressionStat<Result>
-            m.transformX { v, y -> expr.eval(0.0, y, v.toDoubleArray()) }
+            m.transformX(featureSize) { v, y -> expr.eval(0.0, y, v.toDoubleArray()) }
         }
 
         is WithWeightRegression ->
