@@ -133,8 +133,12 @@ class RouletteWheelBandit(
         for (i in weights.indices) {
             if (segmentWeights[i] > 0.0) {
                 val avg = accumulatedScores[i] / segmentWeights[i]
-                weights[i] = (weights[i] * (1.0 - reactionFactor) + reactionFactor * avg)
-                    .coerceAtLeast(minWeight)
+                val blended = weights[i] * (1.0 - reactionFactor) + reactionFactor * avg
+                // coerceAtLeast is `if (this < min) min else this`, and NaN < minWeight is false, so a
+                // NaN blend walks straight through the floor that exists to keep weights usable. It
+                // then makes the roulette total NaN, and `choose` resolves that to "always the last
+                // arm" for good. An arm with no usable evidence gets the floor, like any other.
+                weights[i] = if (blended.isFinite()) blended.coerceAtLeast(minWeight) else minWeight
             }
             accumulatedScores[i] = 0.0
             segmentWeights[i] = 0.0

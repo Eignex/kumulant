@@ -59,3 +59,23 @@ class BoltzmannBanditTest {
         assertTrue(abs(b.temperature() - 1.0) < 1e-9)
     }
 }
+
+class BoltzmannNonFiniteRewardTest {
+
+    @Test
+    fun `a NaN reward does not pin choose to the last arm`() {
+        val b = BoltzmannBandit(nbrArms = 3, random = Random(0))
+        b.update(0, Double.NaN)
+        b.update(2, 5.0)
+        val picks = (0 until 200).map { b.choose() }.toSet()
+        assertTrue(picks.size > 1, "every choose returned ${picks.first()}")
+    }
+
+    @Test
+    fun `a NaN reward leaves the play distribution usable`() {
+        val b = BoltzmannBandit(nbrArms = 3, random = Random(0))
+        b.update(0, Double.NaN)
+        val p = b.playDistribution()
+        assertTrue(p.all { it.isFinite() }, "distribution=${p.toList()}")
+    }
+}

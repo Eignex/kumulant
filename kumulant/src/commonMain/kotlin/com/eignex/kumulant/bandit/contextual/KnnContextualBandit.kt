@@ -12,7 +12,7 @@ import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -140,6 +140,21 @@ class KnnContextualBandit(
     private val totalWeights: DoubleArray = DoubleArray(nbrArms)
     private var step: Long = 0L
 
+    // Width of the contexts this bandit has been shown, learned from the first one. Without it the
+    // only check is the one inside the distance kernel, which does not run until an arm holds k
+    // contexts - so a mis-sized context is accepted, and the first call to throw is a later choose
+    // reporting a mismatch from a helper rather than from the entry point that took the bad data. A
+    // custom distance that skips the check would silently compute against the wrong coordinates.
+    private var featureSize: Int = UNKNOWN_FEATURE_SIZE
+
+    private fun requireFeatureSize(size: Int) {
+        if (featureSize == UNKNOWN_FEATURE_SIZE) {
+            featureSize = size
+            return
+        }
+        require(size == featureSize) { "context size $size != $featureSize" }
+    }
+
     /** Argmax over per-arm [evaluate] scores. Ties broken by lowest index. */
     override fun choose(x: F64VectorView): Int {
         val bestIdx = argmaxArm(nbrArms) { a -> evaluate(a, x) }
@@ -150,6 +165,7 @@ class KnnContextualBandit(
     /** Score arm [armIndex] at context [x]: k-NN mean reward + UCB bonus. */
     override fun evaluate(armIndex: Int, x: F64VectorView): Double {
         requireArmIndex(armIndex, nbrArms)
+        requireFeatureSize(x.size)
         val ctx = historyContexts[armIndex]
         if (ctx.size < k) return coldStartScore + ucbBonus(armIndex)
         val mean = knnMean(armIndex, x)
@@ -160,7 +176,11 @@ class KnnContextualBandit(
     override fun update(armIndex: Int, x: F64VectorView, reward: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
         // An inert observation must not consume a history slot; the eviction below would drop real data.
-        if (weight.isInertWeight()) return
+        // A negative weight drops for the same reason rather than downdating: a bounded history has no
+        // inverse, so it would append a second phantom entry and leave the arm reporting no evidence
+        // while two slots are spent. ReservoirHistogramStat guards the same way. See Stat.
+        if (weight.isNotPositiveWeight()) return
+        requireFeatureSize(x.size)
         val ctxs = historyContexts[armIndex]
         val rs = historyRewards[armIndex]
         val ws = historyWeights[armIndex]
@@ -216,6 +236,7 @@ class KnnContextualBandit(
             totalWeights[a] = 0.0
         }
         step = 0L
+        featureSize = UNKNOWN_FEATURE_SIZE
     }
 
     /** Spawn a fresh bandit with the same configuration; history resets to empty. */
@@ -263,6 +284,9 @@ class KnnContextualBandit(
     /** Distance-function helpers. */
     companion object {
         private const val COLD_START_BONUS = 1.0
+
+        /** No context has been seen yet, so the next one establishes the expected width. */
+        private const val UNKNOWN_FEATURE_SIZE = -1
 
         /**
          * Squared L2 distance between two vectors of equal size. Sparse-aware:

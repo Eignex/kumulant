@@ -7,6 +7,7 @@ import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import com.eignex.kumulant.stream.AtomicMode
 import kotlin.math.ln
 import kotlin.math.min
 import kotlin.math.pow
@@ -180,24 +181,29 @@ class UCB1(
     priorBeta: Double = 1.0,
 ) : BanditPolicy<BernoulliSumResult> {
     override val arm = BernoulliArm(priorAlpha, priorBeta)
-    private var totalSamples: Double = 0.0
+
+    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
+    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
+    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
+    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = UCB1(alpha, arm.priorAlpha, arm.priorBeta)
 
     override fun update(stat: SeriesStat<BernoulliSumResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
-        totalSamples += weight
+        totalSamples.add(weight)
     }
     override fun evaluate(snapshot: BernoulliSumResult, step: Long, rng: Random): Double {
         val n = snapshot.trials
         if (n < 1.0) return Double.POSITIVE_INFINITY
         val mean = snapshot.successes / n
-        return mean + alpha * sqrt(2 * ln(totalSamples) / n)
+        return mean + alpha * sqrt(2 * ln(totalSamples.load()) / n)
     }
     override fun addArm(snapshot: BernoulliSumResult) {
-        totalSamples += snapshot.trials
+        totalSamples.add(snapshot.trials)
     }
     override fun removeArm(snapshot: BernoulliSumResult) {
-        totalSamples -= snapshot.trials
+        totalSamples.add(-snapshot.trials)
     }
 }
 
@@ -224,6 +230,14 @@ class UCB1Normal(
 
     override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
         val nj = snapshot.totalWeights
+        // Deliberately the arm count, where Auer et al. use the total number of plays. Their n grows only
+        // because each play returns a reward, so n and the sum of the per-arm counts advance together;
+        // here `step` counts choose() calls and `nj` counts update weight, and nothing pairs them. A
+        // caller that scores without feeding rewards back would push 8*ln(step) past every arm's weight
+        // and force for good, never reaching the bound at all. Against nbrArms the forced phase is a
+        // bounded warm-up instead, and the confidence term below - which does scale by the total - goes
+        // on exploring after it.
+        val totalPulls = maxOf(step.toDouble(), nj)
         if (nbrArms <= 1 || nj < 8 * ln(nbrArms.toDouble())) return Double.POSITIVE_INFINITY
         // Auer et al. subtract `n * mean^2` from the SUM of squares, and meanOfSquares() is the
         // MEAN of squares, so this has to scale up by `nj` first. Subtracting from `E[x^2]` instead
@@ -231,12 +245,9 @@ class UCB1Normal(
         // `choose` resolves to always picking arm 0 (`NaN > -Inf` is false).
         val sumOfSquares = snapshot.meanOfSquares() * nj
         val p1 = ((sumOfSquares - nj * snapshot.mean * snapshot.mean) / (nj - 1)).coerceAtLeast(0.0)
-        // `n` in Auer et al. is the total pull count, not the arm count. Against `nbrArms` the log
-        // term is ln(1) == 0 at K = 2, so the confidence bound vanishes and the policy goes exactly
-        // greedy at the arm count where exploration matters most. `step` carries the round count,
-        // which is why it is a parameter; this arm's own pulls floor it, since they are part of any total and
-        // `step` stays 0 for a caller that drives update() directly without choose().
-        val totalPulls = maxOf(step.toDouble(), nj)
+        // `step` carries the round count, which is why it is a parameter; this arm's own pulls floor it,
+        // since they are part of any total and `step` stays 0 for a caller that drives update()
+        // directly without choose().
         return snapshot.mean + alpha * sqrt(16 * p1 * (ln((totalPulls - 1.0).coerceAtLeast(1.0)) / nj))
     }
     override fun addArm(snapshot: MomentsResult) {
@@ -265,25 +276,30 @@ class UCB1Tuned(
     priorWeight: Double = 0.02,
 ) : BanditPolicy<MomentsResult> {
     override val arm = MomentsArm(priorMean, priorWeight)
-    private var totalSamples: Double = 0.0
+
+    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
+    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
+    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
+    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = UCB1Tuned(alpha, arm.priorMean, arm.priorWeight)
 
     override fun update(stat: SeriesStat<MomentsResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
-        totalSamples += weight
+        totalSamples.add(weight)
     }
     override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
         val nj = snapshot.totalWeights
         if (nj <= 1.0) return Double.POSITIVE_INFINITY
-        val padding = ln(totalSamples) / nj
+        val padding = ln(totalSamples.load()) / nj
         val v = snapshot.meanOfSquares() - snapshot.mean * snapshot.mean + sqrt(2.0 * padding)
         return snapshot.mean + alpha * sqrt(padding * min(0.25, v))
     }
     override fun addArm(snapshot: MomentsResult) {
-        totalSamples += snapshot.totalWeights
+        totalSamples.add(snapshot.totalWeights)
     }
     override fun removeArm(snapshot: MomentsResult) {
-        totalSamples -= snapshot.totalWeights
+        totalSamples.add(-snapshot.totalWeights)
     }
 }
 
@@ -301,6 +317,33 @@ class Greedy(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDe
     BanditPolicy<WeightedVarianceResult> {
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) = snapshot.mean
+}
+
+/**
+ * One explore-or-exploit coin per round, drawn from the caller's generator.
+ *
+ * The decision has to agree across every arm in a round: scored per arm, an explore draw would compete
+ * against other arms' means and the argmax would favour whichever arm happened to draw high, which is
+ * not epsilon-greedy. Keying the cached draw on the round is what makes it agree - but keying the
+ * *generator* on the round, as `Random(step)` does, makes the decision a pure function of the round
+ * index and so identical for every seed: an ensemble built through `create(random)` to decorrelate
+ * exploration would explore in lockstep instead.
+ *
+ * A caller that drives `evaluate` without ever calling `choose` leaves the round at 0 and so keeps the
+ * first coin; there is no round clock to key on in that case. Under racing rounds two of them may share
+ * a coin, which is bounded drift of the kind the concurrency contract allows.
+ */
+internal class RoundCoin {
+    private var round = Long.MIN_VALUE
+    private var draw = 0.0
+
+    fun explores(step: Long, rng: Random, epsilon: Double): Boolean {
+        if (step != round) {
+            round = step
+            draw = rng.nextDouble()
+        }
+        return draw < epsilon
+    }
 }
 
 /**
@@ -327,8 +370,10 @@ class EpsilonGreedy(
     }
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
 
+    private val coin = RoundCoin()
+
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double =
-        if (Random(step).nextDouble() < epsilon) {
+        if (coin.explores(step, rng, epsilon)) {
             rng.nextDouble()
         } else {
             snapshot.mean
@@ -358,27 +403,33 @@ class EpsilonDecreasing(
         require(epsilon > 0.0) { "epsilon must be positive, got $epsilon" }
     }
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
-    private var totalSamples: Double = 0.0
+
+    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
+    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
+    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
+    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    private val totalSamples = AtomicMode.newDouble(0.0)
+    private val coin = RoundCoin()
     override fun createPolicy() =
         EpsilonDecreasing(epsilon, decay, arm.priorMean, arm.priorWeight, arm.priorSquaredDeviations)
 
     override fun update(stat: SeriesStat<WeightedVarianceResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
-        totalSamples += weight
+        totalSamples.add(weight)
     }
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double {
-        val eps = min(1.0, epsilon / totalSamples.pow(decay))
-        return if (Random(step).nextDouble() < eps) {
+        val eps = min(1.0, epsilon / totalSamples.load().pow(decay))
+        return if (coin.explores(step, rng, eps)) {
             rng.nextDouble()
         } else {
             snapshot.mean
         }
     }
     override fun addArm(snapshot: WeightedVarianceResult) {
-        totalSamples += snapshot.totalWeights
+        totalSamples.add(snapshot.totalWeights)
     }
     override fun removeArm(snapshot: WeightedVarianceResult) {
-        totalSamples -= snapshot.totalWeights
+        totalSamples.add(-snapshot.totalWeights)
     }
 }
 
@@ -424,27 +475,32 @@ class KlUcb(
     priorBeta: Double = 1.0,
 ) : BanditPolicy<BernoulliSumResult> {
     override val arm = BernoulliArm(priorAlpha, priorBeta)
-    private var totalSamples: Double = 0.0
+
+    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
+    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
+    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
+    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = KlUcb(c, tolerance, arm.priorAlpha, arm.priorBeta)
 
     override fun update(stat: SeriesStat<BernoulliSumResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
-        totalSamples += weight
+        totalSamples.add(weight)
     }
 
     override fun evaluate(snapshot: BernoulliSumResult, step: Long, rng: Random): Double {
         val n = snapshot.trials
-        if (n < 1.0 || totalSamples <= 1.0) return Double.POSITIVE_INFINITY
+        if (n < 1.0 || totalSamples.load() <= 1.0) return Double.POSITIVE_INFINITY
         val mean = (snapshot.successes / n).coerceIn(0.0, 1.0)
-        val bound = (ln(totalSamples) + c * ln(ln(totalSamples).coerceAtLeast(1.0))) / n
+        val bound = (ln(totalSamples.load()) + c * ln(ln(totalSamples.load()).coerceAtLeast(1.0))) / n
         return klBernoulliUpper(mean, bound, tolerance)
     }
 
     override fun addArm(snapshot: BernoulliSumResult) {
-        totalSamples += snapshot.trials
+        totalSamples.add(snapshot.trials)
     }
     override fun removeArm(snapshot: BernoulliSumResult) {
-        totalSamples -= snapshot.trials
+        totalSamples.add(-snapshot.trials)
     }
 
     /** Bernoulli KL utilities used by [KlUcb]. */
@@ -502,27 +558,32 @@ class Moss(
         requireNbrArms(nbrArms)
     }
     override val arm = MeanArm(priorMean, priorWeight)
-    private var totalSamples: Double = 0.0
+
+    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
+    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
+    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
+    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = Moss(nbrArms, arm.priorMean, arm.priorWeight)
 
     override fun update(stat: SeriesStat<WeightedMeanResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
-        totalSamples += weight
+        totalSamples.add(weight)
     }
 
     override fun evaluate(snapshot: WeightedMeanResult, step: Long, rng: Random): Double {
         val n = snapshot.totalWeights
         if (n < 1.0) return Double.POSITIVE_INFINITY
-        val arg = totalSamples / (nbrArms * n)
+        val arg = totalSamples.load() / (nbrArms * n)
         val padding = ln(arg.coerceAtLeast(1.0))
         return snapshot.mean + sqrt(padding / n)
     }
 
     override fun addArm(snapshot: WeightedMeanResult) {
-        totalSamples += snapshot.totalWeights
+        totalSamples.add(snapshot.totalWeights)
     }
     override fun removeArm(snapshot: WeightedMeanResult) {
-        totalSamples -= snapshot.totalWeights
+        totalSamples.add(-snapshot.totalWeights)
     }
 }
 
@@ -553,26 +614,31 @@ class UcbV(
         require(zeta > 0.0) { "zeta must be positive, got $zeta" }
     }
     override val arm = MomentsArm(priorMean, priorWeight)
-    private var totalSamples: Double = 0.0
+
+    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
+    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
+    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
+    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = UcbV(zeta, c, arm.priorMean, arm.priorWeight)
 
     override fun update(stat: SeriesStat<MomentsResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
-        totalSamples += weight
+        totalSamples.add(weight)
     }
 
     override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
         val n = snapshot.totalWeights
         if (n < 1.0) return Double.POSITIVE_INFINITY
         val v = (snapshot.meanOfSquares() - snapshot.mean * snapshot.mean).coerceAtLeast(0.0)
-        val logT = ln(totalSamples.coerceAtLeast(2.0))
+        val logT = ln(totalSamples.load().coerceAtLeast(2.0))
         return snapshot.mean + sqrt(2.0 * v * zeta * logT / n) + 3.0 * c * zeta * logT / n
     }
 
     override fun addArm(snapshot: MomentsResult) {
-        totalSamples += snapshot.totalWeights
+        totalSamples.add(snapshot.totalWeights)
     }
     override fun removeArm(snapshot: MomentsResult) {
-        totalSamples -= snapshot.totalWeights
+        totalSamples.add(-snapshot.totalWeights)
     }
 }

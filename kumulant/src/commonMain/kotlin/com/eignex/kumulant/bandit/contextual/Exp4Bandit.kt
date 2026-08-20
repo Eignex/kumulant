@@ -9,6 +9,7 @@ import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.bandit.sampleFromDistribution
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.preview
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -165,6 +166,12 @@ class Exp4Bandit(
     /** Fold a `(context, reward)` observation back into the expert weights. */
     override fun update(armIndex: Int, x: F64VectorView, reward: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
+        // Return before propensityOf, which consumes an outstanding pull. A zero gain leaves the expert
+        // weights alone, but spending the recorded propensity is not a no-op: the real feedback for
+        // that pull would then be divided by the current distribution instead, an unbounded error in
+        // the importance weight. Also before re-evaluating the experts, which overwrites lastAdvice.
+        // See Stat.
+        if (weight.isInertWeight()) return
         // Re-evaluate experts in case caller calls update without a prior choose at this x.
         playDistribution(x)
         val pPlayed = propensityOf(armIndex, x).coerceAtLeast(MIN_PLAY_PROB)
