@@ -116,3 +116,17 @@ class SeasonalSmoothingStatTest {
         for (sx in r.seasons) assertEquals(0.0, sx, DELTA)
     }
 }
+
+class SeasonalForecastHorizonTest {
+
+    @Test
+    fun `a huge horizon picks the same slot as the equivalent short one`() {
+        val s = SeasonalSmoothingStat(period = 3, alpha = 0.5, beta = 0.0, gamma = 0.5)
+        // 29 updates leaves the next slot at 2, so `currentSlot + steps - 1` is the sum that overflows.
+        for (i in 0 until 29) s.update(1.0 + (i % 3))
+        val r = s.read()
+        // Int.MAX_VALUE is 1 mod 3, so it lands on the same season slot as one step ahead, and with
+        // beta = 0 the trend term contributes nothing at either horizon.
+        assertEquals(r.forecast(1), r.forecast(Int.MAX_VALUE), DELTA)
+    }
+}

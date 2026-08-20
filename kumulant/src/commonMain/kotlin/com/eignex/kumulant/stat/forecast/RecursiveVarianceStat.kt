@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.forecast
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -63,7 +63,10 @@ class RecursiveVarianceStat(
     private val initialized = mode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: this recurrence has no inverse -
+        // the GARCH recurrence never consults the weight at all - so the body below would run a
+        // downdate forwards, as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         val x2 = value * value
         while (true) {
             val current = variance.load()

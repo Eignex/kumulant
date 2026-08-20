@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.change
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
@@ -90,7 +90,10 @@ class PageHinkleyStat(
     private val maxNeg = streamMode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: this recurrence has no inverse -
+        // the running min and max have no inverse - so the body below would run a
+        // downdate forwards, as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         lock.guarded {
             val n = count.load() + 1L
             count.store(n)
@@ -119,11 +122,17 @@ class PageHinkleyStat(
         mean.store(combinedMean)
         // Adopt verbatim while empty, as the count-weighted mean above already does implicitly. Halving
         // these would halve exactly the two quantities `alarmUp`/`alarmDown` threshold against.
+        //
+        // The running extremum averages the same way as the sum it is subtracted from. Taking the min
+        // of the two baselines while averaging the two signals leaves a pair neither trace ever held,
+        // and `cumPos - minPos` can then clear the threshold on two traces that each stayed well under
+        // it - a downward level shift merged with a flat trace alarms upward. Averaging both halves
+        // keeps the merged statistic the average of the two traces' statistics.
         val empty = localCount == 0L
         cumPos.store(if (empty) values.cumulativePositive else 0.5 * (cumPos.load() + values.cumulativePositive))
         cumNeg.store(if (empty) values.cumulativeNegative else 0.5 * (cumNeg.load() + values.cumulativeNegative))
-        minPos.store(min(minPos.load(), values.minPositive))
-        maxNeg.store(max(maxNeg.load(), values.maxNegative))
+        minPos.store(if (empty) values.minPositive else 0.5 * (minPos.load() + values.minPositive))
+        maxNeg.store(if (empty) values.maxNegative else 0.5 * (maxNeg.load() + values.maxNegative))
     }
 
     override fun reset() = lock.guarded {

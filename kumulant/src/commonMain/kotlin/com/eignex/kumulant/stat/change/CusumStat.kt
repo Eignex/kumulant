@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.change
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -85,7 +85,10 @@ class CusumStat(
     private val initialized = streamMode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: this recurrence has no inverse -
+        // the one-sided sums clip through max(0, .) and min(0, .) - so the body below would run a
+        // downdate forwards, as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         val deviation = value - target
         while (true) {
             val prev = cusumPos.load()
