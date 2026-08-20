@@ -1,5 +1,7 @@
 package com.eignex.kumulant.stat.sketch
 
+import com.eignex.kumulant.math.Hashers
+import com.eignex.kumulant.math.LongHasher
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -120,5 +122,24 @@ class MinHashTest {
     fun `invalid args throw`() {
         assertFailsWith<IllegalArgumentException> { MinHashStat(numHashes = 0) }
         assertFailsWith<IllegalArgumentException> { MinHashStat(numHashes = -1) }
+    }
+}
+
+class MinHashJaccardHasherTest {
+
+    @Test
+    fun `jaccard rejects a mismatched hasher the way merge does`() {
+        val mixer = object : LongHasher {
+            override val name = "tripled"
+            override fun mix(value: Long) = value * 3
+        }
+        Hashers.register(mixer)
+        val a = MinHashStat(numHashes = 128, seed = 7L)
+        val b = MinHashStat(numHashes = 128, seed = 7L, hasher = mixer)
+        for (k in 1L..1000L) {
+            a.update(k)
+            b.update(k)
+        }
+        assertFailsWith<IllegalArgumentException> { a.read().jaccard(b.read()) }
     }
 }

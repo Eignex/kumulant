@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.DELTA
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -195,5 +196,26 @@ class DDSketchTest {
         )
 
         assertEquals(10.0, a.read().totalWeights, 1e-9)
+    }
+}
+
+class SketchProbabilitiesOwnershipTest {
+
+    @Test
+    fun `editing a DDSketch snapshot's probabilities does not relabel the stat`() {
+        val s = DDSketchStat()
+        repeat(1000) { s.update(it.toDouble()) }
+        val before = s.read().quantiles[0]
+        s.read().probabilities[0] = 0.999
+        assertEquals(before, s.read().quantiles[0], DELTA)
+    }
+
+    @Test
+    fun `editing a TDigest snapshot's probabilities does not relabel the stat`() {
+        val s = TDigestStat()
+        repeat(1000) { s.update(it.toDouble()) }
+        val before = s.read().quantiles[0]
+        s.read().probabilities[0] = 0.999
+        assertEquals(before, s.read().quantiles[0], DELTA)
     }
 }
