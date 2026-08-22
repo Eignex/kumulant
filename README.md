@@ -72,23 +72,11 @@ val anomalyScore = anomaly.read().score(point)
 
 Stats group into families under the `stat.*` subpackages. Each family
 page on the Dokka site lists the entries and the notes on when to pick
-which.
-
-| Family       | Stats                                                                          |
-|--------------|--------------------------------------------------------------------------------|
-| Summary      | Sum, Mean, Min, Max, ArgMin, ArgMax, Range, Variance, Moments, Summary, BernoulliSum, Count, Mad |
-| Event        | Excursion, RunLength, Crossing, Recency, Sojourn                                |
-| Rate         | Rate, CounterRate, DecayingRate                                                 |
-| Change       | Cusum, PageHinkley, Adwin                                                       |
-| Quantile     | DDSketch, TDigest, HdrHistogram, LinearHistogram, ReservoirHistogram, FrugalQuantile, ThresholdBucket |
-| Cardinality  | HyperLogLog, LinearCounting                                                    |
-| Sketch       | BloomFilter, CountMinSketch, MinHash, SpaceSaving                              |
-| Regression   | UnivariateRegression (OLS / L1 / L2), Covariance, Softmax, GaussianNaiveBayes; GLMs (Stochastic, Diagonal, Bayesian, Hierarchical); trees (DecisionTree, RandomForest, classifier variants) |
-| Decay        | DecayingSum, DecayingMean, DecayingVariance, EwmaMean, EwmaVariance             |
-| Forecast     | Holt, SeasonalSmoothing, RecursiveVariance                                      |
-| Score        | MseLoss, MaeLoss, LogLoss, PinballLoss, BrierScore, Auc, Accuracy, ConfusionMatrix, PitHistogram |
-| Calibration  | Reliability, PlattCalibrator, IsotonicCalibrator                                |
-| Anomaly      | GaussianScorer, QuantileFilter, HalfSpaceTrees                                  |
+which. They include summaries such as mean and variance, quantile
+sketches such as DDSketch and t-digest, cardinality estimators such as
+HyperLogLog, heavy-hitter sketches, time-decayed averages, change
+detection, forecasting, calibration, anomaly scoring, and streaming
+prediction metrics.
 
 ## Composing stats
 
