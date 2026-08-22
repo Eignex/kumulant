@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.util.concurrent.TimeUnit
 
 plugins {
-    id("com.eignex.kmp") version "1.3.1"
+    id("com.eignex.kmp") version "1.3.2"
     kotlin("plugin.serialization") version "2.4.10"
 }
 
