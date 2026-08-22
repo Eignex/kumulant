@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.fitLine
 import com.eignex.kumulant.schema.optimizer.Sgd

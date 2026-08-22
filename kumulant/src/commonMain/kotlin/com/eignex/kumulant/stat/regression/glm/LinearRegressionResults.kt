@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.F64DenseMatrix
-import com.eignex.koblas.F64DenseVector
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64DenseMatrix
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.Result

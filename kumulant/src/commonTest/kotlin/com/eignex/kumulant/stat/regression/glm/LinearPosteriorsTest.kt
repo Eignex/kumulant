@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.F64DenseMatrix
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseMatrix
+import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
 import kotlin.random.Random

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.kumulant.bandit.contextual.Exp4Bandit
 import com.eignex.kumulant.bandit.contextual.Exp4Expert
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.schema.expr.X
 import com.eignex.kumulant.schema.expr.isFinite

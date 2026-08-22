@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.F64DenseVector
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.koblas.dot
 import com.eignex.koblas.matVec
 import com.eignex.kumulant.math.nextNormal

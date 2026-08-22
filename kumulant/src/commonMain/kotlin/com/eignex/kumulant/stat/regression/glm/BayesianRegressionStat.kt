@@ -1,13 +1,14 @@
 // math convention: single-letter matrices L, M, etc.
 @file:Suppress("VariableNaming", "FunctionParameterNaming", "PropertyName")
+@file:OptIn(com.eignex.koblas.UnsafeKoblasApi::class)
 
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.F64DenseMatrix
-import com.eignex.koblas.F64DenseVector
-import com.eignex.koblas.F64MatrixView
-import com.eignex.koblas.F64VectorView
 import com.eignex.koblas.axpy
+import com.eignex.koblas.core.F64DenseMatrix
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64MatrixView
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.koblas.dense.CholeskyDecomposition
 import com.eignex.koblas.dense.CholeskyPolicy
 import com.eignex.koblas.dense.cholesky
@@ -166,7 +167,7 @@ class BayesianRegressionStat(
             // would reach `ger` and poison the covariance permanently, taking every later prediction
             // with it. Skipping the observation keeps the posterior usable.
             if (!denom.isFinite() || denom == 0.0) return@guarded
-            scale(z, sqrt(wc) / denom)
+            z.scale(sqrt(wc) / denom)
 
             // Downdate the Cholesky factor; repair on instability. The downdate leaves the factor
             // untouched for any norm at or above one, so the repair has to trigger on the same
@@ -185,16 +186,16 @@ class BayesianRegressionStat(
                 }
                 norm = covarianceL.choleskyDowndateInPlace(z)
                 while (!(norm < 1.0)) {
-                    scale(z, 1.0 / (norm + DOWNDATE_SHRINK))
+                    z.scale(1.0 / (norm + DOWNDATE_SHRINK))
                     norm = covarianceL.choleskyDowndateInPlace(z)
                 }
             }
 
             // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
-            ger(-1.0, z, z, covariance)
+            covariance.ger(-1.0, z, z)
 
             // Posterior mean update: w += (weight * residual) * S_new * x.
-            axpy(weights, weight * residual, covariance.matVec(x))
+            weights.axpy(weight * residual, covariance.matVec(x))
 
             biasPrecision += wc
             bias += weight * residual / biasPrecision

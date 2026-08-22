@@ -1,6 +1,6 @@
 package com.eignex.kumulant.core
 
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64VectorView
 
 /**
  * Reject a context vector whose arity does not match the model's.

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.test.Test
 import kotlin.test.assertEquals

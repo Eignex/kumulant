@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.fitLine
 import com.eignex.kumulant.schema.expr.Const
 import com.eignex.kumulant.schema.optimizer.Adagrad
