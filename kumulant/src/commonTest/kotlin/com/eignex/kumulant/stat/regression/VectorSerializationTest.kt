@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.F64DenseVector
-import com.eignex.koblas.F64SparseVector
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat

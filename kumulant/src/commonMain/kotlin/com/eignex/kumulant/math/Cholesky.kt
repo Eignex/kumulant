@@ -3,9 +3,9 @@
 
 package com.eignex.kumulant.math
 
-import com.eignex.koblas.F64DenseMatrix
-import com.eignex.koblas.F64DenseVector
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64DenseMatrix
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.norm2
@@ -39,7 +39,7 @@ internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorView): Double {
     x.forEachStored { i, v -> s[i] = v }
     trsv(this, s, lower = true)
 
-    val norm = norm2(F64DenseVector.wrap(s))
+    val norm = F64DenseVector.wrap(s).norm2()
     // Negated so a NaN norm bails too: falling through would write NaN across the whole factor
     // and still report success.
     if (!(norm > 0.0 && norm < 1.0)) return norm

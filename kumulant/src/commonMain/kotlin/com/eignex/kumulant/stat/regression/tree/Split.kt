@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.kumulant.schema.expr.BoolExpr
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

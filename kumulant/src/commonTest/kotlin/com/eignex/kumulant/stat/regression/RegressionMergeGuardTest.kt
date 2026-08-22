@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.F64DenseMatrix
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseMatrix
+import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.stat.anomaly.FeatureRange
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
 import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult

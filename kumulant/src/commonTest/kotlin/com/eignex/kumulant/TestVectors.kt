@@ -1,6 +1,6 @@
 package com.eignex.kumulant
 
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseVector
 
 /**
  * A feature vector, for the tests that need one.

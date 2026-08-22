@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.F64DenseVector
-import com.eignex.koblas.F64SparseVector
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64SparseVector
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit.Companion.squaredL2
 import com.eignex.kumulant.feat
 import kotlin.random.Random

@@ -1,7 +1,7 @@
 package com.eignex.kumulant.core
 
-import com.eignex.koblas.F64DenseVector
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.kumulant.stream.currentTimeNanos
 
 /**

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.feat
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.LinUcb

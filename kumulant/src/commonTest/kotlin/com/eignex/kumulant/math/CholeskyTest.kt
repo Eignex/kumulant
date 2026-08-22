@@ -1,8 +1,10 @@
+@file:OptIn(com.eignex.koblas.UnsafeKoblasApi::class)
+
 package com.eignex.kumulant.math
 
-import com.eignex.koblas.F64DenseMatrix
-import com.eignex.koblas.F64DenseVector
-import com.eignex.koblas.F64SparseVector
+import com.eignex.koblas.core.F64DenseMatrix
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64SparseVector
 import com.eignex.koblas.dense.cholesky
 import kotlin.test.Test
 import kotlin.test.assertEquals

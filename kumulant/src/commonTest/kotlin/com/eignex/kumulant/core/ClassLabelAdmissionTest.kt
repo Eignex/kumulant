@@ -1,6 +1,6 @@
 package com.eignex.kumulant.core
 
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionStat

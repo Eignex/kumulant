@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS

@@ -2,8 +2,8 @@
 
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.F64DenseVector
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.test.Test

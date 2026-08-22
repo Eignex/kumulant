@@ -1,8 +1,8 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.F64DenseVector
-import com.eignex.koblas.F64SparseVector
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
@@ -329,6 +329,7 @@ class KnnContextualBandit(
             return s
         }
 
+        @OptIn(com.eignex.koblas.UnsafeKoblasApi::class)
         private fun sparseSquaredL2(a: F64SparseVector, b: F64SparseVector): Double {
             var s = 0.0
             a.forEachStored { i, v ->

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat

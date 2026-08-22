@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.F64DenseMatrix
-import com.eignex.koblas.F64DenseVector
+import com.eignex.koblas.core.F64DenseMatrix
+import com.eignex.koblas.core.F64DenseVector
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

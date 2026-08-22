@@ -2,7 +2,7 @@
 
 package com.eignex.kumulant.stat.anomaly
 
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.VectorStat

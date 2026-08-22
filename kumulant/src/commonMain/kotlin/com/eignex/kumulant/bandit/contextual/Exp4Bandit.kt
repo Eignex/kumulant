@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.F64VectorView
+import com.eignex.koblas.core.F64VectorView
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.MIN_PLAY_PROB
 import com.eignex.kumulant.bandit.Snapshotable
