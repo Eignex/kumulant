@@ -130,24 +130,15 @@ throws, so pick the group that matches the entry.
 
 ## Bandits
 
-Bandits build on per-arm stats: each arm owns a kumulant accumulator
-and the bandit picks arms by scoring their snapshots. Per-arm state
-inherits the same concurrency modes, wire-portable snapshots, and merge
-semantics as any other stat. The `bandit` package overview on the
-Dokka site walks through the hierarchy, the univariate and contextual
-families, policies, and arms.
+Bandits build on per-arm stats and select arms from their snapshots.
+The `bandit` package overview on the Dokka site covers the available
+univariate and contextual bandits, policies, and arms.
 
 ```kotlin
 val bandit = MultiArmedBandit(nbrArms = 4, policy = BetaBernoulliTS())
 val arm = bandit.choose()
 bandit.update(arm, value = 1.0)
 ```
-
-| Family       | Bandits                                                                                  |
-|--------------|-------------------------------------------------------------------------------------------|
-| Univariate   | MultiArmedBandit, RouletteWheelBandit, BoltzmannBandit, Exp3Bandit, TopTwoThompsonBandit  |
-| Contextual   | RegressionContextualBandit, KnnContextualBandit, Exp4Bandit                                |
-| Policies     | UCB1, UCB1-Normal, UCB1-Tuned, KL-UCB, MOSS, UCB-V, Thompson sampling, Greedy, EpsilonGreedy, EpsilonDecreasing, UniformSelection |
 
 For context-aware decisions, the contextual bandit wraps one regression
 stat per arm and scores each arm under the round's feature vector.
@@ -161,31 +152,6 @@ val cb = RegressionContextualBandit(
 val a = cb.choose(features)
 cb.update(a, features, reward = 12.7)
 ```
-
-The bandit hierarchy splits action and state into orthogonal interfaces.
-UnivariateBandit and ContextualBandit carry the choose / update surface;
-PerArmBandit and Snapshotable carry the snapshot/merge/replicate
-surface; Scorable and ContextualScorable are opt-in for bandits whose
-choose is an argmax over independent per-arm scores. Bandits that
-select arms via joint sampling (Top-Two Thompson, Boltzmann) or that
-don't fit a per-arm state shape (Exp4) slot in cleanly without bending
-the contract.
-
-```kotlin
-// Whole-bandit configurations round-trip on the wire alongside their policies.
-val spec: UnivariateBanditSpec = MultiArmedSpec(
-    nbrArms = 4,
-    policy = Ucb1Spec(alpha = 1.5),
-)
-val live: Bandit = spec.materialize(Random(0))
-```
-
-Composite arms model multi-component rewards like zero-inflated lognormal
-revenue without writing a class per shape; routing and score combination
-travel as the same expression ASTs the rest of the library uses, so the
-whole composite round-trips over the wire. Continuous pooling on contextual
-bandits and a hierarchical Bayesian manager cover the cold-start story
-when arms join an in-progress run.
 
 ## Concurrency
 
