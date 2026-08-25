@@ -72,7 +72,7 @@ internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorView): Double {
 
 /**
  * Zero the strict upper triangle of a Cholesky factor. koblas only promises the lower triangle of
- * `CholeskyDecomposition.l`, leaving whatever the backend wrote above the diagonal, so a factor
+ * `F64CholeskyDecomposition.l`, leaving whatever the backend wrote above the diagonal, so a factor
  * that gets stored in a snapshot is cleaned first: the snapshots are compared and serialised, and
  * two mathematically equal posteriors have to agree entry for entry.
  */

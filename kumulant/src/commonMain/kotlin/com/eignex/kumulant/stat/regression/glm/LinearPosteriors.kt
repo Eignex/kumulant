@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.regression.glm
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorView
 import com.eignex.koblas.dot
-import com.eignex.koblas.matVec
+import com.eignex.koblas.times
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlinx.serialization.SerialName
@@ -140,7 +140,7 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
     }
 
     /** Closes to `invMean(eta(x) + sqrt(exploration * xT * Sigma * x) * N(0,1))`; one
-     *  `matVec` and one `dot` instead of sampling the full weight vector. */
+     *  matrix-vector product and one `dot` instead of sampling the full weight vector. */
     override fun evaluate(
         snapshot: CovarianceRegressionResult,
         x: F64VectorView,
@@ -148,7 +148,7 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         exploration: Double,
     ): Double {
         val eta = snapshot.linearPredictor(x)
-        val sigmaX = snapshot.covariance.matVec(x)
+        val sigmaX = snapshot.covariance * x
         val variance = x dot sigmaX
         return snapshot.link.invMean(eta + sqrt(exploration * variance) * rng.nextNormal())
     }
@@ -175,7 +175,7 @@ data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
         exploration: Double,
     ): Double {
         val eta = snapshot.linearPredictor(x)
-        val sigmaX = snapshot.covariance.matVec(x)
+        val sigmaX = snapshot.covariance * x
         val variance = x dot sigmaX
         return snapshot.link.invMean(eta + exploration * sqrt(variance))
     }

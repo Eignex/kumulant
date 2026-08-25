@@ -9,15 +9,15 @@ import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64MatrixView
 import com.eignex.koblas.core.F64VectorView
-import com.eignex.koblas.dense.CholeskyDecomposition
 import com.eignex.koblas.dense.CholeskyPolicy
+import com.eignex.koblas.dense.F64CholeskyDecomposition
 import com.eignex.koblas.dense.cholesky
 import com.eignex.koblas.dense.invert
 import com.eignex.koblas.dense.solve
 import com.eignex.koblas.dot
 import com.eignex.koblas.ger
-import com.eignex.koblas.matVec
 import com.eignex.koblas.scale
+import com.eignex.koblas.times
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
@@ -159,7 +159,7 @@ class BayesianRegressionStat(
             //   S_new = S - (w_c * S x xT S) / (1 + w_c * xT S x)
             //         = S - z zT, where z = sqrt(w_c) * S x / sqrt(1 + w_c * xT S x).
             val wc = weight * curvature
-            val z = covariance.matVec(x)
+            val z = covariance * x
             val denom = sqrt(1.0 + wc * (x dot z))
             // Non-finite as well as zero. Two paths reach a NaN denominator: an `S` outside the
             // positive-definite cone makes the argument negative, and `Link.Log.curvature` is
@@ -195,7 +195,7 @@ class BayesianRegressionStat(
             covariance.ger(-1.0, z, z)
 
             // Posterior mean update: w += (weight * residual) * S_new * x.
-            weights.axpy(weight * residual, covariance.matVec(x))
+            weights.axpy(weight * residual, covariance * x)
 
             biasPrecision += wc
             bias += weight * residual / biasPrecision
@@ -241,8 +241,8 @@ class BayesianRegressionStat(
         lock.guarded {
             val n = featureSize
 
-            val hSelf = CholeskyDecomposition(covarianceL).invert()
-            val hOther = CholeskyDecomposition(values.covarianceL).invert()
+            val hSelf = F64CholeskyDecomposition(covarianceL).invert()
+            val hOther = F64CholeskyDecomposition(values.covarianceL).invert()
 
             // H_new = H_self + H_other - H_prior.
             val hNew = F64DenseMatrix.zero(n, n)
