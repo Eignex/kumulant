@@ -1,9 +1,12 @@
 package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.Workspace
+import com.eignex.koblas.borrow
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.core.F64StridedVectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
@@ -13,6 +16,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class LinearPosteriorsTest {
+
+    private class CustomVector(private val values: DoubleArray) : F64VectorLike {
+        override val size: Int get() = values.size
+        override fun get(i: Int): Double = values[i]
+        override fun toDoubleArray(): DoubleArray = values.copyOf()
+    }
 
     private fun sgdSnapshot(): StochasticRegressionResult {
         val stat = StochasticRegressionStat(featureSize = 2, optimizer = Sgd(ConstantRate(0.05)))
@@ -57,6 +66,34 @@ class LinearPosteriorsTest {
         val reused = MultivariateGaussian.evaluate(snapshot, x, Random(9), workspace, exploration = 0.7)
 
         assertEquals(allocated, reused, 1e-12)
+    }
+
+    @Test
+    fun `workspace covariance evaluation accepts strided and custom vectors`() {
+        val snapshot = bayesianSnapshot()
+        val dense = F64DenseVector.of(doubleArrayOf(0.3, -0.2))
+        val strided = F64StridedVectorView(doubleArrayOf(0.3, 7.0, -0.2, 7.0), 0, 2, 2)
+        val custom = CustomVector(doubleArrayOf(0.3, -0.2))
+        val workspace = Workspace().apply { reserve(2, 1) }
+
+        val expected = LinUcb.evaluate(snapshot, dense, Random(0), workspace, exploration = 0.7)
+        assertEquals(expected, LinUcb.evaluate(snapshot, strided, Random(0), workspace, exploration = 0.7), 1e-12)
+        assertEquals(expected, LinUcb.evaluate(snapshot, custom, Random(0), workspace, exploration = 0.7), 1e-12)
+    }
+
+    @Test
+    fun `sampleInto matches an owned multivariate sample without retaining workspace storage`() {
+        val snapshot = bayesianSnapshot()
+        val destination = DoubleArray(2)
+        val workspace = Workspace().apply { reserve(2, 1) }
+
+        MultivariateGaussian.sampleInto(snapshot, Random(21), destination, workspace, exploration = 0.4)
+        val expected = MultivariateGaussian.sample(snapshot, Random(21), exploration = 0.4)
+        assertEquals(expected[0], destination[0], 1e-12)
+        assertEquals(expected[1], destination[1], 1e-12)
+        workspace.borrow(2) { it.fill(0.0) }
+        assertEquals(expected[0], destination[0], 1e-12)
+        assertEquals(expected[1], destination[1], 1e-12)
     }
 
     @Test

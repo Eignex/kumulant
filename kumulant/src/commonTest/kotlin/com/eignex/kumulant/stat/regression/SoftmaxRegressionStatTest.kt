@@ -3,6 +3,9 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.core.F64StridedVectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import kotlin.math.abs
@@ -13,6 +16,12 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class SoftmaxRegressionStatTest {
+
+    private class CustomVector(private val values: DoubleArray) : F64VectorLike {
+        override val size: Int get() = values.size
+        override fun get(i: Int): Double = values[i]
+        override fun toDoubleArray(): DoubleArray = values.copyOf()
+    }
 
     @Test
     fun `softmax probabilities sum to one and predict matches argmax`() {
@@ -62,6 +71,50 @@ class SoftmaxRegressionStatTest {
         val untouched = doubleArrayOf(7.0, 8.0)
         assertFailsWith<IllegalArgumentException> { result.probabilitiesInto(x, untouched) }
         assertTrue(untouched.contentEquals(doubleArrayOf(7.0, 8.0)))
+    }
+
+    @Test
+    fun `destination scoring accepts dense sparse strided and custom vectors`() {
+        val result = SoftmaxRegressionResult(
+            featureSize = 2,
+            numClasses = 3,
+            weights = F64DenseMatrix.of(
+                arrayOf(doubleArrayOf(1.0, -1.0), doubleArrayOf(2.0, 0.5), doubleArrayOf(-0.5, 1.5)),
+            ),
+            biases = F64DenseVector.of(doubleArrayOf(0.1, 0.2, -0.3)),
+            totalWeights = 0.0,
+            step = 0L,
+            crossEntropy = 0.0,
+        )
+        val dense = F64DenseVector.of(doubleArrayOf(0.25, -0.5))
+        val sparse = F64SparseVector.of(2, intArrayOf(0, 1), doubleArrayOf(0.25, -0.5))
+        val strided = F64StridedVectorView(doubleArrayOf(0.25, 9.0, -0.5, 9.0), 0, 2, 2)
+        val custom = CustomVector(doubleArrayOf(0.25, -0.5))
+        val expected = result.probabilities(dense)
+
+        for (x in listOf<F64VectorLike>(sparse, strided, custom)) {
+            val actual = DoubleArray(3)
+            result.probabilitiesInto(x, actual)
+            assertTrue(actual.contentEquals(expected))
+            assertEquals(result.predict(dense), result.predict(x, Workspace().apply { reserve(3, 1) }))
+        }
+    }
+
+    @Test
+    fun `failed workspace prediction releases its borrowed logits`() {
+        val result = SoftmaxRegressionResult(
+            featureSize = 2,
+            numClasses = 2,
+            weights = F64DenseMatrix.of(arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0))),
+            biases = F64DenseVector.of(doubleArrayOf(0.0, 0.0)),
+            totalWeights = 0.0,
+            step = 0L,
+            crossEntropy = 0.0,
+        )
+        val workspace = Workspace().apply { reserve(2, 1) }
+
+        assertFailsWith<IllegalArgumentException> { result.predict(F64DenseVector.of(doubleArrayOf(1.0)), workspace) }
+        assertEquals(0, result.predict(F64DenseVector.of(doubleArrayOf(1.0, 0.0)), workspace))
     }
 
     @Test
