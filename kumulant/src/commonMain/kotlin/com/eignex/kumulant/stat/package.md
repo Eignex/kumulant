@@ -14,8 +14,8 @@ in the signature of `update`:
 | [com.eignex.kumulant.core.SeriesStat] | `update(value: Double, weight: Double = 1.0)` | One scalar per observation |
 | [com.eignex.kumulant.core.DiscreteStat] | `update(value: Long, weight: Double = 1.0)` | Opaque keys, integer counts |
 | [com.eignex.kumulant.core.PairedStat] | `update(x: Double, y: Double, weight: Double = 1.0)` | Scalar `(x, y)` pairs |
-| [com.eignex.kumulant.core.VectorStat] | `update(vector: VectorView, weight: Double = 1.0)` | Multi-channel observations |
-| [com.eignex.kumulant.core.RegressionStat] | `update(x: VectorView, y: Double, weight: Double = 1.0)` | Vector covariate, scalar response |
+| [com.eignex.kumulant.core.VectorStat] | `update(vector: VectorLike, weight: Double = 1.0)` | Multi-channel observations |
+| [com.eignex.kumulant.core.RegressionStat] | `update(x: VectorLike, y: Double, weight: Double = 1.0)` | Vector covariate, scalar response |
 
 Every `update` overload has a sibling that takes an explicit
 `timestampNanos`; the no-timestamp form calls `currentTimeNanos`. Stats
@@ -23,7 +23,7 @@ that ignore time silently drop the stamp; stats that care about it
 (rates, windowed wrappers, decaying accumulators) treat it as the
 ordering signal; pass a monotonic stamp when replaying a log.
 
-`VectorStat` and `RegressionStat` both accept a `VectorView` so sparse
+`VectorStat` and `RegressionStat` both accept a `VectorLike` so sparse
 callers can feed sparse vectors without materialising them. Each
 interface also exposes a `DoubleArray` convenience overload that wraps
 the array in a `DenseVector`.
@@ -43,7 +43,7 @@ comes out of `read()` goes into `merge()` over the wire. Traits in
   `HasSampleVariance` with `m3`, `m4`, `skewness`, `kurtosis`, and the
   size-adjusted unbiased variants.
 - [com.eignex.kumulant.core.HasLinearModel]: `weights`, `bias`, and
-  `predict(VectorView)` over a fitted hyperplane.
+  `predict(VectorLike)` over a fitted hyperplane.
 - [com.eignex.kumulant.core.HasSlope]: univariate special case with
   `slope`, `intercept`, scalar `predict(Double)`; implements
   `HasLinearModel` for free.

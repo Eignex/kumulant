@@ -18,8 +18,8 @@ modality.
 | [SeriesStat] | `update(value: Double, weight: Double = 1.0)` | One scalar per observation |
 | [DiscreteStat] | `update(value: Long, weight: Double = 1.0)` | Opaque keys, integer counts |
 | [PairedStat] | `update(x: Double, y: Double, weight: Double = 1.0)` | Scalar `(x, y)` pairs |
-| [VectorStat] | `update(vector: VectorView, weight: Double = 1.0)` | Multi-channel observations |
-| [RegressionStat] | `update(x: VectorView, y: Double, weight: Double = 1.0)` | Vector covariate, scalar response |
+| [VectorStat] | `update(vector: VectorLike, weight: Double = 1.0)` | Multi-channel observations |
+| [RegressionStat] | `update(x: VectorLike, y: Double, weight: Double = 1.0)` | Vector covariate, scalar response |
 
 Every `update` overload has a sibling that takes an explicit
 `timestampNanos`; the no-timestamp form calls
@@ -64,7 +64,7 @@ and a multivariate one, or both a `MeanStat` and a `DecayingMeanStat`.
 | [HasRate] | `rate` (events per second), `per(duration)` |
 | [HasSampleVariance] | `totalWeights`, `variance`, `stdDev`, `sampleVariance`, `sampleStdDev` |
 | [HasShapeMoments] | extends `HasSampleVariance` with `m3`, `m4`, `skewness`, `kurtosis`, and the size-adjusted unbiased variants |
-| [HasLinearModel] | `weights: VectorView`, `bias: Double`, `predict(VectorView)` over a fitted hyperplane |
+| [HasLinearModel] | `weights: VectorLike`, `bias: Double`, `predict(VectorLike)` over a fitted hyperplane |
 | [HasSlope] | scalar special case: `slope`, `intercept`, `predict(Double)`; implements `HasLinearModel` |
 | [HasRegression] | `sse`, `ssr`, `mse`, `rmse`, `rSquared` on top of `HasSampleVariance` |
 | [HasCenterScale] | `center: Double`, `scale: Double`; consumed by standardize projections and the band wrapper |

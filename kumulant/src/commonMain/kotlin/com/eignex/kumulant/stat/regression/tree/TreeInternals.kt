@@ -51,7 +51,7 @@ internal fun hoeffdingBound(delta: Double, n: Double, depth: Int, decay: Double)
  * offered different candidates.
  *
  * Generic in the split type because the regression tree is generic in its row type while the
- * classification tree is fixed to `VectorView`.
+ * classification tree is fixed to `VectorLike`.
  *
  * @param S the split type, which differs between the two trees.
  * @param mtry subspace size, or null for the full pool.
