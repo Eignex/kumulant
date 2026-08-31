@@ -3,9 +3,9 @@
 
 package com.eignex.kumulant.math
 
-import com.eignex.koblas.copy
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.borrow
+import com.eignex.koblas.copy
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
@@ -45,8 +45,8 @@ internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike, workspace:
         trsv(s, lower = true)
 
         val norm = F64DenseVector.wrap(s).norm2()
-    // Negated so a NaN norm bails too: falling through would write NaN across the whole factor
-    // and still report success.
+        // Negated so a NaN norm bails too: falling through would write NaN across the whole factor
+        // and still report success.
         if (!(norm > 0.0 && norm < 1.0)) return@borrow norm
 
         workspace.borrow(n) { c ->
@@ -61,8 +61,8 @@ internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike, workspace:
                 s[i] = b / nrm
                 alpha = scale * nrm
             }
-    // Apply the rotations along the rows of L; entry (j, i) of the column-major backing is at
-    // `j + i * n`.
+            // Apply the rotations along the rows of L; entry (j, i) of the column-major backing is at
+            // `j + i * n`.
             for (j in 0 until n) {
                 var xx = 0.0
                 for (i in j downTo 0) {

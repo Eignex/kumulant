@@ -1,16 +1,16 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.Workspace
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class SoftmaxRegressionStatTest {
 
@@ -43,7 +43,9 @@ class SoftmaxRegressionStatTest {
         val result = SoftmaxRegressionResult(
             featureSize = 2,
             numClasses = 3,
-            weights = F64DenseMatrix.of(arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0), doubleArrayOf(-1.0, 1.0))),
+            weights = F64DenseMatrix.of(
+                arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0), doubleArrayOf(-1.0, 1.0)),
+            ),
             biases = F64DenseVector.of(doubleArrayOf(0.2, -0.1, 0.4)),
             totalWeights = 0.0,
             step = 0L,

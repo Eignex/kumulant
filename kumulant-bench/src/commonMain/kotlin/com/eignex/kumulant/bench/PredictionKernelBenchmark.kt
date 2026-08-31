@@ -4,6 +4,7 @@ import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
 import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.Workspace
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
@@ -30,6 +31,8 @@ open class PredictionKernelBenchmark {
     private lateinit var linear: StochasticRegressionResult
     private lateinit var softmax: SoftmaxRegressionResult
     private lateinit var posterior: CovarianceRegressionResult
+    private lateinit var workspace: Workspace
+    private lateinit var probabilities: DoubleArray
 
     @Setup
     fun setup() {
@@ -53,6 +56,11 @@ open class PredictionKernelBenchmark {
         )
         val identity = F64DenseMatrix.diagonal(featureSize, 1.0)
         posterior = CovarianceRegressionResult(weights, 0.25, 1.0, 0.0, 0L, identity, identity)
+        workspace = Workspace().apply {
+            reserve(featureSize, count = 3)
+            reserve(4, count = 1)
+        }
+        probabilities = DoubleArray(4)
     }
 
     @Benchmark
@@ -65,7 +73,20 @@ open class PredictionKernelBenchmark {
     fun softmaxPredict(): Int = softmax.predict(x)
 
     @Benchmark
+    fun softmaxProbabilitiesInto(): DoubleArray = probabilities.also { softmax.probabilitiesInto(x, it) }
+
+    @Benchmark
+    fun softmaxPredictWorkspace(): Int = softmax.predict(x, workspace)
+
+    @Benchmark
     fun multivariateSample(): F64VectorLike = MultivariateGaussian.sample(posterior, Random(1234), 1.0)
+
+    @Benchmark
+    fun multivariateEvaluate(): Double = MultivariateGaussian.evaluate(posterior, x, Random(1234), 1.0)
+
+    @Benchmark
+    fun multivariateEvaluateWorkspace(): Double =
+        MultivariateGaussian.evaluate(posterior, x, Random(1234), workspace, 1.0)
 
     @Benchmark
     fun bayesianPrior(): CovarianceRegressionResult = BayesianRegressionStat(

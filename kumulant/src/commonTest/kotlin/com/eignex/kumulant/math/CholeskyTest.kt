@@ -2,11 +2,11 @@
 
 package com.eignex.kumulant.math
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
 import com.eignex.koblas.core.F64VectorLike
-import com.eignex.koblas.Workspace
 import com.eignex.koblas.dense.cholesky
 import kotlin.test.Test
 import kotlin.test.assertEquals

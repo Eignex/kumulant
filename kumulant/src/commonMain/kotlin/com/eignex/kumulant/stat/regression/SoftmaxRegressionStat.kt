@@ -1,10 +1,10 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.koblas.Workspace
+import com.eignex.koblas.borrow
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
-import com.eignex.koblas.Workspace
-import com.eignex.koblas.borrow
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
@@ -17,9 +17,9 @@ import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.PROBABILITY_FLOOR
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
-import com.eignex.kumulant.stat.regression.glm.multiplyInto
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
+import com.eignex.kumulant.stat.regression.glm.multiplyInto
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.getValue

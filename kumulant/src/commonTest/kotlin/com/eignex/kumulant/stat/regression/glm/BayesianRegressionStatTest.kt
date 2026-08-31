@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
-import com.eignex.koblas.Workspace
 import com.eignex.kumulant.fitLine
 import kotlin.math.abs
 import kotlin.math.exp

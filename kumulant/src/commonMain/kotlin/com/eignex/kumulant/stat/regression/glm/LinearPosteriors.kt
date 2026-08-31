@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.axpy
 import com.eignex.koblas.Workspace
+import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
@@ -38,7 +38,13 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
     fun sample(snapshot: R, rng: Random, exploration: Double = 1.0): F64VectorLike
 
     /** Writes an owned posterior draw into [destination]. [workspace] is caller-owned and not thread-safe. */
-    fun sampleInto(snapshot: R, rng: Random, destination: DoubleArray, workspace: Workspace, exploration: Double = 1.0) {
+    fun sampleInto(
+        snapshot: R,
+        rng: Random,
+        destination: DoubleArray,
+        workspace: Workspace,
+        exploration: Double = 1.0,
+    ) {
         require(destination.size == snapshot.weights.size) {
             "destination size ${destination.size} must match weights size ${snapshot.weights.size}"
         }
@@ -62,11 +68,13 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
     override fun evaluate(snapshot: R, x: F64VectorLike, rng: Random, exploration: Double): Double =
         snapshot.link.invMean(snapshot.bias + (x dot sample(snapshot, rng, exploration)))
 
-    override fun evaluate(snapshot: R, x: F64VectorLike, rng: Random, workspace: Workspace, exploration: Double): Double =
-        snapshot.link.invMean(snapshot.bias + workspace.borrow(snapshot.weights.size) { draw ->
-            sampleInto(snapshot, rng, draw, workspace, exploration)
-            x dot F64DenseVector.wrap(draw)
-        })
+    override fun evaluate(
+        snapshot: R,
+        x: F64VectorLike,
+        rng: Random,
+        workspace: Workspace,
+        exploration: Double,
+    ): Double = evaluate(snapshot, x, rng, exploration)
 }
 
 /**
@@ -86,8 +94,16 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
         return F64DenseVector.of(out)
     }
 
-    override fun sampleInto(snapshot: StochasticRegressionResult, rng: Random, destination: DoubleArray, workspace: Workspace, exploration: Double) {
-        require(destination.size == snapshot.weights.size) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
+    override fun sampleInto(
+        snapshot: StochasticRegressionResult,
+        rng: Random,
+        destination: DoubleArray,
+        workspace: Workspace,
+        exploration: Double,
+    ) {
+        require(
+            destination.size == snapshot.weights.size,
+        ) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
         if (exploration <= 0.0) {
             for (i in destination.indices) destination[i] = snapshot.weights[i]
         } else {
@@ -128,9 +144,22 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
         return F64DenseVector.of(out)
     }
 
-    override fun sampleInto(snapshot: DiagonalRegressionResult, rng: Random, destination: DoubleArray, workspace: Workspace, exploration: Double) {
-        require(destination.size == snapshot.weights.size) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
-        for (i in destination.indices) destination[i] = rng.nextNormal(snapshot.weights[i], sqrt(exploration / snapshot.precision[i]))
+    override fun sampleInto(
+        snapshot: DiagonalRegressionResult,
+        rng: Random,
+        destination: DoubleArray,
+        workspace: Workspace,
+        exploration: Double,
+    ) {
+        require(
+            destination.size == snapshot.weights.size,
+        ) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
+        for (i in destination.indices) {
+            destination[i] = rng.nextNormal(
+                snapshot.weights[i],
+                sqrt(exploration / snapshot.precision[i]),
+            )
+        }
     }
 
     /** Sum of independent normals: `invMean(eta(x) + sqrt(exploration * Sum x_i^2 / precision[i]) * N(0,1))`. */
@@ -166,8 +195,16 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         return F64DenseVector.wrap(u).also { it.axpy(1.0, snapshot.weights) }
     }
 
-    override fun sampleInto(snapshot: CovarianceRegressionResult, rng: Random, destination: DoubleArray, workspace: Workspace, exploration: Double) {
-        require(destination.size == snapshot.weights.size) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
+    override fun sampleInto(
+        snapshot: CovarianceRegressionResult,
+        rng: Random,
+        destination: DoubleArray,
+        workspace: Workspace,
+        exploration: Double,
+    ) {
+        require(
+            destination.size == snapshot.weights.size,
+        ) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
         val sd = sqrt(exploration)
         for (i in destination.indices) destination[i] = rng.nextNormal(0.0, sd)
         snapshot.covarianceL.trmv(destination, lower = true)
@@ -188,7 +225,13 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         return snapshot.link.invMean(eta + sqrt(exploration * variance) * rng.nextNormal())
     }
 
-    override fun evaluate(snapshot: CovarianceRegressionResult, x: F64VectorLike, rng: Random, workspace: Workspace, exploration: Double): Double {
+    override fun evaluate(
+        snapshot: CovarianceRegressionResult,
+        x: F64VectorLike,
+        rng: Random,
+        workspace: Workspace,
+        exploration: Double,
+    ): Double {
         val eta = snapshot.linearPredictor(x)
         return workspace.borrow(snapshot.featureSize) { sigmaX ->
             snapshot.covariance.multiplyInto(x, sigmaX)
@@ -211,8 +254,16 @@ data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
     override fun sample(snapshot: CovarianceRegressionResult, rng: Random, exploration: Double): F64VectorLike =
         snapshot.weights
 
-    override fun sampleInto(snapshot: CovarianceRegressionResult, rng: Random, destination: DoubleArray, workspace: Workspace, exploration: Double) {
-        require(destination.size == snapshot.weights.size) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
+    override fun sampleInto(
+        snapshot: CovarianceRegressionResult,
+        rng: Random,
+        destination: DoubleArray,
+        workspace: Workspace,
+        exploration: Double,
+    ) {
+        require(
+            destination.size == snapshot.weights.size,
+        ) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
         for (i in destination.indices) destination[i] = snapshot.weights[i]
     }
 
@@ -228,7 +279,13 @@ data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
         return snapshot.link.invMean(eta + exploration * sqrt(variance))
     }
 
-    override fun evaluate(snapshot: CovarianceRegressionResult, x: F64VectorLike, rng: Random, workspace: Workspace, exploration: Double): Double {
+    override fun evaluate(
+        snapshot: CovarianceRegressionResult,
+        x: F64VectorLike,
+        rng: Random,
+        workspace: Workspace,
+        exploration: Double,
+    ): Double {
         val eta = snapshot.linearPredictor(x)
         return workspace.borrow(snapshot.featureSize) { sigmaX ->
             snapshot.covariance.multiplyInto(x, sigmaX)

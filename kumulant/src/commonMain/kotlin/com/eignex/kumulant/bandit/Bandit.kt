@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.Workspace
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.Result
 import kotlin.random.Random
 

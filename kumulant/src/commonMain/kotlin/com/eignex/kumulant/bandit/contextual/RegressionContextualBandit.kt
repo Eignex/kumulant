@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.Workspace
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit

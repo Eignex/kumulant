@@ -4,8 +4,8 @@
 
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.axpy
 import com.eignex.koblas.Workspace
+import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
@@ -28,8 +28,8 @@ import com.eignex.kumulant.core.requireMergeFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.choleskyDowndateInPlace
 import com.eignex.kumulant.math.zeroUpperTriangle
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.currentTimeNanos
+import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
@@ -153,7 +153,14 @@ class BayesianRegressionStat(
     fun update(x: F64VectorLike, y: Double, workspace: Workspace, weight: Double = 1.0) =
         updateInternal(x, y, currentTimeNanos(), weight, workspace)
 
-    private fun updateInternal(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) {
+    @Suppress("UnusedParameter")
+    private fun updateInternal(
+        x: F64VectorLike,
+        y: Double,
+        _timestampNanos: Long,
+        weight: Double,
+        workspace: Workspace?,
+    ) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
@@ -173,49 +180,49 @@ class BayesianRegressionStat(
             //         = S - z zT, where z = sqrt(w_c) * S x / sqrt(1 + w_c * xT S x).
             val wc = weight * curvature
             workspace.borrow(featureSize) { zData ->
-            val z = F64DenseVector.wrap(zData)
-            covariance.multiplyInto(x, zData)
-            val denom = sqrt(1.0 + wc * (x dot z))
-            // Non-finite as well as zero. Two paths reach a NaN denominator: an `S` outside the
-            // positive-definite cone makes the argument negative, and `Link.Log.curvature` is
-            // `exp(eta)`, which overflows so that the scale below is `Infinity / Infinity`. Either NaN
-            // would reach `ger` and poison the covariance permanently, taking every later prediction
-            // with it. Skipping the observation keeps the posterior usable.
-            if (!denom.isFinite() || denom == 0.0) return@borrow
-            z.scale(sqrt(wc) / denom)
+                val z = F64DenseVector.wrap(zData)
+                covariance.multiplyInto(x, zData)
+                val denom = sqrt(1.0 + wc * (x dot z))
+                // Non-finite as well as zero. Two paths reach a NaN denominator: an `S` outside the
+                // positive-definite cone makes the argument negative, and `Link.Log.curvature` is
+                // `exp(eta)`, which overflows so that the scale below is `Infinity / Infinity`. Either NaN
+                // would reach `ger` and poison the covariance permanently, taking every later prediction
+                // with it. Skipping the observation keeps the posterior usable.
+                if (!denom.isFinite() || denom == 0.0) return@borrow
+                z.scale(sqrt(wc) / denom)
 
-            // Downdate the Cholesky factor; repair on instability. The downdate leaves the factor
-            // untouched for any norm at or above one, so the repair has to trigger on the same
-            // condition: treating an exact 1.0 as success downdates the covariance below without its
-            // factor, and the two never agree again.
-            var norm = covarianceL.choleskyDowndateInPlace(z, workspace)
-            // Negated, so a NaN norm bails into the repair too. choleskyDowndateInPlace was hardened to
-            // return a NaN rather than write one through the factor, and `norm >= 1.0` is false for NaN -
-            // which would fall straight through to the covariance downdate below and desynchronise it
-            // from its factor permanently, the exact failure the comment above describes.
-            if (!(norm < 1.0)) {
-                for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + COVARIANCE_RIDGE
-                val Lnew = covariance.cholesky(CholeskyPolicy.Regularize()).l
-                for (i in 0 until featureSize) {
-                    for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
-                }
-                norm = covarianceL.choleskyDowndateInPlace(z, workspace)
-                while (!(norm < 1.0)) {
-                    z.scale(1.0 / (norm + DOWNDATE_SHRINK))
+                // Downdate the Cholesky factor; repair on instability. The downdate leaves the factor
+                // untouched for any norm at or above one, so the repair has to trigger on the same
+                // condition: treating an exact 1.0 as success downdates the covariance below without its
+                // factor, and the two never agree again.
+                var norm = covarianceL.choleskyDowndateInPlace(z, workspace)
+                // Negated, so a NaN norm bails into the repair too. choleskyDowndateInPlace was hardened to
+                // return a NaN rather than write one through the factor, and `norm >= 1.0` is false for NaN -
+                // which would fall straight through to the covariance downdate below and desynchronise it
+                // from its factor permanently, the exact failure the comment above describes.
+                if (!(norm < 1.0)) {
+                    for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + COVARIANCE_RIDGE
+                    val Lnew = covariance.cholesky(CholeskyPolicy.Regularize()).l
+                    for (i in 0 until featureSize) {
+                        for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
+                    }
                     norm = covarianceL.choleskyDowndateInPlace(z, workspace)
+                    while (!(norm < 1.0)) {
+                        z.scale(1.0 / (norm + DOWNDATE_SHRINK))
+                        norm = covarianceL.choleskyDowndateInPlace(z, workspace)
+                    }
                 }
-            }
 
-            // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
-            covariance.ger(-1.0, z, z)
+                // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
+                covariance.ger(-1.0, z, z)
 
-            // Posterior mean update: w += (weight * residual) * S_new * x.
-            covariance.multiplyInto(x, zData)
-            weights.axpy(weight * residual, z)
+                // Posterior mean update: w += (weight * residual) * S_new * x.
+                covariance.multiplyInto(x, zData)
+                weights.axpy(weight * residual, z)
 
-            biasPrecision += wc
-            bias += weight * residual / biasPrecision
-            totalWeights += weight
+                biasPrecision += wc
+                bias += weight * residual / biasPrecision
+                totalWeights += weight
             }
         }
     }
