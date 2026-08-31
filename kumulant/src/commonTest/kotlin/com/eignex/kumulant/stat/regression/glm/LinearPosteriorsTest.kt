@@ -87,7 +87,7 @@ class LinearPosteriorsTest {
         val destination = DoubleArray(2)
         val workspace = Workspace().apply { reserve(2, 1) }
 
-        MultivariateGaussian.sampleInto(snapshot, Random(21), destination, workspace, exploration = 0.4)
+        MultivariateGaussian.sampleInto(snapshot, Random(21), destination, exploration = 0.4)
         val expected = MultivariateGaussian.sample(snapshot, Random(21), exploration = 0.4)
         assertEquals(expected[0], destination[0], 1e-12)
         assertEquals(expected[1], destination[1], 1e-12)

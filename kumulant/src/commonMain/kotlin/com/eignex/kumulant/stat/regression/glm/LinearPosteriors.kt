@@ -37,12 +37,11 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
      *  `exploration = 0.0` collapses to the point estimate; `1.0` is the calibrated posterior. */
     fun sample(snapshot: R, rng: Random, exploration: Double = 1.0): F64VectorLike
 
-    /** Writes an owned posterior draw into [destination]. [workspace] is caller-owned and not thread-safe. */
+    /** Writes an owned posterior draw into [destination]. */
     fun sampleInto(
         snapshot: R,
         rng: Random,
         destination: DoubleArray,
-        workspace: Workspace,
         exploration: Double = 1.0,
     ) {
         require(destination.size == snapshot.weights.size) {
@@ -98,7 +97,6 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
         snapshot: StochasticRegressionResult,
         rng: Random,
         destination: DoubleArray,
-        workspace: Workspace,
         exploration: Double,
     ) {
         require(
@@ -148,7 +146,6 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
         snapshot: DiagonalRegressionResult,
         rng: Random,
         destination: DoubleArray,
-        workspace: Workspace,
         exploration: Double,
     ) {
         require(
@@ -199,7 +196,6 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         snapshot: CovarianceRegressionResult,
         rng: Random,
         destination: DoubleArray,
-        workspace: Workspace,
         exploration: Double,
     ) {
         require(
@@ -258,7 +254,6 @@ data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
         snapshot: CovarianceRegressionResult,
         rng: Random,
         destination: DoubleArray,
-        workspace: Workspace,
         exploration: Double,
     ) {
         require(
