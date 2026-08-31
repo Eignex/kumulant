@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
@@ -59,7 +59,7 @@ data class SoftmaxRegressionResult(
     }
 
     /** Linear predictor for class [k]: `biases[k] + weights[k] . x`. */
-    fun logit(x: F64VectorView, k: Int): Double {
+    fun logit(x: F64VectorLike, k: Int): Double {
         x.requireFeatureSize(featureSize)
         var s = biases[k]
         for (i in 0 until featureSize) s += weights[k, i] * x[i]
@@ -67,14 +67,14 @@ data class SoftmaxRegressionResult(
     }
 
     /** Softmax probabilities across all classes for [x]; length [numClasses]. */
-    fun probabilities(x: F64VectorView): DoubleArray {
+    fun probabilities(x: F64VectorLike): DoubleArray {
         val etas = DoubleArray(numClasses) { logit(x, it) }
         etas.softmaxInPlace()
         return etas
     }
 
     /** Argmax class index for [x]. */
-    fun predict(x: F64VectorView): Int = argMaxOf(numClasses) { k -> logit(x, k) }
+    fun predict(x: F64VectorLike): Int = argMaxOf(numClasses) { k -> logit(x, k) }
 }
 
 /**
@@ -143,7 +143,7 @@ class SoftmaxRegressionStat(
     /** Live view of the accumulated weighted cross-entropy. */
     val crossEntropy: Double by crossEntropyCell
 
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {

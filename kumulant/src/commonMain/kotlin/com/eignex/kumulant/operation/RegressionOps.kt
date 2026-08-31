@@ -1,7 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
@@ -18,12 +18,12 @@ import com.eignex.kumulant.core.requirePositiveFeatureSize
 // `com.eignex.kumulant.schema.Operations.kt` materialise to these wrappers.
 
 /** Forward only updates that pass [predicate]; the predicate sees `(x, y)`. */
-internal fun <R : Result> RegressionStat<R>.filter(predicate: (F64VectorView, Double) -> Boolean): RegressionStat<R> =
+internal fun <R : Result> RegressionStat<R>.filter(predicate: (F64VectorLike, Double) -> Boolean): RegressionStat<R> =
     FilterRegressionStat(this, predicate)
 
 /** Rewrite y before update via [transform]; x and weight pass through unchanged. */
 internal fun <R : Result> RegressionStat<R>.transformY(
-    transform: (F64VectorView, Double) -> Double,
+    transform: (F64VectorLike, Double) -> Double,
 ): RegressionStat<R> = TransformYRegressionStat(this, transform)
 
 /**
@@ -34,7 +34,7 @@ internal fun <R : Result> RegressionStat<R>.transformY(
  */
 internal fun <R : Result> RegressionStat<R>.transformX(
     inputFeatureSize: Int? = null,
-    transform: (F64VectorView, Double) -> DoubleArray,
+    transform: (F64VectorLike, Double) -> DoubleArray,
 ): RegressionStat<R> = TransformXRegressionStat(this, inputFeatureSize, transform)
 
 /**
@@ -47,7 +47,7 @@ internal fun <R : Result> RegressionStat<R>.withWeight(weight: Double): Regressi
     WithWeightRegressionStat(this, weight)
 
 /** Multiply each update's caller-supplied weight by [weighter] over `(x, y)`. */
-internal fun <R : Result> RegressionStat<R>.weightBy(weighter: (F64VectorView, Double) -> Double): RegressionStat<R> =
+internal fun <R : Result> RegressionStat<R>.weightBy(weighter: (F64VectorLike, Double) -> Double): RegressionStat<R> =
     WeightByRegressionStat(this, weighter)
 
 /** Forward only every [every]th update; drop the rest. */
@@ -71,16 +71,16 @@ internal fun <R : Result> RegressionStat<R>.sample(rate: Double, seed: Long): Re
  */
 internal fun <R : Result> SeriesStat<R>.foldRegression(
     featureSize: Int,
-    project: (F64VectorView, Double) -> Double,
+    project: (F64VectorLike, Double) -> Double,
 ): RegressionStat<R> = FoldRegressionStat(this, featureSize, project)
 
 internal class FilterRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
-    private val predicate: (F64VectorView, Double) -> Boolean,
+    private val predicate: (F64VectorLike, Double) -> Boolean,
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         if (predicate(x, y)) delegate.update(x, y, timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
@@ -89,11 +89,11 @@ internal class FilterRegressionStat<R : Result>(
 
 internal class TransformYRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
-    private val transform: (F64VectorView, Double) -> Double,
+    private val transform: (F64VectorLike, Double) -> Double,
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x, transform(x, y), timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
@@ -103,7 +103,7 @@ internal class TransformYRegressionStat<R : Result>(
 internal class TransformXRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
     private val inputFeatureSize: Int?,
-    private val transform: (F64VectorView, Double) -> DoubleArray,
+    private val transform: (F64VectorLike, Double) -> DoubleArray,
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     // The width expected in `x`, which is what RegressionStat.featureSize means - not the inner
@@ -112,7 +112,7 @@ internal class TransformXRegressionStat<R : Result>(
     // were silently dropped, while RegressionListStats rejected the honest pairing as a mismatch.
     override val featureSize: Int = inputFeatureSize ?: delegate.featureSize
 
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         delegate.update(F64DenseVector.of(transform(x, y)), y, timestampNanos, weight)
     }
@@ -127,7 +127,7 @@ internal class WithWeightRegressionStat<R : Result>(
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         // `orInert` covers NaN as well as zero, so an inert caller weight stays a no-op rather than
         // being replaced by the constant and becoming a real observation.
         delegate.update(x, y, timestampNanos, weight.orInert(this.weight))
@@ -138,11 +138,11 @@ internal class WithWeightRegressionStat<R : Result>(
 
 internal class WeightByRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
-    private val weighter: (F64VectorView, Double) -> Double,
+    private val weighter: (F64VectorLike, Double) -> Double,
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(x, y, timestampNanos, weight * weighter(x, y))
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
@@ -154,7 +154,7 @@ internal class ThrottleRegressionStat<R : Result>(private val delegate: Regressi
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     private val gate = ThrottleGate(every, delegate.concurrency)
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
         if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
     }
@@ -175,7 +175,7 @@ internal class SampleRegressionStat<R : Result>(
     Stat<R> by delegate {
     private val gate = SampleGate(rate, seed, delegate.concurrency)
     override val featureSize: Int = delegate.featureSize
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
         if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
     }
@@ -192,13 +192,13 @@ internal class SampleRegressionStat<R : Result>(
 internal class FoldRegressionStat<R : Result>(
     private val delegate: SeriesStat<R>,
     override val featureSize: Int,
-    private val project: (F64VectorView, Double) -> Double,
+    private val project: (F64VectorLike, Double) -> Double,
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     init {
         requirePositiveFeatureSize(featureSize)
     }
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         delegate.update(project(x, y), timestampNanos, weight)
     }

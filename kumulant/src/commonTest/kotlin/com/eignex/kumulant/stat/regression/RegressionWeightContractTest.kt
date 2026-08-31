@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
@@ -29,7 +29,7 @@ class RegressionWeightContractTest {
     private class Model(
         val name: String,
         val y: Double,
-        val update: (F64VectorView, Double, Double) -> Unit,
+        val update: (F64VectorLike, Double, Double) -> Unit,
         val snapshot: () -> String,
     )
 

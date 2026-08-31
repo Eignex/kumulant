@@ -6,9 +6,7 @@ package com.eignex.kumulant.stream
  *
  * Per target:
  * - **JVM**: `Thread.onSpinWait()`, which emits the architecture's pause instruction.
- * - **JS / Wasm**: a no-op, correctly - these targets are single-threaded, so nothing else can be
- *   holding the value being waited on.
- * - **Native** (linux, macos, mingw, ios): also a no-op, *not* correctly. These targets are
+ * - **Native** (linux, macos): also a no-op, *not* correctly. These targets are
  *   genuinely multi-threaded, but the source set wiring in `kumulant/build.gradle.kts` points
  *   `nativeMain` at `nonJvmMain`, and the Kotlin/Native stdlib has no portable pause intrinsic to
  *   call instead. The only caller is the bounded busy-wait in

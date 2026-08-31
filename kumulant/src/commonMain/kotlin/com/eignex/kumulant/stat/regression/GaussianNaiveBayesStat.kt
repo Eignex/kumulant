@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
@@ -70,7 +70,7 @@ data class GaussianNaiveBayesResult(
     fun prior(c: Int): Double = if (totalWeights > 0.0) classWeights[c] / totalWeights else 1.0 / numClasses
 
     /** Unnormalised log-posterior `log prior[c] + Sum_i log N(x_i | mu_c, var_c)`. */
-    fun logPosterior(x: F64VectorView, c: Int): Double {
+    fun logPosterior(x: F64VectorLike, c: Int): Double {
         x.requireFeatureSize(featureSize)
         var s = ln(prior(c).coerceAtLeast(SMALL_PROB))
         for (i in 0 until featureSize) {
@@ -83,14 +83,14 @@ data class GaussianNaiveBayesResult(
     }
 
     /** Normalised class probabilities via log-sum-exp on the log-posterior. */
-    fun probabilities(x: F64VectorView): DoubleArray {
+    fun probabilities(x: F64VectorLike): DoubleArray {
         val logs = DoubleArray(numClasses) { logPosterior(x, it) }
         logs.softmaxInPlace()
         return logs
     }
 
     /** Argmax class index for [x]. */
-    fun predict(x: F64VectorView): Int = argMaxOf(numClasses) { k -> logPosterior(x, k) }
+    fun predict(x: F64VectorLike): Int = argMaxOf(numClasses) { k -> logPosterior(x, k) }
 
     private companion object {
         const val SMALL_PROB: Double = 1e-300
@@ -141,7 +141,7 @@ class GaussianNaiveBayesStat(
     private val classWeightCell: StreamDoubleArray = mode.newDoubleArray(numClasses)
     private val totalWeightCell: StreamDouble = mode.newDouble(0.0)
 
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {

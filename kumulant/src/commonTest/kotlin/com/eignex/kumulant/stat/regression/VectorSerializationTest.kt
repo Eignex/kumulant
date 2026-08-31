@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorStorage
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
@@ -63,18 +63,18 @@ class VectorSerializationTest {
 
     @Test
     fun `F64DenseVector round-trips through JSON`() {
-        val v: F64VectorView = F64DenseVector.of(doubleArrayOf(1.0, -2.5, 3.14, 0.0))
-        val wire = json.encodeToString(F64VectorView.serializer(), v)
-        val decoded = json.decodeFromString(F64VectorView.serializer(), wire)
+        val v: F64VectorStorage = F64DenseVector.of(doubleArrayOf(1.0, -2.5, 3.14, 0.0))
+        val wire = json.encodeToString(F64VectorStorage.serializer(), v)
+        val decoded = json.decodeFromString(F64VectorStorage.serializer(), wire)
         assertTrue(decoded is F64DenseVector)
         assertEquals(v, decoded)
     }
 
     @Test
     fun `F64SparseVector round-trips through JSON`() {
-        val v: F64VectorView = F64SparseVector.of(10, intArrayOf(2, 5, 9), doubleArrayOf(1.0, -2.0, 0.5))
-        val wire = json.encodeToString(F64VectorView.serializer(), v)
-        val decoded = json.decodeFromString(F64VectorView.serializer(), wire)
+        val v: F64VectorStorage = F64SparseVector.of(10, intArrayOf(2, 5, 9), doubleArrayOf(1.0, -2.0, 0.5))
+        val wire = json.encodeToString(F64VectorStorage.serializer(), v)
+        val decoded = json.decodeFromString(F64VectorStorage.serializer(), wire)
         assertTrue(decoded is F64SparseVector)
         assertEquals(v, decoded)
     }

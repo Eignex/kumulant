@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
@@ -77,9 +77,9 @@ class DecisionTreeRegressionStat(
     // path and rewritten by reset, so without it a concurrent updater can go on writing into the
     // pre-reset tree indefinitely, never observing the replacement.
     @Volatile
-    private var tree: RegressionTree<F64VectorView> = newTree()
+    private var tree: RegressionTree<F64VectorLike> = newTree()
 
-    private fun newTree(): RegressionTree<F64VectorView> = RegressionTree(
+    private fun newTree(): RegressionTree<F64VectorLike> = RegressionTree(
         splitCandidates,
         config,
         concurrency,
@@ -87,7 +87,7 @@ class DecisionTreeRegressionStat(
         seedRng.nextInt(),
     )
 
-    override fun update(x: F64VectorView, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         // Return before touching the tree: a zero-weight call would still advance the leaves'
         // observationsSinceLastCheck and shift the split-audit cadence.
@@ -121,5 +121,5 @@ class DecisionTreeRegressionStat(
     )
 
     /** Live underlying tree. Use for inspection / pretty-printing. */
-    fun tree(): RegressionTree<F64VectorView> = tree
+    fun tree(): RegressionTree<F64VectorLike> = tree
 }

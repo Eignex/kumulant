@@ -1,7 +1,7 @@
 package com.eignex.kumulant.core
 
 import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.time.Duration
@@ -216,7 +216,7 @@ interface HasShapeMoments : HasSampleVariance {
  */
 interface HasLinearModel : Result {
     /** Fitted weight per feature, indexed by the same `i` as the input `x[i]`. */
-    val weights: F64VectorView
+    val weights: F64VectorLike
 
     /** Fitted bias / intercept term. */
     val bias: Double
@@ -229,7 +229,7 @@ interface HasLinearModel : Result {
      * For Gaussian regression this is the prediction; for non-identity GLMs
      * this is the linear predictor pre-link.
      */
-    fun predict(x: F64VectorView): Double {
+    fun predict(x: F64VectorLike): Double {
         x.requireFeatureSize(weights.size)
         var sum = bias
         for (i in 0 until weights.size) sum += x[i] * weights[i]
@@ -252,7 +252,7 @@ interface HasSlope : HasLinearModel {
     /** Fitted intercept `c`. */
     val intercept: Double
 
-    override val weights: F64VectorView get() = F64DenseVector.of(doubleArrayOf(slope))
+    override val weights: F64VectorLike get() = F64DenseVector.of(doubleArrayOf(slope))
     override val bias: Double get() = intercept
     override val featureSize: Int get() = 1
 

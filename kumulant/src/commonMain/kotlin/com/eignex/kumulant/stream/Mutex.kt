@@ -36,15 +36,13 @@ internal object NoopMutex : Mutex {
  * - JVM: backed by `java.util.concurrent.locks.ReentrantLock`.
  * - Apple / Linux native: backed by a `pthread_mutex_t` allocated via cinterop;
  *   the native handle is freed on GC via `kotlin.native.ref.createCleaner`.
- * - mingwX64: backed by a Win32 `CRITICAL_SECTION`, similarly cleanered.
- * - JS / Wasm: noop - these runtimes are single-threaded.
  *
  * Not reentrant: a stat must never call back into itself while holding its own lock. Nesting two
  * *different* locks is fine, which is what an operator holding its lock across a delegate call does.
  *
  * The targets disagree on what a violation costs. The posix actual is an error-checking mutex and
- * throws, naming the mistake; the reentrant JVM and Win32 backings let it through silently, and the
- * web no-op has no threads to violate it. So the rule is enforced where it is cheapest to enforce and
+ * throws, naming the mistake; the reentrant JVM backing lets it through silently. So the rule is enforced
+ * where it is cheapest to enforce and
  * assumed everywhere else, which means a violation still passes locally on the JVM and surfaces first
  * on a native build.
  */

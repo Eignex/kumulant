@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
@@ -19,7 +19,7 @@ internal class FoldVectorStat<R : Result>(
     private val transform: (DoubleArray) -> Double,
 ) : VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorLike, timestampNanos: Long, weight: Double) {
         delegate.update(transform(vector.toDoubleArray()), timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
@@ -44,7 +44,7 @@ internal class FoldVectorPairedStat<R : Result>(
     private val foldY: (DoubleArray) -> Double,
 ) : VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorLike, timestampNanos: Long, weight: Double) {
         val arr = vector.toDoubleArray()
         delegate.update(foldX(arr), foldY(arr), timestampNanos, weight)
     }

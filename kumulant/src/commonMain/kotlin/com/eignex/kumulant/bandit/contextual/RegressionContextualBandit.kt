@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
@@ -100,20 +100,20 @@ class RegressionContextualBandit<R : Result>(
     private val arms: Array<RegressionStat<R>> = Array(nbrArms) { template.create(null) }
     private val global: RegressionStat<R>? = globalTemplate?.create(null)
 
-    private fun globalMean(x: F64VectorView): Double =
+    private fun globalMean(x: F64VectorLike): Double =
         global?.let { posterior.evaluate(it.read(0L), x, random, 0.0) } ?: 0.0
 
-    override fun choose(x: F64VectorView): Int {
+    override fun choose(x: F64VectorLike): Int {
         val gMean = globalMean(x)
         return argmaxArm(nbrArms) { i -> gMean + posterior.evaluate(arms[i].read(0L), x, random, exploration) }
     }
 
-    override fun evaluate(armIndex: Int, x: F64VectorView): Double {
+    override fun evaluate(armIndex: Int, x: F64VectorLike): Double {
         requireArmIndex(armIndex, nbrArms)
         return globalMean(x) + posterior.evaluate(arms[armIndex].read(0L), x, random, exploration)
     }
 
-    override fun update(armIndex: Int, x: F64VectorView, reward: Double, weight: Double) {
+    override fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
         val g = global
         if (g == null) {

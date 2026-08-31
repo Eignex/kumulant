@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.MIN_PLAY_PROB
 import com.eignex.kumulant.bandit.Snapshotable
@@ -44,7 +44,7 @@ data class Exp4State(
  */
 fun interface Exp4Expert {
     /** Distribution over arms for [x]. Result must sum to 1 and have length `nbrArms`. */
-    fun advise(x: F64VectorView, nbrArms: Int): DoubleArray
+    fun advise(x: F64VectorLike, nbrArms: Int): DoubleArray
 }
 
 /**
@@ -127,7 +127,7 @@ class Exp4Bandit(
     private val pendingPulls = IntArray(nbrArms)
 
     /** Build the round's play distribution and sample an arm. */
-    override fun choose(x: F64VectorView): Int {
+    override fun choose(x: F64VectorLike): Int {
         val p = playDistribution(x)
         val chosen = random.sampleFromDistribution(p)
         pendingPropensity[chosen] = p[chosen]
@@ -137,7 +137,7 @@ class Exp4Bandit(
 
     /** Mean of expert distributions at [x] weighted by current weights, blended with
      *  uniform exploration via [gamma]. */
-    fun playDistribution(x: F64VectorView): DoubleArray {
+    fun playDistribution(x: F64VectorLike): DoubleArray {
         var wSum = 0.0
         for (i in experts.indices) {
             val xi = experts[i].advise(x, nbrArms)
@@ -164,7 +164,7 @@ class Exp4Bandit(
     }
 
     /** Fold a `(context, reward)` observation back into the expert weights. */
-    override fun update(armIndex: Int, x: F64VectorView, reward: Double, weight: Double) {
+    override fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
         // Return before propensityOf, which consumes an outstanding pull. A zero gain leaves the expert
         // weights alone, but spending the recorded propensity is not a no-op: the real feedback for
@@ -189,7 +189,7 @@ class Exp4Bandit(
      * Falls back to the distribution at [x] when the caller updates an arm it never chose, which is
      * the best available estimate and what an off-policy caller implicitly asks for.
      */
-    private fun propensityOf(armIndex: Int, x: F64VectorView): Double {
+    private fun propensityOf(armIndex: Int, x: F64VectorLike): Double {
         if (pendingPulls[armIndex] <= 0) return playDistribution(x)[armIndex]
         pendingPulls[armIndex]--
         return pendingPropensity[armIndex]

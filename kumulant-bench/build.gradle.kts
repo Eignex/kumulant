@@ -69,6 +69,7 @@ tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions.freeCompilerArgs.add("-Xadd-modules=jdk.incubator.vector")
 }
 tasks.withType<Test>().configureEach {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
     jvmArgs("--add-modules=jdk.incubator.vector")
 }
 
@@ -84,7 +85,7 @@ fun JavaExec.kumulantBenchSetup() {
     javaLauncher.set(
         javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(benchJdk)) },
     )
-    jvmArgs("--add-modules=jdk.incubator.vector")
+    jvmArgs("--enable-native-access=ALL-UNNAMED", "--add-modules=jdk.incubator.vector")
     // Forward `-Dbench.*` from the gradle invocation onto the forked JVM so users
     // can tune cell duration, thread count, and JFR options without editing code.
     System.getProperties().forEach { k, v ->
