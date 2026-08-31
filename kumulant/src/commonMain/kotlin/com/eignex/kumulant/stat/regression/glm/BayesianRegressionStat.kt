@@ -122,13 +122,7 @@ class BayesianRegressionStat(
     }
 
     // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
-    private val priorInfo: DoubleArray = DoubleArray(featureSize).also { out ->
-        for (i in 0 until featureSize) {
-            var s = 0.0
-            for (j in 0 until featureSize) s += priorPrecisionMatrix[i, j] * initialWeights[j]
-            out[i] = s
-        }
-    }
+    private val priorInfo: DoubleArray = (priorPrecisionMatrix * F64DenseVector.of(initialWeights)).toDoubleArray()
 
     private val lock = concurrency.serializedLock()
     private val weights = F64DenseVector.of(initialWeights.copyOf())
@@ -253,18 +247,13 @@ class BayesianRegressionStat(
             }
 
             // b = H_self * mu_self + H_other * mu_other - H_prior * mu_prior.
-            val otherWeights = values.weights.toDoubleArray()
-            val selfWeights = weights.toDoubleArray()
-            val b = DoubleArray(n)
-            for (i in 0 until n) {
-                var s = -priorInfo[i]
-                for (j in 0 until n) s += hSelf[i, j] * selfWeights[j] + hOther[i, j] * otherWeights[j]
-                b[i] = s
-            }
+            val b = hSelf * weights
+            b.axpy(1.0, hOther * values.weights)
+            b.axpy(-1.0, F64DenseVector.wrap(priorInfo))
 
             // Solve H_new * mu_new = b via chol(H_new); reuse the same factor for Sum_new.
             val hChol = hNew.cholesky(CholeskyPolicy.Regularize())
-            val muNew = hChol.solve(b)
+            val muNew = hChol.solve(b.data)
             val sigmaNew = hChol.invert()
             val LsigmaNew = sigmaNew.cholesky(CholeskyPolicy.Regularize()).l.zeroUpperTriangle()
 

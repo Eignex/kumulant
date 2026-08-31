@@ -5,12 +5,19 @@ package com.eignex.kumulant.math
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dense.cholesky
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class CholeskyTest {
+
+    private class StridedVector(private val backing: DoubleArray) : F64VectorLike {
+        override val size: Int get() = backing.size / 2
+        override fun get(i: Int): Double = backing[i * 2]
+        override fun toDoubleArray(): DoubleArray = DoubleArray(size) { this[it] }
+    }
 
     // Reconstruct A = L * LT from the lower triangle of a factor.
     private fun product(l: F64DenseMatrix): Array<DoubleArray> {
@@ -112,6 +119,18 @@ class CholeskyTest {
 
         assertEquals(0.0, norm)
         val expected = Array(3) { i -> DoubleArray(3) { j -> a[i][j] - x[i] * x[j] } }
+        assertMatrixEquals(expected, product(l))
+    }
+
+    @Test
+    fun `downdate takes a generic strided vector`() {
+        val a = arrayOf(doubleArrayOf(4.0, 1.0), doubleArrayOf(1.0, 3.0))
+        val l = F64DenseMatrix.of(a).cholesky().l
+        val x = doubleArrayOf(0.5, 0.25)
+
+        assertEquals(0.0, l.choleskyDowndateInPlace(StridedVector(doubleArrayOf(0.5, 9.0, 0.25, 9.0))))
+
+        val expected = Array(2) { i -> DoubleArray(2) { j -> a[i][j] - x[i] * x[j] } }
         assertMatrixEquals(expected, product(l))
     }
 

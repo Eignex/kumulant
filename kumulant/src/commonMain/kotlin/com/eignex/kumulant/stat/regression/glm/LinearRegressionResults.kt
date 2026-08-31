@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.regression.glm
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.dot
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.Result
@@ -47,9 +48,7 @@ sealed interface LinearRegressionResult :
     /** Linear predictor `eta = bias + x . weights`, before the inverse link. */
     fun linearPredictor(x: F64VectorLike): Double {
         x.requireFeatureSize(weights.size)
-        var sum = bias
-        for (i in 0 until weights.size) sum += x[i] * weights[i]
-        return sum
+        return bias + (x dot weights)
     }
 
     /** Mean response: `link.invMean(linearPredictor(x))`. For [Link.Identity] this is

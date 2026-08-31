@@ -1,8 +1,11 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.axpy
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.dense.trmv
 import com.eignex.koblas.dot
+import com.eignex.koblas.forEachStored
 import com.eignex.koblas.times
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.stat.regression.RegressionPosterior
@@ -107,10 +110,7 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
     ): Double {
         val eta = snapshot.linearPredictor(x)
         var variance = 0.0
-        for (i in 0 until x.size) {
-            val xi = x[i]
-            variance += xi * xi / snapshot.precision[i]
-        }
+        x.forEachStored { i, xi -> variance += xi * xi / snapshot.precision[i] }
         return snapshot.link.invMean(eta + sqrt(exploration * variance) * rng.nextNormal())
     }
 }
@@ -130,13 +130,8 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
         val u = DoubleArray(n) { rng.nextNormal(0.0, sd) }
-        val out = DoubleArray(n)
-        for (i in 0 until n) {
-            var s = snapshot.weights[i]
-            for (j in 0..i) s += snapshot.covarianceL[i, j] * u[j]
-            out[i] = s
-        }
-        return F64DenseVector.of(out)
+        snapshot.covarianceL.trmv(u, lower = true)
+        return F64DenseVector.wrap(u).also { it.axpy(1.0, snapshot.weights) }
     }
 
     /** Closes to `invMean(eta(x) + sqrt(exploration * xT * Sigma * x) * N(0,1))`; one
