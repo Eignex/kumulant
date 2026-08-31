@@ -2,6 +2,8 @@ package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64SparseVector
+import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
 import kotlin.random.Random
@@ -113,6 +115,19 @@ class LinearPosteriorsTest {
     }
 
     @Test
+    fun `FactorisedGaussian evaluate gives sparse inputs the dense score`() {
+        val snap = diagonalSnapshot()
+        val dense = F64DenseVector.of(doubleArrayOf(0.1, 0.0))
+        val sparse = F64SparseVector.of(2, intArrayOf(0), doubleArrayOf(0.1))
+
+        assertEquals(
+            FactorisedGaussian.evaluate(snap, dense, Random(42), exploration = 0.1),
+            FactorisedGaussian.evaluate(snap, sparse, Random(42), exploration = 0.1),
+            1e-12,
+        )
+    }
+
+    @Test
     fun `MultivariateGaussian sample is centered on snapshot weights`() {
         val snap = bayesianSnapshot()
         val rng = Random(0)
@@ -126,6 +141,31 @@ class LinearPosteriorsTest {
         }
         assertTrue(abs(s0 / n - snap.weights[0]) < 0.05)
         assertTrue(abs(s1 / n - snap.weights[1]) < 0.05)
+    }
+
+    @Test
+    fun `MultivariateGaussian sample preserves triangular product and random draws`() {
+        val covariance = F64DenseMatrix.of(arrayOf(doubleArrayOf(4.0, 6.0), doubleArrayOf(6.0, 25.0)))
+        val snapshot = CovarianceRegressionResult(
+            weights = F64DenseVector.of(doubleArrayOf(1.0, -1.0)),
+            bias = 0.0,
+            biasPrecision = 1.0,
+            totalWeights = 0.0,
+            step = 0L,
+            covariance = covariance,
+            covarianceL = F64DenseMatrix.of(arrayOf(doubleArrayOf(2.0, 0.0), doubleArrayOf(3.0, 4.0))),
+        )
+        val expectedRng = Random(7)
+        val u0 = expectedRng.nextNormal(0.0, 0.5)
+        val u1 = expectedRng.nextNormal(0.0, 0.5)
+        val expectedNext = expectedRng.nextNormal()
+        val actualRng = Random(7)
+
+        val sample = MultivariateGaussian.sample(snapshot, actualRng, exploration = 0.25)
+
+        assertEquals(1.0 + 2.0 * u0, sample[0], 1e-12)
+        assertEquals(-1.0 + 3.0 * u0 + 4.0 * u1, sample[1], 1e-12)
+        assertEquals(expectedNext, actualRng.nextNormal(), 0.0)
     }
 
     @Test

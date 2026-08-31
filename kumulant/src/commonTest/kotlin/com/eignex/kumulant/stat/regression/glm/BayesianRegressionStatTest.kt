@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.fitLine
 import kotlin.math.abs
 import kotlin.math.exp
@@ -9,6 +10,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 class BayesianRegressionStatTest {
+
+    private class StridedVector(private val backing: DoubleArray) : F64VectorLike {
+        override val size: Int get() = backing.size / 2
+        override fun get(i: Int): Double = backing[i * 2]
+        override fun toDoubleArray(): DoubleArray = DoubleArray(size) { this[it] }
+    }
 
     // The factor is downdated alongside the covariance rather than refactorized, so the two can
     // only be trusted to agree if every downdate lands. L * LT has to stay equal to S. The
@@ -45,6 +52,17 @@ class BayesianRegressionStatTest {
                 "Sum[$i,$i]=${r.covariance[i, i]} did not shrink from prior 1.0",
             )
         }
+    }
+
+    @Test
+    fun `linear predictor gives generic strided inputs the dense result`() {
+        val stat = BayesianRegressionStat(featureSize = 2)
+        stat.update(doubleArrayOf(1.0, -2.0), 3.0)
+        val snapshot = stat.read()
+        val dense = F64DenseVector.of(doubleArrayOf(0.5, -0.25))
+        val strided = StridedVector(doubleArrayOf(0.5, 9.0, -0.25, 9.0))
+
+        assertEquals(snapshot.linearPredictor(dense), snapshot.linearPredictor(strided), 1e-12)
     }
 
     @Test

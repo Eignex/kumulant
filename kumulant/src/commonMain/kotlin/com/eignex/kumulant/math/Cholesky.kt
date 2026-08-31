@@ -3,11 +3,11 @@
 
 package com.eignex.kumulant.math
 
+import com.eignex.koblas.copy
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dense.trsv
-import com.eignex.koblas.forEachStored
 import com.eignex.koblas.norm2
 import kotlin.math.absoluteValue
 import kotlin.math.sqrt
@@ -36,7 +36,7 @@ internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike): Double {
     // Scatter rather than index x: SparseVector.get is a linear scan, so a per-element read would
     // be quadratic in its nonzeros.
     val s = DoubleArray(n)
-    x.forEachStored { i, v -> s[i] = v }
+    copy(x, F64DenseVector.wrap(s))
     trsv(s, lower = true)
 
     val norm = F64DenseVector.wrap(s).norm2()

@@ -2,6 +2,7 @@ package com.eignex.kumulant.core
 
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.dot
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.time.Duration
@@ -231,9 +232,7 @@ interface HasLinearModel : Result {
      */
     fun predict(x: F64VectorLike): Double {
         x.requireFeatureSize(weights.size)
-        var sum = bias
-        for (i in 0 until weights.size) sum += x[i] * weights[i]
-        return sum
+        return bias + (x dot weights)
     }
 }
 
