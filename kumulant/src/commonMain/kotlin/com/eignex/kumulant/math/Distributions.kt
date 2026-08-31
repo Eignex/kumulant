@@ -50,7 +50,7 @@ private fun Random.standardNormal(): Double {
         // fast path where the tail sampler is required. Clamping that one input to Int.MAX_VALUE avoids
         // widening to Long: every ZIGGURAT_KN entry is at most Int.MAX_VALUE, so both Int.MAX_VALUE and
         // the true magnitude 2^31 fail the test identically and fall through to the tail. Widening is
-        // correct too, but Kotlin/JS emulates Long as a class, putting two boxed allocations and a
+        // correct too, but Long arithmetic can require boxed allocations and a
         // compare() call in the 97% fast path of every normal draw.
         val absHz = if (hz >= 0) {
             hz

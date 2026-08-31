@@ -28,8 +28,8 @@ silently drop the stamp. Stats that care about it (rates, windowed
 wrappers, decaying accumulators) treat it as the ordering signal; pass a
 monotonic stamp when replaying a log.
 
-[VectorStat] and [RegressionStat] both accept an `F64VectorView`
-([com.eignex.koblas.core.F64VectorView]) so sparse callers can feed
+[VectorStat] and [RegressionStat] both accept an `F64VectorLike`
+([com.eignex.koblas.core.F64VectorLike]) so sparse callers can feed
 sparse vectors without materialising them. Each also exposes a
 `DoubleArray` convenience overload that wraps the array in an
 `F64DenseVector` before forwarding.

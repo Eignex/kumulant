@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dot
 import com.eignex.koblas.times
 import com.eignex.kumulant.math.nextNormal
@@ -30,7 +30,7 @@ import kotlin.random.Random
 sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosterior<R> {
     /** Draw a weight vector from the posterior at `exploration` variance scale.
      *  `exploration = 0.0` collapses to the point estimate; `1.0` is the calibrated posterior. */
-    fun sample(snapshot: R, rng: Random, exploration: Double = 1.0): F64VectorView
+    fun sample(snapshot: R, rng: Random, exploration: Double = 1.0): F64VectorLike
 
     /**
      * Score a query point [x] under a fresh posterior draw. Parallels
@@ -45,7 +45,7 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
      * space, so the noise is added before the inverse link, never after: a score has to
      * come back on the same scale as the reward being maximised.
      */
-    override fun evaluate(snapshot: R, x: F64VectorView, rng: Random, exploration: Double): Double =
+    override fun evaluate(snapshot: R, x: F64VectorLike, rng: Random, exploration: Double): Double =
         snapshot.link.invMean(snapshot.bias + (x dot sample(snapshot, rng, exploration)))
 }
 
@@ -57,7 +57,7 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
 @Serializable
 @SerialName("PointPosterior")
 data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
-    override fun sample(snapshot: StochasticRegressionResult, rng: Random, exploration: Double): F64VectorView {
+    override fun sample(snapshot: StochasticRegressionResult, rng: Random, exploration: Double): F64VectorLike {
         if (exploration <= 0.0) return snapshot.weights
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
@@ -70,7 +70,7 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
      *  are iid; one Gaussian draw instead of one per coordinate. */
     override fun evaluate(
         snapshot: StochasticRegressionResult,
-        x: F64VectorView,
+        x: F64VectorLike,
         rng: Random,
         exploration: Double,
     ): Double {
@@ -88,7 +88,7 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
 @Serializable
 @SerialName("FactorisedGaussian")
 data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
-    override fun sample(snapshot: DiagonalRegressionResult, rng: Random, exploration: Double): F64VectorView {
+    override fun sample(snapshot: DiagonalRegressionResult, rng: Random, exploration: Double): F64VectorLike {
         val n = snapshot.weights.size
         val out = DoubleArray(n)
         for (i in 0 until n) {
@@ -101,7 +101,7 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
     /** Sum of independent normals: `invMean(eta(x) + sqrt(exploration * Sum x_i^2 / precision[i]) * N(0,1))`. */
     override fun evaluate(
         snapshot: DiagonalRegressionResult,
-        x: F64VectorView,
+        x: F64VectorLike,
         rng: Random,
         exploration: Double,
     ): Double {
@@ -126,7 +126,7 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
 @Serializable
 @SerialName("MultivariateGaussian")
 data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
-    override fun sample(snapshot: CovarianceRegressionResult, rng: Random, exploration: Double): F64VectorView {
+    override fun sample(snapshot: CovarianceRegressionResult, rng: Random, exploration: Double): F64VectorLike {
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
         val u = DoubleArray(n) { rng.nextNormal(0.0, sd) }
@@ -143,7 +143,7 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
      *  matrix-vector product and one `dot` instead of sampling the full weight vector. */
     override fun evaluate(
         snapshot: CovarianceRegressionResult,
-        x: F64VectorView,
+        x: F64VectorLike,
         rng: Random,
         exploration: Double,
     ): Double {
@@ -165,12 +165,12 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
 @Serializable
 @SerialName("LinUcb")
 data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
-    override fun sample(snapshot: CovarianceRegressionResult, rng: Random, exploration: Double): F64VectorView =
+    override fun sample(snapshot: CovarianceRegressionResult, rng: Random, exploration: Double): F64VectorLike =
         snapshot.weights
 
     override fun evaluate(
         snapshot: CovarianceRegressionResult,
-        x: F64VectorView,
+        x: F64VectorLike,
         rng: Random,
         exploration: Double,
     ): Double {

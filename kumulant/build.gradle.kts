@@ -1,8 +1,4 @@
-@file:OptIn(ExperimentalWasmDsl::class)
-
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
-import java.util.concurrent.TimeUnit
 
 plugins {
     id("com.eignex.kmp") version "1.3.2"
@@ -25,35 +21,21 @@ kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
-    jvm()
-    // Mocha on the js node task, which otherwise runs Kotlin's builtin framework - and that one has
-    // no timeout at all, so a hung test wedges the gate rather than failing it. kbuild bounds Mocha at
-    // 120s through onTestFrameworkSet, so the value is not restated here; measured as 120s, not
-    // Mocha's 2s default, which would be worse than no timeout.
-    //
-    // Not applied to wasmJs or wasmWasi: the Kotlin plugin rejects Mocha on wasm ("Mocha test
-    // framework for Wasm target is not supported. For KotlinWasmNode used") and falls back silently,
-    // so asking for it there buys a warning and nothing else. Those two stay unbounded. The browser
-    // tasks are Karma, which kbuild bounds through a generated config.
-    js { browser(); nodejs { testTask { useMocha() } } }
-    wasmJs { browser(); nodejs() }
-    wasmWasi { nodejs() }
-    linuxX64(); linuxArm64()
-    macosArm64(); mingwX64()
-    iosX64(); iosArm64(); iosSimulatorArm64()
+    jvmToolchain(25)
+    jvm {
+        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
+    }
+    linuxX64(); linuxArm64(); macosArm64()
 
     sourceSets {
         val nonJvmMain = create("nonJvmMain") {
             dependsOn(commonMain.get())
         }
         nativeMain.get().dependsOn(nonJvmMain)
-        wasmWasiMain.get().dependsOn(nonJvmMain)
 
         val posixMain = create("posixMain") { dependsOn(nativeMain.get()) }
         appleMain.get().dependsOn(posixMain)
         linuxMain.get().dependsOn(posixMain)
-        webMain.get().dependsOn(nonJvmMain)
-        wasmWasiMain.get().dependsOn(webMain.get())
         commonMain.dependencies {
             api("com.eignex:koblas:0.1.1-SNAPSHOT")
             api("com.eignex:skema:0.3.0")
@@ -128,15 +110,9 @@ tasks.withType<KotlinJvmCompile>().configureEach {
     compilerOptions.freeCompilerArgs.add("-Xadd-modules=jdk.incubator.vector")
 }
 tasks.withType<Test>().configureEach {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
     if (project.findProperty("kumulant.noSimd") != "true") {
         jvmArgs("--add-modules=jdk.incubator.vector")
     }
-}
-
-// koblas is an unpinned SNAPSHOT. Gradle caches a changing module for 24 hours by default, so a
-// build that resolved yesterday's snapshot keeps compiling against it while a fresh checkout gets
-// today's; the same tree then succeeds on one machine and fails on another. Always re-resolve.
-configurations.configureEach {
-    resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
 }
 

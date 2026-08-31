@@ -34,7 +34,7 @@ class IndexedResultSerializationTest {
     @Test
     fun `IndexedResult carries its declared wire name`() {
         // Encoded through an explicit PolymorphicSerializer rather than `encodeToString<Result>`.
-        // The reified form resolves on JVM and JS but throws on Kotlin/Native, where a
+        // The reified form resolves on JVM but throws on Kotlin/Native, where a
         // serializer for a non-@Serializable open interface cannot be looked up from the type
         // alone. Anything shipping results by their interface type needs the explicit form to
         // behave the same on every target.

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.bandit.contextual.Exp4Bandit
 import com.eignex.kumulant.bandit.contextual.Exp4Expert
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
@@ -73,7 +73,7 @@ class StandaloneBanditExtraTest {
     fun `Exp4 expertWeights sum to 1`() {
         val experts: List<Exp4Expert> = listOf(
             Exp4Expert { _, n -> DoubleArray(n) { 1.0 / n } },
-            Exp4Expert { _: F64VectorView, n: Int -> DoubleArray(n).also { it[0] = 1.0 } },
+            Exp4Expert { _: F64VectorLike, n: Int -> DoubleArray(n).also { it[0] = 1.0 } },
         )
         val b = Exp4Bandit(nbrArms = 3, experts = experts, random = Random(1))
         repeat(20) { b.update(b.choose(feat(0.0)), feat(0.0), 1.0) }

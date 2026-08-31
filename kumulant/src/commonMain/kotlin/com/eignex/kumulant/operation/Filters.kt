@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -45,7 +45,7 @@ internal class FilterVectorStat<R : Result>(
     private val predicate: (DoubleArray) -> Boolean,
 ) : VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: F64VectorView, timestampNanos: Long, weight: Double) {
+    override fun update(vector: F64VectorLike, timestampNanos: Long, weight: Double) {
         if (predicate(vector.toDoubleArray())) delegate.update(vector, timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =

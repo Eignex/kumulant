@@ -20,7 +20,7 @@ package com.eignex.kumulant.core
  */
 // Inlined against the compiler's advice: it judges the impact by JVM standards, where the JIT would
 // have inlined this anyway. The targets that matter here are the others - this call showed up once per
-// update in the generated JS, across every stat that guards on it.
+// update across every stat that guards on it.
 @Suppress("NOTHING_TO_INLINE")
 internal inline fun Double.isInertWeight(): Boolean = !isFinite() || this == 0.0
 

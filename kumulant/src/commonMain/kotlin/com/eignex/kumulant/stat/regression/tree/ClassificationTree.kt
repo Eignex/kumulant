@@ -2,7 +2,7 @@
 
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
@@ -17,7 +17,7 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /** The classification instantiation of the node-shape SPI. */
 internal typealias ClassificationShapeSpi = TreeShape<
-    F64VectorView,
+    F64VectorLike,
     SerializableSplit,
     ClassificationNode,
     ClassificationSplitNode,
@@ -57,22 +57,22 @@ class ClassificationTree(
     )
 
     /** Walk to the leaf [row] resolves to. */
-    fun findLeaf(row: F64VectorView): ClassificationLeafNode = growth.root.findLeaf(row)
+    fun findLeaf(row: F64VectorLike): ClassificationLeafNode = growth.root.findLeaf(row)
 
     /** Live root node, for snapshotting. */
     fun rootNode(): ClassificationNode = growth.root
 
     /** Argmax class at the leaf [row] resolves to. */
-    fun predict(row: F64VectorView): Int = findLeaf(row).arm.read(0L).predict()
+    fun predict(row: F64VectorLike): Int = findLeaf(row).arm.read(0L).predict()
 
     /** Probabilities at the leaf [row] resolves to. */
-    fun probabilities(row: F64VectorView): DoubleArray = findLeaf(row).arm.read(0L).probabilities()
+    fun probabilities(row: F64VectorLike): DoubleArray = findLeaf(row).arm.read(0L).probabilities()
 
     /** Number of internal + leaf nodes currently in the tree. */
     val nodeCount: Int get() = growth.nbrNodes.load()
 
     /** Fold an observation `(row, classLabel)` into the tree, possibly growing it. */
-    fun update(row: F64VectorView, classLabel: Int, weight: Double = 1.0) {
+    fun update(row: F64VectorLike, classLabel: Int, weight: Double = 1.0) {
         if (classLabel !in 0 until numClasses) return
         growth.update(row, classLabel.toDouble(), weight)
     }

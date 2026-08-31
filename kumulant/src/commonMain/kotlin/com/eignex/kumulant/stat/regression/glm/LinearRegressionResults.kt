@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.Result
@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
  *  - [CovarianceRegressionResult]: full posterior covariance + Cholesky factor.
  *
  * Sealed + `@Serializable`. Concrete weights round-trip as [F64DenseVector] today;
- * the public field is typed [F64VectorView] so a sparse variant can swap in without
+ * the public field is typed [F64VectorLike] so a sparse variant can swap in without
  * breaking callers. Regression error metrics from [HasRegression] become
  * meaningful once [sse] is tracked; implementations that don't accumulate it
  * return `0.0`.
@@ -29,7 +29,7 @@ sealed interface LinearRegressionResult :
     Result,
     HasLinearModel,
     HasRegression {
-    override val weights: F64VectorView
+    override val weights: F64VectorLike
 
     override val bias: Double
 
@@ -45,7 +45,7 @@ sealed interface LinearRegressionResult :
     val link: Link
 
     /** Linear predictor `eta = bias + x . weights`, before the inverse link. */
-    fun linearPredictor(x: F64VectorView): Double {
+    fun linearPredictor(x: F64VectorLike): Double {
         x.requireFeatureSize(weights.size)
         var sum = bias
         for (i in 0 until weights.size) sum += x[i] * weights[i]
@@ -54,7 +54,7 @@ sealed interface LinearRegressionResult :
 
     /** Mean response: `link.invMean(linearPredictor(x))`. For [Link.Identity] this is
      *  the linear predictor itself, matching plain linear regression. */
-    override fun predict(x: F64VectorView): Double = link.invMean(linearPredictor(x))
+    override fun predict(x: F64VectorLike): Double = link.invMean(linearPredictor(x))
 }
 
 /** SGD weight estimates with no posterior. Cheap, no uncertainty quantification.
@@ -72,7 +72,7 @@ data class StochasticRegressionResult(
     override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
     /** Per-optimiser auxiliary state (e.g. Adam's `m`/`v`); empty for plain SGD. */
-    val updaterState: List<F64VectorView> = emptyList(),
+    val updaterState: List<F64VectorLike> = emptyList(),
 ) : LinearRegressionResult
 
 /**

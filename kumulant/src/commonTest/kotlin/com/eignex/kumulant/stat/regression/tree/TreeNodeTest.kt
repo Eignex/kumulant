@@ -3,7 +3,7 @@
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.test.Test
@@ -13,7 +13,7 @@ import kotlin.test.assertSame
 
 class TreeNodeTest {
 
-    private fun wvLeaf(): RegressionTerminalLeaf<F64VectorView> = RegressionTerminalLeaf(VarianceStat())
+    private fun wvLeaf(): RegressionTerminalLeaf<F64VectorLike> = RegressionTerminalLeaf(VarianceStat())
     private fun ccLeaf(numClasses: Int = 2) = ClassificationTerminalLeaf(ClassCountsStat(numClasses))
 
     @Test

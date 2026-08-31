@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -25,7 +25,7 @@ sealed interface TreePosterior : RegressionPosterior<TreeRegressionResult>
 
 /** Score is the leaf's running mean; point estimate, no exploration. */
 data object MeanTreePosterior : TreePosterior {
-    override fun evaluate(snapshot: TreeRegressionResult, x: F64VectorView, rng: Random, exploration: Double): Double =
+    override fun evaluate(snapshot: TreeRegressionResult, x: F64VectorLike, rng: Random, exploration: Double): Double =
         snapshot.findLeaf(x).mean
 }
 
@@ -70,7 +70,7 @@ data class ThompsonTreePosterior(
     /** Prior variance applied when the leaf has effectively no signal. */
     val priorVariance: Double = 1.0,
 ) : TreePosterior {
-    override fun evaluate(snapshot: TreeRegressionResult, x: F64VectorView, rng: Random, exploration: Double): Double {
+    override fun evaluate(snapshot: TreeRegressionResult, x: F64VectorLike, rng: Random, exploration: Double): Double {
         val leaf = snapshot.findLeaf(x)
         if (exploration <= 0.0) return leaf.mean
         val n = leaf.totalWeights + priorWeight
@@ -90,7 +90,7 @@ data class UcbTreePosterior(
     /** Prior variance used when the leaf has no signal yet. */
     val priorVariance: Double = 1.0,
 ) : TreePosterior {
-    override fun evaluate(snapshot: TreeRegressionResult, x: F64VectorView, rng: Random, exploration: Double): Double {
+    override fun evaluate(snapshot: TreeRegressionResult, x: F64VectorLike, rng: Random, exploration: Double): Double {
         val leaf = snapshot.findLeaf(x)
         val n = leaf.totalWeights + priorWeight
         return leaf.mean + exploration * sqrt(blendedVariance(leaf, priorWeight, priorVariance) / n)
@@ -106,7 +106,7 @@ sealed interface ForestPosterior : RegressionPosterior<ForestRegressionResult>
 data object MeanForestPosterior : ForestPosterior {
     override fun evaluate(
         snapshot: ForestRegressionResult,
-        x: F64VectorView,
+        x: F64VectorLike,
         rng: Random,
         exploration: Double,
     ): Double = snapshot.findLeafMerged(x).mean
@@ -121,7 +121,7 @@ data class ThompsonForestPosterior(
 ) : ForestPosterior {
     override fun evaluate(
         snapshot: ForestRegressionResult,
-        x: F64VectorView,
+        x: F64VectorLike,
         rng: Random,
         exploration: Double,
     ): Double {
@@ -141,7 +141,7 @@ data class UcbForestPosterior(
 ) : ForestPosterior {
     override fun evaluate(
         snapshot: ForestRegressionResult,
-        x: F64VectorView,
+        x: F64VectorLike,
         rng: Random,
         exploration: Double,
     ): Double {

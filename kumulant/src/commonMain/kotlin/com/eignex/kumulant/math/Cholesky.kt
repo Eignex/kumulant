@@ -5,7 +5,7 @@ package com.eignex.kumulant.math
 
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.norm2
@@ -26,7 +26,7 @@ import kotlin.math.sqrt
  * rotations to the rows of L to absorb `s` without breaking triangularity. The rotation loop is
  * carried in `xx` and stays scalar; the substitution goes through the backend's `trsv`.
  */
-internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorView): Double {
+internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike): Double {
     require(rows == cols) { "choleskyDowndateInPlace requires a square matrix; got ${rows}x$cols" }
     require(rows == x.size) { "x size ${x.size} must match matrix dim $rows" }
     if (rows == 0) return 0.0 // an empty downdate stays in the cone trivially
@@ -37,7 +37,7 @@ internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorView): Double {
     // be quadratic in its nonzeros.
     val s = DoubleArray(n)
     x.forEachStored { i, v -> s[i] = v }
-    trsv(this, s, lower = true)
+    trsv(s, lower = true)
 
     val norm = F64DenseVector.wrap(s).norm2()
     // Negated so a NaN norm bails too: falling through would write NaN across the whole factor
