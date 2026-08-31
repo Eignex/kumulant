@@ -38,12 +38,7 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
     fun sample(snapshot: R, rng: Random, exploration: Double = 1.0): F64VectorLike
 
     /** Writes an owned posterior draw into [destination]. */
-    fun sampleInto(
-        snapshot: R,
-        rng: Random,
-        destination: DoubleArray,
-        exploration: Double = 1.0,
-    ) {
+    fun sampleInto(snapshot: R, rng: Random, destination: DoubleArray, exploration: Double = 1.0) {
         require(destination.size == snapshot.weights.size) {
             "destination size ${destination.size} must match weights size ${snapshot.weights.size}"
         }
