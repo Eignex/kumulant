@@ -17,7 +17,7 @@ fit either subfamily, plus the strategy types both rely on.
 | [GaussianNaiveBayesStat] | Regression | Per-class running Welford mean / variance of each feature plus class priors. The cheap non-parametric multiclass classifier. |
 
 Softmax and Naive Bayes implement [com.eignex.kumulant.core.RegressionStat]
-because that interface gives them `update(VectorView, Double)`; the
+because that interface gives them `update(VectorLike, Double)`; the
 scalar `y` is the class index. Strictly they are classifiers, not
 regressors, but they share the input shape and the result is consumed
 the same way (a posterior over classes plus calibration / accuracy

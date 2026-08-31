@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import java.util.concurrent.TimeUnit
 
 plugins {
     id("com.eignex.kmp") version "1.3.2"
@@ -114,5 +115,12 @@ tasks.withType<Test>().configureEach {
     if (project.findProperty("kumulant.noSimd") != "true") {
         jvmArgs("--add-modules=jdk.incubator.vector")
     }
+}
+
+// koblas is an unpinned SNAPSHOT. Gradle caches a changing module for 24 hours by default, so a
+// build that resolved yesterday's snapshot keeps compiling against it while a fresh checkout gets
+// today's; the same tree then succeeds on one machine and fails on another. Always re-resolve.
+configurations.configureEach {
+    resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
 }
 

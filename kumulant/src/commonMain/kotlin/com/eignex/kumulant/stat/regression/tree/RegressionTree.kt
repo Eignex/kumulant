@@ -37,7 +37,7 @@ internal typealias RegressionShapeSpi<Row> = TreeShape<
  * [Split]s (e.g. a dense [com.eignex.koblas.core.F64VectorLike] for the built-in stats, or
  * a typed/constraint-coupled row from a downstream library). Wire-portable serialization
  * of a snapshot is only meaningful for the [com.eignex.koblas.core.F64VectorLike] case and
- * lives in `TreeRegressionResult.kt` as `VectorView`-constrained extensions.
+ * lives in `TreeRegressionResult.kt` as `VectorLike`-constrained extensions.
  *
  * Internal split nodes hold no live arm; subtree aggregates (`rootSnapshot`, the `value`
  * fields on the snapshot results) are derived by combining descendants at snapshot/merge
