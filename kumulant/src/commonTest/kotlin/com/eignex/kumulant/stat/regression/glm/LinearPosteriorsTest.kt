@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.regression.glm
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.Workspace
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
@@ -44,6 +45,18 @@ class LinearPosteriorsTest {
             stat.update(x, y, 1.0)
         }
         return stat.read()
+    }
+
+    @Test
+    fun `workspace covariance evaluation matches allocating evaluation and preserves random draws`() {
+        val snapshot = bayesianSnapshot()
+        val x = F64SparseVector.of(size = 2, indices = intArrayOf(0), values = doubleArrayOf(0.3))
+        val workspace = Workspace().apply { reserve(2, 1) }
+
+        val allocated = MultivariateGaussian.evaluate(snapshot, x, Random(9), exploration = 0.7)
+        val reused = MultivariateGaussian.evaluate(snapshot, x, Random(9), workspace, exploration = 0.7)
+
+        assertEquals(allocated, reused, 1e-12)
     }
 
     @Test

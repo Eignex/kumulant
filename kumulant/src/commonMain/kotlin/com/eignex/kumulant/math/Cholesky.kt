@@ -4,6 +4,8 @@
 package com.eignex.kumulant.math
 
 import com.eignex.koblas.copy
+import com.eignex.koblas.Workspace
+import com.eignex.koblas.borrow
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
@@ -26,7 +28,10 @@ import kotlin.math.sqrt
  * rotations to the rows of L to absorb `s` without breaking triangularity. The rotation loop is
  * carried in `xx` and stays scalar; the substitution goes through the backend's `trsv`.
  */
-internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike): Double {
+internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike): Double = choleskyDowndateInPlace(x, null)
+
+/** Workspace-taking form used by repeated Bayesian updates. */
+internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike, workspace: Workspace?): Double {
     require(rows == cols) { "choleskyDowndateInPlace requires a square matrix; got ${rows}x$cols" }
     require(rows == x.size) { "x size ${x.size} must match matrix dim $rows" }
     if (rows == 0) return 0.0 // an empty downdate stays in the cone trivially
@@ -35,39 +40,41 @@ internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike): Double {
 
     // Scatter rather than index x: SparseVector.get is a linear scan, so a per-element read would
     // be quadratic in its nonzeros.
-    val s = DoubleArray(n)
-    copy(x, F64DenseVector.wrap(s))
-    trsv(s, lower = true)
+    return workspace.borrow(n) { s ->
+        copy(x, F64DenseVector.wrap(s))
+        trsv(s, lower = true)
 
-    val norm = F64DenseVector.wrap(s).norm2()
+        val norm = F64DenseVector.wrap(s).norm2()
     // Negated so a NaN norm bails too: falling through would write NaN across the whole factor
     // and still report success.
-    if (!(norm > 0.0 && norm < 1.0)) return norm
+        if (!(norm > 0.0 && norm < 1.0)) return@borrow norm
 
-    val c = DoubleArray(n)
-    var alpha = sqrt(1.0 - norm * norm)
-    for (ii in 0 until n) {
-        val i = n - ii - 1
-        val scale = alpha + s[i].absoluteValue
-        val a = alpha / scale
-        val b = s[i] / scale
-        val nrm = sqrt(a * a + b * b)
-        c[i] = a / nrm
-        s[i] = b / nrm
-        alpha = scale * nrm
-    }
+        workspace.borrow(n) { c ->
+            var alpha = sqrt(1.0 - norm * norm)
+            for (ii in 0 until n) {
+                val i = n - ii - 1
+                val scale = alpha + s[i].absoluteValue
+                val a = alpha / scale
+                val b = s[i] / scale
+                val nrm = sqrt(a * a + b * b)
+                c[i] = a / nrm
+                s[i] = b / nrm
+                alpha = scale * nrm
+            }
     // Apply the rotations along the rows of L; entry (j, i) of the column-major backing is at
     // `j + i * n`.
-    for (j in 0 until n) {
-        var xx = 0.0
-        for (i in j downTo 0) {
-            val idx = j + i * n
-            val t = c[i] * xx + s[i] * L[idx]
-            L[idx] = c[i] * L[idx] - s[i] * xx
-            xx = t
+            for (j in 0 until n) {
+                var xx = 0.0
+                for (i in j downTo 0) {
+                    val idx = j + i * n
+                    val t = c[i] * xx + s[i] * L[idx]
+                    L[idx] = c[i] * L[idx] - s[i] * xx
+                    xx = t
+                }
+            }
         }
+        0.0
     }
-    return 0.0
 }
 
 /**

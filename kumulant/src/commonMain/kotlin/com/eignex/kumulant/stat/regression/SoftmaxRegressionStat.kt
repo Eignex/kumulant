@@ -3,6 +3,8 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.Workspace
+import com.eignex.koblas.borrow
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
@@ -15,6 +17,7 @@ import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.PROBABILITY_FLOOR
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
+import com.eignex.kumulant.stat.regression.glm.multiplyInto
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stream.StreamDouble
@@ -66,15 +69,33 @@ data class SoftmaxRegressionResult(
         return s
     }
 
+    /** Writes the per-class logits for [x] into [destination]. */
+    fun logitsInto(x: F64VectorLike, destination: DoubleArray) {
+        x.requireFeatureSize(featureSize)
+        require(destination.size == numClasses) {
+            "destination size ${destination.size} must match numClasses $numClasses"
+        }
+        weights.multiplyInto(x, destination)
+        for (k in 0 until numClasses) destination[k] += biases[k]
+    }
+
     /** Softmax probabilities across all classes for [x]; length [numClasses]. */
-    fun probabilities(x: F64VectorLike): DoubleArray {
-        val etas = DoubleArray(numClasses) { logit(x, it) }
-        etas.softmaxInPlace()
-        return etas
+    fun probabilities(x: F64VectorLike): DoubleArray = DoubleArray(numClasses).also { probabilitiesInto(x, it) }
+
+    /** Writes softmax probabilities for [x] into caller-owned [destination]. */
+    fun probabilitiesInto(x: F64VectorLike, destination: DoubleArray) {
+        logitsInto(x, destination)
+        destination.softmaxInPlace()
     }
 
     /** Argmax class index for [x]. */
     fun predict(x: F64VectorLike): Int = argMaxOf(numClasses) { k -> logit(x, k) }
+
+    /** Finds the argmax using a caller-owned, non-thread-safe [workspace] for the logits. */
+    fun predict(x: F64VectorLike, workspace: Workspace): Int = workspace.borrow(numClasses) { logits ->
+        logitsInto(x, logits)
+        argMaxOf(numClasses) { logits[it] }
+    }
 }
 
 /**

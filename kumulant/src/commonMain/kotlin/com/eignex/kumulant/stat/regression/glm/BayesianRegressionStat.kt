@@ -5,6 +5,8 @@
 package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.axpy
+import com.eignex.koblas.Workspace
+import com.eignex.koblas.borrow
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64MatrixLike
@@ -27,6 +29,7 @@ import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.choleskyDowndateInPlace
 import com.eignex.kumulant.math.zeroUpperTriangle
 import com.eignex.kumulant.stream.guarded
+import com.eignex.kumulant.stream.currentTimeNanos
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
@@ -135,6 +138,22 @@ class BayesianRegressionStat(
     private var sse: Double = 0.0
 
     override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
+        updateInternal(x, y, timestampNanos, weight, null)
+    }
+
+    /**
+     * Records an observation using caller-owned scratch storage. [workspace] must be confined to one
+     * thread or externally synchronized; it is not retained by this stat.
+     */
+    fun update(x: F64VectorLike, y: Double, workspace: Workspace, timestampNanos: Long, weight: Double = 1.0) {
+        updateInternal(x, y, timestampNanos, weight, workspace)
+    }
+
+    /** Convenience workspace overload using the current timestamp. */
+    fun update(x: F64VectorLike, y: Double, workspace: Workspace, weight: Double = 1.0) =
+        updateInternal(x, y, currentTimeNanos(), weight, workspace)
+
+    private fun updateInternal(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
@@ -153,21 +172,23 @@ class BayesianRegressionStat(
             //   S_new = S - (w_c * S x xT S) / (1 + w_c * xT S x)
             //         = S - z zT, where z = sqrt(w_c) * S x / sqrt(1 + w_c * xT S x).
             val wc = weight * curvature
-            val z = covariance * x
+            workspace.borrow(featureSize) { zData ->
+            val z = F64DenseVector.wrap(zData)
+            covariance.multiplyInto(x, zData)
             val denom = sqrt(1.0 + wc * (x dot z))
             // Non-finite as well as zero. Two paths reach a NaN denominator: an `S` outside the
             // positive-definite cone makes the argument negative, and `Link.Log.curvature` is
             // `exp(eta)`, which overflows so that the scale below is `Infinity / Infinity`. Either NaN
             // would reach `ger` and poison the covariance permanently, taking every later prediction
             // with it. Skipping the observation keeps the posterior usable.
-            if (!denom.isFinite() || denom == 0.0) return@guarded
+            if (!denom.isFinite() || denom == 0.0) return@borrow
             z.scale(sqrt(wc) / denom)
 
             // Downdate the Cholesky factor; repair on instability. The downdate leaves the factor
             // untouched for any norm at or above one, so the repair has to trigger on the same
             // condition: treating an exact 1.0 as success downdates the covariance below without its
             // factor, and the two never agree again.
-            var norm = covarianceL.choleskyDowndateInPlace(z)
+            var norm = covarianceL.choleskyDowndateInPlace(z, workspace)
             // Negated, so a NaN norm bails into the repair too. choleskyDowndateInPlace was hardened to
             // return a NaN rather than write one through the factor, and `norm >= 1.0` is false for NaN -
             // which would fall straight through to the covariance downdate below and desynchronise it
@@ -178,10 +199,10 @@ class BayesianRegressionStat(
                 for (i in 0 until featureSize) {
                     for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
                 }
-                norm = covarianceL.choleskyDowndateInPlace(z)
+                norm = covarianceL.choleskyDowndateInPlace(z, workspace)
                 while (!(norm < 1.0)) {
                     z.scale(1.0 / (norm + DOWNDATE_SHRINK))
-                    norm = covarianceL.choleskyDowndateInPlace(z)
+                    norm = covarianceL.choleskyDowndateInPlace(z, workspace)
                 }
             }
 
@@ -189,11 +210,13 @@ class BayesianRegressionStat(
             covariance.ger(-1.0, z, z)
 
             // Posterior mean update: w += (weight * residual) * S_new * x.
-            weights.axpy(weight * residual, covariance * x)
+            covariance.multiplyInto(x, zData)
+            weights.axpy(weight * residual, z)
 
             biasPrecision += wc
             bias += weight * residual / biasPrecision
             totalWeights += weight
+            }
         }
     }
 
@@ -231,6 +254,13 @@ class BayesianRegressionStat(
      * the intercept as a scalar Gaussian with zero prior mean.
      */
     override fun merge(values: CovarianceRegressionResult) {
+        mergeInternal(values, null)
+    }
+
+    /** Merges a snapshot using caller-owned scratch storage; [workspace] is never retained. */
+    fun merge(values: CovarianceRegressionResult, workspace: Workspace) = mergeInternal(values, workspace)
+
+    private fun mergeInternal(values: CovarianceRegressionResult, workspace: Workspace?) {
         requireMergeFeatureSize(values.featureSize, featureSize)
         lock.guarded {
             val n = featureSize
@@ -247,13 +277,18 @@ class BayesianRegressionStat(
             }
 
             // b = H_self * mu_self + H_other * mu_other - H_prior * mu_prior.
-            val b = hSelf * weights
-            b.axpy(1.0, hOther * values.weights)
-            b.axpy(-1.0, F64DenseVector.wrap(priorInfo))
+            val b = workspace.borrow(n) { data ->
+                hSelf.multiplyInto(weights, data)
+                workspace.borrow(n) { other ->
+                    hOther.multiplyInto(values.weights, other)
+                    for (i in 0 until n) data[i] += other[i] - priorInfo[i]
+                }
+                data.copyOf()
+            }
 
             // Solve H_new * mu_new = b via chol(H_new); reuse the same factor for Sum_new.
             val hChol = hNew.cholesky(CholeskyPolicy.Regularize())
-            val muNew = hChol.solve(b.data)
+            val muNew = hChol.solve(b)
             val sigmaNew = hChol.invert()
             val LsigmaNew = sigmaNew.cholesky(CholeskyPolicy.Regularize()).l.zeroUpperTriangle()
 

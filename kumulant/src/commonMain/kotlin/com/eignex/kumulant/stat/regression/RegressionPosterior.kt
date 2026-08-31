@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.Workspace
 import com.eignex.kumulant.core.Result
 import kotlin.random.Random
 
@@ -24,4 +25,16 @@ interface RegressionPosterior<R : Result> {
      * `0.0` collapses to the point estimate.
      */
     fun evaluate(snapshot: R, x: F64VectorLike, rng: Random, exploration: Double = 1.0): Double
+
+    /**
+     * Workspace-aware counterpart to [evaluate]. A workspace is caller-owned and must be confined to
+     * one thread (or externally synchronized); it is used only for this call and is never retained.
+     */
+    fun evaluate(
+        snapshot: R,
+        x: F64VectorLike,
+        rng: Random,
+        workspace: Workspace,
+        exploration: Double = 1.0,
+    ): Double = evaluate(snapshot, x, rng, exploration)
 }

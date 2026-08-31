@@ -38,6 +38,11 @@ public final class com/eignex/kumulant/bandit/ContextualBandit$DefaultImpls {
 
 public abstract interface class com/eignex/kumulant/bandit/ContextualScorable {
 	public abstract fun evaluate (ILcom/eignex/koblas/core/F64VectorLike;)D
+	public fun evaluate (ILcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/koblas/Workspace;)D
+}
+
+public final class com/eignex/kumulant/bandit/ContextualScorable$DefaultImpls {
+	public static fun evaluate (Lcom/eignex/kumulant/bandit/ContextualScorable;ILcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/koblas/Workspace;)D
 }
 
 public abstract interface class com/eignex/kumulant/bandit/PerArmBandit : com/eignex/kumulant/bandit/Snapshotable {
@@ -212,6 +217,7 @@ public final class com/eignex/kumulant/bandit/contextual/KnnContextualBandit : c
 	public synthetic fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Snapshotable;
 	public fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualBandit;
 	public fun evaluate (ILcom/eignex/koblas/core/F64VectorLike;)D
+	public fun evaluate (ILcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/koblas/Workspace;)D
 	public final fun getColdStartScore ()D
 	public final fun getDistance ()Lkotlin/jvm/functions/Function2;
 	public final fun getExploration ()D
@@ -392,9 +398,11 @@ public final class com/eignex/kumulant/bandit/contextual/RegressionContextualBan
 	public fun armResult (I)Lcom/eignex/kumulant/core/Result;
 	public final fun armStat (I)Lcom/eignex/kumulant/core/RegressionStat;
 	public fun choose (Lcom/eignex/koblas/core/F64VectorLike;)I
+	public final fun choose (Lcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/koblas/Workspace;)I
 	public synthetic fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Snapshotable;
 	public fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/contextual/RegressionContextualBandit;
 	public fun evaluate (ILcom/eignex/koblas/core/F64VectorLike;)D
+	public fun evaluate (ILcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/koblas/Workspace;)D
 	public final fun getExploration ()D
 	public fun getNbrArms ()I
 	public final fun getPosterior ()Lcom/eignex/kumulant/stat/regression/RegressionPosterior;
@@ -6894,11 +6902,15 @@ public final class com/eignex/kumulant/stat/regression/Optimizer$DefaultImpls {
 
 public abstract interface class com/eignex/kumulant/stat/regression/RegressionPosterior {
 	public abstract fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public static synthetic fun evaluate$default (Lcom/eignex/kumulant/stat/regression/RegressionPosterior;Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;DILjava/lang/Object;)D
+	public static synthetic fun evaluate$default (Lcom/eignex/kumulant/stat/regression/RegressionPosterior;Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;DILjava/lang/Object;)D
 }
 
 public final class com/eignex/kumulant/stat/regression/RegressionPosterior$DefaultImpls {
+	public static fun evaluate (Lcom/eignex/kumulant/stat/regression/RegressionPosterior;Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public static synthetic fun evaluate$default (Lcom/eignex/kumulant/stat/regression/RegressionPosterior;Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;DILjava/lang/Object;)D
+	public static synthetic fun evaluate$default (Lcom/eignex/kumulant/stat/regression/RegressionPosterior;Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;DILjava/lang/Object;)D
 }
 
 public final class com/eignex/kumulant/stat/regression/RmspropOptimizer : com/eignex/kumulant/stat/regression/Optimizer {
@@ -6947,8 +6959,11 @@ public final class com/eignex/kumulant/stat/regression/SoftmaxRegressionResult :
 	public fun hashCode ()I
 	public fun isEmpty ()Z
 	public final fun logit (Lcom/eignex/koblas/core/F64VectorLike;I)D
+	public final fun logitsInto (Lcom/eignex/koblas/core/F64VectorLike;[D)V
 	public final fun predict (Lcom/eignex/koblas/core/F64VectorLike;)I
+	public final fun predict (Lcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/koblas/Workspace;)I
 	public final fun probabilities (Lcom/eignex/koblas/core/F64VectorLike;)[D
+	public final fun probabilitiesInto (Lcom/eignex/koblas/core/F64VectorLike;[D)V
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -7005,13 +7020,18 @@ public final class com/eignex/kumulant/stat/regression/glm/BayesianRegressionSta
 	public final fun getPriorVariance ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;)V
+	public final fun merge (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/Workspace;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;
 	public fun reset ()V
 	public fun update (Lcom/eignex/koblas/core/F64VectorLike;DD)V
 	public fun update (Lcom/eignex/koblas/core/F64VectorLike;DJD)V
+	public final fun update (Lcom/eignex/koblas/core/F64VectorLike;DLcom/eignex/koblas/Workspace;D)V
+	public final fun update (Lcom/eignex/koblas/core/F64VectorLike;DLcom/eignex/koblas/Workspace;JD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/stat/regression/glm/BayesianRegressionStat;Lcom/eignex/koblas/core/F64VectorLike;DLcom/eignex/koblas/Workspace;DILjava/lang/Object;)V
+	public static synthetic fun update$default (Lcom/eignex/kumulant/stat/regression/glm/BayesianRegressionStat;Lcom/eignex/koblas/core/F64VectorLike;DLcom/eignex/koblas/Workspace;JDILjava/lang/Object;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/BayesianRegressionStat$Companion {
@@ -7160,11 +7180,16 @@ public final class com/eignex/kumulant/stat/regression/glm/FactorisedGaussian : 
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/glm/FactorisedGaussian;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun hashCode ()I
 	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/core/F64VectorLike;
 	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/core/F64VectorLike;
+	public fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;D)V
+	public synthetic fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;D)V
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
 }
@@ -7196,11 +7221,16 @@ public final class com/eignex/kumulant/stat/regression/glm/LinUcb : com/eignex/k
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/glm/LinUcb;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun hashCode ()I
 	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/core/F64VectorLike;
 	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/core/F64VectorLike;
+	public fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;D)V
+	public synthetic fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;D)V
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
 }
@@ -7208,9 +7238,13 @@ public final class com/eignex/kumulant/stat/regression/glm/LinUcb : com/eignex/k
 public abstract interface class com/eignex/kumulant/stat/regression/glm/LinearPosterior : com/eignex/kumulant/stat/regression/RegressionPosterior {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior$Companion;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public abstract fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/core/F64VectorLike;
 	public static synthetic fun sample$default (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;DILjava/lang/Object;)Lcom/eignex/koblas/core/F64VectorLike;
+	public fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;D)V
+	public static synthetic fun sampleInto$default (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;DILjava/lang/Object;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/LinearPosterior$Companion {
@@ -7219,7 +7253,10 @@ public final class com/eignex/kumulant/stat/regression/glm/LinearPosterior$Compa
 
 public final class com/eignex/kumulant/stat/regression/glm/LinearPosterior$DefaultImpls {
 	public static fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public static fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public static synthetic fun sample$default (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;DILjava/lang/Object;)Lcom/eignex/koblas/core/F64VectorLike;
+	public static fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;D)V
+	public static synthetic fun sampleInto$default (Lcom/eignex/kumulant/stat/regression/glm/LinearPosterior;Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;DILjava/lang/Object;)V
 }
 
 public abstract interface class com/eignex/kumulant/stat/regression/glm/LinearRegressionResult : com/eignex/kumulant/core/HasLinearModel, com/eignex/kumulant/core/HasRegression, com/eignex/kumulant/core/Result {
@@ -7301,11 +7338,16 @@ public final class com/eignex/kumulant/stat/regression/glm/MultivariateGaussian 
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/glm/MultivariateGaussian;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun hashCode ()I
 	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/core/F64VectorLike;
 	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/core/F64VectorLike;
+	public fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/CovarianceRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;D)V
+	public synthetic fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;D)V
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
 }
@@ -7384,11 +7426,16 @@ public final class com/eignex/kumulant/stat/regression/glm/PointPosterior : com/
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/glm/PointPosterior;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun hashCode ()I
 	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/core/F64VectorLike;
 	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/core/F64VectorLike;
+	public synthetic fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;D)V
+	public fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lkotlin/random/Random;[DLcom/eignex/koblas/Workspace;D)V
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
 }
@@ -7855,6 +7902,10 @@ public final class com/eignex/kumulant/stat/regression/tree/ForestClassification
 public abstract interface class com/eignex/kumulant/stat/regression/tree/ForestPosterior : com/eignex/kumulant/stat/regression/RegressionPosterior {
 }
 
+public final class com/eignex/kumulant/stat/regression/tree/ForestPosterior$DefaultImpls {
+	public static fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestPosterior;Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
+}
+
 public final class com/eignex/kumulant/stat/regression/tree/ForestRegressionResult : com/eignex/kumulant/core/Result {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult$Companion;
 	public fun <init> (Ljava/util/List;)V
@@ -7919,7 +7970,9 @@ public final class com/eignex/kumulant/stat/regression/tree/MeanForestPosterior 
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/tree/MeanForestPosterior;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -7928,7 +7981,9 @@ public final class com/eignex/kumulant/stat/regression/tree/MeanTreePosterior : 
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/tree/MeanTreePosterior;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -8135,7 +8190,9 @@ public final class com/eignex/kumulant/stat/regression/tree/ThompsonForestPoster
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/ThompsonForestPosterior;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/ThompsonForestPosterior;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public final fun getPriorVariance ()D
 	public final fun getPriorWeight ()D
 	public fun hashCode ()I
@@ -8152,7 +8209,9 @@ public final class com/eignex/kumulant/stat/regression/tree/ThompsonTreePosterio
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/ThompsonTreePosterior;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/ThompsonTreePosterior;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public final fun getPriorVariance ()D
 	public final fun getPriorWeight ()D
 	public fun hashCode ()I
@@ -8335,6 +8394,10 @@ public final class com/eignex/kumulant/stat/regression/tree/TreeNodeResult$Compa
 public abstract interface class com/eignex/kumulant/stat/regression/tree/TreePosterior : com/eignex/kumulant/stat/regression/RegressionPosterior {
 }
 
+public final class com/eignex/kumulant/stat/regression/tree/TreePosterior$DefaultImpls {
+	public static fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreePosterior;Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
+}
+
 public final class com/eignex/kumulant/stat/regression/tree/TreeRegressionResult : com/eignex/kumulant/core/Result {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult$Companion;
 	public fun <init> (Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;)V
@@ -8415,7 +8478,9 @@ public final class com/eignex/kumulant/stat/regression/tree/UcbForestPosterior :
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/UcbForestPosterior;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/UcbForestPosterior;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public final fun getPriorVariance ()D
 	public final fun getPriorWeight ()D
 	public fun hashCode ()I
@@ -8432,7 +8497,9 @@ public final class com/eignex/kumulant/stat/regression/tree/UcbTreePosterior : c
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/UcbTreePosterior;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/UcbTreePosterior;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;D)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;Lcom/eignex/koblas/core/F64VectorLike;Lkotlin/random/Random;Lcom/eignex/koblas/Workspace;D)D
 	public final fun getPriorVariance ()D
 	public final fun getPriorWeight ()D
 	public fun hashCode ()I

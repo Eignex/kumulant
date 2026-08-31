@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.Workspace
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import kotlin.math.abs
@@ -9,6 +10,7 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.test.assertFailsWith
 
 class SoftmaxRegressionStatTest {
 
@@ -34,6 +36,30 @@ class SoftmaxRegressionStatTest {
         assertEquals(1.0, total, 1e-9)
         // Class 0 has the largest logit (eta = 2), so argmax must be 0.
         assertEquals(0, r.predict(F64DenseVector.of(doubleArrayOf(2.0, 1.0))))
+    }
+
+    @Test
+    fun `destination scoring matches allocating scoring and validates before mutation`() {
+        val result = SoftmaxRegressionResult(
+            featureSize = 2,
+            numClasses = 3,
+            weights = F64DenseMatrix.of(arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0), doubleArrayOf(-1.0, 1.0))),
+            biases = F64DenseVector.of(doubleArrayOf(0.2, -0.1, 0.4)),
+            totalWeights = 0.0,
+            step = 0L,
+            crossEntropy = 0.0,
+        )
+        val x = F64DenseVector.of(doubleArrayOf(2.0, -1.0))
+        val workspace = Workspace().apply { reserve(3, 1) }
+        val probabilities = DoubleArray(3)
+
+        result.probabilitiesInto(x, probabilities)
+
+        assertTrue(probabilities.contentEquals(result.probabilities(x)))
+        assertEquals(result.predict(x), result.predict(x, workspace))
+        val untouched = doubleArrayOf(7.0, 8.0)
+        assertFailsWith<IllegalArgumentException> { result.probabilitiesInto(x, untouched) }
+        assertTrue(untouched.contentEquals(doubleArrayOf(7.0, 8.0)))
     }
 
     @Test
