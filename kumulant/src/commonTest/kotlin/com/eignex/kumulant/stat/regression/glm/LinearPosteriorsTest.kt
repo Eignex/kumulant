@@ -82,7 +82,7 @@ class LinearPosteriorsTest {
     }
 
     @Test
-    fun `sampleInto matches an owned multivariate sample without retaining workspace storage`() {
+    fun `sampleInto matches an owned multivariate sample without aliasing later borrows`() {
         val snapshot = bayesianSnapshot()
         val destination = DoubleArray(2)
         val workspace = Workspace().apply { reserve(2, 1) }
