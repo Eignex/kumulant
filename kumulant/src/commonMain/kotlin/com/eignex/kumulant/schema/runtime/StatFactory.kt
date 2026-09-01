@@ -24,6 +24,7 @@ import com.eignex.kumulant.operation.TransformPairStat
 import com.eignex.kumulant.operation.TransformValueStat
 import com.eignex.kumulant.operation.TransformVectorStat
 import com.eignex.kumulant.operation.VectorizedStat
+import com.eignex.kumulant.operation.WeightByVectorStat
 import com.eignex.kumulant.operation.asDiscrete
 import com.eignex.kumulant.operation.asSeries
 import com.eignex.kumulant.operation.atIndex
@@ -57,6 +58,7 @@ import com.eignex.kumulant.operation.withTimeAsY
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.schema.*
+import com.eignex.kumulant.schema.expr.eval
 import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.anomaly.GaussianScorerStat
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
@@ -477,22 +479,22 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is TransformVectorElement -> {
             val m = requireVector(inner, "TransformVectorElement").materialize(concurrency) as VectorStat<Result>
-            TransformVectorStat(m) { vec -> DoubleArray(vec.size) { i -> expr.eval(vec[i], 0.0, vec) } }
+            TransformVectorStat.vector(m) { vec -> DoubleArray(vec.size) { i -> expr.eval(vec[i], 0.0, vec) } }
         }
 
         is FilterVector -> {
             val m = requireVector(inner, "FilterVector").materialize(concurrency) as VectorStat<Result>
-            FilterVectorStat(m) { vec -> pred.eval(0.0, 0.0, vec) }
+            FilterVectorStat.vector(m) { vec -> pred.eval(0.0, 0.0, vec) }
         }
 
         is FoldVector -> {
             val m = requireSeries(inner, "FoldVector").materialize(concurrency) as SeriesStat<Result>
-            FoldVectorStat(m) { vec -> expr.eval(0.0, 0.0, vec) }
+            FoldVectorStat.vector(m) { vec -> expr.eval(0.0, 0.0, vec) }
         }
 
         is FoldVectorPaired -> {
             val m = requirePaired(inner, "FoldVectorPaired").materialize(concurrency) as PairedStat<Result>
-            FoldVectorPairedStat(
+            FoldVectorPairedStat.vector(
                 m,
                 foldX = { vec -> xExpr.eval(0.0, 0.0, vec) },
                 foldY = { vec -> yExpr.eval(0.0, 0.0, vec) },
@@ -501,12 +503,13 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is TransformVector -> {
             val m = requireVector(inner, "TransformVector").materialize(concurrency) as VectorStat<Result>
-            TransformVectorStat(m) { vec -> expr.eval(0.0, 0.0, vec) }
+            TransformVectorStat.vector(m) { vec -> expr.eval(0.0, 0.0, vec) }
         }
 
         is WeightByValueVector ->
-            (requireVector(inner, "WeightByValueVector").materialize(concurrency) as VectorStat<Result>)
-                .weightBy { vec -> expr.eval(0.0, 0.0, vec) }
+            WeightByVectorStat.vector(
+                requireVector(inner, "WeightByValueVector").materialize(concurrency) as VectorStat<Result>,
+            ) { vec -> expr.eval(0.0, 0.0, vec) }
 
         is ThrottleVector ->
             requireVector(inner, "ThrottleVector").materialize(concurrency).throttle(every)
@@ -657,17 +660,17 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
 
         is FilterRegression -> {
             val m = requireRegression(inner, "FilterRegression").materialize(concurrency) as RegressionStat<Result>
-            m.filter { v, y -> pred.eval(0.0, y, v.toDoubleArray()) }
+            m.filter { v, y -> pred.eval(0.0, y, v) }
         }
 
         is TransformYRegression -> {
             val m = requireRegression(inner, "TransformYRegression").materialize(concurrency) as RegressionStat<Result>
-            m.transformY { v, y -> expr.eval(0.0, y, v.toDoubleArray()) }
+            m.transformY { v, y -> expr.eval(0.0, y, v) }
         }
 
         is TransformXRegression -> {
             val m = requireRegression(inner, "TransformXRegression").materialize(concurrency) as RegressionStat<Result>
-            m.transformX(featureSize) { v, y -> expr.eval(0.0, y, v.toDoubleArray()) }
+            m.transformX(featureSize) { v, y -> expr.eval(0.0, y, v) }
         }
 
         is WithWeightRegression ->
@@ -678,7 +681,7 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
                 inner,
                 "WeightByValueRegression",
             ).materialize(concurrency) as RegressionStat<Result>
-            m.weightBy { v, y -> expr.eval(0.0, y, v.toDoubleArray()) }
+            m.weightBy { v, y -> expr.eval(0.0, y, v) }
         }
 
         is ThrottleRegression ->
@@ -692,7 +695,7 @@ fun <R : Result> RegressionStatSpec<R>.materialize(concurrency: Concurrency = Co
 
         is FoldRegression -> {
             val m = requireSeries(inner, "FoldRegression").materialize(concurrency) as SeriesStat<Result>
-            m.foldRegression(featureSize) { v, y -> project.eval(0.0, y, v.toDoubleArray()) }
+            m.foldRegression(featureSize) { v, y -> project.eval(0.0, y, v) }
         }
 
         is StandardScalerRegression ->

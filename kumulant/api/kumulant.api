@@ -2388,6 +2388,12 @@ public final class com/eignex/kumulant/schema/expr/ExprKt {
 	public static final fun div (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun eq (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun eq (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
+	public static final fun eval (Lcom/eignex/kumulant/schema/expr/BoolExpr;DDLcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/kumulant/core/Result;)Z
+	public static final fun eval (Lcom/eignex/kumulant/schema/expr/ScalarExpr;DDLcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/kumulant/core/Result;)D
+	public static final fun eval (Lcom/eignex/kumulant/schema/expr/VectorExpr;DDLcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/kumulant/core/Result;)[D
+	public static synthetic fun eval$default (Lcom/eignex/kumulant/schema/expr/BoolExpr;DDLcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/kumulant/core/Result;ILjava/lang/Object;)Z
+	public static synthetic fun eval$default (Lcom/eignex/kumulant/schema/expr/ScalarExpr;DDLcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/kumulant/core/Result;ILjava/lang/Object;)D
+	public static synthetic fun eval$default (Lcom/eignex/kumulant/schema/expr/VectorExpr;DDLcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/kumulant/core/Result;ILjava/lang/Object;)[D
 	public static final fun exp (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun ge (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun ge (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;

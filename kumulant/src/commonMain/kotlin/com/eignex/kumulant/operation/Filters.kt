@@ -42,14 +42,22 @@ internal class FilterPairedStat<R : Result>(
 
 internal class FilterVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
-    private val predicate: (DoubleArray) -> Boolean,
+    private val predicate: (DoubleArray) -> Boolean = { true },
+    private val vectorPredicate: ((F64VectorLike) -> Boolean)? = null,
 ) : VectorStat<R>,
     Stat<R> by delegate {
     override fun update(vector: F64VectorLike, timestampNanos: Long, weight: Double) {
-        if (predicate(vector.toDoubleArray())) delegate.update(vector, timestampNanos, weight)
+        if (vectorPredicate?.invoke(vector) ?: predicate(vector.toDoubleArray())) {
+            delegate.update(vector, timestampNanos, weight)
+        }
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
-        FilterVectorStat(delegate.create(concurrency), predicate)
+        FilterVectorStat(delegate.create(concurrency), predicate, vectorPredicate)
+
+    companion object {
+        fun <R : Result> vector(delegate: VectorStat<R>, predicate: (F64VectorLike) -> Boolean): FilterVectorStat<R> =
+            FilterVectorStat(delegate, vectorPredicate = predicate)
+    }
 }
 
 internal class FilterDiscreteStat<R : Result>(

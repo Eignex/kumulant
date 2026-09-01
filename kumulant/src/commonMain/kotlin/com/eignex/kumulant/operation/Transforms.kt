@@ -49,14 +49,22 @@ internal class TransformPairStat<R : Result>(
 
 internal class TransformVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
-    private val transform: (DoubleArray) -> DoubleArray,
+    private val transform: (DoubleArray) -> DoubleArray = { it },
+    private val vectorTransform: ((F64VectorLike) -> DoubleArray)? = null,
 ) : VectorStat<R>,
     Stat<R> by delegate {
     override fun update(vector: F64VectorLike, timestampNanos: Long, weight: Double) {
-        delegate.update(transform(vector.toDoubleArray()), timestampNanos, weight)
+        delegate.update(vectorTransform?.invoke(vector) ?: transform(vector.toDoubleArray()), timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
-        TransformVectorStat(delegate.create(concurrency), transform)
+        TransformVectorStat(delegate.create(concurrency), transform, vectorTransform)
+
+    companion object {
+        fun <R : Result> vector(
+            delegate: VectorStat<R>,
+            transform: (F64VectorLike) -> DoubleArray,
+        ): TransformVectorStat<R> = TransformVectorStat(delegate, vectorTransform = transform)
+    }
 }
 
 internal class TransformLongStat<R : Result>(

@@ -1,5 +1,9 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.core.F64StridedVectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.ResultList
@@ -20,6 +24,57 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class ExprTest {
+
+    private class NoMaterializeVector(private val values: DoubleArray) : F64VectorLike {
+        override val size: Int get() = values.size
+        override fun get(i: Int): Double = values[i]
+        override fun toDoubleArray(): DoubleArray = error("expression materialised its vector input")
+    }
+
+    @Test fun `vector aware scalar and bool expressions borrow input`() {
+        val vector = NoMaterializeVector(doubleArrayOf(2.0, Double.POSITIVE_INFINITY, 4.0))
+
+        assertEquals(8.0, (V(0) * V(2)).eval(v = vector), DELTA)
+        assertEquals(true, (V(0) gt 1.0).eval(v = vector))
+        assertEquals(false, allFinite().eval(v = vector))
+    }
+
+    @Test fun `vector aware vector expression allocates only its output`() {
+        val vector = NoMaterializeVector(doubleArrayOf(2.0, 3.0, 4.0))
+
+        assertTrue(VElements(listOf(V(2), V(0) + V(1))).eval(v = vector).contentEquals(doubleArrayOf(4.0, 5.0)))
+    }
+
+    @Test fun `vector aware coordinate access keeps bounds behavior`() {
+        assertFailsWith<IndexOutOfBoundsException> { V(2).eval(v = NoMaterializeVector(doubleArrayOf(1.0))) }
+    }
+
+    @Test fun `vector aware expressions agree across vector representations`() {
+        val dense = F64DenseVector.of(doubleArrayOf(2.0, 0.0, -3.0))
+        val sparse = F64SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(2.0, -3.0))
+        val strided = F64StridedVectorView(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -3.0, 9.0), 0, 3, 2)
+        val custom = NoMaterializeVector(doubleArrayOf(2.0, 0.0, -3.0))
+        val scalar = V(0) * V(2) + VFold(VFoldOp.Sum)
+        val predicate = (V(0) gt 0.0) and (V(2) lt 0.0)
+        val vector = VElements(listOf(V(2), V(0) + V(1)))
+
+        for (input in listOf<F64VectorLike>(dense, sparse, strided, custom)) {
+            assertEquals(-7.0, scalar.eval(v = input), DELTA)
+            assertTrue(predicate.eval(v = input))
+            assertTrue(vector.eval(v = input).contentEquals(doubleArrayOf(-3.0, 2.0)))
+            assertTrue(allFinite().eval(v = input))
+        }
+    }
+
+    @Test fun `all finite checks stored non finite values and sparse zeroes`() {
+        assertTrue(allFinite().eval(v = F64SparseVector.of(3, intArrayOf(1), doubleArrayOf(0.0))))
+        assertEquals(false, allFinite().eval(v = F64SparseVector.of(3, intArrayOf(1), doubleArrayOf(Double.NaN))))
+        assertEquals(
+            false,
+            allFinite().eval(v = F64SparseVector.of(3, intArrayOf(1), doubleArrayOf(Double.POSITIVE_INFINITY))),
+        )
+        assertTrue(allFinite().eval(v = NoMaterializeVector(doubleArrayOf())))
+    }
 
     @Test fun `x returns input`() {
         assertEquals(3.0, X.eval(3.0), DELTA)
@@ -277,6 +332,37 @@ class ExprTest {
         assertEquals(30.0, rl.results[1].sum, DELTA)
     }
 
+    @Test fun `schema vector filter fold and transform borrow custom input`() {
+        val input = NoMaterializeVector(doubleArrayOf(2.0, 3.0))
+        val filtered = Sum.vectorized(dimensions = 2).filter(V(0) gt 0.0).materialize(Concurrency.None)
+        val folded = Sum.foldVector(V(0) + V(1)).materialize(Concurrency.None)
+        val transformed = Sum.vectorized(
+            dimensions = 2,
+        ).transformVector(vectorOf(V(1), V(0))).materialize(Concurrency.None)
+
+        filtered.update(input)
+        folded.update(input)
+        transformed.update(input)
+
+        assertEquals(2.0, filtered.read().results[0].sum, DELTA)
+        assertEquals(5.0, folded.read().sum, DELTA)
+        assertEquals(3.0, transformed.read().results[0].sum, DELTA)
+    }
+
+    @Test fun `schema regression fold and weight expressions borrow custom input`() {
+        val input = NoMaterializeVector(doubleArrayOf(2.0, 3.0))
+        val folded = Sum.foldRegression(featureSize = 2, project = V(0) + V(1)).materialize(Concurrency.None)
+        val weighted = Sum.foldRegression(featureSize = 2, project = Y)
+            .weightBy(V(0))
+            .materialize(Concurrency.None)
+
+        folded.update(input, 0.0)
+        weighted.update(input, 4.0)
+
+        assertEquals(5.0, folded.read().sum, DELTA)
+        assertEquals(8.0, weighted.read().sum, DELTA)
+    }
+
     @Test fun `vfold sum product mean min max norm2`() {
         val v = doubleArrayOf(3.0, -4.0, 0.0)
         assertEquals(-1.0, VFold(VFoldOp.Sum).eval(0.0, 0.0, v), DELTA)
@@ -285,6 +371,56 @@ class ExprTest {
         assertEquals(-4.0, VFold(VFoldOp.Min).eval(0.0, 0.0, v), DELTA)
         assertEquals(3.0, VFold(VFoldOp.Max).eval(0.0, 0.0, v), DELTA)
         assertEquals(5.0, VFold(VFoldOp.Norm2).eval(0.0, 0.0, v), DELTA)
+    }
+
+    @Test fun `vector aware vfold min and max match double array ordering`() {
+        val min = VFold(VFoldOp.Min)
+        val max = VFold(VFoldOp.Max)
+        val cases = listOf(
+            doubleArrayOf(1.0, Double.NaN),
+            doubleArrayOf(Double.NaN, 1.0),
+            doubleArrayOf(0.0, -0.0),
+            doubleArrayOf(-0.0, 0.0),
+            doubleArrayOf(3.0, -4.0, 2.0),
+        )
+
+        for (values in cases) {
+            val input = NoMaterializeVector(values)
+            val arrayMin = min.eval(0.0, 0.0, values)
+            val arrayMax = max.eval(0.0, 0.0, values)
+            val vectorMin = min.eval(v = input)
+            val vectorMax = max.eval(v = input)
+            assertEquals(arrayMin.toBits(), vectorMin.toBits())
+            assertEquals(arrayMax.toBits(), vectorMax.toBits())
+        }
+    }
+
+    @Test fun `vector aware vfold min and max preserve empty exceptions`() {
+        val input = NoMaterializeVector(doubleArrayOf())
+
+        assertFailsWith<IllegalArgumentException> { VFold(VFoldOp.Min).eval(v = input) }
+        assertFailsWith<IllegalArgumentException> { VFold(VFoldOp.Max).eval(v = input) }
+    }
+
+    @Test fun `vector aware in evaluates its operand once and matches double array equality`() {
+        val empty = In(V(1), emptyList())
+        assertFailsWith<IndexOutOfBoundsException> { empty.eval(v = NoMaterializeVector(doubleArrayOf(1.0))) }
+
+        for (values in listOf(doubleArrayOf(Double.NaN), doubleArrayOf(0.0), doubleArrayOf(-0.0))) {
+            val expr = In(V(0), listOf(0.0, -0.0, Double.NaN))
+            assertEquals(expr.eval(0.0, 0.0, values), expr.eval(v = NoMaterializeVector(values)))
+        }
+
+        class CountingVector(private val values: DoubleArray) : F64VectorLike {
+            var reads = 0
+            override val size: Int get() = values.size
+            override fun get(i: Int): Double = values[i].also { reads++ }
+            override fun toDoubleArray(): DoubleArray = error("expression materialised its vector input")
+        }
+
+        val input = CountingVector(doubleArrayOf(2.0, 3.0))
+        assertTrue(In(VFold(VFoldOp.Sum), listOf(1.0, 4.0, 5.0)).eval(v = input))
+        assertEquals(2, input.reads)
     }
 
     @Test fun `vdot weighted dot product`() {
@@ -334,6 +470,18 @@ class ExprTest {
         live.update(doubleArrayOf(0.0, 0.0))
         val r = live.read() as WeightedMeanResult
         assertEquals(2.5, r.mean, DELTA)
+    }
+
+    @Test fun `schema paired vector fold borrows custom input`() {
+        val live = UnivariateRegression().foldVector(V(0), V(1)).materialize(Concurrency.None)
+
+        live.update(NoMaterializeVector(doubleArrayOf(1.0, 2.0)))
+        live.update(NoMaterializeVector(doubleArrayOf(2.0, 4.0)))
+
+        val result = live.read()
+        assertEquals(1.5, result.x.mean, DELTA)
+        assertEquals(3.0, result.y.mean, DELTA)
+        assertEquals(2.0, result.slope, DELTA)
     }
 
     @Test fun `fold configs round trip via wire`() {

@@ -16,14 +16,20 @@ import com.eignex.kumulant.core.VectorStat
 
 internal class FoldVectorStat<R : Result>(
     private val delegate: SeriesStat<R>,
-    private val transform: (DoubleArray) -> Double,
+    private val transform: (DoubleArray) -> Double = { 0.0 },
+    private val vectorTransform: ((F64VectorLike) -> Double)? = null,
 ) : VectorStat<R>,
     Stat<R> by delegate {
     override fun update(vector: F64VectorLike, timestampNanos: Long, weight: Double) {
-        delegate.update(transform(vector.toDoubleArray()), timestampNanos, weight)
+        delegate.update(vectorTransform?.invoke(vector) ?: transform(vector.toDoubleArray()), timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
-        FoldVectorStat(delegate.create(concurrency), transform)
+        FoldVectorStat(delegate.create(concurrency), transform, vectorTransform)
+
+    companion object {
+        fun <R : Result> vector(delegate: SeriesStat<R>, transform: (F64VectorLike) -> Double): FoldVectorStat<R> =
+            FoldVectorStat(delegate, vectorTransform = transform)
+    }
 }
 
 internal class FoldPairedStat<R : Result>(
@@ -40,14 +46,28 @@ internal class FoldPairedStat<R : Result>(
 
 internal class FoldVectorPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
-    private val foldX: (DoubleArray) -> Double,
-    private val foldY: (DoubleArray) -> Double,
+    private val foldX: (DoubleArray) -> Double = { 0.0 },
+    private val foldY: (DoubleArray) -> Double = { 0.0 },
+    private val vectorFoldX: ((F64VectorLike) -> Double)? = null,
+    private val vectorFoldY: ((F64VectorLike) -> Double)? = null,
 ) : VectorStat<R>,
     Stat<R> by delegate {
     override fun update(vector: F64VectorLike, timestampNanos: Long, weight: Double) {
-        val arr = vector.toDoubleArray()
-        delegate.update(foldX(arr), foldY(arr), timestampNanos, weight)
+        if (vectorFoldX != null && vectorFoldY != null) {
+            delegate.update(vectorFoldX(vector), vectorFoldY(vector), timestampNanos, weight)
+        } else {
+            val materialized = vector.toDoubleArray()
+            delegate.update(foldX(materialized), foldY(materialized), timestampNanos, weight)
+        }
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
-        FoldVectorPairedStat(delegate.create(concurrency), foldX, foldY)
+        FoldVectorPairedStat(delegate.create(concurrency), foldX, foldY, vectorFoldX, vectorFoldY)
+
+    companion object {
+        fun <R : Result> vector(
+            delegate: PairedStat<R>,
+            foldX: (F64VectorLike) -> Double,
+            foldY: (F64VectorLike) -> Double,
+        ): FoldVectorPairedStat<R> = FoldVectorPairedStat(delegate, vectorFoldX = foldX, vectorFoldY = foldY)
+    }
 }

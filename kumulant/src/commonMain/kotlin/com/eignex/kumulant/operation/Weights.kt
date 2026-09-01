@@ -131,14 +131,24 @@ internal class WeightByPairedStat<R : Result>(
 
 internal class WeightByVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
-    private val weighter: (DoubleArray) -> Double,
+    private val weighter: (DoubleArray) -> Double = { 1.0 },
+    private val vectorWeighter: ((F64VectorLike) -> Double)? = null,
 ) : VectorStat<R>,
     Stat<R> by delegate {
     override fun update(vector: F64VectorLike, timestampNanos: Long, weight: Double) {
-        delegate.update(vector, timestampNanos, weight * weighter(vector.toDoubleArray()))
+        delegate.update(
+            vector,
+            timestampNanos,
+            weight * (vectorWeighter?.invoke(vector) ?: weighter(vector.toDoubleArray())),
+        )
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
-        WeightByVectorStat(delegate.create(concurrency), weighter)
+        WeightByVectorStat(delegate.create(concurrency), weighter, vectorWeighter)
+
+    companion object {
+        fun <R : Result> vector(delegate: VectorStat<R>, weighter: (F64VectorLike) -> Double): WeightByVectorStat<R> =
+            WeightByVectorStat(delegate, vectorWeighter = weighter)
+    }
 }
 
 internal class WeightByDiscreteStat<R : Result>(
