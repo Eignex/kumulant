@@ -14,6 +14,26 @@ import kotlin.test.assertTrue
 class StochasticRegressionStatTest {
 
     @Test
+    fun `read owns weights independently from the stat and other snapshots`() {
+        val stat = StochasticRegressionStat(featureSize = 1, optimizer = Sgd(ConstantRate(0.1)))
+        stat.update(doubleArrayOf(1.0), 1.0)
+        val first = stat.read()
+        val firstWeight = first.weights[0]
+        stat.update(doubleArrayOf(1.0), -1.0)
+        StochasticRegressionStat(featureSize = 1, optimizer = Sgd(ConstantRate(0.1))).also {
+            it.update(doubleArrayOf(1.0), 1.0)
+            stat.merge(it.read())
+        }
+        stat.reset()
+        val second = stat.read()
+
+        assertEquals(firstWeight, first.weights[0], 1e-12)
+        assertEquals(0.0, second.weights[0], 1e-12)
+        first.weights.data[0] = 99.0
+        assertTrue(second.weights[0] != 99.0)
+    }
+
+    @Test
     fun `sgd should recover ground truth weights`() {
         val stat = StochasticRegressionStat(featureSize = 3, optimizer = Sgd(ConstantRate(0.05)))
         val truth = doubleArrayOf(1.5, -2.0, 0.5)

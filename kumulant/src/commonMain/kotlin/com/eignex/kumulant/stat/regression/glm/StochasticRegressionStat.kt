@@ -232,7 +232,7 @@ class StochasticRegressionStat(
             }
         }
         StochasticRegressionResult(
-            weights = F64DenseVector.of(materialised),
+            weights = F64DenseVector.wrap(materialised),
             bias = biasCell.load(),
             totalWeights = totalWeightsCell.load(),
             step = stepCell.load(),
@@ -252,9 +252,8 @@ class StochasticRegressionStat(
             val w2 = values.totalWeights
             val wNew = w1 + w2
             if (wNew > 0.0) {
-                val other = values.weights.toDoubleArray()
                 for (i in 0 until featureSize) {
-                    val blended = (effectiveWeight(i) * w1 + other[i] * w2) / wNew
+                    val blended = (effectiveWeight(i) * w1 + values.weights[i] * w2) / wNew
                     weightsCell.store(i, blended)
                     l1LastApplied?.store(i, requireL1Pending().load())
                 }

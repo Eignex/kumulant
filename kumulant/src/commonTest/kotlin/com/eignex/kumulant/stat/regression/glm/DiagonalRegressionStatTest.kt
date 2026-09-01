@@ -10,6 +10,31 @@ import kotlin.test.assertTrue
 class DiagonalRegressionStatTest {
 
     @Test
+    fun `read owns vectors independently from the stat and other snapshots`() {
+        val stat = DiagonalRegressionStat(featureSize = 1)
+        stat.update(doubleArrayOf(1.0), 1.0)
+        val first = stat.read()
+        val firstWeight = first.weights[0]
+        val firstPrecision = first.precision[0]
+        stat.update(doubleArrayOf(1.0), -1.0)
+        DiagonalRegressionStat(featureSize = 1).also {
+            it.update(doubleArrayOf(1.0), 1.0)
+            stat.merge(it.read())
+        }
+        stat.reset()
+        val second = stat.read()
+
+        assertEquals(firstWeight, first.weights[0], 1e-12)
+        assertEquals(firstPrecision, first.precision[0], 1e-12)
+        assertEquals(0.0, second.weights[0], 1e-12)
+        assertEquals(1.0, second.precision[0], 1e-12)
+        first.weights.data[0] = 99.0
+        first.precision.data[0] = 99.0
+        assertTrue(second.weights[0] != 99.0)
+        assertTrue(second.precision[0] != 99.0)
+    }
+
+    @Test
     fun `diagonal should recover ground truth weights with finite per-coefficient precision`() {
         val stat = DiagonalRegressionStat(featureSize = 3, priorPrecision = 0.01)
         val truth = doubleArrayOf(1.0, -1.5, 2.0)

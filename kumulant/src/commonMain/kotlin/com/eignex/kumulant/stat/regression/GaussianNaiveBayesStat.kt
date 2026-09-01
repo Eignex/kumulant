@@ -175,23 +175,24 @@ class GaussianNaiveBayesStat(
     }
 
     override fun read(timestampNanos: Long): GaussianNaiveBayesResult = lock.guarded {
-        val meansFlat = DoubleArray(numClasses * featureSize) { meanCell.load(it) }
-        val varsFlat = DoubleArray(numClasses * featureSize) { idx ->
-            val c = idx / featureSize
+        val meansFlat = DoubleArray(numClasses * featureSize)
+        val varsFlat = DoubleArray(numClasses * featureSize)
+        for (c in 0 until numClasses) {
             val w = classWeightCell.load(c)
-            if (w > 0.0) m2Cell.load(idx) / w else 0.0
+            for (i in 0 until featureSize) {
+                val source = c * featureSize + i
+                val destination = c + i * numClasses
+                meansFlat[destination] = meanCell.load(source)
+                varsFlat[destination] = if (w > 0.0) m2Cell.load(source) / w else 0.0
+            }
         }
         val cw = DoubleArray(numClasses) { classWeightCell.load(it) }
         GaussianNaiveBayesResult(
             featureSize = featureSize,
             numClasses = numClasses,
-            means = F64DenseMatrix.of(
-                Array(numClasses) { k -> meansFlat.copyOfRange(k * featureSize, (k + 1) * featureSize) },
-            ),
-            variances = F64DenseMatrix.of(
-                Array(numClasses) { k -> varsFlat.copyOfRange(k * featureSize, (k + 1) * featureSize) },
-            ),
-            classWeights = F64DenseVector.of(cw),
+            means = F64DenseMatrix.wrap(numClasses, featureSize, meansFlat),
+            variances = F64DenseMatrix.wrap(numClasses, featureSize, varsFlat),
+            classWeights = F64DenseVector.wrap(cw),
             totalWeights = totalWeightCell.load(),
             varianceFloor = varianceFloor,
         )

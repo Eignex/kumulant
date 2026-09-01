@@ -34,6 +34,12 @@ import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
 
+private fun F64MatrixLike.copyDenseMatrix(): F64DenseMatrix = F64DenseMatrix.wrap(
+    rows,
+    cols,
+    DoubleArray(rows * cols) { index -> this[index % rows, index / rows] },
+)
+
 /**
  * Bayesian generalised linear regression with a Gaussian prior on the weights and a
  * canonical [Link] for the response. Produces a full posterior covariance `S = H^-1`
@@ -111,7 +117,7 @@ class BayesianRegressionStat(
     // so a non-PD user prior throws at construction rather than silently corrupting fits.
     private val initialWeights: DoubleArray = priorMean?.toDoubleArray() ?: DoubleArray(featureSize)
     private val initialCovariance: F64DenseMatrix = priorCovariance
-        ?.let { F64DenseMatrix.of(it.toArray()) }
+        ?.copyDenseMatrix()
         ?: F64DenseMatrix.diagonal(featureSize, priorVariance)
     private val initialCovarianceL: F64DenseMatrix
 
@@ -125,12 +131,12 @@ class BayesianRegressionStat(
     }
 
     // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
-    private val priorInfo: DoubleArray = (priorPrecisionMatrix * F64DenseVector.of(initialWeights)).toDoubleArray()
+    private val priorInfo: DoubleArray = (priorPrecisionMatrix * F64DenseVector.wrap(initialWeights)).toDoubleArray()
 
     private val lock = concurrency.serializedLock()
-    private val weights = F64DenseVector.of(initialWeights.copyOf())
-    private val covariance = F64DenseMatrix.of(initialCovariance.toArray())
-    private val covarianceL = F64DenseMatrix.of(initialCovarianceL.toArray())
+    private val weights = F64DenseVector.wrap(initialWeights.copyOf())
+    private val covariance = F64DenseMatrix.wrap(featureSize, featureSize, initialCovariance.data.copyOf())
+    private val covarianceL = F64DenseMatrix.wrap(featureSize, featureSize, initialCovarianceL.data.copyOf())
     private var bias: Double = 0.0
     private var biasPrecision: Double = 1.0 / priorVariance
     private var totalWeights: Double = 0.0
@@ -229,13 +235,13 @@ class BayesianRegressionStat(
 
     override fun read(timestampNanos: Long): CovarianceRegressionResult = lock.guarded {
         CovarianceRegressionResult(
-            weights = F64DenseVector.of(weights.toDoubleArray()),
+            weights = F64DenseVector.wrap(weights.data.copyOf()),
             bias = bias,
             biasPrecision = biasPrecision,
             totalWeights = totalWeights,
             step = step,
-            covariance = F64DenseMatrix.of(covariance.toArray()),
-            covarianceL = F64DenseMatrix.of(covarianceL.toArray()),
+            covariance = F64DenseMatrix.wrap(featureSize, featureSize, covariance.data.copyOf()),
+            covarianceL = F64DenseMatrix.wrap(featureSize, featureSize, covarianceL.data.copyOf()),
             link = link,
             sse = sse,
         )
@@ -339,8 +345,8 @@ class BayesianRegressionStat(
         priorVariance = priorVariance,
         link = link,
         concurrency = concurrency ?: this.concurrency,
-        priorMean = F64DenseVector.of(initialWeights.copyOf()),
-        priorCovariance = F64DenseMatrix.of(initialCovariance.toArray()),
+        priorMean = F64DenseVector.wrap(initialWeights.copyOf()),
+        priorCovariance = F64DenseMatrix.wrap(featureSize, featureSize, initialCovariance.data.copyOf()),
     )
 
     /** Empirical-Bayes / hierarchical helpers that operate on populations of fitted snapshots. */

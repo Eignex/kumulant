@@ -132,6 +132,26 @@ class KnnContextualBanditTest {
     }
 
     @Test
+    fun `update retains an independent sparse snapshot including stored zeros`() {
+        val indices = intArrayOf(0, 2)
+        val values = doubleArrayOf(1.0, 0.0)
+        val bandit = KnnContextualBandit(nbrArms = 1, k = 1, exploration = 0.0)
+        bandit.update(0, F64SparseVector.wrap(3, indices, values), 4.0)
+
+        indices[0] = 1
+        values[0] = 99.0
+        assertEquals(4.0, bandit.evaluate(0, feat(1.0, 0.0, 0.0)), 1e-12)
+    }
+
+    @Test
+    fun `update retains an empty sparse snapshot`() {
+        val bandit = KnnContextualBandit(nbrArms = 1, k = 1, exploration = 0.0)
+        bandit.update(0, F64SparseVector.wrap(3, IntArray(0), DoubleArray(0)), 4.0)
+
+        assertEquals(4.0, bandit.evaluate(0, feat(0.0, 0.0, 0.0)), 1e-12)
+    }
+
+    @Test
     fun `zero-weight update does not displace real history`() {
         val bandit = KnnContextualBandit(nbrArms = 1, k = 1, maxHistoryPerArm = 2, exploration = 0.0)
         val x = feat(0.0)

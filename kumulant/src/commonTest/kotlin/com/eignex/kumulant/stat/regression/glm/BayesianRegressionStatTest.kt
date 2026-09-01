@@ -18,6 +18,35 @@ class BayesianRegressionStatTest {
         override fun toDoubleArray(): DoubleArray = DoubleArray(size) { this[it] }
     }
 
+    @Test
+    fun `read owns vector and matrix storage independently from the stat`() {
+        val stat = BayesianRegressionStat(featureSize = 1)
+        stat.update(doubleArrayOf(1.0), 1.0)
+        val first = stat.read()
+        val firstWeight = first.weights[0]
+        val firstCovariance = first.covariance[0, 0]
+        val firstCovarianceL = first.covarianceL[0, 0]
+
+        stat.update(doubleArrayOf(1.0), -1.0)
+        BayesianRegressionStat(featureSize = 1).also {
+            it.update(doubleArrayOf(1.0), 1.0)
+            stat.merge(it.read())
+        }
+        stat.reset()
+        val second = stat.read()
+
+        assertEquals(firstWeight, first.weights[0], 1e-12)
+        assertEquals(firstCovariance, first.covariance[0, 0], 1e-12)
+        assertEquals(firstCovarianceL, first.covarianceL[0, 0], 1e-12)
+        assertEquals(0.0, second.weights[0], 1e-12)
+        first.weights.data[0] = 99.0
+        first.covariance.data[0] = 99.0
+        first.covarianceL.data[0] = 99.0
+        assertTrue(second.weights[0] != 99.0)
+        assertTrue(second.covariance[0, 0] != 99.0)
+        assertTrue(second.covarianceL[0, 0] != 99.0)
+    }
+
     // The factor is downdated alongside the covariance rather than refactorized, so the two can
     // only be trusted to agree if every downdate lands. L * LT has to stay equal to S. The
     // tolerance is relative because the covariance entries span many orders of magnitude across

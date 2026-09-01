@@ -21,6 +21,34 @@ class GaussianNaiveBayesStatTest {
     }
 
     @Test
+    fun `read owns matrix and vector storage independently from the stat`() {
+        val stat = GaussianNaiveBayesStat(featureSize = 1, numClasses = 2)
+        stat.update(doubleArrayOf(1.0), 0.0)
+        val first = stat.read()
+        val firstMean = first.means[0, 0]
+        val firstVariance = first.variances[0, 0]
+        val firstWeight = first.classWeights[0]
+
+        stat.update(doubleArrayOf(2.0), 0.0)
+        GaussianNaiveBayesStat(featureSize = 1, numClasses = 2).also {
+            it.update(doubleArrayOf(3.0), 0.0)
+            stat.merge(it.read())
+        }
+        stat.reset()
+        val second = stat.read()
+
+        assertEquals(firstMean, first.means[0, 0], DELTA)
+        assertEquals(firstVariance, first.variances[0, 0], DELTA)
+        assertEquals(firstWeight, first.classWeights[0], DELTA)
+        first.means.data[0] = 99.0
+        first.variances.data[0] = 99.0
+        first.classWeights.data[0] = 99.0
+        assertTrue(second.means[0, 0] != 99.0)
+        assertTrue(second.variances[0, 0] != 99.0)
+        assertTrue(second.classWeights[0] != 99.0)
+    }
+
+    @Test
     fun `per class means and variances match the running stats`() {
         val stat = GaussianNaiveBayesStat(featureSize = 2, numClasses = 2)
         // Class 0: feature 0 around 1.0, feature 1 around 5.0.

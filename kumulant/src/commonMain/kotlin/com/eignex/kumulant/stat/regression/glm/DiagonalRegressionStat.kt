@@ -126,12 +126,12 @@ class DiagonalRegressionStat(
 
     override fun read(timestampNanos: Long): DiagonalRegressionResult = lock.guarded {
         DiagonalRegressionResult(
-            weights = F64DenseVector.of(weights),
+            weights = F64DenseVector.wrap(weights.copyOf()),
             bias = bias,
             biasPrecision = biasPrecision,
             totalWeights = totalWeights,
             step = step,
-            precision = F64DenseVector.of(precision),
+            precision = F64DenseVector.wrap(precision.copyOf()),
             link = link,
             sse = sse,
         )
@@ -145,8 +145,6 @@ class DiagonalRegressionStat(
     override fun merge(values: DiagonalRegressionResult) {
         requireMergeFeatureSize(values.featureSize, featureSize)
         lock.guarded {
-            val otherWeights = values.weights.toDoubleArray()
-            val otherPrecision = values.precision.toDoubleArray()
             // Subtract one copy of the prior, as BayesianRegressionStat.merge does with
             // H_new = H_self + H_other - H_prior. Every replica seeds its precision at
             // priorPrecision, so pooling additively would count the prior once per replica and let an
@@ -154,10 +152,10 @@ class DiagonalRegressionStat(
             // contributes nothing to the information vector and only the denominator changes.
             for (i in 0 until featureSize) {
                 val p1 = precision[i]
-                val p2 = otherPrecision[i]
+                val p2 = values.precision[i]
                 val pNew = p1 + p2 - priorPrecision
                 if (pNew > 0.0) {
-                    weights[i] = (weights[i] * p1 + otherWeights[i] * p2) / pNew
+                    weights[i] = (weights[i] * p1 + values.weights[i] * p2) / pNew
                     precision[i] = pNew
                 }
             }
