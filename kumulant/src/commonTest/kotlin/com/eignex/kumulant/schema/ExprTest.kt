@@ -402,6 +402,91 @@ class ExprTest {
         assertFailsWith<IllegalArgumentException> { VFold(VFoldOp.Max).eval(v = input) }
     }
 
+    @Test fun `vector reductions match double arrays across storage representations`() {
+        val values = listOf(
+            doubleArrayOf(),
+            doubleArrayOf(-0.0),
+            doubleArrayOf(0.0, 3.0, -4.0, 0.0),
+            doubleArrayOf(Double.NaN, 0.0, 2.0),
+            doubleArrayOf(1.0, 0.0, Double.NaN, 2.0),
+            doubleArrayOf(0.0, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY),
+            doubleArrayOf(-0.0, 0.0, Double.MAX_VALUE, Double.MIN_VALUE),
+        )
+        val folds = VFoldOp.entries.map(::VFold)
+
+        for (array in values) {
+            val representations = listOf<F64VectorLike>(
+                F64DenseVector.of(array),
+                sparse(array),
+                F64StridedVectorView(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
+                NoMaterializeVector(array),
+            )
+            for (fold in folds) {
+                for (input in representations) {
+                    if (array.isEmpty() && fold.op in setOf(VFoldOp.Mean, VFoldOp.Min, VFoldOp.Max)) {
+                        assertFailsWith<IllegalArgumentException> { fold.eval(v = input) }
+                    } else {
+                        assertEquals(fold.eval(0.0, 0.0, array).toBits(), fold.eval(v = input).toBits())
+                    }
+                }
+            }
+        }
+    }
+
+    @Test fun `vector vdot matches double arrays for sparse edge cases`() {
+        val cases = listOf(
+            doubleArrayOf(),
+            doubleArrayOf(0.0),
+            doubleArrayOf(0.0, 2.0, -3.0, 0.0),
+            doubleArrayOf(Double.NaN, 0.0, 2.0),
+            doubleArrayOf(0.0, Double.POSITIVE_INFINITY, -0.0),
+            doubleArrayOf(Double.MAX_VALUE, Double.MIN_VALUE, 0.0),
+        )
+        val weightSets = listOf(
+            emptyList(),
+            listOf(0.0),
+            listOf(1.0, 0.0, -1.0, 2.0),
+            listOf(1.0, 0.0, -1.0),
+            listOf(0.0, 1.0, -1.0),
+            listOf(1.0, -1.0, 0.0),
+        )
+
+        for ((array, weights) in cases.zip(weightSets)) {
+            val expr = VDot(weights)
+            val expected = expr.eval(0.0, 0.0, array)
+            for (input in listOf<F64VectorLike>(
+                F64DenseVector.of(array),
+                sparse(array),
+                F64StridedVectorView(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
+                NoMaterializeVector(array),
+            )) {
+                assertEquals(expected.toBits(), expr.eval(v = input).toBits())
+            }
+        }
+    }
+
+    @Test fun `vector reductions preserve explicit sparse zeroes`() {
+        val array = doubleArrayOf(2.0, 0.0, -3.0)
+        val input = F64SparseVector.of(3, intArrayOf(0, 1, 2), array)
+
+        for (op in VFoldOp.entries) {
+            val fold = VFold(op)
+            assertEquals(fold.eval(0.0, 0.0, array).toBits(), fold.eval(v = input).toBits())
+        }
+    }
+
+    @Test fun `vector vdot preserves non finite implicit zero behavior`() {
+        val values = doubleArrayOf(0.0, 2.0, 0.0)
+        val expr = VDot(listOf(Double.POSITIVE_INFINITY, 1.0, Double.NaN))
+
+        assertEquals(expr.eval(0.0, 0.0, values).toBits(), expr.eval(v = sparse(values)).toBits())
+    }
+
+    @Test fun `vector vdot preserves length mismatch and zero weights`() {
+        assertFailsWith<IllegalArgumentException> { VDot(listOf(1.0)).eval(v = sparse(doubleArrayOf(1.0, 2.0))) }
+        assertEquals(0.0, VDot(listOf(0.0, 0.0)).eval(v = sparse(doubleArrayOf(3.0, -4.0))))
+    }
+
     @Test fun `vector aware in evaluates its operand once and matches double array equality`() {
         val empty = In(V(1), emptyList())
         assertFailsWith<IndexOutOfBoundsException> { empty.eval(v = NoMaterializeVector(doubleArrayOf(1.0))) }
@@ -433,6 +518,14 @@ class ExprTest {
         assertFailsWith<IllegalArgumentException> {
             VDot(weights = listOf(1.0, 1.0)).eval(0.0, 0.0, doubleArrayOf(1.0, 2.0, 3.0))
         }
+    }
+
+    private fun sparse(values: DoubleArray): F64SparseVector {
+        val indices = values.indices.filter {
+            values[it] != 0.0 || values[it].toBits() == (-0.0).toBits() ||
+                values[it].isNaN()
+        }
+        return F64SparseVector.of(values.size, indices.toIntArray(), DoubleArray(indices.size) { values[indices[it]] })
     }
 
     @Test fun `foldPaired lifts series to paired with xy expression`() {

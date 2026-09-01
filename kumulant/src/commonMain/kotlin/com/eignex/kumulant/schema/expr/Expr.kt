@@ -1,5 +1,6 @@
 package com.eignex.kumulant.schema.expr
 
+import com.eignex.koblas.core.F64SparseVector
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.HasCenterScale
@@ -902,7 +903,13 @@ fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary:
     }
 
     is VFold -> when (op) {
-        VFoldOp.Sum -> (0 until v.size).sumOf { v[it] }
+        VFoldOp.Sum -> if (v is F64SparseVector) {
+            var sum = 0.0
+            v.forEachStored { _, value -> sum += value }
+            sum
+        } else {
+            (0 until v.size).sumOf { v[it] }
+        }
 
         VFoldOp.Product -> (0 until v.size).fold(1.0) { product, i -> product * v[i] }
 
@@ -910,34 +917,96 @@ fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary:
             require(
                 v.size != 0,
             ) { "VFold.Mean on empty vector" }
-            (0 until v.size).sumOf { v[it] } / v.size
+            if (v is F64SparseVector) {
+                var sum = 0.0
+                v.forEachStored { _, value -> sum += value }
+                sum / v.size
+            } else {
+                (0 until v.size).sumOf { v[it] } / v.size
+            }
         }
 
         VFoldOp.Min -> {
             require(
                 v.size != 0,
             ) { "VFold.Min on empty vector" }
-            var minimum = v[0]
-            for (i in 1 until v.size) if (v[i] < minimum) minimum = v[i]
-            minimum
+            if (v is F64SparseVector) {
+                sparseMin(v)
+            } else {
+                var minimum = v[0]
+                for (i in 1 until v.size) if (v[i] < minimum) minimum = v[i]
+                minimum
+            }
         }
 
         VFoldOp.Max -> {
             require(
                 v.size != 0,
             ) { "VFold.Max on empty vector" }
-            var maximum = v[0]
-            for (i in 1 until v.size) if (v[i] > maximum) maximum = v[i]
-            maximum
+            if (v is F64SparseVector) {
+                sparseMax(v)
+            } else {
+                var maximum = v[0]
+                for (i in 1 until v.size) if (v[i] > maximum) maximum = v[i]
+                maximum
+            }
         }
 
-        VFoldOp.Norm2 -> sqrt((0 until v.size).sumOf { v[it] * v[it] })
+        VFoldOp.Norm2 -> if (v is F64SparseVector) {
+            var sum = 0.0
+            v.forEachStored { _, value -> sum += value * value }
+            sqrt(sum)
+        } else {
+            sqrt((0 until v.size).sumOf { v[it] * v[it] })
+        }
     }
 
     is VDot -> {
         require(v.size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=${v.size}" }
-        (0 until v.size).sumOf { weights[it] * v[it] }
+        if (v is F64SparseVector && weights.all { it.isFinite() }) {
+            var sum = 0.0
+            v.forEachStored { index, value -> sum += weights[index] * value }
+            sum
+        } else {
+            (0 until v.size).sumOf { weights[it] * v[it] }
+        }
     }
+}
+
+private fun sparseMin(v: F64SparseVector): Double {
+    var minimum = 0.0
+    var first = true
+    var next = 0
+    v.forEachStored { index, value ->
+        if (first) {
+            minimum = if (index == 0) value else 0.0
+            first = false
+        }
+        if (index > next && 0.0 < minimum) minimum = 0.0
+        if (index != 0 && value < minimum) minimum = value
+        next = index + 1
+    }
+    if (first) return 0.0
+    if (next < v.size && 0.0 < minimum) minimum = 0.0
+    return minimum
+}
+
+private fun sparseMax(v: F64SparseVector): Double {
+    var maximum = 0.0
+    var first = true
+    var next = 0
+    v.forEachStored { index, value ->
+        if (first) {
+            maximum = if (index == 0) value else 0.0
+            first = false
+        }
+        if (index > next && 0.0 > maximum) maximum = 0.0
+        if (index != 0 && value > maximum) maximum = value
+        next = index + 1
+    }
+    if (first) return 0.0
+    if (next < v.size && 0.0 > maximum) maximum = 0.0
+    return maximum
 }
 
 /** Evaluate this boolean expression against a borrowed KoBLAS vector without materialising it. */
