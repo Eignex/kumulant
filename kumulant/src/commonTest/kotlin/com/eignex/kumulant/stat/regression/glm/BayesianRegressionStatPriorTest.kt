@@ -149,6 +149,35 @@ class BayesianRegressionStatPriorTest {
     }
 
     @Test
+    fun `merging an empty custom prior state preserves the populated posterior`() {
+        val priorMean = F64DenseVector.of(doubleArrayOf(0.4, -0.7))
+        val priorCovariance = F64DenseMatrix.of(
+            arrayOf(
+                doubleArrayOf(0.8, 0.2),
+                doubleArrayOf(0.2, 0.6),
+            ),
+        )
+        fun fresh() = BayesianRegressionStat(
+            featureSize = 2,
+            priorMean = priorMean,
+            priorCovariance = priorCovariance,
+        )
+        val populated = fresh().also {
+            it.update(doubleArrayOf(1.0, -0.25), 0.5)
+            it.update(doubleArrayOf(-0.5, 1.0), -1.0)
+        }
+        val expected = populated.read()
+
+        populated.merge(fresh().read())
+
+        val actual = populated.read()
+        for (i in 0 until 2) {
+            assertEquals(expected.weights[i], actual.weights[i], 1e-12)
+            for (j in 0 until 2) assertEquals(expected.covariance[i, j], actual.covariance[i, j], 1e-12)
+        }
+    }
+
+    @Test
     fun `fitPopulationPrior returns the simple mean for identical posteriors`() {
         val mean = doubleArrayOf(1.0, -0.5)
         val cov = F64DenseMatrix.diagonal(2, 0.4)
