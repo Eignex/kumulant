@@ -8,6 +8,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+
 class Exp4BanditTest {
 
     @Test
@@ -25,6 +26,96 @@ class Exp4BanditTest {
         val bandit = Exp4Bandit(nbrArms = 3, experts = listOf(uniformExpert(3)), random = Random(0))
         val p = bandit.playDistribution(feat(0.0, 0.0))
         for (a in 0 until 3) assertTrue(abs(p[a] - 1.0 / 3) < 1e-9, "p[$a]=${p[a]}")
+    }
+
+    @Test
+    fun `playDistributionInto agrees with owned distribution and keeps its destination`() {
+        val bandit = Exp4Bandit(
+            nbrArms = 3,
+            experts = listOf(oneHotExpert(3, 0), oneHotExpert(3, 2)),
+            gamma = 0.2,
+        )
+        val out = DoubleArray(3)
+
+        bandit.playDistributionInto(feat(0.0), out)
+        val owned = bandit.playDistribution(feat(0.0))
+
+        assertEquals(owned.toList(), out.toList())
+        assertTrue(out !== owned)
+    }
+
+    @Test
+    fun `playDistributionInto validates its destination before consulting experts`() {
+        var calls = 0
+        val bandit = Exp4Bandit(
+            nbrArms = 2,
+            experts = listOf(
+                Exp4Expert { _, _ ->
+                    calls++
+                    doubleArrayOf(0.5, 0.5)
+                },
+            ),
+        )
+
+        assertFailsWith<IllegalArgumentException> { bandit.playDistributionInto(feat(0.0), DoubleArray(1)) }
+
+        assertEquals(0, calls)
+    }
+
+    @Test
+    fun `playDistributionInto evaluates experts in order once and preserves shared advice`() {
+        val shared = doubleArrayOf(1.0, 0.0)
+        val calls = mutableListOf<Int>()
+        val experts = listOf(
+            Exp4Expert { _, _ ->
+                calls += 0
+                shared[0] = 1.0
+                shared[1] = 0.0
+                shared
+            },
+            Exp4Expert { _, _ ->
+                calls += 1
+                shared[0] = 0.0
+                shared[1] = 1.0
+                shared
+            },
+        )
+        val bandit = Exp4Bandit(nbrArms = 2, experts = experts, gamma = 0.0)
+        val out = DoubleArray(2)
+
+        bandit.playDistributionInto(feat(0.0), out)
+
+        assertEquals(listOf(0, 1), calls)
+        assertEquals(listOf(0.0, 1.0), out.toList())
+    }
+
+    @Test
+    fun `playDistributionInto preserves exceptional arithmetic`() {
+        val advice = arrayOf(
+            doubleArrayOf(Double.POSITIVE_INFINITY, -0.0),
+            doubleArrayOf(0.0, Double.NaN),
+        )
+        val allocating = Exp4Bandit(2, advice.map { values -> Exp4Expert { _, _ -> values } }, gamma = 1.0)
+        val destination = Exp4Bandit(2, advice.map { values -> Exp4Expert { _, _ -> values } }, gamma = 1.0)
+        val out = DoubleArray(2)
+
+        val expected = allocating.playDistribution(feat(0.0))
+        destination.playDistributionInto(feat(0.0), out)
+
+        for (i in out.indices) assertEquals(expected[i], out[i])
+    }
+
+    @Test
+    fun `choose consumes one draw and matches destination distribution away from a boundary`() {
+        val experts = listOf(oneHotExpert(2, 0), oneHotExpert(2, 0), oneHotExpert(2, 1))
+        val expected = Exp4Bandit(2, experts, gamma = 0.0, random = Random(17))
+        val actual = Exp4Bandit(2, experts, gamma = 0.0, random = Random(17))
+        val out = DoubleArray(2)
+
+        expected.playDistributionInto(feat(0.0), out)
+        val arm = actual.choose(feat(0.0))
+
+        assertEquals(if (Random(17).nextDouble() < out[0]) 0 else 1, arm)
     }
 
     @Test
@@ -122,6 +213,18 @@ class Exp4BanditTest {
         val before = bandit.expertWeights().toList()
         bandit.update(0, feat(0.0), 1.0, weight = 0.0)
         assertEquals(before, bandit.expertWeights().toList())
+    }
+
+    @Test
+    fun `inert update does not consume a pending propensity`() {
+        val bandit = Exp4Bandit(nbrArms = 2, experts = listOf(oneHotExpert(2, 0), oneHotExpert(2, 1)), gamma = 0.2)
+        val x = feat(0.0)
+        val arm = bandit.choose(x)
+
+        bandit.update(arm, x, 1.0, weight = 0.0)
+        bandit.update(arm, x, 1.0)
+
+        assertTrue(bandit.expertWeights()[arm] > 0.5)
     }
 
     @Test

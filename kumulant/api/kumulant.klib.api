@@ -1207,6 +1207,7 @@ final class com.eignex.kumulant.bandit.contextual/Exp4Bandit : com.eignex.kumula
     final fun expertWeights(): kotlin/DoubleArray // com.eignex.kumulant.bandit.contextual/Exp4Bandit.expertWeights|expertWeights(){}[0]
     final fun merge(com.eignex.kumulant.bandit.contextual/Exp4State) // com.eignex.kumulant.bandit.contextual/Exp4Bandit.merge|merge(com.eignex.kumulant.bandit.contextual.Exp4State){}[0]
     final fun playDistribution(com.eignex.koblas.core/F64VectorLike): kotlin/DoubleArray // com.eignex.kumulant.bandit.contextual/Exp4Bandit.playDistribution|playDistribution(com.eignex.koblas.core.F64VectorLike){}[0]
+    final fun playDistributionInto(com.eignex.koblas.core/F64VectorLike, kotlin/DoubleArray) // com.eignex.kumulant.bandit.contextual/Exp4Bandit.playDistributionInto|playDistributionInto(com.eignex.koblas.core.F64VectorLike;kotlin.DoubleArray){}[0]
     final fun reset() // com.eignex.kumulant.bandit.contextual/Exp4Bandit.reset|reset(){}[0]
     final fun snapshot(): com.eignex.kumulant.bandit.contextual/Exp4State // com.eignex.kumulant.bandit.contextual/Exp4Bandit.snapshot|snapshot(){}[0]
     final fun update(kotlin/Int, com.eignex.koblas.core/F64VectorLike, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.contextual/Exp4Bandit.update|update(kotlin.Int;com.eignex.koblas.core.F64VectorLike;kotlin.Double;kotlin.Double){}[0]

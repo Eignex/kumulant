@@ -131,6 +131,7 @@ public final class com/eignex/kumulant/bandit/contextual/Exp4Bandit : com/eignex
 	public fun merge (Lcom/eignex/kumulant/bandit/contextual/Exp4State;)V
 	public synthetic fun merge (Ljava/lang/Object;)V
 	public final fun playDistribution (Lcom/eignex/koblas/core/F64VectorLike;)[D
+	public final fun playDistributionInto (Lcom/eignex/koblas/core/F64VectorLike;[D)V
 	public fun reset ()V
 	public fun snapshot ()Lcom/eignex/kumulant/bandit/contextual/Exp4State;
 	public synthetic fun snapshot ()Ljava/lang/Object;
