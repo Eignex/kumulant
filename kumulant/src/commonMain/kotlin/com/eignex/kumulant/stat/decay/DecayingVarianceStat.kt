@@ -142,7 +142,7 @@ class DecayingVarianceStat(
         DecayingVarianceResult(mean.load(), variance, w, timestampNanos)
     }
 
-    override fun merge(values: DecayingVarianceResult) = lock.guarded {
+    override fun merge(values: DecayingVarianceResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         if (values.totalWeights <= 0.0) return@guarded
         val target = maxOf(landmarkNanos.load(), values.timestampNanos)
         advanceTo(target)

@@ -1,5 +1,6 @@
 package com.eignex.kumulant.core
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.stream.currentTimeNanos
@@ -151,7 +152,7 @@ interface Stat<R : Result> {
      * information for the principled combine. Each stat's KDoc documents its
      * merge semantics.
      */
-    fun merge(values: R)
+    fun merge(values: R, workspace: Workspace? = null)
 
     /**
      * Reset the stat to its prior-seeded baseline. Equivalent to constructing
@@ -299,18 +300,19 @@ interface RegressionStat<R : Result> : Stat<R> {
     val featureSize: Int
 
     /** Record an `(x, y)` observation with the given [weight] at the current time. */
-    fun update(x: F64VectorLike, y: Double, weight: Double = 1.0) = update(x, y, currentTimeNanos(), weight)
+    fun update(x: F64VectorLike, y: Double, weight: Double = 1.0, workspace: Workspace? = null) =
+        update(x, y, currentTimeNanos(), weight, workspace)
 
     /** Record an `(x, y)` observation at [timestampNanos] with the given [weight]. */
-    fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double = 1.0)
+    fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double = 1.0, workspace: Workspace? = null)
 
     /** Convenience overload that wraps `x` as a [F64DenseVector]. */
-    fun update(x: DoubleArray, y: Double, weight: Double = 1.0) =
-        update(F64DenseVector.of(x), y, currentTimeNanos(), weight)
+    fun update(x: DoubleArray, y: Double, weight: Double = 1.0, workspace: Workspace? = null) =
+        update(F64DenseVector.of(x), y, currentTimeNanos(), weight, workspace)
 
     /** Timestamped convenience overload that wraps `x` as a [F64DenseVector]. */
-    fun update(x: DoubleArray, y: Double, timestampNanos: Long, weight: Double = 1.0) =
-        update(F64DenseVector.of(x), y, timestampNanos, weight)
+    fun update(x: DoubleArray, y: Double, timestampNanos: Long, weight: Double = 1.0, workspace: Workspace? = null) =
+        update(F64DenseVector.of(x), y, timestampNanos, weight, workspace)
 
     override fun create(concurrency: Concurrency?): RegressionStat<R>
 }

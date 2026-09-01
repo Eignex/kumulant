@@ -41,7 +41,7 @@ class MaxStat(override val concurrency: Concurrency = Concurrency.None) : Series
         casMax(this.value, value)
     }
 
-    override fun merge(values: MaxResult) {
+    override fun merge(values: MaxResult, workspace: com.eignex.koblas.Workspace?) {
         casMax(value, values.max)
     }
 

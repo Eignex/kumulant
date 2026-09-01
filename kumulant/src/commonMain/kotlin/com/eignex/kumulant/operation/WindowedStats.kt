@@ -102,7 +102,7 @@ internal class WindowedSeriesStat<R : Result>(
         WindowedSeriesStat(windowDuration, slices, template, concurrency ?: this.concurrency)
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun merge(values: R) = ring.mergeNow(values)
+    override fun merge(values: R, workspace: com.eignex.koblas.Workspace?) = ring.mergeNow(values)
     override fun reset() = ring.reset()
 }
 
@@ -124,7 +124,7 @@ internal class WindowedPairedStat<R : Result>(
         WindowedPairedStat(windowDuration, slices, template, concurrency ?: this.concurrency)
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun merge(values: R) = ring.mergeNow(values)
+    override fun merge(values: R, workspace: com.eignex.koblas.Workspace?) = ring.mergeNow(values)
     override fun reset() = ring.reset()
 }
 
@@ -150,7 +150,7 @@ internal class WindowedDiscreteStat<R : Result>(
         WindowedDiscreteStat(windowDuration, slices, template, concurrency ?: this.concurrency)
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun merge(values: R) = ring.mergeNow(values)
+    override fun merge(values: R, workspace: com.eignex.koblas.Workspace?) = ring.mergeNow(values)
     override fun reset() = ring.reset()
 }
 
@@ -172,6 +172,6 @@ internal class WindowedVectorStat<R : Result>(
         WindowedVectorStat(windowDuration, slices, template, concurrency ?: this.concurrency)
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun merge(values: R) = ring.mergeNow(values)
+    override fun merge(values: R, workspace: com.eignex.koblas.Workspace?) = ring.mergeNow(values)
     override fun reset() = ring.reset()
 }

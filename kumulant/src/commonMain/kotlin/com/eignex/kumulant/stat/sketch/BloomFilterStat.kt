@@ -132,7 +132,7 @@ class BloomFilterStat(
         totalSeen.add(1L)
     }
 
-    override fun merge(values: BloomFilterResult) {
+    override fun merge(values: BloomFilterResult, workspace: com.eignex.koblas.Workspace?) {
         require(values.bits == bits && values.hashes == hashes) {
             "Cannot merge BloomFilterStat with (bits=${values.bits}, hashes=${values.hashes}) " +
                 "into (bits=$bits, hashes=$hashes)"

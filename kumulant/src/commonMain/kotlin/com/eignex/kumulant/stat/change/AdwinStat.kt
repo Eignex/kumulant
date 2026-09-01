@@ -183,7 +183,7 @@ class AdwinStat(
         while (rows.size > 1 && rows.last().isEmpty()) rows.removeAt(rows.size - 1)
     }
 
-    override fun merge(values: AdwinResult) = lock.guarded {
+    override fun merge(values: AdwinResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         // No exact structural merge for the exponential histogram; carry over the change counter.
         changesDetected += values.changesDetected
     }

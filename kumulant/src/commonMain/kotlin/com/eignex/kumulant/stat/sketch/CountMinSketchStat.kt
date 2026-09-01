@@ -153,7 +153,7 @@ class CountMinSketchStat(
         totalSeen.add(1L)
     }
 
-    override fun merge(values: CountMinSketchResult) {
+    override fun merge(values: CountMinSketchResult, workspace: com.eignex.koblas.Workspace?) {
         require(values.depth == depth && values.width == width && values.seed == seed) {
             "Cannot merge CountMinSketchStat with shape " +
                 "(${values.depth}, ${values.width}, seed=${values.seed}) " +

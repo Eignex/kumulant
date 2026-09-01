@@ -88,11 +88,8 @@ data class SoftmaxRegressionResult(
         destination.softmaxInPlace()
     }
 
-    /** Argmax class index for [x]. */
-    fun predict(x: F64VectorLike): Int = argMaxOf(numClasses) { k -> logit(x, k) }
-
-    /** Finds the argmax using a caller-owned, non-thread-safe [workspace] for the logits. */
-    fun predict(x: F64VectorLike, workspace: Workspace): Int = workspace.borrow(numClasses) { logits ->
+    /** Finds the argmax for [x], borrowing logits only for the duration of this call. */
+    fun predict(x: F64VectorLike, workspace: Workspace? = null): Int = workspace.borrow(numClasses) { logits ->
         logitsInto(x, logits)
         argMaxOf(numClasses) { logits[it] }
     }
@@ -164,7 +161,13 @@ class SoftmaxRegressionStat(
     /** Live view of the accumulated weighted cross-entropy. */
     val crossEntropy: Double by crossEntropyCell
 
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
@@ -174,32 +177,33 @@ class SoftmaxRegressionStat(
             stepCell.addAndGet(1L)
 
             // Softmax over current logits.
-            val etas = DoubleArray(numClasses)
-            for (k in 0 until numClasses) {
-                var dot = biasCell.load(k)
-                x.forEachStored { i, v -> dot += weightsCell.load(k * featureSize + i) * v }
-                etas[k] = dot
-            }
-            // Probabilities live in etas[] from here on. A false return means every exponential
-            // underflowed, so there is no distribution to take a gradient against.
-            if (!etas.softmaxInPlace()) return@guarded
-            val logProbC = ln(etas[c].coerceAtLeast(PROBABILITY_FLOOR))
-            crossEntropyCell.add(-logProbC * weight)
-
-            biasOpt.advance()
-            for (k in 0 until numClasses) weightOptimizers[k].advance()
-
-            for (k in 0 until numClasses) {
-                val target = if (k == c) 1.0 else 0.0
-                val dEta = etas[k] - target
-                val opt = weightOptimizers[k]
-                x.forEachStored { i, v ->
-                    val grad = dEta * v
-                    weightsCell.add(k * featureSize + i, opt.computeDelta(i, grad, weight))
+            workspace.borrow(numClasses) { etas ->
+                for (k in 0 until numClasses) {
+                    var dot = biasCell.load(k)
+                    x.forEachStored { i, v -> dot += weightsCell.load(k * featureSize + i) * v }
+                    etas[k] = dot
                 }
-                biasCell.add(k, biasOpt.computeDelta(k, dEta, weight))
+                // Probabilities live in etas[] from here on. A false return means every exponential
+                // underflowed, so there is no distribution to take a gradient against.
+                if (!etas.softmaxInPlace()) return@guarded
+                val logProbC = ln(etas[c].coerceAtLeast(PROBABILITY_FLOOR))
+                crossEntropyCell.add(-logProbC * weight)
+
+                biasOpt.advance()
+                for (k in 0 until numClasses) weightOptimizers[k].advance()
+
+                for (k in 0 until numClasses) {
+                    val target = if (k == c) 1.0 else 0.0
+                    val dEta = etas[k] - target
+                    val opt = weightOptimizers[k]
+                    x.forEachStored { i, v ->
+                        val grad = dEta * v
+                        weightsCell.add(k * featureSize + i, opt.computeDelta(i, grad, weight))
+                    }
+                    biasCell.add(k, biasOpt.computeDelta(k, dEta, weight))
+                }
+                totalWeightsCell.add(weight)
             }
-            totalWeightsCell.add(weight)
         }
     }
 
@@ -219,7 +223,7 @@ class SoftmaxRegressionStat(
         )
     }
 
-    override fun merge(values: SoftmaxRegressionResult) {
+    override fun merge(values: SoftmaxRegressionResult, workspace: com.eignex.koblas.Workspace?) {
         require(values.featureSize == featureSize && values.numClasses == numClasses) {
             "merge: shape mismatch (${values.numClasses}x${values.featureSize}) vs (${numClasses}x$featureSize)"
         }

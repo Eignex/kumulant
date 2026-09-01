@@ -155,7 +155,7 @@ class RouletteWheelBandit(
      * semantics - the segment-based rebalance is inherently sequential - so use this
      * for "roughly combine two parallel runs" rather than for principled aggregation.
      */
-    override fun merge(other: List<RouletteWheelArmResult>) {
+    override fun merge(other: List<RouletteWheelArmResult>, workspace: com.eignex.koblas.Workspace?) {
         requireMergeSize(other.size, nbrArms)
         for (i in 0 until nbrArms) {
             weights[i] = ((weights[i] + other[i].weight) / 2.0).coerceAtLeast(minWeight)

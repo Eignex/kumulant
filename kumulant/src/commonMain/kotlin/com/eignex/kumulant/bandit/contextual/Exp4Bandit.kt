@@ -128,7 +128,7 @@ class Exp4Bandit(
     private val pendingPulls = IntArray(nbrArms)
 
     /** Build the round's play distribution and sample an arm. */
-    override fun choose(x: F64VectorLike): Int {
+    override fun choose(x: F64VectorLike, workspace: com.eignex.koblas.Workspace?): Int {
         playDistributionInto(x, lastDistribution)
         val chosen = random.sampleFromDistribution(lastDistribution)
         pendingPropensity[chosen] = lastDistribution[chosen]
@@ -176,7 +176,13 @@ class Exp4Bandit(
     }
 
     /** Fold a `(context, reward)` observation back into the expert weights. */
-    override fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double) {
+    override fun update(
+        armIndex: Int,
+        x: F64VectorLike,
+        reward: Double,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
         requireArmIndex(armIndex, nbrArms)
         // Return before propensityOf, which consumes an outstanding pull. A zero gain leaves the expert
         // weights alone, but spending the recorded propensity is not a no-op: the real feedback for
@@ -220,7 +226,7 @@ class Exp4Bandit(
 
     override fun snapshot(): Exp4State = Exp4State(weights.copyOf())
 
-    override fun merge(other: Exp4State) {
+    override fun merge(other: Exp4State, workspace: com.eignex.koblas.Workspace?) {
         require(other.weights.size == experts.size) {
             "merge: state has ${other.weights.size} expert weights, expected ${experts.size}"
         }

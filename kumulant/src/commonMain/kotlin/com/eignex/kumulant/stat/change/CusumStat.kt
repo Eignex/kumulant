@@ -103,7 +103,7 @@ class CusumStat(
         initialized.store(1L)
     }
 
-    override fun merge(values: CusumResult) {
+    override fun merge(values: CusumResult, workspace: com.eignex.koblas.Workspace?) {
         // Adopt the snapshot verbatim while empty, matching RecursiveVarianceStat.merge, HoltStat.merge
         // and SeasonalSmoothingStat.merge. Averaging against a fresh stat's zero would halve the incoming
         // drift, and `alarmUp` thresholds on that sum directly, so the alarm would need twice the shift.

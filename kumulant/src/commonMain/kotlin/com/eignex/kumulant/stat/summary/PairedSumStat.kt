@@ -61,7 +61,7 @@ class PairedSumStat(override val concurrency: Concurrency = Concurrency.None) : 
 
     override fun read(timestampNanos: Long) = PairedSumResult(totalWeights.load(), sumX.load(), sumY.load())
 
-    override fun merge(values: PairedSumResult) {
+    override fun merge(values: PairedSumResult, workspace: com.eignex.koblas.Workspace?) {
         totalWeights.add(values.totalWeights)
         sumX.add(values.sumX)
         sumY.add(values.sumY)

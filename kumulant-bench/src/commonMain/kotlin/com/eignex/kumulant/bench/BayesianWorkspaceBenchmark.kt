@@ -35,7 +35,7 @@ open class BayesianWorkspaceBenchmark {
     fun update(): Unit = stat.update(x, 1.0)
 
     @Benchmark
-    fun updateWorkspace(): Unit = stat.update(x, 1.0, workspace)
+    fun updateWorkspace(): Unit = stat.update(x, 1.0, workspace = workspace)
 
     @Benchmark
     fun merge(): Unit = stat.merge(mergeValue)

@@ -27,7 +27,6 @@ import com.eignex.kumulant.core.requireMergeFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.choleskyDowndateInPlace
 import com.eignex.kumulant.math.zeroUpperTriangle
-import com.eignex.kumulant.stream.currentTimeNanos
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
@@ -144,21 +143,8 @@ class BayesianRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
-        updateInternal(x, y, timestampNanos, weight, null)
-    }
-
-    /**
-     * Records an observation using caller-owned scratch storage. [workspace] must be confined to one
-     * thread or externally synchronized; it is not retained by this stat.
-     */
-    fun update(x: F64VectorLike, y: Double, workspace: Workspace, timestampNanos: Long, weight: Double = 1.0) {
+    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) =
         updateInternal(x, y, timestampNanos, weight, workspace)
-    }
-
-    /** Convenience workspace overload using the current timestamp. */
-    fun update(x: F64VectorLike, y: Double, workspace: Workspace, weight: Double = 1.0) =
-        updateInternal(x, y, currentTimeNanos(), weight, workspace)
 
     @Suppress("UnusedParameter")
     private fun updateInternal(
@@ -267,12 +253,7 @@ class BayesianRegressionStat(
      * matrix rather than returning NaNs. Bias is merged the same way, treating
      * the intercept as a scalar Gaussian with zero prior mean.
      */
-    override fun merge(values: CovarianceRegressionResult) {
-        mergeInternal(values, null)
-    }
-
-    /** Merges a snapshot using caller-owned scratch storage; [workspace] is never retained. */
-    fun merge(values: CovarianceRegressionResult, workspace: Workspace) = mergeInternal(values, workspace)
+    override fun merge(values: CovarianceRegressionResult, workspace: Workspace?) = mergeInternal(values, workspace)
 
     private fun mergeInternal(values: CovarianceRegressionResult, workspace: Workspace?) {
         requireMergeFeatureSize(values.featureSize, featureSize)

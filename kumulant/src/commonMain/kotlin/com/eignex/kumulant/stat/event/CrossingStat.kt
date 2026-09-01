@@ -76,7 +76,7 @@ class CrossingStat(
         }
     }
 
-    override fun merge(values: CrossingResult) {
+    override fun merge(values: CrossingResult, workspace: com.eignex.koblas.Workspace?) {
         // The counts only mean anything against the level they were measured at: folding a snapshot
         // taken at another level in would report crossings of a different predicate as this one's.
         require(values.level == level) { "merge level ${values.level} != $level" }

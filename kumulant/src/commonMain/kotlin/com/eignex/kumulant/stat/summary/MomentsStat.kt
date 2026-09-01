@@ -99,7 +99,7 @@ class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : Se
         }
     }
 
-    override fun merge(values: MomentsResult) = lock.guarded {
+    override fun merge(values: MomentsResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         if (values.totalWeights <= 0.0) return@guarded
         val w1 = totalWeights.load()
         val w2 = values.totalWeights

@@ -103,7 +103,7 @@ class SojournStat(
         }
     }
 
-    override fun merge(values: SojournResult) = lock.guarded {
+    override fun merge(values: SojournResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         require(values.states == states) { "merge state alphabet ${values.states} != $states" }
         for (i in states.indices) {
             totalNanos.store(i, totalNanos.load(i) + values.totalNanosByState[i])

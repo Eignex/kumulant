@@ -52,7 +52,7 @@ class ArgMaxStat(override val concurrency: Concurrency = Concurrency.None) : Ser
         }
     }
 
-    override fun merge(values: ArgMaxResult) = lock.guarded {
+    override fun merge(values: ArgMaxResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         if (values.max > value.load()) {
             value.store(values.max)
             at.store(values.atTimestampNanos)

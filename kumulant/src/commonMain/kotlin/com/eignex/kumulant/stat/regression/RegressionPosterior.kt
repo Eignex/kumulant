@@ -24,12 +24,11 @@ interface RegressionPosterior<R : Result> {
      * the posterior-variance scale (Thompson) or the UCB width (LinUcb-style);
      * `0.0` collapses to the point estimate.
      */
-    fun evaluate(snapshot: R, x: F64VectorLike, rng: Random, exploration: Double = 1.0): Double
-
-    /**
-     * Workspace-aware counterpart to [evaluate]. A workspace is caller-owned and must be confined to
-     * one thread (or externally synchronized); it is used only for this call and is never retained.
-     */
-    fun evaluate(snapshot: R, x: F64VectorLike, rng: Random, workspace: Workspace, exploration: Double = 1.0): Double =
-        evaluate(snapshot, x, rng, exploration)
+    fun evaluate(
+        snapshot: R,
+        x: F64VectorLike,
+        rng: Random,
+        exploration: Double = 1.0,
+        workspace: Workspace? = null,
+    ): Double
 }

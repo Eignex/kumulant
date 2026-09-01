@@ -36,7 +36,7 @@ internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private va
 
     override val mergeRefusal: String = "band wrapper cannot merge BandResult; merge the inner stat directly"
 
-    override fun merge(values: BandResult): Unit = error(mergeRefusal)
+    override fun merge(values: BandResult, workspace: com.eignex.koblas.Workspace?): Unit = error(mergeRefusal)
 
     /**
      * Band *around* a windowed inner stat rather than a window around a band.

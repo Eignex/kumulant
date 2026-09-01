@@ -74,7 +74,7 @@ class RunLengthStat(override val concurrency: Concurrency = Concurrency.None) : 
         }
     }
 
-    override fun merge(values: RunLengthResult) {
+    override fun merge(values: RunLengthResult, workspace: com.eignex.koblas.Workspace?) {
         val leftCurrent = current.load()
         val leftLeading = leading.load()
         val leftBroken = anyFalsy.load() != 0L

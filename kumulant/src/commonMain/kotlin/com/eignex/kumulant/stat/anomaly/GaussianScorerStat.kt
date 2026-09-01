@@ -79,8 +79,8 @@ class GaussianScorerStat(override val concurrency: Concurrency = Concurrency.Non
         return GaussianScoreResult(mean = r.mean, variance = r.variance, totalWeights = r.totalWeights)
     }
 
-    override fun merge(values: GaussianScoreResult) =
-        inner.merge(WeightedVarianceResult(values.totalWeights, values.mean, values.variance))
+    override fun merge(values: GaussianScoreResult, workspace: com.eignex.koblas.Workspace?) =
+        inner.merge(WeightedVarianceResult(values.totalWeights, values.mean, values.variance), workspace)
 
     override fun reset() = inner.reset()
 

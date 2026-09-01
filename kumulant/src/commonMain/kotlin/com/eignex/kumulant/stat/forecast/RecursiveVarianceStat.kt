@@ -78,7 +78,7 @@ class RecursiveVarianceStat(
         }
     }
 
-    override fun merge(values: RecursiveVarianceResult) {
+    override fun merge(values: RecursiveVarianceResult, workspace: com.eignex.koblas.Workspace?) {
         while (true) {
             val current = variance.load()
             // Adopt the snapshot verbatim while empty, matching HoltStat.merge and

@@ -374,7 +374,7 @@ class TDigestStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: TDigestResult) {
+    override fun merge(values: TDigestResult, workspace: com.eignex.koblas.Workspace?) {
         require(abs(compression - values.compression) < PARAMETER_MATCH_TOLERANCE) {
             "Cannot merge TDigests with different compression"
         }

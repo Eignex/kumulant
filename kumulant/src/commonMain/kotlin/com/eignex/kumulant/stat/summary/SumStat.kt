@@ -48,7 +48,7 @@ class SumStat(override val concurrency: Concurrency = Concurrency.None) : Series
 
     override fun read(timestampNanos: Long) = SumResult(value.load())
 
-    override fun merge(values: SumResult) {
+    override fun merge(values: SumResult, workspace: com.eignex.koblas.Workspace?) {
         value.add(values.sum)
     }
 

@@ -63,7 +63,7 @@ class EwmaMeanStat(
         }
     }
 
-    override fun merge(values: WeightedMeanResult) = lock.guarded {
+    override fun merge(values: WeightedMeanResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         val localMean = this.mean
         val localWeight = totalWeights.load()
         val localEffectiveWeight = weighting.correction(localWeight)

@@ -129,7 +129,7 @@ class ClassCountsStat(
         DoubleArray(numClasses) { cells.load(it) },
     )
 
-    override fun merge(values: ClassCountsResult) {
+    override fun merge(values: ClassCountsResult, workspace: com.eignex.koblas.Workspace?) {
         require(values.numClasses == numClasses) {
             "numClasses mismatch on merge: this=$numClasses, other=${values.numClasses}"
         }

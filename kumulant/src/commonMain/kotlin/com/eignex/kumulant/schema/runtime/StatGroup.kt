@@ -53,7 +53,7 @@ sealed class AbstractStatGroup<S : Stat<*>>(
     final override fun read(timestampNanos: Long): GroupResult =
         GroupResult(stats.associate { (key, stat) -> key.name to stat.read(timestampNanos) })
 
-    final override fun merge(values: GroupResult) {
+    final override fun merge(values: GroupResult, workspace: com.eignex.koblas.Workspace?) {
         // Checked across every entry before any of them is touched. Merging in declaration order with no
         // way to undo one means a child that refuses partway leaves the group permanently inconsistent -
         // the entries ahead of it carrying both shards and the ones behind it carrying one - and a caller
@@ -196,7 +196,13 @@ class RegressionStatGroup(stats: List<BoundStat<*, out RegressionStat<*>, *>>, c
         }
     }
 
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
         for ((_, stat) in stats) stat.update(x, y, timestampNanos, weight)
     }
 

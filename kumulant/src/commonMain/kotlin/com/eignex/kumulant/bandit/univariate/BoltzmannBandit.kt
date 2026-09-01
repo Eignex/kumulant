@@ -111,9 +111,9 @@ class BoltzmannBandit(
 
     override fun snapshot(): List<WeightedMeanResult> = stats.map { it.read(0L) }
 
-    override fun merge(other: List<WeightedMeanResult>) {
+    override fun merge(other: List<WeightedMeanResult>, workspace: com.eignex.koblas.Workspace?) {
         requireMergeSize(other.size, nbrArms)
-        for (i in 0 until nbrArms) stats[i].merge(other[i])
+        for (i in 0 until nbrArms) stats[i].merge(other[i], workspace)
     }
 
     /** Current temperature: `max(minTau, initialTau / step^decay)`. */

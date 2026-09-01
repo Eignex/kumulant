@@ -79,7 +79,7 @@ class FrugalQuantileStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: QuantileResult) = lock.guarded {
+    override fun merge(values: QuantileResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         val current = quantile.load()
         quantile.store((current + values.quantile) / 2.0)
     }

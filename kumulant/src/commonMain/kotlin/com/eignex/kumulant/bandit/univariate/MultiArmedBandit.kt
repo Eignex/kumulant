@@ -88,12 +88,12 @@ class MultiArmedBandit<R : Result>(
         return arms[armIndex].read(0L)
     }
 
-    override fun merge(other: List<R>) {
+    override fun merge(other: List<R>, workspace: com.eignex.koblas.Workspace?) {
         requireMergeSize(other.size, nbrArms)
         for (i in 0 until nbrArms) {
             val oldSnap = arms[i].read(0L)
             policy.removeArm(oldSnap)
-            arms[i].merge(other[i])
+            arms[i].merge(other[i], workspace)
             policy.addArm(arms[i].read(0L))
         }
     }

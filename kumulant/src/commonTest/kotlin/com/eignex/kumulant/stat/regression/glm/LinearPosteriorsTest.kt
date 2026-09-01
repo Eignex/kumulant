@@ -63,7 +63,7 @@ class LinearPosteriorsTest {
         val workspace = Workspace().apply { reserve(2, 1) }
 
         val allocated = MultivariateGaussian.evaluate(snapshot, x, Random(9), exploration = 0.7)
-        val reused = MultivariateGaussian.evaluate(snapshot, x, Random(9), workspace, exploration = 0.7)
+        val reused = MultivariateGaussian.evaluate(snapshot, x, Random(9), exploration = 0.7, workspace = workspace)
 
         assertEquals(allocated, reused, 1e-12)
     }
@@ -76,9 +76,17 @@ class LinearPosteriorsTest {
         val custom = CustomVector(doubleArrayOf(0.3, -0.2))
         val workspace = Workspace().apply { reserve(2, 1) }
 
-        val expected = LinUcb.evaluate(snapshot, dense, Random(0), workspace, exploration = 0.7)
-        assertEquals(expected, LinUcb.evaluate(snapshot, strided, Random(0), workspace, exploration = 0.7), 1e-12)
-        assertEquals(expected, LinUcb.evaluate(snapshot, custom, Random(0), workspace, exploration = 0.7), 1e-12)
+        val expected = LinUcb.evaluate(snapshot, dense, Random(0), exploration = 0.7, workspace = workspace)
+        assertEquals(
+            expected,
+            LinUcb.evaluate(snapshot, strided, Random(0), exploration = 0.7, workspace = workspace),
+            1e-12,
+        )
+        assertEquals(
+            expected,
+            LinUcb.evaluate(snapshot, custom, Random(0), exploration = 0.7, workspace = workspace),
+            1e-12,
+        )
     }
 
     @Test

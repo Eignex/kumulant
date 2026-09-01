@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.regression.glm
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.fitLine
 import kotlin.math.abs
 import kotlin.math.exp
@@ -72,7 +73,7 @@ class BayesianRegressionStatTest {
         repeat(20) { i ->
             val x = F64DenseVector.of(doubleArrayOf(i.toDouble() / 20.0, 1.0))
             allocated.update(x, x[0] + 2.0)
-            reused.update(x, x[0] + 2.0, workspace)
+            reused.update(x, x[0] + 2.0, workspace = workspace)
         }
         val other = BayesianRegressionStat(featureSize = 2)
         other.update(doubleArrayOf(0.5, 1.0), 2.5)
@@ -83,6 +84,19 @@ class BayesianRegressionStatTest {
         val expected = allocated.read()
         val actual = reused.read()
         for (i in 0 until 2) assertEquals(expected.weights[i], actual.weights[i], 1e-12)
+    }
+
+    @Test
+    fun `regression stat interface accepts nullable workspace for update and merge`() {
+        val workspace = Workspace().apply { reserve(2, 3) }
+        val receiver: RegressionStat<CovarianceRegressionResult> = BayesianRegressionStat(featureSize = 2)
+        val source: RegressionStat<CovarianceRegressionResult> = BayesianRegressionStat(featureSize = 2)
+
+        receiver.update(doubleArrayOf(1.0, 0.0), 1.0, workspace = null)
+        source.update(doubleArrayOf(0.0, 1.0), 2.0, workspace = workspace)
+        receiver.merge(source.read(), workspace)
+
+        assertEquals(2.0, receiver.read().totalWeights)
     }
 
     @Test

@@ -143,7 +143,7 @@ class MinHashStat(
         totalSeen.add(1L)
     }
 
-    override fun merge(values: MinHashResult) {
+    override fun merge(values: MinHashResult, workspace: com.eignex.koblas.Workspace?) {
         requireSameHasher("MinHashStat", values.hasher, hasherRef)
         // Shape before array length; see HyperLogLogStat.merge.
         require(values.numHashes == numHashes && values.seed == seed) {

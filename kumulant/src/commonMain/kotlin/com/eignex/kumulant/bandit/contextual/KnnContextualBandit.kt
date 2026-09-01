@@ -159,14 +159,7 @@ class KnnContextualBandit(
     }
 
     /** Argmax over per-arm [evaluate] scores. Ties broken by lowest index. */
-    override fun choose(x: F64VectorLike): Int {
-        val bestIdx = argmaxArm(nbrArms) { a -> evaluate(a, x) }
-        step++
-        return bestIdx
-    }
-
-    /** Chooses with caller-owned scratch reused for every arm's nearest-neighbour scan. */
-    fun choose(x: F64VectorLike, workspace: Workspace): Int {
+    override fun choose(x: F64VectorLike, workspace: Workspace?): Int {
         requireFeatureSize(x.size)
         val bestIdx = workspace.borrow(3 * k) { scratch ->
             argmaxArm(nbrArms) { armIndex -> evaluateWithScratch(armIndex, x, scratch) }
@@ -176,21 +169,14 @@ class KnnContextualBandit(
     }
 
     /** Score arm [armIndex] at context [x]: k-NN mean reward + UCB bonus. */
-    override fun evaluate(armIndex: Int, x: F64VectorLike): Double {
-        requireArmIndex(armIndex, nbrArms)
-        requireFeatureSize(x.size)
-        return evaluateWithScratch(armIndex, x, null)
-    }
-
-    /** Scores an arm with caller-owned scratch for its bounded top-k buffers. */
-    override fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace): Double {
+    override fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace?): Double {
         requireArmIndex(armIndex, nbrArms)
         requireFeatureSize(x.size)
         return workspace.borrow(3 * k) { scratch -> evaluateWithScratch(armIndex, x, scratch) }
     }
 
     /** Append `(x, reward, weight)` to arm [armIndex]'s history; oldest entry drops if full. */
-    override fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double) {
+    override fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double, workspace: Workspace?) {
         requireArmIndex(armIndex, nbrArms)
         // An inert observation must not consume a history slot; the eviction below would drop real data.
         // A negative weight drops for the same reason rather than downdating: a bounded history has no
@@ -234,7 +220,7 @@ class KnnContextualBandit(
         )
     }
 
-    override fun merge(other: List<KnnArmResult>) {
+    override fun merge(other: List<KnnArmResult>, workspace: com.eignex.koblas.Workspace?) {
         requireMergeSize(other.size, nbrArms)
         for (a in 0 until nbrArms) {
             val arm = other[a]

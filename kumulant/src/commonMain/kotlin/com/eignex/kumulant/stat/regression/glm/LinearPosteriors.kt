@@ -59,16 +59,13 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
      * space, so the noise is added before the inverse link, never after: a score has to
      * come back on the same scale as the reward being maximised.
      */
-    override fun evaluate(snapshot: R, x: F64VectorLike, rng: Random, exploration: Double): Double =
-        snapshot.link.invMean(snapshot.bias + (x dot sample(snapshot, rng, exploration)))
-
     override fun evaluate(
         snapshot: R,
         x: F64VectorLike,
         rng: Random,
-        workspace: Workspace,
         exploration: Double,
-    ): Double = evaluate(snapshot, x, rng, exploration)
+        workspace: Workspace?,
+    ): Double = snapshot.link.invMean(snapshot.bias + (x dot sample(snapshot, rng, exploration)))
 }
 
 /**
@@ -112,6 +109,7 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
         x: F64VectorLike,
         rng: Random,
         exploration: Double,
+        workspace: Workspace?,
     ): Double {
         val eta = snapshot.linearPredictor(x)
         if (exploration <= 0.0) return snapshot.link.invMean(eta)
@@ -157,6 +155,7 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
         x: F64VectorLike,
         rng: Random,
         exploration: Double,
+        workspace: Workspace?,
     ): Double {
         val eta = snapshot.linearPredictor(x)
         var variance = 0.0
@@ -206,19 +205,7 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         x: F64VectorLike,
         rng: Random,
         exploration: Double,
-    ): Double {
-        val eta = snapshot.linearPredictor(x)
-        val sigmaX = snapshot.covariance * x
-        val variance = x dot sigmaX
-        return snapshot.link.invMean(eta + sqrt(exploration * variance) * rng.nextNormal())
-    }
-
-    override fun evaluate(
-        snapshot: CovarianceRegressionResult,
-        x: F64VectorLike,
-        rng: Random,
-        workspace: Workspace,
-        exploration: Double,
+        workspace: Workspace?,
     ): Double {
         val eta = snapshot.linearPredictor(x)
         return workspace.borrow(snapshot.featureSize) { sigmaX ->
@@ -259,19 +246,7 @@ data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
         x: F64VectorLike,
         rng: Random,
         exploration: Double,
-    ): Double {
-        val eta = snapshot.linearPredictor(x)
-        val sigmaX = snapshot.covariance * x
-        val variance = x dot sigmaX
-        return snapshot.link.invMean(eta + exploration * sqrt(variance))
-    }
-
-    override fun evaluate(
-        snapshot: CovarianceRegressionResult,
-        x: F64VectorLike,
-        rng: Random,
-        workspace: Workspace,
-        exploration: Double,
+        workspace: Workspace?,
     ): Double {
         val eta = snapshot.linearPredictor(x)
         return workspace.borrow(snapshot.featureSize) { sigmaX ->

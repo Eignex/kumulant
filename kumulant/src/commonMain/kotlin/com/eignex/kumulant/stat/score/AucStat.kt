@@ -168,7 +168,7 @@ class AucStat(
         return AucResult(area, tp, tn, posSnap, negSnap, lowerBound, upperBound)
     }
 
-    override fun merge(values: AucResult) {
+    override fun merge(values: AucResult, workspace: com.eignex.koblas.Workspace?) {
         require(values.numBins == numBins) {
             "AUC merge bin count mismatch: this=$numBins, other=${values.numBins}"
         }

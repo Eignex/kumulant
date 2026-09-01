@@ -80,8 +80,14 @@ internal class FilterRegressionStat<R : Result>(
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
-        if (predicate(x, y)) delegate.update(x, y, timestampNanos, weight)
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
+        if (predicate(x, y)) delegate.update(x, y, timestampNanos, weight, workspace)
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
         FilterRegressionStat(delegate.create(concurrency), predicate)
@@ -93,8 +99,14 @@ internal class TransformYRegressionStat<R : Result>(
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(x, transform(x, y), timestampNanos, weight)
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
+        delegate.update(x, transform(x, y), timestampNanos, weight, workspace)
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
         TransformYRegressionStat(delegate.create(concurrency), transform)
@@ -112,9 +124,15 @@ internal class TransformXRegressionStat<R : Result>(
     // were silently dropped, while RegressionListStats rejected the honest pairing as a mismatch.
     override val featureSize: Int = inputFeatureSize ?: delegate.featureSize
 
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
         x.requireFeatureSize(featureSize)
-        delegate.update(F64DenseVector.of(transform(x, y)), y, timestampNanos, weight)
+        delegate.update(F64DenseVector.of(transform(x, y)), y, timestampNanos, weight, workspace)
     }
 
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
@@ -127,10 +145,16 @@ internal class WithWeightRegressionStat<R : Result>(
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
         // `orInert` covers NaN as well as zero, so an inert caller weight stays a no-op rather than
         // being replaced by the constant and becoming a real observation.
-        delegate.update(x, y, timestampNanos, weight.orInert(this.weight))
+        delegate.update(x, y, timestampNanos, weight.orInert(this.weight), workspace)
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
         WithWeightRegressionStat(delegate.create(concurrency), weight)
@@ -142,8 +166,14 @@ internal class WeightByRegressionStat<R : Result>(
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(x, y, timestampNanos, weight * weighter(x, y))
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
+        delegate.update(x, y, timestampNanos, weight * weighter(x, y), workspace)
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
         WeightByRegressionStat(delegate.create(concurrency), weighter)
@@ -154,9 +184,15 @@ internal class ThrottleRegressionStat<R : Result>(private val delegate: Regressi
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     private val gate = ThrottleGate(every, delegate.concurrency)
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
         if (weight.isInertWeight()) return
-        if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
+        if (gate.pass()) delegate.update(x, y, timestampNanos, weight, workspace)
     }
     override fun reset() {
         gate.reset()
@@ -175,9 +211,15 @@ internal class SampleRegressionStat<R : Result>(
     Stat<R> by delegate {
     private val gate = SampleGate(rate, seed, delegate.concurrency)
     override val featureSize: Int = delegate.featureSize
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
         if (weight.isInertWeight()) return
-        if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
+        if (gate.pass()) delegate.update(x, y, timestampNanos, weight, workspace)
     }
 
     override fun reset() {
@@ -198,7 +240,13 @@ internal class FoldRegressionStat<R : Result>(
     init {
         requirePositiveFeatureSize(featureSize)
     }
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
         x.requireFeatureSize(featureSize)
         delegate.update(project(x, y), timestampNanos, weight)
     }

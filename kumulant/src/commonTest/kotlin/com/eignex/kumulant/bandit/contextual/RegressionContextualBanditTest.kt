@@ -2,6 +2,8 @@ package com.eignex.kumulant.bandit.contextual
 
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseVector
+import com.eignex.kumulant.bandit.ContextualBandit
+import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.feat
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.LinUcb
@@ -97,8 +99,11 @@ class RegressionContextualBanditTest {
         val x = feat(1.0, 0.0)
         val workspace = Workspace().apply { reserve(2, 1) }
 
-        assertEquals(bandit.evaluate(0, x), bandit.evaluate(0, x, workspace), 1e-12)
-        assertEquals(bandit.choose(x), bandit.choose(x, workspace))
+        val contextual: ContextualBandit = bandit
+        val scorable: ContextualScorable = bandit
+
+        assertEquals(bandit.evaluate(0, x), scorable.evaluate(0, x, workspace), 1e-12)
+        assertEquals(bandit.choose(x), contextual.choose(x, workspace))
     }
 
     @Test
@@ -143,8 +148,9 @@ class RegressionContextualBanditTest {
             posterior = MultivariateGaussian,
             random = Random(3),
         )
-        merged.merge(ba.snapshot())
-        merged.merge(bb.snapshot())
+        val workspace = Workspace().apply { reserve(2, 3) }
+        merged.merge(ba.snapshot(), workspace)
+        merged.merge(bb.snapshot(), workspace)
         // Merged bandit should have higher total weight per arm than either replica.
         val mergedW = merged.armResult(0).totalWeights
         val singleW = ba.armResult(0).totalWeights

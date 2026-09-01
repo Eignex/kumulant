@@ -187,7 +187,7 @@ class ConfusionMatrixStat(
         DoubleArray(cells.size) { cells[it].load() },
     )
 
-    override fun merge(values: ConfusionMatrixResult) {
+    override fun merge(values: ConfusionMatrixResult, workspace: com.eignex.koblas.Workspace?) {
         require(values.numClasses == numClasses) {
             "numClasses mismatch on merge: this=$numClasses, other=${values.numClasses}"
         }
