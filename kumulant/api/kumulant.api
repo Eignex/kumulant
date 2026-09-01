@@ -214,6 +214,7 @@ public final class com/eignex/kumulant/bandit/contextual/KnnContextualBandit : c
 	public synthetic fun armResult (I)Lcom/eignex/kumulant/core/Result;
 	public final fun armWeight (I)D
 	public fun choose (Lcom/eignex/koblas/core/F64VectorLike;)I
+	public final fun choose (Lcom/eignex/koblas/core/F64VectorLike;Lcom/eignex/koblas/Workspace;)I
 	public synthetic fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Snapshotable;
 	public fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/contextual/KnnContextualBandit;
 	public fun evaluate (ILcom/eignex/koblas/core/F64VectorLike;)D
@@ -6851,9 +6852,11 @@ public final class com/eignex/kumulant/stat/regression/GaussianNaiveBayesResult 
 	public fun hashCode ()I
 	public fun isEmpty ()Z
 	public final fun logPosterior (Lcom/eignex/koblas/core/F64VectorLike;I)D
+	public final fun logPosteriorsInto (Lcom/eignex/koblas/core/F64VectorLike;[D)V
 	public final fun predict (Lcom/eignex/koblas/core/F64VectorLike;)I
 	public final fun prior (I)D
 	public final fun probabilities (Lcom/eignex/koblas/core/F64VectorLike;)[D
+	public final fun probabilitiesInto (Lcom/eignex/koblas/core/F64VectorLike;[D)V
 	public fun toString ()Ljava/lang/String;
 }
 

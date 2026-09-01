@@ -1,14 +1,24 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.core.F64StridedVectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.DELTA
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class GaussianNaiveBayesStatTest {
+
+    private class CustomVector(private val values: DoubleArray) : F64VectorLike {
+        override val size: Int get() = values.size
+        override fun get(i: Int): Double = values[i]
+        override fun toDoubleArray(): DoubleArray = values.copyOf()
+    }
 
     @Test
     fun `per class means and variances match the running stats`() {
@@ -77,6 +87,47 @@ class GaussianNaiveBayesStatTest {
         assertEquals(1.0, p.sum(), 1e-9)
         assertTrue(p[1] > p[0])
         assertEquals(1, r.predict(F64DenseVector.of(doubleArrayOf(9.5))))
+    }
+
+    @Test
+    fun `destination scores match owned scores for dense sparse strided and custom inputs`() {
+        val stat = GaussianNaiveBayesStat(featureSize = 3, numClasses = 2)
+        stat.update(doubleArrayOf(1.0, 0.0, -2.0), 0.0, weight = 2.0)
+        stat.update(doubleArrayOf(-1.0, 0.0, 3.0), 1.0)
+        val result = stat.read()
+        val dense = F64DenseVector.of(doubleArrayOf(0.5, 0.0, -1.0))
+        val sparse = F64SparseVector.of(3, intArrayOf(0, 1, 2), doubleArrayOf(0.5, 0.0, -1.0))
+        val strided = F64StridedVectorView(doubleArrayOf(0.5, 9.0, 0.0, 9.0, -1.0, 9.0), 0, 3, 2)
+        val custom = CustomVector(doubleArrayOf(0.5, 0.0, -1.0))
+        val expected = result.probabilities(dense)
+
+        for (x in listOf<F64VectorLike>(sparse, strided, custom)) {
+            val logs = DoubleArray(2)
+            val probabilities = DoubleArray(2)
+            result.logPosteriorsInto(x, logs)
+            result.probabilitiesInto(x, probabilities)
+            assertEquals(result.logPosterior(x, 0), logs[0], 1e-12)
+            assertEquals(result.logPosterior(x, 1), logs[1], 1e-12)
+            assertEquals(expected[0], probabilities[0], 1e-12)
+            assertEquals(expected[1], probabilities[1], 1e-12)
+            assertEquals(result.predict(dense), result.predict(x))
+        }
+    }
+
+    @Test
+    fun `destination validation fails before mutation`() {
+        val stat = GaussianNaiveBayesStat(featureSize = 2, numClasses = 2)
+        val result = stat.read()
+        val destination = doubleArrayOf(7.0)
+
+        assertFailsWith<IllegalArgumentException> {
+            result.logPosteriorsInto(
+                F64DenseVector.of(doubleArrayOf(0.0, 0.0)),
+                destination,
+            )
+        }
+
+        assertTrue(destination.contentEquals(doubleArrayOf(7.0)))
     }
 
     @Test

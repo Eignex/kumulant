@@ -1300,8 +1300,10 @@ final class com.eignex.kumulant.bandit.contextual/KnnContextualBandit : com.eign
 
     final fun armWeight(kotlin/Int): kotlin/Double // com.eignex.kumulant.bandit.contextual/KnnContextualBandit.armWeight|armWeight(kotlin.Int){}[0]
     final fun choose(com.eignex.koblas.core/F64VectorLike): kotlin/Int // com.eignex.kumulant.bandit.contextual/KnnContextualBandit.choose|choose(com.eignex.koblas.core.F64VectorLike){}[0]
+    final fun choose(com.eignex.koblas.core/F64VectorLike, com.eignex.koblas/Workspace): kotlin/Int // com.eignex.kumulant.bandit.contextual/KnnContextualBandit.choose|choose(com.eignex.koblas.core.F64VectorLike;com.eignex.koblas.Workspace){}[0]
     final fun create(kotlin.random/Random): com.eignex.kumulant.bandit.contextual/KnnContextualBandit // com.eignex.kumulant.bandit.contextual/KnnContextualBandit.create|create(kotlin.random.Random){}[0]
     final fun evaluate(kotlin/Int, com.eignex.koblas.core/F64VectorLike): kotlin/Double // com.eignex.kumulant.bandit.contextual/KnnContextualBandit.evaluate|evaluate(kotlin.Int;com.eignex.koblas.core.F64VectorLike){}[0]
+    final fun evaluate(kotlin/Int, com.eignex.koblas.core/F64VectorLike, com.eignex.koblas/Workspace): kotlin/Double // com.eignex.kumulant.bandit.contextual/KnnContextualBandit.evaluate|evaluate(kotlin.Int;com.eignex.koblas.core.F64VectorLike;com.eignex.koblas.Workspace){}[0]
     final fun historySize(kotlin/Int): kotlin/Int // com.eignex.kumulant.bandit.contextual/KnnContextualBandit.historySize|historySize(kotlin.Int){}[0]
     final fun merge(kotlin.collections/List<com.eignex.kumulant.bandit.contextual/KnnArmResult>) // com.eignex.kumulant.bandit.contextual/KnnContextualBandit.merge|merge(kotlin.collections.List<com.eignex.kumulant.bandit.contextual.KnnArmResult>){}[0]
     final fun reset() // com.eignex.kumulant.bandit.contextual/KnnContextualBandit.reset|reset(){}[0]
@@ -7541,9 +7543,11 @@ final class com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult : com.e
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult.hashCode|hashCode(){}[0]
     final fun logPosterior(com.eignex.koblas.core/F64VectorLike, kotlin/Int): kotlin/Double // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult.logPosterior|logPosterior(com.eignex.koblas.core.F64VectorLike;kotlin.Int){}[0]
+    final fun logPosteriorsInto(com.eignex.koblas.core/F64VectorLike, kotlin/DoubleArray) // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult.logPosteriorsInto|logPosteriorsInto(com.eignex.koblas.core.F64VectorLike;kotlin.DoubleArray){}[0]
     final fun predict(com.eignex.koblas.core/F64VectorLike): kotlin/Int // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult.predict|predict(com.eignex.koblas.core.F64VectorLike){}[0]
     final fun prior(kotlin/Int): kotlin/Double // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult.prior|prior(kotlin.Int){}[0]
     final fun probabilities(com.eignex.koblas.core/F64VectorLike): kotlin/DoubleArray // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult.probabilities|probabilities(com.eignex.koblas.core.F64VectorLike){}[0]
+    final fun probabilitiesInto(com.eignex.koblas.core/F64VectorLike, kotlin/DoubleArray) // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult.probabilitiesInto|probabilitiesInto(com.eignex.koblas.core.F64VectorLike;kotlin.DoubleArray){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult.toString|toString(){}[0]
 
     final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult> { // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult.$serializer|null[0]

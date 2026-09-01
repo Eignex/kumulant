@@ -6,6 +6,8 @@ import com.eignex.koblas.core.F64SparseVector
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.Workspace
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
+import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
+import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.Link
@@ -31,6 +33,8 @@ open class PredictionKernelBenchmark {
     private lateinit var linear: StochasticRegressionResult
     private lateinit var softmax: SoftmaxRegressionResult
     private lateinit var posterior: CovarianceRegressionResult
+    private lateinit var gaussianNaiveBayes: com.eignex.kumulant.stat.regression.GaussianNaiveBayesResult
+    private lateinit var knn: KnnContextualBandit
     private lateinit var workspace: Workspace
     private lateinit var probabilities: DoubleArray
 
@@ -56,9 +60,19 @@ open class PredictionKernelBenchmark {
         )
         val identity = F64DenseMatrix.diagonal(featureSize, 1.0)
         posterior = CovarianceRegressionResult(weights, 0.25, 1.0, 0.0, 0L, identity, identity)
+        val naiveBayes = GaussianNaiveBayesStat(featureSize, 4)
+        repeat(16) { sample ->
+            naiveBayes.update(F64DenseVector.of(DoubleArray(featureSize) { i -> (sample - i % 7) * 0.1 }), (sample % 4).toDouble())
+        }
+        gaussianNaiveBayes = naiveBayes.read()
+        knn = KnnContextualBandit(nbrArms = 4, k = 8, exploration = 0.0)
+        repeat(4) { arm ->
+            repeat(32) { sample -> knn.update(arm, x, (sample - arm).toDouble()) }
+        }
         workspace = Workspace().apply {
             reserve(featureSize, count = 3)
             reserve(4, count = 1)
+            reserve(24, count = 1)
         }
         probabilities = DoubleArray(4)
     }
@@ -77,6 +91,18 @@ open class PredictionKernelBenchmark {
 
     @Benchmark
     fun softmaxPredictWorkspace(): Int = softmax.predict(x, workspace)
+
+    @Benchmark
+    fun gaussianNaiveBayesProbabilities(): DoubleArray = gaussianNaiveBayes.probabilities(x)
+
+    @Benchmark
+    fun gaussianNaiveBayesProbabilitiesInto(): DoubleArray = probabilities.also { gaussianNaiveBayes.probabilitiesInto(x, it) }
+
+    @Benchmark
+    fun knnChoose(): Int = knn.choose(x)
+
+    @Benchmark
+    fun knnChooseWorkspace(): Int = knn.choose(x, workspace)
 
     @Benchmark
     fun multivariateSample(): F64VectorLike = MultivariateGaussian.sample(posterior, Random(1234), 1.0)

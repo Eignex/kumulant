@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit.Companion.squaredL2
@@ -145,6 +146,42 @@ class KnnContextualBanditTest {
         val a = F64SparseVector.of(2, intArrayOf(0), doubleArrayOf(0.0))
         val b = F64SparseVector.of(2, intArrayOf(0), doubleArrayOf(3.0))
         assertEquals(9.0, squaredL2(a, b))
+    }
+
+    @Test
+    fun `workspace scoring matches allocating scoring across sparse contexts`() {
+        val allocating = KnnContextualBandit(nbrArms = 2, k = 2, exploration = 0.0)
+        val reused = KnnContextualBandit(nbrArms = 2, k = 2, exploration = 0.0)
+        val samples = listOf(
+            Triple(0, F64SparseVector.of(3, intArrayOf(0), doubleArrayOf(1.0)), 0.5),
+            Triple(0, F64SparseVector.of(3, intArrayOf(1), doubleArrayOf(-2.0)), -1.0),
+            Triple(1, F64SparseVector.of(3, intArrayOf(2), doubleArrayOf(3.0)), 1.5),
+            Triple(1, F64SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(-1.0, 1.0)), 0.25),
+        )
+        for ((arm, x, reward) in samples) {
+            allocating.update(arm, x, reward)
+            reused.update(arm, x, reward)
+        }
+        val x = F64SparseVector.of(3, intArrayOf(0), doubleArrayOf(0.5))
+        val workspace = Workspace().apply { reserve(6, 1) }
+
+        for (arm in 0 until 2) assertEquals(allocating.evaluate(arm, x), reused.evaluate(arm, x, workspace), 1e-12)
+        assertEquals(allocating.choose(x), reused.choose(x, workspace))
+    }
+
+    @Test
+    fun `workspace borrow releases after a distance exception`() {
+        val bandit = KnnContextualBandit(
+            nbrArms = 1,
+            k = 1,
+            exploration = 0.0,
+            distance = { _, _ -> error("distance failed") },
+        )
+        bandit.update(0, feat(1.0), 1.0)
+        val workspace = Workspace().apply { reserve(3, 1) }
+
+        assertFailsWith<IllegalStateException> { bandit.evaluate(0, feat(1.0), workspace) }
+        assertFailsWith<IllegalStateException> { bandit.evaluate(0, feat(1.0), workspace) }
     }
 }
 
