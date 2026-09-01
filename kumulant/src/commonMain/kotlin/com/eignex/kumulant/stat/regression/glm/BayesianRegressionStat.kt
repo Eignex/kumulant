@@ -19,7 +19,6 @@ import com.eignex.koblas.dot
 import com.eignex.koblas.ger
 import com.eignex.koblas.koblas
 import com.eignex.koblas.scale
-import com.eignex.koblas.times
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
@@ -131,7 +130,9 @@ class BayesianRegressionStat(
     }
 
     // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
-    private val priorInfo: DoubleArray = (priorPrecisionMatrix * F64DenseVector.wrap(initialWeights)).toDoubleArray()
+    private val priorInfo = DoubleArray(featureSize).also {
+        priorPrecisionMatrix.multiplyInto(F64DenseVector.wrap(initialWeights), it)
+    }
 
     private val lock = concurrency.serializedLock()
     private val weights = F64DenseVector.wrap(initialWeights.copyOf())
