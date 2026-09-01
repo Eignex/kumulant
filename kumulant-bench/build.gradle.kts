@@ -67,7 +67,7 @@ benchmark {
             iterations = 5
             iterationTime = 1
             iterationTimeUnit = "s"
-            include(".*VectorExprBenchmark.sum")
+            include(".*VectorExprBenchmark.(sum|mean|minimum|maximum|norm2|dot)")
             param("representation", "dense", "sparse")
         }
     }

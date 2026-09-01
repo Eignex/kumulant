@@ -836,7 +836,27 @@ sealed interface VectorExpr {
  * This overload is additive: [ScalarExpr.eval] with a [DoubleArray] remains the compatibility
  * surface for callers whose input is already dense.
  */
-fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary: Result? = null): Double = when (this) {
+fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary: Result? = null): Double {
+    if (v is F64SparseVector) {
+        when (this) {
+            is VFold -> when (op) {
+                VFoldOp.Sum -> return sparseSum(v)
+                VFoldOp.Mean -> return sparseMean(v)
+                VFoldOp.Min -> return sparseMin(v)
+                VFoldOp.Max -> return sparseMax(v)
+                VFoldOp.Norm2 -> return sparseNorm2(v)
+                VFoldOp.Product -> Unit
+            }
+
+            is VDot -> if (weights.all { it.isFinite() }) return sparseDot(v, weights)
+
+            else -> Unit
+        }
+    }
+    return evalVectorGeneric(x, y, v, primary)
+}
+
+private fun ScalarExpr.evalVectorGeneric(x: Double, y: Double, v: F64VectorLike, primary: Result?): Double = when (this) {
     X -> x
 
     Y -> y
@@ -903,13 +923,7 @@ fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary:
     }
 
     is VFold -> when (op) {
-        VFoldOp.Sum -> if (v is F64SparseVector) {
-            var sum = 0.0
-            v.forEachStored { _, value -> sum += value }
-            sum
-        } else {
-            (0 until v.size).sumOf { v[it] }
-        }
+        VFoldOp.Sum -> (0 until v.size).sumOf { v[it] }
 
         VFoldOp.Product -> (0 until v.size).fold(1.0) { product, i -> product * v[i] }
 
@@ -917,63 +931,62 @@ fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary:
             require(
                 v.size != 0,
             ) { "VFold.Mean on empty vector" }
-            if (v is F64SparseVector) {
-                var sum = 0.0
-                v.forEachStored { _, value -> sum += value }
-                sum / v.size
-            } else {
-                (0 until v.size).sumOf { v[it] } / v.size
-            }
+            (0 until v.size).sumOf { v[it] } / v.size
         }
 
         VFoldOp.Min -> {
             require(
                 v.size != 0,
             ) { "VFold.Min on empty vector" }
-            if (v is F64SparseVector) {
-                sparseMin(v)
-            } else {
-                var minimum = v[0]
-                for (i in 1 until v.size) if (v[i] < minimum) minimum = v[i]
-                minimum
-            }
+            var minimum = v[0]
+            for (i in 1 until v.size) if (v[i] < minimum) minimum = v[i]
+            minimum
         }
 
         VFoldOp.Max -> {
             require(
                 v.size != 0,
             ) { "VFold.Max on empty vector" }
-            if (v is F64SparseVector) {
-                sparseMax(v)
-            } else {
-                var maximum = v[0]
-                for (i in 1 until v.size) if (v[i] > maximum) maximum = v[i]
-                maximum
-            }
+            var maximum = v[0]
+            for (i in 1 until v.size) if (v[i] > maximum) maximum = v[i]
+            maximum
         }
 
-        VFoldOp.Norm2 -> if (v is F64SparseVector) {
-            var sum = 0.0
-            v.forEachStored { _, value -> sum += value * value }
-            sqrt(sum)
-        } else {
-            sqrt((0 until v.size).sumOf { v[it] * v[it] })
-        }
+        VFoldOp.Norm2 -> sqrt((0 until v.size).sumOf { v[it] * v[it] })
     }
 
     is VDot -> {
         require(v.size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=${v.size}" }
-        if (v is F64SparseVector && weights.all { it.isFinite() }) {
-            var sum = 0.0
-            v.forEachStored { index, value -> sum += weights[index] * value }
-            sum
-        } else {
-            (0 until v.size).sumOf { weights[it] * v[it] }
-        }
+        (0 until v.size).sumOf { weights[it] * v[it] }
     }
 }
 
+private fun sparseSum(v: F64SparseVector): Double {
+    var sum = 0.0
+    v.forEachStored { _, value -> sum += value }
+    return sum
+}
+
+private fun sparseMean(v: F64SparseVector): Double {
+    require(v.size != 0) { "VFold.Mean on empty vector" }
+    return sparseSum(v) / v.size
+}
+
+private fun sparseNorm2(v: F64SparseVector): Double {
+    var sum = 0.0
+    v.forEachStored { _, value -> sum += value * value }
+    return sqrt(sum)
+}
+
+private fun sparseDot(v: F64SparseVector, weights: List<Double>): Double {
+    require(v.size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=${v.size}" }
+    var sum = 0.0
+    v.forEachStored { index, value -> sum += weights[index] * value }
+    return sum
+}
+
 private fun sparseMin(v: F64SparseVector): Double {
+    require(v.size != 0) { "VFold.Min on empty vector" }
     var minimum = 0.0
     var first = true
     var next = 0
@@ -992,6 +1005,7 @@ private fun sparseMin(v: F64SparseVector): Double {
 }
 
 private fun sparseMax(v: F64SparseVector): Double {
+    require(v.size != 0) { "VFold.Max on empty vector" }
     var maximum = 0.0
     var first = true
     var next = 0
