@@ -1,8 +1,12 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.Workspace
+import com.eignex.koblas.borrow
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.core.F64StridedVectorView
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
@@ -12,6 +16,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class LinearPosteriorsTest {
+
+    private class CustomVector(private val values: DoubleArray) : F64VectorLike {
+        override val size: Int get() = values.size
+        override fun get(i: Int): Double = values[i]
+        override fun toDoubleArray(): DoubleArray = values.copyOf()
+    }
 
     private fun sgdSnapshot(): StochasticRegressionResult {
         val stat = StochasticRegressionStat(featureSize = 2, optimizer = Sgd(ConstantRate(0.05)))
@@ -47,10 +57,63 @@ class LinearPosteriorsTest {
     }
 
     @Test
+    fun `workspace covariance evaluation matches allocating evaluation and preserves random draws`() {
+        val snapshot = bayesianSnapshot()
+        val x = F64SparseVector.of(size = 2, indices = intArrayOf(0), values = doubleArrayOf(0.3))
+        val workspace = Workspace().apply { reserve(2, 1) }
+
+        val allocated = MultivariateGaussian.evaluate(snapshot, x, Random(9), exploration = 0.7)
+        val reused = MultivariateGaussian.evaluate(snapshot, x, Random(9), workspace, exploration = 0.7)
+
+        assertEquals(allocated, reused, 1e-12)
+    }
+
+    @Test
+    fun `workspace covariance evaluation accepts strided and custom vectors`() {
+        val snapshot = bayesianSnapshot()
+        val dense = F64DenseVector.of(doubleArrayOf(0.3, -0.2))
+        val strided = F64StridedVectorView(doubleArrayOf(0.3, 7.0, -0.2, 7.0), 0, 2, 2)
+        val custom = CustomVector(doubleArrayOf(0.3, -0.2))
+        val workspace = Workspace().apply { reserve(2, 1) }
+
+        val expected = LinUcb.evaluate(snapshot, dense, Random(0), workspace, exploration = 0.7)
+        assertEquals(expected, LinUcb.evaluate(snapshot, strided, Random(0), workspace, exploration = 0.7), 1e-12)
+        assertEquals(expected, LinUcb.evaluate(snapshot, custom, Random(0), workspace, exploration = 0.7), 1e-12)
+    }
+
+    @Test
+    fun `sampleInto matches an owned multivariate sample without aliasing later borrows`() {
+        val snapshot = bayesianSnapshot()
+        val destination = DoubleArray(2)
+        val workspace = Workspace().apply { reserve(2, 1) }
+
+        MultivariateGaussian.sampleInto(snapshot, Random(21), destination, exploration = 0.4)
+        val expected = MultivariateGaussian.sample(snapshot, Random(21), exploration = 0.4)
+        assertEquals(expected[0], destination[0], 1e-12)
+        assertEquals(expected[1], destination[1], 1e-12)
+        workspace.borrow(2) { it.fill(0.0) }
+        assertEquals(expected[0], destination[0], 1e-12)
+        assertEquals(expected[1], destination[1], 1e-12)
+    }
+
+    @Test
     fun `PointPosterior with zero exploration returns the snapshot weights as-is`() {
         val snap = sgdSnapshot()
         val sample = PointPosterior.sample(snap, Random(0), exploration = 0.0)
         assertTrue(sample === snap.weights)
+    }
+
+    @Test
+    fun `PointPosterior sample delegates to sampleInto without changing RNG order`() {
+        val snapshot = sgdSnapshot()
+        val expected = DoubleArray(snapshot.weights.size)
+        val intoRng = Random(91)
+        PointPosterior.sampleInto(snapshot, intoRng, expected, exploration = 0.25)
+        val sampleRng = Random(91)
+        val sample = PointPosterior.sample(snapshot, sampleRng, exploration = 0.25)
+
+        for (i in expected.indices) assertEquals(expected[i], sample[i], 0.0)
+        assertEquals(intoRng.nextDouble(), sampleRng.nextDouble(), 0.0)
     }
 
     @Test
@@ -101,6 +164,19 @@ class LinearPosteriorsTest {
         }
         assertTrue(abs(s0 / n - snap.weights[0]) < 0.05)
         assertTrue(abs(s1 / n - snap.weights[1]) < 0.05)
+    }
+
+    @Test
+    fun `FactorisedGaussian sample delegates to sampleInto without changing RNG order`() {
+        val snapshot = diagonalSnapshot()
+        val expected = DoubleArray(snapshot.weights.size)
+        val intoRng = Random(92)
+        FactorisedGaussian.sampleInto(snapshot, intoRng, expected, exploration = 0.25)
+        val sampleRng = Random(92)
+        val sample = FactorisedGaussian.sample(snapshot, sampleRng, exploration = 0.25)
+
+        for (i in expected.indices) assertEquals(expected[i], sample[i], 0.0)
+        assertEquals(intoRng.nextDouble(), sampleRng.nextDouble(), 0.0)
     }
 
     @Test

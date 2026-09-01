@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.fitLine
@@ -32,6 +33,27 @@ class BayesianRegressionStatTest {
                 assertEquals(expected, s, tol, "L * LT disagrees with the covariance at ($i, $j)")
             }
         }
+    }
+
+    @Test
+    fun `workspace updates and merge match allocating paths`() {
+        val allocated = BayesianRegressionStat(featureSize = 2)
+        val reused = BayesianRegressionStat(featureSize = 2)
+        val workspace = Workspace().apply { reserve(2, 3) }
+        repeat(20) { i ->
+            val x = F64DenseVector.of(doubleArrayOf(i.toDouble() / 20.0, 1.0))
+            allocated.update(x, x[0] + 2.0)
+            reused.update(x, x[0] + 2.0, workspace)
+        }
+        val other = BayesianRegressionStat(featureSize = 2)
+        other.update(doubleArrayOf(0.5, 1.0), 2.5)
+
+        allocated.merge(other.read())
+        reused.merge(other.read(), workspace)
+
+        val expected = allocated.read()
+        val actual = reused.read()
+        for (i in 0 until 2) assertEquals(expected.weights[i], actual.weights[i], 1e-12)
     }
 
     @Test

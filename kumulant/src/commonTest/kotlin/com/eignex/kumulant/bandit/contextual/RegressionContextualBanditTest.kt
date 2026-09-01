@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.feat
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
@@ -82,6 +83,22 @@ class RegressionContextualBanditTest {
         val s0Again = bandit.evaluate(0, feat(1.0, 0.0))
         assertEquals(s0, s0Again, "LinUcb is deterministic given a snapshot")
         assertTrue(s0 > 0.0)
+    }
+
+    @Test
+    fun `workspace contextual scoring matches the interface score`() {
+        val bandit = RegressionContextualBandit(
+            nbrArms = 2,
+            template = BayesianRegressionStat(featureSize = 2),
+            posterior = LinUcb,
+            random = Random(0),
+        )
+        bandit.update(0, feat(1.0, 0.0), 1.0)
+        val x = feat(1.0, 0.0)
+        val workspace = Workspace().apply { reserve(2, 1) }
+
+        assertEquals(bandit.evaluate(0, x), bandit.evaluate(0, x, workspace), 1e-12)
+        assertEquals(bandit.choose(x), bandit.choose(x, workspace))
     }
 
     @Test

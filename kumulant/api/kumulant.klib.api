@@ -163,6 +163,7 @@ abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.cor
 
 abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.stat.regression/RegressionPosterior { // com.eignex.kumulant.stat.regression/RegressionPosterior|null[0]
     abstract fun evaluate(#A, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, kotlin/Double = ...): kotlin/Double // com.eignex.kumulant.stat.regression/RegressionPosterior.evaluate|evaluate(1:0;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;kotlin.Double){}[0]
+    open fun evaluate(#A, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, com.eignex.koblas/Workspace, kotlin/Double = ...): kotlin/Double // com.eignex.kumulant.stat.regression/RegressionPosterior.evaluate|evaluate(1:0;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;com.eignex.koblas.Workspace;kotlin.Double){}[0]
 }
 
 abstract interface <#A: in kotlin/Any?> com.eignex.kumulant.stat.regression.tree/Split { // com.eignex.kumulant.stat.regression.tree/Split|null[0]
@@ -191,6 +192,7 @@ abstract interface com.eignex.kumulant.bandit/ContextualBandit : com.eignex.kumu
 
 abstract interface com.eignex.kumulant.bandit/ContextualScorable { // com.eignex.kumulant.bandit/ContextualScorable|null[0]
     abstract fun evaluate(kotlin/Int, com.eignex.koblas.core/F64VectorLike): kotlin/Double // com.eignex.kumulant.bandit/ContextualScorable.evaluate|evaluate(kotlin.Int;com.eignex.koblas.core.F64VectorLike){}[0]
+    open fun evaluate(kotlin/Int, com.eignex.koblas.core/F64VectorLike, com.eignex.koblas/Workspace): kotlin/Double // com.eignex.kumulant.bandit/ContextualScorable.evaluate|evaluate(kotlin.Int;com.eignex.koblas.core.F64VectorLike;com.eignex.koblas.Workspace){}[0]
 }
 
 abstract interface com.eignex.kumulant.bandit/Scorable { // com.eignex.kumulant.bandit/Scorable|null[0]
@@ -404,7 +406,9 @@ sealed interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.schem
 
 sealed interface <#A: com.eignex.kumulant.stat.regression.glm/LinearRegressionResult> com.eignex.kumulant.stat.regression.glm/LinearPosterior : com.eignex.kumulant.stat.regression/RegressionPosterior<#A> { // com.eignex.kumulant.stat.regression.glm/LinearPosterior|null[0]
     abstract fun sample(#A, kotlin.random/Random, kotlin/Double = ...): com.eignex.koblas.core/F64VectorLike // com.eignex.kumulant.stat.regression.glm/LinearPosterior.sample|sample(1:0;kotlin.random.Random;kotlin.Double){}[0]
+    open fun evaluate(#A, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, com.eignex.koblas/Workspace, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.glm/LinearPosterior.evaluate|evaluate(1:0;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;com.eignex.koblas.Workspace;kotlin.Double){}[0]
     open fun evaluate(#A, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.glm/LinearPosterior.evaluate|evaluate(1:0;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;kotlin.Double){}[0]
+    open fun sampleInto(#A, kotlin.random/Random, kotlin/DoubleArray, kotlin/Double = ...) // com.eignex.kumulant.stat.regression.glm/LinearPosterior.sampleInto|sampleInto(1:0;kotlin.random.Random;kotlin.DoubleArray;kotlin.Double){}[0]
 
     final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.glm/LinearPosterior.Companion|null[0]
         final fun <#A2: kotlin/Any?> serializer(kotlinx.serialization/KSerializer<#A2>): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/LinearPosterior<#A2>> // com.eignex.kumulant.stat.regression.glm/LinearPosterior.Companion.serializer|serializer(kotlinx.serialization.KSerializer<0:0>){0§<kotlin.Any?>}[0]
@@ -894,8 +898,10 @@ final class <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.bandit.con
     final fun armResult(kotlin/Int): #A // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.armResult|armResult(kotlin.Int){}[0]
     final fun armStat(kotlin/Int): com.eignex.kumulant.core/RegressionStat<#A> // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.armStat|armStat(kotlin.Int){}[0]
     final fun choose(com.eignex.koblas.core/F64VectorLike): kotlin/Int // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.choose|choose(com.eignex.koblas.core.F64VectorLike){}[0]
+    final fun choose(com.eignex.koblas.core/F64VectorLike, com.eignex.koblas/Workspace): kotlin/Int // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.choose|choose(com.eignex.koblas.core.F64VectorLike;com.eignex.koblas.Workspace){}[0]
     final fun create(kotlin.random/Random): com.eignex.kumulant.bandit.contextual/RegressionContextualBandit<#A> // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.create|create(kotlin.random.Random){}[0]
     final fun evaluate(kotlin/Int, com.eignex.koblas.core/F64VectorLike): kotlin/Double // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.evaluate|evaluate(kotlin.Int;com.eignex.koblas.core.F64VectorLike){}[0]
+    final fun evaluate(kotlin/Int, com.eignex.koblas.core/F64VectorLike, com.eignex.koblas/Workspace): kotlin/Double // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.evaluate|evaluate(kotlin.Int;com.eignex.koblas.core.F64VectorLike;com.eignex.koblas.Workspace){}[0]
     final fun globalSnapshot(): #A? // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.globalSnapshot|globalSnapshot(){}[0]
     final fun globalStat(): com.eignex.kumulant.core/RegressionStat<#A>? // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.globalStat|globalStat(){}[0]
     final fun merge(kotlin.collections/List<#A>) // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.merge|merge(kotlin.collections.List<1:0>){}[0]
@@ -6341,8 +6347,11 @@ final class com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat : com
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     final fun merge(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.merge|merge(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult){}[0]
+    final fun merge(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, com.eignex.koblas/Workspace) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.merge|merge(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;com.eignex.koblas.Workspace){}[0]
     final fun read(kotlin/Long): com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.reset|reset(){}[0]
+    final fun update(com.eignex.koblas.core/F64VectorLike, kotlin/Double, com.eignex.koblas/Workspace, kotlin/Double = ...) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.update|update(com.eignex.koblas.core.F64VectorLike;kotlin.Double;com.eignex.koblas.Workspace;kotlin.Double){}[0]
+    final fun update(com.eignex.koblas.core/F64VectorLike, kotlin/Double, com.eignex.koblas/Workspace, kotlin/Long, kotlin/Double = ...) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.update|update(com.eignex.koblas.core.F64VectorLike;kotlin.Double;com.eignex.koblas.Workspace;kotlin.Long;kotlin.Double){}[0]
     final fun update(com.eignex.koblas.core/F64VectorLike, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.update|update(com.eignex.koblas.core.F64VectorLike;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
 
     final object Companion { // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.Companion|null[0]
@@ -7627,8 +7636,11 @@ final class com.eignex.kumulant.stat.regression/SoftmaxRegressionResult : com.ei
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult.hashCode|hashCode(){}[0]
     final fun logit(com.eignex.koblas.core/F64VectorLike, kotlin/Int): kotlin/Double // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult.logit|logit(com.eignex.koblas.core.F64VectorLike;kotlin.Int){}[0]
+    final fun logitsInto(com.eignex.koblas.core/F64VectorLike, kotlin/DoubleArray) // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult.logitsInto|logitsInto(com.eignex.koblas.core.F64VectorLike;kotlin.DoubleArray){}[0]
     final fun predict(com.eignex.koblas.core/F64VectorLike): kotlin/Int // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult.predict|predict(com.eignex.koblas.core.F64VectorLike){}[0]
+    final fun predict(com.eignex.koblas.core/F64VectorLike, com.eignex.koblas/Workspace): kotlin/Int // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult.predict|predict(com.eignex.koblas.core.F64VectorLike;com.eignex.koblas.Workspace){}[0]
     final fun probabilities(com.eignex.koblas.core/F64VectorLike): kotlin/DoubleArray // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult.probabilities|probabilities(com.eignex.koblas.core.F64VectorLike){}[0]
+    final fun probabilitiesInto(com.eignex.koblas.core/F64VectorLike, kotlin/DoubleArray) // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult.probabilitiesInto|probabilitiesInto(com.eignex.koblas.core.F64VectorLike;kotlin.DoubleArray){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult.toString|toString(){}[0]
 
     final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.regression/SoftmaxRegressionResult> { // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult.$serializer|null[0]
@@ -9185,6 +9197,7 @@ final object com.eignex.kumulant.stat.regression.glm/FactorisedGaussian : com.ei
     final fun evaluate(com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.DiagonalRegressionResult;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.hashCode|hashCode(){}[0]
     final fun sample(com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult, kotlin.random/Random, kotlin/Double): com.eignex.koblas.core/F64VectorLike // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.sample|sample(com.eignex.kumulant.stat.regression.glm.DiagonalRegressionResult;kotlin.random.Random;kotlin.Double){}[0]
+    final fun sampleInto(com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult, kotlin.random/Random, kotlin/DoubleArray, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.sampleInto|sampleInto(com.eignex.kumulant.stat.regression.glm.DiagonalRegressionResult;kotlin.random.Random;kotlin.DoubleArray;kotlin.Double){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/FactorisedGaussian> // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.toString|toString(){}[0]
@@ -9192,9 +9205,11 @@ final object com.eignex.kumulant.stat.regression.glm/FactorisedGaussian : com.ei
 
 final object com.eignex.kumulant.stat.regression.glm/LinUcb : com.eignex.kumulant.stat.regression.glm/LinearPosterior<com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.glm/LinUcb|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.glm/LinUcb.equals|equals(kotlin.Any?){}[0]
+    final fun evaluate(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, com.eignex.koblas/Workspace, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.glm/LinUcb.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;com.eignex.koblas.Workspace;kotlin.Double){}[0]
     final fun evaluate(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.glm/LinUcb.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.glm/LinUcb.hashCode|hashCode(){}[0]
     final fun sample(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, kotlin.random/Random, kotlin/Double): com.eignex.koblas.core/F64VectorLike // com.eignex.kumulant.stat.regression.glm/LinUcb.sample|sample(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;kotlin.random.Random;kotlin.Double){}[0]
+    final fun sampleInto(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, kotlin.random/Random, kotlin/DoubleArray, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/LinUcb.sampleInto|sampleInto(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;kotlin.random.Random;kotlin.DoubleArray;kotlin.Double){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/LinUcb> // com.eignex.kumulant.stat.regression.glm/LinUcb.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.glm/LinUcb.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/LinUcb.toString|toString(){}[0]
@@ -9202,9 +9217,11 @@ final object com.eignex.kumulant.stat.regression.glm/LinUcb : com.eignex.kumulan
 
 final object com.eignex.kumulant.stat.regression.glm/MultivariateGaussian : com.eignex.kumulant.stat.regression.glm/LinearPosterior<com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.equals|equals(kotlin.Any?){}[0]
+    final fun evaluate(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, com.eignex.koblas/Workspace, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;com.eignex.koblas.Workspace;kotlin.Double){}[0]
     final fun evaluate(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.hashCode|hashCode(){}[0]
     final fun sample(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, kotlin.random/Random, kotlin/Double): com.eignex.koblas.core/F64VectorLike // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.sample|sample(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;kotlin.random.Random;kotlin.Double){}[0]
+    final fun sampleInto(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, kotlin.random/Random, kotlin/DoubleArray, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.sampleInto|sampleInto(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;kotlin.random.Random;kotlin.DoubleArray;kotlin.Double){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/MultivariateGaussian> // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.toString|toString(){}[0]
@@ -9215,6 +9232,7 @@ final object com.eignex.kumulant.stat.regression.glm/PointPosterior : com.eignex
     final fun evaluate(com.eignex.kumulant.stat.regression.glm/StochasticRegressionResult, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.glm/PointPosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.glm/PointPosterior.hashCode|hashCode(){}[0]
     final fun sample(com.eignex.kumulant.stat.regression.glm/StochasticRegressionResult, kotlin.random/Random, kotlin/Double): com.eignex.koblas.core/F64VectorLike // com.eignex.kumulant.stat.regression.glm/PointPosterior.sample|sample(com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult;kotlin.random.Random;kotlin.Double){}[0]
+    final fun sampleInto(com.eignex.kumulant.stat.regression.glm/StochasticRegressionResult, kotlin.random/Random, kotlin/DoubleArray, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/PointPosterior.sampleInto|sampleInto(com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult;kotlin.random.Random;kotlin.DoubleArray;kotlin.Double){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/PointPosterior> // com.eignex.kumulant.stat.regression.glm/PointPosterior.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.glm/PointPosterior.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/PointPosterior.toString|toString(){}[0]

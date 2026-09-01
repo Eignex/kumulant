@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
@@ -111,6 +112,20 @@ class RegressionContextualBandit<R : Result>(
     override fun evaluate(armIndex: Int, x: F64VectorLike): Double {
         requireArmIndex(armIndex, nbrArms)
         return globalMean(x) + posterior.evaluate(arms[armIndex].read(0L), x, random, exploration)
+    }
+
+    override fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace): Double {
+        requireArmIndex(armIndex, nbrArms)
+        val gMean = global?.let { posterior.evaluate(it.read(0L), x, random, workspace, 0.0) } ?: 0.0
+        return gMean + posterior.evaluate(arms[armIndex].read(0L), x, random, workspace, exploration)
+    }
+
+    /** Chooses with a caller-owned workspace reused across all arm evaluations. */
+    fun choose(x: F64VectorLike, workspace: Workspace): Int {
+        val gMean = global?.let { posterior.evaluate(it.read(0L), x, random, workspace, 0.0) } ?: 0.0
+        return argmaxArm(nbrArms) { i ->
+            gMean + posterior.evaluate(arms[i].read(0L), x, random, workspace, exploration)
+        }
     }
 
     override fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double) {

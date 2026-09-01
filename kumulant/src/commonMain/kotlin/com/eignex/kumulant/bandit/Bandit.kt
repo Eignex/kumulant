@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.Result
 import kotlin.random.Random
@@ -242,4 +243,7 @@ interface Scorable {
 interface ContextualScorable {
     /** Score the arm at [armIndex] under the current state and context [x]. */
     fun evaluate(armIndex: Int, x: F64VectorLike): Double
+
+    /** Workspace-aware score for consumers that repeatedly evaluate allocation-sensitive posteriors. */
+    fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace): Double = evaluate(armIndex, x)
 }

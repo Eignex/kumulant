@@ -2,6 +2,7 @@
 
 package com.eignex.kumulant.math
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
@@ -53,6 +54,15 @@ class CholeskyTest {
         assertEquals(0.0, norm, "downdate inside the cone reports success")
         val expected = Array(2) { i -> DoubleArray(2) { j -> a[i][j] - x[i] * x[j] } }
         assertMatrixEquals(expected, product(l))
+    }
+
+    @Test
+    fun `workspace downdate reuses nested scratch`() {
+        val l = F64DenseMatrix.of(arrayOf(doubleArrayOf(4.0, 1.0), doubleArrayOf(1.0, 3.0))).cholesky().l
+        val workspace = Workspace().apply { reserve(2, 2) }
+
+        assertEquals(0.0, l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(0.5, 0.25)), workspace))
+        assertEquals(0.0, l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(0.1, 0.1)), workspace))
     }
 
     @Test
