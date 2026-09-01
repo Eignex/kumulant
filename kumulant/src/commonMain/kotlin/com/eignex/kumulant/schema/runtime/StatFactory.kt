@@ -494,7 +494,7 @@ fun <R : Result> VectorStatSpec<R>.materialize(concurrency: Concurrency = Concur
 
         is FoldVectorPaired -> {
             val m = requirePaired(inner, "FoldVectorPaired").materialize(concurrency) as PairedStat<Result>
-            FoldVectorPairedStat(
+            FoldVectorPairedStat.vector(
                 m,
                 foldX = { vec -> xExpr.eval(0.0, 0.0, vec) },
                 foldY = { vec -> yExpr.eval(0.0, 0.0, vec) },

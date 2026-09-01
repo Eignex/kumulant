@@ -373,6 +373,56 @@ class ExprTest {
         assertEquals(5.0, VFold(VFoldOp.Norm2).eval(0.0, 0.0, v), DELTA)
     }
 
+    @Test fun `vector aware vfold min and max match double array ordering`() {
+        val min = VFold(VFoldOp.Min)
+        val max = VFold(VFoldOp.Max)
+        val cases = listOf(
+            doubleArrayOf(1.0, Double.NaN),
+            doubleArrayOf(Double.NaN, 1.0),
+            doubleArrayOf(0.0, -0.0),
+            doubleArrayOf(-0.0, 0.0),
+            doubleArrayOf(3.0, -4.0, 2.0),
+        )
+
+        for (values in cases) {
+            val input = NoMaterializeVector(values)
+            val arrayMin = min.eval(0.0, 0.0, values)
+            val arrayMax = max.eval(0.0, 0.0, values)
+            val vectorMin = min.eval(v = input)
+            val vectorMax = max.eval(v = input)
+            assertEquals(arrayMin.toBits(), vectorMin.toBits())
+            assertEquals(arrayMax.toBits(), vectorMax.toBits())
+        }
+    }
+
+    @Test fun `vector aware vfold min and max preserve empty exceptions`() {
+        val input = NoMaterializeVector(doubleArrayOf())
+
+        assertFailsWith<IllegalArgumentException> { VFold(VFoldOp.Min).eval(v = input) }
+        assertFailsWith<IllegalArgumentException> { VFold(VFoldOp.Max).eval(v = input) }
+    }
+
+    @Test fun `vector aware in evaluates its operand once and matches double array equality`() {
+        val empty = In(V(1), emptyList())
+        assertFailsWith<IndexOutOfBoundsException> { empty.eval(v = NoMaterializeVector(doubleArrayOf(1.0))) }
+
+        for (values in listOf(doubleArrayOf(Double.NaN), doubleArrayOf(0.0), doubleArrayOf(-0.0))) {
+            val expr = In(V(0), listOf(0.0, -0.0, Double.NaN))
+            assertEquals(expr.eval(0.0, 0.0, values), expr.eval(v = NoMaterializeVector(values)))
+        }
+
+        class CountingVector(private val values: DoubleArray) : F64VectorLike {
+            var reads = 0
+            override val size: Int get() = values.size
+            override fun get(i: Int): Double = values[i].also { reads++ }
+            override fun toDoubleArray(): DoubleArray = error("expression materialised its vector input")
+        }
+
+        val input = CountingVector(doubleArrayOf(2.0, 3.0))
+        assertTrue(In(VFold(VFoldOp.Sum), listOf(1.0, 4.0, 5.0)).eval(v = input))
+        assertEquals(2, input.reads)
+    }
+
     @Test fun `vdot weighted dot product`() {
         val v = doubleArrayOf(2.0, 3.0, 4.0)
         val expr = VDot(weights = listOf(1.0, 0.0, -1.0))
@@ -420,6 +470,18 @@ class ExprTest {
         live.update(doubleArrayOf(0.0, 0.0))
         val r = live.read() as WeightedMeanResult
         assertEquals(2.5, r.mean, DELTA)
+    }
+
+    @Test fun `schema paired vector fold borrows custom input`() {
+        val live = UnivariateRegression().foldVector(V(0), V(1)).materialize(Concurrency.None)
+
+        live.update(NoMaterializeVector(doubleArrayOf(1.0, 2.0)))
+        live.update(NoMaterializeVector(doubleArrayOf(2.0, 4.0)))
+
+        val result = live.read()
+        assertEquals(1.5, result.x.mean, DELTA)
+        assertEquals(3.0, result.y.mean, DELTA)
+        assertEquals(2.0, result.slope, DELTA)
     }
 
     @Test fun `fold configs round trip via wire`() {

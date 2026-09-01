@@ -917,14 +917,18 @@ fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary:
             require(
                 v.size != 0,
             ) { "VFold.Min on empty vector" }
-            (1 until v.size).fold(v[0]) { minimum, i -> min(minimum, v[i]) }
+            var minimum = v[0]
+            for (i in 1 until v.size) if (v[i] < minimum) minimum = v[i]
+            minimum
         }
 
         VFoldOp.Max -> {
             require(
                 v.size != 0,
             ) { "VFold.Max on empty vector" }
-            (1 until v.size).fold(v[0]) { maximum, i -> max(maximum, v[i]) }
+            var maximum = v[0]
+            for (i in 1 until v.size) if (v[i] > maximum) maximum = v[i]
+            maximum
         }
 
         VFoldOp.Norm2 -> sqrt((0 until v.size).sumOf { v[it] * v[it] })
@@ -954,7 +958,17 @@ fun BoolExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary: R
 
     is Not -> !a.eval(x, y, v, primary)
 
-    is In -> values.any { it == of.eval(x, y, v, primary) }
+    is In -> {
+        val value = of.eval(x, y, v, primary)
+        var matches = false
+        for (candidate in values) {
+            if (value == candidate) {
+                matches = true
+                break
+            }
+        }
+        matches
+    }
 
     is IsNaN -> of.eval(x, y, v, primary).isNaN()
 
