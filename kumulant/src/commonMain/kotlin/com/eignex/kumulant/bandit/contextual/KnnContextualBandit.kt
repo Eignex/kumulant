@@ -383,20 +383,12 @@ class KnnContextualBandit(
     }
 
     private fun copyOf(x: F64VectorLike): F64VectorStorage = when (x) {
-        is F64DenseVector -> F64DenseVector.of(x.toDoubleArray())
+        is F64DenseVector -> F64DenseVector.wrap(x.toDoubleArray())
 
         is F64SparseVector -> {
-            val keepIdx = IntArray(x.size)
-            val keepVal = DoubleArray(x.size)
-            var n = 0
-            x.forEachStored { i, v ->
-                keepIdx[n] = i
-                keepVal[n] = v
-                n++
-            }
-            F64SparseVector.of(x.size, keepIdx.copyOf(n), keepVal.copyOf(n))
+            F64SparseVector.wrap(x.size, x.copyIndices(), x.values.copyOf())
         }
 
-        else -> F64DenseVector.of(x.toDoubleArray())
+        else -> F64DenseVector.wrap(x.toDoubleArray())
     }
 }
