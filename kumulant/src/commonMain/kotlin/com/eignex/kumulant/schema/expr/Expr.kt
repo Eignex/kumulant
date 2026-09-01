@@ -848,7 +848,10 @@ fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary:
                 VFoldOp.Product -> Unit
             }
 
-            is VDot -> if (weights.all { it.isFinite() }) return sparseDot(v, weights)
+            is VDot -> {
+                require(v.size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=${v.size}" }
+                if (weights.all { it.isFinite() }) return sparseDot(v, weights)
+            }
 
             else -> Unit
         }
@@ -980,7 +983,6 @@ private fun sparseNorm2(v: F64SparseVector): Double {
 }
 
 private fun sparseDot(v: F64SparseVector, weights: List<Double>): Double {
-    require(v.size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=${v.size}" }
     var sum = 0.0
     v.forEachStored { index, value -> sum += weights[index] * value }
     return sum

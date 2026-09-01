@@ -487,6 +487,20 @@ class ExprTest {
         assertEquals(0.0, VDot(listOf(0.0, 0.0)).eval(v = sparse(doubleArrayOf(3.0, -4.0))))
     }
 
+    @Test fun `vector vdot validates sparse length before reading weights`() {
+        val weights = object : AbstractList<Double>() {
+            override val size: Int get() = 1
+            override fun get(index: Int): Double = error("VDot read a mismatched weight")
+            override fun iterator(): Iterator<Double> = error("VDot iterated mismatched weights")
+        }
+
+        val error = assertFailsWith<IllegalArgumentException> {
+            VDot(weights).eval(v = sparse(doubleArrayOf(1.0, 2.0)))
+        }
+
+        assertEquals("VDot length mismatch: weights=1, v=2", error.message)
+    }
+
     @Test fun `vector aware in evaluates its operand once and matches double array equality`() {
         val empty = In(V(1), emptyList())
         assertFailsWith<IndexOutOfBoundsException> { empty.eval(v = NoMaterializeVector(doubleArrayOf(1.0))) }
