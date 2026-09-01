@@ -1,5 +1,6 @@
 package com.eignex.kumulant.schema.expr
 
+import com.eignex.koblas.core.F64SparseVector
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.HasCenterScale
@@ -835,109 +836,194 @@ sealed interface VectorExpr {
  * This overload is additive: [ScalarExpr.eval] with a [DoubleArray] remains the compatibility
  * surface for callers whose input is already dense.
  */
-fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary: Result? = null): Double = when (this) {
-    X -> x
+fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary: Result? = null): Double {
+    if (v is F64SparseVector) {
+        when (this) {
+            is VFold -> when (op) {
+                VFoldOp.Sum -> return sparseSum(v)
+                VFoldOp.Mean -> return sparseMean(v)
+                VFoldOp.Min -> return sparseMin(v)
+                VFoldOp.Max -> return sparseMax(v)
+                VFoldOp.Norm2 -> return sparseNorm2(v)
+                VFoldOp.Product -> Unit
+            }
 
-    Y -> y
+            is VDot -> {
+                require(v.size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=${v.size}" }
+                if (weights.all { it.isFinite() }) return sparseDot(v, weights)
+            }
 
-    Center -> primary.feedbackPrimary<HasCenterScale>("Center").center
-
-    Scale -> primary.feedbackPrimary<HasCenterScale>("Scale").scale
-
-    Low -> primary.feedbackPrimary<HasMinMax>("Low").min
-
-    High -> primary.feedbackPrimary<HasMinMax>("High").max
-
-    VIndex -> {
-        check(
-            primary is IndexedResult,
-        ) { "VIndex requires an element-wise feedback context; got ${primary?.let { it::class.simpleName }}" }
-        primary.index.toDouble()
+            else -> Unit
+        }
     }
+    return evalVectorGeneric(x, y, v, primary)
+}
 
-    is V -> v[index]
+private fun ScalarExpr.evalVectorGeneric(x: Double, y: Double, v: F64VectorLike, primary: Result?): Double =
+    when (this) {
+        X -> x
 
-    is Const -> this.v
+        Y -> y
 
-    is Add -> l.eval(x, y, v, primary) + r.eval(x, y, v, primary)
+        Center -> primary.feedbackPrimary<HasCenterScale>("Center").center
 
-    is Sub -> l.eval(x, y, v, primary) - r.eval(x, y, v, primary)
+        Scale -> primary.feedbackPrimary<HasCenterScale>("Scale").scale
 
-    is Mul -> l.eval(x, y, v, primary) * r.eval(x, y, v, primary)
+        Low -> primary.feedbackPrimary<HasMinMax>("Low").min
 
-    is Div -> l.eval(x, y, v, primary) / r.eval(x, y, v, primary)
+        High -> primary.feedbackPrimary<HasMinMax>("High").max
 
-    is Neg -> -a.eval(x, y, v, primary)
-
-    is Abs -> abs(a.eval(x, y, v, primary))
-
-    is Log -> ln(a.eval(x, y, v, primary))
-
-    is Exp -> exp(a.eval(x, y, v, primary))
-
-    is Sqrt -> sqrt(a.eval(x, y, v, primary))
-
-    is Pow -> a.eval(x, y, v, primary).pow(b.eval(x, y, v, primary))
-
-    is MinExpr -> min(l.eval(x, y, v, primary), r.eval(x, y, v, primary))
-
-    is MaxExpr -> max(l.eval(x, y, v, primary), r.eval(x, y, v, primary))
-
-    is IfExpr -> if (cond.eval(x, y, v, primary)) then.eval(x, y, v, primary) else otherwise.eval(x, y, v, primary)
-
-    is Switch -> {
-        val key = on.eval(x, y, v, primary)
-        cases.firstOrNull { it.value == key }?.then?.eval(x, y, v, primary) ?: otherwise.eval(x, y, v, primary)
-    }
-
-    Standardize -> {
-        val result = primary.feedbackPrimary<HasCenterScale>("Standardize")
-        if (result.scale > 0.0) (x - result.center) / result.scale else 0.0
-    }
-
-    is MinMax -> {
-        val result = primary.feedbackPrimary<HasMinMax>("MinMax")
-        val span = result.max - result.min
-        if (span > 0.0) targetLow + (x - result.min) / span * (targetHigh - targetLow) else targetLow
-    }
-
-    is VFold -> when (op) {
-        VFoldOp.Sum -> (0 until v.size).sumOf { v[it] }
-
-        VFoldOp.Product -> (0 until v.size).fold(1.0) { product, i -> product * v[i] }
-
-        VFoldOp.Mean -> {
-            require(
-                v.size != 0,
-            ) { "VFold.Mean on empty vector" }
-            (0 until v.size).sumOf { v[it] } / v.size
+        VIndex -> {
+            check(
+                primary is IndexedResult,
+            ) { "VIndex requires an element-wise feedback context; got ${primary?.let { it::class.simpleName }}" }
+            primary.index.toDouble()
         }
 
-        VFoldOp.Min -> {
-            require(
-                v.size != 0,
-            ) { "VFold.Min on empty vector" }
-            var minimum = v[0]
-            for (i in 1 until v.size) if (v[i] < minimum) minimum = v[i]
-            minimum
+        is V -> v[index]
+
+        is Const -> this.v
+
+        is Add -> l.eval(x, y, v, primary) + r.eval(x, y, v, primary)
+
+        is Sub -> l.eval(x, y, v, primary) - r.eval(x, y, v, primary)
+
+        is Mul -> l.eval(x, y, v, primary) * r.eval(x, y, v, primary)
+
+        is Div -> l.eval(x, y, v, primary) / r.eval(x, y, v, primary)
+
+        is Neg -> -a.eval(x, y, v, primary)
+
+        is Abs -> abs(a.eval(x, y, v, primary))
+
+        is Log -> ln(a.eval(x, y, v, primary))
+
+        is Exp -> exp(a.eval(x, y, v, primary))
+
+        is Sqrt -> sqrt(a.eval(x, y, v, primary))
+
+        is Pow -> a.eval(x, y, v, primary).pow(b.eval(x, y, v, primary))
+
+        is MinExpr -> min(l.eval(x, y, v, primary), r.eval(x, y, v, primary))
+
+        is MaxExpr -> max(l.eval(x, y, v, primary), r.eval(x, y, v, primary))
+
+        is IfExpr -> if (cond.eval(x, y, v, primary)) then.eval(x, y, v, primary) else otherwise.eval(x, y, v, primary)
+
+        is Switch -> {
+            val key = on.eval(x, y, v, primary)
+            cases.firstOrNull { it.value == key }?.then?.eval(x, y, v, primary) ?: otherwise.eval(x, y, v, primary)
         }
 
-        VFoldOp.Max -> {
-            require(
-                v.size != 0,
-            ) { "VFold.Max on empty vector" }
-            var maximum = v[0]
-            for (i in 1 until v.size) if (v[i] > maximum) maximum = v[i]
-            maximum
+        Standardize -> {
+            val result = primary.feedbackPrimary<HasCenterScale>("Standardize")
+            if (result.scale > 0.0) (x - result.center) / result.scale else 0.0
         }
 
-        VFoldOp.Norm2 -> sqrt((0 until v.size).sumOf { v[it] * v[it] })
+        is MinMax -> {
+            val result = primary.feedbackPrimary<HasMinMax>("MinMax")
+            val span = result.max - result.min
+            if (span > 0.0) targetLow + (x - result.min) / span * (targetHigh - targetLow) else targetLow
+        }
+
+        is VFold -> when (op) {
+            VFoldOp.Sum -> (0 until v.size).sumOf { v[it] }
+
+            VFoldOp.Product -> (0 until v.size).fold(1.0) { product, i -> product * v[i] }
+
+            VFoldOp.Mean -> {
+                require(
+                    v.size != 0,
+                ) { "VFold.Mean on empty vector" }
+                (0 until v.size).sumOf { v[it] } / v.size
+            }
+
+            VFoldOp.Min -> {
+                require(
+                    v.size != 0,
+                ) { "VFold.Min on empty vector" }
+                var minimum = v[0]
+                for (i in 1 until v.size) if (v[i] < minimum) minimum = v[i]
+                minimum
+            }
+
+            VFoldOp.Max -> {
+                require(
+                    v.size != 0,
+                ) { "VFold.Max on empty vector" }
+                var maximum = v[0]
+                for (i in 1 until v.size) if (v[i] > maximum) maximum = v[i]
+                maximum
+            }
+
+            VFoldOp.Norm2 -> sqrt((0 until v.size).sumOf { v[it] * v[it] })
+        }
+
+        is VDot -> {
+            require(v.size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=${v.size}" }
+            (0 until v.size).sumOf { weights[it] * v[it] }
+        }
     }
 
-    is VDot -> {
-        require(v.size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=${v.size}" }
-        (0 until v.size).sumOf { weights[it] * v[it] }
+private fun sparseSum(v: F64SparseVector): Double {
+    var sum = 0.0
+    v.forEachStored { _, value -> sum += value }
+    return sum
+}
+
+private fun sparseMean(v: F64SparseVector): Double {
+    require(v.size != 0) { "VFold.Mean on empty vector" }
+    return sparseSum(v) / v.size
+}
+
+private fun sparseNorm2(v: F64SparseVector): Double {
+    var sum = 0.0
+    v.forEachStored { _, value -> sum += value * value }
+    return sqrt(sum)
+}
+
+private fun sparseDot(v: F64SparseVector, weights: List<Double>): Double {
+    var sum = 0.0
+    v.forEachStored { index, value -> sum += weights[index] * value }
+    return sum
+}
+
+private fun sparseMin(v: F64SparseVector): Double {
+    require(v.size != 0) { "VFold.Min on empty vector" }
+    var minimum = 0.0
+    var first = true
+    var next = 0
+    v.forEachStored { index, value ->
+        if (first) {
+            minimum = if (index == 0) value else 0.0
+            first = false
+        }
+        if (index > next && 0.0 < minimum) minimum = 0.0
+        if (index != 0 && value < minimum) minimum = value
+        next = index + 1
     }
+    if (first) return 0.0
+    if (next < v.size && 0.0 < minimum) minimum = 0.0
+    return minimum
+}
+
+private fun sparseMax(v: F64SparseVector): Double {
+    require(v.size != 0) { "VFold.Max on empty vector" }
+    var maximum = 0.0
+    var first = true
+    var next = 0
+    v.forEachStored { index, value ->
+        if (first) {
+            maximum = if (index == 0) value else 0.0
+            first = false
+        }
+        if (index > next && 0.0 > maximum) maximum = 0.0
+        if (index != 0 && value > maximum) maximum = value
+        next = index + 1
+    }
+    if (first) return 0.0
+    if (next < v.size && 0.0 > maximum) maximum = 0.0
+    return maximum
 }
 
 /** Evaluate this boolean expression against a borrowed KoBLAS vector without materialising it. */

@@ -62,6 +62,14 @@ benchmark {
             iterationTime = 1
             iterationTimeUnit = "s"
         }
+        register("vectorReductions") {
+            warmups = 3
+            iterations = 5
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            include(".*VectorExprBenchmark.(sum|mean|minimum|maximum|norm2|dot)")
+            param("representation", "dense", "sparse")
+        }
     }
 }
 
