@@ -15,9 +15,9 @@ import com.eignex.koblas.dense.CholeskyPolicy
 import com.eignex.koblas.dense.F64CholeskyDecomposition
 import com.eignex.koblas.dense.cholesky
 import com.eignex.koblas.dense.invert
-import com.eignex.koblas.dense.solve
 import com.eignex.koblas.dot
 import com.eignex.koblas.ger
+import com.eignex.koblas.koblas
 import com.eignex.koblas.scale
 import com.eignex.koblas.times
 import com.eignex.kumulant.core.Concurrency
@@ -272,8 +272,8 @@ class BayesianRegressionStat(
         lock.guarded {
             val n = featureSize
 
-            val hSelf = F64CholeskyDecomposition(covarianceL).invert()
-            val hOther = F64CholeskyDecomposition(values.covarianceL).invert()
+            val hSelf = F64CholeskyDecomposition(covarianceL).invert(workspace)
+            val hOther = F64CholeskyDecomposition(values.covarianceL).invert(workspace)
 
             // H_new = H_self + H_other - H_prior.
             val hNew = F64DenseMatrix.zero(n, n)
@@ -284,26 +284,25 @@ class BayesianRegressionStat(
             }
 
             // b = H_self * mu_self + H_other * mu_other - H_prior * mu_prior.
-            val b = workspace.borrow(n) { data ->
-                hSelf.multiplyInto(weights, data)
+            workspace.borrow(n) { b ->
+                hSelf.multiplyInto(weights, b)
                 workspace.borrow(n) { other ->
                     hOther.multiplyInto(values.weights, other)
-                    for (i in 0 until n) data[i] += other[i] - priorInfo[i]
+                    for (i in 0 until n) b[i] += other[i] - priorInfo[i]
                 }
-                data.copyOf()
-            }
 
-            // Solve H_new * mu_new = b via chol(H_new); reuse the same factor for Sum_new.
-            val hChol = hNew.cholesky(CholeskyPolicy.Regularize())
-            val muNew = hChol.solve(b)
-            val sigmaNew = hChol.invert()
-            val LsigmaNew = sigmaNew.cholesky(CholeskyPolicy.Regularize()).l.zeroUpperTriangle()
+                // Solve H_new * mu_new = b via chol(H_new); reuse the same factor for Sum_new.
+                val hChol = hNew.cholesky(CholeskyPolicy.Regularize())
+                koblas.solveInto(hChol, b, b)
+                val sigmaNew = hChol.invert(workspace)
+                val LsigmaNew = sigmaNew.cholesky(CholeskyPolicy.Regularize()).l.zeroUpperTriangle()
 
-            for (i in 0 until n) {
-                weights[i] = muNew[i]
-                for (j in 0 until n) {
-                    covariance[i, j] = sigmaNew[i, j]
-                    covarianceL[i, j] = LsigmaNew[i, j]
+                for (i in 0 until n) {
+                    weights[i] = b[i]
+                    for (j in 0 until n) {
+                        covariance[i, j] = sigmaNew[i, j]
+                        covarianceL[i, j] = LsigmaNew[i, j]
+                    }
                 }
             }
 

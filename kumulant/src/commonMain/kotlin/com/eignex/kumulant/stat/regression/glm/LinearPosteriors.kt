@@ -81,11 +81,11 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
 data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
     override fun sample(snapshot: StochasticRegressionResult, rng: Random, exploration: Double): F64VectorLike {
         if (exploration <= 0.0) return snapshot.weights
-        val n = snapshot.weights.size
-        val sd = sqrt(exploration)
-        val out = DoubleArray(n)
-        for (i in 0 until n) out[i] = rng.nextNormal(snapshot.weights[i], sd)
-        return F64DenseVector.of(out)
+        return F64DenseVector.wrap(
+            DoubleArray(snapshot.weights.size).also { destination ->
+                sampleInto(snapshot, rng, destination, exploration)
+            },
+        )
     }
 
     override fun sampleInto(
@@ -127,15 +127,12 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
 @Serializable
 @SerialName("FactorisedGaussian")
 data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
-    override fun sample(snapshot: DiagonalRegressionResult, rng: Random, exploration: Double): F64VectorLike {
-        val n = snapshot.weights.size
-        val out = DoubleArray(n)
-        for (i in 0 until n) {
-            val sd = sqrt(exploration / snapshot.precision[i])
-            out[i] = rng.nextNormal(snapshot.weights[i], sd)
-        }
-        return F64DenseVector.of(out)
-    }
+    override fun sample(snapshot: DiagonalRegressionResult, rng: Random, exploration: Double): F64VectorLike =
+        F64DenseVector.wrap(
+            DoubleArray(snapshot.weights.size).also { destination ->
+                sampleInto(snapshot, rng, destination, exploration)
+            },
+        )
 
     override fun sampleInto(
         snapshot: DiagonalRegressionResult,

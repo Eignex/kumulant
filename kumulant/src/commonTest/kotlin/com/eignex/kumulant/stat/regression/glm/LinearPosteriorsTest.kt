@@ -104,6 +104,19 @@ class LinearPosteriorsTest {
     }
 
     @Test
+    fun `PointPosterior sample delegates to sampleInto without changing RNG order`() {
+        val snapshot = sgdSnapshot()
+        val expected = DoubleArray(snapshot.weights.size)
+        val intoRng = Random(91)
+        PointPosterior.sampleInto(snapshot, intoRng, expected, exploration = 0.25)
+        val sampleRng = Random(91)
+        val sample = PointPosterior.sample(snapshot, sampleRng, exploration = 0.25)
+
+        for (i in expected.indices) assertEquals(expected[i], sample[i], 0.0)
+        assertEquals(intoRng.nextDouble(), sampleRng.nextDouble(), 0.0)
+    }
+
+    @Test
     fun `PointPosterior sample with exploration matches snapshot mean across draws`() {
         val snap = sgdSnapshot()
         val rng = Random(0)
@@ -151,6 +164,19 @@ class LinearPosteriorsTest {
         }
         assertTrue(abs(s0 / n - snap.weights[0]) < 0.05)
         assertTrue(abs(s1 / n - snap.weights[1]) < 0.05)
+    }
+
+    @Test
+    fun `FactorisedGaussian sample delegates to sampleInto without changing RNG order`() {
+        val snapshot = diagonalSnapshot()
+        val expected = DoubleArray(snapshot.weights.size)
+        val intoRng = Random(92)
+        FactorisedGaussian.sampleInto(snapshot, intoRng, expected, exploration = 0.25)
+        val sampleRng = Random(92)
+        val sample = FactorisedGaussian.sample(snapshot, sampleRng, exploration = 0.25)
+
+        for (i in expected.indices) assertEquals(expected[i], sample[i], 0.0)
+        assertEquals(intoRng.nextDouble(), sampleRng.nextDouble(), 0.0)
     }
 
     @Test
