@@ -82,11 +82,22 @@ data class GaussianNaiveBayesResult(
         return s
     }
 
+    /** Writes unnormalised log-posteriors for [x] into [destination]. */
+    fun logPosteriorsInto(x: F64VectorLike, destination: DoubleArray) {
+        x.requireFeatureSize(featureSize)
+        require(destination.size == numClasses) {
+            "destination size ${destination.size} must match numClasses $numClasses"
+        }
+        for (c in 0 until numClasses) destination[c] = logPosterior(x, c)
+    }
+
     /** Normalised class probabilities via log-sum-exp on the log-posterior. */
-    fun probabilities(x: F64VectorLike): DoubleArray {
-        val logs = DoubleArray(numClasses) { logPosterior(x, it) }
-        logs.softmaxInPlace()
-        return logs
+    fun probabilities(x: F64VectorLike): DoubleArray = DoubleArray(numClasses).also { probabilitiesInto(x, it) }
+
+    /** Writes normalised class probabilities for [x] into [destination]. */
+    fun probabilitiesInto(x: F64VectorLike, destination: DoubleArray) {
+        logPosteriorsInto(x, destination)
+        destination.softmaxInPlace()
     }
 
     /** Argmax class index for [x]. */

@@ -1,5 +1,7 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.Workspace
+import com.eignex.koblas.borrow
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
 import com.eignex.koblas.core.F64VectorLike
@@ -163,14 +165,28 @@ class KnnContextualBandit(
         return bestIdx
     }
 
+    /** Chooses with caller-owned scratch reused for every arm's nearest-neighbour scan. */
+    fun choose(x: F64VectorLike, workspace: Workspace): Int {
+        requireFeatureSize(x.size)
+        val bestIdx = workspace.borrow(3 * k) { scratch ->
+            argmaxArm(nbrArms) { armIndex -> evaluateWithScratch(armIndex, x, scratch) }
+        }
+        step++
+        return bestIdx
+    }
+
     /** Score arm [armIndex] at context [x]: k-NN mean reward + UCB bonus. */
     override fun evaluate(armIndex: Int, x: F64VectorLike): Double {
         requireArmIndex(armIndex, nbrArms)
         requireFeatureSize(x.size)
-        val ctx = historyContexts[armIndex]
-        if (ctx.size < k) return coldStartScore + ucbBonus(armIndex)
-        val mean = knnMean(armIndex, x)
-        return mean + ucbBonus(armIndex)
+        return evaluateWithScratch(armIndex, x, null)
+    }
+
+    /** Scores an arm with caller-owned scratch for its bounded top-k buffers. */
+    override fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace): Double {
+        requireArmIndex(armIndex, nbrArms)
+        requireFeatureSize(x.size)
+        return workspace.borrow(3 * k) { scratch -> evaluateWithScratch(armIndex, x, scratch) }
     }
 
     /** Append `(x, reward, weight)` to arm [armIndex]'s history; oldest entry drops if full. */
@@ -252,32 +268,43 @@ class KnnContextualBandit(
         return exploration * sqrt(ln(t) / w)
     }
 
+    private fun evaluateWithScratch(armIndex: Int, x: F64VectorLike, scratch: DoubleArray?): Double {
+        val ctx = historyContexts[armIndex]
+        if (ctx.size < k) return coldStartScore + ucbBonus(armIndex)
+        val mean = if (scratch == null) knnMean(armIndex, x) else knnMean(armIndex, x, scratch)
+        return mean + ucbBonus(armIndex)
+    }
+
     private fun knnMean(armIndex: Int, x: F64VectorLike): Double {
+        val scratch = DoubleArray(3 * k)
+        return knnMean(armIndex, x, scratch)
+    }
+
+    private fun knnMean(armIndex: Int, x: F64VectorLike, scratch: DoubleArray): Double {
         val ctxs = historyContexts[armIndex]
         val rs = historyRewards[armIndex]
         val ws = historyWeights[armIndex]
         // Linear scan, bounded heap of size k. For typical maxHistoryPerArm values
         // (<= a few thousand) this is faster than maintaining a KD-tree under reweights.
-        val topD = DoubleArray(k) { Double.POSITIVE_INFINITY }
-        val topR = DoubleArray(k)
-        val topW = DoubleArray(k)
+        for (i in 0 until k) scratch[i] = Double.POSITIVE_INFINITY
         for (i in ctxs.indices) {
             val d = distance(ctxs[i], x)
             // Find insertion point: index of the max in topD.
             var worst = 0
-            for (j in 1 until k) if (topD[j] > topD[worst]) worst = j
-            if (d < topD[worst]) {
-                topD[worst] = d
-                topR[worst] = rs[i]
-                topW[worst] = ws[i]
+            for (j in 1 until k) if (scratch[j] > scratch[worst]) worst = j
+            if (d < scratch[worst]) {
+                scratch[worst] = d
+                scratch[k + worst] = rs[i]
+                scratch[2 * k + worst] = ws[i]
             }
         }
         var sumW = 0.0
         var sumWR = 0.0
         for (i in 0 until k) {
-            if (topD[i] == Double.POSITIVE_INFINITY) continue
-            sumW += topW[i]
-            sumWR += topW[i] * topR[i]
+            if (scratch[i] == Double.POSITIVE_INFINITY) continue
+            val weight = scratch[2 * k + i]
+            sumW += weight
+            sumWR += weight * scratch[k + i]
         }
         return if (sumW > 0.0) sumWR / sumW else coldStartScore
     }
