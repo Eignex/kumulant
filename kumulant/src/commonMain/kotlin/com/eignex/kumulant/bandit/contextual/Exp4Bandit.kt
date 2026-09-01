@@ -118,6 +118,7 @@ class Exp4Bandit(
 
     private val weights: DoubleArray = DoubleArray(experts.size) { 1.0 }
     private val lastAdvice: Array<DoubleArray> = Array(experts.size) { DoubleArray(nbrArms) }
+    private val lastDistribution = DoubleArray(nbrArms)
 
     // The probability each arm was last played with, and how many of its pulls are still awaiting
     // feedback. The importance weight has to divide by the probability in force when the arm was
@@ -128,20 +129,33 @@ class Exp4Bandit(
 
     /** Build the round's play distribution and sample an arm. */
     override fun choose(x: F64VectorLike): Int {
-        val p = playDistribution(x)
-        val chosen = random.sampleFromDistribution(p)
-        pendingPropensity[chosen] = p[chosen]
+        playDistributionInto(x, lastDistribution)
+        val chosen = random.sampleFromDistribution(lastDistribution)
+        pendingPropensity[chosen] = lastDistribution[chosen]
         pendingPulls[chosen]++
         return chosen
     }
 
     /** Mean of expert distributions at [x] weighted by current weights, blended with
      *  uniform exploration via [gamma]. */
-    fun playDistribution(x: F64VectorLike): DoubleArray {
+    fun playDistribution(x: F64VectorLike): DoubleArray = DoubleArray(nbrArms).also {
+        playDistributionInto(x, it)
+    }
+
+    /**
+     * Writes the mean of the expert distributions at [x], weighted by current weights and blended
+     * with uniform exploration via [gamma], into [out]. [out] must have [nbrArms] entries and must
+     * not be returned by an [Exp4Expert] during this call.
+     *
+     * The destination is caller-owned. It is not retained after this method returns.
+     */
+    fun playDistributionInto(x: F64VectorLike, out: DoubleArray) {
+        require(out.size == nbrArms) { "out has ${out.size} probs, expected $nbrArms" }
         var wSum = 0.0
         for (i in experts.indices) {
             val xi = experts[i].advise(x, nbrArms)
             require(xi.size == nbrArms) { "expert $i returned ${xi.size} probs, expected $nbrArms" }
+            require(xi !== out) { "expert $i returned the play distribution destination" }
             lastAdvice[i] = xi
             wSum += weights[i]
         }
@@ -150,7 +164,6 @@ class Exp4Bandit(
         // "always the last arm". Fall back to the unweighted expert mean, which still uses the
         // advice even though the experts' relative standing has been lost.
         val usable = wSum > 0.0 && wSum.isFinite()
-        val out = DoubleArray(nbrArms)
         val uniform = gamma / nbrArms
         for (a in 0 until nbrArms) {
             var s = 0.0
@@ -160,7 +173,6 @@ class Exp4Bandit(
             }
             out[a] = (1.0 - gamma) * s + uniform
         }
-        return out
     }
 
     /** Fold a `(context, reward)` observation back into the expert weights. */
@@ -173,7 +185,7 @@ class Exp4Bandit(
         // See Stat.
         if (weight.isInertWeight()) return
         // Re-evaluate experts in case caller calls update without a prior choose at this x.
-        playDistribution(x)
+        playDistributionInto(x, lastDistribution)
         val pPlayed = propensityOf(armIndex, x).coerceAtLeast(MIN_PLAY_PROB)
         val gainPlayed = (reward * weight) / pPlayed
         for (i in experts.indices) {
@@ -190,7 +202,10 @@ class Exp4Bandit(
      * the best available estimate and what an off-policy caller implicitly asks for.
      */
     private fun propensityOf(armIndex: Int, x: F64VectorLike): Double {
-        if (pendingPulls[armIndex] <= 0) return playDistribution(x)[armIndex]
+        if (pendingPulls[armIndex] <= 0) {
+            playDistributionInto(x, lastDistribution)
+            return lastDistribution[armIndex]
+        }
         pendingPulls[armIndex]--
         return pendingPropensity[armIndex]
     }
