@@ -1,10 +1,14 @@
 package com.eignex.kumulant.bandit
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
+import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.CovarianceStat
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
@@ -19,9 +23,49 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class TrackedBanditTest {
+
+    private class WorkspaceRecorder(var workspace: Workspace? = null)
+
+    private class RecordingRegressionStat(private val recorder: WorkspaceRecorder) : RegressionStat<SumResult> {
+        override val concurrency = Concurrency.None
+        override val featureSize = 1
+        override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) {
+            recorder.workspace = workspace
+        }
+
+        override fun merge(values: SumResult, workspace: Workspace?) = Unit
+
+        override fun reset() = Unit
+
+        override fun read(timestampNanos: Long) = SumResult(0.0)
+
+        override fun create(concurrency: Concurrency?) = RecordingRegressionStat(recorder)
+    }
+
+    @Test
+    fun `contextual tracker forwards workspace to choice stat`() {
+        val recorder = WorkspaceRecorder()
+        val tracker = RecordingRegressionStat(recorder)
+        val tracked = TrackedContextualBandit(
+            inner = RegressionContextualBandit(
+                nbrArms = 1,
+                template = BayesianRegressionStat(featureSize = 1),
+                posterior = MultivariateGaussian,
+                random = Random(9),
+            ),
+            contextFeatureSize = 1,
+            chooseTemplate = tracker,
+        )
+        val workspace = Workspace()
+
+        tracked.choose(F64DenseVector.of(doubleArrayOf(0.5)), workspace)
+
+        assertSame(workspace, recorder.workspace)
+    }
 
     @Test
     fun `contextual tracker drives all four slots`() {

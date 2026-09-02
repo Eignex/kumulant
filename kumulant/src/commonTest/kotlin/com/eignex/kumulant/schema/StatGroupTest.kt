@@ -1,5 +1,6 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
@@ -44,6 +45,46 @@ private fun sumVector(d: Int) = VectorizedStat(d, SumStat())
 private fun meanVector(d: Int) = VectorizedStat(d, MeanStat())
 
 class StatGroupTest {
+
+    private class RecordingSeriesStat : SeriesStat<SumResult> {
+        override val concurrency = Concurrency.None
+        var workspace: Workspace? = null
+
+        override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
+
+        override fun merge(values: SumResult, workspace: Workspace?) {
+            this.workspace = workspace
+        }
+
+        override fun reset() = Unit
+
+        override fun read(timestampNanos: Long) = SumResult(0.0)
+
+        override fun create(concurrency: Concurrency?) = RecordingSeriesStat()
+    }
+
+    @Test
+    fun `StatGroup merge forwards workspace to direct child`() {
+        val recorder = RecordingSeriesStat()
+        val target = StatGroup(StatKey<SumResult>("value") to recorder)
+        val workspace = Workspace()
+
+        target.merge(GroupResult(mapOf("value" to SumResult(1.0))), workspace)
+
+        assertSame(workspace, recorder.workspace)
+    }
+
+    @Test
+    fun `StatGroup merge forwards workspace to nested group child`() {
+        val recorder = RecordingSeriesStat()
+        val targetNested = StatGroup(StatKey<SumResult>("value") to recorder)
+        val target = StatGroup(StatKey<GroupResult>("nested") to targetNested)
+        val workspace = Workspace()
+
+        target.merge(GroupResult(mapOf("nested" to GroupResult(mapOf("value" to SumResult(1.0))))), workspace)
+
+        assertSame(workspace, recorder.workspace)
+    }
 
     @Test
     fun `update forwards values to all child stats and read returns grouped result`() {

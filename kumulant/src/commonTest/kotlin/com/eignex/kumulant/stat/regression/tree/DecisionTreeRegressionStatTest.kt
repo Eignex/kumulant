@@ -1,14 +1,88 @@
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.koblas.Workspace
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.feat
+import com.eignex.kumulant.stat.summary.VarianceStat
+import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class DecisionTreeRegressionStatTest {
+
+    private class RecordingLeafArm : SeriesStat<WeightedVarianceResult> {
+        private val delegate = VarianceStat()
+        override val concurrency = delegate.concurrency
+        var workspace: Workspace? = null
+
+        override fun update(value: Double, timestampNanos: Long, weight: Double) {
+            delegate.update(value, timestampNanos, weight)
+        }
+
+        override fun merge(values: WeightedVarianceResult, workspace: Workspace?) {
+            this.workspace = workspace
+            delegate.merge(values, workspace)
+        }
+
+        override fun reset() = delegate.reset()
+
+        override fun read(timestampNanos: Long) = delegate.read(timestampNanos)
+
+        override fun create(concurrency: Concurrency?) = RecordingLeafArm()
+    }
+
+    @Test
+    fun `tree merge forwards workspace to leaf arm`() {
+        val leafArms = mutableListOf<RecordingLeafArm>()
+        val target = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = emptyList(),
+            leafArmFactory = { RecordingLeafArm().also(leafArms::add) },
+        )
+        val source = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = emptyList())
+        source.update(feat(0.0), 1.0)
+        val workspace = Workspace()
+
+        target.merge(source.read(0L), workspace)
+
+        assertSame(workspace, leafArms.single().workspace)
+    }
+
+    @Test
+    fun `tree merge forwards workspace while cloning a snapshot subtree`() {
+        val config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0)
+        val source = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = listOf(ThresholdSplit(0, 0.0)),
+            config = config,
+            randomSeed = 83,
+        )
+        repeat(20) {
+            val x = if (it % 2 == 0) -1.0 else 1.0
+            source.update(feat(x), x)
+        }
+        val leafArms = mutableListOf<RecordingLeafArm>()
+        val target = DecisionTreeRegressionStat(
+            featureSize = 1,
+            splitCandidates = listOf(ThresholdSplit(0, 0.0)),
+            config = config,
+            leafArmFactory = { RecordingLeafArm().also(leafArms::add) },
+            randomSeed = 84,
+        )
+        target.update(feat(0.0), 1.0)
+        val workspace = Workspace()
+
+        target.merge(source.read(0L), workspace)
+
+        val mergedArms = leafArms.filter { it.workspace != null }
+        assertTrue(mergedArms.size >= 3)
+        for (arm in mergedArms) assertSame(workspace, arm.workspace)
+    }
 
     @Test
     fun `rejects bad featureSize`() {
