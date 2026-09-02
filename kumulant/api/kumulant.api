@@ -7726,7 +7726,8 @@ public final class com/eignex/kumulant/stat/regression/tree/ClassificationTree {
 	public final fun findLeaf (Lcom/eignex/koblas/core/F64VectorLike;)Lcom/eignex/kumulant/stat/regression/tree/ClassificationLeafNode;
 	public final fun getNodeCount ()I
 	public final fun merge (Lcom/eignex/kumulant/stat/regression/tree/ClassificationTree;)V
-	public final fun mergeSnapshot (Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;)V
+	public final fun mergeSnapshot (Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;Lcom/eignex/koblas/Workspace;)V
+	public static synthetic fun mergeSnapshot$default (Lcom/eignex/kumulant/stat/regression/tree/ClassificationTree;Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationNodeResult;Lcom/eignex/koblas/Workspace;ILjava/lang/Object;)V
 	public final fun predict (Lcom/eignex/koblas/core/F64VectorLike;)I
 	public final fun prettyPrint (Ljava/lang/String;)Ljava/lang/String;
 	public static synthetic fun prettyPrint$default (Lcom/eignex/kumulant/stat/regression/tree/ClassificationTree;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/String;
@@ -8406,7 +8407,8 @@ public final class com/eignex/kumulant/stat/regression/tree/TreeRegressionResult
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/TreeRegressionResultKt {
-	public static final fun mergeSnapshot (Lcom/eignex/kumulant/stat/regression/tree/RegressionTree;Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;)V
+	public static final fun mergeSnapshot (Lcom/eignex/kumulant/stat/regression/tree/RegressionTree;Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;Lcom/eignex/koblas/Workspace;)V
+	public static synthetic fun mergeSnapshot$default (Lcom/eignex/kumulant/stat/regression/tree/RegressionTree;Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;Lcom/eignex/koblas/Workspace;ILjava/lang/Object;)V
 	public static final fun snapshot (Lcom/eignex/kumulant/stat/regression/tree/RegressionNode;)Lcom/eignex/kumulant/stat/regression/tree/TreeNodeResult;
 }
 

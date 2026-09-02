@@ -104,7 +104,7 @@ class DecisionTreeRegressionStat(
     override fun read(timestampNanos: Long): TreeRegressionResult = TreeRegressionResult(tree.rootNode().snapshot())
 
     override fun merge(values: TreeRegressionResult, workspace: com.eignex.koblas.Workspace?) {
-        tree.mergeSnapshot(values.root)
+        tree.mergeSnapshot(values.root, workspace)
     }
 
     /**

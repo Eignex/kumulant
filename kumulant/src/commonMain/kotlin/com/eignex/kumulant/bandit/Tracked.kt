@@ -92,7 +92,7 @@ class TrackedContextualBandit<B : ContextualBandit>(
     override fun choose(x: F64VectorLike, workspace: com.eignex.koblas.Workspace?): Int {
         x.requireFeatureSize(contextFeatureSize)
         val i = inner.choose(x, workspace)
-        chooseStat?.update(x, i.toDouble(), nowNanos(), 1.0)
+        chooseStat?.update(x, i.toDouble(), nowNanos(), 1.0, workspace)
         return i
     }
 

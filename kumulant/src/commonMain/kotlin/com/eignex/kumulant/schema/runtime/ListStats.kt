@@ -251,7 +251,7 @@ internal class RegressionListStats<R : Result>(
         weight: Double,
         workspace: com.eignex.koblas.Workspace?,
     ) {
-        for ((_, stat) in entries) stat.update(x, y, timestampNanos, weight)
+        for ((_, stat) in entries) stat.update(x, y, timestampNanos, weight, workspace)
     }
 
     override fun create(concurrency: Concurrency?): RegressionStat<ResultList<R>> {

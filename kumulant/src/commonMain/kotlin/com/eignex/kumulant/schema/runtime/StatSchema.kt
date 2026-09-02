@@ -132,11 +132,11 @@ internal fun <S : Stat<*>> toSpec(key: StatKey<*>, stat: S): BoundStat<*, out S,
     BoundStat(key as StatKey<Result>, stat as Stat<Result>) as BoundStat<*, out S, *>
 
 @Suppress("UNCHECKED_CAST")
-internal fun mergeEntry(values: GroupResult, key: StatKey<*>, stat: Stat<*>) {
+internal fun mergeEntry(values: GroupResult, key: StatKey<*>, stat: Stat<*>, workspace: com.eignex.koblas.Workspace?) {
     val result = values.results[key.name] ?: return
     if (result is GroupResult && stat is GroupedStat) {
-        stat.merge(result)
+        stat.merge(result, workspace)
         return
     }
-    (stat as Stat<Result>).merge(result)
+    (stat as Stat<Result>).merge(result, workspace)
 }

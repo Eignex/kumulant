@@ -124,7 +124,7 @@ class RandomForestRegressionStat(
         require(values.trees.size == trees.size) {
             "merge: forest size mismatch (${values.trees.size} vs ${trees.size})"
         }
-        for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root)
+        for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root, workspace)
     }
 
     /**

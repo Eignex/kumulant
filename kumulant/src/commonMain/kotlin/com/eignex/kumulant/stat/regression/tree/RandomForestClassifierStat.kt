@@ -133,7 +133,7 @@ class RandomForestClassifierStat(
         require(values.numClasses == numClasses) {
             "merge: numClasses mismatch (${values.numClasses} vs $numClasses)"
         }
-        for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root)
+        for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root, workspace)
     }
 
     /**

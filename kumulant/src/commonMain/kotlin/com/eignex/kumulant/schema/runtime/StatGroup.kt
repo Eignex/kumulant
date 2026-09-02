@@ -64,7 +64,7 @@ sealed class AbstractStatGroup<S : Stat<*>>(
             if (values.results[key.name] == null) continue
             throw UnsupportedOperationException("cannot merge group entry '${key.name}': $refusal")
         }
-        for ((key, stat) in stats) mergeEntry(values, key, stat)
+        for ((key, stat) in stats) mergeEntry(values, key, stat, workspace)
     }
 
     final override fun reset() {
@@ -203,7 +203,7 @@ class RegressionStatGroup(stats: List<BoundStat<*, out RegressionStat<*>, *>>, c
         weight: Double,
         workspace: com.eignex.koblas.Workspace?,
     ) {
-        for ((_, stat) in stats) stat.update(x, y, timestampNanos, weight)
+        for ((_, stat) in stats) stat.update(x, y, timestampNanos, weight, workspace)
     }
 
     override fun create(concurrency: Concurrency?): RegressionStat<GroupResult> {

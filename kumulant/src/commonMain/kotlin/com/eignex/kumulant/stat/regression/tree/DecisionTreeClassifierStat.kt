@@ -107,7 +107,7 @@ class DecisionTreeClassifierStat(
         require(values.numClasses == numClasses) {
             "merge: numClasses mismatch (${values.numClasses} vs $numClasses)"
         }
-        tree.mergeSnapshot(values.root)
+        tree.mergeSnapshot(values.root, workspace)
     }
 
     /**

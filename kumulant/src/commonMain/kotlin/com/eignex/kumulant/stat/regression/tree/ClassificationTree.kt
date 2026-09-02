@@ -90,7 +90,8 @@ class ClassificationTree(
     fun merge(other: ClassificationTree) = growth.mergeTree(other.growth.root)
 
     /** Snapshot merge: same rules as [merge] but the other side is an immutable result. */
-    fun mergeSnapshot(other: TreeClassificationNodeResult) = growth.mergeSnapshot(other, ClassificationResultShape)
+    fun mergeSnapshot(other: TreeClassificationNodeResult, workspace: com.eignex.koblas.Workspace? = null) =
+        growth.mergeSnapshot(other, ClassificationResultShape, workspace)
 }
 
 /** Reads and writes the classification node hierarchy on the growth engine's behalf. */
