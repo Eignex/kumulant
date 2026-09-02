@@ -84,7 +84,7 @@ class VarianceStat(override val concurrency: Concurrency = Concurrency.None) : S
         }
     }
 
-    override fun merge(values: WeightedVarianceResult) = lock.guarded {
+    override fun merge(values: WeightedVarianceResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         if (values.totalWeights <= 0.0) return@guarded
         val w1 = totalWeights.load()
         val w2 = values.totalWeights

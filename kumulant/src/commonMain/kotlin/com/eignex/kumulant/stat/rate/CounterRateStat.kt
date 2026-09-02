@@ -132,7 +132,7 @@ class CounterRateStat(
         )
     }
 
-    override fun merge(values: RateResult) = lock.guarded {
+    override fun merge(values: RateResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         totalDelta.add(values.totalValue)
 
         // See RateStat.merge: an untouched shard reports its read timestamp as the start and so has no

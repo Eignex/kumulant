@@ -101,8 +101,8 @@ fun RegressionNode<F64VectorLike>.snapshot(): TreeNodeResult = when (this) {
  * An extension rather than a member because it exists only at `Row = F64VectorLike`, which a member of a
  * generic class cannot be constrained to. The algorithm is [TreeGrowth.mergeSnapshot].
  */
-fun RegressionTree<F64VectorLike>.mergeSnapshot(other: TreeNodeResult) {
-    growth.mergeSnapshot(other, RegressionResultShape)
+fun RegressionTree<F64VectorLike>.mergeSnapshot(other: TreeNodeResult, workspace: com.eignex.koblas.Workspace? = null) {
+    growth.mergeSnapshot(other, RegressionResultShape, workspace)
 }
 
 /** Reads the immutable regression snapshot hierarchy on the growth engine's behalf. */

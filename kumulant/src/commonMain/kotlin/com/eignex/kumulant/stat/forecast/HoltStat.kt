@@ -119,7 +119,7 @@ class HoltStat(
         }
     }
 
-    override fun merge(values: HoltResult) = lock.guarded {
+    override fun merge(values: HoltResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         // No principled stat-level merge of two independent Holt traces; take the other's snapshot
         // as the new state once we have anything to merge into. Useful for windowed-slot folds.
         if (initialized.addAndGet(1L) == 1L) {

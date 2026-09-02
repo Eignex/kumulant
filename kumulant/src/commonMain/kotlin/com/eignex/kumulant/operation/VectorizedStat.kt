@@ -51,12 +51,12 @@ internal class VectorizedStat<R : Result>(
     override fun create(concurrency: Concurrency?): VectorStat<ResultList<R>> =
         VectorizedStat(dimensions, template.create(concurrency), skipZeros)
 
-    override fun merge(values: ResultList<R>) {
+    override fun merge(values: ResultList<R>, workspace: com.eignex.koblas.Workspace?) {
         require(values.results.size == dimensions) {
             "merge: results.size=${values.results.size}, expected $dimensions"
         }
         for (i in 0 until dimensions) {
-            stats[i].merge(values.results[i])
+            stats[i].merge(values.results[i], workspace)
         }
     }
 

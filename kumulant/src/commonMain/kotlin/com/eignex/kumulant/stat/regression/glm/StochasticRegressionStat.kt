@@ -124,7 +124,13 @@ class StochasticRegressionStat(
     private fun requireSgdLearningRate(): ScalarExpr = sgdLearningRate ?: error("Sgd learning rate required")
     private fun requireSgdBiasRate(): ScalarExpr = sgdBiasRate ?: error("Sgd bias rate required")
 
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
@@ -245,7 +251,7 @@ class StochasticRegressionStat(
      * Sample-weighted blend of weights and bias. SGD has no second-moment information,
      * so this is an approximation; for principled merges use [BayesianRegressionStat].
      */
-    override fun merge(values: StochasticRegressionResult) {
+    override fun merge(values: StochasticRegressionResult, workspace: com.eignex.koblas.Workspace?) {
         requireMergeFeatureSize(values.featureSize, featureSize)
         lock.guarded {
             val w1 = totalWeightsCell.load()

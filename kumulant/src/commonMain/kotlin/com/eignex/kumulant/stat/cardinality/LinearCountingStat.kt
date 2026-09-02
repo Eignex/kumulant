@@ -126,7 +126,7 @@ class LinearCountingStat(
         totalSeen.add(1L)
     }
 
-    override fun merge(values: LinearCountingResult) {
+    override fun merge(values: LinearCountingResult, workspace: com.eignex.koblas.Workspace?) {
         requireSameHasher("LinearCountingStat", values.hasher, hasherRef)
         // Shape before array length; see HyperLogLogStat.merge. `wordCount` is `bits / 64`.
         require(values.bits == bits) {

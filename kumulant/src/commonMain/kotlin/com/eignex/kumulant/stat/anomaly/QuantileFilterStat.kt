@@ -88,7 +88,10 @@ class QuantileFilterStat(
      * not typically sharded across streams; if you need a distributed
      * quantile, merge a [DDSketchStat] directly and project here.
      */
-    override fun merge(values: QuantileFilterResult): Nothing = throw UnsupportedOperationException(mergeRefusal)
+    override fun merge(values: QuantileFilterResult, workspace: com.eignex.koblas.Workspace?): Nothing =
+        throw UnsupportedOperationException(
+            mergeRefusal,
+        )
 
     override fun reset() = inner.reset()
 

@@ -142,7 +142,7 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
         return ReliabilityResult(numBins, p, o, w)
     }
 
-    override fun merge(values: ReliabilityResult) {
+    override fun merge(values: ReliabilityResult, workspace: com.eignex.koblas.Workspace?) {
         require(values.numBins == numBins) {
             "numBins mismatch on merge: this=$numBins, other=${values.numBins}"
         }

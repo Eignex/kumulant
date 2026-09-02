@@ -88,8 +88,8 @@ internal class SliceRing<R : Result, S : Stat<R>>(
     }
 
     /** Merge [values] into the slot at "now", rotating the bucket first if needed. */
-    fun mergeNow(values: R) {
-        mergeAt(currentTimeNanos(), values)
+    fun mergeNow(values: R, workspace: com.eignex.koblas.Workspace? = null) {
+        mergeAt(currentTimeNanos(), values, workspace)
     }
 
     /**
@@ -97,14 +97,14 @@ internal class SliceRing<R : Result, S : Stat<R>>(
      * first if needed. Exposed for deterministic time-driven tests; `mergeNow` is
      * the production entry point.
      */
-    fun mergeAt(timestampNanos: Long, values: R) {
+    fun mergeAt(timestampNanos: Long, values: R, workspace: com.eignex.koblas.Workspace? = null) {
         val expectedStart = expectedSliceStart(timestampNanos)
         if (isBeyondReach(expectedStart)) return
         val bucketRef = buckets[bucketIndex(expectedStart)]
         while (true) {
             val currentSlot = bucketRef.load()
             if (currentSlot.startNanos == expectedStart) {
-                currentSlot.stat.merge(values)
+                currentSlot.stat.merge(values, workspace)
                 return
             }
             if (currentSlot.startNanos > expectedStart) {
@@ -114,7 +114,7 @@ internal class SliceRing<R : Result, S : Stat<R>>(
             val newSlot = Slot<R, S>(expectedStart, factory(concurrency))
             if (bucketRef.compareAndSet(currentSlot, newSlot)) {
                 casMax(newestStart, expectedStart)
-                newSlot.stat.merge(values)
+                newSlot.stat.merge(values, workspace)
                 return
             }
             // Lost CAS - retry; another thread may have installed the same or a newer slot.

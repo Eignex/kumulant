@@ -84,7 +84,7 @@ class EwmaVarianceStat(
         totalWeights.add(weight)
     }
 
-    override fun merge(values: WeightedVarianceResult) = lock.guarded {
+    override fun merge(values: WeightedVarianceResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         val remoteWeightRaw = values.totalWeights
         if (remoteWeightRaw <= 0.0) return@guarded
 

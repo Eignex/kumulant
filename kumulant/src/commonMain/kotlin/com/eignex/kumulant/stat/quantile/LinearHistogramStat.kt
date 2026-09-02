@@ -81,7 +81,7 @@ class LinearHistogramStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: SparseHistogramResult) {
+    override fun merge(values: SparseHistogramResult, workspace: com.eignex.koblas.Workspace?) {
         for (i in values.lowerBounds.indices) {
             val w = values.weights[i]
             if (w <= 0.0) continue

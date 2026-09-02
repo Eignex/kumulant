@@ -85,7 +85,7 @@ class RateStat(override val concurrency: Concurrency = Concurrency.None) : Serie
         )
     }
 
-    override fun merge(values: RateResult) {
+    override fun merge(values: RateResult, workspace: com.eignex.koblas.Workspace?) {
         totalValues.add(values.totalValue)
 
         // A shard that never observed anything reports its read timestamp as the start (see read), so

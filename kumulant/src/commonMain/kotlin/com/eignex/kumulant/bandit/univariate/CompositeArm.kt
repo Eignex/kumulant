@@ -97,13 +97,13 @@ internal class CompositeStat(private val subArms: List<CompositeSubArm>, initial
 
     override fun read(timestampNanos: Long): ResultList<Result> = ResultList(subStats.map { it.read(timestampNanos) })
 
-    override fun merge(values: ResultList<Result>) {
+    override fun merge(values: ResultList<Result>, workspace: com.eignex.koblas.Workspace?) {
         require(values.results.size == subStats.size) {
             "merge: results.size=${values.results.size} does not match subStats.size=${subStats.size}"
         }
         for (i in subStats.indices) {
             @Suppress("UNCHECKED_CAST")
-            (subStats[i] as SeriesStat<Result>).merge(values.results[i])
+            (subStats[i] as SeriesStat<Result>).merge(values.results[i], workspace)
         }
     }
 

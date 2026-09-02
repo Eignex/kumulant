@@ -1,6 +1,10 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.koblas.Workspace
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.feat
 import com.eignex.kumulant.operation.foldRegression
@@ -18,8 +22,55 @@ import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertSame
 
 class RegressionListStatsTest {
+
+    private class RecordingRegressionStat : RegressionStat<SumResult> {
+        override val concurrency = Concurrency.None
+        override val featureSize = 1
+        var workspace: Workspace? = null
+
+        override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) {
+            this.workspace = workspace
+        }
+
+        override fun merge(values: SumResult, workspace: Workspace?) = Unit
+
+        override fun reset() = Unit
+
+        override fun read(timestampNanos: Long) = SumResult(0.0)
+
+        override fun create(concurrency: Concurrency?) = RecordingRegressionStat()
+    }
+
+    @Test
+    fun `RegressionListStats forwards workspace to every child`() {
+        val first = RecordingRegressionStat()
+        val second = RecordingRegressionStat()
+        val workspace = Workspace()
+
+        RegressionListStats<SumResult>("first" to first, "second" to second)
+            .update(feat(0.0), 1.0, workspace = workspace)
+
+        assertSame(workspace, first.workspace)
+        assertSame(workspace, second.workspace)
+    }
+
+    @Test
+    fun `RegressionStatGroup forwards workspace to every child`() {
+        val first = RecordingRegressionStat()
+        val second = RecordingRegressionStat()
+        val workspace = Workspace()
+
+        RegressionStatGroup(
+            StatKey<SumResult>("first") to first,
+            StatKey<SumResult>("second") to second,
+        ).update(feat(0.0), 1.0, workspace = workspace)
+
+        assertSame(workspace, first.workspace)
+        assertSame(workspace, second.workspace)
+    }
 
     @Test
     fun `RegressionListStats fans every update to all inner regressors`() {

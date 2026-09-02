@@ -112,7 +112,7 @@ open class PredictionKernelBenchmark {
 
     @Benchmark
     fun multivariateEvaluateWorkspace(): Double =
-        MultivariateGaussian.evaluate(posterior, x, Random(1234), workspace, 1.0)
+        MultivariateGaussian.evaluate(posterior, x, Random(1234), 1.0, workspace)
 
     @Benchmark
     fun bayesianPrior(): CovarianceRegressionResult = BayesianRegressionStat(

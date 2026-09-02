@@ -241,7 +241,7 @@ class ReservoirHistogramStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: ReservoirResult) {
+    override fun merge(values: ReservoirResult, workspace: com.eignex.koblas.Workspace?) {
         require(values.values.size == values.keys.size) {
             "ReservoirResult values/keys size mismatch"
         }

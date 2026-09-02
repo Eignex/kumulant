@@ -133,14 +133,14 @@ interface ContextualBandit : Bandit {
      * configurable [com.eignex.kumulant.stat.regression.RegressionPosterior]
      * (or analogue) and returns the argmax / sampled choice.
      */
-    fun choose(x: F64VectorLike): Int
+    fun choose(x: F64VectorLike, workspace: Workspace? = null): Int
 
     /**
      * Fold a single `(x, reward)` observation into the arm at [armIndex].
      * The `weight` is the same observation-weight running through the
      * library; typically `1.0`, occasionally importance-weighted.
      */
-    fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double = 1.0)
+    fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double = 1.0, workspace: Workspace? = null)
 }
 
 /**
@@ -177,7 +177,7 @@ interface Snapshotable<S> {
      * based contextual bandits merge approximately. Each concrete bandit's
      * KDoc documents its merge semantics.
      */
-    fun merge(other: S)
+    fun merge(other: S, workspace: Workspace? = null)
 
     /**
      * Spawn a fresh bandit with the same configuration; state resets to
@@ -242,8 +242,5 @@ interface Scorable {
  */
 interface ContextualScorable {
     /** Score the arm at [armIndex] under the current state and context [x]. */
-    fun evaluate(armIndex: Int, x: F64VectorLike): Double
-
-    /** Workspace-aware score for consumers that repeatedly evaluate allocation-sensitive posteriors. */
-    fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace): Double = evaluate(armIndex, x)
+    fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace? = null): Double
 }

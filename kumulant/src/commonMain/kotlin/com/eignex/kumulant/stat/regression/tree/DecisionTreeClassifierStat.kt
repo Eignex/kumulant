@@ -84,7 +84,13 @@ class DecisionTreeClassifierStat(
         randomSeed = seedRng.nextInt(),
     )
 
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double) {
+    override fun update(
+        x: F64VectorLike,
+        y: Double,
+        timestampNanos: Long,
+        weight: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ) {
         x.requireFeatureSize(featureSize)
         // isInertWeight rather than `weight <= 0.0`, which is false for NaN: a class count downdates
         // exactly, so a negative weight is a real retraction while a NaN would pin a count for good.
@@ -97,11 +103,11 @@ class DecisionTreeClassifierStat(
     override fun read(timestampNanos: Long): TreeClassificationResult =
         TreeClassificationResult(tree.rootNode().snapshot())
 
-    override fun merge(values: TreeClassificationResult) {
+    override fun merge(values: TreeClassificationResult, workspace: com.eignex.koblas.Workspace?) {
         require(values.numClasses == numClasses) {
             "merge: numClasses mismatch (${values.numClasses} vs $numClasses)"
         }
-        tree.mergeSnapshot(values.root)
+        tree.mergeSnapshot(values.root, workspace)
     }
 
     /**

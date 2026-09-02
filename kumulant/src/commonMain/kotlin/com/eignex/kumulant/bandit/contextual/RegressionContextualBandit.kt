@@ -101,42 +101,30 @@ class RegressionContextualBandit<R : Result>(
     private val arms: Array<RegressionStat<R>> = Array(nbrArms) { template.create(null) }
     private val global: RegressionStat<R>? = globalTemplate?.create(null)
 
-    private fun globalMean(x: F64VectorLike): Double =
-        global?.let { posterior.evaluate(it.read(0L), x, random, 0.0) } ?: 0.0
+    private fun globalMean(x: F64VectorLike, workspace: Workspace?): Double =
+        global?.let { posterior.evaluate(it.read(0L), x, random, 0.0, workspace) } ?: 0.0
 
-    override fun choose(x: F64VectorLike): Int {
-        val gMean = globalMean(x)
-        return argmaxArm(nbrArms) { i -> gMean + posterior.evaluate(arms[i].read(0L), x, random, exploration) }
+    override fun choose(x: F64VectorLike, workspace: Workspace?): Int {
+        val gMean = globalMean(x, workspace)
+        return argmaxArm(
+            nbrArms,
+        ) { i -> gMean + posterior.evaluate(arms[i].read(0L), x, random, exploration, workspace) }
     }
 
-    override fun evaluate(armIndex: Int, x: F64VectorLike): Double {
+    override fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace?): Double {
         requireArmIndex(armIndex, nbrArms)
-        return globalMean(x) + posterior.evaluate(arms[armIndex].read(0L), x, random, exploration)
+        return globalMean(x, workspace) + posterior.evaluate(arms[armIndex].read(0L), x, random, exploration, workspace)
     }
 
-    override fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace): Double {
-        requireArmIndex(armIndex, nbrArms)
-        val gMean = global?.let { posterior.evaluate(it.read(0L), x, random, workspace, 0.0) } ?: 0.0
-        return gMean + posterior.evaluate(arms[armIndex].read(0L), x, random, workspace, exploration)
-    }
-
-    /** Chooses with a caller-owned workspace reused across all arm evaluations. */
-    fun choose(x: F64VectorLike, workspace: Workspace): Int {
-        val gMean = global?.let { posterior.evaluate(it.read(0L), x, random, workspace, 0.0) } ?: 0.0
-        return argmaxArm(nbrArms) { i ->
-            gMean + posterior.evaluate(arms[i].read(0L), x, random, workspace, exploration)
-        }
-    }
-
-    override fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double) {
+    override fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double, workspace: Workspace?) {
         requireArmIndex(armIndex, nbrArms)
         val g = global
         if (g == null) {
-            arms[armIndex].update(x, reward, weight)
+            arms[armIndex].update(x, reward, weight, workspace)
         } else {
-            val gMean = posterior.evaluate(g.read(0L), x, random, 0.0)
-            arms[armIndex].update(x, reward - gMean, weight)
-            g.update(x, reward, weight)
+            val gMean = posterior.evaluate(g.read(0L), x, random, 0.0, workspace)
+            arms[armIndex].update(x, reward - gMean, weight, workspace)
+            g.update(x, reward, weight, workspace)
         }
     }
 
@@ -163,14 +151,14 @@ class RegressionContextualBandit<R : Result>(
     /** Live global pooling regressor, or `null` if pooling is disabled. */
     fun globalStat(): RegressionStat<R>? = global
 
-    override fun merge(other: List<R>) {
+    override fun merge(other: List<R>, workspace: Workspace?) {
         requireMergeSize(other.size, nbrArms)
-        for (i in 0 until nbrArms) arms[i].merge(other[i])
+        for (i in 0 until nbrArms) arms[i].merge(other[i], workspace)
     }
 
     /** Merge another bandit replica's global snapshot. No-op when pooling is disabled. */
-    fun mergeGlobal(other: R) {
-        global?.merge(other)
+    fun mergeGlobal(other: R, workspace: Workspace? = null) {
+        global?.merge(other, workspace)
     }
 
     override fun reset() {

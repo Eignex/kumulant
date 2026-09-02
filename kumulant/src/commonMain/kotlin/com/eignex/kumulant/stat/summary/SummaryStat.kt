@@ -89,7 +89,7 @@ class SummaryStat(override val concurrency: Concurrency = Concurrency.None) : Se
         }
     }
 
-    override fun merge(values: SummaryResult) {
+    override fun merge(values: SummaryResult, workspace: com.eignex.koblas.Workspace?) {
         // read() sanitises the empty sentinels to 0.0, so folding in an untouched shard would drag
         // min down (or, on an all-negative stream, max up) to a value never observed.
         if (values.totalWeights <= 0.0) return

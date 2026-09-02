@@ -25,8 +25,13 @@ sealed interface TreePosterior : RegressionPosterior<TreeRegressionResult>
 
 /** Score is the leaf's running mean; point estimate, no exploration. */
 data object MeanTreePosterior : TreePosterior {
-    override fun evaluate(snapshot: TreeRegressionResult, x: F64VectorLike, rng: Random, exploration: Double): Double =
-        snapshot.findLeaf(x).mean
+    override fun evaluate(
+        snapshot: TreeRegressionResult,
+        x: F64VectorLike,
+        rng: Random,
+        exploration: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ): Double = snapshot.findLeaf(x).mean
 }
 
 /**
@@ -70,7 +75,13 @@ data class ThompsonTreePosterior(
     /** Prior variance applied when the leaf has effectively no signal. */
     val priorVariance: Double = 1.0,
 ) : TreePosterior {
-    override fun evaluate(snapshot: TreeRegressionResult, x: F64VectorLike, rng: Random, exploration: Double): Double {
+    override fun evaluate(
+        snapshot: TreeRegressionResult,
+        x: F64VectorLike,
+        rng: Random,
+        exploration: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ): Double {
         val leaf = snapshot.findLeaf(x)
         if (exploration <= 0.0) return leaf.mean
         val n = leaf.totalWeights + priorWeight
@@ -90,7 +101,13 @@ data class UcbTreePosterior(
     /** Prior variance used when the leaf has no signal yet. */
     val priorVariance: Double = 1.0,
 ) : TreePosterior {
-    override fun evaluate(snapshot: TreeRegressionResult, x: F64VectorLike, rng: Random, exploration: Double): Double {
+    override fun evaluate(
+        snapshot: TreeRegressionResult,
+        x: F64VectorLike,
+        rng: Random,
+        exploration: Double,
+        workspace: com.eignex.koblas.Workspace?,
+    ): Double {
         val leaf = snapshot.findLeaf(x)
         val n = leaf.totalWeights + priorWeight
         return leaf.mean + exploration * sqrt(blendedVariance(leaf, priorWeight, priorVariance) / n)
@@ -109,6 +126,7 @@ data object MeanForestPosterior : ForestPosterior {
         x: F64VectorLike,
         rng: Random,
         exploration: Double,
+        workspace: com.eignex.koblas.Workspace?,
     ): Double = snapshot.findLeafMerged(x).mean
 }
 
@@ -124,6 +142,7 @@ data class ThompsonForestPosterior(
         x: F64VectorLike,
         rng: Random,
         exploration: Double,
+        workspace: com.eignex.koblas.Workspace?,
     ): Double {
         val leaf: WeightedVarianceResult = snapshot.findLeafMerged(x)
         if (exploration <= 0.0) return leaf.mean
@@ -144,6 +163,7 @@ data class UcbForestPosterior(
         x: F64VectorLike,
         rng: Random,
         exploration: Double,
+        workspace: com.eignex.koblas.Workspace?,
     ): Double {
         val leaf = snapshot.findLeafMerged(x)
         val n = effectiveWeight(leaf, snapshot) + priorWeight

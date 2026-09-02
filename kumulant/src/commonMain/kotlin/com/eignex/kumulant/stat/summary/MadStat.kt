@@ -69,7 +69,7 @@ class MadStat(
         deviationDigest.update(abs(value - medianEstimate), timestampNanos, weight)
     }
 
-    override fun merge(values: MadResult) {
+    override fun merge(values: MadResult, workspace: com.eignex.koblas.Workspace?) {
         // No round-trippable inner-digest state on the result, so merge approximates by
         // re-pushing the (median, MAD) pair into the two digests as a single weighted update.
         // Sufficient for "combine snapshots" use cases; exact replay isn't possible without

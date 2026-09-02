@@ -263,7 +263,7 @@ class HalfSpaceTreesStat(
      * exactness, and tracking a per-leaf merged-mass correction to recover it would double the
      * model's state for a transient. A merged model is a warm start, not a checkpoint restore.
      */
-    override fun merge(values: HalfSpaceTreesResult) {
+    override fun merge(values: HalfSpaceTreesResult, workspace: com.eignex.koblas.Workspace?) {
         require(values.numTrees == numTrees && values.height == height && values.featureSize == featureSize) {
             "merge: shape mismatch"
         }

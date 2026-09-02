@@ -157,7 +157,7 @@ class DecayingSumStat(
         return Undecayed(epoch.landmarkNanos, epoch.accumulator.load())
     }
 
-    override fun merge(values: DecayingSumResult) {
+    override fun merge(values: DecayingSumResult, workspace: com.eignex.koblas.Workspace?) {
         if (values.sum == 0.0) return
         while (true) {
             val epoch = epochRef.load()

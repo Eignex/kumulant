@@ -112,7 +112,7 @@ class ListStatsTest {
         val tracking = object : SeriesStat<SumResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: SumResult) = Unit
+            override fun merge(values: SumResult, workspace: com.eignex.koblas.Workspace?) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = SumResult(0.0)
             override fun create(concurrency: Concurrency?): SeriesStat<SumResult> {

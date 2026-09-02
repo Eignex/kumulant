@@ -52,7 +52,7 @@ private class MappedResultCore<R1 : Result, R2 : Result>(
     private val reverse: (R2) -> R1,
 ) : Stat<R2> {
     override val concurrency: Concurrency get() = delegate.concurrency
-    override fun merge(values: R2) = delegate.merge(reverse(values))
+    override fun merge(values: R2, workspace: com.eignex.koblas.Workspace?) = delegate.merge(reverse(values), workspace)
     override fun reset() = delegate.reset()
     override fun read(timestampNanos: Long): R2 = forward(delegate.read(timestampNanos))
     override fun create(concurrency: Concurrency?): Stat<R2> =

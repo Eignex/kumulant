@@ -112,7 +112,7 @@ class DDSketchStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: SketchResult) {
+    override fun merge(values: SketchResult, workspace: com.eignex.koblas.Workspace?) {
         require(abs(this.gamma - values.gamma) < PARAMETER_MATCH_TOLERANCE) {
             "Cannot merge DDSketches with different relative error targets"
         }

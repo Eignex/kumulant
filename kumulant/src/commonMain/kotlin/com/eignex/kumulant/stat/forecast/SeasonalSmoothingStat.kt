@@ -210,7 +210,7 @@ class SeasonalSmoothingStat(
         }
     }
 
-    override fun merge(values: SeasonalSmoothingResult) = lock.guarded {
+    override fun merge(values: SeasonalSmoothingResult, workspace: com.eignex.koblas.Workspace?) = lock.guarded {
         require(values.seasons.size == period) { "merge seasons size ${values.seasons.size} != period $period" }
         if (initialized.addAndGet(1L) == 1L) {
             level.store(values.level)

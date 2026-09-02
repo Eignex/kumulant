@@ -153,7 +153,7 @@ class Exp3Bandit(
 
     override fun snapshot(): List<Exp3ArmResult> = List(nbrArms) { Exp3ArmResult(weights[it]) }
 
-    override fun merge(other: List<Exp3ArmResult>) {
+    override fun merge(other: List<Exp3ArmResult>, workspace: com.eignex.koblas.Workspace?) {
         requireMergeSize(other.size, nbrArms)
         // No canonical merge for EXP3 weights; multiply elementwise as a coarse pool,
         // then renormalise. Use for "roughly combine two parallel runs", not principled
