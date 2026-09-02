@@ -196,7 +196,11 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
     }
 
     /** Snapshot merge: the same rules as [mergeTree], but the other side is an immutable snapshot. */
-    fun <R : Any, RS : R> mergeSnapshot(other: R, results: TreeResultShape<S, R, RS, P>, workspace: com.eignex.koblas.Workspace? = null) {
+    fun <R : Any, RS : R> mergeSnapshot(
+        other: R,
+        results: TreeResultShape<S, R, RS, P>,
+        workspace: com.eignex.koblas.Workspace? = null,
+    ) {
         splitLock.guarded {
             root = mergeNodeWithResult(root, other, results, depth = 0, workspace)
             nbrNodes.store(countNodes(root))
@@ -362,8 +366,14 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
         }
         val aSplit = shape.asSplitNode(a) ?: return a
         if (bSplit != null && shape.splitOf(aSplit) == results.splitOf(bSplit)) {
-            shape.setPos(aSplit, mergeNodeWithResult(shape.posOf(aSplit), results.posOf(bSplit), results, depth + 1, workspace))
-            shape.setNeg(aSplit, mergeNodeWithResult(shape.negOf(aSplit), results.negOf(bSplit), results, depth + 1, workspace))
+            shape.setPos(
+                aSplit,
+                mergeNodeWithResult(shape.posOf(aSplit), results.posOf(bSplit), results, depth + 1, workspace),
+            )
+            shape.setNeg(
+                aSplit,
+                mergeNodeWithResult(shape.negOf(aSplit), results.negOf(bSplit), results, depth + 1, workspace),
+            )
             // b's value carries the full subtree aggregate; the child recursion already folded the
             // structurally-aligned portion. Pull only the residual, what b's value holds beyond the sum
             // of its children, into a's carryover.
@@ -383,7 +393,12 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
      * snapshot's shape whatever it is. A snapshot normally comes from a tree that already respected its own
      * `maxDepth`, so the two only diverge when the two configs differ.
      */
-    private fun <R : Any, RS : R> cloneFromResult(node: R, results: TreeResultShape<S, R, RS, P>, depth: Int, workspace: com.eignex.koblas.Workspace? = null): N {
+    private fun <R : Any, RS : R> cloneFromResult(
+        node: R,
+        results: TreeResultShape<S, R, RS, P>,
+        depth: Int,
+        workspace: com.eignex.koblas.Workspace? = null,
+    ): N {
         nbrNodes.addAndFetch(1)
         val split = results.asSplitResult(node)
         if (split == null) {
