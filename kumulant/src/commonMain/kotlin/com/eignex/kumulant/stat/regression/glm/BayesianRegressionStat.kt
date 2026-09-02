@@ -4,6 +4,7 @@
 
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.NotPositiveDefinite
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
@@ -123,7 +124,11 @@ class BayesianRegressionStat(
     private val priorPrecisionMatrix: F64DenseMatrix
 
     init {
-        val chol = initialCovariance.cholesky(CholeskyPolicy.Strict)
+        val chol = try {
+            initialCovariance.cholesky(CholeskyPolicy.Strict)
+        } catch (error: NotPositiveDefinite) {
+            throw IllegalArgumentException("priorCovariance must be positive definite", error)
+        }
         initialCovarianceL = chol.l.zeroUpperTriangle()
         priorPrecisionMatrix = chol.invert()
     }
