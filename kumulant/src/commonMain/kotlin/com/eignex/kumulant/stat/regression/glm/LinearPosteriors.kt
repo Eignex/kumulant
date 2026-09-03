@@ -3,11 +3,13 @@ package com.eignex.kumulant.stat.regression.glm
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
+import com.eignex.koblas.copy
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
-import com.eignex.koblas.dense.trmv
+import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
+import com.eignex.koblas.norm2
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlinx.serialization.SerialName
@@ -164,26 +166,39 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
 }
 
 /**
- * Full multivariate-Gaussian draw `w ~ N(weights, exploration * Sum)` via the
- * pre-computed Cholesky factor `L` carried in the snapshot:
+ * Posterior standard deviation at [x] under a unit exploration scale:
+ * `sqrt(xT * Sigma * x) = ||L^-1 x||` for the precision factor `L` with `Sigma = (L * LT)^-1`.
+ * One forward substitution, so the covariance is never formed.
+ */
+private fun PrecisionRegressionResult.predictiveDeviation(x: F64VectorLike, workspace: Workspace?): Double =
+    workspace.borrow(featureSize) { v ->
+        copy(x, F64DenseVector.wrap(v))
+        precisionL.trsv(v, lower = true)
+        F64DenseVector.wrap(v).norm2()
+    }
+
+/**
+ * Full multivariate-Gaussian draw `w ~ N(weights, exploration * Sigma)` from the
+ * precision factor `L` carried in the snapshot:
  *
- * `w = weights + sqrt(exploration) * L * u` where `u ~ N(0, I)`.
+ * `w = weights + sqrt(exploration) * L^-T * u` where `u ~ N(0, I)`.
  *
- * O(n^2) per draw; no fresh Cholesky decomposition required.
+ * `L^-T` is a square root of `Sigma` because `L^-T * (L^-T)T = (L * LT)^-1`, so the draw
+ * costs one back substitution: O(n^2), and no decomposition at draw time.
  */
 @Serializable
 @SerialName("MultivariateGaussian")
-data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
-    override fun sample(snapshot: CovarianceRegressionResult, rng: Random, exploration: Double): F64VectorLike {
+data object MultivariateGaussian : LinearPosterior<PrecisionRegressionResult> {
+    override fun sample(snapshot: PrecisionRegressionResult, rng: Random, exploration: Double): F64VectorLike {
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
         val u = DoubleArray(n) { rng.nextNormal(0.0, sd) }
-        snapshot.covarianceL.trmv(u, lower = true)
+        snapshot.precisionL.trsv(u, lower = true, transpose = true)
         return F64DenseVector.wrap(u).also { it.axpy(1.0, snapshot.weights) }
     }
 
     override fun sampleInto(
-        snapshot: CovarianceRegressionResult,
+        snapshot: PrecisionRegressionResult,
         rng: Random,
         destination: DoubleArray,
         exploration: Double,
@@ -193,24 +208,22 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
         ) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
         val sd = sqrt(exploration)
         for (i in destination.indices) destination[i] = rng.nextNormal(0.0, sd)
-        snapshot.covarianceL.trmv(destination, lower = true)
+        snapshot.precisionL.trsv(destination, lower = true, transpose = true)
         for (i in destination.indices) destination[i] += snapshot.weights[i]
     }
 
-    /** Closes to `invMean(eta(x) + sqrt(exploration * xT * Sigma * x) * N(0,1))`; one
-     *  matrix-vector product and one `dot` instead of sampling the full weight vector. */
+    /** Closes to `invMean(eta(x) + sqrt(exploration) * ||L^-1 x|| * N(0,1))`; one triangular
+     *  solve instead of sampling the full weight vector. */
     override fun evaluate(
-        snapshot: CovarianceRegressionResult,
+        snapshot: PrecisionRegressionResult,
         x: F64VectorLike,
         rng: Random,
         exploration: Double,
         workspace: Workspace?,
     ): Double {
         val eta = snapshot.linearPredictor(x)
-        return workspace.borrow(snapshot.featureSize) { sigmaX ->
-            snapshot.covariance.multiplyInto(x, sigmaX)
-            snapshot.link.invMean(eta + sqrt(exploration * (x dot F64DenseVector.wrap(sigmaX))) * rng.nextNormal())
-        }
+        val deviation = snapshot.predictiveDeviation(x, workspace)
+        return snapshot.link.invMean(eta + sqrt(exploration) * deviation * rng.nextNormal())
     }
 }
 
@@ -224,12 +237,12 @@ data object MultivariateGaussian : LinearPosterior<CovarianceRegressionResult> {
  */
 @Serializable
 @SerialName("LinUcb")
-data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
-    override fun sample(snapshot: CovarianceRegressionResult, rng: Random, exploration: Double): F64VectorLike =
+data object LinUcb : LinearPosterior<PrecisionRegressionResult> {
+    override fun sample(snapshot: PrecisionRegressionResult, rng: Random, exploration: Double): F64VectorLike =
         snapshot.weights
 
     override fun sampleInto(
-        snapshot: CovarianceRegressionResult,
+        snapshot: PrecisionRegressionResult,
         rng: Random,
         destination: DoubleArray,
         exploration: Double,
@@ -241,16 +254,12 @@ data object LinUcb : LinearPosterior<CovarianceRegressionResult> {
     }
 
     override fun evaluate(
-        snapshot: CovarianceRegressionResult,
+        snapshot: PrecisionRegressionResult,
         x: F64VectorLike,
         rng: Random,
         exploration: Double,
         workspace: Workspace?,
-    ): Double {
-        val eta = snapshot.linearPredictor(x)
-        return workspace.borrow(snapshot.featureSize) { sigmaX ->
-            snapshot.covariance.multiplyInto(x, sigmaX)
-            snapshot.link.invMean(eta + exploration * sqrt(x dot F64DenseVector.wrap(sigmaX)))
-        }
-    }
+    ): Double = snapshot.link.invMean(
+        snapshot.linearPredictor(x) + exploration * snapshot.predictiveDeviation(x, workspace),
+    )
 }

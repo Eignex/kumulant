@@ -279,7 +279,7 @@ interface PairedStat<R : Result> : Stat<R> {
  *
  * Implementations cover the full spread from a one-pass SGD weight tracker
  * ([StochasticRegressionStat][com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat])
- * to a full Bayesian linear regression with covariance
+ * to a full Bayesian linear regression with a joint posterior
  * ([BayesianRegressionStat][com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat])
  * to a non-linear decision tree
  * ([DecisionTreeRegressionStat][com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat]).

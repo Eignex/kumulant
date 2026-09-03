@@ -3,7 +3,7 @@ package com.eignex.kumulant.bench
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
-import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult
+import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.Param
 import kotlinx.benchmark.Scope
@@ -19,7 +19,7 @@ open class BayesianWorkspaceBenchmark {
     private lateinit var x: F64DenseVector
     private lateinit var workspace: Workspace
     private lateinit var stat: BayesianRegressionStat
-    private lateinit var mergeValue: CovarianceRegressionResult
+    private lateinit var mergeValue: PrecisionRegressionResult
 
     @Setup
     fun setup() {

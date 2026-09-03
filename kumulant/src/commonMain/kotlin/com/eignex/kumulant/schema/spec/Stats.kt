@@ -31,10 +31,10 @@ import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesResult
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
-import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionResult
 import com.eignex.kumulant.stat.regression.glm.Link
 import com.eignex.kumulant.stat.regression.glm.Penalty
+import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
 import com.eignex.kumulant.stat.regression.tree.ClassCountsResult
@@ -524,7 +524,7 @@ data class BayesianRegression(
     val priorVariance: Double = 1.0,
     /** GLM link function; `Link.Identity` keeps the strict closed-form Gaussian posterior. */
     val link: Link = Link.Identity,
-) : RegressionStatSpec<CovarianceRegressionResult>
+) : RegressionStatSpec<PrecisionRegressionResult>
 
 /** Spec for `StochasticRegressionStat`: online GLM with a configurable optimizer. */
 @Serializable

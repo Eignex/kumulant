@@ -60,7 +60,7 @@ class RegressionWeightContractTest {
             },
             Model("BayesianRegression", 2.0, { xv, yv, w -> bayesian.update(xv, yv, weight = w) }) {
                 val r = bayesian.read()
-                "${r.weights[0]},${r.weights[1]},${r.bias},${r.totalWeights},${r.covariance[0, 0]},${r.sse}"
+                "${r.weights[0]},${r.weights[1]},${r.bias},${r.totalWeights},${r.precisionL[0, 0]},${r.sse}"
             },
             Model("SoftmaxRegression", 1.0, { xv, yv, w -> softmax.update(xv, yv, weight = w) }) {
                 val r = softmax.read()

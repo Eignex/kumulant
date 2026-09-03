@@ -9,7 +9,7 @@ import com.eignex.kumulant.schema.ops.*
 import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.schema.runtime.*
 import com.eignex.kumulant.schema.spec.*
-import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult
+import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 class RegressionSpecsRoundTripTest {
 
     @Test fun `BayesianRegression leaf spec round trips and materializes`() {
-        val cfg: RegressionStatSpec<CovarianceRegressionResult> = BayesianRegression(
+        val cfg: RegressionStatSpec<PrecisionRegressionResult> = BayesianRegression(
             featureSize = 2,
             priorVariance = 0.5,
         )

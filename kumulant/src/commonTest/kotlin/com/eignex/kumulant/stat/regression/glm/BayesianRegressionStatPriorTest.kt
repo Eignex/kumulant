@@ -18,10 +18,11 @@ class BayesianRegressionStatPriorTest {
     fun `default prior matches isotropic Gaussian with priorVariance on the diagonal`() {
         val blr = BayesianRegressionStat(featureSize = 3, priorVariance = 2.0)
         val r = blr.read()
+        val covariance = r.covariance()
         for (i in 0 until 3) {
             assertEquals(0.0, r.weights[i], 1e-12)
-            assertEquals(2.0, r.covariance[i, i], 1e-12)
-            for (j in 0 until 3) if (i != j) assertEquals(0.0, r.covariance[i, j], 1e-12)
+            assertEquals(2.0, covariance[i, i], 1e-12)
+            for (j in 0 until 3) if (i != j) assertEquals(0.0, covariance[i, j], 1e-12)
         }
     }
 
@@ -41,9 +42,10 @@ class BayesianRegressionStatPriorTest {
             priorCovariance = cov,
         )
         val r = blr.read()
+        val covariance = r.covariance()
         for (i in 0 until 3) {
             assertEquals(mean[i], r.weights[i], 1e-12)
-            for (j in 0 until 3) assertEquals(cov[i, j], r.covariance[i, j], 1e-12)
+            for (j in 0 until 3) assertEquals(cov[i, j], covariance[i, j], 1e-12)
         }
     }
 
@@ -73,9 +75,10 @@ class BayesianRegressionStatPriorTest {
         }
         blr.reset()
         val r = blr.read()
+        val covariance = r.covariance()
         for (i in 0 until 2) {
             assertEquals(mean[i], r.weights[i], 1e-12)
-            assertEquals(cov[i, i], r.covariance[i, i], 1e-12)
+            assertEquals(cov[i, i], covariance[i, i], 1e-12)
         }
         assertEquals(0L, r.step)
         assertEquals(0.0, r.totalWeights, 1e-12)
@@ -171,9 +174,11 @@ class BayesianRegressionStatPriorTest {
         populated.merge(fresh().read())
 
         val actual = populated.read()
+        val expectedCovariance = expected.covariance()
+        val actualCovariance = actual.covariance()
         for (i in 0 until 2) {
             assertEquals(expected.weights[i], actual.weights[i], 1e-12)
-            for (j in 0 until 2) assertEquals(expected.covariance[i, j], actual.covariance[i, j], 1e-12)
+            for (j in 0 until 2) assertEquals(expectedCovariance[i, j], actualCovariance[i, j], 1e-12)
         }
     }
 
@@ -181,14 +186,13 @@ class BayesianRegressionStatPriorTest {
     fun `fitPopulationPrior returns the simple mean for identical posteriors`() {
         val mean = doubleArrayOf(1.0, -0.5)
         val cov = F64DenseMatrix.diagonal(2, 0.4)
-        val snap = CovarianceRegressionResult(
+        val snap = PrecisionRegressionResult(
             weights = F64DenseVector.of(mean),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 100.0,
             step = 100L,
-            covariance = F64DenseMatrix.of(cov.toArray()),
-            covarianceL = cov.let { c -> F64DenseMatrix.diagonal(2, sqrt(0.4)) },
+            precisionL = F64DenseMatrix.diagonal(2, 1.0 / sqrt(0.4)),
             sse = 0.0,
         )
         val prior = BayesianRegressionStat.fitPopulationPrior(List(5) { snap })
@@ -206,14 +210,13 @@ class BayesianRegressionStatPriorTest {
         // covariance should be dominated by the between-instance term (~ (mu_diff/2)^2).
         val tight = F64DenseMatrix.diagonal(2, 0.01)
         val sqrt01 = sqrt(0.01)
-        fun snap(mu: DoubleArray) = CovarianceRegressionResult(
+        fun snap(mu: DoubleArray) = PrecisionRegressionResult(
             weights = F64DenseVector.of(mu),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 100.0,
             step = 100L,
-            covariance = F64DenseMatrix.of(tight.toArray()),
-            covarianceL = F64DenseMatrix.diagonal(2, sqrt01),
+            precisionL = F64DenseMatrix.diagonal(2, 1.0 / sqrt01),
             sse = 0.0,
         )
         val a = snap(doubleArrayOf(1.0, 0.0))
@@ -237,14 +240,13 @@ class BayesianRegressionStatPriorTest {
             doubleArrayOf(0.3, 0.8),
             doubleArrayOf(0.4, 1.2),
         ).map {
-            CovarianceRegressionResult(
+            PrecisionRegressionResult(
                 weights = F64DenseVector.of(it),
                 bias = 0.0,
                 biasPrecision = 1.0,
                 totalWeights = 50.0,
                 step = 50L,
-                covariance = F64DenseMatrix.of(cov.toArray()),
-                covarianceL = F64DenseMatrix.diagonal(2, sqrt05),
+                precisionL = F64DenseMatrix.diagonal(2, 1.0 / sqrt05),
                 sse = 0.0,
             )
         }
@@ -255,11 +257,12 @@ class BayesianRegressionStatPriorTest {
             priorCovariance = prior.covariance,
         )
         val r = seeded.read()
+        val covariance = r.covariance()
         assertEquals(prior.mean[0], r.weights[0], 1e-12)
         assertEquals(prior.mean[1], r.weights[1], 1e-12)
         for (i in 0 until 2) {
             for (j in 0 until 2) {
-                assertEquals(prior.covariance[i, j], r.covariance[i, j], 1e-9)
+                assertEquals(prior.covariance[i, j], covariance[i, j], 1e-9)
             }
         }
     }
@@ -277,14 +280,13 @@ class BayesianRegressionStatPriorTest {
         // second, the result should equal the first snapshot in isolation.
         val cov = F64DenseMatrix.diagonal(2, 0.3)
         val sqrt03 = sqrt(0.3)
-        fun snap(mu: DoubleArray) = CovarianceRegressionResult(
+        fun snap(mu: DoubleArray) = PrecisionRegressionResult(
             weights = F64DenseVector.of(mu),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 1.0,
             step = 1L,
-            covariance = F64DenseMatrix.of(cov.toArray()),
-            covarianceL = F64DenseMatrix.diagonal(2, sqrt03),
+            precisionL = F64DenseMatrix.diagonal(2, 1.0 / sqrt03),
             sse = 0.0,
         )
         val a = snap(doubleArrayOf(2.0, -2.0))
@@ -303,14 +305,13 @@ class BayesianRegressionStatPriorTest {
     @Test
     fun `fitPopulationPrior with a single snapshot has zero between-instance variance`() {
         val cov = F64DenseMatrix.diagonal(2, 0.4)
-        val snap = CovarianceRegressionResult(
+        val snap = PrecisionRegressionResult(
             weights = F64DenseVector.of(doubleArrayOf(0.7, -0.3)),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 50.0,
             step = 50L,
-            covariance = F64DenseMatrix.of(cov.toArray()),
-            covarianceL = F64DenseMatrix.diagonal(2, sqrt(0.4)),
+            precisionL = F64DenseMatrix.diagonal(2, 1.0 / sqrt(0.4)),
             sse = 0.0,
         )
         val prior = BayesianRegressionStat.fitPopulationPrior(listOf(snap))
@@ -338,9 +339,10 @@ class BayesianRegressionStatPriorTest {
         original.update(doubleArrayOf(1.0, 0.0), 5.0, 1.0)
         val clone = original.create(null)
         val r = clone.read()
+        val covariance = r.covariance()
         for (i in 0 until 2) {
             assertEquals(mean[i], r.weights[i], 1e-12)
-            assertEquals(cov[i, i], r.covariance[i, i], 1e-12)
+            assertEquals(cov[i, i], covariance[i, i], 1e-12)
         }
     }
 
@@ -391,14 +393,13 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `PopulationPrior round-trips through JSON`() {
-        val snap = CovarianceRegressionResult(
+        val snap = PrecisionRegressionResult(
             weights = F64DenseVector.of(doubleArrayOf(0.5, -0.5)),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 10.0,
             step = 10L,
-            covariance = F64DenseMatrix.diagonal(2, 0.5),
-            covarianceL = F64DenseMatrix.diagonal(2, sqrt(0.5)),
+            precisionL = F64DenseMatrix.diagonal(2, 1.0 / sqrt(0.5)),
             sse = 0.0,
         )
         val prior = BayesianRegressionStat.fitPopulationPrior(listOf(snap, snap))

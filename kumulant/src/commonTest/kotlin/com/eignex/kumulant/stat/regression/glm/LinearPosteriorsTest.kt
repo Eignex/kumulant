@@ -45,7 +45,7 @@ class LinearPosteriorsTest {
         return stat.read()
     }
 
-    private fun bayesianSnapshot(): CovarianceRegressionResult {
+    private fun bayesianSnapshot(): PrecisionRegressionResult {
         val stat = BayesianRegressionStat(featureSize = 2, priorVariance = 1.0)
         val rng = Random(1)
         repeat(800) {
@@ -228,16 +228,14 @@ class LinearPosteriorsTest {
     }
 
     @Test
-    fun `MultivariateGaussian sample preserves triangular product and random draws`() {
-        val covariance = F64DenseMatrix.of(arrayOf(doubleArrayOf(4.0, 6.0), doubleArrayOf(6.0, 25.0)))
-        val snapshot = CovarianceRegressionResult(
+    fun `MultivariateGaussian sample maps the draw through the inverse precision factor`() {
+        val snapshot = PrecisionRegressionResult(
             weights = F64DenseVector.of(doubleArrayOf(1.0, -1.0)),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 0.0,
             step = 0L,
-            covariance = covariance,
-            covarianceL = F64DenseMatrix.of(arrayOf(doubleArrayOf(2.0, 0.0), doubleArrayOf(3.0, 4.0))),
+            precisionL = F64DenseMatrix.of(arrayOf(doubleArrayOf(2.0, 0.0), doubleArrayOf(3.0, 4.0))),
         )
         val expectedRng = Random(7)
         val u0 = expectedRng.nextNormal(0.0, 0.5)
@@ -247,8 +245,10 @@ class LinearPosteriorsTest {
 
         val sample = MultivariateGaussian.sample(snapshot, actualRng, exploration = 0.25)
 
-        assertEquals(1.0 + 2.0 * u0, sample[0], 1e-12)
-        assertEquals(-1.0 + 3.0 * u0 + 4.0 * u1, sample[1], 1e-12)
+        // Back substitution against LT: z1 = u1 / 4, z0 = (u0 - 3 * z1) / 2.
+        val z1 = u1 / 4.0
+        assertEquals(1.0 + (u0 - 3.0 * z1) / 2.0, sample[0], 1e-12)
+        assertEquals(-1.0 + z1, sample[1], 1e-12)
         assertEquals(expectedNext, actualRng.nextNormal(), 0.0)
     }
 
@@ -303,16 +303,15 @@ class LinearPosteriorsTest {
     }
 
     @Test
-    fun `CovarianceRegressionResult rejects shape mismatch`() {
+    fun `PrecisionRegressionResult rejects shape mismatch`() {
         assertFailsWith<IllegalArgumentException> {
-            CovarianceRegressionResult(
+            PrecisionRegressionResult(
                 weights = F64DenseVector.of(doubleArrayOf(0.0, 0.0)),
                 bias = 0.0,
                 biasPrecision = 1.0,
                 totalWeights = 0.0,
                 step = 0L,
-                covariance = F64DenseMatrix.zero(3, 3),
-                covarianceL = F64DenseMatrix.zero(3, 3),
+                precisionL = F64DenseMatrix.zero(3, 3),
             )
         }
     }
