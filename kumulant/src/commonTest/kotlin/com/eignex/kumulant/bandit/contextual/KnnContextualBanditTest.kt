@@ -245,18 +245,42 @@ class KnnContextualBanditTest {
     }
 
     @Test
-    fun `workspace borrow releases after a distance exception`() {
+    fun `a failed distance leaves the scan buffer usable for the next call`() {
+        var failing = true
         val bandit = KnnContextualBandit(
             nbrArms = 1,
             k = 1,
             exploration = 0.0,
-            distance = { _, _ -> error("distance failed") },
+            distance = { a, b -> if (failing) error("distance failed") else squaredL2(a, b) },
         )
-        bandit.update(0, feat(1.0), 1.0)
-        val workspace = Workspace().apply { reserve(3, 1) }
+        bandit.update(0, feat(1.0), 4.0)
 
-        assertFailsWith<IllegalStateException> { bandit.evaluate(0, feat(1.0), workspace) }
-        assertFailsWith<IllegalStateException> { bandit.evaluate(0, feat(1.0), workspace) }
+        assertFailsWith<IllegalStateException> { bandit.evaluate(0, feat(1.0)) }
+        failing = false
+
+        assertEquals(4.0, bandit.evaluate(0, feat(1.0)), 1e-12)
+    }
+
+    @Test
+    fun `the k nearest are the same whatever order the contexts arrive in`() {
+        // Contexts sit at 1..6 from the query, so the three nearest carry rewards 1, 2 and 3 and
+        // average 2.0. Ascending admits each candidate once and then rejects; descending displaces
+        // on every step, which is the order that exercises the rescan hardest.
+        val ascending = listOf(1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
+        for (order in listOf(ascending, ascending.reversed(), listOf(4.0, 1.0, 6.0, 2.0, 5.0, 3.0))) {
+            val bandit = KnnContextualBandit(nbrArms = 1, k = 3, exploration = 0.0)
+            for (d in order) bandit.update(0, feat(d), d)
+            assertEquals(2.0, bandit.evaluate(0, feat(0.0)), 1e-12, "arrival order $order")
+        }
+    }
+
+    @Test
+    fun `equal distances keep the neighbour that arrived first`() {
+        val bandit = KnnContextualBandit(nbrArms = 1, k = 1, exploration = 0.0)
+        bandit.update(0, feat(1.0), 10.0)
+        bandit.update(0, feat(1.0), 20.0)
+
+        assertEquals(10.0, bandit.evaluate(0, feat(1.0)), 1e-12)
     }
 }
 
