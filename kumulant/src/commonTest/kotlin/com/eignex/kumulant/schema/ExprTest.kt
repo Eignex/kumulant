@@ -18,6 +18,7 @@ import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.skema.SchemaJson
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -411,6 +412,9 @@ class ExprTest {
             doubleArrayOf(1.0, 0.0, Double.NaN, 2.0),
             doubleArrayOf(0.0, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY),
             doubleArrayOf(-0.0, 0.0, Double.MAX_VALUE, Double.MIN_VALUE),
+            // One dominant term ahead of many small ones, long enough to fill SIMD lanes: the only
+            // shape in this set where associativity is observable.
+            DoubleArray(64) { if (it == 0) 1e16 else 1.0 },
         )
         val folds = VFoldOp.entries.map(::VFold)
 
@@ -425,8 +429,15 @@ class ExprTest {
                 for (input in representations) {
                     if (array.isEmpty() && fold.op in setOf(VFoldOp.Mean, VFoldOp.Min, VFoldOp.Max)) {
                         assertFailsWith<IllegalArgumentException> { fold.eval(v = input) }
+                        continue
+                    }
+                    val expected = fold.eval(0.0, 0.0, array)
+                    val actual = fold.eval(v = input)
+                    val message = "${fold.op} over ${input::class.simpleName} of ${array.size}"
+                    if (fold.op in reassociating && expected.isFinite()) {
+                        assertEquals(expected, actual, abs(expected) * reassociationTolerance, message)
                     } else {
-                        assertEquals(fold.eval(0.0, 0.0, array).toBits(), fold.eval(v = input).toBits())
+                        assertEquals(expected.toBits(), actual.toBits(), message)
                     }
                 }
             }
@@ -533,6 +544,17 @@ class ExprTest {
             VDot(weights = listOf(1.0, 1.0)).eval(0.0, 0.0, doubleArrayOf(1.0, 2.0, 3.0))
         }
     }
+
+    /**
+     * Folds whose result depends on how the terms associate. Sum and Mean reduce through koblas,
+     * which pairs terms across SIMD lanes for a dense operand and accumulates in order for every
+     * other storage, so the two answers differ in the last bits. The remaining folds are
+     * order-independent and still have to agree exactly.
+     */
+    private val reassociating = setOf(VFoldOp.Sum, VFoldOp.Mean)
+
+    /** Relative slack for [reassociating] folds; reassociation moves the last bits, nothing more. */
+    private val reassociationTolerance = 1e-12
 
     private fun sparse(values: DoubleArray): F64SparseVector {
         val indices = values.indices.filter {
