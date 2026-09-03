@@ -66,7 +66,16 @@ class KnnWorkspaceAllocationTest {
         const val HISTORY = 32
         const val FEATURES = 32
 
-        /** Slack for sampling noise in the allocation counter; a real per-call buffer is 3 * K * 8 B. */
-        const val CEILING = 8.0
+        /**
+         * A per-call scan buffer would be a `DoubleArray(3 * K)`, about 208 B, and `choose` scored
+         * [ARMS] arms so the old path spent one per arm. Anything at this ceiling is an order of
+         * magnitude below that and still catches a buffer coming back.
+         *
+         * It is not tighter because `getThreadAllocatedBytes` reports TLAB accounting rather than
+         * exact per-call bytes, so a thread can be charged for a refill it did not spend here. At
+         * 2000 calls a ceiling of 8 B budgeted 16 KB in total, less than one TLAB, and CI failed on
+         * the workspace arm while the identical bare arm passed.
+         */
+        const val CEILING = 64.0
     }
 }
