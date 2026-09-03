@@ -91,6 +91,7 @@ data class SoftmaxRegressionResult(
     /** Finds the argmax for [x], borrowing logits only for the duration of this call. */
     fun predict(x: F64VectorLike, workspace: Workspace? = null): Int = when (workspace) {
         null -> argMaxOf(numClasses) { k -> logit(x, k) }
+
         else -> workspace.borrow(numClasses) { logits ->
             logitsInto(x, logits)
             argMaxOf(numClasses) { logits[it] }
