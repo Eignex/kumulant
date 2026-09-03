@@ -8,7 +8,6 @@ import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dense.trmv
 import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
-import com.eignex.koblas.times
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlinx.serialization.SerialName
