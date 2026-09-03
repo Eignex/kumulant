@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.schema.expr.BoolExpr
+import com.eignex.kumulant.schema.expr.eval
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -56,10 +57,9 @@ data class ExprSplit(
     val expr: BoolExpr,
 ) : SerializableSplit {
     override fun direction(row: F64VectorLike): Boolean {
-        val arr = row.toDoubleArray()
-        val x = if (arr.isNotEmpty()) arr[0] else 0.0
-        val y = if (arr.size >= 2) arr[1] else 0.0
-        return expr.eval(x, y, arr)
+        val x = if (row.size >= 1) row[0] else 0.0
+        val y = if (row.size >= 2) row[1] else 0.0
+        return expr.eval(x, y, row)
     }
     override fun toString(): String = "expr($expr)"
 }

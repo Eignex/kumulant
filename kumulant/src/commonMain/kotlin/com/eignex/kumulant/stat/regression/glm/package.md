@@ -30,7 +30,7 @@ coupled to the Bayesian variants).
 | [UnivariateRegressionStat] | One scalar feature, one scalar response. OLS / ridge / lasso via [Penalty]. The cheapest entry; reach for it for "fit a line to a stream of (x, y) points." |
 | [StochasticRegressionStat] | Online SGD with any [OptimizerSpec][com.eignex.kumulant.schema.optimizer.OptimizerSpec] (Sgd / Adagrad / RMSProp / Adam). Best when you want point estimates only and the per-update cost must stay small. |
 | [DiagonalRegressionStat] | Factorised Gaussian posterior; per-coefficient precision without the full covariance matrix. The natural choice for high-dimensional features where the quadratic memory of full Bayesian regression is prohibitive. |
-| [BayesianRegressionStat] | Full Gaussian posterior with covariance matrix and Cholesky factor. Closed-form under [Link.Identity]; online Laplace approximation under [Link.Logit] / [Link.Log]. Reach for it when downstream needs uncertainty quantification; Thompson sampling, LinUCB. |
+| [BayesianRegressionStat] | Full Gaussian posterior, carried as the Cholesky factor of its precision (a square-root information filter). Closed-form under [Link.Identity]; online Laplace approximation under [Link.Logit] / [Link.Log]. Reach for it when downstream needs uncertainty quantification; Thompson sampling, LinUCB. |
 | [HierarchicalBayesianRegression] | Pooled estimation across many parallel regressors. Use it when you have one regressor per arm in a bandit (or per group in any stratified problem) and want them to share strength. |
 
 ## Penalties
@@ -55,7 +55,7 @@ scalar score:
 
 - [PointPosterior]: the deterministic point estimate `bias + x . weights`.
 - [FactorisedGaussian]: Thompson sample / UCB from a [DiagonalRegressionResult].
-- [MultivariateGaussian]: Thompson sample from a [CovarianceRegressionResult].
+- [MultivariateGaussian]: Thompson sample from a [PrecisionRegressionResult].
 - [LinUcb]: UCB-style score `bias + alpha * sqrt(xT Sigma x)`.
 
 The posteriors live here (not in `bandit/`) because they're properties
@@ -75,10 +75,10 @@ to pass through the wire.
 [UnivariateRegressionStat] merges exactly via Chan-style parallel Welford on its
 running covariance. [DiagonalRegressionStat] and [BayesianRegressionStat] merge
 exactly by combining Gaussian posteriors: per-coordinate precision-weighted for
-the diagonal, full precision add-and-downdate (with Cholesky recomputation) for
-the full covariance. [StochasticRegressionStat] merges approximately; SGD keeps
-no second-moment information, so the combine is a sample-weighted average of the
-weight vectors. [HierarchicalBayesianRegression] does not merge; the manager
+the diagonal, and for the joint posterior a precision add-and-subtract whose
+Cholesky factor is the merged state, so nothing is inverted.
+[StochasticRegressionStat] merges approximately; SGD keeps no second-moment
+information, so the combine is a sample-weighted average of the weight vectors. [HierarchicalBayesianRegression] does not merge; the manager
 refits the population prior from its tracked instances instead.
 
 ## Concurrency

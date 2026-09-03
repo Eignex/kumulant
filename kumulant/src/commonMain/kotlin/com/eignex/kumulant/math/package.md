@@ -9,11 +9,13 @@ falls outside that subset and only kumulant needs lives here.
 
 ## Linear-algebra helpers
 
-- `choleskyDowndateInPlace`: rank-1 downdate of a lower-triangular
-  Cholesky factor, so
+- `choleskyUpdateInPlace`: rank-1 update of a lower-triangular Cholesky
+  factor, so
   [BayesianRegressionStat][com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat]
-  can track the posterior covariance factor across observations instead
-  of refactorizing per update.
+  can track the posterior precision factor across observations instead
+  of refactorizing per update. Non-negative `sigma` only: a rank-1
+  update of a positive-definite matrix stays positive definite, and the
+  downdate that does not is what carrying the precision avoids.
 - `zeroUpperTriangle`: clears the strict upper triangle of a factor,
   which koblas leaves unspecified, before it is stored in a snapshot.
 

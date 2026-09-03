@@ -7,6 +7,7 @@ import com.eignex.kumulant.bandit.contextual.KnnContextualBandit.Companion.squar
 import com.eignex.kumulant.feat
 import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -63,6 +64,60 @@ class KnnContextualBanditTest {
         // Latest x=9 dominates; querying near 9 should return the recent reward.
         val s = bandit.evaluate(0, feat(9.0))
         assertTrue(s in 6.5..9.5, "expected score near recent rewards 7/8/9, got $s")
+    }
+
+    @Test
+    fun `snapshot lists the surviving history oldest first after the ring wraps`() {
+        val bandit = KnnContextualBandit(nbrArms = 1, k = 1, maxHistoryPerArm = 3, exploration = 0.0)
+        repeat(5) { bandit.update(0, feat(it.toDouble()), it.toDouble()) }
+
+        val arm = bandit.snapshot()[0]
+
+        assertContentEquals(listOf(2.0, 3.0, 4.0), arm.contexts.map { it.single() })
+        assertContentEquals(doubleArrayOf(2.0, 3.0, 4.0), arm.rewards)
+        assertContentEquals(doubleArrayOf(1.0, 1.0, 1.0), arm.weights)
+        assertEquals(3.0, arm.totalWeight, 1e-9)
+    }
+
+    @Test
+    fun `evaluate scores a wrapped history from the survivors alone`() {
+        val bandit = KnnContextualBandit(nbrArms = 1, k = 1, maxHistoryPerArm = 3, exploration = 0.0)
+        repeat(5) { bandit.update(0, feat(it.toDouble()), it.toDouble()) }
+
+        assertEquals(2.0, bandit.evaluate(0, feat(2.0)), 1e-12)
+        assertEquals(4.0, bandit.evaluate(0, feat(4.0)), 1e-12)
+        // x=0 was evicted, so the nearest neighbour of x=0 is the oldest survivor.
+        assertEquals(2.0, bandit.evaluate(0, feat(0.0)), 1e-12)
+    }
+
+    @Test
+    fun `merge appends foreign samples and trims the oldest across a wrap`() {
+        val local = KnnContextualBandit(nbrArms = 1, k = 1, maxHistoryPerArm = 4, exploration = 0.0)
+        val foreign = KnnContextualBandit(nbrArms = 1, k = 1, maxHistoryPerArm = 4, exploration = 0.0)
+        local.update(0, feat(0.0), 0.0)
+        local.update(0, feat(1.0), 1.0)
+        for (i in 2..4) foreign.update(0, feat(i.toDouble()), i.toDouble())
+
+        local.merge(foreign.snapshot())
+
+        val arm = local.snapshot()[0]
+        assertContentEquals(listOf(1.0, 2.0, 3.0, 4.0), arm.contexts.map { it.single() })
+        assertContentEquals(doubleArrayOf(1.0, 2.0, 3.0, 4.0), arm.rewards)
+        assertEquals(4.0, arm.totalWeight, 1e-9)
+    }
+
+    @Test
+    fun `a wrapped history keeps dense and sparse slots apart as they overwrite each other`() {
+        val bandit = KnnContextualBandit(nbrArms = 1, k = 1, maxHistoryPerArm = 2, exploration = 0.0)
+        bandit.update(0, feat(1.0, 0.0), 1.0)
+        bandit.update(0, feat(0.0, 2.0), 2.0)
+        bandit.update(0, F64SparseVector.of(2, intArrayOf(1), doubleArrayOf(3.0)), 3.0)
+        bandit.update(0, feat(4.0, 0.0), 4.0)
+
+        val contexts = bandit.snapshot()[0].contexts
+
+        assertContentEquals(doubleArrayOf(0.0, 3.0), contexts[0])
+        assertContentEquals(doubleArrayOf(4.0, 0.0), contexts[1])
     }
 
     @Test

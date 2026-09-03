@@ -8,30 +8,29 @@ import com.eignex.koblas.NotPositiveDefinite
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
+import com.eignex.koblas.copy
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64MatrixLike
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dense.CholeskyPolicy
-import com.eignex.koblas.dense.F64CholeskyDecomposition
 import com.eignex.koblas.dense.cholesky
 import com.eignex.koblas.dense.invert
+import com.eignex.koblas.dense.trmv
+import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.dot
-import com.eignex.koblas.ger
 import com.eignex.koblas.koblas
-import com.eignex.koblas.scale
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requireMergeFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
-import com.eignex.kumulant.math.choleskyDowndateInPlace
+import com.eignex.kumulant.math.choleskyUpdateInPlace
 import com.eignex.kumulant.math.zeroUpperTriangle
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
-import kotlin.math.sqrt
 
 private fun F64MatrixLike.copyDenseMatrix(): F64DenseMatrix = F64DenseMatrix.wrap(
     rows,
@@ -41,17 +40,22 @@ private fun F64MatrixLike.copyDenseMatrix(): F64DenseMatrix = F64DenseMatrix.wra
 
 /**
  * Bayesian generalised linear regression with a Gaussian prior on the weights and a
- * canonical [Link] for the response. Produces a full posterior covariance `S = H^-1`
- * alongside the point estimates. Suitable for Thompson-sampling-style bandits drawing
- * a fresh weight vector from `N(weights, exploration * S)` per round.
+ * canonical [Link] for the response. Produces the full joint posterior as the Cholesky
+ * factor of its precision `H`, from which the covariance `S = H^-1` and every quantity
+ * built on it follow by triangular solve. Suitable for Thompson-sampling-style bandits
+ * drawing a fresh weight vector from `N(weights, exploration * S)` per round.
  *
- * Maintained incrementally via Sherman-Morrison-Woodbury for per-observation precision
- * `w_c = weight * link.curvature(eta)`:
+ * A square-root information filter. Each observation contributes local precision
+ * `w_c = weight * link.curvature(eta)` and is folded straight into the factor:
  *  ```
- *  z       = sqrt(w_c) * S * x / sqrt(1 + w_c * xT * S * x)
- *  S       = S - z * zT                     (rank-1 downdate)
- *  w       = w + weight * S_new * x * (y - mu)
+ *  L       <- chol(L * LT + w_c * x xT)     (rank-1 update)
+ *  v       = (L * LT)^-1 * x                (two triangular solves)
+ *  w       = w + weight * (y - mu) * v
  *  ```
+ * Carrying `H` rather than `S` is what makes this stable: `w_c` is non-negative for
+ * every canonical link, so the rank-1 update can never leave the positive-definite
+ * cone, and the same event expressed on the covariance would be a Sherman-Morrison
+ * downdate that can. There is no repair path because there is nothing to repair.
  *
  * Under [Link.Identity] this is the strict closed-form conjugate Gaussian posterior
  * (`curvature = 1`). Under [Link.Logit] / [Link.Log] it is the online Laplace
@@ -61,12 +65,8 @@ private fun F64MatrixLike.copyDenseMatrix(): F64DenseMatrix = F64DenseMatrix.wra
  *
  * Regularisation is the Gaussian prior, controlled by [priorVariance] / `priorMean`
  * / `priorCovariance`; tighten the prior to shrink weights toward zero (or a target).
- *
- * The Cholesky factor `L` of `S` is tracked in parallel via
- * [choleskyDowndateInPlace] so `w ~ N(weights, S)` draws are an O(n^2)
- * `weights + L * u` op (no fresh Cholesky per sample). When the rank-1 downdate
- * falls outside the positive-definite cone, the factor is rebuilt from a
- * regularised covariance and the update is retried with a smaller step.
+ * The prior covariance is factored, inverted, and factored again at construction, so a
+ * non-positive-definite prior throws there rather than corrupting later fits.
  *
  * Residual variance: `sigma^2 = 1`. Callers wanting heteroscedastic noise can
  * re-scale `y` before `update()` or pass per-observation precision via `weight`.
@@ -77,10 +77,11 @@ private fun F64MatrixLike.copyDenseMatrix(): F64DenseMatrix = F64DenseMatrix.wra
  * Reach for [DiagonalRegressionStat] when only marginal posteriors are
  * required and dimensions are high.
  *
- * **Memory:** O([featureSize]^2); weights, covariance, and Cholesky factor.
+ * **Memory:** O([featureSize]^2); weights plus the precision factor and the
+ * prior matrices the merge needs.
  *
- * **Update:** O([featureSize]^2) per observation; rank-1 SMW downdate plus
- * Cholesky downdate. Re-Cholesky on overflow is O([featureSize]^3) but rare.
+ * **Update:** O([featureSize]^2) per observation; one rank-1 Cholesky update
+ * and two triangular solves, with no refactorization path.
  *
  * **Concurrency:** Body serialised by an internal lock under any concurrent
  * [Concurrency] level (no-op under [Concurrency.None]). Exact under every
@@ -96,7 +97,7 @@ class BayesianRegressionStat(
     override val concurrency: Concurrency = Concurrency.None,
     priorMean: F64VectorLike? = null,
     priorCovariance: F64MatrixLike? = null,
-) : RegressionStat<CovarianceRegressionResult> {
+) : RegressionStat<PrecisionRegressionResult> {
 
     init {
         requirePositiveFeatureSize(featureSize)
@@ -112,25 +113,27 @@ class BayesianRegressionStat(
     }
 
     // Stored prior: caller-supplied or the default isotropic N(0, priorVariance * I).
-    // `initialCovarianceL` is validated up front via strict (non-regularising) Cholesky
-    // so a non-PD user prior throws at construction rather than silently corrupting fits.
+    // `initialCovariance` survives only so `create()` can hand a child the same prior it was
+    // given, rather than a round-tripped inverse of the precision.
     private val initialWeights: DoubleArray = priorMean?.toDoubleArray() ?: DoubleArray(featureSize)
     private val initialCovariance: F64DenseMatrix = priorCovariance
         ?.copyDenseMatrix()
         ?: F64DenseMatrix.diagonal(featureSize, priorVariance)
-    private val initialCovarianceL: F64DenseMatrix
 
-    // Prior precision H_prior = Sigma_prior^-1, cached so merge() can subtract one prior factor.
+    // Prior precision H_prior = Sigma_prior^-1, cached so merge() can subtract one prior factor,
+    // and its factor, which is where every update starts.
     private val priorPrecisionMatrix: F64DenseMatrix
+    private val initialPrecisionL: F64DenseMatrix
 
     init {
-        val chol = try {
-            initialCovariance.cholesky(CholeskyPolicy.Strict)
+        // Both factorizations are strict: a caller prior that cannot be inverted has to fail at
+        // construction, not silently become a regularised neighbour of itself.
+        try {
+            priorPrecisionMatrix = initialCovariance.cholesky(CholeskyPolicy.Strict).invert()
+            initialPrecisionL = priorPrecisionMatrix.cholesky(CholeskyPolicy.Strict).l.zeroUpperTriangle()
         } catch (error: NotPositiveDefinite) {
             throw IllegalArgumentException("priorCovariance must be positive definite", error)
         }
-        initialCovarianceL = chol.l.zeroUpperTriangle()
-        priorPrecisionMatrix = chol.invert()
     }
 
     // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
@@ -140,8 +143,7 @@ class BayesianRegressionStat(
 
     private val lock = concurrency.serializedLock()
     private val weights = F64DenseVector.wrap(initialWeights.copyOf())
-    private val covariance = F64DenseMatrix.wrap(featureSize, featureSize, initialCovariance.data.copyOf())
-    private val covarianceL = F64DenseMatrix.wrap(featureSize, featureSize, initialCovarianceL.data.copyOf())
+    private val precisionL = F64DenseMatrix.wrap(featureSize, featureSize, initialPrecisionL.data.copyOf())
     private var bias: Double = 0.0
     private var biasPrecision: Double = 1.0 / priorVariance
     private var totalWeights: Double = 0.0
@@ -170,53 +172,26 @@ class BayesianRegressionStat(
             val curvature = link.curvature(etaPred)
             sse += link.loss(etaPred, y) * weight
 
-            // SMW rank-1 downdate. For canonical-link GLMs the per-observation precision
-            // is `weight * curvature`: 1 under Identity gives the exact conjugate update;
-            // for Logit / Log this is the local Laplace approximation around the current
-            // linear predictor (not the strict closed-form Bayesian update).
-            //   S_new = S - (w_c * S x xT S) / (1 + w_c * xT S x)
-            //         = S - z zT, where z = sqrt(w_c) * S x / sqrt(1 + w_c * xT S x).
+            // For canonical-link GLMs the per-observation precision is `weight * curvature`:
+            // 1 under Identity gives the exact conjugate update; for Logit / Log this is the local
+            // Laplace approximation around the current linear predictor (not the strict closed-form
+            // Bayesian update). `Link.Log.curvature` is `exp(eta)`, which overflows for a large
+            // linear predictor; an infinite w_c would write Infinity through the factor and take
+            // every later prediction with it, so the observation is skipped instead.
             val wc = weight * curvature
-            workspace.borrow(featureSize) { zData ->
-                val z = F64DenseVector.wrap(zData)
-                covariance.multiplyInto(x, zData)
-                val denom = sqrt(1.0 + wc * (x dot z))
-                // Non-finite as well as zero. Two paths reach a NaN denominator: an `S` outside the
-                // positive-definite cone makes the argument negative, and `Link.Log.curvature` is
-                // `exp(eta)`, which overflows so that the scale below is `Infinity / Infinity`. Either NaN
-                // would reach `ger` and poison the covariance permanently, taking every later prediction
-                // with it. Skipping the observation keeps the posterior usable.
-                if (!denom.isFinite() || denom == 0.0) return@borrow
-                z.scale(sqrt(wc) / denom)
+            if (!wc.isFinite()) return@guarded
 
-                // Downdate the Cholesky factor; repair on instability. The downdate leaves the factor
-                // untouched for any norm at or above one, so the repair has to trigger on the same
-                // condition: treating an exact 1.0 as success downdates the covariance below without its
-                // factor, and the two never agree again.
-                var norm = covarianceL.choleskyDowndateInPlace(z, workspace)
-                // Negated, so a NaN norm bails into the repair too. choleskyDowndateInPlace was hardened to
-                // return a NaN rather than write one through the factor, and `norm >= 1.0` is false for NaN -
-                // which would fall straight through to the covariance downdate below and desynchronise it
-                // from its factor permanently, the exact failure the comment above describes.
-                if (!(norm < 1.0)) {
-                    for (i in 0 until featureSize) covariance[i, i] = covariance[i, i] + COVARIANCE_RIDGE
-                    val Lnew = covariance.cholesky(CholeskyPolicy.Regularize()).l
-                    for (i in 0 until featureSize) {
-                        for (j in 0..i) covarianceL[i, j] = Lnew[i, j]
-                    }
-                    norm = covarianceL.choleskyDowndateInPlace(z, workspace)
-                    while (!(norm < 1.0)) {
-                        z.scale(1.0 / (norm + DOWNDATE_SHRINK))
-                        norm = covarianceL.choleskyDowndateInPlace(z, workspace)
-                    }
-                }
+            // H <- H + w_c * x xT, as a rank-1 update of its factor; a zero w_c leaves it alone.
+            precisionL.choleskyUpdateInPlace(x, wc, workspace)
 
-                // Sum = Sum - z * zT  (rank-1 downdate of the covariance).
-                covariance.ger(-1.0, z, z)
-
-                // Posterior mean update: w += (weight * residual) * S_new * x.
-                covariance.multiplyInto(x, zData)
-                weights.axpy(weight * residual, z)
+            workspace.borrow(featureSize) { hx ->
+                // Posterior mean update: w += (weight * residual) * H_new^-1 * x, solved against
+                // the factor just updated rather than through a materialised covariance.
+                val solved = F64DenseVector.wrap(hx)
+                copy(x, solved)
+                precisionL.trsv(hx, lower = true)
+                precisionL.trsv(hx, lower = true, transpose = true)
+                weights.axpy(weight * residual, solved)
 
                 biasPrecision += wc
                 bias += weight * residual / biasPrecision
@@ -225,15 +200,14 @@ class BayesianRegressionStat(
         }
     }
 
-    override fun read(timestampNanos: Long): CovarianceRegressionResult = lock.guarded {
-        CovarianceRegressionResult(
+    override fun read(timestampNanos: Long): PrecisionRegressionResult = lock.guarded {
+        PrecisionRegressionResult(
             weights = F64DenseVector.wrap(weights.data.copyOf()),
             bias = bias,
             biasPrecision = biasPrecision,
             totalWeights = totalWeights,
             step = step,
-            covariance = F64DenseMatrix.wrap(featureSize, featureSize, covariance.data.copyOf()),
-            covarianceL = F64DenseMatrix.wrap(featureSize, featureSize, covarianceL.data.copyOf()),
+            precisionL = F64DenseMatrix.wrap(featureSize, featureSize, precisionL.data.copyOf()),
             link = link,
             sse = sse,
         )
@@ -248,9 +222,11 @@ class BayesianRegressionStat(
      * H_new  = H_self + H_other - H_prior
      * b_new  = H_self * mu_self + H_other * mu_other - H_prior * mu_prior
      * mu_new = H_new^-1 * b_new
-     * S_new  = H_new^-1
      * ```
      *
+     * Both operands already carry their precision factor, so `H` comes back by `syrk`
+     * and the information vectors by two triangular products each; the factor of
+     * `H_new` is the new state, so nothing is inverted and nothing is factored twice.
      * For a non-zero prior mean the `H_prior * mu_prior` correction is subtracted
      * from the information vector as well, otherwise the merged posterior would
      * count the prior shift twice. When `H_new` drifts outside SPD,
@@ -258,44 +234,45 @@ class BayesianRegressionStat(
      * matrix rather than returning NaNs. Bias is merged the same way, treating
      * the intercept as a scalar Gaussian with zero prior mean.
      */
-    override fun merge(values: CovarianceRegressionResult, workspace: Workspace?) = mergeInternal(values, workspace)
+    override fun merge(values: PrecisionRegressionResult, workspace: Workspace?) = mergeInternal(values, workspace)
 
-    private fun mergeInternal(values: CovarianceRegressionResult, workspace: Workspace?) {
+    private fun mergeInternal(values: PrecisionRegressionResult, workspace: Workspace?) {
         requireMergeFeatureSize(values.featureSize, featureSize)
         lock.guarded {
             val n = featureSize
 
-            val hSelf = F64CholeskyDecomposition(covarianceL).invert(workspace)
-            val hOther = F64CholeskyDecomposition(values.covarianceL).invert(workspace)
-
-            // H_new = H_self + H_other - H_prior.
+            // H_new = H_self + H_other - H_prior, accumulated in the lower triangle, which is the
+            // only one the Cholesky below reads. `syrk` takes each factor as a general matrix, so
+            // it depends on the strict upper triangle being zero, which is what `precisionL`
+            // promises and what `zeroUpperTriangle` keeps true on every write to it.
             val hNew = F64DenseMatrix.zero(n, n)
-            for (i in 0 until n) {
-                for (j in 0 until n) {
-                    hNew[i, j] = hSelf[i, j] + hOther[i, j] - priorPrecisionMatrix[i, j]
-                }
+            koblas.syrk(1.0, precisionL, transpose = false, 0.0, hNew, lower = true, workspace = workspace)
+            koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true, workspace = workspace)
+            for (j in 0 until n) {
+                for (i in j until n) hNew[i, j] = hNew[i, j] - priorPrecisionMatrix[i, j]
             }
 
-            // b = H_self * mu_self + H_other * mu_other - H_prior * mu_prior.
+            // b = H_self * mu_self + H_other * mu_other - H_prior * mu_prior, each product taken as
+            // L * (LT * mu) so the precision never has to be formed for it.
             workspace.borrow(n) { b ->
-                hSelf.multiplyInto(weights, b)
+                for (i in 0 until n) b[i] = weights[i]
+                precisionL.trmv(b, lower = true, transpose = true)
+                precisionL.trmv(b, lower = true)
                 workspace.borrow(n) { other ->
-                    hOther.multiplyInto(values.weights, other)
+                    for (i in 0 until n) other[i] = values.weights[i]
+                    values.precisionL.trmv(other, lower = true, transpose = true)
+                    values.precisionL.trmv(other, lower = true)
                     for (i in 0 until n) b[i] += other[i] - priorInfo[i]
                 }
 
-                // Solve H_new * mu_new = b via chol(H_new); reuse the same factor for Sum_new.
+                // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
                 val hChol = hNew.cholesky(CholeskyPolicy.Regularize())
                 koblas.solveInto(hChol, b, b)
-                val sigmaNew = hChol.invert(workspace)
-                val LsigmaNew = sigmaNew.cholesky(CholeskyPolicy.Regularize()).l.zeroUpperTriangle()
+                val lNew = hChol.l.zeroUpperTriangle()
 
                 for (i in 0 until n) {
                     weights[i] = b[i]
-                    for (j in 0 until n) {
-                        covariance[i, j] = sigmaNew[i, j]
-                        covarianceL[i, j] = LsigmaNew[i, j]
-                    }
+                    for (j in 0 until n) precisionL[i, j] = lNew[i, j]
                 }
             }
 
@@ -316,10 +293,7 @@ class BayesianRegressionStat(
 
     override fun reset() = lock.guarded {
         for (i in 0 until featureSize) weights[i] = initialWeights[i]
-        for (k in covariance.data.indices) {
-            covariance.data[k] = initialCovariance.data[k]
-            covarianceL.data[k] = initialCovarianceL.data[k]
-        }
+        for (k in precisionL.data.indices) precisionL.data[k] = initialPrecisionL.data[k]
         bias = 0.0
         biasPrecision = 1.0 / priorVariance
         totalWeights = 0.0
@@ -346,17 +320,19 @@ class BayesianRegressionStat(
          *
          * ```
          * mu_pop    = weighted_mean(snapshot_i.weights)
-         * Sigma_pop = mean(snapshot_i.covariance)
+         * Sigma_pop = mean(snapshot_i.covariance())
          *           + weighted_cov(snapshot_i.weights, mu_pop)
          * ```
          *
          * Weighting per snapshot is `snapshot.totalWeights` by default (more data =
          * tighter contribution); pass an explicit [weight] selector to override (e.g.
-         * uniform weighting, or weighting by `step`). Empty input throws.
+         * uniform weighting, or weighting by `step`). Empty input throws. Each snapshot
+         * is inverted once, so this is O(instances · featureSize^3); it is a periodic
+         * refit, not a per-observation path.
          */
         fun fitPopulationPrior(
-            snapshots: List<CovarianceRegressionResult>,
-            weight: (CovarianceRegressionResult) -> Double = { it.totalWeights.coerceAtLeast(1.0) },
+            snapshots: List<PrecisionRegressionResult>,
+            weight: (PrecisionRegressionResult) -> Double = { it.totalWeights.coerceAtLeast(1.0) },
         ): PopulationPrior {
             require(snapshots.isNotEmpty()) { "fitPopulationPrior requires at least one snapshot" }
             val n = snapshots[0].featureSize
@@ -381,7 +357,7 @@ class BayesianRegressionStat(
             val sigmaPop = F64DenseMatrix.zero(n, n)
             for (s in snapshots.indices) {
                 val wi = weights[s] / wTotal
-                val cov = snapshots[s].covariance
+                val cov = snapshots[s].covariance()
                 val mu = snapshots[s].weights
                 for (i in 0 until n) {
                     val di = mu[i] - muPop[i]
@@ -414,14 +390,3 @@ data class PopulationPrior(
     /** Number of per-instance posteriors that contributed to this prior. */
     val instanceCount: Int,
 )
-
-/**
- * Ridge added to the covariance diagonal when a downdate pushes it out of the positive-definite cone.
- *
- * Shares a value with [DOWNDATE_SHRINK] but not a purpose: the two damp different quantities and either
- * can be retuned alone.
- */
-private const val COVARIANCE_RIDGE: Double = 1e-5
-
-/** Floor on the downdate vector's norm, so a near-zero direction cannot blow the step up. */
-private const val DOWNDATE_SHRINK: Double = 1e-5

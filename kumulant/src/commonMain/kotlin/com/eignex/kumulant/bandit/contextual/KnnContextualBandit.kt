@@ -95,22 +95,24 @@ data class KnnArmResult(
  * **Arms:** contextual with caller-defined feature dimension; `nbrArms`
  * fixed at construction. Per-arm reservoir is bounded by [maxHistoryPerArm].
  *
- * **Memory:** O(nbrArms · maxHistoryPerArm · featureSize); bounded
- * per-arm history of context copies plus parallel reward/weight arrays.
+ * **Memory:** O(nbrArms · maxHistoryPerArm · featureSize); each arm owns a
+ * fixed-capacity ring of context copies plus parallel primitive reward and
+ * weight arrays. A dense slot's buffer is rewritten in place as the ring
+ * wraps, so a saturated arm stops allocating altogether.
  *
  * **Choose:** O(nbrArms · maxHistoryPerArm · (featureSize + k)); linear
  * scan over each arm's history with a bounded top-k heap.
  *
- * **Update:** O(featureSize); append context copy and roll the oldest
- * entry off when capped.
+ * **Update:** O(featureSize); copy the context into the ring's next slot and
+ * advance the head past the oldest entry when capped.
  *
  * **Randomness:** [random] is held for API uniformity but currently unused;
  * `choose` is deterministic, breaking ties by lowest arm index.
  *
- * **Concurrency:** not thread-safe; per-arm history mutable lists, the
+ * **Concurrency:** not thread-safe; the per-arm history rings, the
  * total-weight array, and the step counter are mutated without
- * synchronisation. Serialise `choose` and `update` externally for
- * multi-thread use.
+ * synchronisation, and an eviction rewrites a live context buffer in place.
+ * Serialise `choose` and `update` externally for multi-thread use.
  */
 class KnnContextualBandit(
     /** Number of arms. */
@@ -137,9 +139,7 @@ class KnnContextualBandit(
         require(exploration >= 0.0) { "exploration must be non-negative, got $exploration" }
     }
 
-    private val historyContexts: Array<MutableList<F64VectorStorage>> = Array(nbrArms) { mutableListOf() }
-    private val historyRewards: Array<MutableList<Double>> = Array(nbrArms) { mutableListOf() }
-    private val historyWeights: Array<MutableList<Double>> = Array(nbrArms) { mutableListOf() }
+    private val histories: Array<ArmHistory> = Array(nbrArms) { ArmHistory(maxHistoryPerArm) }
     private val totalWeights: DoubleArray = DoubleArray(nbrArms)
     private var step: Long = 0L
 
@@ -184,25 +184,15 @@ class KnnContextualBandit(
         // while two slots are spent. ReservoirHistogramStat guards the same way. See Stat.
         if (weight.isNotPositiveWeight()) return
         requireFeatureSize(x.size)
-        val ctxs = historyContexts[armIndex]
-        val rs = historyRewards[armIndex]
-        val ws = historyWeights[armIndex]
-        if (ctxs.size >= maxHistoryPerArm) {
-            val dropped = ws.removeAt(0)
-            ctxs.removeAt(0)
-            rs.removeAt(0)
-            totalWeights[armIndex] -= dropped
-        }
-        ctxs += copyOf(x)
-        rs += reward
-        ws += weight
+        val dropped = histories[armIndex].add(x, reward, weight)
+        totalWeights[armIndex] -= dropped
         totalWeights[armIndex] += weight
     }
 
     /** Live arm history size for [armIndex]. */
     fun historySize(armIndex: Int): Int {
         requireArmIndex(armIndex, nbrArms)
-        return historyContexts[armIndex].size
+        return histories[armIndex].size
     }
 
     /** Cumulative observation weight folded into arm [armIndex]. */
@@ -212,10 +202,11 @@ class KnnContextualBandit(
     }
 
     override fun snapshot(): List<KnnArmResult> = List(nbrArms) { a ->
+        val history = histories[a]
         KnnArmResult(
-            contexts = historyContexts[a].map { it.toDoubleArray() },
-            rewards = historyRewards[a].toDoubleArray(),
-            weights = historyWeights[a].toDoubleArray(),
+            contexts = List(history.size) { history.contextCopy(it) },
+            rewards = DoubleArray(history.size) { history.reward(it) },
+            weights = DoubleArray(history.size) { history.weight(it) },
             totalWeight = totalWeights[a],
         )
     }
@@ -233,9 +224,7 @@ class KnnContextualBandit(
     /** Clear every arm's history. */
     override fun reset() {
         for (a in 0 until nbrArms) {
-            historyContexts[a].clear()
-            historyRewards[a].clear()
-            historyWeights[a].clear()
+            histories[a].clear()
             totalWeights[a] = 0.0
         }
         step = 0L
@@ -255,8 +244,7 @@ class KnnContextualBandit(
     }
 
     private fun evaluateWithScratch(armIndex: Int, x: F64VectorLike, scratch: DoubleArray?): Double {
-        val ctx = historyContexts[armIndex]
-        if (ctx.size < k) return coldStartScore + ucbBonus(armIndex)
+        if (histories[armIndex].size < k) return coldStartScore + ucbBonus(armIndex)
         val mean = if (scratch == null) knnMean(armIndex, x) else knnMean(armIndex, x, scratch)
         return mean + ucbBonus(armIndex)
     }
@@ -267,21 +255,20 @@ class KnnContextualBandit(
     }
 
     private fun knnMean(armIndex: Int, x: F64VectorLike, scratch: DoubleArray): Double {
-        val ctxs = historyContexts[armIndex]
-        val rs = historyRewards[armIndex]
-        val ws = historyWeights[armIndex]
+        val history = histories[armIndex]
         // Linear scan, bounded heap of size k. For typical maxHistoryPerArm values
         // (<= a few thousand) this is faster than maintaining a KD-tree under reweights.
         for (i in 0 until k) scratch[i] = Double.POSITIVE_INFINITY
-        for (i in ctxs.indices) {
-            val d = distance(ctxs[i], x)
+        // Oldest first, so equal distances resolve to the same neighbour the arrival order picks.
+        for (i in 0 until history.size) {
+            val d = distance(history.context(i), x)
             // Find insertion point: index of the max in topD.
             var worst = 0
             for (j in 1 until k) if (scratch[j] > scratch[worst]) worst = j
             if (d < scratch[worst]) {
                 scratch[worst] = d
-                scratch[k + worst] = rs[i]
-                scratch[2 * k + worst] = ws[i]
+                scratch[k + worst] = history.reward(i)
+                scratch[2 * k + worst] = history.weight(i)
             }
         }
         var sumW = 0.0
@@ -367,14 +354,79 @@ class KnnContextualBandit(
             return s
         }
     }
+}
 
-    private fun copyOf(x: F64VectorLike): F64VectorStorage = when (x) {
-        is F64DenseVector -> F64DenseVector.wrap(x.toDoubleArray())
+// Fixed-capacity FIFO of (context, reward, weight) samples for one arm, addressed by age with 0 the
+// oldest live sample. Rewards and weights sit in DoubleArrays so a sample costs no boxing, and
+// eviction advances the head onto the slot it overwrites, so a full arm admits a sample in O(width)
+// rather than shifting the whole history.
+//
+// Contexts stay in koblas storages rather than one flat buffer because koblas has no dense vector
+// over an (array, offset, length) slice: a window type declared here would be a third implementation
+// of F64VectorLike, which drops the scan out of squaredL2's dense/dense branch onto its generic one
+// and costs more per choose than the flat layout saves per update.
+private class ArmHistory(private val capacity: Int) {
+    var size: Int = 0
+        private set
 
-        is F64SparseVector -> {
-            F64SparseVector.wrap(x.size, x.copyIndices(), x.values.copyOf())
+    private val rewards = DoubleArray(capacity)
+    private val weights = DoubleArray(capacity)
+    private val contexts = arrayOfNulls<F64VectorStorage>(capacity)
+
+    private var head = 0
+
+    fun reward(age: Int): Double = rewards[slotOf(age)]
+
+    fun weight(age: Int): Double = weights[slotOf(age)]
+
+    /** The stored context at [age], oldest first. */
+    fun context(age: Int): F64VectorLike = contexts[slotOf(age)]!!
+
+    /** The stored context at [age], densified into an array that outlives the slot. */
+    fun contextCopy(age: Int): DoubleArray = contexts[slotOf(age)]!!.toDoubleArray()
+
+    /** Admits `(x, reward, weight)` and returns the weight of the sample it evicted, `0.0` if none. */
+    fun add(x: F64VectorLike, reward: Double, weight: Double): Double {
+        val slot: Int
+        var dropped = 0.0
+        if (size == capacity) {
+            dropped = weights[head]
+            slot = head
+            head = if (head + 1 == capacity) 0 else head + 1
+        } else {
+            slot = slotOf(size)
+            size++
         }
-
-        else -> F64DenseVector.wrap(x.toDoubleArray())
+        rewards[slot] = reward
+        weights[slot] = weight
+        contexts[slot] = retain(contexts[slot], x)
+        return dropped
     }
+
+    fun clear() {
+        size = 0
+        head = 0
+        contexts.fill(null)
+    }
+
+    private fun slotOf(age: Int): Int {
+        val raw = head + age
+        return if (raw >= capacity) raw - capacity else raw
+    }
+}
+
+// The copy of x an arm keeps, reusing the dense buffer already in the slot when the widths agree so a
+// saturated arm evicts without allocating. A sparse sample always takes a fresh copy: its stored
+// length tracks the sample rather than the feature width, and the caller keeps arrays it may mutate.
+private fun retain(slot: F64VectorStorage?, x: F64VectorLike): F64VectorStorage {
+    if (x is F64SparseVector) return F64SparseVector.wrap(x.size, x.copyIndices(), x.values.copyOf())
+    if (slot is F64DenseVector && slot.size == x.size) {
+        if (x is F64DenseVector) {
+            x.data.copyInto(slot.data)
+        } else {
+            for (i in 0 until x.size) slot.data[i] = x[i]
+        }
+        return slot
+    }
+    return F64DenseVector.wrap(x.toDoubleArray())
 }

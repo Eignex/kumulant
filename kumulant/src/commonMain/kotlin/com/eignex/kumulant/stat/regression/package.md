@@ -78,7 +78,7 @@ scoring rule.
   - Point estimates only, fastest path → `StochasticRegressionStat` with
     [com.eignex.kumulant.schema.optimizer.Sgd] or [com.eignex.kumulant.schema.optimizer.Adam].
   - Per-coordinate uncertainty → `DiagonalRegressionStat`.
-  - Full posterior covariance for Thompson sampling / LinUCB →
+  - Full joint posterior for Thompson sampling / LinUCB →
     `BayesianRegressionStat`.
   - Pooled estimation across many parallel regressors →
     `HierarchicalBayesianRegression`.

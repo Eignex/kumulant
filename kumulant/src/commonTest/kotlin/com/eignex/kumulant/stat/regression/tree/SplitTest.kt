@@ -1,5 +1,7 @@
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.feat
 import com.eignex.kumulant.schema.expr.V
 import com.eignex.kumulant.schema.expr.X
@@ -50,5 +52,25 @@ class SplitTest {
         val s = ExprSplit(V(2) gt 0.0)
         assertTrue(s.direction(feat(-1.0, -1.0, 0.5)))
         assertFalse(s.direction(feat(1.0, 1.0, -0.5)))
+    }
+
+    @Test
+    fun `ExprSplit routes a sparse context by its stored values and implicit zeroes`() {
+        val s = ExprSplit(V(2) gt 0.0)
+        assertTrue(s.direction(F64SparseVector.of(3, intArrayOf(2), doubleArrayOf(0.5))))
+        assertFalse(s.direction(F64SparseVector.of(3, intArrayOf(0), doubleArrayOf(1.0))))
+    }
+
+    @Test
+    fun `ExprSplit routes without materialising the context`() {
+        val s = ExprSplit(V(1) gt 0.0)
+        assertTrue(s.direction(NoMaterializeVector(doubleArrayOf(0.0, 1.0))))
+        assertFalse(s.direction(NoMaterializeVector(doubleArrayOf(0.0, -1.0))))
+    }
+
+    private class NoMaterializeVector(private val values: DoubleArray) : F64VectorLike {
+        override val size: Int get() = values.size
+        override fun get(i: Int): Double = values[i]
+        override fun toDoubleArray(): DoubleArray = error("split materialised its context")
     }
 }
