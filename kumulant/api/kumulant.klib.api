@@ -3003,7 +3003,7 @@ final class com.eignex.kumulant.schema.spec/Auc : com.eignex.kumulant.schema.spe
     }
 }
 
-final class com.eignex.kumulant.schema.spec/BayesianRegression : com.eignex.kumulant.schema.spec/RegressionStatSpec<com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult> { // com.eignex.kumulant.schema.spec/BayesianRegression|null[0]
+final class com.eignex.kumulant.schema.spec/BayesianRegression : com.eignex.kumulant.schema.spec/RegressionStatSpec<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult> { // com.eignex.kumulant.schema.spec/BayesianRegression|null[0]
     constructor <init>(kotlin/Int, kotlin/Double = ..., com.eignex.kumulant.stat.regression.glm/Link = ...) // com.eignex.kumulant.schema.spec/BayesianRegression.<init>|<init>(kotlin.Int;kotlin.Double;com.eignex.kumulant.stat.regression.glm.Link){}[0]
 
     final val featureSize // com.eignex.kumulant.schema.spec/BayesianRegression.featureSize|{}featureSize[0]
@@ -6329,7 +6329,7 @@ final class com.eignex.kumulant.stat.rate/RateStat : com.eignex.kumulant.core/Se
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.rate/RateStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
 }
 
-final class com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat : com.eignex.kumulant.core/RegressionStat<com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult> { // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat|null[0]
+final class com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat : com.eignex.kumulant.core/RegressionStat<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult> { // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat|null[0]
     constructor <init>(kotlin/Int, kotlin/Double = ..., com.eignex.kumulant.stat.regression.glm/Link = ..., com.eignex.kumulant.core/Concurrency = ..., com.eignex.koblas.core/F64VectorLike? = ..., com.eignex.koblas.core/F64MatrixLike? = ...) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.<init>|<init>(kotlin.Int;kotlin.Double;com.eignex.kumulant.stat.regression.glm.Link;com.eignex.kumulant.core.Concurrency;com.eignex.koblas.core.F64VectorLike?;com.eignex.koblas.core.F64MatrixLike?){}[0]
 
     final val concurrency // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.concurrency|{}concurrency[0]
@@ -6342,65 +6342,13 @@ final class com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat : com
         final fun <get-priorVariance>(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.priorVariance.<get-priorVariance>|<get-priorVariance>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, com.eignex.koblas/Workspace?) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.merge|merge(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;com.eignex.koblas.Workspace?){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.read|read(kotlin.Long){}[0]
+    final fun merge(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, com.eignex.koblas/Workspace?) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.merge|merge(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult;com.eignex.koblas.Workspace?){}[0]
+    final fun read(kotlin/Long): com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.reset|reset(){}[0]
     final fun update(com.eignex.koblas.core/F64VectorLike, kotlin/Double, kotlin/Long, kotlin/Double, com.eignex.koblas/Workspace?) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.update|update(com.eignex.koblas.core.F64VectorLike;kotlin.Double;kotlin.Long;kotlin.Double;com.eignex.koblas.Workspace?){}[0]
 
     final object Companion { // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.Companion|null[0]
-        final fun fitPopulationPrior(kotlin.collections/List<com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult>, kotlin/Function1<com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, kotlin/Double> = ...): com.eignex.kumulant.stat.regression.glm/PopulationPrior // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.Companion.fitPopulationPrior|fitPopulationPrior(kotlin.collections.List<com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult>;kotlin.Function1<com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult,kotlin.Double>){}[0]
-    }
-}
-
-final class com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult : com.eignex.kumulant.stat.regression.glm/LinearRegressionResult { // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult|null[0]
-    constructor <init>(com.eignex.koblas.core/F64DenseVector, kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Long, com.eignex.koblas.core/F64DenseMatrix, com.eignex.koblas.core/F64DenseMatrix, com.eignex.kumulant.stat.regression.glm/Link = ..., kotlin/Double = ...) // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.<init>|<init>(com.eignex.koblas.core.F64DenseVector;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Long;com.eignex.koblas.core.F64DenseMatrix;com.eignex.koblas.core.F64DenseMatrix;com.eignex.kumulant.stat.regression.glm.Link;kotlin.Double){}[0]
-
-    final val bias // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.bias|{}bias[0]
-        final fun <get-bias>(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.bias.<get-bias>|<get-bias>(){}[0]
-    final val biasPrecision // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.biasPrecision|{}biasPrecision[0]
-        final fun <get-biasPrecision>(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.biasPrecision.<get-biasPrecision>|<get-biasPrecision>(){}[0]
-    final val covariance // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.covariance|{}covariance[0]
-        final fun <get-covariance>(): com.eignex.koblas.core/F64DenseMatrix // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.covariance.<get-covariance>|<get-covariance>(){}[0]
-    final val covarianceL // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.covarianceL|{}covarianceL[0]
-        final fun <get-covarianceL>(): com.eignex.koblas.core/F64DenseMatrix // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.covarianceL.<get-covarianceL>|<get-covarianceL>(){}[0]
-    final val link // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.link|{}link[0]
-        final fun <get-link>(): com.eignex.kumulant.stat.regression.glm/Link // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.link.<get-link>|<get-link>(){}[0]
-    final val sse // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.sse|{}sse[0]
-        final fun <get-sse>(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.sse.<get-sse>|<get-sse>(){}[0]
-    final val step // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.step|{}step[0]
-        final fun <get-step>(): kotlin/Long // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.step.<get-step>|<get-step>(){}[0]
-    final val totalWeights // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.totalWeights|{}totalWeights[0]
-        final fun <get-totalWeights>(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.totalWeights.<get-totalWeights>|<get-totalWeights>(){}[0]
-    final val weights // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.weights|{}weights[0]
-        final fun <get-weights>(): com.eignex.koblas.core/F64DenseVector // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.weights.<get-weights>|<get-weights>(){}[0]
-
-    final fun component1(): com.eignex.koblas.core/F64DenseVector // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.component3|component3(){}[0]
-    final fun component4(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.component4|component4(){}[0]
-    final fun component5(): kotlin/Long // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.component5|component5(){}[0]
-    final fun component6(): com.eignex.koblas.core/F64DenseMatrix // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.component6|component6(){}[0]
-    final fun component7(): com.eignex.koblas.core/F64DenseMatrix // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.component7|component7(){}[0]
-    final fun component8(): com.eignex.kumulant.stat.regression.glm/Link // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.component8|component8(){}[0]
-    final fun component9(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.component9|component9(){}[0]
-    final fun copy(com.eignex.koblas.core/F64DenseVector = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Long = ..., com.eignex.koblas.core/F64DenseMatrix = ..., com.eignex.koblas.core/F64DenseMatrix = ..., com.eignex.kumulant.stat.regression.glm/Link = ..., kotlin/Double = ...): com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.copy|copy(com.eignex.koblas.core.F64DenseVector;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Long;com.eignex.koblas.core.F64DenseMatrix;com.eignex.koblas.core.F64DenseMatrix;com.eignex.kumulant.stat.regression.glm.Link;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult> { // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult) // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult> // com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult.Companion.serializer|serializer(){}[0]
+        final fun fitPopulationPrior(kotlin.collections/List<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult>, kotlin/Function1<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, kotlin/Double> = ...): com.eignex.kumulant.stat.regression.glm/PopulationPrior // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.Companion.fitPopulationPrior|fitPopulationPrior(kotlin.collections.List<com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult>;kotlin.Function1<com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult,kotlin.Double>){}[0]
     }
 }
 
@@ -6527,6 +6475,56 @@ final class com.eignex.kumulant.stat.regression.glm/PopulationPrior { // com.eig
 
     final object Companion { // com.eignex.kumulant.stat.regression.glm/PopulationPrior.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/PopulationPrior> // com.eignex.kumulant.stat.regression.glm/PopulationPrior.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult : com.eignex.kumulant.stat.regression.glm/LinearRegressionResult { // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult|null[0]
+    constructor <init>(com.eignex.koblas.core/F64DenseVector, kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Long, com.eignex.koblas.core/F64DenseMatrix, com.eignex.kumulant.stat.regression.glm/Link = ..., kotlin/Double = ...) // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.<init>|<init>(com.eignex.koblas.core.F64DenseVector;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Long;com.eignex.koblas.core.F64DenseMatrix;com.eignex.kumulant.stat.regression.glm.Link;kotlin.Double){}[0]
+
+    final val bias // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.bias|{}bias[0]
+        final fun <get-bias>(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.bias.<get-bias>|<get-bias>(){}[0]
+    final val biasPrecision // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.biasPrecision|{}biasPrecision[0]
+        final fun <get-biasPrecision>(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.biasPrecision.<get-biasPrecision>|<get-biasPrecision>(){}[0]
+    final val link // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.link|{}link[0]
+        final fun <get-link>(): com.eignex.kumulant.stat.regression.glm/Link // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.link.<get-link>|<get-link>(){}[0]
+    final val precisionL // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.precisionL|{}precisionL[0]
+        final fun <get-precisionL>(): com.eignex.koblas.core/F64DenseMatrix // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.precisionL.<get-precisionL>|<get-precisionL>(){}[0]
+    final val sse // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.sse|{}sse[0]
+        final fun <get-sse>(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.sse.<get-sse>|<get-sse>(){}[0]
+    final val step // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.step|{}step[0]
+        final fun <get-step>(): kotlin/Long // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.step.<get-step>|<get-step>(){}[0]
+    final val totalWeights // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.totalWeights|{}totalWeights[0]
+        final fun <get-totalWeights>(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.totalWeights.<get-totalWeights>|<get-totalWeights>(){}[0]
+    final val weights // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.weights|{}weights[0]
+        final fun <get-weights>(): com.eignex.koblas.core/F64DenseVector // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.weights.<get-weights>|<get-weights>(){}[0]
+
+    final fun component1(): com.eignex.koblas.core/F64DenseVector // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.component2|component2(){}[0]
+    final fun component3(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.component3|component3(){}[0]
+    final fun component4(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.component4|component4(){}[0]
+    final fun component5(): kotlin/Long // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.component5|component5(){}[0]
+    final fun component6(): com.eignex.koblas.core/F64DenseMatrix // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.component6|component6(){}[0]
+    final fun component7(): com.eignex.kumulant.stat.regression.glm/Link // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.component7|component7(){}[0]
+    final fun component8(): kotlin/Double // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.component8|component8(){}[0]
+    final fun copy(com.eignex.koblas.core/F64DenseVector = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Long = ..., com.eignex.koblas.core/F64DenseMatrix = ..., com.eignex.kumulant.stat.regression.glm/Link = ..., kotlin/Double = ...): com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.copy|copy(com.eignex.koblas.core.F64DenseVector;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Long;com.eignex.koblas.core.F64DenseMatrix;com.eignex.kumulant.stat.regression.glm.Link;kotlin.Double){}[0]
+    final fun covariance(com.eignex.koblas/Workspace? = ...): com.eignex.koblas.core/F64DenseMatrix // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.covariance|covariance(com.eignex.koblas.Workspace?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult> { // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult) // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.Companion|null[0]
+        final val $childSerializers // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult> // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -9197,23 +9195,23 @@ final object com.eignex.kumulant.stat.regression.glm/FactorisedGaussian : com.ei
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.toString|toString(){}[0]
 }
 
-final object com.eignex.kumulant.stat.regression.glm/LinUcb : com.eignex.kumulant.stat.regression.glm/LinearPosterior<com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.glm/LinUcb|null[0]
+final object com.eignex.kumulant.stat.regression.glm/LinUcb : com.eignex.kumulant.stat.regression.glm/LinearPosterior<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.glm/LinUcb|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.glm/LinUcb.equals|equals(kotlin.Any?){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, kotlin/Double, com.eignex.koblas/Workspace?): kotlin/Double // com.eignex.kumulant.stat.regression.glm/LinUcb.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;kotlin.Double;com.eignex.koblas.Workspace?){}[0]
+    final fun evaluate(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, kotlin/Double, com.eignex.koblas/Workspace?): kotlin/Double // com.eignex.kumulant.stat.regression.glm/LinUcb.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;kotlin.Double;com.eignex.koblas.Workspace?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.glm/LinUcb.hashCode|hashCode(){}[0]
-    final fun sample(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, kotlin.random/Random, kotlin/Double): com.eignex.koblas.core/F64VectorLike // com.eignex.kumulant.stat.regression.glm/LinUcb.sample|sample(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;kotlin.random.Random;kotlin.Double){}[0]
-    final fun sampleInto(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, kotlin.random/Random, kotlin/DoubleArray, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/LinUcb.sampleInto|sampleInto(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;kotlin.random.Random;kotlin.DoubleArray;kotlin.Double){}[0]
+    final fun sample(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, kotlin.random/Random, kotlin/Double): com.eignex.koblas.core/F64VectorLike // com.eignex.kumulant.stat.regression.glm/LinUcb.sample|sample(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult;kotlin.random.Random;kotlin.Double){}[0]
+    final fun sampleInto(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, kotlin.random/Random, kotlin/DoubleArray, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/LinUcb.sampleInto|sampleInto(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult;kotlin.random.Random;kotlin.DoubleArray;kotlin.Double){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/LinUcb> // com.eignex.kumulant.stat.regression.glm/LinUcb.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.glm/LinUcb.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/LinUcb.toString|toString(){}[0]
 }
 
-final object com.eignex.kumulant.stat.regression.glm/MultivariateGaussian : com.eignex.kumulant.stat.regression.glm/LinearPosterior<com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian|null[0]
+final object com.eignex.kumulant.stat.regression.glm/MultivariateGaussian : com.eignex.kumulant.stat.regression.glm/LinearPosterior<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.equals|equals(kotlin.Any?){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, kotlin/Double, com.eignex.koblas/Workspace?): kotlin/Double // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;kotlin.Double;com.eignex.koblas.Workspace?){}[0]
+    final fun evaluate(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, com.eignex.koblas.core/F64VectorLike, kotlin.random/Random, kotlin/Double, com.eignex.koblas/Workspace?): kotlin/Double // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult;com.eignex.koblas.core.F64VectorLike;kotlin.random.Random;kotlin.Double;com.eignex.koblas.Workspace?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.hashCode|hashCode(){}[0]
-    final fun sample(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, kotlin.random/Random, kotlin/Double): com.eignex.koblas.core/F64VectorLike // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.sample|sample(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;kotlin.random.Random;kotlin.Double){}[0]
-    final fun sampleInto(com.eignex.kumulant.stat.regression.glm/CovarianceRegressionResult, kotlin.random/Random, kotlin/DoubleArray, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.sampleInto|sampleInto(com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult;kotlin.random.Random;kotlin.DoubleArray;kotlin.Double){}[0]
+    final fun sample(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, kotlin.random/Random, kotlin/Double): com.eignex.koblas.core/F64VectorLike // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.sample|sample(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult;kotlin.random.Random;kotlin.Double){}[0]
+    final fun sampleInto(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, kotlin.random/Random, kotlin/DoubleArray, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.sampleInto|sampleInto(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult;kotlin.random.Random;kotlin.DoubleArray;kotlin.Double){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/MultivariateGaussian> // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/MultivariateGaussian.toString|toString(){}[0]
