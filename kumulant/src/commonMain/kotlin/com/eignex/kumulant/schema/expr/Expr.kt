@@ -3,6 +3,8 @@ package com.eignex.kumulant.schema.expr
 import com.eignex.koblas.core.F64SparseVector
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.forEachStored
+import com.eignex.koblas.koblas
+import com.eignex.koblas.sum
 import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasMinMax
 import com.eignex.kumulant.core.IndexedResult
@@ -506,11 +508,7 @@ internal data class VFold(
     val op: VFoldOp,
 ) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = when (op) {
-        VFoldOp.Sum -> {
-            var s = 0.0
-            for (e in v) s += e
-            s
-        }
+        VFoldOp.Sum -> koblas.kernels.sum(v, 0, v.size)
 
         VFoldOp.Product -> {
             var p = 1.0
@@ -520,9 +518,7 @@ internal data class VFold(
 
         VFoldOp.Mean -> {
             require(v.isNotEmpty()) { "VFold.Mean on empty vector" }
-            var s = 0.0
-            for (e in v) s += e
-            s / v.size
+            koblas.kernels.sum(v, 0, v.size) / v.size
         }
 
         VFoldOp.Min -> {
@@ -835,17 +831,26 @@ sealed interface VectorExpr {
  *
  * This overload is additive: [ScalarExpr.eval] with a [DoubleArray] remains the compatibility
  * surface for callers whose input is already dense.
+ *
+ * [VFoldOp.Sum] and [VFoldOp.Mean] reduce through koblas, which pairs terms across SIMD lanes for a
+ * dense operand and accumulates in order for every other storage. Those associate differently, so
+ * the same coordinates reduced from a dense vector and from a sparse one can disagree in the last
+ * bits, and a snapshot carrying such a value is only equal to another that was fed the same storage.
+ * Every other fold is order-independent and agrees exactly whatever the storage.
  */
 fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: F64VectorLike, primary: Result? = null): Double {
     if (v is F64SparseVector) {
         when (this) {
             is VFold -> when (op) {
-                VFoldOp.Sum -> return sparseSum(v)
-                VFoldOp.Mean -> return sparseMean(v)
                 VFoldOp.Min -> return sparseMin(v)
+
                 VFoldOp.Max -> return sparseMax(v)
+
                 VFoldOp.Norm2 -> return sparseNorm2(v)
-                VFoldOp.Product -> Unit
+
+                // Sum and Mean need no fast path: the generic evaluator reduces through
+                // koblas, which already visits only what a sparse vector stores.
+                VFoldOp.Sum, VFoldOp.Mean, VFoldOp.Product -> Unit
             }
 
             is VDot -> {
@@ -927,7 +932,7 @@ private fun ScalarExpr.evalVectorGeneric(x: Double, y: Double, v: F64VectorLike,
         }
 
         is VFold -> when (op) {
-            VFoldOp.Sum -> (0 until v.size).sumOf { v[it] }
+            VFoldOp.Sum -> v.sum()
 
             VFoldOp.Product -> (0 until v.size).fold(1.0) { product, i -> product * v[i] }
 
@@ -935,7 +940,7 @@ private fun ScalarExpr.evalVectorGeneric(x: Double, y: Double, v: F64VectorLike,
                 require(
                     v.size != 0,
                 ) { "VFold.Mean on empty vector" }
-                (0 until v.size).sumOf { v[it] } / v.size
+                v.sum() / v.size
             }
 
             VFoldOp.Min -> {
@@ -964,17 +969,6 @@ private fun ScalarExpr.evalVectorGeneric(x: Double, y: Double, v: F64VectorLike,
             (0 until v.size).sumOf { weights[it] * v[it] }
         }
     }
-
-private fun sparseSum(v: F64SparseVector): Double {
-    var sum = 0.0
-    v.forEachStored { _, value -> sum += value }
-    return sum
-}
-
-private fun sparseMean(v: F64SparseVector): Double {
-    require(v.size != 0) { "VFold.Mean on empty vector" }
-    return sparseSum(v) / v.size
-}
 
 private fun sparseNorm2(v: F64SparseVector): Double {
     var sum = 0.0
