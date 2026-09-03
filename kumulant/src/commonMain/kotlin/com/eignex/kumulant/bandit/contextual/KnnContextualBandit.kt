@@ -371,14 +371,48 @@ class KnnContextualBandit(
 
         @OptIn(com.eignex.koblas.UnsafeKoblasApi::class)
         private fun sparseSquaredL2(a: F64SparseVector, b: F64SparseVector): Double {
+            // Both index arrays are strictly ascending, so one merge walk reaches every coordinate
+            // either side stores without a search. Reading the other side positionally would binary
+            // search per entry, and testing membership against an IntArray scans it, which makes the
+            // pair cost the product of the two nonzero counts rather than their sum.
+            val ai = a.indices
+            val bi = b.indices
+            val av = a.values
+            val bv = b.values
             var s = 0.0
-            a.forEachStored { i, v ->
-                val d = v - b[i]
-                s += d * d
+            var p = 0
+            var q = 0
+            while (p < ai.size && q < bi.size) {
+                val ip = ai[p]
+                val iq = bi[q]
+                when {
+                    ip == iq -> {
+                        val d = av[p] - bv[q]
+                        s += d * d
+                        p++
+                        q++
+                    }
+
+                    ip < iq -> {
+                        s += av[p] * av[p]
+                        p++
+                    }
+
+                    else -> {
+                        s += bv[q] * bv[q]
+                        q++
+                    }
+                }
             }
-            // Membership, not value: a stored zero is already covered by the first loop.
-            b.forEachStored { i, v ->
-                if (i !in a.indices) s += v * v
+            // A coordinate stored on one side only differs from the other side's implicit zero, so
+            // the tails contribute their own squares. A stored zero contributes zero, exactly once.
+            while (p < ai.size) {
+                s += av[p] * av[p]
+                p++
+            }
+            while (q < bi.size) {
+                s += bv[q] * bv[q]
+                q++
             }
             return s
         }

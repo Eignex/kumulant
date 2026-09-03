@@ -161,6 +161,25 @@ class KnnContextualBanditTest {
     }
 
     @Test
+    fun `sparse squaredL2 matches the dense reference across index overlap shapes`() {
+        val shapes = listOf(
+            intArrayOf(0, 1) to intArrayOf(2, 3),
+            intArrayOf(0, 1, 2, 3) to intArrayOf(1),
+            intArrayOf(1) to intArrayOf(0, 1, 2, 3),
+            intArrayOf(0, 2) to intArrayOf(0, 2),
+            intArrayOf() to intArrayOf(1, 3),
+            intArrayOf(0, 3) to intArrayOf(),
+        )
+        for ((ai, bi) in shapes) {
+            val a = F64SparseVector.of(4, ai, DoubleArray(ai.size) { it + 1.5 })
+            val b = F64SparseVector.of(4, bi, DoubleArray(bi.size) { -(it + 0.5) })
+            val reference = squaredL2(F64DenseVector.of(a.toDoubleArray()), F64DenseVector.of(b.toDoubleArray()))
+
+            assertEquals(reference, squaredL2(a, b), 1e-12, "a=${ai.toList()} b=${bi.toList()}")
+        }
+    }
+
+    @Test
     fun `sparse update preserves sparse storage and matches dense scoring`() {
         val sparseInput = KnnContextualBandit(nbrArms = 1, k = 2, exploration = 0.0)
         val denseInput = KnnContextualBandit(nbrArms = 1, k = 2, exploration = 0.0)
