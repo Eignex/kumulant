@@ -48,7 +48,7 @@ class SoftmaxWorkspaceAllocationTest {
     }
 
     @Test
-    fun `softmax prediction stays allocation free with null and reserved workspace`() {
+    fun `a reserved workspace removes the logits buffer softmax prediction otherwise allocates`() {
         val result = SoftmaxRegressionResult(
             featureSize = 2,
             numClasses = 3,
@@ -67,8 +67,10 @@ class SoftmaxWorkspaceAllocationTest {
         val nullBytes = bytesPerCall { result.predict(x, null) }
         val workspaceBytes = bytesPerCall { result.predict(x, workspace) }
 
-        assertTrue(defaultBytes <= 8.0, "default prediction allocated $defaultBytes B/call")
-        assertTrue(nullBytes <= 8.0, "null prediction allocated $nullBytes B/call")
+        // Scoring every class from one pass over x needs somewhere to put the logits, so without a
+        // workspace that is one length-numClasses array per call. The workspace lends it instead.
         assertTrue(workspaceBytes <= 8.0, "workspace prediction allocated $workspaceBytes B/call")
+        assertTrue(defaultBytes > workspaceBytes, "default prediction allocated $defaultBytes B/call")
+        assertTrue(nullBytes > workspaceBytes, "null prediction allocated $nullBytes B/call")
     }
 }

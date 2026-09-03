@@ -65,7 +65,10 @@ data class SoftmaxRegressionResult(
     fun logit(x: F64VectorLike, k: Int): Double {
         x.requireFeatureSize(featureSize)
         var s = biases[k]
-        for (i in 0 until featureSize) s += weights[k, i] * x[i]
+        // Walk what x stores rather than every feature index. Reading a sparse x position by
+        // position binary-searches its stored indices on each one, so a handful of nonzeros would
+        // cost featureSize searches; an unstored position contributes nothing to the sum anyway.
+        x.forEachStored { i, v -> s += weights[k, i] * v }
         return s
     }
 
@@ -88,14 +91,17 @@ data class SoftmaxRegressionResult(
         destination.softmaxInPlace()
     }
 
-    /** Finds the argmax for [x], borrowing logits only for the duration of this call. */
-    fun predict(x: F64VectorLike, workspace: Workspace? = null): Int = when (workspace) {
-        null -> argMaxOf(numClasses) { k -> logit(x, k) }
-
-        else -> workspace.borrow(numClasses) { logits ->
-            logitsInto(x, logits)
-            argMaxOf(numClasses) { logits[it] }
-        }
+    /**
+     * Finds the argmax for [x], borrowing logits only for the duration of this call.
+     *
+     * All [numClasses] logits come from one pass over [x] rather than a pass per class. Scoring a
+     * class at a time re-reads the whole context K times, and on a sparse [x] each of those reads
+     * is a search through its stored indices. Without a [workspace] to borrow from, the single pass
+     * costs one length-[numClasses] buffer, which is the cheaper side of that trade.
+     */
+    fun predict(x: F64VectorLike, workspace: Workspace? = null): Int = workspace.borrow(numClasses) { logits ->
+        logitsInto(x, logits)
+        argMaxOf(numClasses) { logits[it] }
     }
 }
 
