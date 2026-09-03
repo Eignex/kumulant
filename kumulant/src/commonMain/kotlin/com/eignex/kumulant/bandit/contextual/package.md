@@ -29,7 +29,7 @@ Common combinations:
   [LinUcb][com.eignex.kumulant.stat.regression.glm.LinUcb] posterior.
 - **High-dimensional sparse**: `DiagonalRegressionStat` per arm +
   [FactorisedGaussian][com.eignex.kumulant.stat.regression.glm.FactorisedGaussian]
-  posterior; trades full covariance for per-coordinate uncertainty.
+  posterior; trades the joint posterior for per-coordinate uncertainty.
 - **Non-linear**: `RandomForestRegressionStat` per arm +
   `ThompsonForestPosterior` or `UcbForestPosterior`.
 - **Cheap point estimates**: `StochasticRegressionStat` per arm +
