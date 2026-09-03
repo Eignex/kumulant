@@ -38,8 +38,9 @@ internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike, workspace:
     val n = rows
     val L = data
 
-    // Scatter rather than index x: SparseVector.get is a linear scan, so a per-element read would
-    // be quadratic in its nonzeros.
+    // Scatter rather than index x: the substitution needs every slot of a dense buffer, and reading
+    // those one at a time costs a binary search per slot on a sparse x, where the scatter walks only
+    // its stored entries.
     return workspace.borrow(n) { s ->
         copy(x, F64DenseVector.wrap(s))
         trsv(s, lower = true)
