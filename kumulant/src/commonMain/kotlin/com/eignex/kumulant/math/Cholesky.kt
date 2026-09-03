@@ -41,8 +41,9 @@ internal fun F64DenseMatrix.choleskyUpdateInPlace(
     val n = rows
     val L = data
 
-    // The rotations consume the residual, so x is scattered into scratch rather than indexed:
-    // SparseVector.get is a linear scan, and a per-element read would be quadratic in its nonzeros.
+    // The rotations consume the residual, so x is scattered into scratch rather than indexed: the
+    // sweep needs every slot of a dense buffer, and reading those one at a time costs a binary
+    // search per slot on a sparse x, where the scatter walks only its stored entries.
     workspace.borrow(n) { residual ->
         copy(x, F64DenseVector.wrap(residual))
         val scale = sqrt(sigma)

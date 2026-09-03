@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.util.concurrent.TimeUnit
 
 plugins {
@@ -104,12 +103,8 @@ dokka {
     }
 }
 
-// JVM SIMD primitives in com.eignex.kumulant.math.Primitives.kt use the incubator
-// Vector API. Make the module visible to the Kotlin compiler and at test runtime;
-// downstream JVM consumers need the same flag.
-tasks.withType<KotlinJvmCompile>().configureEach {
-    compilerOptions.freeCompilerArgs.add("-Xadd-modules=jdk.incubator.vector")
-}
+// koblas's JVM SIMD kernels load only when the incubator Vector API module is open, so without this
+// the tests cover its scalar fallback instead. `-Pkumulant.noSimd=true` drops it to reach that path.
 tasks.withType<Test>().configureEach {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     if (project.findProperty("kumulant.noSimd") != "true") {
