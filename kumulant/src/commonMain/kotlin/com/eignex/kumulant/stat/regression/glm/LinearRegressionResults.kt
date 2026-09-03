@@ -1,8 +1,13 @@
+@file:OptIn(com.eignex.koblas.UnsafeKoblasApi::class)
+
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.dense.F64CholeskyDecomposition
+import com.eignex.koblas.dense.invert
 import com.eignex.koblas.dot
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
@@ -17,7 +22,7 @@ import kotlinx.serialization.Serializable
  * Concrete subtypes add uncertainty quantification:
  *  - [StochasticRegressionResult]: point estimates only.
  *  - [DiagonalRegressionResult]: per-coefficient precision (factorised posterior).
- *  - [CovarianceRegressionResult]: full posterior covariance + Cholesky factor.
+ *  - [PrecisionRegressionResult]: full posterior as the Cholesky factor of its precision.
  *
  * Sealed + `@Serializable`. Concrete weights round-trip as [F64DenseVector] today;
  * the public field is typed [F64VectorLike] so a sparse variant can swap in without
@@ -95,36 +100,42 @@ data class DiagonalRegressionResult(
 ) : LinearRegressionResult
 
 /**
- * Full multivariate-Gaussian posterior. Carries the joint covariance and its
- * lower-triangular Cholesky factor L so samplers can draw `w ~ N(mean, cov)` as
- * `mean + L u, u ~ N(0, I)` without redoing the decomposition.
+ * Full multivariate-Gaussian posterior in square-root information form: the joint uncertainty is
+ * carried as the Cholesky factor of the posterior precision `H`, and the covariance is `H⁻¹`.
+ *
+ * Every consumer reaches the covariance through a triangular solve rather than an inverse. A
+ * Thompson draw `w ~ N(mean, S)` is `mean + L⁻ᵀ u` for `u ~ N(0, I)`, because `L⁻ᵀ (L⁻ᵀ)ᵀ = H⁻¹`;
+ * a predictive standard deviation `sqrt(xᵀ S x)` is the 2-norm of `L⁻¹ x`. Both are O(n²), the same
+ * cost the covariance form paid, and neither needs the n×n inverse materialised.
  */
 @Serializable
-@SerialName("CovarianceRegressionResult")
-data class CovarianceRegressionResult(
+@SerialName("PrecisionRegressionResult")
+data class PrecisionRegressionResult(
     override val weights: F64DenseVector,
     override val bias: Double,
     /** Posterior precision (inverse variance) on the bias term. */
     val biasPrecision: Double,
     override val totalWeights: Double,
     override val step: Long,
-    /** Full posterior covariance matrix over [weights]. */
-    val covariance: F64DenseMatrix,
-    /** Lower-triangular Cholesky factor of [covariance], maintained in lockstep for sampling. */
-    val covarianceL: F64DenseMatrix,
+    /** Cholesky factor of the posterior precision over [weights]: `H = L·Lᵀ`, covariance `S = H⁻¹`.
+     *  Only the lower triangle is meaningful, matching koblas's factor convention. */
+    val precisionL: F64DenseMatrix,
     override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
 ) : LinearRegressionResult {
     init {
         // Check cols too, not just rows: every consumer indexes both dimensions, so a non-square
         // matrix would fail far from here, at the read site.
-        require(
-            covariance.rows == weights.size && covariance.cols == weights.size &&
-                covarianceL.rows == weights.size && covarianceL.cols == weights.size,
-        ) {
-            "covariance matrices must be ${weights.size}x${weights.size}; got " +
-                "covariance ${covariance.rows}x${covariance.cols} and " +
-                "covarianceL ${covarianceL.rows}x${covarianceL.cols}"
+        require(precisionL.rows == weights.size && precisionL.cols == weights.size) {
+            "precisionL must be ${weights.size}x${weights.size}; got ${precisionL.rows}x${precisionL.cols}"
         }
     }
+
+    /**
+     * Posterior covariance `S = (L·Lᵀ)⁻¹` materialised from [precisionL]. O(n³) and a fresh n×n
+     * matrix per call, so it belongs in reporting and prior fitting; scoring paths should stay on
+     * the factor.
+     */
+    fun covariance(workspace: Workspace? = null): F64DenseMatrix =
+        F64CholeskyDecomposition(precisionL).invert(workspace)
 }

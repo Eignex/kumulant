@@ -8,7 +8,7 @@ import com.eignex.koblas.Workspace
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
-import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult
+import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.Link
 import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
@@ -32,7 +32,7 @@ open class PredictionKernelBenchmark {
     private lateinit var x: F64VectorLike
     private lateinit var linear: StochasticRegressionResult
     private lateinit var softmax: SoftmaxRegressionResult
-    private lateinit var posterior: CovarianceRegressionResult
+    private lateinit var posterior: PrecisionRegressionResult
     private lateinit var gaussianNaiveBayes: com.eignex.kumulant.stat.regression.GaussianNaiveBayesResult
     private lateinit var knn: KnnContextualBandit
     private lateinit var workspace: Workspace
@@ -59,7 +59,7 @@ open class PredictionKernelBenchmark {
             0.0,
         )
         val identity = F64DenseMatrix.diagonal(featureSize, 1.0)
-        posterior = CovarianceRegressionResult(weights, 0.25, 1.0, 0.0, 0L, identity, identity)
+        posterior = PrecisionRegressionResult(weights, 0.25, 1.0, 0.0, 0L, identity)
         val naiveBayes = GaussianNaiveBayesStat(featureSize, 4)
         repeat(16) { sample ->
             naiveBayes.update(F64DenseVector.of(DoubleArray(featureSize) { i -> (sample - i % 7) * 0.1 }), (sample % 4).toDouble())
@@ -115,13 +115,13 @@ open class PredictionKernelBenchmark {
         MultivariateGaussian.evaluate(posterior, x, Random(1234), 1.0, workspace)
 
     @Benchmark
-    fun bayesianPrior(): CovarianceRegressionResult = BayesianRegressionStat(
+    fun bayesianPrior(): PrecisionRegressionResult = BayesianRegressionStat(
         featureSize = featureSize,
         priorMean = F64DenseVector.of(DoubleArray(featureSize) { it * 0.01 }),
     ).read()
 
     @Benchmark
-    fun bayesianMerge(): CovarianceRegressionResult {
+    fun bayesianMerge(): PrecisionRegressionResult {
         val left = BayesianRegressionStat(featureSize)
         val right = BayesianRegressionStat(featureSize)
         left.update(x, 1.0)

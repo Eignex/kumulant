@@ -9,71 +9,68 @@ import com.eignex.koblas.copy
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
-import com.eignex.koblas.dense.trsv
-import com.eignex.koblas.norm2
-import kotlin.math.absoluteValue
+import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
- * In-place Cholesky rank-1 downdate of a lower-triangular factor: modifies [this] so that the
- * matrix `A = L·Lᵀ` it represents becomes `A - x·xᵀ`. Returns `0.0` on success, or a positive
- * "norm" value when the downdate would leave the matrix outside the positive-definite cone; the
- * caller then repairs via a fresh decomposition or takes a smaller step.
+ * In-place Cholesky rank-1 update of a lower-triangular factor: modifies [this] so that the matrix
+ * `A = L·Lᵀ` it represents becomes `A + sigma·x·xᵀ`. [x] is left untouched, and [sigma] must be
+ * non-negative, which is the whole point of the form: a rank-1 update of a positive-definite matrix
+ * stays positive definite, so there is no failure mode to report. A negative `sigma` would be a
+ * downdate, which can leave the cone and is not offered here.
  *
  * koblas covers a defined BLAS/LAPACK subset and the rank-1 factor update is outside it, so it
  * lives here, with the one caller that needs it: [com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat]
- * tracks the posterior covariance factor across observations instead of refactorizing per update.
+ * tracks the posterior precision factor across observations instead of refactorizing per update.
  *
- * Solve `L·s = x` by forward substitution; if `‖s‖ < 1` the downdate stays SPD. Then apply Givens
- * rotations to the rows of L to absorb `s` without breaking triangularity. The rotation loop is
- * carried in `xx` and stays scalar; the substitution goes through the backend's `trsv`.
+ * Each column takes the plane rotation that zeroes the residual against the pivot and applies it
+ * down the column: `L(i,k)` absorbs part of the residual and the rest is carried into what the
+ * trailing submatrix has to take. Rotating rather than dividing by the pivot is what makes a zero
+ * or tiny pivot harmless, and the rotation comes off [hypot], which rescales so a pivot and
+ * residual that would both square to infinity still rotate correctly.
  */
-internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike): Double = choleskyDowndateInPlace(x, null)
-
-/** Workspace-taking form used by repeated Bayesian updates. */
-internal fun F64DenseMatrix.choleskyDowndateInPlace(x: F64VectorLike, workspace: Workspace?): Double {
-    require(rows == cols) { "choleskyDowndateInPlace requires a square matrix; got ${rows}x$cols" }
+internal fun F64DenseMatrix.choleskyUpdateInPlace(
+    x: F64VectorLike,
+    sigma: Double = 1.0,
+    workspace: Workspace? = null,
+) {
+    require(rows == cols) { "choleskyUpdateInPlace requires a square matrix; got ${rows}x$cols" }
     require(rows == x.size) { "x size ${x.size} must match matrix dim $rows" }
-    if (rows == 0) return 0.0 // an empty downdate stays in the cone trivially
+    require(sigma >= 0.0) { "choleskyUpdateInPlace requires a non-negative sigma; got $sigma" }
+    if (rows == 0 || sigma == 0.0) return
     val n = rows
     val L = data
 
-    // Scatter rather than index x: SparseVector.get is a linear scan, so a per-element read would
-    // be quadratic in its nonzeros.
-    return workspace.borrow(n) { s ->
-        copy(x, F64DenseVector.wrap(s))
-        trsv(s, lower = true)
-
-        val norm = F64DenseVector.wrap(s).norm2()
-        // Negated so a NaN norm bails too: falling through would write NaN across the whole factor
-        // and still report success.
-        if (!(norm > 0.0 && norm < 1.0)) return@borrow norm
-
-        workspace.borrow(n) { c ->
-            var alpha = sqrt(1.0 - norm * norm)
-            for (ii in 0 until n) {
-                val i = n - ii - 1
-                val scale = alpha + s[i].absoluteValue
-                val a = alpha / scale
-                val b = s[i] / scale
-                val nrm = sqrt(a * a + b * b)
-                c[i] = a / nrm
-                s[i] = b / nrm
-                alpha = scale * nrm
-            }
-            // Apply the rotations along the rows of L; entry (j, i) of the column-major backing is at
-            // `j + i * n`.
-            for (j in 0 until n) {
-                var xx = 0.0
-                for (i in j downTo 0) {
-                    val idx = j + i * n
-                    val t = c[i] * xx + s[i] * L[idx]
-                    L[idx] = c[i] * L[idx] - s[i] * xx
-                    xx = t
-                }
+    // The rotations consume the residual, so x is scattered into scratch rather than indexed:
+    // SparseVector.get is a linear scan, and a per-element read would be quadratic in its nonzeros.
+    workspace.borrow(n) { residual ->
+        copy(x, F64DenseVector.wrap(residual))
+        val scale = sqrt(sigma)
+        if (scale != 1.0) {
+            for (i in 0 until n) residual[i] = scale * residual[i]
+        }
+        for (k in 0 until n) {
+            // Entry (i, k) of the column-major backing is at `i + k * n`, so a column is contiguous.
+            val pivot = k + k * n
+            val diagonal = L[pivot]
+            val head = residual[k]
+            // hypot rescales, so a pivot and residual that would both square to infinity still
+            // rotate. It is also unsigned, which keeps the factor's diagonal positive; koblas's
+            // rotg follows Netlib and signs after the larger input, flipping whole columns.
+            val r = hypot(diagonal, head)
+            if (r == 0.0) continue
+            val c = diagonal / r
+            val s = head / r
+            L[pivot] = r
+            if (s == 0.0) continue
+            for (i in k + 1 until n) {
+                val idx = i + k * n
+                val lik = L[idx]
+                val xi = residual[i]
+                L[idx] = c * lik + s * xi
+                residual[i] = c * xi - s * lik
             }
         }
-        0.0
     }
 }
 
