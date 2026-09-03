@@ -10,6 +10,7 @@ import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dense.cholesky
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class CholeskyTest {
@@ -32,6 +33,9 @@ class CholeskyTest {
         }
     }
 
+    private fun updated(a: Array<DoubleArray>, x: DoubleArray, sigma: Double = 1.0): Array<DoubleArray> =
+        Array(a.size) { i -> DoubleArray(a.size) { j -> a[i][j] + sigma * x[i] * x[j] } }
+
     private fun assertMatrixEquals(expected: Array<DoubleArray>, actual: Array<DoubleArray>, tol: Double = 1e-9) {
         for (i in expected.indices) {
             for (j in expected[i].indices) {
@@ -41,131 +45,139 @@ class CholeskyTest {
     }
 
     @Test
-    fun `downdate subtracts the rank-one term from the factored matrix`() {
-        val a = arrayOf(
-            doubleArrayOf(4.0, 1.0),
-            doubleArrayOf(1.0, 3.0),
+    fun `update adds the rank-one term to the factored matrix`() {
+        val cases = listOf(
+            arrayOf(doubleArrayOf(4.0)) to doubleArrayOf(1.0),
+            arrayOf(doubleArrayOf(4.0, 1.0), doubleArrayOf(1.0, 3.0)) to doubleArrayOf(0.5, 0.25),
+            arrayOf(doubleArrayOf(4.0, 1.0), doubleArrayOf(1.0, 3.0)) to doubleArrayOf(-3.0, 7.0),
+            arrayOf(
+                doubleArrayOf(6.0, 1.0, 0.5),
+                doubleArrayOf(1.0, 5.0, 2.0),
+                doubleArrayOf(0.5, 2.0, 4.0),
+            ) to doubleArrayOf(0.3, -0.6, 0.2),
+            arrayOf(
+                doubleArrayOf(2.0, 0.0, 0.0, 0.0),
+                doubleArrayOf(0.0, 2.0, 0.0, 0.0),
+                doubleArrayOf(0.0, 0.0, 2.0, 0.0),
+                doubleArrayOf(0.0, 0.0, 0.0, 2.0),
+            ) to doubleArrayOf(1.0, -2.0, 3.0, -4.0),
         )
+
+        for ((a, x) in cases) {
+            val l = F64DenseMatrix.of(a).cholesky().l
+
+            l.choleskyUpdateInPlace(F64DenseVector.of(x))
+
+            assertMatrixEquals(updated(a, x), product(l))
+        }
+    }
+
+    @Test
+    fun `update keeps the factor diagonal positive`() {
+        val l = F64DenseMatrix.of(arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0))).cholesky().l
+
+        l.choleskyUpdateInPlace(F64DenseVector.of(doubleArrayOf(-40.0, -30.0)))
+
+        for (i in 0 until 2) assertTrue(l[i, i] > 0.0, "diagonal entry ($i, $i) = ${l[i, i]}")
+    }
+
+    @Test
+    fun `sigma scales the rank-one term`() {
+        val a = arrayOf(doubleArrayOf(4.0, 1.0), doubleArrayOf(1.0, 3.0))
         val x = doubleArrayOf(0.5, 0.25)
         val l = F64DenseMatrix.of(a).cholesky().l
 
-        val norm = l.choleskyDowndateInPlace(F64DenseVector.of(x))
+        l.choleskyUpdateInPlace(F64DenseVector.of(x), sigma = 9.0)
 
-        assertEquals(0.0, norm, "downdate inside the cone reports success")
-        val expected = Array(2) { i -> DoubleArray(2) { j -> a[i][j] - x[i] * x[j] } }
-        assertMatrixEquals(expected, product(l))
+        assertMatrixEquals(updated(a, x, sigma = 9.0), product(l))
     }
 
     @Test
-    fun `workspace downdate reuses nested scratch`() {
+    fun `a zero sigma leaves the factor unchanged`() {
         val l = F64DenseMatrix.of(arrayOf(doubleArrayOf(4.0, 1.0), doubleArrayOf(1.0, 3.0))).cholesky().l
-        val workspace = Workspace().apply { reserve(2, 2) }
-
-        assertEquals(0.0, l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(0.5, 0.25)), workspace))
-        assertEquals(0.0, l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(0.1, 0.1)), workspace))
-    }
-
-    @Test
-    fun `downdate handles a three by three factor`() {
-        val a = arrayOf(
-            doubleArrayOf(6.0, 1.0, 0.5),
-            doubleArrayOf(1.0, 5.0, 2.0),
-            doubleArrayOf(0.5, 2.0, 4.0),
-        )
-        val x = doubleArrayOf(0.3, -0.6, 0.2)
-        val l = F64DenseMatrix.of(a).cholesky().l
-
-        assertEquals(0.0, l.choleskyDowndateInPlace(F64DenseVector.of(x)))
-
-        val expected = Array(3) { i -> DoubleArray(3) { j -> a[i][j] - x[i] * x[j] } }
-        assertMatrixEquals(expected, product(l))
-    }
-
-    @Test
-    fun `downdate reports a norm at or above one when it would leave the cone`() {
-        val l = F64DenseMatrix.of(
-            arrayOf(
-                doubleArrayOf(1.0, 0.0),
-                doubleArrayOf(0.0, 1.0),
-            ),
-        ).cholesky().l
-
-        // x with ||L^-1 x|| >= 1 cannot be subtracted and stay positive-definite.
-        val norm = l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(3.0, 4.0)))
-
-        assertTrue(norm >= 1.0, "expected a rejected downdate, got norm=$norm")
-    }
-
-    @Test
-    fun `downdate reports the norm at the cone boundary rather than silently doing nothing`() {
-        // ||L^-1 x|| == 1 exactly: the downdate cannot proceed, and the factor is left alone.
-        val l = F64DenseMatrix.of(
-            arrayOf(
-                doubleArrayOf(4.0, 0.0),
-                doubleArrayOf(0.0, 4.0),
-            ),
-        ).cholesky().l
         val before = product(l)
 
-        val norm = l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(2.0, 0.0)))
+        l.choleskyUpdateInPlace(F64DenseVector.of(doubleArrayOf(2.0, -5.0)), sigma = 0.0)
 
-        assertEquals(1.0, norm, 1e-12, "the boundary reports rejection, not success")
         assertMatrixEquals(before, product(l))
     }
 
     @Test
-    fun `downdate takes a sparse vector`() {
+    fun `a negative sigma is rejected as a downdate`() {
+        val l = F64DenseMatrix.of(arrayOf(doubleArrayOf(4.0, 1.0), doubleArrayOf(1.0, 3.0))).cholesky().l
+
+        assertFailsWith<IllegalArgumentException> {
+            l.choleskyUpdateInPlace(F64DenseVector.of(doubleArrayOf(0.5, 0.25)), sigma = -1.0)
+        }
+    }
+
+    @Test
+    fun `update leaves the source vector untouched`() {
+        val l = F64DenseMatrix.of(arrayOf(doubleArrayOf(4.0, 1.0), doubleArrayOf(1.0, 3.0))).cholesky().l
+        val x = F64DenseVector.of(doubleArrayOf(0.5, 0.25))
+
+        l.choleskyUpdateInPlace(x, sigma = 4.0)
+
+        assertEquals(0.5, x[0], 0.0)
+        assertEquals(0.25, x[1], 0.0)
+    }
+
+    @Test
+    fun `update absorbs a near-singular direction the factor barely spans`() {
+        val a = arrayOf(doubleArrayOf(1e-14, 0.0), doubleArrayOf(0.0, 1.0))
+        val x = doubleArrayOf(1.0, 1.0)
+        val l = F64DenseMatrix.of(a).cholesky().l
+
+        l.choleskyUpdateInPlace(F64DenseVector.of(x))
+
+        assertMatrixEquals(updated(a, x), product(l), tol = 1e-12)
+    }
+
+    @Test
+    fun `update through a singular factor restores the rank it was missing`() {
+        val l = F64DenseMatrix.of(arrayOf(doubleArrayOf(0.0, 0.0), doubleArrayOf(0.0, 1.0)))
+
+        l.choleskyUpdateInPlace(F64DenseVector.of(doubleArrayOf(1.0, 0.0)))
+
+        assertMatrixEquals(arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0)), product(l))
+    }
+
+    @Test
+    fun `workspace update reuses nested scratch`() {
+        val a = arrayOf(doubleArrayOf(4.0, 1.0), doubleArrayOf(1.0, 3.0))
+        val l = F64DenseMatrix.of(a).cholesky().l
+        val workspace = Workspace().apply { reserve(2, 2) }
+        val x = doubleArrayOf(0.5, 0.25)
+        val z = doubleArrayOf(0.1, 0.1)
+
+        l.choleskyUpdateInPlace(F64DenseVector.of(x), workspace = workspace)
+        l.choleskyUpdateInPlace(F64DenseVector.of(z), workspace = workspace)
+
+        assertMatrixEquals(updated(updated(a, x), z), product(l))
+    }
+
+    @Test
+    fun `update takes a sparse vector`() {
         val a = arrayOf(
             doubleArrayOf(5.0, 1.0, 0.0),
             doubleArrayOf(1.0, 4.0, 1.0),
             doubleArrayOf(0.0, 1.0, 3.0),
         )
         val l = F64DenseMatrix.of(a).cholesky().l
-        val x = doubleArrayOf(0.0, 0.4, 0.0)
 
-        val norm = l.choleskyDowndateInPlace(
-            F64SparseVector.of(size = 3, indices = intArrayOf(1), values = doubleArrayOf(0.4)),
-        )
+        l.choleskyUpdateInPlace(F64SparseVector.of(size = 3, indices = intArrayOf(1), values = doubleArrayOf(0.4)))
 
-        assertEquals(0.0, norm)
-        val expected = Array(3) { i -> DoubleArray(3) { j -> a[i][j] - x[i] * x[j] } }
-        assertMatrixEquals(expected, product(l))
+        assertMatrixEquals(updated(a, doubleArrayOf(0.0, 0.4, 0.0)), product(l))
     }
 
     @Test
-    fun `downdate takes a generic strided vector`() {
+    fun `update takes a generic strided vector`() {
         val a = arrayOf(doubleArrayOf(4.0, 1.0), doubleArrayOf(1.0, 3.0))
         val l = F64DenseMatrix.of(a).cholesky().l
-        val x = doubleArrayOf(0.5, 0.25)
 
-        assertEquals(0.0, l.choleskyDowndateInPlace(StridedVector(doubleArrayOf(0.5, 9.0, 0.25, 9.0))))
+        l.choleskyUpdateInPlace(StridedVector(doubleArrayOf(0.5, 9.0, 0.25, 9.0)))
 
-        val expected = Array(2) { i -> DoubleArray(2) { j -> a[i][j] - x[i] * x[j] } }
-        assertMatrixEquals(expected, product(l))
-    }
-
-    @Test
-    fun `downdate handles a one by one factor`() {
-        val l = F64DenseMatrix.of(arrayOf(doubleArrayOf(4.0))).cholesky().l
-
-        assertEquals(0.0, l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(1.0))))
-
-        assertEquals(3.0, product(l)[0][0], 1e-12)
-    }
-
-    @Test
-    fun `downdate of a zero vector leaves the factor unchanged`() {
-        val l = F64DenseMatrix.of(
-            arrayOf(
-                doubleArrayOf(2.0, 0.5),
-                doubleArrayOf(0.5, 1.0),
-            ),
-        ).cholesky().l
-        val before = product(l)
-
-        assertEquals(0.0, l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(0.0, 0.0))))
-
-        assertMatrixEquals(before, product(l))
+        assertMatrixEquals(updated(a, doubleArrayOf(0.5, 0.25)), product(l))
     }
 
     @Test
@@ -187,19 +199,5 @@ class CholeskyTest {
         }
         assertEquals(4.0, m[1, 0])
         assertEquals(9.0, m[2, 2])
-    }
-
-    @Test
-    fun `downdate through a singular factor leaves the factor finite`() {
-        val l = F64DenseMatrix.of(
-            arrayOf(
-                doubleArrayOf(0.0, 0.0),
-                doubleArrayOf(0.0, 1.0),
-            ),
-        )
-        l.choleskyDowndateInPlace(F64DenseVector.of(doubleArrayOf(1.0, 0.0)))
-        for (i in 0 until 2) {
-            for (j in 0 until 2) assertTrue(l[i, j].isFinite(), "entry ($i, $j) = ${l[i, j]}")
-        }
     }
 }

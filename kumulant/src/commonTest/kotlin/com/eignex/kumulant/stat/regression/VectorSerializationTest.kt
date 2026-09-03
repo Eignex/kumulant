@@ -7,13 +7,13 @@ import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
-import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
 import com.eignex.kumulant.stat.regression.glm.ExponentialDecay
 import com.eignex.kumulant.stat.regression.glm.FactorisedGaussian
 import com.eignex.kumulant.stat.regression.glm.LinearRegressionResult
 import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
 import com.eignex.kumulant.stat.regression.glm.PointPosterior
+import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.glm.StepDecay
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import kotlinx.serialization.json.Json
@@ -98,7 +98,7 @@ class VectorSerializationTest {
     }
 
     @Test
-    fun `CovarianceRegressionResult round-trips through JSON`() {
+    fun `PrecisionRegressionResult round-trips through JSON`() {
         val stat = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         val truth = doubleArrayOf(0.5, -1.0, 0.7)
         val rng = Random(99)
@@ -109,8 +109,8 @@ class VectorSerializationTest {
             stat.update(x, y, 1.0)
         }
         val before = stat.read()
-        val wire = json.encodeToString(CovarianceRegressionResult.serializer(), before)
-        val after = json.decodeFromString(CovarianceRegressionResult.serializer(), wire)
+        val wire = json.encodeToString(PrecisionRegressionResult.serializer(), before)
+        val after = json.decodeFromString(PrecisionRegressionResult.serializer(), wire)
         assertEquals(before, after)
     }
 

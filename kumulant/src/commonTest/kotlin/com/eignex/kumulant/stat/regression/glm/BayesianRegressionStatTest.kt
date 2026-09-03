@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.Workspace
+import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.RegressionStat
@@ -19,14 +20,27 @@ class BayesianRegressionStatTest {
         override fun toDoubleArray(): DoubleArray = DoubleArray(size) { this[it] }
     }
 
+    // Posteriors captured from the Sherman-Morrison covariance implementation this replaces, so the
+    // equivalence is checked against measured behaviour rather than against a re-derivation of it.
+    private class CovarianceFormReference(
+        val name: String,
+        val weights: DoubleArray,
+        val bias: Double,
+        val covariance: Array<DoubleArray>,
+        // The two forms agree to the last few ULPs where the trajectory is multiply-add and sqrt.
+        // Logit and Log feed it through `exp`, which each platform rounds its own way, so those
+        // cannot be pinned past the point where the platforms themselves stop agreeing.
+        val tolerance: Double = 1e-12,
+        val fit: () -> BayesianRegressionStat,
+    )
+
     @Test
     fun `read owns vector and matrix storage independently from the stat`() {
         val stat = BayesianRegressionStat(featureSize = 1)
         stat.update(doubleArrayOf(1.0), 1.0)
         val first = stat.read()
         val firstWeight = first.weights[0]
-        val firstCovariance = first.covariance[0, 0]
-        val firstCovarianceL = first.covarianceL[0, 0]
+        val firstPrecisionL = first.precisionL[0, 0]
 
         stat.update(doubleArrayOf(1.0), -1.0)
         BayesianRegressionStat(featureSize = 1).also {
@@ -37,32 +51,12 @@ class BayesianRegressionStatTest {
         val second = stat.read()
 
         assertEquals(firstWeight, first.weights[0], 1e-12)
-        assertEquals(firstCovariance, first.covariance[0, 0], 1e-12)
-        assertEquals(firstCovarianceL, first.covarianceL[0, 0], 1e-12)
+        assertEquals(firstPrecisionL, first.precisionL[0, 0], 1e-12)
         assertEquals(0.0, second.weights[0], 1e-12)
         first.weights.data[0] = 99.0
-        first.covariance.data[0] = 99.0
-        first.covarianceL.data[0] = 99.0
+        first.precisionL.data[0] = 99.0
         assertTrue(second.weights[0] != 99.0)
-        assertTrue(second.covariance[0, 0] != 99.0)
-        assertTrue(second.covarianceL[0, 0] != 99.0)
-    }
-
-    // The factor is downdated alongside the covariance rather than refactorized, so the two can
-    // only be trusted to agree if every downdate lands. L * LT has to stay equal to S. The
-    // tolerance is relative because the covariance entries span many orders of magnitude across
-    // these tests.
-    private fun assertFactorReproducesCovariance(r: CovarianceRegressionResult, relativeTolerance: Double = 1e-9) {
-        val n = r.featureSize
-        for (i in 0 until n) {
-            for (j in 0 until n) {
-                var s = 0.0
-                for (k in 0..minOf(i, j)) s += r.covarianceL[i, k] * r.covarianceL[j, k]
-                val expected = r.covariance[i, j]
-                val tol = relativeTolerance * maxOf(1.0, abs(expected))
-                assertEquals(expected, s, tol, "L * LT disagrees with the covariance at ($i, $j)")
-            }
-        }
+        assertTrue(second.precisionL[0, 0] != 99.0)
     }
 
     @Test
@@ -89,8 +83,8 @@ class BayesianRegressionStatTest {
     @Test
     fun `regression stat interface accepts nullable workspace for update and merge`() {
         val workspace = Workspace().apply { reserve(2, 3) }
-        val receiver: RegressionStat<CovarianceRegressionResult> = BayesianRegressionStat(featureSize = 2)
-        val source: RegressionStat<CovarianceRegressionResult> = BayesianRegressionStat(featureSize = 2)
+        val receiver: RegressionStat<PrecisionRegressionResult> = BayesianRegressionStat(featureSize = 2)
+        val source: RegressionStat<PrecisionRegressionResult> = BayesianRegressionStat(featureSize = 2)
 
         receiver.update(doubleArrayOf(1.0, 0.0), 1.0, workspace = null)
         source.update(doubleArrayOf(0.0, 1.0), 2.0, workspace = workspace)
@@ -105,6 +99,7 @@ class BayesianRegressionStatTest {
         val truth = doubleArrayOf(0.8, 1.2, -0.5)
         fitLine(stat, truth, intercept = 0.0)
         val r = stat.read()
+        val covariance = r.covariance()
         for (i in truth.indices) {
             assertTrue(
                 abs(r.weights[i] - truth[i]) < 0.1,
@@ -113,8 +108,8 @@ class BayesianRegressionStatTest {
         }
         for (i in truth.indices) {
             assertTrue(
-                r.covariance[i, i] < 0.05,
-                "Sum[$i,$i]=${r.covariance[i, i]} did not shrink from prior 1.0",
+                covariance[i, i] < 0.05,
+                "Sum[$i,$i]=${covariance[i, i]} did not shrink from prior 1.0",
             )
         }
     }
@@ -131,36 +126,163 @@ class BayesianRegressionStatTest {
     }
 
     @Test
-    fun `the tracked factor keeps reproducing the covariance across updates`() {
-        val stat = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
-        fitLine(stat, doubleArrayOf(0.8, 1.2, -0.5), intercept = 0.3, n = 500)
+    fun `the precision factor accumulates the exact Gaussian information matrix`() {
+        // Under Identity the posterior precision is closed-form: H = H_prior + sum(x xT).
+        val stat = BayesianRegressionStat(featureSize = 3, priorVariance = 2.0)
+        val rng = Random(3)
+        val expected = Array(3) { i -> DoubleArray(3) { j -> if (i == j) 0.5 else 0.0 } }
+        repeat(300) {
+            val x = DoubleArray(3) { rng.nextDouble() * 2.0 - 1.0 }
+            stat.update(x, 1.0)
+            for (i in 0 until 3) {
+                for (j in 0 until 3) expected[i][j] += x[i] * x[j]
+            }
+        }
 
-        assertFactorReproducesCovariance(stat.read())
+        val l = stat.read().precisionL
+
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                var h = 0.0
+                for (k in 0..minOf(i, j)) h += l[i, k] * l[j, k]
+                assertEquals(expected[i][j], h, 1e-9 * maxOf(1.0, abs(expected[i][j])), "H disagrees at ($i, $j)")
+            }
+        }
     }
 
     @Test
-    fun `the factor survives an update that saturates the downdate at the cone boundary`() {
-        // A weight this large drives the downdate's norm to exactly 1.0, where it rejects and
-        // leaves the factor alone. The repair has to run anyway, or the covariance moves without
-        // its factor.
-        val stat = BayesianRegressionStat(featureSize = 2, priorVariance = 1.0)
+    fun `an extreme observation weight leaves the posterior finite and positive definite`() {
+        for (priorVariance in listOf(1.0, 1e12)) {
+            val stat = BayesianRegressionStat(featureSize = 2, priorVariance = priorVariance)
 
-        stat.update(doubleArrayOf(1.0, 1.0), 1.0, 1e18)
+            stat.update(doubleArrayOf(1.0, 1.0), 1.0, 1e18)
 
-        assertFactorReproducesCovariance(stat.read())
+            val r = stat.read()
+            for (i in 0 until 2) {
+                assertTrue(r.precisionL[i, i] > 0.0, "prior $priorVariance left pivot $i at ${r.precisionL[i, i]}")
+                assertTrue(r.weights[i].isFinite(), "prior $priorVariance left weight[$i] at ${r.weights[i]}")
+            }
+        }
     }
 
     @Test
-    fun `the factor survives a saturating update that the diagonal bump cannot lift off the cone`() {
-        // A prior this wide puts the repair's 1e-5 diagonal bump below the covariance's own ULP,
-        // so refactorizing reproduces the same factor and the retried downdate saturates at 1.0
-        // again. That is the case the shrink step exists for: it scales z down until the downdate
-        // lands, and the covariance must be downdated by the same scaled z.
-        val stat = BayesianRegressionStat(featureSize = 2, priorVariance = 1e12)
+    fun `the posterior matches the covariance-form reference`() {
+        val references = listOf(
+            CovarianceFormReference(
+                name = "Identity",
+                weights = doubleArrayOf(0.7892675161781794, 1.1850458080146096, -0.49356069011182385),
+                bias = 0.3073050894951919,
+                covariance = arrayOf(
+                    doubleArrayOf(0.013290276797415315, 2.1104528854958964E-5, -3.6207626139928776E-4),
+                    doubleArrayOf(2.1104528854958964E-5, 0.014407665003666244, 0.0014451418150022467),
+                    doubleArrayOf(-3.6207626139928776E-4, 0.0014451418150022467, 0.017524988529503235),
+                ),
+                fit = {
+                    BayesianRegressionStat(featureSize = 3, priorVariance = 1.0).also {
+                        fitLine(it, doubleArrayOf(0.8, 1.2, -0.5), intercept = 0.3, n = 200)
+                    }
+                },
+            ),
+            CovarianceFormReference(
+                name = "Logit",
+                weights = doubleArrayOf(1.9835854012108827, -1.0319768995357121),
+                bias = 0.04160550210144981,
+                covariance = arrayOf(
+                    doubleArrayOf(0.07948905510027073, -0.013801112891894552),
+                    doubleArrayOf(-0.013801112891894552, 0.07647812815279686),
+                ),
+                tolerance = 1e-9,
+                fit = {
+                    BayesianRegressionStat(featureSize = 2, priorVariance = 1.0, link = Link.Logit).also { stat ->
+                        val rng = Random(7)
+                        repeat(200) {
+                            val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
+                            val p = 1.0 / (1.0 + exp(-(2.0 * x[0] - 1.0 * x[1])))
+                            stat.update(x, if (rng.nextDouble() < p) 1.0 else 0.0, 1.0)
+                        }
+                    }
+                },
+            ),
+            CovarianceFormReference(
+                name = "Log",
+                weights = doubleArrayOf(0.5912716455018358, 0.13055015954246438),
+                bias = 0.21119770261479323,
+                covariance = arrayOf(
+                    doubleArrayOf(0.07487032541781423, -0.05446353635384874),
+                    doubleArrayOf(-0.05446353635384874, 0.07883159690484803),
+                ),
+                tolerance = 1e-9,
+                fit = {
+                    BayesianRegressionStat(featureSize = 2, priorVariance = 1.0, link = Link.Log).also { stat ->
+                        val rng = Random(2)
+                        repeat(200) {
+                            val x = doubleArrayOf(rng.nextDouble() * 0.5, rng.nextDouble() * 0.5)
+                            stat.update(x, exp(1.0 * x[0] + 0.5 * x[1]), 1.0)
+                        }
+                    }
+                },
+            ),
+            CovarianceFormReference(
+                name = "correlated prior and non-unit weights",
+                weights = doubleArrayOf(0.6976030708454642, -0.2986524918934216),
+                bias = -1.5549717847883581E-4,
+                covariance = arrayOf(
+                    doubleArrayOf(0.020610234953868187, -0.004463737865724361),
+                    doubleArrayOf(-0.004463737865724361, 0.022249969534956685),
+                ),
+                fit = {
+                    BayesianRegressionStat(
+                        featureSize = 2,
+                        priorVariance = 1.0,
+                        priorMean = F64DenseVector.of(doubleArrayOf(0.25, -0.5)),
+                        priorCovariance = F64DenseMatrix.of(
+                            arrayOf(doubleArrayOf(2.0, 0.5), doubleArrayOf(0.5, 1.5)),
+                        ),
+                    ).also { stat ->
+                        val rng = Random(11)
+                        repeat(50) { i ->
+                            val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
+                            stat.update(x, 0.7 * x[0] - 0.3 * x[1], weight = 0.5 + i * 0.1)
+                        }
+                    }
+                },
+            ),
+            CovarianceFormReference(
+                name = "merge",
+                weights = doubleArrayOf(0.5000427206311965, -1.192994020310317, 0.8914216135804326),
+                bias = -0.006661823187831848,
+                covariance = arrayOf(
+                    doubleArrayOf(0.007150695249669388, -4.610474019072746E-4, -3.2990083695119075E-4),
+                    doubleArrayOf(-4.610474019072746E-4, 0.0074481219730073035, -3.1298095505277013E-4),
+                    doubleArrayOf(-3.2990083695119075E-4, -3.1298095505277013E-4, 0.007005149200908571),
+                ),
+                fit = {
+                    val truth = doubleArrayOf(0.5, -1.2, 0.9)
+                    val a = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
+                    val b = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
+                    fitLine(a, truth, intercept = 0.0, n = 200, seed = 5L)
+                    fitLine(b, truth, intercept = 0.0, n = 200, seed = 7L)
+                    a.also { it.merge(b.read()) }
+                },
+            ),
+        )
 
-        stat.update(doubleArrayOf(1.0, 1.0), 1.0, 1e18)
-
-        assertFactorReproducesCovariance(stat.read())
+        for (reference in references) {
+            val r = reference.fit().read()
+            val covariance = r.covariance()
+            assertEquals(reference.bias, r.bias, reference.tolerance, "${reference.name} bias")
+            for (i in reference.weights.indices) {
+                assertEquals(reference.weights[i], r.weights[i], reference.tolerance, "${reference.name} weight[$i]")
+                for (j in reference.weights.indices) {
+                    assertEquals(
+                        reference.covariance[i][j],
+                        covariance[i, j],
+                        reference.tolerance,
+                        "${reference.name} covariance ($i, $j)",
+                    )
+                }
+            }
+        }
     }
 
     @Test
@@ -179,6 +301,7 @@ class BayesianRegressionStatTest {
         a.merge(b.read())
         val merged = a.read()
         val refResult = ref.read()
+        val mergedCovariance = merged.covariance()
 
         for (i in truth.indices) {
             assertTrue(
@@ -186,8 +309,8 @@ class BayesianRegressionStatTest {
                 "merged weight[$i]=${merged.weights[i]} far from truth=${truth[i]}",
             )
             // Posterior product should land in the same neighbourhood as replaying
-            // all observations into one stat - not pointwise-identical because SMW
-            // accumulates a slightly different trajectory.
+            // all observations into one stat - not pointwise-identical because the
+            // Laplace trajectory differs.
             assertTrue(
                 abs(merged.weights[i] - refResult.weights[i]) < 0.15,
                 "merged weight[$i]=${merged.weights[i]} diverged from replay=${refResult.weights[i]}",
@@ -197,8 +320,8 @@ class BayesianRegressionStatTest {
         // Combined posterior should be at least as tight as each operand.
         for (i in truth.indices) {
             assertTrue(
-                merged.covariance[i, i] < 0.05,
-                "merged Sum[$i,$i]=${merged.covariance[i, i]} did not tighten",
+                mergedCovariance[i, i] < 0.05,
+                "merged Sum[$i,$i]=${mergedCovariance[i, i]} did not tighten",
             )
         }
     }

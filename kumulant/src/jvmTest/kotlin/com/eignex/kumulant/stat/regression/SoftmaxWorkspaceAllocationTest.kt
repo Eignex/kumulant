@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64DenseMatrix
+import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import com.sun.management.ThreadMXBean

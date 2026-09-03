@@ -4,8 +4,8 @@ import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.stat.anomaly.FeatureRange
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
-import com.eignex.kumulant.stat.regression.glm.CovarianceRegressionResult
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
+import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
@@ -127,16 +127,15 @@ class RegressionMergeGuardTest {
     }
 
     @Test
-    fun `a non-square covariance is rejected by name`() {
+    fun `a non-square precision factor is rejected by name`() {
         val error = assertFailsWith<IllegalArgumentException> {
-            CovarianceRegressionResult(
+            PrecisionRegressionResult(
                 weights = F64DenseVector.of(doubleArrayOf(1.0, 2.0)),
                 bias = 0.0,
                 biasPrecision = 1.0,
                 totalWeights = 1.0,
                 step = 1L,
-                covariance = F64DenseMatrix.zero(2, 3),
-                covarianceL = F64DenseMatrix.zero(2, 2),
+                precisionL = F64DenseMatrix.zero(2, 3),
             )
         }
         assertTrue(error.message?.contains("2x3") == true, "expected the shape in the message, got ${error.message}")
