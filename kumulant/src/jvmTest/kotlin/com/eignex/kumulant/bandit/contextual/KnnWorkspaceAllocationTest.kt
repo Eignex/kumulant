@@ -45,19 +45,19 @@ class KnnWorkspaceAllocationTest {
     }
 
     @Test
-    fun `reserved workspace removes repeated k nearest neighbour scratch allocation`() {
-        val allocating = populatedBandit()
+    fun `k nearest neighbour scoring allocates nothing with or without a workspace`() {
+        val bare = populatedBandit()
         val reused = populatedBandit()
         val x = F64DenseVector.of(DoubleArray(FEATURES) { it * 0.25 })
         val workspace = Workspace().apply { reserve(3 * K, 1) }
 
-        val allocatedBytes = bytesPerCall { allocating.choose(x) }
+        val bareBytes = bytesPerCall { bare.choose(x) }
         val workspaceBytes = bytesPerCall { reused.choose(x, workspace) }
 
-        assertTrue(
-            workspaceBytes + 128.0 <= allocatedBytes,
-            "workspace choose allocated $workspaceBytes B/call versus $allocatedBytes B/call",
-        )
+        // The scan buffer is owned by the bandit, so there is nothing left for a workspace to save
+        // and nothing left to allocate when one is absent.
+        assertTrue(bareBytes <= CEILING, "choose allocated $bareBytes B/call without a workspace")
+        assertTrue(workspaceBytes <= CEILING, "choose allocated $workspaceBytes B/call with a workspace")
     }
 
     private companion object {
@@ -65,5 +65,8 @@ class KnnWorkspaceAllocationTest {
         const val K = 8
         const val HISTORY = 32
         const val FEATURES = 32
+
+        /** Slack for sampling noise in the allocation counter; a real per-call buffer is 3 * K * 8 B. */
+        const val CEILING = 8.0
     }
 }

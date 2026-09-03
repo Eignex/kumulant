@@ -1,7 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.borrow
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64SparseVector
 import com.eignex.koblas.core.F64VectorLike
@@ -98,10 +97,14 @@ data class KnnArmResult(
  * **Memory:** O(nbrArms · maxHistoryPerArm · featureSize); each arm owns a
  * fixed-capacity ring of context copies plus parallel primitive reward and
  * weight arrays. A dense slot's buffer is rewritten in place as the ring
- * wraps, so a saturated arm stops allocating altogether.
+ * wraps, so a saturated arm stops allocating altogether. One `3 · k` scan
+ * buffer is owned by the bandit and reused across every call.
  *
- * **Choose:** O(nbrArms · maxHistoryPerArm · (featureSize + k)); linear
- * scan over each arm's history with a bounded top-k heap.
+ * **Choose:** O(nbrArms · maxHistoryPerArm · featureSize), plus O(k) for each
+ * candidate that displaces one of the k nearest; a candidate that does not is
+ * rejected on a single comparison. Contexts arriving in descending distance
+ * order displace on every step and reach O(nbrArms · maxHistoryPerArm · k) for
+ * the selection term.
  *
  * **Update:** O(featureSize); copy the context into the ring's next slot and
  * advance the head past the oldest entry when capped.
@@ -110,9 +113,11 @@ data class KnnArmResult(
  * `choose` is deterministic, breaking ties by lowest arm index.
  *
  * **Concurrency:** not thread-safe; the per-arm history rings, the
- * total-weight array, and the step counter are mutated without
- * synchronisation, and an eviction rewrites a live context buffer in place.
- * Serialise `choose` and `update` externally for multi-thread use.
+ * total-weight array, the step counter, and one shared scan buffer are mutated
+ * without synchronisation, and an eviction rewrites a live context buffer in
+ * place. Serialise `choose` and `update` externally for multi-thread use. The
+ * shared buffer also rules out re-entrant scoring, so [distance] must not call
+ * back into `choose` or `evaluate`.
  */
 class KnnContextualBandit(
     /** Number of arms. */
@@ -143,6 +148,14 @@ class KnnContextualBandit(
     private val totalWeights: DoubleArray = DoubleArray(nbrArms)
     private var step: Long = 0L
 
+    // One scan buffer for the life of the bandit: k distances, then the k rewards, then the k
+    // weights that go with them. The class already asks callers to serialise `choose` and `update`,
+    // so the buffer can be owned outright rather than borrowed per call, which is what makes scoring
+    // allocation-free with no workspace to hand. The cost is that scoring is not re-entrant: a
+    // [distance] that called back into `choose` or `evaluate` would scan into the buffer its own
+    // caller is still reading.
+    private val scratch: DoubleArray = DoubleArray(3 * k)
+
     // Width of the contexts this bandit has been shown, learned from the first one. Without it the
     // only check is the one inside the distance kernel, which does not run until an arm holds k
     // contexts - so a mis-sized context is accepted, and the first call to throw is a later choose
@@ -158,21 +171,30 @@ class KnnContextualBandit(
         require(size == featureSize) { "context size $size != $featureSize" }
     }
 
-    /** Argmax over per-arm [evaluate] scores. Ties broken by lowest index. */
+    /**
+     * Argmax over per-arm [evaluate] scores. Ties broken by lowest index.
+     *
+     * [workspace] is accepted for interface uniformity and ignored; the scan buffer is owned, so
+     * there is no scratch left to borrow.
+     */
+    @Suppress("UnusedParameter")
     override fun choose(x: F64VectorLike, workspace: Workspace?): Int {
         requireFeatureSize(x.size)
-        val bestIdx = workspace.borrow(3 * k) { scratch ->
-            argmaxArm(nbrArms) { armIndex -> evaluateWithScratch(armIndex, x, scratch) }
-        }
+        val bestIdx = argmaxArm(nbrArms) { armIndex -> score(armIndex, x) }
         step++
         return bestIdx
     }
 
-    /** Score arm [armIndex] at context [x]: k-NN mean reward + UCB bonus. */
+    /**
+     * Score arm [armIndex] at context [x]: k-NN mean reward + UCB bonus.
+     *
+     * [workspace] is accepted for interface uniformity and ignored, as in [choose].
+     */
+    @Suppress("UnusedParameter")
     override fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace?): Double {
         requireArmIndex(armIndex, nbrArms)
         requireFeatureSize(x.size)
-        return workspace.borrow(3 * k) { scratch -> evaluateWithScratch(armIndex, x, scratch) }
+        return score(armIndex, x)
     }
 
     /** Append `(x, reward, weight)` to arm [armIndex]'s history; oldest entry drops if full. */
@@ -243,32 +265,39 @@ class KnnContextualBandit(
         return exploration * sqrt(ln(t) / w)
     }
 
-    private fun evaluateWithScratch(armIndex: Int, x: F64VectorLike, scratch: DoubleArray?): Double {
+    private fun score(armIndex: Int, x: F64VectorLike): Double {
         if (histories[armIndex].size < k) return coldStartScore + ucbBonus(armIndex)
-        val mean = if (scratch == null) knnMean(armIndex, x) else knnMean(armIndex, x, scratch)
-        return mean + ucbBonus(armIndex)
+        return knnMean(armIndex, x) + ucbBonus(armIndex)
     }
 
     private fun knnMean(armIndex: Int, x: F64VectorLike): Double {
-        val scratch = DoubleArray(3 * k)
-        return knnMean(armIndex, x, scratch)
-    }
-
-    private fun knnMean(armIndex: Int, x: F64VectorLike, scratch: DoubleArray): Double {
         val history = histories[armIndex]
-        // Linear scan, bounded heap of size k. For typical maxHistoryPerArm values
+        // Linear scan holding the k nearest seen so far. For typical maxHistoryPerArm values
         // (<= a few thousand) this is faster than maintaining a KD-tree under reweights.
+        // Distances alone are reset: a reward or weight slot is read only where its distance is
+        // finite, so whatever the previous arm left in the other two thirds is unreachable.
         for (i in 0 until k) scratch[i] = Double.POSITIVE_INFINITY
+        // The slot the next admission displaces, carried rather than rescanned for. Rescanning ran
+        // k comparisons for every candidate, admitted or not; carrying it costs one comparison to
+        // reject, and past the first k arrivals nearly every candidate is rejected.
+        var worst = 0
+        var worstDistance = Double.POSITIVE_INFINITY
         // Oldest first, so equal distances resolve to the same neighbour the arrival order picks.
         for (i in 0 until history.size) {
             val d = distance(history.context(i), x)
-            // Find insertion point: index of the max in topD.
-            var worst = 0
-            for (j in 1 until k) if (scratch[j] > scratch[worst]) worst = j
-            if (d < scratch[worst]) {
+            // Stated positively so a NaN distance is rejected: negating the test would admit it.
+            if (d < worstDistance) {
                 scratch[worst] = d
                 scratch[k + worst] = history.reward(i)
                 scratch[2 * k + worst] = history.weight(i)
+                worst = 0
+                worstDistance = scratch[0]
+                for (j in 1 until k) {
+                    if (scratch[j] > worstDistance) {
+                        worst = j
+                        worstDistance = scratch[j]
+                    }
+                }
             }
         }
         var sumW = 0.0
