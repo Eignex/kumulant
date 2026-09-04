@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.score
 
+import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
@@ -41,11 +42,7 @@ data class ConfusionMatrixResult(
     fun count(predicted: Int, truth: Int): Double = counts[predicted * numClasses + truth]
 
     /** Total weight across all cells. */
-    val totalWeights: Double get() {
-        var s = 0.0
-        for (c in counts) s += c
-        return s
-    }
+    val totalWeights: Double get() = koblas.kernels.sum(counts, 0, counts.size)
 
     /** Sum of the diagonal (correctly classified weight). */
     val correct: Double get() {
@@ -58,13 +55,14 @@ data class ConfusionMatrixResult(
     val accuracy: Double get() = totalWeights.let { if (it > 0.0) correct / it else 0.0 }
 
     /** Predicted-class total: weight of all rows where prediction = [c]. */
-    fun predictedTotal(c: Int): Double {
-        var s = 0.0
-        for (t in 0 until numClasses) s += count(c, t)
-        return s
-    }
+    fun predictedTotal(c: Int): Double = koblas.kernels.sum(counts, c * numClasses, numClasses)
 
-    /** True-class total: weight of all columns where truth = [c]. */
+    /**
+     * True-class total: weight of all columns where truth = [c].
+     *
+     * A column is `numClasses` apart in this row-major backing, and the summation kernel takes a
+     * length but no stride, so this stays an indexed walk while [predictedTotal] does not.
+     */
     fun actualTotal(c: Int): Double {
         var s = 0.0
         for (p in 0 until numClasses) s += count(p, c)
