@@ -151,6 +151,27 @@ class BayesianRegressionStatTest {
     }
 
     @Test
+    fun `the factor keeps its canonical form across a long update sequence`() {
+        // A rank-1 update is free to return any factor whose product is right, and a plane rotation
+        // signed after the larger input flips a whole column. That reconstructs H just as well,
+        // since the signs cancel in L LT, so the reconstruction test above cannot see it. Snapshots
+        // are compared and serialised entry for entry, so the canonical form is the contract:
+        // positive diagonal, strict upper triangle zero.
+        val stat = BayesianRegressionStat(featureSize = 4, priorVariance = 0.5)
+        val rng = Random(11)
+
+        repeat(500) {
+            stat.update(DoubleArray(4) { rng.nextDouble() * 4.0 - 2.0 }, rng.nextDouble())
+        }
+
+        val l = stat.read().precisionL
+        for (i in 0 until 4) {
+            assertTrue(l[i, i] > 0.0, "pivot $i went to ${l[i, i]}")
+            for (j in i + 1 until 4) assertEquals(0.0, l[i, j], 0.0, "strict upper ($i, $j) is ${l[i, j]}")
+        }
+    }
+
+    @Test
     fun `an extreme observation weight leaves the posterior finite and positive definite`() {
         for (priorVariance in listOf(1.0, 1e12)) {
             val stat = BayesianRegressionStat(featureSize = 2, priorVariance = priorVariance)
