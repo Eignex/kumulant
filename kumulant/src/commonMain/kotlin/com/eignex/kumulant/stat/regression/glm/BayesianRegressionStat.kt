@@ -22,6 +22,7 @@ import com.eignex.koblas.dense.trmv
 import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.dot
 import com.eignex.koblas.koblas
+import com.eignex.koblas.syr
 import com.eignex.koblas.zeroStrictUpper
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
@@ -368,16 +369,25 @@ class BayesianRegressionStat(
             // One buffer for every snapshot's covariance: the inversion writes each entry, so it
             // never sees what the previous instance left behind.
             val cov = F64DenseMatrix.zero(n, n)
+            // Both matrices are square, n by n, and column-major, so their flat backings line up
+            // entry for entry and the matrix add is a level-1 axpy over the whole of them.
+            val sigmaFlat = F64DenseVector.wrap(sigmaPop.data)
+            val covFlat = F64DenseVector.wrap(cov.data)
+            val deviation = DoubleArray(n)
+            val deviationVector = F64DenseVector.wrap(deviation)
             for (s in snapshots.indices) {
                 val wi = weights[s] / wTotal
                 snapshots[s].covarianceInto(cov)
                 val mu = snapshots[s].weights
-                for (i in 0 until n) {
-                    val di = mu[i] - muPop[i]
-                    for (j in 0 until n) {
-                        sigmaPop[i, j] = sigmaPop[i, j] + wi * (cov[i, j] + di * (mu[j] - muPop[j]))
-                    }
-                }
+                sigmaFlat.axpy(wi, covFlat)
+                for (i in 0 until n) deviation[i] = mu[i] - muPop[i]
+                sigmaPop.syr(wi, deviationVector)
+            }
+            // The axpy filled both triangles, since each Sigma_i is symmetric, but syr writes only
+            // the lower one. Reflecting once here rather than per snapshot is what keeps the
+            // published matrix symmetric, which callers reading either half depend on.
+            for (i in 0 until n) {
+                for (j in i + 1 until n) sigmaPop[i, j] = sigmaPop[j, i]
             }
 
             return PopulationPrior(
