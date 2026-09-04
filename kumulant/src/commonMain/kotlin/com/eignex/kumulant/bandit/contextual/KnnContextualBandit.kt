@@ -6,6 +6,7 @@ import com.eignex.koblas.core.F64SparseVector
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.core.F64VectorStorage
 import com.eignex.koblas.forEachStored
+import com.eignex.koblas.koblas
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
@@ -335,14 +336,8 @@ class KnnContextualBandit(
             }
         }
 
-        private fun denseSquaredL2(a: F64DenseVector, b: F64DenseVector): Double {
-            var s = 0.0
-            for (i in 0 until a.size) {
-                val d = a[i] - b[i]
-                s += d * d
-            }
-            return s
-        }
+        private fun denseSquaredL2(a: F64DenseVector, b: F64DenseVector): Double =
+            koblas.kernels.ssqd(a.data, 0, b.data, 0, a.size)
 
         private fun genericSquaredL2(a: F64VectorLike, b: F64VectorLike): Double {
             var s = 0.0
