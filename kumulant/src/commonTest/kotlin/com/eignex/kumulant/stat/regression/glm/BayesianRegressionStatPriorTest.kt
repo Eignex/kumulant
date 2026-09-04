@@ -205,6 +205,37 @@ class BayesianRegressionStatPriorTest {
     }
 
     @Test
+    fun `fitPopulationPrior returns a symmetric covariance with off-diagonal spread`() {
+        // The between-instance term is accumulated one triangle at a time, so the off-diagonal
+        // has to be filled by reflection rather than written twice. Means that differ in both
+        // coordinates are what puts anything there to reflect.
+        val sqrt01 = sqrt(0.01)
+        fun snap(mu: DoubleArray) = PrecisionRegressionResult(
+            weights = F64DenseVector.of(mu),
+            bias = 0.0,
+            biasPrecision = 1.0,
+            totalWeights = 100.0,
+            step = 100L,
+            precisionL = F64DenseMatrix.diagonal(3, 1.0 / sqrt01),
+            sse = 0.0,
+        )
+        val prior = BayesianRegressionStat.fitPopulationPrior(
+            listOf(
+                snap(doubleArrayOf(2.0, -1.0, 0.5)),
+                snap(doubleArrayOf(-1.0, 3.0, -2.0)),
+                snap(doubleArrayOf(0.0, 1.0, 4.0)),
+            ),
+        )
+
+        for (i in 0 until 3) {
+            for (j in 0 until 3) {
+                assertEquals(prior.covariance[i, j], prior.covariance[j, i], 0.0, "asymmetric at ($i, $j)")
+            }
+        }
+        assertTrue(abs(prior.covariance[0, 1]) > 1e-6, "off-diagonal is ${prior.covariance[0, 1]}")
+    }
+
+    @Test
     fun `fitPopulationPrior captures between-instance spread`() {
         // Two posteriors with very different means and tight covariance: the population
         // covariance should be dominated by the between-instance term (~ (mu_diff/2)^2).
