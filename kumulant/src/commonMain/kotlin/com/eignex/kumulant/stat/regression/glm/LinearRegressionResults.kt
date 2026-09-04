@@ -8,6 +8,7 @@ import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dense.F64CholeskyDecomposition
 import com.eignex.koblas.dense.invert
+import com.eignex.koblas.dense.invertInto
 import com.eignex.koblas.dot
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
@@ -138,4 +139,12 @@ data class PrecisionRegressionResult(
      */
     fun covariance(workspace: Workspace? = null): F64DenseMatrix =
         F64CholeskyDecomposition(precisionL).invert(workspace)
+
+    /**
+     * Posterior covariance into [out], which is returned. Every entry is written, so a buffer
+     * carried across calls needs no clearing; still O(n³) each time, so this saves the allocation
+     * rather than the work. [out] must not be [precisionL] itself.
+     */
+    fun covarianceInto(out: F64DenseMatrix, workspace: Workspace? = null): F64DenseMatrix =
+        F64CholeskyDecomposition(precisionL).invertInto(out, workspace)
 }

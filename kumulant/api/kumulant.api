@@ -7421,6 +7421,8 @@ public final class com/eignex/kumulant/stat/regression/glm/PrecisionRegressionRe
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;Lcom/eignex/koblas/core/F64DenseVector;DDDJLcom/eignex/koblas/core/F64DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;DILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;
 	public final fun covariance (Lcom/eignex/koblas/Workspace;)Lcom/eignex/koblas/core/F64DenseMatrix;
 	public static synthetic fun covariance$default (Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;Lcom/eignex/koblas/Workspace;ILjava/lang/Object;)Lcom/eignex/koblas/core/F64DenseMatrix;
+	public final fun covarianceInto (Lcom/eignex/koblas/core/F64DenseMatrix;Lcom/eignex/koblas/Workspace;)Lcom/eignex/koblas/core/F64DenseMatrix;
+	public static synthetic fun covarianceInto$default (Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;Lcom/eignex/koblas/core/F64DenseMatrix;Lcom/eignex/koblas/Workspace;ILjava/lang/Object;)Lcom/eignex/koblas/core/F64DenseMatrix;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getBias ()D
 	public final fun getBiasPrecision ()D
