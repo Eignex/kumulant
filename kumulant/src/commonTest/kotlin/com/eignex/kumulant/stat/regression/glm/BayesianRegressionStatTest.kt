@@ -151,6 +151,30 @@ class BayesianRegressionStatTest {
     }
 
     @Test
+    fun `covarianceInto matches covariance and carries no state between calls`() {
+        val first = BayesianRegressionStat(featureSize = 3, priorVariance = 2.0)
+        val second = BayesianRegressionStat(featureSize = 3, priorVariance = 0.25)
+        val rng = Random(17)
+        repeat(40) {
+            val x = DoubleArray(3) { rng.nextDouble() * 2.0 - 1.0 }
+            first.update(x, rng.nextDouble())
+            second.update(DoubleArray(3) { rng.nextDouble() }, rng.nextDouble())
+        }
+        val buffer = F64DenseMatrix.zero(3, 3)
+
+        // Reused across two different posteriors: the second fill has to overwrite the first
+        // completely, not blend with whatever it left behind.
+        first.read().covarianceInto(buffer)
+        val secondResult = second.read()
+        secondResult.covarianceInto(buffer)
+
+        val expected = secondResult.covariance()
+        for (i in 0 until 3) {
+            for (j in 0 until 3) assertEquals(expected[i, j], buffer[i, j], 0.0, "disagrees at ($i, $j)")
+        }
+    }
+
+    @Test
     fun `the factor keeps its canonical form across a long update sequence`() {
         // A rank-1 update is free to return any factor whose product is right, and a plane rotation
         // signed after the larger input flips a whole column. That reconstructs H just as well,

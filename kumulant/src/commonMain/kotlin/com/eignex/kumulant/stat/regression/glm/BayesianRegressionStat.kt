@@ -365,9 +365,12 @@ class BayesianRegressionStat(
 
             // Sigma_pop = weighted mean of Sigma_i + weighted covariance of (mu_i - mu_pop).
             val sigmaPop = F64DenseMatrix.zero(n, n)
+            // One buffer for every snapshot's covariance: the inversion writes each entry, so it
+            // never sees what the previous instance left behind.
+            val cov = F64DenseMatrix.zero(n, n)
             for (s in snapshots.indices) {
                 val wi = weights[s] / wTotal
-                val cov = snapshots[s].covariance()
+                snapshots[s].covarianceInto(cov)
                 val mu = snapshots[s].weights
                 for (i in 0 until n) {
                     val di = mu[i] - muPop[i]
