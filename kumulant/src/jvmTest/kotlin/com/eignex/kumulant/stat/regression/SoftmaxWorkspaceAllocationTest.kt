@@ -18,8 +18,18 @@ class SoftmaxWorkspaceAllocationTest {
         fun run()
     }
 
+    /**
+     * Best-of-five bytes per call, taken only after the call chain has had time to reach C2.
+     *
+     * koblas builds a small shape record on every `gemv` and only escape analysis removes it, so until
+     * C2 has compiled the chain from `predict` down to the kernel the workspace arm is charged 24 B for
+     * a record it never asked for and misses a ceiling meant for the buffer it borrows. From a fresh
+     * JVM that compile landed anywhere between 70k and 400k calls in, later the busier the compile
+     * queue, so the warmup is sized for the slow end and the workspace arm measures last with the other
+     * arms' calls behind it.
+     */
     private fun bytesPerCall(body: Body): Double {
-        repeat(1_000) { body.run() }
+        repeat(200_000) { body.run() }
         val id = Thread.currentThread().threadId()
         var best = Double.MAX_VALUE
         repeat(5) {
