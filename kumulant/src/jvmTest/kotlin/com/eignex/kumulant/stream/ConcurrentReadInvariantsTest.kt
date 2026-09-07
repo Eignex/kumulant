@@ -103,9 +103,11 @@ class ConcurrentReadInvariantsTest {
     @Test
     fun `HdrHistogramStat read does not throw while buckets are being populated`() {
         for (level in levels) {
-            // Spread values widely so fresh buckets keep appearing mid-read.
-            val stat = HdrHistogramStat(concurrency = level)
-            assertReadInvariants("HdrHistogramStat[$level]", stat, write = { t, i ->
+            // Spread values widely so fresh buckets keep appearing mid-read. Every read snapshots every
+            // cell of a histogram that keeps growing, so this case runs a third of the usual iterations
+            // and does not track the decades below 1.0 that no write reaches.
+            val stat = HdrHistogramStat(lowestDiscernibleValue = 1.0, concurrency = level)
+            assertReadInvariants("HdrHistogramStat[$level]", stat, iters = 1_000, write = { t, i ->
                 stat.update(1.0 + (t * 7919L + i * 104_729L) % 1_000_000L)
             }) { r ->
                 assertTrue(
