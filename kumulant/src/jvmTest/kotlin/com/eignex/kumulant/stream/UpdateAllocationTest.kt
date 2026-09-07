@@ -1,5 +1,7 @@
 package com.eignex.kumulant.stream
 
+import com.eignex.kumulant.ALLOCATION_PASS_CALLS
+import com.eignex.kumulant.assertAllocatesAtMost
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.change.AdwinStat
@@ -10,57 +12,18 @@ import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
-import com.sun.management.ThreadMXBean
-import java.lang.management.ManagementFactory
 import kotlin.test.Test
-import kotlin.test.assertTrue
 
-// kotlinx-benchmark 0.4.13 does not expose JMH's `gc` profiler - its `advanced` options are limited
-// to fork and bridge settings - so per-operation allocation is invisible to the benchmark suite. It
-// is measured here through the HotSpot thread allocation counter, which is exact for a
-// single-threaded loop and cheap enough to run as an ordinary test.
-//
 // Thresholds are ceilings meant to catch a regression, not exact figures.
 class UpdateAllocationTest {
 
-    private val bean = ManagementFactory.getThreadMXBean() as ThreadMXBean
-
-    /**
-     * Loop body taking a primitive `Int`.
-     *
-     * A Kotlin `(Int) -> Unit` compiles to `Function1<Integer, Unit>`, so every call boxes the
-     * index and the harness allocates 16 B per iteration, swamping what is being measured. A
-     * `fun interface` over a primitive parameter compiles to `(I)V` and allocates nothing.
-     */
-    private fun interface IntBody {
-        fun run(i: Int)
-    }
-
-    /**
-     * Best-of-five bytes per iteration.
-     *
-     * Warmup matters more than it looks: at 20k iterations the JIT has not settled and even a
-     * genuinely allocation-free stat reports several bytes per op. Taking the minimum of
-     * several passes after a 50k warmup removes that noise.
-     */
-    private fun bytesPerOp(iterations: Int, body: IntBody): Double {
-        repeat(50_000) { body.run(it) }
-        val id = Thread.currentThread().threadId()
-        var best = Double.MAX_VALUE
-        repeat(5) {
-            val before = bean.getThreadAllocatedBytes(id)
-            for (i in 0 until iterations) body.run(i)
-            val after = bean.getThreadAllocatedBytes(id)
-            val per = (after - before).toDouble() / iterations
-            if (per < best) best = per
-        }
-        return best
-    }
-
-    private fun assertUpdateAllocation(name: String, limit: Double, stat: SeriesStat<*>, span: Int = 97) {
-        val perOp = bytesPerOp(200_000) { i -> stat.update(1.0 + (i % span), 0L, 1.0) }
-        assertTrue(perOp <= limit, "$name allocated $perOp B/update, expected at most $limit")
-    }
+    private fun assertUpdateAllocation(
+        name: String,
+        limit: Double,
+        stat: SeriesStat<*>,
+        span: Int = 97,
+        callsPerPass: Int = ALLOCATION_PASS_CALLS,
+    ) = assertAllocatesAtMost(limit, "$name update", callsPerPass) { i -> stat.update(1.0 + (i % span), 0L, 1.0) }
 
     @Test
     fun `summary stats allocate nothing per update`() {
@@ -93,13 +56,20 @@ class UpdateAllocationTest {
     fun `the amortised allocators stay under their ceiling`() {
         // Ceilings for the two stats that allocate by design, as tripwires against a large regression
         // rather than as precise figures. Both allocate the same amount under every [Concurrency]
-        // level, so what is left is structural.
+        // level, so what is left is structural. Their allocation lands in bursts, so a pass has to
+        // span many of them for the per-update figure to mean anything.
         //
         // AdwinStat allocates one Bucket per observation, and its bucket-walk scratch buffer grows
         // with the window. Measured 75 B/op.
-        assertUpdateAllocation("AdwinStat", 110.0, AdwinStat(concurrency = Concurrency.None))
+        assertUpdateAllocation("AdwinStat", 110.0, AdwinStat(concurrency = Concurrency.None), callsPerPass = 200_000)
         // TDigestStat allocates the merged centroid arrays once per compression epoch, amortised
         // over the buffer. Measured 54 B/op.
-        assertUpdateAllocation("TDigestStat", 80.0, TDigestStat(concurrency = Concurrency.None), span = 9973)
+        assertUpdateAllocation(
+            "TDigestStat",
+            80.0,
+            TDigestStat(concurrency = Concurrency.None),
+            span = 9973,
+            callsPerPass = 200_000,
+        )
     }
 }

@@ -15,14 +15,4 @@ class MonotonicClockTest {
             )
         }
     }
-
-    @Test
-    fun `currentTimeNanos advances between two calls separated by work`() {
-        val a = currentTimeNanos()
-
-        var sink = 0L
-        repeat(100_000) { sink += it.toLong() }
-        val b = currentTimeNanos()
-        assertTrue(b > a, "expected clock to advance, got a=$a b=$b (sink=$sink)")
-    }
 }

@@ -1,31 +1,12 @@
 package com.eignex.kumulant.bandit.contextual
 
 import com.eignex.koblas.core.F64DenseVector
-import com.sun.management.ThreadMXBean
-import java.lang.management.ManagementFactory
+import com.eignex.kumulant.assertAllocatesAtMost
+import com.eignex.kumulant.bytesPerCall
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class Exp4BanditAllocationTest {
-
-    private val bean = ManagementFactory.getThreadMXBean() as ThreadMXBean
-
-    private fun interface Body {
-        fun run()
-    }
-
-    private fun bytesPerCall(body: Body): Double {
-        repeat(1_000) { body.run() }
-        val id = Thread.currentThread().threadId()
-        var best = Double.MAX_VALUE
-        repeat(5) {
-            val before = bean.getThreadAllocatedBytes(id)
-            repeat(2_000) { body.run() }
-            val after = bean.getThreadAllocatedBytes(id)
-            best = minOf(best, (after - before).toDouble() / 2_000)
-        }
-        return best
-    }
 
     @Test
     fun `destination distribution removes Kumulant output allocation with reusable advice`() {
@@ -34,8 +15,10 @@ class Exp4BanditAllocationTest {
         val x = F64DenseVector.of(doubleArrayOf(1.0))
         val out = DoubleArray(ARMS)
 
-        val allocatingBytes = bytesPerCall { allocating.playDistribution(x) }
-        val destinationBytes = bytesPerCall { destination.playDistributionInto(x, out) }
+        val (allocatingBytes, destinationBytes) = bytesPerCall(
+            { allocating.playDistribution(x) },
+            { destination.playDistributionInto(x, out) },
+        )
 
         assertTrue(
             destinationBytes + 128.0 <= allocatingBytes,
@@ -50,14 +33,11 @@ class Exp4BanditAllocationTest {
         val updating = reusableBandit()
         val arm = updating.choose(x)
 
-        val chooseBytes = bytesPerCall { choosing.choose(x) }
-        val updateBytes = bytesPerCall {
+        assertAllocatesAtMost(0.0, "choose") { choosing.choose(x) }
+        assertAllocatesAtMost(0.0, "update followed by choose") {
             updating.update(arm, x, reward = 0.0)
             updating.choose(x)
-        } / 2.0
-
-        assertTrue(chooseBytes < 128.0, "choose allocated $chooseBytes B/call")
-        assertTrue(updateBytes < 128.0, "update allocated $updateBytes B/call")
+        }
     }
 
     private fun reusableBandit(): Exp4Bandit {
