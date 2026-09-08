@@ -4,7 +4,6 @@
 
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.NotPositiveDefinite
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
@@ -13,11 +12,6 @@ import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64MatrixLike
 import com.eignex.koblas.core.F64VectorLike
-import com.eignex.koblas.dense.CholeskyPolicy
-import com.eignex.koblas.dense.F64CholeskyDecomposition
-import com.eignex.koblas.dense.cholesky
-import com.eignex.koblas.dense.invert
-import com.eignex.koblas.dense.rankUpdate
 import com.eignex.koblas.dense.trmv
 import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.dot
@@ -30,6 +24,10 @@ import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requireMergeFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
+import com.eignex.kumulant.math.CholeskyFactor
+import com.eignex.kumulant.math.CholeskyPolicy
+import com.eignex.kumulant.math.NotPositiveDefinite
+import com.eignex.kumulant.math.cholesky
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
@@ -150,7 +148,7 @@ class BayesianRegressionStat(
     // The rank-1 update takes a decomposition rather than a bare factor. It wraps `precisionL`
     // without copying and every write goes through that same matrix, so one wrapper serves the
     // life of the stat and no update allocates to build one.
-    private val precisionFactor = F64CholeskyDecomposition(precisionL)
+    private val precisionFactor = CholeskyFactor(precisionL)
     private var bias: Double = 0.0
     private var biasPrecision: Double = 1.0 / priorVariance
     private var totalWeights: Double = 0.0
@@ -278,7 +276,7 @@ class BayesianRegressionStat(
 
                 // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
                 val hChol = hNew.cholesky(CholeskyPolicy.Regularize())
-                koblas.solveInto(hChol, b, b)
+                hChol.solveInto(b, b)
                 val lNew = hChol.l.also { it.zeroStrictUpper() }
 
                 for (i in 0 until n) {
