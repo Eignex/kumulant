@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.VectorLike
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
@@ -85,7 +85,7 @@ class DecisionTreeClassifierStat(
     )
 
     override fun update(
-        x: F64VectorLike,
+        x: VectorLike,
         y: Double,
         timestampNanos: Long,
         weight: Double,

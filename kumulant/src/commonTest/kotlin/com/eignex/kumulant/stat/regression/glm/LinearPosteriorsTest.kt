@@ -1,12 +1,12 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
+import com.eignex.koblas.StridedVectorView
+import com.eignex.koblas.VectorLike
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.borrow
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64SparseVector
-import com.eignex.koblas.core.F64StridedVectorView
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
@@ -17,7 +17,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class LinearPosteriorsTest {
 
-    private class CustomVector(private val values: DoubleArray) : F64VectorLike {
+    private class CustomVector(private val values: DoubleArray) : VectorLike {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
         override fun toDoubleArray(): DoubleArray = values.copyOf()
@@ -59,7 +59,7 @@ class LinearPosteriorsTest {
     @Test
     fun `workspace covariance evaluation matches allocating evaluation and preserves random draws`() {
         val snapshot = bayesianSnapshot()
-        val x = F64SparseVector.of(size = 2, indices = intArrayOf(0), values = doubleArrayOf(0.3))
+        val x = SparseVector.of(size = 2, indices = intArrayOf(0), values = doubleArrayOf(0.3))
         val workspace = Workspace().apply { reserve(2, 1) }
 
         val allocated = MultivariateGaussian.evaluate(snapshot, x, Random(9), exploration = 0.7)
@@ -71,8 +71,8 @@ class LinearPosteriorsTest {
     @Test
     fun `workspace covariance evaluation accepts strided and custom vectors`() {
         val snapshot = bayesianSnapshot()
-        val dense = F64DenseVector.of(doubleArrayOf(0.3, -0.2))
-        val strided = F64StridedVectorView(doubleArrayOf(0.3, 7.0, -0.2, 7.0), 0, 2, 2)
+        val dense = DenseVector.of(doubleArrayOf(0.3, -0.2))
+        val strided = StridedVectorView(doubleArrayOf(0.3, 7.0, -0.2, 7.0), 0, 2, 2)
         val custom = CustomVector(doubleArrayOf(0.3, -0.2))
         val workspace = Workspace().apply { reserve(2, 1) }
 
@@ -143,7 +143,7 @@ class LinearPosteriorsTest {
     @Test
     fun `PointPosterior evaluate with zero exploration is the point prediction`() {
         val snap = sgdSnapshot()
-        val x = F64DenseVector.of(doubleArrayOf(0.3, -0.4))
+        val x = DenseVector.of(doubleArrayOf(0.3, -0.4))
         val v = PointPosterior.evaluate(snap, x, Random(0), exploration = 0.0)
         assertEquals(snap.predict(x), v, 1e-12)
     }
@@ -151,7 +151,7 @@ class LinearPosteriorsTest {
     @Test
     fun `PointPosterior evaluate with exploration is finite`() {
         val snap = sgdSnapshot()
-        val x = F64DenseVector.of(doubleArrayOf(0.3, -0.4))
+        val x = DenseVector.of(doubleArrayOf(0.3, -0.4))
         repeat(50) {
             val v = PointPosterior.evaluate(snap, x, Random(it.toLong()), exploration = 0.5)
             assertTrue(v.isFinite())
@@ -190,7 +190,7 @@ class LinearPosteriorsTest {
     @Test
     fun `FactorisedGaussian evaluate is centered on predict`() {
         val snap = diagonalSnapshot()
-        val x = F64DenseVector.of(doubleArrayOf(0.1, 0.2))
+        val x = DenseVector.of(doubleArrayOf(0.1, 0.2))
         val rng = Random(0)
         val n = 600
         var sum = 0.0
@@ -201,8 +201,8 @@ class LinearPosteriorsTest {
     @Test
     fun `FactorisedGaussian evaluate gives sparse inputs the dense score`() {
         val snap = diagonalSnapshot()
-        val dense = F64DenseVector.of(doubleArrayOf(0.1, 0.0))
-        val sparse = F64SparseVector.of(2, intArrayOf(0), doubleArrayOf(0.1))
+        val dense = DenseVector.of(doubleArrayOf(0.1, 0.0))
+        val sparse = SparseVector.of(2, intArrayOf(0), doubleArrayOf(0.1))
 
         assertEquals(
             FactorisedGaussian.evaluate(snap, dense, Random(42), exploration = 0.1),
@@ -230,12 +230,12 @@ class LinearPosteriorsTest {
     @Test
     fun `MultivariateGaussian sample maps the draw through the inverse precision factor`() {
         val snapshot = PrecisionRegressionResult(
-            weights = F64DenseVector.of(doubleArrayOf(1.0, -1.0)),
+            weights = DenseVector.of(doubleArrayOf(1.0, -1.0)),
             bias = 0.0,
             biasPrecision = 1.0,
             totalWeights = 0.0,
             step = 0L,
-            precisionL = F64DenseMatrix.of(arrayOf(doubleArrayOf(2.0, 0.0), doubleArrayOf(3.0, 4.0))),
+            precisionL = DenseMatrix.of(arrayOf(doubleArrayOf(2.0, 0.0), doubleArrayOf(3.0, 4.0))),
         )
         val expectedRng = Random(7)
         val u0 = expectedRng.nextNormal(0.0, 0.5)
@@ -255,7 +255,7 @@ class LinearPosteriorsTest {
     @Test
     fun `MultivariateGaussian evaluate is finite and finite-variance`() {
         val snap = bayesianSnapshot()
-        val x = F64DenseVector.of(doubleArrayOf(0.5, 0.5))
+        val x = DenseVector.of(doubleArrayOf(0.5, 0.5))
         val rng = Random(0)
         val n = 300
         var sum = 0.0
@@ -266,7 +266,7 @@ class LinearPosteriorsTest {
     @Test
     fun `LinUcb evaluate is deterministic given the snapshot`() {
         val snap = bayesianSnapshot()
-        val x = F64DenseVector.of(doubleArrayOf(0.3, 0.7))
+        val x = DenseVector.of(doubleArrayOf(0.3, 0.7))
         val rng = Random(0)
         val a = LinUcb.evaluate(snap, x, rng, exploration = 1.0)
         val b = LinUcb.evaluate(snap, x, rng, exploration = 1.0)
@@ -276,7 +276,7 @@ class LinearPosteriorsTest {
     @Test
     fun `LinUcb evaluate is mean plus alpha times sqrt xT Sigma x`() {
         val snap = bayesianSnapshot()
-        val x = F64DenseVector.of(doubleArrayOf(0.5, -0.5))
+        val x = DenseVector.of(doubleArrayOf(0.5, -0.5))
         val alpha = 2.0
         val score = LinUcb.evaluate(snap, x, Random(0), exploration = alpha)
         val mean = snap.predict(x)
@@ -298,7 +298,7 @@ class LinearPosteriorsTest {
         val snap = sgdSnapshot()
         assertTrue(snap.featureSize == 2)
         assertFailsWith<IllegalArgumentException> {
-            snap.predict(F64DenseVector.of(doubleArrayOf(1.0)))
+            snap.predict(DenseVector.of(doubleArrayOf(1.0)))
         }
     }
 
@@ -306,12 +306,12 @@ class LinearPosteriorsTest {
     fun `PrecisionRegressionResult rejects shape mismatch`() {
         assertFailsWith<IllegalArgumentException> {
             PrecisionRegressionResult(
-                weights = F64DenseVector.of(doubleArrayOf(0.0, 0.0)),
+                weights = DenseVector.of(doubleArrayOf(0.0, 0.0)),
                 bias = 0.0,
                 biasPrecision = 1.0,
                 totalWeights = 0.0,
                 step = 0L,
-                precisionL = F64DenseMatrix.zero(3, 3),
+                precisionL = DenseMatrix.zero(3, 3),
             )
         }
     }
@@ -377,7 +377,7 @@ class LinearPosteriorsTest {
         val point = sgdSnapshot().copy(link = Link.Logit)
         val diagonal = diagonalSnapshot().copy(link = Link.Logit)
         val bayesian = bayesianSnapshot().copy(link = Link.Logit)
-        val x = F64DenseVector.of(doubleArrayOf(1.0, 1.0))
+        val x = DenseVector.of(doubleArrayOf(1.0, 1.0))
         val rng = Random(3)
         repeat(100) {
             assertTrue(PointPosterior.evaluate(point, x, rng, exploration = 4.0) in 0.0..1.0)

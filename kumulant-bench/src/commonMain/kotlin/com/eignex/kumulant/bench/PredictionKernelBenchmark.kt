@@ -1,9 +1,9 @@
 package com.eignex.kumulant.bench
 
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64SparseVector
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
+import com.eignex.koblas.VectorLike
 import com.eignex.koblas.Workspace
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
@@ -29,7 +29,7 @@ open class PredictionKernelBenchmark {
     @Param("1", "10", "100")
     var densityPercent: Int = 1
 
-    private lateinit var x: F64VectorLike
+    private lateinit var x: VectorLike
     private lateinit var linear: StochasticRegressionResult
     private lateinit var softmax: SoftmaxRegressionResult
     private lateinit var posterior: PrecisionRegressionResult
@@ -42,27 +42,27 @@ open class PredictionKernelBenchmark {
     fun setup() {
         val values = DoubleArray(featureSize) { i -> (i % 11 - 5) * 0.125 }
         val count = maxOf(1, featureSize * densityPercent / 100)
-        x = if (densityPercent == 100) F64DenseVector.of(values) else F64SparseVector.of(
+        x = if (densityPercent == 100) DenseVector.of(values) else SparseVector.of(
             featureSize,
             IntArray(count) { it * featureSize / count },
             DoubleArray(count) { values[it * featureSize / count] },
         )
-        val weights = F64DenseVector.of(DoubleArray(featureSize) { i -> (i % 7 - 3) * 0.2 })
+        val weights = DenseVector.of(DoubleArray(featureSize) { i -> (i % 7 - 3) * 0.2 })
         linear = StochasticRegressionResult(weights, 0.25, 0.0, 0L, Link.Identity)
         softmax = SoftmaxRegressionResult(
             featureSize,
             4,
-            F64DenseMatrix.of(Array(4) { k -> DoubleArray(featureSize) { i -> (k - i % 5) * 0.1 } }),
-            F64DenseVector.of(doubleArrayOf(-0.2, 0.0, 0.1, 0.3)),
+            DenseMatrix.of(Array(4) { k -> DoubleArray(featureSize) { i -> (k - i % 5) * 0.1 } }),
+            DenseVector.of(doubleArrayOf(-0.2, 0.0, 0.1, 0.3)),
             0.0,
             0L,
             0.0,
         )
-        val identity = F64DenseMatrix.diagonal(featureSize, 1.0)
+        val identity = DenseMatrix.diagonal(featureSize, 1.0)
         posterior = PrecisionRegressionResult(weights, 0.25, 1.0, 0.0, 0L, identity)
         val naiveBayes = GaussianNaiveBayesStat(featureSize, 4)
         repeat(16) { sample ->
-            naiveBayes.update(F64DenseVector.of(DoubleArray(featureSize) { i -> (sample - i % 7) * 0.1 }), (sample % 4).toDouble())
+            naiveBayes.update(DenseVector.of(DoubleArray(featureSize) { i -> (sample - i % 7) * 0.1 }), (sample % 4).toDouble())
         }
         gaussianNaiveBayes = naiveBayes.read()
         knn = KnnContextualBandit(nbrArms = 4, k = 8, exploration = 0.0)
@@ -105,7 +105,7 @@ open class PredictionKernelBenchmark {
     fun knnChooseWorkspace(): Int = knn.choose(x, workspace)
 
     @Benchmark
-    fun multivariateSample(): F64VectorLike = MultivariateGaussian.sample(posterior, Random(1234), 1.0)
+    fun multivariateSample(): VectorLike = MultivariateGaussian.sample(posterior, Random(1234), 1.0)
 
     @Benchmark
     fun multivariateEvaluate(): Double = MultivariateGaussian.evaluate(posterior, x, Random(1234), 1.0)
@@ -117,7 +117,7 @@ open class PredictionKernelBenchmark {
     @Benchmark
     fun bayesianPrior(): PrecisionRegressionResult = BayesianRegressionStat(
         featureSize = featureSize,
-        priorMean = F64DenseVector.of(DoubleArray(featureSize) { it * 0.01 }),
+        priorMean = DenseVector.of(DoubleArray(featureSize) { it * 0.01 }),
     ).read()
 
     @Benchmark

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bench
 
-import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.bandit.contextual.Exp4Bandit
 import com.eignex.kumulant.bandit.contextual.Exp4Expert
 import kotlinx.benchmark.Benchmark
@@ -19,7 +19,7 @@ open class Exp4MixingBenchmark {
     lateinit var advice: String
 
     private lateinit var bandit: Exp4Bandit
-    private lateinit var x: F64DenseVector
+    private lateinit var x: DenseVector
     private lateinit var out: DoubleArray
     private var arm: Int = 0
 
@@ -31,7 +31,7 @@ open class Exp4MixingBenchmark {
             Exp4Expert { _, _ -> if (advice == "reusable") value else value.copyOf() }
         }
         bandit = Exp4Bandit(arms, expertPool, gamma = 0.1)
-        x = F64DenseVector.of(doubleArrayOf(1.0))
+        x = DenseVector.of(doubleArrayOf(1.0))
         out = DoubleArray(arms)
     }
 

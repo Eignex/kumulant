@@ -1,9 +1,9 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64SparseVector
-import com.eignex.koblas.core.F64StridedVectorView
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
+import com.eignex.koblas.StridedVectorView
+import com.eignex.koblas.VectorLike
 import com.eignex.kumulant.DELTA
 import kotlin.math.abs
 import kotlin.random.Random
@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 
 class GaussianNaiveBayesStatTest {
 
-    private class CustomVector(private val values: DoubleArray) : F64VectorLike {
+    private class CustomVector(private val values: DoubleArray) : VectorLike {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
         override fun toDoubleArray(): DoubleArray = values.copyOf()
@@ -94,7 +94,7 @@ class GaussianNaiveBayesStatTest {
         val n = 300
         repeat(n) {
             val c = rng.nextInt(3)
-            val x = F64DenseVector.of(
+            val x = DenseVector.of(
                 doubleArrayOf(
                     centers[c][0] + rng.nextDouble() - 0.5,
                     centers[c][1] + rng.nextDouble() - 0.5,
@@ -111,10 +111,10 @@ class GaussianNaiveBayesStatTest {
         repeat(10) { stat.update(doubleArrayOf(0.0), 0.0) }
         repeat(10) { stat.update(doubleArrayOf(10.0), 1.0) }
         val r = stat.read()
-        val p = r.probabilities(F64DenseVector.of(doubleArrayOf(9.5)))
+        val p = r.probabilities(DenseVector.of(doubleArrayOf(9.5)))
         assertEquals(1.0, p.sum(), 1e-9)
         assertTrue(p[1] > p[0])
-        assertEquals(1, r.predict(F64DenseVector.of(doubleArrayOf(9.5))))
+        assertEquals(1, r.predict(DenseVector.of(doubleArrayOf(9.5))))
     }
 
     @Test
@@ -123,13 +123,13 @@ class GaussianNaiveBayesStatTest {
         stat.update(doubleArrayOf(1.0, 0.0, -2.0), 0.0, weight = 2.0)
         stat.update(doubleArrayOf(-1.0, 0.0, 3.0), 1.0)
         val result = stat.read()
-        val dense = F64DenseVector.of(doubleArrayOf(0.5, 0.0, -1.0))
-        val sparse = F64SparseVector.of(3, intArrayOf(0, 1, 2), doubleArrayOf(0.5, 0.0, -1.0))
-        val strided = F64StridedVectorView(doubleArrayOf(0.5, 9.0, 0.0, 9.0, -1.0, 9.0), 0, 3, 2)
+        val dense = DenseVector.of(doubleArrayOf(0.5, 0.0, -1.0))
+        val sparse = SparseVector.of(3, intArrayOf(0, 1, 2), doubleArrayOf(0.5, 0.0, -1.0))
+        val strided = StridedVectorView(doubleArrayOf(0.5, 9.0, 0.0, 9.0, -1.0, 9.0), 0, 3, 2)
         val custom = CustomVector(doubleArrayOf(0.5, 0.0, -1.0))
         val expected = result.probabilities(dense)
 
-        for (x in listOf<F64VectorLike>(sparse, strided, custom)) {
+        for (x in listOf<VectorLike>(sparse, strided, custom)) {
             val logs = DoubleArray(2)
             val probabilities = DoubleArray(2)
             result.logPosteriorsInto(x, logs)
@@ -150,7 +150,7 @@ class GaussianNaiveBayesStatTest {
 
         assertFailsWith<IllegalArgumentException> {
             result.logPosteriorsInto(
-                F64DenseVector.of(doubleArrayOf(0.0, 0.0)),
+                DenseVector.of(doubleArrayOf(0.0, 0.0)),
                 destination,
             )
         }

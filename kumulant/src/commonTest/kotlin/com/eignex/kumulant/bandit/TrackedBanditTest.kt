@@ -1,8 +1,8 @@
 package com.eignex.kumulant.bandit
 
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorLike
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
@@ -33,7 +33,7 @@ class TrackedBanditTest {
     private class RecordingRegressionStat(private val recorder: WorkspaceRecorder) : RegressionStat<SumResult> {
         override val concurrency = Concurrency.None
         override val featureSize = 1
-        override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) {
+        override fun update(x: VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) {
             recorder.workspace = workspace
         }
 
@@ -62,7 +62,7 @@ class TrackedBanditTest {
         )
         val workspace = Workspace()
 
-        tracked.choose(F64DenseVector.of(doubleArrayOf(0.5)), workspace)
+        tracked.choose(DenseVector.of(doubleArrayOf(0.5)), workspace)
 
         assertSame(workspace, recorder.workspace)
     }
@@ -83,7 +83,7 @@ class TrackedBanditTest {
             updateMarginalTemplate = BayesianRegressionStat(featureSize = 1),
             updateArmRewardTemplate = CovarianceStat(),
         )
-        val x = F64DenseVector.of(doubleArrayOf(0.3))
+        val x = DenseVector.of(doubleArrayOf(0.3))
         tracked.update(0, x, reward = 1.0)
         tracked.update(0, x, reward = 0.5)
         tracked.update(1, x, reward = 0.0)
@@ -126,7 +126,7 @@ class TrackedBanditTest {
             random = Random(7),
         )
         val tracked = TrackedContextualBandit(inner = inner, contextFeatureSize = 1)
-        val x = F64DenseVector.of(doubleArrayOf(0.1))
+        val x = DenseVector.of(doubleArrayOf(0.1))
         tracked.update(0, x, reward = 1.0)
         tracked.choose(x)
         assertNull(tracked.chooseResult())

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bench
 
-import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.SparseVector
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
@@ -24,7 +24,7 @@ open class OwnedStorageBenchmark {
     private lateinit var diagonal: DiagonalRegressionStat
     private lateinit var bayesian: BayesianRegressionStat
     private lateinit var naiveBayes: GaussianNaiveBayesStat
-    private lateinit var sparse: F64SparseVector
+    private lateinit var sparse: SparseVector
     private lateinit var knn: KnnContextualBandit
 
     @Setup
@@ -35,7 +35,7 @@ open class OwnedStorageBenchmark {
         bayesian = BayesianRegressionStat(featureSize).also { it.update(x, 1.0) }
         naiveBayes = GaussianNaiveBayesStat(featureSize, 4).also { it.update(x, 0.0) }
         val nnz = (featureSize * densityPercent / 100).coerceAtLeast(1)
-        sparse = F64SparseVector.of(
+        sparse = SparseVector.of(
             featureSize,
             IntArray(nnz) { it * featureSize / nnz },
             DoubleArray(nnz) { it.toDouble() },

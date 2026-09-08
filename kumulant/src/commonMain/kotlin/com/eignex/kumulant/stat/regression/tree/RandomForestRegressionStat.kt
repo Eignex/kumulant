@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.VectorLike
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
@@ -81,9 +81,9 @@ class RandomForestRegressionStat(
     // path and rewritten by reset, so without it a concurrent updater can go on writing into the
     // pre-reset tree indefinitely, never observing the replacement.
     @Volatile
-    private var trees: Array<RegressionTree<F64VectorLike>> = Array(nbrTrees) { newTree() }
+    private var trees: Array<RegressionTree<VectorLike>> = Array(nbrTrees) { newTree() }
 
-    private fun newTree(): RegressionTree<F64VectorLike> = RegressionTree(
+    private fun newTree(): RegressionTree<VectorLike> = RegressionTree(
         splitCandidates,
         this.config,
         concurrency,
@@ -92,7 +92,7 @@ class RandomForestRegressionStat(
     )
 
     override fun update(
-        x: F64VectorLike,
+        x: VectorLike,
         y: Double,
         timestampNanos: Long,
         weight: Double,
@@ -150,7 +150,7 @@ class RandomForestRegressionStat(
     )
 
     /** Live underlying trees. Use for inspection. */
-    fun trees(): List<RegressionTree<F64VectorLike>> = trees.toList()
+    fun trees(): List<RegressionTree<VectorLike>> = trees.toList()
 }
 
 /** Snapshot of a [RandomForestRegressionStat]: per-tree immutable snapshots. */
@@ -166,7 +166,7 @@ data class ForestRegressionResult(
 
     /** Merge the leaves that [x] routes to across every tree into a single weighted-
      *  variance aggregate. Useful for ensembled scoring. */
-    fun findLeafMerged(x: F64VectorLike): WeightedVarianceResult {
+    fun findLeafMerged(x: VectorLike): WeightedVarianceResult {
         // The `w2 <= 0.0` skip stays here rather than moving into mergeWVR, which short-circuits only
         // on an exactly-zero weight: a leaf left with negative total weight by an over-reaching
         // downdate would otherwise be folded in, and against a positive sibling of equal magnitude the
@@ -181,7 +181,7 @@ data class ForestRegressionResult(
     }
 
     /** Mean of [findLeafMerged]. */
-    fun predict(x: F64VectorLike): Double = findLeafMerged(x).mean
+    fun predict(x: VectorLike): Double = findLeafMerged(x).mean
 
     /** Sum of per-tree root totalWeights; `nbrTrees * underlyingWeight` under bagging. */
     val totalWeights: Double get() = trees.sumOf { it.totalWeights }

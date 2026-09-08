@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.bytesPerCall
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -14,7 +14,7 @@ class GaussianNaiveBayesAllocationTest {
             stat.update(DoubleArray(32) { feature -> (sample - feature).toDouble() * 0.1 }, (sample % 4).toDouble())
         }
         val result = stat.read()
-        val x = F64DenseVector.of(DoubleArray(32) { it * 0.25 })
+        val x = DenseVector.of(DoubleArray(32) { it * 0.25 })
         val destination = DoubleArray(4)
 
         val (allocatedBytes, destinationBytes) = bytesPerCall(

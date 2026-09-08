@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.VectorLike
 import com.eignex.kumulant.bytesPerCall
 import com.eignex.kumulant.schema.expr.V
 import com.eignex.kumulant.schema.expr.VElements
@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 
 class ExprAllocationTest {
 
-    private class Vector(private val values: DoubleArray) : F64VectorLike {
+    private class Vector(private val values: DoubleArray) : VectorLike {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
         override fun toDoubleArray(): DoubleArray = error("unexpected materialisation")
@@ -23,7 +23,7 @@ class ExprAllocationTest {
         val scalar = V(0) + V(1)
         val predicate = V(0) gt 0.0
         val vector = VElements(listOf(V(0)))
-        fun evaluate(input: F64VectorLike) {
+        fun evaluate(input: VectorLike) {
             scalar.eval(v = input)
             predicate.eval(v = input)
             vector.eval(v = input)

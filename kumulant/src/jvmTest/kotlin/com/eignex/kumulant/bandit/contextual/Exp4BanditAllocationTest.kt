@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.assertAllocatesAtMost
 import com.eignex.kumulant.bytesPerCall
 import kotlin.test.Test
@@ -12,7 +12,7 @@ class Exp4BanditAllocationTest {
     fun `destination distribution removes Kumulant output allocation with reusable advice`() {
         val allocating = reusableBandit()
         val destination = reusableBandit()
-        val x = F64DenseVector.of(doubleArrayOf(1.0))
+        val x = DenseVector.of(doubleArrayOf(1.0))
         val out = DoubleArray(ARMS)
 
         val (allocatingBytes, destinationBytes) = bytesPerCall(
@@ -28,7 +28,7 @@ class Exp4BanditAllocationTest {
 
     @Test
     fun `choose and update retain their distribution storage with reusable advice`() {
-        val x = F64DenseVector.of(doubleArrayOf(1.0))
+        val x = DenseVector.of(doubleArrayOf(1.0))
         val choosing = reusableBandit()
         val updating = reusableBandit()
         val arm = updating.choose(x)

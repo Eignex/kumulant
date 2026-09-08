@@ -1,9 +1,9 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorLike
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.fitLine
 import kotlin.math.abs
@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 class BayesianRegressionStatTest {
 
-    private class StridedVector(private val backing: DoubleArray) : F64VectorLike {
+    private class StridedVector(private val backing: DoubleArray) : VectorLike {
         override val size: Int get() = backing.size / 2
         override fun get(i: Int): Double = backing[i * 2]
         override fun toDoubleArray(): DoubleArray = DoubleArray(size) { this[it] }
@@ -65,7 +65,7 @@ class BayesianRegressionStatTest {
         val reused = BayesianRegressionStat(featureSize = 2)
         val workspace = Workspace().apply { reserve(2, 3) }
         repeat(20) { i ->
-            val x = F64DenseVector.of(doubleArrayOf(i.toDouble() / 20.0, 1.0))
+            val x = DenseVector.of(doubleArrayOf(i.toDouble() / 20.0, 1.0))
             allocated.update(x, x[0] + 2.0)
             reused.update(x, x[0] + 2.0, workspace = workspace)
         }
@@ -119,7 +119,7 @@ class BayesianRegressionStatTest {
         val stat = BayesianRegressionStat(featureSize = 2)
         stat.update(doubleArrayOf(1.0, -2.0), 3.0)
         val snapshot = stat.read()
-        val dense = F64DenseVector.of(doubleArrayOf(0.5, -0.25))
+        val dense = DenseVector.of(doubleArrayOf(0.5, -0.25))
         val strided = StridedVector(doubleArrayOf(0.5, 9.0, -0.25, 9.0))
 
         assertEquals(snapshot.linearPredictor(dense), snapshot.linearPredictor(strided), 1e-12)
@@ -160,7 +160,7 @@ class BayesianRegressionStatTest {
             first.update(x, rng.nextDouble())
             second.update(DoubleArray(3) { rng.nextDouble() }, rng.nextDouble())
         }
-        val buffer = F64DenseMatrix.zero(3, 3)
+        val buffer = DenseMatrix.zero(3, 3)
 
         // Reused across two different posteriors: the second fill has to overwrite the first
         // completely, not blend with whatever it left behind.
@@ -279,8 +279,8 @@ class BayesianRegressionStatTest {
                     BayesianRegressionStat(
                         featureSize = 2,
                         priorVariance = 1.0,
-                        priorMean = F64DenseVector.of(doubleArrayOf(0.25, -0.5)),
-                        priorCovariance = F64DenseMatrix.of(
+                        priorMean = DenseVector.of(doubleArrayOf(0.25, -0.5)),
+                        priorCovariance = DenseMatrix.of(
                             arrayOf(doubleArrayOf(2.0, 0.5), doubleArrayOf(0.5, 1.5)),
                         ),
                     ).also { stat ->
@@ -377,7 +377,7 @@ class BayesianRegressionStatTest {
         assertEquals(Link.Identity, stat.link)
         val snap = stat.read()
         assertEquals(Link.Identity, snap.link)
-        val x = F64DenseVector.of(doubleArrayOf(0.5, -0.3))
+        val x = DenseVector.of(doubleArrayOf(0.5, -0.3))
         assertEquals(snap.linearPredictor(x), snap.predict(x))
     }
 
@@ -393,10 +393,10 @@ class BayesianRegressionStatTest {
             stat.update(x, y, 1.0)
         }
         val snap = stat.read()
-        val p1 = snap.predict(F64DenseVector.of(doubleArrayOf(1.0, 0.0)))
+        val p1 = snap.predict(DenseVector.of(doubleArrayOf(1.0, 0.0)))
         assertTrue(p1 in 0.0..1.0, "predict returned $p1, expected probability")
         assertTrue(p1 > 0.7, "predicted P(positive | (1,0)) = $p1, expected > 0.7")
-        val pNeg = snap.predict(F64DenseVector.of(doubleArrayOf(-1.0, 1.0)))
+        val pNeg = snap.predict(DenseVector.of(doubleArrayOf(-1.0, 1.0)))
         assertTrue(pNeg < 0.3, "predicted P(positive | (-1,1)) = $pNeg, expected < 0.3")
     }
 
@@ -410,7 +410,7 @@ class BayesianRegressionStatTest {
             stat.update(x, rate, 1.0)
         }
         val snap = stat.read()
-        val x = F64DenseVector.of(doubleArrayOf(0.5, 0.5))
+        val x = DenseVector.of(doubleArrayOf(0.5, 0.5))
         val pred = snap.predict(x)
         val expected = exp(0.75)
         assertTrue(abs(pred - expected) / expected < 0.3, "pred=$pred, expected $expected")
@@ -421,7 +421,7 @@ class BayesianRegressionStatTest {
         val stat = BayesianRegressionStat(featureSize = 2, link = Link.Logit)
         stat.update(doubleArrayOf(1.0, 0.5), 1.0, 5.0)
         val snap = stat.read()
-        val x = F64DenseVector.of(doubleArrayOf(0.7, -0.3))
+        val x = DenseVector.of(doubleArrayOf(0.7, -0.3))
         val eta = snap.linearPredictor(x)
         val expected = 1.0 / (1.0 + exp(-eta))
         assertEquals(expected, snap.predict(x), absoluteTolerance = 1e-12)
@@ -432,7 +432,7 @@ class BayesianRegressionStatTest {
         val stat = BayesianRegressionStat(featureSize = 2, link = Link.Log)
         stat.update(doubleArrayOf(0.3, 0.4), 2.0, 1.0)
         val snap = stat.read()
-        val x = F64DenseVector.of(doubleArrayOf(0.1, 0.2))
+        val x = DenseVector.of(doubleArrayOf(0.1, 0.2))
         val eta = snap.linearPredictor(x)
         assertEquals(exp(eta), snap.predict(x), absoluteTolerance = 1e-12)
     }

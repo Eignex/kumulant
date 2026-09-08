@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.times
 import com.eignex.kumulant.bytesPerCall
 import kotlin.test.Test
@@ -12,8 +12,8 @@ class BayesianPriorInfoAllocationTest {
     @Test
     fun `destination prior information kernel avoids the materialized vector copy`() {
         val size = 128
-        val precision = F64DenseMatrix.diagonal(size, 2.0)
-        val mean = F64DenseVector.of(DoubleArray(size) { it * 0.01 })
+        val precision = DenseMatrix.diagonal(size, 2.0)
+        val mean = DenseVector.of(DoubleArray(size) { it * 0.01 })
         val destination = DoubleArray(size)
         var sink = 0.0
 

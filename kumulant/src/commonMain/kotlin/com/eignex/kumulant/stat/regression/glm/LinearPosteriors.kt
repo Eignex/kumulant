@@ -1,11 +1,11 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorLike
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
 import com.eignex.koblas.copy
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
@@ -36,7 +36,7 @@ import kotlin.random.Random
 sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosterior<R> {
     /** Draw a weight vector from the posterior at `exploration` variance scale.
      *  `exploration = 0.0` collapses to the point estimate; `1.0` is the calibrated posterior. */
-    fun sample(snapshot: R, rng: Random, exploration: Double = 1.0): F64VectorLike
+    fun sample(snapshot: R, rng: Random, exploration: Double = 1.0): VectorLike
 
     /** Writes an owned posterior draw into [destination]. */
     fun sampleInto(snapshot: R, rng: Random, destination: DoubleArray, exploration: Double = 1.0) {
@@ -62,7 +62,7 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
      */
     override fun evaluate(
         snapshot: R,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: Workspace?,
@@ -77,9 +77,9 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
 @Serializable
 @SerialName("PointPosterior")
 data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
-    override fun sample(snapshot: StochasticRegressionResult, rng: Random, exploration: Double): F64VectorLike {
+    override fun sample(snapshot: StochasticRegressionResult, rng: Random, exploration: Double): VectorLike {
         if (exploration <= 0.0) return snapshot.weights
-        return F64DenseVector.wrap(
+        return DenseVector.wrap(
             DoubleArray(snapshot.weights.size).also { destination ->
                 sampleInto(snapshot, rng, destination, exploration)
             },
@@ -107,7 +107,7 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
      *  are iid; one Gaussian draw instead of one per coordinate. */
     override fun evaluate(
         snapshot: StochasticRegressionResult,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: Workspace?,
@@ -126,8 +126,8 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
 @Serializable
 @SerialName("FactorisedGaussian")
 data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
-    override fun sample(snapshot: DiagonalRegressionResult, rng: Random, exploration: Double): F64VectorLike =
-        F64DenseVector.wrap(
+    override fun sample(snapshot: DiagonalRegressionResult, rng: Random, exploration: Double): VectorLike =
+        DenseVector.wrap(
             DoubleArray(snapshot.weights.size).also { destination ->
                 sampleInto(snapshot, rng, destination, exploration)
             },
@@ -153,7 +153,7 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
     /** Sum of independent normals: `invMean(eta(x) + sqrt(exploration * Sum x_i^2 / precision[i]) * N(0,1))`. */
     override fun evaluate(
         snapshot: DiagonalRegressionResult,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: Workspace?,
@@ -170,11 +170,11 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
  * `sqrt(xT * Sigma * x) = ||L^-1 x||` for the precision factor `L` with `Sigma = (L * LT)^-1`.
  * One forward substitution, so the covariance is never formed.
  */
-private fun PrecisionRegressionResult.predictiveDeviation(x: F64VectorLike, workspace: Workspace?): Double =
+private fun PrecisionRegressionResult.predictiveDeviation(x: VectorLike, workspace: Workspace?): Double =
     workspace.borrow(featureSize) { v ->
-        copy(x, F64DenseVector.wrap(v))
+        copy(x, DenseVector.wrap(v))
         precisionL.trsv(v, lower = true)
-        F64DenseVector.wrap(v).norm2()
+        DenseVector.wrap(v).norm2()
     }
 
 /**
@@ -189,12 +189,12 @@ private fun PrecisionRegressionResult.predictiveDeviation(x: F64VectorLike, work
 @Serializable
 @SerialName("MultivariateGaussian")
 data object MultivariateGaussian : LinearPosterior<PrecisionRegressionResult> {
-    override fun sample(snapshot: PrecisionRegressionResult, rng: Random, exploration: Double): F64VectorLike {
+    override fun sample(snapshot: PrecisionRegressionResult, rng: Random, exploration: Double): VectorLike {
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
         val u = DoubleArray(n) { rng.nextNormal(0.0, sd) }
         snapshot.precisionL.trsv(u, lower = true, transpose = true)
-        return F64DenseVector.wrap(u).also { it.axpy(1.0, snapshot.weights) }
+        return DenseVector.wrap(u).also { it.axpy(1.0, snapshot.weights) }
     }
 
     override fun sampleInto(
@@ -216,7 +216,7 @@ data object MultivariateGaussian : LinearPosterior<PrecisionRegressionResult> {
      *  solve instead of sampling the full weight vector. */
     override fun evaluate(
         snapshot: PrecisionRegressionResult,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: Workspace?,
@@ -238,7 +238,7 @@ data object MultivariateGaussian : LinearPosterior<PrecisionRegressionResult> {
 @Serializable
 @SerialName("LinUcb")
 data object LinUcb : LinearPosterior<PrecisionRegressionResult> {
-    override fun sample(snapshot: PrecisionRegressionResult, rng: Random, exploration: Double): F64VectorLike =
+    override fun sample(snapshot: PrecisionRegressionResult, rng: Random, exploration: Double): VectorLike =
         snapshot.weights
 
     override fun sampleInto(
@@ -255,7 +255,7 @@ data object LinUcb : LinearPosterior<PrecisionRegressionResult> {
 
     override fun evaluate(
         snapshot: PrecisionRegressionResult,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: Workspace?,

@@ -1,8 +1,8 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64SparseVector
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit.Companion.squaredL2
 import com.eignex.kumulant.feat
 import kotlin.random.Random
@@ -111,7 +111,7 @@ class KnnContextualBanditTest {
         val bandit = KnnContextualBandit(nbrArms = 1, k = 1, maxHistoryPerArm = 2, exploration = 0.0)
         bandit.update(0, feat(1.0, 0.0), 1.0)
         bandit.update(0, feat(0.0, 2.0), 2.0)
-        bandit.update(0, F64SparseVector.of(2, intArrayOf(1), doubleArrayOf(3.0)), 3.0)
+        bandit.update(0, SparseVector.of(2, intArrayOf(1), doubleArrayOf(3.0)), 3.0)
         bandit.update(0, feat(4.0, 0.0), 4.0)
 
         val contexts = bandit.snapshot()[0].contexts
@@ -142,14 +142,14 @@ class KnnContextualBanditTest {
 
     @Test
     fun `squaredL2 dense and sparse agree across storage combinations`() {
-        val aDense = F64DenseVector.of(doubleArrayOf(1.0, 0.0, -2.0, 3.0, 0.0))
-        val bDense = F64DenseVector.of(doubleArrayOf(0.0, 4.0, -2.0, 1.0, 5.0))
-        val aSparse = F64SparseVector.of(
+        val aDense = DenseVector.of(doubleArrayOf(1.0, 0.0, -2.0, 3.0, 0.0))
+        val bDense = DenseVector.of(doubleArrayOf(0.0, 4.0, -2.0, 1.0, 5.0))
+        val aSparse = SparseVector.of(
             size = 5,
             indices = intArrayOf(0, 2, 3),
             values = doubleArrayOf(1.0, -2.0, 3.0),
         )
-        val bSparse = F64SparseVector.of(
+        val bSparse = SparseVector.of(
             size = 5,
             indices = intArrayOf(1, 2, 3, 4),
             values = doubleArrayOf(4.0, -2.0, 1.0, 5.0),
@@ -171,9 +171,9 @@ class KnnContextualBanditTest {
             intArrayOf(0, 3) to intArrayOf(),
         )
         for ((ai, bi) in shapes) {
-            val a = F64SparseVector.of(4, ai, DoubleArray(ai.size) { it + 1.5 })
-            val b = F64SparseVector.of(4, bi, DoubleArray(bi.size) { -(it + 0.5) })
-            val reference = squaredL2(F64DenseVector.of(a.toDoubleArray()), F64DenseVector.of(b.toDoubleArray()))
+            val a = SparseVector.of(4, ai, DoubleArray(ai.size) { it + 1.5 })
+            val b = SparseVector.of(4, bi, DoubleArray(bi.size) { -(it + 0.5) })
+            val reference = squaredL2(DenseVector.of(a.toDoubleArray()), DenseVector.of(b.toDoubleArray()))
 
             assertEquals(reference, squaredL2(a, b), 1e-12, "a=${ai.toList()} b=${bi.toList()}")
         }
@@ -189,11 +189,11 @@ class KnnContextualBanditTest {
             doubleArrayOf(0.5, 0.0, 0.0, 1.5) to 1.0,
         )
         for ((x, r) in rows) {
-            denseInput.update(0, F64DenseVector.of(x), r)
+            denseInput.update(0, DenseVector.of(x), r)
             val nz = x.withIndex().filter { it.value != 0.0 }
             sparseInput.update(
                 0,
-                F64SparseVector.of(
+                SparseVector.of(
                     size = x.size,
                     indices = nz.map { it.index }.toIntArray(),
                     values = nz.map { it.value }.toDoubleArray(),
@@ -201,7 +201,7 @@ class KnnContextualBanditTest {
                 r,
             )
         }
-        val q = F64DenseVector.of(doubleArrayOf(0.5, 0.0, 0.0, 1.5))
+        val q = DenseVector.of(doubleArrayOf(0.5, 0.0, 0.0, 1.5))
         assertEquals(denseInput.evaluate(0, q), sparseInput.evaluate(0, q), 1e-12)
     }
 
@@ -210,7 +210,7 @@ class KnnContextualBanditTest {
         val indices = intArrayOf(0, 2)
         val values = doubleArrayOf(1.0, 0.0)
         val bandit = KnnContextualBandit(nbrArms = 1, k = 1, exploration = 0.0)
-        bandit.update(0, F64SparseVector.wrap(3, indices, values), 4.0)
+        bandit.update(0, SparseVector.wrap(3, indices, values), 4.0)
 
         indices[0] = 1
         values[0] = 99.0
@@ -220,7 +220,7 @@ class KnnContextualBanditTest {
     @Test
     fun `update retains an empty sparse snapshot`() {
         val bandit = KnnContextualBandit(nbrArms = 1, k = 1, exploration = 0.0)
-        bandit.update(0, F64SparseVector.wrap(3, IntArray(0), DoubleArray(0)), 4.0)
+        bandit.update(0, SparseVector.wrap(3, IntArray(0), DoubleArray(0)), 4.0)
 
         assertEquals(4.0, bandit.evaluate(0, feat(0.0, 0.0, 0.0)), 1e-12)
     }
@@ -237,8 +237,8 @@ class KnnContextualBanditTest {
 
     @Test
     fun `squaredL2 counts a stored zero once`() {
-        val a = F64SparseVector.of(2, intArrayOf(0), doubleArrayOf(0.0))
-        val b = F64SparseVector.of(2, intArrayOf(0), doubleArrayOf(3.0))
+        val a = SparseVector.of(2, intArrayOf(0), doubleArrayOf(0.0))
+        val b = SparseVector.of(2, intArrayOf(0), doubleArrayOf(3.0))
         assertEquals(9.0, squaredL2(a, b))
     }
 
@@ -247,16 +247,16 @@ class KnnContextualBanditTest {
         val allocating = KnnContextualBandit(nbrArms = 2, k = 2, exploration = 0.0)
         val reused = KnnContextualBandit(nbrArms = 2, k = 2, exploration = 0.0)
         val samples = listOf(
-            Triple(0, F64SparseVector.of(3, intArrayOf(0), doubleArrayOf(1.0)), 0.5),
-            Triple(0, F64SparseVector.of(3, intArrayOf(1), doubleArrayOf(-2.0)), -1.0),
-            Triple(1, F64SparseVector.of(3, intArrayOf(2), doubleArrayOf(3.0)), 1.5),
-            Triple(1, F64SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(-1.0, 1.0)), 0.25),
+            Triple(0, SparseVector.of(3, intArrayOf(0), doubleArrayOf(1.0)), 0.5),
+            Triple(0, SparseVector.of(3, intArrayOf(1), doubleArrayOf(-2.0)), -1.0),
+            Triple(1, SparseVector.of(3, intArrayOf(2), doubleArrayOf(3.0)), 1.5),
+            Triple(1, SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(-1.0, 1.0)), 0.25),
         )
         for ((arm, x, reward) in samples) {
             allocating.update(arm, x, reward)
             reused.update(arm, x, reward)
         }
-        val x = F64SparseVector.of(3, intArrayOf(0), doubleArrayOf(0.5))
+        val x = SparseVector.of(3, intArrayOf(0), doubleArrayOf(0.5))
         val workspace = Workspace().apply { reserve(6, 1) }
 
         for (arm in 0 until 2) assertEquals(allocating.evaluate(arm, x), reused.evaluate(arm, x, workspace), 1e-12)
