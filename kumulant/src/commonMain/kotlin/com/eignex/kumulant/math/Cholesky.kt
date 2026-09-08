@@ -35,63 +35,96 @@ internal sealed interface CholeskyPolicy {
 internal class NotPositiveDefinite(val pivotIndex: Int, val pivot: Double, message: String) :
     IllegalArgumentException(message)
 
-internal class CholeskyFactor(val l: F64DenseMatrix) {
-    init {
-        require(l.rows == l.cols) { "cholesky factor must be square" }
-    }
-
-    val n: Int get() = l.rows
-    var regularizations: Int = 0
-
-    fun rankUpdate(v: DoubleArray, sigma: Double, workspace: Workspace? = null): CholeskyFactor {
-        require(v.size == n) { "update vector has ${v.size} entries, expected $n" }
-        require(sigma >= 0.0 && sigma.isFinite()) { "sigma must be non-negative and finite, got $sigma" }
-        return referenceCholeskyRankUpdate(koblas.kernels, this, v, sigma, workspace)
-    }
-
-    fun solveInto(b: DoubleArray, out: DoubleArray): DoubleArray {
-        require(b.size == n && out.size == n) { "solve requires vectors of size $n" }
-        if (out !== b) b.copyInto(out)
-        l.trsv(out, lower = true)
-        l.trsv(out, lower = true, transpose = true)
-        return out
-    }
-
-    fun invert(workspace: Workspace? = null): F64DenseMatrix = invertInto(F64DenseMatrix.zero(n, n), workspace)
-
-    fun invertInto(out: F64DenseMatrix, workspace: Workspace? = null): F64DenseMatrix {
-        require(out.rows == n && out.cols == n) { "inverse destination must be ${n}x$n" }
-        require(out.data !== l.data) { "inverse destination must not share the factor's storage" }
-        return referenceSpdInvert(koblas.kernels, this, out, workspace)
+internal fun F64DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, workspace: Workspace? = null) {
+    require(rows == cols) { "cholesky factor must be square" }
+    require(v.size == rows) { "update vector has ${v.size} entries, expected $rows" }
+    require(sigma >= 0.0 && sigma.isFinite()) { "sigma must be non-negative and finite, got $sigma" }
+    val n = rows
+    if (n == 0 || sigma == 0.0) return
+    val ld = data
+    val kernels = koblas.kernels
+    val scale = sqrt(sigma)
+    workspace.borrow(n) { x ->
+        v.copyInto(x)
+        if (scale != 1.0) kernels.scale(x, 0, scale, n)
+        for (k in 0 until n) {
+            val base = k + k * n
+            val diagonal = ld[base]
+            // Inline the rotation to avoid allocating a Givens object per coordinate. A positive
+            // hypot keeps the factor diagonal non-negative and avoids squaring overflow or underflow.
+            val entry = x[k]
+            val r = hypot(diagonal, entry)
+            if (r != 0.0) {
+                ld[base] = r
+                val len = n - k - 1
+                // Two divisions rather than a reciprocal and two multiplies: this rotation sets the
+                // factor's numerical quality, and an extra rounding per entry compounds across n of them.
+                if (len > 0) kernels.rot(ld, base + 1, x, k + 1, len, diagonal / r, entry / r)
+            }
+        }
     }
 }
 
-internal fun F64DenseMatrix.cholesky(policy: CholeskyPolicy = CholeskyPolicy.Strict): CholeskyFactor =
-    referenceCholesky(koblas.kernels, this, policy)
+internal fun F64DenseMatrix.choleskySolveInto(b: DoubleArray, out: DoubleArray): DoubleArray {
+    require(rows == cols) { "cholesky factor must be square" }
+    require(b.size == rows && out.size == rows) { "solve requires vectors of size $rows" }
+    if (out !== b) b.copyInto(out)
+    trsv(out, lower = true)
+    trsv(out, lower = true, transpose = true)
+    return out
+}
 
-private fun referenceCholesky(kernels: F64Kernels, a: F64DenseMatrix, policy: CholeskyPolicy): CholeskyFactor =
-    referenceCholeskyInto(
-        kernels,
-        a,
-        CholeskyFactor(F64DenseMatrix.zero(a.rows, a.rows)),
-        policy,
-    )
+internal fun F64DenseMatrix.choleskyInverse(workspace: Workspace? = null): F64DenseMatrix =
+    choleskyInvertInto(F64DenseMatrix.zero(rows, cols), workspace)
 
-private fun referenceCholeskyInto(
-    kernels: F64Kernels,
-    a: F64DenseMatrix,
-    out: CholeskyFactor,
-    policy: CholeskyPolicy,
-): CholeskyFactor {
-    require(a.rows == a.cols) { "cholesky requires a square matrix" }
-    require(out.n == a.rows) { "choleskyInto: out is ${out.n}x${out.n}, expected ${a.rows}x${a.rows}" }
-    val n = a.rows
-    val ld = out.l.data
+internal fun F64DenseMatrix.choleskyInvertInto(out: F64DenseMatrix, workspace: Workspace? = null): F64DenseMatrix {
+    require(rows == cols) { "cholesky factor must be square" }
+    require(out.rows == rows && out.cols == rows) { "inverse destination must be ${rows}x$rows" }
+    require(out.data !== data) { "inverse destination must not share the factor's storage" }
+    val n = rows
+    val ld = data
+    val kernels = koblas.kernels
+    val invd = out.data
+    workspace.borrow(n) { y ->
+        for (j in 0 until n) {
+            y.fill(0.0, j, n)
+            y[j] = 1.0
+            for (c in j until n) {
+                val base = c + c * n
+                val yc = y[c] / ld[base]
+                y[c] = yc
+                if (yc != 0.0) kernels.axpy(y, c + 1, -yc, ld, base + 1, n - c - 1)
+            }
+            for (i in n - 1 downTo j) {
+                val base = i + i * n
+                y[i] = (y[i] - kernels.dot(ld, base + 1, y, i + 1, n - i - 1)) / ld[base]
+            }
+            for (i in j until n) {
+                invd[i + j * n] = y[i]
+                invd[j + i * n] = y[i]
+            }
+        }
+    }
+    return out
+}
+
+internal fun F64DenseMatrix.cholesky(policy: CholeskyPolicy = CholeskyPolicy.Strict): F64DenseMatrix =
+    choleskyInto(F64DenseMatrix.zero(rows, cols), policy)
+
+internal fun F64DenseMatrix.choleskyInto(
+    out: F64DenseMatrix,
+    policy: CholeskyPolicy = CholeskyPolicy.Strict,
+): F64DenseMatrix {
+    require(rows == cols) { "cholesky requires a square matrix" }
+    require(out.rows == rows && out.cols == rows) { "cholesky destination must be ${rows}x$rows" }
+    val n = rows
+    val kernels = koblas.kernels
+    val ld = out.data
     // A reused destination arrives holding the previous factor where a fresh one arrives zeroed, so the
     // strict upper triangle is cleared rather than inherited.
     for (j in 0 until n) {
         ld.fill(0.0, j * n, j * n + j)
-        a.data.copyInto(ld, j + j * n, j + j * n, (j + 1) * n)
+        if (data !== ld) data.copyInto(ld, j + j * n, j + j * n, (j + 1) * n)
     }
     // Left-looking blocked Cholesky. Each block column first takes what every earlier block owes it as one
     // level-3 product, then finishes column by column against the few columns inside the block. Gathering
@@ -100,7 +133,6 @@ private fun referenceCholeskyInto(
     // One pack buffer for the whole factorization rather than one per block column. The seam takes no
     // workspace, and a matrix that fits in a single block never gathers at all.
     val packed = if (n > CHOLESKY_BLOCK) DoubleArray(CHOLESKY_BLOCK * n) else null
-    out.regularizations = 0
     var blockStart = 0
     while (blockStart < n) {
         val width = min(CHOLESKY_BLOCK, n - blockStart)
@@ -108,7 +140,7 @@ private fun referenceCholeskyInto(
         if (blockStart > 0) {
             gatherEarlierBlocks(kernels, ld, n, blockStart, width, height, packed!!)
         }
-        out.regularizations += factorBlockColumn(kernels, ld, n, blockStart, width, policy)
+        factorBlockColumn(kernels, ld, n, blockStart, width, policy)
         blockStart += width
     }
     return out
@@ -166,8 +198,7 @@ private fun factorBlockColumn(
     start: Int,
     width: Int,
     policy: CholeskyPolicy,
-): Int {
-    var regularized = 0
+) {
     for (j in start until start + width) {
         val base = j + j * n
         val len = n - j
@@ -194,14 +225,12 @@ private fun factorBlockColumn(
             ld[base] = sqrt(pivot)
         } else if (pivot < floor) {
             ld[base] = sqrt(regularizedPivot(ld, base, len, floor))
-            regularized++
         } else {
             ld[base] = sqrt(pivot)
         }
         val diag = ld[base]
         for (i in base + 1 until base + len) ld[i] = ld[i] / diag
     }
-    return regularized
 }
 
 // Bounding the column multipliers by one avoids amplifying the trailing matrix by 1/floor.
@@ -212,69 +241,4 @@ private fun regularizedPivot(ld: DoubleArray, base: Int, len: Int, floor: Double
         if (magnitude > largest) largest = magnitude
     }
     return maxOf(floor, largest * largest)
-}
-
-private fun referenceSpdInvert(
-    kernels: F64Kernels,
-    chol: CholeskyFactor,
-    out: F64DenseMatrix,
-    workspace: Workspace?,
-): F64DenseMatrix {
-    val n = chol.n
-    val ld = chol.l.data
-    val invd = out.data
-    workspace.borrow(n) { y ->
-        for (j in 0 until n) {
-            y.fill(0.0, j, n)
-            y[j] = 1.0
-            for (c in j until n) {
-                val base = c + c * n
-                val yc = y[c] / ld[base]
-                y[c] = yc
-                if (yc != 0.0) kernels.axpy(y, c + 1, -yc, ld, base + 1, n - c - 1)
-            }
-            for (i in n - 1 downTo j) {
-                val base = i + i * n
-                y[i] = (y[i] - kernels.dot(ld, base + 1, y, i + 1, n - i - 1)) / ld[base]
-            }
-            for (i in j until n) {
-                invd[i + j * n] = y[i]
-                invd[j + i * n] = y[i]
-            }
-        }
-    }
-    return out
-}
-
-private fun referenceCholeskyRankUpdate(
-    kernels: F64Kernels,
-    chol: CholeskyFactor,
-    v: DoubleArray,
-    sigma: Double,
-    workspace: Workspace?,
-): CholeskyFactor {
-    val n = chol.n
-    if (n == 0 || sigma == 0.0) return chol
-    val ld = chol.l.data
-    val scale = sqrt(sigma)
-    workspace.borrow(n) { x ->
-        v.copyInto(x)
-        if (scale != 1.0) kernels.scale(x, 0, scale, n)
-        for (k in 0 until n) {
-            val base = k + k * n
-            val diagonal = ld[base]
-            // Inline the rotation to avoid allocating a Givens object per coordinate. A positive
-            // hypot keeps the factor diagonal non-negative and avoids squaring overflow or underflow.
-            val entry = x[k]
-            val r = hypot(diagonal, entry)
-            if (r != 0.0) {
-                ld[base] = r
-                val len = n - k - 1
-                // Two divisions rather than a reciprocal and two multiplies: this rotation sets the
-                // factor's numerical quality, and an extra rounding per entry compounds across n of them.
-                if (len > 0) kernels.rot(ld, base + 1, x, k + 1, len, diagonal / r, entry / r)
-            }
-        }
-    }
-    return chol
 }
