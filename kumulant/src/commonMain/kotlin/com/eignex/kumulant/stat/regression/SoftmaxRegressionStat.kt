@@ -1,10 +1,10 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorLike
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.borrow
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
@@ -44,9 +44,9 @@ data class SoftmaxRegressionResult(
     /** Number of classes (rows of [weights] and length of [biases]). */
     val numClasses: Int,
     /** K-by-p weight matrix; `weights[k][i]` is the coefficient on feature `i` for class `k`. */
-    val weights: F64DenseMatrix,
+    val weights: DenseMatrix,
     /** Per-class intercept; length [numClasses]. */
-    val biases: F64DenseVector,
+    val biases: DenseVector,
     /** Cumulative observation weight folded in. */
     override val totalWeights: Double,
     /** Number of `update` calls absorbed. */
@@ -62,7 +62,7 @@ data class SoftmaxRegressionResult(
     }
 
     /** Linear predictor for class [k]: `biases[k] + weights[k] . x`. */
-    fun logit(x: F64VectorLike, k: Int): Double {
+    fun logit(x: VectorLike, k: Int): Double {
         x.requireFeatureSize(featureSize)
         var s = biases[k]
         // Walk what x stores rather than every feature index. Reading a sparse x position by
@@ -73,7 +73,7 @@ data class SoftmaxRegressionResult(
     }
 
     /** Writes the per-class logits for [x] into [destination]. */
-    fun logitsInto(x: F64VectorLike, destination: DoubleArray) {
+    fun logitsInto(x: VectorLike, destination: DoubleArray) {
         x.requireFeatureSize(featureSize)
         require(destination.size == numClasses) {
             "destination size ${destination.size} must match numClasses $numClasses"
@@ -83,10 +83,10 @@ data class SoftmaxRegressionResult(
     }
 
     /** Softmax probabilities across all classes for [x]; length [numClasses]. */
-    fun probabilities(x: F64VectorLike): DoubleArray = DoubleArray(numClasses).also { probabilitiesInto(x, it) }
+    fun probabilities(x: VectorLike): DoubleArray = DoubleArray(numClasses).also { probabilitiesInto(x, it) }
 
     /** Writes softmax probabilities for [x] into caller-owned [destination]. */
-    fun probabilitiesInto(x: F64VectorLike, destination: DoubleArray) {
+    fun probabilitiesInto(x: VectorLike, destination: DoubleArray) {
         logitsInto(x, destination)
         destination.softmaxInPlace()
     }
@@ -99,7 +99,7 @@ data class SoftmaxRegressionResult(
      * is a search through its stored indices. Without a [workspace] to borrow from, the single pass
      * costs one length-[numClasses] buffer, which is the cheaper side of that trade.
      */
-    fun predict(x: F64VectorLike, workspace: Workspace? = null): Int = workspace.borrow(numClasses) { logits ->
+    fun predict(x: VectorLike, workspace: Workspace? = null): Int = workspace.borrow(numClasses) { logits ->
         logitsInto(x, logits)
         argMaxOf(numClasses) { logits[it] }
     }
@@ -172,7 +172,7 @@ class SoftmaxRegressionStat(
     val crossEntropy: Double by crossEntropyCell
 
     override fun update(
-        x: F64VectorLike,
+        x: VectorLike,
         y: Double,
         timestampNanos: Long,
         weight: Double,
@@ -223,10 +223,10 @@ class SoftmaxRegressionStat(
         SoftmaxRegressionResult(
             featureSize = featureSize,
             numClasses = numClasses,
-            weights = F64DenseMatrix.of(
+            weights = DenseMatrix.of(
                 Array(numClasses) { k -> w.copyOfRange(k * featureSize, (k + 1) * featureSize) },
             ),
-            biases = F64DenseVector.of(b),
+            biases = DenseVector.of(b),
             totalWeights = totalWeightsCell.load(),
             step = stepCell.load(),
             crossEntropy = crossEntropyCell.load(),

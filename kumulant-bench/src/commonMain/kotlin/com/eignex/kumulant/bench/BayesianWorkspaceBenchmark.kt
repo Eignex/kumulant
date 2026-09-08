@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseVector
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import kotlinx.benchmark.Benchmark
@@ -16,14 +16,14 @@ open class BayesianWorkspaceBenchmark {
     @Param("8", "32", "128", "512")
     var featureSize: Int = 8
 
-    private lateinit var x: F64DenseVector
+    private lateinit var x: DenseVector
     private lateinit var workspace: Workspace
     private lateinit var stat: BayesianRegressionStat
     private lateinit var mergeValue: PrecisionRegressionResult
 
     @Setup
     fun setup() {
-        x = F64DenseVector.of(DoubleArray(featureSize) { (it % 7 - 3) * 0.125 })
+        x = DenseVector.of(DoubleArray(featureSize) { (it % 7 - 3) * 0.125 })
         workspace = Workspace().apply { reserve(featureSize, count = 3) }
         stat = BayesianRegressionStat(featureSize)
         val other = BayesianRegressionStat(featureSize)

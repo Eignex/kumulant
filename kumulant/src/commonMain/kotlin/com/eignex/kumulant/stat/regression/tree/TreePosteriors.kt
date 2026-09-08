@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.VectorLike
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -27,7 +27,7 @@ sealed interface TreePosterior : RegressionPosterior<TreeRegressionResult>
 data object MeanTreePosterior : TreePosterior {
     override fun evaluate(
         snapshot: TreeRegressionResult,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: com.eignex.koblas.Workspace?,
@@ -77,7 +77,7 @@ data class ThompsonTreePosterior(
 ) : TreePosterior {
     override fun evaluate(
         snapshot: TreeRegressionResult,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: com.eignex.koblas.Workspace?,
@@ -103,7 +103,7 @@ data class UcbTreePosterior(
 ) : TreePosterior {
     override fun evaluate(
         snapshot: TreeRegressionResult,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: com.eignex.koblas.Workspace?,
@@ -123,7 +123,7 @@ sealed interface ForestPosterior : RegressionPosterior<ForestRegressionResult>
 data object MeanForestPosterior : ForestPosterior {
     override fun evaluate(
         snapshot: ForestRegressionResult,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: com.eignex.koblas.Workspace?,
@@ -139,7 +139,7 @@ data class ThompsonForestPosterior(
 ) : ForestPosterior {
     override fun evaluate(
         snapshot: ForestRegressionResult,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: com.eignex.koblas.Workspace?,
@@ -160,7 +160,7 @@ data class UcbForestPosterior(
 ) : ForestPosterior {
     override fun evaluate(
         snapshot: ForestRegressionResult,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double,
         workspace: com.eignex.koblas.Workspace?,

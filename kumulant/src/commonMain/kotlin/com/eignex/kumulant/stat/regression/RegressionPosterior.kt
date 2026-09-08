@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.koblas.VectorLike
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.core.Result
 import kotlin.random.Random
 
@@ -26,7 +26,7 @@ interface RegressionPosterior<R : Result> {
      */
     fun evaluate(
         snapshot: R,
-        x: F64VectorLike,
+        x: VectorLike,
         rng: Random,
         exploration: Double = 1.0,
         workspace: Workspace? = null,

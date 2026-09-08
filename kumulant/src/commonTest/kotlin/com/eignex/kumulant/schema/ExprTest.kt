@@ -1,9 +1,9 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64SparseVector
-import com.eignex.koblas.core.F64StridedVectorView
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
+import com.eignex.koblas.StridedVectorView
+import com.eignex.koblas.VectorLike
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.ResultList
@@ -26,7 +26,7 @@ import kotlin.test.assertTrue
 
 class ExprTest {
 
-    private class NoMaterializeVector(private val values: DoubleArray) : F64VectorLike {
+    private class NoMaterializeVector(private val values: DoubleArray) : VectorLike {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
         override fun toDoubleArray(): DoubleArray = error("expression materialised its vector input")
@@ -51,15 +51,15 @@ class ExprTest {
     }
 
     @Test fun `vector aware expressions agree across vector representations`() {
-        val dense = F64DenseVector.of(doubleArrayOf(2.0, 0.0, -3.0))
-        val sparse = F64SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(2.0, -3.0))
-        val strided = F64StridedVectorView(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -3.0, 9.0), 0, 3, 2)
+        val dense = DenseVector.of(doubleArrayOf(2.0, 0.0, -3.0))
+        val sparse = SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(2.0, -3.0))
+        val strided = StridedVectorView(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -3.0, 9.0), 0, 3, 2)
         val custom = NoMaterializeVector(doubleArrayOf(2.0, 0.0, -3.0))
         val scalar = V(0) * V(2) + VFold(VFoldOp.Sum)
         val predicate = (V(0) gt 0.0) and (V(2) lt 0.0)
         val vector = VElements(listOf(V(2), V(0) + V(1)))
 
-        for (input in listOf<F64VectorLike>(dense, sparse, strided, custom)) {
+        for (input in listOf<VectorLike>(dense, sparse, strided, custom)) {
             assertEquals(-7.0, scalar.eval(v = input), DELTA)
             assertTrue(predicate.eval(v = input))
             assertTrue(vector.eval(v = input).contentEquals(doubleArrayOf(-3.0, 2.0)))
@@ -68,11 +68,11 @@ class ExprTest {
     }
 
     @Test fun `all finite checks stored non finite values and sparse zeroes`() {
-        assertTrue(allFinite().eval(v = F64SparseVector.of(3, intArrayOf(1), doubleArrayOf(0.0))))
-        assertEquals(false, allFinite().eval(v = F64SparseVector.of(3, intArrayOf(1), doubleArrayOf(Double.NaN))))
+        assertTrue(allFinite().eval(v = SparseVector.of(3, intArrayOf(1), doubleArrayOf(0.0))))
+        assertEquals(false, allFinite().eval(v = SparseVector.of(3, intArrayOf(1), doubleArrayOf(Double.NaN))))
         assertEquals(
             false,
-            allFinite().eval(v = F64SparseVector.of(3, intArrayOf(1), doubleArrayOf(Double.POSITIVE_INFINITY))),
+            allFinite().eval(v = SparseVector.of(3, intArrayOf(1), doubleArrayOf(Double.POSITIVE_INFINITY))),
         )
         assertTrue(allFinite().eval(v = NoMaterializeVector(doubleArrayOf())))
     }
@@ -419,10 +419,10 @@ class ExprTest {
         val folds = VFoldOp.entries.map(::VFold)
 
         for (array in values) {
-            val representations = listOf<F64VectorLike>(
-                F64DenseVector.of(array),
+            val representations = listOf<VectorLike>(
+                DenseVector.of(array),
                 sparse(array),
-                F64StridedVectorView(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
+                StridedVectorView(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
                 NoMaterializeVector(array),
             )
             for (fold in folds) {
@@ -465,10 +465,10 @@ class ExprTest {
         for ((array, weights) in cases.zip(weightSets)) {
             val expr = VDot(weights)
             val expected = expr.eval(0.0, 0.0, array)
-            for (input in listOf<F64VectorLike>(
-                F64DenseVector.of(array),
+            for (input in listOf<VectorLike>(
+                DenseVector.of(array),
                 sparse(array),
-                F64StridedVectorView(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
+                StridedVectorView(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
                 NoMaterializeVector(array),
             )) {
                 assertEquals(expected.toBits(), expr.eval(v = input).toBits())
@@ -478,7 +478,7 @@ class ExprTest {
 
     @Test fun `vector reductions preserve explicit sparse zeroes`() {
         val array = doubleArrayOf(2.0, 0.0, -3.0)
-        val input = F64SparseVector.of(3, intArrayOf(0, 1, 2), array)
+        val input = SparseVector.of(3, intArrayOf(0, 1, 2), array)
 
         for (op in VFoldOp.entries) {
             val fold = VFold(op)
@@ -521,7 +521,7 @@ class ExprTest {
             assertEquals(expr.eval(0.0, 0.0, values), expr.eval(v = NoMaterializeVector(values)))
         }
 
-        class CountingVector(private val values: DoubleArray) : F64VectorLike {
+        class CountingVector(private val values: DoubleArray) : VectorLike {
             var reads = 0
             override val size: Int get() = values.size
             override fun get(i: Int): Double = values[i].also { reads++ }
@@ -556,12 +556,12 @@ class ExprTest {
     /** Relative slack for [reassociating] folds; reassociation moves the last bits, nothing more. */
     private val reassociationTolerance = 1e-12
 
-    private fun sparse(values: DoubleArray): F64SparseVector {
+    private fun sparse(values: DoubleArray): SparseVector {
         val indices = values.indices.filter {
             values[it] != 0.0 || values[it].toBits() == (-0.0).toBits() ||
                 values[it].isNaN()
         }
-        return F64SparseVector.of(values.size, indices.toIntArray(), DoubleArray(indices.size) { values[indices[it]] })
+        return SparseVector.of(values.size, indices.toIntArray(), DoubleArray(indices.size) { values[indices[it]] })
     }
 
     @Test fun `foldPaired lifts series to paired with xy expression`() {

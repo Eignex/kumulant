@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorLike
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
@@ -89,7 +89,7 @@ class TrackedContextualBandit<B : ContextualBandit>(
         @Suppress("UNCHECKED_CAST")
         (updateArmRewardTemplate?.create(null) as PairedStat<Result>?)
 
-    override fun choose(x: F64VectorLike, workspace: com.eignex.koblas.Workspace?): Int {
+    override fun choose(x: VectorLike, workspace: com.eignex.koblas.Workspace?): Int {
         x.requireFeatureSize(contextFeatureSize)
         val i = inner.choose(x, workspace)
         chooseStat?.update(x, i.toDouble(), nowNanos(), 1.0, workspace)
@@ -98,7 +98,7 @@ class TrackedContextualBandit<B : ContextualBandit>(
 
     override fun update(
         armIndex: Int,
-        x: F64VectorLike,
+        x: VectorLike,
         reward: Double,
         weight: Double,
         workspace: com.eignex.koblas.Workspace?,
@@ -110,7 +110,7 @@ class TrackedContextualBandit<B : ContextualBandit>(
             val joint = DoubleArray(contextFeatureSize + 1)
             joint[0] = armIndex.toDouble()
             for (j in 0 until contextFeatureSize) joint[j + 1] = x[j]
-            updateJointStat.update(F64DenseVector.of(joint), reward, ts, weight, workspace)
+            updateJointStat.update(DenseVector.of(joint), reward, ts, weight, workspace)
         }
         updateMarginalStat?.update(x, reward, ts, weight, workspace)
         updateArmRewardStat?.update(armIndex.toDouble(), reward, ts, weight)

@@ -1,10 +1,10 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
+import com.eignex.koblas.VectorLike
+import com.eignex.koblas.VectorStorage
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64SparseVector
-import com.eignex.koblas.core.F64VectorLike
-import com.eignex.koblas.core.F64VectorStorage
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.koblas
 import com.eignex.kumulant.bandit.ContextualBandit
@@ -34,7 +34,7 @@ import kotlin.random.Random
 @Serializable
 @SerialName("KnnArmResult")
 data class KnnArmResult(
-    /** Retained contexts (each a copy of the submitted [F64VectorLike]). */
+    /** Retained contexts (each a copy of the submitted [VectorLike]). */
     val contexts: List<DoubleArray>,
     /** Per-sample rewards, parallel to [contexts]. */
     val rewards: DoubleArray,
@@ -132,7 +132,7 @@ class KnnContextualBandit(
     /** UCB-style exploration scale on `sqrt(ln(totalSteps) / armWeight)`; `0.0` disables. */
     val exploration: Double = 1.0,
     /** Pairwise distance between context vectors; defaults to squared L2. */
-    val distance: (F64VectorLike, F64VectorLike) -> Double = ::squaredL2,
+    val distance: (VectorLike, VectorLike) -> Double = ::squaredL2,
     /** Single source of randomness; used only for tie-breaking, currently deterministic. */
     override val random: Random = Random.Default,
 ) : ContextualBandit,
@@ -179,7 +179,7 @@ class KnnContextualBandit(
      * there is no scratch left to borrow.
      */
     @Suppress("UnusedParameter")
-    override fun choose(x: F64VectorLike, workspace: Workspace?): Int {
+    override fun choose(x: VectorLike, workspace: Workspace?): Int {
         requireFeatureSize(x.size)
         val bestIdx = argmaxArm(nbrArms) { armIndex -> score(armIndex, x) }
         step++
@@ -192,14 +192,14 @@ class KnnContextualBandit(
      * [workspace] is accepted for interface uniformity and ignored, as in [choose].
      */
     @Suppress("UnusedParameter")
-    override fun evaluate(armIndex: Int, x: F64VectorLike, workspace: Workspace?): Double {
+    override fun evaluate(armIndex: Int, x: VectorLike, workspace: Workspace?): Double {
         requireArmIndex(armIndex, nbrArms)
         requireFeatureSize(x.size)
         return score(armIndex, x)
     }
 
     /** Append `(x, reward, weight)` to arm [armIndex]'s history; oldest entry drops if full. */
-    override fun update(armIndex: Int, x: F64VectorLike, reward: Double, weight: Double, workspace: Workspace?) {
+    override fun update(armIndex: Int, x: VectorLike, reward: Double, weight: Double, workspace: Workspace?) {
         requireArmIndex(armIndex, nbrArms)
         // An inert observation must not consume a history slot; the eviction below would drop real data.
         // A negative weight drops for the same reason rather than downdating: a bounded history has no
@@ -239,7 +239,7 @@ class KnnContextualBandit(
         for (a in 0 until nbrArms) {
             val arm = other[a]
             for (i in arm.contexts.indices) {
-                update(a, F64DenseVector.of(arm.contexts[i]), arm.rewards[i], arm.weights[i])
+                update(a, DenseVector.of(arm.contexts[i]), arm.rewards[i], arm.weights[i])
             }
         }
     }
@@ -266,12 +266,12 @@ class KnnContextualBandit(
         return exploration * sqrt(ln(t) / w)
     }
 
-    private fun score(armIndex: Int, x: F64VectorLike): Double {
+    private fun score(armIndex: Int, x: VectorLike): Double {
         if (histories[armIndex].size < k) return coldStartScore + ucbBonus(armIndex)
         return knnMean(armIndex, x) + ucbBonus(armIndex)
     }
 
-    private fun knnMean(armIndex: Int, x: F64VectorLike): Double {
+    private fun knnMean(armIndex: Int, x: VectorLike): Double {
         val history = histories[armIndex]
         // Linear scan holding the k nearest seen so far. For typical maxHistoryPerArm values
         // (<= a few thousand) this is faster than maintaining a KD-tree under reweights.
@@ -325,21 +325,21 @@ class KnnContextualBandit(
          * stored entries and accumulates dense-only contributions via a baseline
          * pass; sparse/sparse iterates the union of stored indices on both sides.
          */
-        fun squaredL2(a: F64VectorLike, b: F64VectorLike): Double {
+        fun squaredL2(a: VectorLike, b: VectorLike): Double {
             require(a.size == b.size) { "size mismatch: ${a.size} vs ${b.size}" }
             return when {
-                a is F64DenseVector && b is F64DenseVector -> denseSquaredL2(a, b)
-                a is F64SparseVector && b is F64SparseVector -> sparseSquaredL2(a, b)
-                a is F64SparseVector -> mixedSquaredL2(a, b)
-                b is F64SparseVector -> mixedSquaredL2(b, a)
+                a is DenseVector && b is DenseVector -> denseSquaredL2(a, b)
+                a is SparseVector && b is SparseVector -> sparseSquaredL2(a, b)
+                a is SparseVector -> mixedSquaredL2(a, b)
+                b is SparseVector -> mixedSquaredL2(b, a)
                 else -> genericSquaredL2(a, b)
             }
         }
 
-        private fun denseSquaredL2(a: F64DenseVector, b: F64DenseVector): Double =
+        private fun denseSquaredL2(a: DenseVector, b: DenseVector): Double =
             koblas.kernels.ssqd(a.data, 0, b.data, 0, a.size)
 
-        private fun genericSquaredL2(a: F64VectorLike, b: F64VectorLike): Double {
+        private fun genericSquaredL2(a: VectorLike, b: VectorLike): Double {
             var s = 0.0
             for (i in 0 until a.size) {
                 val d = a[i] - b[i]
@@ -348,7 +348,7 @@ class KnnContextualBandit(
             return s
         }
 
-        private fun mixedSquaredL2(sparse: F64SparseVector, dense: F64VectorLike): Double {
+        private fun mixedSquaredL2(sparse: SparseVector, dense: VectorLike): Double {
             // Start from the dense side's full squared norm, then correct the sparse-indexed
             // entries to use (sparse_v - dense_v)^2 instead of dense_v^2.
             var s = 0.0
@@ -365,7 +365,7 @@ class KnnContextualBandit(
         }
 
         @OptIn(com.eignex.koblas.UnsafeKoblasApi::class)
-        private fun sparseSquaredL2(a: F64SparseVector, b: F64SparseVector): Double {
+        private fun sparseSquaredL2(a: SparseVector, b: SparseVector): Double {
             // Both index arrays are strictly ascending, so one merge walk reaches every coordinate
             // either side stores without a search. Reading the other side positionally would binary
             // search per entry, and testing membership against an IntArray scans it, which makes the
@@ -421,7 +421,7 @@ class KnnContextualBandit(
 //
 // Contexts stay in koblas storages rather than one flat buffer because koblas has no dense vector
 // over an (array, offset, length) slice: a window type declared here would be a third implementation
-// of F64VectorLike, which drops the scan out of squaredL2's dense/dense branch onto its generic one
+// of VectorLike, which drops the scan out of squaredL2's dense/dense branch onto its generic one
 // and costs more per choose than the flat layout saves per update.
 private class ArmHistory(private val capacity: Int) {
     var size: Int = 0
@@ -429,7 +429,7 @@ private class ArmHistory(private val capacity: Int) {
 
     private val rewards = DoubleArray(capacity)
     private val weights = DoubleArray(capacity)
-    private val contexts = arrayOfNulls<F64VectorStorage>(capacity)
+    private val contexts = arrayOfNulls<VectorStorage>(capacity)
 
     private var head = 0
 
@@ -438,13 +438,13 @@ private class ArmHistory(private val capacity: Int) {
     fun weight(age: Int): Double = weights[slotOf(age)]
 
     /** The stored context at [age], oldest first. */
-    fun context(age: Int): F64VectorLike = contexts[slotOf(age)]!!
+    fun context(age: Int): VectorLike = contexts[slotOf(age)]!!
 
     /** The stored context at [age], densified into an array that outlives the slot. */
     fun contextCopy(age: Int): DoubleArray = contexts[slotOf(age)]!!.toDoubleArray()
 
     /** Admits `(x, reward, weight)` and returns the weight of the sample it evicted, `0.0` if none. */
-    fun add(x: F64VectorLike, reward: Double, weight: Double): Double {
+    fun add(x: VectorLike, reward: Double, weight: Double): Double {
         val slot: Int
         var dropped = 0.0
         if (size == capacity) {
@@ -476,15 +476,15 @@ private class ArmHistory(private val capacity: Int) {
 // The copy of x an arm keeps, reusing the dense buffer already in the slot when the widths agree so a
 // saturated arm evicts without allocating. A sparse sample always takes a fresh copy: its stored
 // length tracks the sample rather than the feature width, and the caller keeps arrays it may mutate.
-private fun retain(slot: F64VectorStorage?, x: F64VectorLike): F64VectorStorage {
-    if (x is F64SparseVector) return F64SparseVector.wrap(x.size, x.copyIndices(), x.values.copyOf())
-    if (slot is F64DenseVector && slot.size == x.size) {
-        if (x is F64DenseVector) {
+private fun retain(slot: VectorStorage?, x: VectorLike): VectorStorage {
+    if (x is SparseVector) return SparseVector.wrap(x.size, x.copyIndices(), x.values.copyOf())
+    if (slot is DenseVector && slot.size == x.size) {
+        if (x is DenseVector) {
             x.data.copyInto(slot.data)
         } else {
             for (i in 0 until x.size) slot.data[i] = x[i]
         }
         return slot
     }
-    return F64DenseVector.wrap(x.toDoubleArray())
+    return DenseVector.wrap(x.toDoubleArray())
 }

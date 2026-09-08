@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.core.F64SparseVector
+import com.eignex.koblas.SparseVector
 import com.eignex.kumulant.assertAllocatesAtMost
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
@@ -41,7 +41,7 @@ class OwnedStorageAllocationTest {
         for (featureSize in intArrayOf(32, 128, 512)) {
             for (density in intArrayOf(1, 10, 100)) {
                 val nnz = (featureSize * density / 100).coerceAtLeast(1)
-                val sparse = F64SparseVector.of(
+                val sparse = SparseVector.of(
                     featureSize,
                     IntArray(nnz) { it * featureSize / nnz },
                     DoubleArray(nnz) { it.toDouble() },

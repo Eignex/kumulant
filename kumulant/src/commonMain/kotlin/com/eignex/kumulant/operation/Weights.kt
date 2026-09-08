@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.VectorLike
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -64,7 +64,7 @@ internal class WithWeightPairedStat<R : Result>(private val delegate: PairedStat
 internal class WithWeightVectorStat<R : Result>(private val delegate: VectorStat<R>, private val weight: Double) :
     VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: F64VectorLike, timestampNanos: Long, weight: Double) {
+    override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) {
         delegate.update(vector, timestampNanos, weight.orInert(this.weight))
     }
 
@@ -132,10 +132,10 @@ internal class WeightByPairedStat<R : Result>(
 internal class WeightByVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val weighter: (DoubleArray) -> Double = { 1.0 },
-    private val vectorWeighter: ((F64VectorLike) -> Double)? = null,
+    private val vectorWeighter: ((VectorLike) -> Double)? = null,
 ) : VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: F64VectorLike, timestampNanos: Long, weight: Double) {
+    override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) {
         delegate.update(
             vector,
             timestampNanos,
@@ -146,7 +146,7 @@ internal class WeightByVectorStat<R : Result>(
         WeightByVectorStat(delegate.create(concurrency), weighter, vectorWeighter)
 
     companion object {
-        fun <R : Result> vector(delegate: VectorStat<R>, weighter: (F64VectorLike) -> Double): WeightByVectorStat<R> =
+        fun <R : Result> vector(delegate: VectorStat<R>, weighter: (VectorLike) -> Double): WeightByVectorStat<R> =
             WeightByVectorStat(delegate, vectorWeighter = weighter)
     }
 }

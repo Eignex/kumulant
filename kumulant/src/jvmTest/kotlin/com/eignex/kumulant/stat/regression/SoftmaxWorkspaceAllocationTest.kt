@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.assertAllocatesAtMost
 import com.eignex.kumulant.bytesPerCall
 import com.eignex.kumulant.schema.optimizer.Sgd
@@ -16,7 +16,7 @@ class SoftmaxWorkspaceAllocationTest {
     fun `reserved workspace removes softmax update logits allocation`() {
         val allocating = SoftmaxRegressionStat(featureSize = 8, numClasses = 4, optimizer = Sgd(ConstantRate(0.05)))
         val reused = SoftmaxRegressionStat(featureSize = 8, numClasses = 4, optimizer = Sgd(ConstantRate(0.05)))
-        val x = F64DenseVector.of(DoubleArray(8) { (it + 1).toDouble() / 8.0 })
+        val x = DenseVector.of(DoubleArray(8) { (it + 1).toDouble() / 8.0 })
         val workspace = Workspace().apply { reserve(4, 1) }
 
         val (allocatedBytes, workspaceBytes) = bytesPerCall(
@@ -35,15 +35,15 @@ class SoftmaxWorkspaceAllocationTest {
         val result = SoftmaxRegressionResult(
             featureSize = 2,
             numClasses = 3,
-            weights = F64DenseMatrix.of(
+            weights = DenseMatrix.of(
                 arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0), doubleArrayOf(-1.0, -1.0)),
             ),
-            biases = F64DenseVector.of(doubleArrayOf(0.0, 0.0, 0.0)),
+            biases = DenseVector.of(doubleArrayOf(0.0, 0.0, 0.0)),
             totalWeights = 0.0,
             step = 0L,
             crossEntropy = 0.0,
         )
-        val x = F64DenseVector.of(doubleArrayOf(1.0, 0.5))
+        val x = DenseVector.of(doubleArrayOf(1.0, 0.5))
         val workspace = Workspace().apply { reserve(3, 1) }
 
         val (defaultBytes, nullBytes, workspaceBytes) = bytesPerCall(

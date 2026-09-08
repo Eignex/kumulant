@@ -1,11 +1,11 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
+import com.eignex.koblas.StridedVectorView
+import com.eignex.koblas.VectorLike
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64SparseVector
-import com.eignex.koblas.core.F64StridedVectorView
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import kotlin.math.abs
@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 
 class SoftmaxRegressionStatTest {
 
-    private class CustomVector(private val values: DoubleArray) : F64VectorLike {
+    private class CustomVector(private val values: DoubleArray) : VectorLike {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
         override fun toDoubleArray(): DoubleArray = values.copyOf()
@@ -28,23 +28,23 @@ class SoftmaxRegressionStatTest {
         val r = SoftmaxRegressionResult(
             featureSize = 2,
             numClasses = 3,
-            weights = F64DenseMatrix.of(
+            weights = DenseMatrix.of(
                 arrayOf(
                     doubleArrayOf(1.0, 0.0),
                     doubleArrayOf(0.0, 1.0),
                     doubleArrayOf(-1.0, -1.0),
                 ),
             ),
-            biases = F64DenseVector.of(doubleArrayOf(0.0, 0.0, 0.0)),
+            biases = DenseVector.of(doubleArrayOf(0.0, 0.0, 0.0)),
             totalWeights = 0.0,
             step = 0L,
             crossEntropy = 0.0,
         )
-        val p = r.probabilities(F64DenseVector.of(doubleArrayOf(2.0, 1.0)))
+        val p = r.probabilities(DenseVector.of(doubleArrayOf(2.0, 1.0)))
         val total = p.sum()
         assertEquals(1.0, total, 1e-9)
         // Class 0 has the largest logit (eta = 2), so argmax must be 0.
-        assertEquals(0, r.predict(F64DenseVector.of(doubleArrayOf(2.0, 1.0))))
+        assertEquals(0, r.predict(DenseVector.of(doubleArrayOf(2.0, 1.0))))
     }
 
     @Test
@@ -52,15 +52,15 @@ class SoftmaxRegressionStatTest {
         val result = SoftmaxRegressionResult(
             featureSize = 2,
             numClasses = 3,
-            weights = F64DenseMatrix.of(
+            weights = DenseMatrix.of(
                 arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0), doubleArrayOf(-1.0, 1.0)),
             ),
-            biases = F64DenseVector.of(doubleArrayOf(0.2, -0.1, 0.4)),
+            biases = DenseVector.of(doubleArrayOf(0.2, -0.1, 0.4)),
             totalWeights = 0.0,
             step = 0L,
             crossEntropy = 0.0,
         )
-        val x = F64DenseVector.of(doubleArrayOf(2.0, -1.0))
+        val x = DenseVector.of(doubleArrayOf(2.0, -1.0))
         val workspace = Workspace().apply { reserve(3, 1) }
         val probabilities = DoubleArray(3)
 
@@ -78,21 +78,21 @@ class SoftmaxRegressionStatTest {
         val result = SoftmaxRegressionResult(
             featureSize = 2,
             numClasses = 3,
-            weights = F64DenseMatrix.of(
+            weights = DenseMatrix.of(
                 arrayOf(doubleArrayOf(1.0, -1.0), doubleArrayOf(2.0, 0.5), doubleArrayOf(-0.5, 1.5)),
             ),
-            biases = F64DenseVector.of(doubleArrayOf(0.1, 0.2, -0.3)),
+            biases = DenseVector.of(doubleArrayOf(0.1, 0.2, -0.3)),
             totalWeights = 0.0,
             step = 0L,
             crossEntropy = 0.0,
         )
-        val dense = F64DenseVector.of(doubleArrayOf(0.25, -0.5))
-        val sparse = F64SparseVector.of(2, intArrayOf(0, 1), doubleArrayOf(0.25, -0.5))
-        val strided = F64StridedVectorView(doubleArrayOf(0.25, 9.0, -0.5, 9.0), 0, 2, 2)
+        val dense = DenseVector.of(doubleArrayOf(0.25, -0.5))
+        val sparse = SparseVector.of(2, intArrayOf(0, 1), doubleArrayOf(0.25, -0.5))
+        val strided = StridedVectorView(doubleArrayOf(0.25, 9.0, -0.5, 9.0), 0, 2, 2)
         val custom = CustomVector(doubleArrayOf(0.25, -0.5))
         val expected = result.probabilities(dense)
 
-        for (x in listOf<F64VectorLike>(sparse, strided, custom)) {
+        for (x in listOf<VectorLike>(sparse, strided, custom)) {
             val actual = DoubleArray(3)
             result.probabilitiesInto(x, actual)
             assertTrue(actual.contentEquals(expected))
@@ -105,16 +105,16 @@ class SoftmaxRegressionStatTest {
         val result = SoftmaxRegressionResult(
             featureSize = 2,
             numClasses = 2,
-            weights = F64DenseMatrix.of(arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0))),
-            biases = F64DenseVector.of(doubleArrayOf(0.0, 0.0)),
+            weights = DenseMatrix.of(arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0))),
+            biases = DenseVector.of(doubleArrayOf(0.0, 0.0)),
             totalWeights = 0.0,
             step = 0L,
             crossEntropy = 0.0,
         )
         val workspace = Workspace().apply { reserve(2, 1) }
 
-        assertFailsWith<IllegalArgumentException> { result.predict(F64DenseVector.of(doubleArrayOf(1.0)), workspace) }
-        assertEquals(0, result.predict(F64DenseVector.of(doubleArrayOf(1.0, 0.0)), workspace))
+        assertFailsWith<IllegalArgumentException> { result.predict(DenseVector.of(doubleArrayOf(1.0)), workspace) }
+        assertEquals(0, result.predict(DenseVector.of(doubleArrayOf(1.0, 0.0)), workspace))
     }
 
     @Test
@@ -141,7 +141,7 @@ class SoftmaxRegressionStatTest {
         val n = 600
         repeat(n) {
             val c = rng.nextInt(3)
-            val x = F64DenseVector.of(
+            val x = DenseVector.of(
                 doubleArrayOf(
                     centers[c][0] + rng.nextDouble() * 0.4 - 0.2,
                     centers[c][1] + rng.nextDouble() * 0.4 - 0.2,

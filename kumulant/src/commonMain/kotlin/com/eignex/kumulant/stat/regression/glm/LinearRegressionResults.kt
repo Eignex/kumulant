@@ -1,9 +1,9 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorLike
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dot
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
@@ -22,8 +22,8 @@ import kotlinx.serialization.Serializable
  *  - [DiagonalRegressionResult]: per-coefficient precision (factorised posterior).
  *  - [PrecisionRegressionResult]: full posterior as the Cholesky factor of its precision.
  *
- * Sealed + `@Serializable`. Concrete weights round-trip as [F64DenseVector] today;
- * the public field is typed [F64VectorLike] so a sparse variant can swap in without
+ * Sealed + `@Serializable`. Concrete weights round-trip as [DenseVector] today;
+ * the public field is typed [VectorLike] so a sparse variant can swap in without
  * breaking callers. Regression error metrics from [HasRegression] become
  * meaningful once [sse] is tracked; implementations that don't accumulate it
  * return `0.0`.
@@ -33,7 +33,7 @@ sealed interface LinearRegressionResult :
     Result,
     HasLinearModel,
     HasRegression {
-    override val weights: F64VectorLike
+    override val weights: VectorLike
 
     override val bias: Double
 
@@ -49,14 +49,14 @@ sealed interface LinearRegressionResult :
     val link: Link
 
     /** Linear predictor `eta = bias + x . weights`, before the inverse link. */
-    fun linearPredictor(x: F64VectorLike): Double {
+    fun linearPredictor(x: VectorLike): Double {
         x.requireFeatureSize(weights.size)
         return bias + (x dot weights)
     }
 
     /** Mean response: `link.invMean(linearPredictor(x))`. For [Link.Identity] this is
      *  the linear predictor itself, matching plain linear regression. */
-    override fun predict(x: F64VectorLike): Double = link.invMean(linearPredictor(x))
+    override fun predict(x: VectorLike): Double = link.invMean(linearPredictor(x))
 }
 
 /** SGD weight estimates with no posterior. Cheap, no uncertainty quantification.
@@ -67,14 +67,14 @@ sealed interface LinearRegressionResult :
 @Serializable
 @SerialName("StochasticRegressionResult")
 data class StochasticRegressionResult(
-    override val weights: F64DenseVector,
+    override val weights: DenseVector,
     override val bias: Double,
     override val totalWeights: Double,
     override val step: Long,
     override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
     /** Per-optimiser auxiliary state (e.g. Adam's `m`/`v`); empty for plain SGD. */
-    val updaterState: List<F64VectorLike> = emptyList(),
+    val updaterState: List<VectorLike> = emptyList(),
 ) : LinearRegressionResult
 
 /**
@@ -85,14 +85,14 @@ data class StochasticRegressionResult(
 @Serializable
 @SerialName("DiagonalRegressionResult")
 data class DiagonalRegressionResult(
-    override val weights: F64DenseVector,
+    override val weights: DenseVector,
     override val bias: Double,
     /** Posterior precision (inverse variance) on the bias term. */
     val biasPrecision: Double,
     override val totalWeights: Double,
     override val step: Long,
     /** Per-coefficient precision (inverse variance). Same length as [weights]. */
-    val precision: F64DenseVector,
+    val precision: DenseVector,
     override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
 ) : LinearRegressionResult
@@ -109,7 +109,7 @@ data class DiagonalRegressionResult(
 @Serializable
 @SerialName("PrecisionRegressionResult")
 data class PrecisionRegressionResult(
-    override val weights: F64DenseVector,
+    override val weights: DenseVector,
     override val bias: Double,
     /** Posterior precision (inverse variance) on the bias term. */
     val biasPrecision: Double,
@@ -117,7 +117,7 @@ data class PrecisionRegressionResult(
     override val step: Long,
     /** Cholesky factor of the posterior precision over [weights]: `H = L·Lᵀ`, covariance `S = H⁻¹`.
      *  Only the lower triangle is meaningful, matching koblas's factor convention. */
-    val precisionL: F64DenseMatrix,
+    val precisionL: DenseMatrix,
     override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
 ) : LinearRegressionResult {
@@ -134,13 +134,13 @@ data class PrecisionRegressionResult(
      * matrix per call, so it belongs in reporting and prior fitting; scoring paths should stay on
      * the factor.
      */
-    fun covariance(workspace: Workspace? = null): F64DenseMatrix = precisionL.choleskyInverse(workspace)
+    fun covariance(workspace: Workspace? = null): DenseMatrix = precisionL.choleskyInverse(workspace)
 
     /**
      * Posterior covariance into [out], which is returned. Every entry is written, so a buffer
      * carried across calls needs no clearing; still O(n³) each time, so this saves the allocation
      * rather than the work. [out] must not be [precisionL] itself.
      */
-    fun covarianceInto(out: F64DenseMatrix, workspace: Workspace? = null): F64DenseMatrix =
+    fun covarianceInto(out: DenseMatrix, workspace: Workspace? = null): DenseMatrix =
         precisionL.choleskyInvertInto(out, workspace)
 }

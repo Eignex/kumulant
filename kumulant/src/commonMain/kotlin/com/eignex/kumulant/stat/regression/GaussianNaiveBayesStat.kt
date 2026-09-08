@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.VectorLike
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
@@ -42,11 +42,11 @@ data class GaussianNaiveBayesResult(
     /** Number of classes. */
     val numClasses: Int,
     /** K-by-p matrix of per-class running means; `means[c][i]` is the mean of feature `i` given class `c`. */
-    val means: F64DenseMatrix,
+    val means: DenseMatrix,
     /** K-by-p matrix of per-class running variances (population, weight-normalised). */
-    val variances: F64DenseMatrix,
+    val variances: DenseMatrix,
     /** Cumulative observation weight per class; length [numClasses]. */
-    val classWeights: F64DenseVector,
+    val classWeights: DenseVector,
     /** Total cumulative observation weight across all classes. */
     override val totalWeights: Double,
     /** Lower bound applied to per-class variances at predict time. */
@@ -70,7 +70,7 @@ data class GaussianNaiveBayesResult(
     fun prior(c: Int): Double = if (totalWeights > 0.0) classWeights[c] / totalWeights else 1.0 / numClasses
 
     /** Unnormalised log-posterior `log prior[c] + Sum_i log N(x_i | mu_c, var_c)`. */
-    fun logPosterior(x: F64VectorLike, c: Int): Double {
+    fun logPosterior(x: VectorLike, c: Int): Double {
         x.requireFeatureSize(featureSize)
         var s = ln(prior(c).coerceAtLeast(SMALL_PROB))
         for (i in 0 until featureSize) {
@@ -83,7 +83,7 @@ data class GaussianNaiveBayesResult(
     }
 
     /** Writes unnormalised log-posteriors for [x] into [destination]. */
-    fun logPosteriorsInto(x: F64VectorLike, destination: DoubleArray) {
+    fun logPosteriorsInto(x: VectorLike, destination: DoubleArray) {
         x.requireFeatureSize(featureSize)
         require(destination.size == numClasses) {
             "destination size ${destination.size} must match numClasses $numClasses"
@@ -92,16 +92,16 @@ data class GaussianNaiveBayesResult(
     }
 
     /** Normalised class probabilities via log-sum-exp on the log-posterior. */
-    fun probabilities(x: F64VectorLike): DoubleArray = DoubleArray(numClasses).also { probabilitiesInto(x, it) }
+    fun probabilities(x: VectorLike): DoubleArray = DoubleArray(numClasses).also { probabilitiesInto(x, it) }
 
     /** Writes normalised class probabilities for [x] into [destination]. */
-    fun probabilitiesInto(x: F64VectorLike, destination: DoubleArray) {
+    fun probabilitiesInto(x: VectorLike, destination: DoubleArray) {
         logPosteriorsInto(x, destination)
         destination.softmaxInPlace()
     }
 
     /** Argmax class index for [x]. */
-    fun predict(x: F64VectorLike): Int = argMaxOf(numClasses) { k -> logPosterior(x, k) }
+    fun predict(x: VectorLike): Int = argMaxOf(numClasses) { k -> logPosterior(x, k) }
 
     private companion object {
         const val SMALL_PROB: Double = 1e-300
@@ -153,7 +153,7 @@ class GaussianNaiveBayesStat(
     private val totalWeightCell: StreamDouble = mode.newDouble(0.0)
 
     override fun update(
-        x: F64VectorLike,
+        x: VectorLike,
         y: Double,
         timestampNanos: Long,
         weight: Double,
@@ -196,9 +196,9 @@ class GaussianNaiveBayesStat(
         GaussianNaiveBayesResult(
             featureSize = featureSize,
             numClasses = numClasses,
-            means = F64DenseMatrix.wrap(numClasses, featureSize, meansFlat),
-            variances = F64DenseMatrix.wrap(numClasses, featureSize, varsFlat),
-            classWeights = F64DenseVector.wrap(cw),
+            means = DenseMatrix.wrap(numClasses, featureSize, meansFlat),
+            variances = DenseMatrix.wrap(numClasses, featureSize, varsFlat),
+            classWeights = DenseVector.wrap(cw),
             totalWeights = totalWeightCell.load(),
             varianceFloor = varianceFloor,
         )

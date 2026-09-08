@@ -4,8 +4,8 @@ package com.eignex.kumulant.math
 
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.borrow
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.dense.F64Kernels
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.dense.Kernels
 import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.koblas
 import kotlin.math.abs
@@ -35,7 +35,7 @@ internal sealed interface CholeskyPolicy {
 internal class NotPositiveDefinite(val pivotIndex: Int, val pivot: Double, message: String) :
     IllegalArgumentException(message)
 
-internal fun F64DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, workspace: Workspace? = null) {
+internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, workspace: Workspace? = null) {
     require(rows == cols) { "cholesky factor must be square" }
     require(v.size == rows) { "update vector has ${v.size} entries, expected $rows" }
     require(sigma >= 0.0 && sigma.isFinite()) { "sigma must be non-negative and finite, got $sigma" }
@@ -65,7 +65,7 @@ internal fun F64DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, wo
     }
 }
 
-internal fun F64DenseMatrix.choleskySolveInto(b: DoubleArray, out: DoubleArray): DoubleArray {
+internal fun DenseMatrix.choleskySolveInto(b: DoubleArray, out: DoubleArray): DoubleArray {
     require(rows == cols) { "cholesky factor must be square" }
     require(b.size == rows && out.size == rows) { "solve requires vectors of size $rows" }
     if (out !== b) b.copyInto(out)
@@ -74,10 +74,10 @@ internal fun F64DenseMatrix.choleskySolveInto(b: DoubleArray, out: DoubleArray):
     return out
 }
 
-internal fun F64DenseMatrix.choleskyInverse(workspace: Workspace? = null): F64DenseMatrix =
-    choleskyInvertInto(F64DenseMatrix.zero(rows, cols), workspace)
+internal fun DenseMatrix.choleskyInverse(workspace: Workspace? = null): DenseMatrix =
+    choleskyInvertInto(DenseMatrix.zero(rows, cols), workspace)
 
-internal fun F64DenseMatrix.choleskyInvertInto(out: F64DenseMatrix, workspace: Workspace? = null): F64DenseMatrix {
+internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Workspace? = null): DenseMatrix {
     require(rows == cols) { "cholesky factor must be square" }
     require(out.rows == rows && out.cols == rows) { "inverse destination must be ${rows}x$rows" }
     require(out.data !== data) { "inverse destination must not share the factor's storage" }
@@ -108,13 +108,13 @@ internal fun F64DenseMatrix.choleskyInvertInto(out: F64DenseMatrix, workspace: W
     return out
 }
 
-internal fun F64DenseMatrix.cholesky(policy: CholeskyPolicy = CholeskyPolicy.Strict): F64DenseMatrix =
-    choleskyInto(F64DenseMatrix.zero(rows, cols), policy)
+internal fun DenseMatrix.cholesky(policy: CholeskyPolicy = CholeskyPolicy.Strict): DenseMatrix =
+    choleskyInto(DenseMatrix.zero(rows, cols), policy)
 
-internal fun F64DenseMatrix.choleskyInto(
-    out: F64DenseMatrix,
+internal fun DenseMatrix.choleskyInto(
+    out: DenseMatrix,
     policy: CholeskyPolicy = CholeskyPolicy.Strict,
-): F64DenseMatrix {
+): DenseMatrix {
     require(rows == cols) { "cholesky requires a square matrix" }
     require(out.rows == rows && out.cols == rows) { "cholesky destination must be ${rows}x$rows" }
     val n = rows
@@ -148,7 +148,7 @@ internal fun F64DenseMatrix.choleskyInto(
 
 @Suppress("LongParameterList") // the factor, its shape, the block being gathered into, and scratch
 private fun gatherEarlierBlocks(
-    kernels: F64Kernels,
+    kernels: Kernels,
     ld: DoubleArray,
     n: Int,
     start: Int,
@@ -192,7 +192,7 @@ private fun gatherEarlierBlocks(
 }
 
 private fun factorBlockColumn(
-    kernels: F64Kernels,
+    kernels: Kernels,
     ld: DoubleArray,
     n: Int,
     start: Int,

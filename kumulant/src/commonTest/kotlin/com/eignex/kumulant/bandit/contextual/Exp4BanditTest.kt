@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.VectorLike
 import com.eignex.kumulant.feat
 import kotlin.math.abs
 import kotlin.random.Random
@@ -179,10 +179,10 @@ class Exp4BanditTest {
     @Test
     fun `context-aware experts win on context-dependent rewards`() {
         // Expert "left" picks arm 0 when x<0, arm 1 when x>=0; opposite for "right".
-        val left = Exp4Expert { x: F64VectorLike, n: Int ->
+        val left = Exp4Expert { x: VectorLike, n: Int ->
             DoubleArray(n).also { it[if (x[0] < 0.0) 0 else 1] = 1.0 }
         }
-        val right = Exp4Expert { x: F64VectorLike, n: Int ->
+        val right = Exp4Expert { x: VectorLike, n: Int ->
             DoubleArray(n).also { it[if (x[0] < 0.0) 1 else 0] = 1.0 }
         }
         val rng = Random(5)

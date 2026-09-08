@@ -1,6 +1,6 @@
 package com.eignex.kumulant.core
 
-import com.eignex.koblas.core.F64VectorLike
+import com.eignex.koblas.VectorLike
 
 /**
  * Reject a context vector whose arity does not match the model's.
@@ -13,10 +13,10 @@ import com.eignex.koblas.core.F64VectorLike
  * spells its own check out instead, because its receiver is named `vector` and its message says so.
  *
  * @param expected the model's feature count.
- * @throws IllegalArgumentException if [F64VectorLike.size] differs from [expected].
+ * @throws IllegalArgumentException if the [VectorLike] size differs from [expected].
  */
 @Suppress("NOTHING_TO_INLINE") // as with the weight predicates; the non-JVM targets pay for the call
-internal inline fun F64VectorLike.requireFeatureSize(expected: Int) {
+internal inline fun VectorLike.requireFeatureSize(expected: Int) {
     require(size == expected) { "x.size=$size, expected $expected" }
 }
 

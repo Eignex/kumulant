@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.assertAllocatesAtMost
 import kotlin.test.Test
 
@@ -16,7 +16,7 @@ class KnnWorkspaceAllocationTest {
             repeat(HISTORY) { sample ->
                 bandit.update(
                     arm,
-                    F64DenseVector.of(DoubleArray(FEATURES) { (it + sample).toDouble() }),
+                    DenseVector.of(DoubleArray(FEATURES) { (it + sample).toDouble() }),
                     sample.toDouble(),
                 )
             }
@@ -27,7 +27,7 @@ class KnnWorkspaceAllocationTest {
     fun `k nearest neighbour scoring allocates nothing with or without a workspace`() {
         val bare = populatedBandit()
         val reused = populatedBandit()
-        val x = F64DenseVector.of(DoubleArray(FEATURES) { it * 0.25 })
+        val x = DenseVector.of(DoubleArray(FEATURES) { it * 0.25 })
         val workspace = Workspace().apply { reserve(3 * K, 1) }
 
         // The scan buffer is owned by the bandit, so there is nothing left for a workspace to save

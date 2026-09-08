@@ -4,14 +4,14 @@
 
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
+import com.eignex.koblas.MatrixLike
+import com.eignex.koblas.VectorLike
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
 import com.eignex.koblas.copy
-import com.eignex.koblas.core.F64DenseMatrix
-import com.eignex.koblas.core.F64DenseVector
-import com.eignex.koblas.core.F64MatrixLike
-import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dense.trmv
 import com.eignex.koblas.dot
 import com.eignex.koblas.koblas
@@ -33,7 +33,7 @@ import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
 
-private fun F64MatrixLike.copyDenseMatrix(): F64DenseMatrix = F64DenseMatrix.wrap(
+private fun MatrixLike.copyDenseMatrix(): DenseMatrix = DenseMatrix.wrap(
     rows,
     cols,
     DoubleArray(rows * cols) { index -> this[index % rows, index / rows] },
@@ -96,8 +96,8 @@ class BayesianRegressionStat(
     /** Canonical GLM link function; [Link.Identity] is the strict closed-form Gaussian posterior. */
     val link: Link = Link.Identity,
     override val concurrency: Concurrency = Concurrency.None,
-    priorMean: F64VectorLike? = null,
-    priorCovariance: F64MatrixLike? = null,
+    priorMean: VectorLike? = null,
+    priorCovariance: MatrixLike? = null,
 ) : RegressionStat<PrecisionRegressionResult> {
 
     init {
@@ -117,14 +117,14 @@ class BayesianRegressionStat(
     // `initialCovariance` survives only so `create()` can hand a child the same prior it was
     // given, rather than a round-tripped inverse of the precision.
     private val initialWeights: DoubleArray = priorMean?.toDoubleArray() ?: DoubleArray(featureSize)
-    private val initialCovariance: F64DenseMatrix = priorCovariance
+    private val initialCovariance: DenseMatrix = priorCovariance
         ?.copyDenseMatrix()
-        ?: F64DenseMatrix.diagonal(featureSize, priorVariance)
+        ?: DenseMatrix.diagonal(featureSize, priorVariance)
 
     // Prior precision H_prior = Sigma_prior^-1, cached so merge() can subtract one prior factor,
     // and its factor, which is where every update starts.
-    private val priorPrecisionMatrix: F64DenseMatrix
-    private val initialPrecisionL: F64DenseMatrix
+    private val priorPrecisionMatrix: DenseMatrix
+    private val initialPrecisionL: DenseMatrix
 
     init {
         // Both factorizations are strict: a caller prior that cannot be inverted has to fail at
@@ -139,12 +139,12 @@ class BayesianRegressionStat(
 
     // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
     private val priorInfo = DoubleArray(featureSize).also {
-        priorPrecisionMatrix.multiplyInto(F64DenseVector.wrap(initialWeights), it)
+        priorPrecisionMatrix.multiplyInto(DenseVector.wrap(initialWeights), it)
     }
 
     private val lock = concurrency.serializedLock()
-    private val weights = F64DenseVector.wrap(initialWeights.copyOf())
-    private val precisionL = F64DenseMatrix.wrap(featureSize, featureSize, initialPrecisionL.data.copyOf())
+    private val weights = DenseVector.wrap(initialWeights.copyOf())
+    private val precisionL = DenseMatrix.wrap(featureSize, featureSize, initialPrecisionL.data.copyOf())
 
     private var bias: Double = 0.0
     private var biasPrecision: Double = 1.0 / priorVariance
@@ -152,12 +152,12 @@ class BayesianRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: F64VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) =
+    override fun update(x: VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) =
         updateInternal(x, y, timestampNanos, weight, workspace)
 
     @Suppress("UnusedParameter")
     private fun updateInternal(
-        x: F64VectorLike,
+        x: VectorLike,
         y: Double,
         _timestampNanos: Long,
         weight: Double,
@@ -187,7 +187,7 @@ class BayesianRegressionStat(
             // untouched, so the scattered x is still there for the solve afterwards; scattering
             // also spares the update a binary search per coordinate when x arrives sparse.
             workspace.borrow(featureSize) { hx ->
-                val solved = F64DenseVector.wrap(hx)
+                val solved = DenseVector.wrap(hx)
                 copy(x, solved)
 
                 // H <- H + w_c * x xT, as a rank-1 update of its factor; a zero w_c leaves it alone.
@@ -207,12 +207,12 @@ class BayesianRegressionStat(
 
     override fun read(timestampNanos: Long): PrecisionRegressionResult = lock.guarded {
         PrecisionRegressionResult(
-            weights = F64DenseVector.wrap(weights.data.copyOf()),
+            weights = DenseVector.wrap(weights.data.copyOf()),
             bias = bias,
             biasPrecision = biasPrecision,
             totalWeights = totalWeights,
             step = step,
-            precisionL = F64DenseMatrix.wrap(featureSize, featureSize, precisionL.data.copyOf()),
+            precisionL = DenseMatrix.wrap(featureSize, featureSize, precisionL.data.copyOf()),
             link = link,
             sse = sse,
         )
@@ -250,7 +250,7 @@ class BayesianRegressionStat(
             // only one the Cholesky below reads. `syrk` takes each factor as a general matrix, so
             // it depends on the strict upper triangle being zero. Factorization clears it, and
             // rank-1 updates preserve it.
-            val hNew = F64DenseMatrix.zero(n, n)
+            val hNew = DenseMatrix.zero(n, n)
             koblas.syrk(1.0, precisionL, transpose = false, 0.0, hNew, lower = true, workspace = workspace)
             koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true, workspace = workspace)
             for (j in 0 until n) {
@@ -310,8 +310,8 @@ class BayesianRegressionStat(
         priorVariance = priorVariance,
         link = link,
         concurrency = concurrency ?: this.concurrency,
-        priorMean = F64DenseVector.wrap(initialWeights.copyOf()),
-        priorCovariance = F64DenseMatrix.wrap(featureSize, featureSize, initialCovariance.data.copyOf()),
+        priorMean = DenseVector.wrap(initialWeights.copyOf()),
+        priorCovariance = DenseMatrix.wrap(featureSize, featureSize, initialCovariance.data.copyOf()),
     )
 
     /** Empirical-Bayes / hierarchical helpers that operate on populations of fitted snapshots. */
@@ -358,16 +358,16 @@ class BayesianRegressionStat(
             for (i in 0 until n) muPop[i] /= wTotal
 
             // Sigma_pop = weighted mean of Sigma_i + weighted covariance of (mu_i - mu_pop).
-            val sigmaPop = F64DenseMatrix.zero(n, n)
+            val sigmaPop = DenseMatrix.zero(n, n)
             // One buffer for every snapshot's covariance: the inversion writes each entry, so it
             // never sees what the previous instance left behind.
-            val cov = F64DenseMatrix.zero(n, n)
+            val cov = DenseMatrix.zero(n, n)
             // Both matrices are square, n by n, and column-major, so their flat backings line up
             // entry for entry and the matrix add is a level-1 axpy over the whole of them.
-            val sigmaFlat = F64DenseVector.wrap(sigmaPop.data)
-            val covFlat = F64DenseVector.wrap(cov.data)
+            val sigmaFlat = DenseVector.wrap(sigmaPop.data)
+            val covFlat = DenseVector.wrap(cov.data)
             val deviation = DoubleArray(n)
-            val deviationVector = F64DenseVector.wrap(deviation)
+            val deviationVector = DenseVector.wrap(deviation)
             for (s in snapshots.indices) {
                 val wi = weights[s] / wTotal
                 snapshots[s].covarianceInto(cov)
@@ -384,7 +384,7 @@ class BayesianRegressionStat(
             }
 
             return PopulationPrior(
-                mean = F64DenseVector.of(muPop),
+                mean = DenseVector.of(muPop),
                 covariance = sigmaPop,
                 instanceCount = snapshots.size,
             )
@@ -400,9 +400,9 @@ class BayesianRegressionStat(
 @Serializable
 data class PopulationPrior(
     /** Population mean of the per-instance posterior means. */
-    val mean: F64DenseVector,
+    val mean: DenseVector,
     /** Population covariance: within-instance posterior + between-instance mean spread. */
-    val covariance: F64DenseMatrix,
+    val covariance: DenseMatrix,
     /** Number of per-instance posteriors that contributed to this prior. */
     val instanceCount: Int,
 )

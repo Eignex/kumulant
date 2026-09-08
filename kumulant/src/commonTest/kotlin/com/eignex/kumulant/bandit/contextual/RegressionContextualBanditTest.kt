@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Workspace
-import com.eignex.koblas.core.F64DenseVector
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.feat
@@ -49,7 +49,7 @@ class RegressionContextualBanditTest {
 
         repeat(3000) {
             val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
-            val xv = F64DenseVector.of(x)
+            val xv = DenseVector.of(x)
             val arm = bandit.choose(xv)
             val reward = trueWeights[arm][0] * x[0] + trueWeights[arm][1] * x[1] +
                 rng.nextDouble() * 0.1 - 0.05
@@ -249,7 +249,7 @@ class RegressionContextualBanditTest {
         // while the global picks up the signal.
         repeat(500) {
             val x = doubleArrayOf(rng.nextDouble(), rng.nextDouble())
-            val xv = F64DenseVector.of(x)
+            val xv = DenseVector.of(x)
             val reward = 2.0 * x[0] + 0.5 * x[1]
             pooled.update(0, xv, reward)
             pooled.update(1, xv, reward)
