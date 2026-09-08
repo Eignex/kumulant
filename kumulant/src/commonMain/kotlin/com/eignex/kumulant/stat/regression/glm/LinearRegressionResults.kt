@@ -9,7 +9,8 @@ import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.requireFeatureSize
-import com.eignex.kumulant.math.CholeskyFactor
+import com.eignex.kumulant.math.choleskyInverse
+import com.eignex.kumulant.math.choleskyInvertInto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -133,7 +134,7 @@ data class PrecisionRegressionResult(
      * matrix per call, so it belongs in reporting and prior fitting; scoring paths should stay on
      * the factor.
      */
-    fun covariance(workspace: Workspace? = null): F64DenseMatrix = CholeskyFactor(precisionL).invert(workspace)
+    fun covariance(workspace: Workspace? = null): F64DenseMatrix = precisionL.choleskyInverse(workspace)
 
     /**
      * Posterior covariance into [out], which is returned. Every entry is written, so a buffer
@@ -141,5 +142,5 @@ data class PrecisionRegressionResult(
      * rather than the work. [out] must not be [precisionL] itself.
      */
     fun covarianceInto(out: F64DenseMatrix, workspace: Workspace? = null): F64DenseMatrix =
-        CholeskyFactor(precisionL).invertInto(out, workspace)
+        precisionL.choleskyInvertInto(out, workspace)
 }

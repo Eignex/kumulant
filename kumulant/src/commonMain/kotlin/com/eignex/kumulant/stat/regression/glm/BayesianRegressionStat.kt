@@ -13,21 +13,22 @@ import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64MatrixLike
 import com.eignex.koblas.core.F64VectorLike
 import com.eignex.koblas.dense.trmv
-import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.dot
 import com.eignex.koblas.koblas
 import com.eignex.koblas.syr
-import com.eignex.koblas.zeroStrictUpper
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requireMergeFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
-import com.eignex.kumulant.math.CholeskyFactor
 import com.eignex.kumulant.math.CholeskyPolicy
 import com.eignex.kumulant.math.NotPositiveDefinite
 import com.eignex.kumulant.math.cholesky
+import com.eignex.kumulant.math.choleskyInto
+import com.eignex.kumulant.math.choleskyInverse
+import com.eignex.kumulant.math.choleskyRankUpdate
+import com.eignex.kumulant.math.choleskySolveInto
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
@@ -129,8 +130,8 @@ class BayesianRegressionStat(
         // Both factorizations are strict: a caller prior that cannot be inverted has to fail at
         // construction, not silently become a regularised neighbour of itself.
         try {
-            priorPrecisionMatrix = initialCovariance.cholesky(CholeskyPolicy.Strict).invert()
-            initialPrecisionL = priorPrecisionMatrix.cholesky(CholeskyPolicy.Strict).l.also { it.zeroStrictUpper() }
+            priorPrecisionMatrix = initialCovariance.cholesky(CholeskyPolicy.Strict).choleskyInverse()
+            initialPrecisionL = priorPrecisionMatrix.cholesky(CholeskyPolicy.Strict)
         } catch (error: NotPositiveDefinite) {
             throw IllegalArgumentException("priorCovariance must be positive definite", error)
         }
@@ -145,10 +146,6 @@ class BayesianRegressionStat(
     private val weights = F64DenseVector.wrap(initialWeights.copyOf())
     private val precisionL = F64DenseMatrix.wrap(featureSize, featureSize, initialPrecisionL.data.copyOf())
 
-    // The rank-1 update takes a decomposition rather than a bare factor. It wraps `precisionL`
-    // without copying and every write goes through that same matrix, so one wrapper serves the
-    // life of the stat and no update allocates to build one.
-    private val precisionFactor = CholeskyFactor(precisionL)
     private var bias: Double = 0.0
     private var biasPrecision: Double = 1.0 / priorVariance
     private var totalWeights: Double = 0.0
@@ -194,12 +191,11 @@ class BayesianRegressionStat(
                 copy(x, solved)
 
                 // H <- H + w_c * x xT, as a rank-1 update of its factor; a zero w_c leaves it alone.
-                if (wc > 0.0) precisionFactor.rankUpdate(hx, wc, workspace)
+                if (wc > 0.0) precisionL.choleskyRankUpdate(hx, wc, workspace)
 
                 // Posterior mean update: w += (weight * residual) * H_new^-1 * x, solved against
                 // the factor just updated rather than through a materialised covariance.
-                precisionL.trsv(hx, lower = true)
-                precisionL.trsv(hx, lower = true, transpose = true)
+                precisionL.choleskySolveInto(hx, hx)
                 weights.axpy(weight * residual, solved)
 
                 biasPrecision += wc
@@ -252,8 +248,8 @@ class BayesianRegressionStat(
 
             // H_new = H_self + H_other - H_prior, accumulated in the lower triangle, which is the
             // only one the Cholesky below reads. `syrk` takes each factor as a general matrix, so
-            // it depends on the strict upper triangle being zero, which is what `precisionL`
-            // promises and what `zeroStrictUpper` keeps true on every write to it.
+            // it depends on the strict upper triangle being zero. Factorization clears it, and
+            // rank-1 updates preserve it.
             val hNew = F64DenseMatrix.zero(n, n)
             koblas.syrk(1.0, precisionL, transpose = false, 0.0, hNew, lower = true, workspace = workspace)
             koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true, workspace = workspace)
@@ -275,13 +271,12 @@ class BayesianRegressionStat(
                 }
 
                 // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
-                val hChol = hNew.cholesky(CholeskyPolicy.Regularize())
-                hChol.solveInto(b, b)
-                val lNew = hChol.l.also { it.zeroStrictUpper() }
+                hNew.choleskyInto(hNew, CholeskyPolicy.Regularize())
+                hNew.choleskySolveInto(b, b)
 
                 for (i in 0 until n) {
                     weights[i] = b[i]
-                    for (j in 0 until n) precisionL[i, j] = lNew[i, j]
+                    for (j in 0 until n) precisionL[i, j] = hNew[i, j]
                 }
             }
 
