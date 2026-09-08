@@ -1,19 +1,15 @@
-@file:OptIn(com.eignex.koblas.UnsafeKoblasApi::class)
-
 package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.core.F64DenseMatrix
 import com.eignex.koblas.core.F64DenseVector
 import com.eignex.koblas.core.F64VectorLike
-import com.eignex.koblas.dense.F64CholeskyDecomposition
-import com.eignex.koblas.dense.invert
-import com.eignex.koblas.dense.invertInto
 import com.eignex.koblas.dot
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.requireFeatureSize
+import com.eignex.kumulant.math.CholeskyFactor
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -137,8 +133,7 @@ data class PrecisionRegressionResult(
      * matrix per call, so it belongs in reporting and prior fitting; scoring paths should stay on
      * the factor.
      */
-    fun covariance(workspace: Workspace? = null): F64DenseMatrix =
-        F64CholeskyDecomposition(precisionL).invert(workspace)
+    fun covariance(workspace: Workspace? = null): F64DenseMatrix = CholeskyFactor(precisionL).invert(workspace)
 
     /**
      * Posterior covariance into [out], which is returned. Every entry is written, so a buffer
@@ -146,5 +141,5 @@ data class PrecisionRegressionResult(
      * rather than the work. [out] must not be [precisionL] itself.
      */
     fun covarianceInto(out: F64DenseMatrix, workspace: Workspace? = null): F64DenseMatrix =
-        F64CholeskyDecomposition(precisionL).invertInto(out, workspace)
+        CholeskyFactor(precisionL).invertInto(out, workspace)
 }
