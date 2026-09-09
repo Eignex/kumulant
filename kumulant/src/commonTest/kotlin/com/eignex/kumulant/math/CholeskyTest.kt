@@ -1,7 +1,7 @@
 package com.eignex.kumulant.math
 
-import com.eignex.koblas.Workspace
 import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.Workspace
 import kotlin.math.abs
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -15,7 +15,7 @@ import kotlin.test.assertTrue
 class CholeskyTest {
     @Test
     fun `factorization recovers a known factor across block boundaries`() {
-        for (n in listOf(0, 1, 63, 64, 65, 129, 193, 321)) {
+        for (n in listOf(0, 1, 63, 64, 65, 71, 75, 79, 129, 257)) {
             val tail = 1.0 / (n + 1)
             val a = DenseMatrix.wrap(
                 n,
@@ -62,7 +62,9 @@ class CholeskyTest {
             assertSame(out, factor)
             for (j in 0 until 65) {
                 for (i in 0 until 65) {
-                    val expected = if (i == j) 2.0 else if (i == 64 && j == 0) {
+                    val expected = if (i == j) {
+                        2.0
+                    } else if (i == 64 && j == 0) {
                         1.0
                     } else {
                         0.0
@@ -88,7 +90,9 @@ class CholeskyTest {
             assertSame(out, factor)
             for (j in 0 until 65) {
                 for (i in 0 until 65) {
-                    val expected = if (i == j) 2.0 else if (i == 64 && j == 0) {
+                    val expected = if (i == j) {
+                        2.0
+                    } else if (i == 64 && j == 0) {
                         1.0
                     } else {
                         0.0
@@ -97,6 +101,137 @@ class CholeskyTest {
                 }
             }
         }
+    }
+
+    @Test
+    fun `factorization reconstructs nearly dependent columns across blocks`() {
+        for (epsilon in listOf(1e-4, 1e-8)) {
+            val n = 129
+            val a = DenseMatrix.wrap(
+                n,
+                n,
+                DoubleArray(n * n) { index ->
+                    if (index % n == index / n) 1.0 + epsilon else 1.0
+                },
+            )
+
+            val factor = a.cholesky()
+
+            var maxError = 0.0
+            for (j in 0 until n) {
+                for (i in j until n) {
+                    var reconstructed = 0.0
+                    for (k in 0..j) reconstructed += factor[i, k] * factor[j, k]
+                    maxError = maxOf(maxError, abs(reconstructed - a[i, j]))
+                }
+            }
+            assertTrue(maxError < 1e-12, "epsilon=$epsilon reconstruction error=$maxError")
+        }
+    }
+
+    @Test
+    fun `workspace reuse preserves factors across different matrices and scales`() {
+        val workspace = Workspace()
+        val first = DenseMatrix.diagonal(129, 4.0).cholesky(workspace = workspace)
+        for (scale in listOf(1e-100, 1.0, 1e100)) {
+            val n = 129
+            val tail = 0.01
+            val a = DenseMatrix.wrap(
+                n,
+                n,
+                DoubleArray(n * n) { index ->
+                    val i = index % n
+                    val j = index / n
+                    val sign = if ((i + j) % 2 == 0) 1.0 else -1.0
+                    val entry = if (i == j) 4.0 + j * tail * tail else sign * (min(i, j) * tail * tail + 2.0 * tail)
+                    if (i < j) Double.NaN else entry * scale * scale
+                },
+            )
+
+            val factor = a.choleskyInto(a, workspace = workspace)
+
+            var maxError = 0.0
+            for (j in 0 until n) {
+                for (i in 0 until n) {
+                    val sign = if ((i + j) % 2 == 0) 1.0 else -1.0
+                    val expected = if (i < j) {
+                        0.0
+                    } else if (i == j) {
+                        2.0
+                    } else {
+                        sign * tail
+                    }
+                    maxError = maxOf(maxError, abs(factor[i, j] / scale - expected))
+                    assertEquals(if (i == j) 2.0 else 0.0, first[i, j])
+                }
+            }
+            assertTrue(maxError < 1e-12, "scale=$scale factor error=$maxError")
+        }
+    }
+
+    @Test
+    fun `zero coefficients preserve the first failing pivot with infinite column tails`() {
+        for (tail in listOf(1e200, Double.POSITIVE_INFINITY)) {
+            val a = DenseMatrix.diagonal(66, 1.0)
+            a[0, 0] = 1e-300
+            a[65, 0] = tail
+
+            val error = assertFailsWith<NotPositiveDefinite> { a.cholesky() }
+
+            assertEquals(65, error.pivotIndex)
+            assertEquals(Double.NEGATIVE_INFINITY, error.pivot)
+        }
+    }
+
+    @Test
+    fun `regularization bounds a corrected column across a block boundary`() {
+        for (pivot in listOf(-1.0, 0.0, 1e-12)) {
+            val a = DenseMatrix.diagonal(66, 1.0)
+            a[64, 0] = 1.0
+            a[65, 0] = 2.0
+            a[64, 64] = 1.0 + pivot
+            a[65, 64] = 5.0
+            a[65, 65] = 6.0
+
+            val factor = a.cholesky(CholeskyPolicy.Regularize())
+
+            assertEquals(3.0, factor[64, 64])
+            assertEquals(1.0, factor[65, 64])
+            assertEquals(1.0, factor[65, 65])
+        }
+    }
+
+    @Test
+    fun `every policy reports NaN pivots beyond the first block with reused scratch`() {
+        val workspace = Workspace()
+        for (policy in listOf(CholeskyPolicy.Strict, CholeskyPolicy.Regularize())) {
+            for (pivot in listOf(64, 65, 128)) {
+                val a = DenseMatrix.diagonal(129, 1.0)
+                a[pivot, pivot] = Double.NaN
+
+                val error = assertFailsWith<NotPositiveDefinite> { a.cholesky(policy, workspace) }
+
+                assertEquals(pivot, error.pivotIndex)
+                assertTrue(error.pivot.isNaN())
+            }
+        }
+        val factor = DenseMatrix.diagonal(129, 4.0).cholesky(workspace = workspace)
+        for (i in 0 until 129) assertEquals(2.0, factor[i, i])
+    }
+
+    @Test
+    fun `regularization uses the column tail outside the diagonal block after a rejected trial`() {
+        val a = DenseMatrix.diagonal(65, 4.0)
+        a[20, 20] = 0.0
+        a[64, 20] = 3.0
+        a[64, 64] = 2.0
+
+        a.choleskyInto(a, CholeskyPolicy.Regularize())
+
+        for (i in 0 until 20) assertEquals(2.0, a[i, i])
+        assertEquals(3.0, a[20, 20])
+        assertEquals(1.0, a[64, 20])
+        assertEquals(1.0, a[64, 64])
     }
 
     @Test

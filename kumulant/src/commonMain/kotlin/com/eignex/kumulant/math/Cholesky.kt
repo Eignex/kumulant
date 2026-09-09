@@ -2,9 +2,9 @@
 
 package com.eignex.kumulant.math
 
+import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.borrow
-import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.dense.Kernels
 import com.eignex.koblas.dense.trsv
 import com.eignex.koblas.koblas
@@ -13,12 +13,9 @@ import kotlin.math.hypot
 import kotlin.math.min
 import kotlin.math.sqrt
 
-// Adapted from Eignex/koblas ReferenceCholesky.kt and ReferenceLevel3.kt at cfdef98439f7baff0febc7a0892f16734bf55315.
-// Apache-2.0; module-internal API and a Cholesky-only specialization of the blocked product.
+// Adapted from Eignex/koblas ReferenceCholesky.kt at cfdef98439f7baff0febc7a0892f16734bf55315.
+// Apache-2.0; module-internal API.
 private const val CHOLESKY_BLOCK = 64
-private const val PRODUCT_ROWS = 256
-private const val PRODUCT_COLUMNS = 8
-private const val PRODUCT_DEPTH = 128
 
 internal sealed interface CholeskyPolicy {
     data object Strict : CholeskyPolicy
@@ -108,12 +105,15 @@ internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Workspa
     return out
 }
 
-internal fun DenseMatrix.cholesky(policy: CholeskyPolicy = CholeskyPolicy.Strict): DenseMatrix =
-    choleskyInto(DenseMatrix.zero(rows, cols), policy)
+internal fun DenseMatrix.cholesky(
+    policy: CholeskyPolicy = CholeskyPolicy.Strict,
+    workspace: Workspace? = null,
+): DenseMatrix = choleskyInto(DenseMatrix.zero(rows, cols), policy, workspace)
 
 internal fun DenseMatrix.choleskyInto(
     out: DenseMatrix,
     policy: CholeskyPolicy = CholeskyPolicy.Strict,
+    workspace: Workspace? = null,
 ): DenseMatrix {
     require(rows == cols) { "cholesky requires a square matrix" }
     require(out.rows == rows && out.cols == rows) { "cholesky destination must be ${rows}x$rows" }
@@ -126,68 +126,43 @@ internal fun DenseMatrix.choleskyInto(
         ld.fill(0.0, j * n, j * n + j)
         if (data !== ld) data.copyInto(ld, j + j * n, j + j * n, (j + 1) * n)
     }
-    // Left-looking blocked Cholesky. Each block column first takes what every earlier block owes it as one
-    // level-3 product, then finishes column by column against the few columns inside the block. Gathering
-    // one column at a time instead is a level-1 axpy per (column, earlier column) pair, which streams
-    // n^3/6 doubles for n^3/3 flops and leaves the factorization bandwidth-bound.
-    // One pack buffer for the whole factorization rather than one per block column. The seam takes no
-    // workspace, and a matrix that fits in a single block never gathers at all.
-    val packed = if (n > CHOLESKY_BLOCK) DoubleArray(CHOLESKY_BLOCK * n) else null
-    var blockStart = 0
-    while (blockStart < n) {
-        val width = min(CHOLESKY_BLOCK, n - blockStart)
-        val height = n - blockStart
-        if (blockStart > 0) {
-            gatherEarlierBlocks(kernels, ld, n, blockStart, width, height, packed!!)
+    if (n <= CHOLESKY_BLOCK || !kernels.supportsCholeskyPanels()) {
+        factorBlockColumn(kernels, ld, n, 0, n, policy)
+        return out
+    }
+    val minimumPivot = (policy as? CholeskyPolicy.Regularize)?.minimumPivot ?: 0.0
+    val block = min(CHOLESKY_BLOCK, n / 4)
+    var start = 0
+    while (start < n) {
+        val width = min(block, n - start)
+        if (!tryCholeskyBlock(kernels, out, start, width, minimumPivot, workspace)) {
+            // Regularization needs the entire corrected column to bound its multipliers.
+            factorBlockColumn(kernels, ld, n, start, width, policy)
+            if (columnsAreFinite(ld, n, start, width)) {
+                updateCholeskyTrailing(kernels, out, start, width, workspace)
+            } else {
+                // A zero multiplier must skip infinite column entries instead of forming 0 * infinity.
+                subtractTrailingColumns(kernels, ld, n, start, width)
+            }
         }
-        factorBlockColumn(kernels, ld, n, blockStart, width, policy)
-        blockStart += width
+        start += width
     }
     return out
 }
 
-@Suppress("LongParameterList") // the factor, its shape, the block being gathered into, and scratch
-private fun gatherEarlierBlocks(
-    kernels: Kernels,
-    ld: DoubleArray,
-    n: Int,
-    start: Int,
-    width: Int,
-    height: Int,
-    packed: DoubleArray,
-) {
-    for (t in 0 until width) {
-        for (p in 0 until start) packed[p + t * start] = ld[start + t + p * n]
+private fun columnsAreFinite(data: DoubleArray, n: Int, start: Int, width: Int): Boolean {
+    for (j in start until start + width) {
+        for (i in j until n) if (!data[i + j * n].isFinite()) return false
     }
-    var column = 0
-    while (column < width) {
-        val columnEnd = min(column + PRODUCT_COLUMNS, width)
-        var inner = 0
-        while (inner < start) {
-            val innerEnd = min(inner + PRODUCT_DEPTH, start)
-            var row = 0
-            while (row < height) {
-                val length = min(row + PRODUCT_ROWS, height) - row
-                for (p in inner until innerEnd) {
-                    val source = start + row + p * n
-                    for (j in column until columnEnd) {
-                        val value = packed[p + j * start]
-                        if (value != 0.0) {
-                            kernels.axpy(ld, start + start * n + row + j * n, -value, ld, source, length)
-                        }
-                    }
-                }
-                row += length
-            }
-            inner = innerEnd
+    return true
+}
+
+private fun subtractTrailingColumns(kernels: Kernels, data: DoubleArray, n: Int, start: Int, width: Int) {
+    for (p in start until start + width) {
+        for (j in start + width until n) {
+            val value = data[j + p * n]
+            if (value != 0.0) kernels.axpy(data, j + j * n, -value, data, j + p * n, n - j)
         }
-        column = columnEnd
-    }
-    // The product covers the whole diagonal block, including the strict upper half of it that the column
-    // sweep neither writes nor reads. Left there it would surface as a nonzero above the factor's diagonal.
-    for (t in 1 until width) {
-        val column = start + t
-        ld.fill(0.0, start + column * n, column + column * n)
     }
 }
 

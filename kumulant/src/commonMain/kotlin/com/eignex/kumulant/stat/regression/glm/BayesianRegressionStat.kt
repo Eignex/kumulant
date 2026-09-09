@@ -271,7 +271,7 @@ class BayesianRegressionStat(
                 }
 
                 // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
-                hNew.choleskyInto(hNew, CholeskyPolicy.Regularize())
+                hNew.choleskyInto(hNew, CholeskyPolicy.Regularize(), workspace)
                 hNew.choleskySolveInto(b, b)
 
                 for (i in 0 until n) {
