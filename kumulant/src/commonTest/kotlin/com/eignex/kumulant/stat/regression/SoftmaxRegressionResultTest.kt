@@ -3,14 +3,14 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class SoftmaxRegressionResultTest {
 
-    private class StridedVector(private val backing: DoubleArray) : VectorLike {
+    private class StridedVector(private val backing: DoubleArray) : Vector {
         override val size: Int get() = backing.size / 2
         override fun get(i: Int): Double = backing[i * 2]
         override fun toDoubleArray(): DoubleArray = DoubleArray(size) { this[it] }
@@ -20,7 +20,7 @@ class SoftmaxRegressionResultTest {
         SoftmaxRegressionResult(
             featureSize = weights[0].size,
             numClasses = weights.size,
-            weights = DenseMatrix.of(weights),
+            weights = DenseMatrix.ofRows(weights),
             biases = DenseVector.of(biases),
             totalWeights = 0.0,
             step = 0L,
@@ -57,7 +57,7 @@ class SoftmaxRegressionResultTest {
         val strided = StridedVector(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -1.0, 9.0, 0.0, 9.0))
 
         val expected = r.probabilities(dense)
-        for (x in listOf<VectorLike>(sparse, strided)) {
+        for (x in listOf<Vector>(sparse, strided)) {
             val actual = r.probabilities(x)
             assertEquals(expected[0], actual[0], 1e-12)
             assertEquals(expected[1], actual[1], 1e-12)
@@ -73,7 +73,7 @@ class SoftmaxRegressionResultTest {
             SoftmaxRegressionResult(
                 featureSize = 3,
                 numClasses = 2,
-                weights = DenseMatrix.of(arrayOf(doubleArrayOf(1.0, 2.0), doubleArrayOf(3.0, 4.0))),
+                weights = DenseMatrix.ofRows(arrayOf(doubleArrayOf(1.0, 2.0), doubleArrayOf(3.0, 4.0))),
                 biases = DenseVector.of(doubleArrayOf(0.0, 0.0)),
                 totalWeights = 0.0,
                 step = 0L,
@@ -88,7 +88,7 @@ class SoftmaxRegressionResultTest {
             SoftmaxRegressionResult(
                 featureSize = 2,
                 numClasses = 2,
-                weights = DenseMatrix.of(arrayOf(doubleArrayOf(1.0, 2.0), doubleArrayOf(3.0, 4.0))),
+                weights = DenseMatrix.ofRows(arrayOf(doubleArrayOf(1.0, 2.0), doubleArrayOf(3.0, 4.0))),
                 biases = DenseVector.of(doubleArrayOf(0.0)),
                 totalWeights = 0.0,
                 step = 0L,

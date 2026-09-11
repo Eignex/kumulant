@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
@@ -35,7 +35,7 @@ internal class VectorizedStat<R : Result>(
 
     override val concurrency: Concurrency get() = template.concurrency
 
-    override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) {
+    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         vector.requireFeatureSize(dimensions)
         if (skipZeros) {
             vector.forEachStored { i, v -> stats[i].update(v, timestampNanos, weight) }

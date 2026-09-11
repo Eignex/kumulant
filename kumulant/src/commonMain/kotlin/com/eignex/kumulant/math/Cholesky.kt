@@ -5,9 +5,9 @@ package com.eignex.kumulant.math
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.borrow
-import com.eignex.koblas.dense.Kernels
-import com.eignex.koblas.dense.trsv
+import com.eignex.koblas.dense.DenseVectorKernels
 import com.eignex.koblas.koblas
+import com.eignex.koblas.trsv
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.min
@@ -39,7 +39,7 @@ internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, works
     val n = rows
     if (n == 0 || sigma == 0.0) return
     val ld = data
-    val kernels = koblas.kernels
+    val kernels = koblas.vectorKernels
     val scale = sqrt(sigma)
     workspace.borrow(n) { x ->
         v.copyInto(x)
@@ -80,7 +80,7 @@ internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Workspa
     require(out.data !== data) { "inverse destination must not share the factor's storage" }
     val n = rows
     val ld = data
-    val kernels = koblas.kernels
+    val kernels = koblas.vectorKernels
     val invd = out.data
     workspace.borrow(n) { y ->
         for (j in 0 until n) {
@@ -118,7 +118,7 @@ internal fun DenseMatrix.choleskyInto(
     require(rows == cols) { "cholesky requires a square matrix" }
     require(out.rows == rows && out.cols == rows) { "cholesky destination must be ${rows}x$rows" }
     val n = rows
-    val kernels = koblas.kernels
+    val kernels = koblas.choleskyKernels()
     val ld = out.data
     // A reused destination arrives holding the previous factor where a fresh one arrives zeroed, so the
     // strict upper triangle is cleared rather than inherited.
@@ -126,8 +126,8 @@ internal fun DenseMatrix.choleskyInto(
         ld.fill(0.0, j * n, j * n + j)
         if (data !== ld) data.copyInto(ld, j + j * n, j + j * n, (j + 1) * n)
     }
-    if (n <= CHOLESKY_BLOCK || !kernels.supportsCholeskyPanels()) {
-        factorBlockColumn(kernels, ld, n, 0, n, policy)
+    if (n <= CHOLESKY_BLOCK) {
+        factorBlockColumn(kernels.vector, ld, n, 0, n, policy)
         return out
     }
     val minimumPivot = (policy as? CholeskyPolicy.Regularize)?.minimumPivot ?: 0.0
@@ -137,12 +137,12 @@ internal fun DenseMatrix.choleskyInto(
         val width = min(block, n - start)
         if (!tryCholeskyBlock(kernels, out, start, width, minimumPivot, workspace)) {
             // Regularization needs the entire corrected column to bound its multipliers.
-            factorBlockColumn(kernels, ld, n, start, width, policy)
+            factorBlockColumn(kernels.vector, ld, n, start, width, policy)
             if (columnsAreFinite(ld, n, start, width)) {
                 updateCholeskyTrailing(kernels, out, start, width, workspace)
             } else {
                 // A zero multiplier must skip infinite column entries instead of forming 0 * infinity.
-                subtractTrailingColumns(kernels, ld, n, start, width)
+                subtractTrailingColumns(kernels.vector, ld, n, start, width)
             }
         }
         start += width
@@ -157,7 +157,7 @@ private fun columnsAreFinite(data: DoubleArray, n: Int, start: Int, width: Int):
     return true
 }
 
-private fun subtractTrailingColumns(kernels: Kernels, data: DoubleArray, n: Int, start: Int, width: Int) {
+private fun subtractTrailingColumns(kernels: DenseVectorKernels, data: DoubleArray, n: Int, start: Int, width: Int) {
     for (p in start until start + width) {
         for (j in start + width until n) {
             val value = data[j + p * n]
@@ -167,7 +167,7 @@ private fun subtractTrailingColumns(kernels: Kernels, data: DoubleArray, n: Int,
 }
 
 private fun factorBlockColumn(
-    kernels: Kernels,
+    kernels: DenseVectorKernels,
     ld: DoubleArray,
     n: Int,
     start: Int,

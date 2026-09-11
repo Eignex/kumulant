@@ -13,11 +13,11 @@ import kotlin.test.assertTrue
 class SoftmaxWorkspaceAllocationTest {
 
     @Test
-    fun `reserved workspace removes softmax update logits allocation`() {
+    fun `workspace reuses softmax update logits allocation`() {
         val allocating = SoftmaxRegressionStat(featureSize = 8, numClasses = 4, optimizer = Sgd(ConstantRate(0.05)))
         val reused = SoftmaxRegressionStat(featureSize = 8, numClasses = 4, optimizer = Sgd(ConstantRate(0.05)))
         val x = DenseVector.of(DoubleArray(8) { (it + 1).toDouble() / 8.0 })
-        val workspace = Workspace().apply { reserve(4, 1) }
+        val workspace = Workspace()
 
         val (allocatedBytes, workspaceBytes) = bytesPerCall(
             { allocating.update(x, 1.0) },
@@ -31,11 +31,11 @@ class SoftmaxWorkspaceAllocationTest {
     }
 
     @Test
-    fun `a reserved workspace removes the logits buffer softmax prediction otherwise allocates`() {
+    fun `a workspace reuses the logits buffer softmax prediction otherwise allocates`() {
         val result = SoftmaxRegressionResult(
             featureSize = 2,
             numClasses = 3,
-            weights = DenseMatrix.of(
+            weights = DenseMatrix.ofRows(
                 arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0), doubleArrayOf(-1.0, -1.0)),
             ),
             biases = DenseVector.of(doubleArrayOf(0.0, 0.0, 0.0)),
@@ -44,7 +44,7 @@ class SoftmaxWorkspaceAllocationTest {
             crossEntropy = 0.0,
         )
         val x = DenseVector.of(doubleArrayOf(1.0, 0.5))
-        val workspace = Workspace().apply { reserve(3, 1) }
+        val workspace = Workspace()
 
         val (defaultBytes, nullBytes, workspaceBytes) = bytesPerCall(
             { result.predict(x) },

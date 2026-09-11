@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.feat
 import com.eignex.kumulant.schema.expr.V
 import com.eignex.kumulant.schema.expr.X
@@ -68,7 +68,7 @@ class SplitTest {
         assertFalse(s.direction(NoMaterializeVector(doubleArrayOf(0.0, -1.0))))
     }
 
-    private class NoMaterializeVector(private val values: DoubleArray) : VectorLike {
+    private class NoMaterializeVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
         override fun toDoubleArray(): DoubleArray = error("split materialised its context")

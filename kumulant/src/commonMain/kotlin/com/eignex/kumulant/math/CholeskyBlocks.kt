@@ -36,16 +36,15 @@
  * or implied, of The University of Texas at Austin.
  */
 
-@file:OptIn(com.eignex.koblas.ExperimentalKoblasApi::class)
-
 package com.eignex.kumulant.math
 
 import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.KoblasEngine
 import com.eignex.koblas.StridedVectorView
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.borrow
-import com.eignex.koblas.dense.Kernels
-import com.eignex.koblas.dense.PackedPanels
+import com.eignex.koblas.dense.DenseVectorKernels
+import com.eignex.koblas.dense.PackedKernels
 import com.eignex.koblas.koblas
 import com.eignex.koblas.view
 import kotlin.math.min
@@ -55,12 +54,13 @@ private const val CHOLESKY_LEAF = 16
 
 // Adapted from OpenBLAS potrf_L_single.c and potf2_L.c
 // at 632ef874379c16ca8646d9fa0f6c60449e47d960. Packing and compute leaves belong to koblas.
-internal fun Kernels.supportsCholeskyPanels(): Boolean =
-    gemmTileRows == PackedPanels.tileRows && gemmTileCols == PackedPanels.tileColumns
+internal data class CholeskyKernels(val vector: DenseVectorKernels, val packed: PackedKernels)
+
+internal fun KoblasEngine.choleskyKernels(): CholeskyKernels = CholeskyKernels(vectorKernels, packedKernels)
 
 // Staging preserves the input block for full-column regularization if a trial pivot needs repair.
 internal fun tryCholeskyBlock(
-    kernels: Kernels,
+    kernels: CholeskyKernels,
     matrix: DenseMatrix,
     start: Int,
     width: Int,
@@ -76,15 +76,15 @@ internal fun tryCholeskyBlock(
     if (!tryCholeskyDiagonal(kernels, diagonal, minimumPivot, workspace)) return@borrow false
     val end = start + width
     val height = n - end
-    workspace.borrow(PackedPanels.leftSize(height, width)) { panel ->
+    workspace.borrow(koblas.packedPanels.leftSize(height, width)) { panel ->
         if (height > 0) {
-            PackedPanels.packLeft(matrix, panel, height, width, sourceRow = end, sourceColumn = start)
+            koblas.packedPanels.packLeft(matrix, panel, height, width, sourceRow = end, sourceColumn = start)
             solveCholeskyPanel(kernels, diagonal, panel, height, workspace)
             if (!panel.all { it.isFinite() }) return@borrow false
         }
         for (j in 0 until width) data.copyInto(matrix.data, start + (start + j) * n, j * width, (j + 1) * width)
         if (height > 0) {
-            PackedPanels.writeLeft(panel, matrix, height, width, destinationRow = end, destinationColumn = start)
+            koblas.packedPanels.writeLeft(panel, matrix, height, width, destinationRow = end, destinationColumn = start)
             subtractCholeskyPanel(kernels, matrix, end, width, panel, workspace)
         }
         true
@@ -92,7 +92,7 @@ internal fun tryCholeskyBlock(
 }
 
 private fun tryCholeskyDiagonal(
-    kernels: Kernels,
+    kernels: CholeskyKernels,
     matrix: DenseMatrix,
     minimumPivot: Double,
     workspace: Workspace?,
@@ -110,17 +110,17 @@ private fun tryCholeskyDiagonal(
 }
 
 private fun solveCholeskyPanel(
-    kernels: Kernels,
+    kernels: CholeskyKernels,
     diagonal: DenseMatrix,
     panel: DoubleArray,
     height: Int,
     workspace: Workspace?,
 ) {
     val width = diagonal.rows
-    val rows = kernels.gemmTileRows
-    val columns = kernels.gemmTileCols
-    workspace.borrow(PackedPanels.rightSize(width, width)) { triangle ->
-        PackedPanels.packTriangularRight(diagonal, triangle, width, width, lower = true, transpose = true)
+    val rows = kernels.packed.gemmTileRows
+    val columns = kernels.packed.gemmTileCols
+    workspace.borrow(koblas.packedPanels.rightSize(width, width)) { triangle ->
+        koblas.packedPanels.packTriangularRight(diagonal, triangle, width, width, lower = true, transpose = true)
         var column = 0
         while (column < width) {
             val order = min(columns, width - column)
@@ -129,7 +129,7 @@ private fun solveCholeskyPanel(
             while (row < height) {
                 val validRows = min(rows, height - row)
                 val rowPanel = row * width
-                kernels.gemmTrsmTile(
+                kernels.packed.gemmTrsmTile(
                     column, validRows, order, panel, rowPanel, triangle, trianglePanel,
                     triangle, trianglePanel + column * columns, false, false, panel, rowPanel + column * rows,
                 )
@@ -138,11 +138,11 @@ private fun solveCholeskyPanel(
             column += columns
         }
     }
-    PackedPanels.clearLeftPadding(panel, height, width)
+    koblas.packedPanels.clearLeftPadding(panel, height, width)
 }
 
 internal fun updateCholeskyTrailing(
-    kernels: Kernels,
+    kernels: CholeskyKernels,
     matrix: DenseMatrix,
     start: Int,
     width: Int,
@@ -151,15 +151,15 @@ internal fun updateCholeskyTrailing(
     val end = start + width
     val height = matrix.rows - end
     if (height == 0) return
-    workspace.borrow(PackedPanels.leftSize(height, width)) { panel ->
-        PackedPanels.packLeft(matrix, panel, height, width, sourceRow = end, sourceColumn = start)
+    workspace.borrow(koblas.packedPanels.leftSize(height, width)) { panel ->
+        koblas.packedPanels.packLeft(matrix, panel, height, width, sourceRow = end, sourceColumn = start)
         subtractCholeskyPanel(kernels, matrix, end, width, panel, workspace)
     }
 }
 
 // The solved left panel remains packed after TRSM. Only its transposed right format needs packing for SYRK.
 private fun subtractCholeskyPanel(
-    kernels: Kernels,
+    kernels: CholeskyKernels,
     matrix: DenseMatrix,
     start: Int,
     width: Int,
@@ -167,11 +167,11 @@ private fun subtractCholeskyPanel(
     workspace: Workspace?,
 ) {
     val height = matrix.rows - start
-    val rows = kernels.gemmTileRows
-    val columns = kernels.gemmTileCols
-    kernels.scale(left, 0, -1.0, left.size)
-    workspace.borrow(PackedPanels.rightSize(width, height)) { right ->
-        PackedPanels.packRight(
+    val rows = kernels.packed.gemmTileRows
+    val columns = kernels.packed.gemmTileCols
+    kernels.vector.scale(left, 0, -1.0, left.size)
+    workspace.borrow(koblas.packedPanels.rightSize(width, height)) { right ->
+        koblas.packedPanels.packRight(
             matrix,
             right,
             width,
@@ -187,7 +187,7 @@ private fun subtractCholeskyPanel(
                 while (row < height) {
                     val destination = start + row + (start + column) * matrix.rows
                     if (row >= column + columns - 1 && row + rows <= height && column + columns <= height) {
-                        kernels.gemmTile(
+                        kernels.packed.gemmTile(
                             width,
                             left,
                             row * width,
@@ -200,7 +200,7 @@ private fun subtractCholeskyPanel(
                     } else {
                         // A diagonal or edge tile must preserve entries outside the stored lower triangle.
                         edge.fill(0.0)
-                        kernels.gemmTile(width, left, row * width, right, column * width, edge, 0, rows)
+                        kernels.packed.gemmTile(width, left, row * width, right, column * width, edge, 0, rows)
                         for (j in 0 until min(columns, height - column)) {
                             for (i in 0 until min(rows, height - row)) {
                                 if (row + i >= column + j) {
@@ -218,7 +218,7 @@ private fun subtractCholeskyPanel(
 }
 
 private fun tryCholeskyLeaf(
-    kernels: Kernels,
+    kernels: CholeskyKernels,
     matrix: DenseMatrix,
     minimumPivot: Double,
     workspace: Workspace?,
@@ -229,14 +229,14 @@ private fun tryCholeskyLeaf(
         for (j in 0 until n) {
             val base = j + j * n
             for (p in 0 until j) row[p] = data[j + p * n]
-            val pivot = data[base] - kernels.dot(row, 0, row, 0, j)
+            val pivot = data[base] - kernels.vector.dot(row, 0, row, 0, j)
             if (!pivot.isFinite() || pivot <= 0.0 || pivot < minimumPivot) return@borrow false
             val diagonal = sqrt(pivot)
             data[base] = diagonal
             val length = n - j - 1
             if (length > 0) {
                 if (j > 0) {
-                    koblas.blas.gemv(
+                    koblas.gemv(
                         -1.0,
                         matrix.view(j + 1, length, 0, j),
                         StridedVectorView(row, 0, j),
@@ -244,7 +244,7 @@ private fun tryCholeskyLeaf(
                         StridedVectorView(data, base + 1, length),
                     )
                 }
-                kernels.scale(data, base + 1, 1.0 / diagonal, length)
+                kernels.vector.scale(data, base + 1, 1.0 / diagonal, length)
                 for (i in base + 1 until base + 1 + length) if (!data[i].isFinite()) return@borrow false
             }
         }

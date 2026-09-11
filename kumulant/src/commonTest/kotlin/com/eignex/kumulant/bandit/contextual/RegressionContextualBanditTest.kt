@@ -97,7 +97,7 @@ class RegressionContextualBanditTest {
         )
         bandit.update(0, feat(1.0, 0.0), 1.0)
         val x = feat(1.0, 0.0)
-        val workspace = Workspace().apply { reserve(2, 1) }
+        val workspace = Workspace()
 
         val contextual: ContextualBandit = bandit
         val scorable: ContextualScorable = bandit
@@ -148,7 +148,7 @@ class RegressionContextualBanditTest {
             posterior = MultivariateGaussian,
             random = Random(3),
         )
-        val workspace = Workspace().apply { reserve(2, 3) }
+        val workspace = Workspace()
         merged.merge(ba.snapshot(), workspace)
         merged.merge(bb.snapshot(), workspace)
         // Merged bandit should have higher total weight per arm than either replica.

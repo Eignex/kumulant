@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.schema.expr.BoolExpr
 import com.eignex.kumulant.schema.expr.eval
 import kotlinx.serialization.SerialName
@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  *
  * The interface is intentionally **open and non-serializable**: it is the in-memory SPI
  * for growing trees over arbitrary features. Wire-portable splits over a dense
- * [VectorLike] context live under the [SerializableSplit] hierarchy, which the
+ * [Vector] context live under the [SerializableSplit] hierarchy, which the
  * serializable tree snapshots ([TreeNodeResult]) embed.
  */
 interface Split<in Row> {
@@ -23,13 +23,13 @@ interface Split<in Row> {
 }
 
 /**
- * Wire-portable [Split] over a dense [VectorLike] context. Sealed + serializable so tree
+ * Wire-portable [Split] over a dense [Vector] context. Sealed + serializable so tree
  * snapshots round-trip cleanly through `kotlinx.serialization`. Built-in implementations:
  * [ThresholdSplit] (numeric `x[i] <= t`) and [ExprSplit] (wrapping a [BoolExpr]); callers
  * needing custom predicates compose them as [BoolExpr] AST nodes and wrap in [ExprSplit].
  */
 @Serializable
-sealed interface SerializableSplit : Split<VectorLike>
+sealed interface SerializableSplit : Split<Vector>
 
 /** Route by `row[featureIndex] <= threshold`. Threshold is inclusive on the "pos" side. */
 @Serializable
@@ -40,7 +40,7 @@ data class ThresholdSplit(
     /** Inclusive threshold separating pos (<=) from neg (>). */
     val threshold: Double,
 ) : SerializableSplit {
-    override fun direction(row: VectorLike): Boolean = row[featureIndex] <= threshold
+    override fun direction(row: Vector): Boolean = row[featureIndex] <= threshold
     override fun toString(): String = "x[$featureIndex] <= $threshold"
 }
 
@@ -56,7 +56,7 @@ data class ExprSplit(
     /** Predicate expression over the context vector. */
     val expr: BoolExpr,
 ) : SerializableSplit {
-    override fun direction(row: VectorLike): Boolean {
+    override fun direction(row: Vector): Boolean {
         val x = if (row.size >= 1) row[0] else 0.0
         val y = if (row.size >= 2) row[1] else 0.0
         return expr.eval(x, y, row)

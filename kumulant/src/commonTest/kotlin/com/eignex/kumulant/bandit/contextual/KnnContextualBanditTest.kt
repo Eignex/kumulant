@@ -257,7 +257,7 @@ class KnnContextualBanditTest {
             reused.update(arm, x, reward)
         }
         val x = SparseVector.of(3, intArrayOf(0), doubleArrayOf(0.5))
-        val workspace = Workspace().apply { reserve(6, 1) }
+        val workspace = Workspace()
 
         for (arm in 0 until 2) assertEquals(allocating.evaluate(arm, x), reused.evaluate(arm, x, workspace), 1e-12)
         assertEquals(allocating.choose(x), reused.choose(x, workspace))

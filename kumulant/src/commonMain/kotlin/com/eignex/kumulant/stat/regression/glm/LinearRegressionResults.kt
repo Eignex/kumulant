@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.dot
 import com.eignex.kumulant.core.HasLinearModel
@@ -23,7 +23,7 @@ import kotlinx.serialization.Serializable
  *  - [PrecisionRegressionResult]: full posterior as the Cholesky factor of its precision.
  *
  * Sealed + `@Serializable`. Concrete weights round-trip as [DenseVector] today;
- * the public field is typed [VectorLike] so a sparse variant can swap in without
+ * the public field is typed [Vector] so a sparse variant can swap in without
  * breaking callers. Regression error metrics from [HasRegression] become
  * meaningful once [sse] is tracked; implementations that don't accumulate it
  * return `0.0`.
@@ -33,7 +33,7 @@ sealed interface LinearRegressionResult :
     Result,
     HasLinearModel,
     HasRegression {
-    override val weights: VectorLike
+    override val weights: Vector
 
     override val bias: Double
 
@@ -49,14 +49,14 @@ sealed interface LinearRegressionResult :
     val link: Link
 
     /** Linear predictor `eta = bias + x . weights`, before the inverse link. */
-    fun linearPredictor(x: VectorLike): Double {
+    fun linearPredictor(x: Vector): Double {
         x.requireFeatureSize(weights.size)
         return bias + (x dot weights)
     }
 
     /** Mean response: `link.invMean(linearPredictor(x))`. For [Link.Identity] this is
      *  the linear predictor itself, matching plain linear regression. */
-    override fun predict(x: VectorLike): Double = link.invMean(linearPredictor(x))
+    override fun predict(x: Vector): Double = link.invMean(linearPredictor(x))
 }
 
 /** SGD weight estimates with no posterior. Cheap, no uncertainty quantification.
@@ -74,7 +74,7 @@ data class StochasticRegressionResult(
     override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
     /** Per-optimiser auxiliary state (e.g. Adam's `m`/`v`); empty for plain SGD. */
-    val updaterState: List<VectorLike> = emptyList(),
+    val updaterState: List<Vector> = emptyList(),
 ) : LinearRegressionResult
 
 /**

@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.fitLine
@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 class BayesianRegressionStatTest {
 
-    private class StridedVector(private val backing: DoubleArray) : VectorLike {
+    private class StridedVector(private val backing: DoubleArray) : Vector {
         override val size: Int get() = backing.size / 2
         override fun get(i: Int): Double = backing[i * 2]
         override fun toDoubleArray(): DoubleArray = DoubleArray(size) { this[it] }
@@ -63,7 +63,7 @@ class BayesianRegressionStatTest {
     fun `workspace updates and merge match allocating paths`() {
         val allocated = BayesianRegressionStat(featureSize = 2)
         val reused = BayesianRegressionStat(featureSize = 2)
-        val workspace = Workspace().apply { reserve(2, 3) }
+        val workspace = Workspace()
         repeat(20) { i ->
             val x = DenseVector.of(doubleArrayOf(i.toDouble() / 20.0, 1.0))
             allocated.update(x, x[0] + 2.0)
@@ -82,7 +82,7 @@ class BayesianRegressionStatTest {
 
     @Test
     fun `regression stat interface accepts nullable workspace for update and merge`() {
-        val workspace = Workspace().apply { reserve(2, 3) }
+        val workspace = Workspace()
         val receiver: RegressionStat<PrecisionRegressionResult> = BayesianRegressionStat(featureSize = 2)
         val source: RegressionStat<PrecisionRegressionResult> = BayesianRegressionStat(featureSize = 2)
 
@@ -280,7 +280,7 @@ class BayesianRegressionStatTest {
                         featureSize = 2,
                         priorVariance = 1.0,
                         priorMean = DenseVector.of(doubleArrayOf(0.25, -0.5)),
-                        priorCovariance = DenseMatrix.of(
+                        priorCovariance = DenseMatrix.ofRows(
                             arrayOf(doubleArrayOf(2.0, 0.5), doubleArrayOf(0.5, 1.5)),
                         ),
                     ).also { stat ->

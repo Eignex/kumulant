@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit
 
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
@@ -89,7 +89,7 @@ class TrackedContextualBandit<B : ContextualBandit>(
         @Suppress("UNCHECKED_CAST")
         (updateArmRewardTemplate?.create(null) as PairedStat<Result>?)
 
-    override fun choose(x: VectorLike, workspace: com.eignex.koblas.Workspace?): Int {
+    override fun choose(x: Vector, workspace: com.eignex.koblas.Workspace?): Int {
         x.requireFeatureSize(contextFeatureSize)
         val i = inner.choose(x, workspace)
         chooseStat?.update(x, i.toDouble(), nowNanos(), 1.0, workspace)
@@ -98,7 +98,7 @@ class TrackedContextualBandit<B : ContextualBandit>(
 
     override fun update(
         armIndex: Int,
-        x: VectorLike,
+        x: Vector,
         reward: Double,
         weight: Double,
         workspace: com.eignex.koblas.Workspace?,

@@ -2,7 +2,7 @@
 
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.bandit.contextual.ContextualBanditSpec
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.bandit.contextual.KnnContextualSpec
@@ -183,7 +183,7 @@ fun RegressionContextualSpec.materialize(
 }
 
 /** Resolve a wire-named distance metric to the function that computes it. */
-private fun KnnDistance.resolve(): (VectorLike, VectorLike) -> Double = when (this) {
+private fun KnnDistance.resolve(): (Vector, Vector) -> Double = when (this) {
     KnnDistance.SquaredL2 -> KnnContextualBandit.Companion::squaredL2
 }
 

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema.runtime
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -148,7 +148,7 @@ class VectorStatGroup(stats: List<BoundStat<*, out VectorStat<*>, *>>, concurren
     constructor(schema: StatSchema, concurrency: Concurrency = Concurrency.None) :
         this(stats = vectorSpecs(schema, concurrency), concurrency = concurrency)
 
-    override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) {
+    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         for ((_, stat) in stats) stat.update(vector, timestampNanos, weight)
     }
 
@@ -197,7 +197,7 @@ class RegressionStatGroup(stats: List<BoundStat<*, out RegressionStat<*>, *>>, c
     }
 
     override fun update(
-        x: VectorLike,
+        x: Vector,
         y: Double,
         timestampNanos: Long,
         weight: Double,

@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
@@ -70,7 +70,7 @@ data class GaussianNaiveBayesResult(
     fun prior(c: Int): Double = if (totalWeights > 0.0) classWeights[c] / totalWeights else 1.0 / numClasses
 
     /** Unnormalised log-posterior `log prior[c] + Sum_i log N(x_i | mu_c, var_c)`. */
-    fun logPosterior(x: VectorLike, c: Int): Double {
+    fun logPosterior(x: Vector, c: Int): Double {
         x.requireFeatureSize(featureSize)
         var s = ln(prior(c).coerceAtLeast(SMALL_PROB))
         for (i in 0 until featureSize) {
@@ -83,7 +83,7 @@ data class GaussianNaiveBayesResult(
     }
 
     /** Writes unnormalised log-posteriors for [x] into [destination]. */
-    fun logPosteriorsInto(x: VectorLike, destination: DoubleArray) {
+    fun logPosteriorsInto(x: Vector, destination: DoubleArray) {
         x.requireFeatureSize(featureSize)
         require(destination.size == numClasses) {
             "destination size ${destination.size} must match numClasses $numClasses"
@@ -92,16 +92,16 @@ data class GaussianNaiveBayesResult(
     }
 
     /** Normalised class probabilities via log-sum-exp on the log-posterior. */
-    fun probabilities(x: VectorLike): DoubleArray = DoubleArray(numClasses).also { probabilitiesInto(x, it) }
+    fun probabilities(x: Vector): DoubleArray = DoubleArray(numClasses).also { probabilitiesInto(x, it) }
 
     /** Writes normalised class probabilities for [x] into [destination]. */
-    fun probabilitiesInto(x: VectorLike, destination: DoubleArray) {
+    fun probabilitiesInto(x: Vector, destination: DoubleArray) {
         logPosteriorsInto(x, destination)
         destination.softmaxInPlace()
     }
 
     /** Argmax class index for [x]. */
-    fun predict(x: VectorLike): Int = argMaxOf(numClasses) { k -> logPosterior(x, k) }
+    fun predict(x: Vector): Int = argMaxOf(numClasses) { k -> logPosterior(x, k) }
 
     private companion object {
         const val SMALL_PROB: Double = 1e-300
@@ -153,7 +153,7 @@ class GaussianNaiveBayesStat(
     private val totalWeightCell: StreamDouble = mode.newDouble(0.0)
 
     override fun update(
-        x: VectorLike,
+        x: Vector,
         y: Double,
         timestampNanos: Long,
         weight: Double,

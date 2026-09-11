@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
@@ -29,7 +29,7 @@ class RegressionWeightContractTest {
     private class Model(
         val name: String,
         val y: Double,
-        val update: (VectorLike, Double, Double) -> Unit,
+        val update: (Vector, Double, Double) -> Unit,
         val snapshot: () -> String,
     )
 

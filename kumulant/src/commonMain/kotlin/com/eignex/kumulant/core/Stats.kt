@@ -1,7 +1,7 @@
 package com.eignex.kumulant.core
 
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.kumulant.stream.currentTimeNanos
 
@@ -285,7 +285,7 @@ interface PairedStat<R : Result> : Stat<R> {
  * ([DecisionTreeRegressionStat][com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat]).
  * They share the update shape and differ in what they expose on [read].
  *
- * Inputs are passed as [VectorLike] so callers can submit sparse feature
+ * Inputs are passed as [Vector] so callers can submit sparse feature
  * vectors without materialising them into dense arrays first. The
  * [DoubleArray] convenience overloads wrap the array in a [DenseVector]; the
  * sparse path goes through [com.eignex.koblas.SparseVector].
@@ -300,11 +300,11 @@ interface RegressionStat<R : Result> : Stat<R> {
     val featureSize: Int
 
     /** Record an `(x, y)` observation with the given [weight] at the current time. */
-    fun update(x: VectorLike, y: Double, weight: Double = 1.0, workspace: Workspace? = null) =
+    fun update(x: Vector, y: Double, weight: Double = 1.0, workspace: Workspace? = null) =
         update(x, y, currentTimeNanos(), weight, workspace)
 
     /** Record an `(x, y)` observation at [timestampNanos] with the given [weight]. */
-    fun update(x: VectorLike, y: Double, timestampNanos: Long, weight: Double = 1.0, workspace: Workspace? = null)
+    fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double = 1.0, workspace: Workspace? = null)
 
     /** Convenience overload that wraps `x` as a [DenseVector]. */
     fun update(x: DoubleArray, y: Double, weight: Double = 1.0, workspace: Workspace? = null) =
@@ -325,16 +325,16 @@ interface RegressionStat<R : Result> : Stat<R> {
  * detector
  * ([HalfSpaceTreesStat][com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat]).
  *
- * Like [RegressionStat], inputs are passed as [VectorLike] so sparse callers
+ * Like [RegressionStat], inputs are passed as [Vector] so sparse callers
  * don't pay for dense materialisation. The [DoubleArray] convenience
  * overloads wrap the array in a [DenseVector].
  */
 interface VectorStat<R : Result> : Stat<R> {
     /** Record a [vector] observation with the given [weight] at the current time. */
-    fun update(vector: VectorLike, weight: Double = 1.0) = update(vector, currentTimeNanos(), weight)
+    fun update(vector: Vector, weight: Double = 1.0) = update(vector, currentTimeNanos(), weight)
 
     /** Record a [vector] observation at [timestampNanos] with the given [weight]. */
-    fun update(vector: VectorLike, timestampNanos: Long, weight: Double = 1.0)
+    fun update(vector: Vector, timestampNanos: Long, weight: Double = 1.0)
 
     /** Convenience overload that wraps [vector] as a [DenseVector]. */
     fun update(vector: DoubleArray, weight: Double = 1.0) = update(

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema.runtime
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -159,7 +159,7 @@ internal class VectorListStats<R : Result>(
             concurrency = concurrency,
         )
 
-    override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) {
+    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         for ((_, stat) in entries) stat.update(vector, timestampNanos, weight)
     }
 
@@ -245,7 +245,7 @@ internal class RegressionListStats<R : Result>(
     }
 
     override fun update(
-        x: VectorLike,
+        x: Vector,
         y: Double,
         timestampNanos: Long,
         weight: Double,

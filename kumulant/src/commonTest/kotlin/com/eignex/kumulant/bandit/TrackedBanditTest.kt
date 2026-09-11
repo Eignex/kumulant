@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bandit
 
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
@@ -33,7 +33,7 @@ class TrackedBanditTest {
     private class RecordingRegressionStat(private val recorder: WorkspaceRecorder) : RegressionStat<SumResult> {
         override val concurrency = Concurrency.None
         override val featureSize = 1
-        override fun update(x: VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) {
+        override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) {
             recorder.workspace = workspace
         }
 

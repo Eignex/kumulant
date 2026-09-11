@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
@@ -17,17 +17,17 @@ import com.eignex.kumulant.core.VectorStat
 internal class FoldVectorStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val transform: (DoubleArray) -> Double = { 0.0 },
-    private val vectorTransform: ((VectorLike) -> Double)? = null,
+    private val vectorTransform: ((Vector) -> Double)? = null,
 ) : VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) {
+    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         delegate.update(vectorTransform?.invoke(vector) ?: transform(vector.toDoubleArray()), timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         FoldVectorStat(delegate.create(concurrency), transform, vectorTransform)
 
     companion object {
-        fun <R : Result> vector(delegate: SeriesStat<R>, transform: (VectorLike) -> Double): FoldVectorStat<R> =
+        fun <R : Result> vector(delegate: SeriesStat<R>, transform: (Vector) -> Double): FoldVectorStat<R> =
             FoldVectorStat(delegate, vectorTransform = transform)
     }
 }
@@ -48,11 +48,11 @@ internal class FoldVectorPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val foldX: (DoubleArray) -> Double = { 0.0 },
     private val foldY: (DoubleArray) -> Double = { 0.0 },
-    private val vectorFoldX: ((VectorLike) -> Double)? = null,
-    private val vectorFoldY: ((VectorLike) -> Double)? = null,
+    private val vectorFoldX: ((Vector) -> Double)? = null,
+    private val vectorFoldY: ((Vector) -> Double)? = null,
 ) : VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) {
+    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         if (vectorFoldX != null && vectorFoldY != null) {
             delegate.update(vectorFoldX(vector), vectorFoldY(vector), timestampNanos, weight)
         } else {
@@ -66,8 +66,8 @@ internal class FoldVectorPairedStat<R : Result>(
     companion object {
         fun <R : Result> vector(
             delegate: PairedStat<R>,
-            foldX: (VectorLike) -> Double,
-            foldY: (VectorLike) -> Double,
+            foldX: (Vector) -> Double,
+            foldY: (Vector) -> Double,
         ): FoldVectorPairedStat<R> = FoldVectorPairedStat(delegate, vectorFoldX = foldX, vectorFoldY = foldY)
     }
 }

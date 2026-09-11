@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
@@ -96,7 +96,7 @@ class RandomForestClassifierStat(
     )
 
     override fun update(
-        x: VectorLike,
+        x: Vector,
         y: Double,
         timestampNanos: Long,
         weight: Double,
@@ -179,7 +179,7 @@ data class ForestClassificationResult(
     }
 
     /** Average per-class probability across trees for the leaf each tree routes [x] to. */
-    fun probabilities(x: VectorLike): DoubleArray {
+    fun probabilities(x: Vector): DoubleArray {
         val acc = DoubleArray(numClasses)
         for (t in trees) {
             val p = t.probabilities(x)
@@ -191,7 +191,7 @@ data class ForestClassificationResult(
     }
 
     /** Argmax over [probabilities]. */
-    fun predict(x: VectorLike): Int {
+    fun predict(x: Vector): Int {
         val p = probabilities(x)
         return argMaxOf(numClasses) { k -> p[k] }
     }

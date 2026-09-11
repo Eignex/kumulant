@@ -2,7 +2,7 @@
 
 package com.eignex.kumulant.stat.anomaly
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.VectorStat
@@ -86,7 +86,7 @@ data class HalfSpaceTreesResult(
      * means [x] falls into densely populated regions of the reference window;
      * i.e. it looks normal. Lower score flags an anomaly.
      */
-    fun score(x: VectorLike): Double {
+    fun score(x: Vector): Double {
         x.requireFeatureSize(featureSize)
         var total = 0.0
         val depthFactor = 1 shl height
@@ -204,7 +204,7 @@ class HalfSpaceTreesStat(
     private val windowCounter: StreamLong = counterMode.newLong(0L)
     private val totalWeightsCell = massMode.newDouble(0.0)
 
-    override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) {
+    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         require(vector.size == featureSize) { "vector.size=${vector.size}, expected $featureSize" }
         if (weight.isNotPositiveWeight()) return
         for (t in 0 until numTrees) {
@@ -318,7 +318,7 @@ private fun routeToLeaf(
     height: Int,
     numInternal: Int,
     treeIdx: Int,
-    x: VectorLike,
+    x: Vector,
 ): Int {
     val treeOffset = treeIdx * numInternal
     var node = 0

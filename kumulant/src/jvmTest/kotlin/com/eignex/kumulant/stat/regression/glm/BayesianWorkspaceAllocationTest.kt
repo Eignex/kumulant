@@ -14,10 +14,10 @@ class BayesianWorkspaceAllocationTest {
     }
 
     @Test
-    fun `reserved workspace removes merge vector scratch allocation`() {
+    fun `workspace reuses merge vector scratch allocation`() {
         val merged = populatedStat().read()
         val allocated = populatedStat()
-        val workspace = Workspace().apply { reserve(8, 8) }
+        val workspace = Workspace()
         val reused = populatedStat()
 
         val (allocatedBytes, workspaceBytes) = bytesPerCall(

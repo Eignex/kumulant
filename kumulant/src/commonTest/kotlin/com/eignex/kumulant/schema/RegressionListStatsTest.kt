@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
@@ -31,7 +31,7 @@ class RegressionListStatsTest {
         override val featureSize = 1
         var workspace: Workspace? = null
 
-        override fun update(x: VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) {
+        override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) {
             this.workspace = workspace
         }
 

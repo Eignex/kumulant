@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.MIN_PLAY_PROB
 import com.eignex.kumulant.bandit.Snapshotable
@@ -44,7 +44,7 @@ data class Exp4State(
  */
 fun interface Exp4Expert {
     /** Distribution over arms for [x]. Result must sum to 1 and have length `nbrArms`. */
-    fun advise(x: VectorLike, nbrArms: Int): DoubleArray
+    fun advise(x: Vector, nbrArms: Int): DoubleArray
 }
 
 /**
@@ -128,7 +128,7 @@ class Exp4Bandit(
     private val pendingPulls = IntArray(nbrArms)
 
     /** Build the round's play distribution and sample an arm. */
-    override fun choose(x: VectorLike, workspace: com.eignex.koblas.Workspace?): Int {
+    override fun choose(x: Vector, workspace: com.eignex.koblas.Workspace?): Int {
         playDistributionInto(x, lastDistribution)
         val chosen = random.sampleFromDistribution(lastDistribution)
         pendingPropensity[chosen] = lastDistribution[chosen]
@@ -138,7 +138,7 @@ class Exp4Bandit(
 
     /** Mean of expert distributions at [x] weighted by current weights, blended with
      *  uniform exploration via [gamma]. */
-    fun playDistribution(x: VectorLike): DoubleArray = DoubleArray(nbrArms).also {
+    fun playDistribution(x: Vector): DoubleArray = DoubleArray(nbrArms).also {
         playDistributionInto(x, it)
     }
 
@@ -149,7 +149,7 @@ class Exp4Bandit(
      *
      * The destination is caller-owned. It is not retained after this method returns.
      */
-    fun playDistributionInto(x: VectorLike, out: DoubleArray) {
+    fun playDistributionInto(x: Vector, out: DoubleArray) {
         require(out.size == nbrArms) { "out has ${out.size} probs, expected $nbrArms" }
         var wSum = 0.0
         for (i in experts.indices) {
@@ -178,7 +178,7 @@ class Exp4Bandit(
     /** Fold a `(context, reward)` observation back into the expert weights. */
     override fun update(
         armIndex: Int,
-        x: VectorLike,
+        x: Vector,
         reward: Double,
         weight: Double,
         workspace: com.eignex.koblas.Workspace?,
@@ -207,7 +207,7 @@ class Exp4Bandit(
      * Falls back to the distribution at [x] when the caller updates an arm it never chose, which is
      * the best available estimate and what an off-policy caller implicitly asks for.
      */
-    private fun propensityOf(armIndex: Int, x: VectorLike): Double {
+    private fun propensityOf(armIndex: Int, x: Vector): Double {
         if (pendingPulls[armIndex] <= 0) {
             playDistributionInto(x, lastDistribution)
             return lastDistribution[armIndex]

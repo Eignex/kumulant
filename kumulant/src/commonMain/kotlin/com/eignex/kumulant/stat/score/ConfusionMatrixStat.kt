@@ -42,7 +42,7 @@ data class ConfusionMatrixResult(
     fun count(predicted: Int, truth: Int): Double = counts[predicted * numClasses + truth]
 
     /** Total weight across all cells. */
-    val totalWeights: Double get() = koblas.kernels.sum(counts, 0, counts.size)
+    val totalWeights: Double get() = koblas.vectorKernels.sum(counts, 0, counts.size)
 
     /** Sum of the diagonal (correctly classified weight). */
     val correct: Double get() {
@@ -55,7 +55,7 @@ data class ConfusionMatrixResult(
     val accuracy: Double get() = totalWeights.let { if (it > 0.0) correct / it else 0.0 }
 
     /** Predicted-class total: weight of all rows where prediction = [c]. */
-    fun predictedTotal(c: Int): Double = koblas.kernels.sum(counts, c * numClasses, numClasses)
+    fun predictedTotal(c: Int): Double = koblas.vectorKernels.sum(counts, c * numClasses, numClasses)
 
     /**
      * True-class total: weight of all columns where truth = [c].

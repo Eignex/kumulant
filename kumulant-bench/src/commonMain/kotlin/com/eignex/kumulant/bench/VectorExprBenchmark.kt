@@ -3,7 +3,7 @@ package com.eignex.kumulant.bench
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.StridedVectorView
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.schema.expr.V
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.expr.VFoldOp
@@ -30,7 +30,7 @@ open class VectorExprBenchmark {
     @Param("dense", "sparse", "strided", "custom")
     lateinit var representation: String
 
-    private lateinit var input: VectorLike
+    private lateinit var input: Vector
     private val scalar = V(0) + V(1)
     private val predicate = V(0) gt 0.0
     private val vector = vectorOf(V(0), V(1))
@@ -51,7 +51,7 @@ open class VectorExprBenchmark {
                 SparseVector.of(featureSize, IntArray(nnz) { it * featureSize / nnz }, DoubleArray(nnz) { 1.0 })
             }
             "strided" -> StridedVectorView(DoubleArray(featureSize * 2) { values[it / 2] }, 0, featureSize, 2)
-            else -> Vector(values)
+            else -> CustomVector(values)
         }
         dot = vDot(List(featureSize) { if (it % 2 == 0) 1.0 else -1.0 })
     }
@@ -69,7 +69,7 @@ open class VectorExprBenchmark {
     @Benchmark fun materializedPredicate(): Boolean = predicate.eval(0.0, 0.0, input.toDoubleArray())
     @Benchmark fun materializedVector(): DoubleArray = vector.eval(0.0, 0.0, input.toDoubleArray())
 
-    private class Vector(private val values: DoubleArray) : VectorLike {
+    private class CustomVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
         override fun toDoubleArray(): DoubleArray = values.copyOf()

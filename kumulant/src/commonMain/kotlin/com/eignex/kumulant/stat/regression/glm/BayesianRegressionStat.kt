@@ -6,16 +6,16 @@ package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.MatrixLike
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Matrix
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
 import com.eignex.koblas.copy
-import com.eignex.koblas.dense.trmv
 import com.eignex.koblas.dot
 import com.eignex.koblas.koblas
 import com.eignex.koblas.syr
+import com.eignex.koblas.trmv
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.isNotPositiveWeight
@@ -33,7 +33,7 @@ import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
 
-private fun MatrixLike.copyDenseMatrix(): DenseMatrix = DenseMatrix.wrap(
+private fun Matrix.copyDenseMatrix(): DenseMatrix = DenseMatrix.wrap(
     rows,
     cols,
     DoubleArray(rows * cols) { index -> this[index % rows, index / rows] },
@@ -96,8 +96,8 @@ class BayesianRegressionStat(
     /** Canonical GLM link function; [Link.Identity] is the strict closed-form Gaussian posterior. */
     val link: Link = Link.Identity,
     override val concurrency: Concurrency = Concurrency.None,
-    priorMean: VectorLike? = null,
-    priorCovariance: MatrixLike? = null,
+    priorMean: Vector? = null,
+    priorCovariance: Matrix? = null,
 ) : RegressionStat<PrecisionRegressionResult> {
 
     init {
@@ -152,17 +152,11 @@ class BayesianRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: VectorLike, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) =
+    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) =
         updateInternal(x, y, timestampNanos, weight, workspace)
 
     @Suppress("UnusedParameter")
-    private fun updateInternal(
-        x: VectorLike,
-        y: Double,
-        _timestampNanos: Long,
-        weight: Double,
-        workspace: Workspace?,
-    ) {
+    private fun updateInternal(x: Vector, y: Double, _timestampNanos: Long, weight: Double, workspace: Workspace?) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {

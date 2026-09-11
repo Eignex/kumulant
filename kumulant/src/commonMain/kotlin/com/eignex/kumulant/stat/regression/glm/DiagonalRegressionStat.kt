@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
 import com.eignex.kumulant.core.Concurrency
@@ -86,7 +86,7 @@ class DiagonalRegressionStat(
     private var sse: Double = 0.0
 
     override fun update(
-        x: VectorLike,
+        x: Vector,
         y: Double,
         timestampNanos: Long,
         weight: Double,
