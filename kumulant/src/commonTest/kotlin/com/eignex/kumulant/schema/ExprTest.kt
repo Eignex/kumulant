@@ -3,7 +3,7 @@ package com.eignex.kumulant.schema
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.StridedVectorView
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.ResultList
@@ -26,7 +26,7 @@ import kotlin.test.assertTrue
 
 class ExprTest {
 
-    private class NoMaterializeVector(private val values: DoubleArray) : VectorLike {
+    private class NoMaterializeVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
         override fun toDoubleArray(): DoubleArray = error("expression materialised its vector input")
@@ -59,7 +59,7 @@ class ExprTest {
         val predicate = (V(0) gt 0.0) and (V(2) lt 0.0)
         val vector = VElements(listOf(V(2), V(0) + V(1)))
 
-        for (input in listOf<VectorLike>(dense, sparse, strided, custom)) {
+        for (input in listOf<Vector>(dense, sparse, strided, custom)) {
             assertEquals(-7.0, scalar.eval(v = input), DELTA)
             assertTrue(predicate.eval(v = input))
             assertTrue(vector.eval(v = input).contentEquals(doubleArrayOf(-3.0, 2.0)))
@@ -419,7 +419,7 @@ class ExprTest {
         val folds = VFoldOp.entries.map(::VFold)
 
         for (array in values) {
-            val representations = listOf<VectorLike>(
+            val representations = listOf<Vector>(
                 DenseVector.of(array),
                 sparse(array),
                 StridedVectorView(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
@@ -465,7 +465,7 @@ class ExprTest {
         for ((array, weights) in cases.zip(weightSets)) {
             val expr = VDot(weights)
             val expected = expr.eval(0.0, 0.0, array)
-            for (input in listOf<VectorLike>(
+            for (input in listOf<Vector>(
                 DenseVector.of(array),
                 sparse(array),
                 StridedVectorView(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
@@ -521,7 +521,7 @@ class ExprTest {
             assertEquals(expr.eval(0.0, 0.0, values), expr.eval(v = NoMaterializeVector(values)))
         }
 
-        class CountingVector(private val values: DoubleArray) : VectorLike {
+        class CountingVector(private val values: DoubleArray) : Vector {
             var reads = 0
             override val size: Int get() = values.size
             override fun get(i: Int): Double = values[i].also { reads++ }

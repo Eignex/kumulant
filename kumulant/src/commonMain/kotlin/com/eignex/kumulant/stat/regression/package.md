@@ -17,7 +17,7 @@ fit either subfamily, plus the strategy types both rely on.
 | [GaussianNaiveBayesStat] | Regression | Per-class running Welford mean / variance of each feature plus class priors. The cheap non-parametric multiclass classifier. |
 
 Softmax and Naive Bayes implement [com.eignex.kumulant.core.RegressionStat]
-because that interface gives them `update(VectorLike, Double)`; the
+because that interface gives them `update(Vector, Double)`; the
 scalar `y` is the class index. Strictly they are classifiers, not
 regressors, but they share the input shape and the result is consumed
 the same way (a posterior over classes plus calibration / accuracy
@@ -49,7 +49,7 @@ per-feature-set; per-coordinate aux state honours the stat's
 
 [RegressionPosterior] is the scoring interface shared by every
 regression family. A posterior projects a [com.eignex.kumulant.core.Result]
-and a query [com.eignex.koblas.VectorLike] to a scalar score,
+and a query [com.eignex.koblas.Vector] to a scalar score,
 parametrised by an `exploration` knob and a `Random`. The contextual
 bandits ([com.eignex.kumulant.bandit.contextual.RegressionContextualBandit])
 consume posteriors at choose time.

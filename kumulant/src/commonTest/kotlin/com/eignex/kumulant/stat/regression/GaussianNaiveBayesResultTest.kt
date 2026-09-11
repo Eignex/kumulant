@@ -23,8 +23,8 @@ class GaussianNaiveBayesResultTest {
     ) = GaussianNaiveBayesResult(
         featureSize = featureSize,
         numClasses = numClasses,
-        means = DenseMatrix.of(means),
-        variances = DenseMatrix.of(variances),
+        means = DenseMatrix.ofRows(means),
+        variances = DenseMatrix.ofRows(variances),
         classWeights = DenseVector.of(classWeights),
         totalWeights = totalWeights,
         varianceFloor = varianceFloor,

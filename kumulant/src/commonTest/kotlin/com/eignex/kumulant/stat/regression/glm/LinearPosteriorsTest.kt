@@ -4,7 +4,7 @@ import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.StridedVectorView
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.borrow
 import com.eignex.kumulant.math.nextNormal
@@ -17,7 +17,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class LinearPosteriorsTest {
 
-    private class CustomVector(private val values: DoubleArray) : VectorLike {
+    private class CustomVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
         override fun toDoubleArray(): DoubleArray = values.copyOf()
@@ -60,7 +60,7 @@ class LinearPosteriorsTest {
     fun `workspace covariance evaluation matches allocating evaluation and preserves random draws`() {
         val snapshot = bayesianSnapshot()
         val x = SparseVector.of(size = 2, indices = intArrayOf(0), values = doubleArrayOf(0.3))
-        val workspace = Workspace().apply { reserve(2, 1) }
+        val workspace = Workspace()
 
         val allocated = MultivariateGaussian.evaluate(snapshot, x, Random(9), exploration = 0.7)
         val reused = MultivariateGaussian.evaluate(snapshot, x, Random(9), exploration = 0.7, workspace = workspace)
@@ -74,7 +74,7 @@ class LinearPosteriorsTest {
         val dense = DenseVector.of(doubleArrayOf(0.3, -0.2))
         val strided = StridedVectorView(doubleArrayOf(0.3, 7.0, -0.2, 7.0), 0, 2, 2)
         val custom = CustomVector(doubleArrayOf(0.3, -0.2))
-        val workspace = Workspace().apply { reserve(2, 1) }
+        val workspace = Workspace()
 
         val expected = LinUcb.evaluate(snapshot, dense, Random(0), exploration = 0.7, workspace = workspace)
         assertEquals(
@@ -93,7 +93,7 @@ class LinearPosteriorsTest {
     fun `sampleInto matches an owned multivariate sample without aliasing later borrows`() {
         val snapshot = bayesianSnapshot()
         val destination = DoubleArray(2)
-        val workspace = Workspace().apply { reserve(2, 1) }
+        val workspace = Workspace()
 
         MultivariateGaussian.sampleInto(snapshot, Random(21), destination, exploration = 0.4)
         val expected = MultivariateGaussian.sample(snapshot, Random(21), exploration = 0.4)
@@ -235,7 +235,7 @@ class LinearPosteriorsTest {
             biasPrecision = 1.0,
             totalWeights = 0.0,
             step = 0L,
-            precisionL = DenseMatrix.of(arrayOf(doubleArrayOf(2.0, 0.0), doubleArrayOf(3.0, 4.0))),
+            precisionL = DenseMatrix.ofRows(arrayOf(doubleArrayOf(2.0, 0.0), doubleArrayOf(3.0, 4.0))),
         )
         val expectedRng = Random(7)
         val u0 = expectedRng.nextNormal(0.0, 0.5)

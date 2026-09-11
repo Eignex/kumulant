@@ -1,6 +1,6 @@
 package com.eignex.kumulant.schema
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
@@ -659,7 +659,7 @@ class VectorStatGroupTest {
 
         val tracking = object : VectorStat<ResultList<SumResult>> {
             override val concurrency: Concurrency = Concurrency.None
-            override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) = Unit
+            override fun update(vector: Vector, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: ResultList<SumResult>, workspace: com.eignex.koblas.Workspace?) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())
@@ -776,7 +776,7 @@ class VectorListStatsTest {
 
         val tracking = object : VectorStat<ResultList<SumResult>> {
             override val concurrency: Concurrency = Concurrency.None
-            override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) = Unit
+            override fun update(vector: Vector, timestampNanos: Long, weight: Double) = Unit
             override fun merge(values: ResultList<SumResult>, workspace: com.eignex.koblas.Workspace?) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())

@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
@@ -101,22 +101,22 @@ class RegressionContextualBandit<R : Result>(
     private val arms: Array<RegressionStat<R>> = Array(nbrArms) { template.create(null) }
     private val global: RegressionStat<R>? = globalTemplate?.create(null)
 
-    private fun globalMean(x: VectorLike, workspace: Workspace?): Double =
+    private fun globalMean(x: Vector, workspace: Workspace?): Double =
         global?.let { posterior.evaluate(it.read(0L), x, random, 0.0, workspace) } ?: 0.0
 
-    override fun choose(x: VectorLike, workspace: Workspace?): Int {
+    override fun choose(x: Vector, workspace: Workspace?): Int {
         val gMean = globalMean(x, workspace)
         return argmaxArm(
             nbrArms,
         ) { i -> gMean + posterior.evaluate(arms[i].read(0L), x, random, exploration, workspace) }
     }
 
-    override fun evaluate(armIndex: Int, x: VectorLike, workspace: Workspace?): Double {
+    override fun evaluate(armIndex: Int, x: Vector, workspace: Workspace?): Double {
         requireArmIndex(armIndex, nbrArms)
         return globalMean(x, workspace) + posterior.evaluate(arms[armIndex].read(0L), x, random, exploration, workspace)
     }
 
-    override fun update(armIndex: Int, x: VectorLike, reward: Double, weight: Double, workspace: Workspace?) {
+    override fun update(armIndex: Int, x: Vector, reward: Double, weight: Double, workspace: Workspace?) {
         requireArmIndex(armIndex, nbrArms)
         val g = global
         if (g == null) {

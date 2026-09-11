@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -50,20 +50,18 @@ internal class TransformPairStat<R : Result>(
 internal class TransformVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val transform: (DoubleArray) -> DoubleArray = { it },
-    private val vectorTransform: ((VectorLike) -> DoubleArray)? = null,
+    private val vectorTransform: ((Vector) -> DoubleArray)? = null,
 ) : VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) {
+    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         delegate.update(vectorTransform?.invoke(vector) ?: transform(vector.toDoubleArray()), timestampNanos, weight)
     }
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         TransformVectorStat(delegate.create(concurrency), transform, vectorTransform)
 
     companion object {
-        fun <R : Result> vector(
-            delegate: VectorStat<R>,
-            transform: (VectorLike) -> DoubleArray,
-        ): TransformVectorStat<R> = TransformVectorStat(delegate, vectorTransform = transform)
+        fun <R : Result> vector(delegate: VectorStat<R>, transform: (Vector) -> DoubleArray): TransformVectorStat<R> =
+            TransformVectorStat(delegate, vectorTransform = transform)
     }
 }
 

@@ -28,7 +28,7 @@ class KnnWorkspaceAllocationTest {
         val bare = populatedBandit()
         val reused = populatedBandit()
         val x = DenseVector.of(DoubleArray(FEATURES) { it * 0.25 })
-        val workspace = Workspace().apply { reserve(3 * K, 1) }
+        val workspace = Workspace()
 
         // The scan buffer is owned by the bandit, so there is nothing left for a workspace to save
         // and nothing left to allocate when one is absent. A buffer coming back would be a

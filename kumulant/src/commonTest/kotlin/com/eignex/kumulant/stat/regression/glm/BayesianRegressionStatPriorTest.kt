@@ -29,7 +29,7 @@ class BayesianRegressionStatPriorTest {
     @Test
     fun `custom prior seeds the initial weights and covariance`() {
         val mean = DenseVector.of(doubleArrayOf(0.5, -1.0, 2.0))
-        val cov = DenseMatrix.of(
+        val cov = DenseMatrix.ofRows(
             arrayOf(
                 doubleArrayOf(1.0, 0.3, 0.0),
                 doubleArrayOf(0.3, 1.0, 0.0),
@@ -52,7 +52,7 @@ class BayesianRegressionStatPriorTest {
     @Test
     fun `non positive definite prior covariance is rejected at construction`() {
         // Diagonal with a negative entry - immediately non-PD.
-        val bad = DenseMatrix.of(
+        val bad = DenseMatrix.ofRows(
             arrayOf(
                 doubleArrayOf(1.0, 0.0),
                 doubleArrayOf(0.0, -0.1),
@@ -114,7 +114,7 @@ class BayesianRegressionStatPriorTest {
         // a single instance trained on the union - independent of the prior, as long
         // as both branches start from the same prior.
         val priorMean = DenseVector.of(doubleArrayOf(0.2, -0.1))
-        val priorCov = DenseMatrix.of(
+        val priorCov = DenseMatrix.ofRows(
             arrayOf(
                 doubleArrayOf(0.5, 0.1),
                 doubleArrayOf(0.1, 0.5),
@@ -154,7 +154,7 @@ class BayesianRegressionStatPriorTest {
     @Test
     fun `merging an empty custom prior state preserves the populated posterior`() {
         val priorMean = DenseVector.of(doubleArrayOf(0.4, -0.7))
-        val priorCovariance = DenseMatrix.of(
+        val priorCovariance = DenseMatrix.ofRows(
             arrayOf(
                 doubleArrayOf(0.8, 0.2),
                 doubleArrayOf(0.2, 0.6),

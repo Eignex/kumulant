@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.kumulant.core.Result
 import kotlin.random.Random
@@ -24,11 +24,5 @@ interface RegressionPosterior<R : Result> {
      * the posterior-variance scale (Thompson) or the UCB width (LinUcb-style);
      * `0.0` collapses to the point estimate.
      */
-    fun evaluate(
-        snapshot: R,
-        x: VectorLike,
-        rng: Random,
-        exploration: Double = 1.0,
-        workspace: Workspace? = null,
-    ): Double
+    fun evaluate(snapshot: R, x: Vector, rng: Random, exploration: Double = 1.0, workspace: Workspace? = null): Double
 }

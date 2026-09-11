@@ -1,6 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
@@ -77,9 +77,9 @@ class DecisionTreeRegressionStat(
     // path and rewritten by reset, so without it a concurrent updater can go on writing into the
     // pre-reset tree indefinitely, never observing the replacement.
     @Volatile
-    private var tree: RegressionTree<VectorLike> = newTree()
+    private var tree: RegressionTree<Vector> = newTree()
 
-    private fun newTree(): RegressionTree<VectorLike> = RegressionTree(
+    private fun newTree(): RegressionTree<Vector> = RegressionTree(
         splitCandidates,
         config,
         concurrency,
@@ -88,7 +88,7 @@ class DecisionTreeRegressionStat(
     )
 
     override fun update(
-        x: VectorLike,
+        x: Vector,
         y: Double,
         timestampNanos: Long,
         weight: Double,
@@ -127,5 +127,5 @@ class DecisionTreeRegressionStat(
     )
 
     /** Live underlying tree. Use for inspection / pretty-printing. */
-    fun tree(): RegressionTree<VectorLike> = tree
+    fun tree(): RegressionTree<Vector> = tree
 }

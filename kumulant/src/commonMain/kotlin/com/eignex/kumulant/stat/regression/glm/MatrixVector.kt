@@ -2,12 +2,12 @@ package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.koblas
 
 /** Writes `matrix * x` to [destination] without materialising a vector for sparse or generic [x]. */
-internal fun DenseMatrix.multiplyInto(x: VectorLike, destination: DoubleArray) {
+internal fun DenseMatrix.multiplyInto(x: Vector, destination: DoubleArray) {
     require(x.size == cols) { "x size ${x.size} must match matrix columns $cols" }
     require(destination.size == rows) { "destination size ${destination.size} must match matrix rows $rows" }
     if (x is DenseVector) {

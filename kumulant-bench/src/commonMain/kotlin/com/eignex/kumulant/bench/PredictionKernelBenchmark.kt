@@ -3,7 +3,7 @@ package com.eignex.kumulant.bench
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
@@ -29,7 +29,7 @@ open class PredictionKernelBenchmark {
     @Param("1", "10", "100")
     var densityPercent: Int = 1
 
-    private lateinit var x: VectorLike
+    private lateinit var x: Vector
     private lateinit var linear: StochasticRegressionResult
     private lateinit var softmax: SoftmaxRegressionResult
     private lateinit var posterior: PrecisionRegressionResult
@@ -52,7 +52,7 @@ open class PredictionKernelBenchmark {
         softmax = SoftmaxRegressionResult(
             featureSize,
             4,
-            DenseMatrix.of(Array(4) { k -> DoubleArray(featureSize) { i -> (k - i % 5) * 0.1 } }),
+            DenseMatrix.ofRows(Array(4) { k -> DoubleArray(featureSize) { i -> (k - i % 5) * 0.1 } }),
             DenseVector.of(doubleArrayOf(-0.2, 0.0, 0.1, 0.3)),
             0.0,
             0L,
@@ -69,11 +69,7 @@ open class PredictionKernelBenchmark {
         repeat(4) { arm ->
             repeat(32) { sample -> knn.update(arm, x, (sample - arm).toDouble()) }
         }
-        workspace = Workspace().apply {
-            reserve(featureSize, count = 3)
-            reserve(4, count = 1)
-            reserve(24, count = 1)
-        }
+        workspace = Workspace()
         probabilities = DoubleArray(4)
     }
 
@@ -105,7 +101,7 @@ open class PredictionKernelBenchmark {
     fun knnChooseWorkspace(): Int = knn.choose(x, workspace)
 
     @Benchmark
-    fun multivariateSample(): VectorLike = MultivariateGaussian.sample(posterior, Random(1234), 1.0)
+    fun multivariateSample(): Vector = MultivariateGaussian.sample(posterior, Random(1234), 1.0)
 
     @Benchmark
     fun multivariateEvaluate(): Double = MultivariateGaussian.evaluate(posterior, x, Random(1234), 1.0)

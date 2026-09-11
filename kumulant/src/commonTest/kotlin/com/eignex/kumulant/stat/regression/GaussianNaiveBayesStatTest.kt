@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.StridedVectorView
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.DELTA
 import kotlin.math.abs
 import kotlin.random.Random
@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 
 class GaussianNaiveBayesStatTest {
 
-    private class CustomVector(private val values: DoubleArray) : VectorLike {
+    private class CustomVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
         override fun toDoubleArray(): DoubleArray = values.copyOf()
@@ -129,7 +129,7 @@ class GaussianNaiveBayesStatTest {
         val custom = CustomVector(doubleArrayOf(0.5, 0.0, -1.0))
         val expected = result.probabilities(dense)
 
-        for (x in listOf<VectorLike>(sparse, strided, custom)) {
+        for (x in listOf<Vector>(sparse, strided, custom)) {
             val logs = DoubleArray(2)
             val probabilities = DoubleArray(2)
             result.logPosteriorsInto(x, logs)

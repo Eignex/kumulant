@@ -1,18 +1,18 @@
 package com.eignex.kumulant.stat.regression.tree
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Immutable, **wire-portable** snapshot of a [RegressionTree] over a dense [VectorLike]
+ * Immutable, **wire-portable** snapshot of a [RegressionTree] over a dense [Vector]
  * context. Carries the tree structure ([SerializableSplit] predicates + per-node
  * weighted-variance aggregates) so callers can route a context vector to its leaf without
  * reaching back into the live stat.
  *
- * Serialization is only meaningful for the [VectorLike] feature representation (the splits
+ * Serialization is only meaningful for the [Vector] feature representation (the splits
  * must be wire-portable); trees grown over other [Split] row types use the live
  * [RegressionTree] directly and are not snapshotted to this type.
  *
@@ -26,10 +26,10 @@ data class TreeRegressionResult(
     val root: TreeNodeResult,
 ) : Result {
     /** Walk to the leaf the context resolves to. */
-    fun findLeaf(x: VectorLike): WeightedVarianceResult = root.findLeaf(x)
+    fun findLeaf(x: Vector): WeightedVarianceResult = root.findLeaf(x)
 
     /** Mean of the leaf the context resolves to. */
-    fun predict(x: VectorLike): Double = findLeaf(x).mean
+    fun predict(x: Vector): Double = findLeaf(x).mean
 
     /** Cumulative weight folded into the tree. */
     val totalWeights: Double get() = root.value.totalWeights
@@ -45,7 +45,7 @@ sealed interface TreeNodeResult {
     val value: WeightedVarianceResult
 
     /** Route [x] to the leaf this subtree assigns it to. */
-    fun findLeaf(x: VectorLike): WeightedVarianceResult
+    fun findLeaf(x: Vector): WeightedVarianceResult
 }
 
 /** Immutable split-node snapshot. */
@@ -60,7 +60,7 @@ data class TreeSplitResult(
     val neg: TreeNodeResult,
     override val value: WeightedVarianceResult,
 ) : TreeNodeResult {
-    override fun findLeaf(x: VectorLike): WeightedVarianceResult =
+    override fun findLeaf(x: Vector): WeightedVarianceResult =
         if (split.direction(x)) pos.findLeaf(x) else neg.findLeaf(x)
 }
 
@@ -68,19 +68,19 @@ data class TreeSplitResult(
 @Serializable
 @SerialName("TreeLeafResult")
 data class TreeLeafResult(override val value: WeightedVarianceResult) : TreeNodeResult {
-    override fun findLeaf(x: VectorLike): WeightedVarianceResult = value
+    override fun findLeaf(x: Vector): WeightedVarianceResult = value
 }
 
 /**
- * Freeze a live [VectorLike] tree node into an immutable, serializable snapshot. Internal
+ * Freeze a live [Vector] tree node into an immutable, serializable snapshot. Internal
  * split aggregates are derived from the snapshotted children so the wire format stays
  * stable even though live splits hold no arm.
  *
- * Snapshotting is `VectorLike`-only because the wire format requires [SerializableSplit];
- * a `VectorLike` tree is always grown from [SerializableSplit] candidates, so the cast on
+ * Snapshotting is `Vector`-only because the wire format requires [SerializableSplit];
+ * a `Vector` tree is always grown from [SerializableSplit] candidates, so the cast on
  * each split is safe by construction.
  */
-fun RegressionNode<VectorLike>.snapshot(): TreeNodeResult = when (this) {
+fun RegressionNode<Vector>.snapshot(): TreeNodeResult = when (this) {
     is RegressionSplitNode -> {
         val p = pos.snapshot()
         val n = neg.snapshot()
@@ -95,22 +95,22 @@ fun RegressionNode<VectorLike>.snapshot(): TreeNodeResult = when (this) {
 
 /**
  * Snapshot merge using only the immutable result. Mirrors [RegressionTree.merge] but the
- * "other" side is a [TreeNodeResult] tree-of-results rather than a live tree. `VectorLike`
+ * "other" side is a [TreeNodeResult] tree-of-results rather than a live tree. `Vector`
  * only, for the same reason [snapshot] is.
  *
- * An extension rather than a member because it exists only at `Row = VectorLike`, which a member of a
+ * An extension rather than a member because it exists only at `Row = Vector`, which a member of a
  * generic class cannot be constrained to. The algorithm is [TreeGrowth.mergeSnapshot].
  */
-fun RegressionTree<VectorLike>.mergeSnapshot(other: TreeNodeResult, workspace: com.eignex.koblas.Workspace? = null) {
+fun RegressionTree<Vector>.mergeSnapshot(other: TreeNodeResult, workspace: com.eignex.koblas.Workspace? = null) {
     growth.mergeSnapshot(other, RegressionResultShape, workspace)
 }
 
 /** Reads the immutable regression snapshot hierarchy on the growth engine's behalf. */
 private object RegressionResultShape :
-    TreeResultShape<Split<VectorLike>, TreeNodeResult, TreeSplitResult, WeightedVarianceResult> {
+    TreeResultShape<Split<Vector>, TreeNodeResult, TreeSplitResult, WeightedVarianceResult> {
     override fun asSplitResult(node: TreeNodeResult): TreeSplitResult? = node as? TreeSplitResult
 
-    override fun splitOf(node: TreeSplitResult): Split<VectorLike> = node.split
+    override fun splitOf(node: TreeSplitResult): Split<Vector> = node.split
 
     override fun posOf(node: TreeSplitResult): TreeNodeResult = node.pos
 

@@ -24,7 +24,7 @@ open class BayesianWorkspaceBenchmark {
     @Setup
     fun setup() {
         x = DenseVector.of(DoubleArray(featureSize) { (it % 7 - 3) * 0.125 })
-        workspace = Workspace().apply { reserve(featureSize, count = 3) }
+        workspace = Workspace()
         stat = BayesianRegressionStat(featureSize)
         val other = BayesianRegressionStat(featureSize)
         other.update(x, -0.5)

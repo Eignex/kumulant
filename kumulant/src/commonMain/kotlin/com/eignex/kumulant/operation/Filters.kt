@@ -1,6 +1,6 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
@@ -43,10 +43,10 @@ internal class FilterPairedStat<R : Result>(
 internal class FilterVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
     private val predicate: (DoubleArray) -> Boolean = { true },
-    private val vectorPredicate: ((VectorLike) -> Boolean)? = null,
+    private val vectorPredicate: ((Vector) -> Boolean)? = null,
 ) : VectorStat<R>,
     Stat<R> by delegate {
-    override fun update(vector: VectorLike, timestampNanos: Long, weight: Double) {
+    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         if (vectorPredicate?.invoke(vector) ?: predicate(vector.toDoubleArray())) {
             delegate.update(vector, timestampNanos, weight)
         }
@@ -55,7 +55,7 @@ internal class FilterVectorStat<R : Result>(
         FilterVectorStat(delegate.create(concurrency), predicate, vectorPredicate)
 
     companion object {
-        fun <R : Result> vector(delegate: VectorStat<R>, predicate: (VectorLike) -> Boolean): FilterVectorStat<R> =
+        fun <R : Result> vector(delegate: VectorStat<R>, predicate: (Vector) -> Boolean): FilterVectorStat<R> =
             FilterVectorStat(delegate, vectorPredicate = predicate)
     }
 }

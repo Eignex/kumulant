@@ -1,7 +1,7 @@
 package com.eignex.kumulant.schema.expr
 
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.koblas
 import com.eignex.koblas.sum
@@ -508,7 +508,7 @@ internal data class VFold(
     val op: VFoldOp,
 ) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = when (op) {
-        VFoldOp.Sum -> koblas.kernels.sum(v, 0, v.size)
+        VFoldOp.Sum -> koblas.vectorKernels.sum(v, 0, v.size)
 
         VFoldOp.Product -> {
             var p = 1.0
@@ -518,7 +518,7 @@ internal data class VFold(
 
         VFoldOp.Mean -> {
             require(v.isNotEmpty()) { "VFold.Mean on empty vector" }
-            koblas.kernels.sum(v, 0, v.size) / v.size
+            koblas.vectorKernels.sum(v, 0, v.size) / v.size
         }
 
         VFoldOp.Min -> {
@@ -838,7 +838,7 @@ sealed interface VectorExpr {
  * bits, and a snapshot carrying such a value is only equal to another that was fed the same storage.
  * Every other fold is order-independent and agrees exactly whatever the storage.
  */
-fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: VectorLike, primary: Result? = null): Double {
+fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: Vector, primary: Result? = null): Double {
     if (v is SparseVector) {
         when (this) {
             is VFold -> when (op) {
@@ -864,7 +864,7 @@ fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: VectorLike, primary: Re
     return evalVectorGeneric(x, y, v, primary)
 }
 
-private fun ScalarExpr.evalVectorGeneric(x: Double, y: Double, v: VectorLike, primary: Result?): Double = when (this) {
+private fun ScalarExpr.evalVectorGeneric(x: Double, y: Double, v: Vector, primary: Result?): Double = when (this) {
     X -> x
 
     Y -> y
@@ -1020,7 +1020,7 @@ private fun sparseMax(v: SparseVector): Double {
 }
 
 /** Evaluate this boolean expression against a borrowed KoBLAS vector without materialising it. */
-fun BoolExpr.eval(x: Double = 0.0, y: Double = 0.0, v: VectorLike, primary: Result? = null): Boolean = when (this) {
+fun BoolExpr.eval(x: Double = 0.0, y: Double = 0.0, v: Vector, primary: Result? = null): Boolean = when (this) {
     is Gt -> l.eval(x, y, v, primary) > r.eval(x, y, v, primary)
 
     is Ge -> l.eval(x, y, v, primary) >= r.eval(x, y, v, primary)
@@ -1069,10 +1069,9 @@ fun BoolExpr.eval(x: Double = 0.0, y: Double = 0.0, v: VectorLike, primary: Resu
 }
 
 /** Evaluate this vector expression against a borrowed KoBLAS vector, allocating only its owned output. */
-fun VectorExpr.eval(x: Double = 0.0, y: Double = 0.0, v: VectorLike, primary: Result? = null): DoubleArray =
-    when (this) {
-        is VElements -> DoubleArray(exprs.size) { i -> exprs[i].eval(x, y, v, primary) }
-    }
+fun VectorExpr.eval(x: Double = 0.0, y: Double = 0.0, v: Vector, primary: Result? = null): DoubleArray = when (this) {
+    is VElements -> DoubleArray(exprs.size) { i -> exprs[i].eval(x, y, v, primary) }
+}
 
 /**
  * Build an output vector by evaluating each [ScalarExpr] in order. Output

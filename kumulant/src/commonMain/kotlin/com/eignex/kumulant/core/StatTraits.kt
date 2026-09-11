@@ -1,7 +1,7 @@
 package com.eignex.kumulant.core
 
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.VectorLike
+import com.eignex.koblas.Vector
 import com.eignex.koblas.dot
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -217,7 +217,7 @@ interface HasShapeMoments : HasSampleVariance {
  */
 interface HasLinearModel : Result {
     /** Fitted weight per feature, indexed by the same `i` as the input `x[i]`. */
-    val weights: VectorLike
+    val weights: Vector
 
     /** Fitted bias / intercept term. */
     val bias: Double
@@ -230,7 +230,7 @@ interface HasLinearModel : Result {
      * For Gaussian regression this is the prediction; for non-identity GLMs
      * this is the linear predictor pre-link.
      */
-    fun predict(x: VectorLike): Double {
+    fun predict(x: Vector): Double {
         x.requireFeatureSize(weights.size)
         return bias + (x dot weights)
     }
@@ -251,7 +251,7 @@ interface HasSlope : HasLinearModel {
     /** Fitted intercept `c`. */
     val intercept: Double
 
-    override val weights: VectorLike get() = DenseVector.of(doubleArrayOf(slope))
+    override val weights: Vector get() = DenseVector.of(doubleArrayOf(slope))
     override val bias: Double get() = intercept
     override val featureSize: Int get() = 1
 

@@ -277,7 +277,7 @@ class CholeskyTest {
 
     @Test
     fun `rank one update represents the weighted outer product without changing its input`() {
-        for (workspace in listOf(null, Workspace().apply { reserve(3, 2) })) {
+        for (workspace in listOf(null, Workspace())) {
             val factor = DenseMatrix.diagonal(3, 2.0).cholesky()
             val v = doubleArrayOf(1.0, -2.0, 3.0)
 
@@ -342,7 +342,7 @@ class CholeskyTest {
 
     @Test
     fun `inverse overwrites both triangles and preserves the factor with reused scratch`() {
-        for (workspace in listOf(null, Workspace().apply { reserve(2, 1) })) {
+        for (workspace in listOf(null, Workspace())) {
             val factor = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, 2.0, 5.0)).cholesky()
             val original = factor.data.copyOf()
             val out = DenseMatrix.wrap(2, 2, DoubleArray(4) { Double.NaN })
