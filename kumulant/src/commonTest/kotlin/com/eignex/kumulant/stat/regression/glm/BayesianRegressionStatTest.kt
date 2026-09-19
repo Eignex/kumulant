@@ -3,8 +3,6 @@ package com.eignex.kumulant.stat.regression.glm
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
-import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.fitLine
 import kotlin.math.abs
 import kotlin.math.exp
@@ -53,44 +51,10 @@ class BayesianRegressionStatTest {
         assertEquals(firstWeight, first.weights[0], 1e-12)
         assertEquals(firstPrecisionL, first.precisionL[0, 0], 1e-12)
         assertEquals(0.0, second.weights[0], 1e-12)
-        first.weights.data[0] = 99.0
-        first.precisionL.data[0] = 99.0
+        first.weights.values[0] = 99.0
+        first.precisionL.values[0] = 99.0
         assertTrue(second.weights[0] != 99.0)
         assertTrue(second.precisionL[0, 0] != 99.0)
-    }
-
-    @Test
-    fun `workspace updates and merge match allocating paths`() {
-        val allocated = BayesianRegressionStat(featureSize = 2)
-        val reused = BayesianRegressionStat(featureSize = 2)
-        val workspace = Workspace()
-        repeat(20) { i ->
-            val x = DenseVector.of(doubleArrayOf(i.toDouble() / 20.0, 1.0))
-            allocated.update(x, x[0] + 2.0)
-            reused.update(x, x[0] + 2.0, workspace = workspace)
-        }
-        val other = BayesianRegressionStat(featureSize = 2)
-        other.update(doubleArrayOf(0.5, 1.0), 2.5)
-
-        allocated.merge(other.read())
-        reused.merge(other.read(), workspace)
-
-        val expected = allocated.read()
-        val actual = reused.read()
-        for (i in 0 until 2) assertEquals(expected.weights[i], actual.weights[i], 1e-12)
-    }
-
-    @Test
-    fun `regression stat interface accepts nullable workspace for update and merge`() {
-        val workspace = Workspace()
-        val receiver: RegressionStat<PrecisionRegressionResult> = BayesianRegressionStat(featureSize = 2)
-        val source: RegressionStat<PrecisionRegressionResult> = BayesianRegressionStat(featureSize = 2)
-
-        receiver.update(doubleArrayOf(1.0, 0.0), 1.0, workspace = null)
-        source.update(doubleArrayOf(0.0, 1.0), 2.0, workspace = workspace)
-        receiver.merge(source.read(), workspace)
-
-        assertEquals(2.0, receiver.read().totalWeights)
     }
 
     @Test

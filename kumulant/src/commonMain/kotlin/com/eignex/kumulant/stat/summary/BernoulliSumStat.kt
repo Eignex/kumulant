@@ -56,7 +56,7 @@ class BernoulliSumStat(override val concurrency: Concurrency = Concurrency.None)
 
     override fun read(timestampNanos: Long) = BernoulliSumResult(successes.load(), trials.load())
 
-    override fun merge(values: BernoulliSumResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: BernoulliSumResult) {
         successes.add(values.successes)
         trials.add(values.trials)
     }

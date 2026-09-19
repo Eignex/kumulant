@@ -196,13 +196,9 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
     }
 
     /** Snapshot merge: the same rules as [mergeTree], but the other side is an immutable snapshot. */
-    fun <R : Any, RS : R> mergeSnapshot(
-        other: R,
-        results: TreeResultShape<S, R, RS, P>,
-        workspace: com.eignex.koblas.Workspace? = null,
-    ) {
+    fun <R : Any, RS : R> mergeSnapshot(other: R, results: TreeResultShape<S, R, RS, P>) {
         splitLock.guarded {
-            root = mergeNodeWithResult(root, other, results, depth = 0, workspace)
+            root = mergeNodeWithResult(root, other, results, depth = 0)
             nbrNodes.store(countNodes(root))
         }
     }
@@ -350,39 +346,38 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
         b: R,
         results: TreeResultShape<S, R, RS, P>,
         depth: Int,
-        workspace: com.eignex.koblas.Workspace?,
     ): N {
         val bSplit = results.asSplitResult(b)
         val aArm = shape.leafArm(a)
         if (aArm != null) {
             if (bSplit == null) {
-                aArm.merge(results.valueOf(b), workspace)
+                aArm.merge(results.valueOf(b))
                 return a
             }
-            val cloned = cloneFromResult(b, results, depth, workspace)
+            val cloned = cloneFromResult(b, results, depth)
             val clonedSplit = shape.asSplitNode(cloned) ?: return cloned
-            foldIntoCarryover(clonedSplit, aArm.read(0L), workspace)
+            foldIntoCarryover(clonedSplit, aArm.read(0L))
             return cloned
         }
         val aSplit = shape.asSplitNode(a) ?: return a
         if (bSplit != null && shape.splitOf(aSplit) == results.splitOf(bSplit)) {
             shape.setPos(
                 aSplit,
-                mergeNodeWithResult(shape.posOf(aSplit), results.posOf(bSplit), results, depth + 1, workspace),
+                mergeNodeWithResult(shape.posOf(aSplit), results.posOf(bSplit), results, depth + 1),
             )
             shape.setNeg(
                 aSplit,
-                mergeNodeWithResult(shape.negOf(aSplit), results.negOf(bSplit), results, depth + 1, workspace),
+                mergeNodeWithResult(shape.negOf(aSplit), results.negOf(bSplit), results, depth + 1),
             )
             // b's value carries the full subtree aggregate; the child recursion already folded the
             // structurally-aligned portion. Pull only the residual, what b's value holds beyond the sum
             // of its children, into a's carryover.
             val residual = residualOf(bSplit, results)
-            if (residual.totalWeights > 0.0) foldIntoCarryover(aSplit, residual, workspace)
+            if (residual.totalWeights > 0.0) foldIntoCarryover(aSplit, residual)
             return a
         }
         // a split + b leaf, or the splits differ: keep a's structure, fold b's aggregate.
-        foldIntoCarryover(aSplit, results.valueOf(b), workspace)
+        foldIntoCarryover(aSplit, results.valueOf(b))
         return a
     }
 
@@ -393,27 +388,22 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
      * snapshot's shape whatever it is. A snapshot normally comes from a tree that already respected its own
      * `maxDepth`, so the two only diverge when the two configs differ.
      */
-    private fun <R : Any, RS : R> cloneFromResult(
-        node: R,
-        results: TreeResultShape<S, R, RS, P>,
-        depth: Int,
-        workspace: com.eignex.koblas.Workspace? = null,
-    ): N {
+    private fun <R : Any, RS : R> cloneFromResult(node: R, results: TreeResultShape<S, R, RS, P>, depth: Int): N {
         nbrNodes.addAndFetch(1)
         val split = results.asSplitResult(node)
         if (split == null) {
             // newLeaf, not makeTerminalLeaf: a cloned leaf that cannot audit would freeze the merged
             // tree at the shape of whatever snapshot it adopted.
             val leaf = newLeaf(depth)
-            shape.leafArm(leaf)?.merge(results.valueOf(node), workspace)
+            shape.leafArm(leaf)?.merge(results.valueOf(node))
             return leaf
         }
-        val pos = cloneFromResult(results.posOf(split), results, depth + 1, workspace)
-        val neg = cloneFromResult(results.negOf(split), results, depth + 1, workspace)
+        val pos = cloneFromResult(results.posOf(split), results, depth + 1)
+        val neg = cloneFromResult(results.negOf(split), results, depth + 1)
         // Re-establish any orphan aggregate the snapshot encodes by comparing the recorded
         // value against the sum of the cloned children's aggregates.
         val residual = residualOf(split, results)
-        val carry = if (residual.totalWeights > 0.0) shape.emptyArm().also { it.merge(residual, workspace) } else null
+        val carry = if (residual.totalWeights > 0.0) shape.emptyArm().also { it.merge(residual) } else null
         return shape.makeSplitNode(results.splitOf(split), pos, neg, carry)
     }
 
@@ -426,13 +416,13 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
         return shape.subtractPayload(results.valueOf(split), childSum)
     }
 
-    private fun foldIntoCarryover(node: SN, value: P, workspace: com.eignex.koblas.Workspace? = null) {
+    private fun foldIntoCarryover(node: SN, value: P) {
         if (value.totalWeights <= 0.0) return
         val existing = shape.carryoverOf(node)
         if (existing != null) {
-            existing.merge(value, workspace)
+            existing.merge(value)
         } else {
-            shape.setCarryover(node, shape.emptyArm().also { it.merge(value, workspace) })
+            shape.setCarryover(node, shape.emptyArm().also { it.merge(value) })
         }
     }
 

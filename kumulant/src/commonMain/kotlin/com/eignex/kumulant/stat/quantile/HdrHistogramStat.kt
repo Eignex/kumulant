@@ -149,7 +149,7 @@ class HdrHistogramStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: SparseHistogramResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: SparseHistogramResult) {
         for (i in values.lowerBounds.indices) {
             val weight = values.weights[i]
             if (weight > 0.0) {

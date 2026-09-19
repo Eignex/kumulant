@@ -87,7 +87,7 @@ class PlattCalibratorStat(
      * [StochasticRegressionStat] snapshot from `(slope, intercept,
      * totalWeights)` and delegating to the underlying merge.
      */
-    override fun merge(values: PlattCalibratorResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: PlattCalibratorResult) {
         val snapshot = StochasticRegressionResult(
             weights = DenseVector.of(doubleArrayOf(values.slope)),
             bias = values.intercept,
@@ -96,7 +96,7 @@ class PlattCalibratorStat(
             link = Link.Logit,
             sse = 0.0,
         )
-        inner.merge(snapshot, workspace)
+        inner.merge(snapshot)
     }
 
     override fun reset() = inner.reset()

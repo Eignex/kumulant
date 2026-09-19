@@ -2,9 +2,7 @@ package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
-import com.eignex.koblas.borrow
 import com.eignex.koblas.copy
 import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
@@ -60,7 +58,7 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
      * space, so the noise is added before the inverse link, never after: a score has to
      * come back on the same scale as the reward being maximised.
      */
-    override fun evaluate(snapshot: R, x: Vector, rng: Random, exploration: Double, workspace: Workspace?): Double =
+    override fun evaluate(snapshot: R, x: Vector, rng: Random, exploration: Double): Double =
         snapshot.link.invMean(snapshot.bias + (x dot sample(snapshot, rng, exploration)))
 }
 
@@ -100,13 +98,7 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
 
     /** Closes to `invMean(eta(x) + sd * ||x|| * N(0,1))` since the per-coord noise terms
      *  are iid; one Gaussian draw instead of one per coordinate. */
-    override fun evaluate(
-        snapshot: StochasticRegressionResult,
-        x: Vector,
-        rng: Random,
-        exploration: Double,
-        workspace: Workspace?,
-    ): Double {
+    override fun evaluate(snapshot: StochasticRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
         val eta = snapshot.linearPredictor(x)
         if (exploration <= 0.0) return snapshot.link.invMean(eta)
         val xNormSq = x dot x
@@ -146,13 +138,7 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
     }
 
     /** Sum of independent normals: `invMean(eta(x) + sqrt(exploration * Sum x_i^2 / precision[i]) * N(0,1))`. */
-    override fun evaluate(
-        snapshot: DiagonalRegressionResult,
-        x: Vector,
-        rng: Random,
-        exploration: Double,
-        workspace: Workspace?,
-    ): Double {
+    override fun evaluate(snapshot: DiagonalRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
         val eta = snapshot.linearPredictor(x)
         var variance = 0.0
         x.forEachStored { i, xi -> variance += xi * xi / snapshot.precision[i] }
@@ -165,12 +151,12 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
  * `sqrt(xT * Sigma * x) = ||L^-1 x||` for the precision factor `L` with `Sigma = (L * LT)^-1`.
  * One forward substitution, so the covariance is never formed.
  */
-private fun PrecisionRegressionResult.predictiveDeviation(x: Vector, workspace: Workspace?): Double =
-    workspace.borrow(featureSize) { v ->
-        copy(x, DenseVector.wrap(v))
-        precisionL.trsv(v, lower = true)
-        DenseVector.wrap(v).norm2()
-    }
+private fun PrecisionRegressionResult.predictiveDeviation(x: Vector): Double {
+    val v = DoubleArray(featureSize)
+    copy(x, DenseVector.wrap(v))
+    precisionL.trsv(v, lower = true)
+    return DenseVector.wrap(v).norm2()
+}
 
 /**
  * Full multivariate-Gaussian draw `w ~ N(weights, exploration * Sigma)` from the
@@ -209,15 +195,9 @@ data object MultivariateGaussian : LinearPosterior<PrecisionRegressionResult> {
 
     /** Closes to `invMean(eta(x) + sqrt(exploration) * ||L^-1 x|| * N(0,1))`; one triangular
      *  solve instead of sampling the full weight vector. */
-    override fun evaluate(
-        snapshot: PrecisionRegressionResult,
-        x: Vector,
-        rng: Random,
-        exploration: Double,
-        workspace: Workspace?,
-    ): Double {
+    override fun evaluate(snapshot: PrecisionRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
         val eta = snapshot.linearPredictor(x)
-        val deviation = snapshot.predictiveDeviation(x, workspace)
+        val deviation = snapshot.predictiveDeviation(x)
         return snapshot.link.invMean(eta + sqrt(exploration) * deviation * rng.nextNormal())
     }
 }
@@ -248,13 +228,8 @@ data object LinUcb : LinearPosterior<PrecisionRegressionResult> {
         for (i in destination.indices) destination[i] = snapshot.weights[i]
     }
 
-    override fun evaluate(
-        snapshot: PrecisionRegressionResult,
-        x: Vector,
-        rng: Random,
-        exploration: Double,
-        workspace: Workspace?,
-    ): Double = snapshot.link.invMean(
-        snapshot.linearPredictor(x) + exploration * snapshot.predictiveDeviation(x, workspace),
-    )
+    override fun evaluate(snapshot: PrecisionRegressionResult, x: Vector, rng: Random, exploration: Double): Double =
+        snapshot.link.invMean(
+            snapshot.linearPredictor(x) + exploration * snapshot.predictiveDeviation(x),
+        )
 }

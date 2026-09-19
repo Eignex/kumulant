@@ -2,7 +2,6 @@ package com.eignex.kumulant.core
 
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.kumulant.stream.currentTimeNanos
 
 /**
@@ -152,7 +151,7 @@ interface Stat<R : Result> {
      * information for the principled combine. Each stat's KDoc documents its
      * merge semantics.
      */
-    fun merge(values: R, workspace: Workspace? = null)
+    fun merge(values: R)
 
     /**
      * Reset the stat to its prior-seeded baseline. Equivalent to constructing
@@ -300,19 +299,18 @@ interface RegressionStat<R : Result> : Stat<R> {
     val featureSize: Int
 
     /** Record an `(x, y)` observation with the given [weight] at the current time. */
-    fun update(x: Vector, y: Double, weight: Double = 1.0, workspace: Workspace? = null) =
-        update(x, y, currentTimeNanos(), weight, workspace)
+    fun update(x: Vector, y: Double, weight: Double = 1.0) = update(x, y, currentTimeNanos(), weight)
 
     /** Record an `(x, y)` observation at [timestampNanos] with the given [weight]. */
-    fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double = 1.0, workspace: Workspace? = null)
+    fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double = 1.0)
 
     /** Convenience overload that wraps `x` as a [DenseVector]. */
-    fun update(x: DoubleArray, y: Double, weight: Double = 1.0, workspace: Workspace? = null) =
-        update(DenseVector.of(x), y, currentTimeNanos(), weight, workspace)
+    fun update(x: DoubleArray, y: Double, weight: Double = 1.0) =
+        update(DenseVector.of(x), y, currentTimeNanos(), weight)
 
     /** Timestamped convenience overload that wraps `x` as a [DenseVector]. */
-    fun update(x: DoubleArray, y: Double, timestampNanos: Long, weight: Double = 1.0, workspace: Workspace? = null) =
-        update(DenseVector.of(x), y, timestampNanos, weight, workspace)
+    fun update(x: DoubleArray, y: Double, timestampNanos: Long, weight: Double = 1.0) =
+        update(DenseVector.of(x), y, timestampNanos, weight)
 
     override fun create(concurrency: Concurrency?): RegressionStat<R>
 }

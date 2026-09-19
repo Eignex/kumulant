@@ -1,6 +1,5 @@
 package com.eignex.kumulant.stream
 
-import com.eignex.koblas.Workspace
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
@@ -8,20 +7,16 @@ import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertSame
 import kotlin.time.Duration.Companion.seconds
 
 class SliceRingMergeAtTest {
 
     private class RecordingSumStat : SeriesStat<SumResult> {
         override val concurrency = Concurrency.None
-        var workspace: Workspace? = null
 
         override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
 
-        override fun merge(values: SumResult, workspace: Workspace?) {
-            this.workspace = workspace
-        }
+        override fun merge(values: SumResult) = Unit
 
         override fun reset() = Unit
 
@@ -35,34 +30,6 @@ class SliceRingMergeAtTest {
         slices = 10,
         concurrency = Concurrency.None,
     ) { c -> SumStat(c) }
-
-    @Test
-    fun `mergeAt forwards workspace to an installed slot`() {
-        val created = mutableListOf<RecordingSumStat>()
-        val ring = SliceRing<SumResult, RecordingSumStat>(10.seconds, 10, Concurrency.None) {
-            RecordingSumStat().also(created::add)
-        }
-        val workspace = Workspace()
-
-        ring.mergeAt(1_000_000_100L, SumResult(1.0))
-        ring.mergeAt(1_000_000_200L, SumResult(1.0), workspace)
-
-        assertSame(workspace, created.last().workspace)
-    }
-
-    @Test
-    fun `mergeAt forwards workspace to a rotated slot`() {
-        val created = mutableListOf<RecordingSumStat>()
-        val ring = SliceRing<SumResult, RecordingSumStat>(10.seconds, 10, Concurrency.None) {
-            RecordingSumStat().also(created::add)
-        }
-        val workspace = Workspace()
-
-        ring.mergeAt(1_000_000_100L, SumResult(1.0))
-        ring.mergeAt(11_000_000_100L, SumResult(1.0), workspace)
-
-        assertSame(workspace, created.last().workspace)
-    }
 
     @Test
     fun `merges within one slice sum into the same slot`() {

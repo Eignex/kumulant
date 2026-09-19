@@ -89,30 +89,24 @@ class TrackedContextualBandit<B : ContextualBandit>(
         @Suppress("UNCHECKED_CAST")
         (updateArmRewardTemplate?.create(null) as PairedStat<Result>?)
 
-    override fun choose(x: Vector, workspace: com.eignex.koblas.Workspace?): Int {
+    override fun choose(x: Vector): Int {
         x.requireFeatureSize(contextFeatureSize)
-        val i = inner.choose(x, workspace)
-        chooseStat?.update(x, i.toDouble(), nowNanos(), 1.0, workspace)
+        val i = inner.choose(x)
+        chooseStat?.update(x, i.toDouble(), nowNanos(), 1.0)
         return i
     }
 
-    override fun update(
-        armIndex: Int,
-        x: Vector,
-        reward: Double,
-        weight: Double,
-        workspace: com.eignex.koblas.Workspace?,
-    ) {
+    override fun update(armIndex: Int, x: Vector, reward: Double, weight: Double) {
         x.requireFeatureSize(contextFeatureSize)
-        inner.update(armIndex, x, reward, weight, workspace)
+        inner.update(armIndex, x, reward, weight)
         val ts = nowNanos()
         if (updateJointStat != null) {
             val joint = DoubleArray(contextFeatureSize + 1)
             joint[0] = armIndex.toDouble()
             for (j in 0 until contextFeatureSize) joint[j + 1] = x[j]
-            updateJointStat.update(DenseVector.of(joint), reward, ts, weight, workspace)
+            updateJointStat.update(DenseVector.of(joint), reward, ts, weight)
         }
-        updateMarginalStat?.update(x, reward, ts, weight, workspace)
+        updateMarginalStat?.update(x, reward, ts, weight)
         updateArmRewardStat?.update(armIndex.toDouble(), reward, ts, weight)
     }
 

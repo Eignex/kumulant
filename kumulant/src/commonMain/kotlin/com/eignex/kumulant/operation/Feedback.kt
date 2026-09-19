@@ -132,19 +132,13 @@ internal class FeedbackRegressionStat<P : Result, R : Result>(
 
     override val featureSize: Int get() = inner.featureSize
 
-    override fun update(
-        x: Vector,
-        y: Double,
-        timestampNanos: Long,
-        weight: Double,
-        workspace: com.eignex.koblas.Workspace?,
-    ) {
+    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         primary.update(x, timestampNanos, weight)
         val snapshot = primary.read(timestampNanos)
         val transformed = DoubleArray(x.size) { i ->
             project.eval(x[i], primary = IndexedResult(snapshot.results[i], i))
         }
-        inner.update(transformed, y, timestampNanos, weight, workspace)
+        inner.update(transformed, y, timestampNanos, weight)
     }
 
     override fun reset() {

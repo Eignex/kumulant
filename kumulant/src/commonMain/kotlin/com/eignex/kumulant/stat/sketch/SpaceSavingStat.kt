@@ -275,7 +275,7 @@ class SpaceSavingStat(
         }
     }
 
-    override fun merge(values: HeavyHittersResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: HeavyHittersResult) {
         require(values.capacity == capacity) {
             "Cannot merge HeavyHitters with capacity=${values.capacity} into $capacity"
         }

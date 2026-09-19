@@ -4,7 +4,7 @@ import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.Vector
 import com.eignex.koblas.VectorStorage
-import com.eignex.koblas.Workspace
+import com.eignex.koblas.copy
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.koblas
 import com.eignex.kumulant.bandit.ContextualBandit
@@ -151,8 +151,8 @@ class KnnContextualBandit(
 
     // One scan buffer for the life of the bandit: k distances, then the k rewards, then the k
     // weights that go with them. The class already asks callers to serialise `choose` and `update`,
-    // so the buffer can be owned outright rather than borrowed per call, which is what makes scoring
-    // allocation-free with no workspace to hand. The cost is that scoring is not re-entrant: a
+    // so the buffer can be owned outright rather than allocated per call. The cost is that scoring
+    // is not re-entrant: a
     // [distance] that called back into `choose` or `evaluate` would scan into the buffer its own
     // caller is still reading.
     private val scratch: DoubleArray = DoubleArray(3 * k)
@@ -174,12 +174,9 @@ class KnnContextualBandit(
 
     /**
      * Argmax over per-arm [evaluate] scores. Ties broken by lowest index.
-     *
-     * [workspace] is accepted for interface uniformity and ignored; the scan buffer is owned, so
-     * there is no scratch left to borrow.
      */
     @Suppress("UnusedParameter")
-    override fun choose(x: Vector, workspace: Workspace?): Int {
+    override fun choose(x: Vector): Int {
         requireFeatureSize(x.size)
         val bestIdx = argmaxArm(nbrArms) { armIndex -> score(armIndex, x) }
         step++
@@ -188,18 +185,16 @@ class KnnContextualBandit(
 
     /**
      * Score arm [armIndex] at context [x]: k-NN mean reward + UCB bonus.
-     *
-     * [workspace] is accepted for interface uniformity and ignored, as in [choose].
      */
     @Suppress("UnusedParameter")
-    override fun evaluate(armIndex: Int, x: Vector, workspace: Workspace?): Double {
+    override fun evaluate(armIndex: Int, x: Vector): Double {
         requireArmIndex(armIndex, nbrArms)
         requireFeatureSize(x.size)
         return score(armIndex, x)
     }
 
     /** Append `(x, reward, weight)` to arm [armIndex]'s history; oldest entry drops if full. */
-    override fun update(armIndex: Int, x: Vector, reward: Double, weight: Double, workspace: Workspace?) {
+    override fun update(armIndex: Int, x: Vector, reward: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
         // An inert observation must not consume a history slot; the eviction below would drop real data.
         // A negative weight drops for the same reason rather than downdating: a bounded history has no
@@ -234,7 +229,7 @@ class KnnContextualBandit(
         )
     }
 
-    override fun merge(other: List<KnnArmResult>, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(other: List<KnnArmResult>) {
         requireMergeSize(other.size, nbrArms)
         for (a in 0 until nbrArms) {
             val arm = other[a]
@@ -328,16 +323,12 @@ class KnnContextualBandit(
         fun squaredL2(a: Vector, b: Vector): Double {
             require(a.size == b.size) { "size mismatch: ${a.size} vs ${b.size}" }
             return when {
-                a is DenseVector && b is DenseVector -> denseSquaredL2(a, b)
                 a is SparseVector && b is SparseVector -> sparseSquaredL2(a, b)
                 a is SparseVector -> mixedSquaredL2(a, b)
                 b is SparseVector -> mixedSquaredL2(b, a)
                 else -> genericSquaredL2(a, b)
             }
         }
-
-        private fun denseSquaredL2(a: DenseVector, b: DenseVector): Double =
-            koblas.vectorKernels.ssqd(a.data, 0, b.data, 0, a.size)
 
         private fun genericSquaredL2(a: Vector, b: Vector): Double {
             var s = 0.0
@@ -479,11 +470,9 @@ private class ArmHistory(private val capacity: Int) {
 private fun retain(slot: VectorStorage?, x: Vector): VectorStorage {
     if (x is SparseVector) return SparseVector.wrap(x.size, x.copyIndices(), x.values.copyOf())
     if (slot is DenseVector && slot.size == x.size) {
-        if (x is DenseVector) {
-            x.data.copyInto(slot.data)
-        } else {
-            for (i in 0 until x.size) slot.data[i] = x[i]
-        }
+        // copy rather than a raw array copyInto: a DenseVector may be strided, and its backing holds more
+        // than the entries it addresses.
+        copy(x, slot)
         return slot
     }
     return DenseVector.wrap(x.toDoubleArray())

@@ -1,7 +1,6 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
@@ -48,42 +47,16 @@ class StatGroupTest {
 
     private class RecordingSeriesStat : SeriesStat<SumResult> {
         override val concurrency = Concurrency.None
-        var workspace: Workspace? = null
 
         override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
 
-        override fun merge(values: SumResult, workspace: Workspace?) {
-            this.workspace = workspace
-        }
+        override fun merge(values: SumResult) = Unit
 
         override fun reset() = Unit
 
         override fun read(timestampNanos: Long) = SumResult(0.0)
 
         override fun create(concurrency: Concurrency?) = RecordingSeriesStat()
-    }
-
-    @Test
-    fun `StatGroup merge forwards workspace to direct child`() {
-        val recorder = RecordingSeriesStat()
-        val target = StatGroup(StatKey<SumResult>("value") to recorder)
-        val workspace = Workspace()
-
-        target.merge(GroupResult(mapOf("value" to SumResult(1.0))), workspace)
-
-        assertSame(workspace, recorder.workspace)
-    }
-
-    @Test
-    fun `StatGroup merge forwards workspace to nested group child`() {
-        val recorder = RecordingSeriesStat()
-        val targetNested = StatGroup(StatKey<SumResult>("value") to recorder)
-        val target = StatGroup(StatKey<GroupResult>("nested") to targetNested)
-        val workspace = Workspace()
-
-        target.merge(GroupResult(mapOf("nested" to GroupResult(mapOf("value" to SumResult(1.0))))), workspace)
-
-        assertSame(workspace, recorder.workspace)
     }
 
     @Test
@@ -245,7 +218,7 @@ class StatGroupTest {
         val tracking = object : SeriesStat<SumResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: SumResult, workspace: com.eignex.koblas.Workspace?) = Unit
+            override fun merge(values: SumResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = SumResult(0.0)
             override fun create(concurrency: Concurrency?): SeriesStat<SumResult> {
@@ -428,7 +401,7 @@ class PairedStatGroupTest {
         val tracking = object : PairedStat<UnivariateRegressionResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: UnivariateRegressionResult, workspace: com.eignex.koblas.Workspace?) = Unit
+            override fun merge(values: UnivariateRegressionResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = UnivariateRegressionResult(
                 Penalty.None,
@@ -551,7 +524,7 @@ class PairedListStatsTest {
         val tracking = object : PairedStat<UnivariateRegressionResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: UnivariateRegressionResult, workspace: com.eignex.koblas.Workspace?) = Unit
+            override fun merge(values: UnivariateRegressionResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = UnivariateRegressionResult(
                 Penalty.None,
@@ -660,7 +633,7 @@ class VectorStatGroupTest {
         val tracking = object : VectorStat<ResultList<SumResult>> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(vector: Vector, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: ResultList<SumResult>, workspace: com.eignex.koblas.Workspace?) = Unit
+            override fun merge(values: ResultList<SumResult>) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())
             override fun create(concurrency: Concurrency?): VectorStat<ResultList<SumResult>> {
@@ -777,7 +750,7 @@ class VectorListStatsTest {
         val tracking = object : VectorStat<ResultList<SumResult>> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(vector: Vector, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: ResultList<SumResult>, workspace: com.eignex.koblas.Workspace?) = Unit
+            override fun merge(values: ResultList<SumResult>) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())
             override fun create(concurrency: Concurrency?): VectorStat<ResultList<SumResult>> {
@@ -860,7 +833,7 @@ class DiscreteStatGroupTest {
         val tracking = object : DiscreteStat<HyperLogLogResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(value: Long, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: HyperLogLogResult, workspace: com.eignex.koblas.Workspace?) = Unit
+            override fun merge(values: HyperLogLogResult) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = HyperLogLogResult(0.0, 10, IntArray(0), 0L)
             override fun create(concurrency: Concurrency?): DiscreteStat<HyperLogLogResult> {

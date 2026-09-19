@@ -2,7 +2,7 @@ package com.eignex.kumulant.bandit.contextual
 
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.Workspace
+import com.eignex.koblas.StridedVector
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit.Companion.squaredL2
 import com.eignex.kumulant.feat
 import kotlin.random.Random
@@ -206,6 +206,28 @@ class KnnContextualBanditTest {
     }
 
     @Test
+    fun `a strided context is retained by the entries it addresses once the history wraps`() {
+        val strided = KnnContextualBandit(nbrArms = 1, k = 2, maxHistoryPerArm = 2, exploration = 0.0)
+        val dense = KnnContextualBandit(nbrArms = 1, k = 2, maxHistoryPerArm = 2, exploration = 0.0)
+        val rows = listOf(
+            doubleArrayOf(1.0, 2.0) to 0.5,
+            doubleArrayOf(0.0, 3.0) to -0.25,
+            doubleArrayOf(0.5, 1.5) to 1.0,
+            doubleArrayOf(2.0, -1.0) to 0.75,
+        )
+        for ((x, r) in rows) {
+            dense.update(0, DenseVector.of(x), r)
+            // Fillers sit between the entries, so a copy that walked the backing array rather than the
+            // vector would retain 9.0 where the context reads x[1]. More rows than the arm holds, so the
+            // later ones land in a slot the earlier ones already filled.
+            strided.update(0, StridedVector(doubleArrayOf(x[0], 9.0, x[1], 9.0), 0, 2, 2), r)
+        }
+
+        val q = DenseVector.of(doubleArrayOf(0.5, 1.5))
+        assertEquals(dense.evaluate(0, q), strided.evaluate(0, q), 1e-12)
+    }
+
+    @Test
     fun `update retains an independent sparse snapshot including stored zeros`() {
         val indices = intArrayOf(0, 2)
         val values = doubleArrayOf(1.0, 0.0)
@@ -240,27 +262,6 @@ class KnnContextualBanditTest {
         val a = SparseVector.of(2, intArrayOf(0), doubleArrayOf(0.0))
         val b = SparseVector.of(2, intArrayOf(0), doubleArrayOf(3.0))
         assertEquals(9.0, squaredL2(a, b))
-    }
-
-    @Test
-    fun `workspace scoring matches allocating scoring across sparse contexts`() {
-        val allocating = KnnContextualBandit(nbrArms = 2, k = 2, exploration = 0.0)
-        val reused = KnnContextualBandit(nbrArms = 2, k = 2, exploration = 0.0)
-        val samples = listOf(
-            Triple(0, SparseVector.of(3, intArrayOf(0), doubleArrayOf(1.0)), 0.5),
-            Triple(0, SparseVector.of(3, intArrayOf(1), doubleArrayOf(-2.0)), -1.0),
-            Triple(1, SparseVector.of(3, intArrayOf(2), doubleArrayOf(3.0)), 1.5),
-            Triple(1, SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(-1.0, 1.0)), 0.25),
-        )
-        for ((arm, x, reward) in samples) {
-            allocating.update(arm, x, reward)
-            reused.update(arm, x, reward)
-        }
-        val x = SparseVector.of(3, intArrayOf(0), doubleArrayOf(0.5))
-        val workspace = Workspace()
-
-        for (arm in 0 until 2) assertEquals(allocating.evaluate(arm, x), reused.evaluate(arm, x, workspace), 1e-12)
-        assertEquals(allocating.choose(x), reused.choose(x, workspace))
     }
 
     @Test

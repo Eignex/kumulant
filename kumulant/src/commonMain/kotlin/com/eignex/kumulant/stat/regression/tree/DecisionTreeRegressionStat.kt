@@ -87,13 +87,7 @@ class DecisionTreeRegressionStat(
         seedRng.nextInt(),
     )
 
-    override fun update(
-        x: Vector,
-        y: Double,
-        timestampNanos: Long,
-        weight: Double,
-        workspace: com.eignex.koblas.Workspace?,
-    ) {
+    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         // Return before touching the tree: a zero-weight call would still advance the leaves'
         // observationsSinceLastCheck and shift the split-audit cadence.
@@ -103,8 +97,8 @@ class DecisionTreeRegressionStat(
 
     override fun read(timestampNanos: Long): TreeRegressionResult = TreeRegressionResult(tree.rootNode().snapshot())
 
-    override fun merge(values: TreeRegressionResult, workspace: com.eignex.koblas.Workspace?) {
-        tree.mergeSnapshot(values.root, workspace)
+    override fun merge(values: TreeRegressionResult) {
+        tree.mergeSnapshot(values.root)
     }
 
     /**

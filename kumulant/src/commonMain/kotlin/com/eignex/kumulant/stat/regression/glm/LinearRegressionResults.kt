@@ -1,9 +1,9 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.koblas.dot
 import com.eignex.kumulant.core.HasLinearModel
 import com.eignex.kumulant.core.HasRegression
@@ -67,7 +67,7 @@ sealed interface LinearRegressionResult :
 @Serializable
 @SerialName("StochasticRegressionResult")
 data class StochasticRegressionResult(
-    override val weights: DenseVector,
+    override val weights: ContiguousVector,
     override val bias: Double,
     override val totalWeights: Double,
     override val step: Long,
@@ -85,14 +85,14 @@ data class StochasticRegressionResult(
 @Serializable
 @SerialName("DiagonalRegressionResult")
 data class DiagonalRegressionResult(
-    override val weights: DenseVector,
+    override val weights: ContiguousVector,
     override val bias: Double,
     /** Posterior precision (inverse variance) on the bias term. */
     val biasPrecision: Double,
     override val totalWeights: Double,
     override val step: Long,
     /** Per-coefficient precision (inverse variance). Same length as [weights]. */
-    val precision: DenseVector,
+    val precision: ContiguousVector,
     override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
 ) : LinearRegressionResult
@@ -109,7 +109,7 @@ data class DiagonalRegressionResult(
 @Serializable
 @SerialName("PrecisionRegressionResult")
 data class PrecisionRegressionResult(
-    override val weights: DenseVector,
+    override val weights: ContiguousVector,
     override val bias: Double,
     /** Posterior precision (inverse variance) on the bias term. */
     val biasPrecision: Double,
@@ -134,13 +134,12 @@ data class PrecisionRegressionResult(
      * matrix per call, so it belongs in reporting and prior fitting; scoring paths should stay on
      * the factor.
      */
-    fun covariance(workspace: Workspace? = null): DenseMatrix = precisionL.choleskyInverse(workspace)
+    fun covariance(): DenseMatrix = precisionL.choleskyInverse()
 
     /**
      * Posterior covariance into [out], which is returned. Every entry is written, so a buffer
      * carried across calls needs no clearing; still O(n³) each time, so this saves the allocation
      * rather than the work. [out] must not be [precisionL] itself.
      */
-    fun covarianceInto(out: DenseMatrix, workspace: Workspace? = null): DenseMatrix =
-        precisionL.choleskyInvertInto(out, workspace)
+    fun covarianceInto(out: DenseMatrix): DenseMatrix = precisionL.choleskyInvertInto(out)
 }
