@@ -1,7 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
@@ -101,30 +100,29 @@ class RegressionContextualBandit<R : Result>(
     private val arms: Array<RegressionStat<R>> = Array(nbrArms) { template.create(null) }
     private val global: RegressionStat<R>? = globalTemplate?.create(null)
 
-    private fun globalMean(x: Vector, workspace: Workspace?): Double =
-        global?.let { posterior.evaluate(it.read(0L), x, random, 0.0, workspace) } ?: 0.0
+    private fun globalMean(x: Vector): Double = global?.let { posterior.evaluate(it.read(0L), x, random, 0.0) } ?: 0.0
 
-    override fun choose(x: Vector, workspace: Workspace?): Int {
-        val gMean = globalMean(x, workspace)
+    override fun choose(x: Vector): Int {
+        val gMean = globalMean(x)
         return argmaxArm(
             nbrArms,
-        ) { i -> gMean + posterior.evaluate(arms[i].read(0L), x, random, exploration, workspace) }
+        ) { i -> gMean + posterior.evaluate(arms[i].read(0L), x, random, exploration) }
     }
 
-    override fun evaluate(armIndex: Int, x: Vector, workspace: Workspace?): Double {
+    override fun evaluate(armIndex: Int, x: Vector): Double {
         requireArmIndex(armIndex, nbrArms)
-        return globalMean(x, workspace) + posterior.evaluate(arms[armIndex].read(0L), x, random, exploration, workspace)
+        return globalMean(x) + posterior.evaluate(arms[armIndex].read(0L), x, random, exploration)
     }
 
-    override fun update(armIndex: Int, x: Vector, reward: Double, weight: Double, workspace: Workspace?) {
+    override fun update(armIndex: Int, x: Vector, reward: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
         val g = global
         if (g == null) {
-            arms[armIndex].update(x, reward, weight, workspace)
+            arms[armIndex].update(x, reward, weight)
         } else {
-            val gMean = posterior.evaluate(g.read(0L), x, random, 0.0, workspace)
-            arms[armIndex].update(x, reward - gMean, weight, workspace)
-            g.update(x, reward, weight, workspace)
+            val gMean = posterior.evaluate(g.read(0L), x, random, 0.0)
+            arms[armIndex].update(x, reward - gMean, weight)
+            g.update(x, reward, weight)
         }
     }
 
@@ -151,14 +149,14 @@ class RegressionContextualBandit<R : Result>(
     /** Live global pooling regressor, or `null` if pooling is disabled. */
     fun globalStat(): RegressionStat<R>? = global
 
-    override fun merge(other: List<R>, workspace: Workspace?) {
+    override fun merge(other: List<R>) {
         requireMergeSize(other.size, nbrArms)
-        for (i in 0 until nbrArms) arms[i].merge(other[i], workspace)
+        for (i in 0 until nbrArms) arms[i].merge(other[i])
     }
 
     /** Merge another bandit replica's global snapshot. No-op when pooling is disabled. */
-    fun mergeGlobal(other: R, workspace: Workspace? = null) {
-        global?.merge(other, workspace)
+    fun mergeGlobal(other: R) {
+        global?.merge(other)
     }
 
     override fun reset() {

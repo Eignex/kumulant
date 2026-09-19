@@ -33,9 +33,8 @@ class BrierScoreStat(override val concurrency: Concurrency = Concurrency.None) :
     }
 
     override fun read(timestampNanos: Long) = inner.read(timestampNanos)
-    override fun merge(values: WeightedMeanResult, workspace: com.eignex.koblas.Workspace?) = inner.merge(
+    override fun merge(values: WeightedMeanResult) = inner.merge(
         values,
-        workspace,
     )
     override fun reset() = inner.reset()
     override fun create(concurrency: Concurrency?) = BrierScoreStat(concurrency ?: this.concurrency)

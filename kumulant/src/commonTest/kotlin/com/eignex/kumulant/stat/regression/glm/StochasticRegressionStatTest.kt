@@ -29,7 +29,7 @@ class StochasticRegressionStatTest {
 
         assertEquals(firstWeight, first.weights[0], 1e-12)
         assertEquals(0.0, second.weights[0], 1e-12)
-        first.weights.data[0] = 99.0
+        first.weights.values[0] = 99.0
         assertTrue(second.weights[0] != 99.0)
     }
 

@@ -1,9 +1,6 @@
 package com.eignex.kumulant.bandit.contextual
 
 import com.eignex.koblas.DenseVector
-import com.eignex.koblas.Workspace
-import com.eignex.kumulant.bandit.ContextualBandit
-import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.feat
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.LinUcb
@@ -88,25 +85,6 @@ class RegressionContextualBanditTest {
     }
 
     @Test
-    fun `workspace contextual scoring matches the interface score`() {
-        val bandit = RegressionContextualBandit(
-            nbrArms = 2,
-            template = BayesianRegressionStat(featureSize = 2),
-            posterior = LinUcb,
-            random = Random(0),
-        )
-        bandit.update(0, feat(1.0, 0.0), 1.0)
-        val x = feat(1.0, 0.0)
-        val workspace = Workspace()
-
-        val contextual: ContextualBandit = bandit
-        val scorable: ContextualScorable = bandit
-
-        assertEquals(bandit.evaluate(0, x), scorable.evaluate(0, x, workspace), 1e-12)
-        assertEquals(bandit.choose(x), contextual.choose(x, workspace))
-    }
-
-    @Test
     fun `armStat exposes the live per-arm regressor`() {
         val bandit = RegressionContextualBandit(
             nbrArms = 2,
@@ -148,9 +126,8 @@ class RegressionContextualBanditTest {
             posterior = MultivariateGaussian,
             random = Random(3),
         )
-        val workspace = Workspace()
-        merged.merge(ba.snapshot(), workspace)
-        merged.merge(bb.snapshot(), workspace)
+        merged.merge(ba.snapshot())
+        merged.merge(bb.snapshot())
         // Merged bandit should have higher total weight per arm than either replica.
         val mergedW = merged.armResult(0).totalWeights
         val singleW = ba.armResult(0).totalWeights

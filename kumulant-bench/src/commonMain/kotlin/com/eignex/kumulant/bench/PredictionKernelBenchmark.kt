@@ -4,7 +4,6 @@ import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
 import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
@@ -35,7 +34,6 @@ open class PredictionKernelBenchmark {
     private lateinit var posterior: PrecisionRegressionResult
     private lateinit var gaussianNaiveBayes: com.eignex.kumulant.stat.regression.GaussianNaiveBayesResult
     private lateinit var knn: KnnContextualBandit
-    private lateinit var workspace: Workspace
     private lateinit var probabilities: DoubleArray
 
     @Setup
@@ -69,7 +67,6 @@ open class PredictionKernelBenchmark {
         repeat(4) { arm ->
             repeat(32) { sample -> knn.update(arm, x, (sample - arm).toDouble()) }
         }
-        workspace = Workspace()
         probabilities = DoubleArray(4)
     }
 
@@ -86,9 +83,6 @@ open class PredictionKernelBenchmark {
     fun softmaxProbabilitiesInto(): DoubleArray = probabilities.also { softmax.probabilitiesInto(x, it) }
 
     @Benchmark
-    fun softmaxPredictWorkspace(): Int = softmax.predict(x, workspace)
-
-    @Benchmark
     fun gaussianNaiveBayesProbabilities(): DoubleArray = gaussianNaiveBayes.probabilities(x)
 
     @Benchmark
@@ -98,17 +92,11 @@ open class PredictionKernelBenchmark {
     fun knnChoose(): Int = knn.choose(x)
 
     @Benchmark
-    fun knnChooseWorkspace(): Int = knn.choose(x, workspace)
-
-    @Benchmark
     fun multivariateSample(): Vector = MultivariateGaussian.sample(posterior, Random(1234), 1.0)
 
     @Benchmark
     fun multivariateEvaluate(): Double = MultivariateGaussian.evaluate(posterior, x, Random(1234), 1.0)
 
-    @Benchmark
-    fun multivariateEvaluateWorkspace(): Double =
-        MultivariateGaussian.evaluate(posterior, x, Random(1234), 1.0, workspace)
 
     @Benchmark
     fun bayesianPrior(): PrecisionRegressionResult = BayesianRegressionStat(

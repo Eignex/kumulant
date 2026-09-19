@@ -102,9 +102,9 @@ class TopTwoThompsonBandit<R : Result>(
         step = 0L
     }
 
-    override fun merge(other: List<R>, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(other: List<R>) {
         requireMergeSize(other.size, nbrArms)
-        for (i in 0 until nbrArms) stats[i].merge(other[i], workspace)
+        for (i in 0 until nbrArms) stats[i].merge(other[i])
     }
 
     override fun create(random: Random): TopTwoThompsonBandit<R> =

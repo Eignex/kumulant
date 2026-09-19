@@ -1,7 +1,6 @@
 package com.eignex.kumulant.bandit
 
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.kumulant.core.Result
 import kotlin.random.Random
 
@@ -133,14 +132,14 @@ interface ContextualBandit : Bandit {
      * configurable [com.eignex.kumulant.stat.regression.RegressionPosterior]
      * (or analogue) and returns the argmax / sampled choice.
      */
-    fun choose(x: Vector, workspace: Workspace? = null): Int
+    fun choose(x: Vector): Int
 
     /**
      * Fold a single `(x, reward)` observation into the arm at [armIndex].
      * The `weight` is the same observation-weight running through the
      * library; typically `1.0`, occasionally importance-weighted.
      */
-    fun update(armIndex: Int, x: Vector, reward: Double, weight: Double = 1.0, workspace: Workspace? = null)
+    fun update(armIndex: Int, x: Vector, reward: Double, weight: Double = 1.0)
 }
 
 /**
@@ -177,7 +176,7 @@ interface Snapshotable<S> {
      * based contextual bandits merge approximately. Each concrete bandit's
      * KDoc documents its merge semantics.
      */
-    fun merge(other: S, workspace: Workspace? = null)
+    fun merge(other: S)
 
     /**
      * Spawn a fresh bandit with the same configuration; state resets to
@@ -242,5 +241,5 @@ interface Scorable {
  */
 interface ContextualScorable {
     /** Score the arm at [armIndex] under the current state and context [x]. */
-    fun evaluate(armIndex: Int, x: Vector, workspace: Workspace? = null): Double
+    fun evaluate(armIndex: Int, x: Vector): Double
 }

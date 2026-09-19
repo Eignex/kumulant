@@ -171,10 +171,9 @@ class IsotonicCalibratorStat(
     override val mergeRefusal: String =
         "IsotonicCalibratorStat does not support merge; merge the underlying ReliabilityStat directly"
 
-    override fun merge(values: IsotonicCalibratorResult, workspace: com.eignex.koblas.Workspace?): Nothing =
-        throw UnsupportedOperationException(
-            mergeRefusal,
-        )
+    override fun merge(values: IsotonicCalibratorResult): Nothing = throw UnsupportedOperationException(
+        mergeRefusal,
+    )
 
     override fun reset() = inner.reset()
 

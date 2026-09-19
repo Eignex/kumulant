@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression
 
+import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
@@ -46,7 +47,7 @@ data class GaussianNaiveBayesResult(
     /** K-by-p matrix of per-class running variances (population, weight-normalised). */
     val variances: DenseMatrix,
     /** Cumulative observation weight per class; length [numClasses]. */
-    val classWeights: DenseVector,
+    val classWeights: ContiguousVector,
     /** Total cumulative observation weight across all classes. */
     override val totalWeights: Double,
     /** Lower bound applied to per-class variances at predict time. */
@@ -152,13 +153,7 @@ class GaussianNaiveBayesStat(
     private val classWeightCell: StreamDoubleArray = mode.newDoubleArray(numClasses)
     private val totalWeightCell: StreamDouble = mode.newDouble(0.0)
 
-    override fun update(
-        x: Vector,
-        y: Double,
-        timestampNanos: Long,
-        weight: Double,
-        workspace: com.eignex.koblas.Workspace?,
-    ) {
+    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
@@ -208,7 +203,7 @@ class GaussianNaiveBayesStat(
      * Weight-pooled merge: combines per-class running means and M2 using Chan's
      * parallel-Welford formula. Exact under weighted updates.
      */
-    override fun merge(values: GaussianNaiveBayesResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: GaussianNaiveBayesResult) {
         require(values.featureSize == featureSize && values.numClasses == numClasses) {
             "merge: shape mismatch (${values.numClasses}x${values.featureSize}) vs (${numClasses}x$featureSize)"
         }

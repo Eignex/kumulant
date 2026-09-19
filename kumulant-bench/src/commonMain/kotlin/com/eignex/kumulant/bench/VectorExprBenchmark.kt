@@ -2,7 +2,7 @@ package com.eignex.kumulant.bench
 
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.StridedVectorView
+import com.eignex.koblas.StridedVector
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.schema.expr.V
 import com.eignex.kumulant.schema.expr.ScalarExpr
@@ -50,7 +50,7 @@ open class VectorExprBenchmark {
                 val nnz = (featureSize * densityPercent / 100).coerceAtLeast(1)
                 SparseVector.of(featureSize, IntArray(nnz) { it * featureSize / nnz }, DoubleArray(nnz) { 1.0 })
             }
-            "strided" -> StridedVectorView(DoubleArray(featureSize * 2) { values[it / 2] }, 0, featureSize, 2)
+            "strided" -> StridedVector(DoubleArray(featureSize * 2) { values[it / 2] }, 0, featureSize, 2)
             else -> CustomVector(values)
         }
         dot = vDot(List(featureSize) { if (it % 2 == 0) 1.0 else -1.0 })

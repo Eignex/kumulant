@@ -101,8 +101,8 @@ fun RegressionNode<Vector>.snapshot(): TreeNodeResult = when (this) {
  * An extension rather than a member because it exists only at `Row = Vector`, which a member of a
  * generic class cannot be constrained to. The algorithm is [TreeGrowth.mergeSnapshot].
  */
-fun RegressionTree<Vector>.mergeSnapshot(other: TreeNodeResult, workspace: com.eignex.koblas.Workspace? = null) {
-    growth.mergeSnapshot(other, RegressionResultShape, workspace)
+fun RegressionTree<Vector>.mergeSnapshot(other: TreeNodeResult) {
+    growth.mergeSnapshot(other, RegressionResultShape)
 }
 
 /** Reads the immutable regression snapshot hierarchy on the growth engine's behalf. */

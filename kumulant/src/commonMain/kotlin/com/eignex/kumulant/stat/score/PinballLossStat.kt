@@ -39,9 +39,8 @@ class PinballLossStat(val tau: Double, override val concurrency: Concurrency = C
     }
 
     override fun read(timestampNanos: Long) = inner.read(timestampNanos)
-    override fun merge(values: WeightedMeanResult, workspace: com.eignex.koblas.Workspace?) = inner.merge(
+    override fun merge(values: WeightedMeanResult) = inner.merge(
         values,
-        workspace,
     )
     override fun reset() = inner.reset()
     override fun create(concurrency: Concurrency?) = PinballLossStat(tau, concurrency ?: this.concurrency)

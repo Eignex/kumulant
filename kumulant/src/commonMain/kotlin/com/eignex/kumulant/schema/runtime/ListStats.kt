@@ -53,12 +53,12 @@ internal sealed class AbstractListStats<R : Result, S : Stat<out R>>(
     }
 
     @Suppress("UNCHECKED_CAST")
-    final override fun merge(values: ResultList<R>, workspace: com.eignex.koblas.Workspace?) {
+    final override fun merge(values: ResultList<R>) {
         require(entries.size == values.results.size) {
             "$typeName merge size mismatch: expected ${entries.size}, got ${values.results.size}"
         }
         entries.zip(values.results).forEach { (pair, result) ->
-            (pair.second as Stat<R>).merge(result, workspace)
+            (pair.second as Stat<R>).merge(result)
         }
     }
 }
@@ -244,14 +244,8 @@ internal class RegressionListStats<R : Result>(
         }
     }
 
-    override fun update(
-        x: Vector,
-        y: Double,
-        timestampNanos: Long,
-        weight: Double,
-        workspace: com.eignex.koblas.Workspace?,
-    ) {
-        for ((_, stat) in entries) stat.update(x, y, timestampNanos, weight, workspace)
+    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
+        for ((_, stat) in entries) stat.update(x, y, timestampNanos, weight)
     }
 
     override fun create(concurrency: Concurrency?): RegressionStat<ResultList<R>> {

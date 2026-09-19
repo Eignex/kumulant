@@ -4,13 +4,12 @@
 
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Matrix
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
-import com.eignex.koblas.borrow
 import com.eignex.koblas.copy
 import com.eignex.koblas.dot
 import com.eignex.koblas.koblas
@@ -144,7 +143,7 @@ class BayesianRegressionStat(
 
     private val lock = concurrency.serializedLock()
     private val weights = DenseVector.wrap(initialWeights.copyOf())
-    private val precisionL = DenseMatrix.wrap(featureSize, featureSize, initialPrecisionL.data.copyOf())
+    private val precisionL = DenseMatrix.wrap(featureSize, featureSize, initialPrecisionL.values.copyOf())
 
     private var bias: Double = 0.0
     private var biasPrecision: Double = 1.0 / priorVariance
@@ -152,11 +151,11 @@ class BayesianRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double, workspace: Workspace?) =
-        updateInternal(x, y, timestampNanos, weight, workspace)
+    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) =
+        updateInternal(x, y, timestampNanos, weight)
 
     @Suppress("UnusedParameter")
-    private fun updateInternal(x: Vector, y: Double, _timestampNanos: Long, weight: Double, workspace: Workspace?) {
+    private fun updateInternal(x: Vector, y: Double, _timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
@@ -180,33 +179,32 @@ class BayesianRegressionStat(
             // One buffer serves both halves of the update. The rank-1 update leaves its vector
             // untouched, so the scattered x is still there for the solve afterwards; scattering
             // also spares the update a binary search per coordinate when x arrives sparse.
-            workspace.borrow(featureSize) { hx ->
-                val solved = DenseVector.wrap(hx)
-                copy(x, solved)
+            val hx = DoubleArray(featureSize)
+            val solved = DenseVector.wrap(hx)
+            copy(x, solved)
 
-                // H <- H + w_c * x xT, as a rank-1 update of its factor; a zero w_c leaves it alone.
-                if (wc > 0.0) precisionL.choleskyRankUpdate(hx, wc, workspace)
+            // H <- H + w_c * x xT, as a rank-1 update of its factor; a zero w_c leaves it alone.
+            if (wc > 0.0) precisionL.choleskyRankUpdate(hx, wc)
 
-                // Posterior mean update: w += (weight * residual) * H_new^-1 * x, solved against
-                // the factor just updated rather than through a materialised covariance.
-                precisionL.choleskySolveInto(hx, hx)
-                weights.axpy(weight * residual, solved)
+            // Posterior mean update: w += (weight * residual) * H_new^-1 * x, solved against
+            // the factor just updated rather than through a materialised covariance.
+            precisionL.choleskySolveInto(hx, hx)
+            weights.axpy(weight * residual, solved)
 
-                biasPrecision += wc
-                bias += weight * residual / biasPrecision
-                totalWeights += weight
-            }
+            biasPrecision += wc
+            bias += weight * residual / biasPrecision
+            totalWeights += weight
         }
     }
 
     override fun read(timestampNanos: Long): PrecisionRegressionResult = lock.guarded {
         PrecisionRegressionResult(
-            weights = DenseVector.wrap(weights.data.copyOf()),
+            weights = DenseVector.wrap(weights.values.copyOf()),
             bias = bias,
             biasPrecision = biasPrecision,
             totalWeights = totalWeights,
             step = step,
-            precisionL = DenseMatrix.wrap(featureSize, featureSize, precisionL.data.copyOf()),
+            precisionL = DenseMatrix.wrap(featureSize, featureSize, precisionL.values.copyOf()),
             link = link,
             sse = sse,
         )
@@ -233,9 +231,9 @@ class BayesianRegressionStat(
      * matrix rather than returning NaNs. Bias is merged the same way, treating
      * the intercept as a scalar Gaussian with zero prior mean.
      */
-    override fun merge(values: PrecisionRegressionResult, workspace: Workspace?) = mergeInternal(values, workspace)
+    override fun merge(values: PrecisionRegressionResult) = mergeInternal(values)
 
-    private fun mergeInternal(values: PrecisionRegressionResult, workspace: Workspace?) {
+    private fun mergeInternal(values: PrecisionRegressionResult) {
         requireMergeFeatureSize(values.featureSize, featureSize)
         lock.guarded {
             val n = featureSize
@@ -245,33 +243,31 @@ class BayesianRegressionStat(
             // it depends on the strict upper triangle being zero. Factorization clears it, and
             // rank-1 updates preserve it.
             val hNew = DenseMatrix.zero(n, n)
-            koblas.syrk(1.0, precisionL, transpose = false, 0.0, hNew, lower = true, workspace = workspace)
-            koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true, workspace = workspace)
+            koblas.syrk(1.0, precisionL, transpose = false, 0.0, hNew, lower = true)
+            koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true)
             for (j in 0 until n) {
                 for (i in j until n) hNew[i, j] = hNew[i, j] - priorPrecisionMatrix[i, j]
             }
 
             // b = H_self * mu_self + H_other * mu_other - H_prior * mu_prior, each product taken as
             // L * (LT * mu) so the precision never has to be formed for it.
-            workspace.borrow(n) { b ->
-                for (i in 0 until n) b[i] = weights[i]
-                precisionL.trmv(b, lower = true, transpose = true)
-                precisionL.trmv(b, lower = true)
-                workspace.borrow(n) { other ->
-                    for (i in 0 until n) other[i] = values.weights[i]
-                    values.precisionL.trmv(other, lower = true, transpose = true)
-                    values.precisionL.trmv(other, lower = true)
-                    for (i in 0 until n) b[i] += other[i] - priorInfo[i]
-                }
+            val b = DoubleArray(n)
+            for (i in 0 until n) b[i] = weights[i]
+            precisionL.trmv(b, lower = true, transpose = true)
+            precisionL.trmv(b, lower = true)
+            val other = DoubleArray(n)
+            for (i in 0 until n) other[i] = values.weights[i]
+            values.precisionL.trmv(other, lower = true, transpose = true)
+            values.precisionL.trmv(other, lower = true)
+            for (i in 0 until n) b[i] += other[i] - priorInfo[i]
 
-                // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
-                hNew.choleskyInto(hNew, CholeskyPolicy.Regularize(), workspace)
-                hNew.choleskySolveInto(b, b)
+            // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
+            hNew.choleskyInto(hNew, CholeskyPolicy.Regularize())
+            hNew.choleskySolveInto(b, b)
 
-                for (i in 0 until n) {
-                    weights[i] = b[i]
-                    for (j in 0 until n) precisionL[i, j] = hNew[i, j]
-                }
+            for (i in 0 until n) {
+                weights[i] = b[i]
+                for (j in 0 until n) precisionL[i, j] = hNew[i, j]
             }
 
             // Scalar bias: same precision-weighted combine, subtract one prior precision.
@@ -291,7 +287,7 @@ class BayesianRegressionStat(
 
     override fun reset() = lock.guarded {
         for (i in 0 until featureSize) weights[i] = initialWeights[i]
-        for (k in precisionL.data.indices) precisionL.data[k] = initialPrecisionL.data[k]
+        for (k in precisionL.values.indices) precisionL.values[k] = initialPrecisionL.values[k]
         bias = 0.0
         biasPrecision = 1.0 / priorVariance
         totalWeights = 0.0
@@ -305,7 +301,7 @@ class BayesianRegressionStat(
         link = link,
         concurrency = concurrency ?: this.concurrency,
         priorMean = DenseVector.wrap(initialWeights.copyOf()),
-        priorCovariance = DenseMatrix.wrap(featureSize, featureSize, initialCovariance.data.copyOf()),
+        priorCovariance = DenseMatrix.wrap(featureSize, featureSize, initialCovariance.values.copyOf()),
     )
 
     /** Empirical-Bayes / hierarchical helpers that operate on populations of fitted snapshots. */
@@ -358,8 +354,8 @@ class BayesianRegressionStat(
             val cov = DenseMatrix.zero(n, n)
             // Both matrices are square, n by n, and column-major, so their flat backings line up
             // entry for entry and the matrix add is a level-1 axpy over the whole of them.
-            val sigmaFlat = DenseVector.wrap(sigmaPop.data)
-            val covFlat = DenseVector.wrap(cov.data)
+            val sigmaFlat = DenseVector.wrap(sigmaPop.values)
+            val covFlat = DenseVector.wrap(cov.values)
             val deviation = DoubleArray(n)
             val deviationVector = DenseVector.wrap(deviation)
             for (s in snapshots.indices) {
@@ -394,7 +390,7 @@ class BayesianRegressionStat(
 @Serializable
 data class PopulationPrior(
     /** Population mean of the per-instance posterior means. */
-    val mean: DenseVector,
+    val mean: ContiguousVector,
     /** Population covariance: within-instance posterior + between-instance mean spread. */
     val covariance: DenseMatrix,
     /** Number of per-instance posteriors that contributed to this prior. */

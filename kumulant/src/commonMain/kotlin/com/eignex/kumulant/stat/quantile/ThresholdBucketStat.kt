@@ -69,7 +69,7 @@ class ThresholdBucketStat(
         return lo
     }
 
-    override fun merge(values: ThresholdBucketResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: ThresholdBucketResult) {
         require(values.counts.size == thresholds.size + 1) {
             "merge counts length ${values.counts.size} != ${thresholds.size + 1}"
         }

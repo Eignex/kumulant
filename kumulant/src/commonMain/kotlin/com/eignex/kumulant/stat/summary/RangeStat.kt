@@ -49,7 +49,7 @@ class RangeStat(override val concurrency: Concurrency = Concurrency.None) : Seri
         casMax(max, value)
     }
 
-    override fun merge(values: RangeResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: RangeResult) {
         casMin(min, values.min)
         casMax(max, values.max)
     }

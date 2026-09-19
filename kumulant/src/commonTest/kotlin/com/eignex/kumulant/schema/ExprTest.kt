@@ -2,7 +2,7 @@ package com.eignex.kumulant.schema
 
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.StridedVectorView
+import com.eignex.koblas.StridedVector
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
@@ -53,7 +53,7 @@ class ExprTest {
     @Test fun `vector aware expressions agree across vector representations`() {
         val dense = DenseVector.of(doubleArrayOf(2.0, 0.0, -3.0))
         val sparse = SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(2.0, -3.0))
-        val strided = StridedVectorView(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -3.0, 9.0), 0, 3, 2)
+        val strided = StridedVector(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -3.0, 9.0), 0, 3, 2)
         val custom = NoMaterializeVector(doubleArrayOf(2.0, 0.0, -3.0))
         val scalar = V(0) * V(2) + VFold(VFoldOp.Sum)
         val predicate = (V(0) gt 0.0) and (V(2) lt 0.0)
@@ -422,7 +422,7 @@ class ExprTest {
             val representations = listOf<Vector>(
                 DenseVector.of(array),
                 sparse(array),
-                StridedVectorView(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
+                StridedVector(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
                 NoMaterializeVector(array),
             )
             for (fold in folds) {
@@ -468,7 +468,7 @@ class ExprTest {
             for (input in listOf<Vector>(
                 DenseVector.of(array),
                 sparse(array),
-                StridedVectorView(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
+                StridedVector(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
                 NoMaterializeVector(array),
             )) {
                 assertEquals(expected.toBits(), expr.eval(v = input).toBits())

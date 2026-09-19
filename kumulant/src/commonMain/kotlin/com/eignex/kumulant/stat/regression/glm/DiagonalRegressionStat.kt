@@ -85,13 +85,7 @@ class DiagonalRegressionStat(
     private var step: Long = 0L
     private var sse: Double = 0.0
 
-    override fun update(
-        x: Vector,
-        y: Double,
-        timestampNanos: Long,
-        weight: Double,
-        workspace: com.eignex.koblas.Workspace?,
-    ) {
+    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
@@ -148,7 +142,7 @@ class DiagonalRegressionStat(
      * independent normals). Cross-feature correlations are dropped, consistent
      * with the diagonal model.
      */
-    override fun merge(values: DiagonalRegressionResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: DiagonalRegressionResult) {
         requireMergeFeatureSize(values.featureSize, featureSize)
         lock.guarded {
             // Subtract one copy of the prior, as BayesianRegressionStat.merge does with

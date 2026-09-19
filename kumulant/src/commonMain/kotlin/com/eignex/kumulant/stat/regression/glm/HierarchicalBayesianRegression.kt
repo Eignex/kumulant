@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
@@ -37,7 +38,7 @@ class HierarchicalBayesianRegression(
     /** Concurrency level forwarded to each instance. */
     val concurrency: Concurrency = Concurrency.None,
     initialPriorVariance: Double = 1.0,
-    initialPriorMean: DenseVector? = null,
+    initialPriorMean: ContiguousVector? = null,
     initialPriorCovariance: DenseMatrix? = null,
 ) {
     init {

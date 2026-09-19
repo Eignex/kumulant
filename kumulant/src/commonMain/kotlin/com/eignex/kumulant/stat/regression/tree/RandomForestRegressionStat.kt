@@ -91,13 +91,7 @@ class RandomForestRegressionStat(
         seedRng.nextInt(),
     )
 
-    override fun update(
-        x: Vector,
-        y: Double,
-        timestampNanos: Long,
-        weight: Double,
-        workspace: com.eignex.koblas.Workspace?,
-    ) {
+    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         // A negative weight is a real downdate only when bagging is off: a class count and a Welford
         // accumulator both subtract exactly. Under bagging each arrival draws its own Poisson
@@ -120,11 +114,11 @@ class RandomForestRegressionStat(
     override fun read(timestampNanos: Long): ForestRegressionResult =
         ForestRegressionResult(trees.map { TreeRegressionResult(it.rootNode().snapshot()) })
 
-    override fun merge(values: ForestRegressionResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: ForestRegressionResult) {
         require(values.trees.size == trees.size) {
             "merge: forest size mismatch (${values.trees.size} vs ${trees.size})"
         }
-        for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root, workspace)
+        for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root)
     }
 
     /**

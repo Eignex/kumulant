@@ -3,9 +3,8 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.StridedVectorView
+import com.eignex.koblas.StridedVector
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import kotlin.math.abs
@@ -61,13 +60,12 @@ class SoftmaxRegressionStatTest {
             crossEntropy = 0.0,
         )
         val x = DenseVector.of(doubleArrayOf(2.0, -1.0))
-        val workspace = Workspace()
         val probabilities = DoubleArray(3)
 
         result.probabilitiesInto(x, probabilities)
 
         assertTrue(probabilities.contentEquals(result.probabilities(x)))
-        assertEquals(result.predict(x), result.predict(x, workspace))
+        assertEquals(result.predict(x), result.predict(x))
         val untouched = doubleArrayOf(7.0, 8.0)
         assertFailsWith<IllegalArgumentException> { result.probabilitiesInto(x, untouched) }
         assertTrue(untouched.contentEquals(doubleArrayOf(7.0, 8.0)))
@@ -88,7 +86,7 @@ class SoftmaxRegressionStatTest {
         )
         val dense = DenseVector.of(doubleArrayOf(0.25, -0.5))
         val sparse = SparseVector.of(2, intArrayOf(0, 1), doubleArrayOf(0.25, -0.5))
-        val strided = StridedVectorView(doubleArrayOf(0.25, 9.0, -0.5, 9.0), 0, 2, 2)
+        val strided = StridedVector(doubleArrayOf(0.25, 9.0, -0.5, 9.0), 0, 2, 2)
         val custom = CustomVector(doubleArrayOf(0.25, -0.5))
         val expected = result.probabilities(dense)
 
@@ -96,25 +94,8 @@ class SoftmaxRegressionStatTest {
             val actual = DoubleArray(3)
             result.probabilitiesInto(x, actual)
             assertTrue(actual.contentEquals(expected))
-            assertEquals(result.predict(dense), result.predict(x, Workspace()))
+            assertEquals(result.predict(dense), result.predict(x))
         }
-    }
-
-    @Test
-    fun `failed workspace prediction releases its borrowed logits`() {
-        val result = SoftmaxRegressionResult(
-            featureSize = 2,
-            numClasses = 2,
-            weights = DenseMatrix.ofRows(arrayOf(doubleArrayOf(1.0, 0.0), doubleArrayOf(0.0, 1.0))),
-            biases = DenseVector.of(doubleArrayOf(0.0, 0.0)),
-            totalWeights = 0.0,
-            step = 0L,
-            crossEntropy = 0.0,
-        )
-        val workspace = Workspace()
-
-        assertFailsWith<IllegalArgumentException> { result.predict(DenseVector.of(doubleArrayOf(1.0)), workspace) }
-        assertEquals(0, result.predict(DenseVector.of(doubleArrayOf(1.0, 0.0)), workspace))
     }
 
     @Test

@@ -41,7 +41,7 @@ class MinStat(override val concurrency: Concurrency = Concurrency.None) : Series
         casMin(this.value, value)
     }
 
-    override fun merge(values: MinResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: MinResult) {
         casMin(value, values.min)
     }
 

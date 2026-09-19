@@ -136,7 +136,7 @@ class HyperLogLogStat(
         totalSeen.add(1L)
     }
 
-    override fun merge(values: HyperLogLogResult, workspace: com.eignex.koblas.Workspace?) {
+    override fun merge(values: HyperLogLogResult) {
         requireSameHasher("HyperLogLogStat", values.hasher, hasherRef)
         // Shape before array length: `m` is derived from `precision`, so checking the register count
         // first would report a differently-sized sketch as the wrong register count rather than the

@@ -1,6 +1,5 @@
 package com.eignex.kumulant.bench
 
-import com.eignex.koblas.Workspace
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
@@ -12,19 +11,17 @@ import kotlinx.benchmark.State
 
 /** Repeated Bayesian update and merge kernels with setup excluded from measurements. */
 @State(Scope.Benchmark)
-open class BayesianWorkspaceBenchmark {
+open class BayesianUpdateBenchmark {
     @Param("8", "32", "128", "512")
     var featureSize: Int = 8
 
     private lateinit var x: DenseVector
-    private lateinit var workspace: Workspace
     private lateinit var stat: BayesianRegressionStat
     private lateinit var mergeValue: PrecisionRegressionResult
 
     @Setup
     fun setup() {
         x = DenseVector.of(DoubleArray(featureSize) { (it % 7 - 3) * 0.125 })
-        workspace = Workspace()
         stat = BayesianRegressionStat(featureSize)
         val other = BayesianRegressionStat(featureSize)
         other.update(x, -0.5)
@@ -35,11 +32,5 @@ open class BayesianWorkspaceBenchmark {
     fun update(): Unit = stat.update(x, 1.0)
 
     @Benchmark
-    fun updateWorkspace(): Unit = stat.update(x, 1.0, workspace = workspace)
-
-    @Benchmark
     fun merge(): Unit = stat.merge(mergeValue)
-
-    @Benchmark
-    fun mergeWorkspace(): Unit = stat.merge(mergeValue, workspace)
 }

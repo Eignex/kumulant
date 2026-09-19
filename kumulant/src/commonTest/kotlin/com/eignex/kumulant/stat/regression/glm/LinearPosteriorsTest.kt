@@ -3,10 +3,8 @@ package com.eignex.kumulant.stat.regression.glm
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.StridedVectorView
+import com.eignex.koblas.StridedVector
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
-import com.eignex.koblas.borrow
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
@@ -57,49 +55,34 @@ class LinearPosteriorsTest {
     }
 
     @Test
-    fun `workspace covariance evaluation matches allocating evaluation and preserves random draws`() {
-        val snapshot = bayesianSnapshot()
-        val x = SparseVector.of(size = 2, indices = intArrayOf(0), values = doubleArrayOf(0.3))
-        val workspace = Workspace()
-
-        val allocated = MultivariateGaussian.evaluate(snapshot, x, Random(9), exploration = 0.7)
-        val reused = MultivariateGaussian.evaluate(snapshot, x, Random(9), exploration = 0.7, workspace = workspace)
-
-        assertEquals(allocated, reused, 1e-12)
-    }
-
-    @Test
-    fun `workspace covariance evaluation accepts strided and custom vectors`() {
+    fun `covariance evaluation accepts strided and custom vectors`() {
         val snapshot = bayesianSnapshot()
         val dense = DenseVector.of(doubleArrayOf(0.3, -0.2))
-        val strided = StridedVectorView(doubleArrayOf(0.3, 7.0, -0.2, 7.0), 0, 2, 2)
+        val strided = StridedVector(doubleArrayOf(0.3, 7.0, -0.2, 7.0), 0, 2, 2)
         val custom = CustomVector(doubleArrayOf(0.3, -0.2))
-        val workspace = Workspace()
 
-        val expected = LinUcb.evaluate(snapshot, dense, Random(0), exploration = 0.7, workspace = workspace)
+        val expected = LinUcb.evaluate(snapshot, dense, Random(0), exploration = 0.7)
         assertEquals(
             expected,
-            LinUcb.evaluate(snapshot, strided, Random(0), exploration = 0.7, workspace = workspace),
+            LinUcb.evaluate(snapshot, strided, Random(0), exploration = 0.7),
             1e-12,
         )
         assertEquals(
             expected,
-            LinUcb.evaluate(snapshot, custom, Random(0), exploration = 0.7, workspace = workspace),
+            LinUcb.evaluate(snapshot, custom, Random(0), exploration = 0.7),
             1e-12,
         )
     }
 
     @Test
-    fun `sampleInto matches an owned multivariate sample without aliasing later borrows`() {
+    fun `sampleInto matches an owned multivariate sample`() {
         val snapshot = bayesianSnapshot()
         val destination = DoubleArray(2)
-        val workspace = Workspace()
 
         MultivariateGaussian.sampleInto(snapshot, Random(21), destination, exploration = 0.4)
         val expected = MultivariateGaussian.sample(snapshot, Random(21), exploration = 0.4)
         assertEquals(expected[0], destination[0], 1e-12)
         assertEquals(expected[1], destination[1], 1e-12)
-        workspace.borrow(2) { it.fill(0.0) }
         assertEquals(expected[0], destination[0], 1e-12)
         assertEquals(expected[1], destination[1], 1e-12)
     }
