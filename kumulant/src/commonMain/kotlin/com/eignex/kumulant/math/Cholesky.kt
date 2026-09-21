@@ -3,6 +3,7 @@
 package com.eignex.kumulant.math
 
 import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.dense.DenseVectorKernels
 import com.eignex.koblas.koblas
 import com.eignex.koblas.trsv
@@ -101,10 +102,20 @@ internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix): DenseMatrix {
     return out
 }
 
-internal fun DenseMatrix.cholesky(policy: CholeskyPolicy = CholeskyPolicy.Strict): DenseMatrix =
-    choleskyInto(DenseMatrix.zero(rows, cols), policy)
+internal fun DenseMatrix.cholesky(
+    policy: CholeskyPolicy = CholeskyPolicy.Strict,
+    workspace: Workspace? = null,
+): DenseMatrix = choleskyInto(DenseMatrix.zero(rows, cols), policy, workspace)
 
-internal fun DenseMatrix.choleskyInto(out: DenseMatrix, policy: CholeskyPolicy = CholeskyPolicy.Strict): DenseMatrix {
+/**
+ * [workspace] is lent to the trailing update's `syrk` for the duration of each block step. A workspace
+ * belongs to one call at a time, so a caller sharing one across threads has to serialize them itself.
+ */
+internal fun DenseMatrix.choleskyInto(
+    out: DenseMatrix,
+    policy: CholeskyPolicy = CholeskyPolicy.Strict,
+    workspace: Workspace? = null,
+): DenseMatrix {
     require(rows == cols) { "cholesky requires a square matrix" }
     require(out.rows == rows && out.cols == rows) { "cholesky destination must be ${rows}x$rows" }
     val n = rows
@@ -128,7 +139,7 @@ internal fun DenseMatrix.choleskyInto(out: DenseMatrix, policy: CholeskyPolicy =
         // factored a column at a time whatever the trailing update costs.
         factorBlockColumn(kernels, ld, n, start, width, policy)
         if (columnsAreFinite(ld, n, start, width)) {
-            updateCholeskyTrailing(out, start, width)
+            updateCholeskyTrailing(out, start, width, workspace)
         } else {
             // A zero multiplier must skip infinite column entries instead of forming 0 * infinity.
             subtractTrailingColumns(kernels, ld, n, start, width)
@@ -139,20 +150,20 @@ internal fun DenseMatrix.choleskyInto(out: DenseMatrix, policy: CholeskyPolicy =
 }
 
 /**
- * `A22 <- A22 - L21 * L21ᵀ` over the trailing submatrix, as one `syrk` in the vendor library.
+ * `A22 <- A22 - L21 * L21ᵀ` over the trailing submatrix, as one `syrk`.
  *
  * The blocks are copied out and written back because koblas carries no leading dimension on [DenseMatrix]
  * and so has no submatrix view. That is O(n²) per block step against the O(n³) the syrk absorbs, which is
  * the price of reaching level 3 at all. Only the lower triangle is written, and the strict upper of the
  * extracted block is already zero, so writing the whole block back leaves it that way.
  */
-private fun updateCholeskyTrailing(out: DenseMatrix, start: Int, width: Int) {
+private fun updateCholeskyTrailing(out: DenseMatrix, start: Int, width: Int, workspace: Workspace?) {
     val first = start + width
     val height = out.rows - first
     if (height == 0) return
     val panel = out.block(first, start, height, width)
     val trailing = out.block(first, first, height, height)
-    koblas.syrk(-1.0, panel, transpose = false, 1.0, trailing, lower = true)
+    koblas.syrk(-1.0, panel, transpose = false, 1.0, trailing, lower = true, workspace = workspace)
     out.setBlock(first, first, trailing)
 }
 
