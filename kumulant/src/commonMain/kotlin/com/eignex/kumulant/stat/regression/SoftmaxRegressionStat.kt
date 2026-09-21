@@ -4,6 +4,8 @@ import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
+import com.eignex.koblas.Workspace
+import com.eignex.koblas.borrow
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.gemvInto
 import com.eignex.kumulant.core.Concurrency
@@ -163,6 +165,12 @@ class SoftmaxRegressionStat(
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
 
+    // Scratch for the per-observation logits. `welfordLock` is a real mutex only under Strict and
+    // HighWrite: Relaxed is the drift-tolerant path where racing writers are expected, and a shared
+    // workspace there would throw rather than drift, so that level keeps allocating per call. None is
+    // safe because a shared None stat is outside its contract to begin with.
+    private val workspace = if (concurrency == Concurrency.Relaxed) null else Workspace()
+
     // Flat row-major K x p layout: weightsCell[k * p + i].
     private val weightsCell: StreamDoubleArray = mode.newDoubleArray(numClasses * featureSize)
     private val biasCell: StreamDoubleArray = mode.newDoubleArray(numClasses)
@@ -194,32 +202,33 @@ class SoftmaxRegressionStat(
             stepCell.addAndGet(1L)
 
             // Softmax over current logits.
-            val etas = DoubleArray(numClasses)
-            for (k in 0 until numClasses) {
-                var dot = biasCell.load(k)
-                x.forEachStored { i, v -> dot += weightsCell.load(k * featureSize + i) * v }
-                etas[k] = dot
-            }
-            // Probabilities live in etas[] from here on. A false return means every exponential
-            // underflowed, so there is no distribution to take a gradient against.
-            if (!etas.softmaxInPlace()) return@guarded
-            val logProbC = ln(etas[c].coerceAtLeast(PROBABILITY_FLOOR))
-            crossEntropyCell.add(-logProbC * weight)
-
-            biasOpt.advance()
-            for (k in 0 until numClasses) weightOptimizers[k].advance()
-
-            for (k in 0 until numClasses) {
-                val target = if (k == c) 1.0 else 0.0
-                val dEta = etas[k] - target
-                val opt = weightOptimizers[k]
-                x.forEachStored { i, v ->
-                    val grad = dEta * v
-                    weightsCell.add(k * featureSize + i, opt.computeDelta(i, grad, weight))
+            workspace.borrow(numClasses) { etas ->
+                for (k in 0 until numClasses) {
+                    var dot = biasCell.load(k)
+                    x.forEachStored { i, v -> dot += weightsCell.load(k * featureSize + i) * v }
+                    etas[k] = dot
                 }
-                biasCell.add(k, biasOpt.computeDelta(k, dEta, weight))
+                // Probabilities live in etas[] from here on. A false return means every exponential
+                // underflowed, so there is no distribution to take a gradient against.
+                if (!etas.softmaxInPlace()) return@guarded
+                val logProbC = ln(etas[c].coerceAtLeast(PROBABILITY_FLOOR))
+                crossEntropyCell.add(-logProbC * weight)
+
+                biasOpt.advance()
+                for (k in 0 until numClasses) weightOptimizers[k].advance()
+
+                for (k in 0 until numClasses) {
+                    val target = if (k == c) 1.0 else 0.0
+                    val dEta = etas[k] - target
+                    val opt = weightOptimizers[k]
+                    x.forEachStored { i, v ->
+                        val grad = dEta * v
+                        weightsCell.add(k * featureSize + i, opt.computeDelta(i, grad, weight))
+                    }
+                    biasCell.add(k, biasOpt.computeDelta(k, dEta, weight))
+                }
+                totalWeightsCell.add(weight)
             }
-            totalWeightsCell.add(weight)
         }
     }
 
