@@ -102,10 +102,8 @@ internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix): DenseMatrix {
     return out
 }
 
-internal fun DenseMatrix.cholesky(
-    policy: CholeskyPolicy = CholeskyPolicy.Strict,
-    workspace: Workspace? = null,
-): DenseMatrix = choleskyInto(DenseMatrix.zero(rows, cols), policy, workspace)
+internal fun DenseMatrix.cholesky(policy: CholeskyPolicy = CholeskyPolicy.Strict): DenseMatrix =
+    choleskyInto(DenseMatrix.zero(rows, cols), policy)
 
 /**
  * [workspace] is lent to the trailing update's `syrk` for the duration of each block step. A workspace
