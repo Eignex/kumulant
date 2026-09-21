@@ -5,6 +5,7 @@ import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
 import com.eignex.koblas.forEachStored
+import com.eignex.koblas.gemvInto
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
@@ -18,7 +19,6 @@ import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
-import com.eignex.kumulant.stat.regression.glm.multiplyInto
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.getValue
@@ -77,7 +77,20 @@ data class SoftmaxRegressionResult(
         require(destination.size == numClasses) {
             "destination size ${destination.size} must match numClasses $numClasses"
         }
-        weights.multiplyInto(x, destination)
+        if (x is DenseVector) {
+            // gemvInto rather than the raw-array gemv: a DenseVector may be strided, and only the typed
+            // entry point carries its origin and step through to the library.
+            weights.gemvInto(1.0, x, 0.0, destination)
+        } else {
+            // A sparse or custom x has no increment to hand a library, and walking what it stores beats
+            // materialising a dense copy of it per call.
+            destination.fill(0.0)
+            x.forEachStored { column, value ->
+                if (value != 0.0) {
+                    for (row in 0 until numClasses) destination[row] += weights[row, column] * value
+                }
+            }
+        }
         for (k in 0 until numClasses) destination[k] += biases[k]
     }
 
