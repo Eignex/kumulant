@@ -79,7 +79,8 @@ private fun Matrix.copyDenseMatrix(): DenseMatrix = DenseMatrix.wrap(
  * required and dimensions are high.
  *
  * **Memory:** O([featureSize]^2); weights plus the precision factor and the
- * prior matrices the merge needs.
+ * prior matrices the merge needs, and the pooled scratch the first merge
+ * borrows, which is then held for the life of the stat so later merges reuse it.
  *
  * **Update:** O([featureSize]^2) per observation; one rank-1 Cholesky update
  * and two triangular solves, with no refactorization path.
@@ -87,7 +88,10 @@ private fun Matrix.copyDenseMatrix(): DenseMatrix = DenseMatrix.wrap(
  * **Concurrency:** Body serialised by an internal lock under any concurrent
  * [Concurrency] level (no-op under [Concurrency.None]). Exact under every
  * level up to floating-point reorder ULPs; throughput bound by lock
- * contention; shard and merge for higher write rates.
+ * contention; shard and merge for higher write rates. The merge scratch is
+ * owned per stat and guarded by that lock alone, so a [Concurrency.None] stat
+ * merged from two threads can fail inside the linear-algebra layer rather than
+ * only drift.
  */
 class BayesianRegressionStat(
     override val featureSize: Int,
@@ -144,7 +148,7 @@ class BayesianRegressionStat(
 
     private val lock = concurrency.serializedLock()
 
-    // Scratch for the level-3 calls in merge, which is the only path that makes any. A workspace lends one
+    // Scratch for the level-3 calls in merge, the only repeated path that makes any. A workspace lends one
     // buffer at a time and throws when a buffer it did not lend comes back, so sharing one across racing
     // callers would break the no-throw contract. It is safe to own per stat because every level that admits
     // concurrent use gives `serializedLock` a real mutex, and `Concurrency.None` puts a shared stat outside
