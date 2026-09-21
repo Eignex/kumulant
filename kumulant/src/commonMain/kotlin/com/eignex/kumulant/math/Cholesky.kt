@@ -4,6 +4,7 @@ package com.eignex.kumulant.math
 
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.Workspace
+import com.eignex.koblas.borrow
 import com.eignex.koblas.dense.DenseVectorKernels
 import com.eignex.koblas.koblas
 import com.eignex.koblas.trsv
@@ -31,7 +32,7 @@ internal sealed interface CholeskyPolicy {
 internal class NotPositiveDefinite(val pivotIndex: Int, val pivot: Double, message: String) :
     IllegalArgumentException(message)
 
-internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double) {
+internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, workspace: Workspace? = null) {
     require(rows == cols) { "cholesky factor must be square" }
     require(v.size == rows) { "update vector has ${v.size} entries, expected $rows" }
     require(sigma >= 0.0 && sigma.isFinite()) { "sigma must be non-negative and finite, got $sigma" }
@@ -40,39 +41,46 @@ internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double) {
     val ld = values
     val kernels = koblas.vectorKernels
     val scale = sqrt(sigma)
-    // A copy rather than v itself: the sweep consumes the vector it rotates against, and the caller keeps
-    // reading theirs after the update.
-    val x = v.copyOf()
-    if (scale != 1.0) kernels.scale(x, 0, scale, n)
-    for (k in 0 until n) {
-        val base = k + k * n
-        val diagonal = ld[base]
-        // Inline the rotation to avoid allocating a Givens object per coordinate. A positive
-        // hypot keeps the factor diagonal non-negative and avoids squaring overflow or underflow.
-        val entry = x[k]
-        val r = hypot(diagonal, entry)
-        if (r != 0.0) {
-            ld[base] = r
-            val len = n - k - 1
-            // Two divisions rather than a reciprocal and two multiplies: this rotation sets the
-            // factor's numerical quality, and an extra rounding per entry compounds across n of them.
-            if (len > 0) kernels.rot(ld, base + 1, x, k + 1, len, diagonal / r, entry / r)
+    // The sweep consumes the vector it rotates against and the caller keeps reading theirs, so it works on
+    // a copy. Borrowed rather than allocated, because this runs once per observation.
+    workspace.borrow(n) { x ->
+        v.copyInto(x)
+        if (scale != 1.0) kernels.scale(x, 0, scale, n)
+        for (k in 0 until n) {
+            val base = k + k * n
+            val diagonal = ld[base]
+            // Inline the rotation to avoid allocating a Givens object per coordinate. A positive
+            // hypot keeps the factor diagonal non-negative and avoids squaring overflow or underflow.
+            val entry = x[k]
+            val r = hypot(diagonal, entry)
+            if (r != 0.0) {
+                ld[base] = r
+                val len = n - k - 1
+                // Two divisions rather than a reciprocal and two multiplies: this rotation sets the
+                // factor's numerical quality, and an extra rounding per entry compounds across n of them.
+                if (len > 0) kernels.rot(ld, base + 1, x, k + 1, len, diagonal / r, entry / r)
+            }
         }
     }
 }
 
-internal fun DenseMatrix.choleskySolveInto(b: DoubleArray, out: DoubleArray): DoubleArray {
+internal fun DenseMatrix.choleskySolveInto(
+    b: DoubleArray,
+    out: DoubleArray,
+    workspace: Workspace? = null,
+): DoubleArray {
     require(rows == cols) { "cholesky factor must be square" }
     require(b.size == rows && out.size == rows) { "solve requires vectors of size $rows" }
     if (out !== b) b.copyInto(out)
-    trsv(out, lower = true)
-    trsv(out, lower = true, transpose = true)
+    trsv(out, lower = true, workspace = workspace)
+    trsv(out, lower = true, transpose = true, workspace = workspace)
     return out
 }
 
-internal fun DenseMatrix.choleskyInverse(): DenseMatrix = choleskyInvertInto(DenseMatrix.zero(rows, cols))
+internal fun DenseMatrix.choleskyInverse(workspace: Workspace? = null): DenseMatrix =
+    choleskyInvertInto(DenseMatrix.zero(rows, cols), workspace)
 
-internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix): DenseMatrix {
+internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Workspace? = null): DenseMatrix {
     require(rows == cols) { "cholesky factor must be square" }
     require(out.rows == rows && out.cols == rows) { "inverse destination must be ${rows}x$rows" }
     require(out.values !== values) { "inverse destination must not share the factor's storage" }
@@ -80,23 +88,24 @@ internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix): DenseMatrix {
     val ld = values
     val kernels = koblas.vectorKernels
     val invd = out.values
-    val y = DoubleArray(n)
-    for (j in 0 until n) {
-        y.fill(0.0, j, n)
-        y[j] = 1.0
-        for (c in j until n) {
-            val base = c + c * n
-            val yc = y[c] / ld[base]
-            y[c] = yc
-            if (yc != 0.0) kernels.axpy(y, c + 1, -yc, ld, base + 1, n - c - 1)
-        }
-        for (i in n - 1 downTo j) {
-            val base = i + i * n
-            y[i] = (y[i] - kernels.dot(ld, base + 1, y, i + 1, n - i - 1)) / ld[base]
-        }
-        for (i in j until n) {
-            invd[i + j * n] = y[i]
-            invd[j + i * n] = y[i]
+    workspace.borrow(n) { y ->
+        for (j in 0 until n) {
+            y.fill(0.0, j, n)
+            y[j] = 1.0
+            for (c in j until n) {
+                val base = c + c * n
+                val yc = y[c] / ld[base]
+                y[c] = yc
+                if (yc != 0.0) kernels.axpy(y, c + 1, -yc, ld, base + 1, n - c - 1)
+            }
+            for (i in n - 1 downTo j) {
+                val base = i + i * n
+                y[i] = (y[i] - kernels.dot(ld, base + 1, y, i + 1, n - i - 1)) / ld[base]
+            }
+            for (i in j until n) {
+                invd[i + j * n] = y[i]
+                invd[j + i * n] = y[i]
+            }
         }
     }
     return out

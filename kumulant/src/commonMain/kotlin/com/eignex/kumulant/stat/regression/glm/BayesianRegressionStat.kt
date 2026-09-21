@@ -11,6 +11,7 @@ import com.eignex.koblas.Matrix
 import com.eignex.koblas.Vector
 import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
+import com.eignex.koblas.borrow
 import com.eignex.koblas.copy
 import com.eignex.koblas.dot
 import com.eignex.koblas.gemvInto
@@ -28,6 +29,7 @@ import com.eignex.kumulant.math.NotPositiveDefinite
 import com.eignex.kumulant.math.cholesky
 import com.eignex.kumulant.math.choleskyInto
 import com.eignex.kumulant.math.choleskyInverse
+import com.eignex.kumulant.math.choleskyInvertInto
 import com.eignex.kumulant.math.choleskyRankUpdate
 import com.eignex.kumulant.math.choleskySolveInto
 import com.eignex.kumulant.stream.guarded
@@ -192,17 +194,18 @@ class BayesianRegressionStat(
             // One buffer serves both halves of the update. The rank-1 update leaves its vector
             // untouched, so the scattered x is still there for the solve afterwards; scattering
             // also spares the update a binary search per coordinate when x arrives sparse.
-            val hx = DoubleArray(featureSize)
-            val solved = DenseVector.wrap(hx)
-            copy(x, solved)
+            workspace.borrow(featureSize) { hx ->
+                val solved = DenseVector.wrap(hx)
+                copy(x, solved)
 
-            // H <- H + w_c * x xT, as a rank-1 update of its factor; a zero w_c leaves it alone.
-            if (wc > 0.0) precisionL.choleskyRankUpdate(hx, wc)
+                // H <- H + w_c * x xT, as a rank-1 update of its factor; a zero w_c leaves it alone.
+                if (wc > 0.0) precisionL.choleskyRankUpdate(hx, wc, workspace)
 
-            // Posterior mean update: w += (weight * residual) * H_new^-1 * x, solved against
-            // the factor just updated rather than through a materialised covariance.
-            precisionL.choleskySolveInto(hx, hx)
-            weights.axpy(weight * residual, solved)
+                // Posterior mean update: w += (weight * residual) * H_new^-1 * x, solved against
+                // the factor just updated rather than through a materialised covariance.
+                precisionL.choleskySolveInto(hx, hx, workspace)
+                weights.axpy(weight * residual, solved)
+            }
 
             biasPrecision += wc
             bias += weight * residual / biasPrecision
@@ -264,23 +267,25 @@ class BayesianRegressionStat(
 
             // b = H_self * mu_self + H_other * mu_other - H_prior * mu_prior, each product taken as
             // L * (LT * mu) so the precision never has to be formed for it.
-            val b = DoubleArray(n)
-            for (i in 0 until n) b[i] = weights[i]
-            precisionL.trmv(b, lower = true, transpose = true)
-            precisionL.trmv(b, lower = true)
-            val other = DoubleArray(n)
-            for (i in 0 until n) other[i] = values.weights[i]
-            values.precisionL.trmv(other, lower = true, transpose = true)
-            values.precisionL.trmv(other, lower = true)
-            for (i in 0 until n) b[i] += other[i] - priorInfo[i]
+            workspace.borrow(n) { b ->
+                for (i in 0 until n) b[i] = weights[i]
+                precisionL.trmv(b, lower = true, transpose = true, workspace = workspace)
+                precisionL.trmv(b, lower = true, workspace = workspace)
+                workspace.borrow(n) { other ->
+                    for (i in 0 until n) other[i] = values.weights[i]
+                    values.precisionL.trmv(other, lower = true, transpose = true, workspace = workspace)
+                    values.precisionL.trmv(other, lower = true, workspace = workspace)
+                    for (i in 0 until n) b[i] += other[i] - priorInfo[i]
+                }
 
-            // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
-            hNew.choleskyInto(hNew, CholeskyPolicy.Regularize(), workspace)
-            hNew.choleskySolveInto(b, b)
+                // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
+                hNew.choleskyInto(hNew, CholeskyPolicy.Regularize(), workspace)
+                hNew.choleskySolveInto(b, b, workspace)
 
-            for (i in 0 until n) {
-                weights[i] = b[i]
-                for (j in 0 until n) precisionL[i, j] = hNew[i, j]
+                for (i in 0 until n) {
+                    weights[i] = b[i]
+                    for (j in 0 until n) precisionL[i, j] = hNew[i, j]
+                }
             }
 
             // Scalar bias: same precision-weighted combine, subtract one prior precision.
@@ -371,13 +376,18 @@ class BayesianRegressionStat(
             val covFlat = DenseVector.wrap(cov.values)
             val deviation = DoubleArray(n)
             val deviationVector = DenseVector.wrap(deviation)
+            // Local to this call and never escaping it, so the scratch the inversion and the rank-1
+            // update each ask for is allocated once for the whole population rather than per snapshot.
+            // The inversion is reached through the factor rather than through `covarianceInto`, which
+            // is public and takes no workspace.
+            val scratch = Workspace()
             for (s in snapshots.indices) {
                 val wi = weights[s] / wTotal
-                snapshots[s].covarianceInto(cov)
+                snapshots[s].precisionL.choleskyInvertInto(cov, scratch)
                 val mu = snapshots[s].weights
                 sigmaFlat.axpy(wi, covFlat)
                 for (i in 0 until n) deviation[i] = mu[i] - muPop[i]
-                sigmaPop.syr(wi, deviationVector)
+                sigmaPop.syr(wi, deviationVector, workspace = scratch)
             }
             // The axpy filled both triangles, since each Sigma_i is symmetric, but syr writes only
             // the lower one. Reflecting once here rather than per snapshot is what keeps the
