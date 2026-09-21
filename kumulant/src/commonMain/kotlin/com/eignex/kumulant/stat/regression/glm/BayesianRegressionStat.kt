@@ -9,6 +9,7 @@ import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Matrix
 import com.eignex.koblas.Vector
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
 import com.eignex.koblas.copy
 import com.eignex.koblas.dot
@@ -142,6 +143,13 @@ class BayesianRegressionStat(
     }
 
     private val lock = concurrency.serializedLock()
+
+    // Scratch for the level-3 calls in merge, which is the only path that makes any. A workspace lends one
+    // buffer at a time and throws when a buffer it did not lend comes back, so sharing one across racing
+    // callers would break the no-throw contract. It is safe to own per stat because every level that admits
+    // concurrent use gives `serializedLock` a real mutex, and `Concurrency.None` puts a shared stat outside
+    // its contract to begin with. `create` builds a fresh stat, so replicas never share this one.
+    private val workspace = Workspace()
     private val weights = DenseVector.wrap(initialWeights.copyOf())
     private val precisionL = DenseMatrix.wrap(featureSize, featureSize, initialPrecisionL.values.copyOf())
 
@@ -243,8 +251,8 @@ class BayesianRegressionStat(
             // it depends on the strict upper triangle being zero. Factorization clears it, and
             // rank-1 updates preserve it.
             val hNew = DenseMatrix.zero(n, n)
-            koblas.syrk(1.0, precisionL, transpose = false, 0.0, hNew, lower = true)
-            koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true)
+            koblas.syrk(1.0, precisionL, transpose = false, 0.0, hNew, lower = true, workspace = workspace)
+            koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true, workspace = workspace)
             for (j in 0 until n) {
                 for (i in j until n) hNew[i, j] = hNew[i, j] - priorPrecisionMatrix[i, j]
             }
@@ -262,7 +270,7 @@ class BayesianRegressionStat(
             for (i in 0 until n) b[i] += other[i] - priorInfo[i]
 
             // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
-            hNew.choleskyInto(hNew, CholeskyPolicy.Regularize())
+            hNew.choleskyInto(hNew, CholeskyPolicy.Regularize(), workspace)
             hNew.choleskySolveInto(b, b)
 
             for (i in 0 until n) {
