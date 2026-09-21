@@ -82,8 +82,9 @@ private fun Matrix.copyDenseMatrix(): DenseMatrix = DenseMatrix.wrap(
  * required and dimensions are high.
  *
  * **Memory:** O([featureSize]^2); weights plus the precision factor and the
- * prior matrices the merge needs, and the pooled scratch the first merge
- * borrows, which is then held for the life of the stat so later merges reuse it.
+ * prior matrices the merge needs, and the pooled scratch the first update or
+ * merge borrows, which is then held for the life of the stat so later calls
+ * reuse it.
  *
  * **Update:** O([featureSize]^2) per observation; one rank-1 Cholesky update
  * and two triangular solves, with no refactorization path.
@@ -91,10 +92,10 @@ private fun Matrix.copyDenseMatrix(): DenseMatrix = DenseMatrix.wrap(
  * **Concurrency:** Body serialised by an internal lock under any concurrent
  * [Concurrency] level (no-op under [Concurrency.None]). Exact under every
  * level up to floating-point reorder ULPs; throughput bound by lock
- * contention; shard and merge for higher write rates. The merge scratch is
- * owned per stat and guarded by that lock alone, so a [Concurrency.None] stat
- * merged from two threads can fail inside the linear-algebra layer rather than
- * only drift.
+ * contention; shard and merge for higher write rates. The update and merge
+ * scratch is owned per stat and guarded by that lock alone, so a
+ * [Concurrency.None] stat updated or merged from two threads can fail inside
+ * the linear-algebra layer rather than only drift.
  */
 class BayesianRegressionStat(
     override val featureSize: Int,
@@ -151,8 +152,8 @@ class BayesianRegressionStat(
 
     private val lock = concurrency.serializedLock()
 
-    // Scratch for the level-3 calls in merge, the only repeated path that makes any. A workspace lends one
-    // buffer at a time and throws when a buffer it did not lend comes back, so sharing one across racing
+    // Scratch for the per-observation update and for the level-3 calls in merge, the two repeated paths
+    // that need any. A workspace refuses a buffer it did not lend, so sharing one across racing
     // callers would break the no-throw contract. It is safe to own per stat because every level that admits
     // concurrent use gives `serializedLock` a real mutex, and `Concurrency.None` puts a shared stat outside
     // its contract to begin with. `create` builds a fresh stat, so replicas never share this one.
@@ -376,10 +377,10 @@ class BayesianRegressionStat(
             val covFlat = DenseVector.wrap(cov.values)
             val deviation = DoubleArray(n)
             val deviationVector = DenseVector.wrap(deviation)
-            // Local to this call and never escaping it, so the scratch the inversion and the rank-1
-            // update each ask for is allocated once for the whole population rather than per snapshot.
-            // The inversion is reached through the factor rather than through `covarianceInto`, which
-            // is public and takes no workspace.
+            // Local to this call and never escaping it, so the scratch the inversion asks for is
+            // allocated once for the whole population rather than once per snapshot. The inversion is
+            // reached through the factor rather than through `covarianceInto`, which is public and
+            // takes no workspace.
             val scratch = Workspace()
             for (s in snapshots.indices) {
                 val wi = weights[s] / wTotal

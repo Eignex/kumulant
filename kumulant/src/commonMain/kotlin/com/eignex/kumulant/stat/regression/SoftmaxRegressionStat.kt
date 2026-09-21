@@ -139,12 +139,18 @@ data class SoftmaxRegressionResult(
  * **Use cases:** K-way online classification with calibrated probabilities; the
  * discriminative counterpart to [GaussianNaiveBayesStat].
  *
- * **Memory:** O([numClasses] * [featureSize]) for weights + per-optimizer aux state.
+ * **Memory:** O([numClasses] * [featureSize]) for weights + per-optimizer aux
+ * state, plus a pooled length-[numClasses] logit buffer held for the life of the
+ * stat under every level but [Concurrency.Relaxed].
  *
  * **Update:** O([numClasses] * nnz(x)) per observation.
  *
  * **Concurrency:** Welford-locked; the optimizer aux state honours the same
- * [Concurrency] passed in.
+ * [Concurrency] passed in. The per-observation logit scratch is owned per stat
+ * and guarded by that lock, so a [Concurrency.None] stat updated from two
+ * threads can fail inside the linear-algebra layer rather than only drift.
+ * [Concurrency.Relaxed] holds no scratch and allocates per update, because its
+ * lock is a no-op and racing writers there must drift rather than throw.
  */
 class SoftmaxRegressionStat(
     override val featureSize: Int,
