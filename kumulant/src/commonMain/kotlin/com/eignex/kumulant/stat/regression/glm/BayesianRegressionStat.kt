@@ -13,6 +13,7 @@ import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
 import com.eignex.koblas.copy
 import com.eignex.koblas.dot
+import com.eignex.koblas.gemvInto
 import com.eignex.koblas.koblas
 import com.eignex.koblas.syr
 import com.eignex.koblas.trmv
@@ -143,7 +144,7 @@ class BayesianRegressionStat(
 
     // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
     private val priorInfo = DoubleArray(featureSize).also {
-        priorPrecisionMatrix.multiplyInto(DenseVector.wrap(initialWeights), it)
+        priorPrecisionMatrix.gemvInto(1.0, DenseVector.wrap(initialWeights), 0.0, it)
     }
 
     private val lock = concurrency.serializedLock()
