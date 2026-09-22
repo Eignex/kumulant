@@ -296,6 +296,14 @@ class ConcurrentReadInvariantsTest {
             assertReadInvariants("TDigestStat[$level]", stat, write = { t, i ->
                 stat.update(1.0 + ((t * 13 + i * 17) % 10_000))
             }) { r ->
+                // Weight is counted where a value is merged, so the reported total is the mass the
+                // centroids actually hold. A total running ahead of them is what leaves the digest
+                // reporting positive weight with no centroid behind it, and NaN for every quantile.
+                val mass = r.weights.sum()
+                assertTrue(
+                    r.totalWeight <= mass + 1e-6,
+                    "totalWeight=${r.totalWeight} exceeds centroid mass $mass",
+                )
                 if (r.totalWeight > 0.0) {
                     var prev = Double.NEGATIVE_INFINITY
                     for ((j, q) in r.quantiles.withIndex()) {
