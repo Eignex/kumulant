@@ -191,6 +191,12 @@ class TDigestStat(
         val snapVal = DoubleArray(drained) { buffer.load(it) }
         val snapW = DoubleArray(drained) { bufferWeights.load(it) }
 
+        // Counted over exactly what is about to be merged, so the total is the digest's own mass by
+        // construction and a stranded claim costs its value without leaving its weight behind.
+        var drainedWeight = 0.0
+        for (i in 0 until drained) drainedWeight += snapW[i]
+        if (drainedWeight > 0.0) totalWeightCell.add(drainedWeight)
+
         // Reset for the next epoch BEFORE compressing; new claimers can start writing
         // into a fresh buffer while we merge the snapshot.
         bufferIndex.store(0L)
@@ -346,16 +352,16 @@ class TDigestStat(
                 if (claimed <= bufferCapLong) {
                     buffer.store(idx, value)
                     bufferWeights.store(idx, weight)
-                    // Publish the value before counting its weight, not after. `drainLocked` can
-                    // strand a claim it cannot prove committed, discarding the value; a weight
-                    // counted first would stay in `totalWeightCell` with nothing in the digest
-                    // behind it, so `read` reports positive weight with NaN for every quantile.
+                    // The weight is not counted here. `drainLocked` can strand a claim it cannot
+                    // prove committed and discard the value, and a weight counted on this side would
+                    // stay in `totalWeightCell` with nothing in the digest behind it: NaN for every
+                    // quantile while the digest is still empty, and a total that runs permanently
+                    // high afterwards. It is counted where the value is merged instead.
                     //
-                    // The reverse skew this admits is benign and self-correcting: a drained value
-                    // whose weight has not landed yet makes `total` low, so a rank clamps toward
-                    // `means[0]`, which is finite and ordered.
+                    // The skew that leaves is benign and self-correcting: a value buffered but not
+                    // yet drained makes `total` low, so a rank clamps toward `means[0]`, which is
+                    // finite and ordered. Every `read` drains first, so a reader never sees it.
                     commitIndex.add(1L)
-                    totalWeightCell.add(weight)
                     if (claimed == bufferCapLong) {
                         compressLock.guarded { drainLocked() }
                     }
