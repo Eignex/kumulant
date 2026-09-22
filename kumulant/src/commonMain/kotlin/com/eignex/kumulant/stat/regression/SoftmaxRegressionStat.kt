@@ -21,6 +21,7 @@ import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
+import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.getValue
@@ -171,11 +172,12 @@ class SoftmaxRegressionStat(
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
 
-    // Scratch for the per-observation logits. `welfordLock` is a real mutex only under Strict and
-    // HighWrite: Relaxed is the drift-tolerant path where racing writers are expected, and a shared
-    // workspace there would throw rather than drift, so that level keeps allocating per call. None is
-    // safe because a shared None stat is outside its contract to begin with.
-    private val workspace = if (concurrency == Concurrency.Relaxed) null else Workspace()
+    // Scratch for the per-observation logits, owned only where updates cannot race over it. A workspace
+    // refuses a buffer it did not lend, so a level that admits concurrent writers without a real mutex
+    // would throw where it promised to drift. Asked of the lock rather than of a list of levels: a level
+    // added later takes `welfordLock`'s no-op default and so allocates per call until someone opts it in
+    // deliberately. `None` needs no lock because a shared `None` stat is outside its contract already.
+    private val workspace = if (concurrency == Concurrency.None || lock !is NoopMutex) Workspace() else null
 
     // Flat row-major K x p layout: weightsCell[k * p + i].
     private val weightsCell: StreamDoubleArray = mode.newDoubleArray(numClasses * featureSize)
