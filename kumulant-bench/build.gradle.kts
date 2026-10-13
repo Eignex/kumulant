@@ -8,7 +8,7 @@ plugins {
 
 repositories {
     mavenCentral()
-    // The koblas snapshot arrives transitively through :kumulant.
+    // The pinned koblas snapshot arrives transitively through :kumulant.
     maven("https://central.sonatype.com/repository/maven-snapshots/") {
         mavenContent { snapshotsOnly() }
     }

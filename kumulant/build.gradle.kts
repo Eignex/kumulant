@@ -1,5 +1,3 @@
-import java.util.concurrent.TimeUnit
-
 plugins {
     id("com.eignex.kmp") version "1.3.3"
     kotlin("plugin.serialization") version "2.4.10"
@@ -37,7 +35,9 @@ kotlin {
         appleMain.get().dependsOn(posixMain)
         linuxMain.get().dependsOn(posixMain)
         commonMain.dependencies {
-            api("com.eignex:koblas:0.1.1-SNAPSHOT")
+            api("com.eignex:koblas:0.1.1-20261013.182449-263") {
+                version { strictly("0.1.1-20261013.182449-263") }
+            }
             api("com.eignex:skema:0.3.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
@@ -49,6 +49,23 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.11.0")
+        }
+    }
+}
+
+// A timestamped KMP root redirects to mutable platform snapshots. Publish constraints so downstream
+// Gradle consumers resolve the same binaries as this build.
+dependencies {
+    constraints {
+        for ((module, pinned) in mapOf(
+            "jvm" to "0.1.1-20261013.182449-266",
+            "linuxx64" to "0.1.1-20261013.182449-262",
+            "linuxarm64" to "0.1.1-20261013.182449-263",
+            "macosarm64" to "0.1.1-20261013.182206-286",
+        )) {
+            add("commonMainApi", "com.eignex:koblas-$module:$pinned") {
+                version { strictly(pinned) }
+            }
         }
     }
 }
@@ -111,11 +128,3 @@ tasks.withType<Test>().configureEach {
         jvmArgs("--add-modules=jdk.incubator.vector")
     }
 }
-
-// koblas is an unpinned SNAPSHOT. Gradle caches a changing module for 24 hours by default, so a
-// build that resolved yesterday's snapshot keeps compiling against it while a fresh checkout gets
-// today's; the same tree then succeeds on one machine and fails on another. Always re-resolve.
-configurations.configureEach {
-    resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
-}
-
