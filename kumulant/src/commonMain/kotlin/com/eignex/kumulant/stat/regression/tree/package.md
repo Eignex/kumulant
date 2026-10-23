@@ -34,6 +34,20 @@ Pass an empty `splitCandidates` list to disable growth and degenerate
 the stat into a single global accumulator. The Random forest's
 `config.mtry` defaults to `ceil(sqrt(p))` Breiman-style.
 
+## Batch fitting
+
+[BatchRandomForest] fits independent CART forests from complete training datasets.
+[RegressionObservation] supplies numeric vectors, scalar responses, and nonnegative
+weights; [BatchForestConfig] controls bootstrap sampling, feature subsampling, and
+leaf/size limits. Thresholds are chosen between observed feature values. The result
+is the same [ForestRegressionResult] snapshot shape used by streaming forests.
+
+[predictDistribution] summarizes the equal-weight distribution of member predictions
+for model uncertainty. [ForestPrediction.expectedImprovement] computes Gaussian
+expected improvement for either response maximization or cost minimization. This
+ensemble distribution differs from [ForestRegressionResult.findLeafMerged], which
+pools leaf evidence with statistical weights for posterior-based online scoring.
+
 ## Posteriors
 
 [TreePosterior] (and its forest counterpart [ForestPosterior]) turn a
@@ -51,6 +65,14 @@ These plug into
 non-linear contextual bandits with the same Thompson / UCB / mean
 choice that the GLM side has via the
 [com.eignex.kumulant.stat.regression.glm.LinearPosterior] family.
+
+For constrained search or custom acquisition functions, [mergeForestEvidence]
+pools arbitrary leaf or subtree summaries with the same correlation adjustment.
+Its default averages the effective weight across members; `independent = true`
+adds weights for disjoint observations. [RandomForestRegressionStat.findLeaves]
+and [RandomForestRegressionStat.predict] read live leaf statistics without
+freezing the full tree structure. Vector inputs can be ordinary dense or sparse
+vectors, or read-only views supplied by a downstream feature adapter.
 
 ## Merge
 
