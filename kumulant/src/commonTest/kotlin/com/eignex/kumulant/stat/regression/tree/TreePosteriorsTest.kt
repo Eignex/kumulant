@@ -143,6 +143,21 @@ class TreePosteriorsTest {
         assertTrue(s > 1.0)
     }
 
+    @Test
+    fun `duplicated forest members preserve posterior exploration with a prior`() {
+        val evidence = WeightedVarianceResult(1.0, 0.0, 0.0)
+        val single = forestSnap(listOf(evidence))
+        val duplicated = forestSnap(List(10) { evidence })
+        val posteriors = listOf(ThompsonForestPosterior(), UcbForestPosterior())
+        for (posterior in posteriors) {
+            assertEquals(
+                posterior.evaluate(single, feat(0.0), Random(7), 1.0),
+                posterior.evaluate(duplicated, feat(0.0), Random(7), 1.0),
+                1e-12,
+            )
+        }
+    }
+
     private fun sampleStdDev(xs: DoubleArray): Double {
         val mean = xs.average()
         var s = 0.0

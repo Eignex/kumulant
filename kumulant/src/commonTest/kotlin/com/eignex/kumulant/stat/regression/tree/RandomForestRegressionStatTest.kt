@@ -97,6 +97,27 @@ class RandomForestRegressionStatTest {
         )
     }
 
+    @Test
+    fun `live prediction matches the immutable forest snapshot`() {
+        val stat = baggedForest(seed = 12)
+        for (i in 0 until 100) stat.update(feat(0.0), i.toDouble())
+        assertEquals(stat.read().predict(feat(0.0)), stat.predict(feat(0.0)), 1e-12)
+    }
+
+    @Test
+    fun `live leaf lookup rejects incompatible feature dimensions`() {
+        val stat = baggedForest(seed = 12)
+        assertFailsWith<IllegalArgumentException> { stat.findLeaves(feat(0.0, 1.0)) }
+    }
+
+    @Test
+    fun `indexed tree access follows reset replacements`() {
+        val stat = baggedForest(seed = 12)
+        feed(stat, 100)
+        stat.reset()
+        assertEquals(0.0, stat.tree(0).rootSnapshot().totalWeights)
+    }
+
     private fun baggedForest(seed: Int) = RandomForestRegressionStat(
         featureSize = 1,
         splitCandidates = emptyList(),

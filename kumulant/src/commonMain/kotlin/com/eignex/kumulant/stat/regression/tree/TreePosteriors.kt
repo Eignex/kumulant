@@ -30,18 +30,6 @@ data object MeanTreePosterior : TreePosterior {
 }
 
 /**
- * Merged-leaf weight deflated by the number of trees that contributed it.
- *
- * [ForestRegressionResult.findLeafMerged] folds the leaf every tree routes `x` to into one accumulator,
- * but under bagging those are N correlated views of a single sample rather than N samples, so the merged
- * weight overstates the evidence by roughly the tree count. Dividing it back out keeps the posterior's
- * standard error at the honest `sqrt(variance / observations)` instead of shrinking it by
- * `sqrt(nbrTrees)` and under-exploring by the same factor.
- */
-private fun effectiveWeight(leaf: WeightedVarianceResult, snapshot: ForestRegressionResult): Double =
-    leaf.totalWeights / snapshot.trees.size
-
-/**
  * Leaf variance blended with [priorVariance] on a [priorWeight] pseudo-count.
  *
  * Swapping in the prior only for a completely empty leaf leaves a hole one observation wide: a leaf
@@ -116,9 +104,9 @@ data class ThompsonForestPosterior(
     val priorVariance: Double = 1.0,
 ) : ForestPosterior {
     override fun evaluate(snapshot: ForestRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
-        val leaf: WeightedVarianceResult = snapshot.findLeafMerged(x)
+        val leaf = snapshot.findLeafEvidence(x)
         if (exploration <= 0.0) return leaf.mean
-        val n = effectiveWeight(leaf, snapshot) + priorWeight
+        val n = leaf.totalWeights + priorWeight
         return rng.nextNormal(leaf.mean, sqrt(exploration * blendedVariance(leaf, priorWeight, priorVariance) / n))
     }
 }
@@ -131,8 +119,8 @@ data class UcbForestPosterior(
     val priorVariance: Double = 1.0,
 ) : ForestPosterior {
     override fun evaluate(snapshot: ForestRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
-        val leaf = snapshot.findLeafMerged(x)
-        val n = effectiveWeight(leaf, snapshot) + priorWeight
+        val leaf = snapshot.findLeafEvidence(x)
+        val n = leaf.totalWeights + priorWeight
         return leaf.mean + exploration * sqrt(blendedVariance(leaf, priorWeight, priorVariance) / n)
     }
 }

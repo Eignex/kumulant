@@ -143,8 +143,20 @@ class RandomForestRegressionStat(
         randomSeed = seedRng.childSeed().toInt(),
     )
 
+    /** Live leaves reached by [x], in tree order; validates the feature dimension. */
+    fun findLeaves(x: Vector): List<RegressionLeafNode<Vector>> {
+        x.requireFeatureSize(featureSize)
+        return trees.map { it.findLeaf(x) }
+    }
+
+    /** Predict from live leaf statistics without snapshotting the forest's structure. */
+    fun predict(x: Vector): Double = mergeForestEvidence(findLeaves(x).map { it.arm.read(0L) }).mean
+
     /** Live underlying trees. Use for inspection. */
     fun trees(): List<RegressionTree<Vector>> = trees.toList()
+
+    /** Live tree at [index], including any replacement installed by [reset]. */
+    fun tree(index: Int): RegressionTree<Vector> = trees[index]
 }
 
 /** Snapshot of a [RandomForestRegressionStat]: per-tree immutable snapshots. */
@@ -160,19 +172,11 @@ data class ForestRegressionResult(
 
     /** Merge the leaves that [x] routes to across every tree into a single weighted-
      *  variance aggregate. Useful for ensembled scoring. */
-    fun findLeafMerged(x: Vector): WeightedVarianceResult {
-        // The `w2 <= 0.0` skip stays here rather than moving into mergeWVR, which short-circuits only
-        // on an exactly-zero weight: a leaf left with negative total weight by an over-reaching
-        // downdate would otherwise be folded in, and against a positive sibling of equal magnitude the
-        // combined weight is zero, producing NaN for the whole forest.
-        var acc = WeightedVarianceResult(0.0, 0.0, 0.0)
-        for (t in trees) {
-            val leaf = t.findLeaf(x)
-            if (leaf.totalWeights <= 0.0) continue
-            acc = mergeWVR(acc, leaf)
-        }
-        return acc
-    }
+    fun findLeafMerged(x: Vector): WeightedVarianceResult =
+        mergeForestEvidence(trees.map { it.findLeaf(x) }, independent = true)
+
+    /** Correlation-adjusted leaf evidence for posterior scoring. */
+    fun findLeafEvidence(x: Vector): WeightedVarianceResult = mergeForestEvidence(trees.map { it.findLeaf(x) })
 
     /** Mean of [findLeafMerged]. */
     fun predict(x: Vector): Double = findLeafMerged(x).mean
