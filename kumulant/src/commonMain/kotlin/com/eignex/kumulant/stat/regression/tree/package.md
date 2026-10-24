@@ -34,27 +34,11 @@ Pass an empty `splitCandidates` list to disable growth and degenerate
 the stat into a single global accumulator. The Random forest's
 `config.mtry` defaults to `ceil(sqrt(p))` Breiman-style.
 
-## Batch fitting
-
-[BatchRandomForest] fits independent CART forests from complete training datasets.
-[RegressionObservation] supplies numeric vectors, scalar responses, and nonnegative
-weights; [BatchForestConfig] controls bootstrap sampling, feature subsampling, and
-leaf/size limits. [BatchSplitStrategy] selects greedy boundaries or randomized continuous
-thresholds within the observed feature range. The result
-is the same [ForestRegressionResult] snapshot shape used by streaming forests.
+## Ensemble prediction
 
 [predictDistribution] summarizes the equal-weight distribution of member predictions
-for model uncertainty. This ensemble distribution differs from [ForestRegressionResult.findLeafMerged], which
+for model uncertainty. This differs from [ForestRegressionResult.findLeafMerged], which
 pools leaf evidence with statistical weights for posterior-based online scoring.
-
-[BatchRandomForest.fitModel] also estimates leaf-mean uncertainty from original observation
-units, independently of internal bootstrap multiplicities. [ForestMoments] separates tree
-disagreement, uncertainty in leaf means, and response dispersion. Known observation variances
-propagate through normalized squared weights. [BatchForestModel.drawFunction] fixes one tree
-and its Gaussian leaf offsets for coherent repeated queries. These are approximate sampling
-moments: adaptive partition selection, unresolved within-leaf function variation, and correlated
-trees prevent interpreting them as a calibrated posterior. Response dispersion is not latent
-function uncertainty, and additional trees do not multiply independent evidence.
 
 ## Posteriors
 
