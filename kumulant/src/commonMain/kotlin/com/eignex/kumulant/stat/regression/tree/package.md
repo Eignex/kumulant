@@ -44,10 +44,7 @@ thresholds within the observed feature range. The result
 is the same [ForestRegressionResult] snapshot shape used by streaming forests.
 
 [predictDistribution] summarizes the equal-weight distribution of member predictions
-for model uncertainty. [ForestPrediction.expectedImprovement] computes Gaussian
-expected improvement for either response maximization or cost minimization.
-For log-response models, [ForestPrediction.expectedImprovementLogNormal] integrates
-improvement in original positive response units. This ensemble distribution differs from [ForestRegressionResult.findLeafMerged], which
+for model uncertainty. This ensemble distribution differs from [ForestRegressionResult.findLeafMerged], which
 pools leaf evidence with statistical weights for posterior-based online scoring.
 
 [BatchRandomForest.fitModel] also estimates leaf-mean uncertainty from original observation
