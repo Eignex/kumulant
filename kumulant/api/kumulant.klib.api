@@ -74,17 +74,6 @@ final enum class com.eignex.kumulant.stat.forecast/SeasonalMode : kotlin/Enum<co
     }
 }
 
-final enum class com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy : kotlin/Enum<com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy> { // com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy|null[0]
-    enum entry Best // com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy.Best|null[0]
-    enum entry Random // com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy.Random|null[0]
-
-    final val entries // com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy.entries|#static{}entries[0]
-        final fun <get-entries>(): kotlin.enums/EnumEntries<com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy> // com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy.entries.<get-entries>|<get-entries>#static(){}[0]
-
-    final fun valueOf(kotlin/String): com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy // com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy.valueOf|valueOf#static(kotlin.String){}[0]
-    final fun values(): kotlin/Array<com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy> // com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy.values|values#static(){}[0]
-}
-
 final enum class com.eignex.kumulant.stat.sketch/AdmissionPolicy : kotlin/Enum<com.eignex.kumulant.stat.sketch/AdmissionPolicy> { // com.eignex.kumulant.stat.sketch/AdmissionPolicy|null[0]
     enum entry Classic // com.eignex.kumulant.stat.sketch/AdmissionPolicy.Classic|null[0]
     enum entry MisraGries // com.eignex.kumulant.stat.sketch/AdmissionPolicy.MisraGries|null[0]
@@ -107,10 +96,6 @@ abstract fun interface com.eignex.kumulant.bandit.contextual/Exp4Expert { // com
 
 abstract fun interface com.eignex.kumulant.math/Hasher64 { // com.eignex.kumulant.math/Hasher64|null[0]
     abstract fun hash(kotlin/ByteArray): kotlin/Long // com.eignex.kumulant.math/Hasher64.hash|hash(kotlin.ByteArray){}[0]
-}
-
-abstract fun interface com.eignex.kumulant.stat.regression.tree/RegressionFunction { // com.eignex.kumulant.stat.regression.tree/RegressionFunction|null[0]
-    abstract fun predict(com.eignex.koblas/Vector): kotlin/Double // com.eignex.kumulant.stat.regression.tree/RegressionFunction.predict|predict(com.eignex.koblas.Vector){}[0]
 }
 
 abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.bandit.univariate/BanditPolicy { // com.eignex.kumulant.bandit.univariate/BanditPolicy|null[0]
@@ -6697,62 +6682,6 @@ final class com.eignex.kumulant.stat.regression.glm/UnivariateRegressionStat : c
     final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/UnivariateRegressionStat.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
 }
 
-final class com.eignex.kumulant.stat.regression.tree/BatchForestConfig { // com.eignex.kumulant.stat.regression.tree/BatchForestConfig|null[0]
-    constructor <init>(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Double = ..., kotlin/Int? = ..., kotlin/Boolean = ..., kotlin/Double = ..., com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy = ..., kotlin/Int = ...) // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Double;kotlin.Int?;kotlin.Boolean;kotlin.Double;com.eignex.kumulant.stat.regression.tree.BatchSplitStrategy;kotlin.Int){}[0]
-
-    final val bootstrap // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.bootstrap|{}bootstrap[0]
-        final fun <get-bootstrap>(): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.bootstrap.<get-bootstrap>|<get-bootstrap>(){}[0]
-    final val maxDepth // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.maxDepth|{}maxDepth[0]
-        final fun <get-maxDepth>(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.maxDepth.<get-maxDepth>|<get-maxDepth>(){}[0]
-    final val maxNodes // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.maxNodes|{}maxNodes[0]
-        final fun <get-maxNodes>(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.maxNodes.<get-maxNodes>|<get-maxNodes>(){}[0]
-    final val minSamplesLeaf // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.minSamplesLeaf|{}minSamplesLeaf[0]
-        final fun <get-minSamplesLeaf>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.minSamplesLeaf.<get-minSamplesLeaf>|<get-minSamplesLeaf>(){}[0]
-    final val minVarianceReduction // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.minVarianceReduction|{}minVarianceReduction[0]
-        final fun <get-minVarianceReduction>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.minVarianceReduction.<get-minVarianceReduction>|<get-minVarianceReduction>(){}[0]
-    final val mtry // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.mtry|{}mtry[0]
-        final fun <get-mtry>(): kotlin/Int? // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.mtry.<get-mtry>|<get-mtry>(){}[0]
-    final val nbrTrees // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.nbrTrees|{}nbrTrees[0]
-        final fun <get-nbrTrees>(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.nbrTrees.<get-nbrTrees>|<get-nbrTrees>(){}[0]
-    final val randomThresholds // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.randomThresholds|{}randomThresholds[0]
-        final fun <get-randomThresholds>(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.randomThresholds.<get-randomThresholds>|<get-randomThresholds>(){}[0]
-    final val splitStrategy // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.splitStrategy|{}splitStrategy[0]
-        final fun <get-splitStrategy>(): com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.splitStrategy.<get-splitStrategy>|<get-splitStrategy>(){}[0]
-
-    final fun component1(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.component1|component1(){}[0]
-    final fun component2(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.component2|component2(){}[0]
-    final fun component3(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.component3|component3(){}[0]
-    final fun component4(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.component4|component4(){}[0]
-    final fun component5(): kotlin/Int? // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.component5|component5(){}[0]
-    final fun component6(): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.component6|component6(){}[0]
-    final fun component7(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.component7|component7(){}[0]
-    final fun component8(): com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.component8|component8(){}[0]
-    final fun component9(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.component9|component9(){}[0]
-    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Double = ..., kotlin/Int? = ..., kotlin/Boolean = ..., kotlin/Double = ..., com.eignex.kumulant.stat.regression.tree/BatchSplitStrategy = ..., kotlin/Int = ...): com.eignex.kumulant.stat.regression.tree/BatchForestConfig // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Double;kotlin.Int?;kotlin.Boolean;kotlin.Double;com.eignex.kumulant.stat.regression.tree.BatchSplitStrategy;kotlin.Int){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/BatchForestConfig.toString|toString(){}[0]
-}
-
-final class com.eignex.kumulant.stat.regression.tree/BatchForestModel { // com.eignex.kumulant.stat.regression.tree/BatchForestModel|null[0]
-    final val forest // com.eignex.kumulant.stat.regression.tree/BatchForestModel.forest|{}forest[0]
-        final fun <get-forest>(): com.eignex.kumulant.stat.regression.tree/ForestRegressionResult // com.eignex.kumulant.stat.regression.tree/BatchForestModel.forest.<get-forest>|<get-forest>(){}[0]
-
-    final fun drawFunction(kotlin.random/Random, kotlin/Boolean = ...): com.eignex.kumulant.stat.regression.tree/RegressionFunction // com.eignex.kumulant.stat.regression.tree/BatchForestModel.drawFunction|drawFunction(kotlin.random.Random;kotlin.Boolean){}[0]
-    final fun predictMoments(com.eignex.koblas/Vector): com.eignex.kumulant.stat.regression.tree/ForestMoments // com.eignex.kumulant.stat.regression.tree/BatchForestModel.predictMoments|predictMoments(com.eignex.koblas.Vector){}[0]
-}
-
-final class com.eignex.kumulant.stat.regression.tree/BatchRandomForest { // com.eignex.kumulant.stat.regression.tree/BatchRandomForest|null[0]
-    constructor <init>(kotlin/Int, com.eignex.kumulant.stat.regression.tree/BatchForestConfig = ...) // com.eignex.kumulant.stat.regression.tree/BatchRandomForest.<init>|<init>(kotlin.Int;com.eignex.kumulant.stat.regression.tree.BatchForestConfig){}[0]
-
-    final val config // com.eignex.kumulant.stat.regression.tree/BatchRandomForest.config|{}config[0]
-        final fun <get-config>(): com.eignex.kumulant.stat.regression.tree/BatchForestConfig // com.eignex.kumulant.stat.regression.tree/BatchRandomForest.config.<get-config>|<get-config>(){}[0]
-    final val featureSize // com.eignex.kumulant.stat.regression.tree/BatchRandomForest.featureSize|{}featureSize[0]
-        final fun <get-featureSize>(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/BatchRandomForest.featureSize.<get-featureSize>|<get-featureSize>(){}[0]
-
-    final fun fit(kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/RegressionObservation>, kotlin.random/Random = ...): com.eignex.kumulant.stat.regression.tree/ForestRegressionResult // com.eignex.kumulant.stat.regression.tree/BatchRandomForest.fit|fit(kotlin.collections.List<com.eignex.kumulant.stat.regression.tree.RegressionObservation>;kotlin.random.Random){}[0]
-}
-
 final class com.eignex.kumulant.stat.regression.tree/ClassCountsResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.regression.tree/ClassCountsResult|null[0]
     constructor <init>(kotlin/Int, kotlin/DoubleArray) // com.eignex.kumulant.stat.regression.tree/ClassCountsResult.<init>|<init>(kotlin.Int;kotlin.DoubleArray){}[0]
 
@@ -7025,32 +6954,6 @@ final class com.eignex.kumulant.stat.regression.tree/ForestClassificationResult 
     }
 }
 
-final class com.eignex.kumulant.stat.regression.tree/ForestMoments { // com.eignex.kumulant.stat.regression.tree/ForestMoments|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.regression.tree/ForestMoments.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-
-    final val disagreementVariance // com.eignex.kumulant.stat.regression.tree/ForestMoments.disagreementVariance|{}disagreementVariance[0]
-        final fun <get-disagreementVariance>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ForestMoments.disagreementVariance.<get-disagreementVariance>|<get-disagreementVariance>(){}[0]
-    final val latentVariance // com.eignex.kumulant.stat.regression.tree/ForestMoments.latentVariance|{}latentVariance[0]
-        final fun <get-latentVariance>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ForestMoments.latentVariance.<get-latentVariance>|<get-latentVariance>(){}[0]
-    final val leafMeanVariance // com.eignex.kumulant.stat.regression.tree/ForestMoments.leafMeanVariance|{}leafMeanVariance[0]
-        final fun <get-leafMeanVariance>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ForestMoments.leafMeanVariance.<get-leafMeanVariance>|<get-leafMeanVariance>(){}[0]
-    final val mean // com.eignex.kumulant.stat.regression.tree/ForestMoments.mean|{}mean[0]
-        final fun <get-mean>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ForestMoments.mean.<get-mean>|<get-mean>(){}[0]
-    final val predictiveVariance // com.eignex.kumulant.stat.regression.tree/ForestMoments.predictiveVariance|{}predictiveVariance[0]
-        final fun <get-predictiveVariance>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ForestMoments.predictiveVariance.<get-predictiveVariance>|<get-predictiveVariance>(){}[0]
-    final val responseVariance // com.eignex.kumulant.stat.regression.tree/ForestMoments.responseVariance|{}responseVariance[0]
-        final fun <get-responseVariance>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ForestMoments.responseVariance.<get-responseVariance>|<get-responseVariance>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ForestMoments.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ForestMoments.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ForestMoments.component3|component3(){}[0]
-    final fun component4(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ForestMoments.component4|component4(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.regression.tree/ForestMoments // com.eignex.kumulant.stat.regression.tree/ForestMoments.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/ForestMoments.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/ForestMoments.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/ForestMoments.toString|toString(){}[0]
-}
-
 final class com.eignex.kumulant.stat.regression.tree/ForestPrediction { // com.eignex.kumulant.stat.regression.tree/ForestPrediction|null[0]
     constructor <init>(kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.regression.tree/ForestPrediction.<init>|<init>(kotlin.Double;kotlin.Double){}[0]
 
@@ -7151,25 +7054,6 @@ final class com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat 
     final fun tree(kotlin/Int): com.eignex.kumulant.stat.regression.tree/RegressionTree<com.eignex.koblas/Vector> // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.tree|tree(kotlin.Int){}[0]
     final fun trees(): kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/RegressionTree<com.eignex.koblas/Vector>> // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.trees|trees(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.update|update(com.eignex.koblas.Vector;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.stat.regression.tree/RegressionObservation { // com.eignex.kumulant.stat.regression.tree/RegressionObservation|null[0]
-    constructor <init>(com.eignex.koblas/Vector, kotlin/Double, kotlin/Double = ...) // com.eignex.kumulant.stat.regression.tree/RegressionObservation.<init>|<init>(com.eignex.koblas.Vector;kotlin.Double;kotlin.Double){}[0]
-
-    final val features // com.eignex.kumulant.stat.regression.tree/RegressionObservation.features|{}features[0]
-        final fun <get-features>(): com.eignex.koblas/Vector // com.eignex.kumulant.stat.regression.tree/RegressionObservation.features.<get-features>|<get-features>(){}[0]
-    final val response // com.eignex.kumulant.stat.regression.tree/RegressionObservation.response|{}response[0]
-        final fun <get-response>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/RegressionObservation.response.<get-response>|<get-response>(){}[0]
-    final val weight // com.eignex.kumulant.stat.regression.tree/RegressionObservation.weight|{}weight[0]
-        final fun <get-weight>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/RegressionObservation.weight.<get-weight>|<get-weight>(){}[0]
-
-    final fun component1(): com.eignex.koblas/Vector // com.eignex.kumulant.stat.regression.tree/RegressionObservation.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/RegressionObservation.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/RegressionObservation.component3|component3(){}[0]
-    final fun copy(com.eignex.koblas/Vector = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.regression.tree/RegressionObservation // com.eignex.kumulant.stat.regression.tree/RegressionObservation.copy|copy(com.eignex.koblas.Vector;kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/RegressionObservation.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/RegressionObservation.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/RegressionObservation.toString|toString(){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig : com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig { // com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig|null[0]
@@ -9504,7 +9388,6 @@ final fun (com.eignex.kumulant.stat.quantile/SketchResult).com.eignex.kumulant.s
 final fun (com.eignex.kumulant.stat.quantile/SparseHistogramResult).com.eignex.kumulant.stat.score/pitChiSquared(kotlin/Int): kotlin/Double // com.eignex.kumulant.stat.score/pitChiSquared|pitChiSquared@com.eignex.kumulant.stat.quantile.SparseHistogramResult(kotlin.Int){}[0]
 final fun (com.eignex.kumulant.stat.quantile/SparseHistogramResult).com.eignex.kumulant.stat.score/pitKsDistance(kotlin/Int): kotlin/Double // com.eignex.kumulant.stat.score/pitKsDistance|pitKsDistance@com.eignex.kumulant.stat.quantile.SparseHistogramResult(kotlin.Int){}[0]
 final fun (com.eignex.kumulant.stat.quantile/TDigestResult).com.eignex.kumulant.stat.quantile/toSparseHistogram(): com.eignex.kumulant.stat.quantile/SparseHistogramResult // com.eignex.kumulant.stat.quantile/toSparseHistogram|toSparseHistogram@com.eignex.kumulant.stat.quantile.TDigestResult(){}[0]
-final fun (com.eignex.kumulant.stat.regression.tree/BatchRandomForest).com.eignex.kumulant.stat.regression.tree/fitModel(kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/RegressionObservation>, kotlin.random/Random = ..., com.eignex.koblas/Vector? = ...): com.eignex.kumulant.stat.regression.tree/BatchForestModel // com.eignex.kumulant.stat.regression.tree/fitModel|fitModel@com.eignex.kumulant.stat.regression.tree.BatchRandomForest(kotlin.collections.List<com.eignex.kumulant.stat.regression.tree.RegressionObservation>;kotlin.random.Random;com.eignex.koblas.Vector?){}[0]
 final fun (com.eignex.kumulant.stat.regression.tree/ForestRegressionResult).com.eignex.kumulant.stat.regression.tree/predictDistribution(com.eignex.koblas/Vector): com.eignex.kumulant.stat.regression.tree/ForestPrediction // com.eignex.kumulant.stat.regression.tree/predictDistribution|predictDistribution@com.eignex.kumulant.stat.regression.tree.ForestRegressionResult(com.eignex.koblas.Vector){}[0]
 final fun (com.eignex.kumulant.stat.regression.tree/RegressionNode<*>).com.eignex.kumulant.stat.regression.tree/aggregate(): com.eignex.kumulant.stat.summary/WeightedVarianceResult // com.eignex.kumulant.stat.regression.tree/aggregate|aggregate@com.eignex.kumulant.stat.regression.tree.RegressionNode<*>(){}[0]
 final fun (com.eignex.kumulant.stat.regression.tree/RegressionNode<com.eignex.koblas/Vector>).com.eignex.kumulant.stat.regression.tree/snapshot(): com.eignex.kumulant.stat.regression.tree/TreeNodeResult // com.eignex.kumulant.stat.regression.tree/snapshot|snapshot@com.eignex.kumulant.stat.regression.tree.RegressionNode<com.eignex.koblas.Vector>(){}[0]
