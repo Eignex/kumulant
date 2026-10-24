@@ -7974,10 +7974,6 @@ public final class com/eignex/kumulant/stat/regression/tree/ForestPrediction {
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/ForestPredictionKt {
-	public static final fun expectedImprovement (Lcom/eignex/kumulant/stat/regression/tree/ForestPrediction;DZD)D
-	public static synthetic fun expectedImprovement$default (Lcom/eignex/kumulant/stat/regression/tree/ForestPrediction;DZDILjava/lang/Object;)D
-	public static final fun expectedImprovementLogNormal (Lcom/eignex/kumulant/stat/regression/tree/ForestPrediction;DZD)D
-	public static synthetic fun expectedImprovementLogNormal$default (Lcom/eignex/kumulant/stat/regression/tree/ForestPrediction;DZDILjava/lang/Object;)D
 	public static final fun predictDistribution (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/Vector;)Lcom/eignex/kumulant/stat/regression/tree/ForestPrediction;
 }
 
