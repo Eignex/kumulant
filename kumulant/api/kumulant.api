@@ -7609,8 +7609,8 @@ public final class com/eignex/kumulant/stat/regression/glm/UnivariateRegressionS
 
 public final class com/eignex/kumulant/stat/regression/tree/BatchForestConfig {
 	public fun <init> ()V
-	public fun <init> (IIIDLjava/lang/Integer;ZD)V
-	public synthetic fun <init> (IIIDLjava/lang/Integer;ZDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IIIDLjava/lang/Integer;ZDLcom/eignex/kumulant/stat/regression/tree/BatchSplitStrategy;I)V
+	public synthetic fun <init> (IIIDLjava/lang/Integer;ZDLcom/eignex/kumulant/stat/regression/tree/BatchSplitStrategy;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
 	public final fun component2 ()I
 	public final fun component3 ()I
@@ -7618,8 +7618,10 @@ public final class com/eignex/kumulant/stat/regression/tree/BatchForestConfig {
 	public final fun component5 ()Ljava/lang/Integer;
 	public final fun component6 ()Z
 	public final fun component7 ()D
-	public final fun copy (IIIDLjava/lang/Integer;ZD)Lcom/eignex/kumulant/stat/regression/tree/BatchForestConfig;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/BatchForestConfig;IIIDLjava/lang/Integer;ZDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/BatchForestConfig;
+	public final fun component8 ()Lcom/eignex/kumulant/stat/regression/tree/BatchSplitStrategy;
+	public final fun component9 ()I
+	public final fun copy (IIIDLjava/lang/Integer;ZDLcom/eignex/kumulant/stat/regression/tree/BatchSplitStrategy;I)Lcom/eignex/kumulant/stat/regression/tree/BatchForestConfig;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/BatchForestConfig;IIIDLjava/lang/Integer;ZDLcom/eignex/kumulant/stat/regression/tree/BatchSplitStrategy;IILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/BatchForestConfig;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBootstrap ()Z
 	public final fun getMaxDepth ()I
@@ -7628,6 +7630,8 @@ public final class com/eignex/kumulant/stat/regression/tree/BatchForestConfig {
 	public final fun getMinVarianceReduction ()D
 	public final fun getMtry ()Ljava/lang/Integer;
 	public final fun getNbrTrees ()I
+	public final fun getRandomThresholds ()I
+	public final fun getSplitStrategy ()Lcom/eignex/kumulant/stat/regression/tree/BatchSplitStrategy;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -7639,6 +7643,14 @@ public final class com/eignex/kumulant/stat/regression/tree/BatchRandomForest {
 	public static synthetic fun fit$default (Lcom/eignex/kumulant/stat/regression/tree/BatchRandomForest;Ljava/util/List;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;
 	public final fun getConfig ()Lcom/eignex/kumulant/stat/regression/tree/BatchForestConfig;
 	public final fun getFeatureSize ()I
+}
+
+public final class com/eignex/kumulant/stat/regression/tree/BatchSplitStrategy : java/lang/Enum {
+	public static final field Best Lcom/eignex/kumulant/stat/regression/tree/BatchSplitStrategy;
+	public static final field Random Lcom/eignex/kumulant/stat/regression/tree/BatchSplitStrategy;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/eignex/kumulant/stat/regression/tree/BatchSplitStrategy;
+	public static fun values ()[Lcom/eignex/kumulant/stat/regression/tree/BatchSplitStrategy;
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/ClassCountsResult : com/eignex/kumulant/core/HasObservationCount {
@@ -7933,6 +7945,8 @@ public final class com/eignex/kumulant/stat/regression/tree/ForestPrediction {
 public final class com/eignex/kumulant/stat/regression/tree/ForestPredictionKt {
 	public static final fun expectedImprovement (Lcom/eignex/kumulant/stat/regression/tree/ForestPrediction;DZD)D
 	public static synthetic fun expectedImprovement$default (Lcom/eignex/kumulant/stat/regression/tree/ForestPrediction;DZDILjava/lang/Object;)D
+	public static final fun expectedImprovementLogNormal (Lcom/eignex/kumulant/stat/regression/tree/ForestPrediction;DZD)D
+	public static synthetic fun expectedImprovementLogNormal$default (Lcom/eignex/kumulant/stat/regression/tree/ForestPrediction;DZDILjava/lang/Object;)D
 	public static final fun predictDistribution (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;Lcom/eignex/koblas/Vector;)Lcom/eignex/kumulant/stat/regression/tree/ForestPrediction;
 }
 

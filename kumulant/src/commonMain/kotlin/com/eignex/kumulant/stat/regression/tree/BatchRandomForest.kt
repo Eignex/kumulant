@@ -20,6 +20,15 @@ data class RegressionObservation(val features: Vector, val response: Double, val
     }
 }
 
+/** Threshold selection for each feature inspected by a batch regression tree. */
+enum class BatchSplitStrategy {
+    /** Scan all distinct observed boundaries for maximum variance reduction. */
+    Best,
+
+    /** Sample thresholds uniformly across the observed feature range. */
+    Random,
+}
+
 /** Configuration for a batch CART regression forest. */
 data class BatchForestConfig(
     /** Number of independently randomized CART trees. */
@@ -36,22 +45,28 @@ data class BatchForestConfig(
     val bootstrap: Boolean = true,
     /** Minimum reduction in weighted population variance required to split. */
     val minVarianceReduction: Double = 0.0,
+    /** Greedy or randomized threshold search. */
+    val splitStrategy: BatchSplitStrategy = BatchSplitStrategy.Best,
+    /** Threshold draws per inspected feature under [BatchSplitStrategy.Random]. */
+    val randomThresholds: Int = 1,
 ) {
     init {
         require(nbrTrees > 0 && maxDepth >= 0 && maxNodes > 0) { "invalid tree count or size limits" }
         require(minSamplesLeaf > 0.0 && minSamplesLeaf.isFinite()) { "minSamplesLeaf must be positive and finite" }
         require(mtry == null || mtry > 0) { "mtry must be positive" }
         require(minVarianceReduction >= 0.0 && minVarianceReduction.isFinite()) { "invalid variance reduction" }
+        require(randomThresholds > 0) { "randomThresholds must be positive" }
     }
 }
 
 /**
  * Batch Breiman-style random forest, rebuilding CART trees from all supplied observations.
- * Each node selects a random feature subset and scans thresholds between distinct observed
- * values for the largest weighted variance reduction. Bootstrap sampling selects rows
+ * Each node selects a random feature subset and searches thresholds for weighted variance
+ * reduction. [BatchSplitStrategy.Best] scans observed boundaries; [BatchSplitStrategy.Random]
+ * samples within each feature's observed range. Bootstrap sampling selects rows
  * uniformly with replacement; observation weights scale their statistical contributions.
  *
- * Numeric thresholds follow the observed data, preserving continuous input values. The
+ * Numeric thresholds preserve continuous input values. The
  * returned [ForestRegressionResult] shares the prediction and serialization API of online
  * forests. Inputs are copied during fitting and subsequent fits produce independent models.
  *
@@ -59,7 +74,7 @@ data class BatchForestConfig(
  *
  * **Memory:** O(n * featureSize + nbrTrees * maxNodes), plus per-node sorting buffers.
  *
- * **Fit:** O(nbrTrees * featureSize * n * log(n) * maxDepth) as a conservative bound.
+ * **Fit:** O(nbrTrees * featureSize * n * (log(n) + randomThresholds) * maxDepth) as a conservative bound.
  *
  * **Concurrency:** No mutable fitter state. Calls are independent when inputs and RNGs are independent.
  *
@@ -129,9 +144,35 @@ private class BatchTreeBuilder(
         val count = config.mtry ?: kotlin.math.ceil(sqrt(featureSize.toDouble())).toInt()
         var best: BatchSplit? = null
         for ((visited, feature) in (0 until featureSize).shuffled(random).withIndex()) {
-            val split = axisSplit(rows, feature, summary)
+            val split = when (config.splitStrategy) {
+                BatchSplitStrategy.Best -> axisSplit(rows, feature, summary)
+                BatchSplitStrategy.Random -> randomSplit(rows, feature, summary)
+            }
             if (split != null && split.gain > (best?.gain ?: Double.NEGATIVE_INFINITY)) best = split
             if (visited + 1 >= count && best != null) break
+        }
+        return best
+    }
+
+    private fun randomSplit(rows: List<TrainingRow>, feature: Int, summary: WeightedVarianceResult): BatchSplit? {
+        val lo = rows.minOf { it.features[feature] }
+        val hi = rows.maxOf { it.features[feature] }
+        if (lo == hi) return null
+        var best: BatchSplit? = null
+        repeat(config.randomThresholds) {
+            val unit = random.nextDouble()
+            val threshold = ((1.0 - unit) * lo + unit * hi).let { if (it < hi) it else lo }
+            val (leftRows, rightRows) = rows.partition { it.features[feature] <= threshold }
+            if (leftRows.isEmpty() || rightRows.isEmpty()) return@repeat
+            val left = summarize(leftRows)
+            val right = summarize(rightRows)
+            if (left.totalWeights < config.minSamplesLeaf || right.totalWeights < config.minSamplesLeaf) return@repeat
+            val residual =
+                (left.variance * left.totalWeights + right.variance * right.totalWeights) / summary.totalWeights
+            val gain = summary.variance - residual
+            if (gain >= config.minVarianceReduction && gain > (best?.gain ?: Double.NEGATIVE_INFINITY)) {
+                best = BatchSplit(feature, threshold, gain)
+            }
         }
         return best
     }

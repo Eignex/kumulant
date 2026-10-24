@@ -39,13 +39,15 @@ the stat into a single global accumulator. The Random forest's
 [BatchRandomForest] fits independent CART forests from complete training datasets.
 [RegressionObservation] supplies numeric vectors, scalar responses, and nonnegative
 weights; [BatchForestConfig] controls bootstrap sampling, feature subsampling, and
-leaf/size limits. Thresholds are chosen between observed feature values. The result
+leaf/size limits. [BatchSplitStrategy] selects greedy boundaries or randomized continuous
+thresholds within the observed feature range. The result
 is the same [ForestRegressionResult] snapshot shape used by streaming forests.
 
 [predictDistribution] summarizes the equal-weight distribution of member predictions
 for model uncertainty. [ForestPrediction.expectedImprovement] computes Gaussian
 expected improvement for either response maximization or cost minimization. This
-ensemble distribution differs from [ForestRegressionResult.findLeafMerged], which
+For log-response models, [ForestPrediction.expectedImprovementLogNormal] integrates
+improvement in original positive response units. This ensemble distribution differs from [ForestRegressionResult.findLeafMerged], which
 pools leaf evidence with statistical weights for posterior-based online scoring.
 
 ## Posteriors

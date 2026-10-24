@@ -10,6 +10,28 @@ import kotlin.test.assertTrue
 
 class ForestPredictionTest {
     @Test
+    fun `lognormal cost improvement remains bounded when raw moments overflow`() {
+        val value = ForestPrediction(0.0, 1e6).expectedImprovementLogNormal(1.0)
+        assertTrue(value.isFinite() && value in 0.49..0.5)
+    }
+
+    @Test
+    fun `lognormal expected improvement agrees with integrated log response moments`() {
+        val prediction = ForestPrediction(0.0, 1.0)
+        assertEquals(0.2384217081, prediction.expectedImprovementLogNormal(1.0), 1e-6)
+        assertEquals(0.8871429788, prediction.expectedImprovementLogNormal(1.0, maximize = true), 1e-6)
+    }
+
+    @Test
+    fun `lognormal deterministic improvement uses original units and margin`() {
+        val prediction = ForestPrediction(kotlin.math.ln(2.0), 0.0)
+        assertEquals(1.0, prediction.expectedImprovementLogNormal(3.0))
+        assertEquals(0.5, prediction.expectedImprovementLogNormal(3.0, margin = 0.5))
+        assertEquals(1.0, prediction.expectedImprovementLogNormal(1.0, maximize = true))
+        assertEquals(0.0, prediction.expectedImprovementLogNormal(1.0, margin = 2.0))
+    }
+
+    @Test
     fun `forest distribution weights model predictions equally`() {
         val forest = ForestRegressionResult(
             listOf(
