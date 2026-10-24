@@ -7636,6 +7636,18 @@ public final class com/eignex/kumulant/stat/regression/tree/BatchForestConfig {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/eignex/kumulant/stat/regression/tree/BatchForestModel {
+	public final fun drawFunction (Lkotlin/random/Random;Z)Lcom/eignex/kumulant/stat/regression/tree/RegressionFunction;
+	public static synthetic fun drawFunction$default (Lcom/eignex/kumulant/stat/regression/tree/BatchForestModel;Lkotlin/random/Random;ZILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/RegressionFunction;
+	public final fun getForest ()Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;
+	public final fun predictMoments (Lcom/eignex/koblas/Vector;)Lcom/eignex/kumulant/stat/regression/tree/ForestMoments;
+}
+
+public final class com/eignex/kumulant/stat/regression/tree/BatchForestModelKt {
+	public static final fun fitModel (Lcom/eignex/kumulant/stat/regression/tree/BatchRandomForest;Ljava/util/List;Lkotlin/random/Random;Lcom/eignex/koblas/Vector;)Lcom/eignex/kumulant/stat/regression/tree/BatchForestModel;
+	public static synthetic fun fitModel$default (Lcom/eignex/kumulant/stat/regression/tree/BatchRandomForest;Ljava/util/List;Lkotlin/random/Random;Lcom/eignex/koblas/Vector;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/BatchForestModel;
+}
+
 public final class com/eignex/kumulant/stat/regression/tree/BatchRandomForest {
 	public fun <init> (ILcom/eignex/kumulant/stat/regression/tree/BatchForestConfig;)V
 	public synthetic fun <init> (ILcom/eignex/kumulant/stat/regression/tree/BatchForestConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -7926,6 +7938,25 @@ public final class com/eignex/kumulant/stat/regression/tree/ForestEvidenceKt {
 	public static synthetic fun mergeForestEvidence$default (Ljava/lang/Iterable;ZILjava/lang/Object;)Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;
 }
 
+public final class com/eignex/kumulant/stat/regression/tree/ForestMoments {
+	public fun <init> (DDDD)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()D
+	public final fun copy (DDDD)Lcom/eignex/kumulant/stat/regression/tree/ForestMoments;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/tree/ForestMoments;DDDDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/tree/ForestMoments;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDisagreementVariance ()D
+	public final fun getLatentVariance ()D
+	public final fun getLeafMeanVariance ()D
+	public final fun getMean ()D
+	public final fun getPredictiveVariance ()D
+	public final fun getResponseVariance ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public abstract interface class com/eignex/kumulant/stat/regression/tree/ForestPosterior : com/eignex/kumulant/stat/regression/RegressionPosterior {
 }
 
@@ -8088,6 +8119,10 @@ public final class com/eignex/kumulant/stat/regression/tree/RegressionAuditLeaf 
 	public final fun getNeg ()Ljava/util/List;
 	public final fun getObservationsSinceLastCheck ()Ljava/util/concurrent/atomic/AtomicLong;
 	public final fun getPos ()Ljava/util/List;
+}
+
+public abstract interface class com/eignex/kumulant/stat/regression/tree/RegressionFunction {
+	public abstract fun predict (Lcom/eignex/koblas/Vector;)D
 }
 
 public abstract class com/eignex/kumulant/stat/regression/tree/RegressionLeafNode : com/eignex/kumulant/stat/regression/tree/RegressionNode {
@@ -9300,6 +9335,34 @@ public final class com/eignex/kumulant/stat/summary/MaxStat : com/eignex/kumulan
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+}
+
+public final class com/eignex/kumulant/stat/summary/MeanEstimate {
+	public fun <init> (DDDLjava/lang/Double;Ljava/lang/Double;)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()Ljava/lang/Double;
+	public final fun component5 ()Ljava/lang/Double;
+	public final fun copy (DDDLjava/lang/Double;Ljava/lang/Double;)Lcom/eignex/kumulant/stat/summary/MeanEstimate;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/summary/MeanEstimate;DDDLjava/lang/Double;Ljava/lang/Double;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/summary/MeanEstimate;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEffectiveSamples ()D
+	public final fun getKnownNoiseVariance ()Ljava/lang/Double;
+	public final fun getMean ()D
+	public final fun getResponseVariance ()D
+	public final fun getStandardError ()D
+	public final fun getVarianceOfMean ()Ljava/lang/Double;
+	public fun hashCode ()I
+	public final fun lowerBound (D)D
+	public fun toString ()Ljava/lang/String;
+	public final fun upperBound (D)D
+}
+
+public final class com/eignex/kumulant/stat/summary/MeanEstimateKt {
+	public static final fun estimateMean (Lcom/eignex/koblas/Vector;Lcom/eignex/koblas/Vector;Lcom/eignex/koblas/Vector;)Lcom/eignex/kumulant/stat/summary/MeanEstimate;
+	public static synthetic fun estimateMean$default (Lcom/eignex/koblas/Vector;Lcom/eignex/koblas/Vector;Lcom/eignex/koblas/Vector;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/summary/MeanEstimate;
+	public static final fun pairedMeanDifference (Lcom/eignex/koblas/Vector;Lcom/eignex/koblas/Vector;)Lcom/eignex/kumulant/stat/summary/MeanEstimate;
 }
 
 public final class com/eignex/kumulant/stat/summary/MeanResult : com/eignex/kumulant/core/Result {

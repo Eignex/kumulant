@@ -97,6 +97,15 @@ stats:
   off a [VarianceStat] / [MomentsStat] / [MadStat] / [SummaryStat]
   primary on every update.
 
+## Batch mean estimates
+
+[estimateMean] accepts values, relative importance weights, and optional known observation
+variances. [MeanEstimate] separates response dispersion from sampling variance of a weighted
+mean, using Kish effective sample size rather than treating importance weights as counts.
+[pairedMeanDifference] preserves pairing when estimating a mean difference. A standard-error
+multiple is descriptive; repeated comparisons do not turn it into an anytime-valid confidence
+bound. One unknown-noise observation cannot estimate a standard error.
+
 ## Merge
 
 Every entry merges across parallel workers. The additive stats ([SumStat],

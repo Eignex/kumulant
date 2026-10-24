@@ -45,10 +45,19 @@ is the same [ForestRegressionResult] snapshot shape used by streaming forests.
 
 [predictDistribution] summarizes the equal-weight distribution of member predictions
 for model uncertainty. [ForestPrediction.expectedImprovement] computes Gaussian
-expected improvement for either response maximization or cost minimization. This
+expected improvement for either response maximization or cost minimization.
 For log-response models, [ForestPrediction.expectedImprovementLogNormal] integrates
 improvement in original positive response units. This ensemble distribution differs from [ForestRegressionResult.findLeafMerged], which
 pools leaf evidence with statistical weights for posterior-based online scoring.
+
+[BatchRandomForest.fitModel] also estimates leaf-mean uncertainty from original observation
+units, independently of internal bootstrap multiplicities. [ForestMoments] separates tree
+disagreement, uncertainty in leaf means, and response dispersion. Known observation variances
+propagate through normalized squared weights. [BatchForestModel.drawFunction] fixes one tree
+and its Gaussian leaf offsets for coherent repeated queries. These are approximate sampling
+moments: adaptive partition selection, unresolved within-leaf function variation, and correlated
+trees prevent interpreting them as a calibrated posterior. Response dispersion is not latent
+function uncertainty, and additional trees do not multiply independent evidence.
 
 ## Posteriors
 
