@@ -10,6 +10,60 @@ import kotlin.test.assertTrue
 
 class BatchRandomForestTest {
     @Test
+    fun `random thresholds diversify trees reproducibly without bootstrapping`() {
+        val rows = listOf(RegressionObservation(feat(0.0), 0.0), RegressionObservation(feat(1.0), 1.0))
+        val fitter = BatchRandomForest(
+            1,
+            BatchForestConfig(
+                nbrTrees = 8,
+                bootstrap = false,
+                splitStrategy = BatchSplitStrategy.Random,
+            ),
+        )
+        val model = fitter.fit(rows, Random(3))
+        assertEquals(model, fitter.fit(rows, Random(3)))
+        val thresholds = model.trees.map {
+            assertIs<ThresholdSplit>(
+                assertIs<TreeSplitResult>(it.root).split,
+            ).threshold
+        }
+        assertTrue(thresholds.all { it >= 0.0 && it < 1.0 })
+        assertTrue(thresholds.toSet().size > 1)
+        assertEquals(0.0, model.predict(feat(0.0)))
+        assertEquals(1.0, model.predict(feat(1.0)))
+    }
+
+    @Test
+    fun `random splits preserve leaf weight bounds and skip constant feature subspaces`() {
+        val rows = listOf(
+            RegressionObservation(feat(0.0, 0.0), 0.0, 0.2),
+            RegressionObservation(feat(0.0, 1.0), 1.0, 3.0),
+        )
+        val model = BatchRandomForest(
+            2,
+            BatchForestConfig(
+                nbrTrees = 1,
+                bootstrap = false,
+                mtry = 1,
+                splitStrategy = BatchSplitStrategy.Random,
+            ),
+        ).fit(rows, Random(4))
+        assertIs<TreeLeafResult>(model.trees.single().root)
+        val equalWeights = rows.map { it.copy(weight = 1.0) }
+        val varied = BatchRandomForest(
+            2,
+            BatchForestConfig(
+                nbrTrees = 1,
+                bootstrap = false,
+                mtry = 1,
+                splitStrategy = BatchSplitStrategy.Random,
+            ),
+        ).fit(equalWeights, Random(4))
+        assertEquals(0.0, varied.predict(feat(0.0, 0.0)))
+        assertEquals(1.0, varied.predict(feat(0.0, 1.0)))
+    }
+
+    @Test
     fun `CART learns an interaction requiring a zero gain first split`() {
         val rows = listOf(
             RegressionObservation(feat(0.0, 0.0), 0.0),
