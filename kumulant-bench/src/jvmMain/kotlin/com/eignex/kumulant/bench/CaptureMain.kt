@@ -64,7 +64,7 @@ internal fun captureOptions(args: Array<String>): CaptureOptions {
             else -> options.copy(output = value)
         }
     }
-    require(options.mode in listOf("quality", "performance")) { "Mode must be quality or performance" }
+    require(options.mode in listOf("quality", "performance", "concurrency")) { "Mode must be quality, performance, or concurrency" }
     require(options.targets.isNotEmpty() && options.targets.all { it in listOf("jvm-scalar", "jvm-simd") }) {
         "Supported targets: jvm-scalar,jvm-simd"
     }
@@ -76,7 +76,7 @@ internal fun captureOptions(args: Array<String>): CaptureOptions {
 
 fun main(args: Array<String>) {
     val options = captureOptions(args)
-    val cases = selectCaptureCases(options.preset, options.suite, options.pattern)
+    val cases = selectCaptureCases(options.preset, options.suite, options.pattern, options.mode)
     if (options.list) {
         println(captureJson.encodeToString(cases))
         return
@@ -137,7 +137,8 @@ private fun measureCaptureCase(
         check(exit == 0 && validation?.passed == true) { "Quality check failed; see raw/$stem-quality.log" }
         val metrics = if (options.mode == "quality") emptyList() else {
             raw = "raw/$stem-jmh.json"
-            val command = captureJavaCommand(result.target) + captureJmhArguments(result.case, timing, output.resolve(raw), options.allocation)
+            val measurement = captureMeasurementTiming(timing, options.mode, result.case)
+            val command = captureJavaCommand(result.target) + captureJmhArguments(result.case, measurement, output.resolve(raw), options.allocation)
             check(runCaptureProcess(command, output.resolve("raw/$stem-jmh")) == 0) {
                 "JMH failed; see raw/$stem-jmh.log"
             }
@@ -150,10 +151,13 @@ private fun measureCaptureCase(
     }
 }
 
+internal fun captureMeasurementTiming(timing: CaptureTiming, mode: String, case: CaptureCase): CaptureTiming =
+    if (mode == "concurrency") timing.copy(mode = "thrpt", unit = "ops/s", threads = case.threads) else timing
+
 internal fun captureJmhArguments(case: CaptureCase, timing: CaptureTiming, output: Path, allocation: Boolean): List<String> = buildList {
     add("org.openjdk.jmh.Main")
     add("^${Regex.escape("com.eignex.kumulant.bench.${case.benchmark}")}$")
-    addAll(listOf("-bm", timing.mode, "-tu", "ns", "-wi", timing.warmups.toString(), "-i", timing.iterations.toString()))
+    addAll(listOf("-bm", timing.mode, "-tu", if (timing.mode == "thrpt") "s" else "ns", "-wi", timing.warmups.toString(), "-i", timing.iterations.toString()))
     addAll(listOf("-w", "${timing.iterationMillis}ms", "-r", "${timing.iterationMillis}ms", "-f", timing.forks.toString()))
     addAll(listOf("-t", timing.threads.toString(), "-foe", "true", "-rf", "json", "-rff", output.toString()))
     for ((name, value) in case.parameters) addAll(listOf("-p", "$name=$value"))
@@ -215,6 +219,7 @@ private fun writeCaptureManifest(output: Path, options: CaptureOptions, cases: L
         ),
         options = options,
         timing = captureTiming(options.preset),
+        caseTimings = cases.associate { it.id to captureMeasurementTiming(captureTiming(options.preset), options.mode, it) },
         cases = cases,
     )
     writeCaptureJson(output.resolve("manifest.json"), captureJson.encodeToString(manifest))
@@ -233,6 +238,7 @@ private data class CaptureManifest(
     val runtime: Map<String, String>,
     val options: CaptureOptions,
     val timing: CaptureTiming,
+    val caseTimings: Map<String, CaptureTiming>,
     val cases: List<CaptureCase>,
     val instrumented: Boolean = options.allocation,
 )

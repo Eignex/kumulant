@@ -58,23 +58,41 @@ internal fun writeCaptureJson(path: Path, value: String) {
 }
 
 internal fun writeCaptureResults(output: Path, results: List<CaptureResult>, status: String) {
-    writeCaptureJson(output.resolve("results.json"), captureJson.encodeToString(CaptureResults(status = status, results = results)))
+    val reported = captureScalingResults(results)
+    writeCaptureJson(output.resolve("results.json"), captureJson.encodeToString(CaptureResults(status = status, results = reported)))
     Files.writeString(output.resolve("summary.md"), buildString {
         appendLine("# Kumulant capture")
         appendLine()
         appendLine("Status: $status. See manifest.json for settings and provenance; raw/ retains original measurements.")
         appendLine()
-        appendLine("| Case | Target | Status | ns/operation | bytes/operation | Validation errors |")
-        appendLine("| --- | --- | --- | --- | --- | --- |")
-        for (result in results) {
+        appendLine("| Case | Target | Status | ns/operation | operations/s | Scaling | bytes/operation | Validation errors |")
+        appendLine("| --- | --- | --- | --- | --- | --- | --- | --- |")
+        for (result in reported) {
             val timing = result.metrics.firstOrNull { it.name == "time" }?.value?.toString() ?: "—"
+            val throughput = result.metrics.firstOrNull { it.name == "throughput" }?.value?.toString() ?: "—"
+            val scaling = result.metrics.firstOrNull { it.name == "threadScaling" }?.value?.toString() ?: "—"
             val allocation = result.metrics.firstOrNull { it.name == "allocation" }?.value?.toString() ?: "—"
-            val errors = result.validation?.metrics?.filter { it.maximum != null }
-                ?.joinToString("; ") { "${it.name}=${it.value} (max ${it.maximum})" } ?: "—"
-            appendLine("| ${result.case.id} | ${result.target} | ${result.status} | $timing | $allocation | $errors |")
+            val errors = result.validation?.metrics?.filter { it.maximum != null || it.name == "scaledDrift" }
+                ?.joinToString("; ") { "${it.name}=${it.value} (${it.maximum?.let { maximum -> "max $maximum" } ?: "reported"})" } ?: "—"
+            appendLine("| ${result.case.id} | ${result.target} | ${result.status} | $timing | $throughput | $scaling | $allocation | $errors |")
+        }
+        for (result in reported) {
             result.reason?.let { appendLine("\n${result.case.id} (${result.target}): ${it.replace('\n', ' ')}\n") }
         }
     })
+}
+
+internal fun captureScalingResults(results: List<CaptureResult>): List<CaptureResult> = results.map { result ->
+    val throughput = result.metrics.firstOrNull { it.name == "throughput" }?.value
+    val baseline = results.firstOrNull {
+        it.target == result.target && it.case.suite == "concurrency" && it.case.threads == 1 && it.status == "passed" &&
+            it.case.workloadParameters == result.case.workloadParameters
+    }?.metrics?.firstOrNull { it.name == "throughput" }?.value
+    if (result.case.suite != "concurrency" || result.status != "passed" || throughput == null || baseline == null) result
+    else result.copy(metrics = result.metrics + listOf(
+        CaptureMetric("threadScaling", throughput / baseline, "ratio"),
+        CaptureMetric("parallelEfficiency", throughput / baseline / result.case.threads, "ratio"),
+    ))
 }
 
 internal fun jmhMetrics(report: String, case: CaptureCase): List<CaptureMetric> {
@@ -84,17 +102,22 @@ internal fun jmhMetrics(report: String, case: CaptureCase): List<CaptureMetric> 
     require(row.getValue("benchmark").jsonPrimitive.content == "com.eignex.kumulant.bench.${case.benchmark}") {
         "Unexpected JMH benchmark for ${case.id}"
     }
-    require(row.getValue("mode").jsonPrimitive.content == "avgt") { "JMH must report average time" }
+    val concurrent = "concurrency" in case.modes
+    require(row.getValue("mode").jsonPrimitive.content == if (concurrent) "thrpt" else "avgt") { "Unexpected JMH measurement mode" }
     val parameters = row.getValue("params").jsonObject.mapValues { it.value.jsonPrimitive.content }
     require(parameters == case.parameters) { "Unexpected JMH parameters for ${case.id}: $parameters" }
     val primary = row.getValue("primaryMetric").jsonObject
-    require(primary.getValue("scoreUnit").jsonPrimitive.content == "ns/op") { "JMH must report ns/op" }
+    require(primary.getValue("scoreUnit").jsonPrimitive.content == if (concurrent) "ops/s" else "ns/op") { "Unexpected JMH score unit" }
     val score = primary.getValue("score").jsonPrimitive.double
     require(score.isFinite() && score > 0.0) { "Invalid JMH time: $score" }
     return buildList {
-        add(CaptureMetric("time", score / case.batchSize, "ns/operation"))
+        add(CaptureMetric("time", if (concurrent) 1e9 / (score * case.batchSize) else score / case.batchSize, "ns/operation"))
+        if (concurrent) add(CaptureMetric("throughput", score * case.batchSize, "operations/s"))
         val error = primary["scoreError"]?.jsonPrimitive?.content?.toDoubleOrNull()
-        if (error != null && error.isFinite()) add(CaptureMetric("timeError", error / case.batchSize, "ns/operation"))
+        if (error != null && error.isFinite()) {
+            if (concurrent) add(CaptureMetric("throughputError", error * case.batchSize, "operations/s"))
+            else add(CaptureMetric("timeError", error / case.batchSize, "ns/operation"))
+        }
         val secondary = row["secondaryMetrics"] as? JsonObject
         val allocation = secondary?.get("gc.alloc.rate.norm") as? JsonObject
         if (allocation != null) {

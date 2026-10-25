@@ -44,7 +44,7 @@ class CaptureMainTest {
             arrayOf("--targets", "jvm-scalar,jvm-scalar"),
             arrayOf("--preset"),
             arrayOf("--case", "--list"),
-            arrayOf("--mode", "concurrency"),
+            arrayOf("--mode", "missing"),
             arrayOf("--unknown", "value"),
             arrayOf("--mode", "quality", "--allocation"),
             arrayOf("--output", ""),

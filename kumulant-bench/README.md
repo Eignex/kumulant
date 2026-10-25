@@ -21,12 +21,15 @@ kumulant-bench/capture-report.sh --case 'cholesky/factor/*' --targets jvm-scalar
 
 # Collect allocation evidence in a separate instrumented capture.
 kumulant-bench/capture-report.sh --preset smoke --allocation --output build/allocation-capture
+
+# Measure shared-stat writers and merges, with preservation and snapshot checks.
+kumulant-bench/capture-report.sh --preset smoke --mode concurrency
 ```
 
 `--case` matches stable case IDs with `*` wildcards; quote the pattern to prevent
 shell expansion. `--suite` is `stats`, `cholesky`, `regression`, `storage`, `bandits`,
-`vectors`, or `sketches`. `--mode` is `performance`
-(default) or `quality`; performance always requires quality validation to pass
+`vectors`, `sketches`, or `concurrency`. `--mode` is `performance` (default),
+`quality`, or `concurrency`; timed captures require quality validation to pass
 first. A backend mismatch fails validation rather than silently publishing a
 fallback's timing. Scalar and SIMD rows for stats can be identical implementations;
 the labels identify the JVM configuration and selected Koblas backend.
@@ -37,7 +40,7 @@ the labels identify the JVM configuration and selected Koblas backend.
 | `standard` | More dimensions, vector representations, bandit policies and matrix shapes | 3 warmups, 5 measurements, 1 s each, 2 forks |
 | `extended` | Additional dimensions, block-boundary matrices and larger shapes | 5 warmups, 10 measurements, 1 s each, 3 forks |
 
-Smoke timing checks wiring only. Every performance measurement uses one thread,
+Smoke timing checks wiring only. Ordinary performance measurements use one thread,
 average ns/op, and a fixed 512 MiB heap. A stat invocation is 4096 updates from a
 precomputed weighted stream, accumulated into one stat throughout the trial; the
 reported time and allocation are divided by 4096. Factorization and matrix solve
@@ -68,6 +71,33 @@ pseudo-regret for seeds 0–4, its mean and standard error; this avoids adding
 counterfactual reward noise to regret. The regret gate checks finiteness and the
 reward-range bound, without claiming that every policy should achieve the same
 quality. Quality seeds are recorded separately from the performance seed.
+
+### Concurrency captures
+
+Concurrency cases are selected only by `--mode concurrency`. They use JMH aggregate
+throughput, normalized to updates/s or merges/s, with an inverse aggregate
+ns/operation. This inverse is not the latency observed by an individual writer.
+Each result records its writer count; `caseTimings` in the manifest records the
+actual mode and threads for every case. Matching one-writer cases provide thread
+scaling and parallel efficiency. Keep raw samples when interpreting those ratios.
+
+Smoke covers sum and variance, Strict and Relaxed, one and four writers, and update
+and merge operations. Standard adds mean and HighWrite; extended adds eight writers.
+The correctness workload uses exact unit weights to detect lost observations;
+sum receives ones, and coupled stats receive seeded uniform values. Each worker
+applies 4096 observations or merges their snapshot, while another worker reads
+snapshots. Counts must remain finite, bounded and nondecreasing; final counts must
+be exact. Strict/HighWrite snapshots must also satisfy bounded-input mean/variance
+ranges. Sum and Strict/HighWrite drift have a `1e-10` scaled-error gate. Relaxed
+coupled-stat drift is reported separately without pretending it has the strict
+contract. Timing uses the existing weighted update fixtures and prepared merge
+snapshots; the correctness workload's own fingerprint is retained explicitly.
+
+Worker and reader exceptions propagate immediately through a completion queue;
+timeouts interrupt remaining workers and shut down their executor. The runner
+does not share Concurrency.None stats between writers. These cases have no ordering
+requirement on timestamps; rate and other order-sensitive stats need their own
+workload-specific reference before they can join the concurrency catalogue.
 
 ### Reports
 
@@ -100,10 +130,15 @@ retains the report directory. Commit the harness to the selected trusted ref
 before submitting it. Scripts own measurement and profiling, so the Lab spec
 does not request experiment-level `measurement` instrumentation.
 
+`lab/concurrency-smoke.json` selects the concurrency mode and reserves five CPU
+slots for up to four writers and one correctness reader. A custom eight-writer
+quality capture needs nine slots. Timing itself uses only the named writer count.
+
 The unified capture covers representative JVM stat updates, Cholesky factorization
 and matrix solves, Bayesian regression updates and snapshots, bandit cycles,
-vector expressions and sketches. Native and concurrency migration, and Lab
-metric ingestion, are follow-up stages in
+vector expressions, sketches, and shared-stat updates/merges. Native captures,
+remaining workload families, legacy-runner consolidation, and Lab metric ingestion
+are follow-up stages in
 [`BENCHMARK_PLAN.md`](../docs/internal/BENCHMARK_PLAN.md). Existing benchmark and
 analysis entry points remain available during migration.
 

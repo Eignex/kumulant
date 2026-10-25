@@ -59,6 +59,14 @@ expected-reward regret. Native integration is a separate subsequent stack layer.
 
 ### 3. Concurrency and consolidation
 
+The third stack layer adds a concurrency mode for shared sum/mean/variance update
+and merge paths. It reports aggregate throughput, one-writer scaling and parallel
+efficiency, verifies exact observation preservation while a reader checks snapshots,
+and propagates worker/reader failures with bounded cleanup. Cases use one/four
+writers (extended adds eight), and Strict/Relaxed/HighWrite contracts. Order-sensitive
+stats and legacy entry-point retirement remain follow-up work until their own
+references and coverage are available.
+
 - Add workload-specific update-preservation, snapshot, merge, and drift reports.
 - Propagate worker exceptions and always shut down executors; do not equate
   disjoint timestamp ranges with globally ordered execution.
@@ -79,8 +87,15 @@ expected-reward regret. Native integration is a separate subsequent stack layer.
 
 Stage 1 is implemented. The entry point is `kumulant-bench/capture-report.sh`;
 `kumulant-bench/lab/smoke.json` uses Lab's existing profile-script interface. The
-README documents coverage, case lifecycles, presets and report schema. Stages 2–4
-remain follow-up work; existing benchmark and analysis entry points are retained.
+README documents coverage, case lifecycles, presets and report schema. Representative
+workload and concurrency migration is implemented in subsequent stack layers.
+Native capture, remaining operation families, legacy consolidation and Lab metric
+ingestion remain follow-up work; existing analysis entry points are retained.
+
+The stack starts with #146 (`codex/benchmark-capture`, based on main), then #148
+(`codex/benchmark-workloads`, based on the foundation), then the concurrency layer
+(`codex/benchmark-concurrency`, based on workloads). Each layer has its own full
+local gate; Lab jobs and performance baselines are not submitted by this work.
 
 Validation completed:
 
@@ -96,3 +111,15 @@ Validation completed:
 - Reusing that nonempty output directory failed without altering its evidence.
 - Shell syntax and `git diff --check` passed. No Lab job was submitted; the job
   specification and executable entry point were checked locally.
+
+Subsequent stack-layer validation:
+
+- The workload layer passed its own `check lintDocs --rerun-tasks` gate, all 70
+  standard quality combinations, and all 30 smoke timing/allocation combinations.
+- The concurrency layer passed its own full gate (62 tasks), all 72 standard
+  correctness combinations, and all 32 smoke timing combinations. Four final
+  four-writer update captures verified raw JMH threads, aggregate throughput,
+  normalized units and per-case manifest settings on both JVM backends.
+- All 28 capture JVM tests pass and complete within 300 ms individually; the
+  latest full-gate run's slowest capture test took 133 ms.
+- No Lab jobs were submitted and smoke numbers are not performance baselines.

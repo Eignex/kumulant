@@ -9,6 +9,24 @@ import kotlin.test.assertTrue
 
 class CaptureReportTest {
     @Test
+    fun `relaxed drift stays visible without a strict acceptance threshold`() {
+        val directory = Files.createTempDirectory("capture-drift")
+        val case = captureCases("smoke").single { it.id == "concurrency/variance/update/Relaxed/1" }
+        val result = CaptureResult(case, "jvm-scalar", "passed", validation = CaptureValidation(
+            "scalar", "fingerprint", listOf(CaptureMetric("scaledDrift", 0.1, "ratio")),
+        ))
+        try {
+            writeCaptureResults(directory, listOf(result), "passed")
+
+            assertTrue(Files.readString(directory.resolve("summary.md")).contains("scaledDrift=0.1 (reported)"))
+        } finally {
+            Files.delete(directory.resolve("results.json"))
+            Files.delete(directory.resolve("summary.md"))
+            Files.delete(directory)
+        }
+    }
+
+    @Test
     fun `batch timings and allocation normalize to individual updates`() {
         val case = captureCases("smoke").first()
         val report = """[{

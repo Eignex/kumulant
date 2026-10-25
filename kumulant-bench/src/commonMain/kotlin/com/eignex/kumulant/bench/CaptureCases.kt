@@ -18,6 +18,8 @@ internal data class CaptureCase(
     val fixtureVersion: Int = 1,
     val workloadParameters: Map<String, String> = emptyMap(),
     val qualitySeeds: List<Int> = listOf(seed),
+    val modes: List<String> = listOf("performance", "quality"),
+    val threads: Int = 1,
 )
 
 internal fun captureCases(preset: String): List<CaptureCase> {
@@ -66,16 +68,39 @@ internal fun captureCases(preset: String): List<CaptureCase> {
             lifecycle = "Reuse one factor and unchanged right hand sides; result allocation is timed.",
         )
     }
-    return stats + factors + solves + workloadCaptureCases(preset)
+    return stats + factors + solves + workloadCaptureCases(preset) + concurrencyCaptureCases(preset)
 }
 
-internal fun selectCaptureCases(preset: String, suite: String?, pattern: String): List<CaptureCase> {
-    require(suite == null || suite in listOf("stats", "cholesky", "regression", "storage", "bandits", "vectors", "sketches")) {
+internal fun selectCaptureCases(preset: String, suite: String?, pattern: String, mode: String? = null): List<CaptureCase> {
+    require(suite == null || suite in listOf("stats", "cholesky", "regression", "storage", "bandits", "vectors", "sketches", "concurrency")) {
         "Unknown suite: $suite"
     }
     val expression = pattern.split('*').joinToString(".*", "^", "$", transform = Regex::escape).toRegex()
-    return captureCases(preset).filter { (suite == null || it.suite == suite) && expression.matches(it.id) }
+    return captureCases(preset).filter { (suite == null || it.suite == suite) && expression.matches(it.id) && (mode == null || mode in it.modes) }
         .also { require(it.isNotEmpty()) { "No cases match suite=${suite ?: "all"}, case=$pattern, preset=$preset" } }
+}
+
+private fun concurrencyCaptureCases(preset: String): List<CaptureCase> = buildList {
+    val names = if (preset == "smoke") listOf("SumStat", "VarianceStat") else listOf("SumStat", "MeanStat", "VarianceStat")
+    val levels = if (preset == "smoke") listOf("Strict", "Relaxed") else listOf("Strict", "Relaxed", "HighWrite")
+    val widths = if (preset == "extended") listOf(1, 4, 8) else listOf(1, 4)
+    for (name in names) for (level in levels) for (threads in widths) for (operation in listOf("update", "merge")) {
+        val id = "concurrency/${name.removeSuffix("Stat").lowercase()}/$operation/$level/$threads"
+        add(CaptureCase(
+            id = id,
+            suite = "concurrency",
+            benchmark = if (operation == "update") "UpdateThroughputBenchmark.update" else "CaptureMergeBenchmark.merge",
+            parameters = if (operation == "update") mapOf("name" to name, "concurrency" to level) else mapOf("caseId" to id),
+            workloadParameters = mapOf("name" to name, "concurrency" to level, "operation" to operation, "observations" to "$STAT_BENCHMARK_BATCH_SIZE"),
+            seed = STAT_BENCHMARK_SEED,
+            operation = operation,
+            batchSize = if (operation == "update") STAT_BENCHMARK_BATCH_SIZE else 1,
+            lifecycle = if (operation == "update") "Concurrent writers accumulate prepared batches into one shared stat."
+            else "Concurrent writers merge one prepared snapshot of 4096 observations per operation into a shared stat.",
+            modes = listOf("concurrency"),
+            threads = threads,
+        ))
+    }
 }
 
 private fun workloadCaptureCases(preset: String): List<CaptureCase> = buildList {

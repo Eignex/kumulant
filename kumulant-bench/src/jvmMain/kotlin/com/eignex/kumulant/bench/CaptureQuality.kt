@@ -30,6 +30,7 @@ fun main(args: Array<String>) {
 internal fun captureQuality(case: CaptureCase): CaptureValidation = when (case.suite) {
     "stats" -> statQuality(allSpecs.single { it.name == case.parameters.getValue("name") }, case)
     "cholesky" -> choleskyQuality(case)
+    "concurrency" -> concurrencyCaptureQuality(case)
     else -> workloadCaptureQuality(case)
 }
 

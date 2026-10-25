@@ -1,0 +1,11 @@
+{
+  "name": "kumulant-concurrency-smoke",
+  "description": "Capture shared-stat update and merge throughput with observation preservation and concurrent snapshot checks",
+  "repository": "Eignex/kumulant",
+  "base": {"ref": "main", "processors": "5", "timeout": "1800000"},
+  "profile": {
+    "script": "kumulant-bench/capture-report.sh",
+    "args": ["--preset", "smoke", "--mode", "concurrency"],
+    "outputArgument": "--output"
+  }
+}
