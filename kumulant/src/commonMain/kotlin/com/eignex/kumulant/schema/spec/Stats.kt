@@ -163,12 +163,20 @@ data class Adwin(
     val maxBucketsPerSize: Int = StatDefaults.ADWIN_MAX_BUCKETS_PER_SIZE,
 ) : SeriesStatSpec<AdwinResult>
 
-/** Spec for `MadStat`: streaming median and median absolute deviation via two t-digests. */
+/** Spec for `MadStat`: streaming median and median absolute deviation from one raw-value t-digest. */
 @Serializable
 @SerialName("Mad")
 data class Mad(
-    /** T-digest compression for both digests; lower = more centroids, tighter quantiles. */
+    /** T-digest compression; larger values retain more centroids and finer detail. */
     val compression: Double = StatDefaults.TDIGEST_COMPRESSION,
+) : SeriesStatSpec<MadResult>
+
+/** Spec for `FrugalMadStat`: constant-memory adaptive median and MAD estimates. */
+@Serializable
+@SerialName("FrugalMad")
+data class FrugalMad(
+    /** Full step size in input units; each adjustment is bounded by half this value. */
+    val stepSize: Double = StatDefaults.FRUGAL_QUANTILE_STEP_SIZE,
 ) : SeriesStatSpec<MadResult>
 
 /** Spec for `ThresholdBucketStat`: weighted counts per user-defined value bucket. */

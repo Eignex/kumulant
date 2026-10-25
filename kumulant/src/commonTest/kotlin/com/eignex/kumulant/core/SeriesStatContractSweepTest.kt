@@ -19,6 +19,7 @@ import com.eignex.kumulant.schema.spec.DecayingVariance
 import com.eignex.kumulant.schema.spec.EwmaMean
 import com.eignex.kumulant.schema.spec.EwmaVariance
 import com.eignex.kumulant.schema.spec.Excursion
+import com.eignex.kumulant.schema.spec.FrugalMad
 import com.eignex.kumulant.schema.spec.FrugalQuantile
 import com.eignex.kumulant.schema.spec.HdrHistogram
 import com.eignex.kumulant.schema.spec.Holt
@@ -73,6 +74,8 @@ class SeriesStatContractSweepTest {
         "ThresholdBucket" to ThresholdBucket(thresholds = listOf(1.0, 5.0, 10.0)),
         "Variance" to Variance,
         "Moments" to Moments,
+        "Mad" to Mad(),
+        "FrugalMad" to FrugalMad(),
         "Summary" to Summary,
         "BernoulliSum" to BernoulliSum,
         "TotalWeights" to TotalWeights,

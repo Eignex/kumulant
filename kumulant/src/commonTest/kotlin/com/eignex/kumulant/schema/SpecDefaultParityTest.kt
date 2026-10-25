@@ -13,6 +13,7 @@ import com.eignex.kumulant.schema.spec.CounterRate
 import com.eignex.kumulant.schema.spec.Cusum
 import com.eignex.kumulant.schema.spec.DDSketch
 import com.eignex.kumulant.schema.spec.DiscreteStatSpec
+import com.eignex.kumulant.schema.spec.FrugalMad
 import com.eignex.kumulant.schema.spec.FrugalQuantile
 import com.eignex.kumulant.schema.spec.HdrHistogram
 import com.eignex.kumulant.schema.spec.HyperLogLog
@@ -39,6 +40,7 @@ import com.eignex.kumulant.stat.score.AucStat
 import com.eignex.kumulant.stat.sketch.BloomFilterStat
 import com.eignex.kumulant.stat.sketch.CountMinSketchStat
 import com.eignex.kumulant.stat.sketch.MinHashStat
+import com.eignex.kumulant.stat.summary.FrugalMadStat
 import com.eignex.kumulant.stat.summary.MadStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -97,6 +99,7 @@ class SpecDefaultParityTest {
             series("PageHinkley", PageHinkley(), PageHinkleyStat()),
             series("Adwin", Adwin(), AdwinStat()),
             series("Mad", Mad(), MadStat()),
+            series("FrugalMad", FrugalMad(), FrugalMadStat()),
             series("DDSketch", DDSketch(), DDSketchStat()),
             series("TDigest", TDigest(), TDigestStat()),
             series("HdrHistogram", HdrHistogram(), HdrHistogramStat()),

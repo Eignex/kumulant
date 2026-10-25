@@ -3573,6 +3573,32 @@ final class com.eignex.kumulant.schema.spec/EwmaVariance : com.eignex.kumulant.s
     }
 }
 
+final class com.eignex.kumulant.schema.spec/FrugalMad : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.summary/MadResult> { // com.eignex.kumulant.schema.spec/FrugalMad|null[0]
+    constructor <init>(kotlin/Double = ...) // com.eignex.kumulant.schema.spec/FrugalMad.<init>|<init>(kotlin.Double){}[0]
+
+    final val stepSize // com.eignex.kumulant.schema.spec/FrugalMad.stepSize|{}stepSize[0]
+        final fun <get-stepSize>(): kotlin/Double // com.eignex.kumulant.schema.spec/FrugalMad.stepSize.<get-stepSize>|<get-stepSize>(){}[0]
+
+    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/FrugalMad.component1|component1(){}[0]
+    final fun copy(kotlin/Double = ...): com.eignex.kumulant.schema.spec/FrugalMad // com.eignex.kumulant.schema.spec/FrugalMad.copy|copy(kotlin.Double){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/FrugalMad.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/FrugalMad.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/FrugalMad.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/FrugalMad> { // com.eignex.kumulant.schema.spec/FrugalMad.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.schema.spec/FrugalMad.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/FrugalMad.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/FrugalMad.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/FrugalMad // com.eignex.kumulant.schema.spec/FrugalMad.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/FrugalMad) // com.eignex.kumulant.schema.spec/FrugalMad.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.FrugalMad){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.schema.spec/FrugalMad.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/FrugalMad> // com.eignex.kumulant.schema.spec/FrugalMad.Companion.serializer|serializer(){}[0]
+    }
+}
+
 final class com.eignex.kumulant.schema.spec/FrugalQuantile : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.quantile/QuantileResult> { // com.eignex.kumulant.schema.spec/FrugalQuantile|null[0]
     constructor <init>(kotlin/Double, kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.spec/FrugalQuantile.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
 
@@ -8071,11 +8097,30 @@ final class com.eignex.kumulant.stat.summary/CountStat : com.eignex.kumulant.cor
     final fun validateMerge(com.eignex.kumulant.stat.summary/SumResult) // com.eignex.kumulant.stat.summary/CountStat.validateMerge|validateMerge(com.eignex.kumulant.stat.summary.SumResult){}[0]
 }
 
+final class com.eignex.kumulant.stat.summary/FrugalMadStat : com.eignex.kumulant.core/RefusesMerge, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/MadResult> { // com.eignex.kumulant.stat.summary/FrugalMadStat|null[0]
+    constructor <init>(kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.summary/FrugalMadStat.<init>|<init>(kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
+
+    final val concurrency // com.eignex.kumulant.stat.summary/FrugalMadStat.concurrency|{}concurrency[0]
+        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.summary/FrugalMadStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
+    final val mergeRefusal // com.eignex.kumulant.stat.summary/FrugalMadStat.mergeRefusal|{}mergeRefusal[0]
+        final fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.stat.summary/FrugalMadStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
+    final val stepSize // com.eignex.kumulant.stat.summary/FrugalMadStat.stepSize|{}stepSize[0]
+        final fun <get-stepSize>(): kotlin/Double // com.eignex.kumulant.stat.summary/FrugalMadStat.stepSize.<get-stepSize>|<get-stepSize>(){}[0]
+
+    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.summary/FrugalMadStat // com.eignex.kumulant.stat.summary/FrugalMadStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
+    final fun merge(com.eignex.kumulant.stat.summary/MadResult): kotlin/Nothing // com.eignex.kumulant.stat.summary/FrugalMadStat.merge|merge(com.eignex.kumulant.stat.summary.MadResult){}[0]
+    final fun read(kotlin/Long): com.eignex.kumulant.stat.summary/MadResult // com.eignex.kumulant.stat.summary/FrugalMadStat.read|read(kotlin.Long){}[0]
+    final fun reset() // com.eignex.kumulant.stat.summary/FrugalMadStat.reset|reset(){}[0]
+    final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.summary/FrugalMadStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+}
+
 final class com.eignex.kumulant.stat.summary/MadResult : com.eignex.kumulant.core/HasCenterScale, com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.summary/MadResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.summary/MadResult.<init>|<init>(kotlin.Double;kotlin.Double){}[0]
+    constructor <init>(kotlin/Double, kotlin/Double, com.eignex.kumulant.stat.quantile/TDigestResult? = ...) // com.eignex.kumulant.stat.summary/MadResult.<init>|<init>(kotlin.Double;kotlin.Double;com.eignex.kumulant.stat.quantile.TDigestResult?){}[0]
 
     final val center // com.eignex.kumulant.stat.summary/MadResult.center|{}center[0]
         final fun <get-center>(): kotlin/Double // com.eignex.kumulant.stat.summary/MadResult.center.<get-center>|<get-center>(){}[0]
+    final val digest // com.eignex.kumulant.stat.summary/MadResult.digest|{}digest[0]
+        final fun <get-digest>(): com.eignex.kumulant.stat.quantile/TDigestResult? // com.eignex.kumulant.stat.summary/MadResult.digest.<get-digest>|<get-digest>(){}[0]
     final val mad // com.eignex.kumulant.stat.summary/MadResult.mad|{}mad[0]
         final fun <get-mad>(): kotlin/Double // com.eignex.kumulant.stat.summary/MadResult.mad.<get-mad>|<get-mad>(){}[0]
     final val median // com.eignex.kumulant.stat.summary/MadResult.median|{}median[0]
@@ -8085,7 +8130,8 @@ final class com.eignex.kumulant.stat.summary/MadResult : com.eignex.kumulant.cor
 
     final fun component1(): kotlin/Double // com.eignex.kumulant.stat.summary/MadResult.component1|component1(){}[0]
     final fun component2(): kotlin/Double // com.eignex.kumulant.stat.summary/MadResult.component2|component2(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.summary/MadResult // com.eignex.kumulant.stat.summary/MadResult.copy|copy(kotlin.Double;kotlin.Double){}[0]
+    final fun component3(): com.eignex.kumulant.stat.quantile/TDigestResult? // com.eignex.kumulant.stat.summary/MadResult.component3|component3(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.stat.quantile/TDigestResult? = ...): com.eignex.kumulant.stat.summary/MadResult // com.eignex.kumulant.stat.summary/MadResult.copy|copy(kotlin.Double;kotlin.Double;com.eignex.kumulant.stat.quantile.TDigestResult?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.summary/MadResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.summary/MadResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.summary/MadResult.toString|toString(){}[0]
@@ -8117,6 +8163,7 @@ final class com.eignex.kumulant.stat.summary/MadStat : com.eignex.kumulant.core/
     final fun read(kotlin/Long): com.eignex.kumulant.stat.summary/MadResult // com.eignex.kumulant.stat.summary/MadStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.summary/MadStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.summary/MadStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.summary/MadResult) // com.eignex.kumulant.stat.summary/MadStat.validateMerge|validateMerge(com.eignex.kumulant.stat.summary.MadResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.summary/MaxResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.summary/MaxResult|null[0]
@@ -9161,6 +9208,7 @@ final fun (com.eignex.kumulant.stat.quantile/SparseHistogramResult).com.eignex.k
 final fun (com.eignex.kumulant.stat.quantile/SparseHistogramResult).com.eignex.kumulant.stat.score/pitKsDistance(kotlin/Int): kotlin/Double // com.eignex.kumulant.stat.score/pitKsDistance|pitKsDistance@com.eignex.kumulant.stat.quantile.SparseHistogramResult(kotlin.Int){}[0]
 final fun (com.eignex.kumulant.stat.quantile/TDigestResult).com.eignex.kumulant.stat.anomaly/exceedanceScore(kotlin/Double, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.anomaly/exceedanceScore|exceedanceScore@com.eignex.kumulant.stat.quantile.TDigestResult(kotlin.Double;kotlin.Double){}[0]
 final fun (com.eignex.kumulant.stat.quantile/TDigestResult).com.eignex.kumulant.stat.quantile/toSparseHistogram(): com.eignex.kumulant.stat.quantile/SparseHistogramResult // com.eignex.kumulant.stat.quantile/toSparseHistogram|toSparseHistogram@com.eignex.kumulant.stat.quantile.TDigestResult(){}[0]
+final fun (com.eignex.kumulant.stat.quantile/TDigestResult).com.eignex.kumulant.stat.summary/medianAbsoluteDeviation(): com.eignex.kumulant.stat.summary/MadResult // com.eignex.kumulant.stat.summary/medianAbsoluteDeviation|medianAbsoluteDeviation@com.eignex.kumulant.stat.quantile.TDigestResult(){}[0]
 final fun (com.eignex.kumulant.stat.regression.tree/ForestRegressionResult).com.eignex.kumulant.stat.regression.tree/predictDistribution(com.eignex.koblas/Vector): com.eignex.kumulant.stat.regression.tree/ForestPrediction // com.eignex.kumulant.stat.regression.tree/predictDistribution|predictDistribution@com.eignex.kumulant.stat.regression.tree.ForestRegressionResult(com.eignex.koblas.Vector){}[0]
 final fun (com.eignex.kumulant.stat.regression.tree/RegressionNode<*>).com.eignex.kumulant.stat.regression.tree/aggregate(): com.eignex.kumulant.stat.summary/WeightedVarianceResult // com.eignex.kumulant.stat.regression.tree/aggregate|aggregate@com.eignex.kumulant.stat.regression.tree.RegressionNode<*>(){}[0]
 final fun (com.eignex.kumulant.stat.regression.tree/RegressionNode<com.eignex.koblas/Vector>).com.eignex.kumulant.stat.regression.tree/snapshot(): com.eignex.kumulant.stat.regression.tree/TreeNodeResult // com.eignex.kumulant.stat.regression.tree/snapshot|snapshot@com.eignex.kumulant.stat.regression.tree.RegressionNode<com.eignex.koblas.Vector>(){}[0]

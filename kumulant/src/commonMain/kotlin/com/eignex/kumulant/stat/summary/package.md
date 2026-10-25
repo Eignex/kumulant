@@ -63,14 +63,23 @@ the standardize and min-max projections downstream.
 
 ## Robust dispersion
 
-[MadStat] tracks the running median and median absolute deviation via
-two t-digests: one over raw values and one over absolute deviations from
-the running median. Reach for it as the robust analog of standard
-deviation for heavy-tailed inputs where the mean and variance overstate
-central tendency and spread. The result implements
-[com.eignex.kumulant.core.HasCenterScale] (with `center = median`,
-`scale = mad`), so the standardize / band projections work on it
-directly.
+[MadStat] retains a single raw-value t-digest. At read time it computes the
+weighted median of centroid locations and their absolute deviations from that
+same center. Both estimates approximate the original observations because
+compression loses within-centroid spread. [medianAbsoluteDeviation] also
+projects an existing [com.eignex.kumulant.stat.quantile.TDigestResult] directly,
+without requiring precomputed quantiles.
+
+[FrugalMadStat] keeps two adaptive estimates and an initialization flag. Its
+constant step size trades responsiveness against jitter; positive weights each
+trigger one step. It estimates recent center and spread, with no historical
+accuracy guarantee or merge support.
+
+Both return [MadResult], which implements
+[com.eignex.kumulant.core.HasCenterScale] with `center = median` and
+`scale = mad`. MAD is unscaled: it is not a Gaussian standard deviation.
+[MadResult.digest] retains merge evidence for digest-backed results; frugal and
+manually constructed summary-only results carry no digest.
 
 ## Paired
 
@@ -108,15 +117,17 @@ bound. One unknown-noise observation cannot estimate a standard error.
 
 ## Merge
 
-Every entry merges across parallel workers. The additive stats ([SumStat],
+The additive stats ([SumStat],
 [CountStat], [TotalWeightsStat], [BernoulliSumStat]) sum cell-wise; [MinStat],
 [MaxStat], and [RangeStat] take cell-wise min/max; [ArgMinStat] and
 [ArgMaxStat] keep the (value, timestamp) pair from the smaller (larger)
 value; the Welford family
 ([MeanStat], [VarianceStat], [MomentsStat], [SummaryStat]) uses the Chan-style
 parallel recurrence; [PairedSumStat] sums each axis. All of these are exact.
-[MadStat] is the one approximation: the t-digests carry no round-trippable
-state, so merge re-pushes the `(median, MAD)` pair as a single update.
+[MadStat] merges the complete digest in [MadResult.digest] and recomputes the
+median and MAD; the result inherits t-digest approximation. Summary-only
+[MadResult] values are rejected. [FrugalMadStat] refuses merge because its
+adaptive estimates contain insufficient evidence to combine streams.
 
 ## Concurrency
 
@@ -128,5 +139,6 @@ state, so merge re-pushes the `(median, MAD)` pair as a single update.
 | [MeanStat] | O(1) | O(1) | Welford-coupled; locked under Strict / HighWrite, racing under Relaxed |
 | [VarianceStat], [SummaryStat] | O(1) | O(1) | Welford-coupled |
 | [MomentsStat] | O(1) | O(1) | Welford-coupled (four cells) |
-| [MadStat] | O(t-digest compression) | O(log compression) | t-digest self-serialises |
+| [MadStat] | O(t-digest compression) | Buffered t-digest update; O(k) read for k centroids | inherits t-digest snapshot consistency |
+| [FrugalMadStat] | O(1) | O(1) | coupled estimates locked under every concurrent level |
 | [PairedSumStat] | O(1) | O(1) | two independent additive cells |

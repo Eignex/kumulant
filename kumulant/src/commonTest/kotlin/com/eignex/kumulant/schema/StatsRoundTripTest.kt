@@ -28,6 +28,27 @@ class StatsRoundTripTest {
         return SchemaJson.decodeFromString<StatSpec>(json) as C
     }
 
+    @Test fun `frugal mad configuration round trips`() {
+        val spec = FrugalMad(stepSize = 0.5)
+
+        assertEquals(spec, roundTrip(spec))
+    }
+
+    @Test fun `frugal mad materializes with center and scale`() {
+        val stat = FrugalMad(stepSize = 2.0).band(3.0).materialize()
+        stat.update(0.0)
+        stat.update(100.0)
+
+        assertEquals(1.0, stat.read().center)
+        assertEquals(1.0, stat.read().scale)
+    }
+
+    @Test fun `frugal mad cannot be windowed through merged snapshots`() {
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            FrugalMad().windowed(1_000).materialize()
+        }
+    }
+
     @Test fun `sumConfig round trips`() {
         assertEquals(Sum, roundTrip(Sum))
     }
