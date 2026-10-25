@@ -1,7 +1,8 @@
 package com.eignex.kumulant.bandit.contextual
 
-import com.eignex.kumulant.stat.regression.glm.LinearPosterior
-import com.eignex.kumulant.stat.regression.glm.LinearRegressionResult
+import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.schema.spec.RegressionStatSpec
+import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -14,62 +15,21 @@ import kotlinx.serialization.Serializable
 sealed interface ContextualBanditSpec
 
 /**
- * Spec for [RegressionContextualBandit] with a linear-posterior backbone.
- * The [regression] variant picks one of the three [LinearRegressionResult]-typed
- * regressors; the [posterior] selects the matching scoring rule.
+ * Spec for [RegressionContextualBandit] using the same [RegressionStatSpec] trees as statistical schemas.
+ * [R] ties the per-arm and optional global regressors to their [posterior] scoring rule.
+ * Built-in linear, tree, and forest posteriors are wire-portable.
  */
 @Serializable
 @SerialName("RegressionContextual")
-data class RegressionContextualSpec(
+data class RegressionContextualSpec<R : Result>(
     /** Number of arms in the population. */
     val nbrArms: Int,
     /** Per-arm regressor template; cloned for each arm. */
-    val regression: LinearRegressionSpec,
+    val regression: RegressionStatSpec<R>,
     /** Stateless arm scorer applied to each per-arm snapshot. */
-    val posterior: LinearPosterior<*>,
+    val posterior: RegressionPosterior<R>,
     /** Per-evaluate exploration scale forwarded to [posterior]. */
     val exploration: Double = 1.0,
     /** Template for the global pooling regressor; `null` disables pooling. */
-    val globalRegression: LinearRegressionSpec? = null,
+    val globalRegression: RegressionStatSpec<R>? = null,
 ) : ContextualBanditSpec
-
-/**
- * Wire-portable spec for the three [LinearRegressionResult]-typed regressors that
- * [RegressionContextualBandit] composes with. RegressionTree-based regressors and other
- * non-linear stats are not yet wire-portable; construct them programmatically.
- */
-@Serializable
-sealed interface LinearRegressionSpec {
-
-    /** Spec for [com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat] with isotropic prior. */
-    @Serializable
-    @SerialName("BayesianRegression")
-    data class Bayesian(
-        /** Coefficient dimension. */
-        val featureSize: Int,
-        /** Isotropic prior variance on every coefficient. */
-        val priorVariance: Double = 1.0,
-    ) : LinearRegressionSpec
-
-    /** Spec for [com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat]. */
-    @Serializable
-    @SerialName("DiagonalRegression")
-    data class Diagonal(
-        /** Coefficient dimension. */
-        val featureSize: Int,
-        /** Initial per-coordinate precision. */
-        val priorPrecision: Double = 1.0,
-        /** Constant learning-rate schedule. */
-        val learningRate: Double = 1.0,
-    ) : LinearRegressionSpec
-
-    /** Spec for [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat]. */
-    @Serializable
-    @SerialName("StochasticRegression")
-    data class Stochastic(
-        /** Coefficient dimension. */
-        val featureSize: Int,
-        /** Constant learning-rate schedule. */
-        val learningRate: Double = 1e-3,
-    ) : LinearRegressionSpec
-}

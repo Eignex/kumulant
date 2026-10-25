@@ -48,8 +48,37 @@ and pass the resulting mean and covariance to new regressors.
 [ContextualBanditSpec] is the sealed root of wire-portable contextual
 configs:
 
-- [RegressionContextualSpec]: wraps a [LinearRegressionSpec]
-  (Bayesian / Diagonal / Stochastic) and a posterior choice.
+[RegressionContextualSpec] accepts the same
+[com.eignex.kumulant.schema.spec.RegressionStatSpec] trees used in statistical
+schemas, paired with a matching posterior. The result type ties the arm and
+optional global regressors to their scorer in Kotlin. Materialization checks
+built-in posterior compatibility for decoded configurations.
+
+```kotlin
+val spec: ContextualBanditSpec = RegressionContextualSpec(
+    nbrArms = 4,
+    regression = BayesianRegression(featureSize = 2)
+        .filter(Y gt 0.0)
+        .weightBy(V(0) * V(0)),
+    posterior = LinUcb,
+)
+val encoded = SchemaJson.encodeToString(ContextualBanditSpec.serializer(), spec)
+val decoded = SchemaJson.decodeFromString(ContextualBanditSpec.serializer(), encoded)
+val bandit = decoded.materialize()
+```
+
+Use the native `BayesianRegression`, `DiagonalRegression`, and
+`StochasticRegression` specs for linear models, and `DecisionTreeRegression`
+or `RandomForestRegression` for tree models. Built-in linear, tree, and forest
+posteriors serialize without a custom serializers module. Custom
+`RegressionPosterior` implementations remain available for programmatic use.
+
+Regression decorators retain their statistical-schema semantics: they modify
+updates. Posteriors score snapshots at the supplied query vector; feature and
+target transformations must be accounted for by the caller's scoring rule.
+The native linear specs also expose link functions, optimizers, penalties, and
+expression-based learning rates; use those fields instead of the former
+`LinearRegressionSpec` variants and scalar `learningRate` field.
 
 These round-trip through skema-based JSON / CBOR and materialise via
 [com.eignex.kumulant.bandit.materialize] into the live bandit.

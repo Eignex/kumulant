@@ -3,7 +3,6 @@
 package com.eignex.kumulant.bandit
 
 import com.eignex.kumulant.bandit.contextual.ContextualBanditSpec
-import com.eignex.kumulant.bandit.contextual.LinearRegressionSpec
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
 import com.eignex.kumulant.bandit.univariate.Arm
@@ -44,15 +43,20 @@ import com.eignex.kumulant.bandit.univariate.UniformSelection
 import com.eignex.kumulant.bandit.univariate.UniformSelectionSpec
 import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.schema.optimizer.Sgd
+import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.stat.regression.RegressionPosterior
-import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
-import com.eignex.kumulant.stat.regression.glm.ConstantRate
-import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
-import com.eignex.kumulant.stat.regression.glm.LinearRegressionResult
-import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
+import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionResult
+import com.eignex.kumulant.stat.regression.glm.FactorisedGaussian
+import com.eignex.kumulant.stat.regression.glm.LinUcb
+import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
+import com.eignex.kumulant.stat.regression.glm.PointPosterior
+import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
+import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
+import com.eignex.kumulant.stat.regression.tree.ForestPosterior
+import com.eignex.kumulant.stat.regression.tree.ForestRegressionResult
+import com.eignex.kumulant.stat.regression.tree.TreePosterior
+import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult
 import kotlin.random.Random
 
 /**
@@ -137,45 +141,41 @@ fun UnivariateBanditSpec.materialize(random: Random = Random.Default): Bandit = 
     is TopTwoThompsonSpec<*> -> (this as TopTwoThompsonSpec<Result>).materialize(random)
 }
 
-/** Build a live linear [RegressionStat] from its spec. */
-private fun LinearRegressionSpec.materialize(concurrency: Concurrency): RegressionStat<out LinearRegressionResult> =
-    when (this) {
-        is LinearRegressionSpec.Bayesian -> BayesianRegressionStat(
-            featureSize = featureSize,
-            priorVariance = priorVariance,
-            concurrency = concurrency,
-        )
-
-        is LinearRegressionSpec.Diagonal -> DiagonalRegressionStat(
-            featureSize = featureSize,
-            priorPrecision = priorPrecision,
-            learningRate = ConstantRate(learningRate),
-            concurrency = concurrency,
-        )
-
-        is LinearRegressionSpec.Stochastic -> StochasticRegressionStat(
-            featureSize = featureSize,
-            optimizer = Sgd(ConstantRate(learningRate)),
-            concurrency = concurrency,
-        )
-    }
-
-/** Build a live [RegressionContextualBandit] from its spec. */
-fun RegressionContextualSpec.materialize(
+/** Build a live [RegressionContextualBandit] from its composed regression specs. */
+fun <R : Result> RegressionContextualSpec<R>.materialize(
     random: Random = Random.Default,
     concurrency: Concurrency = Concurrency.None,
-): RegressionContextualBandit<out LinearRegressionResult> {
+): RegressionContextualBandit<R> {
     val template = regression.materialize(concurrency)
     val global = globalRegression?.materialize(concurrency)
-    @Suppress("UNCHECKED_CAST")
+    posterior.requireCompatible(template.read(0L), "regression")
+    if (global != null) {
+        posterior.requireCompatible(global.read(0L), "globalRegression")
+        require(global.featureSize == template.featureSize) {
+            "globalRegression.featureSize (${global.featureSize}) must match " +
+                "regression.featureSize (${template.featureSize})"
+        }
+    }
     return RegressionContextualBandit(
         nbrArms = nbrArms,
-        template = template as RegressionStat<LinearRegressionResult>,
-        posterior = posterior as RegressionPosterior<LinearRegressionResult>,
+        template = template,
+        posterior = posterior,
         exploration = exploration,
-        globalTemplate = global as? RegressionStat<LinearRegressionResult>,
+        globalTemplate = global,
         random = random,
     )
+}
+
+private fun RegressionPosterior<*>.requireCompatible(snapshot: Result, path: String) {
+    val compatible = when (this) {
+        PointPosterior -> snapshot is StochasticRegressionResult
+        FactorisedGaussian -> snapshot is DiagonalRegressionResult
+        MultivariateGaussian, LinUcb -> snapshot is PrecisionRegressionResult
+        is TreePosterior -> snapshot is TreeRegressionResult
+        is ForestPosterior -> snapshot is ForestRegressionResult
+        else -> true
+    }
+    require(compatible) { "$path: ${snapshot::class.simpleName} is incompatible with ${this::class.simpleName}" }
 }
 
 /** Dispatch any [ContextualBanditSpec] to its concrete bandit. */
@@ -183,5 +183,5 @@ fun ContextualBanditSpec.materialize(
     random: Random = Random.Default,
     concurrency: Concurrency = Concurrency.None,
 ): Bandit = when (this) {
-    is RegressionContextualSpec -> materialize(random, concurrency)
+    is RegressionContextualSpec<*> -> materialize(random, concurrency)
 }
