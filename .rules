@@ -47,8 +47,6 @@ Run `./gradlew check lintDocs`.
 - Prefer clear naming and types over comments. Comments explain *why* (soundness, perf, lifecycle) and never
   restate the code. Never narrate changes, avoid "now/no longer/previously", and don't cite issues. Keep `TODO`/`FIXME`.
 - KDoc on public API only. Use functional notation for math (`succ(i)`, not `succ[i]`); use `[Symbol]` for links.
-- Stat, bandit, and package-page KDoc follow `docs/internal/STAT_KDOC_TEMPLATE.md`,
-  `BANDIT_KDOC_TEMPLATE.md`, and `STAT_PACKAGE_TEMPLATE.md`. Read the matching one before writing docs.
 - Don't edit anything under `.github/` unless asked directly.
 - Single-line conventional commits, no scope, no body/trailers:
   `feat: `, `fix: `, `chore: `, `refactor: `, `docs: `, `test: `.
