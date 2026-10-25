@@ -30,7 +30,7 @@ fun main(args: Array<String>) {
 internal fun captureQuality(case: CaptureCase): CaptureValidation = when (case.suite) {
     "stats" -> statQuality(allSpecs.single { it.name == case.parameters.getValue("name") }, case)
     "cholesky" -> choleskyQuality(case)
-    else -> error("No quality driver for ${case.suite}")
+    else -> workloadCaptureQuality(case)
 }
 
 private fun <S, R : Result> statQuality(spec: StatSpec<S, R>, case: CaptureCase): CaptureValidation {

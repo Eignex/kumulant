@@ -8,7 +8,7 @@ if [[ "${1:-}" == --help || "${1:-}" == -h ]]; then
     cat <<'HELP'
 Usage: kumulant-bench/capture-report.sh [options]
   --preset smoke|standard|extended   Case selection and timing budget (default: standard)
-  --suite stats|cholesky             Select one suite (default: both)
+  --suite NAME                      stats, cholesky, regression, storage, bandits, vectors, sketches
   --case PATTERN                     Match stable case IDs; quote * wildcards
   --mode quality|performance         Default: performance; always validates quality first
   --targets jvm-scalar,jvm-simd      Comma-separated backends (default: both)

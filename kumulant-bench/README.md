@@ -24,7 +24,8 @@ kumulant-bench/capture-report.sh --preset smoke --allocation --output build/allo
 ```
 
 `--case` matches stable case IDs with `*` wildcards; quote the pattern to prevent
-shell expansion. `--suite` is `stats` or `cholesky`. `--mode` is `performance`
+shell expansion. `--suite` is `stats`, `cholesky`, `regression`, `storage`, `bandits`,
+`vectors`, or `sketches`. `--mode` is `performance`
 (default) or `quality`; performance always requires quality validation to pass
 first. A backend mismatch fails validation rather than silently publishing a
 fallback's timing. Scalar and SIMD rows for stats can be identical implementations;
@@ -32,9 +33,9 @@ the labels identify the JVM configuration and selected Koblas backend.
 
 | Preset | Selection | JVM timing per case and backend |
 | --- | --- | --- |
-| `smoke` | Sum, mean, variance, one small factorization and solve | 1 warmup, 2 measurements, 100 ms each, 1 fork |
-| `standard` | Stats and representative precision, RBF, Matérn and solve shapes | 3 warmups, 5 measurements, 1 s each, 2 forks |
-| `extended` | Stats, block-boundary matrices and larger shapes | 5 warmups, 10 measurements, 1 s each, 3 forks |
+| `smoke` | Small representatives from every suite | 1 warmup, 2 measurements, 100 ms each, 1 fork |
+| `standard` | More dimensions, vector representations, bandit policies and matrix shapes | 3 warmups, 5 measurements, 1 s each, 2 forks |
+| `extended` | Additional dimensions, block-boundary matrices and larger shapes | 5 warmups, 10 measurements, 1 s each, 3 forks |
 
 Smoke timing checks wiring only. Every performance measurement uses one thread,
 average ns/op, and a fixed 512 MiB heap. A stat invocation is 4096 updates from a
@@ -43,10 +44,30 @@ reported time and allocation are divided by 4096. Factorization and matrix solve
 rows report one complete allocating API call. Each case definition records its
 state lifecycle, parameters, seed, fixture version and operation size.
 
+`CaptureWorkloadBenchmark` resolves its `caseId` through the catalogue, so adding
+cases does not require another JMH parameter list. Regression uses 256 prepared
+feature/target pairs and excludes feature generation from update timing. Storage
+reads a Bayesian snapshot after one prepared observation. Bandits cycle through
+512 prepared contexts and per-arm rewards, excluding environment sampling; policy
+state accumulates across batches. Vectors evaluate prepared expressions; sketches
+accumulate batches of 4096 heavy-tail values or skewed keys. Primitive vector and
+arm results use primitive blackholes without result boxing in the timed path.
+
 Quality runs use fresh state. Stats compare against a batch reference with scaled
 absolute error at most `1e-10`. Cholesky checks relative reconstruction and normwise
 solve backward error at most `1e-13`, and finite log determinant. These checks are
 acceptance gates for these cases, not a complete algorithm-quality assessment.
+
+Regression reports normalized squared prediction error on 128 independent held-out
+features (maximum `0.02`). Storage checks that an owned snapshot remains unchanged
+after its source is updated. Vector results are compared with scalar arithmetic.
+T-digest reports empirical rank error at probabilities `0.01`, `0.5` and `0.99`,
+including the full rank interval of ties (maximum `0.05`). Count-min reports actual
+frequency overestimates and rejects any underestimate. Bandits report expected-reward
+pseudo-regret for seeds 0–4, its mean and standard error; this avoids adding
+counterfactual reward noise to regret. The regret gate checks finiteness and the
+reward-range bound, without claiming that every policy should achieve the same
+quality. Quality seeds are recorded separately from the performance seed.
 
 ### Reports
 
@@ -79,8 +100,9 @@ retains the report directory. Commit the harness to the selected trusted ref
 before submitting it. Scripts own measurement and profiling, so the Lab spec
 does not request experiment-level `measurement` instrumentation.
 
-The unified capture currently covers JVM stat updates and Cholesky factorization
-and matrix solves. Native, regression, bandit and concurrency migration, and Lab
+The unified capture covers representative JVM stat updates, Cholesky factorization
+and matrix solves, Bayesian regression updates and snapshots, bandit cycles,
+vector expressions and sketches. Native and concurrency migration, and Lab
 metric ingestion, are follow-up stages in
 [`BENCHMARK_PLAN.md`](../docs/internal/BENCHMARK_PLAN.md). Existing benchmark and
 analysis entry points remain available during migration.

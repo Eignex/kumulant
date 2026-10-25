@@ -43,6 +43,12 @@ catalogue or download/cache layer is needed.
 
 ### 2. Migrate workload coverage
 
+The workload layer is the second PR, based on the capture foundation. A common
+`caseId` benchmark resolves prepared regression, storage, vector, sketch and bandit
+workloads from the catalogue. Quality includes held-out predictions, owned storage,
+scalar vector references, quantile ranks, frequency estimates and multi-seed
+expected-reward regret. Native integration is a separate subsequent stack layer.
+
 - Replace duplicated benchmark-name lists with catalogue-driven selection.
 - Add typed regression fixtures so feature generation is outside update timing.
 - Migrate vector, regression, storage, and bandit performance workloads.

@@ -29,7 +29,7 @@ class CaptureMainTest {
     @Test
     fun `empty and unknown selections are rejected`() {
         for (args in listOf(
-            Triple("smoke", "bandits", "*"),
+            Triple("smoke", "missing", "*"),
             Triple("missing", null, "*"),
             Triple("smoke", "stats", "cholesky/*"),
         )) {
