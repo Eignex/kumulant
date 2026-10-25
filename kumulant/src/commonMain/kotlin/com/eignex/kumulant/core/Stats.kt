@@ -331,9 +331,7 @@ interface RegressionStat<R : Result> : Stat<R> {
  * Accumulator over fixed-dimensional vector observations without a response
  * axis. The natural fit for per-coordinate aggregations
  * ([VectorizedStat][com.eignex.kumulant.schema.spec.Vectorized]'s fan-out of any
- * series stat across `dimensions` channels) and for the multivariate anomaly
- * detector
- * ([HalfSpaceTreesStat][com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat]).
+ * series stat across `dimensions` channels).
  *
  * Like [RegressionStat], inputs are passed as [Vector] so sparse callers
  * don't pay for dense materialisation. The [DoubleArray] convenience

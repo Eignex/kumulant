@@ -4,10 +4,6 @@ import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stat.anomaly.FeatureRange
-import com.eignex.kumulant.stat.anomaly.GaussianScoreResult
-import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesResult
-import com.eignex.kumulant.stat.anomaly.QuantileFilterResult
 import com.eignex.kumulant.stat.calibration.IsotonicCalibratorResult
 import com.eignex.kumulant.stat.calibration.PlattCalibratorResult
 import com.eignex.kumulant.stat.calibration.ReliabilityResult
@@ -201,21 +197,6 @@ data class ClassCounts(
     val numClasses: Int,
 ) : SeriesStatSpec<ClassCountsResult>
 
-/** Spec for `GaussianScorerStat`: running mean / variance with `|x - mean| / stdDev` z-score. */
-@Serializable
-@SerialName("GaussianScorer")
-data object GaussianScorer : SeriesStatSpec<GaussianScoreResult>
-
-/** Spec for `QuantileFilterStat`: DDSketch-backed quantile-threshold anomaly detector. */
-@Serializable
-@SerialName("QuantileFilter")
-data class QuantileFilter(
-    /** Probability in `(0, 1)` at which the threshold is evaluated. */
-    val probability: Double = StatDefaults.QUANTILE_FILTER_PROBABILITY,
-    /** Relative-error guarantee passed to the underlying DDSketch. */
-    val relativeError: Double = StatDefaults.QUANTILE_FILTER_RELATIVE_ERROR,
-) : SeriesStatSpec<QuantileFilterResult>
-
 /** Spec for `SummaryStat`: mean / variance / min / max in one result, useful as a primary
  *  for mixed-scaler feedback projections. */
 @Serializable
@@ -353,11 +334,6 @@ data class UnivariateRegression(
 @Serializable
 @SerialName("Covariance")
 data object Covariance : PairedStatSpec<CovarianceResult>
-
-/** Spec for `BrierScoreStat`: mean squared error against `y in {0, 1}` for probabilistic predictions. */
-@Serializable
-@SerialName("BrierScore")
-data object BrierScore : PairedStatSpec<WeightedMeanResult>
 
 /** Spec for `MseLossStat`: mean squared error `(y - yhat)^2`. */
 @Serializable
@@ -651,21 +627,3 @@ data class RandomForestClassifier(
     /** PRNG seed shared across trees. */
     val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStatSpec<ForestClassificationResult>
-
-/** Spec for `HalfSpaceTreesStat`: online ensemble of random half-space trees for multivariate anomaly scoring. */
-@Serializable
-@SerialName("HalfSpaceTrees")
-data class HalfSpaceTrees(
-    /** Number of input features. */
-    val featureSize: Int,
-    /** Per-feature value ranges used to draw random split thresholds. */
-    val featureRanges: List<FeatureRange>,
-    /** Number of trees in the ensemble. */
-    val numTrees: Int = StatDefaults.HALF_SPACE_TREES_NUM_TREES,
-    /** Depth of each tree; each tree has `2^height` leaves. */
-    val height: Int = StatDefaults.HALF_SPACE_TREES_HEIGHT,
-    /** Observations per window before the reference profile rotates. */
-    val windowSize: Int = StatDefaults.HALF_SPACE_TREES_WINDOW_SIZE,
-    /** PRNG seed shared across trees. */
-    val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
-) : VectorStatSpec<HalfSpaceTreesResult>

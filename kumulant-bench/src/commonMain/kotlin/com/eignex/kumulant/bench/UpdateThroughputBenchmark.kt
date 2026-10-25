@@ -60,7 +60,6 @@ open class UpdateThroughputBenchmark {
         "DiagonalRegressionStat",
         "StochasticRegressionStat",
         "AucStat",
-        "BrierScoreStat",
         "LogLossStat",
         "MaeLossStat",
         "MseLossStat",

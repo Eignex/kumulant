@@ -9,9 +9,6 @@ import com.eignex.koblas.Vector
  * it in `predict` / `logit`, because a mismatched vector does not fail loudly on its own: a *short*
  * vector simply reads fewer coordinates and returns a plausible number from the wrong model.
  *
- * The message is fixed at `x.size=<n>, expected <m>` so it stays greppable. `HalfSpaceTreesStat.update`
- * spells its own check out instead, because its receiver is named `vector` and its message says so.
- *
  * @param expected the model's feature count.
  * @throws IllegalArgumentException if the [Vector] size differs from [expected].
  */

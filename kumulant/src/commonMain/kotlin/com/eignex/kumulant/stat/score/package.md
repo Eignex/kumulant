@@ -23,11 +23,12 @@ forecast diagnostics.
 | Stat | Result | Use |
 |------|--------|-----|
 | `LogLoss` (in `Loss.kt`) | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Cross-entropy / log-likelihood. Log-likelihood-shaped objectives. |
-| [BrierScoreStat] | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Bounded squared-error counterpart of log loss. Reliability-decomposable. |
+| [MseLossStat] | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Binary Brier score when inputs are probabilities and outcomes are in `{0, 1}`. |
 
 LogLoss penalises confident-wrong predictions much more harshly than
 Brier. Pick LogLoss when you want a likelihood-shaped objective; pick
-Brier when you want a bounded, calibration-decomposable error.
+MSE on binary probability forecasts when you want the Brier score. The `[0, 1]`
+bound assumes probabilities and outcomes stay in that domain; MSE does not clamp inputs.
 
 ## Discrimination
 
@@ -77,7 +78,7 @@ empirical one.
 ## Compose patterns
 
 - `MseLoss.windowed(window)` for windowed regression error.
-- `BrierScore.transform(...)` after a [Platt][com.eignex.kumulant.stat.calibration.PlattCalibratorStat]
+- `MseLoss.transform(...)` after a [Platt][com.eignex.kumulant.stat.calibration.PlattCalibratorStat]
   or [Isotonic][com.eignex.kumulant.stat.calibration.IsotonicCalibratorStat]
   step to score calibrated probabilities.
 - `Auc` + [Reliability][com.eignex.kumulant.stat.calibration.ReliabilityStat]
@@ -88,14 +89,14 @@ empirical one.
 ## Merge
 
 All paired-mean-shaped metrics (`MseLoss`, `MaeLoss`, `LogLoss`,
-`BrierScore`, `PinballLoss`, `Accuracy`) merge via the underlying
+`PinballLoss`, `Accuracy`) merge via the underlying
 [MeanStat][com.eignex.kumulant.stat.summary.MeanStat]'s Chan-style
 parallel formula; exact across replicas. [AucStat] and
 [ConfusionMatrixStat] merge via cell-wise bin / matrix addition.
 
 ## Concurrency
 
-The mean-shaped metrics ([AccuracyStat], [BrierScoreStat], [PinballLossStat],
+The mean-shaped metrics ([AccuracyStat], [PinballLossStat],
 and the `MseLoss` / `MaeLoss` / `LogLoss` stats in `Loss.kt`) inherit
 [MeanStat][com.eignex.kumulant.stat.summary.MeanStat]'s Welford-coupled model:
 locked under [com.eignex.kumulant.core.Concurrency.Strict] /

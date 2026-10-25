@@ -20,7 +20,6 @@ import com.eignex.kumulant.schema.spec.EwmaMean
 import com.eignex.kumulant.schema.spec.EwmaVariance
 import com.eignex.kumulant.schema.spec.Excursion
 import com.eignex.kumulant.schema.spec.FrugalQuantile
-import com.eignex.kumulant.schema.spec.GaussianScorer
 import com.eignex.kumulant.schema.spec.HdrHistogram
 import com.eignex.kumulant.schema.spec.Holt
 import com.eignex.kumulant.schema.spec.LinearHistogram
@@ -31,7 +30,6 @@ import com.eignex.kumulant.schema.spec.Min
 import com.eignex.kumulant.schema.spec.Moments
 import com.eignex.kumulant.schema.spec.PageHinkley
 import com.eignex.kumulant.schema.spec.PitHistogram
-import com.eignex.kumulant.schema.spec.QuantileFilter
 import com.eignex.kumulant.schema.spec.Range
 import com.eignex.kumulant.schema.spec.Rate
 import com.eignex.kumulant.schema.spec.Recency
@@ -75,8 +73,6 @@ class SeriesStatContractSweepTest {
         "ThresholdBucket" to ThresholdBucket(thresholds = listOf(1.0, 5.0, 10.0)),
         "Variance" to Variance,
         "Moments" to Moments,
-        "GaussianScorer" to GaussianScorer,
-        "QuantileFilter" to QuantileFilter(),
         "Summary" to Summary,
         "BernoulliSum" to BernoulliSum,
         "TotalWeights" to TotalWeights,

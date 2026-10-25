@@ -58,9 +58,6 @@ import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.expr.eval
 import com.eignex.kumulant.schema.spec.*
-import com.eignex.kumulant.stat.anomaly.GaussianScorerStat
-import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
-import com.eignex.kumulant.stat.anomaly.QuantileFilterStat
 import com.eignex.kumulant.stat.calibration.IsotonicCalibratorStat
 import com.eignex.kumulant.stat.calibration.PlattCalibratorStat
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
@@ -106,7 +103,6 @@ import com.eignex.kumulant.stat.regression.tree.RandomForestClassifierStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
 import com.eignex.kumulant.stat.score.AccuracyStat
 import com.eignex.kumulant.stat.score.AucStat
-import com.eignex.kumulant.stat.score.BrierScoreStat
 import com.eignex.kumulant.stat.score.ConfusionMatrixStat
 import com.eignex.kumulant.stat.score.LogLossStat
 import com.eignex.kumulant.stat.score.MaeLossStat
@@ -208,13 +204,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     Summary -> StatPlan(path, hasCenterScale = true) { concurrency -> SummaryStat(concurrency) }
 
     is ClassCounts -> StatPlan(path) { concurrency -> ClassCountsStat(numClasses, concurrency) }
-
-    GaussianScorer -> StatPlan(path) { concurrency -> GaussianScorerStat(concurrency) }
-
-    is QuantileFilter ->
-        StatPlan(path) { concurrency ->
-            QuantileFilterStat(probability, relativeError, concurrency)
-        }
 
     BernoulliSum -> StatPlan(path) { concurrency -> BernoulliSumStat(concurrency) }
 
@@ -535,8 +524,6 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
 
     Covariance -> StatPlan(path) { concurrency -> CovarianceStat(concurrency) }
 
-    BrierScore -> StatPlan(path) { concurrency -> BrierScoreStat(concurrency) }
-
     MseLoss -> StatPlan(path) { concurrency -> MseLossStat(concurrency) }
 
     MaeLoss -> StatPlan(path) { concurrency -> MaeLossStat(concurrency) }
@@ -690,20 +677,6 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         StatPlan(path) { concurrency ->
             val tpl = templatePlan.build(concurrency)
             VectorizedStat(dimensions, tpl, skipZeros)
-        }
-    }
-
-    is HalfSpaceTrees -> {
-        StatPlan(path) { concurrency ->
-            HalfSpaceTreesStat(
-                featureSize = featureSize,
-                featureRanges = featureRanges,
-                numTrees = numTrees,
-                height = height,
-                windowSize = windowSize,
-                randomSeed = randomSeed,
-                concurrency = concurrency,
-            )
         }
     }
 

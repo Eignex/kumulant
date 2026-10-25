@@ -65,9 +65,10 @@ val platt = PlattCalibratorStat()
 for ((x, label) in labeled) platt.update(classifier.read().predict(x), label)
 val calibrated = platt.read().calibrate(pHat)
 
-val anomaly = HalfSpaceTreesStat(featureSize = 4, featureRanges = ranges)
-for (x in vectorStream) anomaly.update(x)
-val anomalyScore = anomaly.read().score(point)
+val variance = VarianceStat()
+for (x in stream) variance.update(x)
+val anomalyScore = variance.read().absoluteZScore(value)
+val tailScore = sketch.read().exceedanceScore(value, probability = 0.99)
 ```
 
 Stats group into families under the `stat.*` subpackages. Each family
