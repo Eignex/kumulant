@@ -9,7 +9,17 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
+import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
+
+internal inline fun <reified T : Any> node(
+    name: String,
+    shape: WireShape = WireShape.Fields,
+    vararg operands: String,
+): WireNode = WireNode(T::class, name, shape, operands.toList()) { serializer<T>() }
+
+internal inline fun <reified T : Any> node(name: String, noinline bodySerializer: () -> KSerializer<T>): WireNode =
+    WireNode(T::class, name, serializer = bodySerializer)
 
 internal enum class WireShape { Fields, Literal, Reference, Operand, Operands, Decay, Smoothing, Filter }
 
@@ -89,8 +99,10 @@ internal class WireNode(
     }
 }
 
-internal open class CanonicalSerializer<T : Any>(private val base: KClass<*>, nodes: () -> List<WireNode>) :
+internal open class CanonicalSerializer<T : Any>(internal val base: KClass<*>, nodes: () -> List<WireNode>) :
     KSerializer<T> {
+    constructor(base: KClass<*>, vararg nodes: WireNode) : this(base, { nodes.toList() })
+
     internal val nodes by lazy(nodes)
     private val legacy by lazy {
         SealedClassSerializer(

@@ -15,6 +15,7 @@ import com.eignex.kumulant.stat.regression.glm.LinUcb
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.skema.SchemaJson
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.encodeToString
@@ -241,6 +242,58 @@ class CanonicalSerializerTest {
         for (payload in cases) {
             val error = assertFailsWith<SerializationException>(payload) { lenient.decodeFromString<StatSpec>(payload) }
             assertTrue("$" in error.message.orEmpty(), error.message)
+        }
+    }
+
+    @Test
+    fun `binary formats round trip composed specs across modalities`() {
+        val specs: List<StatSpec> = listOf(
+            EwmaMean(Alpha(0.1)).transform(X + 1.0).filter(X gt 0.0),
+            UnivariateRegression().filter(X gt 0.0),
+            Mean.vectorized(2).transformVector(vectorOf(V(1), V(0))),
+            HyperLogLog().filter(X.isFinite()),
+            StochasticRegression(2, Adam(Const(0.1))).transformY(Y + 1.0),
+        )
+
+        for (format in listOf(ProtoBuf, Cbor)) {
+            for (spec in specs) {
+                val encoded = format.encodeToByteArray(StatSpec.serializer(), spec)
+                assertEquals(spec, format.decodeFromByteArray(StatSpec.serializer(), encoded))
+            }
+        }
+    }
+
+    @Test
+    fun `binary formats round trip expression roots`() {
+        val scalar: ScalarExpr = IfExpr(X gt 0.0, X + Center, Scale)
+        val predicate: BoolExpr = (X gt 0.0) and V(0).isFinite()
+        val vector: VectorExpr = vectorOf(V(1), X + Center)
+
+        for (format in listOf(ProtoBuf, Cbor)) {
+            assertEquals(scalar, format.decodeFromByteArray<ScalarExpr>(format.encodeToByteArray(scalar)))
+            assertEquals(predicate, format.decodeFromByteArray<BoolExpr>(format.encodeToByteArray(predicate)))
+            assertEquals(vector, format.decodeFromByteArray<VectorExpr>(format.encodeToByteArray(vector)))
+        }
+    }
+
+    @Test
+    fun `binary formats round trip bandit configurations`() {
+        val contextual: ContextualBanditSpec = RegressionContextualSpec(
+            nbrArms = 2,
+            regression = BayesianRegression(2).transformY(Y + 1.0),
+            posterior = LinUcb,
+        )
+        val univariate: UnivariateBanditSpec = MultiArmedSpec(2, Ucb1Spec())
+
+        for (format in listOf(ProtoBuf, Cbor)) {
+            assertEquals(
+                contextual,
+                format.decodeFromByteArray<ContextualBanditSpec>(format.encodeToByteArray(contextual)),
+            )
+            assertEquals(
+                univariate,
+                format.decodeFromByteArray<UnivariateBanditSpec>(format.encodeToByteArray(univariate)),
+            )
         }
     }
 

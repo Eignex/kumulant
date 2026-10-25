@@ -116,7 +116,7 @@ internal fun selectNode(nodes: List<WireNode>, element: JsonElement, path: Strin
         else -> {
             val innerPath = "$path.$operator.inner"
             val inner = operand.objectAt("$path.$operator")["inner"] ?: invalid(innerPath, "missing inner spec")
-            val innerNode = selectNode(statSpecNodes, inner, innerPath).first
+            val innerNode = selectNode(StatSpecSerializer.nodes, inner, innerPath).first
             candidates.singleOrNull { statModalities[it.type] == statModalities[innerNode.type] }
                 ?: invalid(innerPath, "operator '$operator' does not support this input modality")
         }
