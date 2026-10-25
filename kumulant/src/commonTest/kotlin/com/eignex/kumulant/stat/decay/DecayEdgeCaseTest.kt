@@ -9,16 +9,12 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 
-// Edge cases at the ends of the decay family's parameter and time ranges, where the arithmetic
-// stops being well conditioned.
 class DecayEdgeCaseTest {
 
     private val t0 = 1_000_000_000L
 
     @Test
     fun `a half-life too long to fit the rotation threshold still updates`() {
-        // halfLife * 50 overflows Long above ~2135 days; a wrapped negative threshold makes the
-        // rotation test true for every dt.
         for (halfLife in listOf(2136.days, 3650.days, Duration.INFINITE)) {
             val stat = DecayingSumStat(halfLife = halfLife)
 
@@ -33,11 +29,9 @@ class DecayEdgeCaseTest {
 
     @Test
     fun `a half-life under one nanosecond is rejected`() {
-        // inWholeNanoseconds truncates these to 0, which makes alpha infinite and every later
-        // exp() NaN. Reject at construction rather than reporting NaN forever.
         assertFailsWith<IllegalArgumentException> { DecayWeighting.HalfLife(Duration.ZERO) }
         assertFailsWith<IllegalArgumentException> { DecayWeighting.HalfLife((-1).seconds) }
-        DecayWeighting.HalfLife(1.nanoseconds) // the smallest that survives truncation
+        DecayWeighting.HalfLife(1.nanoseconds)
     }
 
     @Test
@@ -45,13 +39,11 @@ class DecayEdgeCaseTest {
         assertFailsWith<IllegalArgumentException> { DecayWeighting.Alpha(-0.5) }
         assertFailsWith<IllegalArgumentException> { DecayWeighting.Alpha(Double.NaN) }
         assertFailsWith<IllegalArgumentException> { DecayWeighting.Alpha(Double.POSITIVE_INFINITY) }
-        // Zero means "never move"; HoltStat uses it to disable trend smoothing.
         assertEquals(0.0, DecayWeighting.Alpha(0.0).correction(5.0))
     }
 
     @Test
     fun `the bias correction survives an alpha times weight too small for the closed form`() {
-        // 1 - exp(-x) is exactly 0.0 for any x below the double epsilon, and callers divide by it.
         val weighting = DecayWeighting.Alpha(1e-300)
 
         val correction = weighting.correction(1.0)
@@ -62,7 +54,6 @@ class DecayEdgeCaseTest {
 
     @Test
     fun `a downdate keeps its negative correction`() {
-        // The underflow fallback must not swallow the legitimately negative value here.
         val weighting = DecayWeighting.Alpha(0.5)
 
         assertTrue(weighting.correction(-1.0) < 0.0)
@@ -86,16 +77,14 @@ class DecayEdgeCaseTest {
         val stat = DecayingVarianceStat(halfLife = 1.milliseconds())
         stat.update(1.0, t0 + 2_000_000_000L, 1.0)
 
-        stat.update(2.0, t0, 1.0) // two seconds behind, i.e. thousands of half-lives late
+        stat.update(2.0, t0, 1.0)
 
         val r = stat.read(t0 + 2_000_000_000L)
         assertTrue(r.totalWeights.isFinite(), "totalWeights went non-finite: ${r.totalWeights}")
         assertTrue(r.mean.isFinite(), "mean went non-finite: ${r.mean}")
-        // The late sample is discounted to nothing, so the state still reflects the first one.
         assertEquals(1.0, r.totalWeights, 1e-9)
         assertEquals(1.0, r.mean, 1e-9)
 
-        // And the stat is not wedged: a later in-order update still lands.
         stat.update(3.0, t0 + 3_000_000_000L, 1.0)
         assertTrue(stat.read(t0 + 3_000_000_000L).mean.isFinite())
     }
@@ -112,8 +101,6 @@ class DecayEdgeCaseTest {
 
     @Test
     fun `an empty variance stat still snaps its landmark to a replay clock`() {
-        // The landmark starts at wall-clock construction time, so a stream numbering from its own
-        // epoch is far behind it. That is not a late arrival and must not be discounted.
         val stat = DecayingVarianceStat(halfLife = 1.seconds)
 
         repeat(10) { stat.update(0.0, t0, 1.0) }
@@ -126,7 +113,6 @@ class DecayEdgeCaseTest {
         val stat = DecayingMeanStat(halfLife = 1.seconds)
         stat.update(100.0, t0, 1.0)
 
-        // ~1100 half-lives on, the shared exp(-alpha*dt) is exactly 0.0 and flushes both sums.
         val late = stat.read(t0 + 1_100_000_000_000L)
 
         assertEquals(0.0, late.totalWeights, "the evidence has decayed away and should say so")

@@ -19,10 +19,8 @@ data class SumResult(
 /**
  * Weighted sum `Sum value*weight` over the stream.
  *
- * Uses naive accumulation, so very long streams of mixed-magnitude values can
- * accumulate ulp drift on the order of `sqrt(n)`. For compensated floating-point
- * accumulation, prefer [MeanStat] or [VarianceStat] (Welford recurrences) and
- * recover the sum as `mean * totalWeights`.
+ * Uses naive floating-point addition. Rounding error depends on the number,
+ * magnitude, and order of contributions; this is not a compensated sum.
  *
  * **Use cases:** totals, counters, gradient aggregation; the primitive
  * additive accumulator.

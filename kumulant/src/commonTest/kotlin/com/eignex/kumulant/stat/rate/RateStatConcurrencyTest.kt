@@ -41,7 +41,6 @@ class RateStatConcurrencyTest {
         }
         val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
-            // Different add-orderings can produce ULP-level differences; use a tight tolerance.
             assertEquals(ref.rate, r.rate, 1e-12, "DecayingRate rate mode=$mode")
             assertEquals(ref.timestampNanos, r.timestampNanos, "DecayingRate timestampNanos mode=$mode")
         }

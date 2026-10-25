@@ -134,8 +134,8 @@ class RegressionSpecsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
         val live = decoded.materialize(Concurrency.None)
-        live.update(feat(0.0), y = -1.0) // dropped
-        live.update(feat(0.0), y = 1.0) // kept
+        live.update(feat(0.0), y = -1.0)
+        live.update(feat(0.0), y = 1.0)
     }
 
     @Test fun `weightBy decorator spec multiplies weight by AST expression`() {
@@ -156,7 +156,6 @@ class RegressionSpecsRoundTripTest {
     }
 
     @Test fun `foldRegression lifts a series spec into the regression modality`() {
-        // Project Y through the series spec; the inner Sum sees y per update.
         val cfg: RegressionStatSpec<SumResult> = Sum.foldRegression(featureSize = 1, project = Y)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
@@ -171,7 +170,7 @@ class RegressionSpecsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json) as RegressionStatSpec<*>
         val live = decoded.materialize(Concurrency.None)
-        live.update(feat(0.0), y = 3.0) // y rewritten to 6.0 before fold projects Y to inner
+        live.update(feat(0.0), y = 3.0)
         assertEquals(6.0, (live.read(0L) as SumResult).sum, DELTA)
     }
 

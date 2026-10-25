@@ -25,7 +25,7 @@ interface HasRate : Result {
      * Rescale the throughput to a specific time duration. Equivalent to
      * `rate * duration.toDouble(DurationUnit.SECONDS)`.
      *
-     * Example: `rate.per(1.minutes)` returns events per minute.
+     * Example: `result.per(1.minutes)` returns events per minute.
      */
     fun per(duration: Duration): Double = rate * duration.toDouble(
         DurationUnit.SECONDS,
@@ -71,23 +71,19 @@ interface HasMinMax : Result {
 }
 
 /**
- * Result trait for snapshots that know how much evidence they are built from.
+ * Result trait exposing the accumulated observation weight, including prior seeds
+ * where configured. [isEmpty] tests for positive evidence; it does not distinguish
+ * a fresh accumulator from one whose weights have cancelled through downdates.
  *
- * Exists so a caller can ask "did this stat see anything?" without knowing which field
- * carries the answer; the count is spelled `totalWeights` on most results, `totalSeen` on the
- * sketches and `totalWeight` on a few others.
- *
- * The distinction matters because several results report a numerically plausible value on an
- * empty stream. A quantile sketch with no observations reports `NaN` per quantile precisely so
- * that absence is distinguishable, but a mean reports `0.0`, which is not. Gate on [isEmpty]
- * before trusting any field of a snapshot that might have arrived before the first
- * observation did.
+ * Check [isEmpty] before interpreting a statistic whose empty result uses a placeholder
+ * such as `0.0`. Concrete results may expose this weight under another name as well,
+ * such as `totalSeen` or `totalWeight`.
  */
 interface HasObservationCount : Result {
     /** Cumulative weight of observations folded into this result. */
     val totalWeights: Double
 
-    /** True when no observation has been folded in, so every other field is a placeholder. */
+    /** True when [totalWeights] is not positive, including zero, negative values, and `NaN`. */
     val isEmpty: Boolean get() = !(totalWeights > 0.0)
 }
 
@@ -216,7 +212,7 @@ interface HasShapeMoments : HasSampleVariance {
  * distinct; the linear-model-specific result types expose both.
  */
 interface HasLinearModel : Result {
-    /** Fitted weight per feature, indexed by the same `i` as the input `x[i]`. */
+    /** Fitted weight per feature, in the same coordinate order as the input vector. */
     val weights: Vector
 
     /** Fitted bias / intercept term. */
@@ -271,11 +267,11 @@ interface HasSlope : HasLinearModel {
  *
  * Under non-identity GLMs ([Link.Logit][com.eignex.kumulant.stat.regression.glm.Link.Logit],
  * [Link.Log][com.eignex.kumulant.stat.regression.glm.Link.Log]) `sse` carries
- * the per-link deviance, not the classical SSE, and `rSquared` is not the
- * usual Gaussian R². Each GLM result documents its `sse` interpretation.
+ * the per-link loss, and `rSquared` does not have its usual Gaussian interpretation.
+ * Each GLM result documents its `sse` interpretation.
  */
 interface HasRegression : HasSampleVariance {
-    /** Sum of squared errors (residuals). Under non-identity GLMs this is the deviance. */
+    /** Accumulated fit error. Squared residuals for identity-link models; other models document their loss. */
     val sse: Double
 
     /** Sum of squares due to regression: [sst] - [sse]. */

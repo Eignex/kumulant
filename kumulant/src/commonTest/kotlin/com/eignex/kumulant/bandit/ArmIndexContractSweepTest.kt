@@ -19,8 +19,6 @@ import kotlin.test.assertEquals
 
 private const val ARMS = 3
 
-// Swept across the whole family rather than restated per bandit, because the failure mode is one
-// member being left out - which is exactly what a per-bandit test misses.
 class ArmIndexContractSweepTest {
 
     private class Probe(val name: String, val calls: List<Pair<String, (Int) -> Any?>>)
@@ -88,8 +86,6 @@ class ArmIndexContractSweepTest {
 
     @Test
     fun `every arm-indexed call rejects an out-of-range index`() {
-        // Negative and one-past-the-end. The negative case is the one a raw array access would also
-        // catch; `nbrArms` exactly is the one that reads as plausible and must still be refused.
         val violations = mutableListOf<String>()
         for (probe in probes()) {
             for (bad in listOf(-1, ARMS)) {
@@ -109,7 +105,6 @@ class ArmIndexContractSweepTest {
 
     @Test
     fun `every arm-indexed call accepts every in-range index`() {
-        // Guards the rule above: a bandit that rejected every index would satisfy it.
         val violations = mutableListOf<String>()
         for (probe in probes()) {
             for (good in 0 until ARMS) {

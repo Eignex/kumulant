@@ -1,6 +1,5 @@
 package com.eignex.kumulant.stream
 
-/** CAS-loop monotonic max: store [candidate] iff strictly greater than current. */
 internal fun casMax(cell: StreamLong, candidate: Long) {
     while (true) {
         val current = cell.load()
@@ -9,7 +8,6 @@ internal fun casMax(cell: StreamLong, candidate: Long) {
     }
 }
 
-/** CAS-loop monotonic max: store [candidate] iff strictly greater than current. NaN is ignored. */
 internal fun casMax(cell: StreamDouble, candidate: Double) {
     if (candidate.isNaN()) return
     while (true) {
@@ -19,7 +17,6 @@ internal fun casMax(cell: StreamDouble, candidate: Double) {
     }
 }
 
-/** CAS-loop monotonic min: store [candidate] iff strictly less than current. NaN is ignored. */
 internal fun casMin(cell: StreamDouble, candidate: Double) {
     if (candidate.isNaN()) return
     while (true) {
@@ -29,7 +26,6 @@ internal fun casMin(cell: StreamDouble, candidate: Double) {
     }
 }
 
-/** CAS-loop bitwise-OR: set every bit in [bitMask] on [cell]. No-op if all bits already set. */
 internal fun casOr(cell: StreamLong, bitMask: Long) {
     while (true) {
         val current = cell.load()
@@ -39,7 +35,6 @@ internal fun casOr(cell: StreamLong, bitMask: Long) {
     }
 }
 
-/** CAS-loop monotonic max on slot [index] of [arr]: store [candidate] iff strictly greater. */
 internal fun casMax(arr: StreamLongArray, index: Int, candidate: Long) {
     while (true) {
         val current = arr.load(index)
@@ -48,7 +43,6 @@ internal fun casMax(arr: StreamLongArray, index: Int, candidate: Long) {
     }
 }
 
-/** CAS-loop monotonic min on slot [index] of [arr]: store [candidate] iff strictly less. */
 internal fun casMin(arr: StreamLongArray, index: Int, candidate: Long) {
     while (true) {
         val current = arr.load(index)
@@ -57,7 +51,6 @@ internal fun casMin(arr: StreamLongArray, index: Int, candidate: Long) {
     }
 }
 
-/** CAS-loop bitwise-OR on slot [index] of [arr]. No-op if all bits already set. */
 internal fun casOr(arr: StreamLongArray, index: Int, bitMask: Long) {
     while (true) {
         val current = arr.load(index)

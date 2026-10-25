@@ -46,8 +46,8 @@ class TrackedBanditTest {
         val tracked = TrackedContextualBandit(
             inner = inner,
             contextFeatureSize = 1,
-            chooseTemplate = BayesianRegressionStat(featureSize = 1), // policy: y = arm | x
-            updateJointTemplate = BayesianRegressionStat(featureSize = 2), // 1 (arm) + 1 (context)
+            chooseTemplate = BayesianRegressionStat(featureSize = 1),
+            updateJointTemplate = BayesianRegressionStat(featureSize = 2),
             updateMarginalTemplate = BayesianRegressionStat(featureSize = 1),
             updateArmRewardTemplate = CovarianceStat(),
         )
@@ -57,13 +57,11 @@ class TrackedBanditTest {
         tracked.update(1, x, reward = 0.0)
         repeat(4) { tracked.choose(x) }
 
-        // All four slots produced a snapshot.
         assertNotNull(tracked.chooseResult())
         assertNotNull(tracked.updateJointResult())
         assertNotNull(tracked.updateMarginalResult())
         val armReward = tracked.updateArmRewardResult() as CovarianceResult
         assertEquals(3.0, armReward.totalWeights, DELTA)
-        // Inner is still reachable for PerArmBandit / ContextualScorable.
         assertEquals(2, tracked.inner.nbrArms)
         assertNotNull(tracked.inner.armResult(0))
     }
@@ -80,7 +78,7 @@ class TrackedBanditTest {
             TrackedContextualBandit(
                 inner = inner,
                 contextFeatureSize = 2,
-                updateJointTemplate = BayesianRegressionStat(featureSize = 2), // should be 3
+                updateJointTemplate = BayesianRegressionStat(featureSize = 2),
             )
         }
     }

@@ -8,10 +8,6 @@ import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-// A container is only as safe as its least-protected member, and this property is what a caller
-// introspects to decide whether reads need external synchronisation. `AbstractStatGroup` carries the
-// same rule, and the two must agree over identical entries or the property is unreliable rather than
-// merely pessimistic.
 class ListStatsConcurrencyClaimTest {
 
     @Test
@@ -23,8 +19,6 @@ class ListStatsConcurrencyClaimTest {
 
     @Test
     fun `one weak entry drags the whole list down to it`() {
-        // The direction that matters for safety: a caller must not be told the list is Strict when one
-        // entry inside it is not.
         val stats = ListStats("strict" to SumStat(Concurrency.Strict), "none" to SumStat(Concurrency.None))
 
         assertEquals(Concurrency.None, stats.concurrency, "one unsynchronised entry was not reported")

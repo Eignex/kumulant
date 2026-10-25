@@ -24,7 +24,6 @@ data class IsotonicCalibratorResult(
     val binMidpoints: DoubleArray,
     /** Monotone-non-decreasing calibrated probability per bin. */
     val probabilities: DoubleArray,
-    /** Cumulative observation weight folded in. */
     override val totalWeights: Double,
 ) : HasObservationCount {
 

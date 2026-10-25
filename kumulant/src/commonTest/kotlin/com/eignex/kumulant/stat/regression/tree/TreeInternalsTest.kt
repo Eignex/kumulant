@@ -14,23 +14,18 @@ class TreeInternalsTest {
 
     @Test
     fun `the hoeffding bound is infinite at an empty leaf`() {
-        // No margin can clear an infinite bound, which is what stops a leaf splitting on no data. The
-        // guard also keeps the division below from producing an infinity by accident.
         assertEquals(Double.POSITIVE_INFINITY, hoeffdingBound(0.05, 0.0, depth = 0, decay = 0.9))
         assertEquals(Double.POSITIVE_INFINITY, hoeffdingBound(0.05, -1.0, depth = 0, decay = 0.9))
     }
 
     @Test
     fun `the hoeffding bound matches the closed form at depth zero`() {
-        // decay^0 is 1, so at the root the bound is exactly sqrt(-ln(delta) / 2n) with no adjustment.
         val expected = sqrt(-ln(0.05) / (2.0 * 100.0))
         assertEquals(expected, hoeffdingBound(0.05, 100.0, depth = 0, decay = 0.9), DELTA)
     }
 
     @Test
     fun `the bound shrinks as evidence accumulates`() {
-        // The property the whole split rule rests on: more observations means a tighter margin, so a
-        // candidate that was not yet convincing becomes convincing without changing.
         var previous = Double.MAX_VALUE
         for (n in listOf(1.0, 10.0, 100.0, 1_000.0, 10_000.0)) {
             val bound = hoeffdingBound(0.05, n, depth = 0, decay = 0.9)
@@ -41,8 +36,6 @@ class TreeInternalsTest {
 
     @Test
     fun `the bound widens with depth`() {
-        // The decay makes a deeper leaf demand a larger margin from the same amount of evidence, which
-        // is the point: a deep leaf sees less of the stream, so equal confidence would be cheaper there.
         var previous = 0.0
         for (depth in 0..8) {
             val bound = hoeffdingBound(0.05, 100.0, depth = depth, decay = 0.9)
@@ -72,7 +65,6 @@ class TreeInternalsTest {
 
         val picked = pool.pickCandidates(mtry = null, random = Random(0))
 
-        // Identity, not just equality: the full-pool path is the common one and should not allocate.
         assertTrue(picked === pool, "the full pool was copied")
     }
 
@@ -98,9 +90,6 @@ class TreeInternalsTest {
 
     @Test
     fun `the draw is reproducible from the seed and varies across seeds`() {
-        // Both halves matter. Reproducibility is what makes a seeded forest testable at all; variation
-        // is what actually decorrelates the trees, and a subspace draw that ignored the PRNG would
-        // still pass every other test here.
         val pool = (0 until 20).toList()
 
         assertEquals(
@@ -120,8 +109,6 @@ class TreeInternalsTest {
         assertEquals(pool, pool.pickCandidates(mtry = null, random = Random(0)))
     }
 
-    // A leaf payload standing in for both real ones, so the ranking tests exercise the shared loop
-    // rather than either metric's arithmetic.
     private fun counts(vararg c: Double) = ClassCountsResult(c.size, c)
 
     @Test
@@ -137,13 +124,12 @@ class TreeInternalsTest {
     fun `a leaf with no qualifying candidate does not split`() {
         val config = ClassificationTreeConfig()
         assertEquals(false, shouldSplit(SplitInfo(0.0, 0.0, -1), 1000.0, 0, config))
-        // Something scored, but no better than not splitting; every metric returns 0 for no signal.
         assertEquals(false, shouldSplit(SplitInfo(0.0, 0.0, 2), 1000.0, 0, config))
     }
 
     @Test
     fun `the hoeffding test needs the winner to clear the runner-up by the bound`() {
-        val config = ClassificationTreeConfig(tau = 0.0) // tau off, so only the Hoeffding rule applies
+        val config = ClassificationTreeConfig(tau = 0.0)
         val bound = hoeffdingBound(config.delta, 1000.0, 0, config.deltaDecay)
 
         val clears = SplitInfo(top1 = bound * 3.0, top2 = 0.0, bestIndex = 0)
@@ -158,9 +144,6 @@ class TreeInternalsTest {
 
     @Test
     fun `the tau tie-break breaks a deadlock the hoeffding rule cannot`() {
-        // Two candidates of equal merit never separate by more than any bound, so without tau the leaf
-        // grows forever without splitting. This is the VFDT tie-break, and it is the reason the
-        // decision is a disjunction rather than a single test.
         val tied = SplitInfo(top1 = 5.0, top2 = 5.0, bestIndex = 0)
         val bigLeaf = 1_000_000.0
 
@@ -170,14 +153,11 @@ class TreeInternalsTest {
         val withTau = ClassificationTreeConfig(tau = 0.05)
         assertTrue(shouldSplit(tied, bigLeaf, 0, withTau), "tau should let a well-evidenced tie split")
 
-        // And tau is not a blanket override: the same tie on a small leaf still waits, because the
-        // bound has not shrunk below tau yet.
         assertTrue(!shouldSplit(tied, 40.0, 0, withTau), "tau should not fire before the bound shrinks")
     }
 
     @Test
     fun `both trees reach the same decision from the same evidence`() {
-        // Identical tunables in both config types must produce identical verdicts.
         val cases = listOf(
             SplitInfo(10.0, 0.0, 0),
             SplitInfo(0.0, 0.0, -1),

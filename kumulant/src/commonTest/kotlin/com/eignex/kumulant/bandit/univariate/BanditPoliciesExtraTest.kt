@@ -172,7 +172,6 @@ class BanditPoliciesExtraTest {
     fun `KL-UCB returns infinity when totalSamples is too small`() {
         val pol = KlUcb()
         val snap = BernoulliSumResult(successes = 3.0, trials = 10.0)
-        // No samples folded in via update -> totalSamples = 0
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(snap, 0L, Random(0)))
     }
 
@@ -193,10 +192,9 @@ class BanditPoliciesExtraTest {
     @Test
     fun `UCB-V score grows with empirical variance at fixed mean`() {
         val pol = UcbV(zeta = 1.2, c = 1.0)
-        // populate totalSamples so the bound has logT > 0
         repeat(100) { pol.update(pol.arm.createStat(), 1.0) }
-        val low = MomentsResult(totalWeights = 10.0, mean = 1.0, m2 = 10.0, m3 = 0.0, m4 = 0.0) // var = 0
-        val high = MomentsResult(totalWeights = 10.0, mean = 1.0, m2 = 30.0, m3 = 0.0, m4 = 0.0) // var = 2
+        val low = MomentsResult(totalWeights = 10.0, mean = 1.0, m2 = 10.0, m3 = 0.0, m4 = 0.0)
+        val high = MomentsResult(totalWeights = 10.0, mean = 1.0, m2 = 30.0, m3 = 0.0, m4 = 0.0)
         assertTrue(pol.evaluate(high, 0L, Random(0)) > pol.evaluate(low, 0L, Random(0)))
     }
 }

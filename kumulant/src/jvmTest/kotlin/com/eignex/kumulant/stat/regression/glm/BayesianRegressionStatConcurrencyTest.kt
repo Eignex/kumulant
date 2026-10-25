@@ -7,9 +7,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// The merge path lends scratch from a workspace the stat owns for its whole life. A workspace refuses a
-// buffer it did not lend, so racing merges that were not serialised would surface as a throw rather than
-// as drift, which is the one outcome the concurrency contract rules out.
 class BayesianRegressionStatConcurrencyTest {
 
     private fun snapshot(seed: Double): PrecisionRegressionResult {
@@ -67,9 +64,7 @@ class BayesianRegressionStatConcurrencyTest {
 
     @Test
     fun `replicas do not share scratch on the update path either`() {
-        // Two None stats, so neither has a lock to hide a shared workspace behind. This is the shape
-        // that catches scratch escaping one stat; the locked-level test above cannot, because its own
-        // mutex serialises whatever the workspace turns out to be.
+        // Independent None stats expose shared scratch that a per-stat lock could otherwise hide.
         val original = BayesianRegressionStat(featureSize = 4, concurrency = Concurrency.None)
         val replica = original.create(Concurrency.None)
         val failures = ConcurrentLinkedQueue<Throwable>()
@@ -93,7 +88,6 @@ class BayesianRegressionStatConcurrencyTest {
         val incoming = snapshot(0.5)
         val failures = ConcurrentLinkedQueue<Throwable>()
 
-        // Two None stats, so neither is shared across threads and each has to hold its own scratch.
         runConcurrently(threads = 2, iterationsPerThread = 25) { thread, _ ->
             try {
                 (if (thread == 0) original else replica).merge(incoming)

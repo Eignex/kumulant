@@ -52,9 +52,9 @@ data class MomentsResult(
  * **Update:** O(1) per observation.
  *
  * **Concurrency:** Welford-coupled cells. [Concurrency.Strict] and
- * [Concurrency.HighWrite] lock the body; exact match to a serial run up to
- * floating-point reorder ULPs. [Concurrency.Relaxed] drops the lock; the
- * higher-order moments drift ~1e-4 relative under contention but never throw.
+ * [Concurrency.HighWrite] lock updates and reads. [Concurrency.Relaxed] uses
+ * atomic cells without a shared lock, so coupled state can drift under contention.
+ * Floating-point results depend on update order.
  */
 class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<MomentsResult> {
 

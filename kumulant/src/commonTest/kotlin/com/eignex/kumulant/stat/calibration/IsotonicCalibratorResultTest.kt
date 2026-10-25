@@ -12,8 +12,6 @@ class IsotonicCalibratorResultTest {
     fun `calibration map is non-decreasing across bins`() {
         val stat = ReliabilityStat(numBins = 10)
         val rng = Random(11L)
-        // Underlying truth: P(y = 1) grows with x; deliberately add a non-monotone
-        // dip in the empirical rate by oversampling negatives near x = 0.6.
         repeat(2000) {
             val x = rng.nextDouble()
             val noisyTruth = if (x in 0.55..0.65) 0.2 else x
@@ -32,16 +30,12 @@ class IsotonicCalibratorResultTest {
 
     @Test
     fun `calibrate interpolates linearly between bin midpoints`() {
-        // Two-bin case: half-positive in low bin, all-positive in high bin.
         val stat = ReliabilityStat(numBins = 2)
-        repeat(10) { stat.update(0.25, if (it < 5) 1.0 else 0.0) } // bin 0: 0.5
-        repeat(10) { stat.update(0.75, 1.0) } // bin 1: 1.0
+        repeat(10) { stat.update(0.25, if (it < 5) 1.0 else 0.0) }
+        repeat(10) { stat.update(0.75, 1.0) }
         val r = stat.read().isotonicCalibration()
-        // Midpoints are 0.25 and 0.75; halfway between is 0.5 → interp probability 0.75.
         assertTrue(abs(r.calibrate(0.5) - 0.75) < 1e-9, "got=${r.calibrate(0.5)}")
-        // Below the first midpoint clamps to the first bin's probability.
         assertTrue(abs(r.calibrate(0.1) - 0.5) < 1e-9)
-        // Above the last midpoint clamps to the last bin's probability.
         assertTrue(abs(r.calibrate(0.9) - 1.0) < 1e-9)
     }
 

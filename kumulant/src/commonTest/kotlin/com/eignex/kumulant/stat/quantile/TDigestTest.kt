@@ -83,7 +83,6 @@ class TDigestTest {
 
     @Test
     fun `a NaN value is absorbed rather than ignored`() {
-        // The value contract is the opposite of the weight one: a NaN value counts. See Stat.
         val td = TDigestStat(probabilities = doubleArrayOf(0.5))
 
         td.update(Double.NaN)
@@ -154,10 +153,8 @@ class TDigestTest {
         val r = td.read()
         val h = r.toSparseHistogram()
         assertEquals(r.means.size, h.lowerBounds.size)
-        // First bin's lower bound is the smallest centroid, last bin's upper bound is the largest.
         assertEquals(r.means.first(), h.lowerBounds.first())
         assertEquals(r.means.last(), h.upperBounds.last())
-        // Adjacent bins share edges: each interior boundary is the midpoint of consecutive means.
         for (i in 0 until r.means.size - 1) {
             assertEquals(h.upperBounds[i], h.lowerBounds[i + 1])
         }

@@ -39,7 +39,6 @@ class OptimizerDirectTest {
         opt.advance()
         val d1 = opt.computeDelta(0, gradient = 2.0, observationWeight = 1.0)
         approx(-1.0 * 2.0 / sqrt(4.0 + 1e-10), d1)
-        // Second hit on coord 0 accumulates: acc = 4 + 9 = 13
         val d2 = opt.computeDelta(0, gradient = 3.0, observationWeight = 1.0)
         approx(-1.0 * 3.0 / sqrt(13.0 + 1e-10), d2)
         val d3 = opt.computeDelta(1, gradient = 1.0, observationWeight = 1.0)
@@ -53,7 +52,6 @@ class OptimizerDirectTest {
         opt.computeDelta(0, gradient = 5.0, observationWeight = 1.0)
         opt.reset()
         opt.advance()
-        // After reset, first update sees acc = 0 + g^2
         val d = opt.computeDelta(0, gradient = 2.0, observationWeight = 1.0)
         approx(-1.0 * 2.0 / sqrt(4.0 + 1e-10), d)
     }
@@ -106,7 +104,7 @@ class OptimizerDirectTest {
         val g = 2.0
         val mNext = (1.0 - b1) * g
         val vNext = (1.0 - b2) * g * g
-        val mHat = mNext / (1.0 - b1) // bias correction at t=1
+        val mHat = mNext / (1.0 - b1)
         val vHat = vNext / (1.0 - b2)
         approx(-0.1 * mHat / (sqrt(vHat) + eps), opt.computeDelta(0, gradient = g, observationWeight = 1.0))
     }
@@ -144,7 +142,6 @@ class OptimizerDirectTest {
     fun `Adam advance increments step counter`() {
         val opt = AdamOptimizer(featureSize = 1, learningRate = ConstantRate(0.1))
         repeat(5) { opt.advance() }
-        // step counter is internal; observe via delta differing between step 1 and step 5 due to bias correction
         val d5 = opt.computeDelta(0, gradient = 1.0, observationWeight = 1.0)
         val fresh = AdamOptimizer(featureSize = 1, learningRate = ConstantRate(0.1))
         fresh.advance()

@@ -29,7 +29,6 @@ class TopTwoThompsonBanditTest {
             beta = 0.5,
             random = rng,
         )
-        // arm 0 is best; rewards are noisy enough that the runner-up keeps getting play during training.
         repeat(600) {
             val a = b.choose()
             val mean = when (a) {
@@ -46,8 +45,7 @@ class TopTwoThompsonBanditTest {
 
     @Test
     fun `top-two spreads play across the top two arms during training`() {
-        // Use a fresh bandit and never let it converge; every choose is at the prior +
-        // a handful of observations, so resamples land on different arms often.
+        // Keep the bandit near its prior so resampling can still find another arm.
         val rng = Random(2)
         val b = TopTwoThompsonBandit(nbrArms = 2, policy = NormalTS(), beta = 0.5, random = rng)
         val picks = IntArray(2)
@@ -61,7 +59,6 @@ class TopTwoThompsonBanditTest {
         repeat(50) { b.update(0, 1.0) }
         b.reset()
         val r0 = b.armResult(0)
-        // After reset the per-arm running mean is back at the prior.
         assertTrue(r0.totalWeights < 1.0, "expected reset to clear data, got totalWeights=${r0.totalWeights}")
     }
 }

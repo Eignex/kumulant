@@ -21,9 +21,6 @@ class ClassLabelAdmissionTest {
     private val splits = listOf(ThresholdSplit(featureIndex = 0, threshold = 0.5))
     private val x = DenseVector.of(DoubleArray(2) { 1.0 })
 
-    // Fresh instances per test. Every snapshot reads the learned numbers out explicitly rather than
-    // stringifying the result: ClassCountsResult has no toString override, so on the JVM a stringified
-    // snapshot is a fresh identity hash every time and compares unequal to itself.
     private fun probes(): List<Probe> {
         val softmax = SoftmaxRegressionStat(featureSize = 2, numClasses = CLASSES)
         val gnb = GaussianNaiveBayesStat(featureSize = 2, numClasses = CLASSES)
@@ -68,7 +65,6 @@ class ClassLabelAdmissionTest {
 
     @Test
     fun `asClassLabel rejects a label that is not an integer`() {
-        // toInt() truncates, so an unvalidated 1.5 would arrive as a perfectly ordinary class 1.
         for (y in listOf(0.5, 1.5, 2.5, -0.5, 1.0000001, 0.9999999)) {
             assertEquals(-1, y.asClassLabel(CLASSES), "$y was accepted as a class index")
         }
@@ -76,7 +72,6 @@ class ClassLabelAdmissionTest {
 
     @Test
     fun `asClassLabel rejects NaN`() {
-        // NaN.toInt() is 0, so an unvalidated NaN label is indistinguishable from the first class.
         assertEquals(-1, Double.NaN.asClassLabel(CLASSES))
     }
 
@@ -85,16 +80,12 @@ class ClassLabelAdmissionTest {
         for (y in listOf(-1.0, -2.0, CLASSES.toDouble(), CLASSES + 1.0, 1e18)) {
             assertEquals(-1, y.asClassLabel(CLASSES), "$y was accepted as a class index")
         }
-        // toInt() saturates the infinities to Int.MIN/MAX_VALUE, which the round-trip rejects because
-        // neither converts back to an infinity.
         assertEquals(-1, Double.POSITIVE_INFINITY.asClassLabel(CLASSES))
         assertEquals(-1, Double.NEGATIVE_INFINITY.asClassLabel(CLASSES))
     }
 
     @Test
     fun `negative zero is the first class`() {
-        // -0.0 == 0.0 under IEEE comparison and the round-trip uses ==, so this is class 0 rather than
-        // a rejected negative. Worth pinning because the sign bit makes it look like neither.
         assertEquals(0, (-0.0).asClassLabel(CLASSES))
     }
 
@@ -115,9 +106,6 @@ class ClassLabelAdmissionTest {
 
     @Test
     fun `every classifier treats a NaN weight as a no-op`() {
-        // `weight <= 0.0` and `weight == 0.0` are both false for NaN, so an unguarded NaN weight reaches
-        // the leaf counts and pins one to NaN permanently: a later valid observation cannot clear it,
-        // because every subsequent add starts from NaN.
         val violations = mutableListOf<String>()
         for (probe in probes()) {
             probe.update(1.0, 1.0)
@@ -128,7 +116,6 @@ class ClassLabelAdmissionTest {
             if (probe.snapshot() != before) violations += "${probe.name} absorbed a NaN weight"
             if ("NaN" in probe.snapshot()) violations += "${probe.name} is now holding a NaN"
 
-            // And it still works afterwards, which is the part a state comparison alone would miss.
             probe.update(2.0, 1.0)
             if ("NaN" in probe.snapshot()) violations += "${probe.name} was poisoned by the NaN weight"
         }
@@ -137,7 +124,6 @@ class ClassLabelAdmissionTest {
 
     @Test
     fun `a valid label at a live weight is still absorbed`() {
-        // Guards the guards above: a stat that rejected everything would satisfy all of them.
         for (probe in probes()) {
             val before = probe.snapshot()
 
@@ -149,8 +135,6 @@ class ClassLabelAdmissionTest {
 
     @Test
     fun `a class count still downdates on a negative weight`() {
-        // ClassCounts guards on isInertWeight rather than isNotPositiveWeight, because a count cell
-        // subtracts exactly: retracting an observation folded in earlier is a downdate, not corruption.
         val counts = ClassCountsStat(CLASSES)
         counts.update(1.0, weight = 3.0)
         counts.update(1.0, weight = -1.0)

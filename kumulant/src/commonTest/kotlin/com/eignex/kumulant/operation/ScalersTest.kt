@@ -38,13 +38,9 @@ class ScalersTest {
     @Test
     fun `minMaxScaler maps to unit interval by default`() {
         val s = SumStat().minMaxScaler()
-        // After the very first update min==max so the projection emits targetLow=0.
         s.update(2.0)
         s.update(10.0)
-        // Second update: min=2, max=10, value=10 -> 1.0.
         s.update(6.0)
-        // Third update: min=2, max=10, value=6 -> 0.5.
-        // Cumulative sum: 0 + 1.0 + 0.5 = 1.5.
         assertEquals(1.5, s.read().sum, DELTA)
     }
 
@@ -53,12 +49,8 @@ class ScalersTest {
         val s = SumStat().minMaxScaler(targetLow = -1.0, targetHigh = 1.0)
         s.update(0.0)
         s.update(10.0)
-        // After two distinct observations: min=0, max=10. Value 10 -> +1.0.
         s.update(5.0)
-        // min=0, max=10. Value 5 -> 0.0.
         s.update(0.0)
-        // min=0, max=10. Value 0 -> -1.0.
-        // Cumulative: targetLow (-1) + 1.0 + 0.0 + (-1.0) = -1.0.
         assertEquals(-1.0, s.read().sum, DELTA)
     }
 
@@ -72,8 +64,6 @@ class ScalersTest {
     @Test
     fun `minMaxScaler emits targetLow while the range is degenerate`() {
         val s = SumStat().minMaxScaler(targetLow = -3.0, targetHigh = 3.0)
-        // Three identical observations: min stays equal to max throughout, so each update
-        // contributes targetLow = -3.0.
         s.update(7.0)
         s.update(7.0)
         s.update(7.0)
@@ -87,7 +77,6 @@ class ScalersTest {
         assertTrue(s.read().sum != 0.0)
         s.reset()
         s.update(5.0)
-        // First post-reset update is again the warm-up zero.
         assertEquals(0.0, s.read().sum, DELTA)
     }
 }

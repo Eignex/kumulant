@@ -160,7 +160,6 @@ class WindowedStatsTest {
         w.update(3L, T9)
         w.update(4L, T10)
         val seen = w.read(T11).estimate
-        // Only 3 keys (2L, 3L, 4L) remain in the [T1, T11] window.
         assertTrue(seen in 2.0..4.0, "estimate=$seen")
     }
 
@@ -182,7 +181,6 @@ class WindowedStatsTest {
 
     @Test
     fun `a stateful operator inside a window keeps its state across slice rotations`() {
-        // Observations land further apart than one slice, so a per-slice diff would never warm up.
         val windowed = SumStat().diff(1).windowed(60.seconds)
         val plain = SumStat().diff(1)
         var t = 0L

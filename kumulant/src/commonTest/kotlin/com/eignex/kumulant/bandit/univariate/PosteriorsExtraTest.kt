@@ -30,8 +30,6 @@ class PosteriorsExtraTest {
 
     @Test
     fun `BetaPosterior reflects priors from BernoulliArm`() {
-        // Sampling from a prior-only snapshot stays bounded in [0, 1]; use BernoulliArm
-        // priors > 0 so the underlying nextBeta doesn't see alpha = 0.
         val snap = BernoulliArm(priorAlpha = 1.0, priorBeta = 1.0).createStat().read(0L)
         val rng = Random(1)
         val s = BetaPosterior.sample(snap, rng)
@@ -53,7 +51,6 @@ class PosteriorsExtraTest {
         val rng = Random(7)
         val pos1 = GammaScalePosterior(fixedShape = 1.0)
         val pos2 = GammaScalePosterior(fixedShape = 5.0)
-        // Same snapshot, different shapes -> different distribution; not equal almost surely.
         val a = pos1.sample(snap, rng)
         val b = pos2.sample(snap, Random(7))
         assertTrue(a != b)

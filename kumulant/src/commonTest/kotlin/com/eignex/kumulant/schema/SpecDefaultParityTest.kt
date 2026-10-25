@@ -45,15 +45,7 @@ import com.eignex.kumulant.stat.summary.MadStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-// `schema/spec/Stats.kt` declares that spec defaults match the underlying stat's primary constructor,
-// so authored payloads stay terse under `encodeDefaults = false`. Nothing else enforces it, and editing
-// either side alone compiles clean.
-//
-// The comparison is behavioural rather than field-by-field, so it needs no reflection - which common
-// Kotlin cannot rely on across thirteen targets - and so it covers defaults added later.
-//
-// `ReservoirHistogram` is excluded: its stat defaults the seed to `Random.Default.nextLong()`, so two
-// instances legitimately disagree.
+// ReservoirHistogram is excluded because its default seed is random.
 class SpecDefaultParityTest {
 
     @Test
@@ -104,8 +96,6 @@ class SpecDefaultParityTest {
             series("TDigest", TDigest(), TDigestStat()),
             series("HdrHistogram", HdrHistogram(), HdrHistogramStat()),
             series("CounterRate", CounterRate(), CounterRateStat()),
-            // q has no default on either side, so it is supplied identically; the point here is that
-            // stepSize and initialEstimate, which do, agree.
             series("FrugalQuantile", FrugalQuantile(q = 0.9), FrugalQuantileStat(q = 0.9)),
         )
         val violations = mutableListOf<String>()
@@ -147,8 +137,6 @@ class SpecDefaultParityTest {
     fun `every paired spec default matches the stat it materialises`() {
         val pairs = listOf(
             paired("Auc", Auc(), AucStat()),
-            // numBins is required on both sides; included because Reliability has no other field and
-            // this pins that the spec forwards it rather than substituting a default of its own.
             paired("Reliability", Reliability(numBins = 10), ReliabilityStat(numBins = 10)),
         )
         val violations = mutableListOf<String>()
@@ -168,10 +156,6 @@ class SpecDefaultParityTest {
 
     @Test
     fun `the sweep can actually see a drifted default`() {
-        // Guards the three sweeps above. If a read were insensitive to the defaults - because the result
-        // type has identity equality, say, or because the stream never exercises the parameter - they
-        // would pass no matter what drifted. Deliberately mis-set one default and confirm the same
-        // comparison catches it.
         val drifted = Cusum(threshold = 999.0).materialize()
         val direct = CusumStat()
         for (i in values.indices) {

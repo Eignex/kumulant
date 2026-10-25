@@ -7,8 +7,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-// Sample moments are compared against analytic moments with generous slack: not a full
-// distributional fit test, just enough to catch sign errors and algorithmic mistakes.
 class DistributionsTest {
 
     @Test
@@ -49,19 +47,15 @@ class DistributionsTest {
         val kurt = s4 / n
         assertTrue(abs(mean) < 0.02, "mean=$mean")
         assertTrue(abs(variance - 1.0) < 0.03, "var=$variance")
-        // N(0,1) has skewness 0, kurtosis 3.
         assertTrue(abs(skew) < 0.05, "skew=$skew")
         assertTrue(abs(kurt - 3.0) < 0.2, "kurt=$kurt")
     }
 
     @Test
     fun `nextNormal tail produces values beyond Ziggurat R boundary`() {
-        // Ziggurat splits its work at R ~ 3.44; verify the tail-sampling branch
-        // actually produces samples beyond it at the analytic rate.
         val rng = Random(3)
         var tailHits = 0
         repeat(100_000) { if (abs(rng.nextNormal()) > 3.5) tailHits++ }
-        // P(|N(0,1)| > 3.5) ~ 4.65e-4 -> expect ~46 hits in 100k.
         assertTrue(tailHits in 20..100, "tailHits=$tailHits (expected ~46)")
     }
 
@@ -85,7 +79,6 @@ class DistributionsTest {
         }
         val mean = s / n
         val variance = ss / n - mean * mean
-        // Exp(1) has mean=1, variance=1.
         assertTrue(abs(mean - 1.0) < 0.03, "mean=$mean")
         assertTrue(abs(variance - 1.0) < 0.08, "var=$variance")
     }
@@ -103,7 +96,6 @@ class DistributionsTest {
         }
         val mean = s / n
         val variance = ss / n - mean * mean
-        // Gamma(3, 1) has mean=3, variance=3.
         assertTrue(abs(mean - 3.0) < 0.1, "mean=$mean")
         assertTrue(abs(variance - 3.0) < 0.2, "var=$variance")
     }
@@ -157,7 +149,6 @@ class DistributionsTest {
         val n = 20_000
         var s = 0.0
         repeat(n) { s += rng.nextBeta(3.0, 1.0) }
-        // Beta(3, 1) has mean = 3 / 4 = 0.75.
         assertTrue(abs(s / n - 0.75) < 0.01, "mean=${s / n}")
     }
 
@@ -169,7 +160,6 @@ class DistributionsTest {
         val b = 5.0
         var s = 0.0
         repeat(n) { s += rng.nextBeta(a, b) }
-        // Beta(a, b) has mean = a / (a + b).
         val expected = a / (a + b)
         assertTrue(abs(s / n - expected) < 0.01, "mean=${s / n}, expected=$expected")
     }

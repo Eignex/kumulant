@@ -23,7 +23,6 @@ class HoltStatTest {
         val s = HoltStat(alpha = 0.5, beta = 0.5)
         for (i in 0..50) s.update(i.toDouble())
         val r = s.read()
-        // On a perfect 1-per-step line, the smoothed trend should be near 1.0.
         assertTrue(r.trend in 0.9..1.1, "trend=${r.trend}")
     }
 
@@ -45,7 +44,6 @@ class HoltStatTest {
     @Test
     fun `damped forecast geometrically discounts the trend`() {
         val r = HoltResult(level = 0.0, trend = 1.0, phi = 0.5)
-        // phi + phi^2 + phi^3 = 0.5 + 0.25 + 0.125 = 0.875
         assertEquals(0.875, r.forecast(3), DELTA)
     }
 
@@ -66,7 +64,6 @@ class HoltStatTest {
         val s = HoltStat(alpha = 0.5, beta = 0.0)
         s.update(0.0)
         s.update(value = 100.0, weight = 1.0)
-        // The level should move from 0 toward 100 by the correction factor 1 - exp(-0.5 * 1).
         val r = s.read()
         val expectedMove = 100.0 * (1.0 - exp(-0.5))
         assertEquals(expectedMove, r.level, 1e-3)

@@ -79,7 +79,6 @@ class BanditPoliciesTest {
         pol.addArm(mom)
         pol.addArm(mom)
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(mom, 0L, Random(0)))
-        // mean=0 keeps the (mos - n*mean^2) variance term non-negative.
         val big = mom.copy(totalWeights = 100.0, mean = 0.0, m2 = 25.0)
         assertTrue(pol.evaluate(big, 0L, Random(0)).isFinite())
         pol.removeArm(mom)

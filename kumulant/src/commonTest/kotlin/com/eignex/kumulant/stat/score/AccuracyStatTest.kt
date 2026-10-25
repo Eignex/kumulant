@@ -15,7 +15,6 @@ class AccuracyStatTest {
         s.update(1.0, 0.0)
         s.update(2.0, 2.0)
         s.update(0.0, 1.0)
-        // 3 out of 5 match.
         assertEquals(3.0 / 5.0, s.read().mean, DELTA)
     }
 
@@ -29,7 +28,6 @@ class AccuracyStatTest {
 
     @Test
     fun `a non-integral label is not a class and is ignored`() {
-        // A truncating comparison would make 1.5 and 1.9 both name class 1 and match each other.
         val s = AccuracyStat(numClasses = 3)
         s.update(1.0, 1.0)
         s.update(1.5, 1.9)
@@ -40,7 +38,6 @@ class AccuracyStatTest {
 
     @Test
     fun `a label outside the declared range is ignored`() {
-        // The other half of what numClasses buys: an unbounded stat would count any label at all.
         val s = AccuracyStat(numClasses = 3)
         s.update(1.0, 1.0)
         s.update(7.0, 7.0)
@@ -51,8 +48,6 @@ class AccuracyStatTest {
 
     @Test
     fun `a NaN label is ignored rather than scored as class zero`() {
-        // `NaN.toLong()` is 0, so a truncating comparison would score a NaN pair as a correct class-0
-        // prediction. asClassLabel rejects it via the same round-trip that rejects 1.5.
         val s = AccuracyStat(numClasses = 3)
         s.update(0.0, 1.0)
         s.update(Double.NaN, Double.NaN)
@@ -63,8 +58,6 @@ class AccuracyStatTest {
 
     @Test
     fun `it agrees with ConfusionMatrixStat on the same stream`() {
-        // ConfusionMatrixResult.accuracy is offered so a caller can cross-check the two, which requires
-        // that they agree on which observations count, not merely on how they are counted.
         val accuracy = AccuracyStat(numClasses = 3)
         val matrix = ConfusionMatrixStat(numClasses = 3)
         val pairs = listOf(
@@ -81,7 +74,6 @@ class AccuracyStatTest {
 
     @Test
     fun `a class count below two is refused`() {
-        // One class is not a classification problem; a binary problem is `numClasses = 2`.
         assertFailsWith<IllegalArgumentException> { AccuracyStat(numClasses = 0) }
         assertFailsWith<IllegalArgumentException> { AccuracyStat(numClasses = 1) }
     }

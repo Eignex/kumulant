@@ -5,9 +5,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// The stat runs classic Space-Saving under most levels and a lock-free Misra-Gries variant under
-// Concurrency.Relaxed, because classic's evict-and-inherit needs a consistent read of the minimum
-// slot. The two bound their counts in opposite directions.
 class SpaceSavingAdmissionPolicyTest {
 
     private fun feed(stat: SpaceSavingStat, distinctKeys: Int, perKey: Int) {
@@ -52,7 +49,6 @@ class SpaceSavingAdmissionPolicyTest {
 
     @Test
     fun `misra-gries reports the shortfall its decrements cause`() {
-        // Far more distinct keys than slots, so the table fills and decrement rounds have to run.
         val stat = SpaceSavingStat(capacity = 4, concurrency = Concurrency.Relaxed)
         feed(stat, distinctKeys = 40, perKey = 2)
 
@@ -64,9 +60,6 @@ class SpaceSavingAdmissionPolicyTest {
 
     @Test
     fun `the reported bounds actually contain the true counts`() {
-        // One key is fed heavily and the rest are noise, so the heavy key survives eviction. The two
-        // directions are not interchangeable: `errors` is how far a count may sit ABOVE the truth, so
-        // it opens the lower bound, and `deficit` is how far it may sit BELOW, so it opens the upper.
         for (level in listOf(Concurrency.None, Concurrency.Relaxed)) {
             val stat = SpaceSavingStat(capacity = 8, concurrency = level)
             val heavy = 7L
@@ -92,9 +85,6 @@ class SpaceSavingAdmissionPolicyTest {
 
     @Test
     fun `a mixed merge is absorbed rather than refused`() {
-        // Many Relaxed workers feeding one Strict coordinator is the obvious topology, so a policy
-        // mismatch must not throw. Both sides are (key, count, error) triples over the same key space;
-        // only the tightness differs, unlike a hasher mismatch which makes the arrays incomparable.
         val worker = SpaceSavingStat(capacity = 8, concurrency = Concurrency.Relaxed)
         feed(worker, distinctKeys = 40, perKey = 2)
         val snapshot = worker.read()
@@ -116,7 +106,6 @@ class SpaceSavingAdmissionPolicyTest {
 
     @Test
     fun `a same-policy merge keeps the stronger guarantee`() {
-        // Guards the degradation above: it must not fire on every merge.
         val a = SpaceSavingStat(capacity = 8, concurrency = Concurrency.None)
         feed(a, distinctKeys = 20, perKey = 3)
         val b = SpaceSavingStat(capacity = 8, concurrency = Concurrency.Strict)

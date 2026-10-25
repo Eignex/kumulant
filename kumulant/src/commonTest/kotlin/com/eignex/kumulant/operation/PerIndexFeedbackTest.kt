@@ -22,7 +22,6 @@ class PerIndexFeedbackTest {
 
     @Test
     fun `VIndex lets the projection branch per coordinate`() {
-        // Z-score coordinate 0, pass coordinate 1 through, double coordinate 2.
         val dimensions = 3
         val primary = VectorizedStat(dimensions, VarianceStat())
         val standardize = IfExpr(Scale gt 0.0, (X - Center) / Scale, Const(0.0))
@@ -55,8 +54,8 @@ class PerIndexFeedbackTest {
             val r = refVar.read()
             expectedCoord0 += if (r.stdDev == 0.0) 0.0 else (u[0] - r.mean) / r.stdDev
         }
-        val expectedCoord1 = updates.sumOf { it[1] } // passthrough
-        val expectedCoord2 = updates.sumOf { it[2] } * 2.0 // doubled
+        val expectedCoord1 = updates.sumOf { it[1] }
+        val expectedCoord2 = updates.sumOf { it[2] } * 2.0
 
         val out = scaled.read().results
         assertEquals(expectedCoord0, out[0].sum, DELTA)
@@ -76,7 +75,6 @@ class PerIndexFeedbackTest {
 
     @Test
     fun `paired feedback exposes axis index via VIndex`() {
-        // Paired feedback evaluates the x axis with VIndex=0 and the y axis with VIndex=1.
         val pair = com.eignex.kumulant.stat.summary.PairedSumStat().withFeedback(
             VarianceStat(),
             VarianceStat(),

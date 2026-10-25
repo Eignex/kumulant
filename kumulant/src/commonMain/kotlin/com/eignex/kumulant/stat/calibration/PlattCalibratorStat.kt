@@ -26,7 +26,6 @@ data class PlattCalibratorResult(
     val slope: Double,
     /** Sigmoid intercept. */
     val intercept: Double,
-    /** Cumulative observation weight folded in. */
     override val totalWeights: Double,
 ) : HasObservationCount {
 

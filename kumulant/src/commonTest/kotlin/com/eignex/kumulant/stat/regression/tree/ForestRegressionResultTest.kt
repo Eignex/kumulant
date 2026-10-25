@@ -13,8 +13,6 @@ class ForestRegressionResultTest {
 
     @Test
     fun `findLeafMerged returns Chan-pooled mean and variance across trees`() {
-        // Three single-leaf trees with disjoint (w, mean, var). Chan's parallel formula:
-        //   w  = w1 + w2; mean = (w1*m1 + w2*m2)/w; sst = v1*w1 + v2*w2 + (m2-m1)^2 * w1*w2/w
         val forest = ForestRegressionResult(
             trees = listOf(
                 leaf(2.0, 1.0, 0.5),
@@ -35,7 +33,7 @@ class ForestRegressionResultTest {
     fun `findLeafMerged skips zero-weight leaves`() {
         val forest = ForestRegressionResult(
             trees = listOf(
-                leaf(0.0, 99.0, 99.0), // ignored
+                leaf(0.0, 99.0, 99.0),
                 leaf(4.0, 2.0, 1.0),
             ),
         )

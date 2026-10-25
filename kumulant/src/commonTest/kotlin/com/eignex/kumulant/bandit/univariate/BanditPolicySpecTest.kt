@@ -11,8 +11,6 @@ class BanditPolicySpecTest {
     private val json = Json { encodeDefaults = false }
 
     private fun roundTrip(policy: BanditPolicySpec<*>) {
-        // Wrap in MultiArmedSpec so the BanditPolicySpec field is serialized polymorphically
-        // through the sealed UnivariateBanditSpec hierarchy.
         @Suppress("UNCHECKED_CAST")
         val wrapped: UnivariateBanditSpec = MultiArmedSpec(
             nbrArms = 3,

@@ -11,15 +11,14 @@ class RecursiveVarianceStatTest {
     fun `first update applies omega plus alpha times value squared`() {
         val s = RecursiveVarianceStat(omega = 0.5, alpha = 0.1, beta = 0.9)
         s.update(2.0)
-        // omega + alpha * 4 + beta * 0 = 0.5 + 0.4 = 0.9
         assertEquals(0.9, s.read().variance, DELTA)
     }
 
     @Test
     fun `recurrence applies beta times previous`() {
         val s = RecursiveVarianceStat(omega = 0.0, alpha = 0.5, beta = 0.5)
-        s.update(2.0) // 0 + 0.5*4 + 0.5*0 = 2.0
-        s.update(0.0) // 0 + 0 + 0.5*2 = 1.0
+        s.update(2.0)
+        s.update(0.0)
         assertEquals(1.0, s.read().variance, DELTA)
     }
 

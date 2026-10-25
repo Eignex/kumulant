@@ -28,8 +28,8 @@ data class Exp3ArmResult(
 /**
  * EXP3 (Auer, Cesa-Bianchi, Freund, Schapire 2002); adversarial multi-armed
  * bandit over a fixed pool of [nbrArms]. Each round: compute play
- * distribution `p[a] = (1 - gamma) · w[a]/Σw + gamma/K`, sample `a ~ p`, then
- * on reward `r ∈ [0,1]` update `w[a] *= exp(eta · r / p[a])` using the
+ * distribution `p(a) = (1 - gamma) * w(a) / sum(w) + gamma/K`, sample `a ~ p`, then
+ * on reward `r ∈ [0,1]` update `w(a) *= exp(eta * r / p(a))` using the
  * importance-sampling-corrected gain.
  *
  * Regret bound is `O(sqrt(T · K · ln K))` under default tunings. Standalone class (not a
@@ -47,13 +47,13 @@ data class Exp3ArmResult(
  * **Arms:** indexless, `nbrArms` fixed at construction; per-arm state is one
  * exponential weight.
  *
- * **Memory:** O(nbrArms); one weight per arm plus a cached play
- * distribution.
+ * **Memory:** O(nbrArms); weights, pending play probabilities, and pending pull counts.
  *
  * **Choose:** O(nbrArms); build the play distribution, inverse-CDF sample.
  *
- * **Update:** O(nbrArms); rebuilds the play distribution to read `p[arm]`,
- * then multiplicative weight update on the played arm.
+ * **Update:** O(nbrArms); multiplicative update and a scan for weight rescaling.
+ * Uses the arm's most recently recorded play probability while feedback is pending,
+ * otherwise recomputes the current distribution.
  *
  * **Randomness:** every `choose` consumes one `random.nextDouble()`;
  * reproducible under a fixed seed.
@@ -63,13 +63,11 @@ data class Exp3ArmResult(
  * `update` externally for multi-thread use.
  */
 class Exp3Bandit(
-    /** Number of arms. */
     override val nbrArms: Int,
     /** Learning rate on per-arm gain updates. */
     val eta: Double = defaultEta(nbrArms),
     /** Exploration mix: probability mass distributed uniformly across arms. */
     val gamma: Double = defaultGamma(eta),
-    /** Single source of randomness. */
     override val random: Random = Random.Default,
 ) : UnivariateBandit,
     PerArmBandit<Exp3ArmResult> {
@@ -81,14 +79,11 @@ class Exp3Bandit(
 
     private val weights: DoubleArray = DoubleArray(nbrArms) { 1.0 }
 
-    // The probability each arm was last played with, and how many of its pulls are still awaiting
-    // feedback. The importance weight has to divide by the probability in force when the arm was
-    // drawn, and the play distribution moves on every update, so recovering it at update time is
-    // only correct when no other arm's feedback arrived in between.
+    // Delayed feedback must use a recorded play probability because other updates move the distribution.
+    // Repeated outstanding pulls of one arm share its most recently recorded probability.
     private val pendingPropensity = DoubleArray(nbrArms)
     private val pendingPulls = IntArray(nbrArms)
 
-    /** Build the round's play distribution and sample an arm. */
     override fun choose(): Int {
         val p = playDistribution()
         val chosen = random.sampleFromDistribution(p)
@@ -101,10 +96,7 @@ class Exp3Bandit(
     fun playDistribution(): DoubleArray {
         var sumW = 0.0
         for (w in weights) sumW += w
-        // A NaN reward, a run of large negative rewards that underflows every weight to zero, or a
-        // merge of all-zero arm results leaves nothing to normalise by, and `w / sumW` would make
-        // the whole distribution NaN - which `choose` then resolves to "always the last arm".
-        // Uniform is the honest distribution when no arm has usable evidence.
+        // Invalid or underflowed totals cannot be normalised; uniform sampling keeps every arm reachable.
         if (!(sumW > 0.0) || !sumW.isFinite()) return DoubleArray(nbrArms) { 1.0 / nbrArms }
         val out = DoubleArray(nbrArms)
         val uniform = gamma / nbrArms
@@ -115,13 +107,9 @@ class Exp3Bandit(
         return out
     }
 
-    /** Fold a `(arm, reward)` observation into the played arm's weight. */
     override fun update(armIndex: Int, value: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
-        // Return before propensityOf, which consumes an outstanding pull. The exponential weights are
-        // already untouched by a zero gain, but spending the recorded propensity is not a no-op: the
-        // real feedback for that pull would then fall back to the current distribution and be divided
-        // by the wrong probability, which is an unbounded error in the importance weight. See Stat.
+        // Inert feedback must not consume a pending pull's recorded probability.
         if (weight.isInertWeight()) return
         val p = propensityOf(armIndex).coerceAtLeast(MIN_PLAY_PROB)
         val gain = (value * weight) / p
@@ -129,12 +117,7 @@ class Exp3Bandit(
         weights.renormaliseExponentialWeights()
     }
 
-    /**
-     * Probability [armIndex] was drawn with, consuming one outstanding pull.
-     *
-     * Falls back to the current distribution when the caller updates an arm it never chose, which is
-     * the best available estimate and what an off-policy caller implicitly asks for.
-     */
+    // Off-policy updates without a pending pull use the current distribution as an estimate.
     private fun propensityOf(armIndex: Int): Double {
         if (pendingPulls[armIndex] <= 0) return playDistribution()[armIndex]
         pendingPulls[armIndex]--
@@ -151,23 +134,22 @@ class Exp3Bandit(
 
     override fun snapshot(): List<Exp3ArmResult> = List(nbrArms) { Exp3ArmResult(weights[it]) }
 
+    /**
+     * Approximate pooling by multiplying corresponding arm weights and rescaling.
+     * Pending play probabilities and pull counts are not included in the snapshot.
+     */
     override fun merge(other: List<Exp3ArmResult>) {
         requireMergeSize(other.size, nbrArms)
-        // No canonical merge for EXP3 weights; multiply elementwise as a coarse pool,
-        // then renormalise. Use for "roughly combine two parallel runs", not principled
-        // aggregation.
         for (i in 0 until nbrArms) weights[i] *= other[i].weight
         weights.renormaliseExponentialWeights()
     }
 
-    /** Reset all weights to uniform. */
     override fun reset() {
         for (i in weights.indices) weights[i] = 1.0
         pendingPropensity.fill(0.0)
         pendingPulls.fill(0)
     }
 
-    /** Spawn a fresh bandit with the same tunables; weights reset. */
     override fun create(random: Random): Exp3Bandit = Exp3Bandit(nbrArms, eta, gamma, random)
 
     /** EXP3 tuning defaults from Auer et al. */

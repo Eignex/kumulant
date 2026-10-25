@@ -10,7 +10,6 @@ class ReliabilityTest {
     @Test
     fun `bins by predicted probability`() {
         val r = ReliabilityStat(numBins = 4).apply {
-            // bin width 0.25
             update(x = 0.1, y = 0.0)
             update(x = 0.3, y = 1.0)
             update(x = 0.6, y = 1.0)
@@ -50,8 +49,6 @@ class ReliabilityTest {
         val res = r.read(0L)
         assertEquals(1.0, res.totalWeights[0], DELTA)
         assertEquals(1.0, res.totalWeights[1], DELTA)
-        // Clamping must apply to the accumulated probability too, otherwise meanProbability
-        // can drift outside [0, 1] and corrupt ECE.
         assertEquals(0.0, res.meanProbability[0], DELTA)
         assertEquals(1.0, res.meanProbability[1], DELTA)
         assertTrue(res.expectedCalibrationError() in 0.0..1.0)
@@ -70,8 +67,6 @@ class ReliabilityTest {
             update(0.8, 0.0)
         }
         val res = r.read(0L)
-        // Bin 0: meanP=0.2, rate=0.5, gap=0.3. Bin 1: meanP=0.8, rate=0.75, gap=0.05.
-        // ECE = 0.5*0.3 + 0.5*0.05 = 0.175
         assertEquals(0.175, res.expectedCalibrationError(), DELTA)
     }
 

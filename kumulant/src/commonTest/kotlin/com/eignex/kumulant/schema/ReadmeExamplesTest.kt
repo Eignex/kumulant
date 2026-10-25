@@ -9,8 +9,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// The README's composition and schema examples, compiled and executed: a snippet nothing compiles is
-// indistinguishable from a correct one until someone tries it.
 class ReadmeExamplesTest {
 
     private object Telemetry : StatSchema() {
@@ -30,7 +28,6 @@ class ReadmeExamplesTest {
             positiveMean.update(x)
         }
 
-        // The filter drops the negative observation; the window keeps all three.
         assertEquals(15.0, positiveMean.read().mean, 1e-9)
         assertEquals(2.0, positiveMean.read().totalWeights, 1e-9)
         assertEquals(3.0, recentMean.read().totalWeights, 1e-9)

@@ -17,15 +17,8 @@ import kotlin.test.assertTrue
 private const val FEATURES = 2
 private const val CLASSES = 2
 
-// The two halves are deliberately different in strength. A non-finite *weight* must be inert, because
-// a weight is a multiplicity and an infinity is not one. A non-finite *value* only has to not throw: it
-// may poison the model, because the observation really did arrive and really was unusable, and
-// `filterFinite()` is how a caller declines to see such observations at all.
 class RegressionWeightContractTest {
 
-    // `snapshot` reads fields explicitly rather than stringifying the result: `ClassCountsResult` holds
-    // a `DoubleArray`, whose `toString` is an identity hash, so a stringified tree snapshot would differ
-    // from itself on every read.
     private class Model(
         val name: String,
         val y: Double,
@@ -36,9 +29,7 @@ class RegressionWeightContractTest {
     private val splits = listOf(ThresholdSplit(featureIndex = 0, threshold = 0.5))
     private val x = DenseVector.of(DoubleArray(FEATURES) { 1.0 })
 
-    // Bagging is off on the two forests. With it on, each tree draws Poisson(1) per observation and can
-    // legitimately draw zero, so a single update may reach no tree at all. The early return that stops an
-    // inert weight consuming a bagging draw has its own coverage in RandomForestRegressionStatTest.
+    // Disable bagging so a zero Poisson draw cannot hide whether an update was accepted.
     private fun models(): List<Model> {
         val stochastic = StochasticRegressionStat(FEATURES)
         val diagonal = DiagonalRegressionStat(FEATURES)
@@ -97,8 +88,6 @@ class RegressionWeightContractTest {
 
     @Test
     fun `an inert weight leaves every model untouched`() {
-        // Zero, NaN, and both infinities. The infinities are the subtle ones: `+Infinity > 0.0` is
-        // true, so a positivity test alone lets one through as an ordinary live observation.
         val inert = doubleArrayOf(0.0, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)
         val violations = mutableListOf<String>()
         for (weight in inert) {
@@ -120,8 +109,6 @@ class RegressionWeightContractTest {
 
     @Test
     fun `no weight puts a non-finite number into a model`() {
-        // A NaN in a weight vector is permanent: every later update multiplies it forward, so unlike a
-        // bad quantile bucket there is no recovery and no way for the caller to tell the model is dead.
         val weights = doubleArrayOf(0.0, Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, -1.0)
         val violations = mutableListOf<String>()
         for (weight in weights) {
@@ -133,7 +120,6 @@ class RegressionWeightContractTest {
                 if ("NaN" in after) violations += "${model.name} reports NaN after a weight of $weight"
                 if ("Infinity" in after) violations += "${model.name} reports an infinity after $weight"
 
-                // And it still trains, which a state comparison alone would not catch.
                 model.update(x, model.y, 1.0)
                 val recovered = model.snapshot()
                 if ("NaN" in recovered || "Infinity" in recovered) {
@@ -146,15 +132,11 @@ class RegressionWeightContractTest {
 
     @Test
     fun `a non-finite feature or target never throws`() {
-        // A non-finite value is explicitly allowed to poison the model, but must not become an
-        // exception. A caller who needs a stronger guarantee uses `filterFinite()`.
         val nonFinite = doubleArrayOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)
         val violations = mutableListOf<String>()
         for (bad in nonFinite) {
             val badFeatures = DenseVector.of(doubleArrayOf(bad, 1.0))
             for (model in models()) {
-                // Feature position. The model is trained first so the bad input meets real state rather
-                // than a fresh accumulator, which is where the arithmetic has more ways to go wrong.
                 model.update(x, model.y, 1.0)
                 runCatching { model.update(badFeatures, model.y, 1.0) }.exceptionOrNull()?.let {
                     violations += "${model.name} threw on a feature of $bad: ${it.message}"
@@ -164,9 +146,6 @@ class RegressionWeightContractTest {
                 }
             }
             for (model in models()) {
-                // Target position, which reaches different arithmetic: a loss and a gradient rather than
-                // a dot product. The classifiers treat it as a label, where asClassLabel already rejects
-                // every non-finite value, so this confirms the rejection is silent rather than a throw.
                 model.update(x, model.y, 1.0)
                 runCatching { model.update(x, bad, 1.0) }.exceptionOrNull()?.let {
                     violations += "${model.name} threw on a target of $bad: ${it.message}"
@@ -181,8 +160,6 @@ class RegressionWeightContractTest {
 
     @Test
     fun `a live weight still trains every model`() {
-        // Guards the rules above: a model that ignored every weight would satisfy all of them, and so
-        // would a snapshot that could not see the model change.
         for (model in models()) {
             val before = model.snapshot()
 

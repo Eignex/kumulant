@@ -31,7 +31,6 @@ class SketchStatConcurrencyTest {
         }
         val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {
-            // CountMinSketchResult has counters; their estimate equals across modes.
             assertEquals(ref.estimate(1L), r.estimate(1L), "CountMinSketch.estimate(1) mode=$mode")
             assertEquals(ref.estimate(2L), r.estimate(2L), "CountMinSketch.estimate(2) mode=$mode")
         }
@@ -52,9 +51,7 @@ class SketchStatConcurrencyTest {
 
     @Test
     fun `SpaceSavingStat classic modes agree on sequential math`() {
-        // Classic Space-Saving runs under None, Strict, HighWrite. Relaxed uses a
-        // lock-free Misra-Gries variant with weaker guarantees (no overestimate
-        // bound) and is verified separately.
+        // Relaxed uses Misra-Gries rather than classic Space-Saving and is checked separately.
         val classicModes = listOf(Concurrency.None, Concurrency.Strict, Concurrency.HighWrite)
         val reads = classicModes.associateWith { mode ->
             val s = SpaceSavingStat(capacity = 4, concurrency = mode)
@@ -70,7 +67,6 @@ class SketchStatConcurrencyTest {
 
     @Test
     fun `SpaceSavingStat Relaxed Misra-Gries still surfaces hot keys`() {
-        // Heavy hitter "1" appears three times in the stream; Misra-Gries must keep it.
         val s = SpaceSavingStat(capacity = 4, concurrency = Concurrency.Relaxed)
         for (k in keys) s.update(k)
         val r = s.read(0L)

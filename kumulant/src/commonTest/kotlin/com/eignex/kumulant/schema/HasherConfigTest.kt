@@ -21,8 +21,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-// The discrete sketch specs carry a [LongHasher] by name; a custom mixer is supplied through the
-// [Hashers] registry and referenced by that name on the wire.
 class HasherConfigTest {
 
     private object SaltedSplitMix : LongHasher {
@@ -56,7 +54,6 @@ class HasherConfigTest {
         cms.update(42L)
         val result = cms.read()
         assertEquals(HasherRef(SaltedSplitMix.name), result.hasher)
-        // estimate() resolves the recorded hasher, so it lands on the same counters as the update.
         assertEquals(1L, result.estimate(42L))
     }
 

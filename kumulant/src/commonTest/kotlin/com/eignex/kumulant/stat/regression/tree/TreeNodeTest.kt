@@ -19,7 +19,6 @@ class TreeNodeTest {
         val node = RegressionSplitNode(ThresholdSplit(0, 0.0), pos = pos, neg = neg)
         assertSame(pos, node.findLeaf(DenseVector.of(doubleArrayOf(-1.0))))
         assertSame(neg, node.findLeaf(DenseVector.of(doubleArrayOf(1.0))))
-        // Threshold is inclusive on the pos side.
         assertSame(pos, node.findLeaf(DenseVector.of(doubleArrayOf(0.0))))
     }
 

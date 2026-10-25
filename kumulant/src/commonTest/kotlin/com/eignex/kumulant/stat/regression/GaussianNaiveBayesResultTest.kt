@@ -72,8 +72,6 @@ class GaussianNaiveBayesResultTest {
 
     @Test
     fun `varianceFloor lifts zero per-class variance at predict time`() {
-        // Two classes, single feature with zero observed variance: floor must keep log-N finite
-        // and a query at one of the means should always prefer that class.
         val r = result(
             numClasses = 2,
             featureSize = 1,
@@ -83,8 +81,6 @@ class GaussianNaiveBayesResultTest {
             totalWeights = 2.0,
             varianceFloor = 0.5,
         )
-        // Hand-compute logPosterior at x=0 under floor=0.5
-        // log prior = ln(0.5); Gaussian term = -0.5 * (LOG_2PI + ln(0.5) + 0)
         val logTwoPi = ln(2.0 * PI)
         val expectedClass0 = ln(0.5) + -0.5 * (logTwoPi + ln(0.5))
         val expectedClass1 = ln(0.5) + -0.5 * (logTwoPi + ln(0.5) + 100.0 / 0.5)
@@ -114,7 +110,6 @@ class GaussianNaiveBayesResultTest {
         val p = r.probabilities(DenseVector.of(doubleArrayOf(0.3)))
         assertEquals(1.0, p.sum(), 1e-12)
         for (pk in p) assertTrue(pk in 0.0..1.0, "prob out of [0,1]: $pk")
-        // Sanity: stddev away from each mean still leaves nonzero mass everywhere.
         val s = sqrt(0.5)
         assertTrue(s > 0.0)
     }

@@ -33,9 +33,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// The library's rule is that an expression must be both serializable and constructable in Kotlin. The
-// round trip is the half that makes the pairing meaningful: a factory producing a node the wire could
-// not carry, or a serial name decoding to something else, would satisfy neither.
 class ExprKotlinConstructionTest {
 
     private val v = doubleArrayOf(2.0, 3.0, 4.0)
@@ -79,8 +76,6 @@ class ExprKotlinConstructionTest {
 
     @Test
     fun `a negative input still reaches the nodes that answer NaN`() {
-        // The factories must not quietly guard their inputs: `ln` of a negative number and `sqrt` of one
-        // are NaN, which is the documented behaviour and what the wire form does too.
         assertTrue(X.ln().eval(-1.0).isNaN(), "ln of a negative should be NaN")
         assertTrue(X.sqrt().eval(-1.0).isNaN(), "sqrt of a negative should be NaN")
         assertTrue(scalarRoundTrip(X.ln()).eval(-1.0).isNaN(), "and the same after a round trip")
@@ -107,8 +102,6 @@ class ExprKotlinConstructionTest {
             VFoldOp.Max to 4.0,
             VFoldOp.Norm2 to kotlin.math.sqrt(29.0),
         )
-        // Driven off VFoldOp.entries, not a hand-written list, so a new op added later fails here
-        // rather than going untested.
         val violations = mutableListOf<String>()
         for (op in VFoldOp.entries) {
             val expr = vFold(op)
@@ -152,25 +145,20 @@ class ExprKotlinConstructionTest {
 
     @Test
     fun `a nested expression built entirely in Kotlin round-trips whole`() {
-        // The nodes have to compose, not merely exist: one tree mixing seven factories with the
-        // operator sugar.
         val expr = X.abs().sqrt().min(vDot(1.0, 0.0, 0.0)).max(Const(0.5)).pow(2.0) + vFold(VFoldOp.Mean)
 
         val direct = expr.eval(-16.0, 0.0, v)
         assertEquals(expr, scalarRoundTrip(expr), "the nested tree did not survive the round trip")
         assertEquals(direct, scalarRoundTrip(expr).eval(-16.0, 0.0, v), "the revived tree evaluates differently")
-        // sqrt(abs(-16)) = 4, min(4, 2) = 2, max(2, 0.5) = 2, 2^2 = 4, plus mean(2,3,4) = 3 -> 7
         assertEquals(7.0, direct, DELTA)
     }
 
     @Test
     fun `the vector transforms are now reachable from Kotlin end to end`() {
-        // Materialising and driving one proves the whole path works, not just that the type exists.
         val reordered = Vectorized(dimensions = 3, template = Sum).transformVector(vectorOf(V(2), V(0), V(1)))
         val stat = reordered.materialize()
         stat.update(DenseVector.of(doubleArrayOf(1.0, 2.0, 3.0)))
 
-        // Coordinate 0 of the output is input coordinate 2.
         assertEquals(3.0, stat.read().results[0].let { (it as com.eignex.kumulant.stat.summary.SumResult).sum }, DELTA)
 
         val regression = StochasticRegression(featureSize = 3).transformX(vectorOf(V(0), V(1), V(2)))

@@ -64,8 +64,6 @@ class ReservoirHistogramTest {
 
     @Test
     fun `a NaN value is sampled like any other rather than ignored`() {
-        // A NaN value is a real observation; the reservoir stores it and the caller filters upstream
-        // if that is unwanted. See Stat for the contract and DDSketchNaNTest for the filter.
         val res = ReservoirHistogramStat(capacity = 10, seed = 1)
 
         res.update(Double.NaN)
@@ -76,9 +74,6 @@ class ReservoirHistogramTest {
 
     @Test
     fun `copies draw independent admission streams`() {
-        // A windowed reservoir builds one slice per copy. Sharing the parent's seed would give every
-        // slice the same admission keys in the same order, so surviving would turn on an
-        // observation's position within its slice rather than on its weight.
         val template = ReservoirHistogramStat(capacity = 8, seed = 99)
         val first = template.create()
         val second = template.create()
@@ -135,8 +130,6 @@ class ReservoirHistogramTest {
         val h = res.read().toSparseHistogram(binCount = 4)
         assertEquals(1, h.lowerBounds.size)
         assertEquals(7.0, h.lowerBounds[0])
-        // upper must be strictly greater than lower so the half-open [lower, upper)
-        // interval actually contains the sampled value.
         assertTrue(h.upperBounds[0] > h.lowerBounds[0])
         assertEquals(5.0, h.weights[0])
     }
@@ -146,7 +139,6 @@ class ReservoirHistogramTest {
         val res = ReservoirHistogramStat(capacity = 10, seed = 1)
         listOf(0.0, 1.0, 2.0, 3.0).forEach { res.update(it) }
         val h = res.read().toSparseHistogram(binCount = 4)
-        // 4 values spread across [0, 3] into 4 bins of width 0.75 - every bin populated.
         assertEquals(4, h.weights.size)
         assertEquals(4.0, h.weights.sum())
     }

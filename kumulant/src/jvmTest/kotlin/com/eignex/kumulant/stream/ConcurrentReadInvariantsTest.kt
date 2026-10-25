@@ -17,25 +17,10 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
-// The per-stat `*ConcurrencyTest` files in `commonTest` are single-threaded, so they structurally
-// cannot catch a missing lock (the sequential arithmetic is identical either way) or a torn read
-// (there is no concurrent reader). This suite covers exactly that gap.
-//
-// The shape is N writers plus one reader, and the assertions are *invariants* rather than exact
-// values: under a lock-free level a snapshot is allowed to be stale, but it is never allowed to be
-// impossible. An AUC above 1.0, a NaN quantile on a populated sketch, a calibrated probability above
-// 1.0, or an exception thrown out of `read()` are all bugs at every level, and none of them are
-// excused by the documented drift allowance.
 class ConcurrentReadInvariantsTest {
 
     private val levels = listOf(Concurrency.Strict, Concurrency.Relaxed, Concurrency.HighWrite)
 
-    /**
-     * Drive [stat] from [writers] threads while a further thread reads it, asserting
-     * [invariants] on every snapshot.
-     *
-     * Collect failures so the report includes every distinct invariant violation.
-     */
     private fun <R : Result> assertReadInvariants(
         label: String,
         stat: Stat<R>,
@@ -52,7 +37,6 @@ class ConcurrentReadInvariantsTest {
                 failures.add(e)
             }
         }
-        // Also check the settled state, which must satisfy the same invariants.
         try {
             invariants(stat.read())
         } catch (e: Throwable) {
@@ -82,7 +66,6 @@ class ConcurrentReadInvariantsTest {
                 if (!r.auc.isNaN()) {
                     assertTrue(r.auc in 0.0..1.0, "auc=${r.auc}")
                 }
-                // The reported totals must account for exactly the binned weight.
                 assertTrue(
                     abs(r.positives.sum() - r.totalPositives) < 1e-6,
                     "positives sum ${r.positives.sum()} vs total ${r.totalPositives}",
@@ -98,8 +81,7 @@ class ConcurrentReadInvariantsTest {
     @Test
     fun `HdrHistogramStat read does not throw while buckets are being populated`() {
         for (level in levels) {
-            // Spread values widely so fresh buckets keep appearing mid-read, without tracking
-            // the decades below 1.0 that no write reaches.
+            // Spread values widely to force bucket creation while reads are in progress.
             val stat = HdrHistogramStat(lowestDiscernibleValue = 1.0, concurrency = level)
             assertReadInvariants("HdrHistogramStat[$level]", stat, iters = 100, write = { t, i ->
                 stat.update(1.0 + (t * 7919L + i * 104_729L) % 1_000_000L)
@@ -210,11 +192,6 @@ class ConcurrentReadInvariantsTest {
 
     @Test
     fun `TDigestStat never reports weight it cannot answer from`() {
-        // `read` fills every quantile with NaN when it has no centroids, so a snapshot reporting weight
-        // it has no centroids for would claim to have observed something it cannot answer a single
-        // quantile from. That is not staleness, which the Relaxed contract allows - it is a snapshot
-        // contradicting itself. Asserted as an invariant rather than by reproducing the interleaving,
-        // which needs a preemption long enough to exhaust drainLocked's spin budget.
         for (level in levels) {
             val stat = TDigestStat(concurrency = level)
             assertReadInvariants("TDigestStat[$level] weight-vs-centroids", stat, write = { t, i ->
@@ -243,9 +220,6 @@ class ConcurrentReadInvariantsTest {
             assertReadInvariants("TDigestStat[$level]", stat, write = { t, i ->
                 stat.update(1.0 + ((t * 13 + i * 17) % 10_000))
             }) { r ->
-                // Weight is counted where a value is merged, so the reported total is the mass the
-                // centroids actually hold. A total running ahead of them is what leaves the digest
-                // reporting positive weight with no centroid behind it, and NaN for every quantile.
                 val mass = r.weights.sum()
                 assertTrue(
                     r.totalWeight <= mass + 1e-6,

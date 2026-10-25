@@ -12,7 +12,6 @@ class TreeClassificationResultTest {
     private fun vec(vararg xs: Double) = DenseVector.of(xs)
 
     private fun stubTree(): TreeClassificationResult {
-        // x[0] <= 0 routes pos (class 0 dominant); otherwise neg (class 1 dominant)
         val pos = TreeClassificationLeafResult(counts(8.0, 2.0))
         val neg = TreeClassificationLeafResult(counts(1.0, 9.0))
         val split = TreeClassificationSplitResult(
@@ -62,8 +61,8 @@ class TreeClassificationResultTest {
 
     @Test
     fun `Forest probabilities average per-tree probabilities`() {
-        val t1 = TreeClassificationResult(TreeClassificationLeafResult(counts(4.0, 0.0))) // [1, 0]
-        val t2 = TreeClassificationResult(TreeClassificationLeafResult(counts(0.0, 2.0))) // [0, 1]
+        val t1 = TreeClassificationResult(TreeClassificationLeafResult(counts(4.0, 0.0)))
+        val t2 = TreeClassificationResult(TreeClassificationLeafResult(counts(0.0, 2.0)))
         val forest = ForestClassificationResult(numClasses = 2, trees = listOf(t1, t2))
         val p = forest.probabilities(vec(0.0))
         assertEquals(0.5, p[0], 1e-12)
@@ -72,8 +71,8 @@ class TreeClassificationResultTest {
 
     @Test
     fun `Forest predict picks the higher averaged probability`() {
-        val t1 = TreeClassificationResult(TreeClassificationLeafResult(counts(3.0, 1.0))) // [0.75, 0.25]
-        val t2 = TreeClassificationResult(TreeClassificationLeafResult(counts(2.0, 2.0))) // [0.5, 0.5]
+        val t1 = TreeClassificationResult(TreeClassificationLeafResult(counts(3.0, 1.0)))
+        val t2 = TreeClassificationResult(TreeClassificationLeafResult(counts(2.0, 2.0)))
         val forest = ForestClassificationResult(numClasses = 2, trees = listOf(t1, t2))
         assertEquals(0, forest.predict(vec(0.0)))
     }

@@ -18,7 +18,6 @@ class PlattCalibratorStatTest {
 
     @Test
     fun `learns a monotone mapping from raw scores to labels`() {
-        // Underlying truth: the label is more likely as the raw score grows.
         val stat = PlattCalibratorStat()
         val rng = Random(7L)
         repeat(5000) {

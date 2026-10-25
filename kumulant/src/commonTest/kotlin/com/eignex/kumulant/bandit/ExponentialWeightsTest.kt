@@ -33,8 +33,6 @@ class ExponentialWeightsTest {
 
     @Test
     fun `an underflowing array is rescaled rather than left to die`() {
-        // A run of large negative rewards drives every exp(eta * gain) toward zero; left there, one
-        // more step reaches exactly zero and no later reward can lift it, since every update multiplies.
         val w = doubleArrayOf(1e-200, 5e-201, 2e-200)
         val ratioBefore = w[0] / w[2]
 
@@ -47,8 +45,6 @@ class ExponentialWeightsTest {
 
     @Test
     fun `a fully collapsed array resets to uniform`() {
-        // Once every weight is exactly zero there are no ratios left to preserve, so there is nothing
-        // to restore it to except a fresh uniform prior. Anything else divides by zero.
         val w = doubleArrayOf(0.0, 0.0, 0.0)
 
         w.renormaliseExponentialWeights()
@@ -58,9 +54,6 @@ class ExponentialWeightsTest {
 
     @Test
     fun `a partly collapsed array survives on its remaining mass`() {
-        // Distinct from the case above: one arm still carries weight, so the zeros stay zero and the
-        // survivor is what the distribution rides on. Resetting to uniform here would throw away
-        // everything the policy had learned.
         val w = doubleArrayOf(0.0, 1e-200, 0.0)
 
         w.renormaliseExponentialWeights()
@@ -72,7 +65,6 @@ class ExponentialWeightsTest {
 
     @Test
     fun `rescaling is idempotent`() {
-        // A second pass must be a no-op, or the policies would drift every time they called it.
         val w = doubleArrayOf(1e200, 5e199, 2e200)
 
         w.renormaliseExponentialWeights()

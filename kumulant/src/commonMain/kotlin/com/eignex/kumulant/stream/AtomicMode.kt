@@ -8,7 +8,6 @@ import kotlin.concurrent.atomics.AtomicLong as KAtomicLong
 import kotlin.concurrent.atomics.AtomicLongArray as KAtomicLongArray
 import kotlin.concurrent.atomics.AtomicReference as KAtomicReference
 
-/** Atomic mode backed by platform atomics; CAS-based, safe for concurrent updates. */
 internal object AtomicMode : StreamMode {
     override fun newDouble(initial: Double) = AtomicDouble(initial)
     override fun newLong(initial: Long) = AtomicLong(initial)
@@ -24,7 +23,6 @@ internal object AtomicMode : StreamMode {
         AtomicDoubleCellArray(KAtomicLongArray(LongArray(size) { init(it).toRawBits() }))
 }
 
-/** CAS-based atomic [StreamDouble] using `Double.toRawBits` encoding over an atomic `Long`. */
 @JvmInline
 internal value class AtomicDouble(val ref: KAtomicLong) : StreamDouble {
 
@@ -64,7 +62,6 @@ internal value class AtomicDouble(val ref: KAtomicLong) : StreamDouble {
         ref.compareAndSet(expectedValue.toRawBits(), newValue.toRawBits())
 }
 
-/** Platform-atomic [StreamLong]. */
 @JvmInline
 internal value class AtomicLong(val ref: KAtomicLong) : StreamLong {
     constructor(initial: Long = 0L) : this(KAtomicLong(initial))
@@ -85,7 +82,6 @@ internal value class AtomicLong(val ref: KAtomicLong) : StreamLong {
         ref.compareAndSet(expectedValue, newValue)
 }
 
-/** Platform-atomic [StreamLongArray] backed by `kotlin.concurrent.atomics.AtomicLongArray`. */
 @JvmInline
 internal value class AtomicLongCellArray(val ref: KAtomicLongArray) : StreamLongArray {
     override val size: Int get() = ref.size
@@ -99,7 +95,6 @@ internal value class AtomicLongCellArray(val ref: KAtomicLongArray) : StreamLong
         ref.compareAndSetAt(index, expectedValue, newValue)
 }
 
-/** Platform-atomic [StreamDoubleArray] backed by an `AtomicLongArray` of IEEE-754 bit patterns. */
 @JvmInline
 internal value class AtomicDoubleCellArray(val ref: KAtomicLongArray) : StreamDoubleArray {
     override val size: Int get() = ref.size
@@ -119,7 +114,6 @@ internal value class AtomicDoubleCellArray(val ref: KAtomicLongArray) : StreamDo
         ref.compareAndSetAt(index, expectedValue.toRawBits(), newValue.toRawBits())
 }
 
-/** Platform-atomic [StreamRef]. */
 @JvmInline
 internal value class AtomicReference<T>(val ref: KAtomicReference<T>) : StreamRef<T> {
     constructor(value: T) : this(KAtomicReference(value))

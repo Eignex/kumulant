@@ -23,7 +23,6 @@ class WithSelfLagTest {
     fun `alternating pattern gives negative lag-1 autocorrelation`() {
         val s = CovarianceStat().withSelfLag(k = 1)
         repeat(10) { i -> s.update(if (i % 2 == 0) 1.0 else 2.0) }
-        // The (current, lag-1) pairs are (2,1),(1,2),(2,1),... giving a negative Pearson.
         val r = s.read()
         assertTrue(r.correlation < -0.5, "correlation=${r.correlation}")
     }

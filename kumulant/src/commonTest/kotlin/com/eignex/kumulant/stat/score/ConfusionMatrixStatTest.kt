@@ -37,37 +37,29 @@ class ConfusionMatrixStatTest {
 
     @Test
     fun `per class precision recall and F1 match formula on a 2-by-2 case`() {
-        // truth distribution: 6 positives, 4 negatives.
-        // predictions: tp=4, fp=1, fn=2, tn=3.
-        val s = ConfusionMatrixStat(numClasses = 2)
-        repeat(4) { s.update(1.0, 1.0) } // tp
-        repeat(2) { s.update(0.0, 1.0) } // fn
-        repeat(1) { s.update(1.0, 0.0) } // fp
-        repeat(3) { s.update(0.0, 0.0) } // tn
-        val r = s.read()
-        // precision_1 = tp / (tp + fp) = 4 / 5; recall_1 = tp / (tp + fn) = 4 / 6.
-        assertEquals(4.0 / 5.0, r.precision(1), DELTA)
-        assertEquals(4.0 / 6.0, r.recall(1), DELTA)
-        val expectedF1 = 2.0 * (4.0 / 5.0) * (4.0 / 6.0) / (4.0 / 5.0 + 4.0 / 6.0)
-        assertEquals(expectedF1, r.f1(1), DELTA)
-        // precision_0 = 3 / 5; recall_0 = 3 / 4.
-        assertEquals(3.0 / 5.0, r.precision(0), DELTA)
-        assertEquals(3.0 / 4.0, r.recall(0), DELTA)
-        // macro F1 = mean of the two F1s.
-        assertEquals((r.f1(0) + r.f1(1)) / 2.0, r.macroF1, DELTA)
-        // accuracy = (4 + 3) / 10.
-        assertEquals(0.7, r.accuracy, DELTA)
-    }
-
-    @Test
-    fun `mcc reproduces the binary closed form`() {
-        // Same 2x2 case.
         val s = ConfusionMatrixStat(numClasses = 2)
         repeat(4) { s.update(1.0, 1.0) }
         repeat(2) { s.update(0.0, 1.0) }
         repeat(1) { s.update(1.0, 0.0) }
         repeat(3) { s.update(0.0, 0.0) }
-        // Binary MCC = (TP*TN - FP*FN) / sqrt((TP+FP)(TP+FN)(TN+FP)(TN+FN)).
+        val r = s.read()
+        assertEquals(4.0 / 5.0, r.precision(1), DELTA)
+        assertEquals(4.0 / 6.0, r.recall(1), DELTA)
+        val expectedF1 = 2.0 * (4.0 / 5.0) * (4.0 / 6.0) / (4.0 / 5.0 + 4.0 / 6.0)
+        assertEquals(expectedF1, r.f1(1), DELTA)
+        assertEquals(3.0 / 5.0, r.precision(0), DELTA)
+        assertEquals(3.0 / 4.0, r.recall(0), DELTA)
+        assertEquals((r.f1(0) + r.f1(1)) / 2.0, r.macroF1, DELTA)
+        assertEquals(0.7, r.accuracy, DELTA)
+    }
+
+    @Test
+    fun `mcc reproduces the binary closed form`() {
+        val s = ConfusionMatrixStat(numClasses = 2)
+        repeat(4) { s.update(1.0, 1.0) }
+        repeat(2) { s.update(0.0, 1.0) }
+        repeat(1) { s.update(1.0, 0.0) }
+        repeat(3) { s.update(0.0, 0.0) }
         val tp = 4.0
         val tn = 3.0
         val fp = 1.0

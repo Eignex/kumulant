@@ -22,7 +22,7 @@ import kotlinx.serialization.Serializable
  *  - [DiagonalRegressionResult]: per-coefficient precision (factorised posterior).
  *  - [PrecisionRegressionResult]: full posterior as the Cholesky factor of its precision.
  *
- * Sealed + `@Serializable`. Concrete weights round-trip as [DenseVector] today;
+ * Sealed + `@Serializable`. Concrete weights round-trip as [DenseVector];
  * the public field is typed [Vector] so a sparse variant can swap in without
  * breaking callers. Regression error metrics from [HasRegression] become
  * meaningful once [sse] is tracked; implementations that don't accumulate it
@@ -37,7 +37,6 @@ sealed interface LinearRegressionResult :
 
     override val bias: Double
 
-    /** Cumulative observation weight folded in. */
     override val totalWeights: Double
 
     /** Number of [com.eignex.kumulant.core.RegressionStat.update] calls absorbed; useful
@@ -61,8 +60,8 @@ sealed interface LinearRegressionResult :
 
 /** SGD weight estimates with no posterior. Cheap, no uncertainty quantification.
  *  [sse] carries the accumulated per-link loss; for [Link.Identity] this is the
- *  classical SSE, for [Link.Logit] / [Link.Log] it is the GLM deviance (negative
- *  log-likelihood). [HasRegression.mse] / [HasRegression.rmse] / [HasRegression.rSquared]
+ *  classical SSE, for [Link.Logit] / [Link.Log] it is the negative
+ *  log-likelihood up to response-only constants. [HasRegression.mse] / [HasRegression.rmse] / [HasRegression.rSquared]
  *  are only natural under Identity. */
 @Serializable
 @SerialName("StochasticRegressionResult")

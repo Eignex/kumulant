@@ -50,7 +50,6 @@ class SpaceSavingTest {
         ss.update(2L)
         ss.update(2L)
         ss.update(3L)
-        // 4 evicts 3 (min count 1): 4 inherits count=2, error=1
         ss.update(4L)
         val r = ss.read()
         val kv = r.keys.zip(r.counts.toList()).toMap()
@@ -69,7 +68,6 @@ class SpaceSavingTest {
     @Test
     fun `recovers heavy hitters of a skewed stream`() {
         val ss = SpaceSavingStat(capacity = 16)
-        // Hot keys 0..3 each occur 1000 times; cold keys 100..1099 each occur once.
         val hot = (0L..3L).toList()
         for (k in hot) repeat(1000) { ss.update(k) }
         for (i in 100L..1099L) ss.update(i)
@@ -94,9 +92,6 @@ class SpaceSavingTest {
 
     @Test
     fun `fractional weight rounds up rather than being dropped`() {
-        // Mirrors CountMinSketchStat: counts are Long, so a fractional weight has to be rounded, and
-        // it rounds *up*. Rounding to nearest would drop everything below 0.5, hiding a key that
-        // accumulates many small weights. Counts become upper bounds, the safe direction here.
         val ss = SpaceSavingStat(capacity = 5)
         ss.update(7L, weight = 1.7)
         ss.update(7L, weight = 0.6)
@@ -142,8 +137,7 @@ class SpaceSavingLargeCountAdmissionTest {
 
     @Test
     fun `admitting against very large counts terminates`() {
-        // The eviction round has to subtract the smallest count, not one: a unit decrement runs once per
-        // unit of that minimum, so at this magnitude the admission below would take days to return.
+        // A unit-at-a-time decrement would take impractically long at these counts.
         val s = SpaceSavingStat(capacity = 2, concurrency = Concurrency.Relaxed)
         s.update(1L, weight = 1e12)
         s.update(2L, weight = 1e12)

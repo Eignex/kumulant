@@ -15,17 +15,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// The empty-read convention: report the identity element where the statistic has one, and `NaN` where
-// it does not, because a `0.0` quantile is indistinguishable from a sketch that observed real zeros.
 class EmptyReadSemanticsTest {
 
     @Test
     fun `statistics with an identity element report it`() {
-        // A sum of nothing really is zero, and a count of nothing really is zero.
         assertEquals(0.0, SumStat().read().sum)
         assertEquals(0.0, CountStat().read().sum, "an empty count is genuinely zero")
-        // The infinities are the correct starting points for a fold and cannot be mistaken for
-        // observed data.
         assertEquals(Double.POSITIVE_INFINITY, MinStat().read().min)
         assertEquals(Double.NEGATIVE_INFINITY, MaxStat().read().max)
     }
@@ -53,8 +48,6 @@ class EmptyReadSemanticsTest {
 
     @Test
     fun `isEmpty is the same check whatever the count is called`() {
-        // totalWeights, totalSeen and totalWeight are three spellings of the same thing across
-        // the catalogue; HasObservationCount normalises them.
         val empties: List<HasObservationCount> = listOf(
             MeanStat().read(),
             DDSketchStat().read(),

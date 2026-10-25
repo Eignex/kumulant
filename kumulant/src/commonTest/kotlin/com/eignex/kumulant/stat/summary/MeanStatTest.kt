@@ -38,7 +38,6 @@ class MeanStatTest {
     fun `downdate drives a sliding window`() {
         val mean = MeanStat()
         listOf(1.0, 2.0, 3.0, 4.0).forEach { mean.update(it, 1.0) }
-        // Drop the two oldest, leaving mean(3, 4).
         mean.update(1.0, -1.0)
         mean.update(2.0, -1.0)
         val r = mean.read()

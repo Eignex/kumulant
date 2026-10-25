@@ -8,8 +8,6 @@ import com.eignex.kumulant.weightedReads
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-// Catches mode-branch wiring bugs (wrong cell type, missing lock) cheaply, before the bench-side
-// concurrency tests exercise actual contention.
 class SummaryStatConcurrencyTest {
 
     @Test
@@ -119,7 +117,6 @@ class SummaryStatConcurrencyTest {
         for (mode in Concurrency.entries) {
             val b = SumStat(concurrency = mode).apply { for (v in WEIGHTED_VALUES) update(v, 0L, 1.0) }
             b.merge(a.read(0L))
-            // After merge: b has 2x of WEIGHTED_VALUES' sum.
             assertEquals(2 * WEIGHTED_VALUES.sum(), b.read(0L).sum, 1e-9, "merge mode=$mode")
         }
     }

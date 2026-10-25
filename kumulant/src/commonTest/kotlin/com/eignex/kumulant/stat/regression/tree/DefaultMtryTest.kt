@@ -20,16 +20,12 @@ class DefaultMtryTest {
 
     @Test
     fun `an empty candidate pool means no growth rather than one candidate`() {
-        // The distinction that makes this worth pinning: a forest built with no split candidates should
-        // report an mtry of zero, not clamp up to one and then try to draw from an empty list.
         assertEquals(0, defaultMtry(0))
         assertEquals(0, defaultMtry(-1))
     }
 
     @Test
     fun `never exceeds the pool it draws from`() {
-        // mtry larger than the pool would make the per-leaf subset draw meaningless. sqrt(p) <= p for
-        // every p >= 1, but the clamp is easy to get wrong, so check the whole small range.
         for (p in 1..64) {
             val mtry = defaultMtry(p)
             assertEquals(true, mtry in 1..p, "defaultMtry($p) = $mtry is outside 1..$p")
@@ -46,7 +42,6 @@ class DefaultMtryTest {
             RandomForestClassifierStat(3, numClasses = 2, splitCandidates = splits, nbrTrees = 2).config.mtry,
         )
 
-        // An explicit mtry has to survive the defaulting, or the config knob would be unreachable.
         assertEquals(
             2,
             RandomForestRegressionStat(

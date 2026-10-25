@@ -59,9 +59,7 @@ class DecayingSumStatTest {
 
 class DecayingSumLandmarkTest {
 
-    // A stream numbered far behind the landmark: the landmark starts at process uptime, so this is
-    // what a replay stream numbering from its own epoch looks like once the process has been up
-    // longer than ~1075 half-lives. A negative stamp reaches the same offset without the wait.
+    // A negative timestamp simulates a replay epoch far behind process uptime without waiting.
     private val farBehind = -200_000_000_000L
 
     @Test

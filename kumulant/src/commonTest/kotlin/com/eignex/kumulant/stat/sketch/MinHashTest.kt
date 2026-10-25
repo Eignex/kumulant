@@ -54,11 +54,10 @@ class MinHashTest {
         val numHashes = 512
         val a = MinHashStat(numHashes = numHashes, seed = 7L)
         val b = MinHashStat(numHashes = numHashes, seed = 7L)
-        // Sets [0, 750) and [250, 1000): overlap=500, union=1000 -> true Jaccard=0.5
         for (i in 0 until 750) a.update(i.toLong())
         for (i in 250 until 1000) b.update(i.toLong())
         val j = a.read().jaccard(b.read())
-        // Standard error ~ 1/sqrt(512) ~ 0.044; allow 4sigma.
+        // Standard error ~ 1/sqrt(512) ~ 0.044; allow 4 sigma.
         assertTrue(abs(j - 0.5) < 0.18, "Jaccard estimate=$j")
     }
 
@@ -73,8 +72,6 @@ class MinHashTest {
         val full = MinHashStat(numHashes = 128, seed = 5L)
         for (i in 0 until 1000) full.update(i.toLong())
 
-        // Merge of disjoint streams is the elementwise min of two independent minhashes,
-        // which equals the minhash over the union.
         assertTrue(a.read().signatures.contentEquals(full.read().signatures))
         assertEquals(1000L, a.read().totalSeen)
     }

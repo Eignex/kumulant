@@ -2,42 +2,25 @@ package com.eignex.kumulant.core
 
 import com.eignex.koblas.Vector
 
-/**
- * Reject a context vector whose arity does not match the model's.
- *
- * Every [RegressionStat] opens its `update` with this check, and every linear-model [Result] repeats
- * it in `predict` / `logit`, because a mismatched vector does not fail loudly on its own: a *short*
- * vector simply reads fewer coordinates and returns a plausible number from the wrong model.
- *
- * @param expected the model's feature count.
- * @throws IllegalArgumentException if the [Vector] size differs from [expected].
- */
-@Suppress("NOTHING_TO_INLINE") // as with the weight predicates; the non-JVM targets pay for the call
+// A short vector can produce a plausible prediction from only part of the model.
+// Avoid call overhead on targets without JIT inlining.
+@Suppress("NOTHING_TO_INLINE")
 internal inline fun Vector.requireFeatureSize(expected: Int) {
     require(size == expected) { "x.size=$size, expected $expected" }
 }
 
-/** Reject a non-positive feature count at construction. */
 internal fun requirePositiveFeatureSize(featureSize: Int) {
     require(featureSize > 0) { "featureSize must be positive, got $featureSize" }
 }
 
-/** Reject a class count below two: one class is not a classification problem. */
 internal fun requireAtLeastTwoClasses(numClasses: Int) {
     require(numClasses >= 2) { "numClasses must be >= 2; got $numClasses" }
 }
 
-/** Reject a non-positive bin count. */
 internal fun requirePositiveBins(numBins: Int) {
     require(numBins > 0) { "numBins must be > 0; got $numBins" }
 }
 
-/**
- * Reject a merge between two models of different arity.
- *
- * Distinct from [requireFeatureSize], which guards an incoming observation: this guards an incoming
- * *snapshot*, where a mismatch means the two were never the same model.
- */
 internal fun requireMergeFeatureSize(incoming: Int, own: Int) {
     require(incoming == own) { "merge: featureSize mismatch $incoming vs $own" }
 }

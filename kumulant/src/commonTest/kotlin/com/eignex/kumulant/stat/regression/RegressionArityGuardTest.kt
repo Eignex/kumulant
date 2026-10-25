@@ -16,9 +16,6 @@ import kotlin.test.assertTrue
 
 private const val FEATURES = 3
 
-// A wrong-arity vector is the one input error that does not announce itself: a *short* vector reads
-// fewer coordinates and returns a perfectly plausible number from the wrong model. Swept across the
-// catalogue so a stat added later cannot go missing its guard.
 class RegressionArityGuardTest {
 
     private val splits = listOf(ThresholdSplit(featureIndex = 0, threshold = 0.5))
@@ -37,8 +34,6 @@ class RegressionArityGuardTest {
 
     @Test
     fun `every regression stat rejects a wrong-arity context vector`() {
-        // Short and long both, because the two fail differently: a long vector would at worst read
-        // past what the model uses, but a short one is the silent case the guard exists for.
         val violations = mutableListOf<String>()
         for ((name, stat) in stats) {
             for (size in listOf(FEATURES - 1, FEATURES + 1)) {
@@ -57,8 +52,6 @@ class RegressionArityGuardTest {
 
     @Test
     fun `the rejection names both the size it got and the size it wanted`() {
-        // Pinned because the message is the only thing that tells a caller which of the two numbers to
-        // change, and because RegressionOpsTest greps it.
         for ((name, stat) in stats) {
             val thrown = runCatching {
                 stat.update(DenseVector.of(doubleArrayOf(1.0)), 1.0)
@@ -71,7 +64,6 @@ class RegressionArityGuardTest {
 
     @Test
     fun `a correctly sized vector is still accepted`() {
-        // Guards the guard: a require that rejected everything would satisfy both tests above.
         for ((name, stat) in stats) {
             val x = DenseVector.of(DoubleArray(FEATURES) { 1.0 })
             val thrown = runCatching { stat.update(x, 1.0) }.exceptionOrNull()

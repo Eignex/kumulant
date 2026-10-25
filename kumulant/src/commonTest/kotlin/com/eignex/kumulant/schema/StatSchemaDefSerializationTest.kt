@@ -96,7 +96,6 @@ class StatSchemaDefSerializationTest {
         val decoded = SchemaJson.decodeFromString<StatSchemaDef>(encoded)
         val reEncoded = SchemaJson.encodeToString(decoded)
 
-        // Declaration order and omitted defaults survive the round trip.
         assertEquals(encoded, reEncoded)
 
         assertTrue(encoded.contains("\"requests\":\"sum\""))

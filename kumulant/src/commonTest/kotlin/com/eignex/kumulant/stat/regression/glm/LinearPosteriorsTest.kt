@@ -218,7 +218,6 @@ class LinearPosteriorsTest {
 
         val sample = MultivariateGaussian.sample(snapshot, actualRng, exploration = 0.25)
 
-        // Back substitution against LT: z1 = u1 / 4, z0 = (u0 - 3 * z1) / 2.
         val z1 = u1 / 4.0
         assertEquals(1.0 + (u0 - 3.0 * z1) / 2.0, sample[0], 1e-12)
         assertEquals(-1.0 + z1, sample[1], 1e-12)

@@ -75,8 +75,7 @@ class ForestBaggingDowndateTest {
 
     @Test
     fun `a retraction under bagging does not leave a negative class probability`() {
-        // Swept over seeds: whether the retraction's Poisson multiplier exceeds the insertion's is a
-        // property of the draw sequence, so a single seed can miss it.
+        // Vary seeds so retraction samples include Poisson multipliers larger than their insertion multipliers.
         for (seed in 1..20) {
             val f = RandomForestClassifierStat(
                 featureSize = 1,

@@ -10,8 +10,7 @@ class ShiftRingRaceTest {
 
     @Test
     fun `diff never forwards a difference against a value the stream never emitted`() {
-        // Every observation is 1e6, so every real difference is 0.0. Reading the ring before a
-        // concurrent writer has stored into it would forward 1e6 - 0.0 instead.
+        // Constant observations make every valid difference zero; an uninitialised slot would emit 1e6.
         val stat = MaxStat(Concurrency.Strict).diff(1)
         runConcurrently(threads = 8, iterationsPerThread = 2000) { _, _ ->
             stat.update(1_000_000.0)

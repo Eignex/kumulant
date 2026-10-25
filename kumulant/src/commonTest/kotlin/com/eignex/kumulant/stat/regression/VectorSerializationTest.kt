@@ -39,7 +39,6 @@ class VectorSerializationTest {
         val dense = DiagonalRegressionStat(featureSize = 5, priorPrecision = 0.01)
         val sparse = DiagonalRegressionStat(featureSize = 5, priorPrecision = 0.01)
         val rng = Random(13)
-        // Each observation activates a handful of features -> naturally sparse.
         repeat(3000) {
             val active = listOf(0, 3, rng.nextInt(5))
             val xArr = DoubleArray(5).also { arr -> for (i in active.distinct()) arr[i] = rng.nextDouble() * 2 - 1 }
@@ -116,9 +115,6 @@ class VectorSerializationTest {
 
     @Test
     fun `LinearPosterior evaluate matches mean plus calibrated Gaussian noise`() {
-        // Average evaluate(x) over ~2k draws and check the sample mean lands near
-        // predict(x) for each posterior shape. Distributional correctness of the
-        // underlying samplers is exercised in DistributionsTest and MathTest.
         val rng = Random(2026)
         val truth = doubleArrayOf(0.7, -0.3, 1.5)
 
@@ -153,9 +149,6 @@ class VectorSerializationTest {
 
     @Test
     fun `LinearRegressionResult round-trips polymorphically through sealed root`() {
-        // The sealed root carries the polymorphic discriminator so combo's
-        // LinearLearnerData(state: LinearRegressionResult) can wire-encode without
-        // knowing which concrete subtype a particular bandit produced.
         val sgd = StochasticRegressionStat(featureSize = 2).also { it.update(doubleArrayOf(1.0, 2.0), 0.5) }
         val diag = DiagonalRegressionStat(featureSize = 2, priorPrecision = 0.1)
             .also { it.update(doubleArrayOf(1.0, 2.0), 0.5) }

@@ -11,9 +11,6 @@ class SamplingValidationTest {
 
     @Test
     fun `throttle rejects a period below one in every modality`() {
-        // A period of zero would divide by zero in the tick test, and a negative one would forward on a
-        // schedule nobody could predict. Both are caller errors rather than degenerate-but-valid
-        // configurations, so they throw at construction rather than at the first update.
         for (every in listOf(0, -1, -7)) {
             assertFailsWith<IllegalArgumentException>("series accepted every=$every") {
                 SumStat().throttle(every)
@@ -32,7 +29,6 @@ class SamplingValidationTest {
 
     @Test
     fun `throttle accepts a period of one as forward-everything`() {
-        // The boundary the check has to leave open: `every = 1` is the identity, not a rejection.
         val stat = SumStat().throttle(1)
         stat.update(3.0)
         stat.update(4.0)
@@ -59,7 +55,6 @@ class SamplingValidationTest {
 
     @Test
     fun `sample accepts both endpoints`() {
-        // Zero and one are the drop-everything and keep-everything ends, both legitimate.
         val none = SumStat().sample(0.0, 0L)
         repeat(20) { none.update(1.0) }
         assertEquals(0.0, none.read().sum, 1e-12, "a rate of zero should drop every update")

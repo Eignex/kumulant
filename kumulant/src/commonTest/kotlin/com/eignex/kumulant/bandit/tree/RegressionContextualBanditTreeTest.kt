@@ -28,7 +28,6 @@ class RegressionContextualBanditTreeTest {
             posterior = ThompsonTreePosterior(priorWeight = 1.0, priorVariance = 1.0),
             random = rng,
         )
-        // Arm 0 pays 1 when x>0, 0 otherwise; arm 1 pays the opposite.
         repeat(600) {
             val x = rng.nextDouble() * 2 - 1
             val xv = feat(x)
@@ -74,8 +73,7 @@ class RegressionContextualBanditTreeTest {
         }
         val pickAtPos = cb.choose(feat(0.7))
         val pickAtNeg = cb.choose(feat(-0.7))
-        // Deterministic claims are flaky for ensembled Thompson; just sanity check
-        // that the snapshot's predictions follow the expected ordering for arm 0.
+        // Ensembled Thompson draws vary; check prediction ordering rather than a deterministic choice.
         val snap = cb.armResult(0)
         assertTrue(snap.predict(feat(0.5)) > snap.predict(feat(-0.5)))
         assertTrue(pickAtPos in 0..1 && pickAtNeg in 0..1)

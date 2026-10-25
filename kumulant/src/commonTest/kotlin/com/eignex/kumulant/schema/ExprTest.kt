@@ -219,7 +219,6 @@ class ExprTest {
         live.update(1.0)
         live.update(2.0)
         live.update(3.0)
-        // (2*1+1) + (2*2+1) + (2*3+1) = 15
         assertEquals(15.0, live.read().sum, DELTA)
     }
 
@@ -241,7 +240,6 @@ class ExprTest {
         live.update(-5.0)
         live.update(5.0)
         live.update(20.0)
-        // clipped 0,5,10 with weight 2 each: sum = 30
         assertEquals(30.0, live.read().sum, DELTA)
     }
 
@@ -262,7 +260,6 @@ class ExprTest {
         val cfg: DiscreteStatSpec<*> = HyperLogLog(precision = 10).filter(Ge(X, Const(0.0)))
         val live = cfg.materialize(Concurrency.None)
         for (i in -50L..50L) live.update(i)
-        // 51 non-negative values survive; HLL estimate should reflect that scale.
         val r = live.read() as HyperLogLogResult
         assertTrue(r.estimate in 30.0..70.0, "estimate=${r.estimate}")
     }
@@ -295,7 +292,6 @@ class ExprTest {
     @Test fun `transformPair swaps x and y`() {
         val cfg: PairedStatSpec<*> = UnivariateRegression().transformPair(xExpr = Y, yExpr = X)
         val live = cfg.materialize(Concurrency.None)
-        // After swap of (1,2),(2,4),(3,6): slope x/y = 0.5
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
@@ -306,7 +302,6 @@ class ExprTest {
     @Test fun `transformX only remaps x`() {
         val cfg: PairedStatSpec<*> = UnivariateRegression().transformX(2.0 * X)
         val live = cfg.materialize(Concurrency.None)
-        // y=2x with x'=2x gives pairs (2,2),(4,4),(6,6) -> slope 1
         live.update(1.0, 2.0)
         live.update(2.0, 4.0)
         live.update(3.0, 6.0)
@@ -340,7 +335,6 @@ class ExprTest {
     }
 
     @Test fun `transformElement can reference other indices`() {
-        // Each element divided by index 0.
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2)
             .transformElement(X / V(0))
         val live = cfg.materialize(Concurrency.None)
@@ -434,8 +428,6 @@ class ExprTest {
             doubleArrayOf(1.0, 0.0, Double.NaN, 2.0),
             doubleArrayOf(0.0, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY),
             doubleArrayOf(-0.0, 0.0, Double.MAX_VALUE, Double.MIN_VALUE),
-            // One dominant term ahead of many small ones, long enough to fill SIMD lanes: the only
-            // shape in this set where associativity is observable.
             DoubleArray(64) { if (it == 0) 1e16 else 1.0 },
         )
         val folds = VFoldOp.entries.map(::VFold)
@@ -561,15 +553,10 @@ class ExprTest {
         }
     }
 
-    /**
-     * Folds whose result depends on how the terms associate. Sum and Mean reduce through koblas,
-     * which pairs terms across SIMD lanes for a dense operand and accumulates in order for every
-     * other storage, so the two answers differ in the last bits. The remaining folds are
-     * order-independent and still have to agree exactly.
-     */
+    // Dense Sum/Mean reductions reassociate across SIMD lanes, so they need rounding slack.
+    // Other folds must agree exactly across storage types.
     private val reassociating = setOf(VFoldOp.Sum, VFoldOp.Mean)
 
-    /** Relative slack for [reassociating] folds; reassociation moves the last bits, nothing more. */
     private val reassociationTolerance = 1e-12
 
     private fun sparse(values: DoubleArray): SparseVector {
@@ -653,7 +640,6 @@ class ExprTest {
     }
 
     @Test fun `transformVector changes dimensionality via VElements`() {
-        // Input dim 4 pooled to output dim 2; inner is sized for the output.
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2)
             .transformVector(VElements(listOf((V(0) + V(1)) / 2.0, (V(2) + V(3)) / 2.0)))
         val live = cfg.materialize(Concurrency.None)

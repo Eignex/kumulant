@@ -15,8 +15,6 @@ class SamplingTest {
 
     @Test
     fun `reset replays the sampling sequence from the start`() {
-        // Stat.reset promises the equivalent of a fresh stat, and the gate's draw counter is state:
-        // without clearing it a reset stat would carry on mid-sequence.
         val a = CountStat().sample(rate = 0.5, seed = 3L)
         repeat(50) { a.update(1.0) }
         val before = a.read().sum
@@ -27,8 +25,6 @@ class SamplingTest {
 
     @Test
     fun `copies sample independently of the stat they came from`() {
-        // Window slices are built through create; sharing the parent's seed would make every slice
-        // accept and reject at the same positions.
         val template = CountStat().sample(rate = 0.5, seed = 11L)
         val first = template.create()
         val second = template.create()
@@ -46,7 +42,6 @@ class SamplingTest {
     fun `series throttle forwards every Nth update`() {
         val stat = CountStat().throttle(every = 3)
         repeat(10) { stat.update(1.0) }
-        // 10 inputs at every=3 => updates fire at ticks 3, 6, 9 => 3 forwarded.
         assertEquals(3.0, stat.read().sum, DELTA)
     }
 
@@ -54,7 +49,6 @@ class SamplingTest {
     fun `paired throttle forwards every Nth update`() {
         val stat = SumStat().atY().throttle(every = 2)
         for (y in doubleArrayOf(1.0, 2.0, 3.0, 4.0, 5.0)) stat.update(0.0, y)
-        // y=2 (tick 2) and y=4 (tick 4) make it through; total y = 6.
         assertEquals(6.0, stat.read().sum, DELTA)
     }
 
@@ -84,24 +78,23 @@ class SamplingTest {
     @Test
     fun `series weightBy multiplies caller weight by expression result`() {
         val stat = SumStat().weightBy { v -> v * v }
-        // sum += value * weight * weighter(value); caller weight defaults to 1.
-        stat.update(2.0) // contributes 2 * 1 * 4 = 8
-        stat.update(3.0) // contributes 3 * 1 * 9 = 27
+        stat.update(2.0)
+        stat.update(3.0)
         assertEquals(35.0, stat.read().sum, DELTA)
     }
 
     @Test
     fun `paired weightBy multiplies caller weight by expression`() {
         val stat = SumStat().atY().weightBy { _, y -> y }
-        stat.update(0.0, y = 2.0) // 2 * 1 * 2 = 4
-        stat.update(0.0, y = 5.0) // 5 * 1 * 5 = 25
+        stat.update(0.0, y = 2.0)
+        stat.update(0.0, y = 5.0)
         assertEquals(29.0, stat.read().sum, DELTA)
     }
 
     @Test
     fun `discrete weightBy composes with caller weight`() {
         val stat = SumStat().asDiscrete().weightBy { v -> v.toDouble() }
-        stat.update(value = 3L, weight = 2.0) // 3 * 2 * 3 = 18
+        stat.update(value = 3L, weight = 2.0)
         assertEquals(18.0, stat.read().sum, DELTA)
     }
 }

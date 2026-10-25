@@ -21,9 +21,6 @@ import kotlin.test.assertTrue
 
 private val NON_FINITE = doubleArrayOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)
 
-// [Stat][com.eignex.kumulant.core.Stat] guarantees only that a non-finite value will not throw; it is
-// explicitly allowed to poison the stat, and for an accumulator it does. `filterFinite` is the
-// supported way for a caller to drop such observations instead.
 class FilterFiniteTest {
 
     @Test
@@ -42,8 +39,6 @@ class FilterFiniteTest {
 
     @Test
     fun `without the filter the same value propagates as documented`() {
-        // The other half of the contract, pinned so the filter's purpose stays legible. This is not a
-        // defect being tolerated: it is the stat reporting that it was given something unusable.
         val plain = Mean.materialize()
         plain.update(4.0)
         plain.update(Double.NaN)
@@ -71,8 +66,6 @@ class FilterFiniteTest {
 
     @Test
     fun `a regression stat behind the filter rejects a non-finite feature or target`() {
-        // The modality where this matters most, because a poisoned coefficient never recovers: every
-        // later gradient step multiplies the NaN forward.
         for (bad in NON_FINITE) {
             val good = DenseVector.of(doubleArrayOf(1.0, 1.0))
 
@@ -96,8 +89,6 @@ class FilterFiniteTest {
 
     @Test
     fun `the filter rejects a non-finite coordinate anywhere in a feature vector`() {
-        // What no per-coordinate expression can express, and the reason AllFinite exists as its own node
-        // rather than as sugar over V(0).isFinite(): the bad coordinate can be any of them.
         for (index in 0 until 4) {
             val stat = StochasticRegression(featureSize = 4).filterFinite().materialize()
             stat.update(DenseVector.of(DoubleArray(4) { 1.0 }), 1.0)
@@ -111,7 +102,6 @@ class FilterFiniteTest {
 
     @Test
     fun `a finite observation still passes the filter`() {
-        // Guards every assertion above: a filter that rejected everything would satisfy all of them.
         val stat = Sum.filterFinite().materialize()
         stat.update(3.0)
         stat.update(4.0)
@@ -121,9 +111,6 @@ class FilterFiniteTest {
 
     @Test
     fun `filtering on finiteness is stricter than filtering on NaN`() {
-        // The distinction that justifies a second predicate. An infinity is not a NaN, so `!isNaN()`
-        // lets it through, and an infinity in a mean is just as permanent. Note it leaves the mean at
-        // +Infinity rather than NaN here, which is worse in a way: it still looks like a bound.
         val nanOnly = Mean.filter(!X.isNaN()).materialize()
         nanOnly.update(4.0)
         nanOnly.update(Double.POSITIVE_INFINITY)
@@ -137,8 +124,6 @@ class FilterFiniteTest {
 
     @Test
     fun `the filter survives a round trip through the wire`() {
-        // Filters are required to be wire-expressible; a predicate that only worked in-process would be
-        // unusable from a serialised pipeline, which is the point of putting it in the AST.
         val spec: StatSpec = Mean.filterFinite() as StatSpec
         val json = SchemaJson.encodeToString(StatSpec.serializer(), spec)
         assertTrue("allFinite" in json, "the predicate did not reach the wire: $json")

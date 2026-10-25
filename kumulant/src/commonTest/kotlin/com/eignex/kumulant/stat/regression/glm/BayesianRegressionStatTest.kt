@@ -18,16 +18,13 @@ class BayesianRegressionStatTest {
         override fun toDoubleArray(): DoubleArray = DoubleArray(size) { this[it] }
     }
 
-    // Posteriors captured from the Sherman-Morrison covariance implementation this replaces, so the
-    // equivalence is checked against measured behaviour rather than against a re-derivation of it.
+    // Reference posteriors captured from the Sherman-Morrison covariance formulation.
     private class CovarianceFormReference(
         val name: String,
         val weights: DoubleArray,
         val bias: Double,
         val covariance: Array<DoubleArray>,
-        // The two forms agree to the last few ULPs where the trajectory is multiply-add and sqrt.
-        // Logit and Log feed it through `exp`, which each platform rounds its own way, so those
-        // cannot be pinned past the point where the platforms themselves stop agreeing.
+        // Logit and Log need wider tolerances because exp rounding differs across platforms.
         val tolerance: Double = 1e-12,
         val fit: () -> BayesianRegressionStat,
     )
@@ -91,7 +88,6 @@ class BayesianRegressionStatTest {
 
     @Test
     fun `the precision factor accumulates the exact Gaussian information matrix`() {
-        // Under Identity the posterior precision is closed-form: H = H_prior + sum(x xT).
         val stat = BayesianRegressionStat(featureSize = 3, priorVariance = 2.0)
         val rng = Random(3)
         val expected = Array(3) { i -> DoubleArray(3) { j -> if (i == j) 0.5 else 0.0 } }
@@ -126,8 +122,6 @@ class BayesianRegressionStatTest {
         }
         val buffer = DenseMatrix.zero(3, 3)
 
-        // Reused across two different posteriors: the second fill has to overwrite the first
-        // completely, not blend with whatever it left behind.
         first.read().covarianceInto(buffer)
         val secondResult = second.read()
         secondResult.covarianceInto(buffer)
@@ -140,11 +134,7 @@ class BayesianRegressionStatTest {
 
     @Test
     fun `the factor keeps its canonical form across a long update sequence`() {
-        // A rank-1 update is free to return any factor whose product is right, and a plane rotation
-        // signed after the larger input flips a whole column. That reconstructs H just as well,
-        // since the signs cancel in L LT, so the reconstruction test above cannot see it. Snapshots
-        // are compared and serialised entry for entry, so the canonical form is the contract:
-        // positive diagonal, strict upper triangle zero.
+        // Column sign flips preserve L * transpose(L), so reconstruction alone cannot verify canonical factors.
         val stat = BayesianRegressionStat(featureSize = 4, priorVariance = 0.5)
         val rng = Random(11)
 
@@ -302,7 +292,6 @@ class BayesianRegressionStatTest {
         fitLine(a, truth, intercept = 0.0, n = 2000, seed = 5L)
         fitLine(b, truth, intercept = 0.0, n = 2000, seed = 7L)
 
-        // Reference: a single stat fed the same total data should agree with merge(a, b).
         val ref = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
         fitLine(ref, truth, intercept = 0.0, n = 2000, seed = 5L)
         fitLine(ref, truth, intercept = 0.0, n = 2000, seed = 7L)
@@ -317,16 +306,13 @@ class BayesianRegressionStatTest {
                 abs(merged.weights[i] - truth[i]) < 0.1,
                 "merged weight[$i]=${merged.weights[i]} far from truth=${truth[i]}",
             )
-            // Posterior product should land in the same neighbourhood as replaying
-            // all observations into one stat - not pointwise-identical because the
-            // Laplace trajectory differs.
+            // The Laplace trajectory differs between pooled posteriors and replay, so allow approximation error.
             assertTrue(
                 abs(merged.weights[i] - refResult.weights[i]) < 0.15,
                 "merged weight[$i]=${merged.weights[i]} diverged from replay=${refResult.weights[i]}",
             )
         }
         assertEquals(4000.0, merged.totalWeights, absoluteTolerance = 1e-9)
-        // Combined posterior should be at least as tight as each operand.
         for (i in truth.indices) {
             assertTrue(
                 mergedCovariance[i, i] < 0.05,

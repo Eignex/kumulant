@@ -46,7 +46,6 @@ class ExprSugarTest {
     @Test
     fun `Standardize matches the manual z-score AST`() {
         val primary = WeightedVarianceResult(totalWeights = 4.0, mean = 5.0, variance = 4.0)
-        // stdDev = 2.0, so (10 - 5) / 2 = 2.5.
         assertEquals(2.5, Standardize.eval(10.0, 0.0, DoubleArray(0), primary), DELTA)
     }
 
@@ -59,11 +58,8 @@ class ExprSugarTest {
     @Test
     fun `MinMax maps to the configured range`() {
         val primary = SummaryResult(totalWeights = 4.0, mean = 5.0, variance = 0.0, min = 0.0, max = 10.0)
-        // x=5 maps to midpoint of [-1, 1] = 0.
         assertEquals(0.0, MinMax(-1.0, 1.0).eval(5.0, 0.0, DoubleArray(0), primary), DELTA)
-        // x=10 maps to +1.
         assertEquals(1.0, MinMax(-1.0, 1.0).eval(10.0, 0.0, DoubleArray(0), primary), DELTA)
-        // x=0 maps to -1.
         assertEquals(-1.0, MinMax(-1.0, 1.0).eval(0.0, 0.0, DoubleArray(0), primary), DELTA)
     }
 
@@ -74,23 +70,19 @@ class ExprSugarTest {
 
     @Test
     fun `Switch In Standardize MinMax compose as flat per-index AST over SummaryStat`() {
-        // Each per-coordinate primary is a SummaryResult (HasCenterScale AND HasMinMax).
         val primary = SummaryResult(totalWeights = 4.0, mean = 5.0, variance = 4.0, min = 0.0, max = 10.0)
 
         val perIndex = Switch(
             on = VIndex,
             cases = listOf(
-                SwitchCase(0.0, Standardize), // 0: z-score (Center/Scale)
-                SwitchCase(1.0, MinMax(targetLow = 0.0, targetHigh = 1.0)), // 1: min-max (Low/High)
+                SwitchCase(0.0, Standardize),
+                SwitchCase(1.0, MinMax(targetLow = 0.0, targetHigh = 1.0)),
             ),
-            otherwise = X, // others: passthrough
+            otherwise = X,
         )
 
-        // At coord 0 with x=10: Standardize -> (10-5)/2 = 2.5.
         assertEquals(2.5, perIndex.eval(10.0, 0.0, DoubleArray(0), IndexedResult(primary, 0)), DELTA)
-        // At coord 1 with x=10: MinMax(0..1) -> (10-0)/10 = 1.0.
         assertEquals(1.0, perIndex.eval(10.0, 0.0, DoubleArray(0), IndexedResult(primary, 1)), DELTA)
-        // At coord 99 with x=42: passthrough.
         assertEquals(42.0, perIndex.eval(42.0, 0.0, DoubleArray(0), IndexedResult(primary, 99)), DELTA)
     }
 }

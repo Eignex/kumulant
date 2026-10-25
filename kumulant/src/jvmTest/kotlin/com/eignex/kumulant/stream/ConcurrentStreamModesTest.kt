@@ -163,7 +163,7 @@ class ConcurrentStreamModesTest {
             }
         }
         val result = tdigest.read()
-        // ~6 * compression is the documented centroid bound. Allow some slack.
+        // Allow slack above the documented centroid bound of about 6 * compression.
         assertTrue(
             result.means.size <= 8 * 100,
             "centroid count ${result.means.size} exceeded 8 * compression",
@@ -198,7 +198,6 @@ class ConcurrentStreamModesTest {
         val iters = 10_000
         runWithReader(ss::read) {
             runConcurrently(writers, iters) { _, i ->
-                // Skewed key distribution so eviction kicks in.
                 ss.update((i % (capacity * 4)).toLong())
             }
         }
@@ -225,7 +224,6 @@ class ConcurrentStreamModesTest {
             result.means.size <= 8 * 100,
             "centroid count ${result.means.size} exceeded 8 * compression",
         )
-        // totalWeight should account for every accepted observation (lock-free counter).
         assertEquals((writers * iters).toDouble(), result.totalWeight, 1e-9)
     }
 
@@ -315,7 +313,6 @@ class ConcurrentStreamModesTest {
         assertEquals((writers * iters).toLong(), result.totalSeen)
     }
 
-    /** Run [block] with a parallel reader thread invoking [read] in a tight loop until [block] returns. */
     private fun <R> runWithReader(read: () -> R, block: () -> Unit) {
         val stop = AtomicBoolean(false)
         val pool = Executors.newSingleThreadExecutor()

@@ -35,7 +35,7 @@ import kotlin.random.Random
  *   in posterior variance: under-explored arms have wider posteriors and
  *   draw higher scores more often.
  * - **UCB-based** ([UCB1], [UCB1Normal], [UCB1Tuned], [UcbV], [KlUcb], [Moss])
- *  ; score is `mean + alpha * confidence-bound` derived from the snapshot
+ *   score is `mean + alpha * confidence-bound` derived from the snapshot
  *   directly. Exploration is explicit in the confidence width.
  *
  * Per-policy global state (e.g. total samples for UCB) updates through
@@ -182,10 +182,7 @@ class UCB1(
 ) : BanditPolicy<BernoulliSumResult> {
     override val arm = BernoulliArm(priorAlpha, priorBeta)
 
-    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
-    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
-    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
-    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    // Policies share this counter across arms, so concurrent updates require atomic addition.
     private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = UCB1(alpha, arm.priorAlpha, arm.priorBeta)
 
@@ -277,10 +274,7 @@ class UCB1Tuned(
 ) : BanditPolicy<MomentsResult> {
     override val arm = MomentsArm(priorMean, priorWeight)
 
-    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
-    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
-    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
-    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    // Policies share this counter across arms, so concurrent updates require atomic addition.
     private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = UCB1Tuned(alpha, arm.priorMean, arm.priorWeight)
 
@@ -319,20 +313,10 @@ class Greedy(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDe
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) = snapshot.mean
 }
 
-/**
- * One explore-or-exploit coin per round, drawn from the caller's generator.
- *
- * The decision has to agree across every arm in a round: scored per arm, an explore draw would compete
- * against other arms' means and the argmax would favour whichever arm happened to draw high, which is
- * not epsilon-greedy. Keying the cached draw on the round is what makes it agree - but keying the
- * *generator* on the round, as `Random(step)` does, makes the decision a pure function of the round
- * index and so identical for every seed: an ensemble built through `create(random)` to decorrelate
- * exploration would explore in lockstep instead.
- *
- * A caller that drives `evaluate` without ever calling `choose` leaves the round at 0 and so keeps the
- * first coin; there is no round clock to key on in that case. Under racing rounds two of them may share
- * a coin, which is bounded drift of the kind the concurrency contract allows.
- */
+// Share one exploration decision across all arms in a round so argmax cannot mix
+// exploration scores with exploitation means. Draw from the caller's RNG rather
+// than seeding by step, which would make different seeds explore in lockstep.
+// Without a new step, direct evaluate calls reuse the draw; racing rounds may share one.
 internal class RoundCoin {
     private var round = Long.MIN_VALUE
     private var draw = 0.0
@@ -404,10 +388,7 @@ class EpsilonDecreasing(
     }
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
 
-    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
-    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
-    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
-    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    // Policies share this counter across arms, so concurrent updates require atomic addition.
     private val totalSamples = AtomicMode.newDouble(0.0)
     private val coin = RoundCoin()
     override fun createPolicy() =
@@ -476,10 +457,7 @@ class KlUcb(
 ) : BanditPolicy<BernoulliSumResult> {
     override val arm = BernoulliArm(priorAlpha, priorBeta)
 
-    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
-    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
-    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
-    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    // Policies share this counter across arms, so concurrent updates require atomic addition.
     private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = KlUcb(c, tolerance, arm.priorAlpha, arm.priorBeta)
 
@@ -559,10 +537,7 @@ class Moss(
     }
     override val arm = MeanArm(priorMean, priorWeight)
 
-    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
-    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
-    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
-    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    // Policies share this counter across arms, so concurrent updates require atomic addition.
     private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = Moss(nbrArms, arm.priorMean, arm.priorWeight)
 
@@ -615,10 +590,7 @@ class UcbV(
     }
     override val arm = MomentsArm(priorMean, priorWeight)
 
-    // Atomic, not a plain field: MultiArmedBandit promises that updates racing on different arms never
-    // block, and every bound below divides by this counter. A lost read-modify-write leaves it short of
-    // the true total for good, so every arm's exploration bonus shrinks and never re-syncs, and a
-    // non-volatile 64-bit field could additionally tear into a value whose logarithm is NaN.
+    // Policies share this counter across arms, so concurrent updates require atomic addition.
     private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = UcbV(zeta, c, arm.priorMean, arm.priorWeight)
 

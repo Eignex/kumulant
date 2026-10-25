@@ -48,8 +48,6 @@ class AdwinStatTest {
         val r = s.read()
         assertTrue(r.changesDetected > 0L, "no change detected")
         assertTrue(r.windowLength < 1_000L, "windowLength=${r.windowLength}")
-        // The remaining window should have moved noticeably toward the post-shift mean (~0.975)
-        // even if some pre-shift residue remains in the largest still-active bucket.
         assertTrue(r.mean > 0.2, "post-shift mean=${r.mean}")
     }
 
@@ -59,7 +57,6 @@ class AdwinStatTest {
         val xs = doubleArrayOf(0.1, 0.2, 0.3, 0.4, 0.5)
         for (x in xs) s.update(x)
         val r = s.read()
-        // No drift in this tiny stationary stream, so the entire input is still in-window.
         assertEquals(0L, r.changesDetected)
         assertEquals(0.3, r.mean, DELTA)
     }

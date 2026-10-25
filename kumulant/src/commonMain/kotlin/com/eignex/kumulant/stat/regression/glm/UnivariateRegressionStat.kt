@@ -88,10 +88,9 @@ data class UnivariateRegressionResult(
  * **Update:** O(1) per observation.
  *
  * **Concurrency:** Welford-coupled cells. [Concurrency.Strict] and
- * [Concurrency.HighWrite] lock the body; exact match to a serial run up to
- * floating-point reorder ULPs. [Concurrency.Relaxed] drops the lock; the six
- * cells race and coefficients drift ~1e-5 relative under contention but
- * never throw.
+ * [Concurrency.HighWrite] lock updates and reads. [Concurrency.Relaxed] uses
+ * atomic cells without a shared lock, so coupled state can drift under contention.
+ * Floating-point results depend on update order.
  */
 class UnivariateRegressionStat(
     /** Regularisation applied at `read()` time; defaults to plain OLS. */
