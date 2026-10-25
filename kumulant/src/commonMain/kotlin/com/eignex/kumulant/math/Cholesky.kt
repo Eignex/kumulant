@@ -14,7 +14,7 @@ import kotlin.math.min
 import kotlin.math.sqrt
 
 // Adapted from Eignex/koblas ReferenceCholesky.kt at cfdef98439f7baff0febc7a0892f16734bf55315.
-// Apache-2.0; module-internal API.
+// Apache-2.0.
 private const val CHOLESKY_BLOCK = 64
 
 internal sealed interface CholeskyPolicy {
@@ -29,7 +29,13 @@ internal sealed interface CholeskyPolicy {
     }
 }
 
-internal class NotPositiveDefinite(val pivotIndex: Int, val pivot: Double, message: String) :
+/**
+ * A Cholesky factorization failed at [pivotIndex] with the corrected diagonal value [pivot].
+ *
+ * @property pivotIndex Zero-based failing column.
+ * @property pivot Corrected diagonal before taking its square root.
+ */
+class NotPositiveDefinite(val pivotIndex: Int, val pivot: Double, message: String) :
     IllegalArgumentException(message)
 
 internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, workspace: Workspace? = null) {
@@ -232,8 +238,7 @@ private fun factorBlockColumn(
                 throw NotPositiveDefinite(
                     j,
                     pivot,
-                    "matrix is not positive-definite at pivot $j (diagonal=$pivot); pass " +
-                        "CholeskyPolicy.Regularize to factor a nearby matrix instead",
+                    "matrix is not positive-definite at pivot $j (diagonal=$pivot)",
                 )
             }
             ld[base] = sqrt(pivot)

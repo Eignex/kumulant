@@ -2430,6 +2430,26 @@ final class com.eignex.kumulant.core/IndexedResult : com.eignex.kumulant.core/Re
     }
 }
 
+final class com.eignex.kumulant.math/CholeskyFactor { // com.eignex.kumulant.math/CholeskyFactor|null[0]
+    final val size // com.eignex.kumulant.math/CholeskyFactor.size|{}size[0]
+        final fun <get-size>(): kotlin/Int // com.eignex.kumulant.math/CholeskyFactor.size.<get-size>|<get-size>(){}[0]
+
+    final fun logDeterminant(): kotlin/Double // com.eignex.kumulant.math/CholeskyFactor.logDeterminant|logDeterminant(){}[0]
+    final fun lowerFactor(): com.eignex.koblas/DenseMatrix // com.eignex.kumulant.math/CholeskyFactor.lowerFactor|lowerFactor(){}[0]
+    final fun solve(com.eignex.koblas/DenseMatrix): com.eignex.koblas/DenseMatrix // com.eignex.kumulant.math/CholeskyFactor.solve|solve(com.eignex.koblas.DenseMatrix){}[0]
+    final fun solve(kotlin/DoubleArray): kotlin/DoubleArray // com.eignex.kumulant.math/CholeskyFactor.solve|solve(kotlin.DoubleArray){}[0]
+    final fun solveLower(com.eignex.koblas/DenseMatrix, kotlin/Boolean = ...): com.eignex.koblas/DenseMatrix // com.eignex.kumulant.math/CholeskyFactor.solveLower|solveLower(com.eignex.koblas.DenseMatrix;kotlin.Boolean){}[0]
+}
+
+final class com.eignex.kumulant.math/NotPositiveDefinite : kotlin/IllegalArgumentException { // com.eignex.kumulant.math/NotPositiveDefinite|null[0]
+    constructor <init>(kotlin/Int, kotlin/Double, kotlin/String) // com.eignex.kumulant.math/NotPositiveDefinite.<init>|<init>(kotlin.Int;kotlin.Double;kotlin.String){}[0]
+
+    final val pivot // com.eignex.kumulant.math/NotPositiveDefinite.pivot|{}pivot[0]
+        final fun <get-pivot>(): kotlin/Double // com.eignex.kumulant.math/NotPositiveDefinite.pivot.<get-pivot>|<get-pivot>(){}[0]
+    final val pivotIndex // com.eignex.kumulant.math/NotPositiveDefinite.pivotIndex|{}pivotIndex[0]
+        final fun <get-pivotIndex>(): kotlin/Int // com.eignex.kumulant.math/NotPositiveDefinite.pivotIndex.<get-pivotIndex>|<get-pivotIndex>(){}[0]
+}
+
 final class com.eignex.kumulant.schema.decay/Alpha : com.eignex.kumulant.schema.decay/DecayWeightingSpec { // com.eignex.kumulant.schema.decay/Alpha|null[0]
     constructor <init>(kotlin/Double) // com.eignex.kumulant.schema.decay/Alpha.<init>|<init>(kotlin.Double){}[0]
 
@@ -9322,6 +9342,7 @@ final object com.eignex.kumulant.stat.regression.tree/VarianceReduction : com.ei
 final val com.eignex.kumulant.math/SplitMix64 // com.eignex.kumulant.math/SplitMix64|{}SplitMix64[0]
     final fun <get-SplitMix64>(): com.eignex.kumulant.math/LongHasher // com.eignex.kumulant.math/SplitMix64.<get-SplitMix64>|<get-SplitMix64>(){}[0]
 
+final fun (com.eignex.koblas/DenseMatrix).com.eignex.kumulant.math/factorCholesky(): com.eignex.kumulant.math/CholeskyFactor // com.eignex.kumulant.math/factorCholesky|factorCholesky@com.eignex.koblas.DenseMatrix(){}[0]
 final fun (com.eignex.kumulant.bandit.contextual/ContextualBanditSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ..., com.eignex.kumulant.core/Concurrency = ...): com.eignex.kumulant.bandit/Bandit // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.ContextualBanditSpec(kotlin.random.Random;com.eignex.kumulant.core.Concurrency){}[0]
 final fun (com.eignex.kumulant.bandit.contextual/KnnContextualSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ...): com.eignex.kumulant.bandit.contextual/KnnContextualBandit // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.KnnContextualSpec(kotlin.random.Random){}[0]
 final fun (com.eignex.kumulant.bandit.contextual/RegressionContextualSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ..., com.eignex.kumulant.core/Concurrency = ...): com.eignex.kumulant.bandit.contextual/RegressionContextualBandit<out com.eignex.kumulant.stat.regression.glm/LinearRegressionResult> // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.RegressionContextualSpec(kotlin.random.Random;com.eignex.kumulant.core.Concurrency){}[0]
