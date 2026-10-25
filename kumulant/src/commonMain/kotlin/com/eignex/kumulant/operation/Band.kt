@@ -2,15 +2,14 @@ package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasCenterScale
-import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.schema.BandResult
 import kotlin.time.Duration
 
 // band derives the center / scale / lower / upper bounds from any inner stat whose
 // result implements [HasCenterScale]. The wrapper forwards update/reset/create to the
-// delegate; read projects to [BandResult]. Merge through the wrapper is intentionally
-// unsupported - merge the inner stat directly when combining replicas.
+// delegate; read projects to [BandResult]. Merge approximates the missing evidence
+// with unit total weight split symmetrically around the remote center.
 
 /** Wrap this series stat to expose a `[lower, upper]` band of width [k] * scale around center. */
 internal fun <R> SeriesStat<R>.band(k: Double): SeriesStat<BandResult>
@@ -19,7 +18,6 @@ internal fun <R> SeriesStat<R>.band(k: Double): SeriesStat<BandResult>
 
 internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private val k: Double) :
     WindowsInside<BandResult, SeriesStat<BandResult>>,
-    RefusesMerge,
     SeriesStat<BandResult> where R : HasCenterScale {
 
     override val concurrency: Concurrency get() = delegate.concurrency
@@ -34,17 +32,16 @@ internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private va
         return BandResult(center = c, scale = s, k = k, lower = c - k * s, upper = c + k * s)
     }
 
-    override val mergeRefusal: String = "band wrapper cannot merge BandResult; merge the inner stat directly"
+    override fun merge(values: BandResult) {
+        if (values.center.isNaN()) return
+        if (values.scale.isNaN() || values.scale == 0.0) {
+            delegate.update(values.center)
+        } else {
+            delegate.update(values.center - values.scale, weight = 0.5)
+            delegate.update(values.center + values.scale, weight = 0.5)
+        }
+    }
 
-    override fun merge(values: BandResult): Unit = error(mergeRefusal)
-
-    /**
-     * Band *around* a windowed inner stat rather than a window around a band.
-     *
-     * The two orders mean the same thing, since this wrapper only projects in [read], but only this
-     * one works: a window reads by merging its slices into a fresh template, and merging *through*
-     * this wrapper throws.
-     */
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<BandResult> =
         BandSeriesStat(delegate.windowed(duration, slices, concurrency), k)
 

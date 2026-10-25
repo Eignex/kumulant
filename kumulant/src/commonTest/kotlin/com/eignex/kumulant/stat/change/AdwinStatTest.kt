@@ -80,4 +80,15 @@ class AdwinStatTest {
         assertEquals(0L, fresh.read().windowLength)
         assertTrue(tpl.read().windowLength > 0L)
     }
+
+    @Test
+    fun `merge adds the remote change count without replacing the local window`() {
+        val stat = AdwinStat().apply { update(2.0) }
+        val before = stat.read()
+        val remote = AdwinStat().apply { update(10.0) }.read().copy(changesDetected = 3L)
+
+        stat.merge(remote)
+
+        assertEquals(before.copy(changesDetected = 3L), stat.read())
+    }
 }

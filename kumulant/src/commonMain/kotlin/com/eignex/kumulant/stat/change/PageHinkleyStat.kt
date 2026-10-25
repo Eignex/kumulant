@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.change
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
@@ -56,8 +55,9 @@ data class PageHinkleyResult(
  * `M-_t - m-_t > threshold` (downward drift). The tolerance [delta] absorbs
  * in-control fluctuation; [threshold] controls false-alarm rate.
  *
- * Snapshots cannot merge independent ordered histories. Generic merge-based windowing
- * is unavailable; feed ordered observations to one accumulator.
+ * Merge combines counts and means, adopting remote drift while empty and otherwise
+ * averaging the drift traces and their baselines.
+ * This is an approximate roll-up, not replay of the combined ordered observations.
  *
  * **Use cases:** drift detection in monitored signals, model-residual whiteness
  * loss alarms, online change-point detection where CUSUM's known target value
@@ -78,8 +78,7 @@ class PageHinkleyStat(
     /** Alarm threshold for either drift; must be `>= 0`. */
     val threshold: Double = StatDefaults.PAGE_HINKLEY_THRESHOLD,
     override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<PageHinkleyResult>,
-    RefusesMerge {
+) : SeriesStat<PageHinkleyResult> {
 
     init {
         require(delta >= 0.0) { "delta must be >= 0, got $delta" }
@@ -116,10 +115,30 @@ class PageHinkleyStat(
         }
     }
 
-    override val mergeRefusal: String =
-        "PageHinkleyStat requires ordered observations; snapshots cannot merge independent histories"
-
-    override fun merge(values: PageHinkleyResult): Nothing = throw UnsupportedOperationException(mergeRefusal)
+    override fun merge(values: PageHinkleyResult) = lock.guarded {
+        // Approximate merge: weighted-average mean, then average the cumulative-drift cells.
+        val localCount = count.load()
+        val incomingCount = values.count
+        val combinedCount = localCount + incomingCount
+        if (combinedCount == 0L) return@guarded
+        val combinedMean =
+            (mean.load() * localCount + values.mean * incomingCount) / combinedCount.toDouble()
+        count.store(combinedCount)
+        mean.store(combinedMean)
+        // Adopt verbatim while empty, as the count-weighted mean above already does implicitly. Halving
+        // these would halve exactly the two quantities `alarmUp`/`alarmDown` threshold against.
+        //
+        // The running extremum averages the same way as the sum it is subtracted from. Taking the min
+        // of the two baselines while averaging the two signals leaves a pair neither trace ever held,
+        // and `cumPos - minPos` can then clear the threshold on two traces that each stayed well under
+        // it - a downward level shift merged with a flat trace alarms upward. Averaging both halves
+        // keeps the merged statistic the average of the two traces' statistics.
+        val empty = localCount == 0L
+        cumPos.store(if (empty) values.cumulativePositive else 0.5 * (cumPos.load() + values.cumulativePositive))
+        cumNeg.store(if (empty) values.cumulativeNegative else 0.5 * (cumNeg.load() + values.cumulativeNegative))
+        minPos.store(if (empty) values.minPositive else 0.5 * (minPos.load() + values.minPositive))
+        maxNeg.store(if (empty) values.maxNegative else 0.5 * (maxNeg.load() + values.maxNegative))
+    }
 
     override fun reset() = lock.guarded {
         count.store(0L)

@@ -32,6 +32,8 @@ Run `./gradlew check lintDocs`.
 
 ## Design
 
+- Every stat must merge compatible snapshots, even when the combine is mathematically unsound.
+  Document approximations and discarded state; do not refuse merging solely for lack of evidence.
 - A concurrent stat may drift, but must never throw, tear, or drop an update. Put a new stat in one of
   the four categories in `stream/ConcurrencyResolution.kt` and use its helper; don't invent a fifth.
 - Weights: zero is a no-op, negative downdates where the metric has an inverse and throws where it

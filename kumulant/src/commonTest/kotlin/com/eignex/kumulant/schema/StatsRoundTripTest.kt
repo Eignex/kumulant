@@ -43,10 +43,13 @@ class StatsRoundTripTest {
         assertEquals(1.0, stat.read().scale)
     }
 
-    @Test fun `frugal mad cannot be windowed through merged snapshots`() {
-        kotlin.test.assertFailsWith<IllegalArgumentException> {
-            FrugalMad().windowed(1_000).materialize()
-        }
+    @Test fun `frugal mad windows combine adaptive snapshots`() {
+        val stat = FrugalMad().windowed(1_000).materialize()
+
+        stat.update(5.0)
+
+        assertEquals(5.0, stat.read().median)
+        assertEquals(0.0, stat.read().mad)
     }
 
     @Test fun `sumConfig round trips`() {

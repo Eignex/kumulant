@@ -59,7 +59,7 @@ internal fun <R : Result> DiscreteStat<R>.windowed(
  *
  * Wrapping the operator's delegate rather than the operator itself is what keeps one instance of the
  * operator's state for the whole stream: see [WindowsInside] for why a slice rotation would otherwise
- * restart it, and BandSeriesStat for the merge-side reason.
+ * restart it.
  */
 private inline fun <R : Result, S : Stat<R>> S.windowedOutsideOrInside(
     duration: Duration,
