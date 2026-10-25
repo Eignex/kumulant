@@ -39,13 +39,6 @@ class SplitMix64Test {
 class Hash64Test {
 
     @Test
-    fun `hash64 ByteArray is deterministic`() {
-        val a = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-        val b = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-        assertEquals(hash64(a), hash64(b))
-    }
-
-    @Test
     fun `hash64 String matches encoded ByteArray`() {
         val s = "hello, hash"
         assertEquals(hash64(s.encodeToByteArray()), hash64(s))
@@ -105,12 +98,6 @@ class Hash64Test {
             val ratio = counts[b] / expected
             assertTrue(ratio in 0.7..1.3, "bucket $b count=${counts[b]} ratio=$ratio")
         }
-    }
-
-    @Test
-    fun `Hasher64 fun-interface accepts a lambda`() {
-        val constant = Hasher64 { _ -> 42L }
-        assertEquals(42L, constant.hash(byteArrayOf(1, 2, 3)))
     }
 
     @Test

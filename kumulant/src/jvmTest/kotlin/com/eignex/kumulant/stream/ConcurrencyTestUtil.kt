@@ -9,7 +9,7 @@ internal fun runConcurrently(threads: Int, iterationsPerThread: Int, body: (thre
     val start = CountDownLatch(1)
     val done = CountDownLatch(threads)
     try {
-        repeat(threads) { t ->
+        val workers = List(threads) { t ->
             pool.submit {
                 try {
                     start.await()
@@ -21,6 +21,7 @@ internal fun runConcurrently(threads: Int, iterationsPerThread: Int, body: (thre
         }
         start.countDown()
         check(done.await(30, TimeUnit.SECONDS)) { "workers did not finish within 30s" }
+        workers.forEach { it.get() }
     } finally {
         pool.shutdownNow()
     }

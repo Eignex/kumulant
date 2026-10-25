@@ -9,7 +9,6 @@ import kotlin.math.exp
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class StochasticRegressionStatTest {
 
@@ -63,14 +62,6 @@ class StochasticRegressionStatTest {
                 abs(r.weights[i] - truth[i]) < 0.15,
                 "merged weight[$i]=${r.weights[i]} far from truth=${truth[i]}",
             )
-        }
-    }
-
-    @Test
-    fun `featureSize mismatch on update throws`() {
-        val stat = StochasticRegressionStat(featureSize = 3)
-        assertFailsWith<IllegalArgumentException> {
-            stat.update(doubleArrayOf(1.0, 2.0), y = 0.0)
         }
     }
 

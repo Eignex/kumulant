@@ -62,24 +62,6 @@ class ArgMinStatTest {
     }
 
     @Test
-    fun `reset restores infinity`() {
-        val m = ArgMinStat().apply { update(3.0, 10L) }
-        m.reset()
-        val r = m.read()
-        assertEquals(Double.POSITIVE_INFINITY, r.min)
-        assertEquals(0L, r.atTimestampNanos)
-    }
-
-    @Test
-    fun `create produces fresh independent stat`() {
-        val m1 = ArgMinStat().apply { update(5.0, 10L) }
-        val m2 = m1.create()
-        m2.update(1.0, 20L)
-        assertEquals(5.0, m1.read().min, DELTA)
-        assertEquals(1.0, m2.read().min, DELTA)
-    }
-
-    @Test
     fun `ignores NaN inputs`() {
         val m = ArgMinStat()
         m.update(5.0, 10L)

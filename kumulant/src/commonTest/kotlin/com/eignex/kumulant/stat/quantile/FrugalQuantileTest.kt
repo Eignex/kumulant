@@ -58,13 +58,6 @@ class FrugalQuantileTest {
     }
 
     @Test
-    fun `zero weight update is ignored`() {
-        val fq = FrugalQuantileStat(q = 0.5, stepSize = 1.0, initialEstimate = 5.0)
-        fq.update(100.0, weight = 0.0)
-        assertEquals(5.0, fq.read().quantile)
-    }
-
-    @Test
     fun `reset returns to initial estimate`() {
         val fq = FrugalQuantileStat(q = 0.5, stepSize = 1.0, initialEstimate = 3.0)
         repeat(100) { fq.update(100.0) }

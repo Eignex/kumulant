@@ -65,23 +65,6 @@ class AdwinStatTest {
     }
 
     @Test
-    fun `reset clears state`() {
-        val s = AdwinStat().apply { repeat(50) { update(1.0) } }
-        s.reset()
-        val r = s.read()
-        assertEquals(0L, r.windowLength)
-        assertEquals(0L, r.changesDetected)
-    }
-
-    @Test
-    fun `create produces an independent stat`() {
-        val tpl = AdwinStat().apply { repeat(10) { update(0.5) } }
-        val fresh = tpl.create()
-        assertEquals(0L, fresh.read().windowLength)
-        assertTrue(tpl.read().windowLength > 0L)
-    }
-
-    @Test
     fun `merge adds the remote change count without replacing the local window`() {
         val stat = AdwinStat().apply { update(2.0) }
         val before = stat.read()

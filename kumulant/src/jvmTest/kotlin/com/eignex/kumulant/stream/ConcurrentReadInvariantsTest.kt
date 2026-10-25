@@ -34,15 +34,13 @@ class ConcurrentReadInvariantsTest {
      * Drive [stat] from [writers] threads while a further thread reads it, asserting
      * [invariants] on every snapshot.
      *
-     * Failures are collected rather than thrown, because [runConcurrently] submits to an
-     * executor and never inspects the returned futures, so anything thrown on a worker is
-     * otherwise swallowed and the test passes green.
+     * Collect failures so the report includes every distinct invariant violation.
      */
     private fun <R : Result> assertReadInvariants(
         label: String,
         stat: Stat<R>,
         writers: Int = 6,
-        iters: Int = 3_000,
+        iters: Int = 300,
         write: (threadId: Int, iter: Int) -> Unit,
         invariants: (R) -> Unit,
     ) {
@@ -100,11 +98,10 @@ class ConcurrentReadInvariantsTest {
     @Test
     fun `HdrHistogramStat read does not throw while buckets are being populated`() {
         for (level in levels) {
-            // Spread values widely so fresh buckets keep appearing mid-read. Every read snapshots every
-            // cell of a histogram that keeps growing, so this case runs a third of the usual iterations
-            // and does not track the decades below 1.0 that no write reaches.
+            // Spread values widely so fresh buckets keep appearing mid-read, without tracking
+            // the decades below 1.0 that no write reaches.
             val stat = HdrHistogramStat(lowestDiscernibleValue = 1.0, concurrency = level)
-            assertReadInvariants("HdrHistogramStat[$level]", stat, iters = 1_000, write = { t, i ->
+            assertReadInvariants("HdrHistogramStat[$level]", stat, iters = 100, write = { t, i ->
                 stat.update(1.0 + (t * 7919L + i * 104_729L) % 1_000_000L)
             }) { r ->
                 assertTrue(

@@ -19,17 +19,6 @@ class PairedSumStatTest {
     }
 
     @Test
-    fun `zero weight is a noop`() {
-        val stat = PairedSumStat().apply {
-            update(99.0, 99.0, 0L, 0.0)
-        }
-        val r = stat.read(0L)
-        assertEquals(0.0, r.totalWeights, DELTA)
-        assertEquals(0.0, r.sumX, DELTA)
-        assertEquals(0.0, r.sumY, DELTA)
-    }
-
-    @Test
     fun `merge adds component-wise`() {
         val a = PairedSumStat().apply { update(1.0, 1.0, 0L, 1.0) }
         val b = PairedSumStat().apply { update(2.0, 3.0, 0L, 1.0) }
@@ -50,14 +39,5 @@ class PairedSumStatTest {
         assertEquals(0.0, r.totalWeights, DELTA)
         assertEquals(0.0, r.sumX, DELTA)
         assertEquals(0.0, r.sumY, DELTA)
-    }
-
-    @Test
-    fun `create produces an independent stat`() {
-        val a = PairedSumStat().apply { update(1.0, 1.0, 0L, 1.0) }
-        val b = a.create()
-        b.update(5.0, 5.0, 0L, 1.0)
-        assertEquals(1.0, a.read(0L).sumX, DELTA)
-        assertEquals(5.0, b.read(0L).sumX, DELTA)
     }
 }

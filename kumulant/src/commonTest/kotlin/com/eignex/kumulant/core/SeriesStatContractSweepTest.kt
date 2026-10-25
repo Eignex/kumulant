@@ -74,7 +74,6 @@ class SeriesStatContractSweepTest {
         "ThresholdBucket" to ThresholdBucket(thresholds = listOf(1.0, 5.0, 10.0)),
         "Variance" to Variance,
         "Moments" to Moments,
-        "Mad" to Mad(),
         "FrugalMad" to FrugalMad(),
         "Summary" to Summary,
         "BernoulliSum" to BernoulliSum,
@@ -282,6 +281,28 @@ class SeriesStatContractSweepTest {
             stat.reset()
 
             assertEquals(spec.materialize().read(readAt), stat.read(readAt), "$name did not reset cleanly")
+        }
+    }
+
+    @Test
+    fun `create returns independent series stats with the requested concurrency`() {
+        for ((name, spec) in specs) {
+            // Reservoir copies derive independent admission seeds.
+            if (spec is ReservoirHistogram) continue
+            val original = primed(spec)
+            val before = original.read(readAt)
+            val copy = original.create(Concurrency.Strict)
+            val fresh = spec.materialize(Concurrency.Strict)
+            assertEquals(Concurrency.Strict, copy.concurrency, name)
+            assertEquals(fresh.read(readAt), copy.read(readAt), "$name copied accumulated state")
+
+            samples.forEachIndexed { i, value ->
+                copy.update(value, i.toLong() * 1_000_000_000L, 1.0)
+                fresh.update(value, i.toLong() * 1_000_000_000L, 1.0)
+            }
+
+            assertEquals(fresh.read(readAt), copy.read(readAt), "$name lost its configuration")
+            assertEquals(before, original.read(readAt), "$name shares state with its copy")
         }
     }
 

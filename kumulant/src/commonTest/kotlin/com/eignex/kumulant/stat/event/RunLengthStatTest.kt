@@ -42,18 +42,6 @@ class RunLengthStatTest {
     }
 
     @Test
-    fun `reset clears state`() {
-        val s = RunLengthStat().apply {
-            update(1.0)
-            update(1.0)
-        }
-        s.reset()
-        val r = s.read()
-        assertEquals(0L, r.current)
-        assertEquals(0L, r.longest)
-    }
-
-    @Test
     fun `read on a fresh stat returns zeros`() {
         val r = RunLengthStat().read()
         assertEquals(0L, r.current)

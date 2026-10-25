@@ -30,22 +30,6 @@ class MinStatTest {
     }
 
     @Test
-    fun `reset restores infinity`() {
-        val m = MinStat().apply { update(3.0) }
-        m.reset()
-        assertEquals(Double.POSITIVE_INFINITY, m.read().min)
-    }
-
-    @Test
-    fun `create produces fresh independent stat`() {
-        val m1 = MinStat().apply { update(5.0) }
-        val m2 = m1.create()
-        m2.update(1.0)
-        assertEquals(5.0, m1.read().min, DELTA)
-        assertEquals(1.0, m2.read().min, DELTA)
-    }
-
-    @Test
     fun `MinStat ignores NaN inputs`() {
         val m = MinStat()
         m.update(5.0)

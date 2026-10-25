@@ -1,6 +1,5 @@
 package com.eignex.kumulant.bandit.univariate
 
-import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -8,6 +7,25 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class MultiArmedBanditTest {
+
+    @Test
+    fun `armStat exposes the live per-arm SeriesStat`() {
+        val mab = MultiArmedBandit(nbrArms = 2, policy = NormalTS(), random = Random(0))
+        val stat = mab.armStat(1)
+        repeat(5) { mab.update(1, 4.0) }
+        val view = stat.read(0L)
+        assertTrue(view.totalWeights >= 5.0)
+    }
+
+    @Test
+    fun `armResult matches snapshot at index`() {
+        val mab = MultiArmedBandit(nbrArms = 3, policy = BetaBernoulliTS(), random = Random(0))
+        mab.update(0, 1.0)
+        mab.update(1, 1.0)
+        mab.update(2, 0.0)
+        val snap = mab.snapshot()
+        for (i in 0 until 3) assertEquals(snap[i], mab.armResult(i))
+    }
 
     @Test
     fun `evaluate returns a finite score for each arm`() {
@@ -32,39 +50,6 @@ class MultiArmedBanditTest {
         repeat(50) { i -> mab.evaluate(i % 3) }
         val after = mab.snapshot()
         assertEquals(before, after)
-    }
-
-    @Test
-    fun `evaluate matches policy evaluate for the same snapshot`() {
-        // With a seeded RNG, evaluating twice in a row should produce different draws
-        // (Thompson sampling consumes the RNG), but the *distribution* is the same one
-        // the policy would have used in choose(). Spot-check by comparing means.
-        val rng = Random(7)
-        val mab = MultiArmedBandit(nbrArms = 1, policy = BetaBernoulliTS(2.0, 5.0), random = rng)
-        var sum = 0.0
-        val n = 5000
-        repeat(n) { sum += mab.evaluate(0) }
-        val mean = sum / n
-        // Beta(2,5) mean is 2/7 ~= 0.2857.
-        assertTrue(abs(mean - 2.0 / 7.0) < 0.02, "mean=$mean")
-    }
-
-    @Test
-    fun `armResult matches snapshot at index`() {
-        val mab = MultiArmedBandit(nbrArms = 3, policy = BetaBernoulliTS(), random = Random(0))
-        mab.update(0, 1.0)
-        mab.update(1, 1.0)
-        mab.update(2, 0.0)
-        val snap = mab.snapshot()
-        for (i in 0 until 3) assertEquals(snap[i], mab.armResult(i))
-    }
-
-    @Test
-    fun `armStat exposes the live per-arm SeriesStat`() {
-        val mab = MultiArmedBandit(nbrArms = 2, policy = BetaBernoulliTS(), random = Random(0))
-        mab.update(0, 1.0)
-        val stat = mab.armStat(0)
-        assertEquals(mab.armResult(0), stat.read(0L))
     }
 
     @Test

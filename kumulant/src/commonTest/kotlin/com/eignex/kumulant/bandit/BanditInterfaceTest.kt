@@ -2,10 +2,9 @@ package com.eignex.kumulant.bandit
 
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
-import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
+import com.eignex.kumulant.bandit.univariate.BoltzmannBandit
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.bandit.univariate.NormalTS
-import com.eignex.kumulant.bandit.univariate.RouletteWheelArmResult
 import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
@@ -13,39 +12,16 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class BanditInterfaceTest {
-
-    @Test
-    fun `MultiArmedBandit and RegressionContextualBandit both satisfy Bandit`() {
-        val mab: Bandit = MultiArmedBandit(
-            nbrArms = 3,
-            policy = BetaBernoulliTS(),
-            random = Random(0),
-        )
-        val cb: Bandit = RegressionContextualBandit(
-            nbrArms = 3,
-            template = BayesianRegressionStat(featureSize = 2),
-            posterior = MultivariateGaussian,
-            random = Random(0),
-        )
-        assertEquals(3, mab.nbrArms)
-        assertEquals(3, cb.nbrArms)
-    }
-
-    @Test
-    fun `RouletteWheelBandit also satisfies PerArmBandit`() {
-        val r: PerArmBandit<RouletteWheelArmResult> = RouletteWheelBandit(nbrArms = 4)
-        assertEquals(4, r.snapshot().size)
-    }
 
     @Test
     fun `PerArmBandit snapshot length matches nbrArms across flavours`() {
         val bandits: List<PerArmBandit<*>> = listOf(
             MultiArmedBandit(nbrArms = 2, policy = NormalTS(), random = Random(1)),
             RouletteWheelBandit(nbrArms = 2),
+            BoltzmannBandit(nbrArms = 2),
             RegressionContextualBandit(
                 nbrArms = 2,
                 template = BayesianRegressionStat(featureSize = 1),
@@ -54,7 +30,9 @@ class BanditInterfaceTest {
         )
         for (b in bandits) {
             val asBandit = b as Bandit
-            assertEquals(asBandit.nbrArms, b.snapshot().size)
+            val snapshot = b.snapshot()
+            assertEquals(asBandit.nbrArms, snapshot.size)
+            for (arm in snapshot.indices) assertEquals(snapshot[arm], b.armResult(arm))
         }
     }
 
@@ -82,14 +60,6 @@ class BanditInterfaceTest {
                 WeightedVarianceResult
             ).totalWeights
         assertTrue(populatedWeight > replicaWeight)
-    }
-
-    @Test
-    fun `Bandit random is exposed`() {
-        val rng = Random(4)
-        val b = MultiArmedBandit(nbrArms = 2, policy = NormalTS(), random = rng)
-        val view: Bandit = b
-        assertSame(rng, view.random)
     }
 
     @Test

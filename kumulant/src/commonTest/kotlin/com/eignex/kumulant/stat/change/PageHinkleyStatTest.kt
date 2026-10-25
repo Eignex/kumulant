@@ -54,26 +54,6 @@ class PageHinkleyStatTest {
         for (i in 1..10) s.update(i.toDouble())
         assertEquals(5.5, s.read().mean, DELTA)
     }
-
-    @Test
-    fun `reset clears state`() {
-        val s = PageHinkleyStat(threshold = 3.0).apply {
-            repeat(50) { update(1.0) }
-        }
-        s.reset()
-        val r = s.read()
-        assertEquals(0L, r.count)
-        assertEquals(0.0, r.mean, DELTA)
-        assertFalse(r.alarm)
-    }
-
-    @Test
-    fun `create produces an independent stat`() {
-        val tpl = PageHinkleyStat().apply { repeat(5) { update(1.0) } }
-        val fresh = tpl.create()
-        assertEquals(0L, fresh.read().count)
-        assertTrue(tpl.read().count > 0)
-    }
 }
 
 class PageHinkleyMergeAlarmTest {

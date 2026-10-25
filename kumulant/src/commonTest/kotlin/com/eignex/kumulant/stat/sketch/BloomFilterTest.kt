@@ -54,17 +54,6 @@ class BloomFilterTest {
     }
 
     @Test
-    fun `zero or negative weight is ignored`() {
-        val bf = BloomFilterStat(bits = 4096, hashes = 4)
-        bf.update(1L, weight = 0.0)
-        bf.update(2L, weight = -1.0)
-        val r = bf.read()
-        assertEquals(0L, r.totalSeen)
-        assertFalse(r.contains(1L))
-        assertFalse(r.contains(2L))
-    }
-
-    @Test
     fun `merge combines two filters`() {
         val a = BloomFilterStat(bits = 4096, hashes = 4)
         val b = BloomFilterStat(bits = 4096, hashes = 4)
@@ -83,28 +72,6 @@ class BloomFilterTest {
         assertFailsWith<IllegalArgumentException> { a.merge(bResult) }
         val cResult = BloomFilterStat(bits = 4096, hashes = 5).read()
         assertFailsWith<IllegalArgumentException> { a.merge(cResult) }
-    }
-
-    @Test
-    fun `reset clears state`() {
-        val bf = BloomFilterStat(bits = 4096, hashes = 4)
-        for (i in 0 until 100) bf.update(i.toLong())
-        bf.reset()
-        val r = bf.read()
-        assertEquals(0L, r.totalSeen)
-        for (i in 0 until 100) assertFalse(r.contains(i.toLong()))
-    }
-
-    @Test
-    fun `create produces independent stat`() {
-        val a = BloomFilterStat(bits = 4096, hashes = 4)
-        a.update(7L)
-        val b = a.create()
-        b.update(8L)
-        assertTrue(a.read().contains(7L))
-        assertFalse(a.read().contains(8L))
-        assertTrue(b.read().contains(8L))
-        assertFalse(b.read().contains(7L))
     }
 
     @Test

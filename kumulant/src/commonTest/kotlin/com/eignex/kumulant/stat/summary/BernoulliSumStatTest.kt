@@ -30,14 +30,6 @@ class BernoulliSumStatTest {
     }
 
     @Test
-    fun `zero weight is a noop`() {
-        val stat = BernoulliSumStat().apply { update(1.0, 0L, 0.0) }
-        val r = stat.read(0L)
-        assertEquals(0.0, r.successes, DELTA)
-        assertEquals(0.0, r.trials, DELTA)
-    }
-
-    @Test
     fun `merge adds component-wise`() {
         val a = BernoulliSumStat().apply { update(1.0, 0L, 1.0) }
         val b = BernoulliSumStat().apply {
@@ -48,16 +40,5 @@ class BernoulliSumStatTest {
         val r = a.read(0L)
         assertEquals(2.0, r.successes, DELTA)
         assertEquals(3.0, r.trials, DELTA)
-    }
-
-    @Test
-    fun `reset clears state`() {
-        val stat = BernoulliSumStat().apply {
-            update(1.0, 0L, 1.0)
-            reset()
-        }
-        val r = stat.read(0L)
-        assertEquals(0.0, r.successes, DELTA)
-        assertEquals(0.0, r.trials, DELTA)
     }
 }

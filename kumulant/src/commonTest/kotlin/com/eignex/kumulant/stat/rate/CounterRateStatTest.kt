@@ -90,16 +90,6 @@ class CounterRateStatTest {
         assertEquals(T0, result.startTimestampNanos)
         assertEquals(40.0, result.rate, DELTA)
     }
-
-    @Test
-    fun `reset clears derived state`() {
-        val r = CounterRateStat().apply {
-            update(100.0, T0)
-            update(130.0, T1)
-        }
-        r.reset()
-        assertEquals(0.0, r.read(T2).totalValue, DELTA)
-    }
 }
 
 class CounterRateZeroResetTest {

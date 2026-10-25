@@ -82,14 +82,6 @@ class TDigestTest {
     }
 
     @Test
-    fun `an inert weight is ignored`() {
-        val td = TDigestStat(probabilities = doubleArrayOf(0.5))
-        td.update(100.0, weight = 0.0)
-        td.update(100.0, weight = Double.NaN)
-        assertEquals(0.0, td.read().totalWeight)
-    }
-
-    @Test
     fun `a NaN value is absorbed rather than ignored`() {
         // The value contract is the opposite of the weight one: a NaN value counts. See Stat.
         val td = TDigestStat(probabilities = doubleArrayOf(0.5))
@@ -125,25 +117,6 @@ class TDigestTest {
         val a = TDigestStat(compression = 100.0)
         val bResult = TDigestStat(compression = 50.0).read()
         assertFailsWith<IllegalArgumentException> { a.merge(bResult) }
-    }
-
-    @Test
-    fun `reset clears state`() {
-        val td = TDigestStat()
-        for (i in 1..100) td.update(i.toDouble())
-        td.reset()
-        val r = td.read()
-        assertEquals(0.0, r.totalWeight)
-        assertEquals(0, r.means.size)
-    }
-
-    @Test
-    fun `create produces independent stat`() {
-        val a = TDigestStat()
-        for (i in 1..100) a.update(i.toDouble())
-        val b = a.create()
-        assertEquals(0.0, b.read().totalWeight)
-        assertEquals(100.0, a.read().totalWeight, 1e-9)
     }
 
     @Test

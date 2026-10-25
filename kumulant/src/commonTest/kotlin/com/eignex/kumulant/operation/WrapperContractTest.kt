@@ -21,6 +21,23 @@ import kotlin.time.Duration.Companion.seconds
 class WrapperContractTest {
 
     @Test
+    fun `throttle resets its phase`() {
+        val stat = SumStat().throttle(3)
+        stat.update(1.0, 1L, 1.0)
+        stat.update(1.0, 2L, 1.0)
+
+        stat.reset()
+        stat.update(100.0, 3L, 1.0)
+
+        // A fresh throttle(3) forwards on its third update, so a reset one must too: reset has to
+        // reach the tick counter and not just the delegate.
+        assertEquals(0.0, stat.read(4L).sum, "reset left the throttle mid-phase")
+        stat.update(100.0, 4L, 1.0)
+        stat.update(100.0, 5L, 1.0)
+        assertEquals(100.0, stat.read(6L).sum)
+    }
+
+    @Test
     fun `a windowed band reads instead of throwing`() {
         val stat = VarianceStat().band(2.0).windowed(1.seconds, slices = 10, concurrency = Concurrency.None)
 
@@ -42,39 +59,12 @@ class WrapperContractTest {
     }
 
     @Test
-    fun `throttle resets its phase`() {
-        val stat = SumStat().throttle(3)
-        stat.update(1.0, 1L, 1.0)
-        stat.update(1.0, 2L, 1.0)
-
-        stat.reset()
-        stat.update(100.0, 3L, 1.0)
-
-        // A fresh throttle(3) forwards on its third update, so a reset one must too: reset has to
-        // reach the tick counter and not just the delegate.
-        assertEquals(0.0, stat.read(4L).sum, "reset left the throttle mid-phase")
-        stat.update(100.0, 4L, 1.0)
-        stat.update(100.0, 5L, 1.0)
-        assertEquals(100.0, stat.read(6L).sum)
-    }
-
-    @Test
     fun `resampleByTime honours the caller's weight`() {
         val weighted = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Sum)
         weighted.update(7.0, 10_000_000L, 2.0)
         weighted.update(0.0, 2_000_000_000L, 1.0) // rolls the bucket
 
         assertEquals(14.0, weighted.read(2_000_000_000L).sum, 1e-9)
-    }
-
-    @Test
-    fun `a zero-weight update through resampleByTime is a no-op`() {
-        val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Sum)
-
-        stat.update(7.0, 10_000_000L, 0.0)
-        stat.update(0.0, 2_000_000_000L, 1.0) // rolls the bucket
-
-        assertEquals(0.0, stat.read(2_000_000_000L).sum, 1e-9)
     }
 
     @Test
@@ -97,13 +87,5 @@ class WrapperContractTest {
             Eq(X, Const(0.0)).eval(-0.0, 0.0, DoubleArray(0), null),
             In(X, zero).eval(-0.0, 0.0, DoubleArray(0), null),
         )
-    }
-
-    @Test
-    fun `In still matches ordinary values`() {
-        val values = listOf(1.0, 2.0, 3.0)
-
-        assertTrue(In(X, values).eval(2.0, 0.0, DoubleArray(0), null))
-        assertFalse(In(X, values).eval(4.0, 0.0, DoubleArray(0), null))
     }
 }

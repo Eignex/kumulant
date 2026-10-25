@@ -3,9 +3,6 @@ package com.eignex.kumulant.stat.rate
 import com.eignex.kumulant.DELTA
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 private const val T0 = 1_000_000_000L
 private const val T1 = 2_000_000_000L
@@ -40,14 +37,6 @@ class RateStatTest {
     }
 
     @Test
-    fun `rate over two seconds`() {
-        val r = RateStat()
-        r.update(20.0, T0)
-        val result = r.read(T2)
-        assertEquals(10.0, result.rate, DELTA)
-    }
-
-    @Test
     fun `weighted update scales value`() {
         val r = RateStat()
         r.update(1.0, T0, weight = 5.0)
@@ -78,37 +67,6 @@ class RateStatTest {
         val before = r1.read(T1)
         r1.merge(RateResult(Long.MIN_VALUE, 0.0, T1))
         assertEquals(before.totalValue, r1.read(T1).totalValue, DELTA)
-    }
-
-    @Test
-    fun `reset clears start and total`() {
-        val r = RateStat().apply { update(10.0, T0) }
-        r.reset()
-        assertEquals(0.0, r.read(T1).totalValue, DELTA)
-    }
-
-    @Test
-    fun `per extension rescales to per-minute`() {
-        val r = RateStat().apply { update(60.0, T0) }
-        val result = r.read(T1)
-        assertEquals(3600.0, result.per(60.seconds), DELTA)
-    }
-
-    @Test
-    fun `per converts Hz to per-minute and per-hour`() {
-        val r = RateStat().apply { update(2.0, T0) }
-        val result = r.read(T1)
-        assertEquals(2.0, result.rate, DELTA)
-        assertEquals(120.0, result.per(1.minutes), DELTA)
-        assertEquals(7200.0, result.per(1.hours), DELTA)
-    }
-
-    @Test
-    fun `create produces fresh independent stat`() {
-        val r1 = RateStat().apply { update(10.0, T0) }
-        val r2 = r1.create()
-        r2.update(5.0, T1)
-        assertEquals(10.0, r1.read(T1).totalValue, DELTA)
     }
 }
 

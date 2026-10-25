@@ -32,14 +32,6 @@ class StandaloneBanditExtraTest {
     }
 
     @Test
-    fun `Exp3 armWeights sum to 1`() {
-        val b = Exp3Bandit(nbrArms = 4, random = Random(2))
-        repeat(20) { b.update(b.choose(), 1.0) }
-        val w = b.armWeights()
-        assertEquals(1.0, w.sum(), 1e-9)
-    }
-
-    @Test
     fun `Exp3Bandit defaultEta is positive and grows with nbrArms`() {
         val small = Exp3Bandit.defaultEta(2)
         val large = Exp3Bandit.defaultEta(10)
@@ -68,30 +60,6 @@ class StandaloneBanditExtraTest {
         b.playDistribution()
         b.playDistribution()
         assertEquals(2.5, b.temperature(), 1e-9)
-    }
-
-    @Test
-    fun `Boltzmann playDistribution sums to 1`() {
-        val b = BoltzmannBandit(nbrArms = 4, initialTau = 1.0, decay = 0.0, random = Random(0))
-        repeat(20) { b.update(it % 4, it.toDouble()) }
-        val p = b.playDistribution()
-        assertEquals(1.0, p.sum(), 1e-9)
-    }
-
-    @Test
-    fun `Boltzmann snapshot matches per-arm armResult`() {
-        val b = BoltzmannBandit(nbrArms = 3, initialTau = 1.0, decay = 0.0, random = Random(0))
-        repeat(10) { b.update(it % 3, it.toDouble()) }
-        val snap = b.snapshot()
-        for (a in 0 until 3) assertEquals(b.armResult(a), snap[a])
-    }
-
-    @Test
-    fun `TopTwoTS sampleArgmax is callable directly`() {
-        val b = TopTwoThompsonBandit(nbrArms = 3, policy = NormalTS(), beta = 0.5, random = Random(0))
-        repeat(10) { b.update(it % 3, it.toDouble()) }
-        val a = b.sampleArgmax()
-        assertTrue(a in 0..2)
     }
 
     @Test

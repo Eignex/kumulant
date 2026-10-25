@@ -15,13 +15,6 @@ private const val T3 = 11_000_000_000L
 class DecayingSumStatTest {
 
     @Test
-    fun `sum is positive after update`() {
-        val s = DecayingSumStat(halfLife = 1.seconds)
-        s.update(10.0, T0)
-        assertTrue(s.read(T0).sum > 0.0)
-    }
-
-    @Test
     fun `sum at update time equals value`() {
         val s = DecayingSumStat(halfLife = 1.seconds)
         s.update(5.0, T0)
@@ -61,23 +54,6 @@ class DecayingSumStatTest {
         s2.update(4.0, T0)
         s1.merge(s2.read(T0))
         assertEquals(7.0, s1.read(T0).sum, 1e-9)
-    }
-
-    @Test
-    fun `reset yields zero sum`() {
-        val s = DecayingSumStat(halfLife = 1.seconds)
-        s.update(5.0, T0)
-        s.reset()
-        assertEquals(0.0, s.read(T1).sum, DELTA)
-    }
-
-    @Test
-    fun `create produces fresh independent stat`() {
-        val s1 = DecayingSumStat(halfLife = 1.seconds)
-        s1.update(10.0, T0)
-        val s2 = s1.create()
-        s2.update(10.0, T1)
-        assertTrue(s1.read(T2).sum < s2.read(T2).sum)
     }
 }
 

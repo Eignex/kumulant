@@ -44,14 +44,4 @@ class RecursiveVarianceStatTest {
         assertFailsWith<IllegalArgumentException> { RecursiveVarianceStat(omega = 0.0, alpha = -0.1, beta = 0.0) }
         assertFailsWith<IllegalArgumentException> { RecursiveVarianceStat(omega = 0.0, alpha = 0.0, beta = -0.1) }
     }
-
-    @Test
-    fun `reset clears variance`() {
-        val s = RecursiveVarianceStat(omega = 0.1, alpha = 0.1, beta = 0.5).apply {
-            update(5.0)
-            update(5.0)
-        }
-        s.reset()
-        assertEquals(0.0, s.read().variance, DELTA)
-    }
 }

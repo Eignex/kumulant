@@ -61,26 +61,6 @@ class CusumStatTest {
         val r = s.read()
         assertEquals(0.0, r.cusumPositive, DELTA)
     }
-
-    @Test
-    fun `reset clears state`() {
-        val s = CusumStat(threshold = 3.0).apply {
-            repeat(10) { update(2.0) }
-        }
-        s.reset()
-        val r = s.read()
-        assertEquals(0.0, r.cusumPositive, DELTA)
-        assertEquals(0.0, r.cusumNegative, DELTA)
-        assertFalse(r.alarm)
-    }
-
-    @Test
-    fun `create produces an independent stat`() {
-        val tpl = CusumStat().apply { repeat(5) { update(2.0) } }
-        val fresh = tpl.create()
-        assertEquals(0.0, fresh.read().cusumPositive, DELTA)
-        assertTrue(tpl.read().cusumPositive > 0.0)
-    }
 }
 
 class ChangeDetectorNegativeWeightTest {

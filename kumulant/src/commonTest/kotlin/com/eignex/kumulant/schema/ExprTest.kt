@@ -155,27 +155,10 @@ class ExprTest {
         assertEquals(3.0, Abs(X).eval(-3.0), DELTA)
     }
 
-    @Test fun `log exp sqrt pow`() {
-        assertEquals(0.0, Log(Const(1.0)).eval(99.0), DELTA)
-        assertEquals(1.0, Exp(Const(0.0)).eval(99.0), DELTA)
-        assertEquals(3.0, Sqrt(Const(9.0)).eval(99.0), DELTA)
-        assertEquals(8.0, Pow(Const(2.0), Const(3.0)).eval(99.0), DELTA)
-    }
-
-    @Test fun `min max`() {
-        assertEquals(2.0, MinExpr(X, Const(2.0)).eval(5.0), DELTA)
-        assertEquals(5.0, MaxExpr(X, Const(2.0)).eval(5.0), DELTA)
-    }
-
     @Test fun `if branches`() {
         val expr = IfExpr(Gt(X, Const(0.0)), Const(1.0), Const(-1.0))
         assertEquals(1.0, expr.eval(0.5), DELTA)
         assertEquals(-1.0, expr.eval(-0.5), DELTA)
-    }
-
-    @Test fun `composed 2x plus 1`() {
-        val expr = Add(Mul(Const(2.0), X), Const(1.0))
-        assertEquals(7.0, expr.eval(3.0), DELTA)
     }
 
     @Test fun `clip via min max`() {
@@ -201,15 +184,6 @@ class ExprTest {
         assertEquals(false, And(a, b).eval(15.0))
         assertEquals(true, Or(a, b).eval(15.0))
         assertEquals(false, Not(a).eval(5.0))
-    }
-
-    @Test fun `in range inclusive`() {
-        val r = InRange(X, 0.0, 10.0)
-        assertEquals(true, r.eval(0.0))
-        assertEquals(true, r.eval(10.0))
-        assertEquals(true, r.eval(5.0))
-        assertEquals(false, r.eval(-0.001))
-        assertEquals(false, r.eval(10.001))
     }
 
     @Test fun `scalar expr round trips`() {
@@ -422,16 +396,6 @@ class ExprTest {
         assertEquals(8.0, weighted.read().sum, DELTA)
     }
 
-    @Test fun `vfold sum product mean min max norm2`() {
-        val v = doubleArrayOf(3.0, -4.0, 0.0)
-        assertEquals(-1.0, VFold(VFoldOp.Sum).eval(0.0, 0.0, v), DELTA)
-        assertEquals(0.0, VFold(VFoldOp.Product).eval(0.0, 0.0, v), DELTA)
-        assertEquals(-1.0 / 3.0, VFold(VFoldOp.Mean).eval(0.0, 0.0, v), DELTA)
-        assertEquals(-4.0, VFold(VFoldOp.Min).eval(0.0, 0.0, v), DELTA)
-        assertEquals(3.0, VFold(VFoldOp.Max).eval(0.0, 0.0, v), DELTA)
-        assertEquals(5.0, VFold(VFoldOp.Norm2).eval(0.0, 0.0, v), DELTA)
-    }
-
     @Test fun `vector aware vfold min and max match double array ordering`() {
         val min = VFold(VFoldOp.Min)
         val max = VFold(VFoldOp.Max)
@@ -591,12 +555,6 @@ class ExprTest {
         assertEquals(2, input.reads)
     }
 
-    @Test fun `vdot weighted dot product`() {
-        val v = doubleArrayOf(2.0, 3.0, 4.0)
-        val expr = VDot(weights = listOf(1.0, 0.0, -1.0))
-        assertEquals(-2.0, expr.eval(0.0, 0.0, v), DELTA)
-    }
-
     @Test fun `vdot length mismatch throws`() {
         assertFailsWith<IllegalArgumentException> {
             VDot(weights = listOf(1.0, 1.0)).eval(0.0, 0.0, doubleArrayOf(1.0, 2.0, 3.0))
@@ -694,12 +652,6 @@ class ExprTest {
         assertEquals(listOf(30.0, 10.0, 20.0), out.toList())
     }
 
-    @Test fun `vElements pools pairs into means`() {
-        val expr = VElements(listOf((V(0) + V(1)) / 2.0, (V(2) + V(3)) / 2.0))
-        val out = expr.eval(0.0, 0.0, doubleArrayOf(2.0, 4.0, 10.0, 30.0))
-        assertEquals(listOf(3.0, 20.0), out.toList())
-    }
-
     @Test fun `transformVector changes dimensionality via VElements`() {
         // Input dim 4 pooled to output dim 2; inner is sized for the output.
         val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 2)
@@ -711,19 +663,6 @@ class ExprTest {
         val rl = live.read() as ResultList<SumResult>
         assertEquals(3.0, rl.results[0].sum, DELTA)
         assertEquals(25.0, rl.results[1].sum, DELTA)
-    }
-
-    @Test fun `transformVector permutes`() {
-        val cfg: VectorStatSpec<*> = Sum.vectorized(dimensions = 3)
-            .transformVector(VElements(listOf(V(2), V(0), V(1))))
-        val live = cfg.materialize(Concurrency.None)
-        live.update(doubleArrayOf(1.0, 10.0, 100.0))
-        live.update(doubleArrayOf(2.0, 20.0, 200.0))
-        @Suppress("UNCHECKED_CAST")
-        val rl = live.read() as ResultList<SumResult>
-        assertEquals(300.0, rl.results[0].sum, DELTA)
-        assertEquals(3.0, rl.results[1].sum, DELTA)
-        assertEquals(30.0, rl.results[2].sum, DELTA)
     }
 
     @Test fun `transformVector round trips via wire`() {

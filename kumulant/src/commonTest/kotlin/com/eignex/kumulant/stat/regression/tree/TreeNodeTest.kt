@@ -1,13 +1,9 @@
-@file:OptIn(ExperimentalAtomicApi::class)
-
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.stat.summary.VarianceStat
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertSame
 
@@ -28,16 +24,6 @@ class TreeNodeTest {
     }
 
     @Test
-    fun `RegressionSplitNode children are volatile and reassignable`() {
-        val original = wvLeaf()
-        val replacement = wvLeaf()
-        val node = RegressionSplitNode(ThresholdSplit(0, 0.0), pos = original, neg = wvLeaf())
-        assertSame(original, node.pos)
-        node.pos = replacement
-        assertSame(replacement, node.findLeaf(DenseVector.of(doubleArrayOf(-1.0))))
-    }
-
-    @Test
     fun `RegressionAuditLeaf requires aligned candidate sizes`() {
         val arm = VarianceStat()
         val candidates = listOf<SerializableSplit>(ThresholdSplit(0, 0.0))
@@ -49,17 +35,6 @@ class TreeNodeTest {
                 neg = listOf(VarianceStat()),
             )
         }
-    }
-
-    @Test
-    fun `RegressionAuditLeaf starts with zero audit ticks`() {
-        val leaf = RegressionAuditLeaf(
-            arm = VarianceStat(),
-            candidates = listOf(ThresholdSplit(0, 0.0)),
-            pos = listOf(VarianceStat()),
-            neg = listOf(VarianceStat()),
-        )
-        assertEquals(0L, leaf.observationsSinceLastCheck.load())
     }
 
     @Test
