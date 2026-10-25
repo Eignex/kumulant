@@ -156,7 +156,7 @@ class ContextualBanditSpecTest {
             {"regressionContextual": {
                 "nbrArms": 2,
                 "regression": {"bayesianRegression": {"featureSize": 1}},
-                "posterior": {"linUcb": {}},
+                "posterior": "linUcb",
                 "globalRegression": {"stochasticRegression": {"featureSize": 1}}
             }}
         """.trimIndent()

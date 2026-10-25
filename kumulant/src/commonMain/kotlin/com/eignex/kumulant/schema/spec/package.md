@@ -20,8 +20,9 @@ accident of layout.
 
 ## Wire shape
 
-JSON uses operator keys, such as `{"ewma":{"alpha":0.1}}`. Serialize through
-[StatSpec] or a modality root. Expressions use numeric literals and structured
+JSON uses names for simple nodes, such as `"mean"`, and operator keys for
+configured nodes, such as `{"ewma":{"alpha":0.1}}`. Serialize through [StatSpec]
+or a modality root. Expressions use numeric literals and structured
 operators; decorators retain an explicit `inner` tree. Defaults follow
 `encodeDefaults`. Non-JSON formats retain generated serial names and field layouts.
 

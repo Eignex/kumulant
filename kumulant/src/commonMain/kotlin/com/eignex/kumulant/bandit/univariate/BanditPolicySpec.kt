@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 /**
  * Wire-portable specification for a [BanditPolicy].
  *
- * JSON uses canonical operator-key nodes such as `{"ucb1":{}}`.
+ * JSON uses names for default policies, such as `"ucb1"`, and operator keys for configured policies.
  * Other formats retain the generated class tags. Construction lives in `BanditFactory`.
  *
  * Specs that take an [Arm] or [Posterior] consume them directly; those

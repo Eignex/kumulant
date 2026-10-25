@@ -66,9 +66,9 @@ rendered API docs via `@sample` directives on individual classes.
 
 - Every concrete stat ships a sibling `StatSpec` data class (or `data object`
   for parameter-less stats) carrying configuration only. Specs are
-  `@Serializable` with `@SerialName` discriminators matching the Kotlin
-  class names, so polymorphic JSON / CBOR / Protobuf put the same type
-  strings on the wire regardless of format.
+  serializable through the spec roots. JSON uses compact node names and
+  operator keys; other formats, including CBOR and Protobuf, retain the
+  generated class tags and field layouts.
 - Every public type has KDoc with a one-sentence summary, then Use cases,
   Memory, Update, and Concurrency sections. See
   [com.eignex.kumulant.stat.summary.MeanStat] for the canonical shape.
