@@ -4,11 +4,11 @@ import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
-import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.core.combinedConcurrency
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.spec.*
 
@@ -26,44 +26,27 @@ sealed class AbstractStatGroup<S : Stat<*>>(
         requireUniqueNames(stats.map { (key, _) -> key.name to key }, this::class.simpleName ?: "StatGroup")
     }
 
-    /**
-     * The group's effective level: the one it was built with when a caller supplied it, otherwise the
-     * *weakest* level any child uses.
-     *
-     * The two agree on the schema path, since a schema group builds every child at the level it was
-     * handed. They can diverge only when a caller supplies stats it built itself, which is what the
-     * vararg `Pair` constructor is for, and there the weakest child is the honest answer.
-     *
-     * Callers introspect this to decide whether reads need external synchronisation, so the weakest
-     * child has to govern: the group can promise nothing its least-protected member does not. One
-     * [Concurrency.None] child makes the whole group unsafe to share, and one [Concurrency.Relaxed]
-     * child means a read can drift even if every sibling is exact.
-     *
-     * The declaration order of [Concurrency] happens to run weakest to strongest, so `minOfOrNull`
-     * picks that child directly. [Concurrency.HighWrite] sorting last is not a claim that it is the
-     * strongest guarantee; it is exactly as exact as [Concurrency.Strict] and falls back to it off the
-     * JVM, so a mixed `Strict` / `HighWrite` group correctly reports `Strict`.
-     *
-     * Computed once: the children are fixed at construction, so there is no reason to walk them again
-     * on every access.
-     */
+    /** The weakest child guarantee; the requested mode applies when constructing fresh children. */
     final override val concurrency: Concurrency =
-        concurrencyOverride ?: stats.minOfOrNull { (_, stat) -> stat.concurrency } ?: Concurrency.None
+        stats.map { (_, stat) -> stat.concurrency }.combinedConcurrency(concurrencyOverride ?: Concurrency.None)
 
     final override fun read(timestampNanos: Long): GroupResult =
         GroupResult(stats.associate { (key, stat) -> key.name to stat.read(timestampNanos) })
 
-    final override fun merge(values: GroupResult) {
-        // Checked across every entry before any of them is touched. Merging in declaration order with no
-        // way to undo one means a child that refuses partway leaves the group permanently inconsistent -
-        // the entries ahead of it carrying both shards and the ones behind it carrying one - and a caller
-        // that catches the exception around a shard roll-up has no way to tell. Throwing first also names
-        // the key, instead of surfacing from whichever stat happened to be reached.
-        for ((key, stat) in stats) {
-            val refusal = (stat as? RefusesMerge)?.mergeRefusal ?: continue
-            if (values.results[key.name] == null) continue
-            throw UnsupportedOperationException("cannot merge group entry '${key.name}': $refusal")
+    final override val mergeRefusal: String?
+        get() = stats.firstNotNullOfOrNull { (key, stat) ->
+            stat.mergeRefusal?.let { "entry '${key.name}': $it" }
         }
+
+    final override fun validateMerge(values: GroupResult) {
+        for ((key, stat) in stats) {
+            val result = values.results[key.name] ?: continue
+            validateMergeEntry(stat, result, key.name)
+        }
+    }
+
+    final override fun merge(values: GroupResult) {
+        validateMerge(values)
         for ((key, stat) in stats) mergeEntry(values, key, stat)
     }
 
@@ -96,7 +79,7 @@ class StatGroup(stats: List<BoundStat<*, out SeriesStat<*>, *>>, concurrency: Co
 
     override fun create(concurrency: Concurrency?): SeriesStat<GroupResult> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
-        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveConcurrency)) }
+        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(concurrency ?: stat.concurrency)) }
         return StatGroup(stats = newStats, concurrency = effectiveConcurrency)
     }
 }
@@ -125,7 +108,7 @@ class PairedStatGroup(stats: List<BoundStat<*, out PairedStat<*>, *>>, concurren
 
     override fun create(concurrency: Concurrency?): PairedStat<GroupResult> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
-        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveConcurrency)) }
+        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(concurrency ?: stat.concurrency)) }
         return PairedStatGroup(stats = newStats, concurrency = effectiveConcurrency)
     }
 }
@@ -154,7 +137,7 @@ class VectorStatGroup(stats: List<BoundStat<*, out VectorStat<*>, *>>, concurren
 
     override fun create(concurrency: Concurrency?): VectorStat<GroupResult> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
-        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveConcurrency)) }
+        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(concurrency ?: stat.concurrency)) }
         return VectorStatGroup(stats = newStats, concurrency = effectiveConcurrency)
     }
 }
@@ -202,7 +185,7 @@ class RegressionStatGroup(stats: List<BoundStat<*, out RegressionStat<*>, *>>, c
 
     override fun create(concurrency: Concurrency?): RegressionStat<GroupResult> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
-        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveConcurrency)) }
+        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(concurrency ?: stat.concurrency)) }
         return RegressionStatGroup(stats = newStats, concurrency = effectiveConcurrency)
     }
 }
@@ -231,7 +214,7 @@ class DiscreteStatGroup(stats: List<BoundStat<*, out DiscreteStat<*>, *>>, concu
 
     override fun create(concurrency: Concurrency?): DiscreteStat<GroupResult> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
-        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(effectiveConcurrency)) }
+        val newStats = stats.map { (key, stat) -> toSpec(key, stat.create(concurrency ?: stat.concurrency)) }
         return DiscreteStatGroup(stats = newStats, concurrency = effectiveConcurrency)
     }
 }

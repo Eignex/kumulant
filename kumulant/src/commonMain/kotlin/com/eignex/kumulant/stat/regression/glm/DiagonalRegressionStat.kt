@@ -11,6 +11,7 @@ import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requireMergeFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.schema.expr.ScalarExpr
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 
@@ -61,13 +62,13 @@ import com.eignex.kumulant.stream.serializedLock
 class DiagonalRegressionStat(
     override val featureSize: Int,
     /** Initial per-coordinate precision (inverse variance) seeded into every weight. */
-    val priorPrecision: Double = 1.0,
+    val priorPrecision: Double = StatDefaults.DIAGONAL_REGRESSION_PRIOR_PRECISION,
     /** Per-step learning-rate schedule applied to coefficient updates. */
-    val learningRate: ScalarExpr = ConstantRate(1.0),
+    val learningRate: ScalarExpr = StatDefaults.diagonalLearningRate(),
     /** Regularisation applied during the gradient step; defaults to plain Newton-SGD. */
-    val penalty: Penalty = Penalty.None,
+    val penalty: Penalty = StatDefaults.regressionPenalty,
     /** Canonical GLM link; [Link.Identity] is the classical Gaussian factorised posterior. */
-    val link: Link = Link.Identity,
+    val link: Link = StatDefaults.regressionLink,
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<DiagonalRegressionResult> {
 
@@ -137,13 +138,17 @@ class DiagonalRegressionStat(
         )
     }
 
+    override fun validateMerge(values: DiagonalRegressionResult) {
+        requireMergeFeatureSize(values.featureSize, featureSize)
+    }
+
     /**
      * Coefficient-wise precision-weighted combine (the standard formula for
      * independent normals). Cross-feature correlations are dropped, consistent
      * with the diagonal model.
      */
     override fun merge(values: DiagonalRegressionResult) {
-        requireMergeFeatureSize(values.featureSize, featureSize)
+        validateMerge(values)
         lock.guarded {
             // Subtract one copy of the prior, as BayesianRegressionStat.merge does with
             // H_new = H_self + H_other - H_prior. Every replica seeds its precision at

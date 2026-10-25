@@ -103,8 +103,12 @@ class SojournStat(
         }
     }
 
-    override fun merge(values: SojournResult) = lock.guarded {
+    override fun validateMerge(values: SojournResult) {
         require(values.states == states) { "merge state alphabet ${values.states} != $states" }
+    }
+
+    override fun merge(values: SojournResult) = lock.guarded {
+        validateMerge(values)
         for (i in states.indices) {
             totalNanos.store(i, totalNanos.load(i) + values.totalNanosByState[i])
             transitions.store(i, transitions.load(i) + values.transitionsByState[i])

@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -44,7 +45,7 @@ data class MadResult(
  */
 class MadStat(
     /** T-digest compression for both digests; lower = more centroids, tighter quantiles. */
-    val compression: Double = 100.0,
+    val compression: Double = StatDefaults.TDIGEST_COMPRESSION,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<MadResult> {
 

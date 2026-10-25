@@ -146,11 +146,14 @@ abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.cor
 abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.core/Stat { // com.eignex.kumulant.core/Stat|null[0]
     abstract val concurrency // com.eignex.kumulant.core/Stat.concurrency|{}concurrency[0]
         abstract fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.core/Stat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
+    open val mergeRefusal // com.eignex.kumulant.core/Stat.mergeRefusal|{}mergeRefusal[0]
+        open fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.core/Stat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     abstract fun create(com.eignex.kumulant.core/Concurrency? = ...): com.eignex.kumulant.core/Stat<#A> // com.eignex.kumulant.core/Stat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     abstract fun merge(#A) // com.eignex.kumulant.core/Stat.merge|merge(1:0){}[0]
     abstract fun read(kotlin/Long = ...): #A // com.eignex.kumulant.core/Stat.read|read(kotlin.Long){}[0]
     abstract fun reset() // com.eignex.kumulant.core/Stat.reset|reset(){}[0]
+    open fun validateMerge(#A) // com.eignex.kumulant.core/Stat.validateMerge|validateMerge(1:0){}[0]
 }
 
 abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.core/VectorStat : com.eignex.kumulant.core/Stat<#A> { // com.eignex.kumulant.core/VectorStat|null[0]
@@ -4730,6 +4733,7 @@ final class com.eignex.kumulant.stat.anomaly/HalfSpaceTreesStat : com.eignex.kum
     final fun read(kotlin/Long): com.eignex.kumulant.stat.anomaly/HalfSpaceTreesResult // com.eignex.kumulant.stat.anomaly/HalfSpaceTreesStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.anomaly/HalfSpaceTreesStat.reset|reset(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.anomaly/HalfSpaceTreesStat.update|update(com.eignex.koblas.Vector;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.anomaly/HalfSpaceTreesResult) // com.eignex.kumulant.stat.anomaly/HalfSpaceTreesStat.validateMerge|validateMerge(com.eignex.kumulant.stat.anomaly.HalfSpaceTreesResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.anomaly/QuantileFilterResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.anomaly/QuantileFilterResult|null[0]
@@ -4938,6 +4942,7 @@ final class com.eignex.kumulant.stat.calibration/ReliabilityStat : com.eignex.ku
     final fun read(kotlin/Long): com.eignex.kumulant.stat.calibration/ReliabilityResult // com.eignex.kumulant.stat.calibration/ReliabilityStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.calibration/ReliabilityStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.calibration/ReliabilityStat.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.calibration/ReliabilityResult) // com.eignex.kumulant.stat.calibration/ReliabilityStat.validateMerge|validateMerge(com.eignex.kumulant.stat.calibration.ReliabilityResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.cardinality/HyperLogLogResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.cardinality/HyperLogLogResult|null[0]
@@ -4995,6 +5000,7 @@ final class com.eignex.kumulant.stat.cardinality/HyperLogLogStat : com.eignex.ku
     final fun read(kotlin/Long): com.eignex.kumulant.stat.cardinality/HyperLogLogResult // com.eignex.kumulant.stat.cardinality/HyperLogLogStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.cardinality/HyperLogLogStat.reset|reset(){}[0]
     final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.cardinality/HyperLogLogStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.cardinality/HyperLogLogResult) // com.eignex.kumulant.stat.cardinality/HyperLogLogStat.validateMerge|validateMerge(com.eignex.kumulant.stat.cardinality.HyperLogLogResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.cardinality/LinearCountingResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.cardinality/LinearCountingResult|null[0]
@@ -5055,6 +5061,7 @@ final class com.eignex.kumulant.stat.cardinality/LinearCountingStat : com.eignex
     final fun read(kotlin/Long): com.eignex.kumulant.stat.cardinality/LinearCountingResult // com.eignex.kumulant.stat.cardinality/LinearCountingStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.cardinality/LinearCountingStat.reset|reset(){}[0]
     final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.cardinality/LinearCountingStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.cardinality/LinearCountingResult) // com.eignex.kumulant.stat.cardinality/LinearCountingStat.validateMerge|validateMerge(com.eignex.kumulant.stat.cardinality.LinearCountingResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.change/AdwinResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.change/AdwinResult|null[0]
@@ -5488,6 +5495,7 @@ final class com.eignex.kumulant.stat.event/CrossingStat : com.eignex.kumulant.co
     final fun read(kotlin/Long): com.eignex.kumulant.stat.event/CrossingResult // com.eignex.kumulant.stat.event/CrossingStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.event/CrossingStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.event/CrossingStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.event/CrossingResult) // com.eignex.kumulant.stat.event/CrossingStat.validateMerge|validateMerge(com.eignex.kumulant.stat.event.CrossingResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.event/ExcursionResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.event/ExcursionResult|null[0]
@@ -5703,6 +5711,7 @@ final class com.eignex.kumulant.stat.event/SojournStat : com.eignex.kumulant.cor
     final fun read(kotlin/Long): com.eignex.kumulant.stat.event/SojournResult // com.eignex.kumulant.stat.event/SojournStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.event/SojournStat.reset|reset(){}[0]
     final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.event/SojournStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.event/SojournResult) // com.eignex.kumulant.stat.event/SojournStat.validateMerge|validateMerge(com.eignex.kumulant.stat.event.SojournResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.forecast/HoltResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.forecast/HoltResult|null[0]
@@ -5892,6 +5901,7 @@ final class com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat : com.eignex
     final fun read(kotlin/Long): com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.validateMerge|validateMerge(com.eignex.kumulant.stat.forecast.SeasonalSmoothingResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.quantile/DDSketchStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/SketchResult> { // com.eignex.kumulant.stat.quantile/DDSketchStat|null[0]
@@ -5913,6 +5923,7 @@ final class com.eignex.kumulant.stat.quantile/DDSketchStat : com.eignex.kumulant
     final fun read(kotlin/Long): com.eignex.kumulant.stat.quantile/SketchResult // com.eignex.kumulant.stat.quantile/DDSketchStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.quantile/DDSketchStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/DDSketchStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.quantile/SketchResult) // com.eignex.kumulant.stat.quantile/DDSketchStat.validateMerge|validateMerge(com.eignex.kumulant.stat.quantile.SketchResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.quantile/FrugalQuantileStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/QuantileResult> { // com.eignex.kumulant.stat.quantile/FrugalQuantileStat|null[0]
@@ -5951,6 +5962,7 @@ final class com.eignex.kumulant.stat.quantile/HdrHistogramStat : com.eignex.kumu
     final fun read(kotlin/Long): com.eignex.kumulant.stat.quantile/SparseHistogramResult // com.eignex.kumulant.stat.quantile/HdrHistogramStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.quantile/HdrHistogramStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/HdrHistogramStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.quantile/SparseHistogramResult) // com.eignex.kumulant.stat.quantile/HdrHistogramStat.validateMerge|validateMerge(com.eignex.kumulant.stat.quantile.SparseHistogramResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.quantile/LinearHistogramStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/SparseHistogramResult> { // com.eignex.kumulant.stat.quantile/LinearHistogramStat|null[0]
@@ -6016,6 +6028,7 @@ final class com.eignex.kumulant.stat.quantile/ReservoirHistogramStat : com.eigne
     final fun read(kotlin/Long): com.eignex.kumulant.stat.quantile/ReservoirResult // com.eignex.kumulant.stat.quantile/ReservoirHistogramStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.quantile/ReservoirHistogramStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/ReservoirHistogramStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.quantile/ReservoirResult) // com.eignex.kumulant.stat.quantile/ReservoirHistogramStat.validateMerge|validateMerge(com.eignex.kumulant.stat.quantile.ReservoirResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.quantile/ReservoirResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.quantile/ReservoirResult|null[0]
@@ -6194,6 +6207,7 @@ final class com.eignex.kumulant.stat.quantile/TDigestStat : com.eignex.kumulant.
     final fun read(kotlin/Long): com.eignex.kumulant.stat.quantile/TDigestResult // com.eignex.kumulant.stat.quantile/TDigestStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.quantile/TDigestStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/TDigestStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.quantile/TDigestResult) // com.eignex.kumulant.stat.quantile/TDigestStat.validateMerge|validateMerge(com.eignex.kumulant.stat.quantile.TDigestResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.quantile/ThresholdBucketResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.quantile/ThresholdBucketResult|null[0]
@@ -6240,6 +6254,7 @@ final class com.eignex.kumulant.stat.quantile/ThresholdBucketStat : com.eignex.k
     final fun read(kotlin/Long): com.eignex.kumulant.stat.quantile/ThresholdBucketResult // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.quantile/ThresholdBucketResult) // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.validateMerge|validateMerge(com.eignex.kumulant.stat.quantile.ThresholdBucketResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.rate/CounterRateStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.rate/RateResult> { // com.eignex.kumulant.stat.rate/CounterRateStat|null[0]
@@ -6293,6 +6308,8 @@ final class com.eignex.kumulant.stat.rate/DecayingRateStat : com.eignex.kumulant
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.rate/DecayingRateStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
     final val halfLife // com.eignex.kumulant.stat.rate/DecayingRateStat.halfLife|{}halfLife[0]
         final fun <get-halfLife>(): kotlin.time/Duration // com.eignex.kumulant.stat.rate/DecayingRateStat.halfLife.<get-halfLife>|<get-halfLife>(){}[0]
+    final val mergeRefusal // com.eignex.kumulant.stat.rate/DecayingRateStat.mergeRefusal|{}mergeRefusal[0]
+        final fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.stat.rate/DecayingRateStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.rate/DecayingRateResult> // com.eignex.kumulant.stat.rate/DecayingRateStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     final fun merge(com.eignex.kumulant.stat.rate/DecayingRateResult) // com.eignex.kumulant.stat.rate/DecayingRateStat.merge|merge(com.eignex.kumulant.stat.rate.DecayingRateResult){}[0]
@@ -6300,6 +6317,7 @@ final class com.eignex.kumulant.stat.rate/DecayingRateStat : com.eignex.kumulant
     final fun reset() // com.eignex.kumulant.stat.rate/DecayingRateStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.rate/DecayingRateStat.update|update(kotlin.Double;kotlin.Double){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.rate/DecayingRateStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.rate/DecayingRateResult) // com.eignex.kumulant.stat.rate/DecayingRateStat.validateMerge|validateMerge(com.eignex.kumulant.stat.rate.DecayingRateResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.rate/RateResult : com.eignex.kumulant.core/HasRate, com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.rate/RateResult|null[0]
@@ -6366,6 +6384,7 @@ final class com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat : com
     final fun read(kotlin/Long): com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.reset|reset(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.update|update(com.eignex.koblas.Vector;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult) // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult){}[0]
 
     final object Companion { // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.Companion|null[0]
         final fun fitPopulationPrior(kotlin.collections/List<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult>, kotlin/Function1<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, kotlin/Double> = ...): com.eignex.kumulant.stat.regression.glm/PopulationPrior // com.eignex.kumulant.stat.regression.glm/BayesianRegressionStat.Companion.fitPopulationPrior|fitPopulationPrior(kotlin.collections.List<com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult>;kotlin.Function1<com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult,kotlin.Double>){}[0]
@@ -6442,6 +6461,7 @@ final class com.eignex.kumulant.stat.regression.glm/DiagonalRegressionStat : com
     final fun read(kotlin/Long): com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult // com.eignex.kumulant.stat.regression.glm/DiagonalRegressionStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression.glm/DiagonalRegressionStat.reset|reset(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/DiagonalRegressionStat.update|update(com.eignex.koblas.Vector;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult) // com.eignex.kumulant.stat.regression.glm/DiagonalRegressionStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.glm.DiagonalRegressionResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression.glm/HierarchicalBayesianRegression { // com.eignex.kumulant.stat.regression.glm/HierarchicalBayesianRegression|null[0]
@@ -6624,6 +6644,7 @@ final class com.eignex.kumulant.stat.regression.glm/StochasticRegressionStat : c
     final fun read(kotlin/Long): com.eignex.kumulant.stat.regression.glm/StochasticRegressionResult // com.eignex.kumulant.stat.regression.glm/StochasticRegressionStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression.glm/StochasticRegressionStat.reset|reset(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/StochasticRegressionStat.update|update(com.eignex.koblas.Vector;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.regression.glm/StochasticRegressionResult) // com.eignex.kumulant.stat.regression.glm/StochasticRegressionStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression.glm/UnivariateRegressionResult : com.eignex.kumulant.core/HasRegression, com.eignex.kumulant.core/HasSlope, com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.regression.glm/UnivariateRegressionResult|null[0]
@@ -6752,6 +6773,7 @@ final class com.eignex.kumulant.stat.regression.tree/ClassCountsStat : com.eigne
     final fun read(kotlin/Long): com.eignex.kumulant.stat.regression.tree/ClassCountsResult // com.eignex.kumulant.stat.regression.tree/ClassCountsStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression.tree/ClassCountsStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.tree/ClassCountsStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.regression.tree/ClassCountsResult) // com.eignex.kumulant.stat.regression.tree/ClassCountsStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.tree.ClassCountsResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression.tree/ClassificationAuditLeaf : com.eignex.kumulant.stat.regression.tree/ClassificationLeafNode { // com.eignex.kumulant.stat.regression.tree/ClassificationAuditLeaf|null[0]
@@ -6888,6 +6910,7 @@ final class com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat 
     final fun reset() // com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat.reset|reset(){}[0]
     final fun tree(): com.eignex.kumulant.stat.regression.tree/ClassificationTree // com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat.tree|tree(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat.update|update(com.eignex.koblas.Vector;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.regression.tree/TreeClassificationResult) // com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.tree.TreeClassificationResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression.tree/DecisionTreeRegressionStat : com.eignex.kumulant.core/RegressionStat<com.eignex.kumulant.stat.regression.tree/TreeRegressionResult> { // com.eignex.kumulant.stat.regression.tree/DecisionTreeRegressionStat|null[0]
@@ -7047,6 +7070,7 @@ final class com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat 
     final fun reset() // com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat.reset|reset(){}[0]
     final fun trees(): kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/ClassificationTree> // com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat.trees|trees(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat.update|update(com.eignex.koblas.Vector;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.regression.tree/ForestClassificationResult) // com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.tree.ForestClassificationResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat : com.eignex.kumulant.core/RegressionStat<com.eignex.kumulant.stat.regression.tree/ForestRegressionResult> { // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat|null[0]
@@ -7074,6 +7098,7 @@ final class com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat 
     final fun tree(kotlin/Int): com.eignex.kumulant.stat.regression.tree/RegressionTree<com.eignex.koblas/Vector> // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.tree|tree(kotlin.Int){}[0]
     final fun trees(): kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/RegressionTree<com.eignex.koblas/Vector>> // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.trees|trees(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.update|update(com.eignex.koblas.Vector;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.regression.tree/ForestRegressionResult) // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.tree.ForestRegressionResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig : com.eignex.kumulant.stat.regression.tree/HoeffdingTreeConfig { // com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig|null[0]
@@ -7535,6 +7560,8 @@ final class com.eignex.kumulant.stat.regression/CovarianceStat : com.eignex.kumu
 
     final val concurrency // com.eignex.kumulant.stat.regression/CovarianceStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.regression/CovarianceStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
+    final val mergeRefusal // com.eignex.kumulant.stat.regression/CovarianceStat.mergeRefusal|{}mergeRefusal[0]
+        final fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.stat.regression/CovarianceStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.regression/CovarianceResult> // com.eignex.kumulant.stat.regression/CovarianceStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     final fun merge(com.eignex.kumulant.stat.regression/CovarianceResult) // com.eignex.kumulant.stat.regression/CovarianceStat.merge|merge(com.eignex.kumulant.stat.regression.CovarianceResult){}[0]
@@ -7542,6 +7569,7 @@ final class com.eignex.kumulant.stat.regression/CovarianceStat : com.eignex.kumu
     final fun reset() // com.eignex.kumulant.stat.regression/CovarianceStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.regression/CovarianceStat.update|update(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
     final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression/CovarianceStat.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.regression/CovarianceResult) // com.eignex.kumulant.stat.regression/CovarianceStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.CovarianceResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult|null[0]
@@ -7607,6 +7635,7 @@ final class com.eignex.kumulant.stat.regression/GaussianNaiveBayesStat : com.eig
     final fun read(kotlin/Long): com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult // com.eignex.kumulant.stat.regression/GaussianNaiveBayesStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression/GaussianNaiveBayesStat.reset|reset(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression/GaussianNaiveBayesStat.update|update(com.eignex.koblas.Vector;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult) // com.eignex.kumulant.stat.regression/GaussianNaiveBayesStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.GaussianNaiveBayesResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression/RmspropOptimizer : com.eignex.kumulant.stat.regression/Optimizer { // com.eignex.kumulant.stat.regression/RmspropOptimizer|null[0]
@@ -7715,6 +7744,7 @@ final class com.eignex.kumulant.stat.regression/SoftmaxRegressionStat : com.eign
     final fun read(kotlin/Long): com.eignex.kumulant.stat.regression/SoftmaxRegressionResult // com.eignex.kumulant.stat.regression/SoftmaxRegressionStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression/SoftmaxRegressionStat.reset|reset(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression/SoftmaxRegressionStat.update|update(com.eignex.koblas.Vector;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.regression/SoftmaxRegressionResult) // com.eignex.kumulant.stat.regression/SoftmaxRegressionStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.SoftmaxRegressionResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.score/AccuracyStat : com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.stat.score/AccuracyStat|null[0]
@@ -7795,6 +7825,7 @@ final class com.eignex.kumulant.stat.score/AucStat : com.eignex.kumulant.core/Pa
     final fun read(kotlin/Long): com.eignex.kumulant.stat.score/AucResult // com.eignex.kumulant.stat.score/AucStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.score/AucStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.score/AucStat.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.score/AucResult) // com.eignex.kumulant.stat.score/AucStat.validateMerge|validateMerge(com.eignex.kumulant.stat.score.AucResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.score/BrierScoreStat : com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.stat.score/BrierScoreStat|null[0]
@@ -7872,6 +7903,7 @@ final class com.eignex.kumulant.stat.score/ConfusionMatrixStat : com.eignex.kumu
     final fun read(kotlin/Long): com.eignex.kumulant.stat.score/ConfusionMatrixResult // com.eignex.kumulant.stat.score/ConfusionMatrixStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.score/ConfusionMatrixStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.score/ConfusionMatrixStat.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.score/ConfusionMatrixResult) // com.eignex.kumulant.stat.score/ConfusionMatrixStat.validateMerge|validateMerge(com.eignex.kumulant.stat.score.ConfusionMatrixResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.score/LogLossStat : com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.stat.score/LogLossStat|null[0]
@@ -7985,6 +8017,7 @@ final class com.eignex.kumulant.stat.sketch/BloomFilterStat : com.eignex.kumulan
     final fun read(kotlin/Long): com.eignex.kumulant.stat.sketch/BloomFilterResult // com.eignex.kumulant.stat.sketch/BloomFilterStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.sketch/BloomFilterStat.reset|reset(){}[0]
     final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.sketch/BloomFilterStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.sketch/BloomFilterResult) // com.eignex.kumulant.stat.sketch/BloomFilterStat.validateMerge|validateMerge(com.eignex.kumulant.stat.sketch.BloomFilterResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.sketch/CountMinSketchResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.sketch/CountMinSketchResult|null[0]
@@ -8049,6 +8082,7 @@ final class com.eignex.kumulant.stat.sketch/CountMinSketchStat : com.eignex.kumu
     final fun read(kotlin/Long): com.eignex.kumulant.stat.sketch/CountMinSketchResult // com.eignex.kumulant.stat.sketch/CountMinSketchStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.sketch/CountMinSketchStat.reset|reset(){}[0]
     final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.sketch/CountMinSketchStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.sketch/CountMinSketchResult) // com.eignex.kumulant.stat.sketch/CountMinSketchStat.validateMerge|validateMerge(com.eignex.kumulant.stat.sketch.CountMinSketchResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.sketch/HeavyHittersResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.sketch/HeavyHittersResult|null[0]
@@ -8156,6 +8190,7 @@ final class com.eignex.kumulant.stat.sketch/MinHashStat : com.eignex.kumulant.co
     final fun read(kotlin/Long): com.eignex.kumulant.stat.sketch/MinHashResult // com.eignex.kumulant.stat.sketch/MinHashStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.sketch/MinHashStat.reset|reset(){}[0]
     final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.sketch/MinHashStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.sketch/MinHashResult) // com.eignex.kumulant.stat.sketch/MinHashStat.validateMerge|validateMerge(com.eignex.kumulant.stat.sketch.MinHashResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.sketch/SpaceSavingStat : com.eignex.kumulant.core/DiscreteStat<com.eignex.kumulant.stat.sketch/HeavyHittersResult> { // com.eignex.kumulant.stat.sketch/SpaceSavingStat|null[0]
@@ -8171,6 +8206,7 @@ final class com.eignex.kumulant.stat.sketch/SpaceSavingStat : com.eignex.kumulan
     final fun read(kotlin/Long): com.eignex.kumulant.stat.sketch/HeavyHittersResult // com.eignex.kumulant.stat.sketch/SpaceSavingStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.sketch/SpaceSavingStat.reset|reset(){}[0]
     final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.sketch/SpaceSavingStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.sketch/HeavyHittersResult) // com.eignex.kumulant.stat.sketch/SpaceSavingStat.validateMerge|validateMerge(com.eignex.kumulant.stat.sketch.HeavyHittersResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.summary/ArgMaxResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.summary/ArgMaxResult|null[0]
@@ -8304,6 +8340,8 @@ final class com.eignex.kumulant.stat.summary/CountStat : com.eignex.kumulant.cor
 
     final val concurrency // com.eignex.kumulant.stat.summary/CountStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.summary/CountStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
+    final val mergeRefusal // com.eignex.kumulant.stat.summary/CountStat.mergeRefusal|{}mergeRefusal[0]
+        final fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.stat.summary/CountStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/SumResult> // com.eignex.kumulant.stat.summary/CountStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     final fun merge(com.eignex.kumulant.stat.summary/SumResult) // com.eignex.kumulant.stat.summary/CountStat.merge|merge(com.eignex.kumulant.stat.summary.SumResult){}[0]
@@ -8311,6 +8349,7 @@ final class com.eignex.kumulant.stat.summary/CountStat : com.eignex.kumulant.cor
     final fun reset() // com.eignex.kumulant.stat.summary/CountStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.summary/CountStat.update|update(kotlin.Double;kotlin.Double){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.summary/CountStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.summary/SumResult) // com.eignex.kumulant.stat.summary/CountStat.validateMerge|validateMerge(com.eignex.kumulant.stat.summary.SumResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.summary/MadResult : com.eignex.kumulant.core/HasCenterScale, com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.summary/MadResult|null[0]
@@ -8750,6 +8789,8 @@ final class com.eignex.kumulant.stat.summary/TotalWeightsStat : com.eignex.kumul
 
     final val concurrency // com.eignex.kumulant.stat.summary/TotalWeightsStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.summary/TotalWeightsStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
+    final val mergeRefusal // com.eignex.kumulant.stat.summary/TotalWeightsStat.mergeRefusal|{}mergeRefusal[0]
+        final fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.stat.summary/TotalWeightsStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/SumResult> // com.eignex.kumulant.stat.summary/TotalWeightsStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     final fun merge(com.eignex.kumulant.stat.summary/SumResult) // com.eignex.kumulant.stat.summary/TotalWeightsStat.merge|merge(com.eignex.kumulant.stat.summary.SumResult){}[0]
@@ -8757,6 +8798,7 @@ final class com.eignex.kumulant.stat.summary/TotalWeightsStat : com.eignex.kumul
     final fun reset() // com.eignex.kumulant.stat.summary/TotalWeightsStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.summary/TotalWeightsStat.update|update(kotlin.Double;kotlin.Double){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.summary/TotalWeightsStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.summary/SumResult) // com.eignex.kumulant.stat.summary/TotalWeightsStat.validateMerge|validateMerge(com.eignex.kumulant.stat.summary.SumResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.summary/VarianceResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.summary/VarianceResult|null[0]
@@ -8905,12 +8947,15 @@ sealed class <#A: com.eignex.kumulant.core/Stat<*>> com.eignex.kumulant.schema.r
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.schema.runtime/AbstractStatGroup.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
     final val concurrencyOverride // com.eignex.kumulant.schema.runtime/AbstractStatGroup.concurrencyOverride|{}concurrencyOverride[0]
         final fun <get-concurrencyOverride>(): com.eignex.kumulant.core/Concurrency? // com.eignex.kumulant.schema.runtime/AbstractStatGroup.concurrencyOverride.<get-concurrencyOverride>|<get-concurrencyOverride>(){}[0]
+    final val mergeRefusal // com.eignex.kumulant.schema.runtime/AbstractStatGroup.mergeRefusal|{}mergeRefusal[0]
+        final fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.schema.runtime/AbstractStatGroup.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
     final val stats // com.eignex.kumulant.schema.runtime/AbstractStatGroup.stats|{}stats[0]
         final fun <get-stats>(): kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, out #A, *>> // com.eignex.kumulant.schema.runtime/AbstractStatGroup.stats.<get-stats>|<get-stats>(){}[0]
 
     final fun merge(com.eignex.kumulant.schema/GroupResult) // com.eignex.kumulant.schema.runtime/AbstractStatGroup.merge|merge(com.eignex.kumulant.schema.GroupResult){}[0]
     final fun read(kotlin/Long): com.eignex.kumulant.schema/GroupResult // com.eignex.kumulant.schema.runtime/AbstractStatGroup.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.schema.runtime/AbstractStatGroup.reset|reset(){}[0]
+    final fun validateMerge(com.eignex.kumulant.schema/GroupResult) // com.eignex.kumulant.schema.runtime/AbstractStatGroup.validateMerge|validateMerge(com.eignex.kumulant.schema.GroupResult){}[0]
 }
 
 sealed class <#A: kotlin/Any?> com.eignex.kumulant.stat.regression.tree/RegressionLeafNode : com.eignex.kumulant.stat.regression.tree/RegressionNode<#A> { // com.eignex.kumulant.stat.regression.tree/RegressionLeafNode|null[0]

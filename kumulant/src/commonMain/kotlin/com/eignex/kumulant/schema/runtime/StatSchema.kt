@@ -94,29 +94,29 @@ private fun seriesOnlyGroupSpec(nestedSchema: StatSchema): GroupStatSpec {
 internal fun seriesSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out SeriesStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is SeriesStatSpec<*>) return@mapNotNull null
-        toSpec<SeriesStat<*>>(StatKey<Result>(name), config.materialize(concurrency))
-    }
+        name to config.compileSeries(name)
+    }.map { (name, plan) -> toSpec<SeriesStat<*>>(StatKey<Result>(name), plan.build(concurrency)) }
 
 /** Paired-modality specs from a schema. */
 internal fun pairedSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out PairedStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is PairedStatSpec<*>) return@mapNotNull null
-        toSpec<PairedStat<*>>(StatKey<Result>(name), config.materialize(concurrency))
-    }
+        name to config.compilePaired(name)
+    }.map { (name, plan) -> toSpec<PairedStat<*>>(StatKey<Result>(name), plan.build(concurrency)) }
 
 /** Vector-modality specs from a schema. */
 internal fun vectorSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out VectorStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is VectorStatSpec<*>) return@mapNotNull null
-        toSpec<VectorStat<*>>(StatKey<Result>(name), config.materialize(concurrency))
-    }
+        name to config.compileVector(name)
+    }.map { (name, plan) -> toSpec<VectorStat<*>>(StatKey<Result>(name), plan.build(concurrency)) }
 
 /** Discrete-modality specs from a schema. */
 internal fun discreteSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out DiscreteStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is DiscreteStatSpec<*>) return@mapNotNull null
-        toSpec<DiscreteStat<*>>(StatKey<Result>(name), config.materialize(concurrency))
-    }
+        name to config.compileDiscrete(name)
+    }.map { (name, plan) -> toSpec<DiscreteStat<*>>(StatKey<Result>(name), plan.build(concurrency)) }
 
 /** Regression-modality specs from a schema. */
 internal fun regressionSpecs(
@@ -124,8 +124,8 @@ internal fun regressionSpecs(
     concurrency: Concurrency,
 ): List<BoundStat<*, out RegressionStat<*>, *>> = schema.entries.mapNotNull { (name, config) ->
     if (config !is RegressionStatSpec<*>) return@mapNotNull null
-    toSpec<RegressionStat<*>>(StatKey<Result>(name), config.materialize(concurrency))
-}
+    name to config.compileRegression(name)
+}.map { (name, plan) -> toSpec<RegressionStat<*>>(StatKey<Result>(name), plan.build(concurrency)) }
 
 @Suppress("UNCHECKED_CAST")
 internal fun <S : Stat<*>> toSpec(key: StatKey<*>, stat: S): BoundStat<*, out S, *> =
@@ -139,4 +139,15 @@ internal fun mergeEntry(values: GroupResult, key: StatKey<*>, stat: Stat<*>) {
         return
     }
     (stat as Stat<Result>).merge(result)
+}
+
+@Suppress("UNCHECKED_CAST")
+internal fun validateMergeEntry(stat: Stat<*>, result: Result, name: String) {
+    try {
+        (stat as Stat<Result>).validateMerge(result)
+    } catch (e: UnsupportedOperationException) {
+        throw UnsupportedOperationException("cannot merge entry '$name': ${e.message}", e)
+    } catch (e: IllegalArgumentException) {
+        throw IllegalArgumentException("cannot merge entry '$name': ${e.message}", e)
+    }
 }

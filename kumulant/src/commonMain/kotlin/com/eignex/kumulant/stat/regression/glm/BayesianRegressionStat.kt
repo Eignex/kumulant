@@ -32,6 +32,7 @@ import com.eignex.kumulant.math.choleskyInverse
 import com.eignex.kumulant.math.choleskyInvertInto
 import com.eignex.kumulant.math.choleskyRankUpdate
 import com.eignex.kumulant.math.choleskySolveInto
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.Serializable
@@ -100,9 +101,9 @@ private fun Matrix.copyDenseMatrix(): DenseMatrix = DenseMatrix.wrap(
 class BayesianRegressionStat(
     override val featureSize: Int,
     /** Isotropic prior variance used when neither [priorCovariance] nor `priorMean` is supplied. */
-    val priorVariance: Double = 1.0,
+    val priorVariance: Double = StatDefaults.BAYESIAN_REGRESSION_PRIOR_VARIANCE,
     /** Canonical GLM link function; [Link.Identity] is the strict closed-form Gaussian posterior. */
-    val link: Link = Link.Identity,
+    val link: Link = StatDefaults.regressionLink,
     override val concurrency: Concurrency = Concurrency.None,
     priorMean: Vector? = null,
     priorCovariance: Matrix? = null,
@@ -227,6 +228,10 @@ class BayesianRegressionStat(
         )
     }
 
+    override fun validateMerge(values: PrecisionRegressionResult) {
+        requireMergeFeatureSize(values.featureSize, featureSize)
+    }
+
     /**
      * Combine two independent Gaussian posteriors over the same parameter by
      * multiplying their densities and renormalising. Each posterior already includes
@@ -251,7 +256,7 @@ class BayesianRegressionStat(
     override fun merge(values: PrecisionRegressionResult) = mergeInternal(values)
 
     private fun mergeInternal(values: PrecisionRegressionResult) {
-        requireMergeFeatureSize(values.featureSize, featureSize)
+        validateMerge(values)
         lock.guarded {
             val n = featureSize
 

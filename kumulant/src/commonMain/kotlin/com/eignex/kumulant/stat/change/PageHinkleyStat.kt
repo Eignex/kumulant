@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
@@ -69,9 +70,9 @@ data class PageHinkleyResult(
  */
 class PageHinkleyStat(
     /** Tolerance absorbing in-control fluctuation; must be `>= 0`. */
-    val delta: Double = 0.005,
+    val delta: Double = StatDefaults.PAGE_HINKLEY_DELTA,
     /** Alarm threshold for either drift; must be `>= 0`. */
-    val threshold: Double = 50.0,
+    val threshold: Double = StatDefaults.PAGE_HINKLEY_THRESHOLD,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<PageHinkleyResult> {
 

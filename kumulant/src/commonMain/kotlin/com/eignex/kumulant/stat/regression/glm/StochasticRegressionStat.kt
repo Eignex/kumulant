@@ -12,6 +12,7 @@ import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.regression.Optimizer
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
@@ -54,13 +55,13 @@ import kotlin.math.pow
 class StochasticRegressionStat(
     override val featureSize: Int,
     /** Per-coordinate update rule for the weight vector. */
-    val optimizer: OptimizerSpec = Sgd(),
+    val optimizer: OptimizerSpec = StatDefaults.regressionOptimizer(),
     /** Update rule for the bias scalar. Defaults to [optimizer]. */
     val biasOptimizer: OptimizerSpec = optimizer,
     /** Regularisation applied during the gradient step; requires [Sgd] optimizers. */
-    val penalty: Penalty = Penalty.None,
+    val penalty: Penalty = StatDefaults.regressionPenalty,
     /** Canonical GLM link function; [Link.Identity] gives ordinary least-squares SGD. */
-    val link: Link = Link.Identity,
+    val link: Link = StatDefaults.regressionLink,
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<StochasticRegressionResult> {
 
@@ -241,12 +242,16 @@ class StochasticRegressionStat(
         )
     }
 
+    override fun validateMerge(values: StochasticRegressionResult) {
+        requireMergeFeatureSize(values.featureSize, featureSize)
+    }
+
     /**
      * Sample-weighted blend of weights and bias. SGD has no second-moment information,
      * so this is an approximation; for principled merges use [BayesianRegressionStat].
      */
     override fun merge(values: StochasticRegressionResult) {
-        requireMergeFeatureSize(values.featureSize, featureSize)
+        validateMerge(values)
         lock.guarded {
             val w1 = totalWeightsCell.load()
             val w2 = values.totalWeights

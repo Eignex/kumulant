@@ -11,6 +11,7 @@ import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.CounterRandom
 import com.eignex.kumulant.math.nextPoissonOne
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName
@@ -50,13 +51,13 @@ class RandomForestRegressionStat(
     /** Candidate split pool. Used by every tree; the per-leaf mtry filter draws from here. */
     val splitCandidates: List<SerializableSplit>,
     /** Trees in the forest. */
-    val nbrTrees: Int = 10,
+    val nbrTrees: Int = StatDefaults.FOREST_SIZE,
     config: RegressionTreeConfig = RegressionTreeConfig(),
     /** Oza & Russell online bagging: per-tree Poisson(1) reweighting at update time. */
-    val bagging: Boolean = true,
+    val bagging: Boolean = StatDefaults.FOREST_BAGGING,
     override val concurrency: Concurrency = Concurrency.None,
     private val leafArmFactory: (() -> SeriesStat<WeightedVarianceResult>)? = null,
-    randomSeed: Int = 0,
+    randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStat<ForestRegressionResult> {
 
     init {
@@ -114,10 +115,14 @@ class RandomForestRegressionStat(
     override fun read(timestampNanos: Long): ForestRegressionResult =
         ForestRegressionResult(trees.map { TreeRegressionResult(it.rootNode().snapshot()) })
 
-    override fun merge(values: ForestRegressionResult) {
+    override fun validateMerge(values: ForestRegressionResult) {
         require(values.trees.size == trees.size) {
             "merge: forest size mismatch (${values.trees.size} vs ${trees.size})"
         }
+    }
+
+    override fun merge(values: ForestRegressionResult) {
+        validateMerge(values)
         for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root)
     }
 

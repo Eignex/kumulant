@@ -138,6 +138,18 @@ interface Stat<R : Result> {
      */
     val concurrency: Concurrency
 
+    /** Reason merging is unsupported, or null when snapshots can be merged. Delegated by update adapters. */
+    val mergeRefusal: String? get() = (this as? RefusesMerge)?.mergeRefusal
+
+    /**
+     * Check a snapshot before merging it, without changing accumulator state.
+     * Containers validate every child before merging any of them. Implementations may check
+     * snapshot compatibility here; passing validation does not make a concurrent merge transactional.
+     */
+    fun validateMerge(values: R) {
+        mergeRefusal?.let { throw UnsupportedOperationException(it) }
+    }
+
     /**
      * Fold another accumulator's snapshot into this one. The unit of merge is
      * the immutable [Result]; not a live [Stat]; which is what lets the merge
@@ -349,7 +361,8 @@ interface VectorStat<R : Result> : Stat<R> {
 }
 
 /**
- * A stat whose [Stat.merge] always throws, declared so a container can find out before it starts.
+ * A stat whose [Stat.merge] always throws. Supplies the default [Stat.mergeRefusal]; adapters
+ * delegate that property and [Stat.validateMerge] so containers can check through composition.
  *
  * A group merges its children in declaration order with no way to undo one, so a child that throws
  * partway leaves the group permanently inconsistent: the entries before it carry both shards and the

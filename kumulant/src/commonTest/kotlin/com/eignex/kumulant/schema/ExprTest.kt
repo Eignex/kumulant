@@ -32,6 +32,64 @@ class ExprTest {
         override fun toDoubleArray(): DoubleArray = error("expression materialised its vector input")
     }
 
+    @Test fun `scalar operations agree between array and borrowed vector inputs`() {
+        val values = doubleArrayOf(2.0, 0.0, -3.0)
+        val expressions = listOf(
+            X + Y, X - Y, X * Y, X / Y, -X, X.abs(), X.ln(), X.exp(), X.sqrt(), X.pow(Y),
+            X.min(Y), X.max(Y), V(0) + V(2),
+            IfExpr(X gt Y, V(0), V(2)),
+            Switch(X, listOf(SwitchCase(2.0, V(0))), V(2)),
+        )
+        val inputs = listOf(
+            DenseVector.of(values),
+            SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(2.0, -3.0)),
+            StridedVector(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -3.0, 9.0), 0, 3, 2),
+            NoMaterializeVector(values),
+        )
+
+        for (expression in expressions) {
+            for (input in inputs) {
+                assertEquals(
+                    expression.eval(2.0, 3.0, values).toBits(),
+                    expression.eval(2.0, 3.0, input).toBits(),
+                    expression.toString(),
+                )
+            }
+        }
+    }
+
+    @Test fun `unselected branches do not access invalid coordinates`() {
+        val values = doubleArrayOf(2.0)
+        val scalarExpressions = listOf(
+            IfExpr(X gt 0.0, X, V(99)),
+            Switch(X, listOf(SwitchCase(2.0, X), SwitchCase(3.0, V(99))), V(99)),
+        )
+        val predicates = listOf((X gt 0.0) or (V(99) gt 0.0), (X lt 0.0) and (V(99) gt 0.0))
+
+        for (expression in scalarExpressions) {
+            assertEquals(2.0, expression.eval(2.0, v = values))
+            assertEquals(2.0, expression.eval(2.0, v = NoMaterializeVector(values)))
+        }
+        for ((predicate, expected) in predicates.zip(listOf(true, false))) {
+            assertEquals(expected, predicate.eval(2.0, v = values))
+            assertEquals(expected, predicate.eval(2.0, v = NoMaterializeVector(values)))
+        }
+    }
+
+    @Test fun `array and borrowed vector arithmetic preserve non finite and signed zero results`() {
+        val expressions = listOf(X + Y, X - Y, X * Y, X / Y, -X, X.min(Y), X.max(Y))
+
+        for (value in listOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.0, -0.0)) {
+            for (expression in expressions) {
+                assertEquals(
+                    expression.eval(value, -0.0).toBits(),
+                    expression.eval(value, -0.0, NoMaterializeVector(doubleArrayOf())).toBits(),
+                    "$expression at $value",
+                )
+            }
+        }
+    }
+
     @Test fun `vector aware scalar and bool expressions borrow input`() {
         val vector = NoMaterializeVector(doubleArrayOf(2.0, Double.POSITIVE_INFINITY, 4.0))
 

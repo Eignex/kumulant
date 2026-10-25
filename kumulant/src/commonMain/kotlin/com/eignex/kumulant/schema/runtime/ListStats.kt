@@ -10,6 +10,7 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.core.combinedConcurrency
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.spec.*
 
@@ -33,17 +34,13 @@ internal sealed class AbstractListStats<R : Result, S : Stat<out R>>(
         requireUniqueNames(entries, typeName)
     }
 
-    /**
-     * The weakest guarantee any entry offers, matching [AbstractStatGroup.concurrency].
-     *
-     * Callers introspect this to decide whether reads need external synchronisation, so
-     * `StatGroup(schema)` and `ListStats(schema)` over the very same schema have to agree about what
-     * they guarantee.
-     *
-     * Computed once rather than per access: the entries are fixed at construction.
-     */
     final override val concurrency: Concurrency =
-        concurrencyOverride ?: entries.minOfOrNull { (_, stat) -> stat.concurrency } ?: Concurrency.None
+        entries.map { (_, stat) -> stat.concurrency }.combinedConcurrency(concurrencyOverride ?: Concurrency.None)
+
+    final override val mergeRefusal: String?
+        get() = entries.firstNotNullOfOrNull { (name, stat) ->
+            stat.mergeRefusal?.let { "entry '$name': $it" }
+        }
 
     final override fun read(timestampNanos: Long): ResultList<R> =
         ResultList(entries.map { it.first }, entries.map { it.second.read(timestampNanos) })
@@ -52,14 +49,20 @@ internal sealed class AbstractListStats<R : Result, S : Stat<out R>>(
         for ((_, stat) in entries) stat.reset()
     }
 
-    @Suppress("UNCHECKED_CAST")
-    final override fun merge(values: ResultList<R>) {
+    final override fun validateMerge(values: ResultList<R>) {
         require(entries.size == values.results.size) {
             "$typeName merge size mismatch: expected ${entries.size}, got ${values.results.size}"
         }
-        entries.zip(values.results).forEach { (pair, result) ->
-            (pair.second as Stat<R>).merge(result)
+        for (i in entries.indices) {
+            val (name, stat) = entries[i]
+            validateMergeEntry(stat, values.results[i], name)
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    final override fun merge(values: ResultList<R>) {
+        validateMerge(values)
+        for (i in entries.indices) (entries[i].second as Stat<R>).merge(values.results[i])
     }
 }
 
@@ -94,7 +97,7 @@ internal class ListStats<R : Result>(entries: List<Pair<String, SeriesStat<out R
     override fun create(concurrency: Concurrency?): SeriesStat<ResultList<R>> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         return ListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
+            entries.map { (name, stat) -> name to stat.create(concurrency ?: stat.concurrency) },
             effectiveConcurrency,
         )
     }
@@ -130,7 +133,7 @@ internal class PairedListStats<R : Result>(
     override fun create(concurrency: Concurrency?): PairedStat<ResultList<R>> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         return PairedListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
+            entries.map { (name, stat) -> name to stat.create(concurrency ?: stat.concurrency) },
             effectiveConcurrency,
         )
     }
@@ -166,7 +169,7 @@ internal class VectorListStats<R : Result>(
     override fun create(concurrency: Concurrency?): VectorStat<ResultList<R>> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         return VectorListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
+            entries.map { (name, stat) -> name to stat.create(concurrency ?: stat.concurrency) },
             effectiveConcurrency,
         )
     }
@@ -202,7 +205,7 @@ internal class DiscreteListStats<R : Result>(
     override fun create(concurrency: Concurrency?): DiscreteStat<ResultList<R>> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         return DiscreteListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
+            entries.map { (name, stat) -> name to stat.create(concurrency ?: stat.concurrency) },
             effectiveConcurrency,
         )
     }
@@ -251,7 +254,7 @@ internal class RegressionListStats<R : Result>(
     override fun create(concurrency: Concurrency?): RegressionStat<ResultList<R>> {
         val effectiveConcurrency = concurrency ?: this.concurrencyOverride
         return RegressionListStats(
-            entries.map { (name, stat) -> name to stat.create(effectiveConcurrency) },
+            entries.map { (name, stat) -> name to stat.create(concurrency ?: stat.concurrency) },
             effectiveConcurrency,
         )
     }

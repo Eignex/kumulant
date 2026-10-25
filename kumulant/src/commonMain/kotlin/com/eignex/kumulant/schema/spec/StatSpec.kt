@@ -16,8 +16,9 @@ import kotlinx.serialization.Serializable
  * when the format is configured with `encodeDefaults = false`.
  *
  * Construction of the live stat happens externally via the `materialize`
- * extension functions in `StatFactory.kt` - one `when` per modality,
- * one cast at the boundary. Specs stay as pure data so the wire format
+ * extension functions. Each specification tree is compiled into a construction plan that checks
+ * modalities and result capabilities before allocating accumulators, with one cast at the typed
+ * materialization boundary. Specs stay as pure data so the wire format
  * doesn't drag behaviour through it. [com.eignex.kumulant.core.Concurrency] is *not*
  * on the wire - it's a deployment knob passed in at materialize time.
  *

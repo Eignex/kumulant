@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
@@ -40,9 +41,9 @@ class FrugalQuantileStat(
     /** Target quantile probability in `[0, 1]`. */
     val q: Double,
     /** Adaptive step size used to chase the quantile. */
-    val stepSize: Double = 0.01,
+    val stepSize: Double = StatDefaults.FRUGAL_QUANTILE_STEP_SIZE,
     /** Initial estimate seeding the random walk. */
-    val initialEstimate: Double = 0.0,
+    val initialEstimate: Double = StatDefaults.FRUGAL_QUANTILE_INITIAL_ESTIMATE,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<QuantileResult> {
 

@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.requirePositiveBins
+import com.eignex.kumulant.stat.StatDefaults
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -95,7 +96,7 @@ data class IsotonicCalibratorResult(
  */
 class IsotonicCalibratorStat(
     /** Number of equal-width bins over `[0, 1]`. */
-    val numBins: Int = 16,
+    val numBins: Int = StatDefaults.ISOTONIC_CALIBRATOR_NUM_BINS,
     override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<IsotonicCalibratorResult>,
     RefusesMerge {

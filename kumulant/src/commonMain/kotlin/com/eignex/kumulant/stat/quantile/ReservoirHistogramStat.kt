@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.deriveChildSeed
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
 import com.eignex.kumulant.stream.guarded
@@ -152,7 +153,7 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  */
 class ReservoirHistogramStat(
     /** Reservoir size (capacity of retained samples). */
-    val capacity: Int = 1024,
+    val capacity: Int = StatDefaults.RESERVOIR_HISTOGRAM_CAPACITY,
     /** PRNG seed for reproducible reservoir admission. */
     val seed: Long = Random.Default.nextLong(),
     override val concurrency: Concurrency = Concurrency.None,
@@ -241,10 +242,14 @@ class ReservoirHistogramStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: ReservoirResult) {
+    override fun validateMerge(values: ReservoirResult) {
         require(values.values.size == values.keys.size) {
             "ReservoirResult values/keys size mismatch"
         }
+    }
+
+    override fun merge(values: ReservoirResult) {
+        validateMerge(values)
         outerLock.guarded {
             for (i in values.values.indices) {
                 admit(values.values[i], values.keys[i])

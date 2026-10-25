@@ -9,6 +9,7 @@ import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.Mutex
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.PlatformMutex
@@ -144,13 +145,13 @@ class HalfSpaceTreesStat(
     /** Per-feature value ranges used to draw random split thresholds at tree build time. */
     val featureRanges: List<FeatureRange>,
     /** Number of trees in the ensemble. */
-    val numTrees: Int = 25,
+    val numTrees: Int = StatDefaults.HALF_SPACE_TREES_NUM_TREES,
     /** Depth of each tree; each tree has `2^height` leaves. */
-    val height: Int = 8,
+    val height: Int = StatDefaults.HALF_SPACE_TREES_HEIGHT,
     /** Observations per window before the reference profile rotates. */
-    val windowSize: Int = 250,
+    val windowSize: Int = StatDefaults.HALF_SPACE_TREES_WINDOW_SIZE,
     /** PRNG seed for reproducible tree construction. */
-    val randomSeed: Int = 0,
+    val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
     override val concurrency: Concurrency = Concurrency.None,
 ) : VectorStat<HalfSpaceTreesResult> {
 
@@ -246,6 +247,18 @@ class HalfSpaceTreesStat(
         )
     }
 
+    override fun validateMerge(values: HalfSpaceTreesResult) {
+        require(values.numTrees == numTrees && values.height == height && values.featureSize == featureSize) {
+            "merge: shape mismatch"
+        }
+        require(values.featureIndices.contentEquals(featureIndices) && values.thresholds.contentEquals(thresholds)) {
+            "merge: tree structure must match (different seeds will produce different trees)"
+        }
+        require(values.referenceMass.size == numTrees * numLeaves) {
+            "merge: expected ${numTrees * numLeaves} masses, got ${values.referenceMass.size}"
+        }
+    }
+
     /**
      * Merge folds another snapshot's reference-window masses into both this stat's reference and
      * latest windows. Tree structures must match exactly; if they don't (e.g. different seeds), the
@@ -264,15 +277,7 @@ class HalfSpaceTreesStat(
      * model's state for a transient. A merged model is a warm start, not a checkpoint restore.
      */
     override fun merge(values: HalfSpaceTreesResult) {
-        require(values.numTrees == numTrees && values.height == height && values.featureSize == featureSize) {
-            "merge: shape mismatch"
-        }
-        require(values.featureIndices.contentEquals(featureIndices) && values.thresholds.contentEquals(thresholds)) {
-            "merge: tree structure must match (different seeds will produce different trees)"
-        }
-        require(values.referenceMass.size == numTrees * numLeaves) {
-            "merge: expected ${numTrees * numLeaves} masses, got ${values.referenceMass.size}"
-        }
+        validateMerge(values)
         // Under the same lock as the rotation and the read: the masses go in as adds, so they compose
         // with a concurrent update, but a reader must not catch the profile half-merged.
         swapLock.guarded {

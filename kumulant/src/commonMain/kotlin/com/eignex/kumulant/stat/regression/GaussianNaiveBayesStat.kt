@@ -14,6 +14,7 @@ import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
 import com.eignex.kumulant.stream.guarded
@@ -136,7 +137,7 @@ class GaussianNaiveBayesStat(
     val numClasses: Int,
     /** Lower bound applied to per-class variances when computing log-likelihoods.
      *  Prevents `log(0)` blow-ups on early or constant-feature data. */
-    val varianceFloor: Double = 1e-9,
+    val varianceFloor: Double = StatDefaults.GAUSSIAN_NAIVE_BAYES_VARIANCE_FLOOR,
     override val concurrency: Concurrency = Concurrency.None,
 ) : RegressionStat<GaussianNaiveBayesResult> {
 
@@ -199,14 +200,18 @@ class GaussianNaiveBayesStat(
         )
     }
 
+    override fun validateMerge(values: GaussianNaiveBayesResult) {
+        require(values.featureSize == featureSize && values.numClasses == numClasses) {
+            "merge: shape mismatch (${values.numClasses}x${values.featureSize}) vs (${numClasses}x$featureSize)"
+        }
+    }
+
     /**
      * Weight-pooled merge: combines per-class running means and M2 using Chan's
      * parallel-Welford formula. Exact under weighted updates.
      */
     override fun merge(values: GaussianNaiveBayesResult) {
-        require(values.featureSize == featureSize && values.numClasses == numClasses) {
-            "merge: shape mismatch (${values.numClasses}x${values.featureSize}) vs (${numClasses}x$featureSize)"
-        }
+        validateMerge(values)
         lock.guarded {
             for (c in 0 until numClasses) {
                 val w1 = classWeightCell.load(c)

@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.sketch.requireSameHasher
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
@@ -103,7 +104,7 @@ data class HyperLogLogResult(
  */
 class HyperLogLogStat(
     /** Number of register-index bits; memory is `2^precision` bytes. */
-    val precision: Int = 14,
+    val precision: Int = StatDefaults.HYPER_LOG_LOG_PRECISION,
     /** Mixer applied to each input before bucketing; defaults to [SplitMix64]. */
     val hasher: LongHasher = SplitMix64,
     override val concurrency: Concurrency = Concurrency.None,
@@ -136,7 +137,7 @@ class HyperLogLogStat(
         totalSeen.add(1L)
     }
 
-    override fun merge(values: HyperLogLogResult) {
+    override fun validateMerge(values: HyperLogLogResult) {
         requireSameHasher("HyperLogLogStat", values.hasher, hasherRef)
         // Shape before array length: `m` is derived from `precision`, so checking the register count
         // first would report a differently-sized sketch as the wrong register count rather than the
@@ -147,6 +148,10 @@ class HyperLogLogStat(
         require(values.registers.size == m) {
             "Cannot merge HyperLogLogStat: expected $m registers, got ${values.registers.size}"
         }
+    }
+
+    override fun merge(values: HyperLogLogResult) {
+        validateMerge(values)
         for (i in 0 until m) {
             val incoming = values.registers[i].toLong()
             if (incoming > 0L) casMax(registers, i, incoming)

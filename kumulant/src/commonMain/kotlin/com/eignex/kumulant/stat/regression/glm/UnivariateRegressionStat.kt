@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.HasSlope
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.summary.VarianceResult
 import com.eignex.kumulant.stream.getValue
 import com.eignex.kumulant.stream.guarded
@@ -94,7 +95,7 @@ data class UnivariateRegressionResult(
  */
 class UnivariateRegressionStat(
     /** Regularisation applied at `read()` time; defaults to plain OLS. */
-    val penalty: Penalty = Penalty.None,
+    val penalty: Penalty = StatDefaults.regressionPenalty,
     override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<UnivariateRegressionResult> {
 

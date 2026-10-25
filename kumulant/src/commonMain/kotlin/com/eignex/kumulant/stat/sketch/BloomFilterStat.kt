@@ -9,6 +9,7 @@ import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.Hashers
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casOr
@@ -98,8 +99,8 @@ fun BloomFilterResult.contains(value: Long): Boolean {
  * under every [Concurrency] level; bit sets are idempotent and commutative.
  */
 class BloomFilterStat(
-    val bits: Int = 1 shl 16,
-    val hashes: Int = 7,
+    val bits: Int = StatDefaults.BLOOM_FILTER_BITS,
+    val hashes: Int = StatDefaults.BLOOM_FILTER_HASHES,
     /** Mixer seeding the double-hashing scheme; defaults to [SplitMix64]. */
     val hasher: LongHasher = SplitMix64,
     override val concurrency: Concurrency = Concurrency.None,
@@ -132,7 +133,7 @@ class BloomFilterStat(
         totalSeen.add(1L)
     }
 
-    override fun merge(values: BloomFilterResult) {
+    override fun validateMerge(values: BloomFilterResult) {
         require(values.bits == bits && values.hashes == hashes) {
             "Cannot merge BloomFilterStat with (bits=${values.bits}, hashes=${values.hashes}) " +
                 "into (bits=$bits, hashes=$hashes)"
@@ -144,6 +145,10 @@ class BloomFilterStat(
         require(values.words.size == wordCount) {
             "Cannot merge BloomFilterStat: expected $wordCount words, got ${values.words.size}"
         }
+    }
+
+    override fun merge(values: BloomFilterResult) {
+        validateMerge(values)
         for (i in 0 until wordCount) {
             val incoming = values.words[i]
             if (incoming != 0L) casOr(words, i, incoming)

@@ -14,6 +14,7 @@ import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.CounterRandom
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.nextPoissonOne
+import com.eignex.kumulant.stat.StatDefaults
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.concurrent.Volatile
@@ -47,13 +48,13 @@ class RandomForestClassifierStat(
     /** Candidate split pool. Used by every tree; the per-leaf mtry filter draws from here. */
     val splitCandidates: List<SerializableSplit>,
     /** Trees in the forest. */
-    val nbrTrees: Int = 10,
+    val nbrTrees: Int = StatDefaults.FOREST_SIZE,
     config: ClassificationTreeConfig = ClassificationTreeConfig(),
     /** Oza & Russell online bagging: per-tree Poisson(1) reweighting at update time. */
-    val bagging: Boolean = true,
+    val bagging: Boolean = StatDefaults.FOREST_BAGGING,
     override val concurrency: Concurrency = Concurrency.None,
     private val leafArmFactory: (() -> SeriesStat<ClassCountsResult>)? = null,
-    randomSeed: Int = 0,
+    randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStat<ForestClassificationResult> {
 
     init {
@@ -120,13 +121,17 @@ class RandomForestClassifierStat(
     override fun read(timestampNanos: Long): ForestClassificationResult =
         ForestClassificationResult(numClasses, trees.map { TreeClassificationResult(it.rootNode().snapshot()) })
 
-    override fun merge(values: ForestClassificationResult) {
+    override fun validateMerge(values: ForestClassificationResult) {
         require(values.trees.size == trees.size) {
             "merge: forest size mismatch (${values.trees.size} vs ${trees.size})"
         }
         require(values.numClasses == numClasses) {
             "merge: numClasses mismatch (${values.numClasses} vs $numClasses)"
         }
+    }
+
+    override fun merge(values: ForestClassificationResult) {
+        validateMerge(values)
         for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root)
     }
 

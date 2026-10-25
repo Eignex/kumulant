@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requirePositiveBins
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import kotlinx.serialization.SerialName
@@ -104,11 +105,11 @@ data class AucResult(
  */
 class AucStat(
     /** Number of histogram bins covering `[lowerBound, upperBound]`. */
-    val numBins: Int = 256,
+    val numBins: Int = StatDefaults.AUC_NUM_BINS,
     /** Inclusive lower bound on the score range; out-of-range scores clamp to the edge bin. */
-    val lowerBound: Double = 0.0,
+    val lowerBound: Double = StatDefaults.AUC_LOWER_BOUND,
     /** Inclusive upper bound on the score range; out-of-range scores clamp to the edge bin. */
-    val upperBound: Double = 1.0,
+    val upperBound: Double = StatDefaults.AUC_UPPER_BOUND,
     override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<AucResult> {
 
@@ -168,7 +169,7 @@ class AucStat(
         return AucResult(area, tp, tn, posSnap, negSnap, lowerBound, upperBound)
     }
 
-    override fun merge(values: AucResult) {
+    override fun validateMerge(values: AucResult) {
         require(values.numBins == numBins) {
             "AUC merge bin count mismatch: this=$numBins, other=${values.numBins}"
         }
@@ -176,6 +177,10 @@ class AucStat(
             "AUC merge range mismatch: this=[$lowerBound,$upperBound], " +
                 "other=[${values.lowerBound},${values.upperBound}]"
         }
+    }
+
+    override fun merge(values: AucResult) {
+        validateMerge(values)
         // Only the bins are folded in; the incoming totals are the sum of its own bins,
         // so they are reconstructed on the next read.
         for (i in 0 until numBins) {

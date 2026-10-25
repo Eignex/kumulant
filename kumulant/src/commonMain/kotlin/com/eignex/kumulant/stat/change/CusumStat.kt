@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -59,11 +60,11 @@ data class CusumResult(
  */
 class CusumStat(
     /** In-control target value to compare each input against. */
-    val target: Double = 0.0,
+    val target: Double = StatDefaults.CUSUM_TARGET,
     /** Reference value (allowance) absorbing in-control variation; must be `>= 0`. */
-    val referenceValue: Double = 0.5,
+    val referenceValue: Double = StatDefaults.CUSUM_REFERENCE_VALUE,
     /** Alarm threshold for either side; must be `>= 0`. */
-    val threshold: Double = 5.0,
+    val threshold: Double = StatDefaults.CUSUM_THRESHOLD,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<CusumResult> {
 

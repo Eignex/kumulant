@@ -129,10 +129,14 @@ class ClassCountsStat(
         DoubleArray(numClasses) { cells.load(it) },
     )
 
-    override fun merge(values: ClassCountsResult) {
+    override fun validateMerge(values: ClassCountsResult) {
         require(values.numClasses == numClasses) {
             "numClasses mismatch on merge: this=$numClasses, other=${values.numClasses}"
         }
+    }
+
+    override fun merge(values: ClassCountsResult) {
+        validateMerge(values)
         for (k in 0 until numClasses) cells.add(k, values.counts[k])
     }
 

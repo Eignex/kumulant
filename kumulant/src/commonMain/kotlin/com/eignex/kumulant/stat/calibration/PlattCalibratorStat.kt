@@ -5,8 +5,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
-import com.eignex.kumulant.schema.optimizer.Sgd
-import com.eignex.kumulant.stat.regression.glm.ConstantRate
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.regression.glm.Link
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
@@ -58,7 +57,7 @@ data class PlattCalibratorResult(
  */
 class PlattCalibratorStat(
     /** Optimizer driving the underlying logistic regression. */
-    val optimizer: OptimizerSpec = Sgd(ConstantRate(1e-2)),
+    val optimizer: OptimizerSpec = StatDefaults.plattOptimizer(),
     override val concurrency: Concurrency = Concurrency.None,
 ) : PairedStat<PlattCalibratorResult> {
 

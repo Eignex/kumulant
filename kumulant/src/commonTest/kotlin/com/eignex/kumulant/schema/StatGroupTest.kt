@@ -986,6 +986,92 @@ class GroupMergeAtomicityTest {
         assertEquals(8.0, local.read()[mergeable.hits].sum, DELTA)
         assertEquals(8.0, local.read()[mergeable.total].sum, DELTA)
     }
+
+    @Test
+    fun `a decorated refusing child is detected before merging siblings`() {
+        val schema = object : StatSchema() {
+            val hits by series(Sum)
+            val filtered by series(QuantileFilter().filter(X gt 0.0).withWeight(2.0))
+        }
+        val local = StatGroup(schema)
+        val remote = StatGroup(schema)
+        local.update(1.0)
+        remote.update(2.0)
+        val before = local.read(0L)
+
+        val failure = assertFailsWith<UnsupportedOperationException> { local.merge(remote.read(0L)) }
+
+        assertEquals(before, local.read(0L))
+        assertTrue(failure.message.orEmpty().contains("filtered"))
+    }
+
+    @Test
+    fun `a nested refusal is detected before merging outer siblings`() {
+        val schema = object : StatSchema() {
+            val hits by series(Sum)
+            val nested by group(MergeHostile)
+        }
+        val local = StatGroup(schema)
+        val remote = StatGroup(schema)
+        local.update(1.0)
+        remote.update(2.0)
+        val before = local.read(0L)
+
+        val failure = assertFailsWith<UnsupportedOperationException> { local.merge(remote.read(0L)) }
+
+        assertEquals(before, local.read(0L))
+        assertTrue(failure.message.orEmpty().contains("nested"))
+        assertTrue(failure.message.orEmpty().contains("p99"))
+    }
+
+    @Test
+    fun `an incompatible wrapped snapshot leaves every entry untouched`() {
+        val schema = object : StatSchema() {
+            val hits by series(Sum)
+            val sketch by series(DDSketch(relativeError = 0.01).filter(X gt 0.0))
+        }
+        val local = StatGroup(schema)
+        local.update(1.0)
+        val before = local.read(0L)
+        val incoming = GroupResult(
+            mapOf("hits" to SumResult(2.0), "sketch" to DDSketch(relativeError = 0.1).materialize().read(0L)),
+        )
+
+        val failure = assertFailsWith<IllegalArgumentException> { local.merge(incoming) }
+
+        assertEquals(before, local.read(0L))
+        assertTrue(failure.message.orEmpty().contains("sketch"))
+    }
+
+    @Test
+    fun `a list validates nested children before merging any entry`() {
+        val local = ListStats<Result>("sum" to SumStat(), "nested" to StatGroup(MergeHostile))
+        val remote = local.create(null)
+        local.update(1.0)
+        remote.update(2.0)
+        val before = local.read(0L)
+
+        assertFailsWith<UnsupportedOperationException> { local.merge(remote.read(0L)) }
+
+        assertEquals(before, local.read(0L))
+    }
+
+    @Test
+    fun `a partial merge can omit a refusing child`() {
+        val local = StatGroup(MergeHostile)
+        local.update(1.0)
+
+        local.merge(GroupResult(mapOf("hits" to SumResult(2.0))))
+
+        assertEquals(3.0, local.read(0L)[MergeHostile.hits].sum, DELTA)
+    }
+
+    @Test
+    fun `windowing rejects snapshots that cannot be merged`() {
+        assertFailsWith<IllegalArgumentException> {
+            QuantileFilter().filter(X gt 0.0).windowed(1_000).materialize()
+        }
+    }
 }
 
 class BandAndTransformSpecGuardTest {

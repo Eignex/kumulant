@@ -70,6 +70,7 @@ private inline fun <R : Result, S : Stat<R>> S.windowedOutsideOrInside(
     @Suppress("UNCHECKED_CAST")
     (this as WindowsInside<R, S>).windowedInside(duration, slices, concurrency)
 } else {
+    require(mergeRefusal == null) { "windowed requires mergeable snapshots: $mergeRefusal" }
     outside()
 }
 
@@ -102,7 +103,12 @@ internal class WindowedSeriesStat<R : Result>(
         WindowedSeriesStat(windowDuration, slices, template, concurrency ?: this.concurrency)
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun merge(values: R) = ring.mergeNow(values)
+    override val mergeRefusal: String? get() = template.mergeRefusal
+    override fun validateMerge(values: R) = template.validateMerge(values)
+    override fun merge(values: R) {
+        validateMerge(values)
+        ring.mergeNow(values)
+    }
     override fun reset() = ring.reset()
 }
 
@@ -124,7 +130,12 @@ internal class WindowedPairedStat<R : Result>(
         WindowedPairedStat(windowDuration, slices, template, concurrency ?: this.concurrency)
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun merge(values: R) = ring.mergeNow(values)
+    override val mergeRefusal: String? get() = template.mergeRefusal
+    override fun validateMerge(values: R) = template.validateMerge(values)
+    override fun merge(values: R) {
+        validateMerge(values)
+        ring.mergeNow(values)
+    }
     override fun reset() = ring.reset()
 }
 
@@ -150,7 +161,12 @@ internal class WindowedDiscreteStat<R : Result>(
         WindowedDiscreteStat(windowDuration, slices, template, concurrency ?: this.concurrency)
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun merge(values: R) = ring.mergeNow(values)
+    override val mergeRefusal: String? get() = template.mergeRefusal
+    override fun validateMerge(values: R) = template.validateMerge(values)
+    override fun merge(values: R) {
+        validateMerge(values)
+        ring.mergeNow(values)
+    }
     override fun reset() = ring.reset()
 }
 
@@ -172,6 +188,11 @@ internal class WindowedVectorStat<R : Result>(
         WindowedVectorStat(windowDuration, slices, template, concurrency ?: this.concurrency)
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun merge(values: R) = ring.mergeNow(values)
+    override val mergeRefusal: String? get() = template.mergeRefusal
+    override fun validateMerge(values: R) = template.validateMerge(values)
+    override fun merge(values: R) {
+        validateMerge(values)
+        ring.mergeNow(values)
+    }
     override fun reset() = ring.reset()
 }

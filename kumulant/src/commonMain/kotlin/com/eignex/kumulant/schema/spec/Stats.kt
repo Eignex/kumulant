@@ -3,6 +3,7 @@ package com.eignex.kumulant.schema.spec
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.optimizer.*
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.anomaly.FeatureRange
 import com.eignex.kumulant.stat.anomaly.GaussianScoreResult
 import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesResult
@@ -30,7 +31,6 @@ import com.eignex.kumulant.stat.rate.RateResult
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesResult
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
-import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionResult
 import com.eignex.kumulant.stat.regression.glm.Link
 import com.eignex.kumulant.stat.regression.glm.Penalty
@@ -140,11 +140,11 @@ data class Crossing(
 @SerialName("Cusum")
 data class Cusum(
     /** In-control target value to compare each input against. */
-    val target: Double = 0.0,
+    val target: Double = StatDefaults.CUSUM_TARGET,
     /** Reference value (allowance) absorbing in-control variation. */
-    val referenceValue: Double = 0.5,
+    val referenceValue: Double = StatDefaults.CUSUM_REFERENCE_VALUE,
     /** Decision threshold for either side. */
-    val threshold: Double = 5.0,
+    val threshold: Double = StatDefaults.CUSUM_THRESHOLD,
 ) : SeriesStatSpec<CusumResult>
 
 /** Spec for `PageHinkleyStat`: Page-Hinkley change-point detector. */
@@ -152,9 +152,9 @@ data class Cusum(
 @SerialName("PageHinkley")
 data class PageHinkley(
     /** Tolerance absorbing in-control fluctuation. */
-    val delta: Double = 0.005,
+    val delta: Double = StatDefaults.PAGE_HINKLEY_DELTA,
     /** Alarm threshold for either drift. */
-    val threshold: Double = 50.0,
+    val threshold: Double = StatDefaults.PAGE_HINKLEY_THRESHOLD,
 ) : SeriesStatSpec<PageHinkleyResult>
 
 /** Spec for `AdwinStat`: ADWIN2 adaptive-windowing change detector. */
@@ -162,9 +162,9 @@ data class PageHinkley(
 @SerialName("Adwin")
 data class Adwin(
     /** Confidence parameter for the Hoeffding-bound cut test. */
-    val delta: Double = 0.002,
+    val delta: Double = StatDefaults.ADWIN_DELTA,
     /** Maximum number of buckets per power-of-two size class before merging upward. */
-    val maxBucketsPerSize: Int = 5,
+    val maxBucketsPerSize: Int = StatDefaults.ADWIN_MAX_BUCKETS_PER_SIZE,
 ) : SeriesStatSpec<AdwinResult>
 
 /** Spec for `MadStat`: streaming median and median absolute deviation via two t-digests. */
@@ -172,7 +172,7 @@ data class Adwin(
 @SerialName("Mad")
 data class Mad(
     /** T-digest compression for both digests; lower = more centroids, tighter quantiles. */
-    val compression: Double = 100.0,
+    val compression: Double = StatDefaults.TDIGEST_COMPRESSION,
 ) : SeriesStatSpec<MadResult>
 
 /** Spec for `ThresholdBucketStat`: weighted counts per user-defined value bucket. */
@@ -211,9 +211,9 @@ data object GaussianScorer : SeriesStatSpec<GaussianScoreResult>
 @SerialName("QuantileFilter")
 data class QuantileFilter(
     /** Probability in `(0, 1)` at which the threshold is evaluated. */
-    val probability: Double = 0.99,
+    val probability: Double = StatDefaults.QUANTILE_FILTER_PROBABILITY,
     /** Relative-error guarantee passed to the underlying DDSketch. */
-    val relativeError: Double = 0.01,
+    val relativeError: Double = StatDefaults.QUANTILE_FILTER_RELATIVE_ERROR,
 ) : SeriesStatSpec<QuantileFilterResult>
 
 /** Spec for `SummaryStat`: mean / variance / min / max in one result, useful as a primary
@@ -247,7 +247,7 @@ data object Rate : SeriesStatSpec<RateResult>
 @SerialName("CounterRate")
 data class CounterRate(
     /** When true, a decrease in the counter is interpreted as a reset rather than a negative rate. */
-    val treatDecreaseAsReset: Boolean = true,
+    val treatDecreaseAsReset: Boolean = StatDefaults.COUNTER_RATE_TREAT_DECREASE_AS_RESET,
 ) : SeriesStatSpec<RateResult>
 
 /**
@@ -259,13 +259,13 @@ data class CounterRate(
 @SerialName("DDSketch")
 data class DDSketch(
     /** Relative error guarantee on the returned quantiles. */
-    val relativeError: Double = 0.01,
+    val relativeError: Double = StatDefaults.DD_SKETCH_RELATIVE_ERROR,
     /** Quantiles to evaluate at read time. */
-    val probabilities: List<Double> = listOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
+    val probabilities: List<Double> = StatDefaults.quantileProbabilities().toList(),
     /** Smallest magnitude given its own bin; smaller non-zero values fold into the bottom bin. */
-    val minIndexableValue: Double = 1e-9,
+    val minIndexableValue: Double = StatDefaults.DD_SKETCH_MIN_INDEXABLE_VALUE,
     /** Largest magnitude given its own bin; larger values fold into the top bin. */
-    val maxIndexableValue: Double = 1e12,
+    val maxIndexableValue: Double = StatDefaults.DD_SKETCH_MAX_INDEXABLE_VALUE,
 ) : SeriesStatSpec<SketchResult>
 
 /** Spec for `FrugalQuantileStat`: O(1)-memory single-quantile estimator. */
@@ -275,9 +275,9 @@ data class FrugalQuantile(
     /** Target quantile probability in `(0, 1)`. */
     val q: Double,
     /** Adaptive step size used to chase the quantile. */
-    val stepSize: Double = 0.01,
+    val stepSize: Double = StatDefaults.FRUGAL_QUANTILE_STEP_SIZE,
     /** Initial estimate seeding the random walk. */
-    val initialEstimate: Double = 0.0,
+    val initialEstimate: Double = StatDefaults.FRUGAL_QUANTILE_INITIAL_ESTIMATE,
 ) : SeriesStatSpec<QuantileResult>
 
 /** Spec for `HdrHistogramStat`: high-dynamic-range histogram. */
@@ -285,11 +285,11 @@ data class FrugalQuantile(
 @SerialName("HdrHistogram")
 data class HdrHistogram(
     /** Smallest value the histogram can distinguish. */
-    val lowestDiscernibleValue: Double = 0.001,
+    val lowestDiscernibleValue: Double = StatDefaults.HDR_HISTOGRAM_LOWEST_DISCERNIBLE_VALUE,
     /** Initial upper bound; the histogram grows past this if needed. */
-    val initialHighestTrackableValue: Double = 100.0,
+    val initialHighestTrackableValue: Double = StatDefaults.HDR_HISTOGRAM_INITIAL_HIGHEST_TRACKABLE_VALUE,
     /** Number of significant digits of precision (1..5). */
-    val significantDigits: Int = 3,
+    val significantDigits: Int = StatDefaults.HDR_HISTOGRAM_SIGNIFICANT_DIGITS,
 ) : SeriesStatSpec<SparseHistogramResult>
 
 /** Spec for `LinearHistogramStat`: fixed-width bins over `[lowerBound, upperBound)`. */
@@ -313,7 +313,7 @@ data class LinearHistogram(
 @SerialName("ReservoirHistogram")
 data class ReservoirHistogram(
     /** Reservoir size (capacity of retained samples). */
-    val capacity: Int = 1024,
+    val capacity: Int = StatDefaults.RESERVOIR_HISTOGRAM_CAPACITY,
     /** PRNG seed for reproducible reservoir admission. */
     val seed: Long,
 ) : SeriesStatSpec<ReservoirResult>
@@ -323,9 +323,9 @@ data class ReservoirHistogram(
 @SerialName("TDigest")
 data class TDigest(
     /** Compression parameter; lower = more clusters, tighter quantiles, more memory. */
-    val compression: Double = 100.0,
+    val compression: Double = StatDefaults.TDIGEST_COMPRESSION,
     /** Quantiles to evaluate at read time. */
-    val probabilities: List<Double> = listOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
+    val probabilities: List<Double> = StatDefaults.quantileProbabilities().toList(),
 ) : SeriesStatSpec<TDigestResult>
 
 /** Spec for `pitHistogram(numBins)`: PIT-style equiprobable histogram for calibration checks. */
@@ -346,7 +346,7 @@ data object PairedSum : PairedStatSpec<PairedSumResult>
 @SerialName("UnivariateRegression")
 data class UnivariateRegression(
     /** Regularisation applied at `read()` time; defaults to plain OLS. */
-    val penalty: Penalty = Penalty.None,
+    val penalty: Penalty = StatDefaults.regressionPenalty,
 ) : PairedStatSpec<UnivariateRegressionResult>
 
 /** Spec for `CovarianceStat`: weighted covariance and Pearson correlation between two streams. */
@@ -387,11 +387,11 @@ data class PinballLoss(
 @SerialName("Auc")
 data class Auc(
     /** Number of histogram bins covering `[lowerBound, upperBound]`. */
-    val numBins: Int = 256,
+    val numBins: Int = StatDefaults.AUC_NUM_BINS,
     /** Inclusive lower bound on the score range. */
-    val lowerBound: Double = 0.0,
+    val lowerBound: Double = StatDefaults.AUC_LOWER_BOUND,
     /** Inclusive upper bound on the score range. */
-    val upperBound: Double = 1.0,
+    val upperBound: Double = StatDefaults.AUC_UPPER_BOUND,
 ) : PairedStatSpec<AucResult>
 
 /** Spec for `ReliabilityStat`: per-bin calibration table (mean predicted vs observed frequency). */
@@ -407,7 +407,7 @@ data class Reliability(
 @SerialName("PlattCalibrator")
 data class PlattCalibrator(
     /** Optimizer driving the underlying logistic regression. */
-    val optimizer: OptimizerSpec = Sgd(ConstantRate(1e-2)),
+    val optimizer: OptimizerSpec = StatDefaults.plattOptimizer(),
 ) : PairedStatSpec<PlattCalibratorResult>
 
 /** Spec for `IsotonicCalibratorStat`: binned isotonic calibrator over `[0, 1]`. */
@@ -415,7 +415,7 @@ data class PlattCalibrator(
 @SerialName("IsotonicCalibrator")
 data class IsotonicCalibrator(
     /** Number of equal-width bins covering `[0, 1]`. */
-    val numBins: Int = 16,
+    val numBins: Int = StatDefaults.ISOTONIC_CALIBRATOR_NUM_BINS,
 ) : PairedStatSpec<IsotonicCalibratorResult>
 
 /** Spec for `ConfusionMatrixStat`: K-by-K weighted confusion matrix over (predictedClass, trueClass). */
@@ -445,7 +445,7 @@ data class Accuracy(
 @SerialName("HyperLogLog")
 data class HyperLogLog(
     /** Number of register-index bits; memory is `2^precision` bytes. */
-    val precision: Int = 14,
+    val precision: Int = StatDefaults.HYPER_LOG_LOG_PRECISION,
     /** [HasherRef] for the mixer applied before bucketing; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<HyperLogLogResult>
@@ -455,7 +455,7 @@ data class HyperLogLog(
 @SerialName("LinearCounting")
 data class LinearCounting(
     /** Bitset size; trade-off between memory and accuracy near the saturation cap. */
-    val bits: Int = 4096,
+    val bits: Int = StatDefaults.LINEAR_COUNTING_BITS,
     /** [HasherRef] for the mixer applied before indexing; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<LinearCountingResult>
@@ -465,9 +465,9 @@ data class LinearCounting(
 @SerialName("BloomFilter")
 data class BloomFilter(
     /** Underlying bitset size. */
-    val bits: Int = 1 shl 16,
+    val bits: Int = StatDefaults.BLOOM_FILTER_BITS,
     /** Number of independent hash functions per insert. */
-    val hashes: Int = 7,
+    val hashes: Int = StatDefaults.BLOOM_FILTER_HASHES,
     /** [HasherRef] for the mixer seeding the double-hashing scheme; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<BloomFilterResult>
@@ -477,11 +477,11 @@ data class BloomFilter(
 @SerialName("CountMinSketch")
 data class CountMinSketch(
     /** Number of independent hash rows. */
-    val depth: Int = 5,
+    val depth: Int = StatDefaults.COUNT_MIN_SKETCH_DEPTH,
     /** Number of counter columns per row. */
-    val width: Int = 1024,
+    val width: Int = StatDefaults.COUNT_MIN_SKETCH_WIDTH,
     /** PRNG seed used to derive the per-row hash salts. */
-    val seed: Long = -7046029254386353133L,
+    val seed: Long = StatDefaults.COUNT_MIN_SKETCH_SEED,
     /** [HasherRef] for the mixer applied per row; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<CountMinSketchResult>
@@ -491,9 +491,9 @@ data class CountMinSketch(
 @SerialName("MinHash")
 data class MinHash(
     /** Signature length; higher means better Jaccard accuracy at more memory. */
-    val numHashes: Int = 128,
+    val numHashes: Int = StatDefaults.MIN_HASH_NUM_HASHES,
     /** PRNG seed used to derive the per-hash salts. */
-    val seed: Long = -3724518991637283867L,
+    val seed: Long = StatDefaults.MIN_HASH_SEED,
     /** [HasherRef] for the mixer applied per signature slot; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<MinHashResult>
@@ -521,9 +521,9 @@ data class BayesianRegression(
     /** Number of input features. */
     val featureSize: Int,
     /** Isotropic prior variance applied to every coefficient. */
-    val priorVariance: Double = 1.0,
+    val priorVariance: Double = StatDefaults.BAYESIAN_REGRESSION_PRIOR_VARIANCE,
     /** GLM link function; `Link.Identity` keeps the strict closed-form Gaussian posterior. */
-    val link: Link = Link.Identity,
+    val link: Link = StatDefaults.regressionLink,
 ) : RegressionStatSpec<PrecisionRegressionResult>
 
 /** Spec for `StochasticRegressionStat`: online GLM with a configurable optimizer. */
@@ -533,13 +533,13 @@ data class StochasticRegression(
     /** Number of input features. */
     val featureSize: Int,
     /** Per-coordinate update rule for the weight vector. */
-    val optimizer: OptimizerSpec = Sgd(),
+    val optimizer: OptimizerSpec = StatDefaults.regressionOptimizer(),
     /** Update rule for the bias scalar; defaults to [optimizer]. */
     val biasOptimizer: OptimizerSpec = optimizer,
     /** Gradient-step regulariser. Requires [Sgd] optimizers. */
-    val penalty: Penalty = Penalty.None,
+    val penalty: Penalty = StatDefaults.regressionPenalty,
     /** GLM link function; `Link.Identity` gives plain OLS. */
-    val link: Link = Link.Identity,
+    val link: Link = StatDefaults.regressionLink,
 ) : RegressionStatSpec<StochasticRegressionResult>
 
 /** Spec for `GaussianNaiveBayesStat`: online Gaussian naive Bayes classifier. */
@@ -551,7 +551,7 @@ data class GaussianNaiveBayes(
     /** Number of classes. */
     val numClasses: Int,
     /** Lower bound applied to per-class variances at predict time. */
-    val varianceFloor: Double = 1e-9,
+    val varianceFloor: Double = StatDefaults.GAUSSIAN_NAIVE_BAYES_VARIANCE_FLOOR,
 ) : RegressionStatSpec<GaussianNaiveBayesResult>
 
 /** Spec for `SoftmaxRegressionStat`: multinomial (K-way) logistic regression. */
@@ -563,7 +563,7 @@ data class SoftmaxRegression(
     /** Number of classes; the input `y` must round to `[0, numClasses)`. */
     val numClasses: Int,
     /** Per-class weight-matrix optimizer; one instance is materialised per class. */
-    val optimizer: OptimizerSpec = Sgd(),
+    val optimizer: OptimizerSpec = StatDefaults.regressionOptimizer(),
     /** Bias optimizer; defaults to [optimizer]. */
     val biasOptimizer: OptimizerSpec = optimizer,
 ) : RegressionStatSpec<SoftmaxRegressionResult>
@@ -575,13 +575,13 @@ data class DiagonalRegression(
     /** Number of input features. */
     val featureSize: Int,
     /** Initial per-coordinate precision (inverse variance) seeded into every weight. */
-    val priorPrecision: Double = 1.0,
+    val priorPrecision: Double = StatDefaults.DIAGONAL_REGRESSION_PRIOR_PRECISION,
     /** Per-step learning rate. */
-    val learningRate: ScalarExpr = ConstantRate(1.0),
+    val learningRate: ScalarExpr = StatDefaults.diagonalLearningRate(),
     /** Gradient-step regulariser. */
-    val penalty: Penalty = Penalty.None,
+    val penalty: Penalty = StatDefaults.regressionPenalty,
     /** GLM link function. */
-    val link: Link = Link.Identity,
+    val link: Link = StatDefaults.regressionLink,
 ) : RegressionStatSpec<DiagonalRegressionResult>
 
 /** Spec for `DecisionTreeRegressionStat`: online VFDT regression tree. */
@@ -595,7 +595,7 @@ data class DecisionTreeRegression(
     /** RegressionTree growth tunables. */
     val config: RegressionTreeConfig = RegressionTreeConfig(),
     /** PRNG seed for per-leaf candidate subsampling and bagging. */
-    val randomSeed: Int = 0,
+    val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStatSpec<TreeRegressionResult>
 
 /** Spec for `RandomForestRegressionStat`: ensembled VFDT regression forest. */
@@ -607,13 +607,13 @@ data class RandomForestRegression(
     /** Candidate split pool. */
     val splitCandidates: List<SerializableSplit>,
     /** Trees in the forest. */
-    val nbrTrees: Int = 10,
+    val nbrTrees: Int = StatDefaults.FOREST_SIZE,
     /** RegressionTree growth tunables (mtry defaults to `ceil(sqrt(p))` when null). */
     val config: RegressionTreeConfig = RegressionTreeConfig(),
     /** Oza & Russell Poisson(1) per-tree reweighting. */
-    val bagging: Boolean = true,
+    val bagging: Boolean = StatDefaults.FOREST_BAGGING,
     /** PRNG seed shared across trees. */
-    val randomSeed: Int = 0,
+    val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStatSpec<ForestRegressionResult>
 
 /** Spec for `DecisionTreeClassifierStat`: online VFDT classification tree. */
@@ -629,7 +629,7 @@ data class DecisionTreeClassifier(
     /** RegressionTree growth tunables. */
     val config: ClassificationTreeConfig = ClassificationTreeConfig(),
     /** PRNG seed. */
-    val randomSeed: Int = 0,
+    val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStatSpec<TreeClassificationResult>
 
 /** Spec for `RandomForestClassifierStat`: ensembled VFDT classification forest. */
@@ -643,13 +643,13 @@ data class RandomForestClassifier(
     /** Candidate split pool. */
     val splitCandidates: List<SerializableSplit>,
     /** Trees in the forest. */
-    val nbrTrees: Int = 10,
+    val nbrTrees: Int = StatDefaults.FOREST_SIZE,
     /** RegressionTree growth tunables (mtry defaults to `ceil(sqrt(p))` when null). */
     val config: ClassificationTreeConfig = ClassificationTreeConfig(),
     /** Oza & Russell Poisson(1) per-tree reweighting. */
-    val bagging: Boolean = true,
+    val bagging: Boolean = StatDefaults.FOREST_BAGGING,
     /** PRNG seed shared across trees. */
-    val randomSeed: Int = 0,
+    val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStatSpec<ForestClassificationResult>
 
 /** Spec for `HalfSpaceTreesStat`: online ensemble of random half-space trees for multivariate anomaly scoring. */
@@ -661,11 +661,11 @@ data class HalfSpaceTrees(
     /** Per-feature value ranges used to draw random split thresholds. */
     val featureRanges: List<FeatureRange>,
     /** Number of trees in the ensemble. */
-    val numTrees: Int = 25,
+    val numTrees: Int = StatDefaults.HALF_SPACE_TREES_NUM_TREES,
     /** Depth of each tree; each tree has `2^height` leaves. */
-    val height: Int = 8,
+    val height: Int = StatDefaults.HALF_SPACE_TREES_HEIGHT,
     /** Observations per window before the reference profile rotates. */
-    val windowSize: Int = 250,
+    val windowSize: Int = StatDefaults.HALF_SPACE_TREES_WINDOW_SIZE,
     /** PRNG seed shared across trees. */
-    val randomSeed: Int = 0,
+    val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : VectorStatSpec<HalfSpaceTreesResult>

@@ -91,14 +91,16 @@ sealed interface ScalarExpr {
 @Serializable
 @SerialName("X")
 data object X : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = x
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Refers to the secondary scalar input `y` (paired stats only). */
 @Serializable
 @SerialName("Y")
 data object Y : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = y
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -109,10 +111,8 @@ data object Y : ScalarExpr {
 @Serializable
 @SerialName("Center")
 data object Center : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = primary.feedbackPrimary<HasCenterScale>("Center")
-        return unwrapped.center
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -123,10 +123,8 @@ data object Center : ScalarExpr {
 @Serializable
 @SerialName("Scale")
 data object Scale : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = primary.feedbackPrimary<HasCenterScale>("Scale")
-        return unwrapped.scale
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -137,10 +135,8 @@ data object Scale : ScalarExpr {
 @Serializable
 @SerialName("Low")
 data object Low : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = primary.feedbackPrimary<HasMinMax>("Low")
-        return unwrapped.min
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -151,10 +147,8 @@ data object Low : ScalarExpr {
 @Serializable
 @SerialName("High")
 data object High : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = primary.feedbackPrimary<HasMinMax>("High")
-        return unwrapped.max
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -168,12 +162,8 @@ data object High : ScalarExpr {
 @Serializable
 @SerialName("VIndex")
 data object VIndex : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        check(primary is IndexedResult) {
-            "VIndex requires an element-wise feedback context; got ${primary?.let { it::class.simpleName }}"
-        }
-        return primary.index.toDouble()
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** `v[index]` - out-of-bounds throws at eval time. */
@@ -183,7 +173,8 @@ data class V(
     /** Vector coordinate to read. */
     val index: Int,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = v[index]
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for a constant scalar. */
@@ -193,7 +184,8 @@ data class Const(
     /** Literal value returned by [eval]. */
     val v: Double,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = this.v
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `l + r`. */
@@ -205,12 +197,8 @@ internal data class Add(
     /** Right operand. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) + r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `l - r`. */
@@ -222,12 +210,8 @@ internal data class Sub(
     /** Right operand (subtrahend). */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) - r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `l * r`. */
@@ -239,12 +223,8 @@ internal data class Mul(
     /** Right operand. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) * r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `l / r`. */
@@ -256,12 +236,8 @@ internal data class Div(
     /** Divisor. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) / r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `-a`. */
@@ -271,7 +247,8 @@ internal data class Neg(
     /** Operand to negate. */
     val a: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = -a.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `|a|`. */
@@ -281,7 +258,8 @@ internal data class Abs(
     /** Operand whose absolute value is returned. */
     val a: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = abs(a.eval(x, y, v, primary))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for the natural logarithm `ln(a)`. */
@@ -291,7 +269,8 @@ internal data class Log(
     /** Operand passed to `ln`. */
     val a: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = ln(a.eval(x, y, v, primary))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `exp(a)`. */
@@ -301,7 +280,8 @@ internal data class Exp(
     /** Operand passed to `exp`. */
     val a: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = exp(a.eval(x, y, v, primary))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `sqrt(a)`. */
@@ -311,7 +291,8 @@ internal data class Sqrt(
     /** Operand passed to `sqrt`. */
     val a: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = sqrt(a.eval(x, y, v, primary))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `a ^ b`. */
@@ -323,12 +304,8 @@ internal data class Pow(
     /** Exponent. */
     val b: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = a.eval(
-        x,
-        y,
-        v,
-        primary,
-    ).pow(b.eval(x, y, v, primary))
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `min(l, r)`. */
@@ -340,10 +317,8 @@ internal data class MinExpr(
     /** Right operand. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = min(
-        l.eval(x, y, v, primary),
-        r.eval(x, y, v, primary),
-    )
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `max(l, r)`. */
@@ -355,10 +330,8 @@ internal data class MaxExpr(
     /** Right operand. */
     val r: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = max(
-        l.eval(x, y, v, primary),
-        r.eval(x, y, v, primary),
-    )
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for a ternary `if (cond) then else otherwise`. */
@@ -373,7 +346,7 @@ data class IfExpr(
     val otherwise: ScalarExpr,
 ) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        if (cond.eval(x, y, v, primary)) then.eval(x, y, v, primary) else otherwise.eval(x, y, v, primary)
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -405,11 +378,8 @@ data class Switch(
     /** Returned when no case matches. */
     val otherwise: ScalarExpr,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val key = on.eval(x, y, v, primary)
-        for (c in cases) if (c.value == key) return c.then.eval(x, y, v, primary)
-        return otherwise.eval(x, y, v, primary)
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -424,14 +394,8 @@ data class In(
     /** Allowed values; exact equality. */
     val values: List<Double>,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean {
-        // `in values` is List<Double>.contains, which boxes and uses Double.equals: total-order
-        // semantics where NaN == NaN and 0.0 != -0.0. This node exists to flatten Eq chains, so it
-        // has to compare primitives with IEEE == the way Eq and Switch do.
-        val value = of.eval(x, y, v, primary)
-        for (candidate in values) if (value == candidate) return true
-        return false
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -441,11 +405,8 @@ data class In(
 @Serializable
 @SerialName("Standardize")
 data object Standardize : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = primary.feedbackPrimary<HasCenterScale>("Standardize")
-        val scale = unwrapped.scale
-        return if (scale > 0.0) (x - unwrapped.center) / scale else 0.0
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -465,13 +426,8 @@ data class MinMax(
         require(targetHigh > targetLow) { "MinMax targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
     }
 
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        val unwrapped = primary.feedbackPrimary<HasMinMax>("MinMax")
-        val lo = unwrapped.min
-        val hi = unwrapped.max
-        val span = hi - lo
-        return if (span > 0.0) targetLow + (x - lo) / span * (targetHigh - targetLow) else targetLow
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -507,40 +463,8 @@ internal data class VFold(
     /** Reduction operation applied to the vector. */
     val op: VFoldOp,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double = when (op) {
-        VFoldOp.Sum -> koblas.vectorKernels.sum(v, 0, v.size)
-
-        VFoldOp.Product -> {
-            var p = 1.0
-            for (e in v) p *= e
-            p
-        }
-
-        VFoldOp.Mean -> {
-            require(v.isNotEmpty()) { "VFold.Mean on empty vector" }
-            koblas.vectorKernels.sum(v, 0, v.size) / v.size
-        }
-
-        VFoldOp.Min -> {
-            require(v.isNotEmpty()) { "VFold.Min on empty vector" }
-            var m = v[0]
-            for (i in 1 until v.size) if (v[i] < m) m = v[i]
-            m
-        }
-
-        VFoldOp.Max -> {
-            require(v.isNotEmpty()) { "VFold.Max on empty vector" }
-            var m = v[0]
-            for (i in 1 until v.size) if (v[i] > m) m = v[i]
-            m
-        }
-
-        VFoldOp.Norm2 -> {
-            var s = 0.0
-            for (e in v) s += e * e
-            sqrt(s)
-        }
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -553,14 +477,8 @@ internal data class VDot(
     /** Coefficient vector applied element-wise; must match input length at eval. */
     val weights: List<Double>,
 ) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double {
-        require(v.size == weights.size) {
-            "VDot length mismatch: weights=${weights.size}, v=${v.size}"
-        }
-        var s = 0.0
-        for (i in 0 until v.size) s += weights[i] * v[i]
-        return s
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -602,12 +520,8 @@ internal data class Gt(
     /** Right operand. */
     val r: ScalarExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) > r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `l >= r`. */
@@ -619,12 +533,8 @@ internal data class Ge(
     /** Right operand. */
     val r: ScalarExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) >= r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `l < r`. */
@@ -636,12 +546,8 @@ internal data class Lt(
     /** Right operand. */
     val r: ScalarExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) < r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `l <= r`. */
@@ -653,12 +559,8 @@ internal data class Le(
     /** Right operand. */
     val r: ScalarExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) <= r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `l == r`. Exact floating-point equality; usually you want a tolerance instead. */
@@ -670,12 +572,8 @@ internal data class Eq(
     /** Right operand. */
     val r: ScalarExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) == r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `l && r` (short-circuiting). */
@@ -687,12 +585,8 @@ internal data class And(
     /** Right operand; evaluated only when [l] is true. */
     val r: BoolExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) && r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `l || r` (short-circuiting). */
@@ -704,12 +598,8 @@ internal data class Or(
     /** Right operand; evaluated only when [l] is false. */
     val r: BoolExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = l.eval(
-        x,
-        y,
-        v,
-        primary,
-    ) || r.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Wire spec for `!a`. */
@@ -719,7 +609,8 @@ internal data class Not(
     /** Operand to negate. */
     val a: BoolExpr,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean = !a.eval(x, y, v, primary)
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -738,7 +629,7 @@ internal data class IsNaN(
     val of: ScalarExpr,
 ) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        of.eval(x, y, v, primary).isNaN()
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -755,7 +646,7 @@ internal data class IsFinite(
     val of: ScalarExpr,
 ) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        of.eval(x, y, v, primary).isFinite()
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -777,11 +668,8 @@ internal data class IsFinite(
 @Serializable
 @SerialName("AllFinite")
 internal data object AllFinite : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean {
-        if (!x.isFinite() || !y.isFinite()) return false
-        for (c in v) if (!c.isFinite()) return false
-        return true
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** `min <= a <= max` (inclusive). Wire-compact form of `And(Ge(a, min), Le(a, max))`. */
@@ -795,10 +683,8 @@ internal data class InRange(
     /** Inclusive upper bound. */
     val max: Double,
 ) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean {
-        val value = a.eval(x, y, v, primary)
-        return value in min..max
-    }
+    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -838,134 +724,282 @@ sealed interface VectorExpr {
  * bits, and a snapshot carrying such a value is only equal to another that was fed the same storage.
  * Every other fold is order-independent and agrees exactly whatever the storage.
  */
-fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: Vector, primary: Result? = null): Double {
-    if (v is SparseVector) {
-        when (this) {
-            is VFold -> when (op) {
+fun ScalarExpr.eval(x: Double = 0.0, y: Double = 0.0, v: Vector, primary: Result? = null): Double =
+    evaluate(x, y, v, primary, VectorInput)
+
+/** Evaluate this boolean expression against a borrowed KoBLAS vector without materialising it. */
+fun BoolExpr.eval(x: Double = 0.0, y: Double = 0.0, v: Vector, primary: Result? = null): Boolean =
+    evaluate(x, y, v, primary, VectorInput)
+
+/**
+ * Evaluate this vector expression against a borrowed KoBLAS vector, allocating only its owned
+ * output.
+ */
+fun VectorExpr.eval(x: Double = 0.0, y: Double = 0.0, v: Vector, primary: Result? = null): DoubleArray =
+    evaluate(x, y, v, primary, VectorInput)
+
+private fun <T> ScalarExpr.evaluate(x: Double, y: Double, v: T, primary: Result?, input: ExprInput<T>): Double =
+    when (this) {
+        X -> x
+
+        Y -> y
+
+        Center -> primary.feedbackPrimary<HasCenterScale>("Center").center
+
+        Scale -> primary.feedbackPrimary<HasCenterScale>("Scale").scale
+
+        Low -> primary.feedbackPrimary<HasMinMax>("Low").min
+
+        High -> primary.feedbackPrimary<HasMinMax>("High").max
+
+        VIndex -> {
+            check(primary is IndexedResult) {
+                "VIndex requires an element-wise feedback context; got ${primary?.let { it::class.simpleName }}"
+            }
+            primary.index.toDouble()
+        }
+
+        is V -> input.get(v, index)
+
+        is Const -> this.v
+
+        is Add -> l.evaluate(x, y, v, primary, input) + r.evaluate(x, y, v, primary, input)
+
+        is Sub -> l.evaluate(x, y, v, primary, input) - r.evaluate(x, y, v, primary, input)
+
+        is Mul -> l.evaluate(x, y, v, primary, input) * r.evaluate(x, y, v, primary, input)
+
+        is Div -> l.evaluate(x, y, v, primary, input) / r.evaluate(x, y, v, primary, input)
+
+        is Neg -> -a.evaluate(x, y, v, primary, input)
+
+        is Abs -> abs(a.evaluate(x, y, v, primary, input))
+
+        is Log -> ln(a.evaluate(x, y, v, primary, input))
+
+        is Exp -> exp(a.evaluate(x, y, v, primary, input))
+
+        is Sqrt -> sqrt(a.evaluate(x, y, v, primary, input))
+
+        is Pow -> a.evaluate(x, y, v, primary, input).pow(b.evaluate(x, y, v, primary, input))
+
+        is MinExpr -> min(l.evaluate(x, y, v, primary, input), r.evaluate(x, y, v, primary, input))
+
+        is MaxExpr -> max(l.evaluate(x, y, v, primary, input), r.evaluate(x, y, v, primary, input))
+
+        is IfExpr ->
+            if (
+                cond.evaluate(
+                    x,
+                    y,
+                    v,
+                    primary,
+                    input,
+                )
+            ) {
+                then.evaluate(x, y, v, primary, input)
+            } else {
+                otherwise.evaluate(x, y, v, primary, input)
+            }
+
+        is Switch -> {
+            val key = on.evaluate(x, y, v, primary, input)
+            cases
+                .firstOrNull { it.value == key }
+                ?.then
+                ?.evaluate(
+                    x,
+                    y,
+                    v,
+                    primary,
+                    input,
+                ) ?: otherwise.evaluate(x, y, v, primary, input)
+        }
+
+        Standardize -> {
+            val result = primary.feedbackPrimary<HasCenterScale>("Standardize")
+            if (result.scale > 0.0) (x - result.center) / result.scale else 0.0
+        }
+
+        is MinMax -> {
+            val result = primary.feedbackPrimary<HasMinMax>("MinMax")
+            val span = result.max - result.min
+            if (span > 0.0) {
+                targetLow + (x - result.min) / span * (targetHigh - targetLow)
+            } else {
+                targetLow
+            }
+        }
+
+        is VFold -> input.fold(v, op)
+
+        is VDot -> input.dot(v, weights)
+    }
+
+private fun <T> BoolExpr.evaluate(x: Double, y: Double, v: T, primary: Result?, input: ExprInput<T>): Boolean =
+    when (this) {
+        is Gt -> l.evaluate(x, y, v, primary, input) > r.evaluate(x, y, v, primary, input)
+
+        is Ge -> l.evaluate(x, y, v, primary, input) >= r.evaluate(x, y, v, primary, input)
+
+        is Lt -> l.evaluate(x, y, v, primary, input) < r.evaluate(x, y, v, primary, input)
+
+        is Le -> l.evaluate(x, y, v, primary, input) <= r.evaluate(x, y, v, primary, input)
+
+        is Eq -> l.evaluate(x, y, v, primary, input) == r.evaluate(x, y, v, primary, input)
+
+        is And -> l.evaluate(x, y, v, primary, input) && r.evaluate(x, y, v, primary, input)
+
+        is Or -> l.evaluate(x, y, v, primary, input) || r.evaluate(x, y, v, primary, input)
+
+        is Not -> !a.evaluate(x, y, v, primary, input)
+
+        // Primitive equality preserves the same NaN and signed-zero semantics as Eq and Switch.
+        is In -> {
+            val value = of.evaluate(x, y, v, primary, input)
+            var matches = false
+            for (candidate in values) {
+                if (value == candidate) {
+                    matches = true
+                    break
+                }
+            }
+            matches
+        }
+
+        is IsNaN -> of.evaluate(x, y, v, primary, input).isNaN()
+
+        is IsFinite -> of.evaluate(x, y, v, primary, input).isFinite()
+
+        AllFinite -> x.isFinite() && y.isFinite() && input.allFinite(v)
+
+        is InRange -> a.evaluate(x, y, v, primary, input) in min..max
+    }
+
+private fun <T> VectorExpr.evaluate(x: Double, y: Double, v: T, primary: Result?, input: ExprInput<T>): DoubleArray =
+    when (this) {
+        is VElements -> DoubleArray(exprs.size) { i -> exprs[i].evaluate(x, y, v, primary, input) }
+    }
+
+private interface ExprInput<T> {
+    fun get(v: T, index: Int): Double
+
+    fun fold(v: T, op: VFoldOp): Double
+
+    fun dot(v: T, weights: List<Double>): Double
+
+    fun allFinite(v: T): Boolean
+}
+
+private object ArrayInput : ExprInput<DoubleArray> {
+    override fun get(v: DoubleArray, index: Int): Double = v[index]
+
+    override fun fold(v: DoubleArray, op: VFoldOp): Double = when (op) {
+        VFoldOp.Sum -> koblas.vectorKernels.sum(v, 0, v.size)
+
+        VFoldOp.Product -> {
+            var p = 1.0
+            for (e in v) p *= e
+            p
+        }
+
+        VFoldOp.Mean -> {
+            require(v.isNotEmpty()) { "VFold.Mean on empty vector" }
+            koblas.vectorKernels.sum(v, 0, v.size) / v.size
+        }
+
+        VFoldOp.Min -> {
+            require(v.isNotEmpty()) { "VFold.Min on empty vector" }
+            var m = v[0]
+            for (i in 1 until v.size) if (v[i] < m) m = v[i]
+            m
+        }
+
+        VFoldOp.Max -> {
+            require(v.isNotEmpty()) { "VFold.Max on empty vector" }
+            var m = v[0]
+            for (i in 1 until v.size) if (v[i] > m) m = v[i]
+            m
+        }
+
+        VFoldOp.Norm2 -> {
+            var s = 0.0
+            for (e in v) s += e * e
+            sqrt(s)
+        }
+    }
+
+    override fun dot(v: DoubleArray, weights: List<Double>): Double {
+        require(v.size == weights.size) {
+            "VDot length mismatch: weights=${weights.size}, v=${v.size}"
+        }
+        var s = 0.0
+        for (i in 0 until v.size) s += weights[i] * v[i]
+        return s
+    }
+
+    override fun allFinite(v: DoubleArray): Boolean = v.all { it.isFinite() }
+}
+
+private object VectorInput : ExprInput<Vector> {
+    override fun get(v: Vector, index: Int): Double = v[index]
+
+    override fun fold(v: Vector, op: VFoldOp): Double {
+        if (v is SparseVector) {
+            when (op) {
                 VFoldOp.Min -> return sparseMin(v)
 
                 VFoldOp.Max -> return sparseMax(v)
 
                 VFoldOp.Norm2 -> return sparseNorm2(v)
 
-                // Sum and Mean need no fast path: the generic evaluator reduces through
-                // koblas, which already visits only what a sparse vector stores.
-                VFoldOp.Sum, VFoldOp.Mean, VFoldOp.Product -> Unit
+                VFoldOp.Sum,
+                VFoldOp.Mean,
+                VFoldOp.Product,
+                -> Unit
+            }
+        }
+        return when (op) {
+            VFoldOp.Sum -> v.sum()
+
+            VFoldOp.Product -> (0 until v.size).fold(1.0) { product, i -> product * v[i] }
+
+            VFoldOp.Mean -> {
+                require(v.size != 0) { "VFold.Mean on empty vector" }
+                v.sum() / v.size
             }
 
-            is VDot -> {
-                require(v.size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=${v.size}" }
-                if (weights.all { it.isFinite() }) return sparseDot(v, weights)
+            VFoldOp.Min -> {
+                require(v.size != 0) { "VFold.Min on empty vector" }
+                var minimum = v[0]
+                for (i in 1 until v.size) if (v[i] < minimum) minimum = v[i]
+                minimum
             }
 
-            else -> Unit
+            VFoldOp.Max -> {
+                require(v.size != 0) { "VFold.Max on empty vector" }
+                var maximum = v[0]
+                for (i in 1 until v.size) if (v[i] > maximum) maximum = v[i]
+                maximum
+            }
+
+            VFoldOp.Norm2 -> sqrt((0 until v.size).sumOf { v[it] * v[it] })
         }
     }
-    return evalVectorGeneric(x, y, v, primary)
-}
 
-private fun ScalarExpr.evalVectorGeneric(x: Double, y: Double, v: Vector, primary: Result?): Double = when (this) {
-    X -> x
-
-    Y -> y
-
-    Center -> primary.feedbackPrimary<HasCenterScale>("Center").center
-
-    Scale -> primary.feedbackPrimary<HasCenterScale>("Scale").scale
-
-    Low -> primary.feedbackPrimary<HasMinMax>("Low").min
-
-    High -> primary.feedbackPrimary<HasMinMax>("High").max
-
-    VIndex -> {
-        check(
-            primary is IndexedResult,
-        ) { "VIndex requires an element-wise feedback context; got ${primary?.let { it::class.simpleName }}" }
-        primary.index.toDouble()
-    }
-
-    is V -> v[index]
-
-    is Const -> this.v
-
-    is Add -> l.eval(x, y, v, primary) + r.eval(x, y, v, primary)
-
-    is Sub -> l.eval(x, y, v, primary) - r.eval(x, y, v, primary)
-
-    is Mul -> l.eval(x, y, v, primary) * r.eval(x, y, v, primary)
-
-    is Div -> l.eval(x, y, v, primary) / r.eval(x, y, v, primary)
-
-    is Neg -> -a.eval(x, y, v, primary)
-
-    is Abs -> abs(a.eval(x, y, v, primary))
-
-    is Log -> ln(a.eval(x, y, v, primary))
-
-    is Exp -> exp(a.eval(x, y, v, primary))
-
-    is Sqrt -> sqrt(a.eval(x, y, v, primary))
-
-    is Pow -> a.eval(x, y, v, primary).pow(b.eval(x, y, v, primary))
-
-    is MinExpr -> min(l.eval(x, y, v, primary), r.eval(x, y, v, primary))
-
-    is MaxExpr -> max(l.eval(x, y, v, primary), r.eval(x, y, v, primary))
-
-    is IfExpr -> if (cond.eval(x, y, v, primary)) then.eval(x, y, v, primary) else otherwise.eval(x, y, v, primary)
-
-    is Switch -> {
-        val key = on.eval(x, y, v, primary)
-        cases.firstOrNull { it.value == key }?.then?.eval(x, y, v, primary) ?: otherwise.eval(x, y, v, primary)
-    }
-
-    Standardize -> {
-        val result = primary.feedbackPrimary<HasCenterScale>("Standardize")
-        if (result.scale > 0.0) (x - result.center) / result.scale else 0.0
-    }
-
-    is MinMax -> {
-        val result = primary.feedbackPrimary<HasMinMax>("MinMax")
-        val span = result.max - result.min
-        if (span > 0.0) targetLow + (x - result.min) / span * (targetHigh - targetLow) else targetLow
-    }
-
-    is VFold -> when (op) {
-        VFoldOp.Sum -> v.sum()
-
-        VFoldOp.Product -> (0 until v.size).fold(1.0) { product, i -> product * v[i] }
-
-        VFoldOp.Mean -> {
-            require(
-                v.size != 0,
-            ) { "VFold.Mean on empty vector" }
-            v.sum() / v.size
+    override fun dot(v: Vector, weights: List<Double>): Double {
+        require(v.size == weights.size) {
+            "VDot length mismatch: weights=${weights.size}, v=${v.size}"
         }
-
-        VFoldOp.Min -> {
-            require(
-                v.size != 0,
-            ) { "VFold.Min on empty vector" }
-            var minimum = v[0]
-            for (i in 1 until v.size) if (v[i] < minimum) minimum = v[i]
-            minimum
-        }
-
-        VFoldOp.Max -> {
-            require(
-                v.size != 0,
-            ) { "VFold.Max on empty vector" }
-            var maximum = v[0]
-            for (i in 1 until v.size) if (v[i] > maximum) maximum = v[i]
-            maximum
-        }
-
-        VFoldOp.Norm2 -> sqrt((0 until v.size).sumOf { v[it] * v[it] })
+        // Skipping implicit zeros is valid only when multiplying them cannot produce NaN.
+        if (v is SparseVector && weights.all { it.isFinite() }) return sparseDot(v, weights)
+        return (0 until v.size).sumOf { weights[it] * v[it] }
     }
 
-    is VDot -> {
-        require(v.size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=${v.size}" }
-        (0 until v.size).sumOf { weights[it] * v[it] }
+    override fun allFinite(v: Vector): Boolean {
+        var finite = true
+        v.forEachStored { _, value -> if (!value.isFinite()) finite = false }
+        return finite
     }
 }
 
@@ -1019,60 +1053,6 @@ private fun sparseMax(v: SparseVector): Double {
     return maximum
 }
 
-/** Evaluate this boolean expression against a borrowed KoBLAS vector without materialising it. */
-fun BoolExpr.eval(x: Double = 0.0, y: Double = 0.0, v: Vector, primary: Result? = null): Boolean = when (this) {
-    is Gt -> l.eval(x, y, v, primary) > r.eval(x, y, v, primary)
-
-    is Ge -> l.eval(x, y, v, primary) >= r.eval(x, y, v, primary)
-
-    is Lt -> l.eval(x, y, v, primary) < r.eval(x, y, v, primary)
-
-    is Le -> l.eval(x, y, v, primary) <= r.eval(x, y, v, primary)
-
-    is Eq -> l.eval(x, y, v, primary) == r.eval(x, y, v, primary)
-
-    is And -> l.eval(x, y, v, primary) && r.eval(x, y, v, primary)
-
-    is Or -> l.eval(x, y, v, primary) || r.eval(x, y, v, primary)
-
-    is Not -> !a.eval(x, y, v, primary)
-
-    is In -> {
-        val value = of.eval(x, y, v, primary)
-        var matches = false
-        for (candidate in values) {
-            if (value == candidate) {
-                matches = true
-                break
-            }
-        }
-        matches
-    }
-
-    is IsNaN -> of.eval(x, y, v, primary).isNaN()
-
-    is IsFinite -> of.eval(x, y, v, primary).isFinite()
-
-    AllFinite -> {
-        if (!x.isFinite() || !y.isFinite()) {
-            false
-        } else {
-            var finite = true
-            v.forEachStored { _, value ->
-                if (!value.isFinite()) finite = false
-            }
-            finite
-        }
-    }
-
-    is InRange -> a.eval(x, y, v, primary) in min..max
-}
-
-/** Evaluate this vector expression against a borrowed KoBLAS vector, allocating only its owned output. */
-fun VectorExpr.eval(x: Double = 0.0, y: Double = 0.0, v: Vector, primary: Result? = null): DoubleArray = when (this) {
-    is VElements -> DoubleArray(exprs.size) { i -> exprs[i].eval(x, y, v, primary) }
-}
-
 /**
  * Build an output vector by evaluating each [ScalarExpr] in order. Output
  * length = `exprs.size`. The exprs can reference any input element via
@@ -1087,7 +1067,7 @@ internal data class VElements(
     val exprs: List<ScalarExpr>,
 ) : VectorExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): DoubleArray =
-        DoubleArray(exprs.size) { i -> exprs[i].eval(x, y, v, primary) }
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Build [Add] of two expressions. */
