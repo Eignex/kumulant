@@ -1,11 +1,17 @@
 # Package com.eignex.kumulant.math
 
-Distribution sampling, stream-hash functions, and the few numeric
-routines that sit outside koblas, consumed by the rest of the library.
-The vector / matrix primitives and BLAS-style linear algebra live in the
-separate [koblas](https://github.com/Eignex/koblas) library
-(`com.eignex.koblas`), which covers a defined BLAS/LAPACK subset; what
-falls outside that subset and only kumulant needs lives here.
+Distribution sampling, stream-hash functions, and Cholesky factorization used by
+statistical models. Vector and matrix storage, arithmetic, and triangular solves
+live in the separate [koblas](https://github.com/Eignex/koblas) BLAS library
+(`com.eignex.koblas`).
+
+## Cholesky factorization
+
+[factorCholesky] factors the finite lower triangle of a symmetric positive-definite
+matrix into an owned [CholeskyFactor]. The factor solves vector and matrix systems,
+provides a log determinant, and returns an independent lower-triangular copy.
+Inputs remain unchanged. Factorization adds no jitter or regularization;
+[NotPositiveDefinite] identifies a failed pivot for callers choosing a retry policy.
 
 ## Distribution sampling
 

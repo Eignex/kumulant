@@ -2111,6 +2111,20 @@ public final class com/eignex/kumulant/core/VectorStat$DefaultImpls {
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;[DJDILjava/lang/Object;)V
 }
 
+public final class com/eignex/kumulant/math/CholeskyFactor {
+	public final fun getSize ()I
+	public final fun logDeterminant ()D
+	public final fun lowerFactor ()Lcom/eignex/koblas/DenseMatrix;
+	public final fun solve (Lcom/eignex/koblas/DenseMatrix;)Lcom/eignex/koblas/DenseMatrix;
+	public final fun solve ([D)[D
+	public final fun solveLower (Lcom/eignex/koblas/DenseMatrix;Z)Lcom/eignex/koblas/DenseMatrix;
+	public static synthetic fun solveLower$default (Lcom/eignex/kumulant/math/CholeskyFactor;Lcom/eignex/koblas/DenseMatrix;ZILjava/lang/Object;)Lcom/eignex/koblas/DenseMatrix;
+}
+
+public final class com/eignex/kumulant/math/CholeskyFactorKt {
+	public static final fun factorCholesky (Lcom/eignex/koblas/DenseMatrix;)Lcom/eignex/kumulant/math/CholeskyFactor;
+}
+
 public final class com/eignex/kumulant/math/DistributionsKt {
 	public static final fun nextBeta (Lkotlin/random/Random;DD)D
 	public static final fun nextGamma (Lkotlin/random/Random;D)D
@@ -2172,6 +2186,12 @@ public final class com/eignex/kumulant/math/HashesKt {
 public abstract interface class com/eignex/kumulant/math/LongHasher {
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun mix (J)J
+}
+
+public final class com/eignex/kumulant/math/NotPositiveDefinite : java/lang/IllegalArgumentException {
+	public fun <init> (IDLjava/lang/String;)V
+	public final fun getPivot ()D
+	public final fun getPivotIndex ()I
 }
 
 public final class com/eignex/kumulant/math/SplitMixChunkHasher : com/eignex/kumulant/math/Hasher64 {
