@@ -528,9 +528,9 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
         StatPlan(path) { concurrency ->
             PairedStatGroup(
                 plans.map { (name, plan) ->
-                toSpec(StatKey<Result>(name), plan.build(concurrency))
-            },
-                concurrency
+                    toSpec(StatKey<Result>(name), plan.build(concurrency))
+                },
+                concurrency,
             )
         }
     }
@@ -679,9 +679,9 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         StatPlan(path) { concurrency ->
             VectorStatGroup(
                 plans.map { (name, plan) ->
-                toSpec(StatKey<Result>(name), plan.build(concurrency))
-            },
-                concurrency
+                    toSpec(StatKey<Result>(name), plan.build(concurrency))
+                },
+                concurrency,
             )
         }
     }
@@ -829,9 +829,9 @@ internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<Discret
         StatPlan(path) { concurrency ->
             DiscreteStatGroup(
                 plans.map { (name, plan) ->
-                toSpec(StatKey<Result>(name), plan.build(concurrency))
-            },
-                concurrency
+                    toSpec(StatKey<Result>(name), plan.build(concurrency))
+                },
+                concurrency,
             )
         }
     }
@@ -942,9 +942,9 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
         StatPlan(path) { concurrency ->
             RegressionStatGroup(
                 plans.map { (name, plan) ->
-                toSpec(StatKey<Result>(name), plan.build(concurrency))
-            },
-                concurrency
+                    toSpec(StatKey<Result>(name), plan.build(concurrency))
+                },
+                concurrency,
             )
         }
     }
