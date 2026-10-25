@@ -23,12 +23,14 @@ Run `./gradlew check lintDocs`.
 
 ## Bench
 
-`:kumulant-bench` holds the measurement tasks, each driving the StatSpec registry and printing to stdout:
+`kumulant-bench/benchmark.sh` runs the existing JMH/Native engines with code-defined fixtures:
 
-- `analyzeAccuracy`, `analyzeThroughput`, `analyzeConcurrencyDrift`, `analyzeMergeContention` for stats.
-- `analyzeBanditAccuracy`, `analyzeBanditThroughput`, `analyzeBanditDrift` for bandits.
-- `benchmark` (or `jvmBenchmark` / `linuxX64Benchmark`) runs the JMH suites.
-- Cite drift and throughput numbers in KDoc only when measured from these tasks; drop them otherwise.
+- `--quality` runs serial stat references, multi-seed bandit regret and Cholesky numerical checks.
+- `--concurrency` checks sum/mean/variance update/merge preservation, snapshots and drift.
+- Default mode runs quality first, then JMH; pass JMH filters, parameters or profilers after `--`.
+- `--native` uses the existing kotlinx-benchmark Gradle task and Native tests.
+- `--smoke` checks wiring; use ordinary runs for performance evidence.
+- Cite drift/throughput in KDoc only from retained benchmark outputs; drop unsupported numbers.
 
 ## Design
 
