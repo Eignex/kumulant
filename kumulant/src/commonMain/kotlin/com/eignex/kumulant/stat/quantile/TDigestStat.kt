@@ -7,10 +7,7 @@ import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.guarded
-import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
-import com.eignex.kumulant.stream.spinHint
-import com.eignex.kumulant.stream.welfordLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.PI
@@ -105,16 +102,14 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  *
  * **Memory:** O([compression]) centroids (~6 · delta) plus a fixed-size buffer.
  *
- * **Update:** O(1) amortised per observation; a single atomic claim into the
- * buffer, with a periodic O([compression] · log [compression]) compress when
- * the buffer fills.
+ * **Update:** O(1) amortised per observation, with a periodic
+ * O([compression] · log [compression]) compress when the buffer fills.
  *
- * **Concurrency:** Hot-path `update` is lock-free under [Concurrency.Relaxed]
- * (atomic claim into a ring buffer); a buffer-full triggers a brief locked
- * compress that does not block concurrent claims in the next epoch. Under
- * [Concurrency.Strict] / [Concurrency.HighWrite] an outer lock serialises
- * updates against reads/merges. [Concurrency.None] runs without
- * synchronisation.
+ * **Concurrency:** Body locked under any concurrent level. One lock protects buffer
+ * appends, compression, reads, merges, and resets, so observations cannot cross a
+ * buffer drain before their value and weight are stored. [Concurrency.None] runs
+ * without synchronisation. Centroid compression remains approximate and depends
+ * on update order.
  */
 class TDigestStat(
     /** Compression parameter; lower = more centroids, tighter quantiles, more memory. */
@@ -132,101 +127,28 @@ class TDigestStat(
     }
 
     private val bufferCap: Int = max(10, (5.0 * compression).toInt())
-    private val bufferCapLong: Long = bufferCap.toLong()
-
-    // Use monotonicMode (SerialMode under None, AtomicMode otherwise) so the buffer
-    // index supports addAndGet + compareAndSet under every concurrent mode. Striped
-    // adders (HighWrite) don't expose CAS and have non-linearizable reads, which
-    // would break the claim/commit protocol below.
-    private val mode = concurrency.monotonicMode()
-
-    // Outer lock: noop under None/Relaxed; real under Strict/HighWrite. Linearizes
-    // update/merge/read against each other for strict semantics.
-    private val outerLock = concurrency.welfordLock()
-
-    // Compress lock: noop under None; real otherwise. Protects centroid arrays and
-    // the buffer-drain critical section against concurrent compress / read / merge.
-    private val compressLock = concurrency.serializedLock()
-
-    // Lock-free ring buffer (one epoch). Updates atomically claim a slot via
-    // bufferIndex.addAndGet, then write value+weight and bump commitIndex. Overflow
-    // (claimed > bufferCap) is funneled through compressLock to drain + reset.
-    private val bufferIndex = mode.newLong(0L)
-    private val commitIndex = mode.newLong(0L)
-    private val buffer = mode.newDoubleArray(bufferCap)
-    private val bufferWeights = mode.newDoubleArray(bufferCap)
-    private val totalWeightCell = mode.newDouble(0.0)
-
-    // Centroid arrays. Always accessed under compressLock (except trivially under None).
+    private val lock = concurrency.serializedLock()
+    private var bufferSize = 0
+    private val buffer = DoubleArray(bufferCap)
+    private val bufferWeights = DoubleArray(bufferCap)
+    private var totalWeight = 0.0
     private var means = DoubleArray(0)
     private var weights = DoubleArray(0)
 
     private fun k1(q: Double): Double = compression / (2.0 * PI) * asin(2.0 * q.coerceIn(0.0, 1.0) - 1.0)
 
-    /**
-     * Drain the current buffer epoch into the centroid arrays. Caller MUST hold
-     * [compressLock]. Idempotent: a no-op if the buffer is empty.
-     */
     private fun drainLocked() {
-        // Freeze the buffer epoch by CAS-bumping bufferIndex to bufferCap; any concurrent
-        // claimer that observes bufferIndex >= bufferCap will overflow into compressLock
-        // and retry against the next epoch.
-        val claimed = claimBufferEpoch() ?: return
-        // Wait for in-flight commits to land. Under Relaxed an addAndGet that
-        // straddles a concurrent reset can leave a stranded claim whose commit
-        // never lands in this epoch's commitIndex; fall back to whatever is
-        // committed so far rather than spinning forever. Drift is the Relaxed
-        // contract; livelock is not.
-        var committed = commitIndex.load().toInt()
-        var spins = 0
-        while (committed < claimed) {
-            spinHint()
-            committed = commitIndex.load().toInt()
-            if (++spins >= SPIN_MAX) {
-                // Stranded claim: trim to what we can prove committed and proceed.
-                break
-            }
-        }
-        val drained = if (committed < claimed) committed else claimed
-
-        val snapVal = DoubleArray(drained) { buffer.load(it) }
-        val snapW = DoubleArray(drained) { bufferWeights.load(it) }
-
-        // Counted over exactly what is about to be merged, so the total is the digest's own mass by
-        // construction and a stranded claim costs its value without leaving its weight behind.
-        var drainedWeight = 0.0
-        for (i in 0 until drained) drainedWeight += snapW[i]
-        if (drainedWeight > 0.0) totalWeightCell.add(drainedWeight)
-
-        // Reset for the next epoch BEFORE compressing; new claimers can start writing
-        // into a fresh buffer while we merge the snapshot.
-        bufferIndex.store(0L)
-        commitIndex.store(0L)
-
-        compressInto(snapVal, snapW, drained)
-    }
-
-    private companion object {
-        // Spin loop iterations before giving up on a stranded in-flight commit.
-        // Sized to cover normal scheduler hiccups but small enough that an
-        // orphaned claim (writer suspended across a drain reset, never lands its
-        // commit in this epoch's counter) doesn't wedge the reader for long.
-        private const val SPIN_MAX = 10_000
-    }
-
-    /** CAS the buffer index up to [bufferCap] to freeze the current epoch. Returns the
-     *  number of valid entries claimed, or `null` if the buffer was empty. */
-    private fun claimBufferEpoch(): Int? {
-        while (true) {
-            val cur = bufferIndex.load()
-            if (cur >= bufferCapLong) return bufferCap
-            if (cur == 0L) return null
-            if (bufferIndex.compareAndSet(cur, bufferCapLong)) return cur.toInt()
-        }
+        val size = bufferSize
+        if (size == 0) return
+        var bufferedWeight = 0.0
+        for (i in 0 until size) bufferedWeight += bufferWeights[i]
+        totalWeight += bufferedWeight
+        compressInto(buffer, bufferWeights, size)
+        bufferSize = 0
     }
 
     // Scratch buffers for the buffer-ordering sort, reused across compressions. Only ever
-    // touched under compressLock, so no synchronisation of their own is needed.
+    // touched under the lock, so no synchronisation of their own is needed.
     private var sortIdx: IntArray = IntArray(0)
     private var sortTmp: IntArray = IntArray(0)
 
@@ -301,7 +223,7 @@ class TDigestStat(
             c++
         }
 
-        val total = totalWeightCell.load()
+        val total = totalWeight
         if (total <= 0.0) {
             means = DoubleArray(0)
             weights = DoubleArray(0)
@@ -346,32 +268,11 @@ class TDigestStat(
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isNotPositiveWeight()) return
-        outerLock.guarded {
-            while (true) {
-                val claimed = bufferIndex.addAndGet(1L)
-                val idx = (claimed - 1L).toInt()
-                if (claimed <= bufferCapLong) {
-                    buffer.store(idx, value)
-                    bufferWeights.store(idx, weight)
-                    // The weight is not counted here. `drainLocked` can strand a claim it cannot
-                    // prove committed and discard the value, and a weight counted on this side would
-                    // stay in `totalWeightCell` with nothing in the digest behind it: NaN for every
-                    // quantile while the digest is still empty, and a total that runs permanently
-                    // high afterwards. It is counted where the value is merged instead.
-                    //
-                    // The skew that leaves is benign and self-correcting: a value buffered but not
-                    // yet drained makes `total` low, so a rank clamps toward `means[0]`, which is
-                    // finite and ordered. Every `read` drains first, so a reader never sees it.
-                    commitIndex.add(1L)
-                    if (claimed == bufferCapLong) {
-                        compressLock.guarded { drainLocked() }
-                    }
-                    return@guarded
-                }
-                // Overflow: a concurrent compress is needed before our claim can land.
-                compressLock.guarded { drainLocked() }
-                // Loop and retry against the next epoch.
-            }
+        lock.guarded {
+            buffer[bufferSize] = value
+            bufferWeights[bufferSize] = weight
+            bufferSize++
+            if (bufferSize == bufferCap) drainLocked()
         }
     }
 
@@ -389,103 +290,92 @@ class TDigestStat(
 
     override fun merge(values: TDigestResult) {
         validateMerge(values)
-        outerLock.guarded {
-            compressLock.guarded {
-                // Drain any buffered points first so they appear in the centroid array.
-                drainLocked()
-                // Feed the incoming centroids through the same compress path.
-                val n = values.means.size
-                val sv = DoubleArray(n)
-                val sw = DoubleArray(n)
-                var c = 0
-                for (i in 0 until n) {
-                    val w = values.weights[i]
-                    if (w > 0.0 && !values.means[i].isNaN()) {
-                        sv[c] = values.means[i]
-                        sw[c] = w
-                        c++
-                        totalWeightCell.add(w)
-                    }
-                }
-                if (c > 0) compressInto(sv, sw, c)
-            }
-        }
-    }
-
-    override fun reset() {
-        outerLock.guarded {
-            compressLock.guarded {
-                bufferIndex.store(0L)
-                commitIndex.store(0L)
-                totalWeightCell.store(0.0)
-                means = DoubleArray(0)
-                weights = DoubleArray(0)
-            }
-        }
-    }
-
-    override fun read(timestampNanos: Long): TDigestResult = outerLock.guarded {
-        compressLock.guarded {
+        lock.guarded {
             drainLocked()
-
-            val total = totalWeightCell.load()
-            val computed = DoubleArray(probabilities.size)
-            if (means.isEmpty() || total <= 0.0) {
-                // NaN per quantile rather than 0.0, matching DDSketchStat. A zero-filled array
-                // cannot be told apart from a digest that genuinely observed zeros, so an untouched
-                // digest would report a p99 of 0.0 and read as healthy. `isEmpty` on the result is
-                // the check for callers who would rather branch.
-                computed.fill(Double.NaN)
-                return@guarded TDigestResult(
-                    probabilities.copyOf(),
-                    computed,
-                    means.copyOf(),
-                    weights.copyOf(),
-                    total,
-                    compression,
-                )
-            }
-
-            // Cumulative rank at each centroid's center (half-weight offsets).
-            val centers = DoubleArray(means.size)
-            var acc = 0.0
-            for (i in means.indices) {
-                centers[i] = acc + weights[i] / 2.0
-                acc += weights[i]
-            }
-
-            for (pi in probabilities.indices) {
-                val targetRank = probabilities[pi] * total
-                val n = means.size
-                val q: Double
-                if (n == 1 || targetRank <= centers[0]) {
-                    q = means[0]
-                } else if (targetRank >= centers[n - 1]) {
-                    q = means[n - 1]
-                } else {
-                    var idx = 0
-                    for (i in 0 until n - 1) {
-                        if (targetRank <= centers[i + 1]) {
-                            idx = i
-                            break
-                        }
-                    }
-                    val span = centers[idx + 1] - centers[idx]
-                    val frac = if (span <= 0.0) 0.0 else (targetRank - centers[idx]) / span
-                    q = means[idx] + frac * (means[idx + 1] - means[idx])
+            val n = values.means.size
+            val sv = DoubleArray(n)
+            val sw = DoubleArray(n)
+            var c = 0
+            for (i in 0 until n) {
+                val weight = values.weights[i]
+                if (weight > 0.0 && !values.means[i].isNaN()) {
+                    sv[c] = values.means[i]
+                    sw[c] = weight
+                    c++
+                    totalWeight += weight
                 }
-                computed[pi] = q
             }
+            if (c > 0) compressInto(sv, sw, c)
+        }
+    }
 
-            // See DDSketchStat.read on why this is copied.
-            TDigestResult(
-                probabilities = probabilities.copyOf(),
-                quantiles = computed,
-                means = means.copyOf(),
-                weights = weights.copyOf(),
-                totalWeight = total,
-                compression = compression,
+    override fun reset() = lock.guarded {
+        bufferSize = 0
+        totalWeight = 0.0
+        means = DoubleArray(0)
+        weights = DoubleArray(0)
+    }
+
+    override fun read(timestampNanos: Long): TDigestResult = lock.guarded {
+        drainLocked()
+
+        val total = totalWeight
+        val computed = DoubleArray(probabilities.size)
+        if (means.isEmpty() || total <= 0.0) {
+            // NaN per quantile rather than 0.0, matching DDSketchStat. A zero-filled array
+            // cannot be told apart from a digest that genuinely observed zeros, so an untouched
+            // digest would report a p99 of 0.0 and read as healthy. `isEmpty` on the result is
+            // the check for callers who would rather branch.
+            computed.fill(Double.NaN)
+            return@guarded TDigestResult(
+                probabilities.copyOf(),
+                computed,
+                means.copyOf(),
+                weights.copyOf(),
+                total,
+                compression,
             )
         }
+
+        // Cumulative rank at each centroid's center (half-weight offsets).
+        val centers = DoubleArray(means.size)
+        var acc = 0.0
+        for (i in means.indices) {
+            centers[i] = acc + weights[i] / 2.0
+            acc += weights[i]
+        }
+
+        for (pi in probabilities.indices) {
+            val targetRank = probabilities[pi] * total
+            val n = means.size
+            val q: Double
+            if (n == 1 || targetRank <= centers[0]) {
+                q = means[0]
+            } else if (targetRank >= centers[n - 1]) {
+                q = means[n - 1]
+            } else {
+                var idx = 0
+                for (i in 0 until n - 1) {
+                    if (targetRank <= centers[i + 1]) {
+                        idx = i
+                        break
+                    }
+                }
+                val span = centers[idx + 1] - centers[idx]
+                val frac = if (span <= 0.0) 0.0 else (targetRank - centers[idx]) / span
+                q = means[idx] + frac * (means[idx + 1] - means[idx])
+            }
+            computed[pi] = q
+        }
+
+        // See DDSketchStat.read on why this is copied.
+        TDigestResult(
+            probabilities = probabilities.copyOf(),
+            quantiles = computed,
+            means = means.copyOf(),
+            weights = weights.copyOf(),
+            totalWeight = total,
+            compression = compression,
+        )
     }
 }

@@ -230,6 +230,54 @@ class ConcurrentStreamModesTest {
     }
 
     @Test
+    fun `TDigestStat under Relaxed preserves weighted observations across interleaved reads`() {
+        val writers = 4
+        val iters = 500
+        for (compression in listOf(2.0, 10.0, 100.0)) {
+            val stat = TDigestStat(compression, doubleArrayOf(0.5), Concurrency.Relaxed)
+
+            runWithReader(stat::read) {
+                runConcurrently(writers, iters) { t, _ ->
+                    val value = (t + 1).toDouble()
+                    stat.update(value, weight = value)
+                }
+            }
+            val result = stat.read()
+
+            assertEquals(iters * 10.0, result.totalWeight, 1e-9, "compression=$compression")
+            assertEquals(iters * 10.0, result.weights.sum(), 1e-9, "compression=$compression")
+            val moment = result.means.indices.sumOf { result.means[it] * result.weights[it] }
+            assertEquals(iters * 30.0, moment, 1e-7, "compression=$compression")
+        }
+    }
+
+    @Test
+    fun `TDigestStat preserves weighted observations across concurrent updates merges and reads`() {
+        val iters = 40
+        val source = TDigestStat(compression = 10.0).apply { update(10.0, weight = 0.25) }.read()
+        for (level in listOf(Concurrency.Relaxed, Concurrency.Strict, Concurrency.HighWrite)) {
+            val stat = TDigestStat(10.0, doubleArrayOf(0.5), level)
+
+            runWithReader(stat::read) {
+                runConcurrently(4, iters) { t, _ ->
+                    if (t == 0) {
+                        stat.merge(source)
+                    } else {
+                        val value = (t + 1).toDouble()
+                        stat.update(value, weight = value)
+                    }
+                }
+            }
+            val result = stat.read()
+
+            assertEquals(iters * 9.25, result.totalWeight, 1e-9, "level=$level")
+            assertEquals(iters * 9.25, result.weights.sum(), 1e-9, "level=$level")
+            val moment = result.means.indices.sumOf { result.means[it] * result.weights[it] }
+            assertEquals(iters * 31.5, moment, 1e-7, "level=$level")
+        }
+    }
+
+    @Test
     fun `ReservoirHistogramStat under Relaxed never exceeds capacity under concurrent update plus read`() {
         val capacity = 256
         val reservoir = ReservoirHistogramStat(capacity = capacity, seed = 42L, concurrency = Concurrency.Relaxed)
