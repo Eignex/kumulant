@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
-    kotlin("multiplatform") version "2.4.10"
-    kotlin("plugin.allopen") version "2.4.10"
+    kotlin("multiplatform") version "2.4.21"
+    kotlin("plugin.allopen") version "2.4.21"
     id("org.jetbrains.kotlinx.benchmark") version "0.4.17"
 }
 
@@ -32,8 +32,8 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":kumulant"))
             implementation("org.jetbrains.kotlinx:kotlinx-benchmark-runtime:0.4.17")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
         }
         commonTest.dependencies {
             implementation(kotlin("test"))

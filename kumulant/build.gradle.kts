@@ -1,6 +1,6 @@
 plugins {
-    id("com.eignex.kmp") version "1.3.3"
-    kotlin("plugin.serialization") version "2.4.10"
+    id("com.eignex.kmp") version "1.3.5-SNAPSHOT"
+    kotlin("plugin.serialization") version "2.4.21"
 }
 
 eignexPublish {
@@ -35,20 +35,20 @@ kotlin {
         appleMain.get().dependsOn(posixMain)
         linuxMain.get().dependsOn(posixMain)
         commonMain.dependencies {
-            api("com.eignex:koblas:0.1.1-20261013.182449-263") {
-                version { strictly("0.1.1-20261013.182449-263") }
+            api("com.eignex:koblas:0.1.1-20261025.142922-269") {
+                version { strictly("0.1.1-20261025.142922-269") }
             }
             api("com.eignex:skema:0.3.0")
-            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
-            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
+            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
+            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
         }
         jvmMain.dependencies {
             implementation(kotlin("reflect"))
         }
         commonTest.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.11.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.12.0")
         }
     }
 }
@@ -58,10 +58,10 @@ kotlin {
 dependencies {
     constraints {
         for ((module, pinned) in mapOf(
-            "jvm" to "0.1.1-20261013.182449-266",
-            "linuxx64" to "0.1.1-20261013.182449-262",
-            "linuxarm64" to "0.1.1-20261013.182449-263",
-            "macosarm64" to "0.1.1-20261013.182206-286",
+            "jvm" to "0.1.1-20261025.142922-272",
+            "linuxx64" to "0.1.1-20261025.142922-268",
+            "linuxarm64" to "0.1.1-20261025.142922-269",
+            "macosarm64" to "0.1.1-20261025.142649-292",
         )) {
             add("commonMainApi", "com.eignex:koblas-$module:$pinned") {
                 version { strictly(pinned) }
