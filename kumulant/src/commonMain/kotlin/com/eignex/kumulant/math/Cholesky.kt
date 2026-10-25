@@ -34,6 +34,7 @@ internal sealed interface CholeskyPolicy {
  *
  * @property pivotIndex Zero-based failing column.
  * @property pivot Corrected diagonal before taking its square root.
+ * @param message Diagnostic description of the failure.
  */
 class NotPositiveDefinite(val pivotIndex: Int, val pivot: Double, message: String) :
     IllegalArgumentException(message)
