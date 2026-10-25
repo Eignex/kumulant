@@ -117,6 +117,7 @@ import com.eignex.kumulant.stat.summary.ArgMaxStat
 import com.eignex.kumulant.stat.summary.ArgMinStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
+import com.eignex.kumulant.stat.summary.FrugalMadStat
 import com.eignex.kumulant.stat.summary.MadStat
 import com.eignex.kumulant.stat.summary.MaxStat
 import com.eignex.kumulant.stat.summary.MeanStat
@@ -182,6 +183,9 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
         StatPlan(path, hasCenterScale = true) { concurrency ->
             MadStat(compression, concurrency)
         }
+
+    is FrugalMad ->
+        StatPlan(path, hasCenterScale = true) { concurrency -> FrugalMadStat(stepSize, concurrency) }
 
     is Cusum ->
         StatPlan(path) { concurrency ->

@@ -44,7 +44,6 @@ class EmptyReadSemanticsTest {
         val digest = TDigestStat(probabilities = doubleArrayOf(0.5, 0.99)).read()
         assertTrue(digest.quantiles.all { it.isNaN() }, "TDigest reported ${digest.quantiles.toList()}")
 
-        // MadStat is built on two TDigests, so it inherits the sentinel: an empty sample has no median.
         val mad = MadStat().read()
         assertTrue(mad.median.isNaN(), "Mad median was ${mad.median}")
         assertTrue(mad.mad.isNaN(), "Mad mad was ${mad.mad}")

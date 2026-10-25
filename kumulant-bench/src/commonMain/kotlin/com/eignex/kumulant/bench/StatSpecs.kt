@@ -34,6 +34,7 @@ import com.eignex.kumulant.stat.summary.ArgMaxStat
 import com.eignex.kumulant.stat.summary.ArgMinStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
+import com.eignex.kumulant.stat.summary.FrugalMadStat
 import com.eignex.kumulant.stat.summary.MadStat
 import com.eignex.kumulant.stat.event.CrossingStat
 import com.eignex.kumulant.stat.event.ExcursionStat
@@ -52,6 +53,7 @@ import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
@@ -263,13 +265,49 @@ val bandSeriesStatSpec = seriesStatSpec(
     reference = { twoPassMean(it.toList()) },
 )
 
+private fun sampleMedian(values: List<Double>): Double {
+    if (values.isEmpty()) return Double.NaN
+    val sorted = values.sorted()
+    val middle = sorted.size / 2
+    return if (sorted.size % 2 == 0) sorted[middle - 1] / 2.0 + sorted[middle] / 2.0 else sorted[middle]
+}
+
+private fun sampleMad(updates: Sequence<Update>): Double {
+    val values = updates.map { it.value }.toList()
+    val median = sampleMedian(values)
+    return sampleMedian(values.map { abs(it - median) })
+}
+
 val madStatSpec = seriesStatSpec(
     name = "MadStat",
     factory = { c -> MadStat(compression = 200.0, concurrency = c) },
     updates = ::uniformUnitWeights,
+    scalar = { it.mad },
+    reference = ::sampleMad,
+)
+
+val madMedianStatSpec = seriesStatSpec(
+    name = "MadStat.median",
+    factory = { c -> MadStat(compression = 200.0, concurrency = c) },
+    updates = ::uniformUnitWeights,
     scalar = { it.median },
-    // Median of uniform [0, 1) is 0.5.
-    reference = { _ -> 0.5 },
+    reference = { sampleMedian(it.map { update -> update.value }.toList()) },
+)
+
+val frugalMadStatSpec = seriesStatSpec(
+    name = "FrugalMadStat",
+    factory = { c -> FrugalMadStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.mad },
+    reference = ::sampleMad,
+)
+
+val frugalMadMedianStatSpec = seriesStatSpec(
+    name = "FrugalMadStat.median",
+    factory = { c -> FrugalMadStat(concurrency = c) },
+    updates = ::uniformUnitWeights,
+    scalar = { it.median },
+    reference = { sampleMedian(it.map { update -> update.value }.toList()) },
 )
 
 val autocorrelationStatSpec = seriesStatSpec(
@@ -1034,6 +1072,9 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     sojournStatSpec,
     autocorrelationStatSpec,
     madStatSpec,
+    madMedianStatSpec,
+    frugalMadStatSpec,
+    frugalMadMedianStatSpec,
     cusumStatSpec,
     pageHinkleyStatSpec,
     adwinStatSpec,

@@ -54,6 +54,8 @@ open class UpdateThroughputBenchmark {
         "ReservoirHistogramStat",
         "TDigestStat",
         "FrugalQuantileStat",
+        "MadStat",
+        "FrugalMadStat",
         "UnivariateRegressionStat",
         "CovarianceStat",
         "BayesianRegressionStat",

@@ -2,6 +2,7 @@ package com.eignex.kumulant.bench
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.Stat
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -51,6 +52,13 @@ private fun <S, R : Result> measure(
     threads: Int,
     updatesPerThread: Int,
 ) {
+    val target = spec.factory(level)
+    val refusal = (target as? Stat<*>)?.mergeRefusal
+    if (refusal != null) {
+        println("${spec.name} @ $level: merge unsupported: $refusal")
+        return
+    }
+
     val perThreadSeqs = (0 until threads).map { tid ->
         shiftForMerge(tid, updatesPerThread, spec.updates(tid, updatesPerThread)).toList()
     }
@@ -63,8 +71,6 @@ private fun <S, R : Result> measure(
         for (u in seq) spec.applyUpdate(producer, u)
         spec.readSnapshot(producer, spec.readAt(seq.size))
     }
-
-    val target = spec.factory(level)
 
     if (level == Concurrency.None) {
         for (snap in snapshots) spec.merge(target, snap)

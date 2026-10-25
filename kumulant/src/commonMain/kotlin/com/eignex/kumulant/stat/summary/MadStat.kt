@@ -5,19 +5,21 @@ import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.StatDefaults
+import com.eignex.kumulant.stat.quantile.TDigestResult
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.math.abs
 
-/** Streaming median and median absolute deviation. */
+/** Median and unscaled median absolute deviation, optionally retaining merge evidence. */
 @Serializable
 @SerialName("MadResult")
 data class MadResult(
     /** Estimated stream median. */
     val median: Double,
-    /** Median absolute deviation from the running median estimate. */
+    /** Estimated median of absolute deviations from [median]. */
     val mad: Double,
+    /** Complete raw-value digest for merging; null for summary-only or frugal results. */
+    val digest: TDigestResult? = null,
 ) : Result,
     HasCenterScale {
     override val center: Double get() = median
@@ -25,71 +27,102 @@ data class MadResult(
 }
 
 /**
- * Streaming median absolute deviation, the robust analog of standard deviation. Backed
- * by two [TDigestStat]s: one over raw values (for the running median estimate), one
- * over `|value - median|` (for the MAD itself). The deviation digest is fed against the
- * running median estimate at each update; early observations therefore see a biased
- * median, so the MAD takes ~tens to ~hundreds of updates to stabilise.
+ * Median and unscaled MAD of this snapshot's weighted centroid distribution.
+ * Every deviation uses the same median. Centroid compression loses within-centroid
+ * spread, so both estimates approximate the original observations. At an exact
+ * half-weight boundary the two adjacent values are averaged.
  *
- * **Use cases:** robust z-scores, IQR-style outlier fences, robust band centers when
- * the input is heavy-tailed and standard deviation overstates spread.
+ * Uses O(k) time and O(1) working memory for k sorted centroids. Precomputed
+ * quantiles are not required. The result retains this snapshot as merge evidence.
  *
- * **Memory:** O(compression); two T-digests at the configured [compression].
+ * @throws IllegalArgumentException if centroid means and weights have different sizes.
+ */
+fun TDigestResult.medianAbsoluteDeviation(): MadResult {
+    require(means.size == weights.size) { "centroid means and weights must have the same size" }
+    val total = weights.sum()
+    if (means.isEmpty() || total <= 0.0 || means.any { it.isNaN() }) return MadResult(Double.NaN, Double.NaN, this)
+    val halfWeight = total / 2.0
+    val median = centroidMedian(halfWeight)
+    if (median.isNaN()) return MadResult(Double.NaN, Double.NaN, this)
+
+    var left = means.indexOfLast { it <= median }
+    var right = left + 1
+    var cumulative = 0.0
+    var previous = Double.NaN
+    while (left >= 0 || right < means.size) {
+        val takeLeft = left >= 0 && (right >= means.size || median - means[left] <= means[right] - median)
+        val index = if (takeLeft) left-- else right++
+        val weight = weights[index]
+        if (weight <= 0.0) continue
+        val distance = if (takeLeft) median - means[index] else means[index] - median
+        if (cumulative > 0.0 && cumulative == halfWeight) {
+            return MadResult(median, previous / 2.0 + distance / 2.0, this)
+        }
+        cumulative += weight
+        if (cumulative > halfWeight) return MadResult(median, distance, this)
+        previous = distance
+    }
+    return MadResult(median, previous, this)
+}
+
+private fun TDigestResult.centroidMedian(halfWeight: Double): Double {
+    var cumulative = 0.0
+    var previous = Double.NaN
+    for (i in means.indices) {
+        val weight = weights[i]
+        if (weight <= 0.0) continue
+        if (cumulative > 0.0 && cumulative == halfWeight) return previous / 2.0 + means[i] / 2.0
+        cumulative += weight
+        if (cumulative > halfWeight) return means[i]
+        previous = means[i]
+    }
+    return previous
+}
+
+/**
+ * Streaming median and unscaled median absolute deviation from one raw-value [TDigestStat].
  *
- * **Update:** O(1) amortised; two T-digest updates plus one median lookup.
+ * Updates accumulate observations without computing deviations. Reading computes the
+ * weighted median of centroid locations, then the weighted median of their absolute
+ * distances from that center. The sorted locations permit a linear outward scan.
+ * Compression can lose within-centroid spread; this estimates the historical MAD,
+ * without retaining deviations measured against earlier centers.
  *
- * **Concurrency:** Inherits the underlying T-digest concurrency mode. The pair is
- * loosely coupled (the deviation digest reads the value digest's median on each
- * update); strict ordering between value and deviation updates is not guaranteed
- * under contention, but neither digest drifts beyond its own per-stat guarantees.
+ * Merge combines the complete digest retained by [MadResult.digest], then reads
+ * recalculate both estimates. A summary-only result cannot be merged.
+ *
+ * **Use cases:** robust center and scale for heavy-tailed streams. Use [FrugalMadStat]
+ * for constant-memory adaptive tracking without merge support.
+ *
+ * **Memory:** O([compression]); one digest and its update buffer.
+ *
+ * **Update:** Inherits [TDigestStat]'s buffered update cost; no snapshot per update.
+ * Reading adds an O(k) scan with O(1) working memory for k centroids.
+ *
+ * **Concurrency:** Inherits [TDigestStat]'s concurrency model. Both estimates are
+ * calculated from the same detached snapshot.
  */
 class MadStat(
-    /** T-digest compression for both digests; lower = more centroids, tighter quantiles. */
+    /** T-digest compression; larger values retain more centroids and finer detail. */
     val compression: Double = StatDefaults.TDIGEST_COMPRESSION,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<MadResult> {
 
-    init {
-        require(compression > 0.0) { "compression must be > 0" }
-    }
+    private val valueDigest = TDigestStat(compression, doubleArrayOf(), concurrency)
 
-    private val valueDigest = TDigestStat(
-        compression = compression,
-        probabilities = doubleArrayOf(0.5),
-        concurrency = concurrency,
-    )
-    private val deviationDigest = TDigestStat(
-        compression = compression,
-        probabilities = doubleArrayOf(0.5),
-        concurrency = concurrency,
-    )
-
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
+    override fun update(value: Double, timestampNanos: Long, weight: Double) =
         valueDigest.update(value, timestampNanos, weight)
-        val medianEstimate = valueDigest.read(timestampNanos).quantiles[0]
-        deviationDigest.update(abs(value - medianEstimate), timestampNanos, weight)
-    }
 
-    override fun merge(values: MadResult) {
-        // No round-trippable inner-digest state on the result, so merge approximates by
-        // re-pushing the (median, MAD) pair into the two digests as a single weighted update.
-        // Sufficient for "combine snapshots" use cases; exact replay isn't possible without
-        // shipping both digests on the wire.
-        valueDigest.update(values.median, weight = 1.0)
-        deviationDigest.update(values.mad, weight = 1.0)
-    }
+    override fun validateMerge(values: MadResult) = valueDigest.validateMerge(values.mergeEvidence())
 
-    override fun reset() {
-        valueDigest.reset()
-        deviationDigest.reset()
-    }
+    override fun merge(values: MadResult) = valueDigest.merge(values.mergeEvidence())
 
-    override fun read(timestampNanos: Long): MadResult {
-        val medianValue = valueDigest.read(timestampNanos).quantiles[0]
-        val medianDeviation = deviationDigest.read(timestampNanos).quantiles[0]
-        return MadResult(median = medianValue, mad = medianDeviation)
-    }
+    override fun reset() = valueDigest.reset()
 
-    override fun create(concurrency: Concurrency?) =
-        MadStat(compression = compression, concurrency = concurrency ?: this.concurrency)
+    override fun read(timestampNanos: Long): MadResult = valueDigest.read(timestampNanos).medianAbsoluteDeviation()
+
+    override fun create(concurrency: Concurrency?) = MadStat(compression, concurrency ?: this.concurrency)
 }
+
+private fun MadResult.mergeEvidence(): TDigestResult =
+    requireNotNull(digest) { "MAD merge requires a complete TDigest snapshot" }

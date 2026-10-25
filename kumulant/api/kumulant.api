@@ -3865,6 +3865,35 @@ public final class com/eignex/kumulant/schema/spec/Excursion : com/eignex/kumula
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/eignex/kumulant/schema/spec/FrugalMad : com/eignex/kumulant/schema/spec/SeriesStatSpec {
+	public static final field Companion Lcom/eignex/kumulant/schema/spec/FrugalMad$Companion;
+	public fun <init> ()V
+	public fun <init> (D)V
+	public synthetic fun <init> (DILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun copy (D)Lcom/eignex/kumulant/schema/spec/FrugalMad;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/FrugalMad;DILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/FrugalMad;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStepSize ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/schema/spec/FrugalMad$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/FrugalMad$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/FrugalMad;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/FrugalMad;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/FrugalMad$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class com/eignex/kumulant/schema/spec/FrugalQuantile : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/FrugalQuantile$Companion;
 	public fun <init> (DDD)V
@@ -9070,15 +9099,39 @@ public final class com/eignex/kumulant/stat/summary/CountStat : com/eignex/kumul
 	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/SumResult;)V
 }
 
+public final class com/eignex/kumulant/stat/summary/FrugalMadStat : com/eignex/kumulant/core/RefusesMerge, com/eignex/kumulant/core/SeriesStat {
+	public fun <init> ()V
+	public fun <init> (DLcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> (DLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
+	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
+	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/FrugalMadStat;
+	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
+	public final fun getStepSize ()D
+	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
+	public fun merge (Lcom/eignex/kumulant/stat/summary/MadResult;)Ljava/lang/Void;
+	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
+	public fun read (J)Lcom/eignex/kumulant/stat/summary/MadResult;
+	public fun reset ()V
+	public fun update (DD)V
+	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/MadResult;)V
+}
+
 public final class com/eignex/kumulant/stat/summary/MadResult : com/eignex/kumulant/core/HasCenterScale, com/eignex/kumulant/core/Result {
 	public static final field Companion Lcom/eignex/kumulant/stat/summary/MadResult$Companion;
-	public fun <init> (DD)V
+	public fun <init> (DDLcom/eignex/kumulant/stat/quantile/TDigestResult;)V
+	public synthetic fun <init> (DDLcom/eignex/kumulant/stat/quantile/TDigestResult;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()D
 	public final fun component2 ()D
-	public final fun copy (DD)Lcom/eignex/kumulant/stat/summary/MadResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/summary/MadResult;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/summary/MadResult;
+	public final fun component3 ()Lcom/eignex/kumulant/stat/quantile/TDigestResult;
+	public final fun copy (DDLcom/eignex/kumulant/stat/quantile/TDigestResult;)Lcom/eignex/kumulant/stat/summary/MadResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/summary/MadResult;DDLcom/eignex/kumulant/stat/quantile/TDigestResult;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/summary/MadResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getCenter ()D
+	public final fun getDigest ()Lcom/eignex/kumulant/stat/quantile/TDigestResult;
 	public final fun getMad ()D
 	public final fun getMedian ()D
 	public fun getScale ()D
@@ -9120,6 +9173,10 @@ public final class com/eignex/kumulant/stat/summary/MadStat : com/eignex/kumulan
 	public fun update (DJD)V
 	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
 	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/MadResult;)V
+}
+
+public final class com/eignex/kumulant/stat/summary/MadStatKt {
+	public static final fun medianAbsoluteDeviation (Lcom/eignex/kumulant/stat/quantile/TDigestResult;)Lcom/eignex/kumulant/stat/summary/MadResult;
 }
 
 public final class com/eignex/kumulant/stat/summary/MaxResult : com/eignex/kumulant/core/Result {
