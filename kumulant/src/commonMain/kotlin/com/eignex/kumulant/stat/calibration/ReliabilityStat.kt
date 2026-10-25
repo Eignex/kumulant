@@ -142,10 +142,14 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
         return ReliabilityResult(numBins, p, o, w)
     }
 
-    override fun merge(values: ReliabilityResult) {
+    override fun validateMerge(values: ReliabilityResult) {
         require(values.numBins == numBins) {
             "numBins mismatch on merge: this=$numBins, other=${values.numBins}"
         }
+    }
+
+    override fun merge(values: ReliabilityResult) {
+        validateMerge(values)
         // Denominator first, matching update(), so a concurrent reader cannot observe a
         // folded-in outcome whose weight has not landed yet.
         for (i in 0 until numBins) {

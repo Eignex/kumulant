@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -50,9 +51,9 @@ data class QuantileFilterResult(
  */
 class QuantileFilterStat(
     /** Probability in `(0, 1)` at which the threshold is evaluated. */
-    val probability: Double = 0.99,
+    val probability: Double = StatDefaults.QUANTILE_FILTER_PROBABILITY,
     /** Relative-error guarantee passed to the underlying DDSketch. */
-    val relativeError: Double = 0.01,
+    val relativeError: Double = StatDefaults.QUANTILE_FILTER_RELATIVE_ERROR,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<QuantileFilterResult>,
     RefusesMerge {

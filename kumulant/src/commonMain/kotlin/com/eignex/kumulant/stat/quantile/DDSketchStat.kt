@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.ArrayBins
 import com.eignex.kumulant.stream.additiveMode
 import kotlin.math.abs
@@ -40,26 +41,19 @@ import kotlin.math.pow
  */
 class DDSketchStat(
     /** Relative error guarantee on every reported quantile. */
-    val relativeError: Double = 0.01,
+    val relativeError: Double = StatDefaults.DD_SKETCH_RELATIVE_ERROR,
     /** Quantiles to evaluate at read time. */
-    val probabilities: DoubleArray = doubleArrayOf(
-        0.5,
-        0.75,
-        0.9,
-        0.95,
-        0.99,
-        0.999,
-    ),
+    val probabilities: DoubleArray = StatDefaults.quantileProbabilities(),
     /**
      * Smallest magnitude given its own bin. Anything smaller (but non-zero) folds into the
      * bottom bin, so it still counts toward the rank but stops driving bin allocation.
      */
-    val minIndexableValue: Double = 1e-9,
+    val minIndexableValue: Double = StatDefaults.DD_SKETCH_MIN_INDEXABLE_VALUE,
     /**
      * Largest magnitude given its own bin. Anything larger folds into the top bin, on the
      * same terms as [minIndexableValue].
      */
-    val maxIndexableValue: Double = 1e12,
+    val maxIndexableValue: Double = StatDefaults.DD_SKETCH_MAX_INDEXABLE_VALUE,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<SketchResult> {
 
@@ -112,11 +106,14 @@ class DDSketchStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: SketchResult) {
+    override fun validateMerge(values: SketchResult) {
         require(abs(this.gamma - values.gamma) < PARAMETER_MATCH_TOLERANCE) {
             "Cannot merge DDSketches with different relative error targets"
         }
+    }
 
+    override fun merge(values: SketchResult) {
+        validateMerge(values)
         zeroCount.add(values.zeroCount)
 
         // Clamp exactly as indexOf does on the update path. ArrayBins grows a dense array spanning

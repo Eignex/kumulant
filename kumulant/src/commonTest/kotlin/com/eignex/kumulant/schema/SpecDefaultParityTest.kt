@@ -56,6 +56,20 @@ import kotlin.test.assertEquals
 // instances legitimately disagree.
 class SpecDefaultParityTest {
 
+    @Test
+    fun `default quantile arrays belong to each accumulator`() {
+        val arrays = listOf(
+            DDSketchStat().probabilities to DDSketchStat().probabilities,
+            TDigestStat().probabilities to TDigestStat().probabilities,
+        )
+
+        for ((first, second) in arrays) {
+            first[0] = 0.25
+
+            assertEquals(0.5, second[0])
+        }
+    }
+
     private val values = doubleArrayOf(0.1, 1.2, 3.7, 0.5, 2.8, 1.0, 4.5, 0.3, 2.1, 1.7, 3.0, 0.8)
     private val keys = longArrayOf(1L, 2L, 3L, 2L, 1L, 4L, 5L, 1L, 6L, 7L, 8L, 3L)
     private val stamps = LongArray(12) { it * 1_000_000_000L }

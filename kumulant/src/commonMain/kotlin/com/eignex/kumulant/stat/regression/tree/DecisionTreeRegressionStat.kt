@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.CounterRandom
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.concurrent.Volatile
@@ -60,7 +61,7 @@ class DecisionTreeRegressionStat(
     override val concurrency: Concurrency = Concurrency.None,
     /** Leaf-arm factory; defaults to a fresh [VarianceStat] honouring the regressor's [concurrency]. */
     private val leafArmFactory: (() -> SeriesStat<WeightedVarianceResult>)? = null,
-    randomSeed: Int = 0,
+    randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStat<TreeRegressionResult> {
 
     init {

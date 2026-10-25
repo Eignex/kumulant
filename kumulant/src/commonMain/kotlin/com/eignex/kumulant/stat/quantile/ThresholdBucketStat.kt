@@ -69,7 +69,7 @@ class ThresholdBucketStat(
         return lo
     }
 
-    override fun merge(values: ThresholdBucketResult) {
+    override fun validateMerge(values: ThresholdBucketResult) {
         require(values.counts.size == thresholds.size + 1) {
             "merge counts length ${values.counts.size} != ${thresholds.size + 1}"
         }
@@ -79,6 +79,10 @@ class ThresholdBucketStat(
         ) {
             "merge thresholds ${values.thresholds} != ${thresholds.toList()}"
         }
+    }
+
+    override fun merge(values: ThresholdBucketResult) {
+        validateMerge(values)
         values.counts.forEachIndexed { i, c -> counts.add(i, c) }
     }
 

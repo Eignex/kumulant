@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
 import kotlin.math.ceil
@@ -35,11 +36,11 @@ import kotlin.math.round
  */
 class HdrHistogramStat(
     /** Smallest value the histogram can distinguish. */
-    val lowestDiscernibleValue: Double = 0.001,
+    val lowestDiscernibleValue: Double = StatDefaults.HDR_HISTOGRAM_LOWEST_DISCERNIBLE_VALUE,
     /** Initial upper bound; the histogram grows past this if needed. */
-    val initialHighestTrackableValue: Double = 100.0,
+    val initialHighestTrackableValue: Double = StatDefaults.HDR_HISTOGRAM_INITIAL_HIGHEST_TRACKABLE_VALUE,
     /** Number of significant digits of precision (1..5). */
-    val significantDigits: Int = 3,
+    val significantDigits: Int = StatDefaults.HDR_HISTOGRAM_SIGNIFICANT_DIGITS,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<SparseHistogramResult> {
 
@@ -149,7 +150,7 @@ class HdrHistogramStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: SparseHistogramResult) {
+    override fun validateMerge(values: SparseHistogramResult) {
         for (i in values.lowerBounds.indices) {
             val weight = values.weights[i]
             if (weight > 0.0) {
@@ -164,6 +165,16 @@ class HdrHistogramStat(
                 require(bound.isFinite() && bound >= 0.0) {
                     "merge bucket lower bound must be finite and non-negative, got $bound"
                 }
+            }
+        }
+    }
+
+    override fun merge(values: SparseHistogramResult) {
+        validateMerge(values)
+        for (i in values.lowerBounds.indices) {
+            val weight = values.weights[i]
+            if (weight > 0.0) {
+                val bound = values.lowerBounds[i]
                 // Rounded, not truncated: a bound this histogram emitted is an exact bucket floor
                 // divided by the multiplier, and multiplying it back lands a hair under the integer.
                 addInternal(round(bound * multiplier).toLong(), weight)

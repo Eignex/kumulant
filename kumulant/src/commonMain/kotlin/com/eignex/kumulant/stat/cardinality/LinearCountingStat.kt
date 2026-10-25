@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.sketch.requireSameHasher
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
@@ -97,7 +98,7 @@ data class LinearCountingResult(
  * level; bit sets are idempotent and commutative.
  */
 class LinearCountingStat(
-    val bits: Int = 4096,
+    val bits: Int = StatDefaults.LINEAR_COUNTING_BITS,
     /** Mixer applied to each input before indexing; defaults to [SplitMix64]. */
     val hasher: LongHasher = SplitMix64,
     override val concurrency: Concurrency = Concurrency.None,
@@ -126,7 +127,7 @@ class LinearCountingStat(
         totalSeen.add(1L)
     }
 
-    override fun merge(values: LinearCountingResult) {
+    override fun validateMerge(values: LinearCountingResult) {
         requireSameHasher("LinearCountingStat", values.hasher, hasherRef)
         // Shape before array length; see HyperLogLogStat.merge. `wordCount` is `bits / 64`.
         require(values.bits == bits) {
@@ -135,6 +136,10 @@ class LinearCountingStat(
         require(values.words.size == wordCount) {
             "Cannot merge LinearCountingStat: expected $wordCount words, got ${values.words.size}"
         }
+    }
+
+    override fun merge(values: LinearCountingResult) {
+        validateMerge(values)
         for (i in 0 until wordCount) {
             val incoming = values.words[i]
             if (incoming != 0L) casOr(words, i, incoming)

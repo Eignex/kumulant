@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.rate
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.guarded
@@ -45,7 +46,7 @@ class CounterRateStat(
      *  to drop decreases entirely; the right choice when the underlying
      *  counter never resets and multiple writers may submit samples out of
      *  value order. */
-    val treatDecreaseAsReset: Boolean = true,
+    val treatDecreaseAsReset: Boolean = StatDefaults.COUNTER_RATE_TREAT_DECREASE_AS_RESET,
 ) : SeriesStat<RateResult> {
 
     private val lock = concurrency.serializedLock()

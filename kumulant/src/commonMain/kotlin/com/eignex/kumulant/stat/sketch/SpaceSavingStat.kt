@@ -275,10 +275,14 @@ class SpaceSavingStat(
         }
     }
 
-    override fun merge(values: HeavyHittersResult) {
+    override fun validateMerge(values: HeavyHittersResult) {
         require(values.capacity == capacity) {
             "Cannot merge HeavyHitters with capacity=${values.capacity} into $capacity"
         }
+    }
+
+    override fun merge(values: HeavyHittersResult) {
+        validateMerge(values)
         // A policy mismatch is not refused. Unlike a hasher mismatch, which makes two sketches'
         // arrays incomparable, both policies produce (key, count, error) triples over the same key
         // space - only the tightness differs. Refusing would also break the obvious topology of many

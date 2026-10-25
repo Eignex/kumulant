@@ -1,0 +1,1083 @@
+package com.eignex.kumulant.schema.runtime
+
+import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.DiscreteStat
+import com.eignex.kumulant.core.HasCenterScale
+import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.Stat
+import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.math.Hashers
+import com.eignex.kumulant.operation.FilterDiscreteStat
+import com.eignex.kumulant.operation.FilterPairedStat
+import com.eignex.kumulant.operation.FilterSeriesStat
+import com.eignex.kumulant.operation.FilterVectorStat
+import com.eignex.kumulant.operation.FoldPairedStat
+import com.eignex.kumulant.operation.FoldVectorPairedStat
+import com.eignex.kumulant.operation.FoldVectorStat
+import com.eignex.kumulant.operation.TransformLongStat
+import com.eignex.kumulant.operation.TransformPairStat
+import com.eignex.kumulant.operation.TransformValueStat
+import com.eignex.kumulant.operation.TransformVectorStat
+import com.eignex.kumulant.operation.VectorizedStat
+import com.eignex.kumulant.operation.WeightByVectorStat
+import com.eignex.kumulant.operation.asDiscrete
+import com.eignex.kumulant.operation.asSeries
+import com.eignex.kumulant.operation.atIndex
+import com.eignex.kumulant.operation.atIndices
+import com.eignex.kumulant.operation.atX
+import com.eignex.kumulant.operation.atY
+import com.eignex.kumulant.operation.band
+import com.eignex.kumulant.operation.derivative
+import com.eignex.kumulant.operation.diff
+import com.eignex.kumulant.operation.filter
+import com.eignex.kumulant.operation.foldRegression
+import com.eignex.kumulant.operation.hysteresis
+import com.eignex.kumulant.operation.lag
+import com.eignex.kumulant.operation.minMaxScaleFeatures
+import com.eignex.kumulant.operation.minMaxScaler
+import com.eignex.kumulant.operation.resampleByTime
+import com.eignex.kumulant.operation.sample
+import com.eignex.kumulant.operation.standardScaleFeatures
+import com.eignex.kumulant.operation.standardScaler
+import com.eignex.kumulant.operation.throttle
+import com.eignex.kumulant.operation.transformX
+import com.eignex.kumulant.operation.transformY
+import com.eignex.kumulant.operation.weightBy
+import com.eignex.kumulant.operation.windowed
+import com.eignex.kumulant.operation.withFeedback
+import com.eignex.kumulant.operation.withFixedX
+import com.eignex.kumulant.operation.withFixedY
+import com.eignex.kumulant.operation.withSelfLag
+import com.eignex.kumulant.operation.withTimeAsX
+import com.eignex.kumulant.operation.withTimeAsY
+import com.eignex.kumulant.operation.withValue
+import com.eignex.kumulant.operation.withWeight
+import com.eignex.kumulant.schema.*
+import com.eignex.kumulant.schema.expr.eval
+import com.eignex.kumulant.schema.spec.*
+import com.eignex.kumulant.stat.anomaly.GaussianScorerStat
+import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
+import com.eignex.kumulant.stat.anomaly.QuantileFilterStat
+import com.eignex.kumulant.stat.calibration.IsotonicCalibratorStat
+import com.eignex.kumulant.stat.calibration.PlattCalibratorStat
+import com.eignex.kumulant.stat.calibration.ReliabilityStat
+import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
+import com.eignex.kumulant.stat.cardinality.LinearCountingStat
+import com.eignex.kumulant.stat.change.AdwinStat
+import com.eignex.kumulant.stat.change.CusumStat
+import com.eignex.kumulant.stat.change.PageHinkleyStat
+import com.eignex.kumulant.stat.decay.DecayingMeanStat
+import com.eignex.kumulant.stat.decay.DecayingSumStat
+import com.eignex.kumulant.stat.decay.DecayingVarianceStat
+import com.eignex.kumulant.stat.decay.EwmaMeanStat
+import com.eignex.kumulant.stat.decay.EwmaVarianceStat
+import com.eignex.kumulant.stat.event.CrossingStat
+import com.eignex.kumulant.stat.event.ExcursionStat
+import com.eignex.kumulant.stat.event.RecencyStat
+import com.eignex.kumulant.stat.event.RunLengthStat
+import com.eignex.kumulant.stat.event.SojournStat
+import com.eignex.kumulant.stat.forecast.HoltStat
+import com.eignex.kumulant.stat.forecast.RecursiveVarianceStat
+import com.eignex.kumulant.stat.forecast.SeasonalSmoothingStat
+import com.eignex.kumulant.stat.quantile.DDSketchStat
+import com.eignex.kumulant.stat.quantile.FrugalQuantileStat
+import com.eignex.kumulant.stat.quantile.HdrHistogramStat
+import com.eignex.kumulant.stat.quantile.LinearHistogramStat
+import com.eignex.kumulant.stat.quantile.ReservoirHistogramStat
+import com.eignex.kumulant.stat.quantile.TDigestStat
+import com.eignex.kumulant.stat.quantile.ThresholdBucketStat
+import com.eignex.kumulant.stat.rate.CounterRateStat
+import com.eignex.kumulant.stat.rate.DecayingRateStat
+import com.eignex.kumulant.stat.rate.RateStat
+import com.eignex.kumulant.stat.regression.CovarianceStat
+import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
+import com.eignex.kumulant.stat.regression.SoftmaxRegressionStat
+import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
+import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
+import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
+import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
+import com.eignex.kumulant.stat.regression.tree.ClassCountsStat
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeClassifierStat
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
+import com.eignex.kumulant.stat.regression.tree.RandomForestClassifierStat
+import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
+import com.eignex.kumulant.stat.score.AccuracyStat
+import com.eignex.kumulant.stat.score.AucStat
+import com.eignex.kumulant.stat.score.BrierScoreStat
+import com.eignex.kumulant.stat.score.ConfusionMatrixStat
+import com.eignex.kumulant.stat.score.LogLossStat
+import com.eignex.kumulant.stat.score.MaeLossStat
+import com.eignex.kumulant.stat.score.MseLossStat
+import com.eignex.kumulant.stat.score.PinballLossStat
+import com.eignex.kumulant.stat.score.pitHistogram
+import com.eignex.kumulant.stat.sketch.BloomFilterStat
+import com.eignex.kumulant.stat.sketch.CountMinSketchStat
+import com.eignex.kumulant.stat.sketch.MinHashStat
+import com.eignex.kumulant.stat.sketch.SpaceSavingStat
+import com.eignex.kumulant.stat.summary.ArgMaxStat
+import com.eignex.kumulant.stat.summary.ArgMinStat
+import com.eignex.kumulant.stat.summary.BernoulliSumStat
+import com.eignex.kumulant.stat.summary.CountStat
+import com.eignex.kumulant.stat.summary.MadStat
+import com.eignex.kumulant.stat.summary.MaxStat
+import com.eignex.kumulant.stat.summary.MeanStat
+import com.eignex.kumulant.stat.summary.MinStat
+import com.eignex.kumulant.stat.summary.MomentsStat
+import com.eignex.kumulant.stat.summary.PairedSumStat
+import com.eignex.kumulant.stat.summary.RangeStat
+import com.eignex.kumulant.stat.summary.SumStat
+import com.eignex.kumulant.stat.summary.SummaryStat
+import com.eignex.kumulant.stat.summary.TotalWeightsStat
+import com.eignex.kumulant.stat.summary.VarianceStat
+import kotlin.time.Duration.Companion.milliseconds
+
+internal class StatPlan<out S : Stat<*>>(
+    private val path: String,
+    val hasCenterScale: Boolean = false,
+    private val factory: (Concurrency) -> S,
+) {
+    fun build(concurrency: Concurrency): S = try {
+        factory(concurrency)
+    } catch (e: IllegalArgumentException) {
+        throw IllegalArgumentException("$path: ${e.message}", e)
+    }
+}
+
+internal fun StatSpec.compile(path: String): StatPlan<Stat<*>> = when (this) {
+    is SeriesStatSpec<*> -> compileSeries(path)
+    is PairedStatSpec<*> -> compilePaired(path)
+    is VectorStatSpec<*> -> compileVector(path)
+    is DiscreteStatSpec<*> -> compileDiscrete(path)
+    is RegressionStatSpec<*> -> compileRegression(path)
+}
+
+internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<*>> = when (this) {
+    Mean -> StatPlan(path) { concurrency -> MeanStat(concurrency) }
+
+    Sum -> StatPlan(path) { concurrency -> SumStat(concurrency) }
+
+    Min -> StatPlan(path) { concurrency -> MinStat(concurrency) }
+
+    Max -> StatPlan(path) { concurrency -> MaxStat(concurrency) }
+
+    ArgMin -> StatPlan(path) { concurrency -> ArgMinStat(concurrency) }
+
+    ArgMax -> StatPlan(path) { concurrency -> ArgMaxStat(concurrency) }
+
+    Range -> StatPlan(path) { concurrency -> RangeStat(concurrency) }
+
+    Excursion -> StatPlan(path) { concurrency -> ExcursionStat(concurrency) }
+
+    RunLength -> StatPlan(path) { concurrency -> RunLengthStat(concurrency) }
+
+    Recency -> StatPlan(path) { concurrency -> RecencyStat(concurrency) }
+
+    is Crossing -> StatPlan(path) { concurrency -> CrossingStat(level, concurrency) }
+
+    is ThresholdBucket ->
+        StatPlan(path) { concurrency ->
+            ThresholdBucketStat(thresholds.toDoubleArray(), concurrency)
+        }
+
+    is Mad ->
+        StatPlan(path, hasCenterScale = true) { concurrency ->
+            MadStat(compression, concurrency)
+        }
+
+    is Cusum ->
+        StatPlan(path) { concurrency ->
+            CusumStat(target, referenceValue, threshold, concurrency)
+        }
+
+    is PageHinkley ->
+        StatPlan(path) { concurrency -> PageHinkleyStat(delta, threshold, concurrency) }
+
+    is Adwin ->
+        StatPlan(path) { concurrency ->
+            AdwinStat(delta, maxBucketsPerSize, concurrency)
+        }
+
+    Variance ->
+        StatPlan(path, hasCenterScale = true) { concurrency -> VarianceStat(concurrency) }
+
+    Moments -> StatPlan(path, hasCenterScale = true) { concurrency -> MomentsStat(concurrency) }
+
+    Summary -> StatPlan(path, hasCenterScale = true) { concurrency -> SummaryStat(concurrency) }
+
+    is ClassCounts -> StatPlan(path) { concurrency -> ClassCountsStat(numClasses, concurrency) }
+
+    GaussianScorer -> StatPlan(path) { concurrency -> GaussianScorerStat(concurrency) }
+
+    is QuantileFilter ->
+        StatPlan(path) { concurrency ->
+            QuantileFilterStat(probability, relativeError, concurrency)
+        }
+
+    BernoulliSum -> StatPlan(path) { concurrency -> BernoulliSumStat(concurrency) }
+
+    TotalWeights -> StatPlan(path) { concurrency -> TotalWeightsStat(concurrency) }
+
+    Count -> StatPlan(path) { concurrency -> CountStat(concurrency) }
+
+    Rate -> StatPlan(path) { concurrency -> RateStat(concurrency) }
+
+    is CounterRate ->
+        StatPlan(path) { concurrency ->
+            CounterRateStat(concurrency, treatDecreaseAsReset)
+        }
+
+    is DDSketch -> {
+        StatPlan(path) { concurrency ->
+            DDSketchStat(
+                relativeError = relativeError,
+                probabilities = probabilities.toDoubleArray(),
+                minIndexableValue = minIndexableValue,
+                maxIndexableValue = maxIndexableValue,
+                concurrency = concurrency,
+            )
+        }
+    }
+
+    is FrugalQuantile ->
+        StatPlan(path) { concurrency ->
+            FrugalQuantileStat(q, stepSize, initialEstimate, concurrency)
+        }
+
+    is HdrHistogram -> {
+        StatPlan(path) { concurrency ->
+            HdrHistogramStat(
+                lowestDiscernibleValue,
+                initialHighestTrackableValue,
+                significantDigits,
+                concurrency,
+            )
+        }
+    }
+
+    is LinearHistogram ->
+        StatPlan(path) { concurrency ->
+            LinearHistogramStat(lowerBound, upperBound, binCount, concurrency)
+        }
+
+    is ReservoirHistogram ->
+        StatPlan(path) { concurrency ->
+            ReservoirHistogramStat(capacity, seed, concurrency)
+        }
+
+    is TDigest ->
+        StatPlan(path) { concurrency ->
+            TDigestStat(compression, probabilities.toDoubleArray(), concurrency)
+        }
+
+    is PitHistogram -> StatPlan(path) { concurrency -> pitHistogram(numBins, concurrency) }
+
+    is DecayingSum ->
+        StatPlan(path) { concurrency ->
+            DecayingSumStat(weighting.toDecayWeighting(), concurrency)
+        }
+
+    is DecayingMean ->
+        StatPlan(path) { concurrency ->
+            DecayingMeanStat(weighting.toDecayWeighting(), concurrency)
+        }
+
+    is DecayingVariance ->
+        StatPlan(path) { concurrency ->
+            DecayingVarianceStat(weighting.toDecayWeighting(), concurrency)
+        }
+
+    is EwmaMean ->
+        StatPlan(path) { concurrency ->
+            EwmaMeanStat(weighting.toDecayWeighting(), concurrency)
+        }
+
+    is EwmaVariance ->
+        StatPlan(
+            path,
+            true,
+        ) { concurrency ->
+            EwmaVarianceStat(weighting.toDecayWeighting(), concurrency)
+        }
+
+    is Holt -> {
+        StatPlan(path) { concurrency ->
+            HoltStat(
+                alphaWeighting = alphaWeighting.toDecayWeighting(),
+                betaWeighting = betaWeighting.toDecayWeighting(),
+                phi = phi,
+                concurrency = concurrency,
+            )
+        }
+    }
+
+    is SeasonalSmoothing -> {
+        StatPlan(path) { concurrency ->
+            SeasonalSmoothingStat(
+                alphaWeighting = alphaWeighting.toDecayWeighting(),
+                betaWeighting = betaWeighting.toDecayWeighting(),
+                gammaWeighting = gammaWeighting.toDecayWeighting(),
+                period = period,
+                mode = mode,
+                phi = phi,
+                concurrency = concurrency,
+            )
+        }
+    }
+
+    is RecursiveVariance ->
+        StatPlan(path) { concurrency ->
+            RecursiveVarianceStat(omega, alpha, beta, concurrency)
+        }
+
+    is DecayingRate ->
+        StatPlan(path) { concurrency ->
+            DecayingRateStat(halfLifeMillis.milliseconds, concurrency)
+        }
+
+    is GroupStatSpec -> {
+        val children = stats.map { (name, config) ->
+            name to requireSeries(config, "$path.$name").compileSeries("$path.$name")
+        }
+        StatPlan(path) { concurrency ->
+            StatGroup(
+                stats =
+                children.map { (name, plan) ->
+                    toSpec(StatKey<Result>(name), plan.build(concurrency))
+                },
+                concurrency = concurrency,
+            )
+        }
+    }
+
+    is WithWeightSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withWeight(weight)
+        }
+    }
+
+    is WithValueSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withValue(value)
+        }
+    }
+
+    is AsSeries -> {
+        val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).asSeries()
+        }
+    }
+
+    is WithFixedX -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withFixedX(fixedX)
+        }
+    }
+
+    is WithFixedY -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withFixedY(fixedY)
+        }
+    }
+
+    is WithTimeAsX -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withTimeAsX()
+        }
+    }
+
+    is WithTimeAsY -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withTimeAsY()
+        }
+    }
+
+    is WindowedSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan
+                .build(concurrency)
+                .windowed(durationMillis.milliseconds, slices, concurrency)
+        }
+    }
+
+    is TransformValueSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            TransformValueStat(m) { expr.eval(it) }
+        }
+    }
+
+    is FilterValueSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            FilterSeriesStat(m) { pred.eval(it) }
+        }
+    }
+
+    is WeightByValueSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).weightBy { v -> expr.eval(v) }
+        }
+    }
+
+    is ThrottleSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).throttle(every)
+        }
+    }
+
+    is SampleSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).sample(rate, seed)
+        }
+    }
+
+    is LagSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).lag(k)
+        }
+    }
+
+    is DiffSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).diff(k)
+        }
+    }
+
+    is DerivativeSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).derivative()
+        }
+    }
+
+    is HysteresisSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).hysteresis(low, high)
+        }
+    }
+
+    is ResampleByTimeSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).resampleByTime(bucketMillis.milliseconds, aggregator)
+        }
+    }
+
+    is WithSelfLagSeries -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withSelfLag(k)
+        }
+    }
+
+    is WithFeedbackSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        val primaryPlan = requireSeries(primary, "$path.primary").compileSeries("$path.primary")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val innerStat = innerPlan.build(concurrency)
+            val primaryStat = primaryPlan.build(concurrency)
+            innerStat.withFeedback(primaryStat, project)
+        }
+    }
+
+    is StandardScalerSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).standardScaler(concurrency)
+        }
+    }
+
+    is MinMaxScalerSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).minMaxScaler(targetLow, targetHigh, concurrency)
+        }
+    }
+
+    is BandSeries -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        require(innerPlan.hasCenterScale) {
+            "$path.inner: BandSeries requires an inner stat whose result has a center and scale, got $inner"
+        }
+        StatPlan(path) { concurrency ->
+            @Suppress("UNCHECKED_CAST")
+            (innerPlan.build(concurrency) as SeriesStat<HasCenterScale>).band(k)
+        }
+    }
+}
+
+internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<*>> = when (this) {
+    PairedSum -> StatPlan(path) { concurrency -> PairedSumStat(concurrency) }
+
+    is UnivariateRegression ->
+        StatPlan(path) { concurrency ->
+            UnivariateRegressionStat(penalty, concurrency)
+        }
+
+    Covariance -> StatPlan(path) { concurrency -> CovarianceStat(concurrency) }
+
+    BrierScore -> StatPlan(path) { concurrency -> BrierScoreStat(concurrency) }
+
+    MseLoss -> StatPlan(path) { concurrency -> MseLossStat(concurrency) }
+
+    MaeLoss -> StatPlan(path) { concurrency -> MaeLossStat(concurrency) }
+
+    LogLoss -> StatPlan(path) { concurrency -> LogLossStat(concurrency) }
+
+    is PinballLoss -> StatPlan(path) { concurrency -> PinballLossStat(tau, concurrency) }
+
+    is Auc ->
+        StatPlan(path) { concurrency ->
+            AucStat(numBins, lowerBound, upperBound, concurrency)
+        }
+
+    is Reliability -> StatPlan(path) { concurrency -> ReliabilityStat(numBins, concurrency) }
+
+    is PlattCalibrator ->
+        StatPlan(path) { concurrency -> PlattCalibratorStat(optimizer, concurrency) }
+
+    is IsotonicCalibrator ->
+        StatPlan(path) { concurrency -> IsotonicCalibratorStat(numBins, concurrency) }
+
+    is ConfusionMatrix ->
+        StatPlan(path) { concurrency -> ConfusionMatrixStat(numClasses, concurrency) }
+
+    is Accuracy -> StatPlan(path) { concurrency -> AccuracyStat(numClasses, concurrency) }
+
+    is WithWeightPaired -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withWeight(weight)
+        }
+    }
+
+    is AtX -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).atX()
+        }
+    }
+
+    is AtY -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).atY()
+        }
+    }
+
+    is WindowedPaired -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan
+                .build(concurrency)
+                .windowed(durationMillis.milliseconds, slices, concurrency)
+        }
+    }
+
+    is TransformPair -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            TransformPairStat(m) { xv, yv -> xExpr.eval(xv, yv) to yExpr.eval(xv, yv) }
+        }
+    }
+
+    is FilterPaired -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            FilterPairedStat(m) { xv, yv -> pred.eval(xv, yv) }
+        }
+    }
+
+    is FoldPaired -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            FoldPairedStat(m) { xv, yv -> expr.eval(xv, yv) }
+        }
+    }
+
+    is WeightByValuePaired -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).weightBy { xv, yv -> expr.eval(xv, yv) }
+        }
+    }
+
+    is ThrottlePaired -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).throttle(every)
+        }
+    }
+
+    is SamplePaired -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).sample(rate, seed)
+        }
+    }
+
+    is StandardScalerPaired -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).standardScaler(concurrency)
+        }
+    }
+
+    is MinMaxScalerPaired -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).minMaxScaler(targetLow, targetHigh, concurrency)
+        }
+    }
+}
+
+internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<*>> = when (this) {
+    is WithWeightVector -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withWeight(weight)
+        }
+    }
+
+    is AtIndex -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).atIndex(index)
+        }
+    }
+
+    is AtIndices -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).atIndices(indexX, indexY)
+        }
+    }
+
+    is WindowedVector -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan
+                .build(concurrency)
+                .windowed(durationMillis.milliseconds, slices, concurrency)
+        }
+    }
+
+    is Vectorized -> {
+        val templatePlan =
+            requireSeries(template, "$path.template").compileSeries("$path.template")
+        StatPlan(path) { concurrency ->
+            val tpl = templatePlan.build(concurrency)
+            VectorizedStat(dimensions, tpl, skipZeros)
+        }
+    }
+
+    is HalfSpaceTrees -> {
+        StatPlan(path) { concurrency ->
+            HalfSpaceTreesStat(
+                featureSize = featureSize,
+                featureRanges = featureRanges,
+                numTrees = numTrees,
+                height = height,
+                windowSize = windowSize,
+                randomSeed = randomSeed,
+                concurrency = concurrency,
+            )
+        }
+    }
+
+    is TransformVectorElement -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            TransformVectorStat.vector(m) { vec ->
+                DoubleArray(vec.size) { i -> expr.eval(vec[i], 0.0, vec) }
+            }
+        }
+    }
+
+    is FilterVector -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            FilterVectorStat.vector(m) { vec -> pred.eval(0.0, 0.0, vec) }
+        }
+    }
+
+    is FoldVector -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            FoldVectorStat.vector(m) { vec -> expr.eval(0.0, 0.0, vec) }
+        }
+    }
+
+    is FoldVectorPaired -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            FoldVectorPairedStat.vector(
+                m,
+                foldX = { vec -> xExpr.eval(0.0, 0.0, vec) },
+                foldY = { vec -> yExpr.eval(0.0, 0.0, vec) },
+            )
+        }
+    }
+
+    is TransformVector -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            TransformVectorStat.vector(m) { vec -> expr.eval(0.0, 0.0, vec) }
+        }
+    }
+
+    is WeightByValueVector -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            WeightByVectorStat.vector(innerPlan.build(concurrency)) { vec ->
+                expr.eval(0.0, 0.0, vec)
+            }
+        }
+    }
+
+    is ThrottleVector -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).throttle(every)
+        }
+    }
+
+    is SampleVector -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).sample(rate, seed)
+        }
+    }
+
+    is StandardScalerVector -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).standardScaleFeatures(dimensions, concurrency)
+        }
+    }
+
+    is MinMaxScalerVector -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan
+                .build(concurrency)
+                .minMaxScaleFeatures(dimensions, targetLow, targetHigh, concurrency)
+        }
+    }
+}
+
+internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<DiscreteStat<*>> = when (this) {
+    is HyperLogLog ->
+        StatPlan(path) { concurrency ->
+            HyperLogLogStat(precision, Hashers.resolve(hasher), concurrency)
+        }
+
+    is LinearCounting ->
+        StatPlan(path) { concurrency ->
+            LinearCountingStat(bits, Hashers.resolve(hasher), concurrency)
+        }
+
+    is BloomFilter ->
+        StatPlan(path) { concurrency ->
+            BloomFilterStat(bits, hashes, Hashers.resolve(hasher), concurrency)
+        }
+
+    is CountMinSketch ->
+        StatPlan(path) { concurrency ->
+            CountMinSketchStat(depth, width, seed, Hashers.resolve(hasher), concurrency)
+        }
+
+    is MinHash ->
+        StatPlan(path) { concurrency ->
+            MinHashStat(numHashes, seed, Hashers.resolve(hasher), concurrency)
+        }
+
+    is SpaceSaving -> StatPlan(path) { concurrency -> SpaceSavingStat(capacity, concurrency) }
+
+    is Sojourn -> StatPlan(path) { concurrency -> SojournStat(states, concurrency) }
+
+    is WithWeightDiscrete -> {
+        val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withWeight(weight)
+        }
+    }
+
+    is WithValueDiscrete -> {
+        val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withValue(value)
+        }
+    }
+
+    is AsDiscrete -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).asDiscrete()
+        }
+    }
+
+    is WindowedDiscrete -> {
+        val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan
+                .build(concurrency)
+                .windowed(durationMillis.milliseconds, slices, concurrency)
+        }
+    }
+
+    is TransformValueDiscrete -> {
+        val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            TransformLongStat(m) { expr.eval(it.toDouble()).toLong() }
+        }
+    }
+
+    is FilterValueDiscrete -> {
+        val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            FilterDiscreteStat(m) { pred.eval(it.toDouble()) }
+        }
+    }
+
+    is WeightByValueDiscrete -> {
+        val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).weightBy { v -> expr.eval(v.toDouble()) }
+        }
+    }
+
+    is ThrottleDiscrete -> {
+        val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).throttle(every)
+        }
+    }
+
+    is SampleDiscrete -> {
+        val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).sample(rate, seed)
+        }
+    }
+}
+
+internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<RegressionStat<*>> = when (this) {
+    is BayesianRegression ->
+        StatPlan(path) { concurrency ->
+            BayesianRegressionStat(featureSize, priorVariance, link, concurrency)
+        }
+
+    is StochasticRegression ->
+        StatPlan(path) { concurrency ->
+            StochasticRegressionStat(
+                featureSize,
+                optimizer,
+                biasOptimizer,
+                penalty,
+                link,
+                concurrency,
+            )
+        }
+
+    is DiagonalRegression ->
+        StatPlan(path) { concurrency ->
+            DiagonalRegressionStat(
+                featureSize,
+                priorPrecision,
+                learningRate,
+                penalty,
+                link,
+                concurrency,
+            )
+        }
+
+    is SoftmaxRegression ->
+        StatPlan(path) { concurrency ->
+            SoftmaxRegressionStat(
+                featureSize,
+                numClasses,
+                optimizer,
+                biasOptimizer,
+                concurrency,
+            )
+        }
+
+    is GaussianNaiveBayes ->
+        StatPlan(path) { concurrency ->
+            GaussianNaiveBayesStat(featureSize, numClasses, varianceFloor, concurrency)
+        }
+
+    is DecisionTreeRegression -> {
+        StatPlan(path) { concurrency ->
+            DecisionTreeRegressionStat(
+                featureSize = featureSize,
+                splitCandidates = splitCandidates,
+                config = config,
+                concurrency = concurrency,
+                randomSeed = randomSeed,
+            )
+        }
+    }
+
+    is RandomForestRegression -> {
+        StatPlan(path) { concurrency ->
+            RandomForestRegressionStat(
+                featureSize = featureSize,
+                splitCandidates = splitCandidates,
+                nbrTrees = nbrTrees,
+                config = config,
+                bagging = bagging,
+                concurrency = concurrency,
+                randomSeed = randomSeed,
+            )
+        }
+    }
+
+    is DecisionTreeClassifier -> {
+        StatPlan(path) { concurrency ->
+            DecisionTreeClassifierStat(
+                featureSize = featureSize,
+                numClasses = numClasses,
+                splitCandidates = splitCandidates,
+                config = config,
+                concurrency = concurrency,
+                randomSeed = randomSeed,
+            )
+        }
+    }
+
+    is RandomForestClassifier -> {
+        StatPlan(path) { concurrency ->
+            RandomForestClassifierStat(
+                featureSize = featureSize,
+                numClasses = numClasses,
+                splitCandidates = splitCandidates,
+                nbrTrees = nbrTrees,
+                config = config,
+                bagging = bagging,
+                concurrency = concurrency,
+                randomSeed = randomSeed,
+            )
+        }
+    }
+
+    is FilterRegression -> {
+        val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            m.filter { v, y -> pred.eval(0.0, y, v) }
+        }
+    }
+
+    is TransformYRegression -> {
+        val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            m.transformY { v, y -> expr.eval(0.0, y, v) }
+        }
+    }
+
+    is TransformXRegression -> {
+        val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            m.transformX(featureSize) { v, y -> expr.eval(0.0, y, v) }
+        }
+    }
+
+    is WithWeightRegression -> {
+        val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withWeight(weight)
+        }
+    }
+
+    is WeightByValueRegression -> {
+        val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            m.weightBy { v, y -> expr.eval(0.0, y, v) }
+        }
+    }
+
+    is ThrottleRegression -> {
+        val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).throttle(every)
+        }
+    }
+
+    is SampleRegression -> {
+        val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).sample(rate, seed)
+        }
+    }
+
+    is FoldRegression -> {
+        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val m = innerPlan.build(concurrency)
+            m.foldRegression(featureSize) { v, y -> project.eval(0.0, y, v) }
+        }
+    }
+
+    is StandardScalerRegression -> {
+        val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).standardScaleFeatures(concurrency)
+        }
+    }
+
+    is MinMaxScalerRegression -> {
+        val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).minMaxScaleFeatures(targetLow, targetHigh, concurrency)
+        }
+    }
+}
+
+private inline fun <reified S : StatSpec> requireInner(inner: StatSpec, path: String): S {
+    require(inner is S) { "$path: expected ${S::class.simpleName}, got ${inner::class.simpleName}" }
+    return inner
+}
+
+private fun requireSeries(inner: StatSpec, path: String): SeriesStatSpec<*> = requireInner(inner, path)
+
+private fun requirePaired(inner: StatSpec, path: String): PairedStatSpec<*> = requireInner(inner, path)
+
+private fun requireVector(inner: StatSpec, path: String): VectorStatSpec<*> = requireInner(inner, path)
+
+private fun requireDiscrete(inner: StatSpec, path: String): DiscreteStatSpec<*> = requireInner(inner, path)
+
+private fun requireRegression(inner: StatSpec, path: String): RegressionStatSpec<*> = requireInner(inner, path)

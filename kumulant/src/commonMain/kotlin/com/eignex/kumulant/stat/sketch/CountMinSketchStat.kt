@@ -10,6 +10,7 @@ import com.eignex.kumulant.math.Hashers
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.math.splitmix64
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.additiveMode
@@ -109,9 +110,9 @@ fun CountMinSketchResult.estimate(value: Long): Long {
  * writers on the same value just bump the same cells.
  */
 class CountMinSketchStat(
-    val depth: Int = 5,
-    val width: Int = 1024,
-    val seed: Long = -7046029254386353133L, // 0x9e3779b97f4a7c15
+    val depth: Int = StatDefaults.COUNT_MIN_SKETCH_DEPTH,
+    val width: Int = StatDefaults.COUNT_MIN_SKETCH_WIDTH,
+    val seed: Long = StatDefaults.COUNT_MIN_SKETCH_SEED, // 0x9e3779b97f4a7c15
     /** Mixer applied to each `value xor rowSalt`; defaults to [SplitMix64]. */
     val hasher: LongHasher = SplitMix64,
     override val concurrency: Concurrency = Concurrency.None,
@@ -153,7 +154,7 @@ class CountMinSketchStat(
         totalSeen.add(1L)
     }
 
-    override fun merge(values: CountMinSketchResult) {
+    override fun validateMerge(values: CountMinSketchResult) {
         require(values.depth == depth && values.width == width && values.seed == seed) {
             "Cannot merge CountMinSketchStat with shape " +
                 "(${values.depth}, ${values.width}, seed=${values.seed}) " +
@@ -166,6 +167,10 @@ class CountMinSketchStat(
         require(values.counters.size == counterCount) {
             "Cannot merge CountMinSketchStat: expected $counterCount counters, got ${values.counters.size}"
         }
+    }
+
+    override fun merge(values: CountMinSketchResult) {
+        validateMerge(values)
         for (i in 0 until counterCount) {
             val incoming = values.counters[i]
             if (incoming != 0L) counters.addSaturating(i, incoming)

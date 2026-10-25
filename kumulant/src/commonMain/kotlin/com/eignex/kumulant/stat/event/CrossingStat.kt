@@ -76,10 +76,14 @@ class CrossingStat(
         }
     }
 
-    override fun merge(values: CrossingResult) {
+    override fun validateMerge(values: CrossingResult) {
         // The counts only mean anything against the level they were measured at: folding a snapshot
         // taken at another level in would report crossings of a different predicate as this one's.
         require(values.level == level) { "merge level ${values.level} != $level" }
+    }
+
+    override fun merge(values: CrossingResult) {
+        validateMerge(values)
         ups.add(values.upCrossings)
         downs.add(values.downCrossings)
         // Adopt the baseline only when there is none, the way SojournStat keeps its own current state

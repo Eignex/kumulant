@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
@@ -121,9 +122,9 @@ class SeasonalSmoothingStat(
     /** Length of the seasonal cycle in updates. */
     val period: Int,
     /** Seasonal coupling; defaults to [SeasonalMode.Additive]. */
-    val mode: SeasonalMode = SeasonalMode.Additive,
+    val mode: SeasonalMode = StatDefaults.seasonalMode,
     /** Trend damping factor in `(0, 1]`; `1.0` is plain Holt-Winters. */
-    val phi: Double = 1.0,
+    val phi: Double = StatDefaults.SEASONAL_SMOOTHING_PHI,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<SeasonalSmoothingResult> {
 
@@ -210,8 +211,12 @@ class SeasonalSmoothingStat(
         }
     }
 
-    override fun merge(values: SeasonalSmoothingResult) = lock.guarded {
+    override fun validateMerge(values: SeasonalSmoothingResult) {
         require(values.seasons.size == period) { "merge seasons size ${values.seasons.size} != period $period" }
+    }
+
+    override fun merge(values: SeasonalSmoothingResult) = lock.guarded {
+        validateMerge(values)
         if (initialized.addAndGet(1L) == 1L) {
             level.store(values.level)
             trend.store(values.trend)

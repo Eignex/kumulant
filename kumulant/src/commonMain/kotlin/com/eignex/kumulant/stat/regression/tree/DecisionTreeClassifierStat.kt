@@ -10,6 +10,7 @@ import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.CounterRandom
+import com.eignex.kumulant.stat.StatDefaults
 import kotlin.concurrent.Volatile
 
 /**
@@ -50,7 +51,7 @@ class DecisionTreeClassifierStat(
     val config: ClassificationTreeConfig = ClassificationTreeConfig(),
     override val concurrency: Concurrency = Concurrency.None,
     private val leafArmFactory: (() -> SeriesStat<ClassCountsResult>)? = null,
-    randomSeed: Int = 0,
+    randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStat<TreeClassificationResult> {
 
     init {
@@ -97,10 +98,14 @@ class DecisionTreeClassifierStat(
     override fun read(timestampNanos: Long): TreeClassificationResult =
         TreeClassificationResult(tree.rootNode().snapshot())
 
-    override fun merge(values: TreeClassificationResult) {
+    override fun validateMerge(values: TreeClassificationResult) {
         require(values.numClasses == numClasses) {
             "merge: numClasses mismatch (${values.numClasses} vs $numClasses)"
         }
+    }
+
+    override fun merge(values: TreeClassificationResult) {
+        validateMerge(values)
         tree.mergeSnapshot(values.root)
     }
 

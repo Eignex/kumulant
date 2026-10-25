@@ -185,10 +185,14 @@ class ConfusionMatrixStat(
         DoubleArray(cells.size) { cells[it].load() },
     )
 
-    override fun merge(values: ConfusionMatrixResult) {
+    override fun validateMerge(values: ConfusionMatrixResult) {
         require(values.numClasses == numClasses) {
             "numClasses mismatch on merge: this=$numClasses, other=${values.numClasses}"
         }
+    }
+
+    override fun merge(values: ConfusionMatrixResult) {
+        validateMerge(values)
         for (i in cells.indices) cells[i].add(values.counts[i])
     }
 

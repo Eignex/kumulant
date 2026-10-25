@@ -26,7 +26,8 @@ data class StatSchemaDef(
 
 /** Materialize every entry, regardless of modality. Caller filters by stat type. */
 fun StatSchemaDef.materialize(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, *, *>> =
-    stats.map { (name, config) -> bind(name, config.materialize(concurrency)) }
+    stats.map { (name, config) -> name to config.compile(name) }
+        .map { (name, plan) -> bind(name, plan.build(concurrency)) }
 
 /** Materialize series-modality entries only; throws if any entry isn't series. */
 fun StatSchemaDef.materializeSeries(
@@ -35,8 +36,8 @@ fun StatSchemaDef.materializeSeries(
     require(config is SeriesStatSpec<*>) {
         "Entry '$name' has config ${config::class.simpleName}, expected a SeriesStatSpec"
     }
-    bindSeries(name, config.materialize(concurrency))
-}
+    name to config.compileSeries(name)
+}.map { (name, plan) -> bindSeries(name, plan.build(concurrency)) }
 
 /** Materialize paired-modality entries only; throws if any entry isn't paired. */
 fun StatSchemaDef.materializePaired(
@@ -45,8 +46,8 @@ fun StatSchemaDef.materializePaired(
     require(config is PairedStatSpec<*>) {
         "Entry '$name' has config ${config::class.simpleName}, expected a PairedStatSpec"
     }
-    bindPaired(name, config.materialize(concurrency))
-}
+    name to config.compilePaired(name)
+}.map { (name, plan) -> bindPaired(name, plan.build(concurrency)) }
 
 /** Materialize vector-modality entries only; throws if any entry isn't vector. */
 fun StatSchemaDef.materializeVector(
@@ -55,8 +56,8 @@ fun StatSchemaDef.materializeVector(
     require(config is VectorStatSpec<*>) {
         "Entry '$name' has config ${config::class.simpleName}, expected a VectorStatSpec"
     }
-    bindVector(name, config.materialize(concurrency))
-}
+    name to config.compileVector(name)
+}.map { (name, plan) -> bindVector(name, plan.build(concurrency)) }
 
 /** Materialize discrete-modality entries only; throws if any entry isn't discrete. */
 fun StatSchemaDef.materializeDiscrete(
@@ -65,8 +66,8 @@ fun StatSchemaDef.materializeDiscrete(
     require(config is DiscreteStatSpec<*>) {
         "Entry '$name' has config ${config::class.simpleName}, expected a DiscreteStatSpec"
     }
-    bindDiscrete(name, config.materialize(concurrency))
-}
+    name to config.compileDiscrete(name)
+}.map { (name, plan) -> bindDiscrete(name, plan.build(concurrency)) }
 
 /** Materialize regression-modality entries only; throws if any entry isn't regression. */
 fun StatSchemaDef.materializeRegression(
@@ -75,8 +76,8 @@ fun StatSchemaDef.materializeRegression(
     require(config is RegressionStatSpec<*>) {
         "Entry '$name' has config ${config::class.simpleName}, expected a RegressionStatSpec"
     }
-    bindRegression(name, config.materialize(concurrency))
-}
+    name to config.compileRegression(name)
+}.map { (name, plan) -> bindRegression(name, plan.build(concurrency)) }
 
 private fun bind(name: String, stat: Stat<*>): BoundStat<*, *, *> = toSpec(StatKey<Result>(name), stat)
 

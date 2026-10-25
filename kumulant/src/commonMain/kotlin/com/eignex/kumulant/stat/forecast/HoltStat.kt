@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
@@ -73,7 +74,7 @@ class HoltStat(
     /** Per-observation smoothing schedule for the trend. Defaults to the level's [alphaWeighting]. */
     val betaWeighting: DecayWeighting.Alpha = alphaWeighting,
     /** Trend damping factor in `(0.0, 1.0]`; `1.0` is plain Holt, smaller values damp the trend. */
-    val phi: Double = 1.0,
+    val phi: Double = StatDefaults.HOLT_PHI,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<HoltResult> {
 

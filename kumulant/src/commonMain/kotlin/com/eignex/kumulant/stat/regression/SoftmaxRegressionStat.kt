@@ -20,7 +20,7 @@ import com.eignex.kumulant.math.PROBABILITY_FLOOR
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
-import com.eignex.kumulant.schema.optimizer.Sgd
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.NoopMutex
 import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.StreamDoubleArray
@@ -158,7 +158,7 @@ class SoftmaxRegressionStat(
     /** Number of classes; the input `y` must round to `[0, numClasses)`. */
     val numClasses: Int,
     /** Per-class weight-matrix optimizer; one instance is materialised per class. */
-    val optimizer: OptimizerSpec = Sgd(),
+    val optimizer: OptimizerSpec = StatDefaults.regressionOptimizer(),
     /** Bias optimizer, materialised once over `numClasses` slots. Defaults to [optimizer]. */
     val biasOptimizer: OptimizerSpec = optimizer,
     override val concurrency: Concurrency = Concurrency.None,
@@ -256,10 +256,14 @@ class SoftmaxRegressionStat(
         )
     }
 
-    override fun merge(values: SoftmaxRegressionResult) {
+    override fun validateMerge(values: SoftmaxRegressionResult) {
         require(values.featureSize == featureSize && values.numClasses == numClasses) {
             "merge: shape mismatch (${values.numClasses}x${values.featureSize}) vs (${numClasses}x$featureSize)"
         }
+    }
+
+    override fun merge(values: SoftmaxRegressionResult) {
+        validateMerge(values)
         lock.guarded {
             val w1 = totalWeightsCell.load()
             val w2 = values.totalWeights

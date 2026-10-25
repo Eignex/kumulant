@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
@@ -62,9 +63,9 @@ data class AdwinResult(
  */
 class AdwinStat(
     /** Confidence parameter for the cut test in `(0, 1)`. */
-    val delta: Double = 0.002,
+    val delta: Double = StatDefaults.ADWIN_DELTA,
     /** Maximum number of buckets per power-of-two size class before merging upward. */
-    val maxBucketsPerSize: Int = 5,
+    val maxBucketsPerSize: Int = StatDefaults.ADWIN_MAX_BUCKETS_PER_SIZE,
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<AdwinResult> {
 

@@ -1,6 +1,7 @@
 package com.eignex.kumulant.schema.spec
 
 import com.eignex.kumulant.schema.decay.*
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.decay.DecayingMeanResult
 import com.eignex.kumulant.stat.decay.DecayingSumResult
 import com.eignex.kumulant.stat.decay.DecayingVarianceResult
@@ -63,7 +64,7 @@ data class Holt(
     /** Per-observation smoothing factor for the trend; defaults to the level's [alphaWeighting]. */
     val betaWeighting: Alpha = alphaWeighting,
     /** Trend damping in `(0, 1]`; `1.0` is plain Holt. */
-    val phi: Double = 1.0,
+    val phi: Double = StatDefaults.HOLT_PHI,
 ) : SeriesStatSpec<HoltResult>
 
 /** Spec for `SeasonalSmoothingStat`: triple exponential smoothing (Holt-Winters). */
@@ -79,9 +80,9 @@ data class SeasonalSmoothing(
     /** Length of the seasonal cycle in updates. */
     val period: Int,
     /** Seasonal coupling. */
-    val mode: SeasonalMode = SeasonalMode.Additive,
+    val mode: SeasonalMode = StatDefaults.seasonalMode,
     /** Trend damping in `(0, 1]`. */
-    val phi: Double = 1.0,
+    val phi: Double = StatDefaults.SEASONAL_SMOOTHING_PHI,
 ) : SeriesStatSpec<SeasonalSmoothingResult>
 
 /** Spec for `RecursiveVarianceStat`: `sigma^2_t = omega + alpha * value^2 + beta * sigma^2_{t-1}`. */

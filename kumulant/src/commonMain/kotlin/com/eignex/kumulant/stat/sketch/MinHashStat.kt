@@ -9,6 +9,7 @@ import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.math.splitmix64
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.StreamLong
 import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.casMin
@@ -117,9 +118,9 @@ fun MinHashResult.jaccard(other: MinHashResult): Double {
  */
 class MinHashStat(
     /** Signature length; higher = better Jaccard accuracy at more memory. */
-    val numHashes: Int = 128,
+    val numHashes: Int = StatDefaults.MIN_HASH_NUM_HASHES,
     /** PRNG seed used to derive the per-hash salts; must match across instances to compare. */
-    val seed: Long = -3724518991637283867L, // 0xcafef00dd15ea5e5
+    val seed: Long = StatDefaults.MIN_HASH_SEED, // 0xcafef00dd15ea5e5
     /** Mixer applied to each `value xor salt`; defaults to [SplitMix64]. */
     val hasher: LongHasher = SplitMix64,
     override val concurrency: Concurrency = Concurrency.None,
@@ -143,7 +144,7 @@ class MinHashStat(
         totalSeen.add(1L)
     }
 
-    override fun merge(values: MinHashResult) {
+    override fun validateMerge(values: MinHashResult) {
         requireSameHasher("MinHashStat", values.hasher, hasherRef)
         // Shape before array length; see HyperLogLogStat.merge.
         require(values.numHashes == numHashes && values.seed == seed) {
@@ -153,6 +154,10 @@ class MinHashStat(
         require(values.signatures.size == numHashes) {
             "Cannot merge MinHashStat: expected $numHashes signatures, got ${values.signatures.size}"
         }
+    }
+
+    override fun merge(values: MinHashResult) {
+        validateMerge(values)
         for (i in 0 until numHashes) {
             val incoming = values.signatures[i]
             if (incoming != Long.MAX_VALUE) casMin(signatures, i, incoming)

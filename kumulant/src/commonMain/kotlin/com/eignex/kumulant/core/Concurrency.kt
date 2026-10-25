@@ -104,3 +104,13 @@ enum class Concurrency {
      */
     HighWrite,
 }
+
+internal fun Iterable<Concurrency>.combinedConcurrency(empty: Concurrency = Concurrency.None): Concurrency =
+    reduceOrNull { left, right ->
+        when {
+            left == right -> left
+            left == Concurrency.None || right == Concurrency.None -> Concurrency.None
+            left == Concurrency.Relaxed || right == Concurrency.Relaxed -> Concurrency.Relaxed
+            else -> Concurrency.Strict
+        }
+    } ?: empty

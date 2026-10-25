@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
+import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
@@ -117,9 +118,9 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  */
 class TDigestStat(
     /** Compression parameter; lower = more centroids, tighter quantiles, more memory. */
-    val compression: Double = 100.0,
+    val compression: Double = StatDefaults.TDIGEST_COMPRESSION,
     /** Quantiles to evaluate at read time. */
-    val probabilities: DoubleArray = doubleArrayOf(0.5, 0.75, 0.9, 0.95, 0.99, 0.999),
+    val probabilities: DoubleArray = StatDefaults.quantileProbabilities(),
     override val concurrency: Concurrency = Concurrency.None,
 ) : SeriesStat<TDigestResult> {
 
@@ -380,10 +381,14 @@ class TDigestStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: TDigestResult) {
+    override fun validateMerge(values: TDigestResult) {
         require(abs(compression - values.compression) < PARAMETER_MATCH_TOLERANCE) {
             "Cannot merge TDigests with different compression"
         }
+    }
+
+    override fun merge(values: TDigestResult) {
+        validateMerge(values)
         outerLock.guarded {
             compressLock.guarded {
                 // Drain any buffered points first so they appear in the centroid array.

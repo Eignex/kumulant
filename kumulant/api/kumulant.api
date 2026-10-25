@@ -1828,9 +1828,11 @@ public abstract interface class com/eignex/kumulant/core/DiscreteStat : com/eign
 }
 
 public final class com/eignex/kumulant/core/DiscreteStat$DefaultImpls {
+	public static fun getMergeRefusal (Lcom/eignex/kumulant/core/DiscreteStat;)Ljava/lang/String;
 	public static fun update (Lcom/eignex/kumulant/core/DiscreteStat;JD)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/DiscreteStat;JDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/DiscreteStat;JJDILjava/lang/Object;)V
+	public static fun validateMerge (Lcom/eignex/kumulant/core/DiscreteStat;Lcom/eignex/kumulant/core/Result;)V
 }
 
 public abstract interface class com/eignex/kumulant/core/HasCenterScale : com/eignex/kumulant/core/Result {
@@ -1991,9 +1993,11 @@ public abstract interface class com/eignex/kumulant/core/PairedStat : com/eignex
 }
 
 public final class com/eignex/kumulant/core/PairedStat$DefaultImpls {
+	public static fun getMergeRefusal (Lcom/eignex/kumulant/core/PairedStat;)Ljava/lang/String;
 	public static fun update (Lcom/eignex/kumulant/core/PairedStat;DDD)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/PairedStat;DDDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/PairedStat;DDJDILjava/lang/Object;)V
+	public static fun validateMerge (Lcom/eignex/kumulant/core/PairedStat;Lcom/eignex/kumulant/core/Result;)V
 }
 
 public abstract interface class com/eignex/kumulant/core/RefusesMerge {
@@ -2015,6 +2019,7 @@ public abstract interface class com/eignex/kumulant/core/RegressionStat : com/ei
 }
 
 public final class com/eignex/kumulant/core/RegressionStat$DefaultImpls {
+	public static fun getMergeRefusal (Lcom/eignex/kumulant/core/RegressionStat;)Ljava/lang/String;
 	public static fun update (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/Vector;DD)V
 	public static fun update (Lcom/eignex/kumulant/core/RegressionStat;[DDD)V
 	public static fun update (Lcom/eignex/kumulant/core/RegressionStat;[DDJD)V
@@ -2022,6 +2027,7 @@ public final class com/eignex/kumulant/core/RegressionStat$DefaultImpls {
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/koblas/Vector;DJDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;[DDDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/RegressionStat;[DDJDILjava/lang/Object;)V
+	public static fun validateMerge (Lcom/eignex/kumulant/core/RegressionStat;Lcom/eignex/kumulant/core/Result;)V
 }
 
 public abstract interface class com/eignex/kumulant/core/Result {
@@ -2068,24 +2074,30 @@ public abstract interface class com/eignex/kumulant/core/SeriesStat : com/eignex
 }
 
 public final class com/eignex/kumulant/core/SeriesStat$DefaultImpls {
+	public static fun getMergeRefusal (Lcom/eignex/kumulant/core/SeriesStat;)Ljava/lang/String;
 	public static fun update (Lcom/eignex/kumulant/core/SeriesStat;DD)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/SeriesStat;DDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/SeriesStat;DJDILjava/lang/Object;)V
+	public static fun validateMerge (Lcom/eignex/kumulant/core/SeriesStat;Lcom/eignex/kumulant/core/Result;)V
 }
 
 public abstract interface class com/eignex/kumulant/core/Stat {
 	public abstract fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public static synthetic fun create$default (Lcom/eignex/kumulant/core/Stat;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/core/Stat;
 	public abstract fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public abstract fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public abstract fun read (J)Lcom/eignex/kumulant/core/Result;
 	public static synthetic fun read$default (Lcom/eignex/kumulant/core/Stat;JILjava/lang/Object;)Lcom/eignex/kumulant/core/Result;
 	public abstract fun reset ()V
+	public fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
 }
 
 public final class com/eignex/kumulant/core/Stat$DefaultImpls {
 	public static synthetic fun create$default (Lcom/eignex/kumulant/core/Stat;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/core/Stat;
+	public static fun getMergeRefusal (Lcom/eignex/kumulant/core/Stat;)Ljava/lang/String;
 	public static synthetic fun read$default (Lcom/eignex/kumulant/core/Stat;JILjava/lang/Object;)Lcom/eignex/kumulant/core/Result;
+	public static fun validateMerge (Lcom/eignex/kumulant/core/Stat;Lcom/eignex/kumulant/core/Result;)V
 }
 
 public abstract interface class com/eignex/kumulant/core/VectorStat : com/eignex/kumulant/core/Stat {
@@ -2102,6 +2114,7 @@ public abstract interface class com/eignex/kumulant/core/VectorStat : com/eignex
 }
 
 public final class com/eignex/kumulant/core/VectorStat$DefaultImpls {
+	public static fun getMergeRefusal (Lcom/eignex/kumulant/core/VectorStat;)Ljava/lang/String;
 	public static fun update (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/Vector;D)V
 	public static fun update (Lcom/eignex/kumulant/core/VectorStat;[DD)V
 	public static fun update (Lcom/eignex/kumulant/core/VectorStat;[DJD)V
@@ -2109,6 +2122,7 @@ public final class com/eignex/kumulant/core/VectorStat$DefaultImpls {
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/koblas/Vector;JDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;[DDILjava/lang/Object;)V
 	public static synthetic fun update$default (Lcom/eignex/kumulant/core/VectorStat;[DJDILjava/lang/Object;)V
+	public static fun validateMerge (Lcom/eignex/kumulant/core/VectorStat;Lcom/eignex/kumulant/core/Result;)V
 }
 
 public final class com/eignex/kumulant/math/CholeskyFactor {
@@ -2975,11 +2989,14 @@ public final class com/eignex/kumulant/schema/optimizer/Sgd$Companion {
 public abstract class com/eignex/kumulant/schema/runtime/AbstractStatGroup : com/eignex/kumulant/schema/runtime/GroupedStat {
 	public synthetic fun <init> (Ljava/util/List;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public final fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public final fun merge (Lcom/eignex/kumulant/schema/GroupResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public final fun read (J)Lcom/eignex/kumulant/schema/GroupResult;
 	public final fun reset ()V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public final fun validateMerge (Lcom/eignex/kumulant/schema/GroupResult;)V
 }
 
 public final class com/eignex/kumulant/schema/runtime/BoundStat {
@@ -3017,6 +3034,11 @@ public final class com/eignex/kumulant/schema/runtime/DiscreteStatGroup : com/ei
 }
 
 public abstract interface class com/eignex/kumulant/schema/runtime/GroupedStat : com/eignex/kumulant/core/Stat {
+}
+
+public final class com/eignex/kumulant/schema/runtime/GroupedStat$DefaultImpls {
+	public static fun getMergeRefusal (Lcom/eignex/kumulant/schema/runtime/GroupedStat;)Ljava/lang/String;
+	public static fun validateMerge (Lcom/eignex/kumulant/schema/runtime/GroupedStat;Lcom/eignex/kumulant/schema/GroupResult;)V
 }
 
 public final class com/eignex/kumulant/schema/runtime/PairedStatGroup : com/eignex/kumulant/schema/runtime/AbstractStatGroup, com/eignex/kumulant/core/PairedStat {
@@ -5044,6 +5066,7 @@ public final class com/eignex/kumulant/stat/anomaly/GaussianScorerStat : com/eig
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/anomaly/GaussianScorerStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -5051,6 +5074,8 @@ public final class com/eignex/kumulant/stat/anomaly/GaussianScorerStat : com/eig
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult;)V
 }
 
 public final class com/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult : com/eignex/kumulant/core/HasObservationCount {
@@ -5104,6 +5129,7 @@ public final class com/eignex/kumulant/stat/anomaly/HalfSpaceTreesStat : com/eig
 	public final fun getFeatureRanges ()Ljava/util/List;
 	public final fun getFeatureSize ()I
 	public final fun getHeight ()I
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumTrees ()I
 	public final fun getRandomSeed ()I
 	public final fun getWindowSize ()I
@@ -5116,6 +5142,8 @@ public final class com/eignex/kumulant/stat/anomaly/HalfSpaceTreesStat : com/eig
 	public fun update (Lcom/eignex/koblas/Vector;JD)V
 	public fun update ([DD)V
 	public fun update ([DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult;)V
 }
 
 public final class com/eignex/kumulant/stat/anomaly/QuantileFilterResult : com/eignex/kumulant/core/HasObservationCount {
@@ -5169,6 +5197,8 @@ public final class com/eignex/kumulant/stat/anomaly/QuantileFilterStat : com/eig
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult;)V
 }
 
 public final class com/eignex/kumulant/stat/calibration/IsotonicCalibratorResult : com/eignex/kumulant/core/HasObservationCount {
@@ -5223,6 +5253,8 @@ public final class com/eignex/kumulant/stat/calibration/IsotonicCalibratorStat :
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/calibration/IsotonicCalibratorResult;)V
 }
 
 public final class com/eignex/kumulant/stat/calibration/PlattCalibratorResult : com/eignex/kumulant/core/HasObservationCount {
@@ -5266,6 +5298,7 @@ public final class com/eignex/kumulant/stat/calibration/PlattCalibratorStat : co
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/calibration/PlattCalibratorStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getOptimizer ()Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;)V
@@ -5274,6 +5307,8 @@ public final class com/eignex/kumulant/stat/calibration/PlattCalibratorStat : co
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;)V
 }
 
 public final class com/eignex/kumulant/stat/calibration/ReliabilityResult : com/eignex/kumulant/core/Result {
@@ -5319,6 +5354,7 @@ public final class com/eignex/kumulant/stat/calibration/ReliabilityStat : com/ei
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/calibration/ReliabilityStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumBins ()I
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/calibration/ReliabilityResult;)V
@@ -5327,6 +5363,8 @@ public final class com/eignex/kumulant/stat/calibration/ReliabilityStat : com/ei
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/calibration/ReliabilityResult;)V
 }
 
 public final class com/eignex/kumulant/stat/cardinality/HyperLogLogResult : com/eignex/kumulant/core/HasObservationCount {
@@ -5376,6 +5414,7 @@ public final class com/eignex/kumulant/stat/cardinality/HyperLogLogStat : com/ei
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/cardinality/HyperLogLogStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getHasher ()Lcom/eignex/kumulant/math/LongHasher;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getPrecision ()I
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/cardinality/HyperLogLogResult;)V
@@ -5384,6 +5423,8 @@ public final class com/eignex/kumulant/stat/cardinality/HyperLogLogStat : com/ei
 	public fun reset ()V
 	public fun update (JD)V
 	public fun update (JJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/cardinality/HyperLogLogResult;)V
 }
 
 public final class com/eignex/kumulant/stat/cardinality/LinearCountingResult : com/eignex/kumulant/core/HasObservationCount {
@@ -5436,6 +5477,7 @@ public final class com/eignex/kumulant/stat/cardinality/LinearCountingStat : com
 	public final fun getBits ()I
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getHasher ()Lcom/eignex/kumulant/math/LongHasher;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -5443,6 +5485,8 @@ public final class com/eignex/kumulant/stat/cardinality/LinearCountingStat : com
 	public fun reset ()V
 	public fun update (JD)V
 	public fun update (JJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;)V
 }
 
 public final class com/eignex/kumulant/stat/change/AdwinResult : com/eignex/kumulant/core/Result {
@@ -5492,6 +5536,7 @@ public final class com/eignex/kumulant/stat/change/AdwinStat : com/eignex/kumula
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getDelta ()D
 	public final fun getMaxBucketsPerSize ()I
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/change/AdwinResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -5499,6 +5544,8 @@ public final class com/eignex/kumulant/stat/change/AdwinStat : com/eignex/kumula
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/change/AdwinResult;)V
 }
 
 public final class com/eignex/kumulant/stat/change/CusumResult : com/eignex/kumulant/core/Result {
@@ -5549,6 +5596,7 @@ public final class com/eignex/kumulant/stat/change/CusumStat : com/eignex/kumula
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/change/CusumStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getReferenceValue ()D
 	public final fun getTarget ()D
 	public final fun getThreshold ()D
@@ -5559,6 +5607,8 @@ public final class com/eignex/kumulant/stat/change/CusumStat : com/eignex/kumula
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/change/CusumResult;)V
 }
 
 public final class com/eignex/kumulant/stat/change/PageHinkleyResult : com/eignex/kumulant/core/Result {
@@ -5616,6 +5666,7 @@ public final class com/eignex/kumulant/stat/change/PageHinkleyStat : com/eignex/
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/change/PageHinkleyStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getDelta ()D
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getThreshold ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/change/PageHinkleyResult;)V
@@ -5624,6 +5675,8 @@ public final class com/eignex/kumulant/stat/change/PageHinkleyStat : com/eignex/
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/change/PageHinkleyResult;)V
 }
 
 public abstract interface class com/eignex/kumulant/stat/decay/DecayWeighting {
@@ -5695,6 +5748,7 @@ public final class com/eignex/kumulant/stat/decay/DecayingMeanStat : com/eignex/
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/decay/DecayingMeanStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getHalfLife-UwyO8pc ()J
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$HalfLife;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/decay/DecayingMeanResult;)V
@@ -5703,6 +5757,8 @@ public final class com/eignex/kumulant/stat/decay/DecayingMeanStat : com/eignex/
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/decay/DecayingMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/decay/DecayingSumResult : com/eignex/kumulant/core/Result {
@@ -5744,6 +5800,7 @@ public final class com/eignex/kumulant/stat/decay/DecayingSumStat : com/eignex/k
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/decay/DecayingSumStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getHalfLife-UwyO8pc ()J
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$HalfLife;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/decay/DecayingSumResult;)V
@@ -5752,6 +5809,8 @@ public final class com/eignex/kumulant/stat/decay/DecayingSumStat : com/eignex/k
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/decay/DecayingSumResult;)V
 }
 
 public final class com/eignex/kumulant/stat/decay/DecayingVarianceResult : com/eignex/kumulant/core/HasObservationCount {
@@ -5799,6 +5858,7 @@ public final class com/eignex/kumulant/stat/decay/DecayingVarianceStat : com/eig
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/decay/DecayingVarianceStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getHalfLife-UwyO8pc ()J
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$HalfLife;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/decay/DecayingVarianceResult;)V
@@ -5807,6 +5867,8 @@ public final class com/eignex/kumulant/stat/decay/DecayingVarianceStat : com/eig
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/decay/DecayingVarianceResult;)V
 }
 
 public final class com/eignex/kumulant/stat/decay/EwmaMeanStat : com/eignex/kumulant/core/SeriesStat {
@@ -5819,6 +5881,7 @@ public final class com/eignex/kumulant/stat/decay/EwmaMeanStat : com/eignex/kumu
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/decay/EwmaMeanStat;
 	public final fun getAlpha ()D
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
@@ -5827,6 +5890,8 @@ public final class com/eignex/kumulant/stat/decay/EwmaMeanStat : com/eignex/kumu
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/decay/EwmaVarianceStat : com/eignex/kumulant/core/SeriesStat {
@@ -5839,6 +5904,7 @@ public final class com/eignex/kumulant/stat/decay/EwmaVarianceStat : com/eignex/
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/decay/EwmaVarianceStat;
 	public final fun getAlpha ()D
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
@@ -5847,6 +5913,8 @@ public final class com/eignex/kumulant/stat/decay/EwmaVarianceStat : com/eignex/
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
 }
 
 public final class com/eignex/kumulant/stat/event/CrossingResult : com/eignex/kumulant/core/Result {
@@ -5891,6 +5959,7 @@ public final class com/eignex/kumulant/stat/event/CrossingStat : com/eignex/kumu
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/event/CrossingStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getLevel ()D
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/event/CrossingResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -5898,6 +5967,8 @@ public final class com/eignex/kumulant/stat/event/CrossingStat : com/eignex/kumu
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/event/CrossingResult;)V
 }
 
 public final class com/eignex/kumulant/stat/event/ExcursionResult : com/eignex/kumulant/core/Result {
@@ -5948,6 +6019,7 @@ public final class com/eignex/kumulant/stat/event/ExcursionStat : com/eignex/kum
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/event/ExcursionStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/event/ExcursionResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -5955,6 +6027,8 @@ public final class com/eignex/kumulant/stat/event/ExcursionStat : com/eignex/kum
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/event/ExcursionResult;)V
 }
 
 public final class com/eignex/kumulant/stat/event/RecencyResult : com/eignex/kumulant/core/Result {
@@ -5997,6 +6071,7 @@ public final class com/eignex/kumulant/stat/event/RecencyStat : com/eignex/kumul
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/event/RecencyStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/event/RecencyResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -6004,6 +6079,8 @@ public final class com/eignex/kumulant/stat/event/RecencyStat : com/eignex/kumul
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/event/RecencyResult;)V
 }
 
 public final class com/eignex/kumulant/stat/event/RunLengthResult : com/eignex/kumulant/core/Result {
@@ -6048,6 +6125,7 @@ public final class com/eignex/kumulant/stat/event/RunLengthStat : com/eignex/kum
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/event/RunLengthStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/event/RunLengthResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -6055,6 +6133,8 @@ public final class com/eignex/kumulant/stat/event/RunLengthStat : com/eignex/kum
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/event/RunLengthResult;)V
 }
 
 public final class com/eignex/kumulant/stat/event/SojournResult : com/eignex/kumulant/core/Result {
@@ -6104,6 +6184,7 @@ public final class com/eignex/kumulant/stat/event/SojournStat : com/eignex/kumul
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/event/SojournStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getStates ()Ljava/util/List;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/event/SojournResult;)V
@@ -6112,6 +6193,8 @@ public final class com/eignex/kumulant/stat/event/SojournStat : com/eignex/kumul
 	public fun reset ()V
 	public fun update (JD)V
 	public fun update (JJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/event/SojournResult;)V
 }
 
 public final class com/eignex/kumulant/stat/forecast/HoltResult : com/eignex/kumulant/core/Result {
@@ -6159,6 +6242,7 @@ public final class com/eignex/kumulant/stat/forecast/HoltStat : com/eignex/kumul
 	public final fun getBeta ()D
 	public final fun getBetaWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getPhi ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/forecast/HoltResult;)V
@@ -6167,6 +6251,8 @@ public final class com/eignex/kumulant/stat/forecast/HoltStat : com/eignex/kumul
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/forecast/HoltResult;)V
 }
 
 public final class com/eignex/kumulant/stat/forecast/RecursiveVarianceResult : com/eignex/kumulant/core/Result {
@@ -6211,6 +6297,7 @@ public final class com/eignex/kumulant/stat/forecast/RecursiveVarianceStat : com
 	public final fun getAlpha ()D
 	public final fun getBeta ()D
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getOmega ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/forecast/RecursiveVarianceResult;)V
@@ -6219,6 +6306,8 @@ public final class com/eignex/kumulant/stat/forecast/RecursiveVarianceStat : com
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/forecast/RecursiveVarianceResult;)V
 }
 
 public final class com/eignex/kumulant/stat/forecast/SeasonalMode : java/lang/Enum {
@@ -6288,6 +6377,7 @@ public final class com/eignex/kumulant/stat/forecast/SeasonalSmoothingStat : com
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getGamma ()D
 	public final fun getGammaWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getMode ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
 	public final fun getPeriod ()I
 	public final fun getPhi ()D
@@ -6298,6 +6388,8 @@ public final class com/eignex/kumulant/stat/forecast/SeasonalSmoothingStat : com
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;)V
 }
 
 public final class com/eignex/kumulant/stat/quantile/DDSketchStat : com/eignex/kumulant/core/SeriesStat {
@@ -6309,6 +6401,7 @@ public final class com/eignex/kumulant/stat/quantile/DDSketchStat : com/eignex/k
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/quantile/DDSketchStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getMaxIndexableValue ()D
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getMinIndexableValue ()D
 	public final fun getProbabilities ()[D
 	public final fun getRelativeError ()D
@@ -6319,6 +6412,8 @@ public final class com/eignex/kumulant/stat/quantile/DDSketchStat : com/eignex/k
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/quantile/SketchResult;)V
 }
 
 public final class com/eignex/kumulant/stat/quantile/FrugalQuantileStat : com/eignex/kumulant/core/SeriesStat {
@@ -6329,6 +6424,7 @@ public final class com/eignex/kumulant/stat/quantile/FrugalQuantileStat : com/ei
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/quantile/FrugalQuantileStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getInitialEstimate ()D
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getQ ()D
 	public final fun getStepSize ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
@@ -6338,6 +6434,8 @@ public final class com/eignex/kumulant/stat/quantile/FrugalQuantileStat : com/ei
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/quantile/QuantileResult;)V
 }
 
 public final class com/eignex/kumulant/stat/quantile/HdrHistogramStat : com/eignex/kumulant/core/SeriesStat {
@@ -6350,6 +6448,7 @@ public final class com/eignex/kumulant/stat/quantile/HdrHistogramStat : com/eign
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getInitialHighestTrackableValue ()D
 	public final fun getLowestDiscernibleValue ()D
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getSignificantDigits ()I
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;)V
@@ -6358,6 +6457,8 @@ public final class com/eignex/kumulant/stat/quantile/HdrHistogramStat : com/eign
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;)V
 }
 
 public final class com/eignex/kumulant/stat/quantile/LinearHistogramStat : com/eignex/kumulant/core/SeriesStat {
@@ -6369,6 +6470,7 @@ public final class com/eignex/kumulant/stat/quantile/LinearHistogramStat : com/e
 	public final fun getBinCount ()I
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getLowerBound ()D
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getUpperBound ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;)V
@@ -6377,6 +6479,8 @@ public final class com/eignex/kumulant/stat/quantile/LinearHistogramStat : com/e
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;)V
 }
 
 public final class com/eignex/kumulant/stat/quantile/QuantileResult : com/eignex/kumulant/core/Result {
@@ -6421,6 +6525,7 @@ public final class com/eignex/kumulant/stat/quantile/ReservoirHistogramStat : co
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/quantile/ReservoirHistogramStat;
 	public final fun getCapacity ()I
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getSeed ()J
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/quantile/ReservoirResult;)V
@@ -6429,6 +6534,8 @@ public final class com/eignex/kumulant/stat/quantile/ReservoirHistogramStat : co
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/quantile/ReservoirResult;)V
 }
 
 public final class com/eignex/kumulant/stat/quantile/ReservoirHistogramStatKt {
@@ -6592,6 +6699,7 @@ public final class com/eignex/kumulant/stat/quantile/TDigestStat : com/eignex/ku
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/quantile/TDigestStat;
 	public final fun getCompression ()D
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getProbabilities ()[D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/quantile/TDigestResult;)V
@@ -6600,6 +6708,8 @@ public final class com/eignex/kumulant/stat/quantile/TDigestStat : com/eignex/ku
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/quantile/TDigestResult;)V
 }
 
 public final class com/eignex/kumulant/stat/quantile/TDigestStatKt {
@@ -6642,6 +6752,7 @@ public final class com/eignex/kumulant/stat/quantile/ThresholdBucketStat : com/e
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/quantile/ThresholdBucketStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getThresholds ()[D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult;)V
@@ -6650,6 +6761,8 @@ public final class com/eignex/kumulant/stat/quantile/ThresholdBucketStat : com/e
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult;)V
 }
 
 public final class com/eignex/kumulant/stat/rate/CounterRateStat : com/eignex/kumulant/core/SeriesStat {
@@ -6660,6 +6773,7 @@ public final class com/eignex/kumulant/stat/rate/CounterRateStat : com/eignex/ku
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/rate/CounterRateStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getTreatDecreaseAsReset ()Z
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/rate/RateResult;)V
@@ -6668,6 +6782,8 @@ public final class com/eignex/kumulant/stat/rate/CounterRateStat : com/eignex/ku
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/rate/RateResult;)V
 }
 
 public final class com/eignex/kumulant/stat/rate/DecayingRateResult : com/eignex/kumulant/core/HasRate, com/eignex/kumulant/core/Result {
@@ -6707,6 +6823,7 @@ public final class com/eignex/kumulant/stat/rate/DecayingRateStat : com/eignex/k
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getHalfLife-UwyO8pc ()J
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/rate/DecayingRateResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -6714,6 +6831,8 @@ public final class com/eignex/kumulant/stat/rate/DecayingRateStat : com/eignex/k
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/rate/DecayingRateResult;)V
 }
 
 public final class com/eignex/kumulant/stat/rate/RateResult : com/eignex/kumulant/core/HasRate, com/eignex/kumulant/core/Result {
@@ -6757,6 +6876,7 @@ public final class com/eignex/kumulant/stat/rate/RateStat : com/eignex/kumulant/
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/rate/RateStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/rate/RateResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -6764,6 +6884,8 @@ public final class com/eignex/kumulant/stat/rate/RateStat : com/eignex/kumulant/
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/rate/RateResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/AdagradOptimizer : com/eignex/kumulant/stat/regression/Optimizer {
@@ -6839,6 +6961,7 @@ public final class com/eignex/kumulant/stat/regression/CovarianceStat : com/eign
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/regression/CovarianceResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -6846,6 +6969,8 @@ public final class com/eignex/kumulant/stat/regression/CovarianceStat : com/eign
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/CovarianceResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/GaussianNaiveBayesResult : com/eignex/kumulant/core/HasObservationCount {
@@ -6897,6 +7022,7 @@ public final class com/eignex/kumulant/stat/regression/GaussianNaiveBayesStat : 
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public fun getFeatureSize ()I
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumClasses ()I
 	public final fun getVarianceFloor ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
@@ -6908,6 +7034,8 @@ public final class com/eignex/kumulant/stat/regression/GaussianNaiveBayesStat : 
 	public fun update (Lcom/eignex/koblas/Vector;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;)V
 }
 
 public abstract interface class com/eignex/kumulant/stat/regression/Optimizer {
@@ -7008,6 +7136,7 @@ public final class com/eignex/kumulant/stat/regression/SoftmaxRegressionStat : c
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getCrossEntropy ()D
 	public fun getFeatureSize ()I
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumClasses ()I
 	public final fun getOptimizer ()Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;
 	public final fun getStep ()J
@@ -7021,6 +7150,8 @@ public final class com/eignex/kumulant/stat/regression/SoftmaxRegressionStat : c
 	public fun update (Lcom/eignex/koblas/Vector;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/BayesianRegressionStat : com/eignex/kumulant/core/RegressionStat {
@@ -7033,6 +7164,7 @@ public final class com/eignex/kumulant/stat/regression/glm/BayesianRegressionSta
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public fun getFeatureSize ()I
 	public final fun getLink ()Lcom/eignex/kumulant/stat/regression/glm/Link;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getPriorVariance ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;)V
@@ -7043,6 +7175,8 @@ public final class com/eignex/kumulant/stat/regression/glm/BayesianRegressionSta
 	public fun update (Lcom/eignex/koblas/Vector;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/BayesianRegressionStat$Companion {
@@ -7116,6 +7250,7 @@ public final class com/eignex/kumulant/stat/regression/glm/DiagonalRegressionSta
 	public fun getFeatureSize ()I
 	public final fun getLearningRate ()Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public final fun getLink ()Lcom/eignex/kumulant/stat/regression/glm/Link;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getPenalty ()Lcom/eignex/kumulant/stat/regression/glm/Penalty;
 	public final fun getPriorPrecision ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
@@ -7127,6 +7262,8 @@ public final class com/eignex/kumulant/stat/regression/glm/DiagonalRegressionSta
 	public fun update (Lcom/eignex/koblas/Vector;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/FactorisedGaussian : com/eignex/kumulant/stat/regression/glm/LinearPosterior {
@@ -7532,6 +7669,7 @@ public final class com/eignex/kumulant/stat/regression/glm/StochasticRegressionS
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public fun getFeatureSize ()I
 	public final fun getLink ()Lcom/eignex/kumulant/stat/regression/glm/Link;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getOptimizer ()Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;
 	public final fun getPenalty ()Lcom/eignex/kumulant/stat/regression/glm/Penalty;
 	public final fun getSse ()D
@@ -7546,6 +7684,8 @@ public final class com/eignex/kumulant/stat/regression/glm/StochasticRegressionS
 	public fun update (Lcom/eignex/koblas/Vector;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/glm/UnivariateRegressionResult : com/eignex/kumulant/core/HasRegression, com/eignex/kumulant/core/HasSlope, com/eignex/kumulant/core/Result {
@@ -7616,6 +7756,7 @@ public final class com/eignex/kumulant/stat/regression/glm/UnivariateRegressionS
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getMeanX ()D
 	public final fun getMeanY ()D
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getPenalty ()Lcom/eignex/kumulant/stat/regression/glm/Penalty;
 	public final fun getTotalWeights ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
@@ -7625,6 +7766,8 @@ public final class com/eignex/kumulant/stat/regression/glm/UnivariateRegressionS
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/glm/UnivariateRegressionResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/ClassCountsResult : com/eignex/kumulant/core/HasObservationCount {
@@ -7669,6 +7812,7 @@ public final class com/eignex/kumulant/stat/regression/tree/ClassCountsStat : co
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/regression/tree/ClassCountsStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumClasses ()I
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;)V
@@ -7677,6 +7821,8 @@ public final class com/eignex/kumulant/stat/regression/tree/ClassCountsStat : co
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/tree/ClassCountsResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/ClassificationAuditLeaf : com/eignex/kumulant/stat/regression/tree/ClassificationLeafNode {
@@ -7798,6 +7944,7 @@ public final class com/eignex/kumulant/stat/regression/tree/DecisionTreeClassifi
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getConfig ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;
 	public fun getFeatureSize ()I
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumClasses ()I
 	public final fun getSplitCandidates ()Ljava/util/List;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
@@ -7810,6 +7957,8 @@ public final class com/eignex/kumulant/stat/regression/tree/DecisionTreeClassifi
 	public fun update (Lcom/eignex/koblas/Vector;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/tree/TreeClassificationResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/DecisionTreeRegressionStat : com/eignex/kumulant/core/RegressionStat {
@@ -7821,6 +7970,7 @@ public final class com/eignex/kumulant/stat/regression/tree/DecisionTreeRegressi
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getConfig ()Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;
 	public fun getFeatureSize ()I
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getSplitCandidates ()Ljava/util/List;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;)V
@@ -7832,6 +7982,8 @@ public final class com/eignex/kumulant/stat/regression/tree/DecisionTreeRegressi
 	public fun update (Lcom/eignex/koblas/Vector;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/tree/TreeRegressionResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/ExprSplit : com/eignex/kumulant/stat/regression/tree/SerializableSplit {
@@ -8009,6 +8161,7 @@ public final class com/eignex/kumulant/stat/regression/tree/RandomForestClassifi
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getConfig ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;
 	public fun getFeatureSize ()I
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNbrTrees ()I
 	public final fun getNumClasses ()I
 	public final fun getSplitCandidates ()Ljava/util/List;
@@ -8022,6 +8175,8 @@ public final class com/eignex/kumulant/stat/regression/tree/RandomForestClassifi
 	public fun update (Lcom/eignex/koblas/Vector;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/tree/ForestClassificationResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/RandomForestRegressionStat : com/eignex/kumulant/core/RegressionStat {
@@ -8035,6 +8190,7 @@ public final class com/eignex/kumulant/stat/regression/tree/RandomForestRegressi
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getConfig ()Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;
 	public fun getFeatureSize ()I
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNbrTrees ()I
 	public final fun getSplitCandidates ()Ljava/util/List;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
@@ -8049,6 +8205,8 @@ public final class com/eignex/kumulant/stat/regression/tree/RandomForestRegressi
 	public fun update (Lcom/eignex/koblas/Vector;DJD)V
 	public fun update ([DDD)V
 	public fun update ([DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/tree/ForestRegressionResult;)V
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/RegressionAuditLeaf : com/eignex/kumulant/stat/regression/tree/RegressionLeafNode {
@@ -8524,6 +8682,7 @@ public final class com/eignex/kumulant/stat/score/AccuracyStat : com/eignex/kumu
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/AccuracyStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumClasses ()I
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
@@ -8532,6 +8691,8 @@ public final class com/eignex/kumulant/stat/score/AccuracyStat : com/eignex/kumu
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/score/AucResult : com/eignex/kumulant/core/Result {
@@ -8583,6 +8744,7 @@ public final class com/eignex/kumulant/stat/score/AucStat : com/eignex/kumulant/
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/AucStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getLowerBound ()D
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumBins ()I
 	public final fun getUpperBound ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
@@ -8592,6 +8754,8 @@ public final class com/eignex/kumulant/stat/score/AucStat : com/eignex/kumulant/
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/score/AucResult;)V
 }
 
 public final class com/eignex/kumulant/stat/score/BrierScoreStat : com/eignex/kumulant/core/PairedStat {
@@ -8602,6 +8766,7 @@ public final class com/eignex/kumulant/stat/score/BrierScoreStat : com/eignex/ku
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/BrierScoreStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -8609,6 +8774,8 @@ public final class com/eignex/kumulant/stat/score/BrierScoreStat : com/eignex/ku
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/score/ConfusionMatrixResult : com/eignex/kumulant/core/Result {
@@ -8660,6 +8827,7 @@ public final class com/eignex/kumulant/stat/score/ConfusionMatrixStat : com/eign
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/ConfusionMatrixStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumClasses ()I
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/score/ConfusionMatrixResult;)V
@@ -8668,6 +8836,8 @@ public final class com/eignex/kumulant/stat/score/ConfusionMatrixStat : com/eign
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/score/ConfusionMatrixResult;)V
 }
 
 public final class com/eignex/kumulant/stat/score/LogLossStat : com/eignex/kumulant/core/PairedStat {
@@ -8678,6 +8848,7 @@ public final class com/eignex/kumulant/stat/score/LogLossStat : com/eignex/kumul
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/LogLossStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -8685,6 +8856,8 @@ public final class com/eignex/kumulant/stat/score/LogLossStat : com/eignex/kumul
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/score/MaeLossStat : com/eignex/kumulant/core/PairedStat {
@@ -8695,6 +8868,7 @@ public final class com/eignex/kumulant/stat/score/MaeLossStat : com/eignex/kumul
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/MaeLossStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -8702,6 +8876,8 @@ public final class com/eignex/kumulant/stat/score/MaeLossStat : com/eignex/kumul
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/score/MseLossStat : com/eignex/kumulant/core/PairedStat {
@@ -8712,6 +8888,7 @@ public final class com/eignex/kumulant/stat/score/MseLossStat : com/eignex/kumul
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/MseLossStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -8719,6 +8896,8 @@ public final class com/eignex/kumulant/stat/score/MseLossStat : com/eignex/kumul
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/score/PinballLossStat : com/eignex/kumulant/core/PairedStat {
@@ -8728,6 +8907,7 @@ public final class com/eignex/kumulant/stat/score/PinballLossStat : com/eignex/k
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/PinballLossStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getTau ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
@@ -8736,6 +8916,8 @@ public final class com/eignex/kumulant/stat/score/PinballLossStat : com/eignex/k
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/score/PitHistogramKt {
@@ -8810,6 +8992,7 @@ public final class com/eignex/kumulant/stat/sketch/BloomFilterStat : com/eignex/
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getHasher ()Lcom/eignex/kumulant/math/LongHasher;
 	public final fun getHashes ()I
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/sketch/BloomFilterResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -8817,6 +9000,8 @@ public final class com/eignex/kumulant/stat/sketch/BloomFilterStat : com/eignex/
 	public fun reset ()V
 	public fun update (JD)V
 	public fun update (JJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/sketch/BloomFilterResult;)V
 }
 
 public final class com/eignex/kumulant/stat/sketch/BloomFilterStatKt {
@@ -8873,6 +9058,7 @@ public final class com/eignex/kumulant/stat/sketch/CountMinSketchStat : com/eign
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getDepth ()I
 	public final fun getHasher ()Lcom/eignex/kumulant/math/LongHasher;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getSeed ()J
 	public final fun getWidth ()I
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
@@ -8882,6 +9068,8 @@ public final class com/eignex/kumulant/stat/sketch/CountMinSketchStat : com/eign
 	public fun reset ()V
 	public fun update (JD)V
 	public fun update (JJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/sketch/CountMinSketchResult;)V
 }
 
 public final class com/eignex/kumulant/stat/sketch/CountMinSketchStatKt {
@@ -8977,6 +9165,7 @@ public final class com/eignex/kumulant/stat/sketch/MinHashStat : com/eignex/kumu
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/sketch/MinHashStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getHasher ()Lcom/eignex/kumulant/math/LongHasher;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getNumHashes ()I
 	public final fun getSeed ()J
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
@@ -8986,6 +9175,8 @@ public final class com/eignex/kumulant/stat/sketch/MinHashStat : com/eignex/kumu
 	public fun reset ()V
 	public fun update (JD)V
 	public fun update (JJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/sketch/MinHashResult;)V
 }
 
 public final class com/eignex/kumulant/stat/sketch/MinHashStatKt {
@@ -9000,6 +9191,7 @@ public final class com/eignex/kumulant/stat/sketch/SpaceSavingStat : com/eignex/
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/sketch/SpaceSavingStat;
 	public final fun getCapacity ()I
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/sketch/HeavyHittersResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9007,6 +9199,8 @@ public final class com/eignex/kumulant/stat/sketch/SpaceSavingStat : com/eignex/
 	public fun reset ()V
 	public fun update (JD)V
 	public fun update (JJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/sketch/HeavyHittersResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/ArgMaxResult : com/eignex/kumulant/core/Result {
@@ -9046,6 +9240,7 @@ public final class com/eignex/kumulant/stat/summary/ArgMaxStat : com/eignex/kumu
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/ArgMaxStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/ArgMaxResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9053,6 +9248,8 @@ public final class com/eignex/kumulant/stat/summary/ArgMaxStat : com/eignex/kumu
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/ArgMaxResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/ArgMinResult : com/eignex/kumulant/core/Result {
@@ -9092,6 +9289,7 @@ public final class com/eignex/kumulant/stat/summary/ArgMinStat : com/eignex/kumu
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/ArgMinStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/ArgMinResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9099,6 +9297,8 @@ public final class com/eignex/kumulant/stat/summary/ArgMinStat : com/eignex/kumu
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/ArgMinResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/BernoulliSumResult : com/eignex/kumulant/core/Result {
@@ -9138,6 +9338,7 @@ public final class com/eignex/kumulant/stat/summary/BernoulliSumStat : com/eigne
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/BernoulliSumStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/BernoulliSumResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9145,6 +9346,8 @@ public final class com/eignex/kumulant/stat/summary/BernoulliSumStat : com/eigne
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/BernoulliSumResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/CountStat : com/eignex/kumulant/core/SeriesStat {
@@ -9154,6 +9357,7 @@ public final class com/eignex/kumulant/stat/summary/CountStat : com/eignex/kumul
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/SumResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9161,6 +9365,8 @@ public final class com/eignex/kumulant/stat/summary/CountStat : com/eignex/kumul
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/SumResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/MadResult : com/eignex/kumulant/core/HasCenterScale, com/eignex/kumulant/core/Result {
@@ -9203,6 +9409,7 @@ public final class com/eignex/kumulant/stat/summary/MadStat : com/eignex/kumulan
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/MadStat;
 	public final fun getCompression ()D
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/MadResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9210,6 +9417,8 @@ public final class com/eignex/kumulant/stat/summary/MadStat : com/eignex/kumulan
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/MadResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/MaxResult : com/eignex/kumulant/core/Result {
@@ -9247,6 +9456,7 @@ public final class com/eignex/kumulant/stat/summary/MaxStat : com/eignex/kumulan
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/MaxStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/MaxResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9254,6 +9464,8 @@ public final class com/eignex/kumulant/stat/summary/MaxStat : com/eignex/kumulan
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/MaxResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/MeanEstimate {
@@ -9319,6 +9531,7 @@ public final class com/eignex/kumulant/stat/summary/MeanStat : com/eignex/kumula
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/MeanStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9326,6 +9539,8 @@ public final class com/eignex/kumulant/stat/summary/MeanStat : com/eignex/kumula
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/MinResult : com/eignex/kumulant/core/Result {
@@ -9363,6 +9578,7 @@ public final class com/eignex/kumulant/stat/summary/MinStat : com/eignex/kumulan
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/MinStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/MinResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9370,6 +9586,8 @@ public final class com/eignex/kumulant/stat/summary/MinStat : com/eignex/kumulan
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/MinResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/MomentsResult : com/eignex/kumulant/core/HasCenterScale, com/eignex/kumulant/core/HasSampleVariance, com/eignex/kumulant/core/HasShapeMoments, com/eignex/kumulant/core/Result {
@@ -9427,6 +9645,7 @@ public final class com/eignex/kumulant/stat/summary/MomentsStat : com/eignex/kum
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/MomentsStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/MomentsResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9434,6 +9653,8 @@ public final class com/eignex/kumulant/stat/summary/MomentsStat : com/eignex/kum
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/MomentsResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/PairedSumResult : com/eignex/kumulant/core/HasObservationCount {
@@ -9476,6 +9697,7 @@ public final class com/eignex/kumulant/stat/summary/PairedSumStat : com/eignex/k
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/PairedSumStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/PairedSumResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9483,6 +9705,8 @@ public final class com/eignex/kumulant/stat/summary/PairedSumStat : com/eignex/k
 	public fun reset ()V
 	public fun update (DDD)V
 	public fun update (DDJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/PairedSumResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/RangeResult : com/eignex/kumulant/core/HasMinMax, com/eignex/kumulant/core/Result {
@@ -9522,6 +9746,7 @@ public final class com/eignex/kumulant/stat/summary/RangeStat : com/eignex/kumul
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/RangeStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/RangeResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9529,6 +9754,8 @@ public final class com/eignex/kumulant/stat/summary/RangeStat : com/eignex/kumul
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/RangeResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/SumResult : com/eignex/kumulant/core/Result {
@@ -9566,6 +9793,7 @@ public final class com/eignex/kumulant/stat/summary/SumStat : com/eignex/kumulan
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/SumStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/SumResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9573,6 +9801,8 @@ public final class com/eignex/kumulant/stat/summary/SumStat : com/eignex/kumulan
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/SumResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/SummaryResult : com/eignex/kumulant/core/HasCenterScale, com/eignex/kumulant/core/HasMinMax, com/eignex/kumulant/core/HasSampleVariance, com/eignex/kumulant/core/Result {
@@ -9625,6 +9855,7 @@ public final class com/eignex/kumulant/stat/summary/SummaryStat : com/eignex/kum
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/SummaryStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/SummaryResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9632,6 +9863,8 @@ public final class com/eignex/kumulant/stat/summary/SummaryStat : com/eignex/kum
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/SummaryResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/TotalWeightsStat : com/eignex/kumulant/core/SeriesStat {
@@ -9641,6 +9874,7 @@ public final class com/eignex/kumulant/stat/summary/TotalWeightsStat : com/eigne
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/SumResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9648,6 +9882,8 @@ public final class com/eignex/kumulant/stat/summary/TotalWeightsStat : com/eigne
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/SumResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/VarianceResult : com/eignex/kumulant/core/Result {
@@ -9687,6 +9923,7 @@ public final class com/eignex/kumulant/stat/summary/VarianceStat : com/eignex/ku
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/VarianceStat;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
 	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -9694,6 +9931,8 @@ public final class com/eignex/kumulant/stat/summary/VarianceStat : com/eignex/ku
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/WeightedMeanResult : com/eignex/kumulant/core/HasObservationCount {

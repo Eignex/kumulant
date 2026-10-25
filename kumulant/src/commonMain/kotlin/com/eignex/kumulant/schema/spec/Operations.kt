@@ -15,8 +15,8 @@ import kotlinx.serialization.Serializable
 // (polymorphic by `@SerialName`) plus the operation's primitive parameters.
 //
 // The inner field is typed at the base [StatSpec] interface so the
-// polymorphic decoder doesn't need a generic argument; construction
-// (`StatFactory.kt`) runtime-checks the inner's modality and casts it. The
+// polymorphic decoder doesn't need a generic argument; compilation
+// checks the inner's modality before constructing accumulators. The
 // user-facing typed surface is the extension functions below on the
 // modality-specific spec interfaces (`SeriesStatSpec<R>.withWeight(...)`,
 // etc.) - the unsafe cast there is correct because the wrapper is
