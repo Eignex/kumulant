@@ -75,8 +75,8 @@ Reuse these standard phrasings so the matrix is grep-able:
 | *Body locked under any concurrent level*        | Exact under every level. Throughput bound by lock contention; shard and merge for higher write rates.                              |
 | *Lock-free order-dependent recurrence*          | Even `Strict` does not reproduce a serial reference because the lock serialises arrival, not order. Drift ~X% under contention.     |
 
-Cite measured drift numbers from `:kumulant-bench:analyzeConcurrencyDrift` when
-known; drop them if not.
+Cite measured drift numbers from retained `kumulant-bench/benchmark.sh
+--concurrency` reports when known; drop them if not.
 
 When a stat is a thin wrapper over another, each section can collapse to one
 line: `**Concurrency:** Inherits [SumStat]'s concurrency model.`

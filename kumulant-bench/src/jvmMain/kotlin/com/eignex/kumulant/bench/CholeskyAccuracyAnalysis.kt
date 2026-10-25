@@ -7,7 +7,7 @@ import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.ln
 
-fun main() {
+internal fun analyzeCholeskyAccuracy() {
     println("Cholesky accuracy: seed=${CholeskyFixtures.SEED}, backend=$koblas")
     println("noiseVariance=${CholeskyFixtures.NOISE_VARIANCE}, jitter=${CholeskyFixtures.JITTER}")
     println("fixture,size,scale,relative_reconstruction,solve_backward_error")
@@ -21,6 +21,7 @@ fun main() {
                 val solution = factor.solve(right)
                 val reconstruction = relativeReconstructionError(matrix, factor.lowerFactor())
                 val backward = solveBackwardError(matrix, right, solution)
+                check(reconstruction < 1e-13 && backward < 1e-13) { "$kind:$size at $scale: reconstruction=$reconstruction, backward=$backward" }
                 println("$kind,$size,$scale,${reconstruction.scientific()},${backward.scientific()}")
             }
         }
@@ -29,6 +30,7 @@ fun main() {
     for (scale in listOf(1e-100, 1.0, 1e100)) {
         val matrix = DenseMatrix.diagonal(65, scale)
         val error = abs(matrix.factorCholesky().logDeterminant() - 65 * ln(scale))
+        check(error <= 1e-10) { "Diagonal log determinant error=$error" }
         println("diagonal,65,$scale,${error.scientific()}")
     }
 }

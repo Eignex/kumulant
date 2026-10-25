@@ -9,13 +9,15 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.koblas.DenseVector
 import kotlin.random.Random
 
+internal const val STAT_BENCHMARK_BATCH_SIZE = 4096
+internal const val STAT_BENCHMARK_SEED = 0
+
 /** Single observation passed to a stat under test. */
-class Update(val value: Double, val weight: Double, val timestampNanos: Long)
+class Update(val value: Double, val weight: Double, var timestampNanos: Long)
 
 /**
- * Generic spec describing how to drive a stat under the bench module's analyses.
- * One [StatSpec] feeds the perf benchmark, the accuracy report, and the
- * concurrency-drift report. Parameterised by the live stat type [S] so
+ * Generic workload definition shared by capture quality and performance.
+ * One [StatSpec] supplies updates, snapshots and references. Parameterised by the live stat type [S] so
  * [SeriesStat]-based summary stats and [DiscreteStat]-based cardinality stats
  * fit the same harness.
  *
@@ -33,17 +35,8 @@ class StatSpec<S, R : Result>(
     val scalar: (R) -> Double,
     val reference: (Sequence<Update>) -> Double,
     val readAt: (n: Int) -> Long = { 0L },
-) {
-    /** Run a single-threaded workload and return the snapshot scalar. */
-    fun runSerial(seed: Int, n: Int, concurrency: Concurrency = Concurrency.None): Double {
-        val stat = factory(concurrency)
-        for (u in updates(seed, n)) applyUpdate(stat, u)
-        return scalar(readSnapshot(stat, readAt(n)))
-    }
-
-    /** Compute the reference for the same workload; exact-math expected value. */
-    fun expected(seed: Int, n: Int): Double = reference(updates(seed, n))
-}
+    val prepareUpdate: (Update) -> (S) -> Unit = { update -> { stat -> applyUpdate(stat, update) } },
+)
 
 /** Build a spec for a [SeriesStat]-shaped stat (the common case). */
 fun <R : Result> seriesStatSpec(
@@ -111,16 +104,17 @@ fun <R : Result> regressionStatSpec(
     require(trueWeights.size == featureSize) {
         "$name: trueWeights.size=${trueWeights.size} must equal featureSize=$featureSize"
     }
+    fun prepare(update: Update): (RegressionStat<R>) -> Unit {
+        val features = DenseVector.of(featuresFor(update.value, featureSize))
+        var target = bias
+        for (i in 0 until featureSize) target += trueWeights[i] * features[i]
+        return { stat -> stat.update(features, target, update.timestampNanos, update.weight) }
+    }
     return StatSpec(
         name = name,
         factory = factory,
-        applyUpdate = { s, u ->
-            val x = featuresFor(u.value, featureSize)
-            var y = bias
-            var i = 0
-            while (i < featureSize) { y += trueWeights[i] * x[i]; i++ }
-            s.update(DenseVector.of(x), y, u.timestampNanos, u.weight)
-        },
+        applyUpdate = { stat, update -> prepare(update)(stat) },
+        prepareUpdate = ::prepare,
         readSnapshot = { s, ts -> s.read(ts) },
         merge = { s, r -> s.merge(r) },
         updates = updates,
@@ -173,9 +167,7 @@ fun uniformVariableWeights(seed: Int, n: Int): Sequence<Update> = sequence {
     repeat(n) { yield(Update(rng.nextDouble(), 0.5 + rng.nextDouble(), 0L)) }
 }
 
-/** Inter-update timestamp step used by [timeProgressingUnitWeights]. Exposed so the
- *  concurrency-drift analyzer can shift per-thread workloads onto non-overlapping
- *  time windows for rate stats that silently drop out-of-order timestamps. */
+/** Inter-update timestamp step used by [timeProgressingUnitWeights]. */
 const val TIME_PROGRESSING_STRIDE_NANOS: Long = 1_000_000L
 
 /**
