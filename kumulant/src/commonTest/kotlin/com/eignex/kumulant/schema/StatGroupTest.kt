@@ -800,7 +800,6 @@ class DiscreteStatGroupTest {
         for (i in 100L..200L) source.update(i)
 
         target.merge(source.read())
-        // After merge, target should see ~102 distinct keys.
         assertTrue(target.read()[hllKey.first].estimate > 50.0)
     }
 

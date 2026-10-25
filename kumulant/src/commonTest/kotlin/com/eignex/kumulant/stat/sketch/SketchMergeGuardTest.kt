@@ -10,11 +10,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-// The mixer decides which cell a key touches, so once the cells disagree the merged counts are
-// meaningless in a plausible-looking way rather than an obviously wrong one.
 class SketchMergeGuardTest {
 
-    /** A second registered mixer, distinguishable from the default only by name. */
+    // Use the same mixer under a different registered name to isolate name compatibility.
     private object OtherHasher : LongHasher {
         override val name: String = "zz-other-mixer"
         override fun mix(value: Long): Long {
@@ -36,8 +34,6 @@ class SketchMergeGuardTest {
         other.update(42L)
         val receiver = BloomFilterStat(bits = 1024, hashes = 7)
 
-        // Accepting this relabels the incoming bits as the receiver's, producing a false negative -
-        // the one thing a Bloom filter promises cannot happen.
         assertFailsWith<IllegalArgumentException> { receiver.merge(other.read()) }
     }
 
@@ -58,8 +54,6 @@ class SketchMergeGuardTest {
         repeat(100) { other.update(42L) }
         val receiver = CountMinSketchStat(depth = 5, width = 1024)
 
-        // Accepting this puts the counts in cells the receiver never probes, so estimate() falls
-        // below the true count and breaks the one-sided guarantee.
         assertFailsWith<IllegalArgumentException> { receiver.merge(other.read()) }
     }
 
@@ -76,8 +70,6 @@ class SketchMergeGuardTest {
 
     @Test
     fun `HyperLogLog LinearCounting and MinHash refuse a merge from a different mixer`() {
-        // The mixer has to travel on the wire, or the mismatch cannot be detected at all: a union of
-        // two identical 10 000-key sets estimates ~19 620.
         val hll = HyperLogLogStat(precision = 12)
         assertFailsWith<IllegalArgumentException> {
             hll.merge(HyperLogLogStat(precision = 12, hasher = OtherHasher).also { it.update(1L) }.read())
@@ -105,7 +97,6 @@ class SketchMergeGuardTest {
         union.merge(a.read())
         union.merge(b.read())
 
-        // Merging the same 10 000 keys twice is still 10 000 distinct keys.
         val estimate = union.read().estimate
         assertTrue(estimate in 9_000.0..11_000.0, "union of identical sets estimated $estimate, expected ~10000")
     }
@@ -141,7 +132,6 @@ class SketchMergeGuardTest {
 
     @Test
     fun `a count-min sketch shape that overflows Int is rejected at construction`() {
-        // depth * width is the array length and is computed in Int.
         assertFailsWith<IllegalArgumentException> { CountMinSketchStat(depth = 16, width = 1 shl 28) }
     }
 

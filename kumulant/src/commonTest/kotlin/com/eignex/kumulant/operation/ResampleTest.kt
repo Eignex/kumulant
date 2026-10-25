@@ -14,7 +14,6 @@ class ResampleTest {
     @Test
     fun `mean aggregator forwards one update per closed bucket`() {
         val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
-        // Bucket 0: values 1.0, 3.0 -> mean 2.0. Bucket 1: value 7.0 (in-progress, not yet flushed).
         stat.update(value = 1.0, timestampNanos = 10_000_000L)
         stat.update(value = 3.0, timestampNanos = 50_000_000L)
         stat.update(value = 7.0, timestampNanos = 150_000_000L)
@@ -26,7 +25,7 @@ class ResampleTest {
         val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Sum)
         stat.update(value = 1.0, timestampNanos = 10_000_000L)
         stat.update(value = 3.0, timestampNanos = 50_000_000L)
-        stat.update(value = 7.0, timestampNanos = 150_000_000L) // triggers flush of bucket 0
+        stat.update(value = 7.0, timestampNanos = 150_000_000L)
         assertEquals(4.0, stat.read().sum, DELTA)
     }
 
@@ -36,7 +35,7 @@ class ResampleTest {
         stat.update(value = 1.0, timestampNanos = 10_000_000L)
         stat.update(value = 3.0, timestampNanos = 50_000_000L)
         stat.update(value = 9.9, timestampNanos = 80_000_000L)
-        stat.update(value = 7.0, timestampNanos = 200_000_000L) // closes bucket 0 (last=9.9)
+        stat.update(value = 7.0, timestampNanos = 200_000_000L)
         assertEquals(9.9, stat.read().sum, DELTA)
     }
 
@@ -46,7 +45,7 @@ class ResampleTest {
         stat.update(value = 5.0, timestampNanos = 10_000_000L)
         stat.update(value = 1.5, timestampNanos = 60_000_000L)
         stat.update(value = 3.0, timestampNanos = 80_000_000L)
-        stat.update(value = 0.0, timestampNanos = 200_000_000L) // closes bucket 0 -> min=1.5
+        stat.update(value = 0.0, timestampNanos = 200_000_000L)
         assertEquals(1.5, stat.read().sum, DELTA)
     }
 
@@ -56,7 +55,7 @@ class ResampleTest {
         stat.update(value = 5.0, timestampNanos = 10_000_000L)
         stat.update(value = 1.5, timestampNanos = 60_000_000L)
         stat.update(value = 9.0, timestampNanos = 80_000_000L)
-        stat.update(value = 0.0, timestampNanos = 200_000_000L) // closes bucket 0 -> max=9.0
+        stat.update(value = 0.0, timestampNanos = 200_000_000L)
         assertEquals(9.0, stat.read().sum, DELTA)
     }
 
@@ -65,28 +64,22 @@ class ResampleTest {
         val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
         stat.update(value = 2.0, timestampNanos = 0L)
         stat.update(value = 4.0, timestampNanos = 50_000_000L)
-        // No update in a later bucket yet, so nothing has flushed.
         assertEquals(0.0, stat.read().sum, DELTA)
     }
 
     @Test
     fun `multiple closed buckets each forward one observation`() {
         val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
-        // Bucket 0: mean 2.0
         stat.update(value = 1.0, timestampNanos = 0L)
         stat.update(value = 3.0, timestampNanos = 50_000_000L)
-        // Bucket 1: mean 5.0 (closes bucket 0)
         stat.update(value = 4.0, timestampNanos = 110_000_000L)
         stat.update(value = 6.0, timestampNanos = 150_000_000L)
-        // Bucket 2: mean 7.0 (closes bucket 1)
         stat.update(value = 7.0, timestampNanos = 250_000_000L)
         assertEquals(2.0 + 5.0, stat.read().sum, DELTA)
     }
 
     @Test
     fun `a downdate emptying the open bucket is rejected`() {
-        // The same guard MeanStat and the other Welford stats apply. Without it the flush divides by a
-        // bucket weight of exactly zero and forwards an infinity the delegate never recovers from.
         val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
         stat.update(value = 10.0, timestampNanos = 10_000_000L, weight = 1.0)
         assertFailsWith<IllegalArgumentException> {
@@ -96,7 +89,6 @@ class ResampleTest {
 
     @Test
     fun `a downdate opening a bucket is rejected`() {
-        // A bucket not yet open holds nothing, so there is no observation for the downdate to remove.
         val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
         assertFailsWith<IllegalArgumentException> {
             stat.update(value = 10.0, timestampNanos = 10_000_000L, weight = -1.0)
@@ -105,8 +97,6 @@ class ResampleTest {
 
     @Test
     fun `a rejected downdate leaves the bucket as it was`() {
-        // The guard runs before any cell is written, so the open bucket must still flush the value it
-        // held before the rejected call.
         val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
         stat.update(value = 10.0, timestampNanos = 10_000_000L, weight = 1.0)
         runCatching { stat.update(value = 20.0, timestampNanos = 50_000_000L, weight = -1.0) }
@@ -116,7 +106,6 @@ class ResampleTest {
 
     @Test
     fun `a partial downdate is honoured as a weighted removal`() {
-        // Weights 2.0 then -1.0 leave the bucket at 1.0, so the mean is (10*2 - 20*1) / 1 = 0.0.
         val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Mean)
         stat.update(value = 10.0, timestampNanos = 10_000_000L, weight = 2.0)
         stat.update(value = 20.0, timestampNanos = 50_000_000L, weight = -1.0)
@@ -135,10 +124,10 @@ class ResampleTest {
     fun `reset clears the in-progress bucket and the delegate`() {
         val stat = SumStat().resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Sum)
         stat.update(value = 1.0, timestampNanos = 0L)
-        stat.update(value = 7.0, timestampNanos = 200_000_000L) // forwards bucket 0 -> 1.0
+        stat.update(value = 7.0, timestampNanos = 200_000_000L)
         stat.reset()
         stat.update(value = 5.0, timestampNanos = 0L)
-        stat.update(value = 9.0, timestampNanos = 250_000_000L) // forwards bucket 0 -> 5.0
+        stat.update(value = 9.0, timestampNanos = 250_000_000L)
         assertEquals(5.0, stat.read().sum, DELTA)
     }
 
@@ -150,7 +139,6 @@ class ResampleTest {
         stat.update(value = 3.0, timestampNanos = 1_000_000_000L)
         stat.update(value = 4.0, timestampNanos = 2_500_000_000L)
         stat.update(value = 5.0, timestampNanos = 3_000_000_000L)
-        // Bucket 0 closes as 1.0 and bucket 2 as 4.0; the late 3.0 joins the open bucket.
         assertEquals(5.0, stat.read().sum, DELTA)
     }
 }

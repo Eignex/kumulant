@@ -253,9 +253,7 @@ class DecisionTreeRegressionStatTest {
 
     @Test
     fun `merged mass does not tighten the hoeffding bound`() {
-        // Two candidates that split the stream equally well, so the margin is zero and the decision
-        // rests entirely on the bound. tau sits between the bound at 10 observations (0.387) and at
-        // 20 (0.274), so counting the donor's merged mass as evidence is the only way to clear it.
+        // Choose tau between the bounds at 10 and 20 observations so only merged evidence enables the split.
         val candidates = listOf(ThresholdSplit(0, 0.0), ThresholdSplit(0, 0.5))
         fun newStat(seed: Int) = DecisionTreeRegressionStat(
             featureSize = 1,

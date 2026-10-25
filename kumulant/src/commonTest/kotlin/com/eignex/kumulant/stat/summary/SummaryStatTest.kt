@@ -13,7 +13,7 @@ class SummaryStatTest {
         for (v in listOf(1.0, 2.0, 3.0, 4.0, 5.0)) s.update(v)
         val r = s.read()
         assertEquals(3.0, r.mean, DELTA)
-        assertEquals(2.0, r.variance, DELTA) // population variance of 1..5
+        assertEquals(2.0, r.variance, DELTA)
         assertEquals(1.0, r.min, DELTA)
         assertEquals(5.0, r.max, DELTA)
     }
@@ -38,8 +38,6 @@ class SummaryStatTest {
 
     @Test
     fun `a rejected downdate leaves the extrema untouched`() {
-        // The extrema are CAS cells with no inverse, so a throw that happens after they have moved
-        // is unrecoverable.
         val s = SummaryStat()
         s.update(5.0, weight = 1.0)
 

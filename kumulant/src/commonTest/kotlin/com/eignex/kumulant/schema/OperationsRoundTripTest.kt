@@ -42,8 +42,6 @@ import com.eignex.kumulant.operation.withFixedY as liveWithFixedY
 import com.eignex.kumulant.operation.withSelfLag as liveWithSelfLag
 import com.eignex.kumulant.operation.withValue as liveWithValue
 import com.eignex.kumulant.operation.withWeight as liveWithWeight
-// Each spec is encoded, decoded, materialized, driven over a small fixed input, and compared against
-// the equivalent live composition.
 
 class OperationsRoundTripTest {
 
@@ -284,7 +282,6 @@ class OperationsRoundTripTest {
         val rebuilt = (decoded as VectorStatSpec<*>).materialize(Concurrency.None)
         val live = com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat().liveAtIndices(0, 2)
 
-        // Vector slots: idx 0 is x, idx 1 ignored, idx 2 is y; y = 2x -> slope 2.
         listOf(
             doubleArrayOf(1.0, 99.0, 2.0),
             doubleArrayOf(2.0, 99.0, 4.0),
@@ -360,13 +357,12 @@ class OperationsRoundTripTest {
     }
 
     @Test fun `weightBy series multiplies weight by AST expression`() {
-        // sum += value * weight * weighter(value), weighter = X * X.
         val cfg: SeriesStatSpec<SumResult> = Sum.weightBy(X * X)
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        rebuilt.update(2.0) // 2 * 1 * 4 = 8
-        rebuilt.update(3.0) // 3 * 1 * 9 = 27
+        rebuilt.update(2.0)
+        rebuilt.update(3.0)
         assertEquals(35.0, (rebuilt.read() as SumResult).sum, DELTA)
     }
 
@@ -375,7 +371,7 @@ class OperationsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        repeat(10) { rebuilt.update(1.0) } // updates at ticks 3, 6, 9
+        repeat(10) { rebuilt.update(1.0) }
         assertEquals(3.0, (rebuilt.read() as SumResult).sum, DELTA)
     }
 
@@ -423,7 +419,6 @@ class OperationsRoundTripTest {
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
         val live = SumStat().liveResampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Sum)
 
-        // Bucket 0: 1.0, 3.0 (closed by bucket-1 update). Bucket 1: 7.0 (in progress).
         val stamps = listOf(0L, 50_000_000L, 150_000_000L)
         val values = listOf(1.0, 3.0, 7.0)
         for (i in stamps.indices) {

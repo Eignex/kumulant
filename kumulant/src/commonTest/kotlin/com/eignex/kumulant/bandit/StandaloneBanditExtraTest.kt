@@ -24,7 +24,6 @@ class StandaloneBanditExtraTest {
     fun `Exp3 gamma=0 puts no uniform mass on losing arms after training`() {
         val b = Exp3Bandit(nbrArms = 2, eta = 1.0, gamma = 0.0, random = Random(1))
         repeat(50) {
-            // Always observe a perfect reward for arm 0; arm 1 never plays so its weight stays 1.
             b.update(0, 1.0)
         }
         val p = b.playDistribution()
@@ -36,7 +35,6 @@ class StandaloneBanditExtraTest {
         val small = Exp3Bandit.defaultEta(2)
         val large = Exp3Bandit.defaultEta(10)
         assertTrue(small > 0.0 && large > 0.0)
-        // ln(K) grows slowly; sqrt(ln(K)/K) shrinks with K. Either way both finite.
         assertTrue(small.isFinite() && large.isFinite())
     }
 
@@ -49,7 +47,6 @@ class StandaloneBanditExtraTest {
             decay = 5.0,
             random = Random(0),
         )
-        // After many calls the schedule's bare tau would be way below 0.5; floor kicks in.
         repeat(50) { b.playDistribution() }
         assertEquals(0.5, b.temperature(), 1e-9)
     }
@@ -64,12 +61,9 @@ class StandaloneBanditExtraTest {
 
     @Test
     fun `TopTwoTS beta=1 always plays the top sample`() {
-        // Force a deterministic-ish bias by populating arm 0 heavily.
         val rng = Random(0)
         val b = TopTwoThompsonBandit(nbrArms = 2, policy = NormalTS(), beta = 1.0, random = rng)
         repeat(50) { b.update(0, 1.0) }
-        // beta=1 means the top sample is always played; convergence still depends on draws,
-        // but the resample loop is skipped so picks track sampleArgmax exactly.
         val picks = IntArray(2)
         repeat(50) { picks[b.choose()]++ }
         assertTrue(picks[0] > picks[1], "arm 0 should dominate: ${picks.toList()}")

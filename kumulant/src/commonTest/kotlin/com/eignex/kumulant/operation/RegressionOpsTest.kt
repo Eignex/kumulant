@@ -30,7 +30,6 @@ class RegressionOpsTest {
         val stat = inner.transformY { _, y -> y * 2.0 }
         stat.update(feat(0.0), y = 3.0)
         val snap = stat.read(0L)
-        // y was doubled before the inner stat saw it, so mean = 6.0.
         assertEquals(6.0, snap.rootMean, DELTA)
     }
 
@@ -54,8 +53,8 @@ class RegressionOpsTest {
     fun `weightBy multiplies caller weight by per-update expr`() {
         val inner = DecisionTreeRegressionStat(featureSize = 1, splitCandidates = emptyList())
         val stat = inner.weightBy { _, y -> y * y }
-        stat.update(feat(0.0), y = 2.0) // weight = 1 * 4
-        stat.update(feat(0.0), y = 3.0) // weight = 1 * 9
+        stat.update(feat(0.0), y = 2.0)
+        stat.update(feat(0.0), y = 3.0)
         assertEquals(13.0, stat.read(0L).totalWeights, DELTA)
     }
 
@@ -79,7 +78,6 @@ class RegressionOpsTest {
 
     @Test
     fun `foldRegression lifts a series stat to consume x and y`() {
-        // Project y through, ignore x; the SeriesStat sees only y.
         val stat = VarianceStat().foldRegression(featureSize = 2) { _, y -> y }
         for (y in doubleArrayOf(1.0, 2.0, 3.0, 4.0, 5.0)) stat.update(feat(0.0, 0.0), y)
         val snap = stat.read(0L)
@@ -92,7 +90,7 @@ class RegressionOpsTest {
     fun `foldRegression rejects x-vector size mismatch`() {
         val stat = SumStat().foldRegression(featureSize = 3) { _, y -> y }
         try {
-            stat.update(feat(1.0, 2.0), y = 0.0) // size = 2, expected 3
+            stat.update(feat(1.0, 2.0), y = 0.0)
             error("should have thrown")
         } catch (e: IllegalArgumentException) {
             assertTrue("x.size=2" in e.message.orEmpty())
@@ -111,8 +109,6 @@ class RegressionOpsTest {
             val y = if (i % 2 == 0) 1.0 else 2.0
             stat.update(feat(if (i % 2 == 0) -1.0 else 1.0), y)
         }
-        // All y are positive so the filter passes; throttle keeps half (10); each kept
-        // observation lands with weight = caller * y.
         val total = stat.read(0L).totalWeights
         assertTrue(total > 0.0, "expected updates to accumulate, got $total")
     }

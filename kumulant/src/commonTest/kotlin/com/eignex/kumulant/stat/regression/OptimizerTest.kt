@@ -101,24 +101,17 @@ class OptimizerTest {
 
     @Test
     fun `Adam rejects a beta of one rather than learning nothing`() {
-        // At beta == 1.0 the bias correction 1 - beta^t is exactly zero while the moment it corrects
-        // is identically zero too, so every delta would be 0/0 and the weights would stay NaN for
-        // the life of the stat. The bound is half-open to keep that unreachable.
         assertFailsWith<IllegalArgumentException> { AdamOptimizer(2, Const(0.1), beta1 = 1.0) }
         assertFailsWith<IllegalArgumentException> { AdamOptimizer(2, Const(0.1), beta2 = 1.0) }
     }
 
     @Test
     fun `Adam still accepts a beta of zero`() {
-        // The other end stays closed: beta1 = 0 is plain SGD on the first moment, which is degenerate
-        // but well defined, and the bias correction is 1 - 0^t = 1.
         AdamOptimizer(2, Const(0.1), beta1 = 0.0, beta2 = 0.0)
     }
 
     @Test
     fun `RMSProp rejects a rho of one rather than diverging`() {
-        // rho == 1.0 freezes the squared-gradient EMA at zero, so the effective step becomes
-        // lr / sqrt(epsilon) - four orders of magnitude larger than intended - on every update.
         assertFailsWith<IllegalArgumentException> { RmspropOptimizer(2, Const(0.1), rho = 1.0) }
     }
 

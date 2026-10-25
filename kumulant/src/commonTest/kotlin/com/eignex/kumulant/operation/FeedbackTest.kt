@@ -18,7 +18,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-/** Standard-scaler projection: emits 0 while stdDev is still zero (first update). */
 private val standardScalerExpr = IfExpr(Scale gt 0.0, (X - Center) / Scale, Const(0.0))
 
 class FeedbackTest {
@@ -28,7 +27,6 @@ class FeedbackTest {
         val standardized = SumStat().withFeedback(VarianceStat(), standardScalerExpr)
         val xs = doubleArrayOf(1.0, 2.0, 3.0, 4.0, 5.0)
         for (x in xs) standardized.update(x)
-        // Each update sees the running mean/stdDev of the values up to and including itself.
         val ref = VarianceStat()
         var expected = 0.0
         for (x in xs) {
@@ -41,7 +39,6 @@ class FeedbackTest {
 
     @Test
     fun `Center requires HasCenterScale primary`() {
-        // SumStat's result has no center; the projection should fail at update time.
         val s = SumStat().withFeedback(SumStat(), Center)
         assertFailsWith<IllegalStateException> { s.update(1.0) }
     }

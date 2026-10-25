@@ -25,7 +25,6 @@ class PageHinkleyStatTest {
     @Test
     fun `stationary stream does not trip the alarm`() {
         val s = PageHinkleyStat(delta = 0.005, threshold = 50.0)
-        // Symmetric alternating values: mean stays near zero, no sustained drift.
         for (idx in 0 until 200) s.update(if (idx % 2 == 0) 1.0 else -1.0)
         assertFalse(s.read().alarm)
     }

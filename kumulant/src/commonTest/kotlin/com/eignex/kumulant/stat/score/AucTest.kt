@@ -64,7 +64,6 @@ class AucTest {
             update(x = -0.5, y = 0.0)
             update(x = 1.5, y = 1.0)
         }
-        // After clamp the streams are perfectly separated (bin 0 vs bin 3).
         assertEquals(1.0, auc.read(0L).auc, DELTA)
     }
 

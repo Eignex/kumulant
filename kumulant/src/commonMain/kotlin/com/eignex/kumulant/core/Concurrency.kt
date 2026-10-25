@@ -1,106 +1,52 @@
 package com.eignex.kumulant.core
 
 /**
- * User-facing concurrency contract for stats. Each stat translates the chosen level
- * into a cell-encoding and lock strategy that honours it for that stat's
- * mathematical structure.
+ * Thread-safety mode for statistical accumulators. Each implementation documents
+ * how the mode maps to its cells and locks.
  *
- * Bare-stat construction defaults to [None]. To give a coherent bag of stats one
- * contract, declare them in a [com.eignex.kumulant.schema.runtime.StatSchema] and pass
- * the level to the group that materializes it, which applies it to every stat the schema
- * describes. The schema itself carries no level, so the same one can back a single-threaded
- * shard and a contended coordinator.
+ * Bare stats default to [None]. A [com.eignex.kumulant.schema.runtime.StatSchema]
+ * can be materialised with a mode that applies to all of its stats.
  *
- * ## Picking a mode
+ * - [None] requires a single-threaded owner.
+ * - [Relaxed] uses atomic cells for additive and monotonic stats, permits drift for
+ *   coupled recurrences, and locks structures that require serialised mutation.
+ * - [Strict] protects coupled recurrences with a lock.
+ * - [HighWrite] uses striped adders for additive JVM stats and behaves like [Strict]
+ *   for coupled state and on other platforms.
  *
- * - A single-threaded producer should pick [None].
- * - Many writers on an additive stat (sum, count, Bernoulli sum) should pick
- *   [HighWrite] on the JVM and [Relaxed] elsewhere.
- * - Many writers that can tolerate ULP-level drift on coupled state in exchange
- *   for not blocking should pick [Relaxed].
- * - Many writers that need exact arithmetic should pick [Strict].
- * - Many writers on a sketch should also pick [Strict]: sketches self-serialise
- *   and the other modes degrade to it anyway.
- *
- * ## Per-stat concurrency clauses
- *
- * Each stat's KDoc has a `**Concurrency:**` section naming the mechanism and
- * per-level behaviour. Recurring patterns:
- *
- * - A single atomic add per update: exact under every level; swapped for a
- *   striped adder under [HighWrite].
- * - A single-cell CAS min or max loop: exact under every level; the retry
- *   serialises racing writers naturally.
- * - Independent striped cells with deterministic bucket assignment: exact under
- *   every level (used by additive histograms, `BernoulliSumStat`, and friends).
- * - Welford-coupled cells without a lock: exact under [None], [Strict], and
- *   [HighWrite]; [Relaxed] drifts a small amount without throwing.
- * - A body locked under any concurrent level: exact under every level with
- *   throughput bounded by lock contention.
- *
- * Bandits inherit the concurrency of their per-arm stat.
- *
- * ## Snapshot consistency
- *
- * A `read()` call is best-effort across cells. A reader that races with a writer
- * on a [Relaxed] Welford stat may see the count incremented before the mean is.
- * The drift is the same as the writer-on-writer case: small in magnitude, no
- * exceptions, no corruption. For a strictly atomic snapshot use [Strict]; the
- * per-stat lock will serialise readers behind the writer.
+ * Atomic updates to individual cells do not guarantee an atomic snapshot of several
+ * cells. Check each stat's concurrency documentation when snapshot consistency matters.
+ * Floating-point results can vary with update order even when updates are serialised.
  *
  * @sample com.eignex.kumulant.samples.perStatConcurrency
  */
 enum class Concurrency {
 
     /**
-     * Single-threaded. No atomics, no locks. The default and cheapest path; it is
-     * correct when one thread owns the accumulator.
-     *
-     * A [None] stat hit by two threads at once falls out of unsynchronised reads
-     * and writes. Exceptions and state corruption are both possible, so do not
-     * share a [None] stat across threads.
+     * Single-threaded access with no synchronisation. Sharing a stat between threads
+     * under this mode can corrupt state or throw.
      */
     None,
 
     /**
-     * Lock-free atomic cells. Many writers, no blocking.
-     *
-     * For stats whose state is one independent cell ([com.eignex.kumulant.stat.summary.SumStat],
-     * [com.eignex.kumulant.stat.summary.MinStat], [com.eignex.kumulant.stat.summary.MaxStat],
-     * the Bernoulli sum, the counter) [Relaxed] is exact because increments and
-     * CAS-min/max commute.
-     *
-     * For Welford-coupled stats ([com.eignex.kumulant.stat.summary.MeanStat],
-     * [com.eignex.kumulant.stat.summary.VarianceStat],
-     * [com.eignex.kumulant.stat.summary.MomentsStat]) the cells race; independent
-     * racers reading a stale numerator against an updated denominator can produce
-     * results that drift by ULPs up to roughly 1e-5 relative under heavy
-     * contention. The drift does not compound and the stat never throws. Pick
-     * [Relaxed] on hot paths where a metric that is 0.001 percent off is
-     * preferable to writers blocking on a lock.
+     * Concurrent updates with implementation-specific consistency.
+     * Independent cells use atomic updates. Coupled recurrences such as mean and variance
+     * can drift under contention; no numerical error bound is guaranteed. Sketches that
+     * require serialised mutation still lock.
      */
     Relaxed,
 
     /**
-     * Multi-threaded with whatever synchronisation each stat needs to stay exact
-     * across coupled state. For Welford-style stats this is a lock around the body
-     * of `update`. For sketches that already self-serialise (DDSketch, t-digest,
-     * HDR, and so on) [Strict] is the natural mode and adds no extra overhead.
-     *
-     * Every writer goes through the same lock for coupled stats. Shard the work
-     * and merge when the write rate swamps a single lock.
+     * Concurrent access with locks where coupled state requires them.
+     * Independent atomic cells remain lock-free; a multi-cell read is coherent only when
+     * the implementation holds a shared lock across reads and writes.
      */
     Strict,
 
     /**
-     * JVM-only striped adders for additive stats. On a heavily-loaded
-     * [com.eignex.kumulant.stat.summary.SumStat] or
-     * [com.eignex.kumulant.stat.summary.CountStat] this scales linearly with the
-     * writer count.
-     *
-     * On non-JVM platforms [HighWrite] falls back to [Strict]. For stats where
-     * striping makes no sense (anything coupled, anything sketch-based)
-     * [HighWrite] also behaves like [Strict].
+     * Striped adders for additive JVM stats, trading cheaper contended updates for a
+     * read that sums the stripes without an atomic snapshot. Behaves like [Strict] on
+     * non-JVM platforms and for stats whose state cannot be striped.
      */
     HighWrite,
 }

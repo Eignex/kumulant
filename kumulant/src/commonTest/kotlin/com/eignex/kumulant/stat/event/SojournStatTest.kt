@@ -35,9 +35,9 @@ class SojournStatTest {
     fun `state change adds elapsed nanos to the prior state`() {
         val s = SojournStat(states)
         s.update(value = 0L, timestampNanos = 0L)
-        s.update(value = 1L, timestampNanos = 3_000L) // 3000ns in state 0
-        s.update(value = 0L, timestampNanos = 5_000L) // 2000ns in state 1
-        val r = s.read(timestampNanos = 9_000L) // 4000ns in state 0 so far
+        s.update(value = 1L, timestampNanos = 3_000L)
+        s.update(value = 0L, timestampNanos = 5_000L)
+        val r = s.read(timestampNanos = 9_000L)
         assertEquals(listOf(3_000L, 2_000L, 0L), r.totalNanosByState)
         assertEquals(listOf(2L, 1L, 0L), r.transitionsByState)
         assertEquals(0L, r.currentState)
@@ -83,8 +83,6 @@ class SojournStatTest {
         }
         a.merge(b.read(timestampNanos = 3_000L))
         val r = a.read(timestampNanos = 3_500L)
-        // Local: state 0 1000ns + remote state 2 2000ns merged elsewhere.
-        // Remote held: state 2 -> 2000ns, currently in state 0 entered at 2500.
         assertEquals(1_000L + 0L, r.totalNanosByState[0])
         assertEquals(0L, r.totalNanosByState[1])
         assertEquals(2_000L, r.totalNanosByState[2])
@@ -111,7 +109,6 @@ class SojournLateArrivalTest {
         s.update(1L, timestampNanos = 50L)
         s.update(0L, timestampNanos = 200L)
         val dwell = s.read(200L).totalNanosByState
-        // The stream's stamps span 100..200, so no more than 100ns of dwell can have been observed.
         assertEquals(100L, dwell.sum())
     }
 }

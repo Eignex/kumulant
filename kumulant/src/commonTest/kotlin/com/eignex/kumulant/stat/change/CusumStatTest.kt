@@ -36,7 +36,7 @@ class CusumStatTest {
     @Test
     fun `sustained positive shift trips alarmUp`() {
         val s = CusumStat(target = 0.0, referenceValue = 0.5, threshold = 3.0)
-        repeat(10) { s.update(2.0) } // strong upward shift
+        repeat(10) { s.update(2.0) }
         val r = s.read()
         assertTrue(r.alarmUp)
         assertFalse(r.alarmDown)
@@ -56,8 +56,8 @@ class CusumStatTest {
     @Test
     fun `positive cusum cannot drop below zero`() {
         val s = CusumStat(target = 0.0, referenceValue = 0.5, threshold = 5.0)
-        s.update(value = 2.0) // pushes cusumPositive to 1.5
-        s.update(value = -10.0) // would drive cusumPositive negative
+        s.update(value = 2.0)
+        s.update(value = -10.0)
         val r = s.read()
         assertEquals(0.0, r.cusumPositive, DELTA)
     }

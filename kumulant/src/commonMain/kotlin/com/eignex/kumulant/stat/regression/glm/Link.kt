@@ -9,21 +9,14 @@ import kotlin.math.ln
 import kotlin.math.max
 
 /**
- * Canonical GLM link function. Encodes everything that varies between Gaussian linear
- * regression and its GLM siblings:
+ * Canonical GLM link functions used by the online regression models.
  *
- *  - [invMean] turns the linear predictor `eta = bias + x . w` into the response mean
- *    (identity / sigmoid / exp).
- *  - [curvature] is the second derivative of the per-observation negative log-likelihood
- *    w.r.t. eta, used by [DiagonalRegressionStat] / [BayesianRegressionStat] to tighten
- *    precision per observation. Equals the variance function under the canonical link.
- *  - [loss] is the per-observation negative log-likelihood computed in a numerically
- *    stable way (log-trick for Logit, no overflow on either tail). Constants that
- *    don't depend on `eta` are dropped, so the absolute value is shifted but
- *    differences and sums are correct.
+ * [invMean] maps a linear predictor to the response mean. [curvature] gives the
+ * negative log-likelihood curvature used to update precision. [loss] supplies the
+ * fit error accumulated by the model: squared error for [Identity], negative
+ * log-likelihood without response-only constants for [Logit] and [Log].
  *
- * Only canonical links are exposed: pairing a non-canonical link with the gradient
- * shortcut `grad_i = (mu - y) * x_i` is wrong, so restricting the type rules that out.
+ * Only canonical links are exposed so the gradient can use `(mu - y) * x`.
  */
 @Serializable(with = LinkSerializer::class)
 sealed interface Link {
@@ -33,28 +26,32 @@ sealed interface Link {
     /** Second derivative of the per-observation negative log-likelihood at `eta`. */
     fun curvature(eta: Double): Double
 
-    /** Per-observation negative log-likelihood (modulo `eta`-independent constants). */
+    /**
+     * Per-observation fit error: squared error for [Identity], negative log-likelihood
+     * up to response-only constants for [Logit] and [Log].
+     */
     fun loss(eta: Double, y: Double): Double
 
-    /** `mu = eta`. Gaussian likelihood with `sigma^2 = 1`. */
+    /**
+     * Gaussian response with unit variance: mean `eta`, curvature `1`, loss `(eta - y)^2`.
+     * The loss is twice the negative log-likelihood so regression results retain squared-error units.
+     */
     @Serializable
     @SerialName("Identity")
     data object Identity : Link {
         override fun invMean(eta: Double) = eta
         override fun curvature(eta: Double) = 1.0
 
-        // Squared error, which is twice the Gaussian negative log-likelihood: `sse` is accumulated from
-        // this and `mse`/`rSquared` are defined against squared error, so halving it to match `curvature`
-        // - the second derivative of the halved form - would change what those report. The two therefore
-        // differ by a factor of two on this link, which matters only to a consumer comparing `sse` across
-        // links or pairing `loss` with `curvature` in a line search.
         override fun loss(eta: Double, y: Double): Double {
             val r = eta - y
             return r * r
         }
     }
 
-    /** `mu = sigmoid(eta)`. Bernoulli likelihood; expects `y in {0, 1}`. */
+    /**
+     * Bernoulli response: mean `sigmoid(eta)`, curvature `mu * (1 - mu)`,
+     * loss `softplus(eta) - y * eta`. Expects binary targets.
+     */
     @Serializable
     @SerialName("Logit")
     data object Logit : Link {
@@ -64,23 +61,24 @@ sealed interface Link {
             return m * (1.0 - m)
         }
 
-        /** `softplus(eta) - y * eta = log(1 + exp(eta)) - y * eta`, computed stably. */
         override fun loss(eta: Double, y: Double): Double = softplus(eta) - y * eta
     }
 
-    /** `mu = exp(eta)`. Poisson likelihood; expects `y >= 0`. */
+    /**
+     * Poisson response: mean and curvature `exp(eta)`, loss `exp(eta) - y * eta`.
+     * Expects non-negative targets; omits the response-only `log(y!)` term.
+     */
     @Serializable
     @SerialName("Log")
     data object Log : Link {
         override fun invMean(eta: Double) = exp(eta)
         override fun curvature(eta: Double) = exp(eta)
 
-        /** `mu - y * eta = exp(eta) - y * eta`; drops the `log(y!)` constant. */
         override fun loss(eta: Double, y: Double): Double = exp(eta) - y * eta
     }
 }
 
-/** Stable sigmoid using the positive-tail branch to avoid `exp` overflow at negative `eta`. */
+// Branch on the sign of eta so neither tail overflows exp.
 internal fun sigmoid(eta: Double): Double = if (eta >= 0.0) {
     1.0 / (1.0 + exp(-eta))
 } else {
@@ -88,5 +86,5 @@ internal fun sigmoid(eta: Double): Double = if (eta >= 0.0) {
     e / (1.0 + e)
 }
 
-/** Stable `log(1 + exp(eta))` via `max(eta, 0) + log1p(exp(-|eta|))`. */
+// Max-subtraction keeps exp bounded when evaluating log(1 + exp(eta)).
 internal fun softplus(eta: Double): Double = max(eta, 0.0) + ln(1.0 + exp(-abs(eta)))

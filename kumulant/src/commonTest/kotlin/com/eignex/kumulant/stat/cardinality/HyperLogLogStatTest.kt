@@ -35,10 +35,6 @@ class HyperLogLogStatTest {
 
     @Test
     fun `accuracy across cardinalities including the medium range stays within 2 percent`() {
-        // Sweeps the m..3m window at precision 14 (m=16384) where the unmodified Flajolet
-        // estimator is classically prone to a few percent downward bias. SplitMix64
-        // prehashing keeps the observed error inside ~1.4% across this range - well
-        // under the 2% bound asserted here.
         val precision = 14
         val cardinalities = intArrayOf(1_000, 5_000, 10_000, 20_000, 30_000, 50_000)
         for (n in cardinalities) {
@@ -82,8 +78,6 @@ class HyperLogLogStatTest {
 
     @Test
     fun `splitmix-prehashed input gives same result as raw`() {
-        // Sanity check: distribution quality is good for sequential input thanks to
-        // internal splitmix; pre-hashing externally still yields a valid estimate.
         val raw = HyperLogLogStat(precision = 12)
         val hashed = HyperLogLogStat(precision = 12)
         for (i in 1..5000) {

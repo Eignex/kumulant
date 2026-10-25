@@ -14,12 +14,8 @@ import kotlinx.serialization.Serializable
 /** Running min/max pair of a stream. */
 @Serializable
 @SerialName("RangeResult")
-data class RangeResult(
-    /** Running minimum value. */
-    override val min: Double,
-    /** Running maximum value. */
-    override val max: Double,
-) : Result,
+data class RangeResult(override val min: Double, override val max: Double) :
+    Result,
     HasMinMax
 
 /**

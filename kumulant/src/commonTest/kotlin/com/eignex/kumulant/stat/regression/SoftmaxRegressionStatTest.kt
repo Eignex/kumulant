@@ -42,7 +42,6 @@ class SoftmaxRegressionStatTest {
         val p = r.probabilities(DenseVector.of(doubleArrayOf(2.0, 1.0)))
         val total = p.sum()
         assertEquals(1.0, total, 1e-9)
-        // Class 0 has the largest logit (eta = 2), so argmax must be 0.
         assertEquals(0, r.predict(DenseVector.of(doubleArrayOf(2.0, 1.0))))
     }
 
@@ -102,7 +101,6 @@ class SoftmaxRegressionStatTest {
     fun `learns a separable three-class problem`() {
         val stat = SoftmaxRegressionStat(featureSize = 2, numClasses = 3, optimizer = Sgd(ConstantRate(0.2)))
         val rng = Random(123L)
-        // Three clusters around (1,0), (-1,1), (-1,-1).
         val centers = arrayOf(
             doubleArrayOf(2.0, 0.0),
             doubleArrayOf(-2.0, 2.0),
@@ -117,7 +115,6 @@ class SoftmaxRegressionStatTest {
             stat.update(x, c.toDouble(), 1.0)
         }
         val r = stat.read()
-        // Held-out accuracy on a fresh batch should be near perfect.
         var correct = 0
         val n = 600
         repeat(n) {

@@ -49,7 +49,6 @@ data class SoftmaxRegressionResult(
     val weights: DenseMatrix,
     /** Per-class intercept; length [numClasses]. */
     val biases: ContiguousVector,
-    /** Cumulative observation weight folded in. */
     override val totalWeights: Double,
     /** Number of `update` calls absorbed. */
     val step: Long,

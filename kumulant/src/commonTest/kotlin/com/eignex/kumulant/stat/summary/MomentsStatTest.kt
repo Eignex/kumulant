@@ -135,7 +135,6 @@ class MomentsStatTest {
         assertEquals(expected, r.unbiasedKurtosis, DELTA)
     }
 
-    /** Weighted central moments computed directly, as the reference for the recurrences. */
     private fun reference(points: List<Pair<Double, Double>>): MomentsResult {
         val w = points.sumOf { it.second }
         val mean = points.sumOf { it.first * it.second } / w

@@ -17,11 +17,6 @@ class TreeRegressionResultTest {
 
     @Test
     fun `findLeaf routes through nested splits`() {
-        // RegressionTree:        x[0] <= 0
-        //              /        \
-        //         x[1] <= 0     leaf C (value=20)
-        //         /        \
-        //   leaf A (val=1) leaf B (val=2)
         val a = WeightedVarianceResult(1.0, 1.0, 0.0)
         val b = WeightedVarianceResult(1.0, 2.0, 0.0)
         val c = WeightedVarianceResult(1.0, 20.0, 0.0)

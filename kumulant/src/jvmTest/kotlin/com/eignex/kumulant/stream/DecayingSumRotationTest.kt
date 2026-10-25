@@ -15,10 +15,7 @@ class DecayingSumRotationTest {
 
     @Test
     fun `a concurrent stream across many epoch rotations stays finite`() {
-        // A 1us half-life puts the rotation threshold at 50us, so a stream stepping 1us per update
-        // crosses it constantly. Writers race the rotation from both sides: one adding against a
-        // landmark another is replacing, and one arriving so far behind the landmark that its
-        // exponent underflows while the read's matching exponent overflows.
+        // A 1us half-life forces frequent landmark rotation while writers race.
         val stat = DecayingSumStat(halfLife = 1.microseconds, concurrency = Concurrency.Relaxed)
         val threads = 4
         val perThread = 20_000

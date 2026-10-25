@@ -1,6 +1,5 @@
 package com.eignex.kumulant.stream
 
-/** Non-atomic, single-threaded mode; cheapest path when no concurrency is required. */
 internal object SerialMode : StreamMode {
     override fun newDouble(initial: Double) = SerialDouble(initial)
     override fun newLong(initial: Long) = SerialLong(initial)
@@ -14,7 +13,6 @@ internal object SerialMode : StreamMode {
     override fun newDoubleArray(size: Int, init: (Int) -> Double) = SerialDoubleArray(DoubleArray(size, init))
 }
 
-/** Plain-`var` [StreamLong] implementation used by [SerialMode]. */
 internal class SerialLong(var ref: Long) : StreamLong {
     override fun load(): Long = ref
 
@@ -40,7 +38,6 @@ internal class SerialLong(var ref: Long) : StreamLong {
     }
 }
 
-/** Plain-`var` [StreamDouble] implementation used by [SerialMode]. */
 internal class SerialDouble(var ref: Double) : StreamDouble {
     override fun load(): Double = ref
 
@@ -70,7 +67,6 @@ internal class SerialDouble(var ref: Double) : StreamDouble {
     }
 }
 
-/** Plain-array [StreamLongArray] implementation used by [SerialMode]. */
 internal class SerialLongArray(val ref: LongArray) : StreamLongArray {
     override val size: Int get() = ref.size
     override fun load(index: Int): Long = ref[index]
@@ -93,7 +89,6 @@ internal class SerialLongArray(val ref: LongArray) : StreamLongArray {
     }
 }
 
-/** Plain-array [StreamDoubleArray] implementation used by [SerialMode]. */
 internal class SerialDoubleArray(val ref: DoubleArray) : StreamDoubleArray {
     override val size: Int get() = ref.size
     override fun load(index: Int): Double = ref[index]
@@ -114,7 +109,6 @@ internal class SerialDoubleArray(val ref: DoubleArray) : StreamDoubleArray {
     }
 }
 
-/** Plain-`var` [StreamRef] implementation used by [SerialMode]. */
 internal class SerialRef<T>(var ref: T) : StreamRef<T> {
     override fun load(): T = ref
 

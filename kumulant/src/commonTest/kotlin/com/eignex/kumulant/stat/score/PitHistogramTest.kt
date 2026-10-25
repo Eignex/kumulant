@@ -12,7 +12,6 @@ class PitHistogramTest {
     fun `uniform PIT input gives roughly equal bin weights`() {
         val numBins = 10
         val h = pitHistogram(numBins)
-        // Spread N values evenly across [0, 1) so each bin gets exactly N/numBins.
         val perBin = 50
         val total = numBins * perBin
         for (i in 0 until total) {

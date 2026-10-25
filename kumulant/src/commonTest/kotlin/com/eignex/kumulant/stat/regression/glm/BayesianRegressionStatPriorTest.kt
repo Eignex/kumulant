@@ -10,8 +10,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-// The custom prior is what lets klause persist a posterior across solver calls: an earlier read()
-// snapshot is fed back in as the next instance's prior.
 class BayesianRegressionStatPriorTest {
 
     @Test
@@ -51,7 +49,6 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `non positive definite prior covariance is rejected at construction`() {
-        // Diagonal with a negative entry - immediately non-PD.
         val bad = DenseMatrix.ofRows(
             arrayOf(
                 doubleArrayOf(1.0, 0.0),
@@ -87,7 +84,6 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `custom prior converges to truth with enough data`() {
-        // A confident-but-wrong prior should still be overridden by data.
         val truth = doubleArrayOf(0.5, -1.0, 0.7)
         val wrongMean = DenseVector.of(doubleArrayOf(-2.0, 3.0, -1.0))
         val blr = BayesianRegressionStat(
@@ -110,9 +106,6 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `merge equals sequential update for custom prior`() {
-        // Property: merging two instances trained on disjoint data should agree with
-        // a single instance trained on the union - independent of the prior, as long
-        // as both branches start from the same prior.
         val priorMean = DenseVector.of(doubleArrayOf(0.2, -0.1))
         val priorCov = DenseMatrix.ofRows(
             arrayOf(
@@ -198,7 +191,6 @@ class BayesianRegressionStatPriorTest {
         val prior = BayesianRegressionStat.fitPopulationPrior(List(5) { snap })
         for (i in 0 until 2) {
             assertEquals(mean[i], prior.mean[i], 1e-12)
-            // Between-cluster variance is zero, within-cluster variance is `cov`.
             assertEquals(cov[i, i], prior.covariance[i, i], 1e-12)
         }
         assertEquals(5, prior.instanceCount)
@@ -206,9 +198,6 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `fitPopulationPrior returns a symmetric covariance with off-diagonal spread`() {
-        // The between-instance term is accumulated one triangle at a time, so the off-diagonal
-        // has to be filled by reflection rather than written twice. Means that differ in both
-        // coordinates are what puts anything there to reflect.
         val sqrt01 = sqrt(0.01)
         fun snap(mu: DoubleArray) = PrecisionRegressionResult(
             weights = DenseVector.of(mu),
@@ -237,8 +226,6 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `fitPopulationPrior captures between-instance spread`() {
-        // Two posteriors with very different means and tight covariance: the population
-        // covariance should be dominated by the between-instance term (~ (mu_diff/2)^2).
         val tight = DenseMatrix.diagonal(2, 0.01)
         val sqrt01 = sqrt(0.01)
         fun snap(mu: DoubleArray) = PrecisionRegressionResult(
@@ -255,15 +242,12 @@ class BayesianRegressionStatPriorTest {
         val prior = BayesianRegressionStat.fitPopulationPrior(listOf(a, b))
         assertEquals(0.0, prior.mean[0], 1e-12)
         assertEquals(0.0, prior.mean[1], 1e-12)
-        // Between = 0.5 * (1 - 0)^2 + 0.5 * (-1 - 0)^2 = 1.0; within = 0.01.
         assertTrue(abs(prior.covariance[0, 0] - 1.01) < 1e-9, "got ${prior.covariance[0, 0]}")
         assertTrue(abs(prior.covariance[1, 1] - 0.01) < 1e-9, "got ${prior.covariance[1, 1]}")
     }
 
     @Test
     fun `fitPopulationPrior result seeds a new BLR`() {
-        // The output is exactly the shape BLR's constructor wants - feed it straight in
-        // and confirm the new instance starts at the fitted population mean.
         val cov = DenseMatrix.diagonal(2, 0.5)
         val sqrt05 = sqrt(0.5)
         val snaps = listOf(
@@ -307,8 +291,6 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `fitPopulationPrior honours custom weight selector`() {
-        // With weight selector returning 1.0 for the first snapshot and 0.0 for the
-        // second, the result should equal the first snapshot in isolation.
         val cov = DenseMatrix.diagonal(2, 0.3)
         val sqrt03 = sqrt(0.3)
         fun snap(mu: DoubleArray) = PrecisionRegressionResult(
@@ -349,7 +331,6 @@ class BayesianRegressionStatPriorTest {
         assertEquals(1, prior.instanceCount)
         assertEquals(0.7, prior.mean[0], 1e-12)
         assertEquals(-0.3, prior.mean[1], 1e-12)
-        // Single instance -> between term is 0, population covariance == within covariance.
         for (i in 0 until 2) {
             for (j in 0 until 2) {
                 assertEquals(cov[i, j], prior.covariance[i, j], 1e-12)
@@ -366,7 +347,6 @@ class BayesianRegressionStatPriorTest {
             priorMean = mean,
             priorCovariance = cov,
         )
-        // Mutate the original; the clone should still spring from the configured prior.
         original.update(doubleArrayOf(1.0, 0.0), 5.0, 1.0)
         val clone = original.create(null)
         val r = clone.read()
@@ -399,8 +379,6 @@ class BayesianRegressionStatPriorTest {
 
     @Test
     fun `strong prior dominates with very little data`() {
-        // 5 noisy observations vs a very tight prior at the wrong mean: posterior
-        // should sit much closer to the prior than to the data-only UnivariateRegression() fit.
         val priorMean = DenseVector.of(doubleArrayOf(0.0, 0.0))
         val tight = DenseMatrix.diagonal(2, 1e-4)
         val blr = BayesianRegressionStat(

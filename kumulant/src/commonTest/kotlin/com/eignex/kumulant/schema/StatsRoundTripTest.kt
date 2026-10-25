@@ -19,8 +19,6 @@ import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-// For each modality: build a schema with a config-only entry, encode, decode, materialize, drive a
-// small fixed input through both the original live stat and the rehydrated stat, and compare results.
 class StatsRoundTripTest {
 
     private fun roundTrip(config: StatSpec): StatSpec {

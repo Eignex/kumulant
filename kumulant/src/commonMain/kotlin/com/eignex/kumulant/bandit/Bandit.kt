@@ -5,26 +5,15 @@ import com.eignex.kumulant.core.Result
 import kotlin.random.Random
 
 /**
- * Root of every bandit kumulant ships. Carries the bare minimum every flavour
- * needs: arm count, a randomness source, and a way to wipe state back to its
- * prior-seeded baseline.
+ * Shared configuration and reset contract for bandits.
  *
- * The action and state surfaces are deliberately orthogonal:
+ * [UnivariateBandit] selects an arm without context; [ContextualBandit] selects one
+ * for a feature vector. [Snapshotable] adds snapshot, merge, and replica creation;
+ * [PerArmBandit] specialises it to one [Result] per arm.
  *
- * - **Action surface**: [UnivariateBandit] (indexless arms, `choose()`) and
- *   [ContextualBandit] (per-round context vector, `choose(x)`). Pick the one
- *   that matches the decision shape.
- * - **State surface**: [Snapshotable] (any state shape) with the
- *   [PerArmBandit] convenience for the common case where state is one
- *   [Result] per arm.
- * - **Inspection**: [Scorable] / [ContextualScorable] expose per-arm
- *   scores; bandits whose selection rule is an argmax-over-independent-scores
- *   implement these. Joint-sampling bandits ([com.eignex.kumulant.bandit.univariate.BoltzmannBandit],
- *   [com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit]) and
- *   exponential-weights bandits ([com.eignex.kumulant.bandit.univariate.Exp3Bandit])
- *   do not; no single per-arm score is meaningful in isolation for them.
- *
- * Each concrete bandit's KDoc states which interfaces it implements and why.
+ * [Scorable] and [ContextualScorable] expose independent per-arm scores for inspection
+ * or custom selection. Policies that sample a joint arm distribution, such as
+ * Boltzmann, Top-Two Thompson, and EXP3, do not expose independent scores.
  */
 interface Bandit {
     /** Number of arms in the population. Fixed at construction; arm indices are `[0, nbrArms)`. */
@@ -75,24 +64,18 @@ interface UnivariateBandit : Bandit {
     fun choose(): Int
 
     /**
-     * Fold a single observed reward [value] into the arm at [armIndex] with
-     * the given [weight]. Weight is the same observation-weight that runs
-     * through the rest of the library; typically `1.0`, occasionally
-     * importance-weighted for off-policy correction.
-     *
-     * Index out of range throws; some bandits also bound-check the value
-     * (e.g. Bernoulli arms require `value in {0.0, 1.0}`).
+     * Record reward [value] for [armIndex] with [weight].
+     * Arm indices must be in `[0, nbrArms)`. Weight and reward handling follow the
+     * implementation's accumulator or policy; see [com.eignex.kumulant.core.Stat]
+     * for the shared accumulator weight rules.
      */
     fun update(armIndex: Int, value: Double, weight: Double = 1.0)
 
     /**
-     * Batched [update]: fold one observation per arm/value pair in a single
-     * call. Equivalent to looping [update] but skips per-call overhead and
-     * may take a per-bandit lock once.
-     *
-     * Sizes must match: `armIndices.size == values.size`, and `weights` (if
-     * non-null) must also match. A null `weights` argument applies `1.0` to
-     * every observation.
+     * Record each arm/reward pair in order by calling [update].
+     * [armIndices] and [values] must have equal sizes. Non-null [weights] must have
+     * the same size; null applies `1.0` to every observation. Size checks run before
+     * any update, but a later update failure can leave earlier observations applied.
      */
     fun updateAll(armIndices: IntArray, values: DoubleArray, weights: DoubleArray? = null) {
         require(armIndices.size == values.size) { "armIndices and values must have equal size" }
@@ -123,45 +106,32 @@ interface UnivariateBandit : Bandit {
  */
 interface ContextualBandit : Bandit {
     /**
-     * Pick an arm to play next, given the per-round context [x]. The bandit
-     * combines the context with its per-arm model to score each arm under a
-     * configurable [com.eignex.kumulant.stat.regression.RegressionPosterior]
-     * (or analogue) and returns the argmax / sampled choice.
+     * Choose an arm for context [x], returning an index in `[0, nbrArms)`.
+     * Uses [Bandit.random] for any sampling.
      */
     fun choose(x: Vector): Int
 
     /**
-     * Fold a single `(x, reward)` observation into the arm at [armIndex].
-     * The `weight` is the same observation-weight running through the
-     * library; typically `1.0`, occasionally importance-weighted.
+     * Record [reward] for [armIndex] under context [x] with [weight].
+     * Arm indices must be in `[0, nbrArms)`. Pass the context used for [choose];
+     * weight and reward handling follow the implementation's model or policy.
      */
     fun update(armIndex: Int, x: Vector, reward: Double, weight: Double = 1.0)
 }
 
 /**
- * State surface for any bandit whose state can be checkpointed, replicated,
- * and merged with a sibling's. Orthogonal to the action surface; every
- * bandit family has its own natural [S]:
+ * Snapshot, merge, and replica creation for bandits, independent of their input shape.
  *
- * - Per-arm-stat bandits ([com.eignex.kumulant.bandit.univariate.MultiArmedBandit]
- *   and friends) use `List<R>` where `R` is the per-arm result type; see
- *   the [PerArmBandit] convenience.
- * - [com.eignex.kumulant.bandit.univariate.Exp3Bandit] uses a single state
- *   object that captures the exponential arm weights.
- *
- * The pattern: workers run the same bandit configuration in parallel,
- * periodically call [snapshot], ship snapshots to a coordinator, the
- * coordinator runs its own bandit and folds each worker's snapshot in via
- * [merge]. Because the merge unit is the snapshot (not a live bandit), the
- * worker is free to terminate after each report.
+ * [S] is the snapshot type. [PerArmBandit] uses `List<R>` with one [Result] per arm,
+ * including [com.eignex.kumulant.bandit.univariate.Exp3Bandit]'s exponential weights.
+ * Workers can send snapshots to a coordinator without sharing live accumulators.
+ * Each implementation documents merge approximations and state omitted from its snapshots.
  */
 interface Snapshotable<S> {
     /**
-     * Materialise the current state as a serialisable snapshot. Reads are
-     * non-mutating; call as often as needed without affecting decisions.
-     * Same snapshot consistency rules as [com.eignex.kumulant.core.Stat.read]
-     *; under [com.eignex.kumulant.core.Concurrency.Relaxed] coupled cells
-     * may drift by ULPs.
+     * Return the current state without adding observations or choosing an arm.
+     * Consistency follows the implementation's concurrency contract; a snapshot of
+     * independently updated cells need not represent a single instant.
      */
     fun snapshot(): S
 
@@ -186,15 +156,8 @@ interface Snapshotable<S> {
 }
 
 /**
- * Convenience for the dominant case where bandit state is one [Result]
- * per arm. Adds per-arm access on top of [Snapshotable]; useful for
- * inspection, debugging, and policies that want to peek at a single
- * arm's posterior without materialising the whole list.
- *
- * Most univariate bandits implement this; exceptions are
- * [com.eignex.kumulant.bandit.univariate.Exp3Bandit] (state is a weight
- * vector, not per-arm results) and the contextual analogues that don't
- * carry per-arm [Result]s in the strict sense.
+ * Bandit state represented as one [Result] per arm, in arm-index order.
+ * [armResult] allows inspection of one arm without requiring a full [snapshot].
  */
 interface PerArmBandit<R : Result> : Snapshotable<List<R>> {
     /**
@@ -219,10 +182,9 @@ interface PerArmBandit<R : Result> : Snapshotable<List<R>> {
  */
 interface Scorable {
     /**
-     * Score the arm at [armIndex] under the bandit's current state. The
-     * value's interpretation is policy-specific; UCB upper bound, Thompson
-     * draw, mean estimate, etc.; and what the bandit's `choose` would
-     * compare against the other arms' scores.
+     * Score [armIndex] under the current state. Higher scores are preferred.
+     * The interpretation is policy-specific, such as a confidence bound, posterior draw,
+     * or mean estimate. Sampling scores consume the bandit's randomness.
      */
     fun evaluate(armIndex: Int): Double
 }
@@ -234,6 +196,9 @@ interface Scorable {
  * selection rule decomposes into per-arm scores.
  */
 interface ContextualScorable {
-    /** Score the arm at [armIndex] under the current state and context [x]. */
+    /**
+     * Score [armIndex] under context [x] and the current state. Higher scores are preferred.
+     * The interpretation is policy-specific; sampling scores consume the bandit's randomness.
+     */
     fun evaluate(armIndex: Int, x: Vector): Double
 }

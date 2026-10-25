@@ -24,9 +24,6 @@ import com.eignex.kumulant.schema.spec.SpaceSaving
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-// The same library-wide contracts as [SeriesStatContractSweepTest], over the paired and discrete
-// modalities. [Stat] states the zero-weight guarantee holds "whatever the modality", so the sweep
-// has to cross modalities to be worth anything.
 class PairedAndDiscreteContractSweepTest {
 
     private val pairedSpecs: List<Pair<String, PairedStatSpec<*>>> = listOf(
@@ -53,8 +50,6 @@ class PairedAndDiscreteContractSweepTest {
         "SpaceSaving" to SpaceSaving(capacity = 8),
     )
 
-    // Values inside the unit interval so the probability-shaped stats (log loss, calibration,
-    // AUC, confusion) all see legal input.
     private val pairs = listOf(0.1 to 0.0, 0.9 to 1.0, 0.4 to 0.0, 0.75 to 1.0, 0.55 to 1.0, 0.2 to 0.0)
     private val keys = longArrayOf(0L, 1L, 2L, 1L, 0L, 2L, 1L)
     private val readAt = 8_000_000_000L
@@ -85,7 +80,6 @@ class PairedAndDiscreteContractSweepTest {
             keys.forEachIndexed { i, k -> stat.update(k, i.toLong() * 1_000_000_000L, 1.0) }
             val before = stat.read(readAt)
 
-            // A key the stat already knows, so this probes weight handling and not key validation.
             stat.update(2L, readAt, 0.0)
 
             val after = stat.read(readAt)
@@ -116,9 +110,6 @@ class PairedAndDiscreteContractSweepTest {
             keys.forEachIndexed { i, k -> stat.update(k, i.toLong() * 1_000_000_000L, 1.0) }
             val before = stat.read(readAt)
 
-            // The sketches are the delicate case: `weight <= 0.0` is false for NaN and
-            // `ceil(NaN).toLong()` is 0, which a coerce would lift to 1, turning a NaN weight into a
-            // real observation of weight one.
             val thrown = runCatching { stat.update(2L, readAt, Double.NaN) }.exceptionOrNull()
             if (thrown != null) {
                 violations += "$name threw on a NaN weight: ${thrown.message}"
@@ -133,9 +124,6 @@ class PairedAndDiscreteContractSweepTest {
 
     @Test
     fun `an infinite weight is a no-op for every paired and discrete stat`() {
-        // The paired modality is the delicate one: a loss or a calibration curve divides an accumulated
-        // total by an accumulated weight, so an absorbed infinity turns both infinite and the read NaN.
-        // See isInertWeight on why an infinity is not a multiplicity.
         val violations = mutableListOf<String>()
         for (weight in doubleArrayOf(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
             for ((name, spec) in pairedSpecs) {
@@ -170,17 +158,10 @@ class PairedAndDiscreteContractSweepTest {
 
     @Test
     fun `a negative weight is a no-op for every discrete sketch`() {
-        // The discrete modality is entirely no-inverse: there is no bucket decrement that undoes a
-        // hash insert into a Bloom filter or an HLL register, so these all drop a negative weight
-        // rather than downdating it. Sojourn is the one exception in the catalogue - it accumulates
-        // residence time additively and subtracts, so it guards on isInertWeight like the series
-        // accumulators. See isNotPositiveWeight for why the two predicates are named separately.
         val violations = mutableListOf<String>()
         for ((name, spec) in discreteSpecs) {
             if (name in DOWNDATES) continue
 
-            // A key none of the primed updates used, so a live-weight probe visibly moves every
-            // sketch here; without that the negative-weight assertion below would be vacuous.
             val absorbing = spec.materialize()
             keys.forEachIndexed { i, k -> absorbing.update(k, i.toLong() * 1_000_000_000L, 1.0) }
             val baseline = absorbing.read(readAt)
@@ -208,10 +189,6 @@ class PairedAndDiscreteContractSweepTest {
 
     @Test
     fun `no paired stat throws on a non-finite value`() {
-        // Both positions separately: a paired stat reaches x and y through different arithmetic, so
-        // one being safe is no evidence about the other. A non-finite value propagates rather than being
-        // filtered, and may poison the stat; the only guarantee is that it does not become an exception.
-        // `filterFinite()` is how a caller opts out.
         val violations = mutableListOf<String>()
         for ((name, spec) in pairedSpecs) {
             val inf = Double.POSITIVE_INFINITY
@@ -239,10 +216,6 @@ class PairedAndDiscreteContractSweepTest {
 
     @Test
     fun `every result equals itself`() {
-        // Reflexivity is not free here: several Results hand-roll equals to get contentEquals on
-        // their arrays, and a hand-rolled `a == other.a` on a Double is IEEE comparison, so a field
-        // that is legitimately NaN makes the result unequal to itself. The generated data-class
-        // equals would not have this problem.
         val violations = mutableListOf<String>()
         for ((name, spec) in pairedSpecs) {
             val fresh = spec.materialize()
@@ -322,13 +295,9 @@ class PairedAndDiscreteContractSweepTest {
     }
 
     private companion object {
-        /**
-         * The one discrete stat whose accumulation inverts, so a negative weight subtracts rather than
-         * being dropped. Everything else in the catalogue is a hash sketch with no decrement.
-         */
         val DOWNDATES = setOf("Sojourn")
 
-        /** A key none of the primed updates touch, so a live-weight probe moves every sketch. */
+        // Use an unseen key so a live-weight probe visibly changes every sketch.
         const val PROBE_KEY = 97L
     }
 }

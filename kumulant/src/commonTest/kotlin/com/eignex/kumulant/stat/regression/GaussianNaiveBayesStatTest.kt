@@ -51,10 +51,8 @@ class GaussianNaiveBayesStatTest {
     @Test
     fun `per class means and variances match the running stats`() {
         val stat = GaussianNaiveBayesStat(featureSize = 2, numClasses = 2)
-        // Class 0: feature 0 around 1.0, feature 1 around 5.0.
         stat.update(doubleArrayOf(1.0, 5.0), 0.0)
         stat.update(doubleArrayOf(3.0, 5.0), 0.0)
-        // Class 1: feature 0 around -1.0, feature 1 around 2.0.
         stat.update(doubleArrayOf(-1.0, 2.0), 1.0)
         stat.update(doubleArrayOf(-3.0, 2.0), 1.0)
         val r = stat.read()
@@ -62,7 +60,6 @@ class GaussianNaiveBayesStatTest {
         assertEquals(5.0, r.means[0, 1], DELTA)
         assertEquals(-2.0, r.means[1, 0], DELTA)
         assertEquals(2.0, r.means[1, 1], DELTA)
-        // Population variance of (1, 3) is 1.0; of (-1, -3) is 1.0; constants are 0.
         assertEquals(1.0, r.variances[0, 0], DELTA)
         assertEquals(0.0, r.variances[0, 1], DELTA)
         assertEquals(1.0, r.variances[1, 0], DELTA)

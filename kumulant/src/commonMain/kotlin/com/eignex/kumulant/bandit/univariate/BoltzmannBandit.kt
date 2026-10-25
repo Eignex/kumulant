@@ -14,7 +14,7 @@ import kotlin.random.Random
 
 /**
  * Boltzmann exploration (a.k.a. softmax bandit): samples arm `a` with
- * probability proportional to `exp(mean[a] / tau(t))`, where `tau(t)` is the
+ * probability proportional to `exp(mean(a) / tau(t))`, where `tau(t)` is the
  * temperature at round `t` and per-arm means are tracked by independent
  * [com.eignex.kumulant.stat.summary.MeanStat] cells.
  *
@@ -45,13 +45,10 @@ import kotlin.random.Random
  * **Randomness:** every `choose` consumes one `random.nextDouble()` for the
  * softmax draw; reproducible under a fixed seed.
  *
- * **Concurrency:** per-arm [com.eignex.kumulant.core.SeriesStat] carries its
- * own concurrency. The step counter is non-atomic; concurrent `choose` calls
- * race on it and may yield duplicate `t` values; pin to a single thread when
- * the cooling schedule must be exact.
+ * **Concurrency:** not thread-safe. Per-arm stats and the cooling step counter
+ * are unsynchronised; serialise access externally for multi-thread use.
  */
 class BoltzmannBandit(
-    /** Number of arms. */
     override val nbrArms: Int,
     /** Per-arm prior on the running reward mean. */
     priorMean: Double = 0.0,
@@ -63,7 +60,6 @@ class BoltzmannBandit(
     val minTau: Double = 1e-3,
     /** Cooling decay exponent: `tau(t) = initialTau / t^decay`. `0.0` is fixed-temperature. */
     val decay: Double = 1.0,
-    /** Single source of randomness. */
     override val random: Random = Random.Default,
 ) : UnivariateBandit,
     PerArmBandit<WeightedMeanResult> {
@@ -78,7 +74,6 @@ class BoltzmannBandit(
     private val stats: Array<SeriesStat<WeightedMeanResult>> = Array(nbrArms) { armSpec.createStat() }
     private var step: Long = 0L
 
-    /** Sample arm from the softmax of per-arm means at the current temperature. */
     override fun choose(): Int {
         val p = playDistribution()
         return random.sampleFromDistribution(p)
@@ -88,20 +83,14 @@ class BoltzmannBandit(
     fun playDistribution(): DoubleArray {
         step++
         val tau = temperature()
-        // Dividing by tau before the max-shift is the same arithmetic, since tau > 0 is enforced at
-        // construction and so `max(means)/tau == max(means/tau)`, and it costs one array instead of two.
+        // Scale directly into the logits array to avoid allocating a second array of means.
         val logits = DoubleArray(nbrArms) { stats[it].read(0L).mean / tau }
-        // A single NaN reward makes that arm's mean NaN for good, and one NaN logit takes the whole
-        // softmax with it - the max-shift leaves NaN alone and the sum is NaN, which softmaxInPlace
-        // still reports as usable. `choose` then resolves an all-NaN distribution to "always the last
-        // arm", with no way back. Uniform is the honest distribution when no arm has usable evidence,
-        // as it is for Exp3Bandit.
+        // Non-finite logits cannot form a usable distribution; uniform sampling keeps every arm reachable.
         if (logits.any { !it.isFinite() }) return DoubleArray(nbrArms) { 1.0 / nbrArms }
         logits.softmaxInPlace()
         return logits
     }
 
-    /** Fold `(arm, reward)` into the per-arm mean. */
     override fun update(armIndex: Int, value: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
         stats[armIndex].update(value, 0L, weight)
@@ -123,13 +112,11 @@ class BoltzmannBandit(
         return maxOf(minTau, initialTau / s.pow(decay))
     }
 
-    /** Reset arms to priors and step counter to zero. */
     override fun reset() {
         for (i in 0 until nbrArms) stats[i] = armSpec.createStat()
         step = 0L
     }
 
-    /** Spawn a fresh bandit with the same configuration. */
     override fun create(random: Random): BoltzmannBandit =
         BoltzmannBandit(nbrArms, armSpec.priorMean, armSpec.priorWeight, initialTau, minTau, decay, random)
 }

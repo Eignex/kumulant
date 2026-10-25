@@ -50,9 +50,7 @@ class CountMinSketchTest {
         val n = 100_000
         for (i in 0 until n) cms.update((i % 1000).toLong())
         val r = cms.read()
-        // True count of each of the 1000 keys is n/1000 = 100; CMS theory gives
-        // per-query error <= e/w * n with probability >= 1 - (1/e)^depth. Average
-        // overestimate across queries is comfortably below e/w * n ~ 67.
+        // The Count-Min per-query error scale e * n / width is about 67 for this fixture.
         var totalOverestimate = 0L
         for (k in 0L until 1000L) {
             val est = r.estimate(k)
@@ -119,8 +117,6 @@ class CountMinSketchTest {
     @Test
     fun `a saturating counter never reads below the true count`() {
         val cms = CountMinSketchStat(depth = 5, width = 1024)
-        // MAX_COUNTER_STEP is the largest single increment, so a little over 1024 of them is what it
-        // takes to run a counter past Long.MAX_VALUE.
         val step = (Long.MAX_VALUE / 1024).toDouble()
         repeat(1100) { cms.update(42L, weight = step) }
         assertEquals(Long.MAX_VALUE, cms.read(0L).estimate(42L))

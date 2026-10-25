@@ -86,8 +86,6 @@ class AdderModeTest {
 
     @Test
     fun `HyperLogLogStat runs under HighWrite concurrency`() {
-        // HLL resolves Concurrency.HighWrite to AtomicMode internally (Adder lacks CAS),
-        // so casMax works and update() succeeds.
         val hll = HyperLogLogStat(precision = 10, concurrency = Concurrency.HighWrite)
         for (i in 1..1000L) hll.update(i)
         val result = hll.read()

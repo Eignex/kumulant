@@ -49,12 +49,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// Contracts that hold for every series stat, checked against the whole catalogue rather than a
-// survey of it: the per-family tests pin behaviour one stat at a time, so only a sweep catches a
-// stat that quietly opts out of a rule the rest of the library follows.
 class SeriesStatContractSweepTest {
 
-    // Every SeriesStatSpec variant, built with parameters in each stat's valid range.
     private val specs: List<Pair<String, SeriesStatSpec<*>>> = listOf(
         "Mean" to Mean,
         "Sum" to Sum,
@@ -102,15 +98,12 @@ class SeriesStatContractSweepTest {
     private val samples = doubleArrayOf(3.0, 7.5, 1.0, 12.0, 6.25, 9.0, 2.5, 11.0)
     private val readAt = 8_000_000_000L
 
-    // A stat fed the same observations at the same timestamps, so results are comparable.
     private fun primed(spec: SeriesStatSpec<*>): SeriesStat<*> = spec.materialize().also { stat ->
         samples.forEachIndexed { i, v -> stat.update(v, i.toLong() * 1_000_000_000L, 1.0) }
     }
 
     @Test
     fun `a zero weight is a no-op for every series stat`() {
-        // Probe above and below the sample range so one-sided stats (min versus max) are both
-        // exercised, and collect every violation rather than stopping at the first.
         val violations = mutableListOf<String>()
         for ((name, spec) in specs) {
             for (probe in doubleArrayOf(999.0, -999.0)) {
@@ -128,8 +121,6 @@ class SeriesStatContractSweepTest {
 
     @Test
     fun `a NaN weight is a no-op for every series stat`() {
-        // The companion of the zero-weight sweep: a weight is the multiplicity of an observation and
-        // NaN is not a multiplicity, so it carries nothing to fold in.
         val violations = mutableListOf<String>()
         for ((name, spec) in specs) {
             for (probe in doubleArrayOf(999.0, -999.0)) {
@@ -151,11 +142,6 @@ class SeriesStatContractSweepTest {
 
     @Test
     fun `an infinite weight is a no-op for every series stat`() {
-        // A weight is the multiplicity of an observation, and an infinity is no more a multiplicity than
-        // a NaN is, so it belongs with the other inert cases. `+Infinity` does have a clean reading -
-        // the update `w / (W + w)` tends to 1, so the mean tends to the value - but an unguarded
-        // recurrence evaluates `Infinity / Infinity` and `Infinity * 0` and publishes the NaN instead.
-        // See isInertWeight for why the limit is not worth chasing.
         val violations = mutableListOf<String>()
         for ((name, spec) in specs) {
             for (weight in doubleArrayOf(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
@@ -179,18 +165,10 @@ class SeriesStatContractSweepTest {
 
     @Test
     fun `a negative weight is a no-op for every stat that cannot invert it`() {
-        // Zero and NaN are no-ops library-wide, but a negative weight partitions the catalogue: a stat
-        // whose recurrence inverts treats it as a downdate, and a stat with no inverse - a sketch, a
-        // histogram bucket - has to drop it, because there is no bucket decrement that undoes a hash
-        // insert. Both halves are correct; what is not correct is a stat picking a third answer. The
-        // negative case is also the reason isNotPositiveWeight is named apart from isInertWeight.
         val violations = mutableListOf<String>()
         for (name in NO_INVERSE) {
             val spec = specs.first { it.first == name }.second
 
-            // Vacuity guard first: the probe has to be an observation each stat would visibly absorb,
-            // or "state did not change" proves nothing. Without this the sweep would still pass if
-            // someone made every one of these stats ignore its input entirely.
             val absorbing = primed(spec)
             val baseline = absorbing.read(readAt)
             absorbing.update(PROBE, readAt, 1.0)
@@ -216,22 +194,8 @@ class SeriesStatContractSweepTest {
 
     @Test
     fun `no series stat throws on a non-finite value`() {
-        // The *only* guarantee the library makes about a non-finite value, and the reason this sweep
-        // exists rather than a per-stat rule. A non-finite value is allowed to propagate and allowed to
-        // poison the stat for good - it was a real observation of something unusable, and hiding that
-        // would turn a gap in the input into a confidently wrong answer. What is ruled out is turning it
-        // into an outage in the caller.
-        //
-        // Both infinities are swept alongside NaN, because they reach different code. An infinity passes
-        // every ordering comparison, so a range check that a NaN fails will let an infinity through and
-        // fail somewhere further in. A caller who wants none of them uses `filterFinite()`.
-        // What is asserted is precisely that *non-finiteness* is not what causes a throw, which is not the
-        // same as "every value is accepted". A stat may legitimately restrict its domain - HdrHistogram
-        // takes non-negative values only - and `-Infinity` is negative, so refusing it there is the same
-        // rule that refuses -5.0 rather than a non-finite defect. Each infinity is therefore paired with a
-        // finite value of the same sign, and a stat that rejects both is exercising its domain rather than
-        // tripping over the infinity. NaN has no signed analogue, so it must never throw at all - a
-        // `value >= 0.0` domain guard is false for NaN and would read it as negative.
+        // Pair infinities with finite values of the same sign to distinguish domain restrictions
+        // from failures caused solely by non-finiteness.
         val probes = listOf(
             Double.NaN to null,
             Double.POSITIVE_INFINITY to 1e6,
@@ -260,8 +224,6 @@ class SeriesStatContractSweepTest {
 
     @Test
     fun `a NaN value propagates through the accumulating families`() {
-        // The positive half of the rule, pinned on the stats where propagation is well defined, so
-        // nobody quietly reintroduces a drop guard: these must report NaN, not a stale or zero value.
         for (name in listOf("Mean", "Sum", "Variance", "Moments", "DecayingSum", "EwmaMean")) {
             val spec = specs.first { it.first == name }.second
             val stat = primed(spec)
@@ -287,7 +249,7 @@ class SeriesStatContractSweepTest {
     @Test
     fun `create returns independent series stats with the requested concurrency`() {
         for ((name, spec) in specs) {
-            // Reservoir copies derive independent admission seeds.
+            // Reservoir copies derive independent admission seeds, so replayed snapshots can differ.
             if (spec is ReservoirHistogram) continue
             val original = primed(spec)
             val before = original.read(readAt)
@@ -330,15 +292,8 @@ class SeriesStatContractSweepTest {
     }
 
     private companion object {
-        /** Stats that deliberately act on a NaN observation; see the exception noted on [Stat]. */
         val NAN_EXEMPT = setOf("RunLength")
 
-        /**
-         * Series stats whose recurrence has no inverse, so a negative weight is dropped rather than
-         * downdated. Membership is exactly the set that guards on `isNotPositiveWeight`; the rest of
-         * the catalogue guards on `isInertWeight` and subtracts. A new sketch or histogram belongs
-         * here, and adding it to the catalogue without adding it here is the drift this pins down.
-         */
         val NO_INVERSE = setOf(
             "DDSketch",
             "DecayingVariance",
@@ -349,7 +304,6 @@ class SeriesStatContractSweepTest {
             "TDigest",
         )
 
-        /** Outside the primed sample range, so every stat above visibly absorbs it at a live weight. */
         const val PROBE = 999.0
     }
 }

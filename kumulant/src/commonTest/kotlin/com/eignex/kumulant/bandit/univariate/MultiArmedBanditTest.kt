@@ -84,7 +84,6 @@ class MultiArmedBanditTest {
         val before = mab.armResult(0).trials
         mab.reset()
         val after = mab.armResult(0).trials
-        // After reset, only the prior pseudo-counts (2 + 5 = 7) remain.
         assertEquals(7.0, after, 1e-9)
         assertTrue(before > after, "reset shrank trials: $before -> $after")
     }
@@ -95,7 +94,6 @@ class MultiArmedBanditTest {
         repeat(30) { original.update(0, 1.0) }
         val fresh = original.create(original.random)
         assertEquals(3, fresh.snapshot().size)
-        // Fresh has only prior pseudo-counts on each arm
         val freshTrials = fresh.armResult(0).trials
         val origTrials = original.armResult(0).trials
         assertTrue(origTrials > freshTrials)

@@ -74,7 +74,7 @@ class LinearCountingStatTest {
     @Test
     fun `invalid bits throws`() {
         assertFailsWith<IllegalArgumentException> { LinearCountingStat(bits = 0) }
-        assertFailsWith<IllegalArgumentException> { LinearCountingStat(bits = 100) } // not a power of two
-        assertFailsWith<IllegalArgumentException> { LinearCountingStat(bits = 32) } // not a multiple of 64
+        assertFailsWith<IllegalArgumentException> { LinearCountingStat(bits = 100) }
+        assertFailsWith<IllegalArgumentException> { LinearCountingStat(bits = 32) }
     }
 }

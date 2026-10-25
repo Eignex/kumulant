@@ -12,8 +12,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-// A model must not silently get *worse* by folding in a snapshot that carries no information, and
-// must not train on a label that is not one.
 class RegressionMergeGuardTest {
 
     private val splits = listOf(ThresholdSplit(0, 4.5))
@@ -27,8 +25,6 @@ class RegressionMergeGuardTest {
         repeat(20) { stat.merge(DiagonalRegressionStat(featureSize = 1).read()) }
 
         val after = stat.read()
-        // Every replica seeds its precision at priorPrecision, so an additive pool would count the
-        // prior once per merge while folding in snapshots that contain no data at all.
         assertEquals(before.weights[0], after.weights[0], 1e-9, "an empty snapshot moved the weights")
         assertEquals(before.precision[0], after.precision[0], 1e-9, "an empty snapshot moved the precision")
         assertEquals(before.totalWeights, after.totalWeights, 1e-9)
@@ -46,7 +42,6 @@ class RegressionMergeGuardTest {
 
         a.merge(b.read())
 
-        // Two replicas of the same evidence: the pooled precision is 2*(single - prior) + prior.
         val prior = 1.0
         assertEquals(2.0 * (single - prior) + prior, a.read().precision[0], 1e-9)
     }
@@ -61,8 +56,6 @@ class RegressionMergeGuardTest {
         softmax.update(doubleArrayOf(100.0), Double.NaN)
         softmax.update(doubleArrayOf(100.0), -0.7)
 
-        // toInt() truncates toward zero, so an unguarded label would land in class 0 and pass the
-        // range check.
         assertEquals(0.0, gnb.read().totalWeights, "GaussianNaiveBayes trained on a non-label")
         assertEquals(0.0, softmax.read().totalWeights, "SoftmaxRegression trained on a non-label")
     }
@@ -74,13 +67,11 @@ class RegressionMergeGuardTest {
         for (i in 0 until 200) {
             val x = doubleArrayOf((i % 10).toDouble())
             val y = 2.0 * (i % 10)
-            probed.update(x, y, 0.0) // must consume no bagging draws
+            probed.update(x, y, 0.0)
             clean.update(x, y, 1.0)
             probed.update(x, y, 1.0)
         }
 
-        // A zero-weight call that drew once per tree from baggingRng would desynchronise every later
-        // draw and change the forest's predictions.
         val at = DenseVector.of(doubleArrayOf(3.0))
         assertEquals(clean.read().predict(at), probed.read().predict(at), 1e-12)
 

@@ -29,8 +29,6 @@ class RegressionContextualBanditTest {
 
     @Test
     fun `choose converges to the arm with the best linear payoff`() {
-        // Three arms with different true weight vectors; the bandit should learn
-        // which one pays best on the average context.
         val trueWeights = listOf(
             doubleArrayOf(1.0, 0.0),
             doubleArrayOf(0.0, 1.0),
@@ -53,7 +51,6 @@ class RegressionContextualBanditTest {
             bandit.update(arm, xv, reward)
         }
 
-        // At feature (1, 0), arm 0 is best; at (0, 1), arm 1 is best.
         val picksAt10 = IntArray(3)
         val picksAt01 = IntArray(3)
         repeat(200) {
@@ -67,8 +64,6 @@ class RegressionContextualBanditTest {
 
     @Test
     fun `evaluate is reproducible under a fixed seed`() {
-        // Same RNG seed, same snapshot -> same score. Catches accidental shared mutable
-        // state on the posterior.
         val rng = Random(0)
         val bandit = RegressionContextualBandit(
             nbrArms = 2,
@@ -128,7 +123,6 @@ class RegressionContextualBanditTest {
         )
         merged.merge(ba.snapshot())
         merged.merge(bb.snapshot())
-        // Merged bandit should have higher total weight per arm than either replica.
         val mergedW = merged.armResult(0).totalWeights
         val singleW = ba.armResult(0).totalWeights
         assertTrue(mergedW >= singleW, "merged $mergedW should >= single $singleW")
@@ -206,14 +200,11 @@ class RegressionContextualBanditTest {
         repeat(50) {
             bandit.update(0, feat(1.0, 0.0), 1.0)
         }
-        // Global has absorbed updates regardless of arm
         assertTrue(bandit.globalSnapshot()!!.totalWeights > 0.0)
     }
 
     @Test
     fun `pooled bandit feeds residuals to per-arm regressors`() {
-        // When pooling is on and the global has fitted some signal, the per-arm regressors
-        // should track delta-from-global, not raw reward.
         val rng = Random(1)
         val pooled = RegressionContextualBandit(
             nbrArms = 2,
@@ -222,8 +213,6 @@ class RegressionContextualBanditTest {
             globalTemplate = BayesianRegressionStat(featureSize = 2),
             random = rng,
         )
-        // Both arms see the same reward function -> per-arm residuals should stay near zero,
-        // while the global picks up the signal.
         repeat(500) {
             val x = doubleArrayOf(rng.nextDouble(), rng.nextDouble())
             val xv = DenseVector.of(x)
@@ -232,10 +221,8 @@ class RegressionContextualBanditTest {
             pooled.update(1, xv, reward)
         }
         val globalSnap = pooled.globalSnapshot()!!
-        // Global weights should approximate (2.0, 0.5)
         assertTrue(abs(globalSnap.weights[0] - 2.0) < 0.5, "global w[0]=${globalSnap.weights[0]}")
         assertTrue(abs(globalSnap.weights[1] - 0.5) < 0.5, "global w[1]=${globalSnap.weights[1]}")
-        // Per-arm weights should be small (residual ~ 0)
         val arm0 = pooled.armResult(0)
         assertTrue(abs(arm0.weights[0]) < 0.5, "arm0 residual w[0]=${arm0.weights[0]} should be near 0")
     }

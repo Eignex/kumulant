@@ -16,9 +16,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
-// A Kotlin `data class` derives `equals` from its components and array components compare by
-// reference, so the array-bearing results have to hand-roll it to keep the documented promise that
-// results are structurally comparable.
 class ResultEqualityTest {
 
     private fun sketch(quantiles: DoubleArray) = SketchResult(
@@ -84,7 +81,6 @@ class ResultEqualityTest {
         val small = HyperLogLogResult(1.0, 2, intArrayOf(1, 2), 2L).toString()
         assertTrue(small.contains("registers=[1, 2]"), "small arrays should be rendered: $small")
 
-        // A real HLL register bank is 2^precision entries; dumping it would flood a log line.
         val large = HyperLogLogResult(1.0, 14, IntArray(16_384), 99L).toString()
         assertTrue(large.contains("registers=IntArray(size=16384)"), "large arrays should be summarised: $large")
         assertFalse(large.length > 200, "summarised toString should stay short, was ${large.length} chars")

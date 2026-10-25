@@ -67,9 +67,6 @@ class RandomForestRegressionStatTest {
 
     @Test
     fun `reset restarts the bagging stream a fresh stat would draw`() {
-        // reset promises the equivalent of a fresh stat, not merely an emptied one. The bagging draws
-        // are the visible half of that: without restarting them the rebuilt forest resumes from
-        // wherever the discarded one left off, and its per-tree weights never match a fresh stat's.
         val fresh = baggedForest(seed = 7)
         val reused = baggedForest(seed = 7)
         feed(reused, 400)
@@ -82,10 +79,6 @@ class RandomForestRegressionStatTest {
 
     @Test
     fun `copies bag independently of the forest they came from`() {
-        // An invariant guard rather than a regression test: copies drew distinct seeds before the
-        // switch to CounterRandom too, since create advanced the parent's generator either way. What
-        // it pins is that create must keep deriving per-copy seeds at all, because a window builds one
-        // slice per copy and slices sharing a stream would bag every observation identically.
         val template = baggedForest(seed = 11)
         val first = template.create()
         val second = template.create()
@@ -126,8 +119,6 @@ class RandomForestRegressionStatTest {
         randomSeed = seed,
     )
 
-    // Per-tree weights rather than a prediction: bagging is exactly what they record, whereas a
-    // forest's prediction converges to the same value however the observations were reweighted.
     private fun perTreeWeights(stat: RandomForestRegressionStat): List<Double> =
         stat.read(0L).trees.map { it.totalWeights }
 

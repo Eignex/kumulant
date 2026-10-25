@@ -10,9 +10,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// Encoding an [IndexedResult] needs a caller-supplied [SerializersModule] covering its `inner` field,
-// which is typed as the open [Result] interface and so resolves polymorphically. The module below
-// registers the one subclass these tests need.
 class IndexedResultSerializationTest {
 
     private val json = Json {
@@ -33,11 +30,7 @@ class IndexedResultSerializationTest {
 
     @Test
     fun `IndexedResult carries its declared wire name`() {
-        // Encoded through an explicit PolymorphicSerializer rather than `encodeToString<Result>`.
-        // The reified form resolves on JVM but throws on Kotlin/Native, where a
-        // serializer for a non-@Serializable open interface cannot be looked up from the type
-        // alone. Anything shipping results by their interface type needs the explicit form to
-        // behave the same on every target.
+        // Kotlin/Native cannot infer a serializer for the open Result interface; pass one explicitly.
         val wire = json.encodeToString(
             PolymorphicSerializer(Result::class),
             IndexedResult(WeightedMeanResult(1.0, 1.0), 0),

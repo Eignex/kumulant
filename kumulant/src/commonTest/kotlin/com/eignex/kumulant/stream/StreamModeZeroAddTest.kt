@@ -6,8 +6,7 @@ import kotlin.test.assertEquals
 
 class StreamModeZeroAddTest {
 
-    // HighWrite is excluded on purpose: a striped adder sums from a +0.0 base, so it cannot represent a
-    // negative zero at all and loses the sign when the cell is seeded, before any add. See AdderMode.
+    // HighWrite cannot represent negative zero because striped sums start from +0.0.
     private val levelsThatCanSignZero = Concurrency.entries.filter { it != Concurrency.HighWrite }
 
     @Test

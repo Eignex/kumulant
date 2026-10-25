@@ -58,10 +58,9 @@ data class WeightedVarianceResult(
  * **Update:** O(1) per observation.
  *
  * **Concurrency:** Welford-coupled cells. [Concurrency.Strict] and
- * [Concurrency.HighWrite] lock the body; exact match to a serial run up to
- * floating-point reorder ULPs. [Concurrency.Relaxed] drops the lock and the
- * three cells race independently; the variance drifts ~1e-4 relative under
- * contention but never throws.
+ * [Concurrency.HighWrite] lock updates and reads. [Concurrency.Relaxed] uses
+ * atomic cells without a shared lock, so coupled state can drift under contention.
+ * Floating-point results depend on update order.
  */
 class VarianceStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<WeightedVarianceResult> {
 

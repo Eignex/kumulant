@@ -6,13 +6,6 @@ import java.lang.management.ManagementFactory
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-// DDSketch assigns a bin per distinct log-bucket index and its bin array spans the whole range
-// between the smallest and largest index seen, allocating a cell for every index in between. Without
-// [DDSketchStat.minIndexableValue] and [DDSketchStat.maxIndexableValue], two observations at opposite
-// ends of the Double range force an enormous array - measured from exactly two updates at 2472 KiB
-// for a relative error of 0.01, 28195 KiB at 0.001 and 220521 KiB at 0.0001. Tighter still and the
-// index saturates `Int`, `maxIndex` overflows negative, the resize is skipped and accumulated bins
-// are silently dropped.
 class DDSketchMemoryBoundTest {
 
     private val bean = ManagementFactory.getThreadMXBean() as ThreadMXBean
@@ -49,8 +42,6 @@ class DDSketchMemoryBoundTest {
         sketch.update(1.0)
         sketch.update(Double.MAX_VALUE)
         val r = sketch.read()
-        // Folding into the edge bins must not lose the observation: the total still sees all
-        // three, so quantile ranks stay correct even where the value is clamped.
         assertTrue(r.totalWeights == 3.0, "expected all three observations counted, got ${r.totalWeights}")
         assertTrue(r.quantiles[0] > 0.0 && r.quantiles[0].isFinite(), "p50 was ${r.quantiles[0]}")
     }

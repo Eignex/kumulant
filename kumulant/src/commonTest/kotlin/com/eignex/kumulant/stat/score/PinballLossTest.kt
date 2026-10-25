@@ -20,9 +20,7 @@ class PinballLossTest {
     fun `tau equals 0_9 penalizes under-prediction more`() {
         val tau = 0.9
         val stat = PinballLossStat(tau).apply {
-            // y > forecast (under-prediction): loss = tau * |diff|
             update(x = 0.0, y = 1.0, timestampNanos = 0L, weight = 1.0)
-            // y < forecast (over-prediction): loss = (1-tau) * |diff|
             update(x = 1.0, y = 0.0, timestampNanos = 0L, weight = 1.0)
         }
         val expected = (tau * 1.0 + (1.0 - tau) * 1.0) / 2.0

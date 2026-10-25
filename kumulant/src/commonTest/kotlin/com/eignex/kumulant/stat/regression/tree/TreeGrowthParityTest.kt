@@ -5,13 +5,9 @@ import com.eignex.kumulant.feat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-// Both trees are fed identical rows, with the regression target being the 0/1 class label as a Double.
-// On binary labels the two split criteria are proportional (Bernoulli variance is exactly half the Gini
-// impurity), so the candidate ranking is identical and both trees must reach the same structure.
+// For binary targets, variance is half the Gini impurity, so candidate rankings must agree.
 class TreeGrowthParityTest {
 
-    // Feature 0 decides the label for three quarters of the stream, feature 1 resolves the remaining
-    // quarter, so the grown tree is a root split, one nested split, and three leaves.
     private val rows = listOf(
         feat(1.0, 0.0) to 1,
         feat(1.0, 0.0) to 1,
@@ -73,8 +69,6 @@ class TreeGrowthParityTest {
     fun `neither tree splits while the candidates carry no signal`() {
         val regression = RegressionTree<Vector>(splitCandidates = candidates, randomSeed = 7)
         val classification = ClassificationTree(numClasses = 2, splitCandidates = candidates, randomSeed = 7)
-        // A constant label leaves every candidate at zero impurity reduction, so shouldSplit must refuse
-        // in both trees no matter how much weight piles up.
         repeat(500) {
             val row = rows[it % rows.size].first
             regression.update(row, 1.0)

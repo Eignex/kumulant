@@ -11,9 +11,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// Schemas are pure description. [Concurrency] is a deployment choice supplied to the
-// `*StatGroup(schema, concurrency)` / `*ListStats(schema, concurrency)` constructors, and it applies to
-// the whole tree the schema describes, nested groups included.
 class StatSchemaConcurrencyTest {
 
     @Test

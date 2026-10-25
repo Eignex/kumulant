@@ -5,9 +5,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// Both stats merge approximately by averaging the drift cells, which is only meaningful between two
-// walks that both happened; against an empty stat the other operand is a zero no observation
-// produced, and `alarmUp` thresholds on the cumulative sum directly.
 class ChangeStatMergeAdoptionTest {
 
     private fun cusumSnapshot(): CusumResult {
@@ -31,9 +28,7 @@ class ChangeStatMergeAdoptionTest {
 
     @Test
     fun `a merged snapshot still raises the alarm it raised on the worker`() {
-        // The threshold is deliberately picked to sit between the real drift and half of it, or the
-        // test proves nothing: at a low threshold even a halved sum still alarms. The worker's drift
-        // is 20 * (2.0 - 0.5) = 30.
+        // Place the threshold between the full drift and half of it so accidental averaging changes the alarm.
         val worker = CusumStat(target = 0.0, referenceValue = 0.5, threshold = 20.0)
         repeat(20) { worker.update(2.0) }
         val snapshot = worker.read()
@@ -48,8 +43,6 @@ class ChangeStatMergeAdoptionTest {
 
     @Test
     fun `a non-empty CusumStat still averages`() {
-        // Guards the rule above: adopting unconditionally would satisfy both tests and break the
-        // documented approximate-merge behaviour.
         val a = CusumStat(target = 0.0, referenceValue = 0.5, threshold = 5.0)
         repeat(20) { a.update(2.0) }
         val own = a.read().cusumPositive
@@ -62,7 +55,6 @@ class ChangeStatMergeAdoptionTest {
 
     @Test
     fun `an empty CusumStat that has been reset adopts again`() {
-        // reset() has to clear the initialized cell too, or a reused coordinator keeps halving.
         val coordinator = CusumStat(target = 0.0, referenceValue = 0.5, threshold = 5.0)
         repeat(20) { coordinator.update(2.0) }
         coordinator.reset()
@@ -73,8 +65,7 @@ class ChangeStatMergeAdoptionTest {
         assertEquals(snapshot.cusumPositive, coordinator.read().cusumPositive, DELTA, "reset left it primed")
     }
 
-    // A level shift, not a constant stream: Page-Hinkley subtracts its own running mean, so a
-    // constant input drifts nowhere.
+    // A constant input produces no Page-Hinkley drift because it subtracts its running mean.
     private fun pageHinkleySnapshot(): PageHinkleyResult {
         val worker = PageHinkleyStat(delta = 0.005, threshold = 50.0)
         repeat(60) { worker.update(0.0) }
@@ -93,7 +84,6 @@ class ChangeStatMergeAdoptionTest {
         val merged = coordinator.read()
         assertEquals(snapshot.cumulativePositive, merged.cumulativePositive, DELTA, "the drift was halved")
         assertEquals(snapshot.cumulativeNegative, merged.cumulativeNegative, DELTA, "the drift was halved")
-        // The mean adopts on its own, because a localCount of zero weights it out.
         assertEquals(snapshot.mean, merged.mean, DELTA, "the mean should always have adopted")
     }
 

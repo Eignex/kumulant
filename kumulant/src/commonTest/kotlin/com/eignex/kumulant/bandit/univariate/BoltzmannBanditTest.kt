@@ -45,7 +45,6 @@ class BoltzmannBanditTest {
         b.playDistribution()
         b.playDistribution()
         b.playDistribution()
-        // step=3, tau = 1/3
         assertTrue(abs(b.temperature() - 1.0 / 3.0) < 1e-9)
     }
 

@@ -69,7 +69,6 @@ class TreePosteriorsTest {
     @Test
     fun `ThompsonTreePosterior falls back to prior variance on empty leaves`() {
         val s = snap(WeightedVarianceResult(0.0, 0.0, 0.0))
-        // exploration = 1.0, totalWeights = 0 -> uses priorVariance = 4.0. SD is sqrt(4/1) = 2.
         val rng = Random(3)
         val draws = DoubleArray(200) {
             ThompsonTreePosterior(priorWeight = 1.0, priorVariance = 4.0)

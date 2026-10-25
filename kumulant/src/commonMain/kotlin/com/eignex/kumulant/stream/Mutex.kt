@@ -14,74 +14,34 @@ interface Mutex {
 }
 
 /**
- * The lock for a [Concurrency] level: [NoopMutex] under [Concurrency.None] — a
- * single-threaded owner pays no synchronization — and a [PlatformMutex] under any
- * concurrent level. The same contract the per-stat `serializedLock` uses, exposed for
- * callers that need a coherent lock for their own coupled state.
+ * Create a no-op lock for [Concurrency.None], otherwise a platform mutex.
+ * Do not re-enter the same mutex while holding it; re-entry is unsupported across platforms.
  */
 fun Concurrency.lock(): Mutex = when (this) {
     Concurrency.None -> NoopMutex
     else -> PlatformMutex()
 }
 
-/** No-op lock used under [com.eignex.kumulant.core.Concurrency.None] and on
- *  drift-tolerant paths. Avoids any synchronization cost. */
 internal object NoopMutex : Mutex {
     override fun <R> withLock(block: () -> R): R = block()
 }
 
-/**
- * Platform-provided mutual-exclusion lock.
- *
- * - JVM: backed by `java.util.concurrent.locks.ReentrantLock`.
- * - Apple / Linux native: backed by a `pthread_mutex_t` allocated via cinterop;
- *   the native handle is freed on GC via `kotlin.native.ref.createCleaner`.
- *
- * Not reentrant: a stat must never call back into itself while holding its own lock. Nesting two
- * *different* locks is fine, which is what an operator holding its lock across a delegate call does.
- *
- * The targets disagree on what a violation costs. The posix actual is an error-checking mutex and
- * throws, naming the mistake; the reentrant JVM backing lets it through silently. So the rule is enforced
- * where it is cheapest to enforce and
- * assumed everywhere else, which means a violation still passes locally on the JVM and surfaces first
- * on a native build.
- */
+// JVM uses ReentrantLock; POSIX uses a GC-cleaned, error-checking pthread mutex.
+// Treat both as non-reentrant: POSIX rejects re-entry even though JVM permits it.
 internal expect class PlatformMutex() : Mutex {
     override fun <R> withLock(block: () -> R): R
 
-    /**
-     * Acquire the lock. Pair with [exit] in a `finally`; prefer [guarded], which does that
-     * for you. Exists so a hot update path can take the lock without constructing a lambda.
-     */
+    // Hot paths use enter/exit to avoid a lambda allocation; guarded ensures release on exceptions.
     fun enter()
 
-    /** Release the lock acquired by [enter]. */
     fun exit()
 }
 
-/**
- * Run [block] holding this lock, without allocating.
- *
- * [Mutex.withLock] is a non-inline interface method taking a function, so every call
- * constructs a capturing lambda. On JVM the JIT scalar-replaces that lambda only while the
- * call site stays monomorphic; once a process has used both [NoopMutex] and [PlatformMutex]
- * the site is polymorphic, escape analysis gives up, and the allocation is real. It measured
- * 32 B per update under [com.eignex.kumulant.core.Concurrency.Strict] in a full-suite run
- * against 0 B when measured alone, and a production process looks like the former. Kotlin
- * platforms without escape analysis pay it unconditionally.
- *
- * Being `inline`, this constructs nothing at all: the branch resolves to a direct
- * `enter`/`try`/`finally`/`exit` around the inlined body, and to the bare body under
- * [NoopMutex]. The `finally` preserves the release-on-throw behaviour `withLock` gave for
- * free, which several stats rely on for their `require` checks.
- */
+// Inlining avoids a capturing lambda on hot update paths, including targets without escape analysis.
+// The finally block must release the lock when validation inside the body throws.
 internal inline fun <R> Mutex.guarded(block: () -> R): R {
     if (this === NoopMutex) return block()
-    // Only [NoopMutex] and [PlatformMutex] exist in this module, and every internal lock comes
-    // from `welfordLock` / `serializedLock` / `Concurrency.lock`, so this always holds. It
-    // cannot fall back to `withLock` for an exotic implementation, because passing an inline
-    // parameter to a non-inline function is not allowed - which is the whole reason the
-    // allocation exists in the first place.
+    // All internal lock factories return one of these two implementations.
     check(this is PlatformMutex) {
         "guarded expects a lock from Concurrency.lock(); got ${this::class.simpleName}"
     }

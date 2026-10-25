@@ -37,7 +37,6 @@ class SplitMetricTest {
     @Test
     fun `rank picks the best split and reports runner-up`() {
         val total = v(20.0, 0.0, 1.0)
-        // Candidate A: nice clean split. Candidate B: weaker.
         val posList = listOf(v(10.0, 1.0, 0.0), v(10.0, 0.4, 0.5))
         val negList = listOf(v(10.0, -1.0, 0.0), v(10.0, -0.4, 0.5))
         val ranked = VarianceReduction.rank(total, posList, negList, minSamplesSplit = 4.0, minSamplesLeaf = 2.0)
@@ -49,7 +48,7 @@ class SplitMetricTest {
     @Test
     fun `rank skips splits below minSamplesLeaf`() {
         val total = v(20.0, 0.0, 1.0)
-        val posList = listOf(v(1.0, 5.0, 0.0)) // pos has only weight 1
+        val posList = listOf(v(1.0, 5.0, 0.0))
         val negList = listOf(v(19.0, 0.0, 0.5))
         val ranked = VarianceReduction.rank(total, posList, negList, minSamplesSplit = 4.0, minSamplesLeaf = 2.0)
         assertEquals(-1, ranked.bestIndex)

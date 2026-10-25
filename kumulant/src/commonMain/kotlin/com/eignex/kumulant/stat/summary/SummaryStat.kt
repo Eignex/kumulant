@@ -21,15 +21,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("SummaryResult")
 data class SummaryResult(
-    /** Cumulative observation weight folded in. */
     override val totalWeights: Double,
     /** Weighted running mean. */
     val mean: Double,
-    /** Population variance: `sst / totalWeights`. */
     override val variance: Double,
-    /** Running minimum value. */
     override val min: Double,
-    /** Running maximum value. */
     override val max: Double,
 ) : Result,
     HasSampleVariance,

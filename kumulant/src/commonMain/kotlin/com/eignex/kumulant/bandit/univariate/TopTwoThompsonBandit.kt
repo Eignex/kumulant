@@ -51,7 +51,6 @@ import kotlin.random.Random
  * best-effort under racing updates.
  */
 class TopTwoThompsonBandit<R : Result>(
-    /** Number of arms. */
     override val nbrArms: Int,
     /** Per-arm posterior + arm spec. */
     val policy: ThompsonSampling<R>,
@@ -59,7 +58,6 @@ class TopTwoThompsonBandit<R : Result>(
     val beta: Double = 0.5,
     /** Cap on the resample loop when searching for a different second arm. */
     val maxResamples: Int = 32,
-    /** Single source of randomness. */
     override val random: Random = Random.Default,
 ) : UnivariateBandit,
     PerArmBandit<R> {

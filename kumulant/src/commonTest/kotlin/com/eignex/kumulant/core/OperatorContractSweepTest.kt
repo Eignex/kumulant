@@ -20,22 +20,11 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val NS_PER_SEC = 1_000_000_000L
 
-// The sibling of SeriesStatContractSweepTest for the operator layer. That sweep materializes bare
-// stats from specs, so an operator wrapping one sat outside it - which is how a whole family of
-// operators came to carry phase across an inert weight while every stat underneath honoured it.
-//
-// Every stateful operator in the library is here, across all five modalities: an operator holding no
-// state between updates (filter, transform, fold, selector) cannot violate the contract, since it has
-// nothing to move. Covering one modality would repeat the original mistake one level down, because
-// [Stat] states the guarantee holds "whatever the modality".
 class OperatorContractSweepTest {
 
     private val readAt = 9L * NS_PER_SEC
     private val samples = doubleArrayOf(3.0, 7.5, 1.0, 12.0, 6.25, 9.0, 2.5, 11.0)
 
-    // An operator's state is only observable through what it forwards, so each case replays the same
-    // stream twice: once with an inert-weight observation spliced in, once without. The two reads must
-    // agree.
     private class Case(val name: String, val read: (Double?, Double) -> Any?)
 
     private inline fun replay(inertWeight: Double?, probe: Double, feed: (Double, Long, Double) -> Unit) {
@@ -45,10 +34,8 @@ class OperatorContractSweepTest {
         }
     }
 
-    // Delegates are chosen so no operator's probe can cancel out. SummaryStat rather than SumStat is
-    // the load-bearing one: a sum telescopes under diff, because the extra terms an absorbed
-    // observation contributes are (probe - prev) + (next - probe), exactly the (next - prev) the sum
-    // would have seen anyway. Count and extrema cannot cancel that way.
+    // A SumStat delegate telescopes under diff and can hide an absorbed probe.
+    // Use count and extrema so an extra observation remains observable.
     private fun series(name: String, build: () -> SeriesStat<*>) = Case(name) { w, probe ->
         val s = build()
         replay(w, probe) { v, ts, wt -> s.update(v, ts, wt) }
@@ -112,7 +99,6 @@ class OperatorContractSweepTest {
     private fun sweep(weight: Double, label: String) {
         val violations = mutableListOf<String>()
         for (case in cases) {
-            // Probe above and below the sample range, so a one-sided operator is caught either way.
             for (probe in doubleArrayOf(999.0, -999.0)) {
                 val withProbe = case.read(weight, probe)
                 val without = case.read(null, probe)
@@ -140,9 +126,6 @@ class OperatorContractSweepTest {
 
     @Test
     fun `the sweep would notice an operator that absorbed the probe`() {
-        // Vacuity guard: the probe has to be an observation each operator visibly absorbs at a live
-        // weight, or "state did not change" proves nothing about the inert case. This is what caught
-        // the telescoping sum the delegate note above describes.
         val inert = cases.filter { it.read(1.0, 999.0) == it.read(null, 999.0) }.map { it.name }
         assertEquals(emptyList(), inert.toList(), "every operator must absorb a live-weight probe")
     }
@@ -150,9 +133,7 @@ class OperatorContractSweepTest {
     private companion object {
         const val PROBE_AT = 4
 
-        // Long enough that no slice has expired by readAt. A shorter window let the probe fall out of
-        // the window before the read, which made every windowed case pass whatever it absorbed - the
-        // vacuity guard caught exactly that. Slice expiry is WindowedStatsTest's job, not this one's.
+        // Keep every probe inside the window until readAt so expiry cannot hide an absorbed update.
         val WINDOW = 12.seconds
         const val SLICES = 4
     }

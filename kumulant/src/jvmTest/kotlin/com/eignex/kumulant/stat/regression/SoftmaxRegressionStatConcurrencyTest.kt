@@ -7,15 +7,11 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// The update path borrows its logits from a workspace the stat owns, but only where the lock is real.
-// `welfordLock` gives Relaxed a no-op, so that level must keep allocating; a shared workspace there would
-// surface as a throw out of the linear-algebra layer rather than as the drift Relaxed promises.
 class SoftmaxRegressionStatConcurrencyTest {
 
     @Test
     fun `concurrent updates neither throw nor stop the stream being counted`() {
-        // None is excluded on purpose: its own documentation puts a shared None stat outside the
-        // contract, and racing one corrupts the plain cells long before any scratch is reached.
+        // Shared None stats are outside the concurrency contract.
         for (concurrency in listOf(Concurrency.Relaxed, Concurrency.Strict, Concurrency.HighWrite)) {
             val stat = SoftmaxRegressionStat(featureSize = 3, numClasses = 3, concurrency = concurrency)
             val failures = ConcurrentLinkedQueue<Throwable>()
@@ -35,8 +31,6 @@ class SoftmaxRegressionStatConcurrencyTest {
 
     @Test
     fun `the relaxed level owns no shared scratch`() {
-        // Relaxed is the one level whose lock does not serialise, so it must not hold a workspace to
-        // share. Racing it is in contract there, and this is the configuration that would throw.
         val stat = SoftmaxRegressionStat(featureSize = 3, numClasses = 3, concurrency = Concurrency.Relaxed)
         val failures = ConcurrentLinkedQueue<Throwable>()
 

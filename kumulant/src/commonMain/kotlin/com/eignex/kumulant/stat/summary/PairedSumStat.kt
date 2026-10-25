@@ -17,7 +17,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 @SerialName("PairedSumResult")
 data class PairedSumResult(
-    /** Cumulative observation weight (`Sum w_i`). */
     override val totalWeights: Double,
     /** Weighted `x` sum (`Sum w_i * x_i`). */
     val sumX: Double,
@@ -28,9 +27,8 @@ data class PairedSumResult(
 /**
  * Weighted paired sum `(Sum w_i*x_i, Sum w_i*y_i)` with accumulated weight.
  *
- * Numerical caveat matches [SumStat]: very long mixed-magnitude streams
- * accumulate ulp drift on the order of `sqrt(n)`. For compensated accumulation,
- * consider running a Welford-style stat over each axis instead.
+ * Each axis uses naive floating-point addition with the same rounding limitations
+ * as [SumStat].
  *
  * **Use cases:** gradient/Hessian aggregation in histogram boosting (one leaf
  * accumulates `(Sum g, Sum h, n)`), or any two-axis additive flow.

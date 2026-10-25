@@ -24,9 +24,6 @@ class VectorScalersTest {
         )
         for (u in updates) scaled.update(u)
 
-        // Reproduce: per-coordinate VarianceStat sees the same updates; the z-scored value
-        // forwarded to the inner sum at each step is `(value - mean) / stdDev` (or 0 while
-        // stdDev is still 0).
         val refPrimaries = Array(dimensions) { VarianceStat() }
         val expectedSums = DoubleArray(dimensions)
         for (u in updates) {
@@ -50,9 +47,6 @@ class VectorScalersTest {
         scaled.update(doubleArrayOf(0.0, 100.0))
         scaled.update(doubleArrayOf(10.0, 200.0))
         scaled.update(doubleArrayOf(5.0, 150.0))
-        // Per coordinate, after the second update min/max are observed; third update maps to 0.5.
-        // Coord 0: 0 -> targetLow=0 (warm-up), 10 -> 1.0, 5 -> 0.5. Sum = 1.5.
-        // Coord 1: 100 -> 0 (warm-up), 200 -> 1.0, 150 -> 0.5. Sum = 1.5.
         val r = scaled.read().results
         assertEquals(1.5, r[0].sum, DELTA)
         assertEquals(1.5, r[1].sum, DELTA)
@@ -74,7 +68,6 @@ class VectorScalersTest {
         scaled.update(doubleArrayOf(2.0, 20.0))
         scaled.reset()
         scaled.update(doubleArrayOf(5.0, 50.0))
-        // First post-reset update is the warm-up zero per coordinate.
         val r = scaled.read().results
         assertEquals(0.0, r[0].sum, DELTA)
         assertEquals(0.0, r[1].sum, DELTA)

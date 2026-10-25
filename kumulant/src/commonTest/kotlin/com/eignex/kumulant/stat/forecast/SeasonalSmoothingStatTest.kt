@@ -19,7 +19,6 @@ class SeasonalSmoothingStatTest {
         }
         val r = s.read()
         assertEquals(baseline, r.level, 0.5)
-        // Seasonal factors should be close to the pattern up to a phase rotation; check the sum is ~0.
         val seasonSum = r.seasons.sum()
         assertTrue(abs(seasonSum) < 1.0, "seasonal factors should average near zero, got sum=$seasonSum")
     }
@@ -41,7 +40,6 @@ class SeasonalSmoothingStatTest {
         val r = s.read()
         assertEquals(baseline, r.level, 0.5)
         val seasonProduct = r.seasons.fold(1.0) { acc, x -> acc * x }
-        // For a multiplicative cycle of length 3 the product of the factors should be close to 1.
         assertTrue(abs(seasonProduct - 1.0) < 0.2, "seasonal factor product=$seasonProduct")
     }
 
@@ -62,7 +60,6 @@ class SeasonalSmoothingStatTest {
             phi = 1.0,
             mode = SeasonalMode.Additive,
         )
-        // Step 1 hits seasons[0] = 1.0 (no trend), step 5 wraps to the same slot.
         assertEquals(11.0, r.forecast(1), DELTA)
         assertEquals(11.0, r.forecast(5), DELTA)
         assertEquals(13.0, r.forecast(3), DELTA)
@@ -70,9 +67,6 @@ class SeasonalSmoothingStatTest {
 
     @Test
     fun `a result rejects a slot that does not index its seasons`() {
-        // The slot indexes the seasons array on the stat's update path, so an unchecked one merges
-        // without complaint and then takes the next update out with an index-out-of-bounds. Rejecting
-        // it at the result keeps that off the update path entirely.
         for (slot in listOf(-1, 4, 99)) {
             assertFailsWith<IllegalArgumentException> {
                 SeasonalSmoothingResult(
@@ -111,11 +105,8 @@ class SeasonalForecastHorizonTest {
     @Test
     fun `a huge horizon picks the same slot as the equivalent short one`() {
         val s = SeasonalSmoothingStat(period = 3, alpha = 0.5, beta = 0.0, gamma = 0.5)
-        // 29 updates leaves the next slot at 2, so `currentSlot + steps - 1` is the sum that overflows.
         for (i in 0 until 29) s.update(1.0 + (i % 3))
         val r = s.read()
-        // Int.MAX_VALUE is 1 mod 3, so it lands on the same season slot as one step ahead, and with
-        // beta = 0 the trend term contributes nothing at either horizon.
         assertEquals(r.forecast(1), r.forecast(Int.MAX_VALUE), DELTA)
     }
 }

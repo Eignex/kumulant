@@ -4,8 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-// None of the three smoothing stats has a principled merge of two independent traces, but all three
-// must at least adopt the first snapshot verbatim rather than averaging it against an empty state.
 class ForecastMergeTest {
 
     @Test
@@ -29,7 +27,6 @@ class ForecastMergeTest {
         val coordinator = source.create()
         repeat(20) { coordinator.merge(snapshot) }
 
-        // Every snapshot is identical, so averaging into it is idempotent once the first is adopted.
         assertEquals(snapshot.variance, coordinator.read().variance, 1e-9)
     }
 
@@ -49,14 +46,12 @@ class ForecastMergeTest {
     fun `merging a seasonal trace brings its phase with its factors`() {
         val a = SeasonalSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4)
         val b = SeasonalSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4)
-        repeat(9) { a.update(it.toDouble()) } // leaves a and b on different slots
+        repeat(9) { a.update(it.toDouble()) }
         repeat(6) { b.update(it.toDouble()) }
         val target = b.read().currentSlot
 
         a.merge(b.read())
 
-        // The averaged factors came from b, so the slot has to be b's too or the factors sit against
-        // a mismatched phase.
         assertEquals(target, a.read().currentSlot)
     }
 
@@ -67,7 +62,6 @@ class ForecastMergeTest {
         stat.update(2.0)
         val r = stat.read()
 
-        // Closed form, so a huge horizon is instant; the damped series also has a finite limit.
         val far = r.forecast(Int.MAX_VALUE)
         assertTrue(far.isFinite(), "damped forecast diverged to $far")
         assertEquals(r.level + (0.9 / 0.1) * r.trend, far, 1e-6)

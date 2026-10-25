@@ -16,7 +16,6 @@ class BandTest {
         val r = s.read()
         assertEquals(2.0, r.center, DELTA)
         assertEquals(2.0, r.k, DELTA)
-        // Variance of 0..4 with N=5 is 2.0; stdDev = sqrt(2).
         val stdDev = sqrt(2.0)
         assertEquals(stdDev, r.scale, DELTA)
         assertEquals(2.0 - 2.0 * stdDev, r.lower, DELTA)

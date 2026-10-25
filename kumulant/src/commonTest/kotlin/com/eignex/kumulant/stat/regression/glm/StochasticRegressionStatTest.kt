@@ -100,7 +100,6 @@ class StochasticRegressionStatTest {
             stat.update(x, y = 1.0 * x[0] - 2.0 * x[1], weight = 1.0)
         }
         val snap = stat.read()
-        // Relaxed mode is still single-threaded in tests; convergence should match Concurrency.None
         assertTrue(abs(snap.weights[0] - 1.0) < 0.3, "w[0] = ${snap.weights[0]}")
         assertTrue(abs(snap.weights[1] - (-2.0)) < 0.3, "w[1] = ${snap.weights[1]}")
     }
@@ -108,22 +107,17 @@ class StochasticRegressionStatTest {
     @Test
     fun `SGD with lazy L1 induces sparsity on the irrelevant coordinate`() {
         val rng = Random(4)
-        // lambda small enough that the signal coord's gradient beats the threshold,
-        // but not so small that irrelevant coords drift far from zero.
         val stat = StochasticRegressionStat(
             featureSize = 3,
             optimizer = Sgd(ConstantRate(0.05)),
             penalty = Penalty.L1(0.01),
         )
-        // Only coord 0 matters; coords 1, 2 are irrelevant noise.
         repeat(2000) {
             val x = doubleArrayOf(rng.nextDouble(), rng.nextDouble(), rng.nextDouble())
             stat.update(x, y = 1.5 * x[0], weight = 1.0)
         }
         val snap = stat.read()
-        // Coord 0 keeps signal (target 1.5; L1 shrinks slightly so > 0.5 is comfortable)
         assertTrue(snap.weights[0] > 0.5, "w[0]=${snap.weights[0]} should be substantially positive")
-        // L1 should keep irrelevant coords closer to zero than the signal coord
         assertTrue(
             abs(snap.weights[1]) < snap.weights[0],
             "w[1]=${snap.weights[1]} should be smaller than w[0]=${snap.weights[0]}",
@@ -137,7 +131,6 @@ class StochasticRegressionStatTest {
     @Test
     fun `SGD with lazy L2 shrinks weights toward zero`() {
         val rng = Random(5)
-        // Strong L2 -> weights stay small even with strong signal.
         val statL2 = StochasticRegressionStat(
             featureSize = 2,
             optimizer = Sgd(ConstantRate(0.05)),
@@ -154,7 +147,6 @@ class StochasticRegressionStatTest {
         }
         val l2 = statL2.read()
         val no = statNoReg.read()
-        // L2 weights should be strictly smaller in magnitude (or near zero) than the unregularised baseline
         assertTrue(abs(l2.weights[0]) <= abs(no.weights[0]) + 0.05)
         assertTrue(abs(l2.weights[1]) <= abs(no.weights[1]) + 0.05)
     }

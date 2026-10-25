@@ -45,8 +45,6 @@ class CounterRateStatTest {
         r.update(10.0, T1)
         val result = r.read(T2)
         assertEquals(10.0, result.totalValue, DELTA)
-        // The reset re-anchors the start window to the post-reset timestamp;
-        // the rate covers only post-reset progress.
         assertEquals(T1, result.startTimestampNanos)
         assertEquals(10.0, result.rate, DELTA)
     }
@@ -63,10 +61,6 @@ class CounterRateStatTest {
     fun `out of order timestamp still contributes its forward delta`() {
         val r = CounterRateStat()
         r.update(100.0, T1)
-        // The second sample carries a smaller timestamp than the first but a
-        // larger counter value; a routine occurrence under concurrent
-        // writers. Ordering is by counter value, not timestamp, so this
-        // contributes its forward delta of 20 and lowers the start window.
         r.update(120.0, T0)
         r.update(130.0, T2)
         val result = r.read(T2)

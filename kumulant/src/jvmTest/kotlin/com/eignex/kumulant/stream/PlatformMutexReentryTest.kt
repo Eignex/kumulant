@@ -5,8 +5,7 @@ import kotlin.test.assertFailsWith
 
 class PlatformMutexReentryTest {
 
-    // Rests on -ea, which Gradle's test task enables by default; without it the check compiles out
-    // and there is nothing to catch.
+    // Requires assertions enabled with -ea, as in the Gradle test task.
     @Test
     fun `re-acquiring a held lock is reported rather than granted`() {
         val mutex = PlatformMutex()

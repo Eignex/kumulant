@@ -9,9 +9,6 @@ import com.eignex.kumulant.schema.spec.DDSketch
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-// A NaN has no rank, so no bin belongs to it: it falls through the sign comparisons in `update` into
-// the zero bucket and drags every quantile toward zero. See `Stat` for why the library propagates a
-// NaN value rather than silently discarding it.
 class DDSketchNaNTest {
 
     @Test
@@ -28,8 +25,6 @@ class DDSketchNaNTest {
 
     @Test
     fun `filtering NaN upstream keeps the sketch clean`() {
-        // The supported remedy, and the reason IsNaN exists as an expression node: none of the
-        // comparison nodes can single out a NaN, since every IEEE comparison against one is false.
         val filtered = DDSketch(relativeError = 0.01, probabilities = listOf(0.5))
             .filter(!X.isNaN())
             .materialize()

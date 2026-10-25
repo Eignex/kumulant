@@ -16,7 +16,6 @@ import kotlin.math.sqrt
 @Serializable
 @SerialName("CovarianceResult")
 data class CovarianceResult(
-    /** Cumulative observation weight folded in. */
     override val totalWeights: Double,
     /** Weighted running mean of `x`. */
     val meanX: Double,

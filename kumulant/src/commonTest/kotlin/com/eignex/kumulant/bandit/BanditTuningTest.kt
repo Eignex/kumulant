@@ -11,8 +11,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
-// A policy that silently stops learning is worse than one that fails loudly, so these assert on
-// what `choose` actually does rather than on the internal weights.
 class BanditTuningTest {
 
     @Test
@@ -93,12 +91,11 @@ class BanditTuningTest {
 
     @Test
     fun `UCB1Normal still explores the losing arm at two arms`() {
-        // Rewards have to vary: this policy scales its bonus by the observed variance, so constant
-        // rewards give a zero bonus legitimately and would not tell us anything about the log term.
+        // Constant rewards would give zero variance and hide a broken exploration bonus.
         val bandit = MultiArmedBandit(2, UCB1Normal(), Random(7))
         repeat(50) { i ->
-            bandit.update(0, if (i % 2 == 0) 0.0 else 2.0) // mean 1
-            bandit.update(1, if (i % 2 == 0) 4.0 else 6.0) // mean 5
+            bandit.update(0, if (i % 2 == 0) 0.0 else 2.0)
+            bandit.update(1, if (i % 2 == 0) 4.0 else 6.0)
         }
 
         val scores = (0 until 2).map { bandit.evaluate(it) }

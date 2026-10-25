@@ -70,7 +70,6 @@ class RegressionTreeTest {
     fun `prettyPrint emits leaf mean when no splits`() {
         val tree = newTree()
         tree.update(feat(0.0), 2.0)
-        // Renderers may omit a trailing `.0`; accept either.
         val out = tree.prettyPrint()
         assertTrue(out.contains("leaf mean=2"), "expected leaf mean in:\n$out")
     }
@@ -83,7 +82,6 @@ class RegressionTreeTest {
         )
         repeat(20) { tree.update(feat(if (it % 2 == 0) -1.0 else 1.0), if (it % 2 == 0) -1.0 else 1.0) }
         val out = tree.prettyPrint()
-        // Renderers may render Double 0.0 as "0"; accept either.
         assertTrue(
             out.contains("if (x[0] <= 0.0)") || out.contains("if (x[0] <= 0)"),
             "expected split predicate in:\n$out",
