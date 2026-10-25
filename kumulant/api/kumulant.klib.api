@@ -162,6 +162,11 @@ abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.cor
 
 abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.stat.regression/RegressionPosterior { // com.eignex.kumulant.stat.regression/RegressionPosterior|null[0]
     abstract fun evaluate(#A, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double = ...): kotlin/Double // com.eignex.kumulant.stat.regression/RegressionPosterior.evaluate|evaluate(1:0;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression/RegressionPosterior.Companion|null[0]
+        final fun <#A2: kotlin/Any?> serializer(kotlinx.serialization/KSerializer<#A2>): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression/RegressionPosterior<#A2>> // com.eignex.kumulant.stat.regression/RegressionPosterior.Companion.serializer|serializer(kotlinx.serialization.KSerializer<0:0>){0§<kotlin.Any?>}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression/RegressionPosterior.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
 }
 
 abstract interface <#A: in kotlin/Any?> com.eignex.kumulant.stat.regression.tree/Split { // com.eignex.kumulant.stat.regression.tree/Split|null[0]
@@ -423,103 +428,6 @@ sealed interface com.eignex.kumulant.bandit.contextual/ContextualBanditSpec { //
     }
 }
 
-sealed interface com.eignex.kumulant.bandit.contextual/LinearRegressionSpec { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec|null[0]
-    final class Bayesian : com.eignex.kumulant.bandit.contextual/LinearRegressionSpec { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian|null[0]
-        constructor <init>(kotlin/Int, kotlin/Double = ...) // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.<init>|<init>(kotlin.Int;kotlin.Double){}[0]
-
-        final val featureSize // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.featureSize|{}featureSize[0]
-            final fun <get-featureSize>(): kotlin/Int // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.featureSize.<get-featureSize>|<get-featureSize>(){}[0]
-        final val priorVariance // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.priorVariance|{}priorVariance[0]
-            final fun <get-priorVariance>(): kotlin/Double // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.priorVariance.<get-priorVariance>|<get-priorVariance>(){}[0]
-
-        final fun component1(): kotlin/Int // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.component1|component1(){}[0]
-        final fun component2(): kotlin/Double // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.component2|component2(){}[0]
-        final fun copy(kotlin/Int = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.copy|copy(kotlin.Int;kotlin.Double){}[0]
-        final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.equals|equals(kotlin.Any?){}[0]
-        final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.hashCode|hashCode(){}[0]
-        final fun toString(): kotlin/String // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.toString|toString(){}[0]
-
-        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian> { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.$serializer|null[0]
-            final val descriptor // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.$serializer.descriptor|{}descriptor[0]
-                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.$serializer.childSerializers|childSerializers(){}[0]
-            final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-            final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian) // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.bandit.contextual.LinearRegressionSpec.Bayesian){}[0]
-        }
-
-        final object Companion { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.Companion|null[0]
-            final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian> // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Bayesian.Companion.serializer|serializer(){}[0]
-        }
-    }
-
-    final class Diagonal : com.eignex.kumulant.bandit.contextual/LinearRegressionSpec { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal|null[0]
-        constructor <init>(kotlin/Int, kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.<init>|<init>(kotlin.Int;kotlin.Double;kotlin.Double){}[0]
-
-        final val featureSize // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.featureSize|{}featureSize[0]
-            final fun <get-featureSize>(): kotlin/Int // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.featureSize.<get-featureSize>|<get-featureSize>(){}[0]
-        final val learningRate // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.learningRate|{}learningRate[0]
-            final fun <get-learningRate>(): kotlin/Double // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.learningRate.<get-learningRate>|<get-learningRate>(){}[0]
-        final val priorPrecision // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.priorPrecision|{}priorPrecision[0]
-            final fun <get-priorPrecision>(): kotlin/Double // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.priorPrecision.<get-priorPrecision>|<get-priorPrecision>(){}[0]
-
-        final fun component1(): kotlin/Int // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.component1|component1(){}[0]
-        final fun component2(): kotlin/Double // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.component2|component2(){}[0]
-        final fun component3(): kotlin/Double // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.component3|component3(){}[0]
-        final fun copy(kotlin/Int = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.copy|copy(kotlin.Int;kotlin.Double;kotlin.Double){}[0]
-        final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.equals|equals(kotlin.Any?){}[0]
-        final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.hashCode|hashCode(){}[0]
-        final fun toString(): kotlin/String // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.toString|toString(){}[0]
-
-        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal> { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.$serializer|null[0]
-            final val descriptor // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.$serializer.descriptor|{}descriptor[0]
-                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.$serializer.childSerializers|childSerializers(){}[0]
-            final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-            final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal) // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.bandit.contextual.LinearRegressionSpec.Diagonal){}[0]
-        }
-
-        final object Companion { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.Companion|null[0]
-            final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal> // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Diagonal.Companion.serializer|serializer(){}[0]
-        }
-    }
-
-    final class Stochastic : com.eignex.kumulant.bandit.contextual/LinearRegressionSpec { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic|null[0]
-        constructor <init>(kotlin/Int, kotlin/Double = ...) // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.<init>|<init>(kotlin.Int;kotlin.Double){}[0]
-
-        final val featureSize // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.featureSize|{}featureSize[0]
-            final fun <get-featureSize>(): kotlin/Int // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.featureSize.<get-featureSize>|<get-featureSize>(){}[0]
-        final val learningRate // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.learningRate|{}learningRate[0]
-            final fun <get-learningRate>(): kotlin/Double // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.learningRate.<get-learningRate>|<get-learningRate>(){}[0]
-
-        final fun component1(): kotlin/Int // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.component1|component1(){}[0]
-        final fun component2(): kotlin/Double // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.component2|component2(){}[0]
-        final fun copy(kotlin/Int = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.copy|copy(kotlin.Int;kotlin.Double){}[0]
-        final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.equals|equals(kotlin.Any?){}[0]
-        final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.hashCode|hashCode(){}[0]
-        final fun toString(): kotlin/String // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.toString|toString(){}[0]
-
-        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic> { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.$serializer|null[0]
-            final val descriptor // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.$serializer.descriptor|{}descriptor[0]
-                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.$serializer.childSerializers|childSerializers(){}[0]
-            final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-            final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic) // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.bandit.contextual.LinearRegressionSpec.Stochastic){}[0]
-        }
-
-        final object Companion { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.Companion|null[0]
-            final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic> // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Stochastic.Companion.serializer|serializer(){}[0]
-        }
-    }
-
-    final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.contextual/LinearRegressionSpec> // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Companion.serializer|serializer(){}[0]
-        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.bandit.contextual/LinearRegressionSpec.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
-    }
-}
-
 sealed interface com.eignex.kumulant.bandit.univariate/UnivariateBanditSpec { // com.eignex.kumulant.bandit.univariate/UnivariateBanditSpec|null[0]
     final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.bandit.univariate/UnivariateBanditSpec.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.univariate/UnivariateBanditSpec> // com.eignex.kumulant.bandit.univariate/UnivariateBanditSpec.Companion.serializer|serializer(){}[0]
@@ -745,7 +653,12 @@ sealed interface com.eignex.kumulant.stat.regression.tree/ClassificationSplitMet
     }
 }
 
-sealed interface com.eignex.kumulant.stat.regression.tree/ForestPosterior : com.eignex.kumulant.stat.regression/RegressionPosterior<com.eignex.kumulant.stat.regression.tree/ForestRegressionResult> // com.eignex.kumulant.stat.regression.tree/ForestPosterior|null[0]
+sealed interface com.eignex.kumulant.stat.regression.tree/ForestPosterior : com.eignex.kumulant.stat.regression/RegressionPosterior<com.eignex.kumulant.stat.regression.tree/ForestRegressionResult> { // com.eignex.kumulant.stat.regression.tree/ForestPosterior|null[0]
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.tree/ForestPosterior.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/ForestPosterior> // com.eignex.kumulant.stat.regression.tree/ForestPosterior.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.tree/ForestPosterior.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
 
 sealed interface com.eignex.kumulant.stat.regression.tree/SerializableSplit : com.eignex.kumulant.stat.regression.tree/Split<com.eignex.koblas/Vector> { // com.eignex.kumulant.stat.regression.tree/SerializableSplit|null[0]
     final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.tree/SerializableSplit.Companion|null[0]
@@ -787,7 +700,12 @@ sealed interface com.eignex.kumulant.stat.regression.tree/TreeNodeResult { // co
     }
 }
 
-sealed interface com.eignex.kumulant.stat.regression.tree/TreePosterior : com.eignex.kumulant.stat.regression/RegressionPosterior<com.eignex.kumulant.stat.regression.tree/TreeRegressionResult> // com.eignex.kumulant.stat.regression.tree/TreePosterior|null[0]
+sealed interface com.eignex.kumulant.stat.regression.tree/TreePosterior : com.eignex.kumulant.stat.regression/RegressionPosterior<com.eignex.kumulant.stat.regression.tree/TreeRegressionResult> { // com.eignex.kumulant.stat.regression.tree/TreePosterior|null[0]
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.tree/TreePosterior.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/TreePosterior> // com.eignex.kumulant.stat.regression.tree/TreePosterior.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.tree/TreePosterior.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
 
 sealed interface com.eignex.kumulant.stat.regression/Optimizer { // com.eignex.kumulant.stat.regression/Optimizer|null[0]
     abstract val featureSize // com.eignex.kumulant.stat.regression/Optimizer.featureSize|{}featureSize[0]
@@ -888,6 +806,52 @@ final class <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.bandit.con
     final fun reset() // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.reset|reset(){}[0]
     final fun snapshot(): kotlin.collections/List<#A> // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.snapshot|snapshot(){}[0]
     final fun update(kotlin/Int, com.eignex.koblas/Vector, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.contextual/RegressionContextualBandit.update|update(kotlin.Int;com.eignex.koblas.Vector;kotlin.Double;kotlin.Double){}[0]
+}
+
+final class <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.bandit.contextual/RegressionContextualSpec : com.eignex.kumulant.bandit.contextual/ContextualBanditSpec { // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec|null[0]
+    constructor <init>(kotlin/Int, com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>, com.eignex.kumulant.stat.regression/RegressionPosterior<#A>, kotlin/Double = ..., com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>? = ...) // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.<init>|<init>(kotlin.Int;com.eignex.kumulant.schema.spec.RegressionStatSpec<1:0>;com.eignex.kumulant.stat.regression.RegressionPosterior<1:0>;kotlin.Double;com.eignex.kumulant.schema.spec.RegressionStatSpec<1:0>?){}[0]
+
+    final val exploration // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.exploration|{}exploration[0]
+        final fun <get-exploration>(): kotlin/Double // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.exploration.<get-exploration>|<get-exploration>(){}[0]
+    final val globalRegression // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.globalRegression|{}globalRegression[0]
+        final fun <get-globalRegression>(): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>? // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.globalRegression.<get-globalRegression>|<get-globalRegression>(){}[0]
+    final val nbrArms // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.nbrArms|{}nbrArms[0]
+        final fun <get-nbrArms>(): kotlin/Int // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.nbrArms.<get-nbrArms>|<get-nbrArms>(){}[0]
+    final val posterior // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.posterior|{}posterior[0]
+        final fun <get-posterior>(): com.eignex.kumulant.stat.regression/RegressionPosterior<#A> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.posterior.<get-posterior>|<get-posterior>(){}[0]
+    final val regression // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.regression|{}regression[0]
+        final fun <get-regression>(): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.regression.<get-regression>|<get-regression>(){}[0]
+
+    final fun component1(): kotlin/Int // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.component1|component1(){}[0]
+    final fun component2(): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.component2|component2(){}[0]
+    final fun component3(): com.eignex.kumulant.stat.regression/RegressionPosterior<#A> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.component3|component3(){}[0]
+    final fun component4(): kotlin/Double // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.component4|component4(){}[0]
+    final fun component5(): com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>? // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.component5|component5(){}[0]
+    final fun copy(kotlin/Int = ..., com.eignex.kumulant.schema.spec/RegressionStatSpec<#A> = ..., com.eignex.kumulant.stat.regression/RegressionPosterior<#A> = ..., kotlin/Double = ..., com.eignex.kumulant.schema.spec/RegressionStatSpec<#A>? = ...): com.eignex.kumulant.bandit.contextual/RegressionContextualSpec<#A> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.copy|copy(kotlin.Int;com.eignex.kumulant.schema.spec.RegressionStatSpec<1:0>;com.eignex.kumulant.stat.regression.RegressionPosterior<1:0>;kotlin.Double;com.eignex.kumulant.schema.spec.RegressionStatSpec<1:0>?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.toString|toString(){}[0]
+
+    final class <#A1: kotlin/Any?> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.contextual/RegressionContextualSpec<#A1>> { // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer|null[0]
+        constructor <init>(kotlinx.serialization/KSerializer<#A1>) // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.<init>|<init>(kotlinx.serialization.KSerializer<1:0>){}[0]
+
+        final val descriptor // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+        final val typeSerial0 // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.typeSerial0|{}typeSerial0[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.bandit.contextual/RegressionContextualSpec<#A1> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.bandit.contextual/RegressionContextualSpec<#A1>) // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.bandit.contextual.RegressionContextualSpec<1:0>){}[0]
+        final fun typeParametersSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.typeParametersSerializers|typeParametersSerializers(){}[0]
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.Companion|null[0]
+        final val $cachedDescriptor // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.Companion.$cachedDescriptor|{}$cachedDescriptor[0]
+            final fun <get-$cachedDescriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.Companion.$cachedDescriptor.<get-$cachedDescriptor>|<get-$cachedDescriptor>(){}[0]
+
+        final fun <#A2: kotlin/Any?> serializer(kotlinx.serialization/KSerializer<#A2>): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.contextual/RegressionContextualSpec<#A2>> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.Companion.serializer|serializer(kotlinx.serialization.KSerializer<0:0>){0§<kotlin.Any?>}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
 }
 
 final class <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.bandit.univariate/MultiArmedBandit : com.eignex.kumulant.bandit/PerArmBandit<#A>, com.eignex.kumulant.bandit/Scorable, com.eignex.kumulant.bandit/UnivariateBandit { // com.eignex.kumulant.bandit.univariate/MultiArmedBandit|null[0]
@@ -1165,46 +1129,6 @@ final class <#A: kotlin/Any?> com.eignex.kumulant.stat.regression.tree/Regressio
     final fun rootNode(): com.eignex.kumulant.stat.regression.tree/RegressionNode<#A> // com.eignex.kumulant.stat.regression.tree/RegressionTree.rootNode|rootNode(){}[0]
     final fun rootSnapshot(): com.eignex.kumulant.stat.summary/WeightedVarianceResult // com.eignex.kumulant.stat.regression.tree/RegressionTree.rootSnapshot|rootSnapshot(){}[0]
     final fun update(#A, kotlin/Double, kotlin/Double = ...) // com.eignex.kumulant.stat.regression.tree/RegressionTree.update|update(1:0;kotlin.Double;kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.bandit.contextual/RegressionContextualSpec : com.eignex.kumulant.bandit.contextual/ContextualBanditSpec { // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec|null[0]
-    constructor <init>(kotlin/Int, com.eignex.kumulant.bandit.contextual/LinearRegressionSpec, com.eignex.kumulant.stat.regression.glm/LinearPosterior<*>, kotlin/Double = ..., com.eignex.kumulant.bandit.contextual/LinearRegressionSpec? = ...) // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.<init>|<init>(kotlin.Int;com.eignex.kumulant.bandit.contextual.LinearRegressionSpec;com.eignex.kumulant.stat.regression.glm.LinearPosterior<*>;kotlin.Double;com.eignex.kumulant.bandit.contextual.LinearRegressionSpec?){}[0]
-
-    final val exploration // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.exploration|{}exploration[0]
-        final fun <get-exploration>(): kotlin/Double // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.exploration.<get-exploration>|<get-exploration>(){}[0]
-    final val globalRegression // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.globalRegression|{}globalRegression[0]
-        final fun <get-globalRegression>(): com.eignex.kumulant.bandit.contextual/LinearRegressionSpec? // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.globalRegression.<get-globalRegression>|<get-globalRegression>(){}[0]
-    final val nbrArms // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.nbrArms|{}nbrArms[0]
-        final fun <get-nbrArms>(): kotlin/Int // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.nbrArms.<get-nbrArms>|<get-nbrArms>(){}[0]
-    final val posterior // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.posterior|{}posterior[0]
-        final fun <get-posterior>(): com.eignex.kumulant.stat.regression.glm/LinearPosterior<*> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.posterior.<get-posterior>|<get-posterior>(){}[0]
-    final val regression // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.regression|{}regression[0]
-        final fun <get-regression>(): com.eignex.kumulant.bandit.contextual/LinearRegressionSpec // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.regression.<get-regression>|<get-regression>(){}[0]
-
-    final fun component1(): kotlin/Int // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.component1|component1(){}[0]
-    final fun component2(): com.eignex.kumulant.bandit.contextual/LinearRegressionSpec // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.component2|component2(){}[0]
-    final fun component3(): com.eignex.kumulant.stat.regression.glm/LinearPosterior<*> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.component3|component3(){}[0]
-    final fun component4(): kotlin/Double // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.component4|component4(){}[0]
-    final fun component5(): com.eignex.kumulant.bandit.contextual/LinearRegressionSpec? // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.component5|component5(){}[0]
-    final fun copy(kotlin/Int = ..., com.eignex.kumulant.bandit.contextual/LinearRegressionSpec = ..., com.eignex.kumulant.stat.regression.glm/LinearPosterior<*> = ..., kotlin/Double = ..., com.eignex.kumulant.bandit.contextual/LinearRegressionSpec? = ...): com.eignex.kumulant.bandit.contextual/RegressionContextualSpec // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.copy|copy(kotlin.Int;com.eignex.kumulant.bandit.contextual.LinearRegressionSpec;com.eignex.kumulant.stat.regression.glm.LinearPosterior<*>;kotlin.Double;com.eignex.kumulant.bandit.contextual.LinearRegressionSpec?){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.contextual/RegressionContextualSpec> { // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.bandit.contextual/RegressionContextualSpec // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.bandit.contextual/RegressionContextualSpec) // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.bandit.contextual.RegressionContextualSpec){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.contextual/RegressionContextualSpec> // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.Companion.serializer|serializer(){}[0]
-    }
 }
 
 final class com.eignex.kumulant.bandit.univariate/BernoulliArm : com.eignex.kumulant.bandit.univariate/Arm<com.eignex.kumulant.stat.summary/BernoulliSumResult> { // com.eignex.kumulant.bandit.univariate/BernoulliArm|null[0]
@@ -6695,6 +6619,19 @@ final class com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior : c
     final fun evaluate(com.eignex.kumulant.stat.regression.tree/ForestRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.ForestRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior> { // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior) // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.regression.tree.ThompsonForestPosterior){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior> // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.Companion.serializer|serializer(){}[0]
+    }
 }
 
 final class com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior : com.eignex.kumulant.stat.regression.tree/TreePosterior { // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior|null[0]
@@ -6712,6 +6649,19 @@ final class com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior : com
     final fun evaluate(com.eignex.kumulant.stat.regression.tree/TreeRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.TreeRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior> { // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior) // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.regression.tree.ThompsonTreePosterior){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior> // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.Companion.serializer|serializer(){}[0]
+    }
 }
 
 final class com.eignex.kumulant.stat.regression.tree/ThresholdSplit : com.eignex.kumulant.stat.regression.tree/SerializableSplit { // com.eignex.kumulant.stat.regression.tree/ThresholdSplit|null[0]
@@ -6958,6 +6908,19 @@ final class com.eignex.kumulant.stat.regression.tree/UcbForestPosterior : com.ei
     final fun evaluate(com.eignex.kumulant.stat.regression.tree/ForestRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.ForestRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.regression.tree/UcbForestPosterior> { // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.regression.tree/UcbForestPosterior // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.regression.tree/UcbForestPosterior) // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.regression.tree.UcbForestPosterior){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/UcbForestPosterior> // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.Companion.serializer|serializer(){}[0]
+    }
 }
 
 final class com.eignex.kumulant.stat.regression.tree/UcbTreePosterior : com.eignex.kumulant.stat.regression.tree/TreePosterior { // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior|null[0]
@@ -6975,6 +6938,19 @@ final class com.eignex.kumulant.stat.regression.tree/UcbTreePosterior : com.eign
     final fun evaluate(com.eignex.kumulant.stat.regression.tree/TreeRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.TreeRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.regression.tree/UcbTreePosterior> { // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.regression.tree/UcbTreePosterior // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.regression.tree/UcbTreePosterior) // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.regression.tree.UcbTreePosterior){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/UcbTreePosterior> // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.Companion.serializer|serializer(){}[0]
+    }
 }
 
 final class com.eignex.kumulant.stat.regression/AdagradOptimizer : com.eignex.kumulant.stat.regression/Optimizer { // com.eignex.kumulant.stat.regression/AdagradOptimizer|null[0]
@@ -8856,17 +8832,21 @@ final object com.eignex.kumulant.stat.regression.tree/InformationGain : com.eign
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/InformationGain.toString|toString(){}[0]
 }
 
-final object com.eignex.kumulant.stat.regression.tree/MeanForestPosterior : com.eignex.kumulant.stat.regression.tree/ForestPosterior { // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior|null[0]
+final object com.eignex.kumulant.stat.regression.tree/MeanForestPosterior : com.eignex.kumulant.stat.regression.tree/ForestPosterior, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.equals|equals(kotlin.Any?){}[0]
     final fun evaluate(com.eignex.kumulant.stat.regression.tree/ForestRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.ForestRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.hashCode|hashCode(){}[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/MeanForestPosterior> // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.toString|toString(){}[0]
 }
 
-final object com.eignex.kumulant.stat.regression.tree/MeanTreePosterior : com.eignex.kumulant.stat.regression.tree/TreePosterior { // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior|null[0]
+final object com.eignex.kumulant.stat.regression.tree/MeanTreePosterior : com.eignex.kumulant.stat.regression.tree/TreePosterior, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.equals|equals(kotlin.Any?){}[0]
     final fun evaluate(com.eignex.kumulant.stat.regression.tree/TreeRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.TreeRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.hashCode|hashCode(){}[0]
+    final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/MeanTreePosterior> // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.serializer|serializer(){}[0]
+    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.toString|toString(){}[0]
 }
 
@@ -8879,12 +8859,19 @@ final object com.eignex.kumulant.stat.regression.tree/VarianceReduction : com.ei
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/VarianceReduction.toString|toString(){}[0]
 }
 
+final object com.eignex.kumulant.stat.regression/RegressionPosteriorSerializer : kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression/RegressionPosterior<*>> { // com.eignex.kumulant.stat.regression/RegressionPosteriorSerializer|null[0]
+    final val descriptor // com.eignex.kumulant.stat.regression/RegressionPosteriorSerializer.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.regression/RegressionPosteriorSerializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.regression/RegressionPosterior<*> // com.eignex.kumulant.stat.regression/RegressionPosteriorSerializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+    final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.regression/RegressionPosterior<*>) // com.eignex.kumulant.stat.regression/RegressionPosteriorSerializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.regression.RegressionPosterior<*>){}[0]
+}
+
 final val com.eignex.kumulant.math/SplitMix64 // com.eignex.kumulant.math/SplitMix64|{}SplitMix64[0]
     final fun <get-SplitMix64>(): com.eignex.kumulant.math/LongHasher // com.eignex.kumulant.math/SplitMix64.<get-SplitMix64>|<get-SplitMix64>(){}[0]
 
 final fun (com.eignex.koblas/DenseMatrix).com.eignex.kumulant.math/factorCholesky(): com.eignex.kumulant.math/CholeskyFactor // com.eignex.kumulant.math/factorCholesky|factorCholesky@com.eignex.koblas.DenseMatrix(){}[0]
 final fun (com.eignex.kumulant.bandit.contextual/ContextualBanditSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ..., com.eignex.kumulant.core/Concurrency = ...): com.eignex.kumulant.bandit/Bandit // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.ContextualBanditSpec(kotlin.random.Random;com.eignex.kumulant.core.Concurrency){}[0]
-final fun (com.eignex.kumulant.bandit.contextual/RegressionContextualSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ..., com.eignex.kumulant.core/Concurrency = ...): com.eignex.kumulant.bandit.contextual/RegressionContextualBandit<out com.eignex.kumulant.stat.regression.glm/LinearRegressionResult> // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.RegressionContextualSpec(kotlin.random.Random;com.eignex.kumulant.core.Concurrency){}[0]
 final fun (com.eignex.kumulant.bandit.univariate/BernoulliArm.Companion).com.eignex.kumulant.bandit.univariate/warmStart(com.eignex.kumulant.stat.summary/BernoulliSumResult, kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/BernoulliArm // com.eignex.kumulant.bandit.univariate/warmStart|warmStart@com.eignex.kumulant.bandit.univariate.BernoulliArm.Companion(com.eignex.kumulant.stat.summary.BernoulliSumResult;kotlin.Double){}[0]
 final fun (com.eignex.kumulant.bandit.univariate/BoltzmannSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ...): com.eignex.kumulant.bandit.univariate/BoltzmannBandit // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.univariate.BoltzmannSpec(kotlin.random.Random){}[0]
 final fun (com.eignex.kumulant.bandit.univariate/Exp3Spec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ...): com.eignex.kumulant.bandit.univariate/Exp3Bandit // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.univariate.Exp3Spec(kotlin.random.Random){}[0]
@@ -8974,6 +8961,7 @@ final fun (kotlin/Double).com.eignex.kumulant.schema.expr/plus(com.eignex.kumula
 final fun (kotlin/Double).com.eignex.kumulant.schema.expr/times(com.eignex.kumulant.schema.expr/ScalarExpr): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/times|times@kotlin.Double(com.eignex.kumulant.schema.expr.ScalarExpr){}[0]
 final fun <#A: com.eignex.kumulant.core/Result, #B: com.eignex.kumulant.core/Stat<#A>, #C: com.eignex.kumulant.schema/StatKey<#A>> com.eignex.kumulant.schema.runtime/stat(#C, #B): com.eignex.kumulant.schema.runtime/BoundStat<#A, #B, #C> // com.eignex.kumulant.schema.runtime/stat|stat(0:2;0:1){0§<com.eignex.kumulant.core.Result>;1§<com.eignex.kumulant.core.Stat<0:0>>;2§<com.eignex.kumulant.schema.StatKey<0:0>>}[0]
 final fun <#A: com.eignex.kumulant.core/Result, #B: com.eignex.kumulant.core/Stat<#A>> com.eignex.kumulant.schema.runtime/stat(kotlin/String, #B): com.eignex.kumulant.schema.runtime/BoundStat<#A, #B, com.eignex.kumulant.schema/StatKey<#A>> // com.eignex.kumulant.schema.runtime/stat|stat(kotlin.String;0:1){0§<com.eignex.kumulant.core.Result>;1§<com.eignex.kumulant.core.Stat<0:0>>}[0]
+final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.bandit.contextual/RegressionContextualSpec<#A>).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ..., com.eignex.kumulant.core/Concurrency = ...): com.eignex.kumulant.bandit.contextual/RegressionContextualBandit<#A> // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.RegressionContextualSpec<0:0>(kotlin.random.Random;com.eignex.kumulant.core.Concurrency){0§<com.eignex.kumulant.core.Result>}[0]
 final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.bandit.univariate/BanditPolicySpec<#A>).com.eignex.kumulant.bandit/materialize(): com.eignex.kumulant.bandit.univariate/BanditPolicy<#A> // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.univariate.BanditPolicySpec<0:0>(){0§<com.eignex.kumulant.core.Result>}[0]
 final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.bandit.univariate/TopTwoThompsonSpec<#A>).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ...): com.eignex.kumulant.bandit.univariate/TopTwoThompsonBandit<#A> // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.univariate.TopTwoThompsonSpec<0:0>(kotlin.random.Random){0§<com.eignex.kumulant.core.Result>}[0]
 final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec/DiscreteStatSpec<#A>).com.eignex.kumulant.schema.ops/asSeries(): com.eignex.kumulant.schema.spec/SeriesStatSpec<#A> // com.eignex.kumulant.schema.ops/asSeries|asSeries@com.eignex.kumulant.schema.spec.DiscreteStatSpec<0:0>(){0§<com.eignex.kumulant.core.Result>}[0]

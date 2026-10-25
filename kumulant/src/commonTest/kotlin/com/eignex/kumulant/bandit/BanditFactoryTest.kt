@@ -1,6 +1,5 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.kumulant.bandit.contextual.LinearRegressionSpec
 import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
 import com.eignex.kumulant.bandit.univariate.BernoulliArm
 import com.eignex.kumulant.bandit.univariate.BetaPosterior
@@ -17,6 +16,7 @@ import com.eignex.kumulant.bandit.univariate.ThompsonSamplingSpec
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonSpec
 import com.eignex.kumulant.bandit.univariate.Ucb1Spec
 import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec
+import com.eignex.kumulant.schema.spec.BayesianRegression
 import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
 import kotlinx.serialization.json.Json
 import kotlin.random.Random
@@ -90,7 +90,7 @@ class BanditFactoryTest {
     fun `RegressionContextual spec materialises with Bayesian backbone`() {
         val spec = RegressionContextualSpec(
             nbrArms = 4,
-            regression = LinearRegressionSpec.Bayesian(featureSize = 2, priorVariance = 1.5),
+            regression = BayesianRegression(featureSize = 2, priorVariance = 1.5),
             posterior = MultivariateGaussian,
         )
         val b = spec.materialize(Random(0))

@@ -4,6 +4,8 @@ import com.eignex.koblas.Vector
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -21,9 +23,12 @@ import kotlin.random.Random
  *  - [UcbTreePosterior]: UCB-style mean + alpha * sqrt(variance / totalWeights) on
  *    the leaf's sampling-distribution-of-the-mean.
  */
+@Serializable
 sealed interface TreePosterior : RegressionPosterior<TreeRegressionResult>
 
 /** Score is the leaf's running mean; point estimate, no exploration. */
+@Serializable
+@SerialName("MeanTreePosterior")
 data object MeanTreePosterior : TreePosterior {
     override fun evaluate(snapshot: TreeRegressionResult, x: Vector, rng: Random, exploration: Double): Double =
         snapshot.findLeaf(x).mean
@@ -52,6 +57,8 @@ private fun blendedVariance(leaf: WeightedVarianceResult, priorWeight: Double, p
  * blended with [priorVariance] on a [priorWeight] pseudo-count, so a leaf holding one observation - whose
  * sample variance is exactly zero - still has spread. `exploration = 0.0` collapses to the leaf mean.
  */
+@Serializable
+@SerialName("ThompsonTreePosterior")
 data class ThompsonTreePosterior(
     /** Pseudo-count added to the leaf's totalWeights to avoid divide-by-zero on empty leaves. */
     val priorWeight: Double = 1.0,
@@ -72,6 +79,8 @@ data class ThompsonTreePosterior(
  * The `sqrt(.)` term is the leaf's standard error of the mean; the prior-weight floor
  * keeps the bound finite at empty leaves.
  */
+@Serializable
+@SerialName("UcbTreePosterior")
 data class UcbTreePosterior(
     /** Pseudo-count added to the leaf's totalWeights; floor for empty leaves. */
     val priorWeight: Double = 1.0,
@@ -88,15 +97,20 @@ data class UcbTreePosterior(
 /** [TreePosterior] family ported to forests: every leaf snapshot the query routes to
  *  is merged into a single weighted-variance result, then scored with the tree-posterior
  *  semantics. Same options, applied to the ensembled leaf. */
+@Serializable
 sealed interface ForestPosterior : RegressionPosterior<ForestRegressionResult>
 
 /** Forest counterpart to [MeanTreePosterior]. */
+@Serializable
+@SerialName("MeanForestPosterior")
 data object MeanForestPosterior : ForestPosterior {
     override fun evaluate(snapshot: ForestRegressionResult, x: Vector, rng: Random, exploration: Double): Double =
         snapshot.findLeafMerged(x).mean
 }
 
 /** Forest counterpart to [ThompsonTreePosterior]. */
+@Serializable
+@SerialName("ThompsonForestPosterior")
 data class ThompsonForestPosterior(
     /** Pseudo-count added to the leaf's totalWeights; floor for empty leaves. */
     val priorWeight: Double = 1.0,
@@ -112,6 +126,8 @@ data class ThompsonForestPosterior(
 }
 
 /** Forest counterpart to [UcbTreePosterior]. */
+@Serializable
+@SerialName("UcbForestPosterior")
 data class UcbForestPosterior(
     /** Pseudo-count added to the leaf's totalWeights; floor for empty leaves. */
     val priorWeight: Double = 1.0,
