@@ -9,9 +9,6 @@ import com.eignex.kumulant.stat.regression.glm.Link
 import com.eignex.kumulant.stat.regression.glm.Penalty
 
 internal object StatDefaults {
-    const val HALF_SPACE_TREES_NUM_TREES: Int = 25
-    const val HALF_SPACE_TREES_HEIGHT: Int = 8
-    const val HALF_SPACE_TREES_WINDOW_SIZE: Int = 250
     const val TREE_RANDOM_SEED: Int = 0
     const val FOREST_SIZE: Int = 10
     const val FOREST_BAGGING: Boolean = true
@@ -44,8 +41,6 @@ internal object StatDefaults {
     const val DD_SKETCH_MIN_INDEXABLE_VALUE: Double = 1e-9
     const val DD_SKETCH_MAX_INDEXABLE_VALUE: Double = 1e12
     const val COUNTER_RATE_TREAT_DECREASE_AS_RESET: Boolean = true
-    const val QUANTILE_FILTER_PROBABILITY: Double = 0.99
-    const val QUANTILE_FILTER_RELATIVE_ERROR: Double = 0.01
     const val ADWIN_DELTA: Double = 0.002
     const val ADWIN_MAX_BUCKETS_PER_SIZE: Int = 5
     const val PAGE_HINKLEY_DELTA: Double = 0.005

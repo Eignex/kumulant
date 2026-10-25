@@ -89,7 +89,7 @@ data class AucResult(
  * raw classifier margins, pass a wider range or pre-sigmoid the score.
  *
  * **Use cases:** binary classifier discrimination monitoring; ranking
- * quality independent of threshold choice. Pair with [BrierScoreStat] or
+ * quality independent of threshold choice. Pair with [MseLossStat] or
  * [LogLossStat] for proper-scoring complements.
  *
  * **Memory:** O([numBins]); two parallel double-cell arrays for positives and

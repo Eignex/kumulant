@@ -1,11 +1,8 @@
 package com.eignex.kumulant.stream
 
-import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.Stat
-import com.eignex.kumulant.stat.anomaly.FeatureRange
-import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
 import com.eignex.kumulant.stat.calibration.IsotonicCalibratorStat
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
@@ -176,53 +173,6 @@ class ConcurrentReadInvariantsTest {
                     val c = r.calibrate(p)
                     assertTrue(!c.isNaN() && c in 0.0..1.0, "calibrate($p)=$c")
                 }
-            }
-        }
-    }
-
-    @Test
-    fun `HalfSpaceTreesStat accumulates every observation and scores finitely`() {
-        for (level in levels) {
-            val ranges = List(3) { FeatureRange(0.0, 1.0) }
-            val stat = HalfSpaceTreesStat(
-                featureSize = 3,
-                featureRanges = ranges,
-                numTrees = 4,
-                height = 3,
-                windowSize = 500,
-                concurrency = level,
-            )
-            val writers = 6
-            val iters = 3_000
-            assertReadInvariants("HalfSpaceTreesStat[$level]", stat, writers = writers, iters = iters, write = { t, i ->
-                val v = DenseVector.of(
-                    doubleArrayOf(
-                        ((t * 7 + i) % 100) / 100.0,
-                        ((t * 13 + i * 3) % 100) / 100.0,
-                        ((t * 29 + i * 5) % 100) / 100.0,
-                    ),
-                )
-                stat.update(v)
-            }) { r ->
-                assertTrue(r.totalWeights >= 0.0, "totalWeights=${r.totalWeights}")
-                for (m in r.referenceMass) assertTrue(m >= 0.0 && m.isFinite(), "referenceMass entry $m")
-                val s = r.score(DenseVector.of(doubleArrayOf(0.5, 0.5, 0.5)))
-                assertTrue(s.isFinite() && s >= 0.0, "score=$s")
-            }
-            val fed = (writers * iters).toDouble()
-            val total = stat.read().totalWeights
-            assertTrue(total <= fed + 1e-6, "$level: totalWeights $total exceeded the $fed observations fed")
-            // Strict and HighWrite promise exactness for a purely additive accumulation, so
-            // every observation must be accounted for. This is the assertion that catches a
-            // missing lock or a non-atomic cell: lost increments leave the total short while
-            // still satisfying the upper bound above, so `<=` alone passes on broken code.
-            // Relaxed is excluded because its contract permits drift.
-            if (level != Concurrency.Relaxed) {
-                assertTrue(
-                    abs(total - fed) < 1e-6,
-                    "$level promises exact additive accumulation but totalWeights was $total for $fed observations, " +
-                        "so ${fed - total} increments were lost",
-                )
             }
         }
     }

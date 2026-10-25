@@ -3353,14 +3353,6 @@ public final class com/eignex/kumulant/schema/spec/BloomFilter$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/schema/spec/BrierScore : com/eignex/kumulant/schema/spec/PairedStatSpec {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/BrierScore;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/eignex/kumulant/schema/spec/ClassCounts : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/ClassCounts$Companion;
 	public fun <init> (I)V
@@ -3937,14 +3929,6 @@ public final class com/eignex/kumulant/schema/spec/GaussianNaiveBayes$Companion 
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/schema/spec/GaussianScorer : com/eignex/kumulant/schema/spec/SeriesStatSpec {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/GaussianScorer;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/eignex/kumulant/schema/spec/GroupStatSpec : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/GroupStatSpec$Companion;
 	public fun <init> (Ljava/util/Map;)V
@@ -3969,44 +3953,6 @@ public final synthetic class com/eignex/kumulant/schema/spec/GroupStatSpec$$seri
 }
 
 public final class com/eignex/kumulant/schema/spec/GroupStatSpec$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/HalfSpaceTrees : com/eignex/kumulant/schema/spec/VectorStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/HalfSpaceTrees$Companion;
-	public fun <init> (ILjava/util/List;IIII)V
-	public synthetic fun <init> (ILjava/util/List;IIIIILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()I
-	public final fun component2 ()Ljava/util/List;
-	public final fun component3 ()I
-	public final fun component4 ()I
-	public final fun component5 ()I
-	public final fun component6 ()I
-	public final fun copy (ILjava/util/List;IIII)Lcom/eignex/kumulant/schema/spec/HalfSpaceTrees;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/HalfSpaceTrees;ILjava/util/List;IIIIILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/HalfSpaceTrees;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getFeatureRanges ()Ljava/util/List;
-	public final fun getFeatureSize ()I
-	public final fun getHeight ()I
-	public final fun getNumTrees ()I
-	public final fun getRandomSeed ()I
-	public final fun getWindowSize ()I
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/HalfSpaceTrees$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/HalfSpaceTrees$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/HalfSpaceTrees;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/HalfSpaceTrees;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/HalfSpaceTrees$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -4439,37 +4385,6 @@ public final synthetic class com/eignex/kumulant/schema/spec/PlattCalibrator$$se
 }
 
 public final class com/eignex/kumulant/schema/spec/PlattCalibrator$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/QuantileFilter : com/eignex/kumulant/schema/spec/SeriesStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/QuantileFilter$Companion;
-	public fun <init> ()V
-	public fun <init> (DD)V
-	public synthetic fun <init> (DDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun copy (DD)Lcom/eignex/kumulant/schema/spec/QuantileFilter;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/QuantileFilter;DDILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/QuantileFilter;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getProbability ()D
-	public final fun getRelativeError ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/QuantileFilter$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/QuantileFilter$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/QuantileFilter;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/QuantileFilter;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/QuantileFilter$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -5000,205 +4915,11 @@ public final class com/eignex/kumulant/schema/spec/VectorStatSpec$Companion {
 	public final fun serializer (Lkotlinx/serialization/KSerializer;)Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/anomaly/FeatureRange {
-	public static final field Companion Lcom/eignex/kumulant/stat/anomaly/FeatureRange$Companion;
-	public fun <init> (DD)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun copy (DD)Lcom/eignex/kumulant/stat/anomaly/FeatureRange;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/anomaly/FeatureRange;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/anomaly/FeatureRange;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getHigh ()D
-	public final fun getLow ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/stat/anomaly/FeatureRange$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/anomaly/FeatureRange$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/anomaly/FeatureRange;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/anomaly/FeatureRange;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/anomaly/FeatureRange$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/anomaly/GaussianScoreResult : com/eignex/kumulant/core/HasObservationCount {
-	public fun <init> (DDD)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun component3 ()D
-	public final fun copy (DDD)Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult;DDDILjava/lang/Object;)Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getMean ()D
-	public final fun getStdDev ()D
-	public fun getTotalWeights ()D
-	public final fun getVariance ()D
-	public fun hashCode ()I
-	public fun isEmpty ()Z
-	public final fun score (D)D
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/stat/anomaly/GaussianScoreResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/anomaly/GaussianScorerStat : com/eignex/kumulant/core/SeriesStat {
-	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/anomaly/GaussianScorerStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public fun getMergeRefusal ()Ljava/lang/String;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult;)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult;
-	public fun reset ()V
-	public fun update (DD)V
-	public fun update (DJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/anomaly/GaussianScoreResult;)V
-}
-
-public final class com/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult : com/eignex/kumulant/core/HasObservationCount {
-	public static final field Companion Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult$Companion;
-	public fun <init> (IIID[I[D[D)V
-	public final fun component1 ()I
-	public final fun component2 ()I
-	public final fun component3 ()I
-	public final fun component4 ()D
-	public final fun component5 ()[I
-	public final fun component6 ()[D
-	public final fun component7 ()[D
-	public final fun copy (IIID[I[D[D)Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult;IIID[I[D[DILjava/lang/Object;)Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getFeatureIndices ()[I
-	public final fun getFeatureSize ()I
-	public final fun getHeight ()I
-	public final fun getNumTrees ()I
-	public final fun getReferenceMass ()[D
-	public final fun getThresholds ()[D
-	public fun getTotalWeights ()D
-	public fun hashCode ()I
-	public fun isEmpty ()Z
-	public final fun score (Lcom/eignex/koblas/Vector;)D
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/anomaly/HalfSpaceTreesStat : com/eignex/kumulant/core/VectorStat {
-	public fun <init> (ILjava/util/List;IIIILcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (ILjava/util/List;IIIILcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/VectorStat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public final fun getFeatureRanges ()Ljava/util/List;
-	public final fun getFeatureSize ()I
-	public final fun getHeight ()I
-	public fun getMergeRefusal ()Ljava/lang/String;
-	public final fun getNumTrees ()I
-	public final fun getRandomSeed ()I
-	public final fun getWindowSize ()I
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult;)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult;
-	public fun reset ()V
-	public fun update (Lcom/eignex/koblas/Vector;D)V
-	public fun update (Lcom/eignex/koblas/Vector;JD)V
-	public fun update ([DD)V
-	public fun update ([DJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/anomaly/HalfSpaceTreesResult;)V
-}
-
-public final class com/eignex/kumulant/stat/anomaly/QuantileFilterResult : com/eignex/kumulant/core/HasObservationCount {
-	public static final field Companion Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult$Companion;
-	public fun <init> (DDD)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun component3 ()D
-	public final fun copy (DDD)Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult;DDDILjava/lang/Object;)Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getProbability ()D
-	public final fun getThreshold ()D
-	public fun getTotalWeights ()D
-	public fun hashCode ()I
-	public fun isEmpty ()Z
-	public final fun score (D)D
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/stat/anomaly/QuantileFilterResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/anomaly/QuantileFilterResult$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/anomaly/QuantileFilterStat : com/eignex/kumulant/core/RefusesMerge, com/eignex/kumulant/core/SeriesStat {
-	public fun <init> ()V
-	public fun <init> (DDLcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (DDLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/anomaly/QuantileFilterStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public fun getMergeRefusal ()Ljava/lang/String;
-	public final fun getProbability ()D
-	public final fun getRelativeError ()D
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult;)Ljava/lang/Void;
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult;
-	public fun reset ()V
-	public fun update (DD)V
-	public fun update (DJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/anomaly/QuantileFilterResult;)V
+public final class com/eignex/kumulant/stat/anomaly/AnomalyScoresKt {
+	public static final fun absoluteZScore (Lcom/eignex/kumulant/core/HasCenterScale;D)D
+	public static final fun exceedanceScore (Lcom/eignex/kumulant/stat/quantile/QuantileResult;D)D
+	public static final fun exceedanceScore (Lcom/eignex/kumulant/stat/quantile/SketchResult;DD)D
+	public static final fun exceedanceScore (Lcom/eignex/kumulant/stat/quantile/TDigestResult;DD)D
 }
 
 public final class com/eignex/kumulant/stat/calibration/IsotonicCalibratorResult : com/eignex/kumulant/core/HasObservationCount {
@@ -8756,26 +8477,6 @@ public final class com/eignex/kumulant/stat/score/AucStat : com/eignex/kumulant/
 	public fun update (DDJD)V
 	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
 	public fun validateMerge (Lcom/eignex/kumulant/stat/score/AucResult;)V
-}
-
-public final class com/eignex/kumulant/stat/score/BrierScoreStat : com/eignex/kumulant/core/PairedStat {
-	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/BrierScoreStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public fun getMergeRefusal ()Ljava/lang/String;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;
-	public fun reset ()V
-	public fun update (DDD)V
-	public fun update (DDJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/score/ConfusionMatrixResult : com/eignex/kumulant/core/Result {

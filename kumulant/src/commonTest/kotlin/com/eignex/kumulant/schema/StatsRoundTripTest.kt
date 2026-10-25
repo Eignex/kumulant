@@ -7,7 +7,6 @@ import com.eignex.kumulant.schema.ops.*
 import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.schema.runtime.*
 import com.eignex.kumulant.schema.spec.*
-import com.eignex.kumulant.stat.anomaly.FeatureRange
 import com.eignex.kumulant.stat.forecast.SeasonalMode
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.regression.glm.Penalty
@@ -137,30 +136,6 @@ class StatsRoundTripTest {
         assertEquals(Summary, roundTrip(Summary))
     }
 
-    @Test fun `gaussianScorerConfig round trips`() {
-        assertEquals(GaussianScorer, roundTrip(GaussianScorer))
-    }
-
-    @Test fun `quantileFilterConfig round trips`() {
-        val cfg = QuantileFilter(probability = 0.97, relativeError = 0.005)
-        assertEquals(cfg, roundTrip(cfg))
-    }
-
-    @Test fun `halfSpaceTreesConfig round trips`() {
-        val cfg = HalfSpaceTrees(
-            featureSize = 2,
-            featureRanges = listOf(
-                FeatureRange(0.0, 10.0),
-                FeatureRange(-5.0, 5.0),
-            ),
-            numTrees = 6,
-            height = 4,
-            windowSize = 50,
-            randomSeed = 13,
-        )
-        assertEquals(cfg, roundTrip(cfg))
-    }
-
     @Test fun `bernoulliSumConfig round trips`() {
         assertEquals(BernoulliSum, roundTrip(BernoulliSum))
     }
@@ -236,10 +211,6 @@ class StatsRoundTripTest {
     @Test fun `ridgeConfig round trips`() {
         val cfg = UnivariateRegression(Penalty.L2(lambda = 0.5))
         assertEquals(cfg, roundTrip(cfg))
-    }
-
-    @Test fun `brierScoreConfig round trips`() {
-        assertEquals(BrierScore, roundTrip(BrierScore))
     }
 
     @Test fun `mseLossConfig round trips`() {

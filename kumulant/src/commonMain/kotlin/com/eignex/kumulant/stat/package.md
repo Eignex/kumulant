@@ -73,9 +73,9 @@ univariate fit and a multivariate one.
 | [com.eignex.kumulant.stat.regression] | Covariance, Softmax, Naive Bayes; see [glm][com.eignex.kumulant.stat.regression.glm] and [tree][com.eignex.kumulant.stat.regression.tree] for the model families |
 | [com.eignex.kumulant.stat.regression.glm] | GLM-family linear models with [Link][com.eignex.kumulant.stat.regression.glm.Link] and [Penalty][com.eignex.kumulant.stat.regression.glm.Penalty] (univariate, stochastic, diagonal, Bayesian, hierarchical) |
 | [com.eignex.kumulant.stat.regression.tree] | Online VFDT regression and classification trees + random forests |
-| [com.eignex.kumulant.stat.score] | Evaluation metrics: MSE / MAE / log loss / Brier / pinball / AUC / confusion matrix / accuracy |
+| [com.eignex.kumulant.stat.score] | Evaluation metrics: MSE / MAE / log loss / pinball / AUC / confusion matrix / accuracy |
 | [com.eignex.kumulant.stat.calibration] | Probability calibration: reliability diagnostic, Platt scaling, isotonic regression |
-| [com.eignex.kumulant.stat.anomaly] | Gaussian z-score, quantile-filter, half-space trees |
+| [com.eignex.kumulant.stat.anomaly] | Stateless z-score and quantile exceedance helpers over result snapshots |
 
 Each individual stat carries its own KDoc covering exact memory, update
 cost, and concurrency story. The canonical shape is

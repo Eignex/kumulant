@@ -10,7 +10,8 @@ import kotlin.math.ln
 
 /**
  * Streaming mean squared error: paired `(prediction, truth)` aggregated as the
- * mean of `(prediction - truth)^2`.
+ * mean of `(prediction - truth)^2`. For binary probability forecasts against
+ * outcomes in `{0, 1}`, this is the Brier score.
  *
  * **Use cases:** regression model evaluation, online MSE tracking on
  * forecasts. Pair with [MaeLossStat] for an L1 view of the same residuals.
@@ -76,7 +77,7 @@ class MaeLossStat(override val concurrency: Concurrency = Concurrency.None) : Pa
  *
  * **Use cases:** classifier evaluation; strictly proper scoring rule that
  * heavily penalises confident-and-wrong predictions. Pair with
- * [BrierScoreStat] for the bounded counterpart.
+ * [MseLossStat] for the binary Brier score counterpart.
  *
  * **Memory:** O(1); backed by a [MeanStat].
  *

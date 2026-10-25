@@ -925,15 +925,6 @@ val aucStatSpec = pairedStatSpec(
     deriveY = { if (it > 0.5) 1.0 else 0.0 },
 )
 
-val brierScoreStatSpec = pairedStatSpec(
-    name = "BrierScoreStat",
-    factory = { c -> com.eignex.kumulant.stat.score.BrierScoreStat(concurrency = c) },
-    updates = ::uniformUnitWeights,
-    scalar = { it.totalWeights },
-    reference = { it.count().toDouble() },
-    deriveY = { if (it > 0.5) 1.0 else 0.0 },
-)
-
 val pinballLossStatSpec = pairedStatSpec(
     name = "PinballLossStat",
     factory = { c -> com.eignex.kumulant.stat.score.PinballLossStat(tau = 0.5, concurrency = c) },
@@ -1083,7 +1074,6 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     diagonalRegressionStatSpec,
     stochasticRegressionStatSpec,
     aucStatSpec,
-    brierScoreStatSpec,
     logLossStatSpec,
     maeLossStatSpec,
     mseLossStatSpec,

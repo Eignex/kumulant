@@ -21,11 +21,9 @@ import com.eignex.kumulant.schema.spec.Mad
 import com.eignex.kumulant.schema.spec.MinHash
 import com.eignex.kumulant.schema.spec.PageHinkley
 import com.eignex.kumulant.schema.spec.PairedStatSpec
-import com.eignex.kumulant.schema.spec.QuantileFilter
 import com.eignex.kumulant.schema.spec.Reliability
 import com.eignex.kumulant.schema.spec.SeriesStatSpec
 import com.eignex.kumulant.schema.spec.TDigest
-import com.eignex.kumulant.stat.anomaly.QuantileFilterStat
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.cardinality.LinearCountingStat
@@ -99,7 +97,6 @@ class SpecDefaultParityTest {
             series("PageHinkley", PageHinkley(), PageHinkleyStat()),
             series("Adwin", Adwin(), AdwinStat()),
             series("Mad", Mad(), MadStat()),
-            series("QuantileFilter", QuantileFilter(), QuantileFilterStat()),
             series("DDSketch", DDSketch(), DDSketchStat()),
             series("TDigest", TDigest(), TDigestStat()),
             series("HdrHistogram", HdrHistogram(), HdrHistogramStat()),

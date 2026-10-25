@@ -8,6 +8,23 @@ import kotlin.test.assertEquals
 class MseLossTest {
 
     @Test
+    fun `binary probability errors yield the Brier score`() {
+        for ((prediction, outcome, expected) in listOf(
+            Triple(1.0, 1.0, 0.0),
+            Triple(0.0, 0.0, 0.0),
+            Triple(1.0, 0.0, 1.0),
+            Triple(0.0, 1.0, 1.0),
+            Triple(0.7, 1.0, 0.09),
+        )) {
+            val stat = MseLossStat()
+
+            stat.update(prediction, outcome)
+
+            assertEquals(expected, stat.read().mean, DELTA)
+        }
+    }
+
+    @Test
     fun `mean of squared residuals`() {
         val stat = MseLossStat().apply {
             update(2.0, 1.0, 0L, 1.0)

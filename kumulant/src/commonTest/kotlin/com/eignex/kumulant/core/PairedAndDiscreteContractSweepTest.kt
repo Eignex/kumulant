@@ -4,7 +4,6 @@ import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.schema.spec.Accuracy
 import com.eignex.kumulant.schema.spec.Auc
 import com.eignex.kumulant.schema.spec.BloomFilter
-import com.eignex.kumulant.schema.spec.BrierScore
 import com.eignex.kumulant.schema.spec.ConfusionMatrix
 import com.eignex.kumulant.schema.spec.CountMinSketch
 import com.eignex.kumulant.schema.spec.Covariance
@@ -32,7 +31,6 @@ class PairedAndDiscreteContractSweepTest {
 
     private val pairedSpecs: List<Pair<String, PairedStatSpec<*>>> = listOf(
         "Covariance" to Covariance,
-        "BrierScore" to BrierScore,
         "MseLoss" to MseLoss,
         "MaeLoss" to MaeLoss,
         "LogLoss" to LogLoss,
@@ -56,7 +54,7 @@ class PairedAndDiscreteContractSweepTest {
     )
 
     // Values inside the unit interval so the probability-shaped stats (log loss, calibration,
-    // Brier, AUC, confusion) all see legal input.
+    // AUC, confusion) all see legal input.
     private val pairs = listOf(0.1 to 0.0, 0.9 to 1.0, 0.4 to 0.0, 0.75 to 1.0, 0.55 to 1.0, 0.2 to 0.0)
     private val keys = longArrayOf(0L, 1L, 2L, 1L, 0L, 2L, 1L)
     private val readAt = 8_000_000_000L

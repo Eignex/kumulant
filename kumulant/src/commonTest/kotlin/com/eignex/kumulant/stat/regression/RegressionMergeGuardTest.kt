@@ -2,8 +2,6 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
-import com.eignex.kumulant.stat.anomaly.FeatureRange
-import com.eignex.kumulant.stat.anomaly.HalfSpaceTreesStat
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
 import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
@@ -51,35 +49,6 @@ class RegressionMergeGuardTest {
         // Two replicas of the same evidence: the pooled precision is 2*(single - prior) + prior.
         val prior = 1.0
         assertEquals(2.0 * (single - prior) + prior, a.read().precision[0], 1e-9)
-    }
-
-    @Test
-    fun `a merged half-space-trees model can score immediately`() {
-        val ranges = List(1) { FeatureRange(0.0, 1.0) }
-        val source = HalfSpaceTreesStat(featureSize = 1, featureRanges = ranges, windowSize = 50)
-        repeat(200) { source.update(doubleArrayOf(0.5)) }
-        val sourceScore = source.read().score(DenseVector.of(doubleArrayOf(0.5)))
-
-        val target = source.create()
-        target.merge(source.read())
-
-        // The reference window is what score() reads, so folding into the latest window alone would
-        // leave a merged model scoring every input maximally anomalous.
-        val mergedScore = target.read().score(DenseVector.of(doubleArrayOf(0.5)))
-        assertTrue(mergedScore > 0.0, "a merged model scored $mergedScore, i.e. maximally anomalous")
-        assertEquals(sourceScore, mergedScore, sourceScore * 1e-9)
-    }
-
-    @Test
-    fun `an absurd half-space-trees height is rejected at construction`() {
-        val ranges = List(1) { FeatureRange(0.0, 1.0) }
-        // 31 wraps `1 shl height` negative and 32 wraps it to 1, so neither can allocate a node array.
-        assertFailsWith<IllegalArgumentException> {
-            HalfSpaceTreesStat(featureSize = 1, featureRanges = ranges, height = 31)
-        }
-        assertFailsWith<IllegalArgumentException> {
-            HalfSpaceTreesStat(featureSize = 1, featureRanges = ranges, height = 32)
-        }
     }
 
     @Test

@@ -952,7 +952,7 @@ class GroupMergeAtomicityTest {
 
     private object MergeHostile : StatSchema() {
         val hits by series(Sum)
-        val p99 by series(QuantileFilter())
+        val bounds by series(Variance.band(2.0))
         val total by series(Count)
     }
 
@@ -991,7 +991,7 @@ class GroupMergeAtomicityTest {
     fun `a decorated refusing child is detected before merging siblings`() {
         val schema = object : StatSchema() {
             val hits by series(Sum)
-            val filtered by series(QuantileFilter().filter(X gt 0.0).withWeight(2.0))
+            val filtered by series(Variance.band(2.0).filter(X gt 0.0).withWeight(2.0))
         }
         val local = StatGroup(schema)
         val remote = StatGroup(schema)
@@ -1021,7 +1021,7 @@ class GroupMergeAtomicityTest {
 
         assertEquals(before, local.read(0L))
         assertTrue(failure.message.orEmpty().contains("nested"))
-        assertTrue(failure.message.orEmpty().contains("p99"))
+        assertTrue(failure.message.orEmpty().contains("bounds"))
     }
 
     @Test
@@ -1069,7 +1069,7 @@ class GroupMergeAtomicityTest {
     @Test
     fun `windowing rejects snapshots that cannot be merged`() {
         assertFailsWith<IllegalArgumentException> {
-            QuantileFilter().filter(X gt 0.0).windowed(1_000).materialize()
+            IsotonicCalibrator().filter(X gt 0.0).windowed(1_000).materialize()
         }
     }
 }

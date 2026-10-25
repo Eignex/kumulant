@@ -12,19 +12,6 @@ class ScoreStatConcurrencyTest {
     private val obs = doubleArrayOf(0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0)
 
     @Test
-    fun `BrierScoreStat sequential math equal across modes`() {
-        val reads = Concurrency.entries.associateWith { mode ->
-            val s = BrierScoreStat(concurrency = mode)
-            for (i in preds.indices) s.update(preds[i], obs[i])
-            s.read(0L)
-        }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) {
-            assertEquals(ref.mean, r.mean, 1e-9, "BrierScoreStat mode=$mode")
-        }
-    }
-
-    @Test
     fun `MseLossStat sequential math equal across modes`() {
         val reads = Concurrency.entries.associateWith { mode ->
             val s = MseLossStat(concurrency = mode)

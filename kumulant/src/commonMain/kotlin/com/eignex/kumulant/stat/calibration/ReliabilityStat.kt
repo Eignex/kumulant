@@ -92,7 +92,7 @@ data class ReliabilityResult(
  *
  * **Use cases:** calibration diagnostics for probabilistic forecasters; the
  * raw material for reliability diagrams and Expected Calibration Error.
- * Pair with [com.eignex.kumulant.stat.score.BrierScoreStat] for the matching proper-scoring number.
+ * Pair with [com.eignex.kumulant.stat.score.MseLossStat] for the matching proper-scoring number.
  *
  * **Memory:** O([numBins]); three parallel Double arrays per bin.
  *
