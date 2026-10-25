@@ -145,8 +145,6 @@ internal fun mergeEntry(values: GroupResult, key: StatKey<*>, stat: Stat<*>) {
 internal fun validateMergeEntry(stat: Stat<*>, result: Result, name: String) {
     try {
         (stat as Stat<Result>).validateMerge(result)
-    } catch (e: UnsupportedOperationException) {
-        throw UnsupportedOperationException("cannot merge entry '$name': ${e.message}", e)
     } catch (e: IllegalArgumentException) {
         throw IllegalArgumentException("cannot merge entry '$name': ${e.message}", e)
     }

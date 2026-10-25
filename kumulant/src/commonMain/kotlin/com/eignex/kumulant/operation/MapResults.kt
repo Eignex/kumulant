@@ -52,7 +52,6 @@ private class MappedResultCore<R1 : Result, R2 : Result>(
     private val reverse: (R2) -> R1,
 ) : Stat<R2> {
     override val concurrency: Concurrency get() = delegate.concurrency
-    override val mergeRefusal: String? get() = delegate.mergeRefusal
     override fun validateMerge(values: R2) = delegate.validateMerge(reverse(values))
     override fun merge(values: R2) = delegate.merge(reverse(values))
     override fun reset() = delegate.reset()

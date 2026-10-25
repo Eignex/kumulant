@@ -142,8 +142,6 @@ abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.cor
 abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.core/Stat { // com.eignex.kumulant.core/Stat|null[0]
     abstract val concurrency // com.eignex.kumulant.core/Stat.concurrency|{}concurrency[0]
         abstract fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.core/Stat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    open val mergeRefusal // com.eignex.kumulant.core/Stat.mergeRefusal|{}mergeRefusal[0]
-        open fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.core/Stat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     abstract fun create(com.eignex.kumulant.core/Concurrency? = ...): com.eignex.kumulant.core/Stat<#A> // com.eignex.kumulant.core/Stat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     abstract fun merge(#A) // com.eignex.kumulant.core/Stat.merge|merge(1:0){}[0]
@@ -297,11 +295,6 @@ abstract interface com.eignex.kumulant.core/HasSlope : com.eignex.kumulant.core/
         open fun <get-weights>(): com.eignex.koblas/Vector // com.eignex.kumulant.core/HasSlope.weights.<get-weights>|<get-weights>(){}[0]
 
     open fun predict(kotlin/Double): kotlin/Double // com.eignex.kumulant.core/HasSlope.predict|predict(kotlin.Double){}[0]
-}
-
-abstract interface com.eignex.kumulant.core/RefusesMerge { // com.eignex.kumulant.core/RefusesMerge|null[0]
-    abstract val mergeRefusal // com.eignex.kumulant.core/RefusesMerge.mergeRefusal|{}mergeRefusal[0]
-        abstract fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.core/RefusesMerge.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 }
 
 abstract interface com.eignex.kumulant.core/Result // com.eignex.kumulant.core/Result|null[0]
@@ -5835,8 +5828,6 @@ final class com.eignex.kumulant.stat.rate/DecayingRateStat : com.eignex.kumulant
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.rate/DecayingRateStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
     final val halfLife // com.eignex.kumulant.stat.rate/DecayingRateStat.halfLife|{}halfLife[0]
         final fun <get-halfLife>(): kotlin.time/Duration // com.eignex.kumulant.stat.rate/DecayingRateStat.halfLife.<get-halfLife>|<get-halfLife>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.rate/DecayingRateStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.stat.rate/DecayingRateStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.rate/DecayingRateResult> // com.eignex.kumulant.stat.rate/DecayingRateStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     final fun merge(com.eignex.kumulant.stat.rate/DecayingRateResult) // com.eignex.kumulant.stat.rate/DecayingRateStat.merge|merge(com.eignex.kumulant.stat.rate.DecayingRateResult){}[0]
@@ -7065,8 +7056,6 @@ final class com.eignex.kumulant.stat.regression/CovarianceStat : com.eignex.kumu
 
     final val concurrency // com.eignex.kumulant.stat.regression/CovarianceStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.regression/CovarianceStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.regression/CovarianceStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.stat.regression/CovarianceStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.regression/CovarianceResult> // com.eignex.kumulant.stat.regression/CovarianceStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     final fun merge(com.eignex.kumulant.stat.regression/CovarianceResult) // com.eignex.kumulant.stat.regression/CovarianceStat.merge|merge(com.eignex.kumulant.stat.regression.CovarianceResult){}[0]
@@ -7832,8 +7821,6 @@ final class com.eignex.kumulant.stat.summary/CountStat : com.eignex.kumulant.cor
 
     final val concurrency // com.eignex.kumulant.stat.summary/CountStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.summary/CountStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.summary/CountStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.stat.summary/CountStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/SumResult> // com.eignex.kumulant.stat.summary/CountStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     final fun merge(com.eignex.kumulant.stat.summary/SumResult) // com.eignex.kumulant.stat.summary/CountStat.merge|merge(com.eignex.kumulant.stat.summary.SumResult){}[0]
@@ -8300,8 +8287,6 @@ final class com.eignex.kumulant.stat.summary/TotalWeightsStat : com.eignex.kumul
 
     final val concurrency // com.eignex.kumulant.stat.summary/TotalWeightsStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.summary/TotalWeightsStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.summary/TotalWeightsStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.stat.summary/TotalWeightsStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/SumResult> // com.eignex.kumulant.stat.summary/TotalWeightsStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
     final fun merge(com.eignex.kumulant.stat.summary/SumResult) // com.eignex.kumulant.stat.summary/TotalWeightsStat.merge|merge(com.eignex.kumulant.stat.summary.SumResult){}[0]
@@ -8458,8 +8443,6 @@ sealed class <#A: com.eignex.kumulant.core/Stat<*>> com.eignex.kumulant.schema.r
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.schema.runtime/AbstractStatGroup.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
     final val concurrencyOverride // com.eignex.kumulant.schema.runtime/AbstractStatGroup.concurrencyOverride|{}concurrencyOverride[0]
         final fun <get-concurrencyOverride>(): com.eignex.kumulant.core/Concurrency? // com.eignex.kumulant.schema.runtime/AbstractStatGroup.concurrencyOverride.<get-concurrencyOverride>|<get-concurrencyOverride>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.schema.runtime/AbstractStatGroup.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String? // com.eignex.kumulant.schema.runtime/AbstractStatGroup.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
     final val stats // com.eignex.kumulant.schema.runtime/AbstractStatGroup.stats|{}stats[0]
         final fun <get-stats>(): kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, out #A, *>> // com.eignex.kumulant.schema.runtime/AbstractStatGroup.stats.<get-stats>|<get-stats>(){}[0]
 

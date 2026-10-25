@@ -15,6 +15,9 @@ import com.eignex.kumulant.stream.welfordMode
  * with `a = 1 - exp(-alpha*w)`. Read returns the bias-corrected value
  * `biasedMean / (1 - exp(-alpha*totalWeights))`.
  *
+ * Merge blends smoothed summaries using their bias-correction weights. This
+ * approximate combine does not replay the combined observations in order.
+ *
  * **Use cases:** weight-windowed central tendency where elapsed time isn't
  * relevant but observation count is (e.g. a smooth average of the last ~N
  * predictions, regardless of how spaced apart they were). Reach for this over
@@ -25,12 +28,10 @@ import com.eignex.kumulant.stream.welfordMode
  *
  * **Update:** O(1) per observation.
  *
- * **Concurrency:** Order-dependent recurrence. Even [Concurrency.Strict]
- * (which locks the body) does **not** reproduce a serial reference value; the
- * lock serialises arrival, not the order of arrival, and the result drifts
- * ~3–10% under contention. [Concurrency.Relaxed] additionally drops the lock,
- * compounding the drift. Use [Concurrency.Strict] when correctness matters
- * more than write throughput.
+ * **Concurrency:** Coupled state locked under [Concurrency.Strict] and
+ * [Concurrency.HighWrite]. [Concurrency.Relaxed] uses independent atomic cells
+ * without a body lock, so snapshots can drift. Results depend on update order;
+ * concurrent scheduling does not establish timestamp order.
  */
 class EwmaMeanStat(
     /** Per-observation smoothing schedule. */

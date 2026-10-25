@@ -33,11 +33,6 @@ sealed class AbstractStatGroup<S : Stat<*>>(
     final override fun read(timestampNanos: Long): GroupResult =
         GroupResult(stats.associate { (key, stat) -> key.name to stat.read(timestampNanos) })
 
-    final override val mergeRefusal: String?
-        get() = stats.firstNotNullOfOrNull { (key, stat) ->
-            stat.mergeRefusal?.let { "entry '${key.name}': $it" }
-        }
-
     final override fun validateMerge(values: GroupResult) {
         for ((key, stat) in stats) {
             val result = values.results[key.name] ?: continue

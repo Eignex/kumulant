@@ -14,6 +14,9 @@ import com.eignex.kumulant.stream.welfordMode
  * Tracks biased mean and biased second-moment `M2` via Welford-style delta updates,
  * then divides by the bias correction at read time.
  *
+ * Merge blends smoothed summaries using their bias-correction weights. This
+ * approximate combine does not replay the combined observations in order.
+ *
  * **Use cases:** weight-windowed dispersion where elapsed time isn't relevant
  * but observation count is. Reach for this over [DecayingVarianceStat] when
  * the cadence is irregular; reach for
@@ -24,10 +27,10 @@ import com.eignex.kumulant.stream.welfordMode
  *
  * **Update:** O(1) per observation.
  *
- * **Concurrency:** Order-dependent recurrence, same as [EwmaMeanStat]. Even
- * [Concurrency.Strict] does not reproduce a serial reference value because
- * the lock serialises arrival, not order of arrival; the snapshot drifts
- * ~5–10% under contention. [Concurrency.Relaxed] additionally drops the lock.
+ * **Concurrency:** Coupled state locked under [Concurrency.Strict] and
+ * [Concurrency.HighWrite]. [Concurrency.Relaxed] uses independent atomic cells
+ * without a body lock, so snapshots can drift. Results depend on update order;
+ * concurrent scheduling does not establish timestamp order.
  */
 class EwmaVarianceStat(
     /** Per-observation smoothing schedule. */

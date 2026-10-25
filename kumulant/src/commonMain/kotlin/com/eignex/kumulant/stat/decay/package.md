@@ -1,93 +1,81 @@
 # Package com.eignex.kumulant.stat.decay
 
-Time-weighted moments. Each observation enters the accumulator with a
-weight that shrinks toward zero with age, so older observations
-contribute less. Two parallel sub-families: timestamp-based decay (the
-`Decaying*` stats) and step-based EWMA (the `Ewma*` stats).
+Exponentially weighted sums and moments over a stream. Each member implements
+[com.eignex.kumulant.core.SeriesStat]. Timestamp-based stats discount observations
+by elapsed time; EWMA stats discount history by cumulative observation weight.
 
-## The two flavours
+## Picking an estimator
 
-### Timestamp-based: Decaying*
+| Stat | Clock | Reach for it when |
+|------|-------|-------------------|
+| [DecayingSumStat] | Event timestamps | Accumulate a total whose contributions fade with age, or build a time-decayed rate. |
+| [DecayingMeanStat] | Event timestamps | Estimate a recent weighted mean when observation intervals vary. |
+| [DecayingVarianceStat] | Event timestamps | Track recent dispersion with a coupled mean and variance. |
+| [EwmaMeanStat] | Observation weight | Smooth a signal according to how much evidence arrives, independent of elapsed time. |
+| [EwmaVarianceStat] | Observation weight | Track dispersion using the same weight-based smoothing clock. |
 
-[DecayingSumStat], [DecayingMeanStat], [DecayingVarianceStat] are the
-time-weighted counterparts of [com.eignex.kumulant.stat.summary.SumStat]
-/ [com.eignex.kumulant.stat.summary.MeanStat] /
-[com.eignex.kumulant.stat.summary.VarianceStat]. The decay schedule is
-configured via [DecayWeighting]:
+## Timestamp-based decay
 
-- `HalfLife(durationMillis)`: exponential decay specified by the
-  half-life of an observation's weight.
-- `TimeConstant(tau)`: exponential decay specified by the time
-  constant (e-fold) of the weighting function.
-- `Custom(weighting)`: caller-supplied decay function from `(elapsedNanos)`
-  to a multiplicative weight.
+[DecayWeighting.HalfLife] takes a `Duration` and sets
+`alpha = ln(2) / halfLifeNanos`. A contribution stamped at `t` has weight
+`exp(-alpha * (readTime - t))` at a later read. The stats also accept the
+half-life directly through their `halfLife: Duration` constructors.
 
-Because weight is a function of the timestamp delta, these handle
-irregular update intervals correctly. A stream that fires once a second
-and then once an hour applies decay over the actual elapsed time, not
-over the update count.
+[DecayingSumStat] rotates its numerical landmark after long elapsed intervals.
+[DecayingMeanStat] composes two such sums for the weighted numerator and
+denominator. [DecayingVarianceStat] decays its weight and second central moment
+together before applying a weighted Welford update.
 
-### Step-based: Ewma*
+## Weight-based EWMA
 
-[EwmaMeanStat] and [EwmaVarianceStat] are the classical
-exponentially-weighted moving variants with a step-based decay:
-`alpha * new + (1 - alpha) * old`. Smoothing factor lives in
-[DecayWeighting.Alpha].
+[DecayWeighting.Alpha] specifies a rate per unit of observation weight. An
+observation of weight `w` uses the smoothing fraction
+`a(w) = 1 - exp(-alpha * w)`. With unit weights, history is discounted once per
+observation; larger weights advance the smoothing clock further. Reads correct
+for the initial zero seed using cumulative weight.
 
-These are cheaper and more familiar but assume roughly fixed intervals
-between observations. Mixed-interval streams should reach for the
-timestamp-based variants instead.
-
-## Picking by need
-
-- **Smooth tracking of a recent signal, regular updates** → [EwmaMeanStat]
-  / [EwmaVarianceStat].
-- **Smooth tracking of a recent signal, irregular timestamps** →
-  [DecayingMeanStat] / [DecayingVarianceStat] with a `HalfLife` or
-  `TimeConstant`.
-- **Volatility tracking with a long-run baseline**: see
-  [com.eignex.kumulant.stat.forecast.RecursiveVarianceStat], which adds
-  a GARCH-style baseline term to [EwmaVarianceStat]'s shape.
+EWMA does not use timestamp spacing. Choose the timestamp-based stats when
+elapsed time should determine how quickly evidence fades.
 
 ## Result shapes
 
-[DecayingMeanStat] / [EwmaMeanStat] expose
-[WeightedMeanResult][com.eignex.kumulant.stat.summary.WeightedMeanResult],
-the same shape as the non-decayed
-[MeanStat][com.eignex.kumulant.stat.summary.MeanStat].
-[DecayingVarianceStat] / [EwmaVarianceStat] expose
-[WeightedVarianceResult][com.eignex.kumulant.stat.summary.WeightedVarianceResult].
-This is intentional: downstream traits like
-[com.eignex.kumulant.core.HasCenterScale] and
-[com.eignex.kumulant.core.HasSampleVariance] work identically on
-decayed and undecayed results, so a band / standardize / scoring step
-doesn't care which provenance the moment came from.
+| Result | Produced by | Fields |
+|--------|-------------|--------|
+| [DecayingSumResult] | [DecayingSumStat] | Sum and snapshot timestamp. |
+| [DecayingMeanResult] | [DecayingMeanStat] | Mean, decayed total weight, and snapshot timestamp. |
+| [DecayingVarianceResult] | [DecayingVarianceStat] | Mean, variance, decayed total weight, and snapshot timestamp; derives `stdDev`. |
+| [com.eignex.kumulant.stat.summary.WeightedMeanResult] | [EwmaMeanStat] | Bias-corrected mean and cumulative observation weight. |
+| [com.eignex.kumulant.stat.summary.WeightedVarianceResult] | [EwmaVarianceStat] | Bias-corrected mean and variance, plus cumulative observation weight. |
+
+Timestamp-based total weights fade with elapsed time. EWMA total weights count
+accepted observation weight and supply the bias correction. The dedicated
+timestamp-based results do not implement the summary family's center/scale
+traits.
 
 ## Merge
 
-Decayed stats with the same schedule merge cleanly: the weight
-formulation makes the Chan-style parallel merge work the same way it
-does for the undecayed Welford family. Stats with different schedules
-(different half-lives, different time constants) cannot be merged
-meaningfully.
+All members support merging. With matching half-lives, timestamp-based sums and
+moments can align evidence to a common timestamp before combining it. Mean and
+variance snapshots retain their effective weights for this combine.
 
-Nothing checks that, and nothing can: `merge` takes a `Result`, and none
-of the decay results carry their schedule on the wire, so a mismatch is
-undetectable at the merge site. Keeping the schedule out of the result
-is deliberate, since it is deployment configuration rather than
-accumulated state, so matching schedules is the caller's responsibility.
-Merging accumulators with different half-lives or alphas produces
-numbers, and they mean nothing. The hashed sketches took the other
-choice and do carry a
-[HasherRef][com.eignex.kumulant.math.HasherRef], because there a
-mismatch silently breaks a guarantee the type itself makes.
+EWMA merges blend already-smoothed summaries using their bias-correction
+weights. The result approximates a pooled summary; it does not reproduce a
+single chronological replay, and grouping repeated merges can change the result.
+
+Decay schedules are configuration and are absent from these result types.
+Matching half-lives or alpha rates is the caller's responsibility.
 
 ## Concurrency
 
-All variants are Welford-coupled (mean + variance + total weight cells
-that have to stay consistent). Locked under
-[com.eignex.kumulant.core.Concurrency.Strict] /
-[com.eignex.kumulant.core.Concurrency.HighWrite]. Under
-[com.eignex.kumulant.core.Concurrency.Relaxed] the cells race; the
-drift is the same small ULP-level magnitude as the undecayed Welford
-family.
+[DecayingSumStat] serializes updates, reads, merges, resets, and landmark changes
+under every concurrent mode. [DecayingMeanStat] inherits that protection for each
+of its two sums, but the pair is updated and read separately: a concurrent reader
+can observe a partial numerator/denominator pair. [DecayingVarianceStat] locks its
+whole coupled state under every concurrent mode.
+
+[EwmaMeanStat] and [EwmaVarianceStat] lock their coupled state under
+[com.eignex.kumulant.core.Concurrency.Strict] and
+[com.eignex.kumulant.core.Concurrency.HighWrite].
+[com.eignex.kumulant.core.Concurrency.Relaxed] uses independent atomic cells
+without a body lock, so concurrent results can drift. EWMA also depends on update
+order. [com.eignex.kumulant.core.Concurrency.None] provides no synchronization.
