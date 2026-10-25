@@ -14,11 +14,8 @@ evaluates to a single number from an update's value, its paired second
 component, and the current vector. [VectorExpr] evaluates to a whole
 vector and backs the per-feature projection and scaling operations.
 [BoolExpr] evaluates to a boolean and drives filter predicates and the
-guards on conditional nodes. JSON uses operator keys, numeric scalar literals,
-and explicit input references. Unknown operators are rejected with their JSON
-paths. Non-JSON formats retain the generated sealed-class representation.
-The [JSON reference](https://github.com/Eignex/kumulant/blob/main/docs/JSON_FORMAT.md)
-lists every expression shape.
+guards on conditional nodes. JSON uses operator keys, numeric literals, and
+explicit input references, such as `{"add":[{"input":"value"},1]}`.
 
 ## Leaves and operators
 

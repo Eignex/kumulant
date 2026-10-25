@@ -20,17 +20,10 @@ accident of layout.
 
 ## Wire shape
 
-JSON uses canonical operator-key nodes such as `{"mean":{}}` and
-`{"ewma":{"alpha":0.1}}`. Expressions use structured operators and numeric
-literals; decorators retain an explicit inner tree. Serialize through [StatSpec]
-or a modality root, or embed specs in a schema or bandit. The
-[JSON reference](https://github.com/Eignex/kumulant/blob/main/docs/JSON_FORMAT.md)
-lists every shape, default-field rules, and migration details.
-
-Non-JSON formats, including Protobuf and CBOR, retain the generated sealed-class
-representation and serial names. Defaults match the underlying stat constructors
-and follow the format's `encodeDefaults` setting. Materialization supplies
-concurrency separately from the wire payload.
+JSON uses operator keys, such as `{"ewma":{"alpha":0.1}}`. Serialize through
+[StatSpec] or a modality root. Expressions use numeric literals and structured
+operators; decorators retain an explicit `inner` tree. Defaults follow
+`encodeDefaults`. Non-JSON formats retain generated serial names and field layouts.
 
 ## Beyond the leaf specs
 

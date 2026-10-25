@@ -154,10 +154,6 @@ val a = cb.choose(features)
 cb.update(a, features, reward = 12.7)
 ```
 
-Configuration JSON is a structured operator tree shared by applications and
-servers. See the [canonical JSON format and migration guide](docs/JSON_FORMAT.md)
-for the complete node catalog and standard serialization entry points.
-
 ## Concurrency
 
 Each stat picks a concurrency mode at construction. The default is
