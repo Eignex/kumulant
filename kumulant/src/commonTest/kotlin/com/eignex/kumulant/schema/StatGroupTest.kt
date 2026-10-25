@@ -1069,7 +1069,7 @@ class GroupMergeAtomicityTest {
     @Test
     fun `windowing rejects snapshots that cannot be merged`() {
         assertFailsWith<IllegalArgumentException> {
-            IsotonicCalibrator().filter(X gt 0.0).windowed(1_000).materialize()
+            Adwin().filter(X gt 0.0).windowed(1_000).materialize()
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.schema.expr.Const
@@ -11,6 +12,7 @@ import com.eignex.kumulant.schema.expr.times
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -191,5 +193,61 @@ class CompositeArmTest {
         val origBern = stat.read(0L).results[0] as BernoulliSumResult
         // Fresh has only prior pseudo-counts; original has more
         assertTrue(origBern.trials > freshBern.trials)
+    }
+
+    @Test
+    fun `routing evaluates the filter and weight against raw input before encoding`() {
+        val stat = CompositeArm(
+            listOf(
+                CompositeSubArm(
+                    LogNormalArm(priorWeight = 0.0),
+                    valueExpr = X * Const(2.0),
+                    weightExpr = X,
+                    filter = X gt 1.0,
+                ),
+            ),
+        ).createStat()
+
+        stat.update(0.75, weight = 2.0)
+        stat.update(2.0, weight = 3.0)
+        val result = stat.read().results.single() as WeightedVarianceResult
+
+        assertEquals(6.0, result.totalWeights)
+        assertEquals(ln(4.0), result.mean, 1e-12)
+    }
+
+    @Test
+    fun `nested composite creation restores priors under each concurrency mode`() {
+        val arm = CompositeArm(listOf(CompositeSubArm(zilnArm())))
+        val stat = arm.createStat()
+        val baseline = stat.read()
+        stat.update(5.0)
+
+        for (concurrency in Concurrency.entries) {
+            val fresh = stat.create(concurrency)
+
+            assertEquals(concurrency, fresh.concurrency)
+            assertEquals(baseline, fresh.read())
+            fresh.update(9.0)
+            fresh.reset()
+            assertEquals(baseline, fresh.read())
+            assertEquals(concurrency, fresh.concurrency)
+        }
+    }
+
+    @Test
+    fun `nested composite merge validates all children before changing siblings`() {
+        val stat = CompositeArm(
+            listOf(CompositeSubArm(BernoulliArm()), CompositeSubArm(zilnArm())),
+        ).createStat()
+        stat.update(5.0)
+        val before = stat.read()
+        val incompatible = ResultList<Result>(
+            listOf(BernoulliSumResult(5.0, 10.0), ResultList<Result>(emptyList())),
+        )
+
+        assertFailsWith<IllegalArgumentException> { stat.merge(incompatible) }
+
+        assertEquals(before, stat.read())
     }
 }

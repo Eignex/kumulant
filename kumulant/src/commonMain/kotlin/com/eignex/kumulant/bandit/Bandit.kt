@@ -116,12 +116,8 @@ interface UnivariateBandit : Bandit {
  *    and the reward. The bandit updates the per-arm model with the
  *    `(x, reward)` pair.
  *
- * Concrete contextual bandits typically own one [com.eignex.kumulant.core.RegressionStat]
- * per arm ([com.eignex.kumulant.bandit.contextual.RegressionContextualBandit]),
- * one nearest-neighbour reservoir per arm
- * ([com.eignex.kumulant.bandit.contextual.KnnContextualBandit]), or a
- * mixture-of-experts weighting
- * ([com.eignex.kumulant.bandit.contextual.Exp4Bandit]).
+ * [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit] owns one
+ * [com.eignex.kumulant.core.RegressionStat] per arm.
  *
  * Implementations source all randomness from [Bandit.random].
  */
@@ -150,9 +146,8 @@ interface ContextualBandit : Bandit {
  * - Per-arm-stat bandits ([com.eignex.kumulant.bandit.univariate.MultiArmedBandit]
  *   and friends) use `List<R>` where `R` is the per-arm result type; see
  *   the [PerArmBandit] convenience.
- * - Joint-state bandits ([com.eignex.kumulant.bandit.univariate.Exp3Bandit],
- *   [com.eignex.kumulant.bandit.contextual.Exp4Bandit]) use a single state
- *   object that captures the expert weights.
+ * - [com.eignex.kumulant.bandit.univariate.Exp3Bandit] uses a single state
+ *   object that captures the exponential arm weights.
  *
  * The pattern: workers run the same bandit configuration in parallel,
  * periodically call [snapshot], ship snapshots to a coordinator, the
@@ -235,9 +230,8 @@ interface Scorable {
 /**
  * Contextual analog of [Scorable]: per-arm score under the current state
  * and a supplied context vector. Implemented by
- * [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit] and
- * [com.eignex.kumulant.bandit.contextual.KnnContextualBandit]; both have
- * an argmax-shaped selection rule that decomposes into per-arm scores.
+ * [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit], whose
+ * selection rule decomposes into per-arm scores.
  */
 interface ContextualScorable {
     /** Score the arm at [armIndex] under the current state and context [x]. */

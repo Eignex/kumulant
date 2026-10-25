@@ -6,7 +6,7 @@ import kotlin.random.Random
 /**
  * Floor applied to the played probability before it divides an importance-weighted reward.
  *
- * EXP3 and EXP4 both estimate an unbiased gain as `reward / p(played arm)`, so an arm the policy had
+ * EXP3 estimates an unbiased gain as `reward / p(played arm)`, so an arm the policy had
  * all but written off produces an enormous gain estimate, and one it had written off entirely produces
  * a non-finite one. The floor bounds that blow-up. It is deliberately far below any probability the
  * exploration term `gamma / K` can produce, so it never perturbs a live distribution.

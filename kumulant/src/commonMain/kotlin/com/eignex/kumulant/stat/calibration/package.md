@@ -1,59 +1,46 @@
 # Package com.eignex.kumulant.stat.calibration
 
-Probability calibration: diagnosing when a classifier's predicted
-probabilities are out of step with the empirical positive rate, and
-two complementary mappings that fix it.
+Probability calibration diagnoses how predicted probabilities differ from
+observed positive rates and fits a mapping to correct them. The live stats
+consume [com.eignex.kumulant.core.PairedStat] observations `(prediction, label)`;
+isotonic calibration derives a curve from a reliability snapshot.
 
-## Picking a calibration stat
+## Picking a calibration method
 
-| Stat | Role | Mapping |
-|------|------|---------|
-| [ReliabilityStat] | **Diagnostic.** Bins `(predicted, observed)` pairs into per-bin reliability tiers; result exposes expected calibration error and the per-bin gap. | No mapping; read the result, plot, or pipe into an alarm. |
-| [PlattCalibratorStat] | **Parametric fix.** Fits `sigmoid(slope * x + intercept)` over `(rawScore, label)`. Two parameters. | Smooth global sigmoid. Right when miscalibration is roughly sigmoidal; the classic SVM / boosted-tree pattern. |
-| [IsotonicCalibratorStat] | **Non-parametric fix.** Bins raw scores; runs Pool Adjacent Violators at read time to produce a monotone step function. | Arbitrary monotone shape with linear interpolation between bin midpoints. Right when miscalibration has a non-sigmoidal pattern (kinks, plateaus, asymmetric tails). |
+| Stat or projection | Mapping | Reach for it when |
+|--------------------|---------|-------------------|
+| [ReliabilityStat] | Per-bin predicted and observed rates, plus calibration error | Diagnose calibration, plot the gaps, or retain mergeable evidence for isotonic fitting. |
+| [PlattCalibratorStat] | `sigmoid(slope * x + intercept)` | Fit a smooth sigmoid with two parameters, especially when observations are scarce. |
+| [isotonicCalibration] | Monotone probabilities with linear interpolation between bin midpoints | Fit an arbitrary monotone shape from a [ReliabilityResult] without a second accumulator. |
 
-## The diagnostic → fix workflow
+## The diagnostic and correction workflow
 
-Standard pipeline:
+1. Feed held-out `(prediction, label)` pairs to [ReliabilityStat].
+2. Inspect [ReliabilityResult.expectedCalibrationError] and the per-bin gap.
+3. Call [ReliabilityResult.isotonicCalibration] to fit a monotone curve, or
+   train [PlattCalibratorStat] on the pairs for a sigmoid mapping.
+4. Apply the fitted result's `calibrate(rawProbability)` at inference and
+   monitor the calibrated outputs with a reliability stat.
 
-1. Train a classifier (anything producing a probability or score in
-   `[0, 1]`).
-2. Feed `(prediction, label)` to a [ReliabilityStat] alongside training
-   (or on held-out evaluation data) and read the per-bin gap. If
-   `expectedCalibrationError()` is acceptable, stop.
-3. Otherwise plumb the same `(prediction, label)` stream into a
-   [PlattCalibratorStat] or [IsotonicCalibratorStat]. At inference,
-   replace `rawProb` with `calibrator.calibrate(rawProb)`.
-4. Continue feeding [ReliabilityStat] from the calibrated outputs to
-   verify the fix held.
-
-## Reuse with ReliabilityStat
-
-[IsotonicCalibratorStat] is built on top of [ReliabilityStat]; the
-binned `(positives, total)` book-keeping is exactly what
-[ReliabilityResult] already exposes. The PAV pass is purely a `read`
-post-process; updates remain `O(1)`. If you already have a
-[ReliabilityStat] in the pipeline for diagnostics, attaching an
-[IsotonicCalibratorStat] costs only the second instance's per-bin cells.
+The isotonic projection runs weighted Pool Adjacent Violators in O(numBins)
+time and memory. It reads the existing per-bin evidence and needs no update
+path or separate lifecycle.
 
 ## Merge
 
-[ReliabilityStat] merges per-bin sums element-wise, safe across
-parallel workers. [PlattCalibratorStat] merges sample-weighted weight
-vectors via the inner
-[com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat]:
-same approximation as any SGD merge. [IsotonicCalibratorStat] does
-not support merge directly: the result only carries the threshold step
-function, not the bin layout. To pool isotonic calibration across
-workers, merge the underlying [ReliabilityStat] and re-derive.
+[ReliabilityStat] adds per-bin sums, retaining the evidence across workers.
+Merge those snapshots before calling [isotonicCalibration]; fitting each
+shard and averaging curves loses the bin weights and pooling constraints.
+[PlattCalibratorStat] merges sample-weighted parameter vectors through its
+[com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat], an
+approximation to training on the combined observations.
 
 ## Concurrency
 
-[ReliabilityStat] applies independent striped atomic adds to its per-bin
-counters; lock-free and exact under every [com.eignex.kumulant.core.Concurrency]
-level. [IsotonicCalibratorStat] inherits that model, with the read-time Pool
-Adjacent Violators pass running single-threaded. [PlattCalibratorStat] inherits
-the [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat] model:
-the update body is locked under [com.eignex.kumulant.core.Concurrency.Strict] /
-[com.eignex.kumulant.core.Concurrency.HighWrite] and runs lock-free (Hogwild)
-under [com.eignex.kumulant.core.Concurrency.Relaxed].
+[ReliabilityStat] uses independent atomic adds for its per-bin cells and
+bounds each snapshot's outcome sum by its total weight. Isotonic fitting
+operates on that detached snapshot. [PlattCalibratorStat] inherits the
+[com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat] model:
+locked updates under [com.eignex.kumulant.core.Concurrency.Strict] and
+[com.eignex.kumulant.core.Concurrency.HighWrite], asynchronous SGD under
+[com.eignex.kumulant.core.Concurrency.Relaxed].

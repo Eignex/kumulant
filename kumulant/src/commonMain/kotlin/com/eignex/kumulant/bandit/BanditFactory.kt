@@ -2,11 +2,7 @@
 
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.Vector
 import com.eignex.kumulant.bandit.contextual.ContextualBanditSpec
-import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
-import com.eignex.kumulant.bandit.contextual.KnnContextualSpec
-import com.eignex.kumulant.bandit.contextual.KnnDistance
 import com.eignex.kumulant.bandit.contextual.LinearRegressionSpec
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
@@ -182,30 +178,10 @@ fun RegressionContextualSpec.materialize(
     )
 }
 
-/** Resolve a wire-named distance metric to the function that computes it. */
-private fun KnnDistance.resolve(): (Vector, Vector) -> Double = when (this) {
-    KnnDistance.SquaredL2 -> KnnContextualBandit.Companion::squaredL2
-}
-
-/** Build a live [KnnContextualBandit] from its spec. */
-fun KnnContextualSpec.materialize(random: Random = Random.Default): KnnContextualBandit {
-    val dist = distance.resolve()
-    return KnnContextualBandit(
-        nbrArms = nbrArms,
-        k = k,
-        maxHistoryPerArm = maxHistoryPerArm,
-        coldStartScore = coldStartScore,
-        exploration = exploration,
-        distance = dist,
-        random = random,
-    )
-}
-
 /** Dispatch any [ContextualBanditSpec] to its concrete bandit. */
 fun ContextualBanditSpec.materialize(
     random: Random = Random.Default,
     concurrency: Concurrency = Concurrency.None,
 ): Bandit = when (this) {
     is RegressionContextualSpec -> materialize(random, concurrency)
-    is KnnContextualSpec -> materialize(random)
 }

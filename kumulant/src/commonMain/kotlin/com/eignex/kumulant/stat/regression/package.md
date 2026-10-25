@@ -81,7 +81,8 @@ scoring rule.
   - Full joint posterior for Thompson sampling / LinUCB →
     `BayesianRegressionStat`.
   - Pooled estimation across many parallel regressors →
-    `HierarchicalBayesianRegression`.
+    [BayesianRegressionStat.fitPopulationPrior][com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat.fitPopulationPrior],
+    then pass the fitted mean and covariance to new regressors.
 - Need a non-linear regressor? Use
   [tree][com.eignex.kumulant.stat.regression.tree]. Single tree for
   cheap; forest for ensembled variance estimates (the natural backbone

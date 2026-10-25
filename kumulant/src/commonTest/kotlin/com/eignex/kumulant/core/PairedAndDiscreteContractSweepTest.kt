@@ -9,7 +9,6 @@ import com.eignex.kumulant.schema.spec.CountMinSketch
 import com.eignex.kumulant.schema.spec.Covariance
 import com.eignex.kumulant.schema.spec.DiscreteStatSpec
 import com.eignex.kumulant.schema.spec.HyperLogLog
-import com.eignex.kumulant.schema.spec.IsotonicCalibrator
 import com.eignex.kumulant.schema.spec.LinearCounting
 import com.eignex.kumulant.schema.spec.LogLoss
 import com.eignex.kumulant.schema.spec.MaeLoss
@@ -38,7 +37,6 @@ class PairedAndDiscreteContractSweepTest {
         "Auc" to Auc(),
         "Reliability" to Reliability(numBins = 8),
         "PlattCalibrator" to PlattCalibrator(),
-        "IsotonicCalibrator" to IsotonicCalibrator(),
         "ConfusionMatrix" to ConfusionMatrix(numClasses = 3),
         "Accuracy" to Accuracy(numClasses = 3),
     )

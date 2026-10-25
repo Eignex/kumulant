@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.forecast
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
@@ -56,6 +57,9 @@ data class HoltResult(
  * The first update seeds `level = value` and `trend = 0`. With `phi == 1.0` this is
  * standard Holt smoothing; with `phi < 1.0` the trend is geometrically damped.
  *
+ * Snapshots cannot merge independent ordered histories. Generic merge-based windowing
+ * is unavailable; feed ordered observations to one accumulator.
+ *
  * **Use cases:** smoothing a noisy series and producing short-horizon forecasts when a
  * non-zero local trend is expected. [com.eignex.kumulant.stat.decay.EwmaMeanStat] is the special case `beta == 0`.
  *
@@ -76,7 +80,8 @@ class HoltStat(
     /** Trend damping factor in `(0.0, 1.0]`; `1.0` is plain Holt, smaller values damp the trend. */
     val phi: Double = StatDefaults.HOLT_PHI,
     override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<HoltResult> {
+) : SeriesStat<HoltResult>,
+    RefusesMerge {
 
     constructor(
         alpha: Double,
@@ -120,17 +125,10 @@ class HoltStat(
         }
     }
 
-    override fun merge(values: HoltResult) = lock.guarded {
-        // No principled stat-level merge of two independent Holt traces; take the other's snapshot
-        // as the new state once we have anything to merge into. Useful for windowed-slot folds.
-        if (initialized.addAndGet(1L) == 1L) {
-            level.store(values.level)
-            trend.store(values.trend)
-        } else {
-            level.store(0.5 * (level.load() + values.level))
-            trend.store(0.5 * (trend.load() + values.trend))
-        }
-    }
+    override val mergeRefusal: String =
+        "HoltStat requires ordered observations; snapshots cannot merge independent histories"
+
+    override fun merge(values: HoltResult): Nothing = throw UnsupportedOperationException(mergeRefusal)
 
     override fun reset() = lock.guarded {
         initialized.store(0L)

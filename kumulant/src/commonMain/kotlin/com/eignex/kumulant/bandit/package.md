@@ -65,8 +65,8 @@ family implements exactly the pieces that fit.
   the contextual analogue.
 
 Joint-sampling bandits (Boltzmann, top-two Thompson) do not expose
-`Scorable` because no per-arm score is meaningful in isolation. Exp3 /
-Exp4 do not fit `PerArmBandit` because their state is not per-arm. Each
+`Scorable` because no per-arm score is meaningful in isolation. Exp3
+does not fit `PerArmBandit` because its snapshot stores joint sampling state. Each
 concrete bandit's KDoc states which interfaces it implements and why.
 
 ## Subpackages
@@ -76,7 +76,7 @@ concrete bandit's KDoc states which interfaces it implements and why.
   roulette-wheel selection.
 - `bandit.contextual`: Per-arm regression bandits over the
   [com.eignex.kumulant.stat.regression] family: linear (Bayesian,
-  diagonal, stochastic), kNN, tree- and forest-based.
+  diagonal, stochastic), tree- and forest-based.
 - `bandit.policy`: Pluggable scoring policies (Greedy, EpsilonGreedy,
   UCB1, ThompsonSampling, KLUcb, MOSS, etc.) shared by univariate
   bandits.
