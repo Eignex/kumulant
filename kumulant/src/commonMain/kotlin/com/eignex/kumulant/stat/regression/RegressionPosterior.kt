@@ -15,8 +15,8 @@ import kotlin.random.Random
  *  - For tree models the snapshot is routed via `findLeaf(x)` and the leaf's
  *    weighted-variance summary drives the draw; see the `TreePosterior` family.
  *
- * Built-in linear, tree, and forest scorers serialize with their native names through
- * [RegressionPosteriorSerializer]. Custom implementations can be used programmatically.
+ * Built-in linear, tree, and forest scorers serialize through [RegressionPosteriorSerializer].
+ * Custom implementations can be used programmatically.
  *
  * Used by [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit] and by Bayesian-
  * optimisation acquisition functions that need to score candidate points.

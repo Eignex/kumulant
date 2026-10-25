@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.kumulant.schema.serialization.LinkSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
@@ -24,7 +25,7 @@ import kotlin.math.max
  * Only canonical links are exposed: pairing a non-canonical link with the gradient
  * shortcut `grad_i = (mu - y) * x_i` is wrong, so restricting the type rules that out.
  */
-@Serializable
+@Serializable(with = LinkSerializer::class)
 sealed interface Link {
     /** Inverse link: maps the linear predictor `eta` to the response mean. */
     fun invMean(eta: Double): Double

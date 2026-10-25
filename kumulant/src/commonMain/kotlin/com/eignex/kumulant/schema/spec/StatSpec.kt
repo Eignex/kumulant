@@ -1,6 +1,12 @@
 package com.eignex.kumulant.schema.spec
 
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.schema.serialization.DiscreteStatSpecSerializer
+import com.eignex.kumulant.schema.serialization.PairedStatSpecSerializer
+import com.eignex.kumulant.schema.serialization.RegressionStatSpecSerializer
+import com.eignex.kumulant.schema.serialization.SeriesStatSpecSerializer
+import com.eignex.kumulant.schema.serialization.StatSpecSerializer
+import com.eignex.kumulant.schema.serialization.VectorStatSpecSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -9,11 +15,11 @@ import kotlinx.serialization.Serializable
  * configuration surface - no live cells, no locks, no
  * [com.eignex.kumulant.core.Concurrency].
  *
- * Polymorphism is by `@SerialName` on each variant, so any
- * [kotlinx.serialization][kotlinx.serialization.KSerializer] format that
- * supports open polymorphism works. Defaults on each spec match the
- * corresponding stat's constructor defaults so encoded payloads stay terse
- * when the format is configured with `encodeDefaults = false`.
+ * JSON uses canonical operator-key objects such as `{"ewma":{"alpha":0.1}}`.
+ * Serialize through this root or a modality interface to preserve that grammar.
+ * Other serialization formats retain the generated sealed-class representation.
+ * Defaults match the corresponding stat constructors and follow the format's
+ * `encodeDefaults` setting.
  *
  * Construction of the live stat happens externally via the `materialize`
  * extension functions. Each specification tree is compiled into a construction plan that checks
@@ -29,25 +35,25 @@ import kotlinx.serialization.Serializable
  *
  * @sample com.eignex.kumulant.samples.specRoundTrip
  */
-@Serializable
+@Serializable(with = StatSpecSerializer::class)
 sealed interface StatSpec
 
 /** [StatSpec] that materializes into a [com.eignex.kumulant.core.SeriesStat] with result type [R]. */
-@Serializable
+@Serializable(with = SeriesStatSpecSerializer::class)
 sealed interface SeriesStatSpec<R : Result> : StatSpec
 
 /** [StatSpec] that materializes into a [com.eignex.kumulant.core.PairedStat] with result type [R]. */
-@Serializable
+@Serializable(with = PairedStatSpecSerializer::class)
 sealed interface PairedStatSpec<R : Result> : StatSpec
 
 /** [StatSpec] that materializes into a [com.eignex.kumulant.core.VectorStat] with result type [R]. */
-@Serializable
+@Serializable(with = VectorStatSpecSerializer::class)
 sealed interface VectorStatSpec<R : Result> : StatSpec
 
 /** [StatSpec] that materializes into a [com.eignex.kumulant.core.DiscreteStat] with result type [R]. */
-@Serializable
+@Serializable(with = DiscreteStatSpecSerializer::class)
 sealed interface DiscreteStatSpec<R : Result> : StatSpec
 
 /** [StatSpec] that materializes into a [com.eignex.kumulant.core.RegressionStat] with result type [R]. */
-@Serializable
+@Serializable(with = RegressionStatSpecSerializer::class)
 sealed interface RegressionStatSpec<R : Result> : StatSpec

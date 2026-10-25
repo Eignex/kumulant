@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.regression.tree
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.schema.expr.BoolExpr
 import com.eignex.kumulant.schema.expr.eval
+import com.eignex.kumulant.schema.serialization.SerializableSplitSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -28,7 +29,7 @@ interface Split<in Row> {
  * [ThresholdSplit] (numeric `x[i] <= t`) and [ExprSplit] (wrapping a [BoolExpr]); callers
  * needing custom predicates compose them as [BoolExpr] AST nodes and wrap in [ExprSplit].
  */
-@Serializable
+@Serializable(with = SerializableSplitSerializer::class)
 sealed interface SerializableSplit : Split<Vector>
 
 /** Route by `row[featureIndex] <= threshold`. Threshold is inclusive on the "pos" side. */

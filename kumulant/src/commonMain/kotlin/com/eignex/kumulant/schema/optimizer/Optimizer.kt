@@ -2,6 +2,7 @@ package com.eignex.kumulant.schema.optimizer
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.schema.expr.*
+import com.eignex.kumulant.schema.serialization.OptimizerSpecSerializer
 import com.eignex.kumulant.stat.regression.AdagradOptimizer
 import com.eignex.kumulant.stat.regression.AdamOptimizer
 import com.eignex.kumulant.stat.regression.Optimizer
@@ -42,7 +43,7 @@ import kotlinx.serialization.Serializable
  * scaling for L2, cumulative truncated gradient for L1) are SGD-specific
  * and don't extend cleanly to adaptive optimizers.
  */
-@Serializable
+@Serializable(with = OptimizerSpecSerializer::class)
 sealed interface OptimizerSpec {
     /**
      * Build a live optimizer instance over `featureSize` coordinates at the

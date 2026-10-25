@@ -66,9 +66,8 @@ import kotlinx.serialization.Serializable
 // stat) because Kotlin requires direct subclasses of a sealed interface to live in the
 // same package as the interface.
 //
-// Each variant uses `@SerialName` matching its Kotlin class name, so the wire `$type`
-// value mirrors what a Kotlin reader would type. Defaults match the underlying stat's
-// primary constructor so authored payloads stay terse under `encodeDefaults = false`.
+// Serial names preserve the tags used by non-JSON formats.
+// Defaults match the stat constructors so payloads stay terse under `encodeDefaults = false`.
 //
 // Construction lives in `StatFactory.kt`; specs here are pure data only.
 

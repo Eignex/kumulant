@@ -4,6 +4,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.nextBeta
 import com.eignex.kumulant.math.nextGamma
 import com.eignex.kumulant.math.nextNormal
+import com.eignex.kumulant.schema.serialization.PosteriorSerializer
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -24,7 +25,7 @@ import kotlin.random.Random
  * already incorporates whatever pseudo-counts the caller wants; with a seeded snapshot
  * the empty-snapshot edge case can't arise.
  */
-@Serializable
+@Serializable(with = PosteriorSerializer::class)
 sealed interface Posterior<R : Result> {
     /** Draw a single Monte Carlo sample of the arm's reward from its posterior. */
     fun sample(snapshot: R, rng: Random): Double

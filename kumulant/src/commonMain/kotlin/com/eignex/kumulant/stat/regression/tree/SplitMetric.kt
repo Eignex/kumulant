@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.kumulant.schema.serialization.SplitMetricSerializer
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,7 +14,7 @@ import kotlinx.serialization.Serializable
  * be added as concrete callers ask for them. Sealed so the wire form (RegressionTreeConfig
  * inside a tree spec) stays portable.
  */
-@Serializable
+@Serializable(with = SplitMetricSerializer::class)
 sealed interface SplitMetric {
     /** Score a candidate split given its total / pos / neg variance snapshots. */
     fun score(total: WeightedVarianceResult, pos: WeightedVarianceResult, neg: WeightedVarianceResult): Double

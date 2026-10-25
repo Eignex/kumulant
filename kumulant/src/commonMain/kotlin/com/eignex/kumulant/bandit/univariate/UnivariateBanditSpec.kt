@@ -1,6 +1,7 @@
 package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.schema.serialization.UnivariateBanditSpecSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -12,7 +13,7 @@ import kotlinx.serialization.Serializable
  * `Random` source through at build time (the source itself is not part of the
  * wire format).
  */
-@Serializable
+@Serializable(with = UnivariateBanditSpecSerializer::class)
 sealed interface UnivariateBanditSpec
 
 /** Spec for [MultiArmedBandit]. */

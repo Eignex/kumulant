@@ -1,6 +1,7 @@
 package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.schema.serialization.BanditPolicySpecSerializer
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
@@ -11,15 +12,14 @@ import kotlinx.serialization.Serializable
 /**
  * Wire-portable specification for a [BanditPolicy].
  *
- * Each variant `@SerialName`s to its policy's class name so a JSON `$type`
- * payload mirrors what a Kotlin reader would type. Construction lives in
- * `BanditFactory`.
+ * JSON uses canonical operator-key nodes such as `{"ucb1":{}}`.
+ * Other formats retain the generated class tags. Construction lives in `BanditFactory`.
  *
  * Specs that take an [Arm] or [Posterior] consume them directly; those
  * hierarchies are already sealed-and-`@Serializable` so they round-trip on the
  * wire alongside the policy.
  */
-@Serializable
+@Serializable(with = BanditPolicySpecSerializer::class)
 sealed interface BanditPolicySpec<R : Result>
 
 /** Spec for [ThompsonSampling]. */

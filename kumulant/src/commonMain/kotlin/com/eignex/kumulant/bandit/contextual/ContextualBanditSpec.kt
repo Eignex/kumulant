@@ -1,6 +1,7 @@
 package com.eignex.kumulant.bandit.contextual
 
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.schema.serialization.ContextualBanditSpecSerializer
 import com.eignex.kumulant.schema.spec.RegressionStatSpec
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlinx.serialization.SerialName
@@ -11,7 +12,7 @@ import kotlinx.serialization.Serializable
  *
  * Materialisation lives in `BanditFactory`.
  */
-@Serializable
+@Serializable(with = ContextualBanditSpecSerializer::class)
 sealed interface ContextualBanditSpec
 
 /**

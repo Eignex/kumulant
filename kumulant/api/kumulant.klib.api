@@ -1312,8 +1312,6 @@ final class com.eignex.kumulant.bandit.univariate/CompositeSubArm { // com.eigne
     }
 
     final object Companion { // com.eignex.kumulant.bandit.univariate/CompositeSubArm.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.bandit.univariate/CompositeSubArm.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.univariate/CompositeSubArm> // com.eignex.kumulant.bandit.univariate/CompositeSubArm.Companion.serializer|serializer(){}[0]
     }
 }
@@ -2292,8 +2290,6 @@ final class com.eignex.kumulant.schema.expr/IfExpr : com.eignex.kumulant.schema.
     }
 
     final object Companion { // com.eignex.kumulant.schema.expr/IfExpr.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.expr/IfExpr.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/IfExpr> // com.eignex.kumulant.schema.expr/IfExpr.Companion.serializer|serializer(){}[0]
     }
 }
@@ -2420,8 +2416,6 @@ final class com.eignex.kumulant.schema.expr/SwitchCase { // com.eignex.kumulant.
     }
 
     final object Companion { // com.eignex.kumulant.schema.expr/SwitchCase.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.expr/SwitchCase.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/SwitchCase> // com.eignex.kumulant.schema.expr/SwitchCase.Companion.serializer|serializer(){}[0]
     }
 }
@@ -2479,8 +2473,6 @@ final class com.eignex.kumulant.schema.optimizer/Adagrad : com.eignex.kumulant.s
     }
 
     final object Companion { // com.eignex.kumulant.schema.optimizer/Adagrad.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.optimizer/Adagrad.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.optimizer/Adagrad> // com.eignex.kumulant.schema.optimizer/Adagrad.Companion.serializer|serializer(){}[0]
     }
 }
@@ -2517,8 +2509,6 @@ final class com.eignex.kumulant.schema.optimizer/Adam : com.eignex.kumulant.sche
     }
 
     final object Companion { // com.eignex.kumulant.schema.optimizer/Adam.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.optimizer/Adam.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.optimizer/Adam> // com.eignex.kumulant.schema.optimizer/Adam.Companion.serializer|serializer(){}[0]
     }
 }
@@ -2552,8 +2542,6 @@ final class com.eignex.kumulant.schema.optimizer/Rmsprop : com.eignex.kumulant.s
     }
 
     final object Companion { // com.eignex.kumulant.schema.optimizer/Rmsprop.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.optimizer/Rmsprop.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.optimizer/Rmsprop> // com.eignex.kumulant.schema.optimizer/Rmsprop.Companion.serializer|serializer(){}[0]
     }
 }
@@ -2581,8 +2569,6 @@ final class com.eignex.kumulant.schema.optimizer/Sgd : com.eignex.kumulant.schem
     }
 
     final object Companion { // com.eignex.kumulant.schema.optimizer/Sgd.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.optimizer/Sgd.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.optimizer/Sgd> // com.eignex.kumulant.schema.optimizer/Sgd.Companion.serializer|serializer(){}[0]
     }
 }
@@ -2783,8 +2769,6 @@ final class com.eignex.kumulant.schema.spec/BayesianRegression : com.eignex.kumu
     }
 
     final object Companion { // com.eignex.kumulant.schema.spec/BayesianRegression.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.spec/BayesianRegression.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/BayesianRegression> // com.eignex.kumulant.schema.spec/BayesianRegression.Companion.serializer|serializer(){}[0]
     }
 }
@@ -3244,8 +3228,6 @@ final class com.eignex.kumulant.schema.spec/DiagonalRegression : com.eignex.kumu
     }
 
     final object Companion { // com.eignex.kumulant.schema.spec/DiagonalRegression.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.spec/DiagonalRegression.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/DiagonalRegression> // com.eignex.kumulant.schema.spec/DiagonalRegression.Companion.serializer|serializer(){}[0]
     }
 }
@@ -3735,8 +3717,6 @@ final class com.eignex.kumulant.schema.spec/PlattCalibrator : com.eignex.kumulan
     }
 
     final object Companion { // com.eignex.kumulant.schema.spec/PlattCalibrator.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.spec/PlattCalibrator.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/PlattCalibrator> // com.eignex.kumulant.schema.spec/PlattCalibrator.Companion.serializer|serializer(){}[0]
     }
 }
@@ -3991,8 +3971,6 @@ final class com.eignex.kumulant.schema.spec/SoftmaxRegression : com.eignex.kumul
     }
 
     final object Companion { // com.eignex.kumulant.schema.spec/SoftmaxRegression.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.spec/SoftmaxRegression.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/SoftmaxRegression> // com.eignex.kumulant.schema.spec/SoftmaxRegression.Companion.serializer|serializer(){}[0]
     }
 }
@@ -4085,8 +4063,6 @@ final class com.eignex.kumulant.schema.spec/StochasticRegression : com.eignex.ku
     }
 
     final object Companion { // com.eignex.kumulant.schema.spec/StochasticRegression.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.spec/StochasticRegression.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/StochasticRegression> // com.eignex.kumulant.schema.spec/StochasticRegression.Companion.serializer|serializer(){}[0]
     }
 }
@@ -4172,8 +4148,6 @@ final class com.eignex.kumulant.schema.spec/UnivariateRegression : com.eignex.ku
     }
 
     final object Companion { // com.eignex.kumulant.schema.spec/UnivariateRegression.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.spec/UnivariateRegression.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/UnivariateRegression> // com.eignex.kumulant.schema.spec/UnivariateRegression.Companion.serializer|serializer(){}[0]
     }
 }
@@ -5876,8 +5850,6 @@ final class com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult : c
     }
 
     final object Companion { // com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult> // com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult.Companion.serializer|serializer(){}[0]
     }
 }
@@ -5983,8 +5955,6 @@ final class com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult : 
     }
 
     final object Companion { // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult> // com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult.Companion.serializer|serializer(){}[0]
     }
 }
@@ -6116,8 +6086,6 @@ final class com.eignex.kumulant.stat.regression.glm/UnivariateRegressionResult :
     }
 
     final object Companion { // com.eignex.kumulant.stat.regression.glm/UnivariateRegressionResult.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.stat.regression.glm/UnivariateRegressionResult.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/UnivariateRegressionResult> // com.eignex.kumulant.stat.regression.glm/UnivariateRegressionResult.Companion.serializer|serializer(){}[0]
     }
 }
@@ -6304,8 +6272,6 @@ final class com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig : 
     }
 
     final object Companion { // com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig> // com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig.Companion.serializer|serializer(){}[0]
     }
 }
@@ -6376,8 +6342,6 @@ final class com.eignex.kumulant.stat.regression.tree/ExprSplit : com.eignex.kumu
     }
 
     final object Companion { // com.eignex.kumulant.stat.regression.tree/ExprSplit.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.stat.regression.tree/ExprSplit.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/ExprSplit> // com.eignex.kumulant.stat.regression.tree/ExprSplit.Companion.serializer|serializer(){}[0]
     }
 }
@@ -6570,8 +6534,6 @@ final class com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig : com.
     }
 
     final object Companion { // com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig.Companion.$childSerializers|{}$childSerializers[0]
-
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig> // com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig.Companion.serializer|serializer(){}[0]
     }
 }

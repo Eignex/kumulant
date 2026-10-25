@@ -35,19 +35,13 @@ private class ServiceMetrics : StatSchema() {
 class StatSchemaDefSerializationTest {
 
     @Test
-    fun `definition encodes with the discriminator and class names`() {
+    fun `definition encodes with canonical operator keys`() {
         val def = ServiceMetrics().statSchemaDef()
         val encoded = SchemaJson.encodeToString(def)
 
         assertEquals(
-            """{"stats":{""" +
-                """"requests":{"${'$'}type":"Sum"},""" +
-                """"avgWeight":{"${'$'}type":"Mean"},""" +
-                """"http":{"${'$'}type":"GroupStatSpec","stats":{""" +
-                """"requests":{"${'$'}type":"Sum"},""" +
-                """"latencyMs":{"${'$'}type":"DDSketch","probabilities":[0.5,0.99,0.999]}""" +
-                """}}""" +
-                """}}""",
+            """{"stats":{"requests":{"sum":{}},"avgWeight":{"mean":{}},"http":{"group":{"stats":{""" +
+                """"requests":{"sum":{}},"latencyMs":{"ddSketch":{"probabilities":[0.5,0.99,0.999]}}}}}}}""",
             encoded,
         )
     }
@@ -101,14 +95,13 @@ class StatSchemaDefSerializationTest {
         val decoded = SchemaJson.decodeFromString<StatSchemaDef>(encoded)
         val reEncoded = SchemaJson.encodeToString(decoded)
 
-        // Byte-identical round-trip: declaration order, defaults suppression, discriminator
-        // placement must all be preserved.
+        // Declaration order and omitted defaults survive the round trip.
         assertEquals(encoded, reEncoded)
 
-        assertEquals(true, encoded.contains("\"requests\":{\"\$type\":\"Sum\"}"))
-        assertEquals(true, encoded.contains("\"\$type\":\"WithWeightSeries\""))
-        assertEquals(true, encoded.contains("\"\$type\":\"WithValueSeries\""))
-        assertEquals(true, encoded.contains("\"\$type\":\"WithFixedX\""))
+        assertTrue(encoded.contains("\"requests\":{\"sum\":{}}"))
+        assertTrue(encoded.contains("\"withWeight\":"))
+        assertTrue(encoded.contains("\"withValue\":"))
+        assertTrue(encoded.contains("\"withFixedX\":"))
     }
 
     @Test

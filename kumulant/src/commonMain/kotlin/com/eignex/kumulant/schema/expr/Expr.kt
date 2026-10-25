@@ -9,6 +9,9 @@ import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasMinMax
 import com.eignex.kumulant.core.IndexedResult
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.schema.serialization.BoolExprSerializer
+import com.eignex.kumulant.schema.serialization.ScalarExprSerializer
+import com.eignex.kumulant.schema.serialization.VectorExprSerializer
 import com.eignex.kumulant.stream.DEFAULT_TARGET_HIGH
 import com.eignex.kumulant.stream.DEFAULT_TARGET_LOW
 import kotlinx.serialization.SerialName
@@ -74,11 +77,11 @@ private inline fun <reified T> Result?.feedbackPrimary(node: String): T {
  *
  * ## Wire format
  *
- * Polymorphic via skema's `$type` discriminator. The `@SerialName` on each
- * concrete node is the wire-format tag; pick stable, unambiguous names if
- * you add new ones.
+ * JSON uses structured operator keys, numeric scalar literals, and explicit input
+ * references: `{"add":[{"input":"value"},1]}`. Serialize through [ScalarExpr],
+ * [BoolExpr], or [VectorExpr]. Other formats retain the generated sealed-class tags.
  */
-@Serializable
+@Serializable(with = ScalarExprSerializer::class)
 sealed interface ScalarExpr {
     /**
      * Evaluate this expression against the per-update inputs. See the class
@@ -501,7 +504,7 @@ internal data class VDot(
  *
  * See [ScalarExpr] for the input-environment convention.
  */
-@Serializable
+@Serializable(with = BoolExprSerializer::class)
 sealed interface BoolExpr {
     /**
      * Evaluate this predicate against the per-update inputs. Returns `true`
@@ -701,7 +704,7 @@ internal data class InRange(
  *
  * See [ScalarExpr] for the input-environment convention.
  */
-@Serializable
+@Serializable(with = VectorExprSerializer::class)
 sealed interface VectorExpr {
     /**
      * Evaluate this expression to produce a fresh `DoubleArray` from the

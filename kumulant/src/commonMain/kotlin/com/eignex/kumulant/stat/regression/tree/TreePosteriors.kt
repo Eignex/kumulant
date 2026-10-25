@@ -2,6 +2,8 @@ package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.math.nextNormal
+import com.eignex.kumulant.schema.serialization.ForestPosteriorSerializer
+import com.eignex.kumulant.schema.serialization.TreePosteriorSerializer
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName
@@ -23,7 +25,7 @@ import kotlin.random.Random
  *  - [UcbTreePosterior]: UCB-style mean + alpha * sqrt(variance / totalWeights) on
  *    the leaf's sampling-distribution-of-the-mean.
  */
-@Serializable
+@Serializable(with = TreePosteriorSerializer::class)
 sealed interface TreePosterior : RegressionPosterior<TreeRegressionResult>
 
 /** Score is the leaf's running mean; point estimate, no exploration. */
@@ -97,7 +99,7 @@ data class UcbTreePosterior(
 /** [TreePosterior] family ported to forests: every leaf snapshot the query routes to
  *  is merged into a single weighted-variance result, then scored with the tree-posterior
  *  semantics. Same options, applied to the ensembled leaf. */
-@Serializable
+@Serializable(with = ForestPosteriorSerializer::class)
 sealed interface ForestPosterior : RegressionPosterior<ForestRegressionResult>
 
 /** Forest counterpart to [MeanTreePosterior]. */

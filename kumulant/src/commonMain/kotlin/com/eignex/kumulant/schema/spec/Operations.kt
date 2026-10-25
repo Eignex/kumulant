@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 
 // Wire-friendly counterparts of the composable operations in
 // `com.eignex.kumulant.operation.*`. Each spec holds an inner [StatSpec]
-// (polymorphic by `@SerialName`) plus the operation's primitive parameters.
+// plus the operation's primitive parameters. Root serializers select the wire grammar.
 //
 // The inner field is typed at the base [StatSpec] interface so the
 // polymorphic decoder doesn't need a generic argument; compilation

@@ -9,6 +9,7 @@ import com.eignex.koblas.forEachStored
 import com.eignex.koblas.norm2
 import com.eignex.koblas.trsv
 import com.eignex.kumulant.math.nextNormal
+import com.eignex.kumulant.schema.serialization.LinearPosteriorSerializer
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -30,7 +31,7 @@ import kotlin.random.Random
  * Sealed + `@Serializable` so a `(regression, posterior)` configuration is wire
  * portable via skema's polymorphic discriminator.
  */
-@Serializable
+@Serializable(with = LinearPosteriorSerializer::class)
 sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosterior<R> {
     /** Draw a weight vector from the posterior at `exploration` variance scale.
      *  `exploration = 0.0` collapses to the point estimate; `1.0` is the calibrated posterior. */
