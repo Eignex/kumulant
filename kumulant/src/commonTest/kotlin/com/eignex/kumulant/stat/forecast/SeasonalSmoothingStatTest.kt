@@ -88,6 +88,24 @@ class SeasonalSmoothingStatTest {
     }
 
     @Test
+    fun `merging a decoded result leaves the stat updatable`() {
+        val s = SeasonalSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4)
+        s.update(1.0)
+        s.merge(
+            SeasonalSmoothingResult(
+                level = 1.0,
+                trend = 0.0,
+                seasons = listOf(0.0, 0.0, 0.0, 0.0),
+                currentSlot = 3,
+                phi = 1.0,
+                mode = SeasonalMode.Additive,
+            ),
+        )
+        s.update(2.0)
+        assertTrue(s.read().level.isFinite())
+    }
+
+    @Test
     fun `reset clears state`() {
         val s = SeasonalSmoothingStat(alpha = 0.4, beta = 0.1, gamma = 0.5, period = 4)
         repeat(20) { s.update(it.toDouble()) }

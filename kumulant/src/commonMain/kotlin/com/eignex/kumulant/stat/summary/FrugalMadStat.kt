@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stat.StatDefaults
@@ -25,22 +24,22 @@ import kotlin.math.abs
  *
  * **Use cases:** lightweight robust center/scale monitoring where bounded state and
  * adaptation matter more than quantile accuracy. Use [MadStat] for digest-based
- * historical estimates, observation weights, and merging.
+ * historical estimates, observation weights, and digest-backed merging.
  *
  * **Memory:** O(1); two estimates, an initialization flag, and a lock.
  *
  * **Update:** O(1); two bounded adjustments, with no per-update allocation.
  *
  * **Concurrency:** Body locked under any concurrent level. Updates, reads, and resets
- * see a coherent pair; estimates remain sensitive to observation order. Merge is
- * unsupported because two adaptive estimates do not retain the source distribution.
+ * see a coherent pair; estimates remain sensitive to observation order. Merge adopts
+ * a nonempty remote pair while empty and otherwise averages both estimates equally,
+ * without reconstructing the combined distribution or its observation weights.
  */
 class FrugalMadStat(
     /** Full step size in input units; each median adjustment is bounded by half this value. */
     val stepSize: Double = StatDefaults.FRUGAL_QUANTILE_STEP_SIZE,
     override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<MadResult>,
-    RefusesMerge {
+) : SeriesStat<MadResult> {
 
     init {
         require(stepSize.isFinite() && stepSize > 0.0) { "stepSize must be finite and positive" }
@@ -51,8 +50,6 @@ class FrugalMadStat(
     private var initialized = false
     private var median = Double.NaN
     private var deviation = Double.NaN
-
-    override val mergeRefusal: String = "FrugalMadStat cannot merge adaptive median and deviation estimates"
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
@@ -72,7 +69,18 @@ class FrugalMadStat(
 
     override fun read(timestampNanos: Long): MadResult = lock.guarded { MadResult(median, deviation) }
 
-    override fun merge(values: MadResult): Nothing = throw UnsupportedOperationException(mergeRefusal)
+    override fun merge(values: MadResult) = lock.guarded {
+        if (values.median.isNaN()) return@guarded
+        val incomingDeviation = if (values.mad.isNaN()) 0.0 else values.mad
+        if (!initialized) {
+            median = values.median
+            deviation = incomingDeviation
+            initialized = true
+        } else {
+            median = median / 2.0 + values.median / 2.0
+            deviation = deviation / 2.0 + incomingDeviation / 2.0
+        }
+    }
 
     override fun reset() = lock.guarded {
         initialized = false

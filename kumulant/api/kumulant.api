@@ -5051,7 +5051,7 @@ public final class com/eignex/kumulant/stat/change/AdwinResult$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/change/AdwinStat : com/eignex/kumulant/core/RefusesMerge, com/eignex/kumulant/core/SeriesStat {
+public final class com/eignex/kumulant/stat/change/AdwinStat : com/eignex/kumulant/core/SeriesStat {
 	public fun <init> ()V
 	public fun <init> (DILcom/eignex/kumulant/core/Concurrency;)V
 	public synthetic fun <init> (DILcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5063,7 +5063,7 @@ public final class com/eignex/kumulant/stat/change/AdwinStat : com/eignex/kumula
 	public final fun getMaxBucketsPerSize ()I
 	public fun getMergeRefusal ()Ljava/lang/String;
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/change/AdwinResult;)Ljava/lang/Void;
+	public fun merge (Lcom/eignex/kumulant/stat/change/AdwinResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/change/AdwinResult;
 	public fun reset ()V
@@ -5113,7 +5113,7 @@ public final class com/eignex/kumulant/stat/change/CusumResult$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/change/CusumStat : com/eignex/kumulant/core/RefusesMerge, com/eignex/kumulant/core/SeriesStat {
+public final class com/eignex/kumulant/stat/change/CusumStat : com/eignex/kumulant/core/SeriesStat {
 	public fun <init> ()V
 	public fun <init> (DDDLcom/eignex/kumulant/core/Concurrency;)V
 	public synthetic fun <init> (DDDLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5126,7 +5126,7 @@ public final class com/eignex/kumulant/stat/change/CusumStat : com/eignex/kumula
 	public final fun getTarget ()D
 	public final fun getThreshold ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/change/CusumResult;)Ljava/lang/Void;
+	public fun merge (Lcom/eignex/kumulant/stat/change/CusumResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/change/CusumResult;
 	public fun reset ()V
@@ -5182,7 +5182,7 @@ public final class com/eignex/kumulant/stat/change/PageHinkleyResult$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/change/PageHinkleyStat : com/eignex/kumulant/core/RefusesMerge, com/eignex/kumulant/core/SeriesStat {
+public final class com/eignex/kumulant/stat/change/PageHinkleyStat : com/eignex/kumulant/core/SeriesStat {
 	public fun <init> ()V
 	public fun <init> (DDLcom/eignex/kumulant/core/Concurrency;)V
 	public synthetic fun <init> (DDLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -5194,7 +5194,7 @@ public final class com/eignex/kumulant/stat/change/PageHinkleyStat : com/eignex/
 	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getThreshold ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/change/PageHinkleyResult;)Ljava/lang/Void;
+	public fun merge (Lcom/eignex/kumulant/stat/change/PageHinkleyResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/change/PageHinkleyResult;
 	public fun reset ()V
@@ -5754,7 +5754,7 @@ public final class com/eignex/kumulant/stat/forecast/HoltResult$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/forecast/HoltStat : com/eignex/kumulant/core/RefusesMerge, com/eignex/kumulant/core/SeriesStat {
+public final class com/eignex/kumulant/stat/forecast/HoltStat : com/eignex/kumulant/core/SeriesStat {
 	public fun <init> (DDDLcom/eignex/kumulant/core/Concurrency;)V
 	public synthetic fun <init> (DDDLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;DLcom/eignex/kumulant/core/Concurrency;)V
@@ -5770,7 +5770,7 @@ public final class com/eignex/kumulant/stat/forecast/HoltStat : com/eignex/kumul
 	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getPhi ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/forecast/HoltResult;)Ljava/lang/Void;
+	public fun merge (Lcom/eignex/kumulant/stat/forecast/HoltResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/forecast/HoltResult;
 	public fun reset ()V
@@ -5813,7 +5813,7 @@ public final class com/eignex/kumulant/stat/forecast/RecursiveVarianceResult$Com
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/forecast/RecursiveVarianceStat : com/eignex/kumulant/core/RefusesMerge, com/eignex/kumulant/core/SeriesStat {
+public final class com/eignex/kumulant/stat/forecast/RecursiveVarianceStat : com/eignex/kumulant/core/SeriesStat {
 	public fun <init> (DDDLcom/eignex/kumulant/core/Concurrency;)V
 	public synthetic fun <init> (DDDLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
@@ -5825,7 +5825,7 @@ public final class com/eignex/kumulant/stat/forecast/RecursiveVarianceStat : com
 	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getOmega ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/forecast/RecursiveVarianceResult;)Ljava/lang/Void;
+	public fun merge (Lcom/eignex/kumulant/stat/forecast/RecursiveVarianceResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/forecast/RecursiveVarianceResult;
 	public fun reset ()V
@@ -5887,7 +5887,7 @@ public final class com/eignex/kumulant/stat/forecast/SeasonalSmoothingResult$Com
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/forecast/SeasonalSmoothingStat : com/eignex/kumulant/core/RefusesMerge, com/eignex/kumulant/core/SeriesStat {
+public final class com/eignex/kumulant/stat/forecast/SeasonalSmoothingStat : com/eignex/kumulant/core/SeriesStat {
 	public fun <init> (DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;DLcom/eignex/kumulant/core/Concurrency;)V
 	public synthetic fun <init> (DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;DLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun <init> (Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;ILcom/eignex/kumulant/stat/forecast/SeasonalMode;DLcom/eignex/kumulant/core/Concurrency;)V
@@ -5907,7 +5907,7 @@ public final class com/eignex/kumulant/stat/forecast/SeasonalSmoothingStat : com
 	public final fun getPeriod ()I
 	public final fun getPhi ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;)Ljava/lang/Void;
+	public fun merge (Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;
 	public fun reset ()V
@@ -8860,7 +8860,7 @@ public final class com/eignex/kumulant/stat/summary/CountStat : com/eignex/kumul
 	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/SumResult;)V
 }
 
-public final class com/eignex/kumulant/stat/summary/FrugalMadStat : com/eignex/kumulant/core/RefusesMerge, com/eignex/kumulant/core/SeriesStat {
+public final class com/eignex/kumulant/stat/summary/FrugalMadStat : com/eignex/kumulant/core/SeriesStat {
 	public fun <init> ()V
 	public fun <init> (DLcom/eignex/kumulant/core/Concurrency;)V
 	public synthetic fun <init> (DLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -8871,7 +8871,7 @@ public final class com/eignex/kumulant/stat/summary/FrugalMadStat : com/eignex/k
 	public fun getMergeRefusal ()Ljava/lang/String;
 	public final fun getStepSize ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/summary/MadResult;)Ljava/lang/Void;
+	public fun merge (Lcom/eignex/kumulant/stat/summary/MadResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
 	public fun read (J)Lcom/eignex/kumulant/stat/summary/MadResult;
 	public fun reset ()V

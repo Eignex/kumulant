@@ -89,10 +89,11 @@ private fun TDigestResult.centroidMedian(halfWeight: Double): Double {
  * without retaining deviations measured against earlier centers.
  *
  * Merge combines the complete digest retained by [MadResult.digest], then reads
- * recalculate both estimates. A summary-only result cannot be merged.
+ * recalculate both estimates. A summary-only result contributes unit total weight
+ * split between `median - mad` and `median + mad`, approximating its missing evidence.
  *
  * **Use cases:** robust center and scale for heavy-tailed streams. Use [FrugalMadStat]
- * for constant-memory adaptive tracking without merge support.
+ * for constant-memory adaptive tracking with an equal-weight approximate merge.
  *
  * **Memory:** O([compression]); one digest and its update buffer.
  *
@@ -113,9 +114,20 @@ class MadStat(
     override fun update(value: Double, timestampNanos: Long, weight: Double) =
         valueDigest.update(value, timestampNanos, weight)
 
-    override fun validateMerge(values: MadResult) = valueDigest.validateMerge(values.mergeEvidence())
+    override fun validateMerge(values: MadResult) {
+        values.digest?.let { valueDigest.validateMerge(it) }
+    }
 
-    override fun merge(values: MadResult) = valueDigest.merge(values.mergeEvidence())
+    override fun merge(values: MadResult) {
+        val digest = values.digest
+        if (digest != null) {
+            valueDigest.merge(digest)
+        } else if (!values.median.isNaN()) {
+            val deviation = if (values.mad.isNaN()) 0.0 else values.mad
+            valueDigest.update(values.median - deviation, weight = 0.5)
+            valueDigest.update(values.median + deviation, weight = 0.5)
+        }
+    }
 
     override fun reset() = valueDigest.reset()
 
@@ -123,6 +135,3 @@ class MadStat(
 
     override fun create(concurrency: Concurrency?) = MadStat(compression, concurrency ?: this.concurrency)
 }
-
-private fun MadResult.mergeEvidence(): TDigestResult =
-    requireNotNull(digest) { "MAD merge requires a complete TDigest snapshot" }

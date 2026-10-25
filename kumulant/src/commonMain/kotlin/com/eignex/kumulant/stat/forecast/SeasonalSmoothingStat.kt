@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.forecast
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
@@ -41,6 +40,9 @@ data class SeasonalSmoothingResult(
     val mode: SeasonalMode,
 ) : Result {
     init {
+        // Validated here rather than in merge, because the slot indexes [seasons] on the stat's
+        // update path: a decoded result carrying a negative slot merges without complaint and then
+        // takes the *next* update out with an index-out-of-bounds, which no stat may throw.
         require(seasons.isNotEmpty()) { "seasons must not be empty" }
         require(currentSlot in seasons.indices) {
             "currentSlot must be in 0..${seasons.size - 1}; got $currentSlot"
@@ -97,8 +99,9 @@ data class SeasonalSmoothingResult(
  * multiplicative); every later update runs the recurrence above. Nothing seeds the seasonal vector
  * separately, so the first cycle carries little seasonal signal.
  *
- * Snapshots cannot merge independent ordered histories. Generic merge-based windowing
- * is unavailable; feed ordered observations to one accumulator.
+ * Merge adopts a remote state while empty and otherwise averages level, trend, and
+ * seasonal factors, using the remote seasonal phase.
+ * This is an approximate roll-up, not replay of the combined ordered observations.
  *
  * **Use cases:** short-horizon forecasting of streams with a recurring cycle on top
  * of a level and trend; pairs with [HoltStat] when no seasonal component is present.
@@ -127,8 +130,7 @@ class SeasonalSmoothingStat(
     /** Trend damping factor in `(0, 1]`; `1.0` is plain Holt-Winters. */
     val phi: Double = StatDefaults.SEASONAL_SMOOTHING_PHI,
     override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<SeasonalSmoothingResult>,
-    RefusesMerge {
+) : SeriesStat<SeasonalSmoothingResult> {
 
     constructor(
         alpha: Double,
@@ -213,10 +215,28 @@ class SeasonalSmoothingStat(
         }
     }
 
-    override val mergeRefusal: String =
-        "SeasonalSmoothingStat requires ordered observations; snapshots cannot merge independent histories"
+    override fun validateMerge(values: SeasonalSmoothingResult) {
+        require(values.seasons.size == period) { "merge seasons size ${values.seasons.size} != period $period" }
+    }
 
-    override fun merge(values: SeasonalSmoothingResult): Nothing = throw UnsupportedOperationException(mergeRefusal)
+    override fun merge(values: SeasonalSmoothingResult) = lock.guarded {
+        validateMerge(values)
+        if (initialized.addAndGet(1L) == 1L) {
+            level.store(values.level)
+            trend.store(values.trend)
+            values.seasons.forEachIndexed { i, s -> seasons.store(i, s) }
+            slot.store(values.currentSlot.toLong())
+        } else {
+            level.store(0.5 * (level.load() + values.level))
+            trend.store(0.5 * (trend.load() + values.trend))
+            for (i in 0 until period) {
+                seasons.store(i, 0.5 * (seasons.load(i) + values.seasons[i]))
+            }
+            // The factors just came from the incoming trace, so the phase has to come with them;
+            // keeping the local slot would silently pair averaged factors with a mismatched phase.
+            slot.store(values.currentSlot.toLong())
+        }
+    }
 
     override fun reset() = lock.guarded {
         initialized.store(0L)

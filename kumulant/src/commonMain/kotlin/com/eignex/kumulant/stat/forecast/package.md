@@ -60,10 +60,11 @@ persistence.
 
 ## Merge
 
-All three forecasters refuse snapshot merges. A final level, trend, seasonal
-vector, or variance does not encode the observation order needed to combine
-independent recurrences. Feed ordered observations to one accumulator.
-Merge-based generic windowing is unavailable.
+All three forecasters support approximate merges. An empty accumulator adopts
+the remote state; a populated one averages its level/trend, seasonal factors, or
+variance with the remote estimate. [SeasonalSmoothingStat] uses the remote phase.
+These roll-ups enable composition and merge-based windowing, but do not reproduce
+processing the combined observations in order.
 
 ## Concurrency
 

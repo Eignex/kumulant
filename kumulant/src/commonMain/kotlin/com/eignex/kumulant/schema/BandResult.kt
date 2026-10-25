@@ -8,7 +8,9 @@ import kotlinx.serialization.Serializable
 /**
  * Center plus a configurable multiple of scale, derived from any [HasCenterScale]
  * result via the `BandSeries` spec. The band wrapper forwards `update` / `reset` /
- * `create` to the inner stat and projects `read` into this [BandResult].
+ * `create` to the inner stat and projects `read` into this [BandResult]. Merging
+ * approximates the remote distribution with unit total weight split between
+ * `center - scale` and `center + scale`; original sample weights are unavailable.
  */
 @Serializable
 @SerialName("BandResult")

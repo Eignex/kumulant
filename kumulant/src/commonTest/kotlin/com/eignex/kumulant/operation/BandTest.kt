@@ -6,7 +6,6 @@ import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class BandTest {
 
@@ -34,12 +33,26 @@ class BandTest {
     }
 
     @Test
-    fun `band merge throws because the wrapper cannot round-trip BandResult`() {
-        val s = VarianceStat().band(k = 1.0)
-        s.update(1.0)
-        assertFailsWith<IllegalStateException> {
-            s.merge(BandResult(center = 0.0, scale = 0.0, k = 1.0, lower = 0.0, upper = 0.0))
-        }
+    fun `band merge approximates remote center and scale with unit weight`() {
+        val stat = VarianceStat().band(k = 2.0)
+
+        stat.merge(BandResult(center = 10.0, scale = 3.0, k = 1.0, lower = 7.0, upper = 13.0))
+        val result = stat.read()
+
+        assertEquals(10.0, result.center, DELTA)
+        assertEquals(3.0, result.scale, DELTA)
+        assertEquals(4.0, result.lower, DELTA)
+        assertEquals(16.0, result.upper, DELTA)
+    }
+
+    @Test
+    fun `merging an empty robust band leaves the destination unchanged`() {
+        val stat = VarianceStat().band(k = 2.0).apply { update(7.0) }
+        val before = stat.read()
+
+        stat.merge(BandResult(Double.NaN, Double.NaN, 2.0, Double.NaN, Double.NaN))
+
+        assertEquals(before, stat.read())
     }
 
     @Test

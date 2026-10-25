@@ -4632,7 +4632,7 @@ final class com.eignex.kumulant.stat.change/AdwinResult : com.eignex.kumulant.co
     }
 }
 
-final class com.eignex.kumulant.stat.change/AdwinStat : com.eignex.kumulant.core/RefusesMerge, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.change/AdwinResult> { // com.eignex.kumulant.stat.change/AdwinStat|null[0]
+final class com.eignex.kumulant.stat.change/AdwinStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.change/AdwinResult> { // com.eignex.kumulant.stat.change/AdwinStat|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/Int = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.change/AdwinStat.<init>|<init>(kotlin.Double;kotlin.Int;com.eignex.kumulant.core.Concurrency){}[0]
 
     final val concurrency // com.eignex.kumulant.stat.change/AdwinStat.concurrency|{}concurrency[0]
@@ -4641,11 +4641,9 @@ final class com.eignex.kumulant.stat.change/AdwinStat : com.eignex.kumulant.core
         final fun <get-delta>(): kotlin/Double // com.eignex.kumulant.stat.change/AdwinStat.delta.<get-delta>|<get-delta>(){}[0]
     final val maxBucketsPerSize // com.eignex.kumulant.stat.change/AdwinStat.maxBucketsPerSize|{}maxBucketsPerSize[0]
         final fun <get-maxBucketsPerSize>(): kotlin/Int // com.eignex.kumulant.stat.change/AdwinStat.maxBucketsPerSize.<get-maxBucketsPerSize>|<get-maxBucketsPerSize>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.change/AdwinStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.stat.change/AdwinStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.change/AdwinStat // com.eignex.kumulant.stat.change/AdwinStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.change/AdwinResult): kotlin/Nothing // com.eignex.kumulant.stat.change/AdwinStat.merge|merge(com.eignex.kumulant.stat.change.AdwinResult){}[0]
+    final fun merge(com.eignex.kumulant.stat.change/AdwinResult) // com.eignex.kumulant.stat.change/AdwinStat.merge|merge(com.eignex.kumulant.stat.change.AdwinResult){}[0]
     final fun read(kotlin/Long): com.eignex.kumulant.stat.change/AdwinResult // com.eignex.kumulant.stat.change/AdwinStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.change/AdwinStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.change/AdwinStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
@@ -4697,13 +4695,11 @@ final class com.eignex.kumulant.stat.change/CusumResult : com.eignex.kumulant.co
     }
 }
 
-final class com.eignex.kumulant.stat.change/CusumStat : com.eignex.kumulant.core/RefusesMerge, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.change/CusumResult> { // com.eignex.kumulant.stat.change/CusumStat|null[0]
+final class com.eignex.kumulant.stat.change/CusumStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.change/CusumResult> { // com.eignex.kumulant.stat.change/CusumStat|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.change/CusumStat.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
 
     final val concurrency // com.eignex.kumulant.stat.change/CusumStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.change/CusumStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.change/CusumStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.stat.change/CusumStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
     final val referenceValue // com.eignex.kumulant.stat.change/CusumStat.referenceValue|{}referenceValue[0]
         final fun <get-referenceValue>(): kotlin/Double // com.eignex.kumulant.stat.change/CusumStat.referenceValue.<get-referenceValue>|<get-referenceValue>(){}[0]
     final val target // com.eignex.kumulant.stat.change/CusumStat.target|{}target[0]
@@ -4712,7 +4708,7 @@ final class com.eignex.kumulant.stat.change/CusumStat : com.eignex.kumulant.core
         final fun <get-threshold>(): kotlin/Double // com.eignex.kumulant.stat.change/CusumStat.threshold.<get-threshold>|<get-threshold>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.change/CusumStat // com.eignex.kumulant.stat.change/CusumStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.change/CusumResult): kotlin/Nothing // com.eignex.kumulant.stat.change/CusumStat.merge|merge(com.eignex.kumulant.stat.change.CusumResult){}[0]
+    final fun merge(com.eignex.kumulant.stat.change/CusumResult) // com.eignex.kumulant.stat.change/CusumStat.merge|merge(com.eignex.kumulant.stat.change.CusumResult){}[0]
     final fun read(kotlin/Long): com.eignex.kumulant.stat.change/CusumResult // com.eignex.kumulant.stat.change/CusumStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.change/CusumStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.change/CusumStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
@@ -4773,20 +4769,18 @@ final class com.eignex.kumulant.stat.change/PageHinkleyResult : com.eignex.kumul
     }
 }
 
-final class com.eignex.kumulant.stat.change/PageHinkleyStat : com.eignex.kumulant.core/RefusesMerge, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.change/PageHinkleyResult> { // com.eignex.kumulant.stat.change/PageHinkleyStat|null[0]
+final class com.eignex.kumulant.stat.change/PageHinkleyStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.change/PageHinkleyResult> { // com.eignex.kumulant.stat.change/PageHinkleyStat|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.change/PageHinkleyStat.<init>|<init>(kotlin.Double;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
 
     final val concurrency // com.eignex.kumulant.stat.change/PageHinkleyStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.change/PageHinkleyStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
     final val delta // com.eignex.kumulant.stat.change/PageHinkleyStat.delta|{}delta[0]
         final fun <get-delta>(): kotlin/Double // com.eignex.kumulant.stat.change/PageHinkleyStat.delta.<get-delta>|<get-delta>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.change/PageHinkleyStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.stat.change/PageHinkleyStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
     final val threshold // com.eignex.kumulant.stat.change/PageHinkleyStat.threshold|{}threshold[0]
         final fun <get-threshold>(): kotlin/Double // com.eignex.kumulant.stat.change/PageHinkleyStat.threshold.<get-threshold>|<get-threshold>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.change/PageHinkleyStat // com.eignex.kumulant.stat.change/PageHinkleyStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.change/PageHinkleyResult): kotlin/Nothing // com.eignex.kumulant.stat.change/PageHinkleyStat.merge|merge(com.eignex.kumulant.stat.change.PageHinkleyResult){}[0]
+    final fun merge(com.eignex.kumulant.stat.change/PageHinkleyResult) // com.eignex.kumulant.stat.change/PageHinkleyStat.merge|merge(com.eignex.kumulant.stat.change.PageHinkleyResult){}[0]
     final fun read(kotlin/Long): com.eignex.kumulant.stat.change/PageHinkleyResult // com.eignex.kumulant.stat.change/PageHinkleyStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.change/PageHinkleyStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.change/PageHinkleyStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
@@ -5280,7 +5274,7 @@ final class com.eignex.kumulant.stat.forecast/HoltResult : com.eignex.kumulant.c
     }
 }
 
-final class com.eignex.kumulant.stat.forecast/HoltStat : com.eignex.kumulant.core/RefusesMerge, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.forecast/HoltResult> { // com.eignex.kumulant.stat.forecast/HoltStat|null[0]
+final class com.eignex.kumulant.stat.forecast/HoltStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.forecast/HoltResult> { // com.eignex.kumulant.stat.forecast/HoltStat|null[0]
     constructor <init>(com.eignex.kumulant.stat.decay/DecayWeighting.Alpha, com.eignex.kumulant.stat.decay/DecayWeighting.Alpha = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/HoltStat.<init>|<init>(com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
     constructor <init>(kotlin/Double, kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/HoltStat.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
 
@@ -5294,13 +5288,11 @@ final class com.eignex.kumulant.stat.forecast/HoltStat : com.eignex.kumulant.cor
         final fun <get-betaWeighting>(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.forecast/HoltStat.betaWeighting.<get-betaWeighting>|<get-betaWeighting>(){}[0]
     final val concurrency // com.eignex.kumulant.stat.forecast/HoltStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.forecast/HoltStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.forecast/HoltStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.stat.forecast/HoltStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
     final val phi // com.eignex.kumulant.stat.forecast/HoltStat.phi|{}phi[0]
         final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltStat.phi.<get-phi>|<get-phi>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.forecast/HoltStat // com.eignex.kumulant.stat.forecast/HoltStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.forecast/HoltResult): kotlin/Nothing // com.eignex.kumulant.stat.forecast/HoltStat.merge|merge(com.eignex.kumulant.stat.forecast.HoltResult){}[0]
+    final fun merge(com.eignex.kumulant.stat.forecast/HoltResult) // com.eignex.kumulant.stat.forecast/HoltStat.merge|merge(com.eignex.kumulant.stat.forecast.HoltResult){}[0]
     final fun read(kotlin/Long): com.eignex.kumulant.stat.forecast/HoltResult // com.eignex.kumulant.stat.forecast/HoltStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.forecast/HoltStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.forecast/HoltStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
@@ -5341,7 +5333,7 @@ final class com.eignex.kumulant.stat.forecast/RecursiveVarianceResult : com.eign
     }
 }
 
-final class com.eignex.kumulant.stat.forecast/RecursiveVarianceStat : com.eignex.kumulant.core/RefusesMerge, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.forecast/RecursiveVarianceResult> { // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat|null[0]
+final class com.eignex.kumulant.stat.forecast/RecursiveVarianceStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.forecast/RecursiveVarianceResult> { // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat|null[0]
     constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
 
     final val alpha // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.alpha|{}alpha[0]
@@ -5350,13 +5342,11 @@ final class com.eignex.kumulant.stat.forecast/RecursiveVarianceStat : com.eignex
         final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.beta.<get-beta>|<get-beta>(){}[0]
     final val concurrency // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
     final val omega // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.omega|{}omega[0]
         final fun <get-omega>(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.omega.<get-omega>|<get-omega>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.forecast/RecursiveVarianceStat // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.forecast/RecursiveVarianceResult): kotlin/Nothing // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.merge|merge(com.eignex.kumulant.stat.forecast.RecursiveVarianceResult){}[0]
+    final fun merge(com.eignex.kumulant.stat.forecast/RecursiveVarianceResult) // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.merge|merge(com.eignex.kumulant.stat.forecast.RecursiveVarianceResult){}[0]
     final fun read(kotlin/Long): com.eignex.kumulant.stat.forecast/RecursiveVarianceResult // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
@@ -5408,7 +5398,7 @@ final class com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult : com.eign
     }
 }
 
-final class com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat : com.eignex.kumulant.core/RefusesMerge, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult> { // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat|null[0]
+final class com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult> { // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat|null[0]
     constructor <init>(com.eignex.kumulant.stat.decay/DecayWeighting.Alpha, com.eignex.kumulant.stat.decay/DecayWeighting.Alpha, com.eignex.kumulant.stat.decay/DecayWeighting.Alpha, kotlin/Int, com.eignex.kumulant.stat.forecast/SeasonalMode = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.<init>|<init>(com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;kotlin.Int;com.eignex.kumulant.stat.forecast.SeasonalMode;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
     constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Int, com.eignex.kumulant.stat.forecast/SeasonalMode = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;com.eignex.kumulant.stat.forecast.SeasonalMode;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
 
@@ -5426,8 +5416,6 @@ final class com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat : com.eignex
         final fun <get-gamma>(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.gamma.<get-gamma>|<get-gamma>(){}[0]
     final val gammaWeighting // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.gammaWeighting|{}gammaWeighting[0]
         final fun <get-gammaWeighting>(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.gammaWeighting.<get-gammaWeighting>|<get-gammaWeighting>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
     final val mode // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.mode|{}mode[0]
         final fun <get-mode>(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.mode.<get-mode>|<get-mode>(){}[0]
     final val period // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.period|{}period[0]
@@ -5436,10 +5424,11 @@ final class com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat : com.eignex
         final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.phi.<get-phi>|<get-phi>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult): kotlin/Nothing // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.merge|merge(com.eignex.kumulant.stat.forecast.SeasonalSmoothingResult){}[0]
+    final fun merge(com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.merge|merge(com.eignex.kumulant.stat.forecast.SeasonalSmoothingResult){}[0]
     final fun read(kotlin/Long): com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.validateMerge|validateMerge(com.eignex.kumulant.stat.forecast.SeasonalSmoothingResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.quantile/DDSketchStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/SketchResult> { // com.eignex.kumulant.stat.quantile/DDSketchStat|null[0]
@@ -7855,18 +7844,16 @@ final class com.eignex.kumulant.stat.summary/CountStat : com.eignex.kumulant.cor
     final fun validateMerge(com.eignex.kumulant.stat.summary/SumResult) // com.eignex.kumulant.stat.summary/CountStat.validateMerge|validateMerge(com.eignex.kumulant.stat.summary.SumResult){}[0]
 }
 
-final class com.eignex.kumulant.stat.summary/FrugalMadStat : com.eignex.kumulant.core/RefusesMerge, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/MadResult> { // com.eignex.kumulant.stat.summary/FrugalMadStat|null[0]
+final class com.eignex.kumulant.stat.summary/FrugalMadStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/MadResult> { // com.eignex.kumulant.stat.summary/FrugalMadStat|null[0]
     constructor <init>(kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.summary/FrugalMadStat.<init>|<init>(kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
 
     final val concurrency // com.eignex.kumulant.stat.summary/FrugalMadStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.summary/FrugalMadStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val mergeRefusal // com.eignex.kumulant.stat.summary/FrugalMadStat.mergeRefusal|{}mergeRefusal[0]
-        final fun <get-mergeRefusal>(): kotlin/String // com.eignex.kumulant.stat.summary/FrugalMadStat.mergeRefusal.<get-mergeRefusal>|<get-mergeRefusal>(){}[0]
     final val stepSize // com.eignex.kumulant.stat.summary/FrugalMadStat.stepSize|{}stepSize[0]
         final fun <get-stepSize>(): kotlin/Double // com.eignex.kumulant.stat.summary/FrugalMadStat.stepSize.<get-stepSize>|<get-stepSize>(){}[0]
 
     final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.summary/FrugalMadStat // com.eignex.kumulant.stat.summary/FrugalMadStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.summary/MadResult): kotlin/Nothing // com.eignex.kumulant.stat.summary/FrugalMadStat.merge|merge(com.eignex.kumulant.stat.summary.MadResult){}[0]
+    final fun merge(com.eignex.kumulant.stat.summary/MadResult) // com.eignex.kumulant.stat.summary/FrugalMadStat.merge|merge(com.eignex.kumulant.stat.summary.MadResult){}[0]
     final fun read(kotlin/Long): com.eignex.kumulant.stat.summary/MadResult // com.eignex.kumulant.stat.summary/FrugalMadStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.summary/FrugalMadStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.summary/FrugalMadStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]

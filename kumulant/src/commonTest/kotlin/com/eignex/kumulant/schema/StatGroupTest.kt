@@ -950,30 +950,27 @@ class DiscreteListStatsTest {
 
 class GroupMergeAtomicityTest {
 
-    private object MergeHostile : StatSchema() {
+    private object BandSchema : StatSchema() {
         val hits by series(Sum)
         val bounds by series(Variance.band(2.0))
         val total by series(Count)
     }
 
     @Test
-    fun `a refused merge leaves every entry untouched`() {
-        val local = StatGroup(MergeHostile)
-        val remote = StatGroup(MergeHostile)
+    fun `merging a group with a band updates every entry`() {
+        val local = StatGroup(BandSchema)
+        val remote = StatGroup(BandSchema)
         repeat(3) { local.update(1.0) }
         repeat(5) { remote.update(1.0) }
 
-        val hitsBefore = local.read()[MergeHostile.hits].sum
-        val totalBefore = local.read()[MergeHostile.total].sum
+        local.merge(remote.read())
 
-        assertFailsWith<UnsupportedOperationException> { local.merge(remote.read()) }
-
-        assertEquals(hitsBefore, local.read()[MergeHostile.hits].sum, DELTA)
-        assertEquals(totalBefore, local.read()[MergeHostile.total].sum, DELTA)
+        assertEquals(8.0, local.read()[BandSchema.hits].sum, DELTA)
+        assertEquals(8.0, local.read()[BandSchema.total].sum, DELTA)
     }
 
     @Test
-    fun `a group with no refusing entry still merges`() {
+    fun `a group of additive stats merges`() {
         val mergeable = object : StatSchema() {
             val hits by series(Sum)
             val total by series(Count)
@@ -988,7 +985,7 @@ class GroupMergeAtomicityTest {
     }
 
     @Test
-    fun `a decorated refusing child is detected before merging siblings`() {
+    fun `a decorated band merges alongside siblings`() {
         val schema = object : StatSchema() {
             val hits by series(Sum)
             val filtered by series(Variance.band(2.0).filter(X gt 0.0).withWeight(2.0))
@@ -997,31 +994,26 @@ class GroupMergeAtomicityTest {
         val remote = StatGroup(schema)
         local.update(1.0)
         remote.update(2.0)
-        val before = local.read(0L)
+        local.merge(remote.read(0L))
 
-        val failure = assertFailsWith<UnsupportedOperationException> { local.merge(remote.read(0L)) }
-
-        assertEquals(before, local.read(0L))
-        assertTrue(failure.message.orEmpty().contains("filtered"))
+        assertEquals(3.0, local.read()[schema.hits].sum, DELTA)
+        assertEquals(1.0 + 1.0 / 3.0, local.read()[schema.filtered].center, DELTA)
     }
 
     @Test
-    fun `a nested refusal is detected before merging outer siblings`() {
+    fun `a nested band group merges alongside outer siblings`() {
         val schema = object : StatSchema() {
             val hits by series(Sum)
-            val nested by group(MergeHostile)
+            val nested by group(BandSchema)
         }
         val local = StatGroup(schema)
         val remote = StatGroup(schema)
         local.update(1.0)
         remote.update(2.0)
-        val before = local.read(0L)
+        local.merge(remote.read(0L))
 
-        val failure = assertFailsWith<UnsupportedOperationException> { local.merge(remote.read(0L)) }
-
-        assertEquals(before, local.read(0L))
-        assertTrue(failure.message.orEmpty().contains("nested"))
-        assertTrue(failure.message.orEmpty().contains("bounds"))
+        assertEquals(3.0, local.read()[schema.hits].sum, DELTA)
+        assertEquals(3.0, local.read()[schema.nested][BandSchema.hits].sum, DELTA)
     }
 
     @Test
@@ -1044,33 +1036,33 @@ class GroupMergeAtomicityTest {
     }
 
     @Test
-    fun `a list validates nested children before merging any entry`() {
-        val local = ListStats<Result>("sum" to SumStat(), "nested" to StatGroup(MergeHostile))
+    fun `a list merges nested band groups`() {
+        val local = ListStats<Result>("sum" to SumStat(), "nested" to StatGroup(BandSchema))
         val remote = local.create(null)
         local.update(1.0)
         remote.update(2.0)
-        val before = local.read(0L)
+        local.merge(remote.read(0L))
 
-        assertFailsWith<UnsupportedOperationException> { local.merge(remote.read(0L)) }
-
-        assertEquals(before, local.read(0L))
+        assertEquals(3.0, (local.read().results[0] as SumResult).sum, DELTA)
     }
 
     @Test
-    fun `a partial merge can omit a refusing child`() {
-        val local = StatGroup(MergeHostile)
+    fun `a partial merge can omit a band child`() {
+        val local = StatGroup(BandSchema)
         local.update(1.0)
 
         local.merge(GroupResult(mapOf("hits" to SumResult(2.0))))
 
-        assertEquals(3.0, local.read(0L)[MergeHostile.hits].sum, DELTA)
+        assertEquals(3.0, local.read(0L)[BandSchema.hits].sum, DELTA)
     }
 
     @Test
-    fun `windowing rejects snapshots that cannot be merged`() {
-        assertFailsWith<IllegalArgumentException> {
-            Adwin().filter(X gt 0.0).windowed(1_000).materialize()
-        }
+    fun `windowing accepts an approximate detector merge`() {
+        val stat = Adwin().filter(X gt 0.0).windowed(1_000).materialize()
+
+        stat.update(1.0)
+
+        assertEquals(0L, stat.read().changesDetected)
     }
 }
 

@@ -157,6 +157,9 @@ interface Stat<R : Result> {
      * call [read] periodically, ship snapshots to a coordinator, and the
      * coordinator merges them in.
      *
+     * Every built-in stat supports merging compatible snapshots, including approximate
+     * roll-ups when its result omits the evidence needed for a sound combine.
+     *
      * Most stat families implement merge exactly (Chan-style parallel formulas
      * for Welford, cell-wise additions for histograms, cell-wise max for HLL).
      * SGD-based regressors merge approximately; they have no second-moment

@@ -73,7 +73,8 @@ without requiring precomputed quantiles.
 [FrugalMadStat] keeps two adaptive estimates and an initialization flag. Its
 constant step size trades responsiveness against jitter; positive weights each
 trigger one step. It estimates recent center and spread, with no historical
-accuracy guarantee or merge support.
+accuracy guarantee. Merge adopts a remote pair while empty and otherwise
+averages the two estimates equally.
 
 Both return [MadResult], which implements
 [com.eignex.kumulant.core.HasCenterScale] with `center = median` and
@@ -125,9 +126,10 @@ value; the Welford family
 ([MeanStat], [VarianceStat], [MomentsStat], [SummaryStat]) uses the Chan-style
 parallel recurrence; [PairedSumStat] sums each axis. All of these are exact.
 [MadStat] merges the complete digest in [MadResult.digest] and recomputes the
-median and MAD; the result inherits t-digest approximation. Summary-only
-[MadResult] values are rejected. [FrugalMadStat] refuses merge because its
-adaptive estimates contain insufficient evidence to combine streams.
+median and MAD; the result inherits t-digest approximation. A summary-only
+[MadResult] contributes unit weight split between `median - mad` and
+`median + mad`, approximating the missing evidence. [FrugalMadStat] adopts
+a remote pair while empty and otherwise averages both estimates equally.
 
 ## Concurrency
 

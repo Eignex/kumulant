@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.change
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
@@ -49,8 +48,8 @@ data class AdwinResult(
  * change points are detected; under stationary streams it grows toward the upper
  * memory bound, which is `maxBucketsPerSize * log2(window)` buckets.
  *
- * Snapshots cannot merge independent ordered histories. Generic merge-based windowing
- * is unavailable; feed ordered observations to one accumulator.
+ * Merge adds the remote change count without reconstructing its adaptive window.
+ * This is an approximate roll-up, not replay of the combined ordered observations.
  *
  * **Use cases:** drift detection in monitored signals where neither a target value
  * nor a fixed window is known up front (CUSUM and Page-Hinkley sit alongside).
@@ -71,8 +70,7 @@ class AdwinStat(
     /** Maximum number of buckets per power-of-two size class before merging upward. */
     val maxBucketsPerSize: Int = StatDefaults.ADWIN_MAX_BUCKETS_PER_SIZE,
     override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<AdwinResult>,
-    RefusesMerge {
+) : SeriesStat<AdwinResult> {
 
     init {
         require(delta > 0.0 && delta < 1.0) { "delta must be in (0, 1), got $delta" }
@@ -189,10 +187,10 @@ class AdwinStat(
         while (rows.size > 1 && rows.last().isEmpty()) rows.removeAt(rows.size - 1)
     }
 
-    override val mergeRefusal: String =
-        "AdwinStat requires ordered observations; snapshots cannot merge independent histories"
-
-    override fun merge(values: AdwinResult): Nothing = throw UnsupportedOperationException(mergeRefusal)
+    override fun merge(values: AdwinResult) = lock.guarded {
+        // No exact structural merge for the exponential histogram; carry over the change counter.
+        changesDetected += values.changesDetected
+    }
 
     override fun reset() = lock.guarded {
         rows.clear()

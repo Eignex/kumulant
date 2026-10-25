@@ -49,10 +49,11 @@ stats. The same pattern works for any binary signal.
 
 ## Merge
 
-The detectors refuse snapshot merges: their summaries cannot reconstruct the
-ordered observations or ADWIN's adaptive histogram. Run a detector per ordered
-stream, or feed a combined ordered stream to one detector. Merge-based generic
-windowing is unavailable; ADWIN manages its own adaptive window.
+All three detectors support approximate merges. [CusumStat] and [PageHinkleyStat]
+adopt remote drift while empty and otherwise average the drift traces;
+[PageHinkleyStat] also combines counts and weighted means. [AdwinStat] adds the
+remote change count without reconstructing its adaptive histogram. These roll-ups
+do not reproduce processing the combined observations in order.
 
 ## Concurrency
 

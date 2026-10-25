@@ -109,14 +109,36 @@ class FrugalMadStatTest {
     }
 
     @Test
-    fun `independent estimates cannot be merged`() {
+    fun `merge adopts a remote pair while empty and averages populated pairs`() {
+        for (concurrency in Concurrency.entries) {
+            val stat = FrugalMadStat(concurrency = concurrency)
+
+            stat.merge(MadResult(10.0, 4.0))
+            assertEquals(MadResult(10.0, 4.0), stat.read())
+
+            stat.merge(MadResult(20.0, 8.0))
+            assertEquals(MadResult(15.0, 6.0), stat.read())
+        }
+    }
+
+    @Test
+    fun `merging an empty snapshot leaves the adaptive estimates unchanged`() {
         val stat = FrugalMadStat().apply { update(7.0) }
         val before = stat.read()
 
-        assertFailsWith<UnsupportedOperationException> { stat.validateMerge(MadResult(1.0, 2.0)) }
-        assertFailsWith<UnsupportedOperationException> { stat.merge(MadResult(1.0, 2.0)) }
+        stat.merge(FrugalMadStat().read())
 
         assertEquals(before, stat.read())
+    }
+
+    @Test
+    fun `adaptive updates continue from the merged pair`() {
+        val stat = FrugalMadStat(stepSize = 2.0)
+        stat.merge(MadResult(10.0, 4.0))
+
+        stat.update(12.0)
+
+        assertEquals(MadResult(11.0, 3.0), stat.read())
     }
 
     @Test

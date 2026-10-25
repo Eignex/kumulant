@@ -123,11 +123,23 @@ class MadStatTest {
     }
 
     @Test
-    fun `summary-only results cannot be merged`() {
+    fun `summary-only results merge as a unit-weight symmetric distribution`() {
+        val stat = MadStat()
+
+        stat.merge(MadResult(10.0, 3.0))
+        val result = stat.read()
+
+        assertEquals(10.0, result.median, DELTA)
+        assertEquals(3.0, result.mad, DELTA)
+        assertEquals(1.0, result.digest!!.totalWeight, DELTA)
+    }
+
+    @Test
+    fun `merging an empty summary leaves the digest unchanged`() {
         val stat = MadStat().apply { update(7.0) }
         val before = stat.read()
 
-        assertFailsWith<IllegalArgumentException> { stat.merge(MadResult(1.0, 2.0)) }
+        stat.merge(FrugalMadStat().read())
 
         assertEquals(before, stat.read())
     }
