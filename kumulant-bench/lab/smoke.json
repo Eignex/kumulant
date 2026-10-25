@@ -1,0 +1,11 @@
+{
+  "name": "kumulant-smoke",
+  "description": "Validate the committed Kumulant capture harness and retain structured quality and timing evidence",
+  "repository": "Eignex/kumulant",
+  "base": {"ref": "main", "timeout": "1800000"},
+  "profile": {
+    "script": "kumulant-bench/capture-report.sh",
+    "args": ["--preset", "smoke"],
+    "outputArgument": "--output"
+  }
+}

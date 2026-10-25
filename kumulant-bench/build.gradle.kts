@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     kotlin("multiplatform") version "2.4.10"
     kotlin("plugin.allopen") version "2.4.10"
+    kotlin("plugin.serialization") version "2.4.10"
     id("org.jetbrains.kotlinx.benchmark") version "0.4.17"
 }
 
@@ -184,4 +185,41 @@ tasks.register<JavaExec>("analyzeMergeContention") {
     description = "Per-stat merge-path drift when 4 threads concurrently merge snapshots. Prints to stdout."
     mainClass.set("com.eignex.kumulant.bench.MergeContentionAnalysisKt")
     kumulantBenchSetup()
+}
+
+abstract class PrepareCapture : DefaultTask() {
+    @get:Input
+    abstract val javaExecutable: Property<String>
+
+    @get:Input
+    abstract val runtimeLibraries: ListProperty<String>
+
+    @get:OutputFile
+    abstract val launcherFile: RegularFileProperty
+
+    @get:OutputFile
+    abstract val dependenciesFile: RegularFileProperty
+
+    @TaskAction
+    fun writeLauncher() {
+        launcherFile.get().asFile.apply {
+            parentFile.mkdirs()
+            writeText(javaExecutable.get() + "\n")
+        }
+        dependenciesFile.get().asFile.writeText(runtimeLibraries.get().joinToString("\n", postfix = "\n"))
+    }
+}
+
+tasks.register<PrepareCapture>("prepareCapture") {
+    description = "Build the JVM capture harness and record its configured Java executable."
+    group = "bench"
+    dependsOn("jvmBenchmarkJar")
+    javaExecutable.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(benchJdk))
+    }.map { it.executablePath.asFile.absolutePath })
+    launcherFile.set(layout.buildDirectory.file("capture/java"))
+    runtimeLibraries.set(kotlin.jvm().compilations.getByName("main").runtimeDependencyFiles.elements.map { libraries ->
+        libraries.map { it.asFile.name }.sorted()
+    })
+    dependenciesFile.set(layout.buildDirectory.file("capture/dependencies.txt"))
 }

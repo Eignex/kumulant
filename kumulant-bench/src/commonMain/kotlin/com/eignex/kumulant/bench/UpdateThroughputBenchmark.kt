@@ -15,7 +15,9 @@ import kotlinx.benchmark.TearDown
  * Update-loop throughput for every [StatSpec]. The `name` parameter picks the spec
  * by [StatSpec.name]; `concurrency` picks the level. Each invocation pushes
  * [updatesPerInvocation] observations through the spec's `applyUpdate` and JMH
- * reports throughput; divide by [updatesPerInvocation] for per-update cost.
+ * reports batches per time unit; multiply by [updatesPerInvocation] for updates
+ * per time unit. In average-time mode, divide batch time by [updatesPerInvocation]
+ * for per-update cost.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
@@ -76,7 +78,7 @@ open class UpdateThroughputBenchmark {
     var concurrency: String = ""
 
     private lateinit var driver: BenchDriver
-    private val updatesPerInvocation = 4096
+    private val updatesPerInvocation = STAT_BENCHMARK_BATCH_SIZE
 
     @Setup
     fun setup() {
@@ -120,7 +122,7 @@ private fun <S, R : com.eignex.kumulant.core.Result> makeDriver(
     n: Int,
 ): BenchDriver {
     val stat = spec.factory(concurrency)
-    val workload = spec.updates(0, n).toList().toTypedArray()
+    val workload = spec.updates(STAT_BENCHMARK_SEED, n).toList().toTypedArray()
     return BenchDriver(
         applyUpdate = { u -> spec.applyUpdate(stat, u) },
         readSnapshot = { spec.readSnapshot(stat, 0L) },

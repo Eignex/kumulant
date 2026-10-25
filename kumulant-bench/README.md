@@ -1,4 +1,91 @@
-# Cholesky benchmarks
+# kumulant-bench
+
+## Unified captures
+
+Workloads and presets are defined in Kotlin in `CaptureCases.kt`; there are no
+dataset files to download or configure. The capture entry point builds the JVM
+harness with the repository's JDK 25 toolchain and runs each backend in a separate
+process. Requires Bash and the repository's Gradle toolchain.
+
+```sh
+# Show options or list the selected case definitions.
+kumulant-bench/capture-report.sh --help
+kumulant-bench/capture-report.sh --preset smoke --list
+
+# Check quality and harness wiring on both JVM backends.
+kumulant-bench/capture-report.sh --preset smoke
+
+# Validate without timing, or measure a selected family.
+kumulant-bench/capture-report.sh --suite stats --mode quality
+kumulant-bench/capture-report.sh --case 'cholesky/factor/*' --targets jvm-scalar,jvm-simd
+
+# Collect allocation evidence in a separate instrumented capture.
+kumulant-bench/capture-report.sh --preset smoke --allocation --output build/allocation-capture
+```
+
+`--case` matches stable case IDs with `*` wildcards; quote the pattern to prevent
+shell expansion. `--suite` is `stats` or `cholesky`. `--mode` is `performance`
+(default) or `quality`; performance always requires quality validation to pass
+first. A backend mismatch fails validation rather than silently publishing a
+fallback's timing. Scalar and SIMD rows for stats can be identical implementations;
+the labels identify the JVM configuration and selected Koblas backend.
+
+| Preset | Selection | JVM timing per case and backend |
+| --- | --- | --- |
+| `smoke` | Sum, mean, variance, one small factorization and solve | 1 warmup, 2 measurements, 100 ms each, 1 fork |
+| `standard` | Stats and representative precision, RBF, Matérn and solve shapes | 3 warmups, 5 measurements, 1 s each, 2 forks |
+| `extended` | Stats, block-boundary matrices and larger shapes | 5 warmups, 10 measurements, 1 s each, 3 forks |
+
+Smoke timing checks wiring only. Every performance measurement uses one thread,
+average ns/op, and a fixed 512 MiB heap. A stat invocation is 4096 updates from a
+precomputed weighted stream, accumulated into one stat throughout the trial; the
+reported time and allocation are divided by 4096. Factorization and matrix solve
+rows report one complete allocating API call. Each case definition records its
+state lifecycle, parameters, seed, fixture version and operation size.
+
+Quality runs use fresh state. Stats compare against a batch reference with scaled
+absolute error at most `1e-10`. Cholesky checks relative reconstruction and normwise
+solve backward error at most `1e-13`, and finite log determinant. These checks are
+acceptance gates for these cases, not a complete algorithm-quality assessment.
+
+### Reports
+
+Each run creates a new directory under `kumulant-bench/build/captures/` unless
+`--output DIR` is supplied. The destination must be absent or empty; existing
+evidence is never replaced.
+
+- `manifest.json`: report schema, source revision, working-tree status, tracked
+  diff hash, compiled harness hash, resolved runtime library names, JMH version,
+  runtime/hardware facts, settings and selected cases.
+- `results.json`: schema 1 results, quality metrics and tolerances, input SHA-256,
+  resolved backend, normalized ns/operation and optional bytes/operation.
+- `summary.md`: status and timing table for reading locally or in Lab artifacts.
+- `raw/`: quality JSON, original JMH JSON with fork samples and confidence
+  intervals, exact command argument arrays and process logs.
+
+Results are saved after each case. Failed validation prevents that case's timing;
+other selected cases continue and the command exits nonzero. Pending entries and
+raw logs preserve evidence of incomplete runs. Each measurement process has a
+two-minute timeout, with child processes terminated on timeout or capture shutdown.
+An allocation capture is marked instrumented in its manifest. Pin captures to
+appropriate cores on an idle host and compare matching fixtures, settings and
+hardware; retain raw uncertainty rather than relying on a single speedup ratio.
+
+### Eignex Lab
+
+Submit `kumulant-bench/lab/smoke.json` with Lab's `deploy/lab run` command. It uses
+the existing committed-script profile interface; Lab supplies `--output` and
+retains the report directory. Commit the harness to the selected trusted ref
+before submitting it. Scripts own measurement and profiling, so the Lab spec
+does not request experiment-level `measurement` instrumentation.
+
+The unified capture currently covers JVM stat updates and Cholesky factorization
+and matrix solves. Native, regression, bandit and concurrency migration, and Lab
+metric ingestion, are follow-up stages in
+[`BENCHMARK_PLAN.md`](../docs/internal/BENCHMARK_PLAN.md). Existing benchmark and
+analysis entry points remain available during migration.
+
+## Cholesky benchmarks
 
 The Cholesky suite establishes the allocating public API baseline for shared
 regression and GP numerical kernels. Matrix generation is deterministic (seed

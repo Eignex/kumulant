@@ -33,7 +33,7 @@ fun main() {
     }
 }
 
-private fun relativeReconstructionError(matrix: DenseMatrix, lower: DenseMatrix): Double {
+internal fun relativeReconstructionError(matrix: DenseMatrix, lower: DenseMatrix): Double {
     var error = 0.0
     var scale = 0.0
     for (j in 0 until matrix.cols) {
@@ -47,7 +47,7 @@ private fun relativeReconstructionError(matrix: DenseMatrix, lower: DenseMatrix)
     return error / scale
 }
 
-private fun solveBackwardError(matrix: DenseMatrix, right: DenseMatrix, solution: DenseMatrix): Double {
+internal fun solveBackwardError(matrix: DenseMatrix, right: DenseMatrix, solution: DenseMatrix): Double {
     var matrixNorm = 0.0
     for (i in 0 until matrix.rows) {
         var rowSum = 0.0
