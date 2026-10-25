@@ -13,16 +13,15 @@ internal fun validateJson(descriptor: SerialDescriptor, element: JsonElement, pa
         validateJson(descriptor.getElementDescriptor(0), element, path)
         return
     }
-    val nodes = wireNodes(descriptor.serialName.removeSuffix("?"))
+    val nodes = descriptor.nodes
     if (nodes != null) {
         val (node, payload) = selectNode(nodes, element, path)
         val body = node.decode(payload, pathFor(node, path))
         validateRecord(node.serializer.descriptor, body, pathFor(node, path)) { field ->
             when (node.shape) {
                 WireShape.Literal, WireShape.Reference -> path
-                WireShape.Operand -> pathFor(node, path)
+                WireShape.Operand, WireShape.Decay -> pathFor(node, path)
                 WireShape.Operands -> "${pathFor(node, path)}[${node.operands.indexOf(field)}]"
-                WireShape.Decay -> pathFor(node, path)
                 WireShape.Smoothing -> "${pathFor(node, path)}.${field.removeSuffix("Weighting")}"
                 WireShape.Fields -> "${pathFor(node, path)}.$field"
                 WireShape.Filter -> "${pathFor(node, path)}.${if (field == "pred") "expr" else field}"
@@ -35,13 +34,8 @@ internal fun validateJson(descriptor: SerialDescriptor, element: JsonElement, pa
 
         StructureKind.LIST -> {
             val array = element as? JsonArray ?: invalid(path, "expected an array")
-            array.forEachIndexed { index, value ->
-                validateJson(
-                    descriptor.getElementDescriptor(0),
-                    value,
-                    "$path[$index]",
-                )
-            }
+            val child = descriptor.getElementDescriptor(0)
+            array.forEachIndexed { index, value -> validateJson(child, value, "$path[$index]") }
         }
 
         StructureKind.MAP -> element.objectAt(path).forEach { (key, value) ->

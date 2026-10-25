@@ -1,9 +1,9 @@
 package com.eignex.kumulant.schema.serialization
 
 import com.eignex.kumulant.schema.expr.*
+import kotlinx.serialization.KSerializer
 
-internal object ScalarExprSerializer : CanonicalSerializer<ScalarExpr>(
-    ScalarExpr::class,
+internal object ScalarExprSerializer : KSerializer<ScalarExpr> by canonical(
     node<X>("input", WireShape.Reference, "value"),
     node<Y>("input", WireShape.Reference, "response"),
     node<Center>("feedback", WireShape.Reference, "center"),
@@ -33,8 +33,7 @@ internal object ScalarExprSerializer : CanonicalSerializer<ScalarExpr>(
     node<VDot>("dot", WireShape.Operand, "weights"),
 )
 
-internal object BoolExprSerializer : CanonicalSerializer<BoolExpr>(
-    BoolExpr::class,
+internal object BoolExprSerializer : KSerializer<BoolExpr> by canonical(
     node<In>("in"),
     node<Gt>("gt", WireShape.Operands, "l", "r"),
     node<Ge>("ge", WireShape.Operands, "l", "r"),
@@ -50,7 +49,6 @@ internal object BoolExprSerializer : CanonicalSerializer<BoolExpr>(
     node<InRange>("inRange"),
 )
 
-internal object VectorExprSerializer : CanonicalSerializer<VectorExpr>(
-    VectorExpr::class,
+internal object VectorExprSerializer : KSerializer<VectorExpr> by canonical(
     node<VElements>("elements", WireShape.Operand, "exprs"),
 )

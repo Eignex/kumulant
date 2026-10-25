@@ -7,24 +7,22 @@ import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.stat.regression.glm.*
 import com.eignex.kumulant.stat.regression.tree.*
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.PolymorphicSerializer
 
-internal object DecayWeightingSpecSerializer : CanonicalSerializer<DecayWeightingSpec>(
-    DecayWeightingSpec::class,
+internal object DecayWeightingSpecSerializer : KSerializer<DecayWeightingSpec> by canonical(
     node<HalfLife>("halfLife"),
     node<Alpha>("alpha", WireShape.Operand, "alpha"),
 )
 
-internal object OptimizerSpecSerializer : CanonicalSerializer<OptimizerSpec>(
-    OptimizerSpec::class,
+internal object OptimizerSpecSerializer : KSerializer<OptimizerSpec> by canonical(
     node<Sgd>("sgd"),
     node<Adagrad>("adagrad"),
     node<Rmsprop>("rmsprop"),
     node<Adam>("adam"),
 )
 
-internal object UnivariateBanditSpecSerializer : CanonicalSerializer<UnivariateBanditSpec>(
-    UnivariateBanditSpec::class,
+internal object UnivariateBanditSpecSerializer : KSerializer<UnivariateBanditSpec> by canonical(
     node("multiArmed") { MultiArmedSpec.serializer(PolymorphicSerializer(Result::class)) },
     node<RouletteWheelSpec>("rouletteWheel"),
     node<BoltzmannSpec>("boltzmann"),
@@ -32,19 +30,16 @@ internal object UnivariateBanditSpecSerializer : CanonicalSerializer<UnivariateB
     node("topTwoThompson") { TopTwoThompsonSpec.serializer(PolymorphicSerializer(Result::class)) },
 )
 
-internal object ContextualBanditSpecSerializer : CanonicalSerializer<ContextualBanditSpec>(
-    ContextualBanditSpec::class,
+internal object ContextualBanditSpecSerializer : KSerializer<ContextualBanditSpec> by canonical(
     node("regressionContextual") { RegressionContextualSpec.serializer(PolymorphicSerializer(Result::class)) },
 )
 
-internal object SerializableSplitSerializer : CanonicalSerializer<SerializableSplit>(
-    SerializableSplit::class,
+internal object SerializableSplitSerializer : KSerializer<SerializableSplit> by canonical(
     node<ThresholdSplit>("thresholdSplit"),
     node<ExprSplit>("exprSplit"),
 )
 
-internal object BanditPolicySpecSerializer : CanonicalSerializer<BanditPolicySpec<*>>(
-    BanditPolicySpec::class,
+internal object BanditPolicySpecSerializer : KSerializer<BanditPolicySpec<*>> by canonical(
     node("thompsonSampling") { ThompsonSamplingSpec.serializer(PolymorphicSerializer(Result::class)) },
     node<Ucb1Spec>("ucb1"),
     node<Ucb1NormalSpec>("ucb1Normal"),
@@ -58,8 +53,7 @@ internal object BanditPolicySpecSerializer : CanonicalSerializer<BanditPolicySpe
     node<UcbVSpec>("ucbV"),
 )
 
-internal object ArmSerializer : CanonicalSerializer<Arm<*>>(
-    Arm::class,
+internal object ArmSerializer : KSerializer<Arm<*>> by canonical(
     node<BernoulliArm>("bernoulliArm"),
     node<MeanArm>("meanArm"),
     node<NormalArm>("normalArm"),
@@ -68,8 +62,7 @@ internal object ArmSerializer : CanonicalSerializer<Arm<*>>(
     node<CompositeArm>("compositeArm"),
 )
 
-internal object PosteriorSerializer : CanonicalSerializer<Posterior<*>>(
-    Posterior::class,
+internal object PosteriorSerializer : KSerializer<Posterior<*>> by canonical(
     node<BetaPosterior>("betaPosterior"),
     node<PoissonGammaPosterior>("poissonGammaPosterior"),
     node<GeometricBetaPosterior>("geometricBetaPosterior"),
@@ -80,27 +73,23 @@ internal object PosteriorSerializer : CanonicalSerializer<Posterior<*>>(
     node<CompositePosterior>("compositePosterior"),
 )
 
-internal object LinkSerializer : CanonicalSerializer<Link>(
-    Link::class,
+internal object LinkSerializer : KSerializer<Link> by canonical(
     node<Link.Identity>("identity"),
     node<Link.Logit>("logit"),
     node<Link.Log>("log"),
 )
 
-internal object PenaltySerializer : CanonicalSerializer<Penalty>(
-    Penalty::class,
+internal object PenaltySerializer : KSerializer<Penalty> by canonical(
     node<Penalty.None>("none"),
     node<Penalty.L1>("l1"),
     node<Penalty.L2>("l2"),
 )
 
-internal object SplitMetricSerializer : CanonicalSerializer<SplitMetric>(
-    SplitMetric::class,
+internal object SplitMetricSerializer : KSerializer<SplitMetric> by canonical(
     node<VarianceReduction>("varianceReduction"),
 )
 
-internal object ClassificationSplitMetricSerializer : CanonicalSerializer<ClassificationSplitMetric>(
-    ClassificationSplitMetric::class,
+internal object ClassificationSplitMetricSerializer : KSerializer<ClassificationSplitMetric> by canonical(
     node<GiniReduction>("giniReduction"),
     node<InformationGain>("informationGain"),
 )

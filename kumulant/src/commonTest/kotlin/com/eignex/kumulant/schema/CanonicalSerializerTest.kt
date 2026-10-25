@@ -175,8 +175,9 @@ class CanonicalSerializerTest {
             nbrArms = 2,
             regression = BayesianRegression(2).transformY(X + 1.0),
             posterior = LinUcb,
+            globalRegression = BayesianRegression(2).transformY(Y + 1.0),
         )
-        val composite = CompositeArm(listOf(CompositeSubArm(BernoulliArm(), valueExpr = X + 1.0)))
+        val composite = CompositeArm(listOf(CompositeSubArm(BernoulliArm(), valueExpr = X + 1.0, filter = X gt 0.0)))
         val univariate: UnivariateBanditSpec = MultiArmedSpec(
             2,
             ThompsonSamplingSpec(composite, CompositePosterior(listOf(BetaPosterior), V(0))),
@@ -282,6 +283,7 @@ class CanonicalSerializerTest {
             nbrArms = 2,
             regression = BayesianRegression(2).transformY(Y + 1.0),
             posterior = LinUcb,
+            globalRegression = BayesianRegression(2).transformY(Y + 1.0),
         )
         val univariate: UnivariateBanditSpec = MultiArmedSpec(2, Ucb1Spec())
 

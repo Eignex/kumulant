@@ -1,16 +1,37 @@
-@file:OptIn(kotlinx.serialization.InternalSerializationApi::class)
+@file:OptIn(InternalSerializationApi::class)
 @file:Suppress("UNCHECKED_CAST")
 
 package com.eignex.kumulant.schema.serialization
 
+import com.eignex.kumulant.stream.AtomicReference
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SealedClassSerializer
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.*
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
+
+internal inline fun <reified T : Any> canonical(vararg nodes: WireNode): KSerializer<T> =
+    CanonicalSerializer<T>(T::class, *nodes)
+
+internal inline fun <reified T : Any> canonical(noinline nodes: () -> List<WireNode>): KSerializer<T> =
+    CanonicalSerializer<T>(T::class, nodes)
+
+private val catalogs = AtomicReference(emptyMap<String, List<WireNode>>())
+internal val KSerializer<*>.nodes: List<WireNode> get() = descriptor.nodes!!
+internal val SerialDescriptor.nodes: List<WireNode>? get() = catalogs.load()[serialName.removeSuffix("?")]
+
+private fun register(descriptor: SerialDescriptor, nodes: List<WireNode>) {
+    while (true) {
+        val current = catalogs.load()
+        if (descriptor.serialName in current) return
+        if (catalogs.compareAndSet(current, current + (descriptor.serialName to nodes))) return
+    }
+}
 
 internal inline fun <reified T : Any> node(
     name: String,
@@ -47,11 +68,8 @@ internal class WireNode(
 
         WireShape.Smoothing -> JsonObject(
             body.map { (key, value) ->
-                if (key.endsWith("Weighting")) {
-                    key.removeSuffix("Weighting") to value.jsonObject.getValue("alpha")
-                } else {
-                    key to value
-                }
+                val unwrapped = if (key.endsWith("Weighting")) value.jsonObject.getValue("alpha") else value
+                key.removeSuffix("Weighting") to unwrapped
             }.toMap(),
         )
     }
@@ -67,10 +85,7 @@ internal class WireNode(
 
         WireShape.Literal, WireShape.Operand -> JsonObject(mapOf(operands.single() to payload))
 
-        WireShape.Reference -> {
-            if (payload != JsonPrimitive(operands.single())) invalid(path, "invalid reference")
-            JsonObject(emptyMap())
-        }
+        WireShape.Reference -> JsonObject(emptyMap())
 
         WireShape.Operands -> {
             val array = payload as? JsonArray ?: invalid(path, "expected an operand array")
@@ -99,7 +114,7 @@ internal class WireNode(
     }
 }
 
-internal open class CanonicalSerializer<T : Any>(internal val base: KClass<*>, nodes: () -> List<WireNode>) :
+internal class CanonicalSerializer<T : Any>(private val base: KClass<*>, nodes: () -> List<WireNode>) :
     KSerializer<T> {
     constructor(base: KClass<*>, vararg nodes: WireNode) : this(base, { nodes.toList() })
 
@@ -112,7 +127,9 @@ internal open class CanonicalSerializer<T : Any>(internal val base: KClass<*>, n
             this.nodes.map { it.serializer as KSerializer<out T> }.toTypedArray(),
         )
     }
-    override val descriptor get() = legacy.descriptor
+    override val descriptor: SerialDescriptor by lazy {
+        legacy.descriptor.also { register(it, this.nodes) }
+    }
 
     override fun serialize(encoder: Encoder, value: T) {
         if (encoder !is JsonEncoder) {
@@ -136,8 +153,6 @@ internal open class CanonicalSerializer<T : Any>(internal val base: KClass<*>, n
         val path = pathFor(node, "$")
         try {
             return decoder.json.decodeFromJsonElement(node.serializer, node.decode(payload, path)) as T
-        } catch (error: SerializationException) {
-            throw SerializationException("$path: ${error.message}", error)
         } catch (error: IllegalArgumentException) {
             throw SerializationException("$path: ${error.message}", error)
         }

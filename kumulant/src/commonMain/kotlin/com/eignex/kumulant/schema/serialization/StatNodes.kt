@@ -1,9 +1,9 @@
 package com.eignex.kumulant.schema.serialization
 
 import com.eignex.kumulant.schema.spec.*
+import kotlinx.serialization.KSerializer
 
-internal object SeriesStatSpecSerializer : CanonicalSerializer<SeriesStatSpec<*>>(
-    SeriesStatSpec::class,
+internal object SeriesStatSpecSerializer : KSerializer<SeriesStatSpec<*>> by canonical(
     node<Mean>("mean"),
     node<Sum>("sum"),
     node<Min>("min"),
@@ -72,8 +72,7 @@ internal object SeriesStatSpecSerializer : CanonicalSerializer<SeriesStatSpec<*>
     node<DecayingRate>("decayingRate"),
 )
 
-internal object PairedStatSpecSerializer : CanonicalSerializer<PairedStatSpec<*>>(
-    PairedStatSpec::class,
+internal object PairedStatSpecSerializer : KSerializer<PairedStatSpec<*>> by canonical(
     node<PairedSum>("pairedSum"),
     node<UnivariateRegression>("univariateRegression"),
     node<Covariance>("covariance"),
@@ -100,8 +99,7 @@ internal object PairedStatSpecSerializer : CanonicalSerializer<PairedStatSpec<*>
     node<SamplePaired>("sample"),
 )
 
-internal object VectorStatSpecSerializer : CanonicalSerializer<VectorStatSpec<*>>(
-    VectorStatSpec::class,
+internal object VectorStatSpecSerializer : KSerializer<VectorStatSpec<*>> by canonical(
     node<WithWeightVector>("withWeight"),
     node<AtIndex>("atIndex"),
     node<AtIndices>("atIndices"),
@@ -119,8 +117,7 @@ internal object VectorStatSpecSerializer : CanonicalSerializer<VectorStatSpec<*>
     node<SampleVector>("sample"),
 )
 
-internal object DiscreteStatSpecSerializer : CanonicalSerializer<DiscreteStatSpec<*>>(
-    DiscreteStatSpec::class,
+internal object DiscreteStatSpecSerializer : KSerializer<DiscreteStatSpec<*>> by canonical(
     node<HyperLogLog>("hyperLogLog"),
     node<LinearCounting>("linearCounting"),
     node<BloomFilter>("bloomFilter"),
@@ -139,8 +136,7 @@ internal object DiscreteStatSpecSerializer : CanonicalSerializer<DiscreteStatSpe
     node<SampleDiscrete>("sample"),
 )
 
-internal object RegressionStatSpecSerializer : CanonicalSerializer<RegressionStatSpec<*>>(
-    RegressionStatSpec::class,
+internal object RegressionStatSpecSerializer : KSerializer<RegressionStatSpec<*>> by canonical(
     node<BayesianRegression>("bayesianRegression"),
     node<StochasticRegression>("stochasticRegression"),
     node<GaussianNaiveBayes>("gaussianNaiveBayes"),
@@ -162,7 +158,7 @@ internal object RegressionStatSpecSerializer : CanonicalSerializer<RegressionSta
     node<FoldRegression>("foldRegression"),
 )
 
-internal val statSerializers: List<CanonicalSerializer<*>> by lazy {
+internal val statSerializers: List<KSerializer<*>> by lazy {
     listOf(
         SeriesStatSpecSerializer,
         PairedStatSpecSerializer,
@@ -172,11 +168,10 @@ internal val statSerializers: List<CanonicalSerializer<*>> by lazy {
     )
 }
 
-internal object StatSpecSerializer : CanonicalSerializer<StatSpec>(
-    StatSpec::class,
+internal object StatSpecSerializer : KSerializer<StatSpec> by canonical(
     { statSerializers.flatMap { it.nodes } },
 )
 
 internal val statModalities by lazy {
-    statSerializers.flatMap { root -> root.nodes.map { it.type to root.base } }.toMap()
+    statSerializers.flatMap { root -> root.nodes.map { it.type to root.descriptor.serialName } }.toMap()
 }
