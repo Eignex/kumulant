@@ -71,28 +71,4 @@ class HoltStatTest {
         val expectedMove = 100.0 * (1.0 - exp(-0.5))
         assertEquals(expectedMove, r.level, 1e-3)
     }
-
-    @Test
-    fun `reset clears state`() {
-        val s = HoltStat(alpha = 0.5, beta = 0.5).apply {
-            for (v in listOf(1.0, 2.0, 3.0)) update(v)
-        }
-        s.reset()
-        val r = s.read()
-        assertEquals(0.0, r.level, DELTA)
-        assertEquals(0.0, r.trend, DELTA)
-    }
-
-    @Test
-    fun `create produces an independent stat`() {
-        val template = HoltStat(alpha = 0.5, beta = 0.5).apply {
-            update(1.0)
-            update(2.0)
-        }
-        val fresh = template.create()
-        fresh.update(10.0)
-        val tr = template.read()
-        val fr = fresh.read()
-        assertTrue(tr.level != fr.level)
-    }
 }

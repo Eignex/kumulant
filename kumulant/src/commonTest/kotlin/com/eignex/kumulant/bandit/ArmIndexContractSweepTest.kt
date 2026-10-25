@@ -91,8 +91,8 @@ class ArmIndexContractSweepTest {
         // Negative and one-past-the-end. The negative case is the one a raw array access would also
         // catch; `nbrArms` exactly is the one that reads as plausible and must still be refused.
         val violations = mutableListOf<String>()
-        for (bad in listOf(-1, ARMS)) {
-            for (probe in probes()) {
+        for (probe in probes()) {
+            for (bad in listOf(-1, ARMS)) {
                 for ((call, invoke) in probe.calls) {
                     val thrown = runCatching { invoke(bad) }.exceptionOrNull()
                     when {
@@ -111,8 +111,8 @@ class ArmIndexContractSweepTest {
     fun `every arm-indexed call accepts every in-range index`() {
         // Guards the rule above: a bandit that rejected every index would satisfy it.
         val violations = mutableListOf<String>()
-        for (good in 0 until ARMS) {
-            for (probe in probes()) {
+        for (probe in probes()) {
+            for (good in 0 until ARMS) {
                 for ((call, invoke) in probe.calls) {
                     runCatching { invoke(good) }.exceptionOrNull()?.let {
                         violations += "${probe.name}.$call rejected valid index $good: ${it.message}"

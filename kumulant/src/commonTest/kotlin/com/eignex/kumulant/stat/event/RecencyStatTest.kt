@@ -61,22 +61,4 @@ class RecencyStatTest {
         assertEquals(1_000L, r.lastObservedTimestampNanos)
         assertTrue(r.hasObservation)
     }
-
-    @Test
-    fun `reset clears state`() {
-        val s = RecencyStat().apply { update(value = 0.0, timestampNanos = 1_000L) }
-        s.reset()
-        val r = s.read(timestampNanos = 5_000L)
-        assertFalse(r.hasObservation)
-        assertEquals(-1L, r.elapsedNanos)
-    }
-
-    @Test
-    fun `create produces an independent stat`() {
-        val tpl = RecencyStat().apply { update(value = 0.0, timestampNanos = 100L) }
-        val fresh = tpl.create()
-        fresh.update(value = 0.0, timestampNanos = 5_000L)
-        assertEquals(100L, tpl.read(10_000L).lastObservedTimestampNanos)
-        assertEquals(5_000L, fresh.read(10_000L).lastObservedTimestampNanos)
-    }
 }

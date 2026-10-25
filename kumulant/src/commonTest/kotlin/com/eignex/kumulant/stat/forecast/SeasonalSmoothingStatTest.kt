@@ -104,17 +104,6 @@ class SeasonalSmoothingStatTest {
         s.update(2.0)
         assertTrue(s.read().level.isFinite())
     }
-
-    @Test
-    fun `reset clears state`() {
-        val s = SeasonalSmoothingStat(alpha = 0.4, beta = 0.1, gamma = 0.5, period = 4)
-        repeat(20) { s.update(it.toDouble()) }
-        s.reset()
-        val r = s.read()
-        assertEquals(0.0, r.level, DELTA)
-        assertEquals(0.0, r.trend, DELTA)
-        for (sx in r.seasons) assertEquals(0.0, sx, DELTA)
-    }
 }
 
 class SeasonalForecastHorizonTest {

@@ -93,16 +93,6 @@ class SpaceSavingTest {
     }
 
     @Test
-    fun `zero or negative weight is ignored`() {
-        val ss = SpaceSavingStat(capacity = 5)
-        ss.update(1L, weight = 0.0)
-        ss.update(1L, weight = -1.0)
-        val r = ss.read()
-        assertEquals(0, r.keys.size)
-        assertEquals(0L, r.totalSeen)
-    }
-
-    @Test
     fun `fractional weight rounds up rather than being dropped`() {
         // Mirrors CountMinSketchStat: counts are Long, so a fractional weight has to be rounded, and
         // it rounds *up*. Rounding to nearest would drop everything below 0.5, hiding a key that
@@ -139,28 +129,6 @@ class SpaceSavingTest {
         val a = SpaceSavingStat(capacity = 5)
         val bResult = SpaceSavingStat(capacity = 10).read()
         assertFailsWith<IllegalArgumentException> { a.merge(bResult) }
-    }
-
-    @Test
-    fun `reset clears state`() {
-        val ss = SpaceSavingStat(capacity = 10)
-        for (i in 1..100) ss.update(i.toLong())
-        ss.reset()
-        val r = ss.read()
-        assertEquals(0, r.keys.size)
-        assertEquals(0L, r.totalSeen)
-    }
-
-    @Test
-    fun `create produces independent stat`() {
-        val a = SpaceSavingStat(capacity = 5)
-        a.update(1L)
-        val b = a.create()
-        b.update(2L)
-        assertEquals(1, a.read().keys.size)
-        assertEquals(1L, a.read().keys[0])
-        assertEquals(1, b.read().keys.size)
-        assertEquals(2L, b.read().keys[0])
     }
 
     @Test

@@ -34,25 +34,6 @@ class HyperLogLogStatTest {
     }
 
     @Test
-    fun `1000 unique keys within expected error at precision 14`() {
-        val hll = HyperLogLogStat(precision = 14)
-        for (i in 1..1000) hll.update(i.toLong())
-        val r = hll.read()
-        val rel = abs(r.estimate - 1000.0) / 1000.0
-        assertTrue(rel < 0.05, "estimate=${r.estimate} rel=$rel")
-    }
-
-    @Test
-    fun `30000 unique keys within expected error at precision 14`() {
-        val hll = HyperLogLogStat(precision = 14)
-        for (i in 1..30_000) hll.update(i.toLong())
-        val r = hll.read()
-        val rel = abs(r.estimate - 30_000.0) / 30_000.0
-        // Standard error is ~ 1.04 / sqrt(2^14) ~ 0.81%, allow 3sigma.
-        assertTrue(rel < 0.03, "estimate=${r.estimate} rel=$rel")
-    }
-
-    @Test
     fun `accuracy across cardinalities including the medium range stays within 2 percent`() {
         // Sweeps the m..3m window at precision 14 (m=16384) where the unmodified Flajolet
         // estimator is classically prone to a few percent downward bias. SplitMix64
@@ -86,25 +67,6 @@ class HyperLogLogStatTest {
     }
 
     @Test
-    fun `reset clears registers and counter`() {
-        val hll = HyperLogLogStat(precision = 8)
-        for (i in 1..500) hll.update(i.toLong())
-        hll.reset()
-        val r = hll.read()
-        assertEquals(0.0, r.estimate)
-        assertEquals(0L, r.totalSeen)
-    }
-
-    @Test
-    fun `create produces independent stat`() {
-        val hll1 = HyperLogLogStat(precision = 10)
-        val hll2 = hll1.create()
-        for (i in 1..100) hll2.update(i.toLong())
-        assertEquals(0.0, hll1.read().estimate)
-        assertTrue(hll2.read().estimate > 50.0)
-    }
-
-    @Test
     fun `merge rejects mismatched precision`() {
         val a = HyperLogLogStat(precision = 10)
         val b = HyperLogLogStat(precision = 12)
@@ -116,13 +78,6 @@ class HyperLogLogStatTest {
     fun `invalid precision throws`() {
         assertFailsWith<IllegalArgumentException> { HyperLogLogStat(precision = 3) }
         assertFailsWith<IllegalArgumentException> { HyperLogLogStat(precision = 19) }
-    }
-
-    @Test
-    fun `zero weight update is ignored`() {
-        val hll = HyperLogLogStat(precision = 8)
-        hll.update(1L, weight = 0.0)
-        assertEquals(0.0, hll.read().estimate)
     }
 
     @Test

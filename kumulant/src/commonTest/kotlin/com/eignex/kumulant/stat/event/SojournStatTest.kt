@@ -93,19 +93,6 @@ class SojournStatTest {
     }
 
     @Test
-    fun `reset clears everything`() {
-        val s = SojournStat(states).apply {
-            update(value = 0L, timestampNanos = 0L)
-            update(value = 1L, timestampNanos = 1_000L)
-        }
-        s.reset()
-        val r = s.read(timestampNanos = 2_000L)
-        assertFalse(r.hasState)
-        for (t in r.totalNanosByState) assertEquals(0L, t)
-        for (t in r.transitionsByState) assertEquals(0L, t)
-    }
-
-    @Test
     fun `create produces an independent stat with the same alphabet`() {
         val tpl = SojournStat(states).apply { update(value = 0L, timestampNanos = 0L) }
         val fresh = tpl.create()

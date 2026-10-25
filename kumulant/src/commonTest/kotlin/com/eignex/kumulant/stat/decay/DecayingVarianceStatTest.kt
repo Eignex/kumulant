@@ -1,6 +1,5 @@
 package com.eignex.kumulant.stat.decay
 
-import com.eignex.kumulant.DELTA
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -12,6 +11,15 @@ private const val T1 = 2_000_000_000L
 private const val T3 = 11_000_000_000L
 
 class DecayingVarianceStatTest {
+
+    @Test
+    fun `stdDev is sqrt of variance`() {
+        val v = DecayingVarianceStat(halfLife = 1.seconds)
+        v.update(0.0, T0)
+        v.update(10.0, T0)
+        val r = v.read(T0)
+        assertEquals(sqrt(r.variance), r.stdDev, 1e-9)
+    }
 
     @Test
     fun `variance of constant stream is zero`() {
@@ -42,15 +50,6 @@ class DecayingVarianceStatTest {
     }
 
     @Test
-    fun `stdDev is sqrt of variance`() {
-        val v = DecayingVarianceStat(halfLife = 1.seconds)
-        v.update(0.0, T0)
-        v.update(10.0, T0)
-        val r = v.read(T0)
-        assertEquals(sqrt(r.variance), r.stdDev, 1e-9)
-    }
-
-    @Test
     fun `merge combines two streams`() {
         val v1 = DecayingVarianceStat(halfLife = 1.seconds)
         val v2 = DecayingVarianceStat(halfLife = 1.seconds)
@@ -59,25 +58,5 @@ class DecayingVarianceStatTest {
         v1.merge(v2.read(T0))
         assertEquals(5.0, v1.read(T0).mean, 1e-9)
         assertEquals(25.0, v1.read(T0).variance, 1e-9)
-    }
-
-    @Test
-    fun `reset clears mean and variance`() {
-        val v = DecayingVarianceStat(halfLife = 1.seconds)
-        v.update(1.0, T0)
-        v.update(9.0, T0)
-        v.reset()
-        val r = v.read(T1)
-        assertEquals(0.0, r.mean, DELTA)
-        assertEquals(0.0, r.variance, DELTA)
-    }
-
-    @Test
-    fun `create produces fresh independent stat`() {
-        val v1 = DecayingVarianceStat(halfLife = 1.seconds)
-        v1.update(5.0, T0)
-        val v2 = v1.create()
-        repeat(50) { v2.update(100.0, T1) }
-        assertTrue(v2.read(T1).mean > v1.read(T1).mean)
     }
 }

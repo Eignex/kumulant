@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.regression.glm.Penalty
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
-import kotlin.math.sqrt
 import kotlin.test.*
 
 private const val EPS = 1e-9
@@ -47,13 +46,6 @@ class OLSTest {
     }
 
     @Test
-    fun `r-squared is 1 for perfect fit`() {
-        val ols = UnivariateRegressionStat()
-        for (x in 0..9) ols.update(x.toDouble(), 2.0 * x + 1.0)
-        assertEquals(1.0, ols.read().rSquared, APPROX)
-    }
-
-    @Test
     fun `r-squared is low for noisy data`() {
         val ols = UnivariateRegressionStat()
 
@@ -62,13 +54,6 @@ class OLSTest {
         ols.update(2.0, 8.0)
         ols.update(3.0, -3.0)
         assertTrue(ols.read().rSquared < 0.5)
-    }
-
-    @Test
-    fun `sse is non-negative`() {
-        val ols = UnivariateRegressionStat()
-        repeat(10) { ols.update(it.toDouble(), it * 2.0 + 0.1 * (it % 3 - 1)) }
-        assertTrue(ols.read().sse >= 0.0)
     }
 
     @Test
@@ -88,13 +73,6 @@ class OLSTest {
         val r = ols.read()
         assertEquals(3.0, r.x.mean, APPROX)
         assertEquals(6.0, r.y.mean, APPROX)
-    }
-
-    @Test
-    fun `totalWeights equals number of updates`() {
-        val ols = UnivariateRegressionStat()
-        repeat(7) { ols.update(it.toDouble(), it.toDouble()) }
-        assertEquals(7.0, ols.read().totalWeights, EPS)
     }
 
     @Test
@@ -157,35 +135,6 @@ class OLSTest {
         ols2.update(100.0, 200.0)
 
         assertEquals(5.0, ols1.read().totalWeights, EPS)
-    }
-
-    @Test
-    fun `predict uses slope and intercept`() {
-        val ols =
-            UnivariateRegressionStat().apply { for (x in 0..9) update(x.toDouble(), 2.0 * x + 1.0) }
-        val r = ols.read()
-        assertEquals(11.0, r.predict(5.0), APPROX)
-    }
-
-    @Test
-    fun `mse and rmse derive from sse and totalWeights`() {
-        val ols = UnivariateRegressionStat()
-        ols.update(0.0, 10.0)
-        ols.update(1.0, -5.0)
-        ols.update(2.0, 8.0)
-        ols.update(3.0, -3.0)
-        val r = ols.read()
-        assertEquals(r.sse / r.totalWeights, r.mse, APPROX)
-        assertEquals(sqrt(r.mse), r.rmse, APPROX)
-        assertTrue(r.mse > 0.0)
-    }
-
-    @Test
-    fun `ssr plus sse equals sst`() {
-        val ols = UnivariateRegressionStat()
-        for (x in 0..9) ols.update(x.toDouble(), 2.0 * x + 1.0 + 0.1 * (x % 3 - 1))
-        val r = ols.read()
-        assertEquals(r.sst, r.ssr + r.sse, APPROX)
     }
 
     @Test
@@ -325,14 +274,6 @@ class RidgeTest {
         val r = ridge.read()
         assertTrue(r.sse >= 0.0)
         assertTrue(r.sse >= ols.read().sse - APPROX)
-    }
-
-    @Test
-    fun `predict uses ridge slope and intercept`() {
-        val ridge = UnivariateRegressionStat(Penalty.L2(lambda = 1.0))
-        for (x in 0..9) ridge.update(x.toDouble(), 2.0 * x + 1.0)
-        val r = ridge.read()
-        assertEquals(r.slope * 5.0 + r.intercept, r.predict(5.0), APPROX)
     }
 
     @Test

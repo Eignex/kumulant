@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.DELTA
-import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.quantile.TDigestResult
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.skema.SchemaJson
@@ -217,26 +216,5 @@ class MadStatTest {
             assertEquals(10.0, it.median, DELTA)
             assertEquals(5.0, it.mad, DELTA)
         }
-    }
-
-    @Test
-    fun `reset clears state`() {
-        val stat = MadStat().apply { repeat(100) { update(it.toDouble()) } }
-
-        stat.reset()
-
-        assertTrue(stat.read().median.isNaN())
-        assertTrue(stat.read().mad.isNaN())
-    }
-
-    @Test
-    fun `create produces an independent stat with the requested concurrency`() {
-        val template = MadStat().apply { update(7.0) }
-
-        val fresh = template.create(Concurrency.Strict)
-
-        assertTrue(fresh.read().median.isNaN())
-        assertEquals(Concurrency.Strict, fresh.concurrency)
-        assertEquals(7.0, template.read().median)
     }
 }

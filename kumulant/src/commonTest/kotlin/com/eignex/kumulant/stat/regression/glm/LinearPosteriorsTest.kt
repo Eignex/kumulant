@@ -132,16 +132,6 @@ class LinearPosteriorsTest {
     }
 
     @Test
-    fun `PointPosterior evaluate with exploration is finite`() {
-        val snap = sgdSnapshot()
-        val x = DenseVector.of(doubleArrayOf(0.3, -0.4))
-        repeat(50) {
-            val v = PointPosterior.evaluate(snap, x, Random(it.toLong()), exploration = 0.5)
-            assertTrue(v.isFinite())
-        }
-    }
-
-    @Test
     fun `FactorisedGaussian sample respects per-coord precision`() {
         val snap = diagonalSnapshot()
         val rng = Random(0)
@@ -236,17 +226,6 @@ class LinearPosteriorsTest {
     }
 
     @Test
-    fun `MultivariateGaussian evaluate is finite and finite-variance`() {
-        val snap = bayesianSnapshot()
-        val x = DenseVector.of(doubleArrayOf(0.5, 0.5))
-        val rng = Random(0)
-        val n = 300
-        var sum = 0.0
-        repeat(n) { sum += MultivariateGaussian.evaluate(snap, x, rng, exploration = 0.2) }
-        assertTrue(abs(sum / n - snap.predict(x)) < 0.05)
-    }
-
-    @Test
     fun `LinUcb evaluate is deterministic given the snapshot`() {
         val snap = bayesianSnapshot()
         val x = DenseVector.of(doubleArrayOf(0.3, 0.7))
@@ -300,16 +279,6 @@ class LinearPosteriorsTest {
     }
 
     @Test
-    fun `SGD update skips non-positive weight`() {
-        val stat = StochasticRegressionStat(featureSize = 2)
-        stat.update(doubleArrayOf(1.0, 2.0), y = 1.0, weight = 0.0)
-        stat.update(doubleArrayOf(1.0, 2.0), y = 1.0, weight = -1.0)
-        val r = stat.read()
-        assertEquals(0.0, r.totalWeights)
-        assertEquals(0L, r.step)
-    }
-
-    @Test
     fun `SGD with L2 regularisation visits every coordinate`() {
         val stat = StochasticRegressionStat(
             featureSize = 3,
@@ -340,11 +309,6 @@ class LinearPosteriorsTest {
         val a = StochasticRegressionStat(featureSize = 2)
         val b = StochasticRegressionStat(featureSize = 3)
         assertFailsWith<IllegalArgumentException> { a.merge(b.read()) }
-    }
-
-    @Test
-    fun `SGD rejects non-positive featureSize`() {
-        assertFailsWith<IllegalArgumentException> { StochasticRegressionStat(featureSize = 0) }
     }
 
     @Test

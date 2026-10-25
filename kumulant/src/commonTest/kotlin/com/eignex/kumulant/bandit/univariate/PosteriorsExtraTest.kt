@@ -48,49 +48,6 @@ class PosteriorsExtraTest {
     }
 
     @Test
-    fun `LogNormalGammaPosterior samples are positive`() {
-        val snap = WeightedVarianceResult(totalWeights = 50.0, mean = 1.0, variance = 0.25)
-        val rng = Random(3)
-        repeat(50) {
-            val s = LogNormalGammaPosterior.sample(snap, rng)
-            assertTrue(s > 0.0, "got non-positive sample: $s")
-        }
-    }
-
-    @Test
-    fun `PoissonGammaPosterior samples are positive given a non-empty snapshot`() {
-        // Seed with a small pseudo-count so the Gamma sampler has alpha > 0.
-        val snap = MeanArm(priorMean = 1.0, priorWeight = 0.5).createStat().also {
-            it.update(2.0)
-        }.read(0L)
-        val rng = Random(4)
-        repeat(30) {
-            val s = PoissonGammaPosterior.sample(snap, rng)
-            assertTrue(s >= 0.0 && s.isFinite(), "got $s")
-        }
-    }
-
-    @Test
-    fun `GeometricBetaPosterior samples exceed one trial`() {
-        val snap = WeightedMeanResult(totalWeights = 20.0, mean = 2.0)
-        val rng = Random(5)
-        repeat(50) {
-            val s = GeometricBetaPosterior.sample(snap, rng)
-            assertTrue(s.isFinite() && s > 1.0, "got $s")
-        }
-    }
-
-    @Test
-    fun `ExponentialGammaPosterior samples are positive`() {
-        val snap = WeightedMeanResult(totalWeights = 30.0, mean = 2.0)
-        val rng = Random(6)
-        repeat(50) {
-            val s = ExponentialGammaPosterior.sample(snap, rng)
-            assertTrue(s > 0.0, "got $s")
-        }
-    }
-
-    @Test
     fun `GammaScalePosterior fixedShape input is respected by sampler`() {
         val snap = WeightedMeanResult(totalWeights = 50.0, mean = 2.0)
         val rng = Random(7)

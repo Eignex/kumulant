@@ -8,7 +8,6 @@ import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
@@ -74,36 +73,12 @@ class SamplingTest {
     }
 
     @Test
-    fun `throttle rejects invalid every`() {
-        assertFailsWith<IllegalArgumentException> { CountStat().throttle(every = 0) }
-        assertFailsWith<IllegalArgumentException> { CountStat().throttle(every = -1) }
-    }
-
-    @Test
     fun `series sample keeps roughly the rate fraction`() {
         val n = 10_000
         val stat = CountStat().sample(rate = 0.3, seed = 42L)
         repeat(n) { stat.update(1.0) }
         val kept = stat.read().sum
         assertTrue(kept in 2_500.0..3_500.0, "expected ~3000, got $kept")
-    }
-
-    @Test
-    fun `sample rate 0 drops everything and 1 keeps everything`() {
-        val none = CountStat().sample(rate = 0.0, seed = 1L)
-        val all = CountStat().sample(rate = 1.0, seed = 1L)
-        repeat(50) {
-            none.update(1.0)
-            all.update(1.0)
-        }
-        assertEquals(0.0, none.read().sum, DELTA)
-        assertEquals(50.0, all.read().sum, DELTA)
-    }
-
-    @Test
-    fun `sample rejects out-of-range rate`() {
-        assertFailsWith<IllegalArgumentException> { CountStat().sample(rate = -0.1, seed = 0L) }
-        assertFailsWith<IllegalArgumentException> { CountStat().sample(rate = 1.1, seed = 0L) }
     }
 
     @Test

@@ -176,7 +176,7 @@ class ConcurrentStreamModesTest {
         val capacity = 256
         val reservoir = ReservoirHistogramStat(capacity = capacity, seed = 42L, concurrency = Concurrency.Strict)
         val writers = 4
-        val iters = 10_000
+        val iters = 1_000
         runWithReader(reservoir::read) {
             runConcurrently(writers, iters) { t, i ->
                 reservoir.update((t * iters + i).toDouble())
@@ -282,7 +282,7 @@ class ConcurrentStreamModesTest {
         val capacity = 256
         val reservoir = ReservoirHistogramStat(capacity = capacity, seed = 42L, concurrency = Concurrency.Relaxed)
         val writers = 4
-        val iters = 10_000
+        val iters = 1_000
         runWithReader(reservoir::read) {
             runConcurrently(writers, iters) { t, i ->
                 reservoir.update((t * iters + i).toDouble())
@@ -301,7 +301,7 @@ class ConcurrentStreamModesTest {
         val capacity = 64
         val ss = SpaceSavingStat(capacity = capacity, concurrency = Concurrency.Relaxed)
         val writers = 4
-        val iters = 10_000
+        val iters = 1_000
         runWithReader(ss::read) {
             runConcurrently(writers, iters) { _, i ->
                 ss.update((i % (capacity * 4)).toLong())

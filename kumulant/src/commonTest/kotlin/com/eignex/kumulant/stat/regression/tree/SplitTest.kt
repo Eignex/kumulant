@@ -34,13 +34,6 @@ class SplitTest {
     }
 
     @Test
-    fun `ThresholdSplit equality is structural`() {
-        assertEquals(ThresholdSplit(0, 0.5), ThresholdSplit(0, 0.5))
-        assertTrue(ThresholdSplit(0, 0.5) != ThresholdSplit(1, 0.5))
-        assertTrue(ThresholdSplit(0, 0.5) != ThresholdSplit(0, 0.6))
-    }
-
-    @Test
     fun `ExprSplit routes by BoolExpr against context`() {
         val s = ExprSplit(X gt 0.0)
         assertTrue(s.direction(feat(1.0)))

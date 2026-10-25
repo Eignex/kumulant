@@ -1,6 +1,5 @@
 package com.eignex.kumulant.stat.decay
 
-import com.eignex.kumulant.DELTA
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -54,24 +53,5 @@ class DecayingMeanStatTest {
         repeat(10) { m2.update(10.0, T0) }
         m1.merge(m2.read(T0))
         assertEquals(5.0, m1.read(T0).mean, 1e-9)
-    }
-
-    @Test
-    fun `reset yields zero mean and count`() {
-        val m = DecayingMeanStat(halfLife = 1.seconds)
-        m.update(42.0, T0)
-        m.reset()
-        val r = m.read(T1)
-        assertEquals(0.0, r.mean, DELTA)
-        assertEquals(0.0, r.totalWeights, DELTA)
-    }
-
-    @Test
-    fun `create produces fresh independent stat`() {
-        val m1 = DecayingMeanStat(halfLife = 1.seconds)
-        m1.update(5.0, T0)
-        val m2 = m1.create()
-        repeat(100) { m2.update(100.0, T1) }
-        assertTrue(m2.read(T1).mean > m1.read(T1).mean)
     }
 }

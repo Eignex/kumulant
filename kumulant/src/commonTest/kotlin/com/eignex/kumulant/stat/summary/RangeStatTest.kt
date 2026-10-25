@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.DELTA
-import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -73,33 +72,6 @@ class RangeStatTest {
     }
 
     @Test
-    fun `reset clears state`() {
-        val r = RangeStat().apply {
-            update(1.0)
-            update(9.0)
-        }
-        r.reset()
-        assertEquals(Double.POSITIVE_INFINITY, r.read().min)
-        assertEquals(Double.NEGATIVE_INFINITY, r.read().max)
-    }
-
-    @Test
-    fun `create produces fresh independent stat`() {
-        val r1 = RangeStat(Concurrency.Relaxed).apply { update(5.0) }
-        val r2 = r1.create(Concurrency.None)
-        r2.update(1.0)
-
-        assertEquals(5.0, r1.read().min, DELTA)
-        assertEquals(1.0, r2.read().min, DELTA)
-    }
-
-    @Test
-    fun `read result carries name`() {
-        val r = RangeStat()
-        r.update(10.0)
-    }
-
-    @Test
     fun `positive infinity sets max`() {
         val r = RangeStat()
         r.update(1.0)
@@ -127,12 +99,5 @@ class RangeStatTest {
         val result = r.read()
         assertEquals(5.0, result.min, DELTA)
         assertEquals(5.0, result.max, DELTA)
-    }
-
-    @Test
-    fun `read before any update returns infinities`() {
-        val result = RangeStat().read()
-        assertTrue(result.min.isInfinite() && result.min > 0.0)
-        assertTrue(result.max.isInfinite() && result.max < 0.0)
     }
 }

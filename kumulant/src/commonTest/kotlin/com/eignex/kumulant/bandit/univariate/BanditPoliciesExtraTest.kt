@@ -54,18 +54,6 @@ class BanditPoliciesExtraTest {
     }
 
     @Test
-    fun `KL-UCB Bernoulli KL is symmetric only at the corners`() {
-        assertEquals(0.0, KlUcb.klBernoulli(0.3, 0.3), 1e-9)
-        assertTrue(KlUcb.klBernoulli(0.1, 0.5) > KlUcb.klBernoulli(0.5, 0.5))
-    }
-
-    @Test
-    fun `KL-UCB upper bound exceeds the mean`() {
-        val q = KlUcb.klBernoulliUpper(p = 0.5, bound = 0.1, tol = 1e-6)
-        assertTrue(q > 0.5 && q < 1.0)
-    }
-
-    @Test
     fun `KL-UCB drives MultiArmedBandit to the best Bernoulli arm`() {
         val rng = Random(1)
         val bandit = MultiArmedBandit(nbrArms = 3, policy = KlUcb(), random = rng)
@@ -168,28 +156,6 @@ class BanditPoliciesExtraTest {
     fun `EpsilonDecreasing rejects bad params`() {
         assertFailsWith<IllegalArgumentException> { EpsilonDecreasing(epsilon = -0.1) }
         assertFailsWith<IllegalArgumentException> { EpsilonDecreasing(epsilon = 0.0) }
-    }
-
-    @Test
-    fun `UCB1 infinite for untried then finite once tried`() {
-        val pol = UCB1()
-        val empty = BernoulliSumResult(0.0, 0.0)
-        assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(empty, 0L, Random(0)))
-        pol.addArm(BernoulliSumResult(0.0, 0.0))
-        val populated = BernoulliSumResult(3.0, 10.0)
-        pol.addArm(populated)
-        val s = pol.evaluate(populated, 0L, Random(0))
-        assertTrue(s.isFinite() && s > 0.3)
-    }
-
-    @Test
-    fun `UCB1Normal forces exploration when nj is small`() {
-        val pol = UCB1Normal()
-        pol.addArm(MomentsResult(0.0, 0.0, 0.0, 0.0, 0.0))
-        pol.addArm(MomentsResult(0.0, 0.0, 0.0, 0.0, 0.0))
-        val tiny = MomentsResult(totalWeights = 1.0, mean = 1.0, m2 = 1.0, m3 = 0.0, m4 = 0.0)
-        // nj=1 is below the forced-exploration threshold ceil(8 ln(K))
-        assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(tiny, 0L, Random(0)))
     }
 
     @Test

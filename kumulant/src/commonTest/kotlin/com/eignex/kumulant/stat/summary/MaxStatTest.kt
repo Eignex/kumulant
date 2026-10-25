@@ -30,22 +30,6 @@ class MaxStatTest {
     }
 
     @Test
-    fun `reset restores negative infinity`() {
-        val m = MaxStat().apply { update(7.0) }
-        m.reset()
-        assertEquals(Double.NEGATIVE_INFINITY, m.read().max)
-    }
-
-    @Test
-    fun `create produces fresh independent stat`() {
-        val m1 = MaxStat().apply { update(5.0) }
-        val m2 = m1.create()
-        m2.update(10.0)
-        assertEquals(5.0, m1.read().max, DELTA)
-        assertEquals(10.0, m2.read().max, DELTA)
-    }
-
-    @Test
     fun `MaxStat ignores NaN inputs`() {
         val m = MaxStat()
         m.update(5.0)

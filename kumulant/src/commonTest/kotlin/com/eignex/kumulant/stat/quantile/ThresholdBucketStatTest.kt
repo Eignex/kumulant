@@ -50,14 +50,6 @@ class ThresholdBucketStatTest {
     }
 
     @Test
-    fun `reset clears all buckets`() {
-        val s = ThresholdBucketStat(doubleArrayOf(0.0, 10.0))
-        listOf(-1.0, 5.0, 50.0).forEach { s.update(it) }
-        s.reset()
-        assertEquals(listOf(0.0, 0.0, 0.0), s.read().counts)
-    }
-
-    @Test
     fun `non-increasing thresholds are rejected`() {
         assertFailsWith<IllegalArgumentException> {
             ThresholdBucketStat(doubleArrayOf(1.0, 1.0))

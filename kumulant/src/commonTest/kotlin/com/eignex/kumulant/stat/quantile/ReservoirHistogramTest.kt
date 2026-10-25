@@ -9,6 +9,15 @@ import kotlin.test.assertTrue
 class ReservoirHistogramTest {
 
     @Test
+    fun `create produces independent stat`() {
+        val a = ReservoirHistogramStat(capacity = 10, seed = 5)
+        for (i in 1..100) a.update(i.toDouble())
+        val b = a.create()
+        assertEquals(0, b.read().values.size)
+        assertTrue(a.read().values.isNotEmpty())
+    }
+
+    @Test
     fun `empty reservoir`() {
         val r = ReservoirHistogramStat(capacity = 100).read()
         assertEquals(0, r.values.size)
@@ -63,25 +72,6 @@ class ReservoirHistogramTest {
 
         assertEquals(1, res.read().values.size, "a NaN value must not be silently discarded")
         assertEquals(1L, res.read().totalSeen)
-    }
-
-    @Test
-    fun `reset clears state`() {
-        val res = ReservoirHistogramStat(capacity = 10, seed = 0)
-        for (i in 1..100) res.update(i.toDouble())
-        res.reset()
-        val r = res.read()
-        assertEquals(0, r.values.size)
-        assertEquals(0L, r.totalSeen)
-    }
-
-    @Test
-    fun `create produces independent stat`() {
-        val a = ReservoirHistogramStat(capacity = 10, seed = 5)
-        for (i in 1..100) a.update(i.toDouble())
-        val b = a.create()
-        assertEquals(0, b.read().values.size)
-        assertTrue(a.read().values.isNotEmpty())
     }
 
     @Test

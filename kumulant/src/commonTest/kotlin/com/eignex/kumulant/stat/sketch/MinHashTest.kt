@@ -63,16 +63,6 @@ class MinHashTest {
     }
 
     @Test
-    fun `zero or negative weight is ignored`() {
-        val mh = MinHashStat(numHashes = 16)
-        mh.update(1L, weight = 0.0)
-        mh.update(2L, weight = -1.0)
-        val r = mh.read()
-        assertEquals(0L, r.totalSeen)
-        assertTrue(r.signatures.all { it == Long.MAX_VALUE })
-    }
-
-    @Test
     fun `merge combines two minhashes`() {
         val a = MinHashStat(numHashes = 128, seed = 5L)
         val b = MinHashStat(numHashes = 128, seed = 5L)
@@ -96,26 +86,6 @@ class MinHashTest {
         assertFailsWith<IllegalArgumentException> { a.merge(bResult) }
         val cResult = MinHashStat(numHashes = 64, seed = 2L).read()
         assertFailsWith<IllegalArgumentException> { a.merge(cResult) }
-    }
-
-    @Test
-    fun `reset clears state`() {
-        val mh = MinHashStat(numHashes = 32)
-        for (i in 1..100) mh.update(i.toLong())
-        mh.reset()
-        val r = mh.read()
-        assertEquals(0L, r.totalSeen)
-        assertTrue(r.signatures.all { it == Long.MAX_VALUE })
-    }
-
-    @Test
-    fun `create produces independent stat`() {
-        val a = MinHashStat(numHashes = 32, seed = 99L)
-        for (i in 1..100) a.update(i.toLong())
-        val b = a.create()
-        assertEquals(0L, b.read().totalSeen)
-        assertTrue(b.read().signatures.all { it == Long.MAX_VALUE })
-        assertEquals(100L, a.read().totalSeen)
     }
 
     @Test

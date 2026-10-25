@@ -10,19 +10,6 @@ import kotlin.test.assertTrue
 class MomentsStatTest {
 
     @Test
-    fun `create produces fresh independent stat`() {
-        val m1 = MomentsStat().apply {
-            update(1.0)
-            update(2.0)
-            update(3.0)
-        }
-        val m2 = m1.create()
-        m1.update(4.0)
-        assertEquals(4.0, m1.read().totalWeights, DELTA)
-        assertEquals(0.0, m2.read().totalWeights, DELTA)
-    }
-
-    @Test
     fun `test skewness for symmetric distribution`() {
         val stat = MomentsStat()
 
@@ -81,20 +68,6 @@ class MomentsStatTest {
 
         assertEquals(60.5, m1.read().mean, DELTA)
         assertEquals(4.0, m1.read().totalWeights, DELTA)
-    }
-
-    @Test
-    fun `test reset`() {
-        val stat = MomentsStat()
-        stat.update(10.0)
-        stat.update(20.0)
-        stat.reset()
-
-        assertEquals(0.0, stat.read().totalWeights, DELTA)
-        assertEquals(0.0, stat.read().mean, DELTA)
-        assertEquals(0.0, stat.read().variance, DELTA)
-        assertEquals(0.0, stat.read().skewness, DELTA)
-        assertEquals(0.0, stat.read().kurtosis, DELTA)
     }
 
     @Test

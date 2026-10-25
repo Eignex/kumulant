@@ -9,18 +9,6 @@ import kotlin.test.assertTrue
 class EwmaVarianceStatTest {
 
     @Test
-    fun `EwmaVarianceStat create produces fresh independent stat`() {
-        val v1 = EwmaVarianceStat(alpha = 0.5).apply {
-            update(1.0)
-            update(2.0)
-        }
-        val v2 = v1.create()
-        repeat(10) { v1.update(1000.0) }
-        assertEquals(0.0, v2.read().totalWeights, DELTA)
-        assertTrue(v1.read().totalWeights > 0.0)
-    }
-
-    @Test
     fun `EwmaVarianceStat tracking volatility shift`() {
         val stat = EwmaVarianceStat(alpha = 0.1)
 
@@ -51,17 +39,6 @@ class EwmaVarianceStatTest {
 
         assertEquals(0.0, stat.read().mean, DELTA)
         assertEquals(0.0, stat.read().variance, DELTA)
-    }
-
-    @Test
-    fun `EwmaVarianceStat reset clears state`() {
-        val varStat = EwmaVarianceStat(alpha = 0.5)
-        varStat.update(10.0)
-        varStat.update(20.0)
-        varStat.reset()
-        assertEquals(0.0, varStat.read().mean, DELTA)
-        assertEquals(0.0, varStat.read().variance, DELTA)
-        assertEquals(0.0, varStat.read().totalWeights, DELTA)
     }
 
     @Test

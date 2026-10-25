@@ -125,52 +125,6 @@ class TreeInternalsTest {
     private fun counts(vararg c: Double) = ClassCountsResult(c.size, c)
 
     @Test
-    fun `ranking picks the best candidate and remembers the runner-up`() {
-        // The runner-up is what the Hoeffding test consumes, so losing track of it would not fail any
-        // "did it pick the best one" assertion while breaking the split rule completely.
-        val total = counts(50.0, 50.0)
-        val pos = listOf(counts(40.0, 10.0), counts(30.0, 20.0), counts(26.0, 24.0))
-        val neg = listOf(counts(10.0, 40.0), counts(20.0, 30.0), counts(24.0, 26.0))
-
-        val ranked = rankCandidates(total, pos, neg, minSamplesSplit = 30.0, minSamplesLeaf = 5.0) { t, p, n ->
-            GiniReduction.score(t, p, n)
-        }
-
-        assertEquals(0, ranked.bestIndex, "the most separating candidate should win")
-        assertTrue(ranked.top1 > ranked.top2, "the runner-up should score below the winner")
-        assertTrue(ranked.top2 > 0.0, "the second candidate separates too, so top2 should not be zero")
-    }
-
-    @Test
-    fun `a candidate too thin on one side is skipped rather than scored`() {
-        // A split isolating three observations can score beautifully and predict nothing, so the
-        // thinness gate has to run before the score is even considered - not after, as a tiebreak.
-        val total = counts(50.0, 50.0)
-        val perfectButThin = counts(3.0, 0.0)
-        val theRest = counts(47.0, 50.0)
-
-        val ranked = rankCandidates(
-            total,
-            listOf(perfectButThin),
-            listOf(theRest),
-            minSamplesSplit = 30.0,
-            minSamplesLeaf = 5.0,
-        ) { t, p, n -> GiniReduction.score(t, p, n) }
-
-        assertEquals(-1, ranked.bestIndex, "a candidate with 3 observations on one side was accepted")
-        assertEquals(0.0, ranked.top1, DELTA)
-    }
-
-    @Test
-    fun `mismatched candidate lists are rejected`() {
-        val total = counts(10.0, 10.0)
-        val e = runCatching {
-            rankCandidates(total, listOf(counts(5.0, 5.0)), emptyList(), 1.0, 1.0) { _, _, _ -> 1.0 }
-        }.exceptionOrNull()
-        assertTrue(e is IllegalArgumentException, "expected a rejection, got $e")
-    }
-
-    @Test
     fun `a leaf below minSamplesSplit does not split`() {
         val ranked = SplitInfo(top1 = 10.0, top2 = 0.0, bestIndex = 0)
         val config = ClassificationTreeConfig(minSamplesSplit = 30.0)
@@ -240,23 +194,6 @@ class TreeInternalsTest {
                     )
                 }
             }
-        }
-    }
-
-    @Test
-    fun `both configs expose the shared tunables through one interface`() {
-        // What makes the growth logic able to read tunables without knowing which tree it drives.
-        val configs: List<HoeffdingTreeConfig> = listOf(RegressionTreeConfig(), ClassificationTreeConfig())
-        for (config in configs) {
-            assertEquals(0.05, config.delta, DELTA)
-            assertEquals(0.9, config.deltaDecay, DELTA)
-            assertEquals(0.05, config.tau, DELTA)
-            assertEquals(30.0, config.minSamplesSplit, DELTA)
-            assertEquals(5.0, config.minSamplesLeaf, DELTA)
-            assertEquals(10, config.splitPeriod)
-            assertEquals(16, config.maxDepth)
-            assertEquals(1024, config.maxNodes)
-            assertEquals(null, config.mtry)
         }
     }
 

@@ -72,16 +72,6 @@ class CountMinSketchTest {
     }
 
     @Test
-    fun `zero or negative weight is ignored`() {
-        val cms = CountMinSketchStat(depth = 5, width = 1024)
-        cms.update(1L, weight = 0.0)
-        cms.update(1L, weight = -1.0)
-        val r = cms.read()
-        assertEquals(0L, r.totalSeen)
-        assertEquals(0L, r.estimate(1L))
-    }
-
-    @Test
     fun `merge combines two sketches`() {
         val a = CountMinSketchStat(depth = 5, width = 1024, seed = 9L)
         val b = CountMinSketchStat(depth = 5, width = 1024, seed = 9L)
@@ -106,16 +96,6 @@ class CountMinSketchTest {
 
         val dResult = CountMinSketchStat(depth = 5, width = 512, seed = 1L).read()
         assertFailsWith<IllegalArgumentException> { a.merge(dResult) }
-    }
-
-    @Test
-    fun `reset clears state`() {
-        val cms = CountMinSketchStat(depth = 5, width = 1024)
-        for (i in 1..100) cms.update(i.toLong())
-        cms.reset()
-        val r = cms.read()
-        assertEquals(0L, r.totalSeen)
-        assertTrue(r.counters.all { it == 0L })
     }
 
     @Test

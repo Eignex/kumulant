@@ -15,6 +15,7 @@ import com.eignex.kumulant.schema.spec.MaeLoss
 import com.eignex.kumulant.schema.spec.MinHash
 import com.eignex.kumulant.schema.spec.MseLoss
 import com.eignex.kumulant.schema.spec.PairedStatSpec
+import com.eignex.kumulant.schema.spec.PairedSum
 import com.eignex.kumulant.schema.spec.PinballLoss
 import com.eignex.kumulant.schema.spec.PlattCalibrator
 import com.eignex.kumulant.schema.spec.Reliability
@@ -29,6 +30,7 @@ import kotlin.test.assertEquals
 class PairedAndDiscreteContractSweepTest {
 
     private val pairedSpecs: List<Pair<String, PairedStatSpec<*>>> = listOf(
+        "PairedSum" to PairedSum,
         "Covariance" to Covariance,
         "MseLoss" to MseLoss,
         "MaeLoss" to MaeLoss,
@@ -275,6 +277,48 @@ class PairedAndDiscreteContractSweepTest {
             if (fresh != stat.read(readAt)) violations += "$name: ${stat.read(readAt)} != fresh $fresh"
         }
         assertEquals(emptyList(), violations.toList(), "reset must restore the fresh state")
+    }
+
+    @Test
+    fun `create returns independent paired stats with the requested concurrency`() {
+        for ((name, spec) in pairedSpecs) {
+            val original = spec.materialize()
+            pairs.forEachIndexed { i, (x, y) -> original.update(x, y, i.toLong(), 1.0) }
+            val before = original.read(readAt)
+            val copy = original.create(Concurrency.Strict)
+            val fresh = spec.materialize(Concurrency.Strict)
+            assertEquals(Concurrency.Strict, copy.concurrency, name)
+            assertEquals(fresh.read(readAt), copy.read(readAt), "$name copied accumulated state")
+
+            pairs.forEachIndexed { i, (x, y) ->
+                copy.update(x, y, i.toLong(), 1.0)
+                fresh.update(x, y, i.toLong(), 1.0)
+            }
+
+            assertEquals(fresh.read(readAt), copy.read(readAt), "$name lost its configuration")
+            assertEquals(before, original.read(readAt), "$name shares state with its copy")
+        }
+    }
+
+    @Test
+    fun `create returns independent discrete stats with the requested concurrency`() {
+        for ((name, spec) in discreteSpecs) {
+            val original = spec.materialize()
+            keys.forEachIndexed { i, key -> original.update(key, i.toLong(), 1.0) }
+            val before = original.read(readAt)
+            val copy = original.create(Concurrency.Strict)
+            val fresh = spec.materialize(Concurrency.Strict)
+            assertEquals(Concurrency.Strict, copy.concurrency, name)
+            assertEquals(fresh.read(readAt), copy.read(readAt), "$name copied accumulated state")
+
+            keys.forEachIndexed { i, key ->
+                copy.update(key, i.toLong(), 1.0)
+                fresh.update(key, i.toLong(), 1.0)
+            }
+
+            assertEquals(fresh.read(readAt), copy.read(readAt), "$name lost its configuration")
+            assertEquals(before, original.read(readAt), "$name shares state with its copy")
+        }
     }
 
     private companion object {

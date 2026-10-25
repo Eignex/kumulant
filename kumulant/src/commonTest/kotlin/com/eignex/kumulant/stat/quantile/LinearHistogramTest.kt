@@ -67,14 +67,6 @@ class LinearHistogramTest {
     }
 
     @Test
-    fun `zero weight ignored`() {
-        val h = LinearHistogramStat(0.0, 10.0, 10)
-        h.update(5.0, weight = 0.0)
-        h.update(5.0, weight = -1.0)
-        assertEquals(0, h.read().weights.size)
-    }
-
-    @Test
     fun `merge combines distributions`() {
         val a = LinearHistogramStat(0.0, 100.0, 10)
         val b = LinearHistogramStat(0.0, 100.0, 10)
@@ -82,25 +74,6 @@ class LinearHistogramTest {
         for (i in 50..99) b.update(i.toDouble())
         a.merge(b.read())
         assertEquals(100.0, a.read().weights.sum(), 1e-9)
-    }
-
-    @Test
-    fun `reset clears state`() {
-        val h = LinearHistogramStat(0.0, 10.0, 10)
-        for (i in 0..9) h.update(i.toDouble())
-        h.reset()
-        assertEquals(0, h.read().weights.size)
-    }
-
-    @Test
-    fun `create produces independent stat`() {
-        val a = LinearHistogramStat(0.0, 10.0, 10)
-        a.update(1.0)
-        val b = a.create()
-        b.update(2.0)
-        b.update(2.0)
-        assertEquals(1.0, a.read().weights.sum(), 1e-9)
-        assertEquals(2.0, b.read().weights.sum(), 1e-9)
     }
 
     @Test

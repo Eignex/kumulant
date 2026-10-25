@@ -64,26 +64,6 @@ class LinearCountingStatTest {
     }
 
     @Test
-    fun `reset clears bitset and counter`() {
-        val lc = LinearCountingStat(bits = 256)
-        for (i in 1..50) lc.update(i.toLong())
-        lc.reset()
-        val r = lc.read()
-        assertEquals(0.0, r.estimate)
-        assertEquals(256L, r.unsetBits)
-        assertEquals(0L, r.totalSeen)
-    }
-
-    @Test
-    fun `create produces independent stat`() {
-        val lc1 = LinearCountingStat(bits = 1024)
-        val lc2 = lc1.create()
-        for (i in 1..50) lc2.update(i.toLong())
-        assertEquals(0.0, lc1.read().estimate)
-        assertTrue(lc2.read().estimate > 30.0)
-    }
-
-    @Test
     fun `merge rejects mismatched size`() {
         val a = LinearCountingStat(bits = 1024)
         val b = LinearCountingStat(bits = 2048)
@@ -96,12 +76,5 @@ class LinearCountingStatTest {
         assertFailsWith<IllegalArgumentException> { LinearCountingStat(bits = 0) }
         assertFailsWith<IllegalArgumentException> { LinearCountingStat(bits = 100) } // not a power of two
         assertFailsWith<IllegalArgumentException> { LinearCountingStat(bits = 32) } // not a multiple of 64
-    }
-
-    @Test
-    fun `zero weight update is ignored`() {
-        val lc = LinearCountingStat(bits = 256)
-        lc.update(1L, weight = 0.0)
-        assertEquals(0.0, lc.read().estimate)
     }
 }

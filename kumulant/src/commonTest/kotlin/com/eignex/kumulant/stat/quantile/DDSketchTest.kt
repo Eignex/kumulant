@@ -92,13 +92,6 @@ class DDSketchTest {
     }
 
     @Test
-    fun `zero weight update is ignored`() {
-        val sketch = DDSketchStat(probabilities = doubleArrayOf(0.5))
-        sketch.update(100.0, weight = 0.0)
-        assertEquals(0.0, sketch.read().totalWeights)
-    }
-
-    @Test
     fun `merge combines two distributions`() {
         val s1 = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
         val s2 = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
@@ -108,27 +101,6 @@ class DDSketchTest {
         val q50 = s1.read().quantiles[0]
         assertTrue(q50 in 45.0..56.0, "merged p50=$q50")
         assertEquals(100.0, s1.read().totalWeights)
-    }
-
-    @Test
-    fun `reset clears all state`() {
-        val sketch = DDSketchStat(probabilities = doubleArrayOf(0.5))
-        for (i in 1..100) sketch.update(i.toDouble())
-        sketch.reset()
-        val r = sketch.read()
-        assertEquals(0.0, r.totalWeights)
-        assertTrue(r.quantiles[0].isNaN(), "a reset sketch is empty, so the quantile is NaN")
-        assertTrue(r.isEmpty)
-    }
-
-    @Test
-    fun `create produces fresh independent stat`() {
-        val s1 = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
-        for (i in 1..10) s1.update(i.toDouble())
-        val s2 = s1.create()
-        for (i in 1..1000) s2.update(i.toDouble())
-
-        assertEquals(10.0, s1.read().totalWeights)
     }
 
     @Test

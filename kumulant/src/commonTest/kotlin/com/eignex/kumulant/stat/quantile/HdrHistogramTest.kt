@@ -61,14 +61,6 @@ class HdrHistogramTest {
     }
 
     @Test
-    fun `zero weight update is ignored`() {
-        val h = HdrHistogramStat()
-        h.update(5.0, weight = 0.0)
-        val r = h.read()
-        assertEquals(0, r.weights.size)
-    }
-
-    @Test
     fun `histogram auto-resizes to accept values beyond initialHighestTrackableValue`() {
         val h = HdrHistogramStat(
             lowestDiscernibleValue = 0.001,
@@ -80,14 +72,6 @@ class HdrHistogramTest {
         assertEquals(2.0, r.weights.sum(), 1e-9)
         val totalRange = r.upperBounds.maxOrNull()!!
         assertTrue(totalRange >= 5000.0, "expected resize to cover 5000, got upper=$totalRange")
-    }
-
-    @Test
-    fun `reset clears counts`() {
-        val h = HdrHistogramStat()
-        repeat(100) { h.update(5.0) }
-        h.reset()
-        assertEquals(0, h.read().weights.size)
     }
 
     @Test
@@ -113,16 +97,6 @@ class HdrHistogramTest {
 
         h1.merge(SparseHistogramResult(DoubleArray(0), DoubleArray(0), DoubleArray(0)))
         assertEquals(before, h1.read().weights.sum(), 1e-9)
-    }
-
-    @Test
-    fun `create returns an independent histogram`() {
-        val h1 = HdrHistogramStat()
-        h1.update(5.0)
-        val h2 = h1.create()
-        repeat(10) { h2.update(5.0) }
-        assertEquals(1.0, h1.read().weights.sum(), 1e-9)
-        assertEquals(10.0, h2.read().weights.sum(), 1e-9)
     }
 
     @Test

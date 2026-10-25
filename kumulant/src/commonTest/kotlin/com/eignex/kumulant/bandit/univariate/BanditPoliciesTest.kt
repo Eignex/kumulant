@@ -23,62 +23,18 @@ class BanditPoliciesTest {
     }
 
     @Test
-    fun `BetaBernoulliTS produces finite samples in 0_1`() {
-        val mab = drive(BetaBernoulliTS(2.0, 3.0), listOf(1.0, 0.0, 1.0, 1.0, 0.0))
-        repeat(20) {
-            val s = mab.evaluate(0)
-            assertTrue(s.isFinite() && s in 0.0..1.0)
-        }
-    }
+    fun `positive reward policies produce positive finite samples`() {
+        val cases = listOf(
+            drive(LogNormalTS(), listOf(1.5, 2.0, 0.5, 3.0)),
+            drive(PoissonTS(), listOf(2.0, 3.0, 1.0, 4.0)),
+            drive(GammaScaleTS(fixedShape = 2.0), listOf(0.5, 1.0, 1.5, 2.0)),
+        )
 
-    @Test
-    fun `NormalTS evaluate is finite`() {
-        val mab = drive(NormalTS(), listOf(0.1, 0.5, -0.2, 1.0))
-        repeat(20) { assertTrue(mab.evaluate(0).isFinite()) }
-    }
-
-    @Test
-    fun `LogNormalTS evaluate produces positive finite values`() {
-        val mab = drive(LogNormalTS(), listOf(1.5, 2.0, 0.5, 3.0))
-        repeat(20) {
-            val s = mab.evaluate(0)
-            assertTrue(s.isFinite() && s > 0.0, "s=$s")
-        }
-    }
-
-    @Test
-    fun `PoissonTS evaluate is positive finite`() {
-        val mab = drive(PoissonTS(), listOf(2.0, 3.0, 1.0, 4.0))
-        repeat(20) {
-            val s = mab.evaluate(0)
-            assertTrue(s.isFinite() && s > 0.0)
-        }
-    }
-
-    @Test
-    fun `GeometricTS evaluate is a finite trial count`() {
-        val mab = drive(GeometricTS(), listOf(2.0, 3.0, 4.0, 1.0))
-        repeat(20) {
-            val s = mab.evaluate(0)
-            assertTrue(s.isFinite() && s > 1.0)
-        }
-    }
-
-    @Test
-    fun `ExponentialTS evaluate is positive finite`() {
-        val mab = drive(ExponentialTS(), listOf(0.5, 1.5, 2.0))
-        repeat(20) {
-            val s = mab.evaluate(0)
-            assertTrue(s.isFinite() && s > 0.0)
-        }
-    }
-
-    @Test
-    fun `GammaScaleTS evaluate is positive finite`() {
-        val mab = drive(GammaScaleTS(fixedShape = 2.0), listOf(0.5, 1.0, 1.5, 2.0))
-        repeat(20) {
-            val s = mab.evaluate(0)
-            assertTrue(s.isFinite() && s > 0.0)
+        for (bandit in cases) {
+            repeat(20) {
+                val score = bandit.evaluate(0)
+                assertTrue(score.isFinite() && score > 0.0, "score=$score")
+            }
         }
     }
 
@@ -142,43 +98,9 @@ class BanditPoliciesTest {
     }
 
     @Test
-    fun `Greedy returns snapshot mean`() {
-        val mab = MultiArmedBandit(nbrArms = 2, policy = Greedy(), random = Random(1))
-        mab.update(0, 1.0)
-        mab.update(0, 1.0)
-        mab.update(1, -1.0)
-        val s0 = mab.evaluate(0)
-        val s1 = mab.evaluate(1)
-        assertTrue(s0 > s1)
-    }
-
-    @Test
     fun `EpsilonGreedy rejects out-of-range epsilon`() {
         assertFailsWith<IllegalArgumentException> { EpsilonGreedy(epsilon = -0.1) }
         assertFailsWith<IllegalArgumentException> { EpsilonGreedy(epsilon = 1.5) }
-    }
-
-    @Test
-    fun `EpsilonGreedy exploits when epsilon is zero and explores when one`() {
-        val exploit = EpsilonGreedy(epsilon = 0.0)
-        val mab1 = MultiArmedBandit(nbrArms = 2, policy = exploit, random = Random(1))
-        mab1.update(0, 5.0)
-        mab1.update(0, 5.0)
-        val s = mab1.evaluate(0)
-        assertTrue(s > 1.0)
-
-        val explore = EpsilonGreedy(epsilon = 1.0)
-        val mab2 = MultiArmedBandit(nbrArms = 1, policy = explore, random = Random(0))
-        repeat(50) {
-            val v = mab2.evaluate(0)
-            assertTrue(v in 0.0..1.0, "expected uniform draw, got $v")
-        }
-    }
-
-    @Test
-    fun `EpsilonDecreasing rejects non-positive epsilon`() {
-        assertFailsWith<IllegalArgumentException> { EpsilonDecreasing(epsilon = 0.0) }
-        assertFailsWith<IllegalArgumentException> { EpsilonDecreasing(epsilon = -1.0) }
     }
 
     @Test
@@ -192,32 +114,6 @@ class BanditPoliciesTest {
         var meanHits = 0
         repeat(100) { if (mab.evaluate(0) > 0.5) meanHits++ }
         assertTrue(meanHits > 50, "expected mostly exploit, got $meanHits/100")
-    }
-
-    @Test
-    fun `EpsilonDecreasing addArm and removeArm adjust totalSamples`() {
-        val pol = EpsilonDecreasing(epsilon = 1.0, decay = 1.0)
-        val snap = WeightedVarianceResult(
-            totalWeights = 100.0,
-            mean = 0.5,
-            variance = 0.1,
-        )
-        pol.addArm(snap)
-        pol.removeArm(snap)
-    }
-
-    @Test
-    fun `UniformSelection ignores snapshot and returns uniform draws`() {
-        val pol = UniformSelection()
-        val snap = WeightedVarianceResult(
-            totalWeights = 1.0,
-            mean = 99.0,
-            variance = 0.0,
-        )
-        repeat(50) {
-            val v = pol.evaluate(snap, 0L, Random(it.toLong()))
-            assertTrue(v in 0.0..1.0, "got $v")
-        }
     }
 
     @Test

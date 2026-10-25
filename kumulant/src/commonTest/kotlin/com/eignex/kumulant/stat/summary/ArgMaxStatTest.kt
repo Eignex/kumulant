@@ -62,24 +62,6 @@ class ArgMaxStatTest {
     }
 
     @Test
-    fun `reset restores infinity`() {
-        val m = ArgMaxStat().apply { update(3.0, 10L) }
-        m.reset()
-        val r = m.read()
-        assertEquals(Double.NEGATIVE_INFINITY, r.max)
-        assertEquals(0L, r.atTimestampNanos)
-    }
-
-    @Test
-    fun `create produces fresh independent stat`() {
-        val m1 = ArgMaxStat().apply { update(1.0, 10L) }
-        val m2 = m1.create()
-        m2.update(5.0, 20L)
-        assertEquals(1.0, m1.read().max, DELTA)
-        assertEquals(5.0, m2.read().max, DELTA)
-    }
-
-    @Test
     fun `ignores NaN inputs`() {
         val m = ArgMaxStat()
         m.update(5.0, 10L)
