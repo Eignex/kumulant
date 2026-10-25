@@ -15,68 +15,23 @@ import kotlinx.benchmark.TearDown
  * Update-loop throughput for every [StatSpec]. The `name` parameter picks the spec
  * by [StatSpec.name]; `concurrency` picks the level. Each invocation pushes
  * [updatesPerInvocation] observations through the spec's `applyUpdate` and JMH
- * reports throughput; divide by [updatesPerInvocation] for per-update cost.
+ * reports batches per time unit; multiply by [updatesPerInvocation] for updates
+ * per time unit. In average-time mode, divide batch time by [updatesPerInvocation]
+ * for per-update cost.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(kotlinx.benchmark.BenchmarkTimeUnit.MICROSECONDS)
 open class UpdateThroughputBenchmark {
 
-    @Param(
-        "SumStat",
-        "CountStat",
-        "TotalWeightsStat",
-        "MeanStat",
-        "VarianceStat",
-        "MomentsStat",
-        "MinStat",
-        "MaxStat",
-        "RangeStat",
-        "BernoulliSumStat",
-        "PairedSumStat",
-        "DecayingSumStat",
-        "DecayingMeanStat",
-        "DecayingVarianceStat",
-        "EwmaMeanStat",
-        "EwmaVarianceStat",
-        "RateStat",
-        "DecayingRateStat",
-        "CounterRateStat",
-        "HyperLogLogStat",
-        "LinearCountingStat",
-        "BloomFilterStat",
-        "CountMinSketchStat",
-        "MinHashStat",
-        "SpaceSavingStat",
-        "DDSketchStat",
-        "HdrHistogramStat",
-        "LinearHistogramStat",
-        "ReservoirHistogramStat",
-        "TDigestStat",
-        "FrugalQuantileStat",
-        "MadStat",
-        "FrugalMadStat",
-        "UnivariateRegressionStat",
-        "CovarianceStat",
-        "BayesianRegressionStat",
-        "DiagonalRegressionStat",
-        "StochasticRegressionStat",
-        "AucStat",
-        "LogLossStat",
-        "MaeLossStat",
-        "MseLossStat",
-        "PinballLossStat",
-        "ReliabilityStat",
-        "DecisionTreeRegressionStat",
-        "RandomForestRegressionStat",
-    )
-    var name: String = ""
+    @Param("SumStat")
+    var name: String = "SumStat"
 
-    @Param("None", "Relaxed", "Strict")
-    var concurrency: String = ""
+    @Param("None")
+    var concurrency: String = "None"
 
     private lateinit var driver: BenchDriver
-    private val updatesPerInvocation = 4096
+    private val updatesPerInvocation = STAT_BENCHMARK_BATCH_SIZE
 
     @Setup
     fun setup() {
@@ -91,27 +46,32 @@ open class UpdateThroughputBenchmark {
 
     @TearDown
     fun teardown() {
-        driver.snapshot()
+        snapshot()
     }
+
+    internal fun snapshot(): com.eignex.kumulant.core.Result = driver.snapshot()
 }
 
-/** Type-erased driver capturing the stat instance and pre-materialised workload
- *  so the JMH hot loop avoids generic dispatch and lambda allocation. */
 private class BenchDriver(
-    private val applyUpdate: (Update) -> Unit,
-    private val readSnapshot: () -> Unit,
+    private val actions: List<() -> Unit>,
+    private val readSnapshot: (Long) -> com.eignex.kumulant.core.Result,
     private val workload: Array<Update>,
+    private val readAt: Long,
 ) {
+    private val stride = workload.maxOf { it.timestampNanos }
+    private var snapshotAt = readAt
+
     fun runUpdates() {
         var i = 0
-        while (i < workload.size) {
-            applyUpdate(workload[i])
+        while (i < actions.size) {
+            actions[i]()
+            if (stride > 0) workload[i].timestampNanos += stride
             i++
         }
+        if (stride > 0) snapshotAt = workload.last().timestampNanos - stride + maxOf(0L, readAt - stride)
     }
-    fun snapshot() {
-        readSnapshot()
-    }
+
+    fun snapshot(): com.eignex.kumulant.core.Result = readSnapshot(snapshotAt)
 }
 
 private fun <S, R : com.eignex.kumulant.core.Result> makeDriver(
@@ -120,10 +80,15 @@ private fun <S, R : com.eignex.kumulant.core.Result> makeDriver(
     n: Int,
 ): BenchDriver {
     val stat = spec.factory(concurrency)
-    val workload = spec.updates(0, n).toList().toTypedArray()
+    val workload = spec.updates(STAT_BENCHMARK_SEED, n).toList().toTypedArray()
     return BenchDriver(
-        applyUpdate = { u -> spec.applyUpdate(stat, u) },
-        readSnapshot = { spec.readSnapshot(stat, 0L) },
+        actions = workload.map { update ->
+            val apply = spec.prepareUpdate(update)
+            val action: () -> Unit = { apply(stat) }
+            action
+        },
+        readSnapshot = { timestamp -> spec.readSnapshot(stat, timestamp) },
         workload = workload,
+        readAt = spec.readAt(n),
     )
 }

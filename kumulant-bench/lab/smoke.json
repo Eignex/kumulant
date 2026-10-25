@@ -1,0 +1,11 @@
+{
+  "name": "kumulant-smoke",
+  "description": "Run existing quality checks and a small JMH benchmark; retain their original outputs",
+  "repository": "Eignex/kumulant",
+  "base": {"ref": "main", "timeout": "1800000"},
+  "profile": {
+    "script": "kumulant-bench/benchmark.sh",
+    "args": ["--smoke"],
+    "outputArgument": "--output"
+  }
+}

@@ -3112,6 +3112,7 @@ public final class com/eignex/kumulant/schema/spec/BernoulliSum : com/eignex/kum
 
 public final class com/eignex/kumulant/schema/spec/BloomFilter : com/eignex/kumulant/schema/spec/DiscreteStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/BloomFilter$Companion;
+	public fun <init> ()V
 	public synthetic fun <init> (IILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (IILjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
@@ -3206,6 +3207,7 @@ public final class com/eignex/kumulant/schema/spec/Count : com/eignex/kumulant/s
 
 public final class com/eignex/kumulant/schema/spec/CountMinSketch : com/eignex/kumulant/schema/spec/DiscreteStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/CountMinSketch$Companion;
+	public fun <init> ()V
 	public synthetic fun <init> (IIJLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (IIJLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
@@ -3872,6 +3874,7 @@ public final class com/eignex/kumulant/schema/spec/Holt$Companion {
 
 public final class com/eignex/kumulant/schema/spec/HyperLogLog : com/eignex/kumulant/schema/spec/DiscreteStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/HyperLogLog$Companion;
+	public fun <init> ()V
 	public synthetic fun <init> (ILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (ILjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
@@ -3902,6 +3905,7 @@ public final class com/eignex/kumulant/schema/spec/HyperLogLog$Companion {
 
 public final class com/eignex/kumulant/schema/spec/LinearCounting : com/eignex/kumulant/schema/spec/DiscreteStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/LinearCounting$Companion;
+	public fun <init> ()V
 	public synthetic fun <init> (ILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (ILjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
@@ -4032,6 +4036,7 @@ public final class com/eignex/kumulant/schema/spec/Min : com/eignex/kumulant/sch
 
 public final class com/eignex/kumulant/schema/spec/MinHash : com/eignex/kumulant/schema/spec/DiscreteStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/MinHash$Companion;
+	public fun <init> ()V
 	public synthetic fun <init> (IJLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (IJLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I

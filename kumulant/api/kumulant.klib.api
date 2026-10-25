@@ -825,7 +825,7 @@ final class <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.bandit.con
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.toString|toString(){}[0]
 
-    final class <#A1: kotlin/Any?> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.contextual/RegressionContextualSpec<#A1>> { // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer|null[0]
+    final class <#A1: com.eignex.kumulant.core/Result> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.contextual/RegressionContextualSpec<#A1>> { // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer|null[0]
         constructor <init>(kotlinx.serialization/KSerializer<#A1>) // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.<init>|<init>(kotlinx.serialization.KSerializer<1:0>){}[0]
 
         final val descriptor // com.eignex.kumulant.bandit.contextual/RegressionContextualSpec.$serializer.descriptor|{}descriptor[0]
@@ -883,7 +883,7 @@ final class <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.bandit.uni
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/MultiArmedSpec.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/MultiArmedSpec.toString|toString(){}[0]
 
-    final class <#A1: kotlin/Any?> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.univariate/MultiArmedSpec<#A1>> { // com.eignex.kumulant.bandit.univariate/MultiArmedSpec.$serializer|null[0]
+    final class <#A1: com.eignex.kumulant.core/Result> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.univariate/MultiArmedSpec<#A1>> { // com.eignex.kumulant.bandit.univariate/MultiArmedSpec.$serializer|null[0]
         constructor <init>(kotlinx.serialization/KSerializer<#A1>) // com.eignex.kumulant.bandit.univariate/MultiArmedSpec.$serializer.<init>|<init>(kotlinx.serialization.KSerializer<1:0>){}[0]
 
         final val descriptor // com.eignex.kumulant.bandit.univariate/MultiArmedSpec.$serializer.descriptor|{}descriptor[0]
@@ -931,7 +931,7 @@ final class <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.bandit.uni
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/ThompsonSamplingSpec.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/ThompsonSamplingSpec.toString|toString(){}[0]
 
-    final class <#A1: kotlin/Any?> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.univariate/ThompsonSamplingSpec<#A1>> { // com.eignex.kumulant.bandit.univariate/ThompsonSamplingSpec.$serializer|null[0]
+    final class <#A1: com.eignex.kumulant.core/Result> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.univariate/ThompsonSamplingSpec<#A1>> { // com.eignex.kumulant.bandit.univariate/ThompsonSamplingSpec.$serializer|null[0]
         constructor <init>(kotlinx.serialization/KSerializer<#A1>) // com.eignex.kumulant.bandit.univariate/ThompsonSamplingSpec.$serializer.<init>|<init>(kotlinx.serialization.KSerializer<1:0>){}[0]
 
         final val descriptor // com.eignex.kumulant.bandit.univariate/ThompsonSamplingSpec.$serializer.descriptor|{}descriptor[0]
@@ -998,7 +998,7 @@ final class <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.bandit.uni
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/TopTwoThompsonSpec.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/TopTwoThompsonSpec.toString|toString(){}[0]
 
-    final class <#A1: kotlin/Any?> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.univariate/TopTwoThompsonSpec<#A1>> { // com.eignex.kumulant.bandit.univariate/TopTwoThompsonSpec.$serializer|null[0]
+    final class <#A1: com.eignex.kumulant.core/Result> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.univariate/TopTwoThompsonSpec<#A1>> { // com.eignex.kumulant.bandit.univariate/TopTwoThompsonSpec.$serializer|null[0]
         constructor <init>(kotlinx.serialization/KSerializer<#A1>) // com.eignex.kumulant.bandit.univariate/TopTwoThompsonSpec.$serializer.<init>|<init>(kotlinx.serialization.KSerializer<1:0>){}[0]
 
         final val descriptor // com.eignex.kumulant.bandit.univariate/TopTwoThompsonSpec.$serializer.descriptor|{}descriptor[0]
@@ -1037,7 +1037,7 @@ final class <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.core/Resul
     final fun toMap(): kotlin.collections/Map<kotlin/String, #A> // com.eignex.kumulant.core/ResultList.toMap|toMap(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.core/ResultList.toString|toString(){}[0]
 
-    final class <#A1: kotlin/Any?> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.core/ResultList<#A1>> { // com.eignex.kumulant.core/ResultList.$serializer|null[0]
+    final class <#A1: com.eignex.kumulant.core/Result> $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.core/ResultList<#A1>> { // com.eignex.kumulant.core/ResultList.$serializer|null[0]
         constructor <init>(kotlinx.serialization/KSerializer<#A1>) // com.eignex.kumulant.core/ResultList.$serializer.<init>|<init>(kotlinx.serialization.KSerializer<1:0>){}[0]
 
         final val descriptor // com.eignex.kumulant.core/ResultList.$serializer.descriptor|{}descriptor[0]
