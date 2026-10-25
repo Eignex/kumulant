@@ -1104,7 +1104,7 @@ class SchemaModalityReachabilityTest {
     }
 
     @Test
-    fun `a nested schema holding a non-series entry is rejected at declaration`() {
+    fun `a nested schema mixing input modalities is rejected at declaration`() {
         assertFailsWith<IllegalArgumentException> {
             val nested = object : StatSchema() {
                 val inner by group(MixedInner)

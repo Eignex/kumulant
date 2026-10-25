@@ -2,9 +2,19 @@ package com.eignex.kumulant.bandit
 
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.bandit.contextual.ContextualBanditSpec
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
+import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
+import com.eignex.kumulant.bandit.contextual.TrackedContextualSpec
 import com.eignex.kumulant.bandit.univariate.BetaBernoulliTS
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
+import com.eignex.kumulant.bandit.univariate.MultiArmedSpec
+import com.eignex.kumulant.bandit.univariate.TrackedUnivariateSpec
+import com.eignex.kumulant.bandit.univariate.Ucb1Spec
+import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec
+import com.eignex.kumulant.schema.expr.*
+import com.eignex.kumulant.schema.ops.*
+import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.CovarianceStat
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
@@ -13,6 +23,8 @@ import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumResult
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -135,5 +147,45 @@ class TrackedBanditTest {
         tracked.reset()
         assertEquals(0.0, (tracked.chooseResult() as SumResult).sum, DELTA)
         assertEquals(0.0, (tracked.updateArmRewardResult() as UnivariateRegressionResult).totalWeights, DELTA)
+    }
+
+    @Test
+    fun `serialized univariate tracking uses the materialization clock`() {
+        val spec: UnivariateBanditSpec = TrackedUnivariateSpec(
+            MultiArmedSpec(2, Ucb1Spec()),
+            chooseTemplate = PairedSum.withTimeAsX(),
+        )
+        val decoded = Json.decodeFromString<UnivariateBanditSpec>(Json.encodeToString(spec))
+        var timestamp = 1_000_000_000L
+        val bandit = decoded.materialize(Random(0), nowNanos = { timestamp }) as TrackedUnivariateBandit<*>
+        bandit.choose()
+        timestamp = 2_000_000_000L
+
+        bandit.choose()
+
+        assertEquals(3.0, (bandit.chooseResult() as com.eignex.kumulant.stat.summary.PairedSumResult).sumX)
+    }
+
+    @Test
+    fun `serialized contextual tracking routes observations to every template`() {
+        val spec: ContextualBanditSpec = TrackedContextualSpec(
+            inner = RegressionContextualSpec(2, BayesianRegression(1), MultivariateGaussian),
+            contextFeatureSize = 1,
+            chooseTemplate = Sum.foldRegression(1, Y),
+            updateJointTemplate = Sum.foldRegression(2, V(0) + V(1) + Y),
+            updateMarginalTemplate = Sum.foldRegression(1, Y),
+            updateArmRewardTemplate = PairedSum,
+        )
+        val decoded = Json.decodeFromString<ContextualBanditSpec>(Json.encodeToString(spec))
+        val bandit = decoded.materialize(Random(0)) as TrackedContextualBandit<*>
+        val x = DenseVector.of(doubleArrayOf(3.0))
+
+        val arm = bandit.choose(x)
+        bandit.update(arm, x, 5.0)
+
+        assertEquals(arm.toDouble(), (bandit.chooseResult() as SumResult).sum)
+        assertEquals(arm + 8.0, (bandit.updateJointResult() as SumResult).sum)
+        assertEquals(5.0, (bandit.updateMarginalResult() as SumResult).sum)
+        assertEquals(5.0, (bandit.updateArmRewardResult() as com.eignex.kumulant.stat.summary.PairedSumResult).sumY)
     }
 }

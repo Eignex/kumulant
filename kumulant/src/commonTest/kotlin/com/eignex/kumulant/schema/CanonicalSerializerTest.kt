@@ -2,8 +2,11 @@
 
 package com.eignex.kumulant.schema
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.bandit.contextual.ContextualBanditSpec
 import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
+import com.eignex.kumulant.bandit.contextual.TrackedContextualSpec
 import com.eignex.kumulant.bandit.univariate.*
 import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
@@ -274,15 +277,34 @@ class CanonicalSerializerTest {
     }
 
     @Test
-    fun `binary formats round trip composed specs across modalities`() {
+    fun `formats round trip composed specs across modalities`() {
         val specs: List<StatSpec> = listOf(
             EwmaMean(Alpha(0.1)).transform(X + 1.0).filter(X gt 0.0),
             UnivariateRegression().filter(X gt 0.0),
             Mean.vectorized(2).transformVector(vectorOf(V(1), V(0))),
             HyperLogLog().filter(X.isFinite()),
             StochasticRegression(2, Adam(Const(0.1))).transformY(Y + 1.0),
+            PairedGroupStatSpec(mapOf("metric" to Sum.atX())).filterFinite(),
+            VectorGroupStatSpec(mapOf("metric" to Sum.atIndex(0))).filterFinite(),
+            DiscreteGroupStatSpec(mapOf("metric" to Sum.asDiscrete())).filter(X gt 0.0),
+            RegressionGroupStatSpec(mapOf("metric" to Sum.foldRegression(1, Y))).filterFinite(),
+            PairedSum.withFeedback(Variance, Variance, Center + VIndex),
+            Sum.vectorized(2).withFeedback(Variance.vectorized(2), Center + VIndex),
+            BayesianRegression(2).withFeedback(Variance.vectorized(2), Center),
+            BayesianRegression(
+                2,
+                priorMean = DenseVector.of(doubleArrayOf(1.0, 2.0)),
+                priorCovariance = DenseMatrix.ofRows(arrayOf(doubleArrayOf(2.0, 0.5), doubleArrayOf(0.5, 1.0))),
+            ),
+            DecisionTreeRegression(1, emptyList(), leafArm = Variance.withWeight(2.0)),
+            RandomForestRegression(1, emptyList(), leafArm = Variance.withWeight(2.0)),
+            DecisionTreeClassifier(1, 2, emptyList(), leafArm = ClassCounts(2).withWeight(2.0)),
+            RandomForestClassifier(1, 2, emptyList(), leafArm = ClassCounts(2).withWeight(2.0)),
         )
 
+        for (spec in specs) {
+            assertEquals(spec, Json.decodeFromString<StatSpec>(Json.encodeToString(spec)))
+        }
         for (format in listOf(ProtoBuf, Cbor)) {
             for (spec in specs) {
                 val encoded = format.encodeToByteArray(StatSpec.serializer(), spec)
@@ -305,7 +327,7 @@ class CanonicalSerializerTest {
     }
 
     @Test
-    fun `binary formats round trip bandit configurations`() {
+    fun `formats round trip bandit configurations`() {
         val contextual: ContextualBanditSpec = RegressionContextualSpec(
             nbrArms = 2,
             regression = BayesianRegression(2).transformY(Y + 1.0),
@@ -313,16 +335,28 @@ class CanonicalSerializerTest {
             globalRegression = BayesianRegression(2).transformY(Y + 1.0),
         )
         val univariate: UnivariateBanditSpec = MultiArmedSpec(2, Ucb1Spec())
+        val contextualSpecs = listOf(
+            contextual,
+            TrackedContextualSpec(contextual, 2, updateMarginalTemplate = BayesianRegression(2)),
+        )
+        val univariateSpecs = listOf(
+            univariate,
+            TrackedUnivariateSpec(univariate, chooseTemplate = Count, updateArmRewardTemplate = PairedSum),
+        )
+        for (spec in contextualSpecs) {
+            assertEquals(spec, Json.decodeFromString<ContextualBanditSpec>(Json.encodeToString(spec)))
+        }
+        for (spec in univariateSpecs) {
+            assertEquals(spec, Json.decodeFromString<UnivariateBanditSpec>(Json.encodeToString(spec)))
+        }
 
         for (format in listOf(ProtoBuf, Cbor)) {
-            assertEquals(
-                contextual,
-                format.decodeFromByteArray<ContextualBanditSpec>(format.encodeToByteArray(contextual)),
-            )
-            assertEquals(
-                univariate,
-                format.decodeFromByteArray<UnivariateBanditSpec>(format.encodeToByteArray(univariate)),
-            )
+            for (spec in contextualSpecs) {
+                assertEquals(spec, format.decodeFromByteArray<ContextualBanditSpec>(format.encodeToByteArray(spec)))
+            }
+            for (spec in univariateSpecs) {
+                assertEquals(spec, format.decodeFromByteArray<UnivariateBanditSpec>(format.encodeToByteArray(spec)))
+            }
         }
     }
 

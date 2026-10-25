@@ -1,7 +1,10 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.kumulant.bandit.TrackedUnivariateBandit
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.schema.serialization.UnivariateBanditSpecSerializer
+import com.eignex.kumulant.schema.spec.PairedStatSpec
+import com.eignex.kumulant.schema.spec.SeriesStatSpec
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -84,4 +87,16 @@ data class TopTwoThompsonSpec<R : Result>(
     val beta: Double = 0.5,
     /** Cap on the resample loop when searching for the second arm. */
     val maxResamples: Int = 32,
+) : UnivariateBanditSpec
+
+/** Spec for [TrackedUnivariateBandit] and its optional observation accumulators. */
+@Serializable
+@SerialName("TrackedUnivariate")
+data class TrackedUnivariateSpec(
+    /** Bandit whose decisions and rewards are observed. */
+    val inner: UnivariateBanditSpec,
+    /** Accumulator observing chosen arm indices. */
+    val chooseTemplate: SeriesStatSpec<*>? = null,
+    /** Accumulator observing arm-index/reward pairs. */
+    val updateArmRewardTemplate: PairedStatSpec<*>? = null,
 ) : UnivariateBanditSpec

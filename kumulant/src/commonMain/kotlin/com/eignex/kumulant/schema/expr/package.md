@@ -1,6 +1,6 @@
 # Package com.eignex.kumulant.schema.expr
 
-The serializable expression AST behind the lambda-bound operations in
+The serializable expression AST used by the input operations in
 [com.eignex.kumulant.schema]. When an operation needs a projection or a
 predicate that must travel on the wire rather than as a live Kotlin
 lambda, it carries one of these trees instead. The whole tree is
@@ -35,8 +35,6 @@ multi-branch [Switch] and the conditional [IfExpr]. Vector projection has
 nodes for dot products, element selection, single-coordinate access, and
 a fold whose operator picks sum, min, max, or mean.
 
-Anything that cannot be expressed as one of these nodes stays a live-only
-lambda on the [com.eignex.kumulant.core.Stat] side and is not
-wire-expressible. Reach for the lambda overloads of the filter and
-transform operations in [com.eignex.kumulant.operation] when that
-happens.
+Filters, transforms, computed weights, and feedback projections use these
+expression trees through [com.eignex.kumulant.schema.ops]. The live adapters
+that evaluate them are internal implementation details.

@@ -24,6 +24,5 @@ band around a center-scale result.
 The operators that take a projection or a predicate, such as filtering,
 transforming, and weighting by a computed value, accept an expression
 tree from [com.eignex.kumulant.schema.expr] rather than a live lambda, so
-the whole composition still serializes. When a projection cannot be
-expressed as that AST, the operation has no spec form and stays a
-live-only lambda on the [com.eignex.kumulant.operation] side.
+the whole composition still serializes. Live adapters compile these trees
+into internal update closures during materialization.

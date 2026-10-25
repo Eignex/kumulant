@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
@@ -95,6 +96,7 @@ import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
+import com.eignex.kumulant.stat.regression.tree.ClassCountsResult
 import com.eignex.kumulant.stat.regression.tree.ClassCountsStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeClassifierStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
@@ -517,7 +519,22 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     }
 }
 
+@Suppress("UNCHECKED_CAST")
 internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<*>> = when (this) {
+    is PairedGroupStatSpec -> {
+        val plans = stats.map { (name, spec) ->
+            name to requirePaired(spec, "$path.$name").compilePaired("$path.$name")
+        }
+        StatPlan(path) { concurrency ->
+            PairedStatGroup(
+                plans.map { (name, plan) ->
+                toSpec(StatKey<Result>(name), plan.build(concurrency))
+            },
+                concurrency
+            )
+        }
+    }
+
     PairedSum -> StatPlan(path) { concurrency -> PairedSumStat(concurrency) }
 
     is UnivariateRegression ->
@@ -625,6 +642,19 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
         }
     }
 
+    is WithFeedbackPaired -> {
+        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        val primaryXPlan = requireSeries(primaryX, "$path.primaryX").compileSeries("$path.primaryX")
+        val primaryYPlan = requireSeries(primaryY, "$path.primaryY").compileSeries("$path.primaryY")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            innerPlan.build(concurrency).withFeedback(
+                primaryXPlan.build(concurrency) as SeriesStat<Result>,
+                primaryYPlan.build(concurrency) as SeriesStat<Result>,
+                project,
+            )
+        }
+    }
+
     is StandardScalerPaired -> {
         val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
@@ -640,7 +670,22 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
     }
 }
 
+@Suppress("UNCHECKED_CAST")
 internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<*>> = when (this) {
+    is VectorGroupStatSpec -> {
+        val plans = stats.map { (name, spec) ->
+            name to requireVector(spec, "$path.$name").compileVector("$path.$name")
+        }
+        StatPlan(path) { concurrency ->
+            VectorStatGroup(
+                plans.map { (name, plan) ->
+                toSpec(StatKey<Result>(name), plan.build(concurrency))
+            },
+                concurrency
+            )
+        }
+    }
+
     is WithWeightVector -> {
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
@@ -749,6 +794,16 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         }
     }
 
+    is WithFeedbackVector -> {
+        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
+        val primaryPlan = requireVector(primary, "$path.primary").compileVector("$path.primary")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val primaryStat = primaryPlan.build(concurrency)
+            require(primaryStat.read(0L) is ResultList<*>) { "$path.primary: expected per-coordinate results" }
+            innerPlan.build(concurrency).withFeedback(primaryStat as VectorStat<ResultList<Result>>, project)
+        }
+    }
+
     is StandardScalerVector -> {
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
@@ -767,6 +822,20 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
 }
 
 internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<DiscreteStat<*>> = when (this) {
+    is DiscreteGroupStatSpec -> {
+        val plans = stats.map { (name, spec) ->
+            name to requireDiscrete(spec, "$path.$name").compileDiscrete("$path.$name")
+        }
+        StatPlan(path) { concurrency ->
+            DiscreteStatGroup(
+                plans.map { (name, plan) ->
+                toSpec(StatKey<Result>(name), plan.build(concurrency))
+            },
+                concurrency
+            )
+        }
+    }
+
     is HyperLogLog ->
         StatPlan(path) { concurrency ->
             HyperLogLogStat(precision, Hashers.resolve(hasher), concurrency)
@@ -864,10 +933,25 @@ internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<Discret
     }
 }
 
+@Suppress("UNCHECKED_CAST")
 internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<RegressionStat<*>> = when (this) {
+    is RegressionGroupStatSpec -> {
+        val plans = stats.map { (name, spec) ->
+            name to requireRegression(spec, "$path.$name").compileRegression("$path.$name")
+        }
+        StatPlan(path) { concurrency ->
+            RegressionStatGroup(
+                plans.map { (name, plan) ->
+                toSpec(StatKey<Result>(name), plan.build(concurrency))
+            },
+                concurrency
+            )
+        }
+    }
+
     is BayesianRegression ->
         StatPlan(path) { concurrency ->
-            BayesianRegressionStat(featureSize, priorVariance, link, concurrency)
+            BayesianRegressionStat(featureSize, priorVariance, link, concurrency, priorMean, priorCovariance)
         }
 
     is StochasticRegression ->
@@ -918,6 +1002,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
                 config = config,
                 concurrency = concurrency,
                 randomSeed = randomSeed,
+                leafArmFactory = leafArm?.leafFactory(concurrency, "$path.leafArm"),
             )
         }
     }
@@ -932,6 +1017,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
                 bagging = bagging,
                 concurrency = concurrency,
                 randomSeed = randomSeed,
+                leafArmFactory = leafArm?.leafFactory(concurrency, "$path.leafArm"),
             )
         }
     }
@@ -945,6 +1031,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
                 config = config,
                 concurrency = concurrency,
                 randomSeed = randomSeed,
+                leafArmFactory = leafArm?.leafFactory(concurrency, "$path.leafArm", numClasses),
             )
         }
     }
@@ -960,6 +1047,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
                 bagging = bagging,
                 concurrency = concurrency,
                 randomSeed = randomSeed,
+                leafArmFactory = leafArm?.leafFactory(concurrency, "$path.leafArm", numClasses),
             )
         }
     }
@@ -1025,6 +1113,20 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
         }
     }
 
+    is WithFeedbackRegression -> {
+        val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        val primaryPlan = requireVector(primary, "$path.primary").compileVector("$path.primary")
+        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
+            val primaryStat = primaryPlan.build(concurrency)
+            val innerStat = innerPlan.build(concurrency)
+            val results = primaryStat.read(0L)
+            require(results is ResultList<*> && results.results.size == innerStat.featureSize) {
+                "$path.primary: expected ${innerStat.featureSize} per-coordinate results"
+            }
+            innerStat.withFeedback(primaryStat as VectorStat<ResultList<Result>>, project)
+        }
+    }
+
     is StandardScalerRegression -> {
         val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
@@ -1037,6 +1139,24 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             innerPlan.build(concurrency).minMaxScaleFeatures(targetLow, targetHigh, concurrency)
         }
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+private inline fun <reified R : Result> SeriesStatSpec<R>.leafFactory(
+    concurrency: Concurrency,
+    path: String,
+    numClasses: Int? = null,
+): () -> SeriesStat<R> {
+    val plan = compileSeries(path)
+    return {
+        val stat = plan.build(concurrency)
+        val result = stat.read(0L)
+        require(result is R) { "$path: incompatible leaf result" }
+        require(numClasses == null || (result is ClassCountsResult && result.numClasses == numClasses)) {
+            "$path: expected $numClasses classes"
+        }
+        stat as SeriesStat<R>
     }
 }
 

@@ -6,10 +6,12 @@ import com.eignex.kumulant.schema.ops.withWeight
 import com.eignex.kumulant.schema.spec.DDSketch
 import com.eignex.kumulant.schema.spec.GroupStatSpec
 import com.eignex.kumulant.schema.spec.PairedSum
+import com.eignex.kumulant.schema.spec.StatSpec
 import com.eignex.kumulant.schema.spec.Sum
 import com.eignex.kumulant.schema.spec.Variance
 import com.eignex.kumulant.schema.spec.WithWeightSeries
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import com.eignex.skema.SchemaJson
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -84,5 +86,56 @@ class StatPlanTest {
 
         assertEquals(1.0, stat.read(1L).lower)
         assertEquals(3.0, stat.read(1L).upper)
+    }
+
+    @Test
+    fun `decoded leaf recipes reject incompatible results before updates`() {
+        val cases = listOf(
+            """{"decisionTreeRegression":{"featureSize":1,"splitCandidates":[],"leafArm":"sum"}}""",
+            """{"randomForestRegression":{"featureSize":1,"splitCandidates":[],"leafArm":"sum"}}""",
+            """{"decisionTreeClassifier":{"featureSize":1,"numClasses":2,"splitCandidates":[],"leafArm":"sum"}}""",
+            """{"randomForestClassifier":{"featureSize":1,"numClasses":2,"splitCandidates":[],"leafArm":"sum"}}""",
+            """{"decisionTreeClassifier":{"featureSize":1,"numClasses":2,"splitCandidates":[],""" +
+                """"leafArm":{"classCounts":{"numClasses":3}}}}""",
+        )
+        for (json in cases) {
+            val spec = SchemaJson.decodeFromString<StatSpec>(json)
+
+            val error = assertFailsWith<IllegalArgumentException> { spec.materialize() }
+
+            assertTrue("leafArm" in error.message.orEmpty(), error.message)
+        }
+    }
+
+    @Test
+    fun `decoded feedback requires per coordinate primary results`() {
+        val json = """
+            {"feedback": {
+                "inner": {"vectorize": {"dimensions": 2, "template": "sum"}},
+                "primary": {"foldVector": {"inner": "sum", "expr": {"fold": {"op": "Sum"}}}},
+                "project": "x"
+            }}
+        """.trimIndent()
+        val spec = SchemaJson.decodeFromString<StatSpec>(json)
+
+        val error = assertFailsWith<IllegalArgumentException> { spec.materialize() }
+
+        assertTrue("primary" in error.message.orEmpty(), error.message)
+    }
+
+    @Test
+    fun `regression feedback checks the primary feature count before updates`() {
+        val json = """
+            {"feedback": {
+                "inner": {"bayesianRegression": {"featureSize": 2}},
+                "primary": {"vectorize": {"dimensions": 1, "template": "variance"}},
+                "project": "x"
+            }}
+        """.trimIndent()
+        val spec = SchemaJson.decodeFromString<StatSpec>(json)
+
+        val error = assertFailsWith<IllegalArgumentException> { spec.materialize() }
+
+        assertTrue("primary" in error.message.orEmpty(), error.message)
     }
 }

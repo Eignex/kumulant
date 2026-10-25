@@ -11,12 +11,16 @@ import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.schema.GroupResult
 import com.eignex.kumulant.schema.GroupStatKey
 import com.eignex.kumulant.schema.StatKey
+import com.eignex.kumulant.schema.spec.DiscreteGroupStatSpec
 import com.eignex.kumulant.schema.spec.DiscreteStatSpec
 import com.eignex.kumulant.schema.spec.GroupStatSpec
+import com.eignex.kumulant.schema.spec.PairedGroupStatSpec
 import com.eignex.kumulant.schema.spec.PairedStatSpec
+import com.eignex.kumulant.schema.spec.RegressionGroupStatSpec
 import com.eignex.kumulant.schema.spec.RegressionStatSpec
 import com.eignex.kumulant.schema.spec.SeriesStatSpec
 import com.eignex.kumulant.schema.spec.StatSpec
+import com.eignex.kumulant.schema.spec.VectorGroupStatSpec
 import com.eignex.kumulant.schema.spec.VectorStatSpec
 import com.eignex.skema.Schema
 
@@ -28,10 +32,6 @@ import com.eignex.skema.Schema
  * [group] delegates; each property exposes a [StatKey] for typed retrieval from a
  * [GroupResult]. Every entry is a [StatSpec], which means the schema always
  * round-trips through the wire - no live-stat back-door.
- *
- * If you need an aggregation that isn't wire-expressible (e.g. a `filter`-wrapped
- * stat), build a [StatGroup] / `*ListStats` directly with the vararg `Pair`
- * constructor - bypass the schema layer entirely.
  *
  * A schema describes stats and nothing else. [com.eignex.kumulant.core.Concurrency] is a deployment
  * choice, so it is supplied where the stats are built - the [StatGroup] / `*ListStats` constructor -
@@ -57,37 +57,21 @@ abstract class StatSchema : Schema<StatSpec>() {
 
     protected fun <R : Result> regression(config: RegressionStatSpec<R>) = register(config) { StatKey<R>(it) }
 
-    /**
-     * Nest a sub-schema as a [GroupStatSpec]; materialization recurses at the parent's group construction.
-     *
-     * Series-only, and checked here rather than at materialization. [GroupStatSpec] is itself a
-     * [SeriesStatSpec], so a nested schema holding another modality has no consistent home: the series
-     * view of the parent rejects the child at materialize time, while the discrete or vector view skips
-     * the whole subtree - reporting no error and no entries, and leaving the nested results unreachable
-     * by any means. A mixed schema is legal at the root, where each modality's view picks its own
-     * entries, so failing at the declaration is what tells the two cases apart.
-     */
+    /** Nest a sub-schema whose entries share one input modality, preserving its typed keys. */
     protected fun <T : StatSchema> group(nestedSchema: T) =
-        register(seriesOnlyGroupSpec(nestedSchema)) { GroupStatKey(it, nestedSchema) }
+        register(groupSpec(nestedSchema)) { GroupStatKey(it, nestedSchema) }
 }
 
-/**
- * [GroupStatSpec] over a nested schema, rejecting any entry that is not series.
- *
- * [GroupStatSpec] is itself a [SeriesStatSpec], so a nested schema holding another modality has no
- * consistent home: the series view of the parent rejects the child at materialize time, while the
- * discrete or vector view skips the whole subtree - reporting no error and no entries, and leaving the
- * nested results unreachable by any means. A mixed schema is legal at the root, where each modality's
- * view picks out its own entries, so failing at the declaration is what tells the two cases apart.
- */
-private fun seriesOnlyGroupSpec(nestedSchema: StatSchema): GroupStatSpec {
+private fun groupSpec(nestedSchema: StatSchema): StatSpec {
     val nested = nestedSchema.statSchemaDef().stats
-    for ((name, config) in nested) {
-        require(config is SeriesStatSpec<*>) {
-            "nested group entry '$name' is ${config::class.simpleName}; a nested schema must be series-only"
-        }
+    return when {
+        nested.values.all { it is SeriesStatSpec<*> } -> GroupStatSpec(nested)
+        nested.values.all { it is PairedStatSpec<*> } -> PairedGroupStatSpec(nested)
+        nested.values.all { it is VectorStatSpec<*> } -> VectorGroupStatSpec(nested)
+        nested.values.all { it is DiscreteStatSpec<*> } -> DiscreteGroupStatSpec(nested)
+        nested.values.all { it is RegressionStatSpec<*> } -> RegressionGroupStatSpec(nested)
+        else -> throw IllegalArgumentException("a nested schema must use one input modality")
     }
-    return GroupStatSpec(nested)
 }
 
 /** Series-modality specs from a schema, materialized at [concurrency]. */

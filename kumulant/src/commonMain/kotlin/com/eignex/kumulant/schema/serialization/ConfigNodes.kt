@@ -27,10 +27,12 @@ internal object UnivariateBanditSpecSerializer : KSerializer<UnivariateBanditSpe
     node<RouletteWheelSpec>("rouletteWheel"),
     node<BoltzmannSpec>("boltzmann"),
     node<Exp3Spec>("exp3"),
+    node<TrackedUnivariateSpec>("tracked"),
     node("topTwoThompson") { TopTwoThompsonSpec.serializer(PolymorphicSerializer(Result::class)) },
 )
 
 internal object ContextualBanditSpecSerializer : KSerializer<ContextualBanditSpec> by canonical(
+    node<TrackedContextualSpec>("tracked"),
     node("regressionContextual") { RegressionContextualSpec.serializer(PolymorphicSerializer(Result::class)) },
 )
 

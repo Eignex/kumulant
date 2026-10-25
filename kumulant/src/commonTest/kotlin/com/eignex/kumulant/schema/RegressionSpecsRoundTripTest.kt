@@ -1,5 +1,7 @@
 package com.eignex.kumulant.schema
 
+import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.feat
@@ -11,8 +13,11 @@ import com.eignex.kumulant.schema.runtime.*
 import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
+import com.eignex.kumulant.stat.regression.tree.ForestClassificationResult
+import com.eignex.kumulant.stat.regression.tree.ForestRegressionResult
 import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
+import com.eignex.kumulant.stat.regression.tree.TreeClassificationResult
 import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.skema.SchemaJson
@@ -168,5 +173,51 @@ class RegressionSpecsRoundTripTest {
         val live = decoded.materialize(Concurrency.None)
         live.update(feat(0.0), y = 3.0) // y rewritten to 6.0 before fold projects Y to inner
         assertEquals(6.0, (live.read(0L) as SumResult).sum, DELTA)
+    }
+
+    @Test fun `custom Bayesian priors survive serialization and initialization`() {
+        val mean = DenseVector.of(doubleArrayOf(1.0, 2.0))
+        val covariance = DenseMatrix.ofRows(arrayOf(doubleArrayOf(2.0, 0.5), doubleArrayOf(0.5, 1.0)))
+        val spec: StatSpec = BayesianRegression(2, priorMean = mean, priorCovariance = covariance)
+        val decoded = SchemaJson.decodeFromString<StatSpec>(SchemaJson.encodeToString(spec)) as RegressionStatSpec<*>
+
+        val result = decoded.materialize().read(0L) as PrecisionRegressionResult
+
+        for (i in 0 until 2) {
+            assertEquals(mean[i], result.weights[i], DELTA)
+            for (j in 0 until 2) assertEquals(covariance[i, j], result.covariance()[i, j], DELTA)
+        }
+    }
+
+    @Test fun `tree specs use the serialized leaf recipe`() {
+        val specs = listOf(
+            DecisionTreeRegression(1, emptyList(), leafArm = Variance.withWeight(2.0)),
+            RandomForestRegression(1, emptyList(), nbrTrees = 1, bagging = false, leafArm = Variance.withWeight(2.0)),
+            DecisionTreeClassifier(1, 2, emptyList(), leafArm = ClassCounts(2).withWeight(2.0)),
+            RandomForestClassifier(
+                1,
+                2,
+                emptyList(),
+                nbrTrees = 1,
+                bagging = false,
+                leafArm = ClassCounts(2).withWeight(2.0),
+            ),
+        )
+        for (spec in specs) {
+            val decoded = SchemaJson.decodeFromString<StatSpec>(SchemaJson.encodeToString<StatSpec>(spec))
+                as RegressionStatSpec<*>
+            val stat = decoded.materialize()
+
+            stat.update(feat(1.0), 1.0)
+
+            val weight = when (val result = stat.read(0L)) {
+                is TreeRegressionResult -> result.totalWeights
+                is TreeClassificationResult -> result.totalWeights
+                is ForestRegressionResult -> result.totalWeights
+                is ForestClassificationResult -> result.totalWeights
+                else -> error("Unexpected tree result: $result")
+            }
+            assertEquals(2.0, weight)
+        }
     }
 }

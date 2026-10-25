@@ -3,6 +3,7 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
+import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.schema.decay.*
@@ -166,5 +167,44 @@ class StatSchemaDefSerializationTest {
     fun `materializeSeries rejects non-series entries`() {
         val def = StatSchemaDef(mapOf("ols" to UnivariateRegression()))
         assertFailsWith<IllegalArgumentException> { def.materializeSeries() }
+    }
+
+    @Test
+    fun `nested groups in every modality survive schema serialization`() {
+        val schemas = listOf(
+            object : StatSchema() {
+                val metric by series(Sum)
+            },
+            object : StatSchema() {
+                val metric by paired(Sum.atX())
+            },
+            object : StatSchema() {
+                val metric by vector(Sum.atIndex(0))
+            },
+            object : StatSchema() {
+                val metric by discrete(Sum.asDiscrete())
+            },
+            object : StatSchema() {
+                val metric by regression(Sum.foldRegression(1, Y))
+            },
+        )
+        for (inner in schemas) {
+            val outer = object : StatSchema() {
+                val nested by group(inner)
+            }
+            val json = SchemaJson.encodeToString(outer.statSchemaDef())
+            val decoded = SchemaJson.decodeFromString<StatSchemaDef>(json)
+            val stat = decoded.materialize().single().stat
+
+            when (stat) {
+                is SeriesStat<*> -> stat.update(2.0)
+                is PairedStat<*> -> stat.update(2.0, 3.0)
+                is VectorStat<*> -> stat.update(doubleArrayOf(2.0, 3.0))
+                is DiscreteStat<*> -> stat.update(2L)
+                is RegressionStat<*> -> stat.update(doubleArrayOf(3.0), 2.0)
+            }
+
+            assertEquals(2.0, ((stat.read(0L) as GroupResult).results.getValue("metric") as SumResult).sum)
+        }
     }
 }

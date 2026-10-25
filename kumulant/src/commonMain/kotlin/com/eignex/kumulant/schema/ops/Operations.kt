@@ -221,6 +221,25 @@ fun <R : Result> PairedStatSpec<R>.withSelfLag(k: Int): SeriesStatSpec<R> =
 fun <R : Result> SeriesStatSpec<R>.withFeedback(primary: SeriesStatSpec<*>, project: ScalarExpr): SeriesStatSpec<R> =
     WithFeedbackSeries(this, primary, project) as SeriesStatSpec<R>
 
+/** Project each paired coordinate against its own primary's updated snapshot. */
+fun <R : Result> PairedStatSpec<R>.withFeedback(
+    primaryX: SeriesStatSpec<*>,
+    primaryY: SeriesStatSpec<*>,
+    project: ScalarExpr,
+): PairedStatSpec<R> = WithFeedbackPaired(this, primaryX, primaryY, project) as PairedStatSpec<R>
+
+/** Project vector coordinates against the corresponding primary snapshots. */
+fun <P : Result, R : Result> VectorStatSpec<R>.withFeedback(
+    primary: VectorStatSpec<ResultList<P>>,
+    project: ScalarExpr,
+): VectorStatSpec<R> = WithFeedbackVector(this, primary, project) as VectorStatSpec<R>
+
+/** Project regression features against the corresponding primary snapshots, preserving the target. */
+fun <P : Result, R : Result> RegressionStatSpec<R>.withFeedback(
+    primary: VectorStatSpec<ResultList<P>>,
+    project: ScalarExpr,
+): RegressionStatSpec<R> = WithFeedbackRegression(this, primary, project) as RegressionStatSpec<R>
+
 /** Element-wise standardise a vector spec against a hidden per-coordinate [Variance] primary. */
 fun <R : Result> VectorStatSpec<R>.standardScaleFeatures(dimensions: Int): VectorStatSpec<R> =
     StandardScalerVector(this, dimensions) as VectorStatSpec<R>

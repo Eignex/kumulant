@@ -73,6 +73,7 @@ internal object SeriesStatSpecSerializer : KSerializer<SeriesStatSpec<*>> by can
 )
 
 internal object PairedStatSpecSerializer : KSerializer<PairedStatSpec<*>> by canonical(
+    node<PairedGroupStatSpec>("pairedGroup"),
     node<PairedSum>("pairedSum"),
     node<UnivariateRegression>("univariateRegression"),
     node<Covariance>("covariance"),
@@ -94,12 +95,14 @@ internal object PairedStatSpecSerializer : KSerializer<PairedStatSpec<*>> by can
     node<FoldPaired>("foldPaired"),
     node<WeightByValuePaired>("weightBy"),
     node<ThrottlePaired>("throttle"),
+    node<WithFeedbackPaired>("feedback"),
     node<StandardScalerPaired>("standardScaler"),
     node<MinMaxScalerPaired>("minMaxScaler"),
     node<SamplePaired>("sample"),
 )
 
 internal object VectorStatSpecSerializer : KSerializer<VectorStatSpec<*>> by canonical(
+    node<VectorGroupStatSpec>("vectorGroup"),
     node<WithWeightVector>("withWeight"),
     node<AtIndex>("atIndex"),
     node<AtIndices>("atIndices"),
@@ -112,12 +115,14 @@ internal object VectorStatSpecSerializer : KSerializer<VectorStatSpec<*>> by can
     node<TransformVector>("transformVector"),
     node<WeightByValueVector>("weightBy"),
     node<ThrottleVector>("throttle"),
+    node<WithFeedbackVector>("feedback"),
     node<StandardScalerVector>("standardScaler"),
     node<MinMaxScalerVector>("minMaxScaler"),
     node<SampleVector>("sample"),
 )
 
 internal object DiscreteStatSpecSerializer : KSerializer<DiscreteStatSpec<*>> by canonical(
+    node<DiscreteGroupStatSpec>("discreteGroup"),
     node<HyperLogLog>("hyperLogLog"),
     node<LinearCounting>("linearCounting"),
     node<BloomFilter>("bloomFilter"),
@@ -137,6 +142,7 @@ internal object DiscreteStatSpecSerializer : KSerializer<DiscreteStatSpec<*>> by
 )
 
 internal object RegressionStatSpecSerializer : KSerializer<RegressionStatSpec<*>> by canonical(
+    node<RegressionGroupStatSpec>("regressionGroup"),
     node<BayesianRegression>("bayesianRegression"),
     node<StochasticRegression>("stochasticRegression"),
     node<GaussianNaiveBayes>("gaussianNaiveBayes"),
@@ -146,6 +152,7 @@ internal object RegressionStatSpecSerializer : KSerializer<RegressionStatSpec<*>
     node<RandomForestRegression>("randomForestRegression"),
     node<DecisionTreeClassifier>("decisionTreeClassifier"),
     node<RandomForestClassifier>("randomForestClassifier"),
+    node<WithFeedbackRegression>("feedback"),
     node<StandardScalerRegression>("standardScaler"),
     node<MinMaxScalerRegression>("minMaxScaler"),
     node<FilterRegression>("filter"),
