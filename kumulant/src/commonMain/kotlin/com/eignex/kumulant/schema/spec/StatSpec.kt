@@ -15,7 +15,9 @@ import kotlinx.serialization.Serializable
  * configuration surface - no live cells, no locks, no
  * [com.eignex.kumulant.core.Concurrency].
  *
- * JSON uses canonical operator-key objects such as `{"ewma":{"alpha":0.1}}`.
+ * JSON uses names for parameterless nodes, such as `"mean"`, and operator keys
+ * for configured nodes, such as `{"ewma":{"alpha":0.1}}`. Decorators retain named
+ * fields, such as `{"transform":{"expr":{"add":["x",1]},"inner":"mean"}}`.
  * Serialize through this root or a modality interface to preserve that grammar.
  * Other serialization formats retain the generated sealed-class representation.
  * Defaults match the corresponding stat constructors and follow the format's

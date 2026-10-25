@@ -19,12 +19,11 @@ internal fun validateJson(descriptor: SerialDescriptor, element: JsonElement, pa
         val body = node.decode(payload, pathFor(node, path))
         validateRecord(node.serializer.descriptor, body, pathFor(node, path)) { field ->
             when (node.shape) {
-                WireShape.Literal, WireShape.Reference -> path
+                WireShape.Literal -> path
                 WireShape.Operand, WireShape.Decay -> pathFor(node, path)
                 WireShape.Operands -> "${pathFor(node, path)}[${node.operands.indexOf(field)}]"
                 WireShape.Smoothing -> "${pathFor(node, path)}.${field.removeSuffix("Weighting")}"
                 WireShape.Fields -> "${pathFor(node, path)}.$field"
-                WireShape.Filter -> "${pathFor(node, path)}.${if (field == "pred") "expr" else field}"
             }
         }
         return
@@ -95,13 +94,14 @@ internal fun selectNode(nodes: List<WireNode>, element: JsonElement, path: Strin
             ?: invalid(path, "expected an operator object")
         return literal to element
     }
-    val obj = element.objectAt(path)
+    val obj = if (element is JsonPrimitive && element.isString) {
+        JsonObject(mapOf(element.content to JsonObject(emptyMap())))
+    } else {
+        element.objectAt(path)
+    }
     if (obj.size != 1) invalid(path, "expected exactly one operator")
     val (operator, operand) = obj.entries.single()
-    val candidates = nodes.filter {
-        it.name == operator && it.shape != WireShape.Literal &&
-            (it.shape != WireShape.Reference || operand == JsonPrimitive(it.operands.single()))
-    }
+    val candidates = nodes.filter { it.name == operator && it.shape != WireShape.Literal }
     val node = when (candidates.size) {
         0 -> invalid("$path.$operator", "unknown operator or reference '$operator'")
 

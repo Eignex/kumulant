@@ -40,8 +40,8 @@ class StatSchemaDefSerializationTest {
         val encoded = SchemaJson.encodeToString(def)
 
         assertEquals(
-            """{"stats":{"requests":{"sum":{}},"avgWeight":{"mean":{}},"http":{"group":{"stats":{""" +
-                """"requests":{"sum":{}},"latencyMs":{"ddSketch":{"probabilities":[0.5,0.99,0.999]}}}}}}}""",
+            """{"stats":{"requests":"sum","avgWeight":"mean","http":{"group":{"stats":{""" +
+                """"requests":"sum","latencyMs":{"ddSketch":{"probabilities":[0.5,0.99,0.999]}}}}}}}""",
             encoded,
         )
     }
@@ -98,7 +98,7 @@ class StatSchemaDefSerializationTest {
         // Declaration order and omitted defaults survive the round trip.
         assertEquals(encoded, reEncoded)
 
-        assertTrue(encoded.contains("\"requests\":{\"sum\":{}}"))
+        assertTrue(encoded.contains("\"requests\":\"sum\""))
         assertTrue(encoded.contains("\"withWeight\":"))
         assertTrue(encoded.contains("\"withValue\":"))
         assertTrue(encoded.contains("\"withFixedX\":"))

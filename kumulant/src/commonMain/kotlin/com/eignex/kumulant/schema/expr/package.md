@@ -15,7 +15,7 @@ component, and the current vector. [VectorExpr] evaluates to a whole
 vector and backs the per-feature projection and scaling operations.
 [BoolExpr] evaluates to a boolean and drives filter predicates and the
 guards on conditional nodes. JSON uses operator keys, numeric literals, and
-explicit input references, such as `{"add":[{"input":"value"},1]}`.
+named input references, such as `{"add":["x",1]}`.
 
 ## Leaves and operators
 

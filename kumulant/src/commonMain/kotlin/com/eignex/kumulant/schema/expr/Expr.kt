@@ -77,8 +77,8 @@ private inline fun <reified T> Result?.feedbackPrimary(node: String): T {
  *
  * ## Wire format
  *
- * JSON uses structured operator keys, numeric scalar literals, and explicit input
- * references: `{"add":[{"input":"value"},1]}`. Serialize through [ScalarExpr],
+ * JSON uses structured operator keys, numeric scalar literals, and named input
+ * references: `{"add":["x",1]}`. Serialize through [ScalarExpr],
  * [BoolExpr], or [VectorExpr]. Other formats retain the generated sealed-class tags.
  */
 @Serializable(with = ScalarExprSerializer::class)

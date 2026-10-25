@@ -4,13 +4,13 @@ import com.eignex.kumulant.schema.expr.*
 import kotlinx.serialization.KSerializer
 
 internal object ScalarExprSerializer : KSerializer<ScalarExpr> by canonical(
-    node<X>("input", WireShape.Reference, "value"),
-    node<Y>("input", WireShape.Reference, "response"),
-    node<Center>("feedback", WireShape.Reference, "center"),
-    node<Scale>("feedback", WireShape.Reference, "scale"),
-    node<Low>("feedback", WireShape.Reference, "min"),
-    node<High>("feedback", WireShape.Reference, "max"),
-    node<VIndex>("input", WireShape.Reference, "index"),
+    node<X>("x"),
+    node<Y>("y"),
+    node<Center>("center"),
+    node<Scale>("scale"),
+    node<Low>("low"),
+    node<High>("high"),
+    node<VIndex>("index"),
     node<V>("element", WireShape.Operand, "index"),
     node<Const>("const", WireShape.Literal, "v"),
     node<Add>("add", WireShape.Operands, "l", "r"),

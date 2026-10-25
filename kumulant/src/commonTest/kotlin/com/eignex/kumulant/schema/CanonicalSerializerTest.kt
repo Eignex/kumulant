@@ -39,7 +39,7 @@ class CanonicalSerializerTest {
     @Test
     fun `transformed ewma uses structured arithmetic through schema JSON`() {
         val spec: StatSpec = EwmaMean(Alpha(0.1)).transform(X + 1.0)
-        val expected = """{"transform":{"expr":{"add":[{"input":"value"},1.0]},"inner":{"ewma":{"alpha":0.1}}}}"""
+        val expected = """{"transform":{"expr":{"add":["x",1.0]},"inner":{"ewma":{"alpha":0.1}}}}"""
 
         val encoded = SchemaJson.encodeToString(spec)
         val decoded = SchemaJson.decodeFromString<StatSpec>(expected)
@@ -51,36 +51,36 @@ class CanonicalSerializerTest {
     @Test
     fun `scalar nodes have stable documented shapes`() {
         val cases = listOf(
-            X to """{"input":"value"}""",
-            Y to """{"input":"response"}""",
-            VIndex to """{"input":"index"}""",
-            Center to """{"feedback":"center"}""",
-            Scale to """{"feedback":"scale"}""",
-            Low to """{"feedback":"min"}""",
-            High to """{"feedback":"max"}""",
+            X to """"x"""",
+            Y to """"y"""",
+            VIndex to """"index"""",
+            Center to """"center"""",
+            Scale to """"scale"""",
+            Low to """"low"""",
+            High to """"high"""",
             V(2) to """{"element":2}""",
             Const(2.0) to "2.0",
-            Add(X, Const(2.0)) to """{"add":[{"input":"value"},2.0]}""",
-            Sub(X, Const(2.0)) to """{"sub":[{"input":"value"},2.0]}""",
-            Mul(X, Const(2.0)) to """{"mul":[{"input":"value"},2.0]}""",
-            Div(X, Const(2.0)) to """{"div":[{"input":"value"},2.0]}""",
-            Neg(X) to """{"neg":{"input":"value"}}""",
-            Abs(X) to """{"abs":{"input":"value"}}""",
-            Log(X) to """{"log":{"input":"value"}}""",
-            Exp(X) to """{"exp":{"input":"value"}}""",
-            Sqrt(X) to """{"sqrt":{"input":"value"}}""",
-            Pow(X, Const(2.0)) to """{"pow":[{"input":"value"},2.0]}""",
-            MinExpr(X, Const(2.0)) to """{"min":[{"input":"value"},2.0]}""",
-            MaxExpr(X, Const(2.0)) to """{"max":[{"input":"value"},2.0]}""",
+            Add(X, Const(2.0)) to """{"add":["x",2.0]}""",
+            Sub(X, Const(2.0)) to """{"sub":["x",2.0]}""",
+            Mul(X, Const(2.0)) to """{"mul":["x",2.0]}""",
+            Div(X, Const(2.0)) to """{"div":["x",2.0]}""",
+            Neg(X) to """{"neg":"x"}""",
+            Abs(X) to """{"abs":"x"}""",
+            Log(X) to """{"log":"x"}""",
+            Exp(X) to """{"exp":"x"}""",
+            Sqrt(X) to """{"sqrt":"x"}""",
+            Pow(X, Const(2.0)) to """{"pow":["x",2.0]}""",
+            MinExpr(X, Const(2.0)) to """{"min":["x",2.0]}""",
+            MaxExpr(X, Const(2.0)) to """{"max":["x",2.0]}""",
             IfExpr(Gt(X, Const(0.0)), X, Const(0.0)) to
-                """{"if":{"cond":{"gt":[{"input":"value"},0.0]},"then":{"input":"value"},"otherwise":0.0}}""",
+                """{"if":{"cond":{"gt":["x",0.0]},"then":"x","otherwise":0.0}}""",
             Switch(X, listOf(SwitchCase(1.0, Y)), Const(0.0)) to
                 (
-                    """{"switch":{"on":{"input":"value"},"cases":[{"value":1.0,"then":{"input":"response"}}],""" +
+                    """{"switch":{"on":"x","cases":[{"value":1.0,"then":"y"}],""" +
                         """"otherwise":0.0}}"""
                     ),
-            Standardize to """{"standardize":{}}""",
-            MinMax() to """{"minMax":{}}""",
+            Standardize to """"standardize"""",
+            MinMax() to """"minMax"""",
             VFold(VFoldOp.Sum) to """{"fold":{"op":"Sum"}}""",
             VDot(listOf(1.0, 2.0)) to """{"dot":[1.0,2.0]}""",
         )
@@ -93,19 +93,19 @@ class CanonicalSerializerTest {
     @Test
     fun `boolean nodes have stable documented shapes`() {
         val cases = listOf(
-            Gt(X, Const(0.0)) to """{"gt":[{"input":"value"},0.0]}""",
-            Ge(X, Const(0.0)) to """{"ge":[{"input":"value"},0.0]}""",
-            Lt(X, Const(0.0)) to """{"lt":[{"input":"value"},0.0]}""",
-            Le(X, Const(0.0)) to """{"le":[{"input":"value"},0.0]}""",
-            Eq(X, Const(0.0)) to """{"eq":[{"input":"value"},0.0]}""",
-            And(AllFinite, AllFinite) to """{"and":[{"allFinite":{}},{"allFinite":{}}]}""",
-            Or(AllFinite, AllFinite) to """{"or":[{"allFinite":{}},{"allFinite":{}}]}""",
-            Not(AllFinite) to """{"not":{"allFinite":{}}}""",
-            In(X, listOf(1.0)) to """{"in":{"of":{"input":"value"},"values":[1.0]}}""",
-            IsNaN(X) to """{"isNaN":{"input":"value"}}""",
-            IsFinite(X) to """{"isFinite":{"input":"value"}}""",
-            AllFinite to """{"allFinite":{}}""",
-            InRange(X, 0.0, 1.0) to """{"inRange":{"a":{"input":"value"},"min":0.0,"max":1.0}}""",
+            Gt(X, Const(0.0)) to """{"gt":["x",0.0]}""",
+            Ge(X, Const(0.0)) to """{"ge":["x",0.0]}""",
+            Lt(X, Const(0.0)) to """{"lt":["x",0.0]}""",
+            Le(X, Const(0.0)) to """{"le":["x",0.0]}""",
+            Eq(X, Const(0.0)) to """{"eq":["x",0.0]}""",
+            And(AllFinite, AllFinite) to """{"and":["allFinite","allFinite"]}""",
+            Or(AllFinite, AllFinite) to """{"or":["allFinite","allFinite"]}""",
+            Not(AllFinite) to """{"not":"allFinite"}""",
+            In(X, listOf(1.0)) to """{"in":{"of":"x","values":[1.0]}}""",
+            IsNaN(X) to """{"isNaN":"x"}""",
+            IsFinite(X) to """{"isFinite":"x"}""",
+            AllFinite to """"allFinite"""",
+            InRange(X, 0.0, 1.0) to """{"inRange":{"a":"x","min":0.0,"max":1.0}}""",
         )
         for ((expr, expected) in cases) {
             assertEquals(expected, Json.encodeToString<BoolExpr>(expr))
@@ -116,7 +116,7 @@ class CanonicalSerializerTest {
     @Test
     fun `vector expressions keep nested scalar expressions structured`() {
         val expr = vectorOf(V(1), X + Center)
-        val expected = """{"elements":[{"element":1},{"add":[{"input":"value"},{"feedback":"center"}]}]}"""
+        val expected = """{"elements":[{"element":1},{"add":["x","center"]}]}"""
 
         assertEquals(expected, Json.encodeToString<VectorExpr>(expr))
         assertEquals(expr, Json.decodeFromString<VectorExpr>(expected))
@@ -185,8 +185,8 @@ class CanonicalSerializerTest {
         val encoded = Json.encodeToString(contextual)
         val rewards = Json.encodeToString(univariate)
 
-        assertTrue("\"linUcb\":{}" in encoded)
-        assertTrue("\"add\":[{\"input\":\"value\"},1.0]" in encoded)
+        assertTrue("\"linUcb\"" in encoded)
+        assertTrue(""""add":["x",1.0]""" in encoded)
         assertEquals(contextual, Json.decodeFromString<ContextualBanditSpec>(encoded))
         assertEquals(univariate, Json.decodeFromString<UnivariateBanditSpec>(rewards))
         assertFalse("type" in rewards)
@@ -203,12 +203,32 @@ class CanonicalSerializerTest {
     }
 
     @Test
+    fun `default encoding expands optional fields on named nodes`() {
+        val defaults = Json { encodeDefaults = true }
+        val expr: ScalarExpr = MinMax()
+
+        assertEquals("\"minMax\"", Json.encodeToString(expr))
+        assertEquals("""{"minMax":{"targetLow":0.0,"targetHigh":1.0}}""", defaults.encodeToString(expr))
+        assertEquals(expr, Json.decodeFromString<ScalarExpr>(defaults.encodeToString(expr)))
+    }
+
+    @Test
+    fun `finite filters retain named fields around short stat names`() {
+        val spec: StatSpec = Mean.filterFinite()
+        val expected = """{"filter":{"inner":"mean","pred":"allFinite"}}"""
+
+        assertEquals(Json.parseToJsonElement(expected), Json.parseToJsonElement(Json.encodeToString(spec)))
+        assertEquals(spec, Json.decodeFromString<StatSpec>(expected))
+    }
+
+    @Test
     fun `invalid expression shapes report the offending path`() {
         val cases = listOf(
             """{"missing":[]}""" to "$.missing",
             """{"add":[1]}""" to "$.add",
             """{"add":{"l":1,"r":2}}""" to "$.add",
             """{"input":"unknown"}""" to "$.input",
+            """"unknown"""" to "$.unknown",
             """{"const":1}""" to "$.const",
             """{"add":[1,{"missing":{}}]}""" to "$.add[1].missing",
             """{"neg":true}""" to "$.neg",
@@ -235,10 +255,17 @@ class CanonicalSerializerTest {
             """{"ewma":{}}""",
             """{"ewma":{"alpha":0.1,"extra":1}}""",
             """{"mean":{"extra":1}}""",
+            """"ewma"""",
+            """{"filter":["allFinite"]}""",
+            """{"filter":["allFinite","mean", "sum"]}""",
+            """{"filter":{"pred":"allFinite","inner":1}}""",
+            """{"filter":{"pred":"allFinite","inner":{"transform":{"expr":"x","inner":1}}}}""",
+            """{"transform":{"expr":"x","inner":"missing"}}""",
+            """{"transform":{"expr":"x","inner":{"bayesianRegression":{"featureSize":2}}}}""",
             """{"ewma":{"alpha":"0.1"}}""",
             """{"holt":{"alphaWeighting":{"alpha":0.2}}}""",
             """{"stochasticRegression":{"featureSize":1,"optimizer":{"adam":{"learningRate":null}}}}""",
-            """{"transform":{"inner":{"mean":{}},"expr":{"missing":[]}}}""",
+            """{"transform":{"expr":{"missing":[]},"inner":"mean"}}""",
         )
         for (payload in cases) {
             val error = assertFailsWith<SerializationException>(payload) { lenient.decodeFromString<StatSpec>(payload) }

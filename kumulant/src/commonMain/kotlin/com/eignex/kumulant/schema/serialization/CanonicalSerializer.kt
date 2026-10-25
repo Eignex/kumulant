@@ -42,7 +42,7 @@ internal inline fun <reified T : Any> node(
 internal inline fun <reified T : Any> node(name: String, noinline bodySerializer: () -> KSerializer<T>): WireNode =
     WireNode(T::class, name, serializer = bodySerializer)
 
-internal enum class WireShape { Fields, Literal, Reference, Operand, Operands, Decay, Smoothing, Filter }
+internal enum class WireShape { Fields, Literal, Operand, Operands, Decay, Smoothing }
 
 internal class WireNode(
     val type: KClass<*>,
@@ -56,11 +56,7 @@ internal class WireNode(
     fun encode(body: JsonObject): JsonElement = when (shape) {
         WireShape.Fields -> body
 
-        WireShape.Filter -> JsonObject(body.mapKeys { (key, _) -> if (key == "pred") "expr" else key })
-
         WireShape.Literal, WireShape.Operand -> body.getValue(operands.single())
-
-        WireShape.Reference -> JsonPrimitive(operands.single())
 
         WireShape.Operands -> JsonArray(operands.map { body.getValue(it) })
 
@@ -77,15 +73,7 @@ internal class WireNode(
     fun decode(payload: JsonElement, path: String): JsonObject = when (shape) {
         WireShape.Fields -> payload.objectAt(path)
 
-        WireShape.Filter -> {
-            val body = payload.objectAt(path)
-            if ("pred" in body) invalid("$path.pred", "unknown field 'pred'; use 'expr'")
-            JsonObject(body.mapKeys { (key, _) -> if (key == "expr") "pred" else key })
-        }
-
         WireShape.Literal, WireShape.Operand -> JsonObject(mapOf(operands.single() to payload))
-
-        WireShape.Reference -> JsonObject(emptyMap())
 
         WireShape.Operands -> {
             val array = payload as? JsonArray ?: invalid(path, "expected an operand array")
@@ -141,7 +129,11 @@ internal class CanonicalSerializer<T : Any>(private val base: KClass<*>, nodes: 
         val body = encoder.json.encodeToJsonElement(node.serializer, value).jsonObject
         val payload = node.encode(body)
         encoder.encodeJsonElement(
-            if (node.shape == WireShape.Literal) payload else JsonObject(mapOf(node.name to payload)),
+            when {
+                node.shape == WireShape.Literal -> payload
+                payload is JsonObject && payload.isEmpty() -> JsonPrimitive(node.name)
+                else -> JsonObject(mapOf(node.name to payload))
+            },
         )
     }
 
