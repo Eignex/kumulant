@@ -77,6 +77,30 @@ benchmark {
             iterationTimeUnit = "s"
             include(".*Exp4MixingBenchmark.(playDistribution|playDistributionInto|choose|update)")
         }
+        register("cholesky") {
+            warmups = 3
+            iterations = 5
+            iterationTime = 1
+            iterationTimeUnit = "s"
+            mode = "avgt"
+            outputTimeUnit = "us"
+            reportFormat = "json"
+            advanced("jvmForks", 2)
+            include(".*Cholesky.*Benchmark.*")
+        }
+        register("choleskySmoke") {
+            warmups = 1
+            iterations = 2
+            iterationTime = 100
+            iterationTimeUnit = "ms"
+            mode = "avgt"
+            outputTimeUnit = "us"
+            reportFormat = "json"
+            include(".*Cholesky.*Benchmark.*")
+            param("matrixCase", "precision:8", "rbf:65", "matern:129")
+            param("shape", "32x1", "128x16")
+            param("historySize", 32)
+        }
     }
 }
 
@@ -85,7 +109,16 @@ tasks.withType<KotlinJvmCompile>().configureEach {
 }
 tasks.withType<Test>().configureEach {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
-    jvmArgs("--add-modules=jdk.incubator.vector")
+    if (project.findProperty("kumulant.noSimd") != "true") {
+        jvmArgs("--add-modules=jdk.incubator.vector")
+    }
+}
+
+tasks.withType<JavaExec>().matching { it.name.startsWith("jvmCholesky") }.configureEach {
+    jvmArgs("--enable-native-access=ALL-UNNAMED", "-Xms512m", "-Xmx512m")
+    if (project.findProperty("kumulant.noSimd") != "true") {
+        jvmArgs("--add-modules=jdk.incubator.vector")
+    }
 }
 
 // Analysis tasks. Each one drives the StatSpec registry and prints a measurement
@@ -100,7 +133,10 @@ fun JavaExec.kumulantBenchSetup() {
     javaLauncher.set(
         javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(benchJdk)) },
     )
-    jvmArgs("--enable-native-access=ALL-UNNAMED", "--add-modules=jdk.incubator.vector")
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+    if (project.findProperty("kumulant.noSimd") != "true") {
+        jvmArgs("--add-modules=jdk.incubator.vector")
+    }
     // Forward `-Dbench.*` from the gradle invocation onto the forked JVM so users
     // can tune cell duration, thread count, and JFR options without editing code.
     System.getProperties().forEach { k, v ->
@@ -112,6 +148,12 @@ fun JavaExec.kumulantBenchSetup() {
 tasks.register<JavaExec>("analyzeAccuracy") {
     description = "Per-stat serial accuracy vs analytical reference. Prints to stdout."
     mainClass.set("com.eignex.kumulant.bench.AccuracyAnalysisKt")
+    kumulantBenchSetup()
+}
+
+tasks.register<JavaExec>("analyzeCholeskyAccuracy") {
+    description = "Cholesky reconstruction, solve backward error, and analytical log determinant errors. Prints to stdout."
+    mainClass.set("com.eignex.kumulant.bench.CholeskyAccuracyAnalysisKt")
     kumulantBenchSetup()
 }
 
