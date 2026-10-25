@@ -51,8 +51,6 @@ internal class VectorizedStat<R : Result>(
     override fun create(concurrency: Concurrency?): VectorStat<ResultList<R>> =
         VectorizedStat(dimensions, template.create(concurrency), skipZeros)
 
-    override val mergeRefusal: String? get() = template.mergeRefusal
-
     override fun validateMerge(values: ResultList<R>) {
         require(values.results.size == dimensions) {
             "merge: results.size=${values.results.size}, expected $dimensions"

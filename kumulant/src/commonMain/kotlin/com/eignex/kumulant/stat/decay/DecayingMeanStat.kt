@@ -35,10 +35,10 @@ data class DecayingMeanResult(
  *
  * **Update:** O(1) per observation (two `DecayingSumStat.update()` calls).
  *
- * **Concurrency:** Inherits [DecayingSumStat]'s lock-free epoch-rotation;
- * exact under every [Concurrency] level. The two sums are updated sequentially
- * without a lock, so a `read()` between them can briefly observe a tiny ratio
- * bias on a contested stream; self-correcting on the next update.
+ * **Concurrency:** Each underlying [DecayingSumStat] locks its state under every
+ * concurrent level. The numerator and denominator are updated and read separately,
+ * so concurrent readers can observe a partial pair. After writers finish, both sums
+ * include every accepted contribution. [Concurrency.None] runs without synchronisation.
  */
 class DecayingMeanStat(
     /** Time-decay schedule applied to past contributions. */

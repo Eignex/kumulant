@@ -37,11 +37,6 @@ internal sealed class AbstractListStats<R : Result, S : Stat<out R>>(
     final override val concurrency: Concurrency =
         entries.map { (_, stat) -> stat.concurrency }.combinedConcurrency(concurrencyOverride ?: Concurrency.None)
 
-    final override val mergeRefusal: String?
-        get() = entries.firstNotNullOfOrNull { (name, stat) ->
-            stat.mergeRefusal?.let { "entry '$name': $it" }
-        }
-
     final override fun read(timestampNanos: Long): ResultList<R> =
         ResultList(entries.map { it.first }, entries.map { it.second.read(timestampNanos) })
 
