@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
 
 // Wire-friendly counterparts of the composable operations in
 // `com.eignex.kumulant.operation.*`. Each spec holds an inner [StatSpec]
-// (polymorphic by `@SerialName`) plus the operation's primitive parameters.
+// plus the operation's primitive parameters. Root serializers select the wire grammar.
 //
 // The inner field is typed at the base [StatSpec] interface so the
 // polymorphic decoder doesn't need a generic argument; compilation
@@ -24,8 +24,7 @@ import kotlinx.serialization.Serializable
 //
 // AST-backed operations (filter, transform, weightBy, fold) reach into
 // `ScalarExpr` / `BoolExpr` / `VectorExpr` so the whole composition serialises.
-// Lambda-only live forms (`mapResult`, the lambda overloads of
-// `transformValue`/`transformPair`/`filter`) stay in the live-stat package only.
+// Live adapters compile these expressions into internal update closures.
 
 /** Wire spec for `SeriesStat.withWeight(weight)`: every update uses [weight] regardless of caller input. */
 @Serializable
@@ -592,6 +591,25 @@ internal data class WithFeedbackSeries(
     /** Scalar projection evaluated against `(value, primary.snapshot)`. */
     val project: ScalarExpr,
 ) : SeriesStatSpec<Result>
+
+@Serializable
+@SerialName("WithFeedbackPaired")
+internal data class WithFeedbackPaired(
+    val inner: StatSpec,
+    val primaryX: StatSpec,
+    val primaryY: StatSpec,
+    val project: ScalarExpr,
+) : PairedStatSpec<Result>
+
+@Serializable
+@SerialName("WithFeedbackVector")
+internal data class WithFeedbackVector(val inner: StatSpec, val primary: StatSpec, val project: ScalarExpr) :
+    VectorStatSpec<Result>
+
+@Serializable
+@SerialName("WithFeedbackRegression")
+internal data class WithFeedbackRegression(val inner: StatSpec, val primary: StatSpec, val project: ScalarExpr) :
+    RegressionStatSpec<Result>
 
 /**
  * Wire spec for `VectorStat.standardScaleFeatures(dimensions)`: element-wise z-score

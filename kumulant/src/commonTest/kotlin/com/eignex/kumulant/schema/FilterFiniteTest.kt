@@ -141,7 +141,7 @@ class FilterFiniteTest {
         // unusable from a serialised pipeline, which is the point of putting it in the AST.
         val spec: StatSpec = Mean.filterFinite() as StatSpec
         val json = SchemaJson.encodeToString(StatSpec.serializer(), spec)
-        assertTrue("AllFinite" in json, "the predicate did not reach the wire: $json")
+        assertTrue("allFinite" in json, "the predicate did not reach the wire: $json")
 
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         assertEquals(spec, decoded, "the spec did not survive the round trip")

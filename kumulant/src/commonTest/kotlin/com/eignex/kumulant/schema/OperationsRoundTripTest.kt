@@ -557,4 +557,43 @@ class OperationsRoundTripTest {
         }
         assertEquals((a.read() as SumResult).sum, (b.read() as SumResult).sum, DELTA)
     }
+
+    @Test fun `vector feedback projects each coordinate after serialization`() {
+        val spec: StatSpec = Sum.vectorized(2).withFeedback(Variance.vectorized(2), Center + VIndex)
+        val decoded = SchemaJson.decodeFromString<StatSpec>(SchemaJson.encodeToString(spec)) as VectorStatSpec<*>
+        val stat = decoded.materialize()
+
+        stat.update(doubleArrayOf(2.0, 10.0))
+        stat.update(doubleArrayOf(4.0, 14.0))
+        val results = (stat.read() as ResultList<*>).results.map { (it as SumResult).sum }
+
+        assertEquals(listOf(5.0, 24.0), results)
+    }
+
+    @Test fun `paired feedback exposes each axis after serialization`() {
+        val spec: StatSpec = PairedSum.withFeedback(Variance, Variance, Center + VIndex)
+        val decoded = SchemaJson.decodeFromString<StatSpec>(SchemaJson.encodeToString(spec)) as PairedStatSpec<*>
+        val stat = decoded.materialize()
+
+        stat.update(2.0, 10.0)
+        stat.update(4.0, 14.0)
+        val result = stat.read() as com.eignex.kumulant.stat.summary.PairedSumResult
+
+        assertEquals(5.0, result.sumX)
+        assertEquals(24.0, result.sumY)
+    }
+
+    @Test fun `regression feedback preserves targets and resets primary state`() {
+        val spec: StatSpec = Sum.foldRegression(2, V(0) + V(1) + Y)
+            .withFeedback(Variance.vectorized(2), Center + VIndex)
+        val decoded = SchemaJson.decodeFromString<StatSpec>(SchemaJson.encodeToString(spec)) as RegressionStatSpec<*>
+        val stat = decoded.materialize()
+        stat.update(doubleArrayOf(2.0, 10.0), 100.0)
+        stat.update(doubleArrayOf(4.0, 14.0), 200.0)
+        stat.reset()
+
+        stat.update(doubleArrayOf(6.0, 20.0), 300.0)
+
+        assertEquals(327.0, (stat.read() as SumResult).sum)
+    }
 }

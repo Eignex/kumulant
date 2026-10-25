@@ -2,6 +2,7 @@ package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.schema.serialization.ArmSerializer
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.MeanStat
@@ -57,7 +58,7 @@ import kotlin.math.sqrt
  *   [MomentsResult]; pairs with the variance-aware UCB family
  *   ([UCB1Normal], [UCB1Tuned], [UcbV]).
  */
-@Serializable
+@Serializable(with = ArmSerializer::class)
 sealed interface Arm<R : Result> {
     /**
      * Allocate a fresh per-arm accumulator already seeded with this arm's

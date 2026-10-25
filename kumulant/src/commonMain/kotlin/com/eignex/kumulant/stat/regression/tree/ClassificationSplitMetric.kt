@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.kumulant.schema.serialization.ClassificationSplitMetricSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -11,7 +12,7 @@ import kotlinx.serialization.Serializable
  * Ships [GiniReduction] and [InformationGain] only; other criteria can land here
  * when consumers ask for them.
  */
-@Serializable
+@Serializable(with = ClassificationSplitMetricSerializer::class)
 sealed interface ClassificationSplitMetric {
     /** Score a candidate split given the leaf's total / pos / neg class counts. */
     fun score(total: ClassCountsResult, pos: ClassCountsResult, neg: ClassCountsResult): Double

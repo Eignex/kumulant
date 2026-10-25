@@ -1,6 +1,6 @@
 # Package com.eignex.kumulant.schema.expr
 
-The serializable expression AST behind the lambda-bound operations in
+The serializable expression AST used by the input operations in
 [com.eignex.kumulant.schema]. When an operation needs a projection or a
 predicate that must travel on the wire rather than as a live Kotlin
 lambda, it carries one of these trees instead. The whole tree is
@@ -14,9 +14,8 @@ evaluates to a single number from an update's value, its paired second
 component, and the current vector. [VectorExpr] evaluates to a whole
 vector and backs the per-feature projection and scaling operations.
 [BoolExpr] evaluates to a boolean and drives filter predicates and the
-guards on conditional nodes. Each hierarchy is sealed, so serialization
-is closed and exhaustive: every node carries a discriminator and decoding
-can never land on an unknown shape.
+guards on conditional nodes. JSON uses operator keys, numeric literals, and
+named input references, such as `{"add":["x",1]}`.
 
 ## Leaves and operators
 
@@ -36,8 +35,6 @@ multi-branch [Switch] and the conditional [IfExpr]. Vector projection has
 nodes for dot products, element selection, single-coordinate access, and
 a fold whose operator picks sum, min, max, or mean.
 
-Anything that cannot be expressed as one of these nodes stays a live-only
-lambda on the [com.eignex.kumulant.core.Stat] side and is not
-wire-expressible. Reach for the lambda overloads of the filter and
-transform operations in [com.eignex.kumulant.operation] when that
-happens.
+Filters, transforms, computed weights, and feedback projections use these
+expression trees through [com.eignex.kumulant.schema.ops]. The live adapters
+that evaluate them are internal implementation details.

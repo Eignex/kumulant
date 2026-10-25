@@ -121,7 +121,7 @@ class ContextualBanditSpecTest {
     fun `decoded mismatched posterior is rejected during materialization`() {
         val spec: ContextualBanditSpec = RegressionContextualSpec(2, BayesianRegression(1), LinUcb)
         val encoded = SchemaJson.encodeToString(ContextualBanditSpec.serializer(), spec)
-            .replace("LinUcb", "PointPosterior")
+            .replace("linUcb", "pointPosterior")
         val decoded = SchemaJson.decodeFromString(ContextualBanditSpec.serializer(), encoded)
 
         val error = assertFailsWith<IllegalArgumentException> { decoded.materialize() }
@@ -153,13 +153,12 @@ class ContextualBanditSpecTest {
     @Test
     fun `decoded mismatched global regression is rejected during materialization`() {
         val encoded = """
-            {
-                "type": "RegressionContextual",
+            {"regressionContextual": {
                 "nbrArms": 2,
-                "regression": { "type": "BayesianRegression", "featureSize": 1 },
-                "posterior": { "type": "LinUcb" },
-                "globalRegression": { "type": "StochasticRegression", "featureSize": 1 }
-            }
+                "regression": {"bayesianRegression": {"featureSize": 1}},
+                "posterior": "linUcb",
+                "globalRegression": {"stochasticRegression": {"featureSize": 1}}
+            }}
         """.trimIndent()
         val decoded = Json.decodeFromString(ContextualBanditSpec.serializer(), encoded)
 

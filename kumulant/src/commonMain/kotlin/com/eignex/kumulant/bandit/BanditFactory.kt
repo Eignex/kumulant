@@ -5,6 +5,7 @@ package com.eignex.kumulant.bandit
 import com.eignex.kumulant.bandit.contextual.ContextualBanditSpec
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
+import com.eignex.kumulant.bandit.contextual.TrackedContextualSpec
 import com.eignex.kumulant.bandit.univariate.Arm
 import com.eignex.kumulant.bandit.univariate.BanditPolicy
 import com.eignex.kumulant.bandit.univariate.BanditPolicySpec
@@ -31,6 +32,7 @@ import com.eignex.kumulant.bandit.univariate.ThompsonSampling
 import com.eignex.kumulant.bandit.univariate.ThompsonSamplingSpec
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonSpec
+import com.eignex.kumulant.bandit.univariate.TrackedUnivariateSpec
 import com.eignex.kumulant.bandit.univariate.UCB1
 import com.eignex.kumulant.bandit.univariate.UCB1Normal
 import com.eignex.kumulant.bandit.univariate.UCB1Tuned
@@ -133,7 +135,12 @@ fun <R : Result> TopTwoThompsonSpec<R>.materialize(random: Random = Random.Defau
     )
 
 /** Dispatch any [UnivariateBanditSpec] to its concrete bandit. */
-fun UnivariateBanditSpec.materialize(random: Random = Random.Default): Bandit = when (this) {
+fun UnivariateBanditSpec.materialize(
+    random: Random = Random.Default,
+    concurrency: Concurrency = Concurrency.None,
+    nowNanos: () -> Long = { 0L },
+): Bandit = when (this) {
+    is TrackedUnivariateSpec -> materialize(random, concurrency, nowNanos)
     is MultiArmedSpec<*> -> materialize(random)
     is RouletteWheelSpec -> materialize(random)
     is BoltzmannSpec -> materialize(random)
@@ -182,6 +189,35 @@ private fun RegressionPosterior<*>.requireCompatible(snapshot: Result, path: Str
 fun ContextualBanditSpec.materialize(
     random: Random = Random.Default,
     concurrency: Concurrency = Concurrency.None,
+    nowNanos: () -> Long = { 0L },
 ): Bandit = when (this) {
     is RegressionContextualSpec<*> -> materialize(random, concurrency)
+    is TrackedContextualSpec -> materialize(random, concurrency, nowNanos)
 }
+
+/** Build a tracked univariate bandit; [nowNanos] supplies observation timestamps at runtime. */
+fun TrackedUnivariateSpec.materialize(
+    random: Random = Random.Default,
+    concurrency: Concurrency = Concurrency.None,
+    nowNanos: () -> Long = { 0L },
+): TrackedUnivariateBandit<UnivariateBandit> = TrackedUnivariateBandit(
+    inner = inner.materialize(random, concurrency, nowNanos) as UnivariateBandit,
+    chooseTemplate = chooseTemplate?.materialize(concurrency),
+    updateArmRewardTemplate = updateArmRewardTemplate?.materialize(concurrency),
+    nowNanos = nowNanos,
+)
+
+/** Build a tracked contextual bandit; [nowNanos] supplies observation timestamps at runtime. */
+fun TrackedContextualSpec.materialize(
+    random: Random = Random.Default,
+    concurrency: Concurrency = Concurrency.None,
+    nowNanos: () -> Long = { 0L },
+): TrackedContextualBandit<ContextualBandit> = TrackedContextualBandit(
+    inner = inner.materialize(random, concurrency, nowNanos) as ContextualBandit,
+    contextFeatureSize = contextFeatureSize,
+    chooseTemplate = chooseTemplate?.materialize(concurrency),
+    updateJointTemplate = updateJointTemplate?.materialize(concurrency),
+    updateMarginalTemplate = updateMarginalTemplate?.materialize(concurrency),
+    updateArmRewardTemplate = updateArmRewardTemplate?.materialize(concurrency),
+    nowNanos = nowNanos,
+)

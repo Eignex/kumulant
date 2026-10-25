@@ -20,15 +20,11 @@ accident of layout.
 
 ## Wire shape
 
-Polymorphism is by name: each spec carries a serial discriminator matching
-its Kotlin class name, so any format with open polymorphism, JSON, CBOR,
-or Protobuf, puts the same type string on the wire. Defaults on each spec
-mirror the underlying stat's constructor defaults, so an encoded payload
-stays terse when the format is configured to omit defaults. Construction
-lives elsewhere on purpose: a spec is inert data, and turning it into a
-live stat happens through the materialize functions in
-[com.eignex.kumulant.schema.runtime], with the concurrency mode supplied
-at that point rather than carried on the wire.
+JSON uses names for simple nodes, such as `"mean"`, and operator keys for
+configured nodes, such as `{"ewma":{"alpha":0.1}}`. Serialize through [StatSpec]
+or a modality root. Expressions use numeric literals and structured
+operators; decorators retain an explicit `inner` tree. Defaults follow
+`encodeDefaults`. Non-JSON formats retain generated serial names and field layouts.
 
 ## Beyond the leaf specs
 

@@ -20,13 +20,13 @@ test and strictly synchronized in a contended hot loop.
 ## Declaring and reading a group
 
 [StatSchema] is the declarative entry point. A schema subclass registers
-its stats through the series, paired, vector, and discrete delegates, and
+its stats through the series, paired, vector, discrete, and regression delegates, and
 each delegate hands back a [com.eignex.kumulant.schema.StatKey] carrying
 the result type. The schema materializes into a [StatGroup], which is
 itself a series stat over [com.eignex.kumulant.schema.GroupResult]: it
 forwards every update to all of its entries and collects their snapshots
 into one result, read back by typed key rather than by string. The
-[PairedStatGroup], [VectorStatGroup], and [DiscreteStatGroup] variants
+[PairedStatGroup], [VectorStatGroup], [DiscreteStatGroup], and [RegressionStatGroup] variants
 fan updates only to entries of their own modality.
 
 The group constructor is where [Concurrency][com.eignex.kumulant.core.Concurrency]
@@ -41,10 +41,6 @@ in through merge.
 
 ## Building groups by hand
 
-When an aggregation isn't wire-expressible, for instance a filter-wrapped
-stat that depends on a live lambda, the group can be assembled directly
-from name-to-stat pairs rather than from a schema. The list-stat builders
-behind [ListStats] and its modality variants do exactly this, and
-[BoundStat] is the name-plus-stat pairing they collect. This bypasses the
-schema layer entirely, trading wire portability for the freedom to hold a
-live stat the spec vocabulary can't describe.
+Groups can also be assembled directly from [BoundStat] entries. The same
+built-in accumulators and compositions are available as serializable specs;
+use [StatSchema] or [StatSchemaDef] when the configuration must travel on the wire.

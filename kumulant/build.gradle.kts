@@ -49,6 +49,7 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.12.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.12.0")
         }
     }
 }

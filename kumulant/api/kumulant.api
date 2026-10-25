@@ -5,23 +5,27 @@ public abstract interface class com/eignex/kumulant/bandit/Bandit {
 }
 
 public final class com/eignex/kumulant/bandit/BanditFactoryKt {
-	public static final fun materialize (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/bandit/Bandit;
+	public static final fun materialize (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;)Lcom/eignex/kumulant/bandit/Bandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/contextual/RegressionContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/bandit/contextual/RegressionContextualBandit;
+	public static final fun materialize (Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;)Lcom/eignex/kumulant/bandit/TrackedContextualBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/BanditPolicySpec;)Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/Exp3Spec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/Exp3Bandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/MultiArmedSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/MultiArmedBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/RouletteWheelSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/RouletteWheelBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonBandit;
-	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Bandit;
-	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/Bandit;
+	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;)Lcom/eignex/kumulant/bandit/TrackedUnivariateBandit;
+	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;)Lcom/eignex/kumulant/bandit/Bandit;
+	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/Bandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/RegressionContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/contextual/RegressionContextualBandit;
+	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/TrackedContextualBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/Exp3Spec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/Exp3Bandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/MultiArmedSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/MultiArmedBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/RouletteWheelSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/RouletteWheelBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonBandit;
-	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/Bandit;
+	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/TrackedUnivariateBandit;
+	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/Bandit;
 }
 
 public abstract interface class com/eignex/kumulant/bandit/ContextualBandit : com/eignex/kumulant/bandit/Bandit {
@@ -166,6 +170,44 @@ public final synthetic class com/eignex/kumulant/bandit/contextual/RegressionCon
 
 public final class com/eignex/kumulant/bandit/contextual/RegressionContextualSpec$Companion {
 	public final fun serializer (Lkotlinx/serialization/KSerializer;)Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/bandit/contextual/TrackedContextualSpec : com/eignex/kumulant/bandit/contextual/ContextualBanditSpec {
+	public static final field Companion Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec$Companion;
+	public fun <init> (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;ILcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/PairedStatSpec;)V
+	public synthetic fun <init> (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;ILcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/PairedStatSpec;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;
+	public final fun component2 ()I
+	public final fun component3 ()Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
+	public final fun component4 ()Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
+	public final fun component5 ()Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
+	public final fun component6 ()Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public final fun copy (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;ILcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/PairedStatSpec;)Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec;Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;ILcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/PairedStatSpec;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChooseTemplate ()Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
+	public final fun getContextFeatureSize ()I
+	public final fun getInner ()Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;
+	public final fun getUpdateArmRewardTemplate ()Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public final fun getUpdateJointTemplate ()Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
+	public final fun getUpdateMarginalTemplate ()Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/bandit/contextual/TrackedContextualSpec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/bandit/contextual/TrackedContextualSpec$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public abstract interface class com/eignex/kumulant/bandit/univariate/Arm {
@@ -1258,6 +1300,38 @@ public final synthetic class com/eignex/kumulant/bandit/univariate/TopTwoThompso
 
 public final class com/eignex/kumulant/bandit/univariate/TopTwoThompsonSpec$Companion {
 	public final fun serializer (Lkotlinx/serialization/KSerializer;)Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec : com/eignex/kumulant/bandit/univariate/UnivariateBanditSpec {
+	public static final field Companion Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec$Companion;
+	public fun <init> (Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;Lcom/eignex/kumulant/schema/spec/PairedStatSpec;)V
+	public synthetic fun <init> (Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;Lcom/eignex/kumulant/schema/spec/PairedStatSpec;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;
+	public final fun component2 ()Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public final fun component3 ()Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public final fun copy (Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;Lcom/eignex/kumulant/schema/spec/PairedStatSpec;)Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec;Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;Lcom/eignex/kumulant/schema/spec/PairedStatSpec;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChooseTemplate ()Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public final fun getInner ()Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;
+	public final fun getUpdateArmRewardTemplate ()Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/eignex/kumulant/bandit/univariate/UCB1 : com/eignex/kumulant/bandit/univariate/BanditPolicy {
@@ -2535,7 +2609,10 @@ public final class com/eignex/kumulant/schema/ops/OperationsKt {
 	public static synthetic fun windowed$default (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;JIILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
 	public static synthetic fun windowed$default (Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;JIILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
 	public static synthetic fun windowed$default (Lcom/eignex/kumulant/schema/spec/VectorStatSpec;JIILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/VectorStatSpec;
+	public static final fun withFeedback (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static final fun withFeedback (Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/spec/VectorStatSpec;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
 	public static final fun withFeedback (Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public static final fun withFeedback (Lcom/eignex/kumulant/schema/spec/VectorStatSpec;Lcom/eignex/kumulant/schema/spec/VectorStatSpec;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/spec/VectorStatSpec;
 	public static final fun withFixedX (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;D)Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
 	public static final fun withFixedY (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;D)Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
 	public static final fun withSelfLag (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;I)Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
@@ -2991,16 +3068,20 @@ public final class com/eignex/kumulant/schema/spec/Auc$Companion {
 
 public final class com/eignex/kumulant/schema/spec/BayesianRegression : com/eignex/kumulant/schema/spec/RegressionStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/BayesianRegression$Companion;
-	public fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;)V
-	public synthetic fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;)V
+	public synthetic fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
 	public final fun component2 ()D
 	public final fun component3 ()Lcom/eignex/kumulant/stat/regression/glm/Link;
-	public final fun copy (IDLcom/eignex/kumulant/stat/regression/glm/Link;)Lcom/eignex/kumulant/schema/spec/BayesianRegression;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/BayesianRegression;IDLcom/eignex/kumulant/stat/regression/glm/Link;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/BayesianRegression;
+	public final fun component4 ()Lcom/eignex/koblas/ContiguousVector;
+	public final fun component5 ()Lcom/eignex/koblas/DenseMatrix;
+	public final fun copy (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;)Lcom/eignex/kumulant/schema/spec/BayesianRegression;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/BayesianRegression;IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/BayesianRegression;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getFeatureSize ()I
 	public final fun getLink ()Lcom/eignex/kumulant/stat/regression/glm/Link;
+	public final fun getPriorCovariance ()Lcom/eignex/koblas/DenseMatrix;
+	public final fun getPriorMean ()Lcom/eignex/koblas/ContiguousVector;
 	public final fun getPriorVariance ()D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -3401,18 +3482,20 @@ public final class com/eignex/kumulant/schema/spec/DecayingVariance$Companion {
 
 public final class com/eignex/kumulant/schema/spec/DecisionTreeClassifier : com/eignex/kumulant/schema/spec/RegressionStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/DecisionTreeClassifier$Companion;
-	public fun <init> (IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;I)V
-	public synthetic fun <init> (IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ILcom/eignex/kumulant/schema/spec/SeriesStatSpec;)V
+	public synthetic fun <init> (IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ILcom/eignex/kumulant/schema/spec/SeriesStatSpec;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
 	public final fun component2 ()I
 	public final fun component3 ()Ljava/util/List;
 	public final fun component4 ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;
 	public final fun component5 ()I
-	public final fun copy (IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;I)Lcom/eignex/kumulant/schema/spec/DecisionTreeClassifier;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DecisionTreeClassifier;IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;IILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DecisionTreeClassifier;
+	public final fun component6 ()Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public final fun copy (IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ILcom/eignex/kumulant/schema/spec/SeriesStatSpec;)Lcom/eignex/kumulant/schema/spec/DecisionTreeClassifier;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DecisionTreeClassifier;IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ILcom/eignex/kumulant/schema/spec/SeriesStatSpec;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DecisionTreeClassifier;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getConfig ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;
 	public final fun getFeatureSize ()I
+	public final fun getLeafArm ()Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
 	public final fun getNumClasses ()I
 	public final fun getRandomSeed ()I
 	public final fun getSplitCandidates ()Ljava/util/List;
@@ -3437,17 +3520,19 @@ public final class com/eignex/kumulant/schema/spec/DecisionTreeClassifier$Compan
 
 public final class com/eignex/kumulant/schema/spec/DecisionTreeRegression : com/eignex/kumulant/schema/spec/RegressionStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/DecisionTreeRegression$Companion;
-	public fun <init> (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;I)V
-	public synthetic fun <init> (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ILcom/eignex/kumulant/schema/spec/SeriesStatSpec;)V
+	public synthetic fun <init> (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ILcom/eignex/kumulant/schema/spec/SeriesStatSpec;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
 	public final fun component2 ()Ljava/util/List;
 	public final fun component3 ()Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;
 	public final fun component4 ()I
-	public final fun copy (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;I)Lcom/eignex/kumulant/schema/spec/DecisionTreeRegression;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DecisionTreeRegression;ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;IILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DecisionTreeRegression;
+	public final fun component5 ()Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public final fun copy (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ILcom/eignex/kumulant/schema/spec/SeriesStatSpec;)Lcom/eignex/kumulant/schema/spec/DecisionTreeRegression;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DecisionTreeRegression;ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ILcom/eignex/kumulant/schema/spec/SeriesStatSpec;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DecisionTreeRegression;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getConfig ()Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;
 	public final fun getFeatureSize ()I
+	public final fun getLeafArm ()Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
 	public final fun getRandomSeed ()I
 	public final fun getSplitCandidates ()Ljava/util/List;
 	public fun hashCode ()I
@@ -3502,6 +3587,33 @@ public final synthetic class com/eignex/kumulant/schema/spec/DiagonalRegression$
 }
 
 public final class com/eignex/kumulant/schema/spec/DiagonalRegression$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/DiscreteGroupStatSpec : com/eignex/kumulant/schema/spec/DiscreteStatSpec {
+	public static final field Companion Lcom/eignex/kumulant/schema/spec/DiscreteGroupStatSpec$Companion;
+	public fun <init> (Ljava/util/Map;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lcom/eignex/kumulant/schema/spec/DiscreteGroupStatSpec;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DiscreteGroupStatSpec;Ljava/util/Map;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DiscreteGroupStatSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStats ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/schema/spec/DiscreteGroupStatSpec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/DiscreteGroupStatSpec$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/DiscreteGroupStatSpec;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/DiscreteGroupStatSpec;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/DiscreteGroupStatSpec$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -4002,6 +4114,33 @@ public final class com/eignex/kumulant/schema/spec/PageHinkley$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public final class com/eignex/kumulant/schema/spec/PairedGroupStatSpec : com/eignex/kumulant/schema/spec/PairedStatSpec {
+	public static final field Companion Lcom/eignex/kumulant/schema/spec/PairedGroupStatSpec$Companion;
+	public fun <init> (Ljava/util/Map;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lcom/eignex/kumulant/schema/spec/PairedGroupStatSpec;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/PairedGroupStatSpec;Ljava/util/Map;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/PairedGroupStatSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStats ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/schema/spec/PairedGroupStatSpec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/PairedGroupStatSpec$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/PairedGroupStatSpec;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/PairedGroupStatSpec;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/PairedGroupStatSpec$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public abstract interface class com/eignex/kumulant/schema/spec/PairedStatSpec : com/eignex/kumulant/schema/spec/StatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/PairedStatSpec$Companion;
 }
@@ -4103,8 +4242,8 @@ public final class com/eignex/kumulant/schema/spec/PlattCalibrator$Companion {
 
 public final class com/eignex/kumulant/schema/spec/RandomForestClassifier : com/eignex/kumulant/schema/spec/RegressionStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/RandomForestClassifier$Companion;
-	public fun <init> (IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZI)V
-	public synthetic fun <init> (IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZILcom/eignex/kumulant/schema/spec/SeriesStatSpec;)V
+	public synthetic fun <init> (IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZILcom/eignex/kumulant/schema/spec/SeriesStatSpec;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
 	public final fun component2 ()I
 	public final fun component3 ()Ljava/util/List;
@@ -4112,12 +4251,14 @@ public final class com/eignex/kumulant/schema/spec/RandomForestClassifier : com/
 	public final fun component5 ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;
 	public final fun component6 ()Z
 	public final fun component7 ()I
-	public final fun copy (IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZI)Lcom/eignex/kumulant/schema/spec/RandomForestClassifier;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/RandomForestClassifier;IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZIILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/RandomForestClassifier;
+	public final fun component8 ()Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public final fun copy (IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZILcom/eignex/kumulant/schema/spec/SeriesStatSpec;)Lcom/eignex/kumulant/schema/spec/RandomForestClassifier;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/RandomForestClassifier;IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZILcom/eignex/kumulant/schema/spec/SeriesStatSpec;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/RandomForestClassifier;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBagging ()Z
 	public final fun getConfig ()Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;
 	public final fun getFeatureSize ()I
+	public final fun getLeafArm ()Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
 	public final fun getNbrTrees ()I
 	public final fun getNumClasses ()I
 	public final fun getRandomSeed ()I
@@ -4143,20 +4284,22 @@ public final class com/eignex/kumulant/schema/spec/RandomForestClassifier$Compan
 
 public final class com/eignex/kumulant/schema/spec/RandomForestRegression : com/eignex/kumulant/schema/spec/RegressionStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/RandomForestRegression$Companion;
-	public fun <init> (ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZI)V
-	public synthetic fun <init> (ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZILcom/eignex/kumulant/schema/spec/SeriesStatSpec;)V
+	public synthetic fun <init> (ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZILcom/eignex/kumulant/schema/spec/SeriesStatSpec;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
 	public final fun component2 ()Ljava/util/List;
 	public final fun component3 ()I
 	public final fun component4 ()Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;
 	public final fun component5 ()Z
 	public final fun component6 ()I
-	public final fun copy (ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZI)Lcom/eignex/kumulant/schema/spec/RandomForestRegression;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/RandomForestRegression;ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZIILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/RandomForestRegression;
+	public final fun component7 ()Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public final fun copy (ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZILcom/eignex/kumulant/schema/spec/SeriesStatSpec;)Lcom/eignex/kumulant/schema/spec/RandomForestRegression;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/RandomForestRegression;ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZILcom/eignex/kumulant/schema/spec/SeriesStatSpec;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/RandomForestRegression;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getBagging ()Z
 	public final fun getConfig ()Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;
 	public final fun getFeatureSize ()I
+	public final fun getLeafArm ()Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
 	public final fun getNbrTrees ()I
 	public final fun getRandomSeed ()I
 	public final fun getSplitCandidates ()Ljava/util/List;
@@ -4231,6 +4374,33 @@ public final synthetic class com/eignex/kumulant/schema/spec/RecursiveVariance$$
 }
 
 public final class com/eignex/kumulant/schema/spec/RecursiveVariance$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/RegressionGroupStatSpec : com/eignex/kumulant/schema/spec/RegressionStatSpec {
+	public static final field Companion Lcom/eignex/kumulant/schema/spec/RegressionGroupStatSpec$Companion;
+	public fun <init> (Ljava/util/Map;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lcom/eignex/kumulant/schema/spec/RegressionGroupStatSpec;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/RegressionGroupStatSpec;Ljava/util/Map;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/RegressionGroupStatSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStats ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/schema/spec/RegressionGroupStatSpec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/RegressionGroupStatSpec$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/RegressionGroupStatSpec;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/RegressionGroupStatSpec;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/RegressionGroupStatSpec$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -4618,6 +4788,33 @@ public final class com/eignex/kumulant/schema/spec/Variance : com/eignex/kumulan
 	public fun hashCode ()I
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/eignex/kumulant/schema/spec/VectorGroupStatSpec : com/eignex/kumulant/schema/spec/VectorStatSpec {
+	public static final field Companion Lcom/eignex/kumulant/schema/spec/VectorGroupStatSpec$Companion;
+	public fun <init> (Ljava/util/Map;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lcom/eignex/kumulant/schema/spec/VectorGroupStatSpec;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/VectorGroupStatSpec;Ljava/util/Map;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/VectorGroupStatSpec;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getStats ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/schema/spec/VectorGroupStatSpec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/VectorGroupStatSpec$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/VectorGroupStatSpec;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/VectorGroupStatSpec;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/VectorGroupStatSpec$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public abstract interface class com/eignex/kumulant/schema/spec/VectorStatSpec : com/eignex/kumulant/schema/spec/StatSpec {

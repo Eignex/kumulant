@@ -1,5 +1,7 @@
 package com.eignex.kumulant.schema.spec
 
+import com.eignex.koblas.ContiguousVector
+import com.eignex.koblas.DenseMatrix
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.optimizer.*
@@ -66,9 +68,8 @@ import kotlinx.serialization.Serializable
 // stat) because Kotlin requires direct subclasses of a sealed interface to live in the
 // same package as the interface.
 //
-// Each variant uses `@SerialName` matching its Kotlin class name, so the wire `$type`
-// value mirrors what a Kotlin reader would type. Defaults match the underlying stat's
-// primary constructor so authored payloads stay terse under `encodeDefaults = false`.
+// Serial names preserve the tags used by non-JSON formats.
+// Defaults match the stat constructors so payloads stay terse under `encodeDefaults = false`.
 //
 // Construction lives in `StatFactory.kt`; specs here are pure data only.
 
@@ -489,7 +490,7 @@ data class SpaceSaving(
     val capacity: Int,
 ) : DiscreteStatSpec<HeavyHittersResult>
 
-/** Spec for `BayesianRegressionStat`: closed-form Gaussian linear regression with isotropic prior. */
+/** Spec for `BayesianRegressionStat`: Gaussian linear regression with a configurable prior. */
 @Serializable
 @SerialName("BayesianRegression")
 data class BayesianRegression(
@@ -499,6 +500,10 @@ data class BayesianRegression(
     val priorVariance: Double = StatDefaults.BAYESIAN_REGRESSION_PRIOR_VARIANCE,
     /** GLM link function; `Link.Identity` keeps the strict closed-form Gaussian posterior. */
     val link: Link = StatDefaults.regressionLink,
+    /** Prior coefficient mean; null uses the zero vector. */
+    val priorMean: ContiguousVector? = null,
+    /** Prior coefficient covariance; null uses [priorVariance] times the identity. */
+    val priorCovariance: DenseMatrix? = null,
 ) : RegressionStatSpec<PrecisionRegressionResult>
 
 /** Spec for `StochasticRegressionStat`: online GLM with a configurable optimizer. */
@@ -571,6 +576,8 @@ data class DecisionTreeRegression(
     val config: RegressionTreeConfig = RegressionTreeConfig(),
     /** PRNG seed for per-leaf candidate subsampling and bagging. */
     val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
+    /** Per-leaf accumulator recipe; null uses the stat's default leaf arm. */
+    val leafArm: SeriesStatSpec<WeightedVarianceResult>? = null,
 ) : RegressionStatSpec<TreeRegressionResult>
 
 /** Spec for `RandomForestRegressionStat`: ensembled VFDT regression forest. */
@@ -589,6 +596,8 @@ data class RandomForestRegression(
     val bagging: Boolean = StatDefaults.FOREST_BAGGING,
     /** PRNG seed shared across trees. */
     val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
+    /** Per-leaf accumulator recipe; null uses the stat's default leaf arm. */
+    val leafArm: SeriesStatSpec<WeightedVarianceResult>? = null,
 ) : RegressionStatSpec<ForestRegressionResult>
 
 /** Spec for `DecisionTreeClassifierStat`: online VFDT classification tree. */
@@ -605,6 +614,8 @@ data class DecisionTreeClassifier(
     val config: ClassificationTreeConfig = ClassificationTreeConfig(),
     /** PRNG seed. */
     val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
+    /** Per-leaf accumulator recipe; null uses the stat's default leaf arm. */
+    val leafArm: SeriesStatSpec<ClassCountsResult>? = null,
 ) : RegressionStatSpec<TreeClassificationResult>
 
 /** Spec for `RandomForestClassifierStat`: ensembled VFDT classification forest. */
@@ -625,4 +636,6 @@ data class RandomForestClassifier(
     val bagging: Boolean = StatDefaults.FOREST_BAGGING,
     /** PRNG seed shared across trees. */
     val randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
+    /** Per-leaf accumulator recipe; null uses the stat's default leaf arm. */
+    val leafArm: SeriesStatSpec<ClassCountsResult>? = null,
 ) : RegressionStatSpec<ForestClassificationResult>

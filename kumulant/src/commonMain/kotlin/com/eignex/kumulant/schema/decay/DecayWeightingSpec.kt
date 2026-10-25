@@ -1,5 +1,6 @@
 package com.eignex.kumulant.schema.decay
 
+import com.eignex.kumulant.schema.serialization.DecayWeightingSpecSerializer
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,7 +16,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * `kotlin.time.Duration` to avoid the experimental `Duration` serializer and
  * keep the wire compact.
  */
-@Serializable
+@Serializable(with = DecayWeightingSpecSerializer::class)
 sealed interface DecayWeightingSpec
 
 /** Wall-clock half-life decay: weight halves every [durationMillis]. */

@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression.glm
 
+import com.eignex.kumulant.schema.serialization.PenaltySerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -10,7 +11,7 @@ import kotlinx.serialization.Serializable
  * truncated-gradient in [StochasticRegressionStat], per-coordinate proximal step
  * (L1) or gradient term (L2) in [DiagonalRegressionStat]. See each stat's KDoc.
  */
-@Serializable
+@Serializable(with = PenaltySerializer::class)
 sealed interface Penalty {
     /** No regularisation. */
     @Serializable

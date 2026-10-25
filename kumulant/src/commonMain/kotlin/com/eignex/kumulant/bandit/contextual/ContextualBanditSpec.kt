@@ -1,6 +1,9 @@
 package com.eignex.kumulant.bandit.contextual
 
+import com.eignex.kumulant.bandit.TrackedContextualBandit
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.schema.serialization.ContextualBanditSpecSerializer
+import com.eignex.kumulant.schema.spec.PairedStatSpec
 import com.eignex.kumulant.schema.spec.RegressionStatSpec
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlinx.serialization.SerialName
@@ -11,7 +14,7 @@ import kotlinx.serialization.Serializable
  *
  * Materialisation lives in `BanditFactory`.
  */
-@Serializable
+@Serializable(with = ContextualBanditSpecSerializer::class)
 sealed interface ContextualBanditSpec
 
 /**
@@ -32,4 +35,22 @@ data class RegressionContextualSpec<R : Result>(
     val exploration: Double = 1.0,
     /** Template for the global pooling regressor; `null` disables pooling. */
     val globalRegression: RegressionStatSpec<R>? = null,
+) : ContextualBanditSpec
+
+/** Spec for [TrackedContextualBandit] and its optional observation accumulators. */
+@Serializable
+@SerialName("TrackedContextual")
+data class TrackedContextualSpec(
+    /** Bandit whose decisions and rewards are observed. */
+    val inner: ContextualBanditSpec,
+    /** Width of the context supplied to the bandit. */
+    val contextFeatureSize: Int,
+    /** Accumulator observing context/chosen-arm pairs. */
+    val chooseTemplate: RegressionStatSpec<*>? = null,
+    /** Accumulator observing contexts prefixed with the chosen arm and reward targets. */
+    val updateJointTemplate: RegressionStatSpec<*>? = null,
+    /** Accumulator observing context/reward pairs. */
+    val updateMarginalTemplate: RegressionStatSpec<*>? = null,
+    /** Accumulator observing arm-index/reward pairs. */
+    val updateArmRewardTemplate: PairedStatSpec<*>? = null,
 ) : ContextualBanditSpec
