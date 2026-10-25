@@ -4,10 +4,14 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.operation.FilterSeriesStat
+import com.eignex.kumulant.operation.TransformValueStat
+import com.eignex.kumulant.operation.weightBy
 import com.eignex.kumulant.schema.expr.BoolExpr
 import com.eignex.kumulant.schema.expr.Const
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.expr.X
+import com.eignex.kumulant.schema.runtime.ListStats
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -46,8 +50,7 @@ data class CompositeArm(
         require(subArms.isNotEmpty()) { "CompositeArm requires at least one subArm" }
     }
 
-    override fun createStat(): SeriesStat<ResultList<Result>> =
-        CompositeStat(subArms, subArms.map { it.arm.createStat() })
+    override fun createStat(): SeriesStat<ResultList<Result>> = compose()
 
     /** Companion host for factory helpers. */
     companion object
@@ -73,46 +76,30 @@ data class CompositeSubArm(
     val filter: BoolExpr? = null,
 )
 
-/** Live composite accumulator: fans each observation through the per-sub-arm AST. */
-internal class CompositeStat(private val subArms: List<CompositeSubArm>, initialSubStats: List<SeriesStat<*>>) :
-    SeriesStat<ResultList<Result>> {
+private fun CompositeArm.compose(): SeriesStat<ResultList<Result>> = ListStats(
+    subArms.mapIndexed { index, sub -> index.toString() to sub.routedStat() },
+)
 
-    private val subStats: Array<SeriesStat<*>> = initialSubStats.toTypedArray()
-
-    override val concurrency: Concurrency = subStats.firstOrNull()?.concurrency ?: Concurrency.None
-
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        for (i in subArms.indices) {
-            val sub = subArms[i]
-            if (sub.filter?.eval(value) == false) continue
-            val routed = sub.valueExpr.eval(value)
-
-            @Suppress("UNCHECKED_CAST")
-            val encoded = (sub.arm as Arm<Result>).encode(routed)
-            val w = weight * sub.weightExpr.eval(value)
-            @Suppress("UNCHECKED_CAST")
-            (subStats[i] as SeriesStat<Result>).update(encoded, timestampNanos, w)
-        }
+@Suppress("UNCHECKED_CAST")
+private fun CompositeSubArm.routedStat(): SeriesStat<Result> {
+    val accumulator = if (arm is CompositeArm) {
+        arm.compose() as SeriesStat<Result>
+    } else {
+        val leaf = arm.createStat() as SeriesStat<Result>
+        PriorSeriesStat(leaf, leaf.read(0L))
     }
+    val transformed = TransformValueStat(accumulator) { arm.encode(valueExpr.eval(it)) }
+    val weighted = transformed.weightBy { weightExpr.eval(it) }
+    return filter?.let { predicate -> FilterSeriesStat(weighted) { predicate.eval(it) } } ?: weighted
+}
 
-    override fun read(timestampNanos: Long): ResultList<Result> = ResultList(subStats.map { it.read(timestampNanos) })
-
-    override fun merge(values: ResultList<Result>) {
-        require(values.results.size == subStats.size) {
-            "merge: results.size=${values.results.size} does not match subStats.size=${subStats.size}"
-        }
-        for (i in subStats.indices) {
-            @Suppress("UNCHECKED_CAST")
-            (subStats[i] as SeriesStat<Result>).merge(values.results[i])
-        }
-    }
-
-    /** Reset re-seeds the prior pseudo-counts by rebuilding sub-stats via [Arm.createStat],
-     *  matching the priors-restored semantics of other Stat resets in the library. */
+private class PriorSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val prior: R) :
+    SeriesStat<R> by delegate {
     override fun reset() {
-        for (i in subArms.indices) subStats[i] = subArms[i].arm.createStat()
+        delegate.reset()
+        delegate.merge(prior)
     }
 
-    override fun create(concurrency: Concurrency?): SeriesStat<ResultList<Result>> =
-        CompositeStat(subArms, subStats.map { it.create(concurrency) })
+    override fun create(concurrency: Concurrency?): SeriesStat<R> =
+        PriorSeriesStat(delegate.create(concurrency), prior).also { it.reset() }
 }

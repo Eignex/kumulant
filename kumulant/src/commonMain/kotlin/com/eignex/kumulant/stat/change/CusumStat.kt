@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.change
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
@@ -47,6 +48,9 @@ data class CusumResult(
  * controls false-alarm rate. Standard rules of thumb are `k = 0.5 * sigma` and
  * `h = 4..5 * sigma` for unit-variance shifts.
  *
+ * Snapshots cannot merge independent ordered histories. Generic merge-based windowing
+ * is unavailable; feed ordered observations to one accumulator.
+ *
  * **Use cases:** detecting mean shifts in monitored signals (SPC, change-point
  * alarms on metrics, drift detection on model residuals).
  *
@@ -66,7 +70,8 @@ class CusumStat(
     /** Alarm threshold for either side; must be `>= 0`. */
     val threshold: Double = StatDefaults.CUSUM_THRESHOLD,
     override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<CusumResult> {
+) : SeriesStat<CusumResult>,
+    RefusesMerge {
 
     init {
         require(referenceValue >= 0.0) { "referenceValue must be >= 0, got $referenceValue" }
@@ -76,14 +81,6 @@ class CusumStat(
     private val streamMode = concurrency.monotonicMode()
     private val cusumPos = streamMode.newDouble(0.0)
     private val cusumNeg = streamMode.newDouble(0.0)
-
-    /**
-     * Whether anything has landed yet, which the two cells cannot tell us on their own.
-     *
-     * `cusumPos` clamps at zero and `cusumNeg` at zero from below, so "no observation yet" and "the
-     * drift has walked back to zero" are the same pair of numbers. [merge] has to distinguish them.
-     */
-    private val initialized = streamMode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // Non-positive rather than merely inert: this recurrence has no inverse -
@@ -101,31 +98,16 @@ class CusumStat(
             val next = min(0.0, prev + deviation + referenceValue)
             if (cusumNeg.compareAndSet(prev, next)) break
         }
-        initialized.store(1L)
     }
 
-    override fun merge(values: CusumResult) {
-        // Adopt the snapshot verbatim while empty, matching RecursiveVarianceStat.merge, HoltStat.merge
-        // and SeasonalSmoothingStat.merge. Averaging against a fresh stat's zero would halve the incoming
-        // drift, and `alarmUp` thresholds on that sum directly, so the alarm would need twice the shift.
-        val empty = initialized.load() == 0L
-        while (true) {
-            val prev = cusumPos.load()
-            val next = if (empty) values.cusumPositive else 0.5 * (prev + values.cusumPositive)
-            if (cusumPos.compareAndSet(prev, next)) break
-        }
-        while (true) {
-            val prev = cusumNeg.load()
-            val next = if (empty) values.cusumNegative else 0.5 * (prev + values.cusumNegative)
-            if (cusumNeg.compareAndSet(prev, next)) break
-        }
-        initialized.store(1L)
-    }
+    override val mergeRefusal: String =
+        "CusumStat requires ordered observations; snapshots cannot merge independent histories"
+
+    override fun merge(values: CusumResult): Nothing = throw UnsupportedOperationException(mergeRefusal)
 
     override fun reset() {
         cusumPos.store(0.0)
         cusumNeg.store(0.0)
-        initialized.store(0L)
     }
 
     override fun read(timestampNanos: Long): CusumResult {

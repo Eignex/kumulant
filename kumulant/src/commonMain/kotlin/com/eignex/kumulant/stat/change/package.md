@@ -38,11 +38,10 @@ detector to track the current one without explicit reset.
 
 ## Output
 
-All three produce a result with the running running statistic plus an
-`alarm: Boolean` field. The alarm doesn't auto-reset; caller decides
-what to do (page, reset the stat, write to an event store). Repeated
-alarm reads return the same value until the underlying statistic falls
-back below threshold.
+All three produce a result with a running statistic and an `alarm: Boolean`
+field. CUSUM and Page-Hinkley alarms reflect the current cumulative drift;
+the caller decides when to reset the detector. ADWIN's alarm reports whether
+the latest update removed an older part of its adaptive window.
 
 For drift detectors on classification accuracy specifically, feed the
 binary correctness signal `1[predicted == truth]` through one of these
@@ -50,19 +49,16 @@ stats. The same pattern works for any binary signal.
 
 ## Merge
 
-All three drift detectors merge only approximately; the state is an
-order-dependent recurrence with no exact parallel combine. [CusumStat] and
-[PageHinkleyStat] average their cumulative-deviation cells (and [PageHinkleyStat]
-weight-averages the running mean); [AdwinStat] carries over the change counter
-without reconstructing the windowed histogram. Treat merge as a roll-up
-convenience; for distributed drift detection, run a detector per stream rather
-than merging partials.
+The detectors refuse snapshot merges: their summaries cannot reconstruct the
+ordered observations or ADWIN's adaptive histogram. Run a detector per ordered
+stream, or feed a combined ordered stream to one detector. Merge-based generic
+windowing is unavailable; ADWIN manages its own adaptive window.
 
 ## Concurrency
 
-All three keep coupled state (running statistic + previous reference)
-that has to stay consistent across reads. Locked under
-[com.eignex.kumulant.core.Concurrency.Strict] /
-[com.eignex.kumulant.core.Concurrency.HighWrite]. Under
-[com.eignex.kumulant.core.Concurrency.Relaxed] the cells race and
-the alarm signal may flicker briefly under contention.
+[CusumStat] updates its two cumulative sums with independent CAS loops under
+concurrent modes. [PageHinkleyStat] locks coupled updates under
+[com.eignex.kumulant.core.Concurrency.Strict] and
+[com.eignex.kumulant.core.Concurrency.HighWrite]; its relaxed cells can drift.
+[AdwinStat] serialises histogram updates under every concurrent mode.
+Concurrency does not establish chronological observation order.

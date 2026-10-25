@@ -58,7 +58,6 @@ import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.expr.eval
 import com.eignex.kumulant.schema.spec.*
-import com.eignex.kumulant.stat.calibration.IsotonicCalibratorStat
 import com.eignex.kumulant.stat.calibration.PlattCalibratorStat
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
@@ -545,9 +544,6 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
 
     is PlattCalibrator ->
         StatPlan(path) { concurrency -> PlattCalibratorStat(optimizer, concurrency) }
-
-    is IsotonicCalibrator ->
-        StatPlan(path) { concurrency -> IsotonicCalibratorStat(numBins, concurrency) }
 
     is ConfusionMatrix ->
         StatPlan(path) { concurrency -> ConfusionMatrixStat(numClasses, concurrency) }

@@ -79,7 +79,7 @@ empirical one.
 
 - `MseLoss.windowed(window)` for windowed regression error.
 - `MseLoss.transform(...)` after a [Platt][com.eignex.kumulant.stat.calibration.PlattCalibratorStat]
-  or [Isotonic][com.eignex.kumulant.stat.calibration.IsotonicCalibratorStat]
+  or [isotonic calibration][com.eignex.kumulant.stat.calibration.isotonicCalibration]
   step to score calibrated probabilities.
 - `Auc` + [Reliability][com.eignex.kumulant.stat.calibration.ReliabilityStat]
   in parallel: AUC tells you discrimination, reliability tells you

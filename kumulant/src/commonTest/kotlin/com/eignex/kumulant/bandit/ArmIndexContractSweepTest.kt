@@ -1,7 +1,6 @@
 package com.eignex.kumulant.bandit
 
 import com.eignex.koblas.Vector
-import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BernoulliArm
 import com.eignex.kumulant.bandit.univariate.BetaPosterior
@@ -34,7 +33,6 @@ class ArmIndexContractSweepTest {
         val boltzmann = BoltzmannBandit(ARMS, random = Random(0))
         val exp3 = Exp3Bandit(ARMS, random = Random(0))
         val topTwo = TopTwoThompsonBandit(ARMS, ThompsonSampling(BernoulliArm(), BetaPosterior), random = Random(0))
-        val knn = KnnContextualBandit(ARMS, random = Random(0))
         val regression = RegressionContextualBandit(
             nbrArms = ARMS,
             template = BayesianRegressionStat(featureSize = 2),
@@ -74,15 +72,6 @@ class ArmIndexContractSweepTest {
                 "TopTwoThompsonBandit",
                 listOf(
                     "update" to { i -> topTwo.update(i, 1.0) },
-                ),
-            ),
-            Probe(
-                "KnnContextualBandit",
-                listOf(
-                    "update" to { i -> knn.update(i, x, 1.0) },
-                    "evaluate" to { i -> knn.evaluate(i, x) },
-                    "historySize" to { i -> knn.historySize(i) },
-                    "armWeight" to { i -> knn.armWeight(i) },
                 ),
             ),
             Probe(

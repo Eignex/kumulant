@@ -32,9 +32,7 @@ data class Exp3ArmResult(
  * on reward `r ∈ [0,1]` update `w[a] *= exp(eta · r / p[a])` using the
  * importance-sampling-corrected gain.
  *
- * Regret bound is `O(sqrt(T · K · ln K))` under default tunings. Univariate
- * sibling to [com.eignex.kumulant.bandit.contextual.Exp4Bandit]; same
- * machinery without the expert layer. Standalone class (not a
+ * Regret bound is `O(sqrt(T · K · ln K))` under default tunings. Standalone class (not a
  * [BanditPolicy] under [MultiArmedBandit]) because its sampling distribution
  * is computed across arms, not by independent-per-arm score + argmax.
  *

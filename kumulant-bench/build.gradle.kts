@@ -70,13 +70,6 @@ benchmark {
             include(".*VectorExprBenchmark.(sum|mean|minimum|maximum|norm2|dot)")
             param("representation", "dense", "sparse")
         }
-        register("exp4Mixing") {
-            warmups = 3
-            iterations = 5
-            iterationTime = 1
-            iterationTimeUnit = "s"
-            include(".*Exp4MixingBenchmark.(playDistribution|playDistributionInto|choose|update)")
-        }
         register("cholesky") {
             warmups = 3
             iterations = 5

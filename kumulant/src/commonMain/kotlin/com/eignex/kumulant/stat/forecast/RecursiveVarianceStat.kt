@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.forecast
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.RefusesMerge
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
@@ -32,6 +33,9 @@ data class RecursiveVarianceResult(
  * The first update seeds `sigma^2 = omega + alpha * value^2` (treating the previous
  * variance as zero).
  *
+ * Snapshots cannot merge independent ordered histories. Generic merge-based windowing
+ * is unavailable; feed ordered observations to one accumulator.
+ *
  * **Use cases:** generalised variance / volatility recursion; any application that
  * wants the bare three-coefficient form rather than the EWMA special case.
  *
@@ -50,7 +54,8 @@ class RecursiveVarianceStat(
     /** Persistence coefficient applied to the previous variance. Must be `>= 0`. */
     val beta: Double,
     override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<RecursiveVarianceResult> {
+) : SeriesStat<RecursiveVarianceResult>,
+    RefusesMerge {
 
     init {
         require(omega >= 0.0) { "omega must be >= 0, got $omega" }
@@ -60,7 +65,6 @@ class RecursiveVarianceStat(
 
     private val mode = concurrency.monotonicMode()
     private val variance = mode.newDouble(0.0)
-    private val initialized = mode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // Non-positive rather than merely inert: this recurrence has no inverse -
@@ -71,36 +75,17 @@ class RecursiveVarianceStat(
         while (true) {
             val current = variance.load()
             val next = omega + alpha * x2 + beta * current
-            if (variance.compareAndSet(current, next)) {
-                initialized.store(1L)
-                return
-            }
+            if (variance.compareAndSet(current, next)) return
         }
     }
 
-    override fun merge(values: RecursiveVarianceResult) {
-        while (true) {
-            val current = variance.load()
-            // Adopt the snapshot verbatim while empty, matching HoltStat.merge and
-            // SeasonalSmoothingStat.merge. Averaging against a fresh stat's 0.0 would halve the
-            // first contribution, so a roll-up merging N worker snapshots into a new coordinator
-            // would systematically understate the first one.
-            val next = if (initialized.load() == 0L) {
-                values.variance
-            } else {
-                // Treat the remote snapshot as one extra "averaged" observation of the variance.
-                0.5 * (current + values.variance)
-            }
-            if (variance.compareAndSet(current, next)) {
-                initialized.store(1L)
-                return
-            }
-        }
-    }
+    override val mergeRefusal: String =
+        "RecursiveVarianceStat requires ordered observations; snapshots cannot merge independent histories"
+
+    override fun merge(values: RecursiveVarianceResult): Nothing = throw UnsupportedOperationException(mergeRefusal)
 
     override fun reset() {
         variance.store(0.0)
-        initialized.store(0L)
     }
 
     override fun read(timestampNanos: Long) = RecursiveVarianceResult(variance.load(), omega, alpha, beta)

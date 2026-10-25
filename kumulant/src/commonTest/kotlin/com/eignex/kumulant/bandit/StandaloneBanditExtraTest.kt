@@ -1,19 +1,13 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.koblas.Vector
-import com.eignex.kumulant.bandit.contextual.Exp4Bandit
-import com.eignex.kumulant.bandit.contextual.Exp4Expert
-import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.bandit.univariate.BoltzmannBandit
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
 import com.eignex.kumulant.bandit.univariate.NormalTS
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
-import com.eignex.kumulant.feat
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class StandaloneBanditExtraTest {
@@ -55,33 +49,6 @@ class StandaloneBanditExtraTest {
     }
 
     @Test
-    fun `Exp4 rejects expert returning wrong-length advice`() {
-        val badExpert = Exp4Expert { _, _ -> DoubleArray(99) { 1.0 / 99 } }
-        val b = Exp4Bandit(nbrArms = 3, experts = listOf(badExpert), random = Random(0))
-        assertFailsWith<IllegalArgumentException> { b.playDistribution(feat(0.0)) }
-    }
-
-    @Test
-    fun `Exp4 gamma=1 produces uniform play distribution`() {
-        val expert = Exp4Expert { _, n -> DoubleArray(n).also { it[0] = 1.0 } }
-        val b = Exp4Bandit(nbrArms = 3, experts = listOf(expert), gamma = 1.0, random = Random(0))
-        val p = b.playDistribution(feat(0.0))
-        for (a in 0 until 3) assertTrue(abs(p[a] - 1.0 / 3) < 1e-9, "p[$a]=${p[a]}")
-    }
-
-    @Test
-    fun `Exp4 expertWeights sum to 1`() {
-        val experts: List<Exp4Expert> = listOf(
-            Exp4Expert { _, n -> DoubleArray(n) { 1.0 / n } },
-            Exp4Expert { _: Vector, n: Int -> DoubleArray(n).also { it[0] = 1.0 } },
-        )
-        val b = Exp4Bandit(nbrArms = 3, experts = experts, random = Random(1))
-        repeat(20) { b.update(b.choose(feat(0.0)), feat(0.0), 1.0) }
-        val w = b.expertWeights()
-        assertEquals(1.0, w.sum(), 1e-9)
-    }
-
-    @Test
     fun `Boltzmann temperature respects floor`() {
         val b = BoltzmannBandit(
             nbrArms = 2,
@@ -117,62 +84,6 @@ class StandaloneBanditExtraTest {
         repeat(10) { b.update(it % 3, it.toDouble()) }
         val snap = b.snapshot()
         for (a in 0 until 3) assertEquals(b.armResult(a), snap[a])
-    }
-
-    @Test
-    fun `Knn uses custom distance function`() {
-        // Custom distance: always returns 1; every point looks equidistant.
-        val b = KnnContextualBandit(
-            nbrArms = 2,
-            k = 2,
-            exploration = 0.0,
-            distance = { _, _ -> 1.0 },
-            random = Random(0),
-        )
-        repeat(4) { b.update(0, feat(it.toDouble()), it.toDouble()) }
-        // Without spatial info every query returns the same average.
-        val a = b.evaluate(0, feat(-100.0))
-        val c = b.evaluate(0, feat(100.0))
-        assertEquals(a, c, 1e-9)
-    }
-
-    @Test
-    fun `Knn historySize and armWeight track per arm`() {
-        val b = KnnContextualBandit(nbrArms = 2, k = 2, exploration = 0.0)
-        b.update(0, feat(0.0), 1.0, weight = 2.0)
-        b.update(0, feat(1.0), 1.0)
-        b.update(1, feat(0.0), 1.0)
-        assertEquals(2, b.historySize(0))
-        assertEquals(1, b.historySize(1))
-        assertEquals(3.0, b.armWeight(0), 1e-9)
-        assertEquals(1.0, b.armWeight(1), 1e-9)
-    }
-
-    @Test
-    fun `Knn exploration scale grows the score on low-evidence arms`() {
-        val baseline = KnnContextualBandit(nbrArms = 1, k = 1, exploration = 0.0, random = Random(0))
-        val bonus = KnnContextualBandit(nbrArms = 1, k = 1, exploration = 5.0, random = Random(0))
-        baseline.update(0, feat(0.0), 1.0)
-        bonus.update(0, feat(0.0), 1.0)
-        // Advance the step counters so the UCB bound has ln(t) > 0.
-        repeat(5) {
-            baseline.choose(feat(0.0))
-            bonus.choose(feat(0.0))
-        }
-        assertTrue(bonus.evaluate(0, feat(0.0)) > baseline.evaluate(0, feat(0.0)))
-    }
-
-    @Test
-    fun `Knn squaredL2 distance behaves correctly`() {
-        val d = KnnContextualBandit.squaredL2(feat(1.0, 2.0), feat(0.0, 0.0))
-        assertEquals(5.0, d, 1e-9)
-    }
-
-    @Test
-    fun `Knn squaredL2 rejects mismatched sizes`() {
-        assertFailsWith<IllegalArgumentException> {
-            KnnContextualBandit.squaredL2(feat(1.0), feat(1.0, 2.0))
-        }
     }
 
     @Test

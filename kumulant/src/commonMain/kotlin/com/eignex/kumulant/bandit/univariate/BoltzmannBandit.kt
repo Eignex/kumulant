@@ -95,7 +95,7 @@ class BoltzmannBandit(
         // softmax with it - the max-shift leaves NaN alone and the sum is NaN, which softmaxInPlace
         // still reports as usable. `choose` then resolves an all-NaN distribution to "always the last
         // arm", with no way back. Uniform is the honest distribution when no arm has usable evidence,
-        // as it is for Exp3Bandit and Exp4Bandit.
+        // as it is for Exp3Bandit.
         if (logits.any { !it.isFinite() }) return DoubleArray(nbrArms) { 1.0 / nbrArms }
         logits.softmaxInPlace()
         return logits

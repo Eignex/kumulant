@@ -6,7 +6,6 @@ import com.eignex.koblas.SparseVector
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
-import com.eignex.kumulant.bandit.contextual.KnnContextualBandit
 import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.Link
@@ -33,7 +32,6 @@ open class PredictionKernelBenchmark {
     private lateinit var softmax: SoftmaxRegressionResult
     private lateinit var posterior: PrecisionRegressionResult
     private lateinit var gaussianNaiveBayes: com.eignex.kumulant.stat.regression.GaussianNaiveBayesResult
-    private lateinit var knn: KnnContextualBandit
     private lateinit var probabilities: DoubleArray
 
     @Setup
@@ -63,10 +61,6 @@ open class PredictionKernelBenchmark {
             naiveBayes.update(DenseVector.of(DoubleArray(featureSize) { i -> (sample - i % 7) * 0.1 }), (sample % 4).toDouble())
         }
         gaussianNaiveBayes = naiveBayes.read()
-        knn = KnnContextualBandit(nbrArms = 4, k = 8, exploration = 0.0)
-        repeat(4) { arm ->
-            repeat(32) { sample -> knn.update(arm, x, (sample - arm).toDouble()) }
-        }
         probabilities = DoubleArray(4)
     }
 
@@ -87,9 +81,6 @@ open class PredictionKernelBenchmark {
 
     @Benchmark
     fun gaussianNaiveBayesProbabilitiesInto(): DoubleArray = probabilities.also { gaussianNaiveBayes.probabilitiesInto(x, it) }
-
-    @Benchmark
-    fun knnChoose(): Int = knn.choose(x)
 
     @Benchmark
     fun multivariateSample(): Vector = MultivariateGaussian.sample(posterior, Random(1234), 1.0)

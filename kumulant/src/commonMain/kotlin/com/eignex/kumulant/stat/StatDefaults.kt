@@ -26,7 +26,6 @@ internal object StatDefaults {
     const val BLOOM_FILTER_HASHES: Int = 7
     const val LINEAR_COUNTING_BITS: Int = 4096
     const val HYPER_LOG_LOG_PRECISION: Int = 14
-    const val ISOTONIC_CALIBRATOR_NUM_BINS: Int = 16
     const val AUC_NUM_BINS: Int = 256
     const val AUC_LOWER_BOUND: Double = 0.0
     const val AUC_UPPER_BOUND: Double = 1.0

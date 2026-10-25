@@ -265,11 +265,6 @@ class StatsRoundTripTest {
         assertEquals(PlattCalibrator(), roundTrip(PlattCalibrator()))
     }
 
-    @Test fun `isotonicCalibratorConfig round trips`() {
-        val cfg = IsotonicCalibrator(numBins = 12)
-        assertEquals(cfg, roundTrip(cfg))
-    }
-
     @Test fun `confusionMatrixConfig round trips`() {
         val cfg = ConfusionMatrix(numClasses = 5)
         assertEquals(cfg, roundTrip(cfg))

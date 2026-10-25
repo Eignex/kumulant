@@ -1,9 +1,8 @@
 # Package com.eignex.kumulant.stat.forecast
 
-Predictive recurrences with multi-cell state. Their results expose
-`forecast(steps)` projections, distinguishing them from the
-[decay][com.eignex.kumulant.stat.decay] family's
-running-moment shape.
+Predictive recurrences over ordered observations. Holt and seasonal smoothing
+expose `forecast(steps)` projections; recursive variance tracks volatility.
+Each implements [com.eignex.kumulant.core.SeriesStat].
 
 ## Picking a forecaster
 
@@ -23,7 +22,7 @@ running-moment shape.
   `trend = beta * (level - priorLevel) + (1 - beta) * priorTrend`.
 
 The result exposes `forecast(steps)` which projects the level forward
-by a damped trend: `forecast(h) = level + (1 - phi^h) / (1 - phi) * trend`.
+by a damped trend: `forecast(h) = level + phi * (1 - phi^h) / (1 - phi) * trend`.
 The damping factor `phi` in `(0, 1]` geometrically discounts the trend's
 contribution to long-horizon forecasts; `phi = 1.0` recovers the
 classical undamped Holt. Pick `phi` close to 1 for streams with
@@ -61,18 +60,15 @@ persistence.
 
 ## Merge
 
-All three forecasters merge only approximately. The smoothing recurrences are
-order-dependent with no exact parallel combine, so the merge averages the
-coupled cells: level and trend for [HoltStat], plus the seasonal factor vector
-for [SeasonalSmoothingStat] and the running variance for [RecursiveVarianceStat].
-Treat merge as a roll-up convenience; for the truest forecast, feed one stat the
-ordered stream.
+All three forecasters refuse snapshot merges. A final level, trend, seasonal
+vector, or variance does not encode the observation order needed to combine
+independent recurrences. Feed ordered observations to one accumulator.
+Merge-based generic windowing is unavailable.
 
 ## Concurrency
 
-All three stats keep multi-cell coupled state (level + trend; level +
-trend + seasonal vector; variance + omega/alpha/beta parameters) and
-need consistent reads. Locked under [com.eignex.kumulant.core.Concurrency.Strict]
-/ [com.eignex.kumulant.core.Concurrency.HighWrite]. Under
-[com.eignex.kumulant.core.Concurrency.Relaxed] the cells race; results
-may drift briefly under contention but never throw.
+[HoltStat] and [SeasonalSmoothingStat] lock their coupled updates under
+[com.eignex.kumulant.core.Concurrency.Strict] and
+[com.eignex.kumulant.core.Concurrency.HighWrite]; relaxed cells can drift.
+[RecursiveVarianceStat] uses a single-cell CAS recurrence under concurrent
+modes. Concurrency does not establish chronological observation order.

@@ -3,8 +3,8 @@ package com.eignex.kumulant.stream
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.Stat
-import com.eignex.kumulant.stat.calibration.IsotonicCalibratorStat
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
+import com.eignex.kumulant.stat.calibration.isotonicCalibration
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.quantile.HdrHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
@@ -163,14 +163,14 @@ class ConcurrentReadInvariantsTest {
     }
 
     @Test
-    fun `IsotonicCalibratorStat never emits a probability outside the unit interval`() {
+    fun `isotonic calibration never emits a probability outside the unit interval`() {
         for (level in levels) {
-            val stat = IsotonicCalibratorStat(numBins = 16, concurrency = level)
-            assertReadInvariants("IsotonicCalibratorStat[$level]", stat, write = { t, i ->
+            val stat = ReliabilityStat(numBins = 16, concurrency = level)
+            assertReadInvariants("isotonicCalibration[$level]", stat, write = { t, i ->
                 stat.update(((t * 11 + i * 3) % 100) / 100.0, if ((t + i) % 3 == 0) 1.0 else 0.0)
             }) { r ->
                 for (p in listOf(0.0, 0.25, 0.5, 0.75, 1.0)) {
-                    val c = r.calibrate(p)
+                    val c = r.isotonicCalibration().calibrate(p)
                     assertTrue(!c.isNaN() && c in 0.0..1.0, "calibrate($p)=$c")
                 }
             }

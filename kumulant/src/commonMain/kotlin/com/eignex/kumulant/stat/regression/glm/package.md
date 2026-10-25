@@ -31,7 +31,6 @@ coupled to the Bayesian variants).
 | [StochasticRegressionStat] | Online SGD with any [OptimizerSpec][com.eignex.kumulant.schema.optimizer.OptimizerSpec] (Sgd / Adagrad / RMSProp / Adam). Best when you want point estimates only and the per-update cost must stay small. |
 | [DiagonalRegressionStat] | Factorised Gaussian posterior; per-coefficient precision without the full covariance matrix. The natural choice for high-dimensional features where the quadratic memory of full Bayesian regression is prohibitive. |
 | [BayesianRegressionStat] | Full Gaussian posterior, carried as the Cholesky factor of its precision (a square-root information filter). Closed-form under [Link.Identity]; online Laplace approximation under [Link.Logit] / [Link.Log]. Reach for it when downstream needs uncertainty quantification; Thompson sampling, LinUCB. |
-| [HierarchicalBayesianRegression] | Pooled estimation across many parallel regressors. Use it when you have one regressor per arm in a bandit (or per group in any stratified problem) and want them to share strength. |
 
 ## Penalties
 
@@ -78,8 +77,10 @@ exactly by combining Gaussian posteriors: per-coordinate precision-weighted for
 the diagonal, and for the joint posterior a precision add-and-subtract whose
 Cholesky factor is the merged state, so nothing is inverted.
 [StochasticRegressionStat] merges approximately; SGD keeps no second-moment
-information, so the combine is a sample-weighted average of the weight vectors. [HierarchicalBayesianRegression] does not merge; the manager
-refits the population prior from its tracked instances instead.
+information, so the combine is a sample-weighted average of the weight vectors.
+For partial pooling, fit a population prior from snapshots with
+[BayesianRegressionStat.fitPopulationPrior] and pass its mean and covariance to
+new regressors. The caller owns the snapshot collection and refit schedule.
 
 ## Concurrency
 
@@ -94,5 +95,5 @@ under [com.eignex.kumulant.core.Concurrency.Strict] /
 [BayesianRegressionStat] serialise the whole update under any concurrent level
 (the coupled posterior update has no lock-free form); throughput is
 contention-bound, so shard and merge for higher write rates.
-[HierarchicalBayesianRegression] is a manager, not a hot-path stat; each tracked
-[BayesianRegressionStat] honours its own level.
+Population-prior fitting operates on detached snapshots; collect them using
+each regressor's configured concurrency level.

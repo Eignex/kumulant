@@ -4,7 +4,6 @@ import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stat.calibration.IsotonicCalibratorResult
 import com.eignex.kumulant.stat.calibration.PlattCalibratorResult
 import com.eignex.kumulant.stat.calibration.ReliabilityResult
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
@@ -393,14 +392,6 @@ data class PlattCalibrator(
     /** Optimizer driving the underlying logistic regression. */
     val optimizer: OptimizerSpec = StatDefaults.plattOptimizer(),
 ) : PairedStatSpec<PlattCalibratorResult>
-
-/** Spec for `IsotonicCalibratorStat`: binned isotonic calibrator over `[0, 1]`. */
-@Serializable
-@SerialName("IsotonicCalibrator")
-data class IsotonicCalibrator(
-    /** Number of equal-width bins covering `[0, 1]`. */
-    val numBins: Int = StatDefaults.ISOTONIC_CALIBRATOR_NUM_BINS,
-) : PairedStatSpec<IsotonicCalibratorResult>
 
 /** Spec for `ConfusionMatrixStat`: K-by-K weighted confusion matrix over (predictedClass, trueClass). */
 @Serializable

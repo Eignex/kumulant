@@ -1,6 +1,5 @@
 package com.eignex.kumulant.core
 
-import com.eignex.kumulant.bandit.contextual.Exp4State
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.cardinality.LinearCountingResult
 import com.eignex.kumulant.stat.quantile.ReservoirResult
@@ -35,7 +34,6 @@ class ResultEqualityTest {
     @Test
     fun `identical snapshots compare equal and hash alike`() {
         val pairs: List<Pair<Result, Result>> = listOf(
-            Exp4State(doubleArrayOf(1.0, 2.0)) to Exp4State(doubleArrayOf(1.0, 2.0)),
             HyperLogLogResult(1.5, 4, intArrayOf(1, 2, 3), 9L) to
                 HyperLogLogResult(1.5, 4, intArrayOf(1, 2, 3), 9L),
             LinearCountingResult(2.0, 64, 60L, longArrayOf(7L), 4L) to
