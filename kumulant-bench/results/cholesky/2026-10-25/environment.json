@@ -1,0 +1,42 @@
+{
+  "startUtc": "2026-10-25T10:36:24.767506+00:00",
+  "baseRevision": "f8fb995659d6cb3bd2d5dee400e9927f288edd88",
+  "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+  "dependencies": {
+    "kotlin": "2.4.10",
+    "kotlinx-benchmark": "0.4.17",
+    "jmh": "1.37",
+    "koblas-root": "0.1.1-20261013.182449-263",
+    "koblas-jvm": "0.1.1-20261013.182449-266",
+    "koblas-linuxx64": "0.1.1-20261013.182449-262"
+  },
+  "cpu": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           46 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  20\nOn-line CPU(s) list:                     0-19\nVendor ID:                               GenuineIntel\nModel name:                              12th Gen Intel(R) Core(TM) i9-12900H\nCPU family:                              6\nModel:                                   154\nThread(s) per core:                      2\nCore(s) per socket:                      14\nSocket(s):                               1\nStepping:                                3\nMicrocode version:                       0x43b\nCPU(s) scaling MHz:                      75%\nCPU max MHz:                             5000.0000\nCPU min MHz:                             400.0000\nBogoMIPS:                                5836.80\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities\nVirtualization:                          VT-x\nL1d cache:                               544 KiB (14 instances)\nL1i cache:                               704 KiB (14 instances)\nL2 cache:                                11.5 MiB (8 instances)\nL3 cache:                                24 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-19\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Mitigation; Clear Register File\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Not affected\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; PBRSB-eIBRS SW sequence; BHI BHI_DIS_S\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Not affected\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Mitigation; IBPB before exit to userspace\n",
+  "jdk": "openjdk version \"25.0.1\" 2025-10-21 LTS\nOpenJDK Runtime Environment Temurin-25.0.1+8 (build 25.0.1+8-LTS)\nOpenJDK 64-Bit Server VM Temurin-25.0.1+8 (build 25.0.1+8-LTS, mixed mode, sharing)\n",
+  "jarSha256": "676dda046b07b84e5a455c62d6d10c9db4ab8b5f854b021591dca822d41ab43c",
+  "sourceSha256": {
+    "kumulant-bench/build.gradle.kts": "e4fb7e26df9ce6ec7c250acad6854d1d6df3c1ce0fdcfd180115e9d3c79499ed",
+    "kumulant-bench/src/commonMain/kotlin/com/eignex/kumulant/bench/CholeskyFactorBenchmark.kt": "9115341e586546b8b463f757bd8472d5a725a8ad69adc769d526690f757287ae",
+    "kumulant-bench/src/commonMain/kotlin/com/eignex/kumulant/bench/CholeskyFixtures.kt": "b879b375509b65498b2edeabd5ca543a9eef4e738ad611ea94c58ac7e4fdfddf",
+    "kumulant-bench/src/commonMain/kotlin/com/eignex/kumulant/bench/CholeskySolveBenchmark.kt": "973f5a1c8f5ef6c4b360850f31a305844a0620e854d46b9016308530233d70cc",
+    "kumulant-bench/src/commonMain/kotlin/com/eignex/kumulant/bench/CholeskyVectorBenchmark.kt": "f38fc94acc851f3685515661cb90c0b0819bc215ef7b87d7e612c9cb4e6a87ee",
+    "kumulant-bench/src/commonMain/kotlin/com/eignex/kumulant/bench/CholeskyWorkloadBenchmark.kt": "cf2dc84a22a9ed01e107be9cf10f912a142c97b2ef063477f143a720a1a4372e",
+    "kumulant-bench/src/jvmMain/kotlin/com/eignex/kumulant/bench/CholeskyAccuracyAnalysis.kt": "63abd285f2aa282bb4828a7b9d16ff18ff67c5461b9a6ec1d4a60066fc8c3da1"
+  },
+  "commands": {
+    "accuracy-scalar": "taskset -c 4 /home/rasmus/.gradle/jdks/eclipse_adoptium-25-amd64-linux.2/bin/java --enable-native-access=ALL-UNNAMED -Xms512m -Xmx512m -cp /home/rasmus/.codex/worktrees/5832/kumulant/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar com.eignex.kumulant.bench.CholeskyAccuracyAnalysisKt",
+    "scalar": "taskset -c 4 /home/rasmus/.gradle/jdks/eclipse_adoptium-25-amd64-linux.2/bin/java --enable-native-access=ALL-UNNAMED -Xms512m -Xmx512m -jar /home/rasmus/.codex/worktrees/5832/kumulant/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar '.*(CholeskyFactorBenchmark.factor|CholeskySolveBenchmark.(solveMatrix|solveLower)|CholeskyVectorBenchmark.(solveVector|logDeterminant)|CholeskyWorkloadBenchmark.factorSolveLogDeterminant)$' -p matrixCase=precision:8,precision:128,rbf:128,rbf:512 -p shape=128x16 -p historySize=128 -bm avgt -tu us -wi 3 -i 5 -w 1s -r 1s -f 2 -t 1 -prof gc -foe true -rf json -rff /home/rasmus/.codex/worktrees/5832/kumulant/kumulant-bench/results/cholesky/2026-10-25/scalar.json",
+    "accuracy-simd": "taskset -c 4 /home/rasmus/.gradle/jdks/eclipse_adoptium-25-amd64-linux.2/bin/java --enable-native-access=ALL-UNNAMED -Xms512m -Xmx512m --add-modules=jdk.incubator.vector -cp /home/rasmus/.codex/worktrees/5832/kumulant/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar com.eignex.kumulant.bench.CholeskyAccuracyAnalysisKt",
+    "simd": "taskset -c 4 /home/rasmus/.gradle/jdks/eclipse_adoptium-25-amd64-linux.2/bin/java --enable-native-access=ALL-UNNAMED -Xms512m -Xmx512m --add-modules=jdk.incubator.vector -jar /home/rasmus/.codex/worktrees/5832/kumulant/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar '.*(CholeskyFactorBenchmark.factor|CholeskySolveBenchmark.(solveMatrix|solveLower)|CholeskyVectorBenchmark.(solveVector|logDeterminant)|CholeskyWorkloadBenchmark.factorSolveLogDeterminant)$' -p matrixCase=precision:8,precision:128,rbf:128,rbf:512 -p shape=128x16 -p historySize=128 -bm avgt -tu us -wi 3 -i 5 -w 1s -r 1s -f 2 -t 1 -prof gc -foe true -rf json -rff /home/rasmus/.codex/worktrees/5832/kumulant/kumulant-bench/results/cholesky/2026-10-25/simd.json"
+  },
+  "load": {
+    "scalar": {
+      "before": "22.29 30.88 19.63 7/9522 2576976",
+      "after": "8.40 21.38 17.74 3/9601 2595858"
+    },
+    "simd": {
+      "before": "8.40 21.38 17.74 27/9606 2596078",
+      "after": "6.35 15.00 15.87 5/9189 2613155"
+    }
+  },
+  "endUtc": "2026-10-25T10:41:34.883541+00:00"
+}
