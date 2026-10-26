@@ -1,0 +1,15 @@
+name:main
+configurationName:main
+compilationMode:Release
+reportFile:/local/worker/attempts/0-none-0-1/cases/0/out/report/native-1/results.json
+traceFormat:text
+reportFormat:json
+warmups:3
+iterations:5
+iterationTime:1000
+iterationTimeUnit:ms
+outputTimeUnit:us
+mode:avgt
+include:.*CholeskyFactorBenchmark\.(factor|factorWithWorkspace)$
+param:matrixCase=precision:32
+param:matrixCase=rbf:512

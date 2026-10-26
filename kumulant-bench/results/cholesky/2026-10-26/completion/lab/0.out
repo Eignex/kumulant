@@ -1,0 +1,15 @@
+[0.513s][info][jfr,startup] Started recording 1. No limit specified, using maxsize=250MB as default.
+[0.513s][info][jfr,startup] 
+[0.513s][info][jfr,startup] Use jcmd 41 JFR.dump name=1 to copy recording data to file.
+Starting prepared Native repetition 0
+Prepared Native repetition 0: 1/4 cases
+Prepared Native repetition 0: 2/4 cases
+Prepared Native repetition 0: 3/4 cases
+Prepared Native repetition 0: 4/4 cases
+Completed prepared Native repetition 0
+Starting prepared Native repetition 1
+Prepared Native repetition 1: 1/4 cases
+Prepared Native repetition 1: 2/4 cases
+Prepared Native repetition 1: 3/4 cases
+Prepared Native repetition 1: 4/4 cases
+Completed prepared Native repetition 1
