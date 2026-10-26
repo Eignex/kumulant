@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-26",
+  "repository": "Eignex/kumulant",
+  "numerical_baseline": "8d0c8db142df800636e5a68a4b5aa2f168873cb6",
+  "numerical_candidate": "bce5218bc1c725fea06f7bfa41b2bc1740e48175",
+  "jvm_baseline_profile": "523a38312363d7e8116fe0f30a69e70749237f74",
+  "native_baseline_profile": "a6e65330750d21876b6da4877d48da49ac2ef61d",
+  "verified_simd_baseline_profile": "b7773b7ea7ea4e12e6de91d16cedccb521cd6200",
+  "verified_simd_candidate_profile": "44be1165fd759654428c79de7e6dcdd8cad46b15",
+  "final_quality_revision": "1958455173286bff8c39170b29ab5bf61f1d9a2d",
+  "dependencies": {
+    "kotlin": "2.4.21",
+    "gradle": "9.7.1",
+    "kbuild": "1.3.5",
+    "kotlinx-benchmark": "0.4.17",
+    "jmh": "1.37",
+    "serialization": "1.12.0",
+    "koblas": "0.1.1-20261025.142922-269",
+    "koblas-jvm": "0.1.1-20261025.142922-272",
+    "koblas-linuxx64": "0.1.1-20261025.142922-268"
+  },
+  "lab_jdk": "25.0.4.1+1-LTS",
+  "local_jdk": "25.0.1+8-LTS",
+  "lab_cpu": "Intel Xeon Platinum 8488C",
+  "lab_visible_cpus": 16,
+  "case_budget": {
+    "cpu_millis": 1000,
+    "memory_mib": 4608
+  },
+  "preparation_budget": {
+    "cpu_millis": 2000,
+    "memory_mib": 4096
+  },
+  "combo": {
+    "revision": "f0674ecf0ffb448593dfbd2f12bb6f83eff9b4fe",
+    "baseline_kumulant_jvm": "0.3.4-20261025.222801-85",
+    "candidate_kumulant": "1958455173286bff8c39170b29ab5bf61f1d9a2d",
+    "mode": "frozen",
+    "seed": 401,
+    "queries": 4096,
+    "histories": [
+      16,
+      64
+    ]
+  },
+  "jobs": {
+    "jvm_scalar_baseline": 8393,
+    "native_baseline": 8394,
+    "jvm_scalar_candidate": 8396,
+    "native_candidate": 8397,
+    "scalar_jfr": 8398,
+    "scalar_candidate_batches": 8399,
+    "native_baseline_repeat": 8400,
+    "verified_simd_candidate": 8401,
+    "verified_simd_baseline": 8404,
+    "verified_simd_jfr": 8403,
+    "small_baseline_repeat": 8407,
+    "small_candidate_repeat": 8408,
+    "single_copy_jvm_solves": 8405,
+    "single_copy_native_solves": 8406,
+    "final_jvm_solves": 8409,
+    "final_native_solves": 8410
+  },
+  "excluded_jobs": {
+    "8392": "Missing Kumulant classes in archive-built benchmark jar",
+    "8402": "Backend assertion rejected stale baseline JAR task configuration"
+  },
+  "final_matrix_solve_revision": "1958455173286bff8c39170b29ab5bf61f1d9a2d",
+  "jdk25_class_overrides": [
+    "com/eignex/koblas/JvmBackend.class"
+  ]
+}
