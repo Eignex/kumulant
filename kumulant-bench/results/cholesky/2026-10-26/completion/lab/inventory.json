@@ -1,0 +1,218 @@
+[
+  {
+    "source": "0.err",
+    "bytes": 55,
+    "sha256": "edc8d35623ef3b5bdbbf28491b2a7624c1b8e3502b34ec0aa1ae61ac754cb9c0",
+    "retained": "lab/0.err"
+  },
+  {
+    "source": "0.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "retained": "lab/0.exit"
+  },
+  {
+    "source": "0.out",
+    "bytes": 692,
+    "sha256": "6fe550612184e51a3c2ee15ab5897160a82bc6b41c8dd447b51c8b2a72948758",
+    "retained": "lab/0.out"
+  },
+  {
+    "source": "cases/0/out/report/host.txt",
+    "bytes": 3327,
+    "sha256": "76cce44946386469055c668cf66872132516be4282363c0f448a06cf4348edc4",
+    "retained": "host.txt"
+  },
+  {
+    "source": "cases/0/out/report/native-0/benchmark.txt",
+    "bytes": 3380,
+    "sha256": "0bbc0027c0d0d346142a54767beaf371bd9c2c531ac47667ce8745b912e2f872",
+    "retained": "native-0-benchmark.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factorWithWorkspace_0.txt",
+    "bytes": 232,
+    "sha256": "9d90d19252f302d8b271cc8a75189b7b737a0be375590e2fda21c87daa4beda0",
+    "retained": "lab/protocol/native-0/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factorWithWorkspace_0.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factorWithWorkspace_1.txt",
+    "bytes": 227,
+    "sha256": "743e5a41a282159519233edacfb789ae63b7dab3b2777e3d709db3b51f78e982",
+    "retained": "lab/protocol/native-0/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factorWithWorkspace_1.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factor_0.txt",
+    "bytes": 219,
+    "sha256": "ae9a074ac222458d2177fde43783da10f9b5f460281407bfcb25cacfc64dfb68",
+    "retained": "lab/protocol/native-0/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factor_0.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factor_1.txt",
+    "bytes": 214,
+    "sha256": "a53572afe0d83ffcf24cbd37184cdc49fdbd0d3aa5a29d59b26ca20356bba1ce",
+    "retained": "lab/protocol/native-0/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factor_1.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/configuration.txt",
+    "bytes": 388,
+    "sha256": "43a630b586fadfc7884a202e099d5a14dc2c75c4c8929fdd5900adc329688ef5",
+    "retained": "native-0-configuration.txt"
+  },
+  {
+    "source": "cases/0/out/report/native-0/progress.txt",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retained": "lab/protocol/native-0/progress.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/results.json",
+    "bytes": 5135,
+    "sha256": "80be01e9a5457bb65d6094d70b522da9b7629c5ef30aeed0c5b1f890cf4b3b38",
+    "retained": "native-0.json.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/run.txt",
+    "bytes": 3041,
+    "sha256": "d2fc524c08c11dd72e238cd98a379e0c58a3a6359f5724b9f4153f0598293990",
+    "retained": "native-0-run.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/samples-0.txt",
+    "bytes": 98,
+    "sha256": "b9eb09caa3bea0d0369bc42fc2980087413b8eb5d87529415c3fbccbc1f072a9",
+    "retained": "lab/protocol/native-0/samples-0.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/samples-1.txt",
+    "bytes": 94,
+    "sha256": "8dd674522596286b14e9cbb8f32f17f67ecb8ceadb773a0d45c875b0af4bb005",
+    "retained": "lab/protocol/native-0/samples-1.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/samples-2.txt",
+    "bytes": 94,
+    "sha256": "14066a1aa76bf3cc20e6265ba17912e6adb320b024d8d794fff33ef3cc4c1db2",
+    "retained": "lab/protocol/native-0/samples-2.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/samples-3.txt",
+    "bytes": 92,
+    "sha256": "f11f56dfabc9afab4446eb8b63c9835b29d0f88d0a03a4583f49657ccbe12cf6",
+    "retained": "lab/protocol/native-0/samples-3.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/samples.txt",
+    "bytes": 1031,
+    "sha256": "da647605df9c27d3b7251e19633a938660102350ba241cf0e105cb6bd90e3ccb",
+    "retained": "lab/protocol/native-0/samples.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/benchmark.txt",
+    "bytes": 3381,
+    "sha256": "6fe5d24e103abaa693d46ea0cdd0ba2e8932e75af52321bc97d48a03d9f13509",
+    "retained": "native-1-benchmark.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factorWithWorkspace_0.txt",
+    "bytes": 232,
+    "sha256": "9d90d19252f302d8b271cc8a75189b7b737a0be375590e2fda21c87daa4beda0",
+    "retained": "lab/protocol/native-1/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factorWithWorkspace_0.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factorWithWorkspace_1.txt",
+    "bytes": 227,
+    "sha256": "743e5a41a282159519233edacfb789ae63b7dab3b2777e3d709db3b51f78e982",
+    "retained": "lab/protocol/native-1/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factorWithWorkspace_1.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factor_0.txt",
+    "bytes": 219,
+    "sha256": "ae9a074ac222458d2177fde43783da10f9b5f460281407bfcb25cacfc64dfb68",
+    "retained": "lab/protocol/native-1/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factor_0.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factor_1.txt",
+    "bytes": 214,
+    "sha256": "a53572afe0d83ffcf24cbd37184cdc49fdbd0d3aa5a29d59b26ca20356bba1ce",
+    "retained": "lab/protocol/native-1/cases/CholeskyFactorBenchmark_com.eignex.kumulant.bench.CholeskyFactorBenchmark.factor_1.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/configuration.txt",
+    "bytes": 388,
+    "sha256": "bfaa53802af2048b0611d958aeba3d4b7d6ac908345d111cf8ff757e441a3f9c",
+    "retained": "native-1-configuration.txt"
+  },
+  {
+    "source": "cases/0/out/report/native-1/progress.txt",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "retained": "lab/protocol/native-1/progress.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/results.json",
+    "bytes": 5146,
+    "sha256": "73e5f89dd7e36994b3c9ef34600b2022e201e50c673456cbf60110af3337c3f0",
+    "retained": "native-1.json.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/run.txt",
+    "bytes": 3041,
+    "sha256": "cea1b84030f0a97d5707a316e370b4dc57fc10e6a3e58af25015540db9cb4539",
+    "retained": "native-1-run.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/samples-0.txt",
+    "bytes": 98,
+    "sha256": "7bc2c8543b7344036453e21e1ed1eaf87ef644d7c7e38b402cd33ff4405b1fb5",
+    "retained": "lab/protocol/native-1/samples-0.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/samples-1.txt",
+    "bytes": 93,
+    "sha256": "d74fbc7b6a82fe670ae3394d0710fc43b38eec34eb56ad6e341d7d0e044600eb",
+    "retained": "lab/protocol/native-1/samples-1.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/samples-2.txt",
+    "bytes": 98,
+    "sha256": "6e654bee59b714196f92f6533f3c45ad25dfe6989fc560771938fa098871ca2e",
+    "retained": "lab/protocol/native-1/samples-2.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/samples-3.txt",
+    "bytes": 92,
+    "sha256": "78428cc550393aae63ef20dd75cd91f43622fe99bf005c519df6a6fed9566f1a",
+    "retained": "lab/protocol/native-1/samples-3.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/samples.txt",
+    "bytes": 1034,
+    "sha256": "1f812a6709c3ca7ae2bb9c171deee652d090387925276bf2016c46a634dd2e47",
+    "retained": "lab/protocol/native-1/samples.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-quality.txt",
+    "bytes": 22623,
+    "sha256": "f8462d6b31b436f1987bf22de48dc08e4ec0ec74db6315ea63799cd66d5620da",
+    "retained": "native-quality.txt.gz"
+  },
+  {
+    "source": "job.log",
+    "bytes": 1320,
+    "sha256": "10858f54edc2679f7224a78450fbeed862237b08ebc4e2c3fc9975ab975c9f5d",
+    "retained": "lab/job.log"
+  },
+  {
+    "source": "nomad/0-none-0-1-resources.json",
+    "bytes": 524,
+    "sha256": "946e17416af7b7dd991a65dd01f05f40b6db9f1de9438858ae5a13be24a0aeee",
+    "retained": "lab/nomad/0-none-0-1-resources.json"
+  },
+  {
+    "source": "nomad/preparation-1-resources.json",
+    "bytes": 534,
+    "sha256": "dd04ec22cb168ef01fc7d44e1b04416d3b6184884dce2e52bc97b314140c9ea9",
+    "retained": "lab/nomad/preparation-1-resources.json"
+  }
+]
