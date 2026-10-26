@@ -148,6 +148,18 @@ class CholeskyFactorTest {
     }
 
     @Test
+    fun `extension preserves both supplied blocks`() {
+        val factor = DenseMatrix.diagonal(2, 1.0).factorCholesky()
+        val cross = DenseMatrix.wrap(2, 1, doubleArrayOf(0.5, 0.25))
+        val diagonal = DenseMatrix.diagonal(1, 2.0)
+
+        factor.extended(cross, diagonal, Workspace())
+
+        assertContentEquals(doubleArrayOf(0.5, 0.25), cross.values)
+        assertContentEquals(doubleArrayOf(2.0), diagonal.values)
+    }
+
+    @Test
     fun `extension reports the failing pivot in the enlarged matrix`() {
         val factor = DenseMatrix.diagonal(2, 1.0).factorCholesky()
         val diagonal = DenseMatrix.diagonal(doubleArrayOf(1.0, -1.0))

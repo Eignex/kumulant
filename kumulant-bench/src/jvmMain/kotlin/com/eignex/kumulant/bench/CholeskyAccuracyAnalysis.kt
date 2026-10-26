@@ -97,7 +97,7 @@ private fun compareFactors(matrix: DenseMatrix, factor: CholeskyFactor): DoubleA
     val out = DenseMatrix.zero(right.rows, right.cols)
     val solution = factor.solveInto(right, out, Workspace())
     var difference = 0.0
-    var magnitude = 1.0
+    var magnitude = 0.0
     for (i in solution.values.indices) {
         difference = maxOf(difference, abs(solution.values[i] - expected.values[i]))
         magnitude = maxOf(magnitude, abs(expected.values[i]))
@@ -105,7 +105,7 @@ private fun compareFactors(matrix: DenseMatrix, factor: CholeskyFactor): DoubleA
     return doubleArrayOf(
         relativeReconstructionError(matrix, factor.lowerFactor()),
         solveBackwardError(matrix, right, solution),
-        difference / magnitude,
+        if (magnitude == 0.0) difference else difference / magnitude,
         abs(factor.logDeterminant() - reference.logDeterminant()),
     )
 }
