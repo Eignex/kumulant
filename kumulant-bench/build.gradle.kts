@@ -28,7 +28,11 @@ kotlin {
     jvmToolchain(benchJdk)
 
     jvm()
-    linuxX64()
+    linuxX64 {
+        binaries.executable("choleskyQuality") {
+            entryPoint = "com.eignex.kumulant.bench.main"
+        }
+    }
 
     sourceSets {
         commonMain.dependencies {

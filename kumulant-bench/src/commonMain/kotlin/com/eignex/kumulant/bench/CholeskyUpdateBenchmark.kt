@@ -25,6 +25,7 @@ open class CholeskyUpdateBenchmark {
 
     @Setup
     fun setup() {
+        reportCholeskyBackend()
         matrix = CholeskyFixtures.precision(featureSize)
         factor = matrix.factorCholesky()
         val observations = CholeskyFixtures.right(featureSize, 8)

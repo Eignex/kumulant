@@ -23,6 +23,7 @@ open class CholeskySolveBenchmark {
 
     @Setup
     fun setup() {
+        reportCholeskyBackend()
         val (size, columns) = shape.split('x').map(String::toInt)
         factor = CholeskyFixtures.matrix("rbf:$size").factorCholesky()
         right = CholeskyFixtures.right(size, columns)

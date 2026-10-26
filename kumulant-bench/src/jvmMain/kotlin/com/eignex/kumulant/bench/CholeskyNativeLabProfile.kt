@@ -17,6 +17,11 @@ internal fun runPreparedNativeCholesky(output: File, arguments: List<String>) {
     }
     require(arguments.all { it.startsWith("-Pbench.filter=") || it.startsWith("-Pbench.param.") })
     require(arguments.none { '\n' in it || '\r' in it })
+    val quality = File("kumulant-bench/build/bin/linuxX64/choleskyQualityReleaseExecutable/choleskyQuality.kexe").absoluteFile
+    check(quality.isFile && quality.setExecutable(true)) { "Native quality executable must be linked during preparation" }
+    val preflight = ProcessBuilder(quality.path).redirectErrorStream(true)
+        .redirectOutput(File(output, "native-quality.txt")).start()
+    check(preflight.waitFor() == 0) { "Native quality failed; inspect native-quality.txt" }
     repeat(2) { repetition ->
         val directory = File(output, "native-$repetition").apply { check(mkdir()) }
         val cases = File(directory, "cases").apply { check(mkdir()) }
