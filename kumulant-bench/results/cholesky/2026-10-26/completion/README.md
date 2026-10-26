@@ -12,7 +12,7 @@ requested measurements and acceptance checks to retained evidence.
 | GP extensions by 1/4/16 versus full refactorization | [Alternative comparisons](../alternatives.csv) and [extension accuracy](../accuracy.csv) |
 | Allocating versus destination/workspace APIs, JVM B/op and GC | [Original measurements](../measurements.csv), [caller payload accounting](../caller-payloads.csv), and [sampled allocation stacks](../jfr/allocation-sites.csv) |
 | Repeated candidate batches, covariance construction, factor/solve/logdet, and 25-factor fitting rounds | [Original measurements](../measurements.csv), with [matched fitting-round view comparisons](../views/before-after.csv) |
-| Same seeded fixtures, dependencies, hardware, backend, warmup, and repetitions | Each cohort's [original provenance](../provenance.json) or [view provenance](../views/provenance.json), [dependency pins](../views/dependency-cohort.json), and raw reports |
+| Same seeded fixtures, dependencies, hardware, backend, warmup, and repetitions | [JVM view provenance](../views/provenance.json), [backend-identified Native pairing](../native-verified/runtime.json), [dependency pins](../views/dependency-cohort.json), and raw reports |
 | Compare copying and borrowed matrix regions after Koblas publication | [88 matched comparisons](../views/before-after.csv); select views on JVM and copying on Native from measured outcomes |
 | Numerical accuracy at block boundaries, extreme scales, and clustered RBF/Matérn inputs | [Accuracy tables](../views/accuracy.csv) and [quality logs](../views/validation/) |
 | Update/extension equivalence and analytical log determinants | [Original accuracy results](../accuracy.csv) and the shared quality fixtures |
@@ -69,6 +69,14 @@ one-second engine settings, then regenerate the Native CSVs. The
 SHA-256 digests. The preparation archive and driver's JFR remain in Lab rather
 than duplicating those binary artifacts in Git.
 
+The [backend-identified Native comparison](../native-verified/README.md) supplies
+the missing paired attribution: both copying and view arms complete on the same
+Lab host with identical OpenBLAS/library/thread/resource settings. All 48
+measurement processes match their preflight receipts, and 24 matched comparisons
+retain both repetitions and the unchanged small control. This independent
+follow-up confirms the selected Native copying route while retaining the
+historical capture's limitations.
+
 The [separate desktop integration run](local/) validates all 54 factor fixtures,
 12 bounded update sequences, 108 extensions, three analytical determinants, and
 three caller-retry outcomes. It then completes eight timing rows: two process
@@ -87,5 +95,6 @@ checks also pass for the follow-up source.
 
 Native borrowed-region packing, backend scratch allocation, and tuning for other
 hardware remain possible performance work. They are not unimplemented acceptance
-criteria: the measured slower Native view trial was rejected. There is no public
-contract change or automatic jitter requirement remaining in this issue.
+criteria: the measured slower Native view trial was rejected. The [closure audit](../native-verified/README.md#closure-audit) identifies no
+remaining requested numerical feature or measurement. The selected Cholesky
+API and numerical implementation are unchanged from #163.
