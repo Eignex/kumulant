@@ -7,6 +7,7 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 
 internal fun analyzeQuality() {
+    analyzeNormalSamplingQuality()
     println("backend=${koblas.name}; stat seed=0; updates=$STAT_BENCHMARK_BATCH_SIZE")
     println("stat,actual,reference,scaled_error")
     allSpecs.forEach { statQuality(it) }
