@@ -1,0 +1,92 @@
+{
+  "id": 8399,
+  "name": "cholesky-139-candidate-batches",
+  "ref": "bce5218bc1c725fea06f7bfa41b2bc1740e48175",
+  "sha": "bce5218bc1c725fea06f7bfa41b2bc1740e48175",
+  "status": "DONE",
+  "cancelRequested": false,
+  "setupDone": true,
+  "createdAt": 1793024713362,
+  "startedAt": 1793024725927,
+  "finishedAt": 1793025135068,
+  "error": null,
+  "parallel": 1,
+  "priority": 0,
+  "paused": false,
+  "experiment": {
+    "name": "cholesky-139-candidate-batches",
+    "problems": [],
+    "base": {
+      "ref": "bce5218bc1c725fea06f7bfa41b2bc1740e48175",
+      "timeout": "7200000"
+    },
+    "configs": [
+      {}
+    ],
+    "grid": {},
+    "seeds": [],
+    "repeats": 1,
+    "parallel": 1,
+    "priority": 0,
+    "confirm": false,
+    "host": "aws",
+    "auto": false,
+    "machines": null,
+    "problemList": [],
+    "description": "Sixteen candidate-batch solves sharing one factor: allocating API versus reusable destination/workspace",
+    "measurement": "none",
+    "analyze": null,
+    "profile": {
+      "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+      "args": [
+        "--filter",
+        ".*CholeskySolveBenchmark.candidateBatches(Into)?$",
+        "-p",
+        "shape=32x1,128x16,512x64,1024x256"
+      ],
+      "runTimeoutSec": null,
+      "script": null,
+      "buildTasks": [
+        ":kumulant-bench:prepareBenchmark"
+      ],
+      "classpath": [
+        "kumulant-bench/build/classes/kotlin/jvm/main",
+        "kumulant/build/classes/kotlin/jvm/main",
+        "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+      ],
+      "jvmArgs": [],
+      "outputArgument": null
+    },
+    "script": null,
+    "scriptFile": null,
+    "capped": [],
+    "repository": "Eignex/kumulant",
+    "nodeTags": {
+      "require": [
+        "arch:x86_64",
+        "simd:avx2"
+      ],
+      "exclude": []
+    }
+  },
+  "commands": [
+    {
+      "index": 0,
+      "cmd": "cd '/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175' && export OUT=\"$JOB_DIR/cases/0/out\" LAB_REPOSITORY='Eignex/kumulant' LAB_WORKTREE='/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175' && mkdir -p \"$OUT\" && exec \"${JAVA_HOME:+$JAVA_HOME/bin/}java\" \"-XX:StartFlightRecording=filename=$OUT/profile.jfr,settings=profile,dumponexit=true\" '--enable-native-access=ALL-UNNAMED' '--add-modules=jdk.incubator.vector' '-cp' '/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175/kumulant-bench/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175/kumulant/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar' 'com.eignex.kumulant.bench.CholeskyLabProfileKt' '--filter' '.*CholeskySolveBenchmark.candidateBatches(Into)?$' '-p' 'shape=32x1,128x16,512x64,1024x256'",
+      "timeoutSec": 7320,
+      "status": "DONE",
+      "exitCode": 0,
+      "startedAt": 1793024831552,
+      "finishedAt": 1793025133206,
+      "cores": 1,
+      "phase": null,
+      "terminations": [],
+      "host": "dc701b49-d404-ef3f-e9e0-25767b1b0a64"
+    }
+  ],
+  "runMs": 409141,
+  "runningSince": null,
+  "counts": null,
+  "local": false,
+  "backend": "nomad"
+}

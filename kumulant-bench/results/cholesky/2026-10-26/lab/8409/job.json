@@ -1,0 +1,92 @@
+{
+  "id": 8409,
+  "name": "cholesky-139-preserved-solve-routes",
+  "ref": "1958455173286bff8c39170b29ab5bf61f1d9a2d",
+  "sha": "1958455173286bff8c39170b29ab5bf61f1d9a2d",
+  "status": "DONE",
+  "cancelRequested": false,
+  "setupDone": true,
+  "createdAt": 1793026792721,
+  "startedAt": 1793026809241,
+  "finishedAt": 1793027780018,
+  "error": null,
+  "parallel": 1,
+  "priority": 0,
+  "paused": false,
+  "experiment": {
+    "name": "cholesky-139-preserved-solve-routes",
+    "problems": [],
+    "base": {
+      "ref": "1958455173286bff8c39170b29ab5bf61f1d9a2d",
+      "timeout": "7200000"
+    },
+    "configs": [
+      {}
+    ],
+    "grid": {},
+    "seeds": [],
+    "repeats": 1,
+    "parallel": 1,
+    "priority": 0,
+    "confirm": false,
+    "host": "aws",
+    "auto": false,
+    "machines": null,
+    "problemList": [],
+    "description": "Final allocating TRSM route against opt-in destination TRSV/TRSM routes, including sixteen-solve candidate batches",
+    "measurement": "none",
+    "analyze": null,
+    "profile": {
+      "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+      "args": [
+        "--filter",
+        ".*CholeskySolveBenchmark\\.(solveMatrix|solveMatrixInto|solveLower|solveLowerInto|candidateBatches|candidateBatchesInto)$",
+        "-p",
+        "shape=32x1,128x16,512x64,1024x256"
+      ],
+      "runTimeoutSec": null,
+      "script": null,
+      "buildTasks": [
+        ":kumulant-bench:prepareBenchmark"
+      ],
+      "classpath": [
+        "kumulant-bench/build/classes/kotlin/jvm/main",
+        "kumulant/build/classes/kotlin/jvm/main",
+        "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+      ],
+      "jvmArgs": [],
+      "outputArgument": null
+    },
+    "script": null,
+    "scriptFile": null,
+    "capped": [],
+    "repository": "Eignex/kumulant",
+    "nodeTags": {
+      "require": [
+        "arch:x86_64",
+        "simd:avx2"
+      ],
+      "exclude": []
+    }
+  },
+  "commands": [
+    {
+      "index": 0,
+      "cmd": "cd '/local/worker/attempts/0-none-0-1/worktrees/1958455173286bff8c39170b29ab5bf61f1d9a2d' && export OUT=\"$JOB_DIR/cases/0/out\" LAB_REPOSITORY='Eignex/kumulant' LAB_WORKTREE='/local/worker/attempts/0-none-0-1/worktrees/1958455173286bff8c39170b29ab5bf61f1d9a2d' && mkdir -p \"$OUT\" && exec \"${JAVA_HOME:+$JAVA_HOME/bin/}java\" \"-XX:StartFlightRecording=filename=$OUT/profile.jfr,settings=profile,dumponexit=true\" '--enable-native-access=ALL-UNNAMED' '--add-modules=jdk.incubator.vector' '-cp' '/local/worker/attempts/0-none-0-1/worktrees/1958455173286bff8c39170b29ab5bf61f1d9a2d/kumulant-bench/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/1958455173286bff8c39170b29ab5bf61f1d9a2d/kumulant/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/1958455173286bff8c39170b29ab5bf61f1d9a2d/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar' 'com.eignex.kumulant.bench.CholeskyLabProfileKt' '--filter' '.*CholeskySolveBenchmark\\.(solveMatrix|solveMatrixInto|solveLower|solveLowerInto|candidateBatches|candidateBatchesInto)$' '-p' 'shape=32x1,128x16,512x64,1024x256'",
+      "timeoutSec": 7320,
+      "status": "DONE",
+      "exitCode": 0,
+      "startedAt": 1793026925447,
+      "finishedAt": 1793027778537,
+      "cores": 1,
+      "phase": null,
+      "terminations": [],
+      "host": "dc701b49-d404-ef3f-e9e0-25767b1b0a64"
+    }
+  ],
+  "runMs": 970777,
+  "runningSince": null,
+  "counts": null,
+  "local": false,
+  "backend": "nomad"
+}

@@ -1,0 +1,95 @@
+{
+  "id": 8397,
+  "name": "cholesky-139-native-candidate",
+  "ref": "bce5218bc1c725fea06f7bfa41b2bc1740e48175",
+  "sha": "bce5218bc1c725fea06f7bfa41b2bc1740e48175",
+  "status": "DONE",
+  "cancelRequested": false,
+  "setupDone": true,
+  "createdAt": 1793022706606,
+  "startedAt": 1793022720071,
+  "finishedAt": 1793024346740,
+  "error": null,
+  "parallel": 1,
+  "priority": 0,
+  "paused": false,
+  "experiment": {
+    "name": "cholesky-139-native-candidate",
+    "problems": [],
+    "base": {
+      "ref": "bce5218bc1c725fea06f7bfa41b2bc1740e48175",
+      "timeout": "7200000"
+    },
+    "configs": [
+      {}
+    ],
+    "grid": {},
+    "seeds": [],
+    "repeats": 1,
+    "parallel": 1,
+    "priority": 0,
+    "confirm": false,
+    "host": "aws",
+    "auto": false,
+    "machines": null,
+    "problemList": [],
+    "description": "Two Native process runs of candidate allocating/reusable Cholesky kernels, rank updates, extensions, and caller retry outcomes",
+    "measurement": "none",
+    "analyze": null,
+    "profile": {
+      "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+      "args": [
+        "--native",
+        "-Pbench.filter=.*Cholesky(FactorBenchmark\\.(factor|factorWithWorkspace)|SolveBenchmark\\.(solveMatrix|solveMatrixInto|solveLower|solveLowerInto)|VectorBenchmark\\.(solveVector|solveVectorInto)|WorkloadBenchmark\\.(factorSolveLogDeterminant|factorSolveLogDeterminantWithWorkspace|fittingRound|fittingRoundWithWorkspace)|UpdateBenchmark\\.(rankUpdateWithWorkspace|refactorUpdate|posteriorUpdateSolve|posteriorRefactorSolve|factorCopy)|ExtensionBenchmark\\.(extendWithWorkspace|refactor|factorCopy)|RetryBenchmark\\.callerRetry)$",
+        "-Pbench.param.matrixCase=precision:8,precision:128,precision:512,rbf:128,rbf:512,rbf:1024",
+        "-Pbench.param.shape=32x1,128x16,512x64,1024x256",
+        "-Pbench.param.historySize=128,512",
+        "-Pbench.param.featureSize=8,128,512",
+        "-Pbench.param.extensionShape=16x1,128x4,512x16"
+      ],
+      "runTimeoutSec": null,
+      "script": null,
+      "buildTasks": [
+        ":kumulant-bench:prepareBenchmark"
+      ],
+      "classpath": [
+        "kumulant-bench/build/classes/kotlin/jvm/main",
+        "kumulant/build/classes/kotlin/jvm/main",
+        "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+      ],
+      "jvmArgs": [],
+      "outputArgument": null
+    },
+    "script": null,
+    "scriptFile": null,
+    "capped": [],
+    "repository": "Eignex/kumulant",
+    "nodeTags": {
+      "require": [
+        "arch:x86_64",
+        "simd:avx2"
+      ],
+      "exclude": []
+    }
+  },
+  "commands": [
+    {
+      "index": 0,
+      "cmd": "cd '/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175' && export OUT=\"$JOB_DIR/cases/0/out\" LAB_REPOSITORY='Eignex/kumulant' LAB_WORKTREE='/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175' && mkdir -p \"$OUT\" && exec \"${JAVA_HOME:+$JAVA_HOME/bin/}java\" \"-XX:StartFlightRecording=filename=$OUT/profile.jfr,settings=profile,dumponexit=true\" '--enable-native-access=ALL-UNNAMED' '--add-modules=jdk.incubator.vector' '-cp' '/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175/kumulant-bench/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175/kumulant/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar' 'com.eignex.kumulant.bench.CholeskyLabProfileKt' '--native' '-Pbench.filter=.*Cholesky(FactorBenchmark\\.(factor|factorWithWorkspace)|SolveBenchmark\\.(solveMatrix|solveMatrixInto|solveLower|solveLowerInto)|VectorBenchmark\\.(solveVector|solveVectorInto)|WorkloadBenchmark\\.(factorSolveLogDeterminant|factorSolveLogDeterminantWithWorkspace|fittingRound|fittingRoundWithWorkspace)|UpdateBenchmark\\.(rankUpdateWithWorkspace|refactorUpdate|posteriorUpdateSolve|posteriorRefactorSolve|factorCopy)|ExtensionBenchmark\\.(extendWithWorkspace|refactor|factorCopy)|RetryBenchmark\\.callerRetry)$' '-Pbench.param.matrixCase=precision:8,precision:128,precision:512,rbf:128,rbf:512,rbf:1024' '-Pbench.param.shape=32x1,128x16,512x64,1024x256' '-Pbench.param.historySize=128,512' '-Pbench.param.featureSize=8,128,512' '-Pbench.param.extensionShape=16x1,128x4,512x16'",
+      "timeoutSec": 7320,
+      "status": "DONE",
+      "exitCode": 0,
+      "startedAt": 1793022837328,
+      "finishedAt": 1793024342650,
+      "cores": 1,
+      "phase": null,
+      "terminations": [],
+      "host": "dc701b49-d404-ef3f-e9e0-25767b1b0a64"
+    }
+  ],
+  "runMs": 1626669,
+  "runningSince": null,
+  "counts": null,
+  "local": false,
+  "backend": "nomad"
+}

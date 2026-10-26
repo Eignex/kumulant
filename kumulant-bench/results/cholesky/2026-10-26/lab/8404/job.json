@@ -1,0 +1,95 @@
+{
+  "id": 8404,
+  "name": "cholesky-139-verified-simd-baseline",
+  "ref": "b7773b7ea7ea4e12e6de91d16cedccb521cd6200",
+  "sha": "b7773b7ea7ea4e12e6de91d16cedccb521cd6200",
+  "status": "DONE",
+  "cancelRequested": false,
+  "setupDone": true,
+  "createdAt": 1793025654681,
+  "startedAt": 1793025669787,
+  "finishedAt": 1793026542040,
+  "error": null,
+  "parallel": 1,
+  "priority": 0,
+  "paused": false,
+  "experiment": {
+    "name": "cholesky-139-verified-simd-baseline",
+    "problems": [],
+    "base": {
+      "ref": "b7773b7ea7ea4e12e6de91d16cedccb521cd6200",
+      "timeout": "3600000"
+    },
+    "configs": [
+      {}
+    ],
+    "grid": {},
+    "seeds": [],
+    "repeats": 1,
+    "parallel": 1,
+    "priority": 0,
+    "confirm": false,
+    "host": "aws",
+    "auto": false,
+    "machines": null,
+    "problemList": [],
+    "description": "Verified SIMD baseline, unchanged numerical implementation from main, with multi-release benchmark packaging fix",
+    "measurement": "none",
+    "analyze": null,
+    "profile": {
+      "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+      "args": [
+        "--simd-only",
+        "-p",
+        "matrixCase=precision:8,precision:32,precision:128,precision:512,rbf:16,rbf:128,rbf:512,rbf:1024,matern:128",
+        "-p",
+        "shape=32x1,128x16,512x64,1024x256",
+        "-p",
+        "historySize=32,128,512"
+      ],
+      "runTimeoutSec": null,
+      "script": null,
+      "buildTasks": [
+        ":kumulant-bench:prepareBenchmark"
+      ],
+      "classpath": [
+        "kumulant-bench/build/classes/kotlin/jvm/main",
+        "kumulant/build/classes/kotlin/jvm/main",
+        "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+      ],
+      "jvmArgs": [],
+      "outputArgument": null
+    },
+    "script": null,
+    "scriptFile": null,
+    "capped": [],
+    "repository": "Eignex/kumulant",
+    "nodeTags": {
+      "require": [
+        "arch:x86_64",
+        "simd:avx2"
+      ],
+      "exclude": []
+    }
+  },
+  "commands": [
+    {
+      "index": 0,
+      "cmd": "cd '/local/worker/attempts/0-none-0-1/worktrees/b7773b7ea7ea4e12e6de91d16cedccb521cd6200' && export OUT=\"$JOB_DIR/cases/0/out\" LAB_REPOSITORY='Eignex/kumulant' LAB_WORKTREE='/local/worker/attempts/0-none-0-1/worktrees/b7773b7ea7ea4e12e6de91d16cedccb521cd6200' && mkdir -p \"$OUT\" && exec \"${JAVA_HOME:+$JAVA_HOME/bin/}java\" \"-XX:StartFlightRecording=filename=$OUT/profile.jfr,settings=profile,dumponexit=true\" '--enable-native-access=ALL-UNNAMED' '--add-modules=jdk.incubator.vector' '-cp' '/local/worker/attempts/0-none-0-1/worktrees/b7773b7ea7ea4e12e6de91d16cedccb521cd6200/kumulant-bench/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/b7773b7ea7ea4e12e6de91d16cedccb521cd6200/kumulant/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/b7773b7ea7ea4e12e6de91d16cedccb521cd6200/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar' 'com.eignex.kumulant.bench.CholeskyLabProfileKt' '--simd-only' '-p' 'matrixCase=precision:8,precision:32,precision:128,precision:512,rbf:16,rbf:128,rbf:512,rbf:1024,matern:128' '-p' 'shape=32x1,128x16,512x64,1024x256' '-p' 'historySize=32,128,512'",
+      "timeoutSec": 3720,
+      "status": "DONE",
+      "exitCode": 0,
+      "startedAt": 1793025786306,
+      "finishedAt": 1793026535434,
+      "cores": 1,
+      "phase": null,
+      "terminations": [],
+      "host": "dc701b49-d404-ef3f-e9e0-25767b1b0a64"
+    }
+  ],
+  "runMs": 872253,
+  "runningSince": null,
+  "counts": null,
+  "local": false,
+  "backend": "nomad"
+}
