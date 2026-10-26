@@ -7982,6 +7982,22 @@ final class com.eignex.kumulant.stat.summary/BernoulliSumStat : com.eignex.kumul
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.summary/BernoulliSumStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
 }
 
+final class com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate { // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.<init>|<init>(kotlin.Double;kotlin.Double){}[0]
+
+    final val mean // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.mean|{}mean[0]
+        final fun <get-mean>(): kotlin/Double // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.mean.<get-mean>|<get-mean>(){}[0]
+    final val varianceOfMean // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.varianceOfMean|{}varianceOfMean[0]
+        final fun <get-varianceOfMean>(): kotlin/Double // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.varianceOfMean.<get-varianceOfMean>|<get-varianceOfMean>(){}[0]
+
+    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.component2|component2(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.copy|copy(kotlin.Double;kotlin.Double){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate.toString|toString(){}[0]
+}
+
 final class com.eignex.kumulant.stat.summary/CountStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/SumResult> { // com.eignex.kumulant.stat.summary/CountStat|null[0]
     constructor <init>(com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.summary/CountStat.<init>|<init>(com.eignex.kumulant.core.Concurrency){}[0]
 
@@ -9245,6 +9261,7 @@ final fun com.eignex.kumulant.stat.regression.glm/ExponentialDecay(kotlin/Double
 final fun com.eignex.kumulant.stat.regression.glm/StepDecay(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.stat.regression.glm/StepDecay|StepDecay(kotlin.Double;kotlin.Double){}[0]
 final fun com.eignex.kumulant.stat.regression.tree/mergeForestEvidence(kotlin.collections/Iterable<com.eignex.kumulant.stat.summary/WeightedVarianceResult>, kotlin/Boolean = ...): com.eignex.kumulant.stat.summary/WeightedVarianceResult // com.eignex.kumulant.stat.regression.tree/mergeForestEvidence|mergeForestEvidence(kotlin.collections.Iterable<com.eignex.kumulant.stat.summary.WeightedVarianceResult>;kotlin.Boolean){}[0]
 final fun com.eignex.kumulant.stat.score/pitHistogram(kotlin/Int, com.eignex.kumulant.core/Concurrency = ...): com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/SparseHistogramResult> // com.eignex.kumulant.stat.score/pitHistogram|pitHistogram(kotlin.Int;com.eignex.kumulant.core.Concurrency){}[0]
+final fun com.eignex.kumulant.stat.summary/estimateCorrelatedMean(com.eignex.koblas/Vector, com.eignex.kumulant.math/CholeskyFactor): com.eignex.kumulant.stat.summary/CorrelatedMeanEstimate // com.eignex.kumulant.stat.summary/estimateCorrelatedMean|estimateCorrelatedMean(com.eignex.koblas.Vector;com.eignex.kumulant.math.CholeskyFactor){}[0]
 final fun com.eignex.kumulant.stat.summary/estimateMean(com.eignex.koblas/Vector, com.eignex.koblas/Vector? = ..., com.eignex.koblas/Vector? = ...): com.eignex.kumulant.stat.summary/MeanEstimate // com.eignex.kumulant.stat.summary/estimateMean|estimateMean(com.eignex.koblas.Vector;com.eignex.koblas.Vector?;com.eignex.koblas.Vector?){}[0]
 final fun com.eignex.kumulant.stat.summary/pairedMeanDifference(com.eignex.koblas/Vector, com.eignex.koblas/Vector): com.eignex.kumulant.stat.summary/MeanEstimate // com.eignex.kumulant.stat.summary/pairedMeanDifference|pairedMeanDifference(com.eignex.koblas.Vector;com.eignex.koblas.Vector){}[0]
 final inline fun <#A: kotlin/Any?, #B: com.eignex.kumulant.schema.runtime/GroupedStat> com.eignex.kumulant.schema.runtime/group(kotlin/String, #A, kotlin/Function1<#A, #B>): com.eignex.kumulant.schema.runtime/BoundStat<com.eignex.kumulant.schema/GroupResult, #B, com.eignex.kumulant.schema/GroupStatKey<#A>> // com.eignex.kumulant.schema.runtime/group|group(kotlin.String;0:0;kotlin.Function1<0:0,0:1>){0§<kotlin.Any?>;1§<com.eignex.kumulant.schema.runtime.GroupedStat>}[0]
