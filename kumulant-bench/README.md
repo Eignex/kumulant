@@ -130,13 +130,22 @@ only. Parameters pass as Gradle properties, for example
 Native has no bytes/op profiler in this harness.
 
 For prepared Lab archives, add
-`:kumulant-bench:linkLinuxX64BenchmarkReleaseExecutableLinuxX64` to the build tasks
+`:kumulant-bench:linkLinuxX64BenchmarkReleaseExecutableLinuxX64` and
+`:kumulant-bench:linkCholeskyQualityReleaseExecutableLinuxX64` to the build tasks
 and use `--native-prepared`. It invokes the generated release harness directly,
 keeping compilation in preparation. Each benchmark runs in its own process, with
 two repetitions, three one-second warmups, five one-second measurement iterations,
 and output in microseconds. Filters and parameters use `-Pbench.filter` and
 `-Pbench.param.*` as above. The configuration, invocations, samples, and engine JSON
 are retained under `$OUT/report/native-*`.
+Before timing, the release quality executable runs the same Cholesky accuracy
+fixtures used on JVM. `$OUT/report/native-quality.txt` records its results, selected
+engine, available vendor library/version/thread evidence, and route descriptions
+for the first contiguous and borrowed trailing updates at orders 128/512/1024.
+Each benchmark process also records its selected backend/library during setup,
+outside its timed region. Those route descriptions inspect call shapes; they are
+not separate kernel timings.
+Any failed accuracy check stops the capture before timing starts.
 
 Submit a committed trusted ref with `profile.main` set to
 `com.eignex.kumulant.bench.CholeskyLabProfileKt`, `profile.buildTasks` containing

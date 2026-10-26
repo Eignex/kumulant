@@ -21,6 +21,7 @@ open class CholeskyVectorBenchmark {
 
     @Setup
     fun setup() {
+        reportCholeskyBackend()
         factor = CholeskyFixtures.matrix("rbf:$historySize").factorCholesky()
         right = CholeskyFixtures.right(historySize).values
         out = DoubleArray(historySize)

@@ -22,6 +22,7 @@ open class CholeskyRetryBenchmark {
 
     @Setup
     fun setup() {
+        reportCholeskyBackend()
         matrix = retryMatrix(scenario)
     }
 

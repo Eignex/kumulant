@@ -24,6 +24,7 @@ open class CholeskyWorkloadBenchmark {
 
     @Setup
     fun setup() {
+        reportCholeskyBackend()
         points = CholeskyFixtures.points(historySize)
         covariance = CholeskyFixtures.covariance(points)
         right = CholeskyFixtures.right(historySize).values

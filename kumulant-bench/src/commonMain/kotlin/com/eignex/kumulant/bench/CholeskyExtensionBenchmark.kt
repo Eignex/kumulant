@@ -23,6 +23,7 @@ open class CholeskyExtensionBenchmark {
 
     @Setup
     fun setup() {
+        reportCholeskyBackend()
         val (size, added) = extensionShape.split('x').map(String::toInt)
         val fixture = CholeskyFixtures.extension(size, added)
         full = fixture.full

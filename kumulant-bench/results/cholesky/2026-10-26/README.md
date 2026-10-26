@@ -205,15 +205,15 @@ replace Combo's pinned `kumulant-jvm` dependency. From the recorded Combo revisi
   -Dcholesky.candidate=/path/to/kumulant
 ```
 
-## Remaining work for #139
+## Follow-up and acceptance
 
-Keep the issue open. A copy-versus-view comparison still depends on
-[Koblas #639](https://github.com/Eignex/koblas/issues/639). The workspace path still
-copies panel/trailing blocks and can churn at larger sizes. A view-backed candidate
-must be measured on these same fixtures when that dependency is available.
+The [published-snapshot view comparison](views/README.md) completes the planned
+copy-versus-view evaluation on the same seeded fixtures and dependency cohort.
+JVM uses borrowed trailing regions; Native retains contiguous copied blocks after
+the view trial measured slower. This is a platform storage-access choice within
+the shared numerical implementation.
 
-The captured small SIMD solve regression was addressed by preserving the original
-allocating route. Contemporary small-factor repeats and the repeated Native control
-put initial timing shifts in context; all earlier estimates remain visible. Accept
-only measured workload-specific improvements, and retain these controls when
-evaluating the view-backed candidate.
+The [acceptance audit](completion/README.md) maps the issue requirements to retained
+timing, allocation, accuracy, and consumer evidence, and distinguishes optional
+future optimization from acceptance work. The original cohort above retains its
+own revisions, dependency pins, controls, and timing qualifications.

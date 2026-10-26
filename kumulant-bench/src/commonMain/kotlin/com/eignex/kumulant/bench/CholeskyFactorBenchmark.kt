@@ -24,6 +24,7 @@ open class CholeskyFactorBenchmark {
 
     @Setup
     fun setup() {
+        reportCholeskyBackend()
         matrix = CholeskyFixtures.matrix(matrixCase)
     }
 

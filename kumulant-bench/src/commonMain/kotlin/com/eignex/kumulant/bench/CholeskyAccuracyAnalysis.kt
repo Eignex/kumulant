@@ -5,7 +5,6 @@ import com.eignex.koblas.Workspace
 import com.eignex.koblas.koblas
 import com.eignex.kumulant.math.CholeskyFactor
 import com.eignex.kumulant.math.factorCholesky
-import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.sqrt
@@ -25,7 +24,7 @@ internal fun analyzeCholeskyAccuracy() {
                 val reconstruction = relativeReconstructionError(matrix, factor.lowerFactor())
                 val backward = solveBackwardError(matrix, right, solution)
                 check(reconstruction < 1e-13 && backward < 1e-13) { "$kind:$size at $scale: reconstruction=$reconstruction, backward=$backward" }
-                println("$kind,$size,$scale,${reconstruction.scientific()},${backward.scientific()}")
+                println("$kind,$size,$scale,$reconstruction,$backward")
             }
         }
     }
@@ -34,7 +33,7 @@ internal fun analyzeCholeskyAccuracy() {
         val matrix = DenseMatrix.diagonal(65, scale)
         val error = abs(matrix.factorCholesky().logDeterminant() - 65 * ln(scale))
         check(error <= 1e-10) { "Diagonal log determinant error=$error" }
-        println("diagonal,65,$scale,${error.scientific()}")
+        println("diagonal,65,$scale,$error")
     }
     analyzeUpdates()
     analyzeExtensions()
@@ -64,7 +63,7 @@ private fun analyzeUpdates() {
             check(errors[0] < 1e-13 && errors[1] < 1e-13 && errors[2] < 1e-10 && errors[3] < 1e-9) {
                 "rank updates size=$size scale=$scale errors=${errors.toList()}"
             }
-            println("update,$size,$scale,${errors.joinToString(",") { it.scientific() }}")
+            println("update,$size,$scale,${errors.joinToString(",")}")
         }
     }
 }
@@ -83,7 +82,7 @@ private fun analyzeExtensions() {
                     check(errors[0] < 1e-13 && errors[1] < 1e-13 && errors[2] < tolerance && errors[3] < tolerance) {
                         "extension $kind:$size+$added scale=$scale errors=${errors.toList()} tolerance=$tolerance"
                     }
-                    println("extension,$kind,$size,$added,$scale,${errors.joinToString(",") { it.scientific() }},${tolerance.scientific()}")
+                    println("extension,$kind,$size,$added,$scale,${errors.joinToString(",")},${tolerance}")
                 }
             }
         }
@@ -148,4 +147,3 @@ private fun solveBackwardError(matrix: DenseMatrix, right: DenseMatrix, solution
     return error
 }
 
-private fun Double.scientific(): String = String.format(Locale.ROOT, "%.6e", this)
