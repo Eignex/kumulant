@@ -1,0 +1,33 @@
+Reusing configuration cache.
+> Task :combo:jvmTestProcessResources NO-SOURCE
+> Task :combo:jvmProcessResources NO-SOURCE
+> Task :combo:processJvmTestResources SKIPPED
+> Task :combo:kmpPartiallyResolvedDependenciesChecker
+> Task :kumulant:kumulant:kmpPartiallyResolvedDependenciesChecker
+> Task :combo:processJvmMainResources SKIPPED
+> Task :combo:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :kumulant:kumulant:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :combo:koverFindJar UP-TO-DATE
+> Task :kumulant:kumulant:jvmProcessResources
+> Task :kumulant:kumulant:processJvmMainResources SKIPPED
+> Task :kumulant:kumulant:compileKotlinJvm
+> Task :kumulant:kumulant:compileJvmMainJava NO-SOURCE
+> Task :kumulant:kumulant:jvmMainClasses
+> Task :kumulant:kumulant:jvmJar
+> Task :combo:compileKotlinJvm
+> Task :combo:compileJvmMainJava NO-SOURCE
+> Task :combo:jvmMainClasses
+> Task :combo:jvmJar UP-TO-DATE
+> Task :combo:compileTestKotlinJvm
+> Task :combo:compileJvmTestJava NO-SOURCE
+> Task :combo:jvmTestClasses
+
+> Task :combo:compareGp
+WARNING: Using incubator modules: jdk.incubator.vector
+
+> Task :combo:jvmTest
+WARNING: Using incubator modules: jdk.incubator.vector
+
+BUILD SUCCESSFUL in 8s
+11 actionable tasks: 9 executed, 2 up-to-date
+Configuration cache entry reused.

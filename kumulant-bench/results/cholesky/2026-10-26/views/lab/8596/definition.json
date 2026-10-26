@@ -1,0 +1,34 @@
+{
+  "name": "cholesky-139-views-copy-native-rbf-prepared",
+  "repository": "Eignex/kumulant",
+  "description": "Matched copy rbf Native capture using the generated release harness; compile before execution; unchanged engine/fork/warmup/measurement protocol",
+  "base": {
+    "ref": "6d5ae314a386669ff3da5e997a9ba1437e592dad",
+    "timeout": "7200000"
+  },
+  "nodeTags": {
+    "require": [
+      "arch:x86_64",
+      "simd:avx2"
+    ],
+    "exclude": []
+  },
+  "profile": {
+    "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+    "buildTasks": [
+      ":kumulant-bench:prepareBenchmark",
+      ":kumulant-bench:linkLinuxX64BenchmarkReleaseExecutableLinuxX64"
+    ],
+    "classpath": [
+      "kumulant-bench/build/classes/kotlin/jvm/main",
+      "kumulant/build/classes/kotlin/jvm/main",
+      "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+    ],
+    "args": [
+      "--native-prepared",
+      "-Pbench.filter=.*CholeskyFactorBenchmark\\.(factor|factorWithWorkspace)$",
+      "-Pbench.param.matrixCase=rbf:128,rbf:512,rbf:1024"
+    ]
+  },
+  "parallel": 1
+}

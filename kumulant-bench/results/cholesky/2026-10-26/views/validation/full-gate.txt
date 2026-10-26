@@ -1,0 +1,136 @@
+Reusing configuration cache.
+> Task :kumulant:jvmTestProcessResources NO-SOURCE
+> Task :kumulant:kmpPartiallyResolvedDependenciesChecker
+> Task :kumulant:processJvmTestResources SKIPPED
+> Task :kumulant:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :kumulant:koverFindJar
+> Task :kumulant:jvmProcessResources
+> Task :kumulant:processJvmMainResources SKIPPED
+> Task :kumulant:linuxX64ProcessResources
+> Task :kumulant:validateLocalSwiftPMDependencies SKIPPED
+> Task :kumulant:computeLocalPackageDependencyInputFiles SKIPPED
+> Task :kumulant:macosArm64ProcessResources
+> Task :kumulant:downloadKotlinNativeDistribution
+> Task :kumulant:fingerprintSyntheticPackage
+> Task :kumulant:generateSyntheticLinkageSwiftPMImportProjectForCinteropsAndLdDump SKIPPED
+> Task :kumulant:generateUmbrellaPackageIdentifierBasedResolutionForDefault SKIPPED
+> Task :kumulant:fetchUmbrellaPackageIdentifierForDefault SKIPPED
+> Task :kumulant:syncPersistedPackageResolvedToSynthetic SKIPPED
+> Task :kumulant:fetchSyntheticImportProjectPackages SKIPPED
+> Task :kumulant:fingerprintXcodebuildMacosx SKIPPED
+> Task :kumulant:dumpXcodebuildArgsMacosx SKIPPED
+> Task :kumulant:convertSyntheticImportProjectIntoDefFileMacosx SKIPPED
+> Task :kumulant:checkKdoc
+> Task :kumulant:compileKotlinJvm
+> Task :kumulant:compileJvmMainJava NO-SOURCE
+> Task :kumulant:jvmMainClasses
+
+> Task :kumulant:compileKotlinMacosArm64
+w: file:///home/rasmus/.codex/worktrees/5832/kumulant/kumulant/src/appleMain/kotlin/com/eignex/kumulant/stream/MutexAttr.apple.kt:11:75 Redundant call of conversion method.
+
+> Task :kumulant:compileKotlinLinuxX64
+> Task :kumulant:linuxX64MainKlibrary
+> Task :kumulant:compileKotlinLinuxArm64
+> Task :kumulant:linuxArm64ProcessResources
+> Task :kumulant:linuxArm64MainKlibrary
+> Task :kumulant:checkNativeSafeTestNames
+> Task :kumulant:writeEignexDetektConfig
+> Task :kumulant:detekt SKIPPED
+> Task :kumulant:macosArm64MainKlibrary
+> Task :kumulant:jvmJar
+> Task :kumulant:detektAppleMainSourceSet
+> Task :kumulant:internalDumpKotlinAbi
+> Task :kumulant:checkKotlinAbi
+> Task :kumulant:detektAppleTestSourceSet NO-SOURCE
+> Task :kumulant:compileTestKotlinLinuxX64
+> Task :kumulant:compileTestKotlinMacosArm64
+> Task :kumulant:linkDebugTestMacosArm64 SKIPPED
+> Task :kumulant:macosArm64Test SKIPPED
+> Task :kumulant:compileTestKotlinJvm
+> Task :kumulant:compileJvmTestJava NO-SOURCE
+> Task :kumulant:jvmTestClasses
+
+> Task :kumulant:jvmTest
+WARNING: Using incubator modules: jdk.incubator.vector
+
+> Task :kumulant:detektJvmMainSourceSet
+> Task :kumulant:detektJvmTestSourceSet
+> Task :kumulant:detektLinuxArm64MainSourceSet NO-SOURCE
+> Task :kumulant:detektLinuxArm64TestSourceSet NO-SOURCE
+> Task :kumulant:detektLinuxMainSourceSet
+> Task :kumulant:detektLinuxTestSourceSet NO-SOURCE
+> Task :kumulant:detektLinuxX64MainSourceSet NO-SOURCE
+> Task :kumulant:detektLinuxX64TestSourceSet NO-SOURCE
+> Task :kumulant:detektMacosArm64MainSourceSet NO-SOURCE
+> Task :kumulant:detektMacosArm64TestSourceSet NO-SOURCE
+> Task :kumulant:detektMacosMainSourceSet NO-SOURCE
+> Task :kumulant:detektMacosTestSourceSet NO-SOURCE
+> Task :kumulant:detektMainJvm SKIPPED
+> Task :kumulant:detektNativeMainSourceSet NO-SOURCE
+> Task :kumulant:detektNativeTestSourceSet NO-SOURCE
+> Task :kumulant:detektNonJvmMainSourceSet
+> Task :kumulant:detektPosixMainSourceSet
+> Task :kumulant:detektTestJvm SKIPPED
+> Task :kumulant:koverGenerateArtifactJvm
+> Task :kumulant:koverGenerateArtifact
+> Task :kumulant:koverCachedVerify
+> Task :kumulant:koverVerify
+> Task :kumulant-bench:kmpPartiallyResolvedDependenciesChecker
+> Task :kumulant-bench:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :kumulant-bench:compileKotlinJvm
+> Task :kumulant-bench:compileJvmMainJava NO-SOURCE
+> Task :kumulant-bench:jvmProcessResources NO-SOURCE
+> Task :kumulant-bench:processJvmMainResources SKIPPED
+> Task :kumulant-bench:jvmMainClasses
+> Task :kumulant-bench:jvmJar
+> Task :kumulant-bench:compileTestKotlinJvm
+> Task :kumulant-bench:compileJvmTestJava NO-SOURCE
+> Task :kumulant-bench:jvmTestProcessResources NO-SOURCE
+> Task :kumulant-bench:processJvmTestResources SKIPPED
+> Task :kumulant-bench:jvmTestClasses
+
+> Task :kumulant-bench:jvmTest
+WARNING: Using incubator modules: jdk.incubator.vector
+
+> Task :kumulant:exportCrossCompilationMetadataForLinuxX64ApiElements
+> Task :kumulant-bench:downloadKotlinNativeDistribution
+> Task :kumulant:detektCommonMainSourceSet
+> Task :kumulant-bench:compileKotlinLinuxX64
+> Task :kumulant-bench:linuxX64ProcessResources NO-SOURCE
+> Task :kumulant-bench:linuxX64MainKlibrary
+> Task :kumulant-bench:compileTestKotlinLinuxX64
+> Task :kumulant:linkDebugTestLinuxX64
+> Task :kumulant:detektCommonTestSourceSet
+> Task :kumulant:commonizeNativeDistribution
+> Task :kumulant:transformCommonMainDependenciesMetadata
+> Task :kumulant-bench:linkDebugTestLinuxX64
+> Task :kumulant:compileCommonMainKotlinMetadata
+> Task :kumulant:metadataCommonMainProcessResources
+> Task :kumulant:metadataCommonMainClasses
+> Task :kumulant:transformNonJvmMainDependenciesMetadata
+> Task :kumulant:compileNonJvmMainKotlinMetadata
+> Task :kumulant:metadataNonJvmMainProcessResources
+> Task :kumulant:metadataNonJvmMainClasses
+> Task :kumulant:transformNativeMainDependenciesMetadata
+> Task :kumulant:compileNativeMainKotlinMetadata NO-SOURCE
+> Task :kumulant:metadataNativeMainProcessResources
+> Task :kumulant:metadataNativeMainClasses
+> Task :kumulant:transformPosixMainDependenciesMetadata
+> Task :kumulant:compilePosixMainKotlinMetadata
+> Task :kumulant:metadataPosixMainProcessResources
+> Task :kumulant:metadataPosixMainClasses
+> Task :kumulant:transformLinuxMainDependenciesMetadata
+> Task :kumulant-bench:linuxX64Test
+> Task :kumulant-bench:allTests
+> Task :kumulant-bench:check
+> Task :kumulant:linuxX64Test
+> Task :kumulant:allTests
+> Task :kumulant:check
+> Task :kumulant:dokkaGeneratePublicationHtml
+> Task :kumulant:dokkaGenerate
+> Task :kumulant:lintDocs
+> Task :kumulant:logLinkDokkaGeneratePublicationHtml SKIPPED
+
+BUILD SUCCESSFUL in 1m 13s
+63 actionable tasks: 63 executed
+Configuration cache entry reused.

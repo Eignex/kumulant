@@ -1,0 +1,33 @@
+{
+  "name": "cholesky-139-views-view-native-rbf",
+  "repository": "Eignex/kumulant",
+  "description": "Matched view rbf fixture shard; unchanged standard forks/warmup/measurement settings; same published Koblas cohort; replaces interrupted full capture",
+  "base": {
+    "ref": "bb6ef6cbd6436758e7c634586a3fbab7e93305b8",
+    "timeout": "7200000"
+  },
+  "nodeTags": {
+    "require": [
+      "arch:x86_64",
+      "simd:avx2"
+    ],
+    "exclude": []
+  },
+  "profile": {
+    "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+    "buildTasks": [
+      ":kumulant-bench:prepareBenchmark"
+    ],
+    "classpath": [
+      "kumulant-bench/build/classes/kotlin/jvm/main",
+      "kumulant/build/classes/kotlin/jvm/main",
+      "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+    ],
+    "args": [
+      "--native",
+      "-Pbench.filter=.*CholeskyFactorBenchmark\\.(factor|factorWithWorkspace)$",
+      "-Pbench.param.matrixCase=rbf:128,rbf:512,rbf:1024"
+    ]
+  },
+  "parallel": 1
+}

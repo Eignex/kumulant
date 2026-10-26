@@ -28,6 +28,10 @@ merged Koblas subview implementation before its snapshot publication. It retains
 the integration patch, local allocation comparison, and source-based checks; those
 exploratory measurements are separate from this Lab capture.
 
+The [published-snapshot view comparison](views/README.md) isolates removal of the
+caller block copies using one new Koblas cohort on both implementations. Its
+measurements and validation are separate from the original capture below.
+
 ## Evidence and scope
 
 - [Selected timing/allocation tables](tables.md) show point estimates and variability.

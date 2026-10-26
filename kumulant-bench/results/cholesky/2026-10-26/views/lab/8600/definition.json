@@ -1,0 +1,34 @@
+{
+  "name": "cholesky-139-views-view-native-gp-prepared",
+  "repository": "Eignex/kumulant",
+  "description": "Matched view gp Native capture using the generated release harness; compile before execution; unchanged engine/fork/warmup/measurement protocol",
+  "base": {
+    "ref": "0a874caaf5bad397199a16f1ec084cb8f9e9ec8c",
+    "timeout": "7200000"
+  },
+  "nodeTags": {
+    "require": [
+      "arch:x86_64",
+      "simd:avx2"
+    ],
+    "exclude": []
+  },
+  "profile": {
+    "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+    "buildTasks": [
+      ":kumulant-bench:prepareBenchmark",
+      ":kumulant-bench:linkLinuxX64BenchmarkReleaseExecutableLinuxX64"
+    ],
+    "classpath": [
+      "kumulant-bench/build/classes/kotlin/jvm/main",
+      "kumulant/build/classes/kotlin/jvm/main",
+      "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+    ],
+    "args": [
+      "--native-prepared",
+      "-Pbench.filter=.*CholeskyWorkloadBenchmark\\.(factorSolveLogDeterminant|factorSolveLogDeterminantWithWorkspace|fittingRound|fittingRoundWithWorkspace)$",
+      "-Pbench.param.historySize=128,512"
+    ]
+  },
+  "parallel": 1
+}
