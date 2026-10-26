@@ -7,91 +7,114 @@ import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.stat.regression.glm.*
 import com.eignex.kumulant.stat.regression.tree.*
-import kotlinx.serialization.KSerializer
+import com.eignex.skema.serialization.JsonNodeShape
+import com.eignex.skema.serialization.jsonNode
 import kotlinx.serialization.PolymorphicSerializer
 
-internal object DecayWeightingSpecSerializer : KSerializer<DecayWeightingSpec> by canonical(
-    node<HalfLife>("halfLife"),
-    node<Alpha>("alpha", WireShape.Operand, "alpha"),
-)
+internal object DecayWeightingSpecSerializer : KumulantSerializer<DecayWeightingSpec>(DecayWeightingSpec::class, {
+    listOf(
+        jsonNode<HalfLife>("halfLife"),
+        jsonNode<Alpha>("alpha", JsonNodeShape.Operand, "alpha"),
+    )
+})
 
-internal object OptimizerSpecSerializer : KSerializer<OptimizerSpec> by canonical(
-    node<Sgd>("sgd"),
-    node<Adagrad>("adagrad"),
-    node<Rmsprop>("rmsprop"),
-    node<Adam>("adam"),
-)
+internal object OptimizerSpecSerializer : KumulantSerializer<OptimizerSpec>(OptimizerSpec::class, {
+    listOf(
+        jsonNode<Sgd>("sgd"),
+        jsonNode<Adagrad>("adagrad"),
+        jsonNode<Rmsprop>("rmsprop"),
+        jsonNode<Adam>("adam"),
+    )
+})
 
-internal object UnivariateBanditSpecSerializer : KSerializer<UnivariateBanditSpec> by canonical(
-    node("multiArmed") { MultiArmedSpec.serializer(PolymorphicSerializer(Result::class)) },
-    node<RouletteWheelSpec>("rouletteWheel"),
-    node<BoltzmannSpec>("boltzmann"),
-    node<Exp3Spec>("exp3"),
-    node<TrackedUnivariateSpec>("tracked"),
-    node("topTwoThompson") { TopTwoThompsonSpec.serializer(PolymorphicSerializer(Result::class)) },
-)
+internal object UnivariateBanditSpecSerializer : KumulantSerializer<UnivariateBanditSpec>(UnivariateBanditSpec::class, {
+    listOf(
+        jsonNode("multiArmed") { MultiArmedSpec.serializer(PolymorphicSerializer(Result::class)) },
+        jsonNode<RouletteWheelSpec>("rouletteWheel"),
+        jsonNode<BoltzmannSpec>("boltzmann"),
+        jsonNode<Exp3Spec>("exp3"),
+        jsonNode<TrackedUnivariateSpec>("tracked"),
+        jsonNode("topTwoThompson") { TopTwoThompsonSpec.serializer(PolymorphicSerializer(Result::class)) },
+    )
+})
 
-internal object ContextualBanditSpecSerializer : KSerializer<ContextualBanditSpec> by canonical(
-    node<TrackedContextualSpec>("tracked"),
-    node("regressionContextual") { RegressionContextualSpec.serializer(PolymorphicSerializer(Result::class)) },
-)
+internal object ContextualBanditSpecSerializer : KumulantSerializer<ContextualBanditSpec>(ContextualBanditSpec::class, {
+    listOf(
+        jsonNode<TrackedContextualSpec>("tracked"),
+        jsonNode("regressionContextual") { RegressionContextualSpec.serializer(PolymorphicSerializer(Result::class)) },
+    )
+})
 
-internal object SerializableSplitSerializer : KSerializer<SerializableSplit> by canonical(
-    node<ThresholdSplit>("thresholdSplit"),
-    node<ExprSplit>("exprSplit"),
-)
+internal object SerializableSplitSerializer : KumulantSerializer<SerializableSplit>(SerializableSplit::class, {
+    listOf(
+        jsonNode<ThresholdSplit>("thresholdSplit"),
+        jsonNode<ExprSplit>("exprSplit"),
+    )
+})
 
-internal object BanditPolicySpecSerializer : KSerializer<BanditPolicySpec<*>> by canonical(
-    node("thompsonSampling") { ThompsonSamplingSpec.serializer(PolymorphicSerializer(Result::class)) },
-    node<Ucb1Spec>("ucb1"),
-    node<Ucb1NormalSpec>("ucb1Normal"),
-    node<Ucb1TunedSpec>("ucb1Tuned"),
-    node<GreedySpec>("greedy"),
-    node<EpsilonGreedySpec>("epsilonGreedy"),
-    node<EpsilonDecreasingSpec>("epsilonDecreasing"),
-    node<UniformSelectionSpec>("uniformSelection"),
-    node<KlUcbSpec>("klUcb"),
-    node<MossSpec>("moss"),
-    node<UcbVSpec>("ucbV"),
-)
+internal object BanditPolicySpecSerializer : KumulantSerializer<BanditPolicySpec<*>>(BanditPolicySpec::class, {
+    listOf(
+        jsonNode("thompsonSampling") { ThompsonSamplingSpec.serializer(PolymorphicSerializer(Result::class)) },
+        jsonNode<Ucb1Spec>("ucb1"),
+        jsonNode<Ucb1NormalSpec>("ucb1Normal"),
+        jsonNode<Ucb1TunedSpec>("ucb1Tuned"),
+        jsonNode<GreedySpec>("greedy"),
+        jsonNode<EpsilonGreedySpec>("epsilonGreedy"),
+        jsonNode<EpsilonDecreasingSpec>("epsilonDecreasing"),
+        jsonNode<UniformSelectionSpec>("uniformSelection"),
+        jsonNode<KlUcbSpec>("klUcb"),
+        jsonNode<MossSpec>("moss"),
+        jsonNode<UcbVSpec>("ucbV"),
+    )
+})
 
-internal object ArmSerializer : KSerializer<Arm<*>> by canonical(
-    node<BernoulliArm>("bernoulliArm"),
-    node<MeanArm>("meanArm"),
-    node<NormalArm>("normalArm"),
-    node<LogNormalArm>("logNormalArm"),
-    node<MomentsArm>("momentsArm"),
-    node<CompositeArm>("compositeArm"),
-)
+internal object ArmSerializer : KumulantSerializer<Arm<*>>(Arm::class, {
+    listOf(
+        jsonNode<BernoulliArm>("bernoulliArm"),
+        jsonNode<MeanArm>("meanArm"),
+        jsonNode<NormalArm>("normalArm"),
+        jsonNode<LogNormalArm>("logNormalArm"),
+        jsonNode<MomentsArm>("momentsArm"),
+        jsonNode<CompositeArm>("compositeArm"),
+    )
+})
 
-internal object PosteriorSerializer : KSerializer<Posterior<*>> by canonical(
-    node<BetaPosterior>("betaPosterior"),
-    node<PoissonGammaPosterior>("poissonGammaPosterior"),
-    node<GeometricBetaPosterior>("geometricBetaPosterior"),
-    node<ExponentialGammaPosterior>("exponentialGammaPosterior"),
-    node<NormalGammaPosterior>("normalGammaPosterior"),
-    node<LogNormalGammaPosterior>("logNormalGammaPosterior"),
-    node<GammaScalePosterior>("gammaScalePosterior"),
-    node<CompositePosterior>("compositePosterior"),
-)
+internal object PosteriorSerializer : KumulantSerializer<Posterior<*>>(Posterior::class, {
+    listOf(
+        jsonNode<BetaPosterior>("betaPosterior"),
+        jsonNode<PoissonGammaPosterior>("poissonGammaPosterior"),
+        jsonNode<GeometricBetaPosterior>("geometricBetaPosterior"),
+        jsonNode<ExponentialGammaPosterior>("exponentialGammaPosterior"),
+        jsonNode<NormalGammaPosterior>("normalGammaPosterior"),
+        jsonNode<LogNormalGammaPosterior>("logNormalGammaPosterior"),
+        jsonNode<GammaScalePosterior>("gammaScalePosterior"),
+        jsonNode<CompositePosterior>("compositePosterior"),
+    )
+})
 
-internal object LinkSerializer : KSerializer<Link> by canonical(
-    node<Link.Identity>("identity"),
-    node<Link.Logit>("logit"),
-    node<Link.Log>("log"),
-)
+internal object LinkSerializer : KumulantSerializer<Link>(Link::class, {
+    listOf(
+        jsonNode<Link.Identity>("identity"),
+        jsonNode<Link.Logit>("logit"),
+        jsonNode<Link.Log>("log"),
+    )
+})
 
-internal object PenaltySerializer : KSerializer<Penalty> by canonical(
-    node<Penalty.None>("none"),
-    node<Penalty.L1>("l1"),
-    node<Penalty.L2>("l2"),
-)
+internal object PenaltySerializer : KumulantSerializer<Penalty>(Penalty::class, {
+    listOf(
+        jsonNode<Penalty.None>("none"),
+        jsonNode<Penalty.L1>("l1"),
+        jsonNode<Penalty.L2>("l2"),
+    )
+})
 
-internal object SplitMetricSerializer : KSerializer<SplitMetric> by canonical(
-    node<VarianceReduction>("varianceReduction"),
-)
+internal object SplitMetricSerializer : KumulantSerializer<SplitMetric>(SplitMetric::class, {
+    listOf(
+        jsonNode<VarianceReduction>("varianceReduction"),
+    )
+})
 
-internal object ClassificationSplitMetricSerializer : KSerializer<ClassificationSplitMetric> by canonical(
-    node<GiniReduction>("giniReduction"),
-    node<InformationGain>("informationGain"),
+internal object ClassificationSplitMetricSerializer : KumulantSerializer<ClassificationSplitMetric>(
+    ClassificationSplitMetric::class,
+    { listOf(jsonNode<GiniReduction>("giniReduction"), jsonNode<InformationGain>("informationGain")) },
 )

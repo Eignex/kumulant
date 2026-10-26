@@ -38,7 +38,9 @@ kotlin {
             api("com.eignex:koblas:0.1.1-20261025.142922-269") {
                 version { strictly("0.1.1-20261025.142922-269") }
             }
-            api("com.eignex:skema:0.3.0")
+            api("com.eignex:skema:0.3.1-20261026.122153-9") {
+                version { strictly("0.3.1-20261026.122153-9") }
+            }
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
         }
@@ -54,18 +56,28 @@ kotlin {
     }
 }
 
-// A timestamped KMP root redirects to mutable platform snapshots. Publish constraints so downstream
+// Timestamped KMP roots redirect to mutable platform snapshots. Publish constraints so downstream
 // Gradle consumers resolve the same binaries as this build.
 dependencies {
     constraints {
-        for ((module, pinned) in mapOf(
-            "jvm" to "0.1.1-20261025.142922-272",
-            "linuxx64" to "0.1.1-20261025.142922-268",
-            "linuxarm64" to "0.1.1-20261025.142922-269",
-            "macosarm64" to "0.1.1-20261025.142649-292",
+        for ((library, platforms) in mapOf(
+            "koblas" to mapOf(
+                "jvm" to "0.1.1-20261025.142922-272",
+                "linuxx64" to "0.1.1-20261025.142922-268",
+                "linuxarm64" to "0.1.1-20261025.142922-269",
+                "macosarm64" to "0.1.1-20261025.142649-292",
+            ),
+            "skema" to mapOf(
+                "jvm" to "0.3.1-20261026.122153-9",
+                "linuxx64" to "0.3.1-20261026.122153-9",
+                "linuxarm64" to "0.3.1-20261026.122153-9",
+                "macosarm64" to "0.3.1-20261026.122153-9",
+            ),
         )) {
-            add("commonMainApi", "com.eignex:koblas-$module:$pinned") {
-                version { strictly(pinned) }
+            for ((module, pinned) in platforms) {
+                add("commonMainApi", "com.eignex:$library-$module:$pinned") {
+                    version { strictly(pinned) }
+                }
             }
         }
     }

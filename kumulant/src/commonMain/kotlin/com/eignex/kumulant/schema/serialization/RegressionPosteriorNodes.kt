@@ -3,27 +3,34 @@ package com.eignex.kumulant.schema.serialization
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import com.eignex.kumulant.stat.regression.glm.*
 import com.eignex.kumulant.stat.regression.tree.*
-import kotlinx.serialization.KSerializer
+import com.eignex.skema.serialization.jsonNode
 
-internal object LinearPosteriorSerializer : KSerializer<LinearPosterior<*>> by canonical(
-    node<PointPosterior>("pointPosterior"),
-    node<FactorisedGaussian>("factorisedGaussian"),
-    node<MultivariateGaussian>("multivariateGaussian"),
-    node<LinUcb>("linUcb"),
-)
+internal object LinearPosteriorSerializer : KumulantSerializer<LinearPosterior<*>>(LinearPosterior::class, {
+    listOf(
+        jsonNode<PointPosterior>("pointPosterior"),
+        jsonNode<FactorisedGaussian>("factorisedGaussian"),
+        jsonNode<MultivariateGaussian>("multivariateGaussian"),
+        jsonNode<LinUcb>("linUcb"),
+    )
+})
 
-internal object TreePosteriorSerializer : KSerializer<TreePosterior> by canonical(
-    node<MeanTreePosterior>("meanTreePosterior"),
-    node<ThompsonTreePosterior>("thompsonTreePosterior"),
-    node<UcbTreePosterior>("ucbTreePosterior"),
-)
+internal object TreePosteriorSerializer : KumulantSerializer<TreePosterior>(TreePosterior::class, {
+    listOf(
+        jsonNode<MeanTreePosterior>("meanTreePosterior"),
+        jsonNode<ThompsonTreePosterior>("thompsonTreePosterior"),
+        jsonNode<UcbTreePosterior>("ucbTreePosterior"),
+    )
+})
 
-internal object ForestPosteriorSerializer : KSerializer<ForestPosterior> by canonical(
-    node<MeanForestPosterior>("meanForestPosterior"),
-    node<ThompsonForestPosterior>("thompsonForestPosterior"),
-    node<UcbForestPosterior>("ucbForestPosterior"),
-)
+internal object ForestPosteriorSerializer : KumulantSerializer<ForestPosterior>(ForestPosterior::class, {
+    listOf(
+        jsonNode<MeanForestPosterior>("meanForestPosterior"),
+        jsonNode<ThompsonForestPosterior>("thompsonForestPosterior"),
+        jsonNode<UcbForestPosterior>("ucbForestPosterior"),
+    )
+})
 
-internal object CanonicalRegressionPosteriorSerializer : KSerializer<RegressionPosterior<*>> by canonical(
+internal object CanonicalRegressionPosteriorSerializer : KumulantSerializer<RegressionPosterior<*>>(
+    RegressionPosterior::class,
     { LinearPosteriorSerializer.nodes + TreePosteriorSerializer.nodes + ForestPosteriorSerializer.nodes },
 )
