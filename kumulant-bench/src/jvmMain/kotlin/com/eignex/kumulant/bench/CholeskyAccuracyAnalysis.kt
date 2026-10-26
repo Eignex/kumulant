@@ -1,11 +1,14 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.Workspace
 import com.eignex.koblas.koblas
+import com.eignex.kumulant.math.CholeskyFactor
 import com.eignex.kumulant.math.factorCholesky
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.ln
+import kotlin.math.sqrt
 
 internal fun analyzeCholeskyAccuracy() {
     println("Cholesky accuracy: seed=${CholeskyFixtures.SEED}, backend=$koblas")
@@ -33,6 +36,78 @@ internal fun analyzeCholeskyAccuracy() {
         check(error <= 1e-10) { "Diagonal log determinant error=$error" }
         println("diagonal,65,$scale,${error.scientific()}")
     }
+    analyzeUpdates()
+    analyzeExtensions()
+    println("retry,scenario,attempts,diagonal_shift,succeeded")
+    for (scenario in listOf("success", "retry", "exhaustion")) {
+        val result = retryFactor(retryMatrix(scenario), Workspace())
+        check((result.factor != null) == (scenario != "exhaustion"))
+        println("retry,$scenario,${result.attempts},${result.shift},${result.factor != null}")
+    }
+}
+
+private fun analyzeUpdates() {
+    println("update,size,scale,reconstruction,backward_error,relative_solution_error,absolute_logdet_error")
+    val workspace = Workspace()
+    for (size in listOf(8, 32, 128, 512)) {
+        for (scale in listOf(1e-100, 1.0, 1e100)) {
+            val matrix = CholeskyFixtures.precision(size)
+            for (i in matrix.values.indices) matrix.values[i] *= scale
+            var factor = matrix.factorCholesky(workspace)
+            val updates = CholeskyFixtures.right(size, 8)
+            for (column in 0 until updates.cols) {
+                val update = DoubleArray(size) { updates[it, column] * sqrt(scale) }
+                factor = factor.rankUpdated(update, workspace)
+                CholeskyFixtures.addOuterProduct(matrix, update)
+            }
+            val errors = compareFactors(matrix, factor)
+            check(errors[0] < 1e-13 && errors[1] < 1e-13 && errors[2] < 1e-10 && errors[3] < 1e-9) {
+                "rank updates size=$size scale=$scale errors=${errors.toList()}"
+            }
+            println("update,$size,$scale,${errors.joinToString(",") { it.scientific() }}")
+        }
+    }
+}
+
+private fun analyzeExtensions() {
+    println("extension,kernel,size,appended,scale,reconstruction,backward_error,relative_solution_error,absolute_logdet_error,forward_tolerance")
+    val workspace = Workspace()
+    for (kind in listOf("rbf", "matern")) {
+        for (size in listOf(63, 64, 65, 127, 128, 129)) {
+            for (added in listOf(1, 4, 16)) {
+                for (scale in listOf(1e-100, 1.0, 1e100)) {
+                    val fixture = CholeskyFixtures.extension(size, added, kind, scale)
+                    val factor = fixture.base.factorCholesky(workspace).extended(fixture.cross, fixture.diagonal, workspace)
+                    val errors = compareFactors(fixture.full, factor)
+                    val tolerance = 64 * 2.220446049250313e-16 * (size + added) / CholeskyFixtures.NOISE_VARIANCE
+                    check(errors[0] < 1e-13 && errors[1] < 1e-13 && errors[2] < tolerance && errors[3] < tolerance) {
+                        "extension $kind:$size+$added scale=$scale errors=${errors.toList()} tolerance=$tolerance"
+                    }
+                    println("extension,$kind,$size,$added,$scale,${errors.joinToString(",") { it.scientific() }},${tolerance.scientific()}")
+                }
+            }
+        }
+    }
+}
+
+private fun compareFactors(matrix: DenseMatrix, factor: CholeskyFactor): DoubleArray {
+    val reference = matrix.factorCholesky()
+    val right = CholeskyFixtures.right(matrix.rows, 4)
+    val expected = reference.solve(right)
+    val out = DenseMatrix.zero(right.rows, right.cols)
+    val solution = factor.solveInto(right, out, Workspace())
+    var difference = 0.0
+    var magnitude = 1.0
+    for (i in solution.values.indices) {
+        difference = maxOf(difference, abs(solution.values[i] - expected.values[i]))
+        magnitude = maxOf(magnitude, abs(expected.values[i]))
+    }
+    return doubleArrayOf(
+        relativeReconstructionError(matrix, factor.lowerFactor()),
+        solveBackwardError(matrix, right, solution),
+        difference / magnitude,
+        abs(factor.logDeterminant() - reference.logDeterminant()),
+    )
 }
 
 private fun relativeReconstructionError(matrix: DenseMatrix, lower: DenseMatrix): Double {

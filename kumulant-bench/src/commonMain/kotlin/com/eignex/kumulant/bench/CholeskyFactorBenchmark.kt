@@ -1,6 +1,7 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.Workspace
 import com.eignex.kumulant.math.CholeskyFactor
 import com.eignex.kumulant.math.factorCholesky
 import kotlinx.benchmark.Benchmark
@@ -19,6 +20,7 @@ open class CholeskyFactorBenchmark {
     lateinit var matrixCase: String
 
     private lateinit var matrix: DenseMatrix
+    private val workspace = Workspace()
 
     @Setup
     fun setup() {
@@ -27,4 +29,7 @@ open class CholeskyFactorBenchmark {
 
     @Benchmark
     fun factor(): CholeskyFactor = matrix.factorCholesky()
+
+    @Benchmark
+    fun factorWithWorkspace(): CholeskyFactor = matrix.factorCholesky(workspace)
 }

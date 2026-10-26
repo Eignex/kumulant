@@ -28,8 +28,10 @@ fun main(args: Array<String>) {
         }
         return
     }
-    val selection = if (args.firstOrNull() == "--filter") args[1] else ".*Cholesky.*Benchmark.*"
-    val parameters = if (args.firstOrNull() == "--filter") args.drop(2) else args.toList()
+    val recording = "--jfr" in args
+    val requested = args.filterNot { it == "--jfr" }
+    val selection = if (requested.firstOrNull() == "--filter") requested[1] else ".*Cholesky.*Benchmark.*"
+    val parameters = if (requested.firstOrNull() == "--filter") requested.drop(2) else requested
     for (backend in listOf("scalar", "simd")) {
         val directory = File(output, backend).apply { check(mkdir()) }
         val command = listOf(java, "--enable-native-access=ALL-UNNAMED", "-Xms512m", "-Xmx512m") +
@@ -43,7 +45,8 @@ fun main(args: Array<String>) {
         val quality = ProcessBuilder(command + "--quality").redirectErrorStream(true)
             .redirectOutput(File(directory, "quality.txt")).start()
         check(quality.waitFor() == 0) { "$backend quality failed" }
-        val benchmark = ProcessBuilder(command + listOf(selection, "-bm", "avgt", "-tu", "us", "-prof", "gc") +
+        val profiler = if (recording) listOf("-prof", "jfr:dir=${File(directory, "jfr").absolutePath}") else emptyList()
+        val benchmark = ProcessBuilder(command + listOf(selection, "-bm", "avgt", "-tu", "us", "-prof", "gc") + profiler +
             parameters + listOf("-rf", "json", "-rff", File(directory, "results.json").absolutePath))
             .redirectErrorStream(true).redirectOutput(File(directory, "benchmark.txt")).start()
         check(benchmark.waitFor() == 0) { "$backend benchmark failed" }

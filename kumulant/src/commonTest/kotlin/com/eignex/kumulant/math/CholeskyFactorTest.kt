@@ -1,14 +1,236 @@
 package com.eignex.kumulant.math
 
 import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.Workspace
+import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class CholeskyFactorTest {
+    @Test
+    fun `vector destinations support independent and shared storage`() {
+        val factor = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, 2.0, 5.0)).factorCholesky()
+        for (inPlace in listOf(false, true)) {
+            val right = doubleArrayOf(8.0, 12.0)
+            val out = if (inPlace) right else DoubleArray(2) { Double.NaN }
+
+            val result = factor.solveInto(right, out, Workspace())
+
+            assertSame(out, result)
+            assertContentEquals(doubleArrayOf(1.0, 2.0), result)
+        }
+    }
+
+    @Test
+    fun `matrix destinations support independent and shared storage`() {
+        val factor = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, 2.0, 5.0)).factorCholesky()
+        for (inPlace in listOf(false, true)) {
+            val right = DenseMatrix.wrap(2, 2, doubleArrayOf(8.0, 12.0, -8.0, -12.0))
+            val out = if (inPlace) DenseMatrix.wrap(2, 2, right.values) else DenseMatrix.zero(2, 2)
+
+            val result = factor.solveInto(right, out, Workspace())
+
+            assertSame(out, result)
+            assertContentEquals(doubleArrayOf(1.0, 2.0, -1.0, -2.0), result.values)
+        }
+    }
+
+    @Test
+    fun `reusable triangular destinations support both orientations`() {
+        val factor = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, 2.0, 5.0)).factorCholesky()
+        val workspace = Workspace()
+        val out = DenseMatrix.zero(2, 1)
+        for (transpose in listOf(false, true)) {
+            val right = DenseMatrix.wrap(2, 1, if (transpose) doubleArrayOf(4.0, 4.0) else doubleArrayOf(2.0, 5.0))
+
+            factor.solveLowerInto(right, out, transpose, workspace)
+
+            assertContentEquals(doubleArrayOf(1.0, 2.0), out.values)
+        }
+    }
+
+    @Test
+    fun `reusable solves preserve independent inputs and factor storage`() {
+        val factor = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, 2.0, 5.0)).factorCholesky()
+        val original = factor.lowerFactor().values
+        val right = DenseMatrix.wrap(2, 1, doubleArrayOf(8.0, 12.0))
+        val out = DenseMatrix.zero(2, 1)
+
+        factor.solveInto(right, out)
+        factor.solveLowerInto(right, out)
+        factor.solveInto(right.values, out.values)
+
+        assertContentEquals(doubleArrayOf(8.0, 12.0), right.values)
+        assertContentEquals(original, factor.lowerFactor().values)
+    }
+
+    @Test
+    fun `rank update factors the outer product added to the original matrix`() {
+        val factor = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, 2.0, 5.0)).factorCholesky()
+
+        val updated = factor.rankUpdated(doubleArrayOf(1.0, -2.0), Workspace())
+
+        val solution = updated.solve(doubleArrayOf(5.0, 18.0))
+        assertEquals(1.0, solution[0], 1e-13)
+        assertEquals(2.0, solution[1], 1e-13)
+    }
+
+    @Test
+    fun `rank update preserves its vector and original factor`() {
+        val factor = DenseMatrix.diagonal(2, 1.0).factorCholesky()
+        val update = doubleArrayOf(1.0, -2.0)
+
+        factor.rankUpdated(update)
+
+        assertContentEquals(doubleArrayOf(1.0, -2.0), update)
+        assertContentEquals(doubleArrayOf(1.0, 0.0, 0.0, 1.0), factor.lowerFactor().values)
+    }
+
+    @Test
+    fun `rank update reports a nonrepresentable factor`() {
+        val factor = DenseMatrix.diagonal(1, 1.0).factorCholesky().rankUpdated(doubleArrayOf(Double.MAX_VALUE))
+
+        assertFailsWith<NotPositiveDefinite> { factor.rankUpdated(doubleArrayOf(Double.MAX_VALUE)) }
+    }
+
+    @Test
+    fun `extension agrees with full factorization across block boundaries`() {
+        val workspace = Workspace()
+        for (size in listOf(0, 1, 63, 64, 65, 127, 128, 129)) {
+            val base = DenseMatrix.wrap(
+                size,
+                size,
+                DoubleArray(size * size) { if (it % size == it / size) 2.25 else 0.25 },
+            )
+            val factor = base.factorCholesky()
+            for (added in listOf(0, 1, 4, 16)) {
+                val cross = DenseMatrix.wrap(size, added, DoubleArray(size * added) { 0.25 })
+                val diagonal = DenseMatrix.wrap(
+                    added,
+                    added,
+                    DoubleArray(added * added) { if (it % added == it / added) 2.25 else 0.25 },
+                )
+                val order = size + added
+                val full = DenseMatrix.wrap(
+                    order,
+                    order,
+                    DoubleArray(order * order) { if (it % order == it / order) 2.25 else 0.25 },
+                )
+                val expected = full.factorCholesky().lowerFactor().values
+
+                val actual = factor.extended(cross, diagonal, workspace).lowerFactor().values
+
+                var error = 0.0
+                for (i in actual.indices) error = maxOf(error, abs(actual[i] - expected[i]))
+                assertTrue(error < 1e-12, "size=$size added=$added factor error=$error")
+            }
+        }
+    }
+
+    @Test
+    fun `extension owns its inputs and leaves the original factor unchanged`() {
+        val factor = DenseMatrix.diagonal(2, 1.0).factorCholesky()
+        val cross = DenseMatrix.wrap(2, 1, doubleArrayOf(0.5, 0.25))
+        val diagonal = DenseMatrix.diagonal(1, 2.0)
+
+        val extended = factor.extended(cross, diagonal)
+        val original = extended.lowerFactor().values
+        cross.values.fill(Double.NaN)
+        diagonal.values.fill(Double.NaN)
+
+        assertContentEquals(original, extended.lowerFactor().values)
+        assertContentEquals(doubleArrayOf(1.0, 0.0, 0.0, 1.0), factor.lowerFactor().values)
+    }
+
+    @Test
+    fun `extension reports the failing pivot in the enlarged matrix`() {
+        val factor = DenseMatrix.diagonal(2, 1.0).factorCholesky()
+        val diagonal = DenseMatrix.diagonal(doubleArrayOf(1.0, -1.0))
+
+        val error = assertFailsWith<NotPositiveDefinite> { factor.extended(DenseMatrix.zero(2, 2), diagonal) }
+
+        assertEquals(3, error.pivotIndex)
+        assertEquals(-1.0, error.pivot)
+        assertEquals(1, (error.cause as NotPositiveDefinite).pivotIndex)
+    }
+
+    @Test
+    fun `workspace remains reusable after a rejected extension`() {
+        val workspace = Workspace()
+        val factor = DenseMatrix.diagonal(2, 1.0).factorCholesky()
+        val cross = DenseMatrix.zero(2, 1)
+        assertFailsWith<NotPositiveDefinite> { factor.extended(cross, DenseMatrix.diagonal(1, -1.0), workspace) }
+
+        val result = factor.extended(cross, DenseMatrix.diagonal(1, 1.0), workspace)
+
+        assertContentEquals(DenseMatrix.diagonal(3, 1.0).values, result.lowerFactor().values)
+    }
+
+    @Test
+    fun `extension ignores the upper triangle of the diagonal block`() {
+        val factor = DenseMatrix.diagonal(1, 1.0).factorCholesky()
+        val diagonal = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 0.0, Double.NaN, 9.0))
+
+        val actual = factor.extended(DenseMatrix.zero(1, 2), diagonal).lowerFactor().values
+
+        assertContentEquals(doubleArrayOf(1.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 3.0), actual)
+    }
+
+    @Test
+    fun `reusable methods reject incompatible shapes`() {
+        val factor = DenseMatrix.diagonal(2, 1.0).factorCholesky()
+
+        assertFailsWith<IllegalArgumentException> { factor.solveInto(DoubleArray(2), DoubleArray(1)) }
+        assertFailsWith<IllegalArgumentException> { factor.solveInto(DenseMatrix.zero(2, 1), DenseMatrix.zero(2, 2)) }
+        assertFailsWith<IllegalArgumentException> {
+            factor.solveLowerInto(
+                DenseMatrix.zero(3, 1),
+                DenseMatrix.zero(3, 1),
+            )
+        }
+        assertFailsWith<IllegalArgumentException> { factor.extended(DenseMatrix.zero(3, 1), DenseMatrix.zero(1, 1)) }
+        assertFailsWith<IllegalArgumentException> { factor.extended(DenseMatrix.zero(2, 1), DenseMatrix.zero(2, 2)) }
+        assertFailsWith<IllegalArgumentException> { factor.rankUpdated(DoubleArray(1)) }
+    }
+
+    @Test
+    fun `updates and extensions reject nonfinite selected inputs`() {
+        val factor = DenseMatrix.diagonal(1, 1.0).factorCholesky()
+        for (value in listOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
+            assertFailsWith<IllegalArgumentException> { factor.rankUpdated(doubleArrayOf(value)) }
+            assertFailsWith<IllegalArgumentException> {
+                factor.extended(
+                    DenseMatrix.wrap(1, 1, doubleArrayOf(value)),
+                    DenseMatrix.diagonal(1, 1.0),
+                )
+            }
+            assertFailsWith<IllegalArgumentException> {
+                factor.extended(
+                    DenseMatrix.zero(1, 1),
+                    DenseMatrix.diagonal(1, value),
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `workspace factorization preserves its input and returns an owned factor`() {
+        val matrix = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, Double.NaN, 5.0))
+        val workspace = Workspace()
+
+        val factor = matrix.factorCholesky(workspace)
+        matrix.factorCholesky(workspace)
+
+        assertContentEquals(doubleArrayOf(4.0, 2.0, Double.NaN, 5.0), matrix.values)
+        matrix.values.fill(0.0)
+        assertContentEquals(doubleArrayOf(2.0, 1.0, 0.0, 2.0), factor.lowerFactor().values)
+    }
+
     @Test
     fun `factor owns its input and returned lower matrix`() {
         val matrix = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, Double.NaN, 5.0))

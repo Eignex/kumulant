@@ -10,7 +10,13 @@ live in the separate [koblas](https://github.com/Eignex/koblas) BLAS library
 [factorCholesky] factors the finite lower triangle of a symmetric positive-definite
 matrix into an owned [CholeskyFactor]. The factor solves vector and matrix systems,
 provides a log determinant, and returns an independent lower-triangular copy.
-Inputs remain unchanged. Factorization adds no jitter or regularization;
+Allocating operations preserve inputs. [CholeskyFactor.solveInto] and
+[CholeskyFactor.solveLowerInto] write to supplied destinations, which may alias
+the right-hand side. Separate calls can reuse a workspace serially; concurrent
+calls need independent workspaces and destinations. The factor remains unchanged.
+[CholeskyFactor.rankUpdated] adds an outer product and
+[CholeskyFactor.extended] appends a block, each returning an owned factor.
+Factorization adds no jitter or regularization;
 [NotPositiveDefinite] identifies a failed pivot for callers choosing a retry policy.
 
 ## Distribution sampling
