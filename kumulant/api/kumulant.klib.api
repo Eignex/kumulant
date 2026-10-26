@@ -2253,6 +2253,26 @@ final class com.eignex.kumulant.math/NotPositiveDefinite : kotlin/IllegalArgumen
         final fun <get-pivotIndex>(): kotlin/Int // com.eignex.kumulant.math/NotPositiveDefinite.pivotIndex.<get-pivotIndex>|<get-pivotIndex>(){}[0]
 }
 
+final class com.eignex.kumulant.math/SobolSequence { // com.eignex.kumulant.math/SobolSequence|null[0]
+    constructor <init>(kotlin/Int, kotlin/Long? = ..., kotlin/Int = ...) // com.eignex.kumulant.math/SobolSequence.<init>|<init>(kotlin.Int;kotlin.Long?;kotlin.Int){}[0]
+
+    final val dimensionOffset // com.eignex.kumulant.math/SobolSequence.dimensionOffset|{}dimensionOffset[0]
+        final fun <get-dimensionOffset>(): kotlin/Int // com.eignex.kumulant.math/SobolSequence.dimensionOffset.<get-dimensionOffset>|<get-dimensionOffset>(){}[0]
+    final val dimensions // com.eignex.kumulant.math/SobolSequence.dimensions|{}dimensions[0]
+        final fun <get-dimensions>(): kotlin/Int // com.eignex.kumulant.math/SobolSequence.dimensions.<get-dimensions>|<get-dimensions>(){}[0]
+    final val scrambleSeed // com.eignex.kumulant.math/SobolSequence.scrambleSeed|{}scrambleSeed[0]
+        final fun <get-scrambleSeed>(): kotlin/Long? // com.eignex.kumulant.math/SobolSequence.scrambleSeed.<get-scrambleSeed>|<get-scrambleSeed>(){}[0]
+
+    final fun nextNormal(kotlin/DoubleArray = ...): kotlin/DoubleArray // com.eignex.kumulant.math/SobolSequence.nextNormal|nextNormal(kotlin.DoubleArray){}[0]
+    final fun nextPoint(kotlin/DoubleArray = ...): kotlin/DoubleArray // com.eignex.kumulant.math/SobolSequence.nextPoint|nextPoint(kotlin.DoubleArray){}[0]
+    final fun skipTo(kotlin/Long) // com.eignex.kumulant.math/SobolSequence.skipTo|skipTo(kotlin.Long){}[0]
+
+    final object Companion { // com.eignex.kumulant.math/SobolSequence.Companion|null[0]
+        final const val MAX_DIMENSIONS // com.eignex.kumulant.math/SobolSequence.Companion.MAX_DIMENSIONS|{}MAX_DIMENSIONS[0]
+            final fun <get-MAX_DIMENSIONS>(): kotlin/Int // com.eignex.kumulant.math/SobolSequence.Companion.MAX_DIMENSIONS.<get-MAX_DIMENSIONS>|<get-MAX_DIMENSIONS>(){}[0]
+    }
+}
+
 final class com.eignex.kumulant.schema.decay/Alpha : com.eignex.kumulant.schema.decay/DecayWeightingSpec { // com.eignex.kumulant.schema.decay/Alpha|null[0]
     constructor <init>(kotlin/Double) // com.eignex.kumulant.schema.decay/Alpha.<init>|<init>(kotlin.Double){}[0]
 

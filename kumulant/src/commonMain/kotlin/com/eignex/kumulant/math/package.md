@@ -29,6 +29,33 @@ Convenience extensions on `kotlin.random.Random`:
 These are mostly internal to the library but exposed in case downstream
 code wants the same well-tested implementations.
 
+## Quasi-Monte Carlo integration
+
+[SobolSequence] generates uniform or standard-normal integration points. A seed applies
+left linear matrix scrambling and a digital shift; null selects the unscrambled sequence.
+Use powers-of-two sample blocks from the beginning and independent seeds for error estimates.
+These points are dependent integration samples, not independent observations for a statistical model.
+
+Coordinate and sample prefixes remain fixed when dimensions grow. `dimensionOffset` selects a
+contiguous projection, so a consumer can construct additional normal coordinates while retaining
+an existing common-sample cache. The engine supports 1,024 global coordinates and 2^52 points;
+normal samples use 52-bit cell midpoints and an inverse CDF to keep endpoints finite.
+
+```kotlin
+val sequence = SobolSequence(dimensions = 4, scrambleSeed = 17L)
+val point = DoubleArray(4)
+repeat(1024) {
+    sequence.nextNormal(point)
+    // Evaluate an integrand at point before reusing this storage.
+}
+```
+
+Direction numbers are the first 1,024 coordinates of the
+[Joe-Kuo D(6) table](https://web.maths.unsw.edu.au/~fkuo/sobol/).
+Normal quantiles use Wichura's AS 241 coefficients from
+[John Burkardt's ASA241 distribution](https://people.sc.fsu.edu/~jburkardt/f_src/asa241/asa241.html).
+Their BSD and MIT notices are included under `META-INF/LICENSES` in the JVM artifact and source distribution.
+
 ## Hash functions
 
 The streaming sketches and cardinality estimators
