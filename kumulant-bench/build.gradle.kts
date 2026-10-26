@@ -108,6 +108,7 @@ tasks.register<PrepareBenchmark>("prepareBenchmark") {
 }
 
 tasks.withType<Jar>().matching { it.name == "jvmBenchmarkJar" }.configureEach {
+    manifest.attributes["Multi-Release"] = "true"
     dependsOn("jvmJar", ":kumulant:jvmJar")
     // Project outputs must be inputs even when their JARs do not exist during configuration.
     from(kotlin.jvm().compilations.getByName("main").output.allOutputs)
