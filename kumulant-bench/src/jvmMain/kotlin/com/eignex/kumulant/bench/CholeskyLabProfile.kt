@@ -29,10 +29,11 @@ fun main(args: Array<String>) {
         return
     }
     val recording = "--jfr" in args
-    val requested = args.filterNot { it == "--jfr" }
+    val requested = args.filterNot { it == "--jfr" || it == "--simd-only" }
     val selection = if (requested.firstOrNull() == "--filter") requested[1] else ".*Cholesky.*Benchmark.*"
     val parameters = if (requested.firstOrNull() == "--filter") requested.drop(2) else requested
-    for (backend in listOf("scalar", "simd")) {
+    val backends = if ("--simd-only" in args) listOf("simd") else listOf("scalar", "simd")
+    for (backend in backends) {
         val directory = File(output, backend).apply { check(mkdir()) }
         val command = listOf(java, "--enable-native-access=ALL-UNNAMED", "-Xms512m", "-Xmx512m") +
             (if (backend == "simd") listOf("--add-modules=jdk.incubator.vector") else emptyList()) +
@@ -45,6 +46,10 @@ fun main(args: Array<String>) {
         val quality = ProcessBuilder(command + "--quality").redirectErrorStream(true)
             .redirectOutput(File(directory, "quality.txt")).start()
         check(quality.waitFor() == 0) { "$backend quality failed" }
+        val expected = if (backend == "simd") "KoblasEngine(simd(" else "KoblasEngine(scalar/"
+        check(File(directory, "quality.txt").readText().contains(expected)) {
+            "$backend backend did not resolve; inspect quality.txt"
+        }
         val profiler = if (recording) listOf("-prof", "jfr:dir=${File(directory, "jfr").absolutePath}") else emptyList()
         val benchmark = ProcessBuilder(command + listOf(selection, "-bm", "avgt", "-tu", "us", "-prof", "gc") + profiler +
             parameters + listOf("-rf", "json", "-rff", File(directory, "results.json").absolutePath))
