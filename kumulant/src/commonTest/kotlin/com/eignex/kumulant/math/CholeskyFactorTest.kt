@@ -306,6 +306,11 @@ class CholeskyFactorTest {
         assertEquals(0.0, factor.logDeterminant())
         assertTrue(factor.solve(doubleArrayOf()).isEmpty())
         assertEquals(3, factor.solve(DenseMatrix.zero(0, 3)).cols)
+        val destination = DenseMatrix.zero(0, 3)
+        assertSame(destination, factor.solveInto(DenseMatrix.zero(0, 3), destination, Workspace()))
+        assertSame(destination, factor.solveLowerInto(destination, destination, workspace = Workspace()))
+        assertTrue(factor.solveInto(doubleArrayOf(), doubleArrayOf(), Workspace()).isEmpty())
+        assertEquals(0, factor.rankUpdated(doubleArrayOf(), Workspace()).size)
         assertEquals(0, DenseMatrix.diagonal(2, 4.0).factorCholesky().solve(DenseMatrix.zero(2, 0)).cols)
     }
 
