@@ -10,6 +10,10 @@ fun main(args: Array<String>) {
     val hardware = ProcessBuilder("lscpu").redirectErrorStream(true).start()
     File(output, "host.txt").writeText(hardware.inputStream.bufferedReader().readText())
     check(hardware.waitFor() == 0)
+    if (args.firstOrNull() == "--native-prepared") {
+        runPreparedNativeCholesky(output, args.drop(1))
+        return
+    }
     if (args.firstOrNull() == "--native") {
         repeat(2) { repetition ->
             val directory = File(output, "native-$repetition").apply { check(mkdir()) }
