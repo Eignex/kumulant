@@ -1,0 +1,5 @@
+java=25.0.4.1+1-LTS
+os=Linux
+command=[/opt/java/openjdk/bin/java, --enable-native-access=ALL-UNNAMED, -Xms512m, -Xmx512m, --add-modules=jdk.incubator.vector, -cp, /local/worker/attempts/0-none-0-2/worktrees/e0260626fa71deb78a97c3b42196811f70146e4e/kumulant-bench/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-2/worktrees/e0260626fa71deb78a97c3b42196811f70146e4e/kumulant/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-2/worktrees/e0260626fa71deb78a97c3b42196811f70146e4e/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar, com.eignex.kumulant.bench.BenchmarkMainKt]
+arguments=[--filter, .*CholeskyFactorBenchmark\.(factor|factorWithWorkspace)$, -p, matrixCase=precision:32]
+load=9.53 2.74 0.95 17/1833 221

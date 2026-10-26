@@ -65,15 +65,18 @@ The [historical Cholesky baseline](results/cholesky/2026-10-25/README.md) retain
 original measurements. The [Cholesky comparison](results/cholesky/2026-10-26/README.md)
 retains Lab timing, allocation, accuracy, and consumer checks. Prediction, storage,
 vector and Cholesky benchmark kernels remain selectable with standard benchmark filters.
+The [published-snapshot view comparison](results/cholesky/2026-10-26/views/README.md)
+isolates borrowed regions using the same Koblas dependency on both implementations.
 
 ## Cholesky comparisons
 
 `CholeskyFactorBenchmark` compares the owned factor factory with and without a
-reused workspace. The owned result is allocated in both cases. Blocked
-factorization passes borrowed destination regions to Koblas for its trailing
-updates. Backend packing and scratch can still allocate; a workspace lends that
-storage through Koblas's bounded pool. Large or changing shapes can exceed the
-pool's retained lengths.
+reused workspace. The owned result is allocated in both cases. JVM factorization
+passes borrowed destination regions to Koblas for trailing updates. Native retains
+contiguous copied blocks, which were faster in the matched comparison. A workspace
+lends backend scratch and Native panel/trailing storage through Koblas's bounded
+pool. Backend packing can still allocate, and large or changing shapes can exceed
+the pool's retained lengths.
 
 `CholeskySolveBenchmark` and `CholeskyVectorBenchmark` compare allocating solves
 with `solveInto`/`solveLowerInto` and a reused destination/workspace. Independent
@@ -125,6 +128,15 @@ reports, using `bench.mode=avgt` and `bench.timeUnit=us`. It runs measurement ta
 only. Parameters pass as Gradle properties, for example
 `-Pbench.param.shape=32x1,128x16`; JVM parameters use standard JMH `-p` options.
 Native has no bytes/op profiler in this harness.
+
+For prepared Lab archives, add
+`:kumulant-bench:linkLinuxX64BenchmarkReleaseExecutableLinuxX64` to the build tasks
+and use `--native-prepared`. It invokes the generated release harness directly,
+keeping compilation in preparation. Each benchmark runs in its own process, with
+two repetitions, three one-second warmups, five one-second measurement iterations,
+and output in microseconds. Filters and parameters use `-Pbench.filter` and
+`-Pbench.param.*` as above. The configuration, invocations, samples, and engine JSON
+are retained under `$OUT/report/native-*`.
 
 Submit a committed trusted ref with `profile.main` set to
 `com.eignex.kumulant.bench.CholeskyLabProfileKt`, `profile.buildTasks` containing

@@ -60,10 +60,10 @@ Its short timing settings are exploratory; timing samples are retained for audit
 but establish no speedup or regression. They must not be compared with the earlier
 Lab timings as a controlled before/after result.
 
-## Pending publication and acceptance
+## Published-snapshot follow-up
 
-The view integration needs a published Koblas snapshot containing the merged API
-before the normal dependency pins and PR can adopt it. The final Lab comparison
-must pin that same dependency cohort for both copying and view implementations,
-then measure factorization and GP fitting workloads with the standard warmup/forks.
-This preview does not mark #139 complete.
+This capture predates snapshot publication. The
+[published-snapshot follow-up](../views/README.md) adopts the merged API with
+strict platform pins and compares copying and views on the same dependency cohort.
+It separately retains factorization and GP fitting measurements with standard
+warmup/forks. This preview's local measurements remain exploratory.

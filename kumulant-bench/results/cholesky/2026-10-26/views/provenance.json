@@ -1,0 +1,79 @@
+{
+  "copy": "e0260626fa71deb78a97c3b42196811f70146e4e",
+  "view": "bb6ef6cbd6436758e7c634586a3fbab7e93305b8",
+  "koblas": "fc3b2fa5cb196bf09379e3039b8ffa5da9cb42dd",
+  "combo": "f0674ecf0ffb448593dfbd2f12bb6f83eff9b4fe",
+  "seed": 139,
+  "consumerSeed": 401,
+  "fullGate": "./gradlew check lintDocs --rerun-tasks",
+  "scalarTest": "./gradlew :kumulant-bench:prepareBenchmark :kumulant:jvmTest --tests '*CholeskyTest' -Pkumulant.noSimd=true",
+  "scalarCholeskyTests": {
+    "name": "CholeskyTest[jvm]",
+    "tests": "20",
+    "skipped": "0",
+    "failures": "0",
+    "errors": "0",
+    "timestamp": "2026-10-26T18:21:27.060Z",
+    "hostname": "LTHCL001",
+    "time": "0.809"
+  },
+  "jobs": {
+    "copy-jvm": 8503,
+    "copy-native": 8504,
+    "view-jvm": 8505,
+    "view-native": 8506,
+    "copy-small-jvm": 8536,
+    "copy-small-native": 8537,
+    "view-small-jvm": 8538,
+    "view-small-native": 8539,
+    "copy-precision-jvm": 8556,
+    "copy-precision-native": 8557,
+    "copy-rbf-jvm": 8558,
+    "copy-rbf-native": 8559,
+    "copy-gp-jvm": 8560,
+    "copy-gp-native": 8561,
+    "view-precision-jvm": 8562,
+    "view-precision-native": 8563,
+    "view-rbf-jvm": 8564,
+    "view-rbf-native": 8565,
+    "view-gp-jvm": 8566,
+    "view-gp-native": 8567,
+    "copy-precision-prepared-native": 8595,
+    "copy-rbf-prepared-native": 8596,
+    "copy-gp-prepared-native": 8597,
+    "view-precision-prepared-native": 8598,
+    "view-rbf-prepared-native": 8599,
+    "view-gp-prepared-native": 8600
+  },
+  "identicalBenchmarksAndDependencyDeclaration": true,
+  "consumerCommand": "./gradlew :combo:jvmTest --tests '*GaussianProcessSurrogateTest' :combo:compareGp -Pgp.mode=frozen -Pgp.seeds=401 --init-script /path/to/kumulant-substitution.init.gradle",
+  "interruptedFullCaptures": [
+    8503,
+    8504,
+    8505,
+    8506
+  ],
+  "captureGrouping": "precision, RBF and GP fixture shards; unchanged forks, warmup and measurement settings",
+  "preparedNativeSources": {
+    "copy": "6d5ae314a386669ff3da5e997a9ba1437e592dad",
+    "view": "0a874caaf5bad397199a16f1ec084cb8f9e9ec8c"
+  },
+  "finalJvmTrailingMatchesMeasuredView": true,
+  "finalNativeTrailingMatchesMeasuredCopy": true,
+  "productionRoutes": {
+    "jvm": "borrowed views",
+    "nonJvm": "contiguous copied blocks"
+  },
+  "finalProduction": "b33088afb795b7070b68b55f054621020f5c83c9",
+  "supersededPreparedCaptures": {
+    "jobs": [
+      8595,
+      8596,
+      8597,
+      8598,
+      8599,
+      8600
+    ],
+    "reason": "Original paired captures completed; backup captures are not inputs to the timing tables."
+  }
+}

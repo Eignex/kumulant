@@ -1,0 +1,24 @@
+2026-10-26T19:01:22.680Z 5bc70afe-4f61-419f-b84b-6f749758a4f5 session-created
+2026-10-26T19:02:40.695Z 5bc70afe-4f61-419f-b84b-6f749758a4f5 claimed:preparation:1
+2026-10-26T19:02:40.848Z 5bc70afe-4f61-419f-b84b-6f749758a4f5 phase:preparing:preparation:1
+2026-10-26T19:04:40.910Z 5bc70afe-4f61-419f-b84b-6f749758a4f5 selection-approved:1
+2026-10-26T19:04:45.830Z 5bc70afe-4f61-419f-b84b-6f749758a4f5 phase:uploading:preparation:1
+2026-10-26T19:04:46.154Z 5bc70afe-4f61-419f-b84b-6f749758a4f5 committed:preparation:1
+2026-10-26T19:04:47.494Z 5bc70afe-4f61-419f-b84b-6f749758a4f5 lost:prepared
+2026-10-26T19:05:01.620Z 069d6f44-f39d-4f09-ab1f-4fc8be2caf9a session-created
+2026-10-26T19:05:22.170Z 069d6f44-f39d-4f09-ab1f-4fc8be2caf9a claimed:0:none:0:1
+2026-10-26T19:05:22.347Z 069d6f44-f39d-4f09-ab1f-4fc8be2caf9a phase:preparing:0:none:0:1
+2026-10-26T19:05:27.921Z 069d6f44-f39d-4f09-ab1f-4fc8be2caf9a phase:executing:0:none:0:1
+2026-10-26T19:05:28.066Z 069d6f44-f39d-4f09-ab1f-4fc8be2caf9a case-start:0:1
+2026-10-26T19:15:31.861Z 069d6f44-f39d-4f09-ab1f-4fc8be2caf9a lost:0:none:0:1
+2026-10-26T19:15:31.861Z 069d6f44-f39d-4f09-ab1f-4fc8be2caf9a lost:infrastructure:lease-expired
+2026-10-26T19:15:32.546Z b4301821-2f95-4bc2-94f2-d96ccbc10f7a session-created
+2026-10-26T19:15:46.460Z b4301821-2f95-4bc2-94f2-d96ccbc10f7a claimed:0:none:0:2
+2026-10-26T19:15:46.659Z b4301821-2f95-4bc2-94f2-d96ccbc10f7a phase:preparing:0:none:0:2
+2026-10-26T19:16:04.235Z b4301821-2f95-4bc2-94f2-d96ccbc10f7a phase:executing:0:none:0:2
+2026-10-26T19:16:04.388Z b4301821-2f95-4bc2-94f2-d96ccbc10f7a case-start:0:2
+2026-10-26T19:25:08.972Z b4301821-2f95-4bc2-94f2-d96ccbc10f7a phase:uploading:0:none:0:2
+2026-10-26T19:25:10.461Z b4301821-2f95-4bc2-94f2-d96ccbc10f7a committed:0:none:0:2
+2026-10-26T19:25:10.816Z b4301821-2f95-4bc2-94f2-d96ccbc10f7a lost:completed
+2026-10-26T19:25:19.128Z experiment domain-completed
+status: DONE

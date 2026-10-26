@@ -1,0 +1,38 @@
+2026-10-26T18:21:26.093Z d2862b52-55a7-4aef-b324-7963e2865843 session-created
+2026-10-26T18:22:28.960Z d2862b52-55a7-4aef-b324-7963e2865843 claimed:preparation:1
+2026-10-26T18:22:29.078Z d2862b52-55a7-4aef-b324-7963e2865843 phase:preparing:preparation:1
+2026-10-26T18:24:22.240Z d2862b52-55a7-4aef-b324-7963e2865843 selection-approved:1
+2026-10-26T18:24:28.326Z d2862b52-55a7-4aef-b324-7963e2865843 phase:uploading:preparation:1
+2026-10-26T18:24:29.365Z d2862b52-55a7-4aef-b324-7963e2865843 committed:preparation:1
+2026-10-26T18:24:37.202Z d2862b52-55a7-4aef-b324-7963e2865843 lost:prepared
+2026-10-26T18:25:35.340Z f4abf0b4-37e4-422f-84d9-f7fdadea7472 session-created
+2026-10-26T18:25:53.159Z f4abf0b4-37e4-422f-84d9-f7fdadea7472 claimed:0:none:0:1
+2026-10-26T18:25:53.258Z f4abf0b4-37e4-422f-84d9-f7fdadea7472 phase:preparing:0:none:0:1
+2026-10-26T18:25:57.096Z f4abf0b4-37e4-422f-84d9-f7fdadea7472 phase:executing:0:none:0:1
+2026-10-26T18:25:57.124Z f4abf0b4-37e4-422f-84d9-f7fdadea7472 case-start:0:1
+2026-10-26T18:32:08.571Z f4abf0b4-37e4-422f-84d9-f7fdadea7472 lost:0:none:0:1
+2026-10-26T18:32:08.571Z f4abf0b4-37e4-422f-84d9-f7fdadea7472 lost:infrastructure:running
+2026-10-26T18:32:08.577Z 1c75c98a-5cc0-4466-b242-d63c718c86a4 session-created
+2026-10-26T18:36:40.961Z 1c75c98a-5cc0-4466-b242-d63c718c86a4 claimed:0:none:0:2
+2026-10-26T18:36:41.268Z 1c75c98a-5cc0-4466-b242-d63c718c86a4 phase:preparing:0:none:0:2
+2026-10-26T18:37:03.231Z 1c75c98a-5cc0-4466-b242-d63c718c86a4 phase:executing:0:none:0:2
+2026-10-26T18:37:03.354Z 1c75c98a-5cc0-4466-b242-d63c718c86a4 case-start:0:2
+2026-10-26T18:42:12.199Z 1c75c98a-5cc0-4466-b242-d63c718c86a4 lost:0:none:0:2
+2026-10-26T18:42:12.199Z 1c75c98a-5cc0-4466-b242-d63c718c86a4 lost:infrastructure:complete
+2026-10-26T18:42:12.212Z 20d6977d-3cb7-4099-bfd0-f7e8a01edc79 session-created
+2026-10-26T18:43:40.918Z 20d6977d-3cb7-4099-bfd0-f7e8a01edc79 claimed:0:none:0:3
+2026-10-26T18:43:41.148Z 20d6977d-3cb7-4099-bfd0-f7e8a01edc79 phase:preparing:0:none:0:3
+2026-10-26T18:43:48.125Z 20d6977d-3cb7-4099-bfd0-f7e8a01edc79 phase:executing:0:none:0:3
+2026-10-26T18:43:48.306Z 20d6977d-3cb7-4099-bfd0-f7e8a01edc79 case-start:0:3
+2026-10-26T18:47:43.326Z 20d6977d-3cb7-4099-bfd0-f7e8a01edc79 lost:0:none:0:3
+2026-10-26T18:47:43.326Z 20d6977d-3cb7-4099-bfd0-f7e8a01edc79 lost:infrastructure:complete
+2026-10-26T18:47:43.336Z f0985b69-0f94-43f3-8dea-97df9dfc3c57 session-created
+2026-10-26T18:52:30.386Z f0985b69-0f94-43f3-8dea-97df9dfc3c57 claimed:0:none:0:4
+2026-10-26T18:52:30.580Z f0985b69-0f94-43f3-8dea-97df9dfc3c57 phase:preparing:0:none:0:4
+2026-10-26T18:53:02.384Z f0985b69-0f94-43f3-8dea-97df9dfc3c57 phase:executing:0:none:0:4
+2026-10-26T18:53:02.466Z f0985b69-0f94-43f3-8dea-97df9dfc3c57 case-start:0:4
+2026-10-26T18:55:14.574Z f0985b69-0f94-43f3-8dea-97df9dfc3c57 lost:0:none:0:4
+2026-10-26T18:55:14.574Z f0985b69-0f94-43f3-8dea-97df9dfc3c57 lost:infrastructure:running
+2026-10-26T18:55:14.578Z experiment failed:Nomad infrastructure retry budget exhausted
+status: FAILED
+error: Nomad infrastructure retry budget exhausted
