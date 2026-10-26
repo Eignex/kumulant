@@ -69,10 +69,11 @@ vector and Cholesky benchmark kernels remain selectable with standard benchmark 
 ## Cholesky comparisons
 
 `CholeskyFactorBenchmark` compares the owned factor factory with and without a
-reused workspace. The owned result is allocated in both cases. Workspace-backed
-factorization lends the copied panel/trailing blocks and backend scratch through
-Koblas's bounded pool; it still copies blocks until BLAS matrix subviews are
-available. Large or changing shapes can exceed that pool's retained lengths.
+reused workspace. The owned result is allocated in both cases. Blocked
+factorization passes borrowed destination regions to Koblas for its trailing
+updates. Backend packing and scratch can still allocate; a workspace lends that
+storage through Koblas's bounded pool. Large or changing shapes can exceed the
+pool's retained lengths.
 
 `CholeskySolveBenchmark` and `CholeskyVectorBenchmark` compare allocating solves
 with `solveInto`/`solveLowerInto` and a reused destination/workspace. Independent
