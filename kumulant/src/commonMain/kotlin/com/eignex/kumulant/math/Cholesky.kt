@@ -35,9 +35,23 @@ internal sealed interface CholeskyPolicy {
  * @property pivotIndex Zero-based failing column.
  * @property pivot Corrected diagonal before taking its square root.
  * @param message Diagnostic description of the failure.
+ * @param cause Original failure when translating a block-local pivot to a larger matrix.
  */
-class NotPositiveDefinite(val pivotIndex: Int, val pivot: Double, message: String) :
-    IllegalArgumentException(message)
+class NotPositiveDefinite private constructor(
+    val pivotIndex: Int,
+    val pivot: Double,
+    message: String,
+    cause: Throwable?,
+) : IllegalArgumentException(message, cause) {
+    constructor(pivotIndex: Int, pivot: Double, message: String) : this(pivotIndex, pivot, message, null)
+
+    internal fun offsetBy(offset: Int): NotPositiveDefinite = NotPositiveDefinite(
+        offset + pivotIndex,
+        pivot,
+        "extension failed at pivot ${offset + pivotIndex}: $message",
+        this,
+    )
+}
 
 internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, workspace: Workspace? = null) {
     require(rows == cols) { "cholesky factor must be square" }
@@ -161,39 +175,6 @@ internal fun DenseMatrix.choleskyInto(
         start += width
     }
     return out
-}
-
-/**
- * `A22 <- A22 - L21 * L21ᵀ` over the trailing submatrix, as one `syrk`.
- *
- * The blocks are copied out and written back because koblas carries no leading dimension on [DenseMatrix]
- * and so has no submatrix view. That is O(n²) per block step against the O(n³) the syrk absorbs, which is
- * the price of reaching level 3 at all. Only the lower triangle is written, and the strict upper of the
- * extracted block is already zero, so writing the whole block back leaves it that way.
- */
-private fun updateCholeskyTrailing(out: DenseMatrix, start: Int, width: Int, workspace: Workspace?) {
-    val first = start + width
-    val height = out.rows - first
-    if (height == 0) return
-    val panel = out.block(first, start, height, width)
-    val trailing = out.block(first, first, height, height)
-    koblas.syrk(-1.0, panel, transpose = false, 1.0, trailing, lower = true, workspace = workspace)
-    out.setBlock(first, first, trailing)
-}
-
-private fun DenseMatrix.block(r0: Int, c0: Int, nr: Int, nc: Int): DenseMatrix {
-    val out = DenseMatrix.zero(nr, nc)
-    for (j in 0 until nc) {
-        val from = (c0 + j) * rows + r0
-        values.copyInto(out.values, j * nr, from, from + nr)
-    }
-    return out
-}
-
-private fun DenseMatrix.setBlock(r0: Int, c0: Int, src: DenseMatrix) {
-    for (j in 0 until src.cols) {
-        src.values.copyInto(values, (c0 + j) * rows + r0, j * src.rows, (j + 1) * src.rows)
-    }
 }
 
 private fun columnsAreFinite(values: DoubleArray, n: Int, start: Int, width: Int): Boolean {

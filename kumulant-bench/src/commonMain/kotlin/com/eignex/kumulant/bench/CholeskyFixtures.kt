@@ -75,4 +75,35 @@ internal object CholeskyFixtures {
         val random = Random(SEED + 1)
         return DenseMatrix.wrap(size, columns, DoubleArray(size * columns) { random.nextDouble(-1.0, 1.0) })
     }
+
+    fun addOuterProduct(matrix: DenseMatrix, update: DoubleArray) {
+        for (j in 0 until matrix.cols) {
+            for (i in j until matrix.rows) {
+                val value = matrix[i, j] + update[i] * update[j]
+                matrix[i, j] = value
+                matrix[j, i] = value
+            }
+        }
+    }
+
+    fun extension(size: Int, added: Int, kind: String = "rbf", scale: Double = 1.0): CholeskyExtensionFixture {
+        val full = covariance(points(size + added), kind)
+        for (i in full.values.indices) full.values[i] *= scale
+        val base = DenseMatrix.zero(size, size)
+        val cross = DenseMatrix.zero(size, added)
+        val diagonal = DenseMatrix.zero(added, added)
+        for (j in 0 until size) for (i in 0 until size) base[i, j] = full[i, j]
+        for (j in 0 until added) {
+            for (i in 0 until size) cross[i, j] = full[i, size + j]
+            for (i in 0 until added) diagonal[i, j] = full[size + i, size + j]
+        }
+        return CholeskyExtensionFixture(base, cross, diagonal, full)
+    }
 }
+
+internal data class CholeskyExtensionFixture(
+    val base: DenseMatrix,
+    val cross: DenseMatrix,
+    val diagonal: DenseMatrix,
+    val full: DenseMatrix,
+)

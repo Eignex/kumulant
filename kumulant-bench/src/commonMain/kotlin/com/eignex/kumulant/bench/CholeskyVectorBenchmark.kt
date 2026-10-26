@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bench
 
+import com.eignex.koblas.Workspace
 import com.eignex.kumulant.math.CholeskyFactor
 import com.eignex.kumulant.math.factorCholesky
 import kotlinx.benchmark.Benchmark
@@ -15,15 +16,21 @@ open class CholeskyVectorBenchmark {
 
     private lateinit var factor: CholeskyFactor
     private lateinit var right: DoubleArray
+    private lateinit var out: DoubleArray
+    private val workspace = Workspace()
 
     @Setup
     fun setup() {
         factor = CholeskyFixtures.matrix("rbf:$historySize").factorCholesky()
         right = CholeskyFixtures.right(historySize).values
+        out = DoubleArray(historySize)
     }
 
     @Benchmark
     fun solveVector(): DoubleArray = factor.solve(right)
+
+    @Benchmark
+    fun solveVectorInto(): DoubleArray = factor.solveInto(right, out, workspace)
 
     @Benchmark
     fun logDeterminant(): Double = factor.logDeterminant()

@@ -2237,11 +2237,16 @@ final class com.eignex.kumulant.math/CholeskyFactor { // com.eignex.kumulant.mat
     final val size // com.eignex.kumulant.math/CholeskyFactor.size|{}size[0]
         final fun <get-size>(): kotlin/Int // com.eignex.kumulant.math/CholeskyFactor.size.<get-size>|<get-size>(){}[0]
 
+    final fun extended(com.eignex.koblas/DenseMatrix, com.eignex.koblas/DenseMatrix, com.eignex.koblas/Workspace? = ...): com.eignex.kumulant.math/CholeskyFactor // com.eignex.kumulant.math/CholeskyFactor.extended|extended(com.eignex.koblas.DenseMatrix;com.eignex.koblas.DenseMatrix;com.eignex.koblas.Workspace?){}[0]
     final fun logDeterminant(): kotlin/Double // com.eignex.kumulant.math/CholeskyFactor.logDeterminant|logDeterminant(){}[0]
     final fun lowerFactor(): com.eignex.koblas/DenseMatrix // com.eignex.kumulant.math/CholeskyFactor.lowerFactor|lowerFactor(){}[0]
+    final fun rankUpdated(kotlin/DoubleArray, com.eignex.koblas/Workspace? = ...): com.eignex.kumulant.math/CholeskyFactor // com.eignex.kumulant.math/CholeskyFactor.rankUpdated|rankUpdated(kotlin.DoubleArray;com.eignex.koblas.Workspace?){}[0]
     final fun solve(com.eignex.koblas/DenseMatrix): com.eignex.koblas/DenseMatrix // com.eignex.kumulant.math/CholeskyFactor.solve|solve(com.eignex.koblas.DenseMatrix){}[0]
     final fun solve(kotlin/DoubleArray): kotlin/DoubleArray // com.eignex.kumulant.math/CholeskyFactor.solve|solve(kotlin.DoubleArray){}[0]
+    final fun solveInto(com.eignex.koblas/DenseMatrix, com.eignex.koblas/DenseMatrix, com.eignex.koblas/Workspace? = ...): com.eignex.koblas/DenseMatrix // com.eignex.kumulant.math/CholeskyFactor.solveInto|solveInto(com.eignex.koblas.DenseMatrix;com.eignex.koblas.DenseMatrix;com.eignex.koblas.Workspace?){}[0]
+    final fun solveInto(kotlin/DoubleArray, kotlin/DoubleArray, com.eignex.koblas/Workspace? = ...): kotlin/DoubleArray // com.eignex.kumulant.math/CholeskyFactor.solveInto|solveInto(kotlin.DoubleArray;kotlin.DoubleArray;com.eignex.koblas.Workspace?){}[0]
     final fun solveLower(com.eignex.koblas/DenseMatrix, kotlin/Boolean = ...): com.eignex.koblas/DenseMatrix // com.eignex.kumulant.math/CholeskyFactor.solveLower|solveLower(com.eignex.koblas.DenseMatrix;kotlin.Boolean){}[0]
+    final fun solveLowerInto(com.eignex.koblas/DenseMatrix, com.eignex.koblas/DenseMatrix, kotlin/Boolean = ..., com.eignex.koblas/Workspace? = ...): com.eignex.koblas/DenseMatrix // com.eignex.kumulant.math/CholeskyFactor.solveLowerInto|solveLowerInto(com.eignex.koblas.DenseMatrix;com.eignex.koblas.DenseMatrix;kotlin.Boolean;com.eignex.koblas.Workspace?){}[0]
 }
 
 final class com.eignex.kumulant.math/NotPositiveDefinite : kotlin/IllegalArgumentException { // com.eignex.kumulant.math/NotPositiveDefinite|null[0]
@@ -2251,6 +2256,26 @@ final class com.eignex.kumulant.math/NotPositiveDefinite : kotlin/IllegalArgumen
         final fun <get-pivot>(): kotlin/Double // com.eignex.kumulant.math/NotPositiveDefinite.pivot.<get-pivot>|<get-pivot>(){}[0]
     final val pivotIndex // com.eignex.kumulant.math/NotPositiveDefinite.pivotIndex|{}pivotIndex[0]
         final fun <get-pivotIndex>(): kotlin/Int // com.eignex.kumulant.math/NotPositiveDefinite.pivotIndex.<get-pivotIndex>|<get-pivotIndex>(){}[0]
+}
+
+final class com.eignex.kumulant.math/SobolSequence { // com.eignex.kumulant.math/SobolSequence|null[0]
+    constructor <init>(kotlin/Int, kotlin/Long? = ..., kotlin/Int = ...) // com.eignex.kumulant.math/SobolSequence.<init>|<init>(kotlin.Int;kotlin.Long?;kotlin.Int){}[0]
+
+    final val dimensionOffset // com.eignex.kumulant.math/SobolSequence.dimensionOffset|{}dimensionOffset[0]
+        final fun <get-dimensionOffset>(): kotlin/Int // com.eignex.kumulant.math/SobolSequence.dimensionOffset.<get-dimensionOffset>|<get-dimensionOffset>(){}[0]
+    final val dimensions // com.eignex.kumulant.math/SobolSequence.dimensions|{}dimensions[0]
+        final fun <get-dimensions>(): kotlin/Int // com.eignex.kumulant.math/SobolSequence.dimensions.<get-dimensions>|<get-dimensions>(){}[0]
+    final val scrambleSeed // com.eignex.kumulant.math/SobolSequence.scrambleSeed|{}scrambleSeed[0]
+        final fun <get-scrambleSeed>(): kotlin/Long? // com.eignex.kumulant.math/SobolSequence.scrambleSeed.<get-scrambleSeed>|<get-scrambleSeed>(){}[0]
+
+    final fun nextNormal(kotlin/DoubleArray = ...): kotlin/DoubleArray // com.eignex.kumulant.math/SobolSequence.nextNormal|nextNormal(kotlin.DoubleArray){}[0]
+    final fun nextPoint(kotlin/DoubleArray = ...): kotlin/DoubleArray // com.eignex.kumulant.math/SobolSequence.nextPoint|nextPoint(kotlin.DoubleArray){}[0]
+    final fun skipTo(kotlin/Long) // com.eignex.kumulant.math/SobolSequence.skipTo|skipTo(kotlin.Long){}[0]
+
+    final object Companion { // com.eignex.kumulant.math/SobolSequence.Companion|null[0]
+        final const val MAX_DIMENSIONS // com.eignex.kumulant.math/SobolSequence.Companion.MAX_DIMENSIONS|{}MAX_DIMENSIONS[0]
+            final fun <get-MAX_DIMENSIONS>(): kotlin/Int // com.eignex.kumulant.math/SobolSequence.Companion.MAX_DIMENSIONS.<get-MAX_DIMENSIONS>|<get-MAX_DIMENSIONS>(){}[0]
+    }
 }
 
 final class com.eignex.kumulant.schema.decay/Alpha : com.eignex.kumulant.schema.decay/DecayWeightingSpec { // com.eignex.kumulant.schema.decay/Alpha|null[0]
@@ -9019,6 +9044,7 @@ final val com.eignex.kumulant.math/SplitMix64 // com.eignex.kumulant.math/SplitM
     final fun <get-SplitMix64>(): com.eignex.kumulant.math/LongHasher // com.eignex.kumulant.math/SplitMix64.<get-SplitMix64>|<get-SplitMix64>(){}[0]
 
 final fun (com.eignex.koblas/DenseMatrix).com.eignex.kumulant.math/factorCholesky(): com.eignex.kumulant.math/CholeskyFactor // com.eignex.kumulant.math/factorCholesky|factorCholesky@com.eignex.koblas.DenseMatrix(){}[0]
+final fun (com.eignex.koblas/DenseMatrix).com.eignex.kumulant.math/factorCholesky(com.eignex.koblas/Workspace): com.eignex.kumulant.math/CholeskyFactor // com.eignex.kumulant.math/factorCholesky|factorCholesky@com.eignex.koblas.DenseMatrix(com.eignex.koblas.Workspace){}[0]
 final fun (com.eignex.kumulant.bandit.contextual/ContextualBanditSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ..., com.eignex.kumulant.core/Concurrency = ..., kotlin/Function0<kotlin/Long> = ...): com.eignex.kumulant.bandit/Bandit // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.ContextualBanditSpec(kotlin.random.Random;com.eignex.kumulant.core.Concurrency;kotlin.Function0<kotlin.Long>){}[0]
 final fun (com.eignex.kumulant.bandit.contextual/TrackedContextualSpec).com.eignex.kumulant.bandit/materialize(kotlin.random/Random = ..., com.eignex.kumulant.core/Concurrency = ..., kotlin/Function0<kotlin/Long> = ...): com.eignex.kumulant.bandit/TrackedContextualBandit<com.eignex.kumulant.bandit/ContextualBandit> // com.eignex.kumulant.bandit/materialize|materialize@com.eignex.kumulant.bandit.contextual.TrackedContextualSpec(kotlin.random.Random;com.eignex.kumulant.core.Concurrency;kotlin.Function0<kotlin.Long>){}[0]
 final fun (com.eignex.kumulant.bandit.univariate/BernoulliArm.Companion).com.eignex.kumulant.bandit.univariate/warmStart(com.eignex.kumulant.stat.summary/BernoulliSumResult, kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/BernoulliArm // com.eignex.kumulant.bandit.univariate/warmStart|warmStart@com.eignex.kumulant.bandit.univariate.BernoulliArm.Companion(com.eignex.kumulant.stat.summary.BernoulliSumResult;kotlin.Double){}[0]

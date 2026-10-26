@@ -10,7 +10,13 @@ live in the separate [koblas](https://github.com/Eignex/koblas) BLAS library
 [factorCholesky] factors the finite lower triangle of a symmetric positive-definite
 matrix into an owned [CholeskyFactor]. The factor solves vector and matrix systems,
 provides a log determinant, and returns an independent lower-triangular copy.
-Inputs remain unchanged. Factorization adds no jitter or regularization;
+Allocating operations preserve inputs. [CholeskyFactor.solveInto] and
+[CholeskyFactor.solveLowerInto] write to supplied destinations, which may alias
+the right-hand side. Separate calls can reuse a workspace serially; concurrent
+calls need independent workspaces and destinations. The factor remains unchanged.
+[CholeskyFactor.rankUpdated] adds an outer product and
+[CholeskyFactor.extended] appends a block, each returning an owned factor.
+Factorization adds no jitter or regularization;
 [NotPositiveDefinite] identifies a failed pivot for callers choosing a retry policy.
 
 ## Distribution sampling
@@ -28,6 +34,33 @@ Convenience extensions on `kotlin.random.Random`:
 
 These are mostly internal to the library but exposed in case downstream
 code wants the same well-tested implementations.
+
+## Quasi-Monte Carlo integration
+
+[SobolSequence] generates uniform or standard-normal integration points. A seed applies
+left linear matrix scrambling and a digital shift; null selects the unscrambled sequence.
+Use powers-of-two sample blocks from the beginning and independent seeds for error estimates.
+These points are dependent integration samples, not independent observations for a statistical model.
+
+Coordinate and sample prefixes remain fixed when dimensions grow. `dimensionOffset` selects a
+contiguous projection, so a consumer can construct additional normal coordinates while retaining
+an existing common-sample cache. The engine supports 1,024 global coordinates and 2^52 points;
+normal samples use 52-bit cell midpoints and an inverse CDF to keep endpoints finite.
+
+```kotlin
+val sequence = SobolSequence(dimensions = 4, scrambleSeed = 17L)
+val point = DoubleArray(4)
+repeat(1024) {
+    sequence.nextNormal(point)
+    // Evaluate an integrand at point before reusing this storage.
+}
+```
+
+Direction numbers are the first 1,024 coordinates of the
+[Joe-Kuo D(6) table](https://web.maths.unsw.edu.au/~fkuo/sobol/).
+Normal quantiles use Wichura's AS 241 coefficients from
+[John Burkardt's ASA241 distribution](https://people.sc.fsu.edu/~jburkardt/f_src/asa241/asa241.html).
+Their BSD and MIT notices are included under `META-INF/LICENSES` in the JVM artifact and source distribution.
 
 ## Hash functions
 

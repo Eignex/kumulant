@@ -1,0 +1,13 @@
+./gradlew
+:kumulant-bench:linuxX64Benchmark
+--console=plain
+--no-daemon
+-Dorg.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m
+-Pbench.filter=.*Cholesky.*Benchmark.*
+-Pbench.mode=avgt
+-Pbench.timeUnit=us
+-Pbench.output=/local/worker/attempts/0-none-0-1/cases/0/out/report/native-1
+-Pbench.filter=.*(CholeskyFactorBenchmark.factor|CholeskySolveBenchmark.(solveMatrix|solveLower)|CholeskyVectorBenchmark.(solveVector|logDeterminant)|CholeskyWorkloadBenchmark.factorSolveLogDeterminant)$
+-Pbench.param.matrixCase=precision:8,precision:32,precision:128,precision:512,rbf:16,rbf:128,rbf:512,rbf:1024,matern:128
+-Pbench.param.shape=32x1,128x16,512x64,1024x256
+-Pbench.param.historySize=32,128,512

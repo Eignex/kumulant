@@ -1,0 +1,10 @@
+def candidateDirectory = System.getProperty('cholesky.candidate')
+if (candidateDirectory == null) throw new GradleException('Set -Dcholesky.candidate to the Kumulant checkout')
+settingsEvaluated { settings ->
+    settings.includeBuild(candidateDirectory) {
+        dependencySubstitution {
+            substitute module('com.eignex:kumulant-jvm') using project(':kumulant')
+            substitute module('com.eignex:kumulant-linuxx64') using project(':kumulant')
+        }
+    }
+}

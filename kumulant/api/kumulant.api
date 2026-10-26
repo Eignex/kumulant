@@ -1910,17 +1910,28 @@ public final class com/eignex/kumulant/core/VectorStat$DefaultImpls {
 }
 
 public final class com/eignex/kumulant/math/CholeskyFactor {
+	public final fun extended (Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/Workspace;)Lcom/eignex/kumulant/math/CholeskyFactor;
+	public static synthetic fun extended$default (Lcom/eignex/kumulant/math/CholeskyFactor;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/Workspace;ILjava/lang/Object;)Lcom/eignex/kumulant/math/CholeskyFactor;
 	public final fun getSize ()I
 	public final fun logDeterminant ()D
 	public final fun lowerFactor ()Lcom/eignex/koblas/DenseMatrix;
+	public final fun rankUpdated ([DLcom/eignex/koblas/Workspace;)Lcom/eignex/kumulant/math/CholeskyFactor;
+	public static synthetic fun rankUpdated$default (Lcom/eignex/kumulant/math/CholeskyFactor;[DLcom/eignex/koblas/Workspace;ILjava/lang/Object;)Lcom/eignex/kumulant/math/CholeskyFactor;
 	public final fun solve (Lcom/eignex/koblas/DenseMatrix;)Lcom/eignex/koblas/DenseMatrix;
 	public final fun solve ([D)[D
+	public final fun solveInto (Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/Workspace;)Lcom/eignex/koblas/DenseMatrix;
+	public final fun solveInto ([D[DLcom/eignex/koblas/Workspace;)[D
+	public static synthetic fun solveInto$default (Lcom/eignex/kumulant/math/CholeskyFactor;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/Workspace;ILjava/lang/Object;)Lcom/eignex/koblas/DenseMatrix;
+	public static synthetic fun solveInto$default (Lcom/eignex/kumulant/math/CholeskyFactor;[D[DLcom/eignex/koblas/Workspace;ILjava/lang/Object;)[D
 	public final fun solveLower (Lcom/eignex/koblas/DenseMatrix;Z)Lcom/eignex/koblas/DenseMatrix;
 	public static synthetic fun solveLower$default (Lcom/eignex/kumulant/math/CholeskyFactor;Lcom/eignex/koblas/DenseMatrix;ZILjava/lang/Object;)Lcom/eignex/koblas/DenseMatrix;
+	public final fun solveLowerInto (Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;ZLcom/eignex/koblas/Workspace;)Lcom/eignex/koblas/DenseMatrix;
+	public static synthetic fun solveLowerInto$default (Lcom/eignex/kumulant/math/CholeskyFactor;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;ZLcom/eignex/koblas/Workspace;ILjava/lang/Object;)Lcom/eignex/koblas/DenseMatrix;
 }
 
 public final class com/eignex/kumulant/math/CholeskyFactorKt {
 	public static final fun factorCholesky (Lcom/eignex/koblas/DenseMatrix;)Lcom/eignex/kumulant/math/CholeskyFactor;
+	public static final fun factorCholesky (Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/Workspace;)Lcom/eignex/kumulant/math/CholeskyFactor;
 }
 
 public final class com/eignex/kumulant/math/DistributionsKt {
@@ -1990,6 +2001,24 @@ public final class com/eignex/kumulant/math/NotPositiveDefinite : java/lang/Ille
 	public fun <init> (IDLjava/lang/String;)V
 	public final fun getPivot ()D
 	public final fun getPivotIndex ()I
+}
+
+public final class com/eignex/kumulant/math/SobolSequence {
+	public static final field Companion Lcom/eignex/kumulant/math/SobolSequence$Companion;
+	public static final field MAX_DIMENSIONS I
+	public fun <init> (ILjava/lang/Long;I)V
+	public synthetic fun <init> (ILjava/lang/Long;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDimensionOffset ()I
+	public final fun getDimensions ()I
+	public final fun getScrambleSeed ()Ljava/lang/Long;
+	public final fun nextNormal ([D)[D
+	public static synthetic fun nextNormal$default (Lcom/eignex/kumulant/math/SobolSequence;[DILjava/lang/Object;)[D
+	public final fun nextPoint ([D)[D
+	public static synthetic fun nextPoint$default (Lcom/eignex/kumulant/math/SobolSequence;[DILjava/lang/Object;)[D
+	public final fun skipTo (J)V
+}
+
+public final class com/eignex/kumulant/math/SobolSequence$Companion {
 }
 
 public final class com/eignex/kumulant/math/SplitMixChunkHasher : com/eignex/kumulant/math/Hasher64 {

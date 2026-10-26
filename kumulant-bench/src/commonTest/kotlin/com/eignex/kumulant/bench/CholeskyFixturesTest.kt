@@ -1,10 +1,12 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.Workspace
 import com.eignex.kumulant.math.NotPositiveDefinite
 import com.eignex.kumulant.math.factorCholesky
 import kotlin.math.abs
 import kotlin.math.ln
+import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -32,12 +34,13 @@ class CholeskyFixturesTest {
     }
 
     @Test
-    fun `factorization reconstructs benchmark matrices across block boundaries`() {
+    fun `reusable factorization reconstructs benchmark matrices across block boundaries`() {
+        val workspace = Workspace()
         for (size in listOf(63, 64, 65, 127, 128, 129)) {
             for (kind in listOf("precision", "rbf", "matern")) {
                 val matrix = CholeskyFixtures.matrix("$kind:$size")
 
-                val lower = matrix.factorCholesky().lowerFactor()
+                val lower = matrix.factorCholesky(workspace).lowerFactor()
 
                 var error = 0.0
                 var scale = 0.0
@@ -50,6 +53,59 @@ class CholeskyFixturesTest {
                     }
                 }
                 assertTrue(error / scale < 1e-13, "$kind:$size relative reconstruction error=${error / scale}")
+            }
+        }
+    }
+
+    @Test
+    fun `rank updates agree with full factorization across scales`() {
+        val workspace = Workspace()
+        for (size in listOf(8, 32, 65)) {
+            for (scale in listOf(1e-100, 1.0, 1e100)) {
+                val matrix = CholeskyFixtures.precision(size)
+                for (i in matrix.values.indices) matrix.values[i] *= scale
+                var factor = matrix.factorCholesky(workspace)
+                val updates = CholeskyFixtures.right(size, 4)
+
+                for (j in 0 until updates.cols) {
+                    val update = DoubleArray(size) { updates[it, j] * sqrt(scale) }
+                    factor = factor.rankUpdated(update, workspace)
+                    CholeskyFixtures.addOuterProduct(matrix, update)
+                }
+
+                val expected = matrix.factorCholesky().lowerFactor().values
+                val actual = factor.lowerFactor().values
+                var error = 0.0
+                var magnitude = 0.0
+                for (i in expected.indices) {
+                    error = maxOf(error, abs(actual[i] - expected[i]))
+                    magnitude = maxOf(magnitude, abs(expected[i]))
+                }
+                assertTrue(error / magnitude < 1e-12, "size=$size scale=$scale relative error=${error / magnitude}")
+            }
+        }
+    }
+
+    @Test
+    fun `covariance extensions agree across scales and block boundaries`() {
+        val workspace = Workspace()
+        for (kind in listOf("rbf", "matern")) {
+            for (size in listOf(63, 65)) {
+                for (scale in listOf(1e-100, 1.0, 1e100)) {
+                    val fixture = CholeskyFixtures.extension(size, 4, kind, scale)
+                    val factor = fixture.base.factorCholesky(workspace)
+
+                    val actual = factor.extended(fixture.cross, fixture.diagonal, workspace).lowerFactor().values
+
+                    val expected = fixture.full.factorCholesky().lowerFactor().values
+                    var error = 0.0
+                    var magnitude = 0.0
+                    for (i in expected.indices) {
+                        error = maxOf(error, abs(actual[i] - expected[i]))
+                        magnitude = maxOf(magnitude, abs(expected[i]))
+                    }
+                    assertTrue(error / magnitude < 1e-8, "$kind:$size scale=$scale relative error=${error / magnitude}")
+                }
             }
         }
     }

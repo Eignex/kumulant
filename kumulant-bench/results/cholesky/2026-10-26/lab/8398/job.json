@@ -1,0 +1,93 @@
+{
+  "id": 8398,
+  "name": "cholesky-139-allocation-recording",
+  "ref": "bce5218bc1c725fea06f7bfa41b2bc1740e48175",
+  "sha": "bce5218bc1c725fea06f7bfa41b2bc1740e48175",
+  "status": "DONE",
+  "cancelRequested": false,
+  "setupDone": true,
+  "createdAt": 1793022706672,
+  "startedAt": 1793022720114,
+  "finishedAt": 1793023007277,
+  "error": null,
+  "parallel": 1,
+  "priority": 0,
+  "paused": false,
+  "experiment": {
+    "name": "cholesky-139-allocation-recording",
+    "problems": [],
+    "base": {
+      "ref": "bce5218bc1c725fea06f7bfa41b2bc1740e48175",
+      "timeout": "7200000"
+    },
+    "configs": [
+      {}
+    ],
+    "grid": {},
+    "seeds": [],
+    "repeats": 1,
+    "parallel": 1,
+    "priority": 0,
+    "confirm": false,
+    "host": "aws",
+    "auto": false,
+    "machines": null,
+    "problemList": [],
+    "description": "Separate instrumented JFR capture for allocation-site attribution; exclude these timings from the GC-only performance comparison",
+    "measurement": "none",
+    "analyze": null,
+    "profile": {
+      "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+      "args": [
+        "--jfr",
+        "--filter",
+        ".*CholeskyFactorBenchmark.(factor|factorWithWorkspace)$",
+        "-p",
+        "matrixCase=rbf:128,rbf:512"
+      ],
+      "runTimeoutSec": null,
+      "script": null,
+      "buildTasks": [
+        ":kumulant-bench:prepareBenchmark"
+      ],
+      "classpath": [
+        "kumulant-bench/build/classes/kotlin/jvm/main",
+        "kumulant/build/classes/kotlin/jvm/main",
+        "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+      ],
+      "jvmArgs": [],
+      "outputArgument": null
+    },
+    "script": null,
+    "scriptFile": null,
+    "capped": [],
+    "repository": "Eignex/kumulant",
+    "nodeTags": {
+      "require": [
+        "arch:x86_64",
+        "simd:avx2"
+      ],
+      "exclude": []
+    }
+  },
+  "commands": [
+    {
+      "index": 0,
+      "cmd": "cd '/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175' && export OUT=\"$JOB_DIR/cases/0/out\" LAB_REPOSITORY='Eignex/kumulant' LAB_WORKTREE='/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175' && mkdir -p \"$OUT\" && exec \"${JAVA_HOME:+$JAVA_HOME/bin/}java\" \"-XX:StartFlightRecording=filename=$OUT/profile.jfr,settings=profile,dumponexit=true\" '--enable-native-access=ALL-UNNAMED' '--add-modules=jdk.incubator.vector' '-cp' '/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175/kumulant-bench/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175/kumulant/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/bce5218bc1c725fea06f7bfa41b2bc1740e48175/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar' 'com.eignex.kumulant.bench.CholeskyLabProfileKt' '--jfr' '--filter' '.*CholeskyFactorBenchmark.(factor|factorWithWorkspace)$' '-p' 'matrixCase=rbf:128,rbf:512'",
+      "timeoutSec": 7320,
+      "status": "DONE",
+      "exitCode": 0,
+      "startedAt": 1793022837550,
+      "finishedAt": 1793022998653,
+      "cores": 1,
+      "phase": null,
+      "terminations": [],
+      "host": "dc701b49-d404-ef3f-e9e0-25767b1b0a64"
+    }
+  ],
+  "runMs": 287163,
+  "runningSince": null,
+  "counts": null,
+  "local": false,
+  "backend": "nomad"
+}

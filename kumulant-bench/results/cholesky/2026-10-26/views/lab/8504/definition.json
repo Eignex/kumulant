@@ -1,0 +1,34 @@
+{
+  "name": "cholesky-139-views-copy-native",
+  "repository": "Eignex/kumulant",
+  "description": "Matched copy trailing-update implementation on one published Koblas cohort; same seeded factor and GP workloads; retain quality, backend, timing, and allocation samples",
+  "base": {
+    "ref": "e0260626fa71deb78a97c3b42196811f70146e4e",
+    "timeout": "7200000"
+  },
+  "nodeTags": {
+    "require": [
+      "arch:x86_64",
+      "simd:avx2"
+    ],
+    "exclude": []
+  },
+  "profile": {
+    "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+    "buildTasks": [
+      ":kumulant-bench:prepareBenchmark"
+    ],
+    "classpath": [
+      "kumulant-bench/build/classes/kotlin/jvm/main",
+      "kumulant/build/classes/kotlin/jvm/main",
+      "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+    ],
+    "args": [
+      "--native",
+      "-Pbench.filter=.*Cholesky(FactorBenchmark\\.(factor|factorWithWorkspace)|WorkloadBenchmark\\.(factorSolveLogDeterminant|factorSolveLogDeterminantWithWorkspace|fittingRound|fittingRoundWithWorkspace))$",
+      "-Pbench.param.matrixCase=precision:8,precision:128,precision:512,rbf:128,rbf:512,rbf:1024",
+      "-Pbench.param.historySize=128,512"
+    ]
+  },
+  "parallel": 1
+}

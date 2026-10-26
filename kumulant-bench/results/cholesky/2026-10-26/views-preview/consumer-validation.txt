@@ -1,0 +1,69 @@
+Calculating task graph as configuration cache cannot be reused because init script '../../../../tmp/kumulant139-koblas-source.init.gradle' has been added.
+
+> Configure project :combo
+Signing skipped: SNAPSHOT is a snapshot.
+
+> Configure project :kumulant:kumulant
+Signing skipped: SNAPSHOT is a snapshot.
+
+> Configure project :kumulant139-koblas-jeh273ie:koblas
+Signing skipped: SNAPSHOT is a snapshot.
+
+> Task :combo:kmpPartiallyResolvedDependenciesChecker
+> Task :combo:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :combo:jvmProcessResources NO-SOURCE
+> Task :kumulant:kumulant:kmpPartiallyResolvedDependenciesChecker
+> Task :kumulant:kumulant:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :combo:processJvmMainResources SKIPPED
+> Task :kumulant139-koblas-jeh273ie:koblas:kmpPartiallyResolvedDependenciesChecker
+> Task :kumulant139-koblas-jeh273ie:koblas:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :combo:jvmTestProcessResources NO-SOURCE
+> Task :kumulant139-koblas-jeh273ie:koblas:jvmProcessResources NO-SOURCE
+> Task :kumulant139-koblas-jeh273ie:koblas:processJvmMainResources SKIPPED
+> Task :combo:processJvmTestResources SKIPPED
+> Task :kumulant139-koblas-jeh273ie:koblas:jvmJava25ProcessResources NO-SOURCE
+> Task :kumulant139-koblas-jeh273ie:koblas:processJvmJava25Resources SKIPPED
+> Task :combo:koverFindJar UP-TO-DATE
+> Task :kumulant:kumulant:jvmProcessResources
+> Task :kumulant:kumulant:processJvmMainResources SKIPPED
+> Task :kumulant139-koblas-jeh273ie:koblas:compileKotlinJvm
+> Task :kumulant139-koblas-jeh273ie:koblas:compileJvmMainJava NO-SOURCE
+> Task :kumulant139-koblas-jeh273ie:koblas:jvmMainClasses
+> Task :kumulant139-koblas-jeh273ie:koblas:compileJava25KotlinJvm
+> Task :kumulant139-koblas-jeh273ie:koblas:compileJvmJava25Java NO-SOURCE
+> Task :kumulant139-koblas-jeh273ie:koblas:jvmJava25Classes
+
+> Task :kumulant139-koblas-jeh273ie:koblas:compileJvmModuleDescriptor
+warning: [incubating] using incubating module(s): jdk.incubator.vector
+1 warning
+
+
+> Task :kumulant139-koblas-jeh273ie:koblas:jvmJar
+> Task :kumulant:kumulant:compileKotlinJvm
+> Task :kumulant:kumulant:compileJvmMainJava NO-SOURCE
+> Task :kumulant:kumulant:jvmMainClasses
+> Task :kumulant:kumulant:jvmJar
+> Task :combo:compileKotlinJvm
+> Task :combo:compileJvmMainJava NO-SOURCE
+> Task :combo:jvmMainClasses
+> Task :combo:jvmJar UP-TO-DATE
+
+> Task :combo:compileTestKotlinJvm
+w: file:///home/rasmus/Workspaces/combo/combo/src/jvmTest/kotlin/com/eignex/combo/bo/BatchRefactorTest.kt:165:72 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Vector'.
+w: file:///home/rasmus/Workspaces/combo/combo/src/jvmTest/kotlin/com/eignex/combo/bo/BatchRefactorTest.kt:166:43 Unnecessary non-null assertion (!!) on a non-null receiver of type 'Vector'.
+w: file:///home/rasmus/Workspaces/combo/combo/src/jvmTest/kotlin/com/eignex/combo/bo/BoComponentsTest.kt:135:35 Unnecessary non-null assertion (!!) on a non-null receiver of type 'BanditSample'.
+
+> Task :combo:compileJvmTestJava NO-SOURCE
+> Task :combo:jvmTestClasses
+
+> Task :combo:compareGp
+WARNING: Using incubator modules: jdk.incubator.vector
+
+> Task :combo:jvmTest
+WARNING: Using incubator modules: jdk.incubator.vector
+
+[Incubating] Problems report is available at: file:///home/rasmus/Workspaces/combo/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 38s
+16 actionable tasks: 14 executed, 2 up-to-date
+Configuration cache entry stored.

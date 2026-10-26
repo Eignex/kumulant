@@ -1,5 +1,5 @@
 plugins {
-    id("com.eignex.kmp") version "1.3.5-SNAPSHOT"
+    id("com.eignex.kmp") version "1.3.5"
     kotlin("plugin.serialization") version "2.4.21"
 }
 
@@ -35,8 +35,8 @@ kotlin {
         appleMain.get().dependsOn(posixMain)
         linuxMain.get().dependsOn(posixMain)
         commonMain.dependencies {
-            api("com.eignex:koblas:0.1.1-20261025.142922-269") {
-                version { strictly("0.1.1-20261025.142922-269") }
+            api("com.eignex:koblas:0.1.1-20261026.172701-271") {
+                version { strictly("0.1.1-20261026.172701-271") }
             }
             api("com.eignex:skema:0.3.1-20261026.205017-11") {
                 version { strictly("0.3.1-20261026.205017-11") }
@@ -62,10 +62,10 @@ dependencies {
     constraints {
         for ((library, platforms) in mapOf(
             "koblas" to mapOf(
-                "jvm" to "0.1.1-20261025.142922-272",
-                "linuxx64" to "0.1.1-20261025.142922-268",
-                "linuxarm64" to "0.1.1-20261025.142922-269",
-                "macosarm64" to "0.1.1-20261025.142649-292",
+                "jvm" to "0.1.1-20261026.172701-274",
+                "linuxx64" to "0.1.1-20261026.172701-270",
+                "linuxarm64" to "0.1.1-20261026.172701-271",
+                "macosarm64" to "0.1.1-20261026.172206-294",
             ),
             "skema" to mapOf(
                 "jvm" to "0.3.1-20261026.205017-11",

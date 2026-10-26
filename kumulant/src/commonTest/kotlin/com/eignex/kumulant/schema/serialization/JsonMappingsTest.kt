@@ -19,7 +19,9 @@ class JsonMappingsTest {
                     if (name == "\$ref") references += value.jsonPrimitive.content
                     collect(value)
                 }
+
                 is JsonArray -> element.forEach(::collect)
+
                 else -> Unit
             }
         }
