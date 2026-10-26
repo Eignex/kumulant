@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
     kotlin("multiplatform") version "2.4.21"
@@ -66,6 +67,11 @@ benchmark {
             param("name", *providers.gradleProperty("bench.stats").getOrElse("SumStat").split(',').toTypedArray())
             param("policy", *providers.gradleProperty("bench.policies").getOrElse("MultiArmed/Thompson").split(',').toTypedArray())
             param("concurrency", "None")
+            providers.gradleProperty("bench.mode").orNull?.let { mode = it }
+            providers.gradleProperty("bench.timeUnit").orNull?.let { outputTimeUnit = it }
+            for ((key, value) in providers.gradlePropertiesPrefixedBy("bench.param.").get()) {
+                param(key.removePrefix("bench.param."), *value.split(',').toTypedArray())
+            }
         }
     }
 }
@@ -98,4 +104,13 @@ tasks.register<PrepareBenchmark>("prepareBenchmark") {
         languageVersion.set(JavaLanguageVersion.of(benchJdk))
     }.map { it.executablePath.asFile.absolutePath })
     javaFile.set(layout.buildDirectory.file("benchmark-java"))
+}
+
+tasks.withType<Jar>().matching { it.name == "jvmBenchmarkJar" }.configureEach {
+    dependsOn("jvmJar", ":kumulant:jvmJar")
+    // Project outputs must be inputs even when their JARs do not exist during configuration.
+    from(kotlin.jvm().compilations.getByName("main").output.allOutputs)
+    from(project(":kumulant").extensions.getByType<KotlinMultiplatformExtension>()
+        .jvm().compilations.getByName("main").output.allOutputs)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
