@@ -69,6 +69,11 @@ do not establish that views eliminate copying on that backend. Routing is select
 from the observed end-to-end behavior, without attributing every timing difference
 to a particular kernel.
 
+The [backend-identified Native follow-up](../native-verified/README.md) independently
+repeats the copying/view comparison on one Lab host with matching OpenBLAS
+library/version/thread receipts in both arms. Its qualified results support the
+same production choice and do not retroactively identify this historical cohort.
+
 ## Measurements
 
 The retained Lab definitions run identical seeded fixtures on both implementations:
@@ -114,7 +119,10 @@ are not inputs to these original matched timing tables.
 
 The published-snapshot [full gate](validation/full-gate.txt) passes with
 `./gradlew check lintDocs --rerun-tasks`, including JVM/Linux Native tests and ABI
-checks. All 54 scalar Cholesky tests also pass. Local
+checks. The retained scalar `CholeskyTest` run covers 20 unit tests. A
+[follow-up run of both Cholesky suites](../native-verified/validation/scalar-contracts.json)
+covers 42 scalar unit tests. The 54 factor accuracy fixtures below are a separate
+numerical workload, not a unit-test count. Local
 [scalar](validation/scalar-quality.txt) and [SIMD](validation/simd-quality.txt)
 quality checks validate reconstruction/backward error, scaled and clustered GP
 fixtures, update/extension equivalence, analytical log determinants, and caller

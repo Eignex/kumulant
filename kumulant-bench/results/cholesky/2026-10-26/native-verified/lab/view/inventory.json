@@ -1,0 +1,98 @@
+[
+  {
+    "source": "0.err",
+    "bytes": 55,
+    "sha256": "edc8d35623ef3b5bdbbf28491b2a7624c1b8e3502b34ec0aa1ae61ac754cb9c0",
+    "retained": "lab/view/0.err"
+  },
+  {
+    "source": "0.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "retained": "lab/view/0.exit"
+  },
+  {
+    "source": "0.out",
+    "bytes": 1362,
+    "sha256": "d2852d59943c90003878a830b22668205d4557365843281ea05077bba9ae7047",
+    "retained": "lab/view/0.out"
+  },
+  {
+    "source": "cases/0/out/report/host.txt",
+    "bytes": 3327,
+    "sha256": "76cce44946386469055c668cf66872132516be4282363c0f448a06cf4348edc4",
+    "retained": "view/host.txt"
+  },
+  {
+    "source": "cases/0/out/report/native-0/benchmark.txt",
+    "bytes": 10137,
+    "sha256": "872fca421f677350fef20c14974a12ce53c6c51dbce48c070dc9a745eaea790c",
+    "retained": "view/native-0-benchmark.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/configuration.txt",
+    "bytes": 594,
+    "sha256": "2186c38196f4b478273516d016a0af01bda4c7c35d6106e4ba0a499513309e6b",
+    "retained": "view/native-0-configuration.txt"
+  },
+  {
+    "source": "cases/0/out/report/native-0/results.json",
+    "bytes": 15220,
+    "sha256": "a8bfca7b54af4cc259c60aba5b22930b556e146211691d7b49761796a65b1dad",
+    "retained": "view/native-0.json.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-0/run.txt",
+    "bytes": 7609,
+    "sha256": "0335d9169bb4f8ab6c8b0ec9e003d4e5d2aa241565f2ef2adefd9b2154729b8b",
+    "retained": "view/native-0-run.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/benchmark.txt",
+    "bytes": 10135,
+    "sha256": "2a6f258a162de726b96f3064117d6d060d34387c5b73ba707cffbb66e1260ca1",
+    "retained": "view/native-1-benchmark.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/configuration.txt",
+    "bytes": 594,
+    "sha256": "9ee2d08e271632140f1a05223c738e99cd8d928f2e41e99912e79c15725d91f2",
+    "retained": "view/native-1-configuration.txt"
+  },
+  {
+    "source": "cases/0/out/report/native-1/results.json",
+    "bytes": 15331,
+    "sha256": "d7d2a5843266a269525ff16d15b7f3f4216fa593dc6a6dd896646ab0ad131cc1",
+    "retained": "view/native-1.json.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-1/run.txt",
+    "bytes": 7609,
+    "sha256": "1f3e284663372d99068481be0d92a146f16df3515f0e73e1355f8d78dd8c61c6",
+    "retained": "view/native-1-run.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/native-quality.txt",
+    "bytes": 22623,
+    "sha256": "f8462d6b31b436f1987bf22de48dc08e4ec0ec74db6315ea63799cd66d5620da",
+    "retained": "view/native-quality.txt.gz"
+  },
+  {
+    "source": "job.log",
+    "bytes": 2325,
+    "sha256": "592cc5249bc79fc33b24f7c9df42a9970a9f12b91a1702a7f7c08c11a7b76298",
+    "retained": "lab/view/job.log"
+  },
+  {
+    "source": "nomad/0-none-0-2-resources.json",
+    "bytes": 530,
+    "sha256": "861c36db58f9d9f014638e1dcdad9d74e0b76725fbaf5c667b87beefc1fa35a8",
+    "retained": "lab/view/accepted-resources.json"
+  },
+  {
+    "source": "nomad/preparation-2-resources.json",
+    "bytes": 517,
+    "sha256": "cbb9c95b87db8c87118e28380832d6baefd5c66b77e32ec4b53fe6eeea677f17",
+    "retained": "lab/view/nomad/preparation-2-resources.json"
+  }
+]
