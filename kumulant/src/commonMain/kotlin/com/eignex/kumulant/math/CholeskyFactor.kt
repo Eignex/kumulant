@@ -44,8 +44,9 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
 
     /** Solve `A X = right`, with one right-hand side per column. */
     fun solve(right: DenseMatrix): DenseMatrix {
-        require(right.rows == size) { "right-hand side has ${right.rows} rows, expected $size" }
-        return solveInto(right, DenseMatrix.zero(size, right.cols))
+        val result = solveLower(right)
+        solveTriangular(result, transpose = true, workspace = null)
+        return result
     }
 
     /**
@@ -63,7 +64,9 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
     /** Solve `L X = right`, or `Lᵀ X = right` when [transpose] is true, into an independent matrix. */
     fun solveLower(right: DenseMatrix, transpose: Boolean = false): DenseMatrix {
         require(right.rows == size) { "right-hand side has ${right.rows} rows, expected $size" }
-        return solveLowerInto(right, DenseMatrix.zero(size, right.cols), transpose)
+        val result = DenseMatrix.wrap(right.rows, right.cols, right.values.copyOf())
+        solveTriangular(result, transpose, workspace = null)
+        return result
     }
 
     /**
