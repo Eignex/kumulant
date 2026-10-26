@@ -23,6 +23,11 @@ also slows substantially relative to its initial capture and overlaps the candid
 on existing paths, demonstrating cross-run drift. These controls qualify the
 before/after estimates; they do not establish a general factorization improvement.
 
+The [source-pinned view preview](views-preview/README.md) separately validates the
+merged Koblas subview implementation before its snapshot publication. It retains
+the integration patch, local allocation comparison, and source-based checks; those
+exploratory measurements are separate from this Lab capture.
+
 ## Evidence and scope
 
 - [Selected timing/allocation tables](tables.md) show point estimates and variability.
