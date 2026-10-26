@@ -116,6 +116,10 @@ mean, using Kish effective sample size rather than treating importance weights a
 multiple is descriptive; repeated comparisons do not turn it into an anytime-valid confidence
 bound. One unknown-noise observation cannot estimate a standard error.
 
+[estimateCorrelatedMean] estimates a common location from a supplied positive-definite covariance.
+It uses generalized least squares, including correlations and observation noise. Its reported mean
+variance is conditional on that covariance; it does not include covariance-estimation uncertainty.
+
 ## Merge
 
 The additive stats ([SumStat],
