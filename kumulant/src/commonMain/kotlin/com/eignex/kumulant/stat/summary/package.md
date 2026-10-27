@@ -95,7 +95,7 @@ stats:
 
 - **Fraction meeting a threshold**: for SLO compliance and error
   budgets. Compose
-  [Mean][com.eignex.kumulant.schema.spec.Mean]`.transform(IfExpr(X gt threshold, 1.0, 0.0)).windowed(window)`.
+  [Mean][com.eignex.kumulant.schema.spec.Mean]`.transform(ifThenElse(X gt threshold, 1.0, 0.0)).windowed(window)`.
   Mean over the Bernoulli predicate is exactly the matched fraction.
 - **Lag-k autocorrelation**;
   [Covariance][com.eignex.kumulant.schema.spec.Covariance]`.withSelfLag(k)`

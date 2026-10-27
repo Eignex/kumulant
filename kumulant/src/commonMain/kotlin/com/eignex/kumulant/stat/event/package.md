@@ -46,7 +46,7 @@ of state changes and timestamps rather than numeric aggregates.
 
 ## Compose patterns
 
-- `Mean.transform(IfExpr(X gt threshold, 1.0, 0.0)).windowed(window)`
+- `Mean.transform(ifThenElse(X gt threshold, 1.0, 0.0)).windowed(window)`
   for windowed fraction-meeting-threshold (SLO compliance).
 - `RunLength.filter(predicate)` for "longest consecutive run satisfying
   a predicate".

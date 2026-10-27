@@ -41,7 +41,7 @@ negative rates.
 
 - `Rate.windowed(duration)` for windowed throughput: the windowed
   wrapper produces a sliding rate over the configured duration.
-- `DecayingRate.transform(IfExpr(predicate, 1.0, 0.0))` for an
+- `DecayingRate.transform(ifThenElse(predicate, 1.0, 0.0))` for an
   exponentially-decayed predicate-match rate.
 
 ## Merge

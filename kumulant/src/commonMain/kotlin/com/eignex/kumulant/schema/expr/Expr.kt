@@ -72,8 +72,11 @@ private inline fun <reified T> Result?.feedbackPrimary(node: String): T {
  *
  * Compose with the DSL operators in this file rather than constructing AST
  * data classes directly: `X * 2.0`, `(X + Const(1.0)) gt 0.0`,
- * `IfExpr(X gt 0.0, X, -X)`. The operators return the public sealed
- * interface and hide the concrete (internal) node types.
+ * `ifThenElse(X gt 0.0, X, -X)`. The operators return the public sealed
+ * interface and hide the concrete (internal) node types. Comparisons and
+ * arithmetic take a literal on either side, `abs`, `min`, `max` and `pow`
+ * are receiver helpers, and conditionals are [ifThenElse]: the spellings
+ * Klause's integer expressions share.
  *
  * ## Wire format
  *
@@ -159,8 +162,8 @@ data object High : ScalarExpr {
  * coordinate index of the currently evaluating element as a Double. Outside such
  * contexts (primary is not an [IndexedResult]), raises [IllegalStateException].
  *
- * Branch on this with [IfExpr]/[Eq] to apply different sub-expressions per coordinate:
- * `IfExpr(VIndex eq 0.0, (X - Center) / Scale, X)`.
+ * Branch on this with [ifThenElse]/[Eq] to apply different sub-expressions per coordinate:
+ * `ifThenElse(VIndex eq 0.0, (X - Center) / Scale, X)`.
  */
 @Serializable
 @SerialName("VIndex")
@@ -489,7 +492,7 @@ internal data class VDot(
  * environment as [ScalarExpr]. Consumed by every spec-side `filter` operator
  * and by [IfExpr]'s condition slot.
  *
- * Build via the comparison operators (`gt` / `ge` / `lt` / `le` / `eq`) on
+ * Build via the comparison operators (`gt` / `ge` / `lt` / `le` / `eq` / `ne`) on
  * [ScalarExpr] and the boolean combinators (`and` / `or` / `not`). The
  * resulting expression round-trips on the wire alongside the rest of the
  * spec.
@@ -1149,6 +1152,33 @@ infix fun ScalarExpr.eq(rhs: ScalarExpr): BoolExpr = Eq(this, rhs)
 /** Exact equality against a literal (no tolerance). */
 infix fun ScalarExpr.eq(rhs: Double): BoolExpr = Eq(this, Const(rhs))
 
+/**
+ * Exact inequality, the negation of [eq] under IEEE 754: true when either side is `NaN`, and false
+ * for `0.0` against `-0.0`. It builds `!(this eq rhs)`, which encodes with the portable `not` and `eq`.
+ */
+infix fun ScalarExpr.ne(rhs: ScalarExpr): BoolExpr = Not(Eq(this, rhs))
+
+/** Exact inequality against a literal; see [ne]. */
+infix fun ScalarExpr.ne(rhs: Double): BoolExpr = Not(Eq(this, Const(rhs)))
+
+/** Strictly-greater-than with a literal left operand. */
+infix fun Double.gt(rhs: ScalarExpr): BoolExpr = Gt(Const(this), rhs)
+
+/** Greater-or-equal with a literal left operand. */
+infix fun Double.ge(rhs: ScalarExpr): BoolExpr = Ge(Const(this), rhs)
+
+/** Strictly-less-than with a literal left operand. */
+infix fun Double.lt(rhs: ScalarExpr): BoolExpr = Lt(Const(this), rhs)
+
+/** Less-or-equal with a literal left operand. */
+infix fun Double.le(rhs: ScalarExpr): BoolExpr = Le(Const(this), rhs)
+
+/** Exact equality with a literal left operand (no tolerance). */
+infix fun Double.eq(rhs: ScalarExpr): BoolExpr = Eq(Const(this), rhs)
+
+/** Exact inequality with a literal left operand; see [ne]. */
+infix fun Double.ne(rhs: ScalarExpr): BoolExpr = Not(Eq(Const(this), rhs))
+
 /** Short-circuiting conjunction. */
 infix fun BoolExpr.and(rhs: BoolExpr): BoolExpr = And(this, rhs)
 
@@ -1216,6 +1246,9 @@ fun ScalarExpr.pow(exponent: ScalarExpr): ScalarExpr = Pow(this, exponent)
 /** This expression raised to a constant [exponent]. */
 fun ScalarExpr.pow(exponent: Double): ScalarExpr = Pow(this, Const(exponent))
 
+/** This expression raised to an integer [exponent], which binary64 represents exactly. */
+fun ScalarExpr.pow(exponent: Int): ScalarExpr = Pow(this, Const(exponent.toDouble()))
+
 /** The smaller of this expression and [other]. */
 fun ScalarExpr.min(other: ScalarExpr): ScalarExpr = MinExpr(this, other)
 
@@ -1227,6 +1260,19 @@ fun ScalarExpr.max(other: ScalarExpr): ScalarExpr = MaxExpr(this, other)
 
 /** The larger of this expression and a constant [other]. */
 fun ScalarExpr.max(other: Double): ScalarExpr = MaxExpr(this, Const(other))
+
+/** [then] when [cond] holds, else [otherwise]; only the selected branch is evaluated. Builds an [IfExpr]. */
+fun ifThenElse(cond: BoolExpr, then: ScalarExpr, otherwise: ScalarExpr): ScalarExpr = IfExpr(cond, then, otherwise)
+
+/** [then] when [cond] holds, else [otherwise], with a literal [then] branch. */
+fun ifThenElse(cond: BoolExpr, then: Double, otherwise: ScalarExpr): ScalarExpr = IfExpr(cond, Const(then), otherwise)
+
+/** [then] when [cond] holds, else [otherwise], with a literal [otherwise] branch. */
+fun ifThenElse(cond: BoolExpr, then: ScalarExpr, otherwise: Double): ScalarExpr = IfExpr(cond, then, Const(otherwise))
+
+/** [then] when [cond] holds, else [otherwise], with literal branches. */
+fun ifThenElse(cond: BoolExpr, then: Double, otherwise: Double): ScalarExpr =
+    IfExpr(cond, Const(then), Const(otherwise))
 
 /**
  * True when this expression falls within `[min, max]`, both ends inclusive.
