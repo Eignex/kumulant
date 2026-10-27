@@ -44,9 +44,9 @@ class CorrelatedMeanEstimateTest {
         val correlation = 1.0 - 1e-12
         val covariance = DenseMatrix.ofRows(
             arrayOf(
-                doubleArrayOf(1.0, correlation),
-                doubleArrayOf(correlation, 1.0),
-            ),
+            doubleArrayOf(1.0, correlation),
+            doubleArrayOf(correlation, 1.0),
+        )
         )
         val estimate = estimateCorrelatedMean(
             DenseVector.of(doubleArrayOf(1.0, 3.0)),
