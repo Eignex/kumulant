@@ -2,7 +2,6 @@
 
 package com.eignex.kumulant.schema.serialization
 
-import com.eignex.skema.serialization.JsonNode
 import com.eignex.skema.serialization.JsonPayloadMapping
 import kotlinx.serialization.json.*
 
@@ -16,12 +15,7 @@ internal class InputMapping(name: String) : JsonPayloadMapping {
         return JsonObject(emptyMap())
     }
 
-    override fun jsonSchema(node: JsonNode, body: JsonObject): JsonObject = buildJsonObject {
-        put("type", "object")
-        put("properties", buildJsonObject { put(node.name, buildJsonObject { put("const", token) }) })
-        put("required", JsonArray(listOf(JsonPrimitive(node.name))))
-        put("additionalProperties", false)
-    }
+    override fun payloadSchema(body: JsonObject): JsonObject = buildJsonObject { put("const", token) }
 }
 
 internal object NumberMapping : JsonPayloadMapping {
@@ -40,6 +34,6 @@ internal object NumberMapping : JsonPayloadMapping {
 
     override fun fieldPath(field: String, path: String): String = path
 
-    override fun jsonSchema(node: JsonNode, body: JsonObject): JsonObject =
+    override fun payloadSchema(body: JsonObject): JsonObject =
         body.getValue("properties").jsonObject.getValue("v").jsonObject
 }
