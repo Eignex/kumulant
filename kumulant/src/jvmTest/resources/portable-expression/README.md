@@ -8,3 +8,6 @@ Each case includes the expression, scalar bindings, canonical encoding where nee
 and integer and binary64 outcomes. Kumulant runs the binary64 cases, rejects unsupported
 operations and shapes, and retains nested grouping. `NaN`, `Infinity`, and `-Infinity`
 are evaluation outcomes, not JSON literals.
+
+A case with `dsl` records the Klause Kotlin DSL construction that emits its expression.
+Kumulant evaluates those cases like any other.

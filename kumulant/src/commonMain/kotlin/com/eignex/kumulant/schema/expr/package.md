@@ -62,6 +62,8 @@ Kumulant retains every binary grouping and evaluates operands in their written o
 For example, adding two small numbers before a large one can produce a different
 result from adding each small number to the large one in turn. Variadic `add`, `min`,
 `max`, `and`, and `or` are Klause integer extensions; Kumulant rejects those shapes.
+Klause writes its own chains nested to the left, subtraction as `add` of `mul` by -1,
+and constant multiplication with the constant first, so its DSL output stays portable.
 
 `div` is binary64 division, including IEEE 754 infinities and NaN from division by
 zero. Klause's integer operations use `truncDiv` and `truncMod`; Kumulant rejects them.
