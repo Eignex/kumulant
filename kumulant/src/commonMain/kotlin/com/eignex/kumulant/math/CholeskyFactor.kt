@@ -44,8 +44,10 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
 
     /** Solve `A X = right`, with one right-hand side per column. */
     fun solve(right: DenseMatrix): DenseMatrix {
-        val result = solveLower(right)
-        lower.trsm(result, lower = true, transpose = true)
+        // Both substitutions lend scratch of the same shapes, so one call-local workspace serves them.
+        val scratch = callScratch(size)
+        val result = solveLowerCopy(right, transpose = false, scratch)
+        lower.trsm(result, lower = true, transpose = true, workspace = scratch)
         return result
     }
 
@@ -62,10 +64,14 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
     }
 
     /** Solve `L X = right`, or `Lᵀ X = right` when [transpose] is true, into an independent matrix. */
-    fun solveLower(right: DenseMatrix, transpose: Boolean = false): DenseMatrix {
+    fun solveLower(right: DenseMatrix, transpose: Boolean = false): DenseMatrix =
+        solveLowerCopy(right, transpose, callScratch(size))
+
+    // The substitution's windows lend scratch of repeating shapes, which a workspace pools across them.
+    private fun solveLowerCopy(right: DenseMatrix, transpose: Boolean, workspace: Workspace?): DenseMatrix {
         require(right.rows == size) { "right-hand side has ${right.rows} rows, expected $size" }
         val result = DenseMatrix.wrap(right.rows, right.cols, right.values.copyOf())
-        lower.trsm(result, lower = true, transpose = transpose)
+        lower.trsm(result, lower = true, transpose = transpose, workspace = workspace)
         return result
     }
 
@@ -133,15 +139,18 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
         require(cross.values.all { it.isFinite() }) { "extension requires a finite cross block" }
         diagonal.requireCholeskyInput()
         val added = cross.cols
-        return workspace.borrow(size * added) { projectedValues ->
+        // The projection, Schur update and Schur factorization lend overlapping shapes, so a call without a
+        // workspace pools them for its own duration.
+        val scratch = workspace ?: callScratch(size)
+        return scratch.borrow(size * added) { projectedValues ->
             val projected = DenseMatrix.wrap(size, added, projectedValues)
-            solveLowerInto(cross, projected, workspace = workspace)
-            workspace.borrow(added * added) { schurValues ->
+            solveLowerInto(cross, projected, workspace = scratch)
+            scratch.borrow(added * added) { schurValues ->
                 diagonal.values.copyInto(schurValues)
                 val schur = DenseMatrix.wrap(added, added, schurValues)
-                koblas.syrk(-1.0, projected, transpose = true, 1.0, schur, lower = true, workspace = workspace)
+                koblas.syrk(-1.0, projected, transpose = true, 1.0, schur, lower = true, workspace = scratch)
                 try {
-                    schur.choleskyInto(schur, workspace = workspace)
+                    schur.choleskyInto(schur, workspace = scratch)
                     schur.requireFiniteCholeskyFactor()
                 } catch (failure: NotPositiveDefinite) {
                     throw failure.offsetBy(size)
