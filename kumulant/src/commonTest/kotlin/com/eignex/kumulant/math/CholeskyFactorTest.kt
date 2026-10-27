@@ -102,34 +102,34 @@ class CholeskyFactorTest {
     fun `extension agrees with full factorization across block boundaries`() {
         for (workspace in listOf(Workspace(), null)) {
             for (size in listOf(0, 1, 63, 64, 65, 127, 128, 129)) {
-            val base = DenseMatrix.wrap(
-                size,
-                size,
-                DoubleArray(size * size) { if (it % size == it / size) 2.25 else 0.25 },
-            )
-            val factor = base.factorCholesky()
-            for (added in if (size < 2) listOf(0, 1, 4, 16) else listOf(1, 16)) {
-                val cross = DenseMatrix.wrap(size, added, DoubleArray(size * added) { 0.25 })
-                val diagonal = DenseMatrix.wrap(
-                    added,
-                    added,
-                    DoubleArray(added * added) { if (it % added == it / added) 2.25 else 0.25 },
+                val base = DenseMatrix.wrap(
+                    size,
+                    size,
+                    DoubleArray(size * size) { if (it % size == it / size) 2.25 else 0.25 },
                 )
-                val order = size + added
-                val full = DenseMatrix.wrap(
-                    order,
-                    order,
-                    DoubleArray(order * order) { if (it % order == it / order) 2.25 else 0.25 },
-                )
-                val expected = full.factorCholesky().lowerFactor().values
-
-                val actual = factor.extended(cross, diagonal, workspace).lowerFactor().values
-
-                var error = 0.0
-                for (i in actual.indices) error = maxOf(error, abs(actual[i] - expected[i]))
-                assertTrue(error < 1e-12, "size=$size added=$added workspace=${workspace != null} factor error=$error")
+                val factor = base.factorCholesky()
+                for (added in if (size < 2) listOf(0, 1, 4, 16) else listOf(1, 16)) {
+                    val cross = DenseMatrix.wrap(size, added, DoubleArray(size * added) { 0.25 })
+                    val diagonal = DenseMatrix.wrap(
+                        added,
+                        added,
+                        DoubleArray(added * added) { if (it % added == it / added) 2.25 else 0.25 },
+                    )
+                    val order = size + added
+                    val full = DenseMatrix.wrap(
+                        order,
+                        order,
+                        DoubleArray(order * order) { if (it % order == it / order) 2.25 else 0.25 },
+                    )
+                    val expected = full.factorCholesky().lowerFactor().values
+    
+                    val actual = factor.extended(cross, diagonal, workspace).lowerFactor().values
+    
+                    var error = 0.0
+                    for (i in actual.indices) error = maxOf(error, abs(actual[i] - expected[i]))
+                    assertTrue(error < 1e-12, "size=$size added=$added pooled=${workspace != null} error=$error")
+                }
             }
-        }
         }
     }
 
