@@ -61,7 +61,7 @@
     {"name": "a scaled difference keeps each coefficient", "type": "number", "dsl": "2 * a - b",
      "expr": {"add": [{"mul": [2, {"ref": "a"}]}, {"mul": [-1, {"ref": "b"}]}]}, "bindings": {"a": 3, "b": 4},
      "integer": 2, "binary64": 2},
-    {"name": "a min chain nests to the left", "type": "number", "dsl": "min(a, b, c)",
+    {"name": "a min chain keeps its left nesting", "type": "number", "dsl": "a.min(b).min(c)",
      "expr": {"min": [{"min": [{"ref": "a"}, {"ref": "b"}]}, {"ref": "c"}]}, "bindings": {"a": 4, "b": 3, "c": 5},
      "integer": 3, "binary64": 3},
     {"name": "a conjunction chain nests to the left", "type": "boolean", "dsl": "(a ge 0) and (a le 9) and (b ge 0)",
