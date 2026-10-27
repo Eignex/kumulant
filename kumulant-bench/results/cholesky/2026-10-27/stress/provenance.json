@@ -36,6 +36,14 @@
       "job": 8724,
       "ref": "28030b60dfeb92c6cfeaea3d4e492c51b53a1a26",
       "kind": "jvm"
+    },
+    "avx512-jvm": {
+      "job": 8708,
+      "ref": "ca3200444c0c7db9dc7fdcd35c84d797b8862c78",
+      "kind": "jvm",
+      "excluded_attempts": [
+        "case attempt 1 lost to infrastructure (lease); attempt 2 committed"
+      ]
     }
   },
   "failed_jobs": {

@@ -1,0 +1,110 @@
+[
+  {
+    "source": "0.err",
+    "bytes": 55,
+    "sha256": "edc8d35623ef3b5bdbbf28491b2a7624c1b8e3502b34ec0aa1ae61ac754cb9c0",
+    "retained": "lab/avx512-jvm/0.err"
+  },
+  {
+    "source": "0.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "retained": "lab/avx512-jvm/0.exit"
+  },
+  {
+    "source": "0.out",
+    "bytes": 330,
+    "sha256": "ef25a684a494fee12dcebdd426f63406e29500408839fb64dfe40166168917c2",
+    "retained": "lab/avx512-jvm/0.out.gz"
+  },
+  {
+    "source": "cases/0/out/report/host.txt",
+    "bytes": 3311,
+    "sha256": "3c34e60874a9e7a82021505ec77033f630b1fb79d6bdee33395a742e39fb1ad8",
+    "retained": "avx512-jvm/host.txt"
+  },
+  {
+    "source": "cases/0/out/report/scalar/benchmark.txt",
+    "bytes": 156429,
+    "sha256": "dde8b17d2c3b7ac8d8bfcacdeefa9abc0da292ee7e823ca3573131d85065852e",
+    "retained": "avx512-jvm/scalar/benchmark.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/scalar/quality.txt",
+    "bytes": 24979,
+    "sha256": "289a1bf8d633e284feacd7ea3a150c10ea20b1068c8275d23fcec35b07adb68b",
+    "retained": "avx512-jvm/scalar/quality.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/scalar/results.json",
+    "bytes": 163639,
+    "sha256": "76782d1591bc97e6ac859fe759fd7c886c610648d993dc96c535250894f8bd22",
+    "retained": "avx512-jvm/scalar/results.json.gz"
+  },
+  {
+    "source": "cases/0/out/report/scalar/run.txt",
+    "bytes": 1002,
+    "sha256": "8164072dc799d3a3773771ea450a79f4b505cfbe0b5bc8805881fa7ad9e5db82",
+    "retained": "avx512-jvm/scalar/run.txt"
+  },
+  {
+    "source": "cases/0/out/report/scalar/stress.txt",
+    "bytes": 1279,
+    "sha256": "d2468606c7c0b6cd46ac852a97d73a52b730d7183a9191293ca053555009fa3c",
+    "retained": "avx512-jvm/scalar/stress.txt"
+  },
+  {
+    "source": "cases/0/out/report/simd/benchmark.txt",
+    "bytes": 163003,
+    "sha256": "53126582981e6f01c1da1685b3e35ac765f2912b35ef50049d12c19129727bf2",
+    "retained": "avx512-jvm/simd/benchmark.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/simd/quality.txt",
+    "bytes": 25113,
+    "sha256": "d588d5f82ea61eb900a675e8771b8688fa53636980de244a18df1c806a42d652",
+    "retained": "avx512-jvm/simd/quality.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/simd/results.json",
+    "bytes": 167727,
+    "sha256": "130d425638de49a2b5c11b829eca6e5bf70acfc31de7b84378c99065ce9316d0",
+    "retained": "avx512-jvm/simd/results.json.gz"
+  },
+  {
+    "source": "cases/0/out/report/simd/run.txt",
+    "bytes": 1040,
+    "sha256": "2f6c4666cf66c6a7f298676b559815eb66dc79c06ff967006546ad1748e538d7",
+    "retained": "avx512-jvm/simd/run.txt"
+  },
+  {
+    "source": "cases/0/out/report/simd/stress.txt",
+    "bytes": 1356,
+    "sha256": "8a47fcc26740873d0fcc05ff8cb56a3de8e8911b7d05de7b2a298b863d32e1be",
+    "retained": "avx512-jvm/simd/stress.txt"
+  },
+  {
+    "source": "job.log",
+    "bytes": 1997,
+    "sha256": "dc8ddb78b86d97874cf7110ce88a8cc5b3f31aed8dcbf1d0e0e1d2fb819f9c31",
+    "retained": "lab/avx512-jvm/job.log"
+  },
+  {
+    "source": "nomad/0-none-0-2-resources.json",
+    "bytes": 531,
+    "sha256": "4f0df8c3debd750a222dd3a79bf8e35079f9a1598fa21a416e21cab1fcaac15f",
+    "retained": "lab/avx512-jvm/nomad-0-none-0-2-resources.json"
+  },
+  {
+    "source": "nomad/preparation-1-resources.json",
+    "bytes": 528,
+    "sha256": "928d2fd4c0b24487756acc05aa12aad59a7f4d45236f4bea884c1c713e1a5e99",
+    "retained": "lab/avx512-jvm/nomad-preparation-1-resources.json"
+  },
+  {
+    "source": "nomad/source/git-output.log",
+    "bytes": 33,
+    "sha256": "72e4f854475c50d63f24d6159ae6dd08c562f9eba1f7a9793ae19cf393491507",
+    "retained": "lab/avx512-jvm/nomad-source-git-output.log"
+  }
+]

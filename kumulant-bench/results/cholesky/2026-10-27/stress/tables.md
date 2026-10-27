@@ -196,6 +196,44 @@ Job 8724, Lab host `b70d6a4e-0c57-e47d-96fe-ec5a4c9bb2b7`, aarch64 16 CPUs, flag
 | factorSolveLogDeterminant | 512 | 16.324 ± 0.690 | 10.692 ± 0.434 | 2.101 / 1.182 | 2.101 / 1.182 |
 | factorSolveLogDeterminantWithWorkspace | 512 | 15.970 ± 0.603 | 10.584 ± 0.510 | 2.097 / 0.001 | 2.097 / 0.001 |
 
+## avx512-jvm: Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz
+
+Job 8708, Lab host `a5f259b9-a394-6020-ab22-7ae882c3657c`, x86_64 16 CPUs, flags avx2, avx512f, fma; backends: `KoblasEngine(scalar/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)`; `KoblasEngine(simd(8 lanes)/simd-sparse/simd-panel(8 lanes)/simd-tile(16x4)/simd-substitution(8 lanes))`.
+
+### Order-2048 stress
+
+| Method | Fixture | jvm-scalar ms | jvm-simd ms | jvm-scalar owned/other MB | jvm-simd owned/other MB |
+| --- | --- | ---: | ---: | ---: | ---: |
+| factor | matern:2048 | 483.663 ± 5.751 | 141.710 ± 13.731 | 33.554 / 5.908 | 33.554 / 5.919 |
+| factor | rbf:2048 | 482.338 ± 7.039 | 141.000 ± 9.170 | 33.554 / 5.908 | 33.554 / 5.919 |
+| factorWithWorkspace | matern:2048 | 481.304 ± 5.149 | 143.435 ± 11.142 | 33.554 / 0.004 | 33.554 / 0.003 |
+| factorWithWorkspace | rbf:2048 | 478.048 ± 3.791 | 144.928 ± 13.518 | 33.554 / 0.004 | 33.554 / 0.003 |
+| solveMatrix | 2048x1 | 2.754 ± 0.050 | 1.939 ± 0.293 | 0.016 / 0.032 | 0.016 / 0.032 |
+| solveMatrix | 2048x256 | 377.232 ± 3.157 | 83.451 ± 3.953 | 4.194 / 12.128 | 4.194 / 12.159 |
+| solveMatrixInto | 2048x1 | 3.846 ± 0.014 | 1.502 ± 0.073 | 0.000 / 0.000 | 0.000 / 0.000 |
+| solveMatrixInto | 2048x256 | 379.488 ± 1.170 | 71.891 ± 22.324 | 0.000 / 0.002 | 0.000 / 0.000 |
+| covarianceConstruction | 2048 | 31.702 ± 2.663 | 37.726 ± 4.416 | 33.554 / 0.000 | 33.554 / 0.000 |
+| factorSolveLogDeterminant | 2048 | 483.899 ± 4.933 | 150.108 ± 19.894 | 33.571 / 5.908 | 33.571 / 5.919 |
+| factorSolveLogDeterminantWithWorkspace | 2048 | 483.669 ± 3.312 | 151.017 ± 18.987 | 33.554 / 0.004 | 33.554 / 0.003 |
+
+### Small and mid-size controls
+
+| Method | Fixture | jvm-scalar ms | jvm-simd ms | jvm-scalar owned/other MB | jvm-simd owned/other MB |
+| --- | --- | ---: | ---: | ---: | ---: |
+| factor | precision:32 | 0.006 ± 0.000 | 0.006 ± 0.000 | 0.008 / 0.000 | 0.008 / 0.000 |
+| factor | rbf:1024 | 65.477 ± 2.236 | 22.086 ± 0.776 | 8.389 / 2.757 | 8.389 / 2.762 |
+| factor | rbf:512 | 9.664 ± 0.409 | 4.075 ± 0.052 | 2.097 / 1.181 | 2.097 / 1.184 |
+| factorWithWorkspace | precision:32 | 0.006 ± 0.000 | 0.006 ± 0.000 | 0.008 / 0.000 | 0.008 / 0.000 |
+| factorWithWorkspace | rbf:1024 | 65.974 ± 2.422 | 23.521 ± 2.759 | 8.389 / 0.002 | 8.389 / 0.001 |
+| factorWithWorkspace | rbf:512 | 9.420 ± 0.474 | 3.935 ± 0.339 | 2.097 / 0.001 | 2.097 / 0.001 |
+| solveMatrix | 1024x256 | 103.501 ± 0.962 | 23.645 ± 1.303 | 2.097 / 5.834 | 2.097 / 5.867 |
+| solveMatrix | 32x1 | 0.002 ± 0.000 | 0.002 ± 0.000 | 0.000 / 0.000 | 0.000 / 0.000 |
+| solveMatrixInto | 1024x256 | 101.912 ± 0.566 | 23.542 ± 1.911 | 0.000 / 0.001 | 0.000 / 0.000 |
+| solveMatrixInto | 32x1 | 0.001 ± 0.000 | 0.001 ± 0.000 | 0.000 / 0.000 | 0.000 / 0.000 |
+| covarianceConstruction | 512 | 1.664 ± 0.009 | 1.838 ± 0.244 | 2.097 / 0.000 | 2.097 / 0.000 |
+| factorSolveLogDeterminant | 512 | 9.689 ± 0.341 | 4.766 ± 0.232 | 2.101 / 1.181 | 2.101 / 1.184 |
+| factorSolveLogDeterminantWithWorkspace | 512 | 9.528 ± 0.265 | 4.658 ± 0.639 | 2.097 / 0.001 | 2.097 / 0.001 |
+
 ## Order-2048 numerical stress
 
 | Capture | Platform | Check | Kernel | Reconstruction | Backward | Relative solution | Log-det | Tolerance |
@@ -254,3 +292,15 @@ Job 8724, Lab host `b70d6a4e-0c57-e47d-96fe-ec5a4c9bb2b7`, aarch64 16 CPUs, flag
 | neon-jvm | jvm-simd | extension | matern | 3.66e-15 | 9.96e-18 | 6.39e-09 | 5.71e-10 | 2.91e-05 |
 | neon-jvm | jvm-simd | update | rbf | 4.67e-15 | 8.13e-16 | 7.98e-07 | 1.36e-08 | 2.91e-05 |
 | neon-jvm | jvm-simd | update | matern | 4.42e-15 | 7.19e-16 | 7.26e-07 | 1.17e-07 | 2.91e-05 |
+| avx512-jvm | jvm-scalar | factor | rbf | 5.55e-15 | 1.73e-17 |  |  |  |
+| avx512-jvm | jvm-scalar | factor | matern | 3.66e-15 | 1.26e-17 |  |  |  |
+| avx512-jvm | jvm-scalar | extension | rbf | 5.55e-15 | 1.82e-17 | 8.72e-10 | 6.33e-10 | 2.91e-05 |
+| avx512-jvm | jvm-scalar | extension | matern | 3.66e-15 | 1.26e-17 | 7.92e-10 | 4.11e-10 | 2.91e-05 |
+| avx512-jvm | jvm-scalar | update | rbf | 3.53e-15 | 8.75e-16 | 9.18e-07 | 9.58e-09 | 2.91e-05 |
+| avx512-jvm | jvm-scalar | update | matern | 3.28e-15 | 6.8e-16 | 6.98e-07 | 4.29e-08 | 2.91e-05 |
+| avx512-jvm | jvm-simd | factor | rbf | 5.11e-15 | 1.99e-17 |  |  |  |
+| avx512-jvm | jvm-simd | factor | matern | 3.77e-15 | 1.19e-17 |  |  |  |
+| avx512-jvm | jvm-simd | extension | rbf | 5.11e-15 | 1.62e-17 | 9.65e-09 | 8.88e-10 | 2.91e-05 |
+| avx512-jvm | jvm-simd | extension | matern | 3.77e-15 | 1.16e-17 | 5.12e-09 | 1.49e-10 | 2.91e-05 |
+| avx512-jvm | jvm-simd | update | rbf | 4.8e-15 | 6.99e-16 | 8.62e-07 | 4.75e-09 | 2.91e-05 |
+| avx512-jvm | jvm-simd | update | matern | 5.55e-15 | 8.33e-16 | 6.77e-07 | 4.24e-08 | 2.91e-05 |
