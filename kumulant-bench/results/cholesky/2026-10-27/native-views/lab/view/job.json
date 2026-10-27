@@ -1,0 +1,94 @@
+{
+  "id": 8778,
+  "name": "cholesky-179-published-views",
+  "ref": "4d740908a9cd3a95d35abbec2a67ba5be4510e6c",
+  "sha": "4d740908a9cd3a95d35abbec2a67ba5be4510e6c",
+  "status": "DONE",
+  "cancelRequested": false,
+  "setupDone": true,
+  "createdAt": 1793111624999,
+  "startedAt": 1793111646971,
+  "finishedAt": 1793112112308,
+  "error": null,
+  "parallel": 1,
+  "priority": 0,
+  "paused": false,
+  "experiment": {
+    "name": "cholesky-179-published-views",
+    "problems": [],
+    "base": {
+      "ref": "4d740908a9cd3a95d35abbec2a67ba5be4510e6c",
+      "timeout": "3600000"
+    },
+    "configs": [
+      {}
+    ],
+    "grid": {},
+    "seeds": [],
+    "repeats": 1,
+    "parallel": 1,
+    "priority": 0,
+    "confirm": false,
+    "host": "aws",
+    "auto": false,
+    "machines": null,
+    "problemList": [],
+    "description": "Issue 179 views: published Koblas in-place Native regions cohort, current Kumulant call-local scratch, unchanged seed-139 fixtures and release protocol; pairing requires identical hardware/library/thread receipts.",
+    "measurement": "none",
+    "analyze": null,
+    "profile": {
+      "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+      "args": [
+        "--native-prepared",
+        "-Pbench.filter=.*Cholesky(FactorBenchmark\\.(factor|factorWithWorkspace)|WorkloadBenchmark\\.(factorSolveLogDeterminant|factorSolveLogDeterminantWithWorkspace|fittingRound|fittingRoundWithWorkspace))$",
+        "-Pbench.param.matrixCase=precision:32,precision:128,rbf:512,rbf:1024",
+        "-Pbench.param.historySize=512"
+      ],
+      "runTimeoutSec": null,
+      "script": null,
+      "buildTasks": [
+        ":kumulant-bench:prepareBenchmark",
+        ":kumulant-bench:linkCholeskyQualityReleaseExecutableLinuxX64",
+        ":kumulant-bench:linkLinuxX64BenchmarkReleaseExecutableLinuxX64"
+      ],
+      "classpath": [
+        "kumulant-bench/build/classes/kotlin/jvm/main",
+        "kumulant/build/classes/kotlin/jvm/main",
+        "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+      ],
+      "jvmArgs": [],
+      "outputArgument": null
+    },
+    "script": null,
+    "scriptFile": null,
+    "capped": [],
+    "repository": "Eignex/kumulant",
+    "nodeTags": {
+      "require": [
+        "arch:x86_64",
+        "simd:avx2"
+      ],
+      "exclude": []
+    }
+  },
+  "commands": [
+    {
+      "index": 0,
+      "cmd": "cd '/local/worker/attempts/0-none-0-1/worktrees/4d740908a9cd3a95d35abbec2a67ba5be4510e6c' && export OUT=\"$JOB_DIR/cases/0/out\" LAB_REPOSITORY='Eignex/kumulant' LAB_WORKTREE='/local/worker/attempts/0-none-0-1/worktrees/4d740908a9cd3a95d35abbec2a67ba5be4510e6c' && mkdir -p \"$OUT\" && exec \"${JAVA_HOME:+$JAVA_HOME/bin/}java\" \"-XX:StartFlightRecording=filename=$OUT/profile.jfr,settings=profile,dumponexit=true\" '--enable-native-access=ALL-UNNAMED' '--add-modules=jdk.incubator.vector' '-cp' '/local/worker/attempts/0-none-0-1/worktrees/4d740908a9cd3a95d35abbec2a67ba5be4510e6c/kumulant-bench/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/4d740908a9cd3a95d35abbec2a67ba5be4510e6c/kumulant/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-1/worktrees/4d740908a9cd3a95d35abbec2a67ba5be4510e6c/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar' 'com.eignex.kumulant.bench.CholeskyLabProfileKt' '--native-prepared' '-Pbench.filter=.*Cholesky(FactorBenchmark\\.(factor|factorWithWorkspace)|WorkloadBenchmark\\.(factorSolveLogDeterminant|factorSolveLogDeterminantWithWorkspace|fittingRound|fittingRoundWithWorkspace))$' '-Pbench.param.matrixCase=precision:32,precision:128,rbf:512,rbf:1024' '-Pbench.param.historySize=512'",
+      "timeoutSec": 3720,
+      "status": "DONE",
+      "exitCode": 0,
+      "startedAt": 1793111860617,
+      "finishedAt": 1793112070571,
+      "cores": 1,
+      "phase": null,
+      "terminations": [],
+      "host": "9e466ea1-7e65-bd2e-ae27-90033d7e6fc4"
+    }
+  ],
+  "runMs": 465337,
+  "runningSince": null,
+  "counts": null,
+  "local": false,
+  "backend": "nomad"
+}

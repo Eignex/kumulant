@@ -1,0 +1,6 @@
+{
+  "native_views_supported": true,
+  "required_rows": 16,
+  "worst_view_over_copy": 0.8111708494005399,
+  "slower_rows": []
+}

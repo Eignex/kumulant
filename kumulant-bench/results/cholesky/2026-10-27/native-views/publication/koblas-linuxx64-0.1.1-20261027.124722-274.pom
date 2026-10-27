@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <!-- This module was also published with a richer model, Gradle metadata,  -->
+  <!-- which should be used instead. Do not delete the following line which  -->
+  <!-- is to indicate to Gradle or any Gradle module metadata file consumer  -->
+  <!-- that they should prefer consuming it instead. -->
+  <!-- do_not_remove: published-with-gradle-metadata -->
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.eignex</groupId>
+  <artifactId>koblas-linuxx64</artifactId>
+  <version>0.1.1-SNAPSHOT</version>
+  <packaging>klib</packaging>
+  <name>koblas</name>
+  <description>Portable dense and sparse BLAS for Kotlin Multiplatform with JVM SIMD and optional host bindings.</description>
+  <url>https://github.com/Eignex/koblas</url>
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>rasros</id>
+      <name>Rasmus Ros</name>
+      <url>https://github.com/rasros</url>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:https://github.com/Eignex/koblas.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/Eignex/koblas.git</developerConnection>
+    <url>https://github.com/Eignex/koblas</url>
+  </scm>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.eignex</groupId>
+        <artifactId>kbuild-platform</artifactId>
+        <version>1.3.5</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.jetbrains.kotlinx</groupId>
+      <artifactId>kotlinx-serialization-core-linuxx64</artifactId>
+      <version>1.12.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains.kotlin</groupId>
+      <artifactId>kotlin-stdlib</artifactId>
+      <version>2.4.21</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>
