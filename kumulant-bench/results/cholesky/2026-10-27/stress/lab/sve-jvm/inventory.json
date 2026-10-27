@@ -1,0 +1,110 @@
+[
+  {
+    "source": "0.err",
+    "bytes": 55,
+    "sha256": "edc8d35623ef3b5bdbbf28491b2a7624c1b8e3502b34ec0aa1ae61ac754cb9c0",
+    "retained": "lab/sve-jvm/0.err"
+  },
+  {
+    "source": "0.exit",
+    "bytes": 2,
+    "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+    "retained": "lab/sve-jvm/0.exit"
+  },
+  {
+    "source": "0.out",
+    "bytes": 330,
+    "sha256": "3a5f1c2db673a7814851e056a9bd5c26c5ab04772504ca0a2b521b312cd028bf",
+    "retained": "lab/sve-jvm/0.out"
+  },
+  {
+    "source": "cases/0/out/report/host.txt",
+    "bytes": 2359,
+    "sha256": "d168e6a71f55f29015dc82958645c204d05a0d363d5da69ba42d40151938f547",
+    "retained": "sve-jvm/host.txt"
+  },
+  {
+    "source": "cases/0/out/report/scalar/benchmark.txt",
+    "bytes": 156677,
+    "sha256": "51a01cc8e5b8d2e7f085c0196dbd7b88aad48e236c08a9d5d5d92f7d5c799e35",
+    "retained": "sve-jvm/scalar/benchmark.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/scalar/quality.txt",
+    "bytes": 25009,
+    "sha256": "3db0da7cdb6e8ed480e0c5d3e1404c0765952600810c5c705288c6a5ee06ea80",
+    "retained": "sve-jvm/scalar/quality.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/scalar/results.json",
+    "bytes": 164414,
+    "sha256": "36c1a7121530609c4157f4663c57ff7b7b2d75a34394936208f92748737069c5",
+    "retained": "sve-jvm/scalar/results.json.gz"
+  },
+  {
+    "source": "cases/0/out/report/scalar/run.txt",
+    "bytes": 1002,
+    "sha256": "85510580a7f5e6ad4f3f55aa042d2dba1ae9e49715d1d5b1a7291335d55e0d8d",
+    "retained": "sve-jvm/scalar/run.txt"
+  },
+  {
+    "source": "cases/0/out/report/scalar/stress.txt",
+    "bytes": 1279,
+    "sha256": "6761e079a9fbbb352a9b0c09104f769f82b1119eb0190ced01ab4fed0bdc7c46",
+    "retained": "sve-jvm/scalar/stress.txt"
+  },
+  {
+    "source": "cases/0/out/report/simd/benchmark.txt",
+    "bytes": 162821,
+    "sha256": "1313689bb1b3060e8cf9dc19bf794fbb93f3e0a2857200259ca5149fcf60259d",
+    "retained": "sve-jvm/simd/benchmark.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/simd/quality.txt",
+    "bytes": 25094,
+    "sha256": "495a0171f4051c5d5e80990f171ef3c06cc66e97900d9a15fc7034ce0c70a2e8",
+    "retained": "sve-jvm/simd/quality.txt.gz"
+  },
+  {
+    "source": "cases/0/out/report/simd/results.json",
+    "bytes": 167015,
+    "sha256": "abfad05cd462eb2ae64b89a00fe2974fce6fafa242510310a71299545c48a17b",
+    "retained": "sve-jvm/simd/results.json.gz"
+  },
+  {
+    "source": "cases/0/out/report/simd/run.txt",
+    "bytes": 1040,
+    "sha256": "42e4ac07920691bb6cb1bdbe4b71510d9743a4b48273f484ce74043ee1859d6e",
+    "retained": "sve-jvm/simd/run.txt"
+  },
+  {
+    "source": "cases/0/out/report/simd/stress.txt",
+    "bytes": 1349,
+    "sha256": "58c8f0b653f68fde0b3ad69b056b5970a3664cfcbb31bae50dbbecd683a11554",
+    "retained": "sve-jvm/simd/stress.txt"
+  },
+  {
+    "source": "job.log",
+    "bytes": 1827,
+    "sha256": "497f67f446a549ba00a170893bbef124a34aedbf114c14c05ab696d80f6ec845",
+    "retained": "lab/sve-jvm/job.log"
+  },
+  {
+    "source": "nomad/0-none-0-1-resources.json",
+    "bytes": 531,
+    "sha256": "5a7414456555ec3d8ccf425503c664d61710e1fc5f9bdce6d3524e09dbc757ac",
+    "retained": "lab/sve-jvm/nomad-0-none-0-1-resources.json"
+  },
+  {
+    "source": "nomad/preparation-2-resources.json",
+    "bytes": 518,
+    "sha256": "2ebb4c164a62f90721b113d10986d848987cd93eb41fb830fbc4022a6584906d",
+    "retained": "lab/sve-jvm/nomad-preparation-2-resources.json"
+  },
+  {
+    "source": "nomad/source/git-output.log",
+    "bytes": 33,
+    "sha256": "72e4f854475c50d63f24d6159ae6dd08c562f9eba1f7a9793ae19cf393491507",
+    "retained": "lab/sve-jvm/nomad-source-git-output.log"
+  }
+]

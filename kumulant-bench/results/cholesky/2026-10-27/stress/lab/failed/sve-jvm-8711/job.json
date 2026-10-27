@@ -1,0 +1,86 @@
+{
+  "id": 8711,
+  "name": "cholesky-stress-2048-sve-jvm",
+  "ref": "ca3200444c0c7db9dc7fdcd35c84d797b8862c78",
+  "sha": null,
+  "status": "FAILED",
+  "cancelRequested": false,
+  "setupDone": false,
+  "createdAt": 1793099326338,
+  "startedAt": 1793099504406,
+  "finishedAt": 1793099548618,
+  "error": "source-build: exit 1\nPicked up JAVA_TOOL_OPTIONS: -Xmx1365m -XX:ActiveProcessorCount=2\n\nFAILURE: Build failed with an exception.\n\n* What went wrong:\nA problem occurred configuring project ':kumulant-bench'.\n> Failed to notify project evaluation listener.\n   > Unknown host target: linux aarch64\n\n* Try:\n> Run with --stacktrace option to get the stack trace.\n> Run with --info or --debug option to get more log output.\n> Run with --scan to get full insights from a Build Scan (powered by Develocity).\n> Get more help at https://help.gradle.org.\n\nBUILD FAILED in 42s\n\nFetching distribution.\nDownloading https://services.gradle.org/distributions/gradle-9.7.1-bin.zip\n..............10%..............20%...............30%..............40%...............50%..............60%...............70%..............80%..............90%...............100%\n",
+  "parallel": 1,
+  "priority": 0,
+  "paused": false,
+  "experiment": {
+    "name": "cholesky-stress-2048-sve-jvm",
+    "problems": [],
+    "base": {
+      "ref": "ca3200444c0c7db9dc7fdcd35c84d797b8862c78",
+      "timeout": "5400000"
+    },
+    "configs": [
+      {}
+    ],
+    "grid": {},
+    "seeds": [],
+    "repeats": 1,
+    "parallel": 1,
+    "priority": 0,
+    "confirm": false,
+    "host": "aws",
+    "auto": false,
+    "machines": null,
+    "problemList": [],
+    "description": "Order-2048 Cholesky stress and scaling study with unblocked order-32 controls: numerical/ownership preflight, then allocating and workspace factors, solves and GP evaluations. Seed 139, noise 1e-6, jitter 1e-10; fitting rounds stay at order 512. Not a before/after comparison. arm64 SVE pool without SVE2. JVM scalar then SIMD in one case, 512 MiB heap, standard JMH warmup/measurement with two forks and GC profiler.",
+    "measurement": "none",
+    "analyze": null,
+    "profile": {
+      "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+      "args": [
+        "--stress-order=2048",
+        "--filter",
+        ".*Cholesky(FactorBenchmark\\.(factor|factorWithWorkspace)|SolveBenchmark\\.(solveMatrix|solveMatrixInto)|WorkloadBenchmark\\.(covarianceConstruction|factorSolveLogDeterminant|factorSolveLogDeterminantWithWorkspace))$",
+        "-p",
+        "matrixCase=precision:32,rbf:512,rbf:1024,rbf:2048,matern:2048",
+        "-p",
+        "shape=32x1,1024x256,2048x1,2048x256",
+        "-p",
+        "historySize=512,2048"
+      ],
+      "runTimeoutSec": null,
+      "script": null,
+      "buildTasks": [
+        ":kumulant-bench:prepareBenchmark"
+      ],
+      "classpath": [
+        "kumulant-bench/build/classes/kotlin/jvm/main",
+        "kumulant/build/classes/kotlin/jvm/main",
+        "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+      ],
+      "jvmArgs": [],
+      "outputArgument": null
+    },
+    "script": null,
+    "scriptFile": null,
+    "capped": [],
+    "repository": "Eignex/kumulant",
+    "nodeTags": {
+      "require": [
+        "arch:arm64",
+        "simd:sve"
+      ],
+      "exclude": [
+        "local",
+        "simd:sve2"
+      ]
+    }
+  },
+  "commands": [],
+  "runMs": 44212,
+  "runningSince": null,
+  "counts": null,
+  "local": false,
+  "backend": "nomad"
+}
