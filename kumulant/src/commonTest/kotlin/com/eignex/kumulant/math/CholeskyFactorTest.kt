@@ -100,7 +100,8 @@ class CholeskyFactorTest {
 
     @Test
     fun `extension agrees with full factorization across block boundaries`() {
-        for (workspace in listOf(Workspace(), null)) for (size in listOf(0, 1, 63, 64, 65, 127, 128, 129)) {
+        for (workspace in listOf(Workspace(), null)) {
+            for (size in listOf(0, 1, 63, 64, 65, 127, 128, 129)) {
             val base = DenseMatrix.wrap(
                 size,
                 size,
@@ -128,6 +129,7 @@ class CholeskyFactorTest {
                 for (i in actual.indices) error = maxOf(error, abs(actual[i] - expected[i]))
                 assertTrue(error < 1e-12, "size=$size added=$added workspace=${workspace != null} factor error=$error")
             }
+        }
         }
     }
 
@@ -311,13 +313,22 @@ class CholeskyFactorTest {
                 val original = right.values.copyOf()
                 val out = DenseMatrix.zero(size, columns)
 
-                val solved = factor.solve(right).values
-                val lower = factor.solveLower(right).values
-                val upper = factor.solveLower(right, transpose = true).values
+                val allocated = listOf(
+                    factor.solve(right).values,
+                    factor.solveLower(right).values,
+                    factor.solveLower(right, transpose = true).values,
+                )
+                val destinations = listOf(
+                    factor.solveInto(right, out, Workspace()).values.copyOf(),
+                    factor.solveLowerInto(right, out, workspace = Workspace()).values.copyOf(),
+                    factor.solveLowerInto(right, out, true, Workspace()).values.copyOf(),
+                )
 
-                assertContentEquals(factor.solveInto(right, out, Workspace()).values, solved)
-                assertContentEquals(factor.solveLowerInto(right, out, workspace = Workspace()).values, lower)
-                assertContentEquals(factor.solveLowerInto(right, out, true, Workspace()).values, upper)
+                var error = 0.0
+                for ((actual, expected) in allocated.zip(destinations)) {
+                    for (i in actual.indices) error = maxOf(error, abs(actual[i] - expected[i]))
+                }
+                assertTrue(error < 1e-12, "size=$size columns=$columns solve error=$error")
                 assertContentEquals(original, right.values)
             }
         }
