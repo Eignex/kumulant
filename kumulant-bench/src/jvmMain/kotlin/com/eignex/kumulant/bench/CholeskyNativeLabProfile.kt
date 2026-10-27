@@ -2,7 +2,7 @@ package com.eignex.kumulant.bench
 
 import java.io.File
 
-internal fun runPreparedNativeCholesky(output: File, arguments: List<String>, stressOrder: Int? = null) {
+internal fun runPreparedNativeCholesky(output: File, arguments: List<String>, stressOrder: Int? = null, smoke: Boolean = false, qualityOnly: Boolean = false) {
     // Prepared archives omit Gradle state; the engine protocol keeps compilation in preparation.
     val executable = File("kumulant-bench/build/benchmarks/linuxX64/classes/linuxX64Benchmark.kexe").absoluteFile
     check(executable.isFile) { "Native benchmark must be linked during preparation" }
@@ -27,7 +27,8 @@ internal fun runPreparedNativeCholesky(output: File, arguments: List<String>, st
             .redirectOutput(File(output, "native-stress.txt")).start()
         check(stress.waitFor() == 0) { "Native stress failed; inspect native-stress.txt" }
     }
-    repeat(2) { repetition ->
+    if (qualityOnly) return
+    repeat(if (smoke) 1 else 2) { repetition ->
         val directory = File(output, "native-$repetition").apply { check(mkdir()) }
         val cases = File(directory, "cases").apply { check(mkdir()) }
         val progress = File(directory, "progress.txt").apply { writeText("") }
@@ -35,8 +36,8 @@ internal fun runPreparedNativeCholesky(output: File, arguments: List<String>, st
             writeText((listOf(
                 "name:main", "configurationName:main", "compilationMode:Release",
                 "reportFile:${File(directory, "results.json").absolutePath}",
-                "traceFormat:text", "reportFormat:json", "warmups:3", "iterations:5",
-                "iterationTime:1000", "iterationTimeUnit:ms", "outputTimeUnit:us", "mode:avgt",
+                "traceFormat:text", "reportFormat:json", "warmups:${if (smoke) 1 else 3}", "iterations:${if (smoke) 2 else 5}",
+                "iterationTime:${if (smoke) 100 else 1000}", "iterationTimeUnit:ms", "outputTimeUnit:us", "mode:avgt",
                 "include:$selection",
             ) + parameters).joinToString("\n"))
         }

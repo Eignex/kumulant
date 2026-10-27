@@ -89,3 +89,35 @@ and pass `--native-prepared`. Filters and parameters use `-Pbench.filter` and
 `-Pbench.param.*`. Add `--stress-order=2048` to run larger numerical checks before
 JVM or prepared Native timing. Retain the selected revision, host details, resource
 limits and raw samples with each comparison.
+
+## Bench SDK adapter
+
+`lab/bench.json` owns the prepared JVM adapter's build and launch recipe.
+`lab/native-linux-x64.json` also runs the Native bench tests and links the benchmark and quality executables.
+The SDK dependency `com.eignex:lab-bench:0.1.0` is confined to `jvmMain`; the
+existing JMH and kotlinx-benchmark engines continue to own measurement.
+
+To test an unpublished SDK, run
+`./gradlew :lab-bench:stageAdapterRepository -PbenchVersion=0.1.0` in the lab
+checkout, then build this checkout with
+`./gradlew :kumulant-bench:prepareBenchmark -PlabBenchRepository=file:///absolute/eignex-lab/lab-bench/build/adapter-repository`.
+The default repository uses public GitHub Release assets without credentials;
+`-PlabBenchVersion=VERSION` selects a release.
+
+A lab submission uses `repository: "Eignex/kumulant"` and
+`bench: {"manifest":"kumulant-bench/lab/bench.json","request":{"parameters":{"backends":"scalar,simd","smoke":"true"}}}`.
+The planner expands one case per backend. Request keys are `backends`
+(`scalar,simd,native`), `mode` (`performance`, `quality`, `concurrency`), `smoke`,
+`argv`, `memory-mib` and `timeout-seconds`. `argv` is a JSON array encoded as a
+string, preserving repeated `-p` arguments and literal filters. JVM requests use
+JMH arguments; Native requests use `-Pbench.filter=...` and
+`-Pbench.param.NAME=...`. Submit different argument dialects separately.
+JMH thread counts become declared CPUs; concurrency checks reserve four CPUs.
+
+`benchmark.sh --prepared` uses `KUMULANT_BENCH_JAVA` and the prepared JMH jar
+without Gradle. The Native adapter uses the prepared engine protocol directly,
+checks Native Cholesky quality before timing, and retains its configuration,
+per-case samples, progress and JSON reports. Native concurrency is unavailable.
+JVM quality/performance retain the shell harness's quality checks. The lab keeps
+all files under a child report directory and the harness log even after a failure.
+Smoke verifies wiring; full runs on idle target hardware provide measurement evidence.

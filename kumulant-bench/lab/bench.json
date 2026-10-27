@@ -1,0 +1,6 @@
+{
+  "main": "com.eignex.kumulant.bench.LabAdapterKt",
+  "classpath": ["kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"],
+  "buildTasks": [":kumulant-bench:prepareBenchmark"],
+  "jvmArgs": ["-Xmx256m"]
+}

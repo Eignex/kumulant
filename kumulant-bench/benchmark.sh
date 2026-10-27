@@ -2,6 +2,7 @@
 set -euo pipefail
 cd "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
+prepared=false
 smoke=false
 native=false
 scalar=false
@@ -9,6 +10,7 @@ mode=performance
 output=""
 while (($#)); do
     case "$1" in
+        --prepared) prepared=true; shift ;;
         --output) output=${2:?--output requires a directory}; shift 2 ;;
         --smoke) smoke=true; shift ;;
         --native) native=true; shift ;;
@@ -34,8 +36,13 @@ else
     ((${#entries[@]} == 0)) || { echo "Output is not empty: $output" >&2; exit 2; }
 fi
 echo "Reports: $output"
-./gradlew --console=plain :kumulant-bench:prepareBenchmark
-IFS= read -r java < kumulant-bench/build/benchmark-java
+if [[ $prepared == true ]]; then
+    [[ $native == false ]] || { echo 'Use the prepared Native lab adapter for Native runs.' >&2; exit 2; }
+    java=${KUMULANT_BENCH_JAVA:?Prepared mode requires KUMULANT_BENCH_JAVA}
+else
+    ./gradlew --console=plain :kumulant-bench:prepareBenchmark
+    IFS= read -r java < kumulant-bench/build/benchmark-java
+fi
 jvm_args=(--enable-native-access=ALL-UNNAMED -Xms512m -Xmx512m "-Dbench.smoke=$smoke")
 [[ "$scalar" == true ]] || jvm_args+=(--add-modules=jdk.incubator.vector)
 runner=("$java" "${jvm_args[@]}" -cp "$PWD/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar" com.eignex.kumulant.bench.BenchmarkMainKt)
