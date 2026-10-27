@@ -78,7 +78,7 @@ private inline fun <reified T> Result?.feedbackPrimary(node: String): T {
  * ## Wire format
  *
  * JSON uses structured operator keys, numeric scalar literals, and named input
- * references: `{"add":["x",1]}`. Serialize through [ScalarExpr],
+ * references: `{"add":[{"ref":"value"},1]}`. Resolve [Ref] nodes with [bind]. Serialize through [ScalarExpr],
  * [BoolExpr], or [VectorExpr]. Other formats retain the generated sealed-class tags.
  */
 @Serializable(with = ScalarExprSerializer::class)
@@ -743,6 +743,10 @@ fun VectorExpr.eval(x: Double = 0.0, y: Double = 0.0, v: Vector, primary: Result
 
 private fun <T> ScalarExpr.evaluate(x: Double, y: Double, v: T, primary: Result?, input: ExprInput<T>): Double =
     when (this) {
+        is Ref -> error("Unresolved reference '$name'; supply explicit bindings")
+
+        is BoundScalarExpr -> resolved.evaluate(x, y, v, primary, input)
+
         X -> x
 
         Y -> y
@@ -841,6 +845,8 @@ private fun <T> ScalarExpr.evaluate(x: Double, y: Double, v: T, primary: Result?
 
 private fun <T> BoolExpr.evaluate(x: Double, y: Double, v: T, primary: Result?, input: ExprInput<T>): Boolean =
     when (this) {
+        is BoundBoolExpr -> resolved.evaluate(x, y, v, primary, input)
+
         is Gt -> l.evaluate(x, y, v, primary, input) > r.evaluate(x, y, v, primary, input)
 
         is Ge -> l.evaluate(x, y, v, primary, input) >= r.evaluate(x, y, v, primary, input)
@@ -881,6 +887,7 @@ private fun <T> BoolExpr.evaluate(x: Double, y: Double, v: T, primary: Result?, 
 
 private fun <T> VectorExpr.evaluate(x: Double, y: Double, v: T, primary: Result?, input: ExprInput<T>): DoubleArray =
     when (this) {
+        is BoundVectorExpr -> resolved.evaluate(x, y, v, primary, input)
         is VElements -> DoubleArray(exprs.size) { i -> exprs[i].evaluate(x, y, v, primary, input) }
     }
 

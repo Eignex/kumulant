@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.regression.tree
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.schema.expr.BoolExpr
 import com.eignex.kumulant.schema.expr.eval
+import com.eignex.kumulant.schema.expr.requireBound
 import com.eignex.kumulant.schema.serialization.SerializableSplitSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -57,6 +58,10 @@ data class ExprSplit(
     /** Predicate expression over the context vector. */
     val expr: BoolExpr,
 ) : SerializableSplit {
+    init {
+        expr.requireBound("expr")
+    }
+
     override fun direction(row: Vector): Boolean {
         val x = if (row.size >= 1) row[0] else 0.0
         val y = if (row.size >= 2) row[1] else 0.0
