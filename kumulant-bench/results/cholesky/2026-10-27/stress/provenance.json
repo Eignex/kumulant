@@ -1,0 +1,46 @@
+{
+  "scope": "Opt-in order-2048 Cholesky stress plus scaling study across available Lab hardware. Each capture is self-contained; no before/after source pair.",
+  "measured_sources": {
+    "ca3200444c0c7db9dc7fdcd35c84d797b8862c78": "Stress checks, workload memory gate and Lab stress flag.",
+    "28030b60dfeb92c6cfeaea3d4e492c51b53a1a26": "Adds README text and skips the kotlinx-benchmark linuxX64 target on Linux arm64 hosts; JVM benchmark, fixture and numerical code identical to ca32004."
+  },
+  "dependency_pins": "kumulant/build.gradle.kts strict koblas/skema platform pins (koblas jvm 0.1.1-20261026.172701-274, linuxx64 0.1.1-20261026.172701-270)",
+  "captures": {
+    "avx2-jvm": {
+      "job": 8709,
+      "ref": "ca3200444c0c7db9dc7fdcd35c84d797b8862c78",
+      "kind": "jvm"
+    },
+    "avx2-native": {
+      "job": 8738,
+      "ref": "ca3200444c0c7db9dc7fdcd35c84d797b8862c78",
+      "kind": "native"
+    },
+    "sve2-jvm": {
+      "job": 8722,
+      "ref": "28030b60dfeb92c6cfeaea3d4e492c51b53a1a26",
+      "kind": "jvm",
+      "excluded_attempts": [
+        "case attempt 1 lost to infrastructure (lease); attempt 2 committed"
+      ]
+    },
+    "sve-jvm": {
+      "job": 8723,
+      "ref": "28030b60dfeb92c6cfeaea3d4e492c51b53a1a26",
+      "kind": "jvm",
+      "excluded_attempts": [
+        "preparation attempt 1 lost to infrastructure; preparation 2 committed"
+      ]
+    },
+    "neon-jvm": {
+      "job": 8724,
+      "ref": "28030b60dfeb92c6cfeaea3d4e492c51b53a1a26",
+      "kind": "jvm"
+    }
+  },
+  "failed_jobs": {
+    "8710": "sve2-jvm at ca32004: Gradle configuration failed, 'Unknown host target: linux aarch64' (kotlinx-benchmark Native wiring); no measurements",
+    "8711": "sve-jvm at ca32004: same configuration failure",
+    "8712": "neon-jvm at ca32004: same configuration failure"
+  }
+}

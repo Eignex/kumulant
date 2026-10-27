@@ -1,0 +1,38 @@
+Cholesky backend: KoblasEngine(onemkl-level1/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)
+Cholesky vendor: OneMkl
+Cholesky library: /home/rasmus/intel/oneapi/mkl/latest/lib/libmkl_rt.so.3
+Cholesky version: Intel(R) oneAPI Math Kernel Library Version 2026.1-Product Build 20260612 for Intel(R) 64 architecture applications
+Cholesky threads: 1-thread-confirmed
+Cholesky stress: seed=139, order=2048, backend=KoblasEngine(onemkl-level1/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)
+noiseVariance=1.0E-6, jitter=1.0E-10, matrixBytes=33554432
+stress_factor,kernel,order,relative_reconstruction,solve_backward_error,into_backward_error,aliased_backward_error,workspace_factor_difference
+stress_factor,rbf,2048,5.107020805744213E-15,1.8765114609839734E-17,1.8765114609839734E-17,1.8765114609839734E-17,0.0
+stress_factor,matern,2048,3.7747545085935486E-15,1.1617768242958067E-17,1.1617768242958067E-17,1.1617768242958067E-17,0.0
+stress_sequence,operation,kernel,order,reconstruction,backward_error,relative_solution_error,absolute_logdet_error,forward_tolerance
+stress_sequence,extension,rbf,2048,5.107020805744213E-15,1.6508083285368445E-17,6.4054628495849725E-9,4.220055416226387E-10,2.9103830456733704E-5
+stress_sequence,extension,matern,2048,3.7747545085935486E-15,9.986582358589571E-18,6.6184090731082936E-9,3.7471181713044643E-10,2.9103830456733704E-5
+stress_sequence,update,rbf,2048,4.0385964947279E-15,8.541149768630974E-16,1.5623575609832183E-6,1.5937985153868794E-8,2.9103830456733704E-5
+stress_sequence,update,matern,2048,4.0385964947279E-15,8.333202090422923E-16,1.0964519538244393E-6,4.948742571286857E-8,2.9103830456733704E-5
+	Command being timed: "kumulant-bench/build/bin/linuxX64/choleskyQualityReleaseExecutable/choleskyQuality.kexe 2048"
+	User time (seconds): 47.69
+	System time (seconds): 1.48
+	Percent of CPU this job got: 100%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:48.92
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 765112
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1479097
+	Voluntary context switches: 321
+	Involuntary context switches: 691
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

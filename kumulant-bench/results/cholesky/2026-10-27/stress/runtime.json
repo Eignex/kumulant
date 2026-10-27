@@ -1,0 +1,249 @@
+{
+  "avx2-jvm": {
+    "job": 8709,
+    "ref": "ca3200444c0c7db9dc7fdcd35c84d797b8862c78",
+    "lab_host": "34a7336e-758c-22bb-df43-2bc2829f4aaa",
+    "pool_tags": {
+      "require": [
+        "arch:x86_64",
+        "simd:avx2"
+      ],
+      "exclude": [
+        "local",
+        "simd:avx512"
+      ]
+    },
+    "hardware": {
+      "Architecture": "x86_64",
+      "CPU(s)": "16",
+      "Model name": "AMD EPYC 7R32",
+      "Thread(s) per core": "2",
+      "Core(s) per socket": "8",
+      "Socket(s)": "1",
+      "vector_flags": [
+        "avx2",
+        "fma"
+      ]
+    },
+    "resources": {
+      "enforcement": "cgroup-v2-hard",
+      "budget": {
+        "cpuMillis": 1000,
+        "memoryMiB": 4608
+      },
+      "cpuMax": "100000 100000",
+      "memoryMax": "4831838208",
+      "javaVersion": "25.0.4.1+1-LTS",
+      "os": "Linux",
+      "arch": "amd64"
+    },
+    "oom_events": 0,
+    "excluded_attempts": [],
+    "backends": {
+      "scalar": "KoblasEngine(scalar/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)",
+      "simd": "KoblasEngine(simd(4 lanes)/simd-sparse/simd-panel(4 lanes)/simd-tile(8x4)/simd-substitution(4 lanes))"
+    },
+    "load_at_start": {
+      "scalar": "2.04 1.16 0.49 1/448 59",
+      "simd": "1.09 1.04 0.72 2/423 1063"
+    }
+  },
+  "avx2-native": {
+    "job": 8738,
+    "ref": "ca3200444c0c7db9dc7fdcd35c84d797b8862c78",
+    "lab_host": "34a7336e-758c-22bb-df43-2bc2829f4aaa",
+    "pool_tags": {
+      "require": [
+        "arch:x86_64",
+        "simd:avx2"
+      ],
+      "exclude": [
+        "local",
+        "simd:avx512"
+      ]
+    },
+    "hardware": {
+      "Architecture": "x86_64",
+      "CPU(s)": "16",
+      "Model name": "AMD EPYC 7R32",
+      "Thread(s) per core": "2",
+      "Core(s) per socket": "8",
+      "Socket(s)": "1",
+      "vector_flags": [
+        "avx2",
+        "fma"
+      ]
+    },
+    "resources": {
+      "enforcement": "cgroup-v2-hard",
+      "budget": {
+        "cpuMillis": 1000,
+        "memoryMiB": 4608
+      },
+      "cpuMax": "100000 100000",
+      "memoryMax": "4831838208",
+      "javaVersion": "25.0.4.1+1-LTS",
+      "os": "Linux",
+      "arch": "amd64"
+    },
+    "oom_events": 0,
+    "excluded_attempts": [],
+    "backends": {
+      "native": [
+        "Cholesky backend: KoblasEngine(openblas-level1/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)",
+        "Cholesky vendor: OpenBlas",
+        "Cholesky library: /lib/x86_64-linux-gnu/libopenblas.so.0",
+        "Cholesky version: OpenBLAS 0.3.26 NO_LAPACKE DYNAMIC_ARCH NO_AFFINITY Zen MAX_THREADS=64",
+        "Cholesky threads: 1-thread-confirmed"
+      ]
+    }
+  },
+  "sve2-jvm": {
+    "job": 8722,
+    "ref": "28030b60dfeb92c6cfeaea3d4e492c51b53a1a26",
+    "lab_host": "bf55d743-8dc0-4339-4c97-eee958e9f66e",
+    "pool_tags": {
+      "require": [
+        "arch:arm64",
+        "simd:sve2"
+      ],
+      "exclude": [
+        "local"
+      ]
+    },
+    "hardware": {
+      "Architecture": "aarch64",
+      "CPU(s)": "16",
+      "Model name": "Neoverse-V2",
+      "Thread(s) per core": "1",
+      "Socket(s)": "-",
+      "vector_flags": [
+        "asimd",
+        "sve",
+        "sve2"
+      ]
+    },
+    "resources": {
+      "enforcement": "cgroup-v2-hard",
+      "budget": {
+        "cpuMillis": 1000,
+        "memoryMiB": 4608
+      },
+      "cpuMax": "100000 100000",
+      "memoryMax": "4831838208",
+      "javaVersion": "25.0.4.1+1-LTS",
+      "os": "Linux",
+      "arch": "arm64"
+    },
+    "oom_events": 0,
+    "excluded_attempts": [
+      "case attempt 1 lost to infrastructure (lease); attempt 2 committed"
+    ],
+    "backends": {
+      "scalar": "KoblasEngine(scalar/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)",
+      "simd": "KoblasEngine(simd(2 lanes)/simd-sparse/simd-panel(2 lanes)/simd-tile(4x4)/simd-substitution(2 lanes))"
+    },
+    "load_at_start": {
+      "scalar": "0.69 0.30 0.11 3/523 126",
+      "simd": "0.93 0.82 0.46 1/503 1130"
+    }
+  },
+  "sve-jvm": {
+    "job": 8723,
+    "ref": "28030b60dfeb92c6cfeaea3d4e492c51b53a1a26",
+    "lab_host": "b1ed44f2-115d-8059-d860-94857b2b535d",
+    "pool_tags": {
+      "require": [
+        "arch:arm64",
+        "simd:sve"
+      ],
+      "exclude": [
+        "local",
+        "simd:sve2"
+      ]
+    },
+    "hardware": {
+      "Architecture": "aarch64",
+      "CPU(s)": "16",
+      "Model name": "Neoverse-V1",
+      "Thread(s) per core": "1",
+      "Socket(s)": "-",
+      "vector_flags": [
+        "asimd",
+        "sve"
+      ]
+    },
+    "resources": {
+      "enforcement": "cgroup-v2-hard",
+      "budget": {
+        "cpuMillis": 1000,
+        "memoryMiB": 4608
+      },
+      "cpuMax": "100000 100000",
+      "memoryMax": "4831838208",
+      "javaVersion": "25.0.4.1+1-LTS",
+      "os": "Linux",
+      "arch": "arm64"
+    },
+    "oom_events": 0,
+    "excluded_attempts": [
+      "preparation attempt 1 lost to infrastructure; preparation 2 committed"
+    ],
+    "backends": {
+      "scalar": "KoblasEngine(scalar/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)",
+      "simd": "KoblasEngine(simd(4 lanes)/simd-sparse/simd-panel(4 lanes)/simd-tile(8x4)/simd-substitution(4 lanes))"
+    },
+    "load_at_start": {
+      "scalar": "1.18 0.66 0.34 2/468 59",
+      "simd": "0.90 0.88 0.60 1/460 1063"
+    }
+  },
+  "neon-jvm": {
+    "job": 8724,
+    "ref": "28030b60dfeb92c6cfeaea3d4e492c51b53a1a26",
+    "lab_host": "b70d6a4e-0c57-e47d-96fe-ec5a4c9bb2b7",
+    "pool_tags": {
+      "require": [
+        "arch:arm64",
+        "simd:neon"
+      ],
+      "exclude": [
+        "local",
+        "simd:sve",
+        "simd:sve2"
+      ]
+    },
+    "hardware": {
+      "Architecture": "aarch64",
+      "CPU(s)": "16",
+      "Model name": "Neoverse-N1",
+      "Thread(s) per core": "1",
+      "Socket(s)": "-",
+      "vector_flags": [
+        "asimd"
+      ]
+    },
+    "resources": {
+      "enforcement": "cgroup-v2-hard",
+      "budget": {
+        "cpuMillis": 1000,
+        "memoryMiB": 4608
+      },
+      "cpuMax": "100000 100000",
+      "memoryMax": "4831838208",
+      "javaVersion": "25.0.4.1+1-LTS",
+      "os": "Linux",
+      "arch": "arm64"
+    },
+    "oom_events": 0,
+    "excluded_attempts": [],
+    "backends": {
+      "scalar": "KoblasEngine(scalar/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)",
+      "simd": "KoblasEngine(simd(2 lanes)/simd-sparse/simd-panel(2 lanes)/simd-tile(4x4)/simd-substitution(2 lanes))"
+    },
+    "load_at_start": {
+      "scalar": "1.74 0.99 0.46 2/466 59",
+      "simd": "2.08 2.42 1.43 1/467 1063"
+    }
+  }
+}
