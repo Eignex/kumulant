@@ -17,6 +17,10 @@ import kotlin.math.sqrt
 // Apache-2.0.
 private const val CHOLESKY_BLOCK = 64
 
+// Pools the loans a call without a caller workspace repeats across its blocked steps. Up to one block there is
+// little or nothing to pool, so the workspace would cost more than the scratch it saves.
+internal fun callScratch(order: Int): Workspace? = if (order > CHOLESKY_BLOCK) Workspace() else null
+
 internal sealed interface CholeskyPolicy {
     data object Strict : CholeskyPolicy
 
@@ -160,6 +164,9 @@ internal fun DenseMatrix.choleskyInto(
         return out
     }
     val block = min(CHOLESKY_BLOCK, n / 4)
+    // Every block step lends the trailing update scratch of the same shapes, so a call without a workspace
+    // pools it for its own duration rather than allocating it again at each step.
+    val scratch = workspace ?: Workspace()
     var start = 0
     while (start < n) {
         val width = min(block, n - start)
@@ -167,7 +174,7 @@ internal fun DenseMatrix.choleskyInto(
         // factored a column at a time whatever the trailing update costs.
         factorBlockColumn(kernels, ld, n, start, width, policy)
         if (columnsAreFinite(ld, n, start, width)) {
-            updateCholeskyTrailing(out, start, width, workspace)
+            updateCholeskyTrailing(out, start, width, scratch)
         } else {
             // A zero multiplier must skip infinite column entries instead of forming 0 * infinity.
             subtractTrailingColumns(kernels, ld, n, start, width)

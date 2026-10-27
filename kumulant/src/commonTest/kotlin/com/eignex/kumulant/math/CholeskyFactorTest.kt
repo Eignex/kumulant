@@ -100,8 +100,7 @@ class CholeskyFactorTest {
 
     @Test
     fun `extension agrees with full factorization across block boundaries`() {
-        val workspace = Workspace()
-        for (size in listOf(0, 1, 63, 64, 65, 127, 128, 129)) {
+        for (workspace in listOf(Workspace(), null)) for (size in listOf(0, 1, 63, 64, 65, 127, 128, 129)) {
             val base = DenseMatrix.wrap(
                 size,
                 size,
@@ -127,7 +126,7 @@ class CholeskyFactorTest {
 
                 var error = 0.0
                 for (i in actual.indices) error = maxOf(error, abs(actual[i] - expected[i]))
-                assertTrue(error < 1e-12, "size=$size added=$added factor error=$error")
+                assertTrue(error < 1e-12, "size=$size added=$added workspace=${workspace != null} factor error=$error")
             }
         }
     }
@@ -295,6 +294,32 @@ class CholeskyFactorTest {
                 assertEquals(expected, solution[i, 0], 1e-13)
             }
             assertContentEquals(original, right)
+        }
+    }
+
+    @Test
+    fun `allocating matrix solves match destination solves across block boundaries`() {
+        for (size in listOf(63, 129, 257)) {
+            val matrix = DenseMatrix.wrap(
+                size,
+                size,
+                DoubleArray(size * size) { if (it % size == it / size) 2.25 else 0.25 },
+            )
+            val factor = matrix.factorCholesky()
+            for (columns in listOf(3, 16)) {
+                val right = DenseMatrix.wrap(size, columns, DoubleArray(size * columns) { it % 7 - 3.0 })
+                val original = right.values.copyOf()
+                val out = DenseMatrix.zero(size, columns)
+
+                val solved = factor.solve(right).values
+                val lower = factor.solveLower(right).values
+                val upper = factor.solveLower(right, transpose = true).values
+
+                assertContentEquals(factor.solveInto(right, out, Workspace()).values, solved)
+                assertContentEquals(factor.solveLowerInto(right, out, workspace = Workspace()).values, lower)
+                assertContentEquals(factor.solveLowerInto(right, out, true, Workspace()).values, upper)
+                assertContentEquals(original, right.values)
+            }
         }
     }
 
