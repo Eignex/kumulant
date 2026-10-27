@@ -3,6 +3,7 @@ package com.eignex.kumulant.bandit.univariate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.schema.expr.ScalarExpr
+import com.eignex.kumulant.schema.expr.requireBound
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.random.Random
@@ -36,6 +37,7 @@ data class CompositePosterior(
 ) : Posterior<ResultList<Result>> {
 
     init {
+        combine.requireBound("combine")
         require(subPosteriors.isNotEmpty()) { "CompositePosterior requires at least one subPosterior" }
     }
 

@@ -113,7 +113,7 @@ class StatPlanTest {
             {"feedback": {
                 "inner": {"vectorize": {"dimensions": 2, "template": "sum"}},
                 "primary": {"foldVector": {"inner": "sum", "expr": {"fold": {"op": "Sum"}}}},
-                "project": "x"
+                "project": {"input": "x"}
             }}
         """.trimIndent()
         val spec = SchemaJson.decodeFromString<StatSpec>(json)
@@ -129,7 +129,7 @@ class StatPlanTest {
             {"feedback": {
                 "inner": {"bayesianRegression": {"featureSize": 2}},
                 "primary": {"vectorize": {"dimensions": 1, "template": "variance"}},
-                "project": "x"
+                "project": {"input": "x"}
             }}
         """.trimIndent()
         val spec = SchemaJson.decodeFromString<StatSpec>(json)

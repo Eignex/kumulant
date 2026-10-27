@@ -58,6 +58,7 @@ import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.expr.eval
+import com.eignex.kumulant.schema.expr.requireBound
 import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.calibration.PlattCalibratorStat
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
@@ -405,6 +406,7 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     }
 
     is TransformValueSeries -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -413,6 +415,7 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     }
 
     is FilterValueSeries -> {
+        pred.requireBound("$path.pred")
         val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -421,6 +424,7 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     }
 
     is WeightByValueSeries -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             innerPlan.build(concurrency).weightBy { v -> expr.eval(v) }
@@ -484,6 +488,7 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     }
 
     is WithFeedbackSeries -> {
+        project.requireBound("$path.project")
         val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
         val primaryPlan = requireSeries(primary, "$path.primary").compileSeries("$path.primary")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
@@ -598,6 +603,8 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
     }
 
     is TransformPair -> {
+        xExpr.requireBound("$path.xExpr")
+        yExpr.requireBound("$path.yExpr")
         val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -606,6 +613,7 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
     }
 
     is FilterPaired -> {
+        pred.requireBound("$path.pred")
         val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -614,6 +622,7 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
     }
 
     is FoldPaired -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -622,6 +631,7 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
     }
 
     is WeightByValuePaired -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             innerPlan.build(concurrency).weightBy { xv, yv -> expr.eval(xv, yv) }
@@ -643,6 +653,7 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
     }
 
     is WithFeedbackPaired -> {
+        project.requireBound("$path.project")
         val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
         val primaryXPlan = requireSeries(primaryX, "$path.primaryX").compileSeries("$path.primaryX")
         val primaryYPlan = requireSeries(primaryY, "$path.primaryY").compileSeries("$path.primaryY")
@@ -726,6 +737,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
     }
 
     is TransformVectorElement -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -736,6 +748,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
     }
 
     is FilterVector -> {
+        pred.requireBound("$path.pred")
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -744,6 +757,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
     }
 
     is FoldVector -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -752,6 +766,8 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
     }
 
     is FoldVectorPaired -> {
+        xExpr.requireBound("$path.xExpr")
+        yExpr.requireBound("$path.yExpr")
         val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -764,6 +780,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
     }
 
     is TransformVector -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -772,6 +789,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
     }
 
     is WeightByValueVector -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             WeightByVectorStat.vector(innerPlan.build(concurrency)) { vec ->
@@ -795,6 +813,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
     }
 
     is WithFeedbackVector -> {
+        project.requireBound("$path.project")
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         val primaryPlan = requireVector(primary, "$path.primary").compileVector("$path.primary")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
@@ -896,6 +915,7 @@ internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<Discret
     }
 
     is TransformValueDiscrete -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -904,6 +924,7 @@ internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<Discret
     }
 
     is FilterValueDiscrete -> {
+        pred.requireBound("$path.pred")
         val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -912,6 +933,7 @@ internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<Discret
     }
 
     is WeightByValueDiscrete -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             innerPlan.build(concurrency).weightBy { v -> expr.eval(v.toDouble()) }
@@ -968,6 +990,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
 
     is DiagonalRegression ->
         StatPlan(path) { concurrency ->
+            learningRate.requireBound("$path.learningRate")
             DiagonalRegressionStat(
                 featureSize,
                 priorPrecision,
@@ -1053,6 +1076,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
     }
 
     is FilterRegression -> {
+        pred.requireBound("$path.pred")
         val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -1061,6 +1085,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
     }
 
     is TransformYRegression -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -1069,6 +1094,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
     }
 
     is TransformXRegression -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -1084,6 +1110,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
     }
 
     is WeightByValueRegression -> {
+        expr.requireBound("$path.expr")
         val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -1106,6 +1133,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
     }
 
     is FoldRegression -> {
+        project.requireBound("$path.project")
         val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
@@ -1114,6 +1142,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
     }
 
     is WithFeedbackRegression -> {
+        project.requireBound("$path.project")
         val innerPlan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
         val primaryPlan = requireVector(primary, "$path.primary").compileVector("$path.primary")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->

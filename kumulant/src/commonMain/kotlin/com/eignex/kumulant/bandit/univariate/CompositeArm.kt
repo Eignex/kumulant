@@ -11,6 +11,7 @@ import com.eignex.kumulant.schema.expr.BoolExpr
 import com.eignex.kumulant.schema.expr.Const
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.expr.X
+import com.eignex.kumulant.schema.expr.requireBound
 import com.eignex.kumulant.schema.runtime.ListStats
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -82,6 +83,9 @@ private fun CompositeArm.compose(): SeriesStat<ResultList<Result>> = ListStats(
 
 @Suppress("UNCHECKED_CAST")
 private fun CompositeSubArm.routedStat(): SeriesStat<Result> {
+    valueExpr.requireBound("valueExpr")
+    weightExpr.requireBound("weightExpr")
+    filter?.requireBound("filter")
     val accumulator = if (arm is CompositeArm) {
         arm.compose() as SeriesStat<Result>
     } else {

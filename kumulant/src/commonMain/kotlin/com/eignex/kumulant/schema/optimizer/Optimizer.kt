@@ -82,8 +82,10 @@ data class Sgd(
      */
     val learningRate: ScalarExpr = ConstantRate(1e-3),
 ) : OptimizerSpec {
-    override fun materialize(featureSize: Int, concurrency: Concurrency): Optimizer =
-        SgdOptimizer(featureSize, learningRate, concurrency)
+    override fun materialize(featureSize: Int, concurrency: Concurrency): Optimizer {
+        learningRate.requireBound("learningRate")
+        return SgdOptimizer(featureSize, learningRate, concurrency)
+    }
 }
 
 /**
@@ -105,8 +107,10 @@ data class Adagrad(
     /** Numerical-stability epsilon added under the square root to keep the divisor non-zero. */
     val epsilon: Double = 1e-10,
 ) : OptimizerSpec {
-    override fun materialize(featureSize: Int, concurrency: Concurrency): Optimizer =
-        AdagradOptimizer(featureSize, learningRate, epsilon, concurrency)
+    override fun materialize(featureSize: Int, concurrency: Concurrency): Optimizer {
+        learningRate.requireBound("learningRate")
+        return AdagradOptimizer(featureSize, learningRate, epsilon, concurrency)
+    }
 }
 
 /**
@@ -130,8 +134,10 @@ data class Rmsprop(
     /** Numerical-stability epsilon added under the square root. */
     val epsilon: Double = 1e-8,
 ) : OptimizerSpec {
-    override fun materialize(featureSize: Int, concurrency: Concurrency): Optimizer =
-        RmspropOptimizer(featureSize, learningRate, rho, epsilon, concurrency)
+    override fun materialize(featureSize: Int, concurrency: Concurrency): Optimizer {
+        learningRate.requireBound("learningRate")
+        return RmspropOptimizer(featureSize, learningRate, rho, epsilon, concurrency)
+    }
 }
 
 /**
@@ -167,6 +173,8 @@ data class Adam(
     /** Numerical-stability epsilon added under the square root. */
     val epsilon: Double = 1e-8,
 ) : OptimizerSpec {
-    override fun materialize(featureSize: Int, concurrency: Concurrency): Optimizer =
-        AdamOptimizer(featureSize, learningRate, beta1, beta2, epsilon, concurrency)
+    override fun materialize(featureSize: Int, concurrency: Concurrency): Optimizer {
+        learningRate.requireBound("learningRate")
+        return AdamOptimizer(featureSize, learningRate, beta1, beta2, epsilon, concurrency)
+    }
 }

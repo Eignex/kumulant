@@ -2454,6 +2454,33 @@ final class com.eignex.kumulant.schema.expr/MinMax : com.eignex.kumulant.schema.
     }
 }
 
+final class com.eignex.kumulant.schema.expr/Ref : com.eignex.kumulant.schema.expr/ScalarExpr { // com.eignex.kumulant.schema.expr/Ref|null[0]
+    constructor <init>(kotlin/String) // com.eignex.kumulant.schema.expr/Ref.<init>|<init>(kotlin.String){}[0]
+
+    final val name // com.eignex.kumulant.schema.expr/Ref.name|{}name[0]
+        final fun <get-name>(): kotlin/String // com.eignex.kumulant.schema.expr/Ref.name.<get-name>|<get-name>(){}[0]
+
+    final fun component1(): kotlin/String // com.eignex.kumulant.schema.expr/Ref.component1|component1(){}[0]
+    final fun copy(kotlin/String = ...): com.eignex.kumulant.schema.expr/Ref // com.eignex.kumulant.schema.expr/Ref.copy|copy(kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/Ref.equals|equals(kotlin.Any?){}[0]
+    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/Ref.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
+    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/Ref.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.eignex.kumulant.schema.expr/Ref.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.expr/Ref> { // com.eignex.kumulant.schema.expr/Ref.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.schema.expr/Ref.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.expr/Ref.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.expr/Ref.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.expr/Ref // com.eignex.kumulant.schema.expr/Ref.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.expr/Ref) // com.eignex.kumulant.schema.expr/Ref.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.expr.Ref){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.schema.expr/Ref.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/Ref> // com.eignex.kumulant.schema.expr/Ref.Companion.serializer|serializer(){}[0]
+    }
+}
+
 final class com.eignex.kumulant.schema.expr/Switch : com.eignex.kumulant.schema.expr/ScalarExpr { // com.eignex.kumulant.schema.expr/Switch|null[0]
     constructor <init>(com.eignex.kumulant.schema.expr/ScalarExpr, kotlin.collections/List<com.eignex.kumulant.schema.expr/SwitchCase>, com.eignex.kumulant.schema.expr/ScalarExpr) // com.eignex.kumulant.schema.expr/Switch.<init>|<init>(com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.collections.List<com.eignex.kumulant.schema.expr.SwitchCase>;com.eignex.kumulant.schema.expr.ScalarExpr){}[0]
 
@@ -8959,6 +8986,13 @@ final object com.eignex.kumulant.schema.spec/Variance : com.eignex.kumulant.sche
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/Variance.toString|toString(){}[0]
 }
 
+final object com.eignex.kumulant.schema/KumulantJson { // com.eignex.kumulant.schema/KumulantJson|null[0]
+    final val catalog // com.eignex.kumulant.schema/KumulantJson.catalog|{}catalog[0]
+        final fun <get-catalog>(): com.eignex.skema.serialization/JsonNodeCatalog // com.eignex.kumulant.schema/KumulantJson.catalog.<get-catalog>|<get-catalog>(){}[0]
+    final val serializers // com.eignex.kumulant.schema/KumulantJson.serializers|{}serializers[0]
+        final fun <get-serializers>(): kotlin.collections/List<com.eignex.skema.serialization/CompactSerializer<*>> // com.eignex.kumulant.schema/KumulantJson.serializers.<get-serializers>|<get-serializers>(){}[0]
+}
+
 final object com.eignex.kumulant.stat.regression.glm/FactorisedGaussian : com.eignex.kumulant.stat.regression.glm/LinearPosterior<com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.equals|equals(kotlin.Any?){}[0]
     final fun evaluate(com.eignex.kumulant.stat.regression.glm/DiagonalRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.DiagonalRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
@@ -9077,10 +9111,12 @@ final fun (com.eignex.kumulant.bandit.univariate/UnivariateBanditSpec).com.eigne
 final fun (com.eignex.kumulant.core/Concurrency).com.eignex.kumulant.stream/lock(): com.eignex.kumulant.stream/Mutex // com.eignex.kumulant.stream/lock|lock@com.eignex.kumulant.core.Concurrency(){}[0]
 final fun (com.eignex.kumulant.core/HasCenterScale).com.eignex.kumulant.stat.anomaly/absoluteZScore(kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.anomaly/absoluteZScore|absoluteZScore@com.eignex.kumulant.core.HasCenterScale(kotlin.Double){}[0]
 final fun (com.eignex.kumulant.schema.expr/BoolExpr).com.eignex.kumulant.schema.expr/and(com.eignex.kumulant.schema.expr/BoolExpr): com.eignex.kumulant.schema.expr/BoolExpr // com.eignex.kumulant.schema.expr/and|and@com.eignex.kumulant.schema.expr.BoolExpr(com.eignex.kumulant.schema.expr.BoolExpr){}[0]
+final fun (com.eignex.kumulant.schema.expr/BoolExpr).com.eignex.kumulant.schema.expr/bind(kotlin.collections/Map<kotlin/String, com.eignex.kumulant.schema.expr/ScalarExpr>): com.eignex.kumulant.schema.expr/BoolExpr // com.eignex.kumulant.schema.expr/bind|bind@com.eignex.kumulant.schema.expr.BoolExpr(kotlin.collections.Map<kotlin.String,com.eignex.kumulant.schema.expr.ScalarExpr>){}[0]
 final fun (com.eignex.kumulant.schema.expr/BoolExpr).com.eignex.kumulant.schema.expr/eval(kotlin/Double = ..., kotlin/Double = ..., com.eignex.koblas/Vector, com.eignex.kumulant.core/Result? = ...): kotlin/Boolean // com.eignex.kumulant.schema.expr/eval|eval@com.eignex.kumulant.schema.expr.BoolExpr(kotlin.Double;kotlin.Double;com.eignex.koblas.Vector;com.eignex.kumulant.core.Result?){}[0]
 final fun (com.eignex.kumulant.schema.expr/BoolExpr).com.eignex.kumulant.schema.expr/not(): com.eignex.kumulant.schema.expr/BoolExpr // com.eignex.kumulant.schema.expr/not|not@com.eignex.kumulant.schema.expr.BoolExpr(){}[0]
 final fun (com.eignex.kumulant.schema.expr/BoolExpr).com.eignex.kumulant.schema.expr/or(com.eignex.kumulant.schema.expr/BoolExpr): com.eignex.kumulant.schema.expr/BoolExpr // com.eignex.kumulant.schema.expr/or|or@com.eignex.kumulant.schema.expr.BoolExpr(com.eignex.kumulant.schema.expr.BoolExpr){}[0]
 final fun (com.eignex.kumulant.schema.expr/ScalarExpr).com.eignex.kumulant.schema.expr/abs(): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/abs|abs@com.eignex.kumulant.schema.expr.ScalarExpr(){}[0]
+final fun (com.eignex.kumulant.schema.expr/ScalarExpr).com.eignex.kumulant.schema.expr/bind(kotlin.collections/Map<kotlin/String, com.eignex.kumulant.schema.expr/ScalarExpr>): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/bind|bind@com.eignex.kumulant.schema.expr.ScalarExpr(kotlin.collections.Map<kotlin.String,com.eignex.kumulant.schema.expr.ScalarExpr>){}[0]
 final fun (com.eignex.kumulant.schema.expr/ScalarExpr).com.eignex.kumulant.schema.expr/div(com.eignex.kumulant.schema.expr/ScalarExpr): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/div|div@com.eignex.kumulant.schema.expr.ScalarExpr(com.eignex.kumulant.schema.expr.ScalarExpr){}[0]
 final fun (com.eignex.kumulant.schema.expr/ScalarExpr).com.eignex.kumulant.schema.expr/div(kotlin/Double): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/div|div@com.eignex.kumulant.schema.expr.ScalarExpr(kotlin.Double){}[0]
 final fun (com.eignex.kumulant.schema.expr/ScalarExpr).com.eignex.kumulant.schema.expr/eq(com.eignex.kumulant.schema.expr/ScalarExpr): com.eignex.kumulant.schema.expr/BoolExpr // com.eignex.kumulant.schema.expr/eq|eq@com.eignex.kumulant.schema.expr.ScalarExpr(com.eignex.kumulant.schema.expr.ScalarExpr){}[0]
@@ -9113,6 +9149,7 @@ final fun (com.eignex.kumulant.schema.expr/ScalarExpr).com.eignex.kumulant.schem
 final fun (com.eignex.kumulant.schema.expr/ScalarExpr).com.eignex.kumulant.schema.expr/times(com.eignex.kumulant.schema.expr/ScalarExpr): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/times|times@com.eignex.kumulant.schema.expr.ScalarExpr(com.eignex.kumulant.schema.expr.ScalarExpr){}[0]
 final fun (com.eignex.kumulant.schema.expr/ScalarExpr).com.eignex.kumulant.schema.expr/times(kotlin/Double): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/times|times@com.eignex.kumulant.schema.expr.ScalarExpr(kotlin.Double){}[0]
 final fun (com.eignex.kumulant.schema.expr/ScalarExpr).com.eignex.kumulant.schema.expr/unaryMinus(): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/unaryMinus|unaryMinus@com.eignex.kumulant.schema.expr.ScalarExpr(){}[0]
+final fun (com.eignex.kumulant.schema.expr/VectorExpr).com.eignex.kumulant.schema.expr/bind(kotlin.collections/Map<kotlin/String, com.eignex.kumulant.schema.expr/ScalarExpr>): com.eignex.kumulant.schema.expr/VectorExpr // com.eignex.kumulant.schema.expr/bind|bind@com.eignex.kumulant.schema.expr.VectorExpr(kotlin.collections.Map<kotlin.String,com.eignex.kumulant.schema.expr.ScalarExpr>){}[0]
 final fun (com.eignex.kumulant.schema.expr/VectorExpr).com.eignex.kumulant.schema.expr/eval(kotlin/Double = ..., kotlin/Double = ..., com.eignex.koblas/Vector, com.eignex.kumulant.core/Result? = ...): kotlin/DoubleArray // com.eignex.kumulant.schema.expr/eval|eval@com.eignex.kumulant.schema.expr.VectorExpr(kotlin.Double;kotlin.Double;com.eignex.koblas.Vector;com.eignex.kumulant.core.Result?){}[0]
 final fun (com.eignex.kumulant.schema.runtime/StatSchemaDef).com.eignex.kumulant.schema.runtime/materialize(com.eignex.kumulant.core/Concurrency = ...): kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, *, *>> // com.eignex.kumulant.schema.runtime/materialize|materialize@com.eignex.kumulant.schema.runtime.StatSchemaDef(com.eignex.kumulant.core.Concurrency){}[0]
 final fun (com.eignex.kumulant.schema.runtime/StatSchemaDef).com.eignex.kumulant.schema.runtime/materializeDiscrete(com.eignex.kumulant.core/Concurrency = ...): kotlin.collections/List<com.eignex.kumulant.schema.runtime/BoundStat<*, out com.eignex.kumulant.core/DiscreteStat<*>, *>> // com.eignex.kumulant.schema.runtime/materializeDiscrete|materializeDiscrete@com.eignex.kumulant.schema.runtime.StatSchemaDef(com.eignex.kumulant.core.Concurrency){}[0]

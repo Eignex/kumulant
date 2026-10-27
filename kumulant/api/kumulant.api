@@ -2098,6 +2098,12 @@ public final class com/eignex/kumulant/schema/GroupStatKey : com/eignex/kumulant
 	public final fun getKeys ()Ljava/lang/Object;
 }
 
+public final class com/eignex/kumulant/schema/KumulantJson {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/KumulantJson;
+	public final fun getCatalog ()Lcom/eignex/skema/serialization/JsonNodeCatalog;
+	public final fun getSerializers ()Ljava/util/List;
+}
+
 public class com/eignex/kumulant/schema/StatKey {
 	public fun <init> (Ljava/lang/String;)V
 	public final fun getName ()Ljava/lang/String;
@@ -2382,6 +2388,40 @@ public final synthetic class com/eignex/kumulant/schema/expr/MinMax$$serializer 
 
 public final class com/eignex/kumulant/schema/expr/MinMax$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/expr/Ref : com/eignex/kumulant/schema/expr/ScalarExpr {
+	public static final field Companion Lcom/eignex/kumulant/schema/expr/Ref$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lcom/eignex/kumulant/schema/expr/Ref;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/expr/Ref;Ljava/lang/String;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/expr/Ref;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun eval (DD[DLcom/eignex/kumulant/core/Result;)D
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/schema/expr/Ref$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/expr/Ref$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/expr/Ref;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/expr/Ref;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/expr/Ref$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/expr/ReferenceBindingsKt {
+	public static final fun bind (Lcom/eignex/kumulant/schema/expr/BoolExpr;Ljava/util/Map;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
+	public static final fun bind (Lcom/eignex/kumulant/schema/expr/ScalarExpr;Ljava/util/Map;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
+	public static final fun bind (Lcom/eignex/kumulant/schema/expr/VectorExpr;Ljava/util/Map;)Lcom/eignex/kumulant/schema/expr/VectorExpr;
 }
 
 public abstract interface class com/eignex/kumulant/schema/expr/ScalarExpr {

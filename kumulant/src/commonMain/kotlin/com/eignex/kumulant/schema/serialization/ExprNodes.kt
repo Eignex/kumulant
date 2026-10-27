@@ -6,15 +6,17 @@ import com.eignex.skema.serialization.jsonNode
 
 internal object ScalarExprSerializer : KumulantSerializer<ScalarExpr>(ScalarExpr::class, {
     listOf(
-        jsonNode<X>("x"),
-        jsonNode<Y>("y"),
-        jsonNode<Center>("center"),
-        jsonNode<Scale>("scale"),
-        jsonNode<Low>("low"),
-        jsonNode<High>("high"),
-        jsonNode<VIndex>("index"),
+        jsonNode<Ref>("ref", JsonNodeShape.Operand, "name"),
+        jsonNode<BoundScalarExpr>("bind"),
+        jsonNode<X>("input", mapping = InputMapping("x")),
+        jsonNode<Y>("input", mapping = InputMapping("y")),
+        jsonNode<Center>("feedback", mapping = InputMapping("center")),
+        jsonNode<Scale>("feedback", mapping = InputMapping("scale")),
+        jsonNode<Low>("feedback", mapping = InputMapping("low")),
+        jsonNode<High>("feedback", mapping = InputMapping("high")),
+        jsonNode<VIndex>("feedback", mapping = InputMapping("index")),
         jsonNode<V>("element", JsonNodeShape.Operand, "index"),
-        jsonNode<Const>("const", JsonNodeShape.Literal, "v"),
+        jsonNode<Const>("const", JsonNodeShape.Literal, "v", mapping = NumberMapping),
         jsonNode<Add>("add", JsonNodeShape.Operands, "l", "r"),
         jsonNode<Sub>("sub", JsonNodeShape.Operands, "l", "r"),
         jsonNode<Mul>("mul", JsonNodeShape.Operands, "l", "r"),
@@ -27,7 +29,7 @@ internal object ScalarExprSerializer : KumulantSerializer<ScalarExpr>(ScalarExpr
         jsonNode<Pow>("pow", JsonNodeShape.Operands, "a", "b"),
         jsonNode<MinExpr>("min", JsonNodeShape.Operands, "l", "r"),
         jsonNode<MaxExpr>("max", JsonNodeShape.Operands, "l", "r"),
-        jsonNode<IfExpr>("if"),
+        jsonNode<IfExpr>("if", JsonNodeShape.Operands, "cond", "then", "otherwise"),
         jsonNode<Switch>("switch"),
         jsonNode<Standardize>("standardize"),
         jsonNode<MinMax>("minMax"),
@@ -38,6 +40,7 @@ internal object ScalarExprSerializer : KumulantSerializer<ScalarExpr>(ScalarExpr
 
 internal object BoolExprSerializer : KumulantSerializer<BoolExpr>(BoolExpr::class, {
     listOf(
+        jsonNode<BoundBoolExpr>("bind"),
         jsonNode<In>("in"),
         jsonNode<Gt>("gt", JsonNodeShape.Operands, "l", "r"),
         jsonNode<Ge>("ge", JsonNodeShape.Operands, "l", "r"),
@@ -56,6 +59,7 @@ internal object BoolExprSerializer : KumulantSerializer<BoolExpr>(BoolExpr::clas
 
 internal object VectorExprSerializer : KumulantSerializer<VectorExpr>(VectorExpr::class, {
     listOf(
+        jsonNode<BoundVectorExpr>("bind"),
         jsonNode<VElements>("elements", JsonNodeShape.Operand, "exprs"),
     )
 })
