@@ -1,0 +1,10 @@
+Cholesky stress: seed=139, order=2048, backend=KoblasEngine(scalar/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)
+noiseVariance=1.0E-6, jitter=1.0E-10, matrixBytes=33554432
+stress_factor,kernel,order,relative_reconstruction,solve_backward_error,into_backward_error,aliased_backward_error,workspace_factor_difference
+stress_factor,rbf,2048,5.551109571461101E-15,1.7346501592710136E-17,1.7346501592710136E-17,1.7346501592710136E-17,0.0
+stress_factor,matern,2048,3.663732317164326E-15,1.2616424666991908E-17,1.2616424666991908E-17,1.2616424666991908E-17,0.0
+stress_sequence,operation,kernel,order,reconstruction,backward_error,relative_solution_error,absolute_logdet_error,forward_tolerance
+stress_sequence,extension,rbf,2048,5.551109571461101E-15,1.8169975526556374E-17,8.71567435238846E-10,6.330083124339581E-10,2.9103830456733704E-5
+stress_sequence,extension,matern,2048,3.663732317164326E-15,1.2600159300299926E-17,7.915853893060875E-10,4.1109160520136356E-10,2.9103830456733704E-5
+stress_sequence,update,rbf,2048,3.5337719328869125E-15,8.75467528685823E-16,9.177433786264005E-7,9.575160220265388E-9,2.9103830456733704E-5
+stress_sequence,update,matern,2048,3.2813596519664186E-15,6.800528955318281E-16,6.975222123234361E-7,4.2866304283961654E-8,2.9103830456733704E-5

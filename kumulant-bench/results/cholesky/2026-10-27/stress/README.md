@@ -63,13 +63,18 @@ may share a 16-vCPU node.
 
 | Capture | Job | CPU | JVM SIMD backend | Native backend |
 | --- | ---: | --- | --- | --- |
+| avx512-jvm | 8708 | Xeon Platinum 8375C (AVX-512) | `simd(8 lanes)`, tile 16×4 | |
 | avx2-jvm | 8709 | AMD EPYC 7R32 (AVX2) | `simd(4 lanes)`, tile 8×4 | |
 | avx2-native | 8738 | same Lab host as 8709 | | OpenBLAS 0.3.26 Zen level-1, scalar tiles, 1 thread confirmed |
 | sve2-jvm | 8722 | Neoverse-V2 (SVE2) | `simd(2 lanes)`, tile 4×4 | |
 | sve-jvm | 8723 | Neoverse-V1 (SVE) | `simd(4 lanes)`, tile 8×4 | |
 | neon-jvm | 8724 | Neoverse-N1 (NEON) | `simd(2 lanes)`, tile 4×4 | |
 
-Every JVM capture also ran the scalar backend. The Vector API's preferred species picks
+Every JVM capture also ran the scalar backend. The AVX-512 SIMD destination-solve
+row has a wide engine error (71.9 ± 22.3 ms); retain its raw sample range and avoid
+inferring a destination-solve speedup from this capture.
+
+The Vector API's preferred species picks
 two lanes on Neoverse-V2: its SVE2 vectors are 128 bits, while Neoverse-V1 has 256-bit SVE.
 
 ## Findings
@@ -81,6 +86,8 @@ Selected order-2048 results, in milliseconds (mean ± engine error):
 
 | Capture | Backend | RBF factor | RBF factor, workspace | Solve 2048×256 | Solve into 2048×256 |
 | --- | --- | ---: | ---: | ---: | ---: |
+| avx512-jvm | scalar | 482.3 ± 7.0 | 478.0 ± 3.8 | 377.2 ± 3.2 | 379.5 ± 1.2 |
+| avx512-jvm | SIMD | 141.0 ± 9.2 | 144.9 ± 13.5 | 83.5 ± 4.0 | 71.9 ± 22.3 |
 | avx2-jvm | scalar | 484.9 ± 3.3 | 484.8 ± 4.4 | 422.8 ± 3.8 | 421.6 ± 2.9 |
 | avx2-jvm | SIMD | 139.6 ± 7.4 | 140.8 ± 12.1 | 104.5 ± 3.7 | 103.0 ± 3.7 |
 | avx2-native | process 0 / 1 | 397.5 / 395.8 | 396.1 / 395.8 | 60.5 / 61.3 | 58.3 / 58.1 |
@@ -115,7 +122,7 @@ switch.
 
 ## Numerical stress
 
-All 54 stress rows pass ([stress.csv](stress.csv)), as do the shared preflights:
+All 66 stress rows pass ([stress.csv](stress.csv)), as do the shared preflights:
 54 factors, 12 update sequences, 108 extensions, three determinants and three retry
 outcomes per backend ([accuracy.csv](accuracy.csv)). At order 2048, the maximum relative
 reconstruction error is `5.55e-15` and the maximum solve backward error `8.75e-16`, both
@@ -141,14 +148,14 @@ reconstruction and backward errors on scalar and SIMD
   `Unknown host target: linux aarch64`. kotlinx-benchmark resolves the Kotlin/Native host
   while wiring Native tasks. They produced no measurements; their definitions and job
   records are under [lab/failed](lab/failed/). Jobs 8722–8724 reran at `28030b6`.
-- 8722 lost its first case attempt and 8723 its first preparation attempt to
+- 8708 and 8722 lost their first case attempts and 8723 its first preparation attempt to
   infrastructure. Only committed attempts contribute.
 - The Lab's local node (macOS arm64 with SME2) was excluded. The profile records
   hardware with `lscpu`, and the benchmark Native target is Linux x64 only. No macOS
   numbers are claimed.
 - Native timing exists only for Linux x86_64 (AVX2 pool). The AVX-512 pool was
-  unavailable for most of the session because of EC2 spot capacity and a Lab admission
-  backlog. Job 8708 (AVX-512 JVM) is recorded below when complete. No AVX-512 Native
+  delayed for much of the session by EC2 spot capacity and a Lab admission backlog.
+  Job 8708 (AVX-512 JVM) completed during wrap-up and is included. No AVX-512 Native
   capture was launched.
 - Every capture is a single Lab job. Drift between hosts or jobs exceeds engine error, as
   the 2026-10-26 controls showed.

@@ -245,5 +245,56 @@
       "scalar": "1.74 0.99 0.46 2/466 59",
       "simd": "2.08 2.42 1.43 1/467 1063"
     }
+  },
+  "avx512-jvm": {
+    "job": 8708,
+    "ref": "ca3200444c0c7db9dc7fdcd35c84d797b8862c78",
+    "lab_host": "a5f259b9-a394-6020-ab22-7ae882c3657c",
+    "pool_tags": {
+      "require": [
+        "arch:x86_64",
+        "simd:avx512"
+      ],
+      "exclude": [
+        "local"
+      ]
+    },
+    "hardware": {
+      "Architecture": "x86_64",
+      "CPU(s)": "16",
+      "Model name": "Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz",
+      "Thread(s) per core": "2",
+      "Core(s) per socket": "8",
+      "Socket(s)": "1",
+      "vector_flags": [
+        "avx2",
+        "avx512f",
+        "fma"
+      ]
+    },
+    "resources": {
+      "enforcement": "cgroup-v2-hard",
+      "budget": {
+        "cpuMillis": 1000,
+        "memoryMiB": 4608
+      },
+      "cpuMax": "100000 100000",
+      "memoryMax": "4831838208",
+      "javaVersion": "25.0.4.1+1-LTS",
+      "os": "Linux",
+      "arch": "amd64"
+    },
+    "oom_events": 0,
+    "excluded_attempts": [
+      "case attempt 1 lost to infrastructure (lease); attempt 2 committed"
+    ],
+    "backends": {
+      "scalar": "KoblasEngine(scalar/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)",
+      "simd": "KoblasEngine(simd(8 lanes)/simd-sparse/simd-panel(8 lanes)/simd-tile(16x4)/simd-substitution(8 lanes))"
+    },
+    "load_at_start": {
+      "scalar": "0.37 1.03 0.79 2/444 59",
+      "simd": "2.64 2.03 1.32 1/514 1063"
+    }
   }
 }
