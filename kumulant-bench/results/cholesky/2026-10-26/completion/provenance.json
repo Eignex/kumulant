@@ -1,9 +1,0 @@
-{
-  "source": "d40dff58654151034b6bf2a9ffe544baa8ffca3e",
-  "merged_pr_163": "3fa7a6c05cce2f901cd53b273f2898e6e68082b9",
-  "numerical_library_unchanged": true,
-  "dependency_cohort": "../views/dependency-cohort.json",
-  "lab_job": 8634,
-  "scope": "Supplemental prepared-engine integration and numerical accuracy evidence. No matched baseline or speedup claim.",
-  "source_ci": "https://github.com/Eignex/kumulant/actions/runs/40401562590/job/121848450454"
-}

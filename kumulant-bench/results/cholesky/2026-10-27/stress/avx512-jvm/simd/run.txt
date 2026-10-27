@@ -1,5 +1,0 @@
-java=25.0.4.1+1-LTS
-os=Linux
-command=[/opt/java/openjdk/bin/java, --enable-native-access=ALL-UNNAMED, -Xms512m, -Xmx512m, --add-modules=jdk.incubator.vector, -cp, /local/worker/attempts/0-none-0-2/worktrees/ca3200444c0c7db9dc7fdcd35c84d797b8862c78/kumulant-bench/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-2/worktrees/ca3200444c0c7db9dc7fdcd35c84d797b8862c78/kumulant/build/classes/kotlin/jvm/main:/local/worker/attempts/0-none-0-2/worktrees/ca3200444c0c7db9dc7fdcd35c84d797b8862c78/kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar, com.eignex.kumulant.bench.BenchmarkMainKt]
-arguments=[--stress-order=2048, --filter, .*Cholesky(FactorBenchmark\.(factor|factorWithWorkspace)|SolveBenchmark\.(solveMatrix|solveMatrixInto)|WorkloadBenchmark\.(covarianceConstruction|factorSolveLogDeterminant|factorSolveLogDeterminantWithWorkspace))$, -p, matrixCase=precision:32,rbf:512,rbf:1024,rbf:2048,matern:2048, -p, shape=32x1,1024x256,2048x1,2048x256, -p, historySize=512,2048]
-load=2.64 2.03 1.32 1/514 1063

@@ -1,3 +1,0 @@
-Scratch harness (oracle-equivalence.kt.txt) compiled at ca3200444c0c7db9dc7fdcd35c84d797b8862c78 with the two oracle helpers temporarily made internal; not committed as source.
-scalar: bitwise identical oracle results: 72 cases
-simd (--add-modules=jdk.incubator.vector): bitwise identical oracle results: 72 cases

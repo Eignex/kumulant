@@ -1,4 +1,0 @@
-jvmRuntimeClasspath=com.eignex:koblas-jvm:0.1.1-20261027.124722-278
-jvmRuntimeClasspath=com.eignex:koblas:0.1.1-20261027.124722-275
-linuxX64CompileKlibraries=com.eignex:koblas-linuxx64:0.1.1-20261027.124722-274
-linuxX64CompileKlibraries=com.eignex:koblas:0.1.1-20261027.124722-275

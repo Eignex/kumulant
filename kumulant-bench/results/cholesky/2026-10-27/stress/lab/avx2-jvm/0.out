@@ -1,7 +1,0 @@
-[0.716s][info][jfr,startup] Started recording 1. No limit specified, using maxsize=250MB as default.
-[0.716s][info][jfr,startup] 
-[0.716s][info][jfr,startup] Use jcmd 41 JFR.dump name=1 to copy recording data to file.
-Starting scalar quality and measurements
-Completed scalar
-Starting simd quality and measurements
-Completed simd

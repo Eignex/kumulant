@@ -61,14 +61,8 @@ script-profile interface for a Git checkout. Scripts own profiling; leave Lab
 recording off when using their profilers. Inspect retained outputs alongside
 Lab's revision, host, and resource metadata.
 
-The [historical Cholesky baseline](results/cholesky/2026-10-25/README.md) retains its
-original measurements. The [Cholesky comparison](results/cholesky/2026-10-26/README.md)
-retains Lab timing, allocation, accuracy, and consumer checks. Prediction, storage,
-vector and Cholesky benchmark kernels remain selectable with standard benchmark filters.
-The [published-snapshot view comparison](results/cholesky/2026-10-26/views/README.md)
-isolates borrowed regions using the same Koblas dependency on both implementations.
-The [in-place Native comparison](results/cholesky/2026-10-27/native-views/README.md)
-retains the published-cohort evidence for Native borrowed trailing regions.
+Prediction, storage, vector and Cholesky benchmark kernels are selectable with
+standard benchmark filters.
 
 ## Cholesky comparisons
 
