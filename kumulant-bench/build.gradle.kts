@@ -57,7 +57,10 @@ allOpen {
 benchmark {
     targets {
         register("jvm")
-        register("linuxX64")
+        // kotlinx-benchmark resolves the Kotlin/Native host while wiring Native tasks, which fails on
+        // Linux arm64; JVM benchmarks still run there.
+        val linuxArm64Host = System.getProperty("os.name") == "Linux" && System.getProperty("os.arch") == "aarch64"
+        if (!linuxArm64Host) register("linuxX64")
     }
     reportsDir = providers.gradleProperty("bench.output").getOrElse("build/reports/benchmarks")
     configurations {
