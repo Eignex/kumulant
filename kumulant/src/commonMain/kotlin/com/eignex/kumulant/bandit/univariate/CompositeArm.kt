@@ -31,7 +31,7 @@ import kotlinx.serialization.Serializable
  * Example; zero-inflated lognormal revenue:
  * ```
  * val ziln = CompositeArm(listOf(
- *     CompositeSubArm(BernoulliArm(), valueExpr = IfExpr(X gt 0.0, Const(1.0), Const(0.0))),
+ *     CompositeSubArm(BernoulliArm(), valueExpr = ifThenElse(X gt 0.0, 1.0, 0.0)),
  *     CompositeSubArm(LogNormalArm(), filter = X gt 0.0),
  * ))
  * val score = CompositePosterior(

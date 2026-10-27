@@ -70,6 +70,14 @@ Fractional literals, fractional or expression-valued exponents, negative exponen
 with fractional exponents can produce NaN. JSON does not carry non-finite literals
 under the default settings; an evaluation may still produce a non-finite result.
 
+Kotlin construction uses the spellings Klause's integer expressions share: infix `lt`,
+`le`, `eq`, `ne`, `ge` and `gt` with a literal on either side, arithmetic operators with
+literal operands, the receiver helpers `x.abs()`, `x.min(y)`, `x.max(y)` and `x.pow(n)`,
+and `ifThenElse(cond, then, otherwise)` with literal or expression branches. Literals
+are binary64 here, so `/` builds `div` rather than Klause's truncating division.
+`ne` builds `not` over `eq` and holds when either side is NaN. A literal on the left
+stays the left operand, so `0.0 lt X` and `X gt 0.0` agree in value but not in encoding.
+
 The shared `portable-expression/conformance.json` JVM resource is a byte-identical
 copy of Klause's fixture. Each case records accepted shapes, canonical output,
 evaluation results for both numeric environments, and explicit rejections.

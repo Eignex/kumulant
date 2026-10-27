@@ -676,4 +676,49 @@ class ExprTest {
         val vDecoded = SchemaJson.decodeFromString(StatSpec.serializer(), vJson) as FilterVector
         assertEquals(Gt(V(0), Const(0.0)), vDecoded.pred)
     }
+
+    @Test fun `portable helpers encode to the shared expression keys`() {
+        val a = Ref("a")
+        val b = Ref("b")
+
+        val encoded = listOf(a.abs(), a.min(b), a.max(b), a.pow(3), ifThenElse(a gt 0.0, a, b))
+            .map { SchemaJson.encodeToString(ScalarExpr.serializer(), it) }
+
+        assertEquals(
+            listOf(
+                """{"abs":{"ref":"a"}}""",
+                """{"min":[{"ref":"a"},{"ref":"b"}]}""",
+                """{"max":[{"ref":"a"},{"ref":"b"}]}""",
+                """{"pow":[{"ref":"a"},3]}""",
+                """{"if":[{"gt":[{"ref":"a"},0]},{"ref":"a"},{"ref":"b"}]}""",
+            ),
+            encoded,
+        )
+    }
+
+    @Test fun `conditional branches accept literals`() {
+        val p = X gt 0.0
+
+        assertEquals(
+            listOf(IfExpr(p, Const(1.0), Y), IfExpr(p, Y, Const(0.0)), IfExpr(p, Const(1.0), Const(0.0))),
+            listOf(ifThenElse(p, 1.0, Y), ifThenElse(p, Y, 0.0), ifThenElse(p, 1.0, 0.0)),
+        )
+    }
+
+    @Test fun `a literal left of a comparison stays the left operand`() {
+        val one = Const(1.0)
+
+        assertEquals(
+            listOf(Gt(one, X), Ge(one, X), Lt(one, X), Le(one, X), Eq(one, X), Not(Eq(one, X))),
+            listOf(1.0 gt X, 1.0 ge X, 1.0 lt X, 1.0 le X, 1.0 eq X, 1.0 ne X),
+        )
+    }
+
+    @Test fun `ne is the IEEE negation of eq including NaN and signed zero`() {
+        val inputs = listOf(1.0 to 1.0, 1.0 to 2.0, 0.0 to -0.0, Double.NaN to Double.NaN, Double.NaN to 1.0)
+
+        val results = inputs.map { (x, y) -> (X ne Y).eval(x, y) }
+
+        assertEquals(listOf(false, true, false, true, true), results)
+    }
 }
