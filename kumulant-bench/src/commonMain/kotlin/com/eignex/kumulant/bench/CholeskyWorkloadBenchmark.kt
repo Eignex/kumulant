@@ -29,8 +29,11 @@ open class CholeskyWorkloadBenchmark {
         covariance = CholeskyFixtures.covariance(points)
         right = CholeskyFixtures.right(historySize).values
         out = DoubleArray(historySize)
-        fittingMatrices = List(CholeskyFixtures.FITTING_ROUND_SIZE) { candidate ->
-            CholeskyFixtures.covariance(points, lengthScale = 0.05 + candidate * 0.01)
+        // Stress orders keep only one covariance live; 25 order-2048 candidates alone exceed the 512 MiB harness heap.
+        fittingMatrices = if (historySize > CholeskyFixtures.FITTING_ROUND_MAX_ORDER) emptyList() else {
+            List(CholeskyFixtures.FITTING_ROUND_SIZE) { candidate ->
+                CholeskyFixtures.covariance(points, lengthScale = 0.05 + candidate * 0.01)
+            }
         }
     }
 
@@ -53,16 +56,23 @@ open class CholeskyWorkloadBenchmark {
 
     @Benchmark
     fun fittingRound(blackhole: Blackhole) {
+        requireFittingRound()
         for (matrix in fittingMatrices) evaluate(matrix, blackhole)
     }
 
     @Benchmark
     fun fittingRoundWithWorkspace(blackhole: Blackhole) {
+        requireFittingRound()
         for (matrix in fittingMatrices) {
             val factor = matrix.factorCholesky(workspace)
             blackhole.consume(factor.solveInto(right, out, workspace))
             blackhole.consume(factor.logDeterminant())
         }
+    }
+
+    private fun requireFittingRound() = check(fittingMatrices.isNotEmpty()) {
+        "Fitting rounds hold ${CholeskyFixtures.FITTING_ROUND_SIZE} covariances; history sizes above " +
+            "${CholeskyFixtures.FITTING_ROUND_MAX_ORDER} measure single factor/solve/log-determinant evaluations"
     }
 
     private fun evaluate(matrix: DenseMatrix, blackhole: Blackhole) {

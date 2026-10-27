@@ -10,6 +10,7 @@ fun main(args: Array<String>) {
     when (args.firstOrNull()) {
         "--quality" -> { analyzeQuality(); analyzeCholeskyAccuracy() }
         "--concurrency" -> analyzeConcurrency()
+        "--cholesky-stress" -> analyzeCholeskyStress(args.getOrNull(1)?.toIntOrNull() ?: error("Usage: --cholesky-stress ORDER"))
         "--parameters" -> {
             println(allSpecs.joinToString(",") { it.name })
             println(allBanditSpecs.joinToString(",") { it.name })

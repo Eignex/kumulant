@@ -2,7 +2,9 @@ package com.eignex.kumulant.bench
 
 import java.io.File
 
-fun main(args: Array<String>) {
+fun main(arguments: Array<String>) {
+    val stressOrder = arguments.singleOrNull { it.startsWith("--stress-order=") }?.substringAfter('=')?.toInt()
+    val args = arguments.filterNot { it.startsWith("--stress-order=") }
     val output = File(requireNotNull(System.getenv("OUT")) { "Eignex Lab supplies OUT" }, "report")
     check(output.mkdirs()) { "Report directory already exists: $output" }
     val java = File(System.getProperty("java.home"), "bin/java").absolutePath
@@ -11,7 +13,7 @@ fun main(args: Array<String>) {
     File(output, "host.txt").writeText(hardware.inputStream.bufferedReader().readText())
     check(hardware.waitFor() == 0)
     if (args.firstOrNull() == "--native-prepared") {
-        runPreparedNativeCholesky(output, args.drop(1))
+        runPreparedNativeCholesky(output, args.drop(1), stressOrder)
         return
     }
     if (args.firstOrNull() == "--native") {
@@ -44,7 +46,7 @@ fun main(args: Array<String>) {
             listOf("-cp", classpath, "com.eignex.kumulant.bench.BenchmarkMainKt")
         File(directory, "run.txt").writeText(
             "java=${System.getProperty("java.runtime.version")}\nos=${System.getProperty("os.name")}\n" +
-                "command=$command\narguments=${args.toList()}\nload=${File("/proc/loadavg").readText()}",
+                "command=$command\narguments=${arguments.toList()}\nload=${File("/proc/loadavg").readText()}",
         )
         println("Starting $backend quality and measurements")
         val quality = ProcessBuilder(command + "--quality").redirectErrorStream(true)
@@ -53,6 +55,12 @@ fun main(args: Array<String>) {
         val expected = if (backend == "simd") "KoblasEngine(simd(" else "KoblasEngine(scalar/"
         check(File(directory, "quality.txt").readText().contains(expected)) {
             "$backend backend did not resolve; inspect quality.txt"
+        }
+        if (stressOrder != null) {
+            val stress = ProcessBuilder(command + listOf("--cholesky-stress", "$stressOrder")).redirectErrorStream(true)
+                .redirectOutput(File(directory, "stress.txt")).start()
+            check(stress.waitFor() == 0) { "$backend stress failed; inspect stress.txt" }
+            check(File(directory, "stress.txt").readText().contains(expected)) { "$backend stress backend did not resolve" }
         }
         val profiler = if (recording) listOf("-prof", "jfr:dir=${File(directory, "jfr").absolutePath}") else emptyList()
         val benchmark = ProcessBuilder(command + listOf(selection, "-bm", "avgt", "-tu", "us", "-prof", "gc") + profiler +

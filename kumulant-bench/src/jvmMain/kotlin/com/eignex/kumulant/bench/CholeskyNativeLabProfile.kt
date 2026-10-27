@@ -2,7 +2,7 @@ package com.eignex.kumulant.bench
 
 import java.io.File
 
-internal fun runPreparedNativeCholesky(output: File, arguments: List<String>) {
+internal fun runPreparedNativeCholesky(output: File, arguments: List<String>, stressOrder: Int? = null) {
     // Prepared archives omit Gradle state; the engine protocol keeps compilation in preparation.
     val executable = File("kumulant-bench/build/benchmarks/linuxX64/classes/linuxX64Benchmark.kexe").absoluteFile
     check(executable.isFile) { "Native benchmark must be linked during preparation" }
@@ -22,6 +22,11 @@ internal fun runPreparedNativeCholesky(output: File, arguments: List<String>) {
     val preflight = ProcessBuilder(quality.path).redirectErrorStream(true)
         .redirectOutput(File(output, "native-quality.txt")).start()
     check(preflight.waitFor() == 0) { "Native quality failed; inspect native-quality.txt" }
+    if (stressOrder != null) {
+        val stress = ProcessBuilder(quality.path, "$stressOrder").redirectErrorStream(true)
+            .redirectOutput(File(output, "native-stress.txt")).start()
+        check(stress.waitFor() == 0) { "Native stress failed; inspect native-stress.txt" }
+    }
     repeat(2) { repetition ->
         val directory = File(output, "native-$repetition").apply { check(mkdir()) }
         val cases = File(directory, "cases").apply { check(mkdir()) }
