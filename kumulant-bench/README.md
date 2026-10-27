@@ -67,15 +67,17 @@ retains Lab timing, allocation, accuracy, and consumer checks. Prediction, stora
 vector and Cholesky benchmark kernels remain selectable with standard benchmark filters.
 The [published-snapshot view comparison](results/cholesky/2026-10-26/views/README.md)
 isolates borrowed regions using the same Koblas dependency on both implementations.
+The [in-place Native comparison](results/cholesky/2026-10-27/native-views/README.md)
+retains the published-cohort evidence for Native borrowed trailing regions.
 
 ## Cholesky comparisons
 
 `CholeskyFactorBenchmark` compares the owned factor factory with and without a
-reused workspace. The owned result is allocated in both cases. JVM factorization
-passes borrowed destination regions to Koblas for trailing updates. Native retains
-contiguous copied blocks, which were faster in the matched comparison. A workspace
-lends backend scratch and Native panel/trailing storage through Koblas's bounded
-pool. Backend packing can still allocate, and large or changing shapes can exceed
+reused workspace. The owned result is allocated in both cases. Factorization passes
+borrowed destination regions to Koblas for trailing updates on JVM and Native.
+The pinned Native binding passes eligible regions directly to host BLAS; disjoint panel
+and trailing regions need no packing. A workspace lends backend scratch through Koblas's
+bounded pool. Backend packing can still allocate, and large or changing shapes can exceed
 the pool's retained lengths.
 
 `CholeskySolveBenchmark` and `CholeskyVectorBenchmark` compare allocating solves

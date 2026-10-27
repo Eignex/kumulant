@@ -1,0 +1,17 @@
+2026-10-27T14:23:45.272Z 1c84cec1-f590-4683-b2ce-907c8a3bd56c session-created
+2026-10-27T14:23:52.400Z 1c84cec1-f590-4683-b2ce-907c8a3bd56c claimed:preparation:1
+2026-10-27T14:23:52.484Z 1c84cec1-f590-4683-b2ce-907c8a3bd56c phase:preparing:preparation:1
+2026-10-27T14:28:41.987Z 1c84cec1-f590-4683-b2ce-907c8a3bd56c selection-approved:1
+2026-10-27T14:28:47.013Z 1c84cec1-f590-4683-b2ce-907c8a3bd56c phase:uploading:preparation:1
+2026-10-27T14:28:48.088Z 1c84cec1-f590-4683-b2ce-907c8a3bd56c committed:preparation:1
+2026-10-27T14:28:51.704Z 9c0cf4f3-5948-4331-b9d7-461d3df6b267 session-created
+2026-10-27T14:28:51.768Z 1c84cec1-f590-4683-b2ce-907c8a3bd56c lost:prepared
+2026-10-27T14:29:04.888Z 9c0cf4f3-5948-4331-b9d7-461d3df6b267 claimed:0:none:0:1
+2026-10-27T14:29:05.013Z 9c0cf4f3-5948-4331-b9d7-461d3df6b267 phase:preparing:0:none:0:1
+2026-10-27T14:29:08.828Z 9c0cf4f3-5948-4331-b9d7-461d3df6b267 phase:executing:0:none:0:1
+2026-10-27T14:29:08.883Z 9c0cf4f3-5948-4331-b9d7-461d3df6b267 case-start:0:1
+2026-10-27T14:32:41.913Z 9c0cf4f3-5948-4331-b9d7-461d3df6b267 phase:uploading:0:none:0:1
+2026-10-27T14:33:29.020Z 9c0cf4f3-5948-4331-b9d7-461d3df6b267 committed:0:none:0:1
+2026-10-27T14:33:36.544Z 9c0cf4f3-5948-4331-b9d7-461d3df6b267 lost:completed
+2026-10-27T14:33:37.171Z experiment domain-completed
+status: DONE

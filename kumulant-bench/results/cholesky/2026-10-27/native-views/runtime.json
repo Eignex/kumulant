@@ -1,0 +1,30 @@
+{
+  "backend": [
+    "Cholesky backend: KoblasEngine(openblas-level1/scalar/scalar-panel/scalar-tile(4x4)/scalar-substitution)",
+    "Cholesky vendor: OpenBlas",
+    "Cholesky library: /lib/x86_64-linux-gnu/libopenblas.so.0",
+    "Cholesky version: OpenBLAS 0.3.26 NO_LAPACKE DYNAMIC_ARCH NO_AFFINITY SkylakeX MAX_THREADS=64",
+    "Cholesky threads: 1-thread-confirmed"
+  ],
+  "hardware": {
+    "Architecture": "x86_64",
+    "CPU(s)": "16",
+    "Model name": "Intel(R) Xeon(R) Platinum 8375C CPU @ 2.90GHz",
+    "Thread(s) per core": "2",
+    "Core(s) per socket": "8",
+    "Socket(s)": "1"
+  },
+  "lab_host": "9e466ea1-7e65-bd2e-ae27-90033d7e6fc4",
+  "resource_settings": {
+    "enforcement": "cgroup-v2-hard",
+    "budget": {
+      "cpuMillis": 1000,
+      "memoryMiB": 4608
+    },
+    "cpuMax": "100000 100000",
+    "memoryMax": "4831838208",
+    "javaVersion": "25.0.4.1+1-LTS",
+    "os": "Linux",
+    "arch": "amd64"
+  }
+}

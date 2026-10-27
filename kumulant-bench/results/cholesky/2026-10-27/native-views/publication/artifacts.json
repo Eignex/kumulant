@@ -1,0 +1,142 @@
+{
+  "release_run": "https://github.com/Eignex/koblas/actions/runs/40505951648",
+  "published_revision": "9b9d9dc98cffc76262ad8ff49574c74e144b9511",
+  "runtime_merge": "c2952c2daa28ab48acd0d23a4154098417f47b5a",
+  "artifacts": [
+    {
+      "artifact": "koblas",
+      "version": "0.1.1-20261027.124722-275",
+      "files": [
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas/0.1.1-SNAPSHOT/koblas-0.1.1-20261027.124722-275.pom",
+          "name": "koblas-0.1.1-20261027.124722-275.pom",
+          "bytes": 2217,
+          "sha256": "97dbe99ccaeb528e98c92d538c2671ce995ec3d0afa191ae88ef05455ce15b09",
+          "retained": true
+        },
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas/0.1.1-SNAPSHOT/koblas-0.1.1-20261027.124722-275.module",
+          "name": "koblas-0.1.1-20261027.124722-275.module",
+          "bytes": 12613,
+          "sha256": "6adb05b1be2e96093844fa822a7529cd11a4d7ec51738485ffdd9e7bb0c8a8cb",
+          "retained": true
+        },
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas/0.1.1-SNAPSHOT/koblas-0.1.1-20261027.124722-275-sources.jar",
+          "name": "koblas-0.1.1-20261027.124722-275-sources.jar",
+          "bytes": 220759,
+          "sha256": "3704bd64bd452440d8ee2f3892ce28f4081ebe55ef394e6cae9dd36bee5794d0",
+          "retained": false
+        }
+      ]
+    },
+    {
+      "artifact": "koblas-jvm",
+      "version": "0.1.1-20261027.124722-278",
+      "files": [
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-jvm/0.1.1-SNAPSHOT/koblas-jvm-0.1.1-20261027.124722-278.pom",
+          "name": "koblas-jvm-0.1.1-20261027.124722-278.pom",
+          "bytes": 2221,
+          "sha256": "af21b8170e863dae234d2982080b858cd397e0278872d7352476be3fb0481a44",
+          "retained": true
+        },
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-jvm/0.1.1-SNAPSHOT/koblas-jvm-0.1.1-20261027.124722-278.module",
+          "name": "koblas-jvm-0.1.1-20261027.124722-278.module",
+          "bytes": 4161,
+          "sha256": "8e1b555254b1f5d15269bce9fa0b59f94f851b719b4739923d5de264939105a1",
+          "retained": true
+        },
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-jvm/0.1.1-SNAPSHOT/koblas-jvm-0.1.1-20261027.124722-278-sources.jar",
+          "name": "koblas-jvm-0.1.1-20261027.124722-278-sources.jar",
+          "bytes": 245745,
+          "sha256": "52fe24a6ae54935cf0daad42d13b3b315c833be8885ba520a7b6f391b8746aa1",
+          "retained": false
+        }
+      ]
+    },
+    {
+      "artifact": "koblas-linuxx64",
+      "version": "0.1.1-20261027.124722-274",
+      "files": [
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-linuxx64/0.1.1-SNAPSHOT/koblas-linuxx64-0.1.1-20261027.124722-274.pom",
+          "name": "koblas-linuxx64-0.1.1-20261027.124722-274.pom",
+          "bytes": 2261,
+          "sha256": "10f39541984a0d59a016594ccce61fd455334a9b51bef30dced26aea319e0764",
+          "retained": true
+        },
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-linuxx64/0.1.1-SNAPSHOT/koblas-linuxx64-0.1.1-20261027.124722-274.module",
+          "name": "koblas-linuxx64-0.1.1-20261027.124722-274.module",
+          "bytes": 2912,
+          "sha256": "a9420307f53ab9cabf15328e7299d91a9cc62d99a31718599a7f3f38f756ce2e",
+          "retained": true
+        },
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-linuxx64/0.1.1-SNAPSHOT/koblas-linuxx64-0.1.1-20261027.124722-274-sources.jar",
+          "name": "koblas-linuxx64-0.1.1-20261027.124722-274-sources.jar",
+          "bytes": 220759,
+          "sha256": "6bff5cc6eaf3563adb24a41c52bf900a4f26cc3dd914c110fca3e83d0672336e",
+          "retained": false
+        }
+      ]
+    },
+    {
+      "artifact": "koblas-linuxarm64",
+      "version": "0.1.1-20261027.124722-275",
+      "files": [
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-linuxarm64/0.1.1-SNAPSHOT/koblas-linuxarm64-0.1.1-20261027.124722-275.pom",
+          "name": "koblas-linuxarm64-0.1.1-20261027.124722-275.pom",
+          "bytes": 2265,
+          "sha256": "a38473cb3c9dbcddc70a5a9e06520f7c936982a0cdb57c89d2fe42db61ee8053",
+          "retained": true
+        },
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-linuxarm64/0.1.1-SNAPSHOT/koblas-linuxarm64-0.1.1-20261027.124722-275.module",
+          "name": "koblas-linuxarm64-0.1.1-20261027.124722-275.module",
+          "bytes": 2928,
+          "sha256": "760622148d230ffd765c76466ac1938b3ec57150d1cb32044598b1063bd06c7d",
+          "retained": true
+        },
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-linuxarm64/0.1.1-SNAPSHOT/koblas-linuxarm64-0.1.1-20261027.124722-275-sources.jar",
+          "name": "koblas-linuxarm64-0.1.1-20261027.124722-275-sources.jar",
+          "bytes": 220759,
+          "sha256": "6bff5cc6eaf3563adb24a41c52bf900a4f26cc3dd914c110fca3e83d0672336e",
+          "retained": false
+        }
+      ]
+    },
+    {
+      "artifact": "koblas-macosarm64",
+      "version": "0.1.1-20261027.124335-298",
+      "files": [
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-macosarm64/0.1.1-SNAPSHOT/koblas-macosarm64-0.1.1-20261027.124335-298.pom",
+          "name": "koblas-macosarm64-0.1.1-20261027.124335-298.pom",
+          "bytes": 2265,
+          "sha256": "2ecb474175fc710c386bc907d4aebf4e6a4bcc38f602b697f30adbd12c402368",
+          "retained": true
+        },
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-macosarm64/0.1.1-SNAPSHOT/koblas-macosarm64-0.1.1-20261027.124335-298.module",
+          "name": "koblas-macosarm64-0.1.1-20261027.124335-298.module",
+          "bytes": 4505,
+          "sha256": "0ffd1012052e499ac30ea3e3d4a73b77e4139f6ecc3493c5493b80f278b1d2b6",
+          "retained": true
+        },
+        {
+          "url": "https://central.sonatype.com/repository/maven-snapshots/com/eignex/koblas-macosarm64/0.1.1-SNAPSHOT/koblas-macosarm64-0.1.1-20261027.124335-298-sources.jar",
+          "name": "koblas-macosarm64-0.1.1-20261027.124335-298-sources.jar",
+          "bytes": 220759,
+          "sha256": "6bff5cc6eaf3563adb24a41c52bf900a4f26cc3dd914c110fca3e83d0672336e",
+          "retained": false
+        }
+      ]
+    }
+  ]
+}

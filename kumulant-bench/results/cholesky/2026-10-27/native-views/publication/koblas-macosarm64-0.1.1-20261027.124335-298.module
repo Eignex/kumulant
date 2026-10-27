@@ -1,0 +1,138 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "url": "../../koblas/0.1.1-SNAPSHOT/koblas-0.1.1-SNAPSHOT.module",
+    "group": "com.eignex",
+    "module": "koblas",
+    "version": "0.1.1-SNAPSHOT",
+    "attributes": {
+      "org.gradle.status": "integration"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.7.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "macosArm64ApiElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-api",
+        "org.jetbrains.kotlin.native.target": "macos_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-core",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.4.21"
+          }
+        },
+        {
+          "group": "com.eignex",
+          "module": "kbuild-platform",
+          "version": {
+            "requires": "1.3.5"
+          },
+          "attributes": {
+            "org.gradle.category": "platform"
+          },
+          "endorseStrictVersions": true
+        }
+      ],
+      "files": [
+        {
+          "name": "koblas-macosArm64Main-0.1.1-SNAPSHOT.klib",
+          "url": "koblas-macosarm64-0.1.1-SNAPSHOT.klib",
+          "size": 860526,
+          "sha512": "35587231338f684a04174a27c5c374727fd97380a4f5439ee2279ba32511f8ad412884d5f2bacf7db96fef6241ba982ba13292cc7759bf71cd9814feae22d882",
+          "sha256": "35cd658ed631d2848d52f16153b9de7777070345918badf33dcece2adce07a10",
+          "sha1": "0ea2b9e952f3ce1adf197510daab918fdfb689e2",
+          "md5": "dd1ddb11eb35bc04657a0ef50244843c"
+        }
+      ]
+    },
+    {
+      "name": "macosArm64SourcesElements-published",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-runtime",
+        "org.jetbrains.kotlin.native.target": "macos_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "files": [
+        {
+          "name": "koblas-macosarm64-0.1.1-SNAPSHOT-sources.jar",
+          "url": "koblas-macosarm64-0.1.1-SNAPSHOT-sources.jar",
+          "size": 220759,
+          "sha512": "b783705a6b273ac28a3e7931c6898f651f879a8e0ca23aa3646b061163bbdbf8cb4daa3949b3e8cd9931745ba770853f025b3da579261e48c6b6229259cb7498",
+          "sha256": "6bff5cc6eaf3563adb24a41c52bf900a4f26cc3dd914c110fca3e83d0672336e",
+          "sha1": "3d6e12e63e36818cc401ad562ca5fb59e0ff485c",
+          "md5": "a6f9450304285b5499a0ea0a24b6dcc5"
+        }
+      ]
+    },
+    {
+      "name": "macosArm64MetadataElements-published",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.jvm.environment": "non-jvm",
+        "org.gradle.usage": "kotlin-metadata",
+        "org.jetbrains.kotlin.native.target": "macos_arm64",
+        "org.jetbrains.kotlin.platform.type": "native"
+      },
+      "dependencies": [
+        {
+          "group": "org.jetbrains.kotlinx",
+          "module": "kotlinx-serialization-core",
+          "version": {
+            "requires": "1.12.0"
+          }
+        },
+        {
+          "group": "org.jetbrains.kotlin",
+          "module": "kotlin-stdlib",
+          "version": {
+            "requires": "2.4.21"
+          }
+        },
+        {
+          "group": "com.eignex",
+          "module": "kbuild-platform",
+          "version": {
+            "requires": "1.3.5"
+          },
+          "attributes": {
+            "org.gradle.category": "platform"
+          },
+          "endorseStrictVersions": true
+        }
+      ],
+      "files": [
+        {
+          "name": "koblas-macosarm64-0.1.1-SNAPSHOT-metadata.jar",
+          "url": "koblas-macosarm64-0.1.1-SNAPSHOT-metadata.jar",
+          "size": 261,
+          "sha512": "1487e5a20c9e4d74f298e07c42e96a61be11b7a768c3fbc199ee138cd68e1fc2267d1cfe3f11f288acc05df755315344d052cc5f6f751f126ab4fe1caa5125ea",
+          "sha256": "c6deada2fac53b8ea6523dbda77597b128006674616f140f04df23264c6d1aa3",
+          "sha1": "2ad14aed781c4a73ed4dbb421966d408a0a06686",
+          "md5": "f43436d6bec321290f6af228ad602604"
+        }
+      ]
+    }
+  ]
+}

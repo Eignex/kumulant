@@ -1,0 +1,17 @@
+{
+  "copy": "02d1f61fdbc2615bab0826cc766dc5d03b20e54e",
+  "view": "4d740908a9cd3a95d35abbec2a67ba5be4510e6c",
+  "main_base": "974eee93231ae7fd7a2b1d768c36cc05f521ab94",
+  "koblas_merge": "c2952c2daa28ab48acd0d23a4154098417f47b5a",
+  "koblas_published_source": "9b9d9dc98cffc76262ad8ff49574c74e144b9511",
+  "cohort": {
+    "root": "0.1.1-20261027.124722-275",
+    "jvm": "0.1.1-20261027.124722-278",
+    "linuxx64": "0.1.1-20261027.124722-274",
+    "linuxarm64": "0.1.1-20261027.124722-275",
+    "macosarm64": "0.1.1-20261027.124335-298"
+  },
+  "copy_job": 8775,
+  "view_job": 8778,
+  "comparison": "Same published cohort, current call-local scratch and seed-139 fixtures; production copying versus borrowed trailing regions."
+}

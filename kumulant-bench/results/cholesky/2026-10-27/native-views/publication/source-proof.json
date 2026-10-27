@@ -1,0 +1,101 @@
+{
+  "merge": "c2952c2daa28ab48acd0d23a4154098417f47b5a",
+  "sources": [
+    {
+      "artifact": "koblas",
+      "source": "commonMain/com/eignex/koblas/dense/HostDenseBlas.kt",
+      "sha256": "fc32f72a3ba2498598517f6354bb260216e13a9f471120f52fcca2149b24b40d",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas",
+      "source": "commonMain/com/eignex/koblas/vendor/RegionBlas.kt",
+      "sha256": "41839aa41bf056a2092a624a7601e47910c9806c686ee41151169b9f56d43b2c",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas",
+      "source": "nativeMain/com/eignex/koblas/vendor/NativeOperands.kt",
+      "sha256": "518c05730ea254c306f9260f7765a6f9590a48b0c9cc5e75bf42bd1fe02b7bdb",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas",
+      "source": "nativeMain/com/eignex/koblas/vendor/NativeVendorBlas.kt",
+      "sha256": "e8f52767d926dd314efd2e338bcdea7508decfcc5a3d08b7c72977e5c596c56c",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-linuxx64",
+      "source": "commonMain/com/eignex/koblas/dense/HostDenseBlas.kt",
+      "sha256": "fc32f72a3ba2498598517f6354bb260216e13a9f471120f52fcca2149b24b40d",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-linuxx64",
+      "source": "commonMain/com/eignex/koblas/vendor/RegionBlas.kt",
+      "sha256": "41839aa41bf056a2092a624a7601e47910c9806c686ee41151169b9f56d43b2c",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-linuxx64",
+      "source": "nativeMain/com/eignex/koblas/vendor/NativeOperands.kt",
+      "sha256": "518c05730ea254c306f9260f7765a6f9590a48b0c9cc5e75bf42bd1fe02b7bdb",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-linuxx64",
+      "source": "nativeMain/com/eignex/koblas/vendor/NativeVendorBlas.kt",
+      "sha256": "e8f52767d926dd314efd2e338bcdea7508decfcc5a3d08b7c72977e5c596c56c",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-linuxarm64",
+      "source": "commonMain/com/eignex/koblas/dense/HostDenseBlas.kt",
+      "sha256": "fc32f72a3ba2498598517f6354bb260216e13a9f471120f52fcca2149b24b40d",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-linuxarm64",
+      "source": "commonMain/com/eignex/koblas/vendor/RegionBlas.kt",
+      "sha256": "41839aa41bf056a2092a624a7601e47910c9806c686ee41151169b9f56d43b2c",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-linuxarm64",
+      "source": "nativeMain/com/eignex/koblas/vendor/NativeOperands.kt",
+      "sha256": "518c05730ea254c306f9260f7765a6f9590a48b0c9cc5e75bf42bd1fe02b7bdb",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-linuxarm64",
+      "source": "nativeMain/com/eignex/koblas/vendor/NativeVendorBlas.kt",
+      "sha256": "e8f52767d926dd314efd2e338bcdea7508decfcc5a3d08b7c72977e5c596c56c",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-macosarm64",
+      "source": "commonMain/com/eignex/koblas/dense/HostDenseBlas.kt",
+      "sha256": "fc32f72a3ba2498598517f6354bb260216e13a9f471120f52fcca2149b24b40d",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-macosarm64",
+      "source": "commonMain/com/eignex/koblas/vendor/RegionBlas.kt",
+      "sha256": "41839aa41bf056a2092a624a7601e47910c9806c686ee41151169b9f56d43b2c",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-macosarm64",
+      "source": "nativeMain/com/eignex/koblas/vendor/NativeOperands.kt",
+      "sha256": "518c05730ea254c306f9260f7765a6f9590a48b0c9cc5e75bf42bd1fe02b7bdb",
+      "matches_merge": true
+    },
+    {
+      "artifact": "koblas-macosarm64",
+      "source": "nativeMain/com/eignex/koblas/vendor/NativeVendorBlas.kt",
+      "sha256": "e8f52767d926dd314efd2e338bcdea7508decfcc5a3d08b7c72977e5c596c56c",
+      "matches_merge": true
+    }
+  ]
+}
