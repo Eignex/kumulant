@@ -11,6 +11,7 @@ internal object CholeskyFixtures {
     const val NOISE_VARIANCE = 1e-6
     const val JITTER = 1e-10
     const val FITTING_ROUND_SIZE = 25
+    const val FITTING_ROUND_MAX_ORDER = 512
 
     fun matrix(matrixCase: String): DenseMatrix {
         val (kind, order) = matrixCase.split(':')

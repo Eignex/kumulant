@@ -4,8 +4,12 @@ import com.eignex.koblas.dense.DenseCall
 import com.eignex.koblas.dense.DenseMatrixOperation
 import com.eignex.koblas.koblas
 
-fun main() {
+fun main(args: Array<String>) {
     reportCholeskyBackend()
+    if (args.isNotEmpty()) {
+        analyzeCholeskyStress(args.singleOrNull()?.toIntOrNull() ?: error("Usage: choleskyQuality [STRESS_ORDER]"))
+        return
+    }
     for (size in listOf(128, 512, 1024)) {
         val width = minOf(64, size / 4)
         for (borrowed in listOf(false, true)) {
