@@ -1,0 +1,4 @@
+copy-candidate onemkl: /home/rasmus/intel/oneapi/mkl/latest/lib/libmkl_rt.so.3 ; [  PASSED  ] 42 tests.
+copy-candidate openblas: /usr/lib/x86_64-linux-gnu/libopenblas.so.0 ; [  PASSED  ] 42 tests.
+view-candidate onemkl: /home/rasmus/intel/oneapi/mkl/latest/lib/libmkl_rt.so.3 ; [  PASSED  ] 42 tests.
+view-candidate openblas: /usr/lib/x86_64-linux-gnu/libopenblas.so.0 ; [  PASSED  ] 42 tests.
