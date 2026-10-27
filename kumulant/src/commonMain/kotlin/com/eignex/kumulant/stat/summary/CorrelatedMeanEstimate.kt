@@ -26,11 +26,10 @@ fun estimateCorrelatedMean(values: Vector, covariance: CholeskyFactor): Correlat
     require(observations.all { it.isFinite() })
     val anchor = estimateMean(values).mean
     val right = DenseMatrix.wrap(
-        values.size,
-        2,
+        values.size, 2,
         DoubleArray(2 * values.size) {
-            if (it < values.size) 1.0 else observations[it - values.size] - anchor
-        },
+        if (it < values.size) 1.0 else observations[it - values.size] - anchor
+    }
     )
     val whitened = covariance.solveLower(right).values
     val precision = koblas.vectorKernels.dot(whitened, 0, whitened, 0, values.size)
