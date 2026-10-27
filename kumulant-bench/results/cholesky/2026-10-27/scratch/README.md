@@ -66,7 +66,7 @@ Some order-128 operations allocate 280 B more, which is the empty workspace: `so
 `extended` 128x16. At order 128, `solve` still drops from 98409 to 57697 B/op on scalar and from 114824
 to 65904 on SIMD, because its two substitutions share scratch.
 
-**Throughput.** All 72 matched timing rows (ten samples per arm) has overlapping 99.9% intervals. Candidate over
+**Throughput.** All 72 matched timing rows (ten samples per arm) have overlapping 99.9% intervals. Candidate over
 baseline ratios range from 0.90 to 1.08 and go both ways. This includes the unchanged
 `factorWithWorkspace` and `solveMatrixInto` controls, which range from 0.90 to 1.03. So the capture
 shows **no measurable throughput change in either direction**. It establishes an allocation reduction,
