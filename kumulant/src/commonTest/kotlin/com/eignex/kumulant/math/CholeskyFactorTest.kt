@@ -122,9 +122,9 @@ class CholeskyFactorTest {
                         DoubleArray(order * order) { if (it % order == it / order) 2.25 else 0.25 },
                     )
                     val expected = full.factorCholesky().lowerFactor().values
-    
+
                     val actual = factor.extended(cross, diagonal, workspace).lowerFactor().values
-    
+
                     var error = 0.0
                     for (i in actual.indices) error = maxOf(error, abs(actual[i] - expected[i]))
                     assertTrue(error < 1e-12, "size=$size added=$added pooled=${workspace != null} error=$error")
