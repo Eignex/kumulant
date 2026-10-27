@@ -1,0 +1,2 @@
++--- com.eignex:koblas:{strictly 0.1.1-20261026.172701-271} -> project ':koblas-candidate:koblas'
++--- com.eignex:koblas:{strictly 0.1.1-20261026.172701-271} -> project ':koblas-candidate:koblas'

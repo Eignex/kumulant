@@ -1,0 +1,36 @@
+{
+  "name": "cholesky-native-packing-view-candidate",
+  "repository": "Eignex/kumulant",
+  "description": "Native borrowed-view arm built against Koblas source 5eb646d1 (host regions passed in place) through a pinned composite substitution; same definition as the matched copying and view arms.",
+  "base": {
+    "ref": "98adc59842dc6924ff138cab0e614751b1a25044",
+    "timeout": "3600000"
+  },
+  "nodeTags": {
+    "require": [
+      "arch:x86_64",
+      "simd:avx2"
+    ],
+    "exclude": []
+  },
+  "profile": {
+    "main": "com.eignex.kumulant.bench.CholeskyLabProfileKt",
+    "buildTasks": [
+      ":kumulant-bench:prepareBenchmark",
+      ":kumulant-bench:linkCholeskyQualityReleaseExecutableLinuxX64",
+      ":kumulant-bench:linkLinuxX64BenchmarkReleaseExecutableLinuxX64"
+    ],
+    "classpath": [
+      "kumulant-bench/build/classes/kotlin/jvm/main",
+      "kumulant/build/classes/kotlin/jvm/main",
+      "kumulant-bench/build/benchmarks/jvm/jars/kumulant-bench-jvm-jmh-JMH.jar"
+    ],
+    "args": [
+      "--native-prepared",
+      "-Pbench.filter=.*Cholesky(FactorBenchmark\\.(factor|factorWithWorkspace)|WorkloadBenchmark\\.(factorSolveLogDeterminant|factorSolveLogDeterminantWithWorkspace|fittingRound|fittingRoundWithWorkspace))$",
+      "-Pbench.param.matrixCase=precision:32,precision:128,rbf:512,rbf:1024",
+      "-Pbench.param.historySize=512"
+    ]
+  },
+  "parallel": 1
+}
