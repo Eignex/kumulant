@@ -154,3 +154,22 @@ Submit a committed trusted ref with `profile.main` set to
 The numerical benchmark tasks use JDK 25. Retain Lab's selected SHA, hardware,
 resource limits, and raw samples; node capability tags alone do not identify
 which instructions or backend executed.
+
+## Order-2048 stress
+
+Stress checks are opt-in. `BenchmarkMainKt --cholesky-stress 2048` and
+`choleskyQuality.kexe 2048` factor seeded RBF/Matérn covariances with and without a
+workspace, then report reconstruction and backward errors for allocating, destination
+and aliased solves. They also verify input/right-hand-side immutability and factor
+ownership. Order-2032 extensions by 16 entries and eight rank updates are compared with
+full refactorization, using the conservative kernel tolerance above. Any failed check
+exits nonzero. Pass `--stress-order=2048` to `CholeskyLabProfileKt` to run them before
+timing on each JVM backend (`stress.txt`) or a prepared Native capture (`native-stress.txt`).
+
+One order-2048 matrix occupies 32 MiB, and each owned factor needs another 32 MiB.
+Stress timings use the ordinary `matrixCase`, `shape` and `historySize` parameters,
+for example `-p matrixCase=rbf:2048 -p shape=2048x256 -p historySize=2048`. Fitting
+rounds hold 25 distinct covariances, so `CholeskyWorkloadBenchmark` builds them only
+up to history size 512; larger sizes measure single factor/solve/log-determinant
+evaluations and reject `fittingRound` methods. Keep stress timings separate from
+small-shape controls when reporting.
