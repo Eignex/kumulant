@@ -16,7 +16,8 @@ On Kotlin/Native the default Koblas engine composes the installed host BLAS. Bef
   time through the interface `get`, with bounds checks on every entry.
 - After the library call, it copied the triangle back through `set` in the same way.
 
-Kotlin/Native does not vectorise those loops. The copying arm instead moves whole columns with `copyInto`
+Every entry of the panel and triangle costs an interface call and a bounds check, in both directions. The
+copying arm instead moves whole columns with `copyInto`
 and calls the contiguous `syrk`, which pins the arrays in place. Both arms reach the same vendor entry point.
 The retained preflights show the difference as the `host-stage/region` route component on the borrowed call.
 CBLAS already takes a pointer and a leading dimension, so the packing bought nothing.
@@ -36,7 +37,7 @@ only a test.
 All runs below build Kumulant `dc1fa17` against Koblas `5eb646d1` source through `--include-build`.
 [Resolution](validation/composite-resolution.txt) shows `com.eignex:koblas` replaced by the included
 project in both the JVM runtime and the linuxX64 klib configurations. No `koblas-jvm` or `koblas-linuxx64`
-snapshot coordinate is resolved. No published snapshot contains the change yet, so this exact-source
+snapshot coordinate is resolved. No published snapshot was used for this validation; this exact-source
 composite is the evidence, and no dependency pin is changed.
 
 - **Production copying:** all 42 Cholesky unit tests (20 `CholeskyTest`, 22 `CholeskyFactorTest`) pass on
@@ -76,7 +77,7 @@ build unless `HEAD` matches it and the tree is clean.
 At 12:22 UTC on 2026-10-27 this report was finalized while all four jobs were still `RUNNING`. None had
 committed a preparation or started a measurement case. Jobs 8713 and 8714 had lost four preparations,
 8715 and 8716 three, each `lost:preparation` / `lost:infrastructure:failed` after roughly one to eight
-minutes. The jobs were left queued for continuation; their job IDs are above. During the same
+minutes. The jobs were left active for continuation; their job IDs are above. During the same
 period, other Kumulant profile jobs on the pool failed preparation at most once and then committed in about
 6.5 minutes. The probable difference is that these arms also compile Koblas from source during preparation.
 The Lab exposes no preparation log, so that cause is not confirmed. No timing row exists, and none is
