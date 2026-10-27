@@ -7,6 +7,7 @@ fun main(arguments: Array<String>) {
     val args = arguments.filterNot { it.startsWith("--stress-order=") }
     val output = File(requireNotNull(System.getenv("OUT")) { "Eignex Lab supplies OUT" }, "report")
     check(output.mkdirs()) { "Report directory already exists: $output" }
+    File("kumulant-bench/build/benchmark-dependencies.txt").copyTo(File(output, "dependencies.txt"))
     val java = File(System.getProperty("java.home"), "bin/java").absolutePath
     val classpath = System.getProperty("java.class.path")
     val hardware = ProcessBuilder("lscpu").redirectErrorStream(true).start()
