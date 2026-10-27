@@ -1,4 +1,5 @@
 import org.gradle.jvm.tasks.Jar
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
@@ -96,11 +97,14 @@ tasks.withType<Test>().configureEach {
 
 abstract class PrepareBenchmark : DefaultTask() {
     @get:Input abstract val javaExecutable: Property<String>
+    @get:Input abstract val dependencyCoordinates: ListProperty<String>
     @get:OutputFile abstract val javaFile: RegularFileProperty
+    @get:OutputFile abstract val dependencyFile: RegularFileProperty
 
     @TaskAction
     fun writeJava() {
         javaFile.get().asFile.apply { parentFile.mkdirs(); writeText(javaExecutable.get() + "\n") }
+        dependencyFile.get().asFile.writeText(dependencyCoordinates.get().joinToString("\n", postfix = "\n"))
     }
 }
 
@@ -112,6 +116,17 @@ tasks.register<PrepareBenchmark>("prepareBenchmark") {
         languageVersion.set(JavaLanguageVersion.of(benchJdk))
     }.map { it.executablePath.asFile.absolutePath })
     javaFile.set(layout.buildDirectory.file("benchmark-java"))
+    dependencyFile.set(layout.buildDirectory.file("benchmark-dependencies.txt"))
+    for (name in listOf("jvmRuntimeClasspath", "linuxX64CompileKlibraries")) {
+        dependencyCoordinates.addAll(configurations.named(name).map { configuration ->
+            configuration.incoming.resolutionResult.allComponents
+                .mapNotNull { it.id as? ModuleComponentIdentifier }
+                .filter { it.group == "com.eignex" && it.module.startsWith("koblas") }
+                .map { "$name=${it.group}:${it.module}:${it.version}" }
+                .sorted()
+                .also { check(it.isNotEmpty()) { "Koblas is missing from $name" } }
+        })
+    }
 }
 
 tasks.withType<Jar>().matching { it.name == "jvmBenchmarkJar" }.configureEach {
