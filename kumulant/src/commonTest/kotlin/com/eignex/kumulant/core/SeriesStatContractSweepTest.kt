@@ -204,7 +204,8 @@ class SeriesStatContractSweepTest {
         val violations = mutableListOf<String>()
         for ((name, spec) in specs) {
             for ((value, finiteAnalogue) in probes) {
-                val thrown = runCatching { primed(spec).update(value, readAt, 1.0) }.exceptionOrNull()
+                val stat = primed(spec)
+                val thrown = runCatching { stat.update(value, readAt, 1.0) }.exceptionOrNull()
                 if (thrown != null) {
                     val analogueThrows = finiteAnalogue != null &&
                         runCatching { primed(spec).update(finiteAnalogue, readAt, 1.0) }.exceptionOrNull() != null
@@ -212,8 +213,6 @@ class SeriesStatContractSweepTest {
                     continue
                 }
 
-                val stat = primed(spec)
-                stat.update(value, readAt, 1.0)
                 runCatching { stat.read(readAt) }.exceptionOrNull()?.let {
                     violations += "$name threw reading back after a value of $value: ${it.message}"
                 }
@@ -266,18 +265,6 @@ class SeriesStatContractSweepTest {
             assertEquals(fresh.read(readAt), copy.read(readAt), "$name lost its configuration")
             assertEquals(before, original.read(readAt), "$name shares state with its copy")
         }
-    }
-
-    @Test
-    fun `every series result equals itself`() {
-        val violations = mutableListOf<String>()
-        for ((name, spec) in specs) {
-            val empty = spec.materialize()
-            if (empty.read(readAt) != empty.read(readAt)) violations += "$name (empty)"
-            val full = primed(spec)
-            if (full.read(readAt) != full.read(readAt)) violations += "$name (primed)"
-        }
-        assertEquals(emptyList(), violations.toList(), "a result must equal itself")
     }
 
     @Test

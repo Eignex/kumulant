@@ -56,6 +56,17 @@ kotlin {
     }
 }
 
+// Dependency, generated serializer and test harness bytecode is outside this module's coverage report.
+kover {
+    currentProject {
+        instrumentation {
+            includedClasses.add("com.eignex.kumulant.*")
+            excludedClasses.addAll("com.eignex.kumulant.*Test", "com.eignex.kumulant.*Test\$*")
+            excludedClasses.add("com.eignex.kumulant.*\$\$serializer")
+        }
+    }
+}
+
 // Timestamped KMP roots redirect to mutable platform snapshots. Publish constraints so downstream
 // Gradle consumers resolve the same binaries as this build.
 dependencies {

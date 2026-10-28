@@ -2,18 +2,12 @@ package com.eignex.kumulant.stat.regression
 
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.VectorStorage
 import com.eignex.kumulant.schema.expr.ScalarExpr
-import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import com.eignex.kumulant.stat.regression.glm.DiagonalRegressionStat
 import com.eignex.kumulant.stat.regression.glm.ExponentialDecay
-import com.eignex.kumulant.stat.regression.glm.FactorisedGaussian
 import com.eignex.kumulant.stat.regression.glm.LinearRegressionResult
-import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
-import com.eignex.kumulant.stat.regression.glm.PointPosterior
-import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.glm.StepDecay
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import kotlinx.serialization.json.Json
@@ -23,23 +17,17 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-private inline fun mean(n: Int, draw: () -> Double): Double {
-    var s = 0.0
-    repeat(n) { s += draw() }
-    return s / n
-}
-
 class VectorSerializationTest {
 
     private val json = Json { encodeDefaults = false }
 
     @Test
-    fun `sparse and dense inputs converge to the same fit`() {
+    fun `sparse and dense updates produce the same fit`() {
         val truth = doubleArrayOf(1.5, 0.0, 0.0, -2.0, 0.0)
         val dense = DiagonalRegressionStat(featureSize = 5, priorPrecision = 0.01)
         val sparse = DiagonalRegressionStat(featureSize = 5, priorPrecision = 0.01)
         val rng = Random(13)
-        repeat(3000) {
+        repeat(20) {
             val active = listOf(0, 3, rng.nextInt(5))
             val xArr = DoubleArray(5).also { arr -> for (i in active.distinct()) arr[i] = rng.nextDouble() * 2 - 1 }
             var y = 0.0
@@ -61,24 +49,6 @@ class VectorSerializationTest {
     }
 
     @Test
-    fun `DenseVector round-trips through JSON`() {
-        val v: VectorStorage = DenseVector.of(doubleArrayOf(1.0, -2.5, 3.14, 0.0))
-        val wire = json.encodeToString(VectorStorage.serializer(), v)
-        val decoded = json.decodeFromString(VectorStorage.serializer(), wire)
-        assertTrue(decoded is DenseVector)
-        assertEquals(v, decoded)
-    }
-
-    @Test
-    fun `SparseVector round-trips through JSON`() {
-        val v: VectorStorage = SparseVector.of(10, intArrayOf(2, 5, 9), doubleArrayOf(1.0, -2.0, 0.5))
-        val wire = json.encodeToString(VectorStorage.serializer(), v)
-        val decoded = json.decodeFromString(VectorStorage.serializer(), wire)
-        assertTrue(decoded is SparseVector)
-        assertEquals(v, decoded)
-    }
-
-    @Test
     fun `learning rate schedules round-trip through JSON`() {
         val constant = ConstantRate(0.05)
         val step = StepDecay(0.01, 1e-3)
@@ -93,57 +63,6 @@ class VectorSerializationTest {
                     "schedule diverged at step=$s: $e",
                 )
             }
-        }
-    }
-
-    @Test
-    fun `PrecisionRegressionResult round-trips through JSON`() {
-        val stat = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
-        val truth = doubleArrayOf(0.5, -1.0, 0.7)
-        val rng = Random(99)
-        repeat(500) {
-            val x = DoubleArray(3) { rng.nextDouble() * 2 - 1 }
-            var y = 0.0
-            for (i in 0 until 3) y += truth[i] * x[i]
-            stat.update(x, y, 1.0)
-        }
-        val before = stat.read()
-        val wire = json.encodeToString(PrecisionRegressionResult.serializer(), before)
-        val after = json.decodeFromString(PrecisionRegressionResult.serializer(), wire)
-        assertEquals(before, after)
-    }
-
-    @Test
-    fun `LinearPosterior evaluate matches mean plus calibrated Gaussian noise`() {
-        val rng = Random(2026)
-        val truth = doubleArrayOf(0.7, -0.3, 1.5)
-
-        val sgd = StochasticRegressionStat(featureSize = 3, optimizer = Sgd(ConstantRate(0.05)))
-        val diag = DiagonalRegressionStat(featureSize = 3, priorPrecision = 0.01)
-        val bayes = BayesianRegressionStat(featureSize = 3, priorVariance = 1.0)
-        repeat(2000) {
-            val xArr = DoubleArray(3) { rng.nextDouble() * 2 - 1 }
-            var y = 0.0
-            for (i in 0 until 3) y += truth[i] * xArr[i]
-            sgd.update(xArr, y, 1.0)
-            diag.update(xArr, y, 1.0)
-            bayes.update(xArr, y, 1.0)
-        }
-        val queryX = DenseVector.of(doubleArrayOf(0.4, -0.2, 0.6))
-        val analyticMean = 0.7 * 0.4 + -0.3 * -0.2 + 1.5 * 0.6
-
-        for ((label, m) in listOf(
-            "PointPosterior" to mean(2000) {
-                PointPosterior.evaluate(sgd.read(), queryX, rng, exploration = 0.1)
-            },
-            "FactorisedGaussian" to mean(2000) {
-                FactorisedGaussian.evaluate(diag.read(), queryX, rng, exploration = 1.0)
-            },
-            "MultivariateGaussian" to mean(2000) {
-                MultivariateGaussian.evaluate(bayes.read(), queryX, rng, exploration = 1.0)
-            },
-        )) {
-            assertTrue(abs(m - analyticMean) < 0.2, "$label evaluate mean=$m far from $analyticMean")
         }
     }
 

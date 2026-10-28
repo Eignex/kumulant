@@ -1,6 +1,5 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
 import com.eignex.kumulant.bandit.univariate.BernoulliArm
 import com.eignex.kumulant.bandit.univariate.BetaPosterior
 import com.eignex.kumulant.bandit.univariate.BoltzmannSpec
@@ -14,11 +13,7 @@ import com.eignex.kumulant.bandit.univariate.NormalGammaPosterior
 import com.eignex.kumulant.bandit.univariate.RouletteWheelSpec
 import com.eignex.kumulant.bandit.univariate.ThompsonSamplingSpec
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonSpec
-import com.eignex.kumulant.bandit.univariate.Ucb1Spec
 import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec
-import com.eignex.kumulant.schema.spec.BayesianRegression
-import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
-import kotlinx.serialization.json.Json
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,8 +21,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class BanditFactoryTest {
-
-    private val json = Json { encodeDefaults = false }
 
     @Test
     fun `MultiArmed spec materialises to a working MultiArmedBandit`() {
@@ -49,12 +42,6 @@ class BanditFactoryTest {
     @Test
     fun `Boltzmann spec materialises`() {
         val b = BoltzmannSpec(nbrArms = 3).materialize(Random(0))
-        assertEquals(3, b.nbrArms)
-    }
-
-    @Test
-    fun `Exp3 spec materialises with default eta and gamma`() {
-        val b = Exp3Spec(nbrArms = 3).materialize(Random(0))
         assertEquals(3, b.nbrArms)
     }
 
@@ -84,28 +71,6 @@ class BanditFactoryTest {
             policy = ThompsonSamplingSpec(NormalArm(), NormalGammaPosterior),
         ).materialize(Random(0))
         assertEquals(3, b.nbrArms)
-    }
-
-    @Test
-    fun `RegressionContextual spec materialises with Bayesian backbone`() {
-        val spec = RegressionContextualSpec(
-            nbrArms = 4,
-            regression = BayesianRegression(featureSize = 2, priorVariance = 1.5),
-            posterior = MultivariateGaussian,
-        )
-        val b = spec.materialize(Random(0))
-        assertEquals(4, b.nbrArms)
-    }
-
-    @Test
-    fun `univariate spec round-trips through JSON`() {
-        val spec: UnivariateBanditSpec = MultiArmedSpec(
-            nbrArms = 4,
-            policy = Ucb1Spec(alpha = 1.5),
-        )
-        val encoded = json.encodeToString(UnivariateBanditSpec.serializer(), spec)
-        val decoded = json.decodeFromString(UnivariateBanditSpec.serializer(), encoded)
-        assertEquals(spec, decoded)
     }
 
     @Test

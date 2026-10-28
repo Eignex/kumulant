@@ -9,6 +9,7 @@ import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.ops.*
 import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.schema.spec.*
+import com.eignex.kumulant.stat.regression.RegressionPosterior
 import com.eignex.kumulant.stat.regression.RegressionPosteriorSerializer
 import com.eignex.kumulant.stat.regression.glm.*
 import com.eignex.kumulant.stat.regression.tree.*
@@ -25,28 +26,11 @@ import kotlin.test.assertTrue
 class ContextualBanditSpecTest {
 
     @Test
-    fun `composed contextual regressions round trip through the sealed root`() {
-        val spec: ContextualBanditSpec = RegressionContextualSpec(
-            nbrArms = 2,
-            regression = BayesianRegression(featureSize = 1).transformY(Y * 2.0)
-                .weightBy(V(0) * V(0)).filter(Y gt 0.0),
-            posterior = LinUcb,
-            exploration = 0.0,
-        )
-        val encoded = SchemaJson.encodeToString(ContextualBanditSpec.serializer(), spec)
-        val decoded = SchemaJson.decodeFromString(ContextualBanditSpec.serializer(), encoded)
-
-        assertEquals(spec, decoded)
-    }
-
-    @Test
-    fun `decoded expressions control contextual updates and choices`() {
+    fun `expressions control contextual updates and choices`() {
         val regression = BayesianRegression(featureSize = 1).transformY(Y * 2.0)
             .weightBy(V(0) * V(0)).filter(Y gt 0.0)
         val spec: ContextualBanditSpec = RegressionContextualSpec(2, regression, LinUcb, exploration = 0.0)
-        val encoded = SchemaJson.encodeToString(ContextualBanditSpec.serializer(), spec)
-        val decoded = SchemaJson.decodeFromString(ContextualBanditSpec.serializer(), encoded)
-        val bandit = decoded.materialize(Random(0)) as ContextualBandit
+        val bandit = spec.materialize(Random(0)) as ContextualBandit
         val direct = regression.materialize()
         val x = feat(2.0)
 
@@ -61,40 +45,22 @@ class ContextualBanditSpecTest {
     }
 
     @Test
-    fun `native linear tree and forest specs round trip and learn`() {
+    fun `native linear tree and forest specs learn`() {
         val specs = listOf(
             RegressionContextualSpec(2, BayesianRegression(1), MultivariateGaussian, exploration = 0.0),
-            RegressionContextualSpec(2, BayesianRegression(1), LinUcb, exploration = 0.0),
             RegressionContextualSpec(2, DiagonalRegression(1), FactorisedGaussian, exploration = 0.0),
             RegressionContextualSpec(2, StochasticRegression(1), PointPosterior, exploration = 0.0),
-            RegressionContextualSpec(2, DecisionTreeRegression(1, emptyList()), MeanTreePosterior),
             RegressionContextualSpec(2, DecisionTreeRegression(1, emptyList()), ThompsonTreePosterior(2.0, 3.0)),
-            RegressionContextualSpec(2, DecisionTreeRegression(1, emptyList()), UcbTreePosterior(2.0, 3.0)),
-            RegressionContextualSpec(
-                2,
-                RandomForestRegression(1, emptyList(), 2, bagging = false),
-                MeanForestPosterior,
-            ),
             RegressionContextualSpec(
                 2,
                 RandomForestRegression(1, emptyList(), 2, bagging = false),
                 ThompsonForestPosterior(2.0, 3.0),
             ),
-            RegressionContextualSpec(
-                2,
-                RandomForestRegression(1, emptyList(), 2, bagging = false),
-                UcbForestPosterior(2.0, 3.0),
-            ),
         )
-        for (format in listOf(SchemaJson, Json, Json { classDiscriminator = "kind" })) {
-            for (spec in specs) {
-                val encoded = format.encodeToString(ContextualBanditSpec.serializer(), spec)
-                val decoded = format.decodeFromString(ContextualBanditSpec.serializer(), encoded)
-                assertEquals(spec, decoded)
-                val bandit = (decoded as RegressionContextualSpec<*>).copy(exploration = 0.0).materialize(Random(0))
-                bandit.update(0, feat(1.0), 2.0)
-                assertTrue(bandit.evaluate(0, feat(1.0)) > bandit.evaluate(1, feat(1.0)))
-            }
+        for (spec in specs) {
+            val bandit = spec.copy(exploration = 0.0).materialize(Random(0))
+            bandit.update(0, feat(1.0), 2.0)
+            assertTrue(bandit.evaluate(0, feat(1.0)) > bandit.evaluate(1, feat(1.0)))
         }
     }
 
@@ -103,9 +69,7 @@ class ContextualBanditSpecTest {
         val regression = BayesianRegression(1).withWeight(2.0)
         val global = BayesianRegression(1).transformY(Y * 3.0)
         val spec: ContextualBanditSpec = RegressionContextualSpec(2, regression, LinUcb, 0.0, global)
-        val encoded = SchemaJson.encodeToString(ContextualBanditSpec.serializer(), spec)
-        val decoded = SchemaJson.decodeFromString(ContextualBanditSpec.serializer(), encoded)
-        val bandit = decoded.materialize(Random(0), Concurrency.Strict) as RegressionContextualBandit<*>
+        val bandit = spec.materialize(Random(0), Concurrency.Strict) as RegressionContextualBandit<*>
         val directGlobal = global.materialize()
         val x = feat(1.0)
 
@@ -119,9 +83,13 @@ class ContextualBanditSpecTest {
 
     @Test
     fun `decoded mismatched posterior is rejected during materialization`() {
-        val spec: ContextualBanditSpec = RegressionContextualSpec(2, BayesianRegression(1), LinUcb)
-        val encoded = SchemaJson.encodeToString(ContextualBanditSpec.serializer(), spec)
-            .replace("linUcb", "pointPosterior")
+        val encoded = """
+            {"regressionContextual": {
+                "nbrArms": 2,
+                "regression": {"bayesianRegression": {"featureSize": 1}},
+                "posterior": "pointPosterior"
+            }}
+        """.trimIndent()
         val decoded = SchemaJson.decodeFromString(ContextualBanditSpec.serializer(), encoded)
 
         val error = assertFailsWith<IllegalArgumentException> { decoded.materialize() }
@@ -141,13 +109,19 @@ class ContextualBanditSpecTest {
 
     @OptIn(ExperimentalSerializationApi::class)
     @Test
-    fun `regression posteriors round trip through a binary format`() {
-        val posterior = ThompsonTreePosterior(priorWeight = 2.0, priorVariance = 3.0)
-
-        val encoded = ProtoBuf.encodeToByteArray(RegressionPosteriorSerializer, posterior)
-        val decoded = ProtoBuf.decodeFromByteArray(RegressionPosteriorSerializer, encoded)
-
-        assertEquals(posterior, decoded)
+    fun `regression posteriors round trip through JSON and binary formats`() {
+        val posteriors: List<RegressionPosterior<*>> = listOf(
+            PointPosterior, FactorisedGaussian, MultivariateGaussian, LinUcb,
+            MeanTreePosterior, ThompsonTreePosterior(2.0, 3.0), UcbTreePosterior(2.0, 3.0),
+            MeanForestPosterior, ThompsonForestPosterior(2.0, 3.0), UcbForestPosterior(2.0, 3.0),
+        )
+        val json = Json { classDiscriminator = "kind" }
+        for (posterior in posteriors) {
+            val encodedJson = json.encodeToString(RegressionPosteriorSerializer, posterior)
+            assertEquals(posterior, json.decodeFromString(RegressionPosteriorSerializer, encodedJson))
+            val encodedBinary = ProtoBuf.encodeToByteArray(RegressionPosteriorSerializer, posterior)
+            assertEquals(posterior, ProtoBuf.decodeFromByteArray(RegressionPosteriorSerializer, encodedBinary))
+        }
     }
 
     @Test

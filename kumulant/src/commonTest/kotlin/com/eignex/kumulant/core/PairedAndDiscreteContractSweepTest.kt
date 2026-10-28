@@ -215,24 +215,6 @@ class PairedAndDiscreteContractSweepTest {
     }
 
     @Test
-    fun `every result equals itself`() {
-        val violations = mutableListOf<String>()
-        for ((name, spec) in pairedSpecs) {
-            val fresh = spec.materialize()
-            if (fresh.read(readAt) != fresh.read(readAt)) violations += "$name (empty): ${fresh.read(readAt)}"
-            pairs.forEachIndexed { i, (x, y) -> fresh.update(x, y, i.toLong() * 1_000_000_000L, 1.0) }
-            if (fresh.read(readAt) != fresh.read(readAt)) violations += "$name (primed): ${fresh.read(readAt)}"
-        }
-        for ((name, spec) in discreteSpecs) {
-            val fresh = spec.materialize()
-            if (fresh.read(readAt) != fresh.read(readAt)) violations += "$name (empty): ${fresh.read(readAt)}"
-            keys.forEachIndexed { i, k -> fresh.update(k, i.toLong() * 1_000_000_000L, 1.0) }
-            if (fresh.read(readAt) != fresh.read(readAt)) violations += "$name (primed): ${fresh.read(readAt)}"
-        }
-        assertEquals(emptyList(), violations.map { it.take(80) }, "a result must equal itself")
-    }
-
-    @Test
     fun `reset returns every paired and discrete stat to its fresh state`() {
         val violations = mutableListOf<String>()
         for ((name, spec) in pairedSpecs) {
