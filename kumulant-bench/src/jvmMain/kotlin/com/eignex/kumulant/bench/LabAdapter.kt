@@ -84,6 +84,12 @@ internal object KumulantLabSuite : BenchSuite {
         val owned = setOf("-rff", "-rf", "-o", "-jvm", "-jvmArgs", "-jvmArgsAppend", "-jvmArgsPrepend", "-h", "-l", "-lp", "-lprof", "-lrf", "-tg")
         require(args.none { it.substringBefore('=') in owned || it.startsWith("-P") }) { "Adapter owns report paths, JVM flags and launch actions; use JVM controls or JMH measurement arguments" }
         val cli = CommandLineOptions(*args.toTypedArray())
+        require(!cli.jvm.hasValue() && !cli.jvmArgs.hasValue() && !cli.jvmArgsAppend.hasValue() && !cli.jvmArgsPrepend.hasValue() &&
+            !cli.output.hasValue() && !cli.result.hasValue() && !cli.resultFormat.hasValue() && !cli.threadGroups.hasValue() &&
+            !cli.shouldHelp() && !cli.shouldList() && !cli.shouldListWithParams() && !cli.shouldListProfilers() && !cli.shouldListResultFormats()) {
+            "Adapter owns JVM flags, report paths and launch actions, including JMH option aliases"
+        }
+        require(cli.shouldFailOnError().orElse(true)) { "Prepared benchmarks require fail-on-error" }
         val threads = cli.threads.orElse(1)
         require(threads > 0) { "Use an explicit positive JMH thread count" }
         require(cli.forkCount.orElse(1) > 0) { "Prepared benchmarks require at least one JMH fork" }
@@ -120,7 +126,7 @@ internal object KumulantLabSuite : BenchSuite {
             if (backend == "native") {
                 require(System.getProperty("os.name") == "Linux" && System.getProperty("os.arch") in setOf("amd64", "x86_64")) { "Native requires Linux x86_64" }
                 Files.createDirectories(report)
-                val preflight = listOf("bash", root.resolve("kumulant-bench/benchmark.sh").toString(), "--prepared", "--quality", "--output", report.resolve("jvm-quality").toString())
+                val preflight = listOf("bash", root.resolve("kumulant-bench/benchmark.sh").toString(), "--prepared", "--scalar", "--quality", "--output", report.resolve("jvm-quality").toString())
                 check(context.process(preflight, "benchmark.log", environment = mapOf(
                     "KUMULANT_BENCH_JAVA" to Path.of(System.getProperty("java.home"), "bin", "java").toString())) == 0) {
                     "JVM reference quality failed before Native execution; inspect benchmark.log and jvm-quality"
@@ -153,6 +159,6 @@ internal object KumulantLabSuite : BenchSuite {
         val artifacts = context.artifacts() + if (Files.isRegularFile(context.outputDirectory.resolve("benchmark.log")))
             listOf(context.artifact("benchmark.log", "text/plain")) else emptyList()
         return BenchResult(case.id, if (errors.isEmpty()) BenchStatus.SUCCESS else BenchStatus.FAILED,
-            measurements.metrics, artifacts, details = measurements.details, message = errors.takeIf { it.isNotEmpty() }?.joinToString("; "))
+            measurements.metrics, artifacts, details = JsonObject(measurements.details + ("parameters" to JsonObject(p.mapValues { JsonPrimitive(it.value) }))), message = errors.takeIf { it.isNotEmpty() }?.joinToString("; "))
     }
 }

@@ -158,7 +158,7 @@ separately. Annotation-defined benchmark modes/units apply unless overridden.
 `benchmark.sh --prepared` uses `KUMULANT_BENCH_JAVA` and the prepared JMH jar
 without Gradle. Each JVM repetition checks the resolved scalar/SIMD backend,
 runs the full serial quality suite and optional Cholesky stress checks before
-its selected operation. The prepared Native runner first runs JVM reference
+its selected operation. The prepared Native runner first runs scalar JVM reference
 quality, then Native Cholesky diagnostics and optional Native stress checks.
 Native fixture tests run during preparation. Native stat/bandit timing is serial;
 the Native concurrency preservation checks and multithreaded timing are unavailable.

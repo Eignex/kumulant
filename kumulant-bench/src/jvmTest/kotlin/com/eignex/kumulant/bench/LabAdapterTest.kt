@@ -60,6 +60,7 @@ class LabAdapterTest {
     @Test fun `prepared JVM requests cannot override backend memory or artifact ownership`() {
         for (argv in listOf(
             "[\"-jvmArgs\",\"--add-modules=jdk.incubator.vector\"]", "[\"-rff\",\"/tmp/escape.json\"]",
+            "[\"--jvmArgsAppend\",\"-Xmx100g\"]", "[\"--rff\",\"escape.json\"]", "[\"-foe\",\"false\"]",
             "[\"-o\",\"escape.log\"]", "[\"-f\",\"0\"]", "[\"-t\",\"max\"]", "[\"-l\"]",
             "[\"-prof\",\"jfr:dir=/tmp/out\"]", "[\"-p\",\"concurrency=None\",\"-t\",\"4\"]",
         )) assertFailsWith<IllegalArgumentException>(argv) { plan("backends" to "scalar", "argv" to argv) }

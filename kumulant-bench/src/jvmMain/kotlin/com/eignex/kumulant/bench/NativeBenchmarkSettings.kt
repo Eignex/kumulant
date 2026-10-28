@@ -1,6 +1,8 @@
 package com.eignex.kumulant.bench
 
 internal class NativeBenchmarkSettings(arguments: List<String>, smoke: Boolean) {
+    private val parameterNames = setOf("name", "policy", "concurrency", "featureSize", "densityPercent", "representation",
+        "samples", "dimensions", "sampling", "historySize", "shape", "scenario", "matrixCase", "extensionShape")
     private val properties = linkedMapOf(
         "filter" to ".*(UpdateThroughputBenchmark.update|BanditBenchmark.cycle)",
         "param.name" to if (smoke) "SumStat" else allSpecs.joinToString(",") { it.name },
@@ -20,7 +22,7 @@ internal class NativeBenchmarkSettings(arguments: List<String>, smoke: Boolean) 
             }
             val key = argument.substringAfter("-Pbench.").substringBefore('=')
             val value = argument.substringAfter('=')
-            require(key in properties || key in setOf("stats", "policies", "mode", "timeUnit") || key.matches(Regex("param\\.[A-Za-z][A-Za-z0-9_]*"))) {
+            require(key in properties || key in setOf("stats", "policies", "mode", "timeUnit") || (key.startsWith("param.") && key.removePrefix("param.") in parameterNames)) {
                 "Unsupported prepared Native property: $key"
             }
             require(value.isNotBlank() && supplied.add(key)) { "Blank or duplicate Native property: $key" }

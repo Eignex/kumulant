@@ -25,7 +25,7 @@ class NativeBenchmarkSettingsTest {
 
     @Test fun `unsupported native properties and concurrency are rejected`() {
         for (args in listOf(
-            listOf("-Pbench.output=/tmp/out"), listOf("-Pbench.mode=sample"), listOf("-Pbench.threads=4"),
+            listOf("-Pbench.param.unknown=1"), listOf("-Pbench.output=/tmp/out"), listOf("-Pbench.mode=sample"), listOf("-Pbench.threads=4"),
             listOf("-Pbench.param.concurrency=Strict"), listOf("-Pbench.iterations=0"), listOf("-Pbench.warmups=-1"), listOf("-Pbench.warmups=0"),
             listOf("-Pbench.stats=SumStat", "-Pbench.param.name=MeanStat"), listOf("-Pbench.filter=a", "-Pbench.filter=b"),
             listOf("-Pbench.param.name="), listOf("-Pbench.timeUnit=hours"), listOf("--no-daemon"),
