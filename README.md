@@ -18,9 +18,9 @@
 Kumulant is a Kotlin multiplatform library for streaming machine
 learning. Every model runs online: feed observations as they arrive,
 ask for a result any time, and the memory footprint stays bounded no
-matter how long the stream runs. Two instances of the same accumulator
-combine into one, so partial results from independent shards merge
-back without losing fidelity.
+matter how long the stream runs. Compatible snapshots from independent
+shards can be merged into one accumulator. Each stat documents whether
+its merge is exact or approximate and which state its snapshots retain.
 
 It covers online regression and classification (OLS, logistic, softmax,
 naive Bayes, decision trees, random forests), multi-armed and
@@ -83,7 +83,7 @@ prediction metrics.
 
 You can wrap a stat to change how it sees its input. Time-windowing,
 weighting, filtering, and pre-update transforms all stack on top of
-any stat. Composition happens on the *spec*, then you materialize the
+compatible stats. Composition happens on the *spec*, then you materialize the
 result into a live accumulator. See the `schema.ops` package overview
 on the Dokka site for the full adapter surface.
 
@@ -125,9 +125,9 @@ val distinctUsers = users.read()[Telemetry.uniqueUsers]
 ```
 
 `StatGroup` covers the `series` entries, `DiscreteStatGroup` the
-`discrete` ones, and `PairedStatGroup` / `VectorStatGroup` the
-remaining modalities. Reading a key from the group that does not own it
-throws, so pick the group that matches the entry.
+`discrete` ones, and `PairedStatGroup`, `VectorStatGroup`, and
+`RegressionStatGroup` the remaining modalities. Reading a key from a
+group that does not own it throws, so pick the group matching the entry.
 
 ## Bandits
 
@@ -157,22 +157,23 @@ cb.update(a, features, reward = 12.7)
 ## Concurrency
 
 Each stat picks a concurrency mode at construction. The default is
-single-threaded and the cheapest. Relaxed mode lets many threads
-update the same accumulator without any locks, using atomic operations
-on every cell. Coupled-state stats may drift by a tiny amount under
-heavy contention but never throw or corrupt their state, which makes
-it a good fit for hot paths where a strict lock would dominate the
-cost. Strict mode adds the locking needed to keep coupled state exact,
-and HighWrite swaps in striped adders on the JVM for additive stats
-under write-heavy load. The `Concurrency` enum's KDoc on the Dokka
-site covers the per-stat semantics in more depth.
+single-threaded and the cheapest. Relaxed mode uses atomic cells for
+additive and monotonic stats and permits drift in coupled recurrences;
+structures that require serial mutation still lock. No numerical error
+bound is guaranteed for coupled state under contention. Strict mode
+locks coupled recurrences, while independently updated cells can still
+produce a snapshot spanning several updates. HighWrite uses striped
+adders for additive JVM stats and follows Strict semantics for coupled
+state and on other platforms. Floating-point results depend on update
+order. See the `Concurrency` enum and each stat's KDoc on the Dokka site
+for snapshot consistency and locking details.
 
 ```kotlin
 val hits = SumStat(concurrency = Concurrency.HighWrite)
 val ols = UnivariateRegressionStat(concurrency = Concurrency.Strict)
 ```
 
-Every stat is exercised under every concurrency mode in the
-[kumulant-bench](kumulant-bench) module, which runs accuracy, drift,
-and throughput benches across the full catalogue so the lock-free
-claims travel with the code.
+The [kumulant-bench](kumulant-bench) module provides registry-based
+quality and throughput runs. Its concurrency checks cover sum, mean,
+and variance updates, merges, and snapshots under Strict, Relaxed,
+and HighWrite.

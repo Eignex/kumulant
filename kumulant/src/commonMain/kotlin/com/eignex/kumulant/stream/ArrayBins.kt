@@ -3,19 +3,14 @@ package com.eignex.kumulant.stream
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * A lock-free, dynamically resizing array-backed bin manager.
- * It stores a contiguous array of StreamDouble references to avoid Map allocation overhead.
- * Resizing creates a new array but copies the original StreamDouble instances,
- * guaranteeing zero dropped writes during concurrent access.
- */
+// Resizing reuses existing cells so writers holding an older array still update the live bins.
+// Each cell follows its StreamMode's guarantees; a multi-bin snapshot is not atomic.
 internal class ArrayBins(private val mode: StreamMode) {
 
     private class State(val offset: Int, val bins: Array<StreamDouble>)
 
     private val stateRef = mode.newReference(State(0, emptyArray()))
 
-    /** Add [weight] to bin [index], growing the underlying array as needed. */
     fun add(index: Int, weight: Double) {
         while (true) {
             val state = stateRef.load()
@@ -60,7 +55,6 @@ internal class ArrayBins(private val mode: StreamMode) {
         }
     }
 
-    /** Return a point-in-time copy of populated bins as an index-to-weight map. */
     fun snapshot(): Map<Int, Double> {
         val state = stateRef.load()
         val result = mutableMapOf<Int, Double>()
@@ -73,22 +67,14 @@ internal class ArrayBins(private val mode: StreamMode) {
         return result
     }
 
-    /** Drop all bins, returning the manager to its empty state. */
     fun clear() {
         stateRef.store(State(0, emptyArray()))
     }
 }
 
-/**
- * Bins allocated the first time an index arrives.
- *
- * [INITIAL_CENTER_OFFSET] must stay half of this: the first index is placed at the centre of the span so
- * the next one in either direction fits without regrowing.
- */
+// Centre the first index in the initial span to leave room for growth in either direction.
 private const val INITIAL_BINS: Int = 128
 
-/** Half of [INITIAL_BINS], so the first index lands in the middle of the initial span. */
 private const val INITIAL_CENTER_OFFSET: Int = INITIAL_BINS / 2
 
-/** Geometric growth factor when the span has to widen. */
 private const val GROWTH_FACTOR: Double = 1.5

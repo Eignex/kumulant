@@ -26,21 +26,20 @@ data class BernoulliSumResult(
  * Accumulates `(Sum w_i*x_i, Sum w_i)` where each update's value is interpreted as a
  * Bernoulli success indicator (typically 0 or 1; soft probabilities work too).
  *
- * Mirrors combo's `BinarySum`: emits the sufficient statistics for binomial /
- * Beta-Binomial Thompson sampling without doing the sampling itself.
+ * Emits sufficient statistics for binomial / Beta-Binomial inference without
+ * performing posterior sampling.
  *
  * **Use cases:** click/conversion accounting, Beta-Binomial bandit arms, A/B
  * sufficient-statistic logging.
  *
  * **Memory:** O(1); two double cells.
  *
- * **Update:** O(1) per observation (two atomic adds).
+ * **Update:** O(1) per observation (two cell adds).
  *
- * **Concurrency:** Two independent atomic adds per update; exact under every
- * [Concurrency] level. A `read()` interleaved between the two writes of one
- * update can briefly observe successes/trials mismatched by one observation,
- * but the per-cell guarantees hold. [Concurrency.HighWrite] switches both
- * cells to striped adders.
+ * **Concurrency:** Two independent additive cells. Concurrent modes preserve
+ * per-cell updates; reads can observe successes and trials from different points
+ * in the stream. [Concurrency.HighWrite] uses striped adders on the JVM.
+ * [Concurrency.None] uses plain cells. Floating-point results depend on update order.
  */
 class BernoulliSumStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<BernoulliSumResult> {
 

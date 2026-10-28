@@ -1,9 +1,9 @@
 # Package com.eignex.kumulant.stat.summary
 
-Exact running aggregates over a stream of scalars. Memory is constant in
-the stream length; updates are O(1); every entry merges cleanly across
-parallel workers via Chan-style parallel formulas or commuting cell
-arithmetic.
+Running aggregates over scalar streams, from exact sums and moments to
+approximate robust dispersion estimates. Memory is bounded in the stream
+length; update and read costs depend on the stat. Each entry supports
+merging snapshots from parallel workers.
 
 This is the largest stat family and the one most other packages compose
 against; change detectors run over a [MeanStat] / [VarianceStat] internally,
@@ -12,24 +12,23 @@ covariance through [WeightedVarianceResult]-shaped cells, and so on.
 
 ## The trivial entries
 
-[SumStat], [MinStat], [MaxStat], and [RangeStat] are single-cell stats:
-one Double of state, O(1) update, exact under every [com.eignex.kumulant.core.Concurrency]
-level via independent commuting cell arithmetic ([SumStat]) or a CAS
-loop on a single cell ([MinStat] / [MaxStat]). [RangeStat] is a
-[MinStat] and [MaxStat] tracked together.
+[SumStat], [MinStat], and [MaxStat] each keep one Double of state with
+O(1) updates. Concurrent modes use additive cells for [SumStat] and CAS
+loops for [MinStat] / [MaxStat]. [RangeStat] tracks min and max in two
+independent cells, so concurrent reads need not observe both from the
+same update. Floating-point sums depend on update order.
 
 [ArgMinStat] and [ArgMaxStat] extend [MinStat] / [MaxStat] with the
-timestamp at which the extreme was observed. The (value, timestamp) pair
-is coupled, so a single-cell CAS no longer suffices; an internal lock
-keeps the pair consistent under concurrency. Merge keeps the pair from
+timestamp at which the extreme was observed. An internal lock keeps the
+coupled (value, timestamp) pair consistent under concurrency. Merge keeps the pair from
 the smaller (larger) value.
 
 [CountStat], [TotalWeightsStat], and [BernoulliSumStat] look similar but
 answer different questions. [CountStat] counts updates, ignoring weight.
 [TotalWeightsStat] sums weight, ignoring the value. [BernoulliSumStat]
-sums weight only when the value is nonzero, which is the natural counter
-for binary outcomes (click-or-not, pass-or-fail). All three are
-naively additive and gain a striped-adder JVM path under
+tracks weighted successes (`sum(weight * value)`) and trials (`sum(weight)`),
+supporting both binary outcomes and soft probabilities. All three are
+additive and gain a striped-adder JVM path under
 [com.eignex.kumulant.core.Concurrency.HighWrite].
 
 ## The Welford family
@@ -44,8 +43,8 @@ The cells are *coupled*: an updated count needs its matching updated
 mean to stay consistent. Under [com.eignex.kumulant.core.Concurrency.Strict]
 or [com.eignex.kumulant.core.Concurrency.HighWrite] the body is locked.
 Under [com.eignex.kumulant.core.Concurrency.Relaxed] the cells race
-without a lock; readers and writers may drift by ULPs of the workload
-under contention but the stat never throws.
+without a shared lock; coupled state can drift under contention with
+no numerical error bound. Floating-point results depend on update order.
 
 | Stat | Result | Tracks |
 |------|--------|--------|
@@ -139,12 +138,12 @@ a remote pair while empty and otherwise averages both estimates equally.
 
 | Stat | Memory | Update | Concurrency |
 |------|--------|--------|-------------|
-| [SumStat], [CountStat], [TotalWeightsStat], [BernoulliSumStat] | O(1) | O(1) | striped-additive under HighWrite, atomic otherwise |
-| [MinStat], [MaxStat], [RangeStat] | O(1) | O(1) | CAS loop on a single cell |
+| [SumStat], [CountStat], [TotalWeightsStat], [BernoulliSumStat] | O(1) | O(1) | JVM striped adders under HighWrite; atomic under other concurrent modes |
+| [MinStat], [MaxStat], [RangeStat] | O(1) | O(1) | per-cell CAS; Range reads min and max independently |
 | [ArgMinStat], [ArgMaxStat] | O(1) | O(1) | internal lock keeps the (value, timestamp) pair consistent |
 | [MeanStat] | O(1) | O(1) | Welford-coupled; locked under Strict / HighWrite, racing under Relaxed |
 | [VarianceStat], [SummaryStat] | O(1) | O(1) | Welford-coupled |
-| [MomentsStat] | O(1) | O(1) | Welford-coupled (four cells) |
+| [MomentsStat] | O(1) | O(1) | Welford-coupled (five cells) |
 | [MadStat] | O(t-digest compression) | Buffered t-digest update; O(k) read for k centroids | inherits t-digest snapshot consistency |
 | [FrugalMadStat] | O(1) | O(1) | coupled estimates locked under every concurrent level |
 | [PairedSumStat] | O(1) | O(1) | two independent additive cells |

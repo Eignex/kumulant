@@ -84,8 +84,8 @@ dependencies {
 }
 
 // Dokka site is the canonical user documentation. Module-level and per-package prose
-// lives in adjacent .md files; runnable code examples live as samples under
-// src/commonTest and are referenced from KDoc with `@sample`.
+// lives in adjacent .md files; compile-checked examples live under
+// src/commonMain/kotlin/com/eignex/kumulant/samples and are referenced with `@sample`.
 dokka {
     moduleName.set("kumulant")
     dokkaSourceSets.configureEach {

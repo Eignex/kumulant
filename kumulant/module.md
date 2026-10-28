@@ -9,15 +9,15 @@ re-reading inputs.
 
 ## Mental model
 
-Every accumulator implements [com.eignex.kumulant.core.Stat]. The contract is
-three verbs and one constant:
+Every accumulator implements [com.eignex.kumulant.core.Stat]. The main operations
+and configuration are:
 
 - `update(...)` folds a single observation into the running state. The exact
   signature depends on the modality (see the [stat][com.eignex.kumulant.stat]
-  package for the four modality interfaces).
+  package for the five modality interfaces).
 - `read()` materialises the current state as an immutable
-  [Result][com.eignex.kumulant.core.Result]. Reads never mutate; call them as
-  often as you like.
+  [Result][com.eignex.kumulant.core.Result] snapshot without adding an observation.
+  Snapshot consistency follows the stat's concurrency contract.
 - `merge(snapshot)` folds another accumulator's snapshot into this one.
   Snapshots are the merge unit, not live accumulators; that is what lets
   merge cross a process boundary.
@@ -53,9 +53,10 @@ rendered API docs via `@sample` directives on individual classes.
 - [com.eignex.kumulant.stat]: concrete accumulators grouped by family:
   summary, quantile, cardinality, sketch, rate, decay, regression (with glm
   and tree subfamilies), score, calibration, anomaly, event, change, forecast.
-- [com.eignex.kumulant.operation]: composable wrappers that change how a
+- [com.eignex.kumulant.schema.ops]: composable spec operators that change how a
   stat sees its input (filtering, weighting, windowing, sampling, lagging)
-  or how it reports its output (folding, transforming, projecting).
+  or how it reports its output (folding, transforming, projecting). Materialize
+  the composed spec to build its live adapters.
 - [com.eignex.kumulant.schema]: typed, named, wire-portable schemas. Declare
   a bag of stats once, materialise it into a live [StatGroup][com.eignex.kumulant.schema.runtime.StatGroup],
   encode the schema to wire and rehydrate on the other side.
@@ -64,15 +65,15 @@ rendered API docs via `@sample` directives on individual classes.
 
 ## Conventions
 
-- Every concrete stat ships a sibling `StatSpec` data class (or `data object`
-  for parameter-less stats) carrying configuration only. Specs are
+- Each built-in stat has a corresponding spec in
+  [com.eignex.kumulant.schema.spec], carrying configuration only. Specs are
   serializable through the spec roots. JSON uses compact node names and
   operator keys; other formats, including CBOR and Protobuf, retain the
   generated class tags and field layouts.
-- Every public type has KDoc with a one-sentence summary, then Use cases,
-  Memory, Update, and Concurrency sections. See
+- Concrete stat KDoc includes a summary, Use cases, Memory, Update, and
+  Concurrency sections. See
   [com.eignex.kumulant.stat.summary.MeanStat] for the canonical shape.
-- Results are immutable, sealed where it makes sense, and structurally
-  comparable via `equals`/`hashCode`. The value that comes out of `read()`
-  is the same value that goes into `merge()` over the wire.
+- Results are snapshots that can be serialized and passed to `merge()`.
+  Each stat documents its merge approximations and any state omitted from
+  the snapshot.
 

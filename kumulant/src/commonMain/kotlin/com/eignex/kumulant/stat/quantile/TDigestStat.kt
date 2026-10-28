@@ -112,7 +112,7 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  * on update order.
  */
 class TDigestStat(
-    /** Compression parameter; lower = more centroids, tighter quantiles, more memory. */
+    /** Compression parameter; higher permits more centroids and finer quantile resolution. */
     val compression: Double = StatDefaults.TDIGEST_COMPRESSION,
     /** Quantiles to evaluate at read time. */
     val probabilities: DoubleArray = StatDefaults.quantileProbabilities(),

@@ -78,11 +78,12 @@ and lock strategy that honours it for the stat's mathematical structure.
 The enum's own KDoc covers the four modes in detail; the short version:
 
 - `None`: single-threaded, no synchronisation, default.
-- `Relaxed`: lock-free atomic cells; coupled-state stats may drift
-  by ULPs under contention but never throw.
-- `Strict`: coarse lock around coupled state; exact arithmetic.
-- `HighWrite`: JVM-only striped adders for naively additive stats
-  under heavy concurrent writes; falls back to `Strict` elsewhere.
+- `Relaxed`: atomic cells for additive and monotonic stats; coupled recurrences
+  can drift without a numerical error bound. Structures requiring serial mutation lock.
+- `Strict`: locks coupled recurrences. Independently updated cells can still produce
+  a snapshot spanning several updates; floating-point results depend on update order.
+- `HighWrite`: striped adders for additive JVM stats, with reads that sum stripes
+  without an atomic snapshot; follows `Strict` for coupled state and on other platforms.
 
 To give a coherent bag of stats one contract, declare them in a
 [com.eignex.kumulant.schema.runtime.StatSchema] and pass the level to the
@@ -99,26 +100,18 @@ identity element:
 
 | Family | Empty read reports |
 |--------|--------------------|
-| Sum, Count, BernoulliSum | `0.0`, the additive identity |
+| Sum, Count, TotalWeights, BernoulliSum | `0.0`, the additive identity |
 | Min, Max | `+Infinity` / `-Infinity`, the comparison identities |
 | HdrHistogram, LinearHistogram, Reservoir | empty arrays |
 | DDSketch, TDigest, Mad | `NaN` per quantile |
 | Auc | `NaN` |
 | Mean, Variance, Moments | `0.0` for every field |
 
-Where an identity exists, it is reported: a sum of nothing is genuinely zero,
-and the infinities are the correct starting points for a min/max fold and are
-already distinguishable from real data. Where none exists, the result is `NaN`
-rather than a plausible-looking number. An empty quantile sketch has no p99,
-and reporting `0.0` claimed one; on a latency dashboard that read as excellent
-rather than as absent.
-
-Mean, Variance and Moments still report `0.0` on an empty stream. That has the
-same ambiguity as the quantile case did and is a candidate for the same
-treatment, but changing it is a wider break than the sketches were.
-
-Rather than knowing which field carries the count, gate on
-[com.eignex.kumulant.core.HasObservationCount.isEmpty]:
+Sums and extrema report their identity elements. Quantile sketches and AUC
+report `NaN` when no estimate exists. Mean, variance, and moments use zero-valued
+empty results, so zero alone does not distinguish an empty stream from observed
+zeros. For results implementing [HasObservationCount], check
+[HasObservationCount.isEmpty] before interpreting the estimate:
 
 ```kotlin
 val r = sketch.read()

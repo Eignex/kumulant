@@ -34,8 +34,7 @@ import com.eignex.kumulant.stream.welfordMode
  * [Concurrency.Strict] and [Concurrency.HighWrite] lock each step but do not
  * reproduce a serial reference value; the lock serialises arrival, not
  * order. [Concurrency.Relaxed] additionally drops the lock; the single-cell
- * estimate races but stays bounded. Bench reports ~15% absolute error on a
- * `q = 0.5` uniform stream regardless of level.
+ * estimate can drift under contention. No numerical error bound is guaranteed.
  */
 class FrugalQuantileStat(
     /** Target quantile probability in `[0, 1]`. */

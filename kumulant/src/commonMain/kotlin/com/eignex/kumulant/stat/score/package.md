@@ -100,8 +100,10 @@ The mean-shaped metrics ([AccuracyStat], [PinballLossStat],
 and the `MseLoss` / `MaeLoss` / `LogLoss` stats in `Loss.kt`) inherit
 [MeanStat][com.eignex.kumulant.stat.summary.MeanStat]'s Welford-coupled model:
 locked under [com.eignex.kumulant.core.Concurrency.Strict] /
-[com.eignex.kumulant.core.Concurrency.HighWrite], drifting by ULPs under
-[com.eignex.kumulant.core.Concurrency.Relaxed] but never throwing. [AucStat] and
-[ConfusionMatrixStat] apply independent striped atomic increments to their
-histogram / matrix cells; lock-free and exact under every level, with the
-trapezoidal / precision-recall read running single-threaded.
+[com.eignex.kumulant.core.Concurrency.HighWrite]. Under
+[com.eignex.kumulant.core.Concurrency.Relaxed], coupled state can drift without
+a numerical error bound. [AucStat] and
+[ConfusionMatrixStat] use independent additive histogram / matrix cells;
+concurrent modes preserve per-cell updates, with JVM striped adders under
+HighWrite. Multi-cell reads are not atomic. Floating-point results depend on
+update order. [com.eignex.kumulant.core.Concurrency.None] uses plain cells.

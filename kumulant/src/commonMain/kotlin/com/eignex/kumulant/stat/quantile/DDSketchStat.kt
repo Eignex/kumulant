@@ -14,9 +14,10 @@ import kotlin.math.pow
 /**
  * DDSketchStat: relative-error quantile sketch with logarithmic bins.
  *
- * Guarantees [relativeError] on every reported quantile using `O(log(max/min))`
- * bins. Supports negative values via a mirrored bin tree and a zero-bucket.
- * Tightening [relativeError] grows bin count roughly as `1/epsilon`.
+ * Targets [relativeError] for quantile values within the indexable range.
+ * Out-of-range magnitudes fold into edge bins and lose that guarantee. Supports
+ * negative values via mirrored bins and a zero bucket. At a fixed indexable range,
+ * tightening [relativeError] grows bin count roughly as `1/epsilon`.
  *
  * **Use cases:** quantile / percentile monitoring of any positive-skewed
  * scalar (latencies, payload sizes). Reach for this over [HdrHistogramStat]
@@ -35,12 +36,13 @@ import kotlin.math.pow
  * observation with no bin of its own, so it falls into the zero bucket; filter it
  * upstream with `!X.isNaN()` when that is not wanted.
  *
- * **Concurrency:** Striped atomic adds on independent bins. Lock-free and
- * exact under every [Concurrency] level; increments commute, bin assignment
- * is deterministic per value.
+ * **Concurrency:** Independent additive bins preserve per-cell updates under
+ * concurrent modes. [Concurrency.HighWrite] uses striped adders on the JVM;
+ * [Concurrency.None] uses plain cells. Multi-bin reads are not atomic, and
+ * floating-point results depend on update order.
  */
 class DDSketchStat(
-    /** Relative error guarantee on every reported quantile. */
+    /** Relative value error target within the indexable range. */
     val relativeError: Double = StatDefaults.DD_SKETCH_RELATIVE_ERROR,
     /** Quantiles to evaluate at read time. */
     val probabilities: DoubleArray = StatDefaults.quantileProbabilities(),
