@@ -35,11 +35,11 @@ kotlin {
         appleMain.get().dependsOn(posixMain)
         linuxMain.get().dependsOn(posixMain)
         commonMain.dependencies {
-            api("com.eignex:koblas:0.1.1-20261027.124722-275") {
-                version { strictly("0.1.1-20261027.124722-275") }
+            api("com.eignex:koblas:0.1.1-20261028.123205-277") {
+                version { strictly("0.1.1-20261028.123205-277") }
             }
-            api("com.eignex:skema:0.3.1-20261027.115734-17") {
-                version { strictly("0.3.1-20261027.115734-17") }
+            api("com.eignex:skema:0.3.1-20261028.100806-19") {
+                version { strictly("0.3.1-20261028.100806-19") }
             }
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
@@ -62,16 +62,16 @@ dependencies {
     constraints {
         for ((library, platforms) in mapOf(
             "koblas" to mapOf(
-                "jvm" to "0.1.1-20261027.124722-278",
-                "linuxx64" to "0.1.1-20261027.124722-274",
-                "linuxarm64" to "0.1.1-20261027.124722-275",
-                "macosarm64" to "0.1.1-20261027.124335-298",
+                "jvm" to "0.1.1-20261028.123205-280",
+                "linuxx64" to "0.1.1-20261028.123205-276",
+                "linuxarm64" to "0.1.1-20261028.123205-277",
+                "macosarm64" to "0.1.1-20261028.120512-299",
             ),
             "skema" to mapOf(
-                "jvm" to "0.3.1-20261027.115734-17",
-                "linuxx64" to "0.3.1-20261027.115734-17",
-                "linuxarm64" to "0.3.1-20261027.115734-17",
-                "macosarm64" to "0.3.1-20261027.115734-17",
+                "jvm" to "0.3.1-20261028.100806-19",
+                "linuxx64" to "0.3.1-20261028.100806-19",
+                "linuxarm64" to "0.3.1-20261028.100806-19",
+                "macosarm64" to "0.3.1-20261028.100806-19",
             ),
         )) {
             for ((module, pinned) in platforms) {
