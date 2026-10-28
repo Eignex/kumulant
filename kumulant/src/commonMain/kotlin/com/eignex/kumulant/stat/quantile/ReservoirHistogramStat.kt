@@ -140,16 +140,14 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  *
  * **Memory:** O([capacity]) doubles for values + keys, plus a small RNG lock.
  *
- * **Update:** O([capacity]) per observation on a full reservoir (linear scan
- * for the minimum key); O(1) until the reservoir fills.
+ * **Update:** O([capacity]) per admission attempt to scan for the minimum key;
+ * CAS contention can require repeated scans.
  *
- * **Concurrency:** Under [Concurrency.Relaxed] and [Concurrency.HighWrite]
- * the admit path scans for the min-key slot and CAS-replaces it; concurrent
- * winners on the same slot fall through to a re-scan, and a brief torn-pair
- * window (key updated before value) is possible during a read; the sampling
- * distribution stays approximately correct (bounded drift). Under
- * [Concurrency.Strict] an outer lock serialises admit against read for a
- * fully linearized sample. [Concurrency.None] runs without synchronisation.
+ * **Concurrency:** [Concurrency.Strict] and [Concurrency.HighWrite] use an outer
+ * lock across updates, merges, reads, and resets. [Concurrency.Relaxed] uses CAS
+ * admission and a separate RNG lock; reads can observe a key before its matching
+ * value, and no sampling-error bound is guaranteed under contention.
+ * [Concurrency.None] runs without synchronisation.
  */
 class ReservoirHistogramStat(
     /** Reservoir size (capacity of retained samples). */
@@ -165,13 +163,9 @@ class ReservoirHistogramStat(
 
     private val mode = concurrency.monotonicMode()
 
-    // Outer lock: noop under None/Relaxed; real under Strict/HighWrite. Linearizes
-    // update/merge/read against each other for strict semantics.
     private val outerLock = concurrency.welfordLock()
 
-    // RNG is not thread-safe; protect with a tiny lock under Relaxed (HighWrite
-    // and Strict already serialize via outerLock for HighWrite, but under
-    // Relaxed we need our own). None needs no lock.
+    // Relaxed admission has no outer lock, so its mutable RNG needs a separate one.
     private val rngLock = when (concurrency) {
         Concurrency.Relaxed, Concurrency.HighWrite -> PlatformMutex()
         else -> NoopMutex
@@ -208,9 +202,7 @@ class ReservoirHistogramStat(
             }
             if (key <= minKey) return // not admit-worthy
             if (sampleKeys.compareAndSet(minIdx, minKey, key)) {
-                // Brief window: a concurrent read may observe (oldValue, newKey).
-                // Acceptable drift - the value distribution stays approximately
-                // weight-proportional.
+                // Relaxed readers can observe the new key before its matching value.
                 sampleValues.store(minIdx, value)
                 return
             }

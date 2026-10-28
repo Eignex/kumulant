@@ -46,9 +46,7 @@ internal class SerialDouble(var ref: Double) : StreamDouble {
     }
 
     override fun add(delta: Double) {
-        // Same short-circuit AtomicMode takes, so a cell holding -0.0 keeps its sign at every level
-        // rather than flipping to +0.0 here and staying -0.0 under Relaxed and Strict. Nothing else in
-        // the primitive differs by mode, and the reported sign of a zero should not either.
+        // Preserve signed zero consistently with AtomicMode when the delta is zero.
         if (delta == 0.0) return
         ref += delta
     }

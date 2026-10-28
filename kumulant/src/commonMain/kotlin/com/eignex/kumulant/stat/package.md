@@ -3,7 +3,7 @@
 Concrete accumulators grouped by family. Each family lives in its own
 subpackage; this page is the navigation index.
 
-## The four modalities
+## The five modalities
 
 Every stat extends [com.eignex.kumulant.core.Stat] and shares
 `read` / `merge` / `reset` / `create` / `concurrency`. They differ only
@@ -49,8 +49,8 @@ comes out of `read()` goes into `merge()` over the wire. Traits in
   `HasLinearModel` for free.
 - [com.eignex.kumulant.core.HasRegression]: `sse`, `ssr`, `mse`,
   `rmse`, `rSquared` on top of `HasSampleVariance`.
-- [com.eignex.kumulant.core.HasCenterScale] / [com.eignex.kumulant.core.HasMinMax]
- ; projection-friendly access to running centre/scale and running
+- [com.eignex.kumulant.core.HasCenterScale] / [com.eignex.kumulant.core.HasMinMax]:
+  projection-friendly access to running centre/scale and running
   min/max, consumed by the standardize / min-max feedback operators.
 
 A consumer written against a trait works for every concrete result that
@@ -84,8 +84,8 @@ new stats.
 
 ## Building a stat
 
-The cheapest construction is the no-arg form. Pass `concurrency` to opt
-into a thread-safety mode; required configuration is positional or named.
+Construct a stat directly, supplying any required configuration. Pass
+`concurrency` to select a thread-safety mode; the default is single-threaded.
 
 ```kotlin
 val hits = SumStat(concurrency = Concurrency.HighWrite)
