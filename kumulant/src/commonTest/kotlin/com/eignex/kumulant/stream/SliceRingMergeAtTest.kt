@@ -53,4 +53,15 @@ class SliceRingMergeAtTest {
         ring.forEachActive(newerStart + 500) { total += it.read().sum }
         assertEquals(5.0, total, DELTA)
     }
+
+    @Test
+    fun `merge resumes after gaps longer than the window`() {
+        val ring = newRing()
+        ring.mergeAt(0L, SumResult(1.0))
+        ring.mergeAt(11_000_000_000L, SumResult(7.0))
+        var total = 0.0
+        ring.forEachActive(11_000_000_000L) { total += it.read().sum }
+
+        assertEquals(7.0, total, DELTA)
+    }
 }

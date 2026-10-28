@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.DEFAULT_WINDOW_SLICES
 import com.eignex.kumulant.stream.SliceRing
 import kotlin.time.Duration
@@ -95,6 +96,7 @@ internal class WindowedSeriesStat<R : Result>(
     private val ring = SliceRing<R, SeriesStat<R>>(windowDuration, slices, concurrency) { c -> this.template.create(c) }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         ring.slotFor(timestampNanos)?.update(value, timestampNanos, weight)
     }
 
@@ -121,6 +123,7 @@ internal class WindowedPairedStat<R : Result>(
     private val ring = SliceRing<R, PairedStat<R>>(windowDuration, slices, concurrency) { c -> this.template.create(c) }
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         ring.slotFor(timestampNanos)?.update(x, y, timestampNanos, weight)
     }
 
@@ -151,6 +154,7 @@ internal class WindowedDiscreteStat<R : Result>(
     ) { c -> this.template.create(c) }
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         ring.slotFor(timestampNanos)?.update(value, timestampNanos, weight)
     }
 
@@ -177,6 +181,7 @@ internal class WindowedVectorStat<R : Result>(
     private val ring = SliceRing<R, VectorStat<R>>(windowDuration, slices, concurrency) { c -> this.template.create(c) }
 
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
+        if (weight.isInertWeight()) return
         ring.slotFor(timestampNanos)?.update(vector, timestampNanos, weight)
     }
 

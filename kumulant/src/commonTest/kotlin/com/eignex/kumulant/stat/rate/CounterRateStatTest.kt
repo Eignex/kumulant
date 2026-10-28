@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.rate
 
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -83,6 +84,27 @@ class CounterRateStatTest {
         assertEquals(80.0, result.totalValue, DELTA)
         assertEquals(T0, result.startTimestampNanos)
         assertEquals(40.0, result.rate, DELTA)
+    }
+
+    @Test
+    fun `rate includes the initial interval without increments`() {
+        for (concurrency in Concurrency.entries) {
+            val stat = CounterRateStat(concurrency)
+            stat.update(0.0, 0L)
+            stat.update(0.0, 10_000_000_000L)
+            stat.update(10.0, 20_000_000_000L)
+
+            assertEquals(0.5, stat.read(20_000_000_000L).rate, DELTA, "mode=$concurrency")
+        }
+    }
+
+    @Test
+    fun `snapshot retains a quiet counter observation window`() {
+        val stat = CounterRateStat()
+        stat.update(100.0, T0)
+        stat.update(100.0, T1)
+
+        assertEquals(T0, stat.read(T2).startTimestampNanos)
     }
 }
 

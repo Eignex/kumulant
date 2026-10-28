@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.decay
 
+import com.eignex.kumulant.core.Concurrency
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -58,5 +59,47 @@ class DecayingVarianceStatTest {
         v1.merge(v2.read(T0))
         assertEquals(5.0, v1.read(T0).mean, 1e-9)
         assertEquals(25.0, v1.read(T0).variance, 1e-9)
+    }
+
+    @Test
+    fun `fresh accumulator adopts a replay snapshot at its timestamp`() {
+        for (concurrency in Concurrency.entries) {
+            val source = DecayingVarianceStat(1.seconds, concurrency)
+            val timestamp = -2_000_000_000_000L
+            source.update(4.0, timestamp)
+            source.update(6.0, timestamp)
+            val snapshot = source.read(timestamp)
+            val target = source.create()
+            target.merge(snapshot)
+
+            assertEquals(snapshot, target.read(timestamp), "mode=$concurrency")
+        }
+    }
+
+    @Test
+    fun `backdated read reports the landmark timestamp`() {
+        val stat = DecayingVarianceStat(1.seconds)
+        stat.update(4.0, T3)
+
+        assertEquals(T3, stat.read(T0).timestampNanos)
+    }
+
+    @Test
+    fun `merging a backdated read preserves the remote evidence weight`() {
+        val source = DecayingVarianceStat(1.seconds)
+        source.update(4.0, T3)
+        source.update(6.0, T3)
+        val target = DecayingVarianceStat(1.seconds)
+        target.update(5.0, T3)
+        target.merge(source.read(T0))
+
+        assertEquals(3.0, target.read(T3).totalWeights, 1e-9)
+    }
+
+    @Test
+    fun `empty replay reads retain the requested timestamp`() {
+        val stat = DecayingVarianceStat(1.seconds)
+
+        assertEquals(0L, stat.read(0L).timestampNanos)
     }
 }

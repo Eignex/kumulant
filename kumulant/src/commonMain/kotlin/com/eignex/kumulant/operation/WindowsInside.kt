@@ -6,7 +6,10 @@ import com.eignex.kumulant.core.Stat
 import kotlin.time.Duration
 
 /**
- * A pre-update operator that carries state from one observation to the next.
+ * An operator that passes windowing into its delegate.
+ *
+ * Stateless decorators also implement this interface so they do not hide a stateful operator
+ * deeper in the chain from windowing.
  *
  * Windowing slices a stat into per-bucket replicas, so an operator wrapped *outside* a window would
  * have that state rebuilt on every slice rotation: a lag ring restarts its warm-up, a throttle gate
