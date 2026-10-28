@@ -19,11 +19,16 @@ data class RateResult(val startTimestampNanos: Long, val totalValue: Double, val
     HasRate {
     override val rate: Double
         get() {
-            // Subtract in Double, not Long: a large-magnitude negative start against a positive read
-            // timestamp overflows the Long subtraction, and the guard below would read the wrapped
-            // value as a non-positive duration.
-            val durationSeconds = (timestampNanos.toDouble() - startTimestampNanos.toDouble()) / NANOS_PER_SECOND
-            if (!(durationSeconds > 0.0)) return 0.0
+            if (timestampNanos <= startTimestampNanos) return 0.0
+            // Subtract before converting to preserve short intervals at large timestamps. A negative
+            // difference here can only be Long overflow, for which Double subtraction is safe.
+            val elapsed = timestampNanos - startTimestampNanos
+            val durationNanos = if (elapsed > 0L) {
+                elapsed.toDouble()
+            } else {
+                timestampNanos.toDouble() - startTimestampNanos.toDouble()
+            }
+            val durationSeconds = durationNanos / NANOS_PER_SECOND
             return totalValue / durationSeconds
         }
 }
@@ -60,14 +65,18 @@ class RateStat(override val concurrency: Concurrency = Concurrency.None) : Serie
         // not anchor the rate window either, or the denominator would count time the numerator never
         // saw. See Stat.
         if (weight.isInertWeight()) return
-        // CAS-loop-min; a plain compareAndSet(MIN_VALUE, ts) would let an arbitrary
-        // first-arriving thread set the start, not the thread with the earliest ts.
+        advanceStartTimestampDown(timestampNanos)
+        totalValues.add(value * weight)
+    }
+
+    private fun advanceStartTimestampDown(timestampNanos: Long) {
+        // Updates and merges share the CAS loop so an interleaved later stamp cannot overwrite
+        // an earlier one elected by another writer.
         var current = startTimestampNanos.load()
         while (current == Long.MIN_VALUE || current > timestampNanos) {
             if (startTimestampNanos.compareAndSet(current, timestampNanos)) break
             current = startTimestampNanos.load()
         }
-        totalValues.add(value * weight)
     }
 
     override fun create(concurrency: Concurrency?) = RateStat(concurrency ?: this.concurrency)
@@ -88,16 +97,12 @@ class RateStat(override val concurrency: Concurrency = Concurrency.None) : Serie
     override fun merge(values: RateResult) {
         totalValues.add(values.totalValue)
 
-        // A shard that never observed anything reports its read timestamp as the start (see read), so
-        // it has no window to contribute. A zero total is not the same test: a shard that observed only
-        // zero-valued events, or values that cancel, covers a real span, and dropping that span leaves
-        // the merged denominator shorter than the observations it is dividing.
-        if (values.startTimestampNanos >= values.timestampNanos) return
+        // An untouched shard has zero total and reports its read timestamp as the start. A nonzero
+        // total proves the window exists even if the snapshot was read at or before its start.
+        // Zero-valued observations over a positive span also contribute their window.
+        if (values.totalValue == 0.0 && values.startTimestampNanos >= values.timestampNanos) return
 
-        val currentStart = startTimestampNanos.load()
-        if (currentStart == Long.MIN_VALUE || values.startTimestampNanos < currentStart) {
-            startTimestampNanos.store(values.startTimestampNanos)
-        }
+        advanceStartTimestampDown(values.startTimestampNanos)
     }
 
     override fun reset() {
