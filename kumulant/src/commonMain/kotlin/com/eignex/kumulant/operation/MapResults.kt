@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import kotlin.time.Duration
 
 /**
  * Present a [SeriesStat]'s result as a different type via an invertible projection.
@@ -65,9 +66,13 @@ internal class MapResultSeriesStat<R1 : Result, R2 : Result>(
     private val forward: (R1) -> R2,
     private val reverse: (R2) -> R1,
 ) : SeriesStat<R2>,
+    WindowsInside<R2, SeriesStat<R2>>,
     Stat<R2> by MappedResultCore(delegate, forward, reverse) {
     override fun update(value: Double, timestampNanos: Long, weight: Double) =
         delegate.update(value, timestampNanos, weight)
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R2> =
+        MapResultSeriesStat(delegate.windowed(duration, slices, concurrency), forward, reverse)
+
     override fun create(concurrency: Concurrency?): SeriesStat<R2> =
         MapResultSeriesStat(delegate.create(concurrency), forward, reverse)
 }
@@ -77,9 +82,13 @@ internal class MapResultPairedStat<R1 : Result, R2 : Result>(
     private val forward: (R1) -> R2,
     private val reverse: (R2) -> R1,
 ) : PairedStat<R2>,
+    WindowsInside<R2, PairedStat<R2>>,
     Stat<R2> by MappedResultCore(delegate, forward, reverse) {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) =
         delegate.update(x, y, timestampNanos, weight)
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R2> =
+        MapResultPairedStat(delegate.windowed(duration, slices, concurrency), forward, reverse)
+
     override fun create(concurrency: Concurrency?): PairedStat<R2> =
         MapResultPairedStat(delegate.create(concurrency), forward, reverse)
 }
@@ -89,9 +98,13 @@ internal class MapResultVectorStat<R1 : Result, R2 : Result>(
     private val forward: (R1) -> R2,
     private val reverse: (R2) -> R1,
 ) : VectorStat<R2>,
+    WindowsInside<R2, VectorStat<R2>>,
     Stat<R2> by MappedResultCore(delegate, forward, reverse) {
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) =
         delegate.update(vector, timestampNanos, weight)
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R2> =
+        MapResultVectorStat(delegate.windowed(duration, slices, concurrency), forward, reverse)
+
     override fun create(concurrency: Concurrency?): VectorStat<R2> =
         MapResultVectorStat(delegate.create(concurrency), forward, reverse)
 }
@@ -101,9 +114,13 @@ internal class MapResultDiscreteStat<R1 : Result, R2 : Result>(
     private val forward: (R1) -> R2,
     private val reverse: (R2) -> R1,
 ) : DiscreteStat<R2>,
+    WindowsInside<R2, DiscreteStat<R2>>,
     Stat<R2> by MappedResultCore(delegate, forward, reverse) {
     override fun update(value: Long, timestampNanos: Long, weight: Double) =
         delegate.update(value, timestampNanos, weight)
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): DiscreteStat<R2> =
+        MapResultDiscreteStat(delegate.windowed(duration, slices, concurrency), forward, reverse)
+
     override fun create(concurrency: Concurrency?): DiscreteStat<R2> =
         MapResultDiscreteStat(delegate.create(concurrency), forward, reverse)
 }

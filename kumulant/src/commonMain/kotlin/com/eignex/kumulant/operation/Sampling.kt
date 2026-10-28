@@ -153,6 +153,7 @@ internal class SampleSeriesStat<R : Result>(
     private val rate: Double,
     private val seed: Long,
 ) : SeriesStat<R>,
+    WindowsInside<R, SeriesStat<R>>,
     Stat<R> by delegate {
     private val gate = SampleGate(rate, seed, delegate.concurrency)
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -164,6 +165,9 @@ internal class SampleSeriesStat<R : Result>(
         delegate.reset()
     }
 
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
+        SampleSeriesStat(delegate.windowed(duration, slices, concurrency), rate, seed)
+
     override fun create(concurrency: Concurrency?): SeriesStat<R> =
         SampleSeriesStat(delegate.create(concurrency), rate, gate.childSeed())
 }
@@ -173,6 +177,7 @@ internal class SamplePairedStat<R : Result>(
     private val rate: Double,
     private val seed: Long,
 ) : PairedStat<R>,
+    WindowsInside<R, PairedStat<R>>,
     Stat<R> by delegate {
     private val gate = SampleGate(rate, seed, delegate.concurrency)
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
@@ -184,6 +189,9 @@ internal class SamplePairedStat<R : Result>(
         delegate.reset()
     }
 
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
+        SamplePairedStat(delegate.windowed(duration, slices, concurrency), rate, seed)
+
     override fun create(concurrency: Concurrency?): PairedStat<R> =
         SamplePairedStat(delegate.create(concurrency), rate, gate.childSeed())
 }
@@ -193,6 +201,7 @@ internal class SampleVectorStat<R : Result>(
     private val rate: Double,
     private val seed: Long,
 ) : VectorStat<R>,
+    WindowsInside<R, VectorStat<R>>,
     Stat<R> by delegate {
     private val gate = SampleGate(rate, seed, delegate.concurrency)
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
@@ -204,6 +213,9 @@ internal class SampleVectorStat<R : Result>(
         delegate.reset()
     }
 
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
+        SampleVectorStat(delegate.windowed(duration, slices, concurrency), rate, seed)
+
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         SampleVectorStat(delegate.create(concurrency), rate, gate.childSeed())
 }
@@ -213,6 +225,7 @@ internal class SampleDiscreteStat<R : Result>(
     private val rate: Double,
     private val seed: Long,
 ) : DiscreteStat<R>,
+    WindowsInside<R, DiscreteStat<R>>,
     Stat<R> by delegate {
     private val gate = SampleGate(rate, seed, delegate.concurrency)
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
@@ -223,6 +236,9 @@ internal class SampleDiscreteStat<R : Result>(
         gate.reset()
         delegate.reset()
     }
+
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): DiscreteStat<R> =
+        SampleDiscreteStat(delegate.windowed(duration, slices, concurrency), rate, seed)
 
     override fun create(concurrency: Concurrency?): DiscreteStat<R> =
         SampleDiscreteStat(delegate.create(concurrency), rate, gate.childSeed())

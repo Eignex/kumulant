@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import kotlin.time.Duration
 
 /**
  * Fold adapters. Constructed by the spec layer's `foldPaired(ScalarExpr)` /
@@ -19,10 +20,14 @@ internal class FoldVectorStat<R : Result>(
     private val transform: (DoubleArray) -> Double = { 0.0 },
     private val vectorTransform: ((Vector) -> Double)? = null,
 ) : VectorStat<R>,
+    WindowsInside<R, VectorStat<R>>,
     Stat<R> by delegate {
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         delegate.update(vectorTransform?.invoke(vector) ?: transform(vector.toDoubleArray()), timestampNanos, weight)
     }
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
+        FoldVectorStat(delegate.windowed(duration, slices, concurrency), transform, vectorTransform)
+
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         FoldVectorStat(delegate.create(concurrency), transform, vectorTransform)
 
@@ -36,10 +41,14 @@ internal class FoldPairedStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val transform: (Double, Double) -> Double,
 ) : PairedStat<R>,
+    WindowsInside<R, PairedStat<R>>,
     Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         delegate.update(transform(x, y), timestampNanos, weight)
     }
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
+        FoldPairedStat(delegate.windowed(duration, slices, concurrency), transform)
+
     override fun create(concurrency: Concurrency?): PairedStat<R> =
         FoldPairedStat(delegate.create(concurrency), transform)
 }
@@ -51,6 +60,7 @@ internal class FoldVectorPairedStat<R : Result>(
     private val vectorFoldX: ((Vector) -> Double)? = null,
     private val vectorFoldY: ((Vector) -> Double)? = null,
 ) : VectorStat<R>,
+    WindowsInside<R, VectorStat<R>>,
     Stat<R> by delegate {
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         if (vectorFoldX != null && vectorFoldY != null) {
@@ -60,6 +70,9 @@ internal class FoldVectorPairedStat<R : Result>(
             delegate.update(foldX(materialized), foldY(materialized), timestampNanos, weight)
         }
     }
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
+        FoldVectorPairedStat(delegate.windowed(duration, slices, concurrency), foldX, foldY, vectorFoldX, vectorFoldY)
+
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         FoldVectorPairedStat(delegate.create(concurrency), foldX, foldY, vectorFoldX, vectorFoldY)
 

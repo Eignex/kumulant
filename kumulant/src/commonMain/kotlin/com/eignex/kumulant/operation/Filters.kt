@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
+import kotlin.time.Duration
 
 /**
  * Filter adapters. Constructed by the spec layer's
@@ -20,10 +21,14 @@ internal class FilterSeriesStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val predicate: (Double) -> Boolean,
 ) : SeriesStat<R>,
+    WindowsInside<R, SeriesStat<R>>,
     Stat<R> by delegate {
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (predicate(value)) delegate.update(value, timestampNanos, weight)
     }
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
+        FilterSeriesStat(delegate.windowed(duration, slices, concurrency), predicate)
+
     override fun create(concurrency: Concurrency?): SeriesStat<R> =
         FilterSeriesStat(delegate.create(concurrency), predicate)
 }
@@ -32,10 +37,14 @@ internal class FilterPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
     private val predicate: (Double, Double) -> Boolean,
 ) : PairedStat<R>,
+    WindowsInside<R, PairedStat<R>>,
     Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (predicate(x, y)) delegate.update(x, y, timestampNanos, weight)
     }
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
+        FilterPairedStat(delegate.windowed(duration, slices, concurrency), predicate)
+
     override fun create(concurrency: Concurrency?): PairedStat<R> =
         FilterPairedStat(delegate.create(concurrency), predicate)
 }
@@ -45,12 +54,16 @@ internal class FilterVectorStat<R : Result>(
     private val predicate: (DoubleArray) -> Boolean = { true },
     private val vectorPredicate: ((Vector) -> Boolean)? = null,
 ) : VectorStat<R>,
+    WindowsInside<R, VectorStat<R>>,
     Stat<R> by delegate {
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         if (vectorPredicate?.invoke(vector) ?: predicate(vector.toDoubleArray())) {
             delegate.update(vector, timestampNanos, weight)
         }
     }
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
+        FilterVectorStat(delegate.windowed(duration, slices, concurrency), predicate, vectorPredicate)
+
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         FilterVectorStat(delegate.create(concurrency), predicate, vectorPredicate)
 
@@ -64,10 +77,14 @@ internal class FilterDiscreteStat<R : Result>(
     private val delegate: DiscreteStat<R>,
     private val predicate: (Long) -> Boolean,
 ) : DiscreteStat<R>,
+    WindowsInside<R, DiscreteStat<R>>,
     Stat<R> by delegate {
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (predicate(value)) delegate.update(value, timestampNanos, weight)
     }
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): DiscreteStat<R> =
+        FilterDiscreteStat(delegate.windowed(duration, slices, concurrency), predicate)
+
     override fun create(concurrency: Concurrency?): DiscreteStat<R> =
         FilterDiscreteStat(delegate.create(concurrency), predicate)
 }

@@ -74,6 +74,7 @@ class CounterRateStat(
         if (previousCounter.isNaN()) {
             lastCounter.store(value)
             lastTimestampNanos.store(timestampNanos)
+            advanceStartTimestampDown(timestampNanos)
             return
         }
 

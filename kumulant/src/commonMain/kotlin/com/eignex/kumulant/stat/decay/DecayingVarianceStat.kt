@@ -41,6 +41,9 @@ data class DecayingVarianceResult(
  * `M2 += w*delta*(value - meanNew)`. This avoids the catastrophic cancellation
  * of the `E[X^2] - E[X]^2` form when `stdDev << |mean|`.
  *
+ * Reads before the newest accepted event return the state at that event's timestamp. The snapshot
+ * carries that effective timestamp so merging it does not apply the same decay twice.
+ *
  * **Use cases:** recency-biased dispersion (rolling latency variance, recent
  * variance for control charts). Reach for this over [com.eignex.kumulant.stat.summary.VarianceStat] when older
  * observations should fade.
@@ -139,11 +142,19 @@ class DecayingVarianceStat(
             decayedM2 = priorM2 * decay
         }
         val variance = if (w > 0.0) decayedM2 / w else 0.0
-        DecayingVarianceResult(mean.load(), variance, w, timestampNanos)
+        val snapshotTimestamp = if (priorW == 0.0) timestampNanos else maxOf(timestampNanos, landmark)
+        DecayingVarianceResult(mean.load(), variance, w, snapshotTimestamp)
     }
 
     override fun merge(values: DecayingVarianceResult) = lock.guarded {
         if (values.totalWeights <= 0.0) return@guarded
+        if (totalWeights.load() == 0.0) {
+            landmarkNanos.store(values.timestampNanos)
+            totalWeights.store(values.totalWeights)
+            mean.store(values.mean)
+            m2.store(values.variance * values.totalWeights)
+            return@guarded
+        }
         val target = maxOf(landmarkNanos.load(), values.timestampNanos)
         advanceTo(target)
         val remoteDecay = exp(-alpha * (target - values.timestampNanos).toDouble())

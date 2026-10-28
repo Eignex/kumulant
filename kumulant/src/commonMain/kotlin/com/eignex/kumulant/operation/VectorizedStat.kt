@@ -8,6 +8,7 @@ import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.core.requireFeatureSize
+import kotlin.time.Duration
 
 /**
  * Fans each vector observation out to one [SeriesStat] per dimension.
@@ -28,7 +29,8 @@ internal class VectorizedStat<R : Result>(
     val dimensions: Int,
     private val template: SeriesStat<R>,
     val skipZeros: Boolean = false,
-) : VectorStat<ResultList<R>> {
+) : VectorStat<ResultList<R>>,
+    WindowsInside<ResultList<R>, VectorStat<ResultList<R>>> {
 
     private val stats: Array<SeriesStat<R>> =
         Array(dimensions) { template.create(null) }
@@ -47,6 +49,13 @@ internal class VectorizedStat<R : Result>(
     }
 
     override fun read(timestampNanos: Long): ResultList<R> = ResultList(stats.map { it.read(timestampNanos) })
+
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<ResultList<R>> =
+        VectorizedStat(
+            dimensions,
+            template.windowed(duration, slices, concurrency),
+            skipZeros,
+        )
 
     override fun create(concurrency: Concurrency?): VectorStat<ResultList<R>> =
         VectorizedStat(dimensions, template.create(concurrency), skipZeros)
