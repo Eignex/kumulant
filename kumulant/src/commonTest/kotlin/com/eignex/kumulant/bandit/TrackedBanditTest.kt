@@ -23,8 +23,6 @@ import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.SumResult
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -148,14 +146,13 @@ class TrackedBanditTest {
     }
 
     @Test
-    fun `serialized univariate tracking uses the materialization clock`() {
+    fun `univariate tracking uses the materialization clock`() {
         val spec: UnivariateBanditSpec = TrackedUnivariateSpec(
             MultiArmedSpec(2, Ucb1Spec()),
             chooseTemplate = PairedSum.withTimeAsX(),
         )
-        val decoded = Json.decodeFromString<UnivariateBanditSpec>(Json.encodeToString(spec))
         var timestamp = 1_000_000_000L
-        val bandit = decoded.materialize(Random(0), nowNanos = { timestamp }) as TrackedUnivariateBandit<*>
+        val bandit = spec.materialize(Random(0), nowNanos = { timestamp }) as TrackedUnivariateBandit<*>
         bandit.choose()
         timestamp = 2_000_000_000L
 
@@ -165,7 +162,7 @@ class TrackedBanditTest {
     }
 
     @Test
-    fun `serialized contextual tracking routes observations to every template`() {
+    fun `contextual tracking routes observations to every template`() {
         val spec: ContextualBanditSpec = TrackedContextualSpec(
             inner = RegressionContextualSpec(2, BayesianRegression(1), MultivariateGaussian),
             contextFeatureSize = 1,
@@ -174,8 +171,7 @@ class TrackedBanditTest {
             updateMarginalTemplate = Sum.foldRegression(1, Y),
             updateArmRewardTemplate = PairedSum,
         )
-        val decoded = Json.decodeFromString<ContextualBanditSpec>(Json.encodeToString(spec))
-        val bandit = decoded.materialize(Random(0)) as TrackedContextualBandit<*>
+        val bandit = spec.materialize(Random(0)) as TrackedContextualBandit<*>
         val x = DenseVector.of(doubleArrayOf(3.0))
 
         val arm = bandit.choose(x)

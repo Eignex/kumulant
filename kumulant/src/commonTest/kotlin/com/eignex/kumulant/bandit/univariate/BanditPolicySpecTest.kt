@@ -29,6 +29,7 @@ class BanditPolicySpecTest {
             GreedySpec(priorMean = 0.25, priorWeight = 0.05, priorSquaredDeviations = 0.01),
             UniformSelectionSpec(),
             KlUcbSpec(c = 3.0, tolerance = 1e-5, priorAlpha = 2.0, priorBeta = 3.0),
+            Ucb1Spec(alpha = 1.5),
             Ucb1NormalSpec(alpha = 0.5, priorMean = 0.1, priorWeight = 0.5),
             Ucb1TunedSpec(alpha = 1.5),
             UcbVSpec(zeta = 1.0, c = 0.5),

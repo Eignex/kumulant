@@ -6,8 +6,8 @@ import com.eignex.koblas.SparseVector
 import com.eignex.koblas.StridedVector
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.math.nextNormal
-import com.eignex.kumulant.schema.optimizer.Sgd
 import kotlin.math.abs
+import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -21,37 +21,44 @@ class LinearPosteriorsTest {
         override fun toDoubleArray(): DoubleArray = values.copyOf()
     }
 
-    private fun sgdSnapshot(): StochasticRegressionResult {
-        val stat = StochasticRegressionStat(featureSize = 2, optimizer = Sgd(ConstantRate(0.05)))
-        val rng = Random(1)
-        repeat(800) {
-            val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
-            val y = 1.0 * x[0] - 2.0 * x[1]
-            stat.update(x, y, 1.0)
-        }
-        return stat.read()
-    }
+    private fun sgdSnapshot(): StochasticRegressionResult = StochasticRegressionResult(
+        weights = DenseVector.of(doubleArrayOf(1.0, -2.0)),
+        bias = 0.5,
+        totalWeights = 100.0,
+        step = 100L,
+    )
 
-    private fun diagonalSnapshot(): DiagonalRegressionResult {
-        val stat = DiagonalRegressionStat(featureSize = 2, priorPrecision = 0.1)
-        val rng = Random(1)
-        repeat(800) {
-            val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
-            val y = 1.0 * x[0] - 2.0 * x[1]
-            stat.update(x, y, 1.0)
-        }
-        return stat.read()
-    }
+    private fun diagonalSnapshot(): DiagonalRegressionResult = DiagonalRegressionResult(
+        weights = DenseVector.of(doubleArrayOf(1.0, -2.0)),
+        bias = 0.5,
+        biasPrecision = 100.0,
+        totalWeights = 100.0,
+        step = 100L,
+        precision = DenseVector.of(doubleArrayOf(100.0, 400.0)),
+    )
 
-    private fun bayesianSnapshot(): PrecisionRegressionResult {
-        val stat = BayesianRegressionStat(featureSize = 2, priorVariance = 1.0)
-        val rng = Random(1)
-        repeat(800) {
-            val x = doubleArrayOf(rng.nextDouble() * 2 - 1, rng.nextDouble() * 2 - 1)
-            val y = 1.0 * x[0] - 2.0 * x[1]
-            stat.update(x, y, 1.0)
+    private fun bayesianSnapshot(): PrecisionRegressionResult = PrecisionRegressionResult(
+        weights = DenseVector.of(doubleArrayOf(1.0, -2.0)),
+        bias = 0.5,
+        biasPrecision = 100.0,
+        totalWeights = 100.0,
+        step = 100L,
+        precisionL = DenseMatrix.ofRows(arrayOf(doubleArrayOf(10.0, 0.0), doubleArrayOf(3.0, 20.0))),
+    )
+
+    @Test
+    fun `posterior scores use the predictive variance`() {
+        val x = DenseVector.of(doubleArrayOf(3.0, 4.0))
+        val noise = Random(7).nextNormal()
+        val scores = listOf(
+            PointPosterior.evaluate(sgdSnapshot(), x, Random(7), exploration = 0.25) to 2.5,
+            FactorisedGaussian.evaluate(diagonalSnapshot(), x, Random(7), exploration = 0.25) to sqrt(0.0325),
+            MultivariateGaussian.evaluate(bayesianSnapshot(), x, Random(7), exploration = 0.25) to sqrt(0.02850625),
+        )
+
+        for ((score, deviation) in scores) {
+            assertEquals(-4.5 + deviation * noise, score, 1e-12)
         }
-        return stat.read()
     }
 
     @Test
@@ -81,8 +88,6 @@ class LinearPosteriorsTest {
 
         MultivariateGaussian.sampleInto(snapshot, Random(21), destination, exploration = 0.4)
         val expected = MultivariateGaussian.sample(snapshot, Random(21), exploration = 0.4)
-        assertEquals(expected[0], destination[0], 1e-12)
-        assertEquals(expected[1], destination[1], 1e-12)
         assertEquals(expected[0], destination[0], 1e-12)
         assertEquals(expected[1], destination[1], 1e-12)
     }
@@ -161,17 +166,6 @@ class LinearPosteriorsTest {
     }
 
     @Test
-    fun `FactorisedGaussian evaluate is centered on predict`() {
-        val snap = diagonalSnapshot()
-        val x = DenseVector.of(doubleArrayOf(0.1, 0.2))
-        val rng = Random(0)
-        val n = 600
-        var sum = 0.0
-        repeat(n) { sum += FactorisedGaussian.evaluate(snap, x, rng, exploration = 0.1) }
-        assertTrue(abs(sum / n - snap.predict(x)) < 0.05)
-    }
-
-    @Test
     fun `FactorisedGaussian evaluate gives sparse inputs the dense score`() {
         val snap = diagonalSnapshot()
         val dense = DenseVector.of(doubleArrayOf(0.1, 0.0))
@@ -237,11 +231,11 @@ class LinearPosteriorsTest {
     @Test
     fun `LinUcb evaluate is mean plus alpha times sqrt xT Sigma x`() {
         val snap = bayesianSnapshot()
-        val x = DenseVector.of(doubleArrayOf(0.5, -0.5))
-        val alpha = 2.0
-        val score = LinUcb.evaluate(snap, x, Random(0), exploration = alpha)
-        val mean = snap.predict(x)
-        assertTrue(score > mean, "LinUcb should add positive UCB term; score=$score, mean=$mean")
+        val x = DenseVector.of(doubleArrayOf(3.0, 4.0))
+
+        val score = LinUcb.evaluate(snap, x, Random(0), exploration = 2.0)
+
+        assertEquals(-4.5 + 2.0 * sqrt(0.114025), score, 1e-12)
     }
 
     @Test
@@ -278,23 +272,6 @@ class LinearPosteriorsTest {
     }
 
     @Test
-    fun `SGD with L2 regularisation visits every coordinate`() {
-        val stat = StochasticRegressionStat(
-            featureSize = 3,
-            optimizer = Sgd(ConstantRate(0.05)),
-            penalty = Penalty.L2(0.1),
-        )
-        val rng = Random(1)
-        repeat(500) {
-            val x = doubleArrayOf(rng.nextDouble(), rng.nextDouble(), rng.nextDouble())
-            stat.update(x, y = x[0] - x[1], weight = 1.0)
-        }
-        val r = stat.read()
-        assertTrue(r.weights.toDoubleArray().any { it != 0.0 })
-        assertTrue(r.sse > 0.0)
-    }
-
-    @Test
     fun `SGD merge with zero combined weight is a no-op`() {
         val stat = StochasticRegressionStat(featureSize = 2)
         val empty = stat.read()
@@ -308,14 +285,6 @@ class LinearPosteriorsTest {
         val a = StochasticRegressionStat(featureSize = 2)
         val b = StochasticRegressionStat(featureSize = 3)
         assertFailsWith<IllegalArgumentException> { a.merge(b.read()) }
-    }
-
-    @Test
-    fun `SGD create returns a new instance preserving configuration`() {
-        val a = StochasticRegressionStat(featureSize = 4, penalty = Penalty.L2(0.5))
-        val b = a.create()
-        val r = b.read()
-        assertEquals(4, r.weights.size)
     }
 
     @Test

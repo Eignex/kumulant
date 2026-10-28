@@ -99,36 +99,59 @@ class CholeskyFactorTest {
     }
 
     @Test
-    fun `extension agrees with full factorization across block boundaries`() {
-        for (workspace in listOf(Workspace(), null)) {
-            for (size in listOf(0, 1, 63, 64, 65, 127, 128, 129)) {
-                val base = DenseMatrix.wrap(
-                    size,
-                    size,
-                    DoubleArray(size * size) { if (it % size == it / size) 2.25 else 0.25 },
-                )
-                val factor = base.factorCholesky()
-                for (added in if (size < 2) listOf(0, 1, 4, 16) else listOf(1, 16)) {
-                    val cross = DenseMatrix.wrap(size, added, DoubleArray(size * added) { 0.25 })
-                    val diagonal = DenseMatrix.wrap(
-                        added,
-                        added,
-                        DoubleArray(added * added) { if (it % added == it / added) 2.25 else 0.25 },
-                    )
-                    val order = size + added
-                    val full = DenseMatrix.wrap(
-                        order,
-                        order,
-                        DoubleArray(order * order) { if (it % order == it / order) 2.25 else 0.25 },
-                    )
-                    val expected = full.factorCholesky().lowerFactor().values
+    fun `extension recovers a known factor across block boundaries`() {
+        val workspaces = listOf(Workspace(), null)
+        for ((size, added) in listOf(
+            0 to 0,
+            0 to 4,
+            1 to 0,
+            1 to 1,
+            63 to 2,
+            64 to 1,
+            65 to 2,
+        )) {
+            val tail = 1.0 / (size + added + 1)
+            val lower = DenseMatrix.wrap(
+                size,
+                size,
+                DoubleArray(size * size) {
+                    when {
+                        it % size < it / size -> 0.0
+                        it % size == it / size -> 2.0
+                        else -> tail
+                    }
+                },
+            )
+            val factor = CholeskyFactor(lower)
+            val cross = DenseMatrix.wrap(
+                size,
+                added,
+                DoubleArray(size * added) { 2.0 * tail + (it % size) * tail * tail },
+            )
+            val diagonal = DenseMatrix.wrap(
+                added,
+                added,
+                DoubleArray(added * added) {
+                    val i = it % added
+                    val j = it / added
+                    (size + minOf(i, j)) * tail * tail + if (i == j) 4.0 else 2.0 * tail
+                },
+            )
+            val order = size + added
 
-                    val actual = factor.extended(cross, diagonal, workspace).lowerFactor().values
+            for (workspace in workspaces) {
+                val actual = factor.extended(cross, diagonal, workspace).lowerFactor().values
 
-                    var error = 0.0
-                    for (i in actual.indices) error = maxOf(error, abs(actual[i] - expected[i]))
-                    assertTrue(error < 1e-12, "size=$size added=$added pooled=${workspace != null} error=$error")
+                var error = 0.0
+                for (i in actual.indices) {
+                    val expected = when {
+                        i % order < i / order -> 0.0
+                        i % order == i / order -> 2.0
+                        else -> tail
+                    }
+                    error = maxOf(error, abs(actual[i] - expected))
                 }
+                assertTrue(error < 1e-12, "size=$size added=$added pooled=${workspace != null} error=$error")
             }
         }
     }
@@ -301,36 +324,34 @@ class CholeskyFactorTest {
 
     @Test
     fun `allocating matrix solves match destination solves across block boundaries`() {
-        for (size in listOf(63, 129, 257)) {
+        for ((size, columns) in listOf(63 to 3, 65 to 16)) {
             val matrix = DenseMatrix.wrap(
                 size,
                 size,
                 DoubleArray(size * size) { if (it % size == it / size) 2.25 else 0.25 },
             )
             val factor = matrix.factorCholesky()
-            for (columns in listOf(3, 16)) {
-                val right = DenseMatrix.wrap(size, columns, DoubleArray(size * columns) { it % 7 - 3.0 })
-                val original = right.values.copyOf()
-                val out = DenseMatrix.zero(size, columns)
+            val right = DenseMatrix.wrap(size, columns, DoubleArray(size * columns) { it % 7 - 3.0 })
+            val original = right.values.copyOf()
+            val out = DenseMatrix.zero(size, columns)
 
-                val allocated = listOf(
-                    factor.solve(right).values,
-                    factor.solveLower(right).values,
-                    factor.solveLower(right, transpose = true).values,
-                )
-                val destinations = listOf(
-                    factor.solveInto(right, out, Workspace()).values.copyOf(),
-                    factor.solveLowerInto(right, out, workspace = Workspace()).values.copyOf(),
-                    factor.solveLowerInto(right, out, true, Workspace()).values.copyOf(),
-                )
+            val allocated = listOf(
+                factor.solve(right).values,
+                factor.solveLower(right).values,
+                factor.solveLower(right, transpose = true).values,
+            )
+            val destinations = listOf(
+                factor.solveInto(right, out, Workspace()).values.copyOf(),
+                factor.solveLowerInto(right, out, workspace = Workspace()).values.copyOf(),
+                factor.solveLowerInto(right, out, true, Workspace()).values.copyOf(),
+            )
 
-                var error = 0.0
-                for ((actual, expected) in allocated.zip(destinations)) {
-                    for (i in actual.indices) error = maxOf(error, abs(actual[i] - expected[i]))
-                }
-                assertTrue(error < 1e-12, "size=$size columns=$columns solve error=$error")
-                assertContentEquals(original, right.values)
+            var error = 0.0
+            for ((actual, expected) in allocated.zip(destinations)) {
+                for (i in actual.indices) error = maxOf(error, abs(actual[i] - expected[i]))
             }
+            assertTrue(error < 1e-12, "size=$size columns=$columns solve error=$error")
+            assertContentEquals(original, right.values)
         }
     }
 

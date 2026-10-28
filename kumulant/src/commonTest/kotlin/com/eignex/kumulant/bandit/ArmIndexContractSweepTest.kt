@@ -11,8 +11,8 @@ import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
 import com.eignex.kumulant.bandit.univariate.ThompsonSampling
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
 import com.eignex.kumulant.feat
-import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
-import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
+import com.eignex.kumulant.stat.regression.tree.MeanTreePosterior
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,8 +33,8 @@ class ArmIndexContractSweepTest {
         val topTwo = TopTwoThompsonBandit(ARMS, ThompsonSampling(BernoulliArm(), BetaPosterior), random = Random(0))
         val regression = RegressionContextualBandit(
             nbrArms = ARMS,
-            template = BayesianRegressionStat(featureSize = 2),
-            posterior = MultivariateGaussian,
+            template = DecisionTreeRegressionStat(featureSize = 2, splitCandidates = emptyList()),
+            posterior = MeanTreePosterior,
             random = Random(0),
         )
         return listOf(
