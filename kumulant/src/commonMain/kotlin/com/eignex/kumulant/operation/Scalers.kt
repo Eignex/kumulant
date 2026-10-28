@@ -25,15 +25,10 @@ import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stream.DEFAULT_TARGET_HIGH
 import com.eignex.kumulant.stream.DEFAULT_TARGET_LOW
 
-// Standard streaming feature scalers built on top of `withFeedback`. Each scaler couples the
-// inner stat with a small running-statistics primary so the projected input is rescaled per
-// update against the snapshot just observed.
-//
-// All scalers degrade gracefully during the warm-up phase (variance/range still zero): they
-// emit the configured neutral value rather than NaN.
+// Scalers project each input against the just-updated primary snapshot.
+// Zero variance or range maps to the configured neutral value.
 
-/** AST: `(X - center) / scale` guarded by `Scale > 0`, emitting `0` while the variance is
- *  still degenerate. */
+// Zero variance maps to the neutral value 0.
 internal val standardScalerProjection: ScalarExpr =
     IfExpr(Scale gt 0.0, (X - Center) / Scale, Const(0.0))
 
@@ -44,20 +39,10 @@ internal fun minMaxProjection(targetLow: Double, targetHigh: Double): ScalarExpr
     return IfExpr(span gt 0.0, scaled, Const(targetLow))
 }
 
-/**
- * Z-score the input against the inner stat's own running mean and standard deviation, then
- * forward the standardized value to this stat. Wraps a hidden [VarianceStat] primary; while
- * the variance is still zero (the very first update) the scaler emits `0`.
- */
 internal fun <R : Result> SeriesStat<R>.standardScaler(concurrency: Concurrency = this.concurrency): SeriesStat<R> =
     withFeedback(VarianceStat(concurrency), standardScalerProjection)
 
-/**
- * Min-max scale the input against the running observed range, then forward the mapped value
- * to this stat. With the defaults the output lands in `[0, 1]`; use `targetLow = -1.0,
- * targetHigh = 1.0` for a `[-1, 1]` mapping. While the range is still degenerate (first
- * update or constant stream) the scaler emits [targetLow].
- */
+// A degenerate observed range maps to targetLow.
 internal fun <R : Result> SeriesStat<R>.minMaxScaler(
     targetLow: Double = DEFAULT_TARGET_LOW,
     targetHigh: Double = DEFAULT_TARGET_HIGH,
@@ -67,12 +52,6 @@ internal fun <R : Result> SeriesStat<R>.minMaxScaler(
     return withFeedback(RangeStat(concurrency), minMaxProjection(targetLow, targetHigh))
 }
 
-/**
- * Element-wise standard scaler over a [dimensions]-dimensional vector input. Each
- * coordinate carries its own [VarianceStat] primary; the inner vector stat sees a
- * per-coordinate z-scored vector. Each coordinate degrades to `0` while its
- * variance is still zero.
- */
 @Suppress("UNCHECKED_CAST")
 internal fun <I : Result> VectorStat<I>.standardScaleFeatures(
     dimensions: Int,
@@ -83,12 +62,6 @@ internal fun <I : Result> VectorStat<I>.standardScaleFeatures(
     return withFeedback(primary, standardScalerProjection)
 }
 
-/**
- * Element-wise min-max scaler over a [dimensions]-dimensional vector input. Each
- * coordinate carries its own [RangeStat] primary; the inner vector stat sees a
- * per-coordinate `[targetLow, targetHigh]`-mapped vector. Each coordinate degrades
- * to [targetLow] while its range is still degenerate.
- */
 @Suppress("UNCHECKED_CAST")
 internal fun <I : Result> VectorStat<I>.minMaxScaleFeatures(
     dimensions: Int,
@@ -102,11 +75,6 @@ internal fun <I : Result> VectorStat<I>.minMaxScaleFeatures(
     return withFeedback(primary, minMaxProjection(targetLow, targetHigh))
 }
 
-/**
- * Element-wise standard scaler over the regression's feature vector. Each coordinate
- * carries its own [VarianceStat] primary; the inner regressor sees a per-feature
- * z-scored vector. `y` and `weight` pass through unchanged.
- */
 @Suppress("UNCHECKED_CAST")
 internal fun <R : Result> RegressionStat<R>.standardScaleFeatures(
     concurrency: Concurrency = this.concurrency,
@@ -116,11 +84,6 @@ internal fun <R : Result> RegressionStat<R>.standardScaleFeatures(
     return withFeedback(primary, standardScalerProjection)
 }
 
-/**
- * Element-wise min-max scaler over the regression's feature vector. Each coordinate
- * carries its own [RangeStat] primary; the inner regressor sees a per-feature
- * rescaled vector. `y` and `weight` pass through unchanged.
- */
 @Suppress("UNCHECKED_CAST")
 internal fun <R : Result> RegressionStat<R>.minMaxScaleFeatures(
     targetLow: Double = DEFAULT_TARGET_LOW,
@@ -133,19 +96,9 @@ internal fun <R : Result> RegressionStat<R>.minMaxScaleFeatures(
     return withFeedback(primary, minMaxProjection(targetLow, targetHigh))
 }
 
-/**
- * Z-score both axes of a paired stat against per-axis [VarianceStat] primaries, then
- * forward the standardized `(x', y')` to the inner. Each axis degrades to `0` while
- * its variance is still zero.
- */
 internal fun <R : Result> PairedStat<R>.standardScaler(concurrency: Concurrency = this.concurrency): PairedStat<R> =
     withFeedback(VarianceStat(concurrency), VarianceStat(concurrency), standardScalerProjection)
 
-/**
- * Min-max scale both axes of a paired stat against per-axis [RangeStat] primaries into
- * `[targetLow, targetHigh]`. Each axis degrades to [targetLow] while its range is still
- * degenerate.
- */
 internal fun <R : Result> PairedStat<R>.minMaxScaler(
     targetLow: Double = DEFAULT_TARGET_LOW,
     targetHigh: Double = DEFAULT_TARGET_HIGH,

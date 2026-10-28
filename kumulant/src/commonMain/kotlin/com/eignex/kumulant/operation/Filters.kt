@@ -10,13 +10,6 @@ import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import kotlin.time.Duration
 
-/**
- * Filter adapters. Constructed by the spec layer's
- * `filter(BoolExpr)` materialization in
- * `com.eignex.kumulant.schema.Operations.kt`: the predicate closure is built
- * from the AST at materialize time.
- */
-
 internal class FilterSeriesStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val predicate: (Double) -> Boolean,

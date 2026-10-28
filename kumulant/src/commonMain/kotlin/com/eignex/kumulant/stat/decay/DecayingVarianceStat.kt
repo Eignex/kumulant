@@ -77,24 +77,11 @@ class DecayingVarianceStat(
     private val mean = mode.newDouble(0.0)
     private val m2 = mode.newDouble(0.0)
 
-    /**
-     * Decay the accumulator forward to [t] and return the factor to apply to an observation
-     * stamped there.
-     *
-     * A timestamp *behind* the landmark cannot be decayed to: `exp(-alpha*(t - landmark))` has a
-     * positive exponent, so it would inflate `W` and `M2` rather than shrink them, overflow both
-     * to `Infinity` past ~1024 half-lives, and drag the landmark backwards so nothing recovers.
-     * An out-of-order stamp is a late arrival, not a rewind, so the landmark holds and the sample
-     * is discounted by how late it is - which is what [DecayingSumStat] already does with its
-     * `exp(alpha*dt)` for a negative `dt`.
-     */
+    // Late observations are discounted against the current landmark, keeping decay forward-only.
     private fun advanceTo(t: Long): Double {
         val priorLandmark = landmarkNanos.load()
         if (t == priorLandmark) return 1.0
-        // While empty the landmark snaps to the observation, in either direction: it starts at
-        // wall-clock construction time, and a replay stream numbering from its own epoch is
-        // legitimately far behind that. Only once there is history to protect does a backwards
-        // stamp mean a late arrival.
+        // The first observation sets the landmark to support replay epochs; later timestamps preserve forward decay.
         val priorW = totalWeights.load()
         if (priorW == 0.0) {
             landmarkNanos.store(t)
@@ -109,7 +96,6 @@ class DecayingVarianceStat(
     }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        // Both before the lock: a dropped observation neither contends for it nor moves the landmark.
         if (weight.isNotPositiveWeight()) return // no inverse here, so a negative drops too; see Stat
         lock.guarded {
             val scaledWeight = weight * advanceTo(timestampNanos)
@@ -131,8 +117,7 @@ class DecayingVarianceStat(
         val priorM2 = m2.load()
         val w: Double
         val decayedM2: Double
-        // A read behind the landmark gets the state as of the landmark rather than an inflated one,
-        // for the same reason advanceTo refuses to rewind.
+        // Reads behind the landmark use the landmark state to preserve forward decay.
         if (priorW == 0.0 || timestampNanos <= landmark) {
             w = priorW
             decayedM2 = priorM2

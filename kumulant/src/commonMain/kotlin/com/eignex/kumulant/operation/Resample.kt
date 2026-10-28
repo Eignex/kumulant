@@ -14,32 +14,11 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration
 
-// resampleByTime aligns the input stream onto fixed wall-clock buckets and forwards
-// one observation per closed bucket to the delegate stat. The per-bucket value is
-// determined by [ResampleAggregator].
-//
-// An update in a later bucket is the only thing that closes the open one. There is no
-// flush, and `read` does not close it either, so the newest bucket is never visible: a
-// reader always sees the stream as of the last bucket boundary an update crossed. That
-// is what makes the operator's output independent of when it is read, which a windowed
-// or periodically-scraped consumer depends on - a flush on read would emit a partial
-// bucket whose value then changed as the rest of it arrived.
-//
-// Concurrency: coupled per-bucket state and bucket index (category 3). The internal
-// lock keeps the multi-cell transition consistent.
+// Only updates crossing a bucket boundary publish a bucket, making reads independent of polling time.
+// The bucket index and accumulated value share a lock for consistent transitions.
 
-/**
- * Align this series on fixed wall-clock buckets of [bucket] length and forward one
- * observation per closed bucket using [aggregator].
- *
- * A bucket closes when an update arrives in a later one, so the delegate lags the input by up to one
- * bucket and the open bucket is never readable. Reads are therefore stable: the same read repeated
- * returns the same value until an update crosses a boundary.
- *
- * Caller weight folds into the open bucket rather than passing through: [ResampleAggregator.Sum] and
- * [ResampleAggregator.Mean] weight the observations they combine, and the closed bucket then reaches
- * the delegate as a single observation of weight `1.0` however many raw ones went into it.
- */
+// Updates crossing a bucket boundary close the prior bucket. Closed buckets carry weight 1;
+// Sum and Mean incorporate caller weights inside the bucket.
 internal fun <R : Result> SeriesStat<R>.resampleByTime(
     bucket: Duration,
     aggregator: ResampleAggregator = ResampleAggregator.Mean,
@@ -79,17 +58,8 @@ internal class ResampleByTimeStat<R : Result>(
         lock.guarded {
             val newBucket = timestampNanos.floorDiv(bucketNanos)
             val cur = currentBucket.load()
-            // The same guard the Welford stats downstream apply, for the same reason: Mean divides by
-            // the bucket's accumulated weight, so a downdate that takes it to zero publishes an
-            // infinity that every later read inherits.
-            //
-            // The prior is whatever the bucket this weight will actually land in already holds. A late
-            // arrival joins the open bucket rather than its own, so charging it against a zero prior
-            // would reject a downdate the open bucket can absorb, on the strength of a timestamp the
-            // operator then ignores. Only the seed paths start from nothing.
-            //
-            // Checked before any cell is written, so a rejected update leaves the stat as it was
-            // rather than half-applied.
+            // Validate the destination bucket weight before mutation to keep rejected downdates atomic.
+            // Late arrivals contribute to the open bucket; seed paths start with zero weight.
             val joinsOpenBucket = cur != NO_BUCKET && newBucket <= cur
             requireLiveWeight(if (joinsOpenBucket) bucketWeight.load() else 0.0, weight)
             if (cur == NO_BUCKET) {

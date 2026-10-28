@@ -15,7 +15,6 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * snapshot hierarchy, and a public facade that forwards to [TreeGrowth].
  */
 
-/** The classification instantiation of the node-shape SPI. */
 internal typealias ClassificationShapeSpi = TreeShape<
     Vector,
     SerializableSplit,
@@ -93,7 +92,6 @@ class ClassificationTree(
     fun mergeSnapshot(other: TreeClassificationNodeResult) = growth.mergeSnapshot(other, ClassificationResultShape)
 }
 
-/** Reads and writes the classification node hierarchy on the growth engine's behalf. */
 private class ClassificationShape(
     private val config: ClassificationTreeConfig,
     private val newArm: () -> SeriesStat<ClassCountsResult>,
@@ -169,7 +167,6 @@ private class ClassificationShape(
     override fun leafLabel(arm: ClassCountsResult): String = "leaf counts=${arm.counts.toList()}"
 }
 
-/** Reads the immutable classification snapshot hierarchy on the growth engine's behalf. */
 private object ClassificationResultShape : TreeResultShape<
     SerializableSplit,
     TreeClassificationNodeResult,

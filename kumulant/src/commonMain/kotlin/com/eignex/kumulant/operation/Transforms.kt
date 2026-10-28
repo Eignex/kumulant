@@ -10,19 +10,6 @@ import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import kotlin.time.Duration
 
-/**
- * Pre-update transform adapters. The lambda-bound variants
- * ([TransformValueStat] / [TransformPairStat] / [TransformVectorStat] /
- * [TransformLongStat]) are constructed by the spec layer's
- * `transform(ScalarExpr)` / `transformPair(xExpr, yExpr)` /
- * `transformElement(ScalarExpr)` / `transformVector(VectorExpr)` materialization
- * in `com.eignex.kumulant.schema.Operations.kt`; the closure is built from the
- * AST at materialize time.
- *
- * The exceptions are [withValue], [asSeries], and [asDiscrete]: parameter-only
- * adapters with no lambda, exposed on the live surface for direct use.
- */
-
 internal class TransformValueStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val transform: (Double) -> Double,
@@ -94,10 +81,8 @@ internal class TransformLongStat<R : Result>(
         TransformLongStat(delegate.create(concurrency), transform)
 }
 
-/** Replace every incoming Double with the constant [value]. */
 internal fun <R : Result> SeriesStat<R>.withValue(value: Double): SeriesStat<R> = ConstantValueStat(this, value)
 
-/** Replace every incoming Long with the constant [value]. */
 internal fun <R : Result> DiscreteStat<R>.withValue(value: Long): DiscreteStat<R> = ConstantValueDiscreteStat(
     this,
     value,
@@ -131,13 +116,8 @@ internal class ConstantValueDiscreteStat<R : Result>(private val delegate: Discr
         ConstantValueDiscreteStat(delegate.create(concurrency), value)
 }
 
-/**
- * View this [DiscreteStat] as a [SeriesStat] that accepts `Double`. Each Double input
- * is cast via [Double.toLong] (truncates toward zero) before being forwarded.
- */
 internal fun <R : Result> DiscreteStat<R>.asSeries(): SeriesStat<R> = DiscreteAsSeriesStat(this)
 
-/** View this [SeriesStat] as a [DiscreteStat] that accepts `Long` (cast to Double via [Long.toDouble]). */
 internal fun <R : Result> SeriesStat<R>.asDiscrete(): DiscreteStat<R> = SeriesAsDiscreteStat(this)
 
 internal class DiscreteAsSeriesStat<R : Result>(private val delegate: DiscreteStat<R>) :

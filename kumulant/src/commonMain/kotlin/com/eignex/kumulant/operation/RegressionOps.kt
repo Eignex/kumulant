@@ -11,63 +11,33 @@ import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 
-// Decorator surface for [RegressionStat], mirroring the live ops on the other modalities.
-// Every wrapper delegates `read` / `merge` / `reset` / `concurrency` / `featureSize` to
-// the inner regressor and intercepts only `update` to filter, transform, weight,
-// throttle, sample, or fan out. Spec-layer counterparts in
-// `com.eignex.kumulant.schema.Operations.kt` materialise to these wrappers.
-
-/** Forward only updates that pass [predicate]; the predicate sees `(x, y)`. */
 internal fun <R : Result> RegressionStat<R>.filter(predicate: (Vector, Double) -> Boolean): RegressionStat<R> =
     FilterRegressionStat(this, predicate)
 
-/** Rewrite y before update via [transform]; x and weight pass through unchanged. */
 internal fun <R : Result> RegressionStat<R>.transformY(transform: (Vector, Double) -> Double): RegressionStat<R> =
     TransformYRegressionStat(this, transform)
 
-/**
- * Rewrite x before update via [transform]; y and weight pass through unchanged.
- *
- * [inputFeatureSize] is the width callers must supply, which differs from the inner regressor's whenever
- * the transform changes the length. Null keeps the inner width.
- */
+// inputFeatureSize describes the vector before transformation; null uses the inner width.
 internal fun <R : Result> RegressionStat<R>.transformX(
     inputFeatureSize: Int? = null,
     transform: (Vector, Double) -> DoubleArray,
 ): RegressionStat<R> = TransformXRegressionStat(this, inputFeatureSize, transform)
 
-/**
- * Replace every update's weight with the constant [weight].
- *
- * An inert caller weight is passed through rather than replaced, exactly as in the other four
- * modalities; see [com.eignex.kumulant.operation.withWeight] for why.
- */
+// Inert caller weights pass through unchanged to preserve the no-op contract.
 internal fun <R : Result> RegressionStat<R>.withWeight(weight: Double): RegressionStat<R> =
     WithWeightRegressionStat(this, weight)
 
-/** Multiply each update's caller-supplied weight by [weighter] over `(x, y)`. */
 internal fun <R : Result> RegressionStat<R>.weightBy(weighter: (Vector, Double) -> Double): RegressionStat<R> =
     WeightByRegressionStat(this, weighter)
 
-/** Forward only every [every]th update; drop the rest. */
 internal fun <R : Result> RegressionStat<R>.throttle(every: Int): RegressionStat<R> = ThrottleRegressionStat(
     this,
     every,
 )
 
-/** Bernoulli-sample each update at probability [rate], drawing from [seed]. */
 internal fun <R : Result> RegressionStat<R>.sample(rate: Double, seed: Long): RegressionStat<R> =
     SampleRegressionStat(this, rate, seed)
 
-/**
- * Lift a scalar [SeriesStat] into a [RegressionStat] by projecting `(x, y)` to a
- * scalar via [project]. Use it to fan a regression input stream into a series stat
- * that only cares about, say, the marginal y distribution: pass `{ _, y -> y }`.
- *
- * The resulting RegressionStat's `read` returns the underlying SeriesStat's result;
- * `featureSize` is the caller-supplied [featureSize] so an x-vector contract is
- * enforced at update time even though the inner stat ignores x.
- */
 internal fun <R : Result> SeriesStat<R>.foldRegression(
     featureSize: Int,
     project: (Vector, Double) -> Double,

@@ -175,11 +175,8 @@ data class NormalArm(
     val priorSquaredDeviations: Double = 0.02,
 ) : Arm<WeightedVarianceResult> {
     override fun createStat(): SeriesStat<WeightedVarianceResult> {
-        // Three seed points carrying priorWeight, priorWeight/2 and priorWeight/2, so the stat ends up
-        // with 2 * priorWeight of total weight and a squared-deviation sum of exactly
-        // priorSquaredDeviations - hence a reported variance of priorSquaredDeviations / (2 *
-        // priorWeight). Anything deriving one of these parameters from the other has to account for
-        // both factors; see NormalArm.warmStart.
+        // The three seed points total 2 * priorWeight with squared deviations priorSquaredDeviations,
+        // giving variance priorSquaredDeviations / (2 * priorWeight).
         val s = VarianceStat()
         if (priorWeight > 0.0) {
             s.update(priorMean, 0L, priorWeight)

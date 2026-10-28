@@ -15,7 +15,6 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
  * facade that forwards to it.
  */
 
-/** The regression instantiation of the node-shape SPI. */
 internal typealias RegressionShapeSpi<Row> = TreeShape<
     Row,
     Split<Row>,
@@ -104,7 +103,6 @@ class RegressionTree<Row>(
     fun merge(other: RegressionTree<Row>) = growth.mergeTree(other.growth.root)
 }
 
-/** Reads and writes the regression node hierarchy on the growth engine's behalf. */
 private class RegressionShape<Row>(
     private val config: RegressionTreeConfig,
     private val newArm: () -> SeriesStat<WeightedVarianceResult>,

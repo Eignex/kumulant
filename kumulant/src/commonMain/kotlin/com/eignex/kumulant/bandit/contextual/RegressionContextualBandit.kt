@@ -80,13 +80,11 @@ import kotlin.random.Random
  */
 class RegressionContextualBandit<R : Result>(
     override val nbrArms: Int,
-    /** Template regressor; one independent copy is allocated per arm via [RegressionStat.create]. */
     private val template: RegressionStat<R>,
     /** Stateless arm scorer applied to each per-arm snapshot at `choose` time. */
     val posterior: RegressionPosterior<R>,
     /** Per-evaluate exploration scale forwarded to the posterior; `0.0` collapses to the point estimate. */
     val exploration: Double = 1.0,
-    /** Template for the global pooling regressor; `null` disables pooling. */
     private val globalTemplate: RegressionStat<R>? = null,
     override val random: Random = Random.Default,
 ) : ContextualBandit,

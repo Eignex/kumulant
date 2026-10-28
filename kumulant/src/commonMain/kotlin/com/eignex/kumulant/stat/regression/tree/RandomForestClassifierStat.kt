@@ -68,8 +68,7 @@ class RandomForestClassifierStat(
 
     private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
 
-    // Resolved per instance, not captured in the constructor default: create() has to be able
-    // to rebind the default arm to the replica's concurrency.
+    // Per-instance resolution binds default arms to each replica concurrency level.
     private val armFactory: () -> SeriesStat<ClassCountsResult> = leafArmFactory ?: {
         ClassCountsStat(
             numClasses,
@@ -77,13 +76,9 @@ class RandomForestClassifierStat(
         )
     }
 
-    // Drawn from on the update path, once per tree, with no lock over it - so it has to be a generator
-    // that concurrent updates can share. See CounterRandom.
     private val baggingRng = CounterRandom(seedRng.childSeed(), concurrency)
 
-    // Volatile like TreeGrowth.root, and for the same reason: this reference is read on the update
-    // path and rewritten by reset, so without it a concurrent updater can go on writing into the
-    // pre-reset tree indefinitely, never observing the replacement.
+    // Volatile publication makes reset replacements visible to concurrent updates.
     @Volatile
     private var trees: Array<ClassificationTree> = Array(nbrTrees) { newTree() }
 
@@ -98,13 +93,8 @@ class RandomForestClassifierStat(
 
     override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
-        // A negative weight is a real downdate only when bagging is off: a class count and a Welford
-        // accumulator both subtract exactly. Under bagging each arrival draws its own Poisson
-        // multiplier, so a retraction is scaled by a different k than the insertion it undoes - leaving
-        // a leaf with negative mass, or tripping the weight guard inside it - and keying the multiplier
-        // off the observation instead would hand repeated identical observations the same k and bias the
-        // resampling. Either way the guard returns before the first draw, since consuming one would
-        // desynchronise every later bagging draw and change the forest's predictions.
+        // Bagging uses independent Poisson draws, so retractions cannot recover insertion weights.
+        // Drop rejected weights before drawing to preserve the sequence for later observations.
         if (if (bagging) weight.isNotPositiveWeight() else weight.isInertWeight()) return
         val c = y.asClassLabel(numClasses)
         if (c < 0) return
@@ -135,11 +125,7 @@ class RandomForestClassifierStat(
         for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root)
     }
 
-    /**
-     * Restarts both seed streams, so the rebuilt forest is the one a fresh stat would have grown and
-     * the bagging draws resume from the start rather than from wherever the old forest left off.
-     * `reset` promises the equivalent of a fresh stat, not merely an emptied one.
-     */
+    /** Restores empty state and restarts the seed streams for reproducible growth. */
     override fun reset() {
         seedRng.reset()
         baggingRng.reset()

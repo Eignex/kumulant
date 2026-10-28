@@ -61,8 +61,7 @@ class DecisionTreeClassifierStat(
 
     private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
 
-    // Resolved per instance, not captured in the constructor default: create() has to be able
-    // to rebind the default arm to the replica's concurrency.
+    // Per-instance resolution binds default arms to each replica concurrency level.
     private val armFactory: () -> SeriesStat<ClassCountsResult> = leafArmFactory ?: {
         ClassCountsStat(
             numClasses,
@@ -70,9 +69,7 @@ class DecisionTreeClassifierStat(
         )
     }
 
-    // Volatile like TreeGrowth.root, and for the same reason: this reference is read on the update
-    // path and rewritten by reset, so without it a concurrent updater can go on writing into the
-    // pre-reset tree indefinitely, never observing the replacement.
+    // Volatile publication makes reset replacements visible to concurrent updates.
     @Volatile
     private var tree: ClassificationTree = newTree()
 
@@ -87,8 +84,7 @@ class DecisionTreeClassifierStat(
 
     override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
-        // isInertWeight rather than `weight <= 0.0`, which is false for NaN: a class count downdates
-        // exactly, so a negative weight is a real retraction while a NaN would pin a count for good.
+        // Finite negative weights retract class counts; inert weights preserve them.
         if (weight.isInertWeight()) return
         val c = y.asClassLabel(numClasses)
         if (c < 0) return
@@ -109,11 +105,7 @@ class DecisionTreeClassifierStat(
         tree.mergeSnapshot(values.root)
     }
 
-    /**
-     * Restarts the seed stream too, so the rebuilt tree is the one a fresh stat would have grown.
-     * Without it a reset stat draws its next seed from wherever construction left off, and `reset`
-     * promises the equivalent of a fresh stat rather than merely an empty one.
-     */
+    /** Restores empty state and restarts the seed streams for reproducible growth. */
     override fun reset() {
         seedRng.reset()
         tree = newTree()

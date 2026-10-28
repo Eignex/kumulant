@@ -7,85 +7,22 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-/**
- * Breiman's default random-subspace size: `ceil(sqrt(p))` candidates drawn per audit leaf.
- *
- * Both forests default `mtry` to this when the caller leaves it null. The clamp matters at the small end
- * - `ceil(sqrt(1))` is already 1, but `coerceAtLeast(1)` keeps an mtry of zero from disabling growth
- * silently if the arithmetic is ever changed - and `p <= 0` returns 0 rather than 1 because an empty
- * candidate pool means no growth at all rather than growth on one candidate that does not exist.
- *
- * @param p size of the tree's full candidate-split pool.
- */
+// Breiman random-subspace size: ceil(sqrt(p)); an empty candidate pool yields zero.
 internal fun defaultMtry(p: Int): Int = if (p <= 0) 0 else ceil(sqrt(p.toDouble())).toInt().coerceAtLeast(1)
 
-/**
- * The VFDT split margin: how far ahead a candidate must be before the tree believes the ordering.
- *
- * Hoeffding's inequality bounds how far a mean over [n] observations can sit from the true mean at
- * confidence [delta], and a split fires when the best candidate beats the runner-up by more than this.
- * That is what makes the tree's decisions stable rather than a reaction to whichever candidate happened
- * to look good first.
- *
- * [delta] is decayed by [decay] raised to [depth] before use: a deeper leaf sees less of the stream, so
- * holding confidence fixed would let it split on proportionally thinner evidence. An empty leaf returns
- * an infinite bound, so no margin can ever clear it and the leaf cannot split on no data.
- *
- * @param delta confidence threshold before depth decay.
- * @param n total observation weight at the leaf.
- * @param depth the leaf's depth, driving the decay.
- * @param decay per-depth multiplier on [delta].
- */
+// VFDT margin with confidence delta * decay^depth; empty leaves have an infinite bound.
 internal fun hoeffdingBound(delta: Double, n: Double, depth: Int, decay: Double): Double {
     if (n <= 0.0) return Double.POSITIVE_INFINITY
     val adjusted = delta * decay.pow(depth.toDouble())
     return sqrt(-ln(adjusted) / (2.0 * n))
 }
 
-/**
- * Draw the random subspace of candidate splits a newly born audit leaf will consider.
- *
- * With [mtry] null, or at least as large as the pool, the leaf considers everything and the list is
- * returned as is rather than copied. Otherwise it gets a fresh random subset, which is what decorrelates
- * the trees in a forest: two trees seeing the same stream still grow differently because they were
- * offered different candidates.
- *
- * Generic in the split type because the regression tree is generic in its row type while the
- * classification tree is fixed to `Vector`.
- *
- * @param S the split type, which differs between the two trees.
- * @param mtry subspace size, or null for the full pool.
- * @param random the tree's PRNG, so a seeded tree stays reproducible.
- */
 internal fun <S> List<S>.pickCandidates(mtry: Int?, random: Random): List<S> {
     val k = mtry ?: return this
     if (k >= size) return this
     return shuffled(random).take(k)
 }
 
-/**
- * Score every candidate split at a leaf and return the winner, the runner-up, and the winner's index.
- *
- * Generic in the leaf payload: the loop needs only `totalWeights` and a scoring function, so both are
- * supplied here rather than reached through a payload-specific metric type.
- *
- * A candidate is skipped, not scored, when either side is thinner than [minSamplesLeaf] or the two
- * sides together are thinner than [minSamplesSplit]: a split that isolates three observations may score
- * beautifully and predict nothing. Skipped candidates cannot become `bestIndex`, so a leaf where every
- * candidate is too thin reports `bestIndex = -1` and does not split.
- *
- * The runner-up is tracked because that, not the winner's absolute score, is what the Hoeffding test
- * consumes: the question is whether the tree is confident about the *ordering*, so a leaf with two
- * equally good candidates has to wait even though both are excellent.
- *
- * @param R the leaf payload type.
- * @param total the leaf's pre-split aggregate.
- * @param pos per-candidate aggregate of observations routing true.
- * @param neg per-candidate aggregate of observations routing false.
- * @param minSamplesSplit minimum combined weight for a candidate to be scored.
- * @param minSamplesLeaf minimum weight on each side for a candidate to be scored.
- * @param score the split criterion, taking total / pos / neg.
- */
 internal fun <R : HasObservationCount> rankCandidates(
     total: R,
     pos: List<R>,
@@ -116,25 +53,7 @@ internal fun <R : HasObservationCount> rankCandidates(
     return SplitInfo(top1, top2, bestI)
 }
 
-/**
- * The VFDT split decision: given ranked candidates, has the leaf earned the right to split?
- *
- * A candidate must exist and be worth taking: `bestIndex < 0` means every candidate was too thin to
- * score, and `top1 <= 0.0` means the best one does not improve on not splitting at all, since every
- * metric is defined so that no signal scores zero.
- *
- * Then either the Hoeffding test or the tie-break has to pass. The Hoeffding test is the real rule: the
- * winner must beat the runner-up by more than the bound, so the ordering is not an artefact of which
- * candidate happened to look good first. The tie-break exists because that rule alone deadlocks - two
- * candidates of genuinely equal merit never separate by more than any bound, so the leaf would grow
- * forever without splitting. Once the bound itself has shrunk below [HoeffdingTreeConfig.tau] the tree
- * has enough evidence to know the choice does not matter much, and picks the winner anyway.
- *
- * @param ranked output of [rankCandidates].
- * @param totalWeight the leaf's accumulated observation weight, which drives the bound.
- * @param depth the leaf's depth, which decays the confidence level.
- * @param config the growth tunables.
- */
+// The Hoeffding margin establishes candidate ordering; tau permits ties once the bound is small enough.
 internal fun shouldSplit(ranked: SplitInfo, totalWeight: Double, depth: Int, config: HoeffdingTreeConfig): Boolean {
     if (totalWeight < config.minSamplesSplit) return false
     if (ranked.bestIndex < 0 || ranked.top1 <= 0.0) return false
@@ -142,21 +61,7 @@ internal fun shouldSplit(ranked: SplitInfo, totalWeight: Double, depth: Int, con
     return ranked.top1 - ranked.top2 > eps || eps < config.tau
 }
 
-/**
- * The fraction of the parent's impurity that splitting removes.
- *
- * Every split criterion kumulant ships is this expression over a different impurity measure:
- * [VarianceReduction] over `variance`, [GiniReduction] over `gini`, [InformationGain] over `entropy`. The
- * `w <= 0.0` guard is what keeps an empty split scoring zero rather than NaN.
- *
- * Reported as a fraction rather than an absolute reduction because [hoeffdingBound] assumes a criterion
- * whose range is 1. Absolute variance reduction is in units of the variance of `y` and so unbounded: on a
- * stream with a spread of 100 two candidates split on pure noise differ by far more than any bound, so the
- * test passes trivially and the tree splits on noise, while on a stream inside `[0, 1]` the differences
- * never reach the bound and every split comes from the tie-break instead - the tree splits on a schedule
- * rather than on evidence. Entropy in nats has range `ln(K)` and misses in the other direction. Dividing
- * by the parent impurity puts all three in `[0, 1]`, which is the range the bound is derived for.
- */
+// Normalizing by parent impurity puts every criterion in [0, 1], the range assumed by the Hoeffding bound.
 internal inline fun <R : HasObservationCount> impurityReduction(
     total: R,
     pos: R,

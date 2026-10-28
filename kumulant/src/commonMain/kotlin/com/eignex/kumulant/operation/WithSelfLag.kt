@@ -7,29 +7,10 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
 import kotlin.time.Duration
 
-// withSelfLag lifts a PairedStat<R> into a SeriesStat<R> by self-pairing each input
-// with the value seen k updates ago. The first k updates only warm the ring buffer
-// and forward nothing; from update k+1 onward the inner paired stat sees (current, lag-k).
-//
-// Use case: lag-k autocorrelation is Pearson correlation of the (current, lag-k) pair,
-// so CovarianceStat.withSelfLag(k) is the streaming autocorrelation primitive.
-//
-// An inert weight is dropped before the ring is touched: the ring is what the lagged half of
-// each pair is read back out of, so admitting an observation that carries no multiplicity would
-// pair it with a real one later at that update's weight. See [Stat].
-//
-// Concurrency: the ring update is serialised behind the level's lock, which is a noop only under
-// Concurrency.None. Claiming the tick, reading the ring slot and storing into it is one indivisible
-// step: split apart, the paired stat receives (current, 0.0), a pair the stream never emitted, which
-// is an unbounded error rather than the bounded drift the concurrent levels promise.
+// The first k updates warm the ring. Inert weights preserve its history.
+// Tick allocation, slot reads, and writes share a lock so pairs always contain initialized values.
 
-/**
- * Lift a paired stat into a series stat by self-pairing each input with the value seen
- * [k] updates ago. The first [k] updates only warm the ring and forward nothing.
- *
- * The inner paired stat receives `(current, lag-k)` so a covariance / correlation stat
- * naturally computes lag-k autocovariance / autocorrelation.
- */
+// The delegate receives (current, lag-k), giving lag-k autocovariance or autocorrelation.
 internal fun <R : Result> PairedStat<R>.withSelfLag(k: Int): SeriesStat<R> = WithSelfLagSeriesStat(this, k)
 
 internal class WithSelfLagSeriesStat<R : Result>(private val delegate: PairedStat<R>, private val k: Int) :

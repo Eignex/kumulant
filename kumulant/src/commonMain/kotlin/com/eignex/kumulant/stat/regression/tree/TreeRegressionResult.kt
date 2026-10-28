@@ -105,7 +105,6 @@ fun RegressionTree<Vector>.mergeSnapshot(other: TreeNodeResult) {
     growth.mergeSnapshot(other, RegressionResultShape)
 }
 
-/** Reads the immutable regression snapshot hierarchy on the growth engine's behalf. */
 private object RegressionResultShape :
     TreeResultShape<Split<Vector>, TreeNodeResult, TreeSplitResult, WeightedVarianceResult> {
     override fun asSplitResult(node: TreeNodeResult): TreeSplitResult? = node as? TreeSplitResult

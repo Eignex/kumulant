@@ -74,35 +74,30 @@ private fun groupSpec(nestedSchema: StatSchema): StatSpec {
     }
 }
 
-/** Series-modality specs from a schema, materialized at [concurrency]. */
 internal fun seriesSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out SeriesStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is SeriesStatSpec<*>) return@mapNotNull null
         name to config.compileSeries(name)
     }.map { (name, plan) -> toSpec<SeriesStat<*>>(StatKey<Result>(name), plan.build(concurrency)) }
 
-/** Paired-modality specs from a schema. */
 internal fun pairedSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out PairedStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is PairedStatSpec<*>) return@mapNotNull null
         name to config.compilePaired(name)
     }.map { (name, plan) -> toSpec<PairedStat<*>>(StatKey<Result>(name), plan.build(concurrency)) }
 
-/** Vector-modality specs from a schema. */
 internal fun vectorSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out VectorStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is VectorStatSpec<*>) return@mapNotNull null
         name to config.compileVector(name)
     }.map { (name, plan) -> toSpec<VectorStat<*>>(StatKey<Result>(name), plan.build(concurrency)) }
 
-/** Discrete-modality specs from a schema. */
 internal fun discreteSpecs(schema: StatSchema, concurrency: Concurrency): List<BoundStat<*, out DiscreteStat<*>, *>> =
     schema.entries.mapNotNull { (name, config) ->
         if (config !is DiscreteStatSpec<*>) return@mapNotNull null
         name to config.compileDiscrete(name)
     }.map { (name, plan) -> toSpec<DiscreteStat<*>>(StatKey<Result>(name), plan.build(concurrency)) }
 
-/** Regression-modality specs from a schema. */
 internal fun regressionSpecs(
     schema: StatSchema,
     concurrency: Concurrency,

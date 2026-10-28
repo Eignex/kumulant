@@ -69,8 +69,6 @@ class ClassificationAuditLeaf(
     val observationsSinceLastCheck: AtomicLong = AtomicLong(0L)
 }
 
-/** Recursive subtree aggregate; for leaves, the arm's snapshot; for splits, the
- *  element-wise merge of both children plus any carryover. */
 internal fun ClassificationNode.subtreeAggregate(): ClassCountsResult = when (this) {
     is ClassificationLeafNode -> arm.read(0L)
 

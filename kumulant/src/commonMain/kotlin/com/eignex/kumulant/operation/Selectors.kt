@@ -69,16 +69,12 @@ internal class AtIndicesStat<R : Result>(
         AtIndicesStat(delegate.create(concurrency), indexX, indexY)
 }
 
-/** Adapt a [SeriesStat] to consume only the x coordinate of a paired input. */
 internal fun <R : Result> SeriesStat<R>.atX(): PairedStat<R> = AtXStat(this)
 
-/** Adapt a [SeriesStat] to consume only the y coordinate of a paired input. */
 internal fun <R : Result> SeriesStat<R>.atY(): PairedStat<R> = AtYStat(this)
 
-/** Adapt a [SeriesStat] to consume `vector[index]` of each incoming vector. */
 internal fun <R : Result> SeriesStat<R>.atIndex(index: Int): VectorStat<R> = AtIndexStat(this, index)
 
-/** Adapt a [PairedStat] to consume (`vector[indexX]`, `vector[indexY]`) of each vector. */
 internal fun <R : Result> PairedStat<R>.atIndices(indexX: Int, indexY: Int): VectorStat<R> = AtIndicesStat(
     this,
     indexX,

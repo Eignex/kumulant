@@ -70,16 +70,7 @@ fun halfLife(halfLife: Duration): DecayWeighting.HalfLife = DecayWeighting.HalfL
 /** Shorthand for [DecayWeighting.Alpha] - usable as a shared weighting across stats. */
 fun alpha(alpha: Double): DecayWeighting.Alpha = DecayWeighting.Alpha(alpha)
 
-/**
- * Divide a biased accumulator by its [DecayWeighting.correction], reporting an unmoved accumulator as
- * zero.
- *
- * The zero branch is reachable only for `alpha == 0.0` - no smoothing at all - where the accumulator has
- * never left zero and the ratio is 0/0. Reporting the accumulator beats reporting NaN.
- *
- * An extension rather than an interface member, so the public [DecayWeighting] hierarchy does not publish
- * a convenience for internal callers.
- */
+// At alpha == 0 the accumulator stays zero; return it directly to avoid 0/0 during debiasing.
 internal fun DecayWeighting.debias(biased: Double, totalWeight: Double): Double {
     val correction = correction(totalWeight)
     return if (correction == 0.0) 0.0 else biased / correction

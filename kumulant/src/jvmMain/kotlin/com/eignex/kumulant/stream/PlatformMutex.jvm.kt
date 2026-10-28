@@ -8,10 +8,7 @@ import kotlin.concurrent.withLock
 internal actual class PlatformMutex actual constructor() : Mutex {
     private val lock = ReentrantLock()
 
-    // ReentrantLock would happily grant a second acquisition to the same thread, so the JVM cannot
-    // discover a re-entry the way an error-checking posix mutex does. `assert` closes that gap where
-    // it is free: enabled under -ea, which Gradle turns on for tests, and a JIT-eliminated branch
-    // otherwise. It answers on the target the tests run on first, before a native build hangs.
+    // Assertions detect forbidden re-entry under -ea and are eliminated in ordinary builds.
     private fun requireNotHeld() {
         assert(!lock.isHeldByCurrentThread) {
             "this thread already holds this lock; PlatformMutex is not reentrant"

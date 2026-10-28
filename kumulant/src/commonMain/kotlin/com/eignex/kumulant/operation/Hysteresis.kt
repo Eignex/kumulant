@@ -8,26 +8,10 @@ import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.monotonicMode
 import kotlin.time.Duration
 
-// Hysteresis adapter: maps a noisy numeric stream onto a debounced 0.0/1.0 signal.
-//
-// The state flips to 1.0 when an input rises above `high`, and back to 0.0 when an input
-// falls below `low`. Inputs in the deadband `[low, high]` (after the initial sample)
-// keep the current state. The first update establishes the initial state by treating
-// the input as if entering from neutral: value > high seeds 1.0, value < low seeds 0.0,
-// and anything in between seeds 0.0.
-//
-// Each call forwards the current debounced state (not just transitions), so downstream
-// stats that consume a series naturally observe per-update progress.
-//
-// An inert weight is dropped before the state cell is read: the debounced state persists across
-// updates, so a value admitted with no multiplicity would flip the state and change what every
-// later update forwards. See [Stat].
-//
-// Concurrency: per-cell atomics with bounded drift (category 1). The state cell may
-// briefly observe stale reads under contention; rapid bouncing values can produce a
-// slightly different transition trace than a strict serial replay would. Never throws.
+// The first sample seeds 1 above high and 0 otherwise; later deadband samples retain the state.
+// Every accepted update forwards the current state. Inert weights preserve it.
+// Per-cell atomics permit bounded drift in transition order under contention.
 
-/** Debounce a noisy numeric stream into a 0.0/1.0 stream using two-threshold hysteresis. */
 internal fun <R : Result> SeriesStat<R>.hysteresis(low: Double, high: Double): SeriesStat<R> =
     HysteresisSeriesStat(this, low, high)
 

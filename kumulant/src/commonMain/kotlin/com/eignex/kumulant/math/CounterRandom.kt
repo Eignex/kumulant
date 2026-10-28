@@ -4,24 +4,8 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stream.monotonicMode
 import kotlin.random.Random
 
-/**
- * A [Random] whose state is a counter rather than a mutable seed, so it is safe to draw from under any
- * [Concurrency] level.
- *
- * The n-th draw is `splitmix64(seed + n)`, with `n` resolved through
- * [monotonicMode][com.eignex.kumulant.stream.monotonicMode]. A stock `Random` is a mutable object with
- * no atomicity, so a stat that draws on its update path races on it as soon as two threads update at
- * once - and a lock is the wrong answer on a path whose whole cost is a draw. Here each draw is one
- * atomic increment and one mix, and under [Concurrency.None] the increment is plain.
- *
- * Subclassing [Random] rather than exposing a bespoke draw method is what keeps
- * [nextPoissonOne][com.eignex.kumulant.math.nextPoissonOne] and every other distribution in
- * `Distributions.kt` usable unchanged, including the ones that consume a variable number of draws.
- *
- * Draws interleave arbitrarily between threads, so a contended stat sees a different sequence than a
- * serial replay would - the same bounded drift every concurrent stat is allowed. Each individual draw
- * is well-formed whoever wins the increment, which is the property a shared `Random` cannot offer.
- */
+// Each draw mixes seed + a counter whose storage follows the concurrency level.
+// Concurrent draws interleave while preserving valid samples.
 internal class CounterRandom(private val seed: Long, concurrency: Concurrency) : Random() {
 
     private val mode = concurrency.monotonicMode()
@@ -40,11 +24,5 @@ internal class CounterRandom(private val seed: Long, concurrency: Concurrency) :
     fun childSeed(): Long = deriveChildSeed(seed, copies.addAndGet(1L))
 }
 
-/**
- * Keep the top [bitCount] bits of this `Int`, zeroing the rest, as [Random.nextBits] requires.
- *
- * The stdlib has this exact helper and keeps it internal, so it is restated here. The mask
- * `(-bitCount shr 31)` is what makes `bitCount = 0` yield `0` rather than an unshifted value: the sign
- * propagation gives `-1` for any positive count and `0` for zero.
- */
+// The mask makes zero-bit requests yield zero despite masked shift distances.
 private fun Int.takeUpperBits(bitCount: Int): Int = ushr(32 - bitCount) and (-bitCount shr 31)

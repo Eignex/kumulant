@@ -4,16 +4,14 @@ import com.eignex.kumulant.core.*
 import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import kotlin.time.Duration
 
-/** Lift a paired stat into a series stat that feeds its x from the event timestamp (seconds). */
+// Event timestamps are converted to seconds.
 internal fun <R : Result> PairedStat<R>.withTimeAsX(): SeriesStat<R> = WithTimeAsXStat(this)
 
-/** Lift a paired stat into a series stat that feeds its y from the event timestamp (seconds). */
+// Event timestamps are converted to seconds.
 internal fun <R : Result> PairedStat<R>.withTimeAsY(): SeriesStat<R> = WithTimeAsYStat(this)
 
-/** Lift a paired stat into a series stat that always feeds [fixedX] as the x coordinate. */
 internal fun <R : Result> PairedStat<R>.withFixedX(fixedX: Double): SeriesStat<R> = WithFixedXStat(this, fixedX)
 
-/** Lift a paired stat into a series stat that always feeds [fixedY] as the y coordinate. */
 internal fun <R : Result> PairedStat<R>.withFixedY(fixedY: Double): SeriesStat<R> = WithFixedYStat(this, fixedY)
 
 internal class WithTimeAsXStat<R : Result>(private val delegate: PairedStat<R>) :

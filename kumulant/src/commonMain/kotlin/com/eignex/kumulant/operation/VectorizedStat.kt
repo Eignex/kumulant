@@ -10,21 +10,8 @@ import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.core.requireFeatureSize
 import kotlin.time.Duration
 
-/**
- * Fans each vector observation out to one [SeriesStat] per dimension.
- *
- * Constructed from a single [template] stat replicated across [dimensions]
- * via `template.create(concurrency)`. Produces a [ResultList] with positional
- * entries; incoming vectors must match [dimensions] exactly.
- *
- * When [skipZeros] is `true`, only the stored entries of the input vector are
- * forwarded to their per-dimension stats. For a [com.eignex.koblas.SparseVector]
- * this turns the per-update cost from `O(dimensions)` into `O(nnz)`, and an
- * unobserved index is treated as "no update" rather than "update with 0.0".
- * Keep the default (`false`) for stats whose semantics distinguish zero from
- * absent (Mean, Variance); flip it on for additive stats (Sum, Count, Rate)
- * where the two are equivalent.
- */
+// skipZeros treats absent coordinates as unobserved, with O(nnz) sparse updates.
+// Use it for additive stats; means and variances distinguish absence from zero.
 internal class VectorizedStat<R : Result>(
     val dimensions: Int,
     private val template: SeriesStat<R>,

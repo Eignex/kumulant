@@ -64,14 +64,8 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-// [StatSpec] variants for kumulant's stats. Co-located here (rather than next to each
-// stat) because Kotlin requires direct subclasses of a sealed interface to live in the
-// same package as the interface.
-//
-// Serial names preserve the tags used by non-JSON formats.
-// Defaults match the stat constructors so payloads stay terse under `encodeDefaults = false`.
-//
-// Construction lives in `StatFactory.kt`; specs here are pure data only.
+// Direct subclasses share the sealed interface package. Defaults match stat constructors for terse payloads.
+// Serial names preserve tags for non-JSON formats.
 
 /** Spec for `MeanStat`: weighted running mean. */
 @Serializable

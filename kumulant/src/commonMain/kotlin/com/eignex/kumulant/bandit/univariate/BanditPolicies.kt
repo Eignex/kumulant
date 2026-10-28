@@ -227,13 +227,8 @@ class UCB1Normal(
 
     override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
         val nj = snapshot.totalWeights
-        // Deliberately the arm count, where Auer et al. use the total number of plays. Their n grows only
-        // because each play returns a reward, so n and the sum of the per-arm counts advance together;
-        // here `step` counts choose() calls and `nj` counts update weight, and nothing pairs them. A
-        // caller that scores without feeding rewards back would push 8*ln(step) past every arm's weight
-        // and force for good, never reaching the bound at all. Against nbrArms the forced phase is a
-        // bounded warm-up instead, and the confidence term below - which does scale by the total - goes
-        // on exploring after it.
+        // The arm count bounds forced warm-up because choose calls and reward updates can advance independently.
+        // The confidence term continues exploration using accumulated reward weight.
         val totalPulls = maxOf(step.toDouble(), nj)
         if (nbrArms <= 1 || nj < 8 * ln(nbrArms.toDouble())) return Double.POSITIVE_INFINITY
         // Auer et al. subtract `n * mean^2` from the SUM of squares, and meanOfSquares() is the

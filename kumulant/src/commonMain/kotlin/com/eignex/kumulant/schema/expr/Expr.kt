@@ -26,13 +26,7 @@ import kotlin.math.sqrt
 
 private val EMPTY_VECTOR = DoubleArray(0)
 
-/**
- * Narrow a feedback primary to the trait a node needs, unwrapping the per-element indirection first.
- *
- * The [IndexedResult] unwrap is load-bearing: a vectorised feedback stat hands each coordinate its own
- * primary boxed with the coordinate's index, so a node that checked the box rather than its contents
- * would reject every element-wise pipeline.
- */
+// Per-coordinate feedback boxes its primary in IndexedResult; trait checks apply to the inner result.
 private inline fun <reified T> Result?.feedbackPrimary(node: String): T {
     val unwrapped = if (this is IndexedResult) inner else this
     check(unwrapped is T) {
@@ -42,47 +36,20 @@ private inline fun <reified T> Result?.feedbackPrimary(node: String): T {
 }
 
 /**
- * Wire-serialisable AST for scalar expressions over the per-update input
- * environment. The library uses these wherever a stat needs to apply a
- * caller-supplied projection / weight / threshold expression that has to
- * round-trip on the wire; `weightBy`, `transform`, the per-bin scaler
- * projections, the `WithFeedback` op, the loss / pinball / quantile
- * configurations.
+ * Wire-serialisable scalar expression over per-update inputs:
  *
- * ## The input environment
+ * - `x`: series value or paired x-axis; unused for regression.
+ * - `y`: paired y-axis or regression response.
+ * - `v`: vector input or regression features.
+ * - `primary`: feedback snapshot; [Center], [Scale], [Low], and [High] read its traits.
+ *   Per-coordinate feedback uses [IndexedResult] to carry the coordinate index.
  *
- * Every evaluation receives:
+ * Unused inputs default to `0.0`, an empty array, or `null`.
+ * Compose with DSL operators such as `X * 2.0`, `X gt 0.0`, and [ifThenElse].
  *
- * - `x: Double`: the primary scalar input. For series stats it's the
- *   observation value; for paired stats it's the x-axis; for regression
- *   stats it's unused (use [V] to access feature vector coordinates).
- * - `y: Double`: the secondary scalar input. Used by paired stats (the
- *   y-axis) and regression stats (the response).
- * - `v: DoubleArray`: the full input vector. Used by vector / regression
- *   stats; empty otherwise.
- * - `primary: Result?`: the primary stat's snapshot at evaluation time
- *   for feedback operators. [Center], [Scale], [Low], [High] read directly
- *   from this; per-coordinate ops receive an [com.eignex.kumulant.core.IndexedResult]
- *   to thread the coordinate index through.
- *
- * Stats that don't need a particular field pass the default (0.0, empty
- * array, null).
- *
- * ## Construction
- *
- * Compose with the DSL operators in this file rather than constructing AST
- * data classes directly: `X * 2.0`, `(X + Const(1.0)) gt 0.0`,
- * `ifThenElse(X gt 0.0, X, -X)`. The operators return the public sealed
- * interface and hide the concrete (internal) node types. Comparisons and
- * arithmetic take a literal on either side, `abs`, `min`, `max` and `pow`
- * are receiver helpers, and conditionals are [ifThenElse]: the spellings
- * Klause's integer expressions share.
- *
- * ## Wire format
- *
- * JSON uses structured operator keys, numeric scalar literals, and named input
- * references: `{"add":[{"ref":"value"},1]}`. Resolve [Ref] nodes with [bind]. Serialize through [ScalarExpr],
- * [BoolExpr], or [VectorExpr]. Other formats retain the generated sealed-class tags.
+ * JSON uses operator keys, numeric literals, and named references:
+ * `{"add":[{"ref":"value"},1]}`. Resolve [Ref] nodes with [bind] and serialize through
+ * [ScalarExpr], [BoolExpr], or [VectorExpr]. Other formats use sealed-class tags.
  */
 @Serializable(with = ScalarExprSerializer::class)
 sealed interface ScalarExpr {
@@ -194,148 +161,86 @@ data class Const(
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `l + r`. */
 @Serializable
 @SerialName("Add")
-internal data class Add(
-    /** Left operand. */
-    val l: ScalarExpr,
-    /** Right operand. */
-    val r: ScalarExpr,
-) : ScalarExpr {
+internal data class Add(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `l - r`. */
 @Serializable
 @SerialName("Sub")
-internal data class Sub(
-    /** Left operand (minuend). */
-    val l: ScalarExpr,
-    /** Right operand (subtrahend). */
-    val r: ScalarExpr,
-) : ScalarExpr {
+internal data class Sub(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `l * r`. */
 @Serializable
 @SerialName("Mul")
-internal data class Mul(
-    /** Left operand. */
-    val l: ScalarExpr,
-    /** Right operand. */
-    val r: ScalarExpr,
-) : ScalarExpr {
+internal data class Mul(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `l / r`. */
 @Serializable
 @SerialName("Div")
-internal data class Div(
-    /** Dividend. */
-    val l: ScalarExpr,
-    /** Divisor. */
-    val r: ScalarExpr,
-) : ScalarExpr {
+internal data class Div(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `-a`. */
 @Serializable
 @SerialName("Neg")
-internal data class Neg(
-    /** Operand to negate. */
-    val a: ScalarExpr,
-) : ScalarExpr {
+internal data class Neg(val a: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `|a|`. */
 @Serializable
 @SerialName("Abs")
-internal data class Abs(
-    /** Operand whose absolute value is returned. */
-    val a: ScalarExpr,
-) : ScalarExpr {
+internal data class Abs(val a: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for the natural logarithm `ln(a)`. */
 @Serializable
 @SerialName("Log")
-internal data class Log(
-    /** Operand passed to `ln`. */
-    val a: ScalarExpr,
-) : ScalarExpr {
+internal data class Log(val a: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `exp(a)`. */
 @Serializable
 @SerialName("Exp")
-internal data class Exp(
-    /** Operand passed to `exp`. */
-    val a: ScalarExpr,
-) : ScalarExpr {
+internal data class Exp(val a: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `sqrt(a)`. */
 @Serializable
 @SerialName("Sqrt")
-internal data class Sqrt(
-    /** Operand passed to `sqrt`. */
-    val a: ScalarExpr,
-) : ScalarExpr {
+internal data class Sqrt(val a: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `a ^ b`. */
 @Serializable
 @SerialName("Pow")
-internal data class Pow(
-    /** Base. */
-    val a: ScalarExpr,
-    /** Exponent. */
-    val b: ScalarExpr,
-) : ScalarExpr {
+internal data class Pow(val a: ScalarExpr, val b: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `min(l, r)`. */
 @Serializable
 @SerialName("MinExpr")
-internal data class MinExpr(
-    /** Left operand. */
-    val l: ScalarExpr,
-    /** Right operand. */
-    val r: ScalarExpr,
-) : ScalarExpr {
+internal data class MinExpr(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `max(l, r)`. */
 @Serializable
 @SerialName("MaxExpr")
-internal data class MaxExpr(
-    /** Left operand. */
-    val l: ScalarExpr,
-    /** Right operand. */
-    val r: ScalarExpr,
-) : ScalarExpr {
+internal data class MaxExpr(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
@@ -462,27 +367,16 @@ enum class VFoldOp {
     Norm2,
 }
 
-/** Wire spec for a whole-vector reduction selected by [op]. */
 @Serializable
 @SerialName("VFold")
-internal data class VFold(
-    /** Reduction operation applied to the vector. */
-    val op: VFoldOp,
-) : ScalarExpr {
+internal data class VFold(val op: VFoldOp) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/**
- * Weighted dot product `Sum weights[i] * v[i]`. Length must match the incoming
- * vector at eval time. Wire form is a primitive list - encodes cleanly.
- */
 @Serializable
 @SerialName("VDot")
-internal data class VDot(
-    /** Coefficient vector applied element-wise; must match input length at eval. */
-    val weights: List<Double>,
-) : ScalarExpr {
+internal data class VDot(val weights: List<Double>) : ScalarExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
@@ -517,160 +411,77 @@ sealed interface BoolExpr {
     fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Boolean
 }
 
-/** Wire spec for `l > r`. */
 @Serializable
 @SerialName("Gt")
-internal data class Gt(
-    /** Left operand. */
-    val l: ScalarExpr,
-    /** Right operand. */
-    val r: ScalarExpr,
-) : BoolExpr {
+internal data class Gt(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `l >= r`. */
 @Serializable
 @SerialName("Ge")
-internal data class Ge(
-    /** Left operand. */
-    val l: ScalarExpr,
-    /** Right operand. */
-    val r: ScalarExpr,
-) : BoolExpr {
+internal data class Ge(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `l < r`. */
 @Serializable
 @SerialName("Lt")
-internal data class Lt(
-    /** Left operand. */
-    val l: ScalarExpr,
-    /** Right operand. */
-    val r: ScalarExpr,
-) : BoolExpr {
+internal data class Lt(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `l <= r`. */
 @Serializable
 @SerialName("Le")
-internal data class Le(
-    /** Left operand. */
-    val l: ScalarExpr,
-    /** Right operand. */
-    val r: ScalarExpr,
-) : BoolExpr {
+internal data class Le(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `l == r`. Exact floating-point equality; usually you want a tolerance instead. */
 @Serializable
 @SerialName("Eq")
-internal data class Eq(
-    /** Left operand. */
-    val l: ScalarExpr,
-    /** Right operand. */
-    val r: ScalarExpr,
-) : BoolExpr {
+internal data class Eq(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `l && r` (short-circuiting). */
 @Serializable
 @SerialName("And")
-internal data class And(
-    /** Left operand. */
-    val l: BoolExpr,
-    /** Right operand; evaluated only when [l] is true. */
-    val r: BoolExpr,
-) : BoolExpr {
+internal data class And(val l: BoolExpr, val r: BoolExpr) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `l || r` (short-circuiting). */
 @Serializable
 @SerialName("Or")
-internal data class Or(
-    /** Left operand. */
-    val l: BoolExpr,
-    /** Right operand; evaluated only when [l] is false. */
-    val r: BoolExpr,
-) : BoolExpr {
+internal data class Or(val l: BoolExpr, val r: BoolExpr) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** Wire spec for `!a`. */
 @Serializable
 @SerialName("Not")
-internal data class Not(
-    /** Operand to negate. */
-    val a: BoolExpr,
-) : BoolExpr {
+internal data class Not(val a: BoolExpr) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/**
- * Wire spec for `a is NaN`.
- *
- * The only way to express this: `Gt`, `Ge`, `Lt`, `Le` and `Eq` all compare with IEEE semantics, so
- * every one of them evaluates `false` against a `NaN` and none can single it out. Its purpose is
- * `filter(!IsNaN(X))`, which is how a caller opts into dropping `NaN` observations -
- * [Stat][com.eignex.kumulant.core.Stat] leaves them to propagate by default, so a stream that wants
- * them gone says so here.
- */
 @Serializable
 @SerialName("IsNaN")
-internal data class IsNaN(
-    /** Value tested for NaN. */
-    val of: ScalarExpr,
-) : BoolExpr {
+internal data class IsNaN(val of: ScalarExpr) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/**
- * Wire spec for `a is finite`, meaning neither `NaN` nor an infinity.
- *
- * Strictly stronger than `!IsNaN(a)`, and the difference matters: an infinity compares normally under
- * `Gt` and `Lt`, so a range check can be written that an infinity passes, and `1e400` parses to
- * `Infinity` without complaint. A caller that wants only real numbers wants this, not the `NaN` test.
- */
 @Serializable
 @SerialName("IsFinite")
-internal data class IsFinite(
-    /** Value tested for finiteness. */
-    val of: ScalarExpr,
-) : BoolExpr {
+internal data class IsFinite(val of: ScalarExpr) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/**
- * Wire spec for "every input to this update is finite", whatever the modality.
- *
- * One node covers all five because of how the filter wrappers bind `eval`: a series stat passes its
- * value as `x`, a paired stat passes `x` and `y`, a vector stat passes the coordinates in `v`, a
- * regression stat passes the target as `y` and the features in `v`, and a discrete stat passes a `Long`
- * widened to `x`, which cannot be non-finite. Unused slots default to `0.0`, which is finite, so
- * checking all of them is correct everywhere rather than merely harmless.
- *
- * This exists because a per-coordinate test cannot express it. `V(0).isFinite()` checks one coordinate,
- * and a feature vector needs all of them; there is no way to write a fold over `v` in the AST.
- *
- * [Stat][com.eignex.kumulant.core.Stat] guarantees only that a non-finite value will not throw. What a
- * stat then does with it is the stat's business, and for an accumulator that means propagating it for
- * good. This is the supported way to opt out of that.
- */
+// Unused input slots default to finite values, allowing one finiteness check across all modalities.
 @Serializable
 @SerialName("AllFinite")
 internal data object AllFinite : BoolExpr {
@@ -678,17 +489,9 @@ internal data object AllFinite : BoolExpr {
         evaluate(x, y, v, primary, ArrayInput)
 }
 
-/** `min <= a <= max` (inclusive). Wire-compact form of `And(Ge(a, min), Le(a, max))`. */
 @Serializable
 @SerialName("InRange")
-internal data class InRange(
-    /** Value tested against the range. */
-    val a: ScalarExpr,
-    /** Inclusive lower bound. */
-    val min: Double,
-    /** Inclusive upper bound. */
-    val max: Double,
-) : BoolExpr {
+internal data class InRange(val a: ScalarExpr, val min: Double, val max: Double) : BoolExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
@@ -1066,19 +869,9 @@ private fun sparseMax(v: SparseVector): Double {
     return maximum
 }
 
-/**
- * Build an output vector by evaluating each [ScalarExpr] in order. Output
- * length = `exprs.size`. The exprs can reference any input element via
- * [V]`(i)` - sufficient for permutations (`VElements(listOf(V(2), V(0), V(1)))`),
- * pooling (`VElements(listOf((V(0)+V(1))/2.0, (V(2)+V(3))/2.0))`),
- * dimensionality reduction, and feature augmentation.
- */
 @Serializable
 @SerialName("VElements")
-internal data class VElements(
-    /** Per-output-coordinate expression; output length = `exprs.size`. */
-    val exprs: List<ScalarExpr>,
-) : VectorExpr {
+internal data class VElements(val exprs: List<ScalarExpr>) : VectorExpr {
     override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): DoubleArray =
         evaluate(x, y, v, primary, ArrayInput)
 }

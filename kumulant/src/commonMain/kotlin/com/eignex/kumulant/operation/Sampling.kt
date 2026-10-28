@@ -11,55 +11,30 @@ import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.core.isInertWeight
 import kotlin.time.Duration
 
-// Throttle / sample adapters. Each wraps an inner stat, intercepts at the update
-// boundary, and drops some updates before they reach the delegate. State per
-// wrapper is one counter cell, held by the gate.
-//
-// Both gates are phase-carrying state, so both wrappers drop an inert weight before
-// consulting them: an observation that carries no multiplicity must not shift which
-// later updates survive. See [Stat] for the guarantee and `Gates.kt` for the gates.
-//
-// The constructed spec-layer counterparts live in
-// `com.eignex.kumulant.schema.Operations.kt`: `throttle(every)` and
-// `sample(rate, seed)`.
+// Inert weights are dropped before advancing a gate, preserving the phase of later updates.
 
-/** Forward only every [every]th update to the delegate; drop the rest. */
 internal fun <R : Result> SeriesStat<R>.throttle(every: Int): SeriesStat<R> = ThrottleSeriesStat(this, every)
 
-/** Paired-stat counterpart of [SeriesStat.throttle]. */
 internal fun <R : Result> PairedStat<R>.throttle(every: Int): PairedStat<R> = ThrottlePairedStat(this, every)
 
-/** Vector-stat counterpart of [SeriesStat.throttle]. */
 internal fun <R : Result> VectorStat<R>.throttle(every: Int): VectorStat<R> = ThrottleVectorStat(this, every)
 
-/** Discrete-stat counterpart of [SeriesStat.throttle]. */
 internal fun <R : Result> DiscreteStat<R>.throttle(every: Int): DiscreteStat<R> = ThrottleDiscreteStat(this, every)
 
-/** Bernoulli-sample each update at probability [rate], drawing from [seed]. */
 internal fun <R : Result> SeriesStat<R>.sample(rate: Double, seed: Long): SeriesStat<R> =
     SampleSeriesStat(this, rate, seed)
 
-/** Paired-stat counterpart of [SeriesStat.sample]. */
 internal fun <R : Result> PairedStat<R>.sample(rate: Double, seed: Long): PairedStat<R> =
     SamplePairedStat(this, rate, seed)
 
-/** Vector-stat counterpart of [SeriesStat.sample]. */
 internal fun <R : Result> VectorStat<R>.sample(rate: Double, seed: Long): VectorStat<R> =
     SampleVectorStat(this, rate, seed)
 
-/** Discrete-stat counterpart of [SeriesStat.sample]. */
 internal fun <R : Result> DiscreteStat<R>.sample(rate: Double, seed: Long): DiscreteStat<R> =
     SampleDiscreteStat(this, rate, seed)
 
-/**
- * Reject a throttle period that would forward nothing or everything unpredictably.
- *
- * `internal` rather than file-private so the regression modality's wrappers in `RegressionOps.kt`
- * can share it.
- */
 internal fun checkEvery(every: Int) = require(every >= 1) { "throttle every must be >= 1, got $every" }
 
-/** Reject a sampling rate outside the unit interval; see [checkEvery] on why this is `internal`. */
 internal fun checkRate(rate: Double) = require(rate in 0.0..1.0) { "sample rate must be in [0, 1], got $rate" }
 
 internal class ThrottleSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val every: Int) :
@@ -146,8 +121,6 @@ internal class ThrottleDiscreteStat<R : Result>(private val delegate: DiscreteSt
         ThrottleDiscreteStat(delegate.create(concurrency), every)
 }
 
-/** Bernoulli sampling helper. [SampleGate] draws from [seed] through a counter cell, so the
- *  gate is safe to share across threads and every copy gets its own derived stream. */
 internal class SampleSeriesStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val rate: Double,

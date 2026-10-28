@@ -11,24 +11,13 @@ import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.core.isInertWeight
 import kotlin.time.Duration
 
-/**
- * Force every update through this stat to use a constant [weight], discarding caller weight.
- *
- * An inert caller weight is passed through unchanged rather than replaced: that is every weight
- * [isInertWeight] names, so `0.0`, `NaN`, and either infinity. The override sets the *magnitude* of a
- * real observation, and none of "ignore this observation", "no multiplicity at all", or an infinity
- * that is not a multiplicity either is a magnitude, so the no-op guarantees in [Stat] survive the
- * wrapper.
- */
+// Inert caller weights pass through unchanged to preserve the no-op contract.
 internal fun <R : Result> SeriesStat<R>.withWeight(weight: Double): SeriesStat<R> = WithWeightStat(this, weight)
 
-/** Paired-stat counterpart of [SeriesStat.withWeight]. */
 internal fun <R : Result> PairedStat<R>.withWeight(weight: Double): PairedStat<R> = WithWeightPairedStat(this, weight)
 
-/** Vector-stat counterpart of [SeriesStat.withWeight]. */
 internal fun <R : Result> VectorStat<R>.withWeight(weight: Double): VectorStat<R> = WithWeightVectorStat(this, weight)
 
-/** Discrete-stat counterpart of [SeriesStat.withWeight]. */
 internal fun <R : Result> DiscreteStat<R>.withWeight(weight: Double): DiscreteStat<R> = WithWeightDiscreteStat(
     this,
     weight,
@@ -100,25 +89,15 @@ internal class WithWeightDiscreteStat<R : Result>(private val delegate: Discrete
         WithWeightDiscreteStat(delegate.create(concurrency), weight)
 }
 
-/**
- * Per-update weight multiplier driven by the input. `weightBy` multiplies the
- * caller-supplied weight by the value [weighter] returns, so it composes with
- * [withWeight] (which replaces weight outright). The spec-layer counterpart in
- * `Operations.kt` takes a [com.eignex.kumulant.schema.expr.ScalarExpr] and materializes the closure at build
- * time.
- */
 internal fun <R : Result> SeriesStat<R>.weightBy(weighter: (Double) -> Double): SeriesStat<R> =
     WeightBySeriesStat(this, weighter)
 
-/** Paired-stat counterpart of [SeriesStat.weightBy]; [weighter] sees `(x, y)`. */
 internal fun <R : Result> PairedStat<R>.weightBy(weighter: (Double, Double) -> Double): PairedStat<R> =
     WeightByPairedStat(this, weighter)
 
-/** Vector-stat counterpart of [SeriesStat.weightBy]; [weighter] sees the full vector. */
 internal fun <R : Result> VectorStat<R>.weightBy(weighter: (DoubleArray) -> Double): VectorStat<R> =
     WeightByVectorStat(this, weighter)
 
-/** Discrete-stat counterpart of [SeriesStat.weightBy]; [weighter] sees the long value. */
 internal fun <R : Result> DiscreteStat<R>.weightBy(weighter: (Long) -> Double): DiscreteStat<R> =
     WeightByDiscreteStat(this, weighter)
 

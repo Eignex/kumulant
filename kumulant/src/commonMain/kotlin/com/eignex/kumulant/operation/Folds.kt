@@ -9,12 +9,6 @@ import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import kotlin.time.Duration
 
-/**
- * Fold adapters. Constructed by the spec layer's `foldPaired(ScalarExpr)` /
- * `foldVector(ScalarExpr)` materialization in
- * `com.eignex.kumulant.schema.Operations.kt`.
- */
-
 internal class FoldVectorStat<R : Result>(
     private val delegate: SeriesStat<R>,
     private val transform: (DoubleArray) -> Double = { 0.0 },

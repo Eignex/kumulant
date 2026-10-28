@@ -21,10 +21,8 @@ import kotlin.random.Random
  * tune lower to bias toward exploitation when running in the
  * regret-minimisation regime.
  *
- * Doesn't expose [com.eignex.kumulant.bandit.Scorable]: arm selection
- * samples jointly and conditionally resamples, so there's no per-arm score
- * callers can read in isolation. The per-arm posterior state still fits
- * [PerArmBandit].
+ * Arm selection uses joint sampling and conditional resampling. Per-arm posterior
+ * state is available through [PerArmBandit].
  *
  * **Use cases:** best-arm identification and pure-exploration problems where
  * shrinking the regret gap matters more than minimising cumulative regret;

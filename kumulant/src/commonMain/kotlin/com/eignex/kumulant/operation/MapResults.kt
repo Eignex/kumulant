@@ -10,17 +10,7 @@ import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
 import kotlin.time.Duration
 
-/**
- * Present a [SeriesStat]'s result as a different type via an invertible projection.
- *
- * [forward] produces the exposed result on read; [reverse] reconstructs the underlying
- * result on merge. Both must round-trip for merge semantics to hold.
- *
- * Internal-only: lambda-based and not wire-expressible. Used by
- * [com.eignex.kumulant.stat.regression.CovarianceStat] and
- * [com.eignex.kumulant.stat.rate.DecayingRateStat] to project an inner stat's result; the
- * user-facing API for those is the dedicated stat constructor.
- */
+// The projections must round-trip so merged snapshots reconstruct the delegate result.
 internal fun <R1 : Result, R2 : Result> SeriesStat<R1>.mapResult(
     forward: (R1) -> R2,
     reverse: (R2) -> R1,
@@ -41,12 +31,6 @@ internal fun <R1 : Result, R2 : Result> DiscreteStat<R1>.mapResult(
     reverse: (R2) -> R1,
 ): DiscreteStat<R2> = MapResultDiscreteStat(this, forward, reverse)
 
-/**
- * Modality-agnostic merge/read/reset/create projection shared by the four
- * [mapResult] adapters. The subclass overrides only [Stat.create] (to keep the
- * modality-specific return type) and `update` (which has a different signature
- * per modality).
- */
 private class MappedResultCore<R1 : Result, R2 : Result>(
     private val delegate: Stat<R1>,
     private val forward: (R1) -> R2,
