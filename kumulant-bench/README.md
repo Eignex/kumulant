@@ -112,18 +112,94 @@ to the consumer build. Refresh dependencies when restaging the same version.
 
 A lab submission uses `repository: "Eignex/kumulant"` and
 `bench: {"manifest":"kumulant-bench/lab/bench.json","request":{"parameters":{"backends":"scalar,simd","smoke":"true"}}}`.
-The planner expands one case per backend. Request keys are `backends`
-(`scalar,simd,native`), `mode` (`performance`, `quality`, `concurrency`), `smoke`,
-`argv`, `memory-mib` and `timeout-seconds`. `argv` is a JSON array encoded as a
-string, preserving repeated `-p` arguments and literal filters. JVM requests use
-JMH arguments; Native requests use `-Pbench.filter=...` and
-`-Pbench.param.NAME=...`. Submit different argument dialects separately.
-JMH thread counts become declared CPUs; concurrency checks reserve four CPUs.
+The planner expands one case per backend and freezes registry selections and timing
+defaults. Every case runs its backends sequentially within the harness.
+
+| Request key | Supported values and behavior |
+| --- | --- |
+| `backends` | `scalar,simd` by default; `native` requires the Native manifest and Linux x86_64 |
+| `mode` | `performance` (default), `quality`, `concurrency` (JVM only) |
+| `smoke` | Strict boolean; selects small fixtures and short timing defaults |
+| `argv` | JSON string array for performance; preserves repeated arguments and literal filters |
+| `repetitions` | Positive process repetitions; default 1 on JVM and Native smoke, 2 on ordinary Native runs |
+| `stress-order` | Cholesky diagnostic order greater than 16, before measurement |
+| `heap-mib` | JVM heap per process, default 512; at least 64 and within the two-JVM memory budget |
+| `jvm-gc` | JVM `g1` (default), `serial`, `zgc` |
+| `jfr` | Strict boolean; JVM performance only; recordings retained beneath each repetition |
+| `memory-mib` | Declared case memory, at least 2048; default 2048 |
+| `timeout-seconds` | Positive outer execution timeout; default 3600 |
+| `native-executable` | Portable prepared `.kexe` path under `kumulant-bench/build/` containing `/linuxX64/` |
+| `native-quality-executable` | Same path rules for the Native Cholesky diagnostic executable |
+
+JVM `argv` accepts JMH filters, repeated `-p` selections, measurement modes, time
+units, warmups, iterations, iteration times, batch sizes, positive fork/thread
+counts, and portable `gc`, `stack`, `safepoints`, `comp` and `cl` profilers. Use
+`jfr=true` for recordings. Report destinations, Java executable/flags, listing
+commands and group thread counts are adapter-owned and rejected in `argv`.
+These restrictions keep paths portable, backend selection verifiable and heap
+reservations consistent. Concurrent timing uses the existing JMH contract:
+sum/mean/variance, Strict/Relaxed/HighWrite, with no explicit filter.
+JMH thread counts become declared CPUs; concurrency checks reserve five CPUs
+for four writers and the concurrent snapshot reader.
+
+Native `argv` accepts `-Pbench.filter=REGEX`, `-Pbench.param.NAME=VALUES`,
+`-Pbench.stats=VALUES`, `-Pbench.policies=VALUES`, `-Pbench.mode=avgt|thrpt`,
+`-Pbench.timeUnit=ns|us|ms|s|m`, `-Pbench.warmups=N`, `-Pbench.iterations=N`,
+`-Pbench.iterationTime=N` and `-Pbench.iterationTimeUnit=ns|us|ms|s|m`.
+Timing properties also work with the ordinary Gradle benchmark task. Omitted
+workload properties retain the registry defaults even when another property is
+supplied. `stats` and `param.name` (or `policies` and `param.policy`) are aliases;
+select one form. Native warmups must be positive: the engine calibrates iteration counts during
+warmup and produces nonfinite average times or zero throughput without it.
+Duplicate properties, unsupported Gradle arguments and shared
+Native concurrency levels are rejected. Submit JVM and Native argument dialects
+separately. Annotation-defined benchmark modes/units apply unless overridden.
 
 `benchmark.sh --prepared` uses `KUMULANT_BENCH_JAVA` and the prepared JMH jar
-without Gradle. The Native adapter uses the prepared engine protocol directly,
-checks Native Cholesky quality before timing, and retains its configuration,
-per-case samples, progress and JSON reports. Native concurrency is unavailable.
-JVM quality/performance retain the shell harness's quality checks. The lab keeps
-all files under a child report directory and the harness log even after a failure.
+without Gradle. Each JVM repetition checks the resolved scalar/SIMD backend,
+runs the full serial quality suite and optional Cholesky stress checks before
+its selected operation. The prepared Native runner first runs JVM reference
+quality, then Native Cholesky diagnostics and optional Native stress checks.
+Native fixture tests run during preparation. Native stat/bandit timing is serial;
+the Native concurrency preservation checks and multithreaded timing are unavailable.
+Native selects the host's default Koblas engine, which can include an installed
+vendor library; its actual backend, vendor, library and thread evidence are retained.
+
+The planner declares both Native executables as SDK inputs, so preparation hashes
+and relocates them with the source bundle. Runtime resolves them from
+`LAB_WORKTREE`, independent of the launcher's working directory. No build tools
+are invoked during prepared execution. The SDK remains confined to `jvmMain` and
+resolves anonymously from the public release assets.
+
+Every file beneath `report/` is retained, including nested repetition directories,
+JFR recordings, Native case configurations, raw samples, progress and partial
+output. JVM captures include revision, patch, platform, Java and dependency details;
+Native captures also retain runtime details and executable invocations. A failure
+retains completed metrics, available partial reports and logs. Malformed reports
+mark the result failed without discarding valid earlier measurements.
+
+SDK metrics come from JMH/kotlinx-benchmark primary and secondary scores and
+quality/concurrency/stress rows. Scores retain the engine's units: throughput is
+higher-is-better, elapsed time and numerical error/drift are lower-is-better;
+uncertainty and diagnostic values carry no preference. Allocation per operation
+is lower-is-better. Nonfinite optional scores are omitted; a missing or nonfinite
+primary result fails the case. `details.metricSources` maps each metric to its
+report, row/line, benchmark, parameters and batch size. Batch units remain unchanged;
+raw reports retain samples and confidence information. The lab consumes this
+protocol without Kumulant-specific capture commands or metric parsing.
+
+For example, pass the following request parameters for a small repeated JVM
+allocation capture (a wiring check, not performance evidence):
+
+```json
+{
+  "backends": "scalar,simd",
+  "smoke": "true",
+  "repetitions": "2",
+  "jvm-gc": "serial",
+  "heap-mib": "256",
+  "argv": "[\".*UpdateThroughputBenchmark.update\",\"-p\",\"name=SumStat\",\"-prof\",\"gc\",\"-bm\",\"avgt\",\"-tu\",\"us\"]"
+}
+```
+
 Smoke verifies wiring; full runs on idle target hardware provide measurement evidence.

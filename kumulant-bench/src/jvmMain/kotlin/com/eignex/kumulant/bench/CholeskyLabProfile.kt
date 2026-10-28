@@ -14,7 +14,10 @@ fun main(arguments: Array<String>) {
     File(output, "host.txt").writeText(hardware.inputStream.bufferedReader().readText())
     check(hardware.waitFor() == 0)
     if (args.firstOrNull() == "--native-prepared") {
-        runPreparedNativeCholesky(output, args.drop(1), stressOrder)
+        val nativeArgs = args.drop(1)
+        val defaults = listOf("-Pbench.filter=.*Cholesky.*Benchmark.*", "-Pbench.mode=avgt", "-Pbench.timeUnit=us")
+            .filter { default -> nativeArgs.none { it.substringBefore('=') == default.substringBefore('=') } }
+        runPreparedNativeCholesky(output, defaults + nativeArgs, stressOrder)
         return
     }
     if (args.firstOrNull() == "--native") {
