@@ -1,4 +1,5 @@
 import org.gradle.jvm.tasks.Jar
+
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -20,6 +21,22 @@ repositories {
 // :kumulant gets its toolchain from the com.eignex.kmp convention plugin, which this module does not
 // apply (it publishes nothing). Keep the benchmark runtime on the library's JDK.
 val benchJdk = 25
+
+repositories {
+    exclusiveContent {
+        forRepository {
+            ivy {
+                name = "labBenchReleases"
+                url = uri(providers.gradleProperty("labBenchRepository")
+                    .getOrElse("https://github.com/Eignex/eignex-lab/releases/download"))
+                patternLayout { artifact("lab-bench-v[revision]/[artifact]-[revision](-[classifier]).[ext]") }
+                metadataSources { gradleMetadata() }
+            }
+        }
+        filter { includeModule("com.eignex", "lab-bench") }
+    }
+}
+val labBenchVersion = providers.gradleProperty("labBenchVersion").getOrElse("0.1.0")
 
 kotlin {
     applyDefaultHierarchyTemplate()
@@ -45,6 +62,7 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
         }
+        jvmMain.dependencies { implementation("com.eignex:lab-bench:$labBenchVersion") }
         jvmTest.dependencies {
             implementation(kotlin("test-junit"))
         }
@@ -67,10 +85,10 @@ benchmark {
     configurations {
         named("main") {
             val smoke = providers.gradleProperty("bench.smoke").getOrElse("false").toBoolean()
-            warmups = if (smoke) 1 else 3
-            iterations = if (smoke) 2 else 5
-            iterationTime = if (smoke) 100 else 1000
-            iterationTimeUnit = "ms"
+            warmups = providers.gradleProperty("bench.warmups").orNull?.toInt() ?: if (smoke) 1 else 3
+            iterations = providers.gradleProperty("bench.iterations").orNull?.toInt() ?: if (smoke) 2 else 5
+            iterationTime = providers.gradleProperty("bench.iterationTime").orNull?.toLong() ?: if (smoke) 100L else 1000L
+            iterationTimeUnit = providers.gradleProperty("bench.iterationTimeUnit").getOrElse("ms")
             reportFormat = "json"
             include(providers.gradleProperty("bench.filter").getOrElse(".*(UpdateThroughputBenchmark.update|BanditBenchmark.cycle)"))
             param("name", *providers.gradleProperty("bench.stats").getOrElse("SumStat").split(',').toTypedArray())

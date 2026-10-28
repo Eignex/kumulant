@@ -24,8 +24,7 @@ fun main(args: Array<String>) {
     }
 }
 
-internal fun benchmarkOptions(options: CommandLineOptions): Options {
-    val smoke = java.lang.Boolean.getBoolean("bench.smoke")
+internal fun benchmarkOptions(options: CommandLineOptions, smoke: Boolean = java.lang.Boolean.getBoolean("bench.smoke")): Options {
     val concurrent = options.threads.orElse(1) != 1
     val names = options.getParameter("name").orElse(
         if (smoke) listOf("SumStat") else if (concurrent) listOf("SumStat", "MeanStat", "VarianceStat") else allSpecs.map { it.name },
