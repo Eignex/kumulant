@@ -7,9 +7,7 @@ import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import com.eignex.kumulant.stream.firstWriterMode
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
-import com.eignex.kumulant.stream.serializedLock
 import kotlin.time.Duration
 
 // Pre-update shift adapters: forward a value derived from the stream's recent history to the
@@ -56,30 +54,15 @@ internal class LagSeriesStat<R : Result>(private val delegate: SeriesStat<R>, pr
         requireK(k)
     }
 
-    private val mode = delegate.concurrency.monotonicMode()
-    private val lock = delegate.concurrency.serializedLock()
-    private val tick = mode.newLong(0L)
-    private val ring = mode.newDoubleArray(k)
+    private val history = LagBuffer(k, delegate.concurrency)
 
-    // Serialised: claiming the tick, reading the slot and writing it back is one indivisible step.
-    // Split apart, a second writer reads the slot before the first has stored into it and forwards
-    // the ring's initial 0.0 as though the stream had emitted it.
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
-        lock.guarded {
-            val n = tick.addAndGet(1L)
-            val slot = ((n - 1L) % k).toInt()
-            val past = ring.load(slot)
-            ring.store(slot, value)
-            if (n > k) delegate.update(past, timestampNanos, weight)
+        history.update(value, weight) { past ->
+            delegate.update(past, timestampNanos, weight)
         }
     }
 
-    override fun reset() = lock.guarded {
-        delegate.reset()
-        tick.store(0L)
-        for (i in 0 until k) ring.store(i, 0.0)
-    }
+    override fun reset() = history.reset { delegate.reset() }
 
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
         LagSeriesStat(delegate.windowed(duration, slices, concurrency), k)
@@ -95,29 +78,15 @@ internal class DiffSeriesStat<R : Result>(private val delegate: SeriesStat<R>, p
         requireK(k)
     }
 
-    private val mode = delegate.concurrency.monotonicMode()
-    private val lock = delegate.concurrency.serializedLock()
-    private val tick = mode.newLong(0L)
-    private val ring = mode.newDoubleArray(k)
+    private val history = LagBuffer(k, delegate.concurrency)
 
-    // Serialised for the same reason as [LagSeriesStat]: a torn read of the ring would forward a
-    // difference against the initial 0.0, an outlier the size of the stream's own magnitude.
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
-        lock.guarded {
-            val n = tick.addAndGet(1L)
-            val slot = ((n - 1L) % k).toInt()
-            val past = ring.load(slot)
-            ring.store(slot, value)
-            if (n > k) delegate.update(value - past, timestampNanos, weight)
+        history.update(value, weight) { past ->
+            delegate.update(value - past, timestampNanos, weight)
         }
     }
 
-    override fun reset() = lock.guarded {
-        delegate.reset()
-        tick.store(0L)
-        for (i in 0 until k) ring.store(i, 0.0)
-    }
+    override fun reset() = history.reset { delegate.reset() }
 
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
         DiffSeriesStat(delegate.windowed(duration, slices, concurrency), k)
