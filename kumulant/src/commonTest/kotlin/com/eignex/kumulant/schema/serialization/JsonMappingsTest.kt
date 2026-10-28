@@ -157,7 +157,13 @@ class JsonMappingsTest {
     @Test
     fun `only payloads accepting the empty object include name shorthands`() {
         val mapped = listOf(
-            "decayingSum", "decayingMean", "decayingVariance", "ewma", "ewmaVariance", "holt", "seasonalSmoothing",
+            "decayingSum",
+            "decayingMean",
+            "decayingVariance",
+            "ewma",
+            "ewmaVariance",
+            "holt",
+            "seasonalSmoothing",
         )
         val shorthands = (alternatives(statSchema) + alternatives(exprSchema))
             .flatMap { it["anyOf"]?.jsonArray.orEmpty() }
