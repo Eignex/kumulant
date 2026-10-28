@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.rate
 
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -59,6 +60,28 @@ class RateStatTest {
         assertEquals(15.0, result.totalValue, DELTA)
 
         assertEquals(T0, result.startTimestampNanos)
+    }
+
+    @Test
+    fun `merge retains the window of a snapshot read at its first observation`() {
+        for (concurrency in Concurrency.entries) {
+            val source = RateStat(concurrency).apply { update(10.0, T0) }
+            val merged = RateStat(concurrency)
+
+            merged.merge(source.read(T0))
+
+            assertEquals(10.0, merged.read(T1).rate, DELTA, "mode=$concurrency")
+        }
+    }
+
+    @Test
+    fun `merge retains an observation window when the snapshot read precedes it`() {
+        val source = RateStat().apply { update(10.0, T1) }
+        val merged = RateStat()
+
+        merged.merge(source.read(T0))
+
+        assertEquals(10.0, merged.read(T2).rate, DELTA)
     }
 
     @Test

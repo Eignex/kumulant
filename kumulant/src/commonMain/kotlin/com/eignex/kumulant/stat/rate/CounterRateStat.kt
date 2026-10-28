@@ -139,7 +139,7 @@ class CounterRateStat(
 
         // See RateStat.merge: an untouched shard reports its read timestamp as the start and so has no
         // window to adopt, but a zero total does not imply an untouched shard.
-        if (values.startTimestampNanos >= values.timestampNanos) return@guarded
+        if (values.totalValue == 0.0 && values.startTimestampNanos >= values.timestampNanos) return@guarded
 
         val currentStart = startTimestampNanos.load()
         if (currentStart == Long.MIN_VALUE || values.startTimestampNanos < currentStart) {

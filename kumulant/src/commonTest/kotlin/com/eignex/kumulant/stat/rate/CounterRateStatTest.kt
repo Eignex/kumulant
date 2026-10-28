@@ -87,6 +87,21 @@ class CounterRateStatTest {
     }
 
     @Test
+    fun `merge retains the window of a snapshot read at a counter reset`() {
+        for (concurrency in Concurrency.entries) {
+            val source = CounterRateStat(concurrency).apply {
+                update(100.0, T0)
+                update(10.0, T1)
+            }
+            val merged = CounterRateStat(concurrency)
+
+            merged.merge(source.read(T1))
+
+            assertEquals(10.0, merged.read(T2).rate, DELTA, "mode=$concurrency")
+        }
+    }
+
+    @Test
     fun `rate includes the initial interval without increments`() {
         for (concurrency in Concurrency.entries) {
             val stat = CounterRateStat(concurrency)
