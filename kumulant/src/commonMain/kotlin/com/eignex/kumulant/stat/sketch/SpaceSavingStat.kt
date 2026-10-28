@@ -134,24 +134,12 @@ class SpaceSavingStat(
     // Noop under None/Relaxed; real under Strict/HighWrite.
     private val outerLock = concurrency.welfordLock()
 
-    /**
-     * Classic Space-Saving needs a consistent read of the minimum slot to evict and inherit its count,
-     * which cannot be done lock-free, so [Concurrency.Relaxed] gets Misra-Gries instead.
-     */
+    // Relaxed uses Misra-Gries because classic minimum-slot eviction requires serialization.
     private val policy: AdmissionPolicy =
         if (concurrency == Concurrency.Relaxed) AdmissionPolicy.MisraGries else AdmissionPolicy.Classic
     private val useMisraGries: Boolean = policy == AdmissionPolicy.MisraGries
 
-    /**
-     * Bulk-decrement rounds, plus any absorbed from a merged snapshot.
-     *
-     * On the Misra-Gries path this is the only thing bounding how far a count can fall below the truth.
-     * It lives off the hot path: a decrement round runs only when the table is full with no free slot,
-     * not on every update.
-     *
-     * Sticky across a policy change, because a `Classic` stat that has merged a Misra-Gries snapshot is
-     * carrying that snapshot's shortfall and must keep reporting it.
-     */
+    // Accumulated Misra-Gries shortfall remains part of the error bound after policy changes.
     private val deficitCell = mode.newLong(0L)
     private val absorbedMisraGries = mode.newLong(0L)
 
@@ -160,10 +148,7 @@ class SpaceSavingStat(
     private val errors = mode.newLongArray(capacity)
     private val totalSeenCell = mode.newLong(0L)
 
-    /**
-     * Classic Space-Saving admit. Caller serializes against concurrent admit / read
-     * (None: trivially; Strict/HighWrite: via [outerLock]).
-     */
+    // The caller serializes admission and reads through outerLock in concurrent modes.
     private fun admitClassic(key: Long, addCount: Long, addError: Long) {
         for (i in 0 until capacity) {
             if (counts.load(i) > 0L && keys.load(i) == key) {
@@ -194,10 +179,7 @@ class SpaceSavingStat(
         errors.store(minIdx, saturatingPlus(minCount, addError))
     }
 
-    /**
-     * Lock-free Misra-Gries admit. Bounded drift: concurrent racers may
-     * see a brief torn (newCount, staleKey) view in a freshly-claimed slot.
-     */
+    // Concurrent admission permits bounded drift from a brief (newCount, staleKey) view.
     private fun admitMisraGries(key: Long, addCount: Long, addError: Long) {
         while (true) {
             // 1. Find a slot whose current (key, count) matches and increment in place.
@@ -229,16 +211,8 @@ class SpaceSavingStat(
             }
             if (claimed) return
 
-            // 3. No free slot found - best-effort subtraction of the smallest count from every count,
-            //    which drives at least the slot holding that minimum to zero and so frees it for step 2
-            //    on the next iteration. A concurrent admit may subtract in parallel; both progress, and
-            //    step 2 accepts the resulting non-positive counts.
-            //
-            //    By the minimum rather than by one: a unit decrement makes this loop run once per unit
-            //    of the smallest count, so admitting a single key against a table holding counts of 1e15
-            //    - reachable through the weight contract, since toCounterStep caps one step at
-            //    Long.MAX_VALUE/1024 - would never return. Classic Misra-Gries subtracts the minimum in
-            //    one round for the same reason, which is what makes its amortised cost constant.
+            // Bulk-decrementing by the smallest count frees a slot in one round, even at large counts.
+            // Concurrent decrements may leave non-positive counts, which admission treats as free slots.
             var minCount = Long.MAX_VALUE
             for (i in 0 until capacity) minCount = minOf(minCount, counts.load(i))
             // At least one, so a table that a concurrent round already drove non-positive still makes
@@ -258,11 +232,7 @@ class SpaceSavingStat(
         // would make a NaN weight a real observation. Counts are Long, so there is nothing to
         // propagate into.
         if (weight.isNotPositiveWeight()) return
-        // Counts are Long, so a fractional weight has to be rounded. Round *up*: rounding to nearest
-        // would drop everything below 0.5, so a key accumulating many small weights never surfaces
-        // as a heavy hitter. Capped as in CountMinSketchStat, and for the same reason: counts are
-        // Long and monotonically increasing, so an unbounded step saturates a count and the next one
-        // wraps it negative, dropping a genuine heavy hitter out of the summary entirely.
+        // Rounding upward preserves fractional contributions; the step cap protects integer counters.
         val w = weight.toCounterStep()
         if (useMisraGries) {
             admitMisraGries(value, w, 0L)
@@ -283,16 +253,9 @@ class SpaceSavingStat(
 
     override fun merge(values: HeavyHittersResult) {
         validateMerge(values)
-        // A policy mismatch is not refused. Unlike a hasher mismatch, which makes two sketches'
-        // arrays incomparable, both policies produce (key, count, error) triples over the same key
-        // space - only the tightness differs. Refusing would also break the obvious topology of many
-        // Relaxed workers feeding one Strict coordinator. So the snapshot is absorbed and the bounds
-        // are widened to stay sound: the incoming shortfall is added, and the reported policy degrades
-        // to the weaker of the two.
-        // Guarded because reset clears both of these together and read observes both together: left
-        // outside, a reset landing between them leaves an empty table reporting a degraded policy with
-        // no deficit, or a deficit with no policy. Written before the counts they bound, so a reader
-        // that catches the merge partway sees a bound too loose for the data rather than too tight.
+        // Mixed-policy merges add shortfall and report the weaker policy.
+        // The lock keeps deficit and policy consistent across reads and resets.
+        // Publishing bounds before counts keeps partial merge reads conservative.
         outerLock.guarded {
             if (values.policy == AdmissionPolicy.MisraGries) absorbedMisraGries.store(1L)
             deficitCell.add(values.deficit)
@@ -325,7 +288,6 @@ class SpaceSavingStat(
         }
     }
 
-    /** This stat's own policy, weakened if it has absorbed a Misra-Gries snapshot. */
     private fun effectivePolicy(): AdmissionPolicy =
         if (useMisraGries || absorbedMisraGries.load() != 0L) AdmissionPolicy.MisraGries else policy
 

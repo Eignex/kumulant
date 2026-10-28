@@ -3,12 +3,8 @@ package com.eignex.kumulant.stream
 import java.util.concurrent.atomic.DoubleAdder as JDoubleAdder
 import java.util.concurrent.atomic.LongAdder as JLongAdder
 
-// JVM `StreamMode` backed by `java.util.concurrent.atomic.DoubleAdder` / `LongAdder`.
-//
-// Optimized for many concurrent writers (striped cells). `load()` sweeps all cells and
-// is slower than CAS atomics, so prefer this for write-heavy counters read infrequently.
-// `load` is non-linearizable: use `AtomicMode` if reads must observe a single update
-// atomically with subsequent writes.
+// Striped adders favor frequent writes and infrequent reads. Totals are best-effort; AtomicMode provides linearizable
+// cells.
 internal object AdderMode : StreamMode {
     override fun newDouble(initial: Double) = DoubleAdder(initial)
     override fun newLong(initial: Long) = LongAdder(initial)
@@ -24,11 +20,7 @@ internal object AdderMode : StreamMode {
         AtomicMode.newDoubleArray(size, init)
 }
 
-// `StreamDouble` backed by a striped `java.util.concurrent.atomic.DoubleAdder`.
-//
-// `sum` accumulates from a `+0.0` base, so this cell cannot represent a negative zero: seeding it with
-// `-0.0` reports `+0.0`. Only the sign of a reported zero is affected, and it is inherent to a striped
-// counter rather than something the operations below can preserve.
+// DoubleAdder sums from +0.0, so reported zeros are positive even when seeded with -0.0.
 @JvmInline
 internal value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
 

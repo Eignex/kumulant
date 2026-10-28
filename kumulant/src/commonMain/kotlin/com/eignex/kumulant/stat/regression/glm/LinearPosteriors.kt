@@ -147,11 +147,8 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
     }
 }
 
-/**
- * Posterior standard deviation at [x] under a unit exploration scale:
- * `sqrt(xT * Sigma * x) = ||L^-1 x||` for the precision factor `L` with `Sigma = (L * LT)^-1`.
- * One forward substitution, so the covariance is never formed.
- */
+// For precision factor L, posterior deviation is sqrt(xT * Sigma * x) = ||L^-1 x||.
+// A forward substitution avoids forming the covariance matrix.
 private fun PrecisionRegressionResult.predictiveDeviation(x: Vector): Double {
     val v = DoubleArray(featureSize)
     copy(x, DenseVector.wrap(v))

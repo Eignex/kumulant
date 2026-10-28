@@ -13,13 +13,7 @@ import com.eignex.kumulant.stream.DEFAULT_WINDOW_SLICES
 import com.eignex.kumulant.stream.SliceRing
 import kotlin.time.Duration
 
-/**
- * Wrap a [SeriesStat] in a tumbling-slice sliding window of length [duration].
- *
- * Values are bucketed across [slices] ring-buffer slots; reads merge the in-window
- * slots using the underlying stat's [Stat.merge]. More [slices] smooths the boundary
- * at the cost of memory and merge work per read.
- */
+// Reads merge active slices; finer slices improve expiry granularity at a memory and merge cost.
 internal fun <R : Result> SeriesStat<R>.windowed(
     duration: Duration,
     slices: Int = DEFAULT_WINDOW_SLICES,
@@ -28,7 +22,6 @@ internal fun <R : Result> SeriesStat<R>.windowed(
     WindowedSeriesStat(duration, slices, this, concurrency)
 }
 
-/** Paired-stat counterpart of [SeriesStat.windowed]. */
 internal fun <R : Result> PairedStat<R>.windowed(
     duration: Duration,
     slices: Int = DEFAULT_WINDOW_SLICES,
@@ -37,7 +30,6 @@ internal fun <R : Result> PairedStat<R>.windowed(
     WindowedPairedStat(duration, slices, this, concurrency)
 }
 
-/** Vector-stat counterpart of [SeriesStat.windowed]. */
 internal fun <R : Result> VectorStat<R>.windowed(
     duration: Duration,
     slices: Int = DEFAULT_WINDOW_SLICES,
@@ -46,7 +38,6 @@ internal fun <R : Result> VectorStat<R>.windowed(
     WindowedVectorStat(duration, slices, this, concurrency)
 }
 
-/** Discrete-stat counterpart of [SeriesStat.windowed]. */
 internal fun <R : Result> DiscreteStat<R>.windowed(
     duration: Duration,
     slices: Int = DEFAULT_WINDOW_SLICES,
@@ -55,13 +46,7 @@ internal fun <R : Result> DiscreteStat<R>.windowed(
     WindowedDiscreteStat(duration, slices, this, concurrency)
 }
 
-/**
- * Route a stateful operator to [WindowsInside.windowedInside] and everything else to [outside].
- *
- * Wrapping the operator's delegate rather than the operator itself is what keeps one instance of the
- * operator's state for the whole stream: see [WindowsInside] for why a slice rotation would otherwise
- * restart it.
- */
+// Windowing the delegate preserves one operator state across slice rotations.
 private inline fun <R : Result, S : Stat<R>> S.windowedOutsideOrInside(
     duration: Duration,
     slices: Int,
@@ -74,11 +59,6 @@ private inline fun <R : Result, S : Stat<R>> S.windowedOutsideOrInside(
     outside()
 }
 
-/**
- * Build a fresh single-threaded accumulator from [template], merge in every active
- * slot at [timestampNanos], and read the result. Shared by the four [windowed]
- * adapters since their `read` is modality-agnostic.
- */
 private fun <R : Result, S : Stat<R>> windowedRead(template: S, ring: SliceRing<R, S>, timestampNanos: Long): R {
     val acc = template.create(concurrency = Concurrency.None)
     ring.forEachActive(timestampNanos) { acc.merge(it.read(timestampNanos)) }

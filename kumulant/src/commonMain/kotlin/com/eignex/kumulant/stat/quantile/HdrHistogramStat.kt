@@ -155,13 +155,8 @@ class HdrHistogramStat(
             val weight = values.weights[i]
             if (weight > 0.0) {
                 val bound = values.lowerBounds[i]
-                // The same non-negative, finite domain update enforces. SparseHistogramResult is the
-                // shared merge type for every histogram and sketch projection, so a bound from a
-                // DDSketch that saw negative values, or the -Infinity floor of a LinearHistogram
-                // underflow row, arrives here through ordinary public API. Unguarded, getIndex hands
-                // back the negative value unchanged and the counts array is indexed out of bounds -
-                // and -Infinity is worse than that, since its Long is Int-truncated to 0 and the weight
-                // is filed silently into the lowest bucket.
+                // Shared histogram snapshots may contain negative or non-finite bounds; only this histogram domain is
+                // indexable.
                 require(bound.isFinite() && bound >= 0.0) {
                     "merge bucket lower bound must be finite and non-negative, got $bound"
                 }

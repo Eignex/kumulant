@@ -36,16 +36,7 @@ data object MeanTreePosterior : TreePosterior {
         snapshot.findLeaf(x).mean
 }
 
-/**
- * Leaf variance blended with [priorVariance] on a [priorWeight] pseudo-count.
- *
- * Swapping in the prior only for a completely empty leaf leaves a hole one observation wide: a leaf
- * holding exactly one sample reports `totalWeights = 1` with a variance of exactly `0`, so a Thompson
- * draw collapses to a point and a UCB bound loses its bonus - on the leaves that need exploration most.
- * Driving a contextual bandit, an arm whose single observation was unlucky is then never picked again,
- * so the leaf never gets a second observation and the state is absorbing. Blending also removes the
- * discontinuity at `totalWeights == 0`, where the two branches disagreed.
- */
+// Blending prior variance preserves exploration for singleton leaves with zero empirical variance.
 private fun blendedVariance(leaf: WeightedVarianceResult, priorWeight: Double, priorVariance: Double): Double {
     val n = leaf.totalWeights + priorWeight
     if (n <= 0.0) return priorVariance

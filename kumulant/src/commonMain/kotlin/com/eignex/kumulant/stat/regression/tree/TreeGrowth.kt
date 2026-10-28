@@ -15,127 +15,73 @@ import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.random.Random
 
-/*
- * The VFDT growth engine, shared by [RegressionTree] and [ClassificationTree].
- *
- * The trees run one algorithm over two payload types, but their node hierarchies are public and
- * wire-visible, so the types must stay distinct: `RegressionNode` is generic in the row type and carries
- * weighted-variance arms, `ClassificationNode` is fixed to a dense vector row and carries class-count
- * arms. What is shared is therefore the engine, parameterised by [TreeShape] - an internal SPI that
- * narrows nodes, reads and writes their children, and builds new ones.
- */
+// Shared VFDT engine over distinct public regression and classification node hierarchies.
 
-/**
- * The node-shape SPI the growth engine drives. Every member is a one-liner over one tree's node types.
- *
- * The narrowing members ([asSplitNode], [asAuditLeaf], [leafArm]) return null when the node is not of
- * that kind; the engine dispatches on a chain of null checks rather than a `when` over a sealed type.
- */
+// Narrowing members return null for nodes of another kind.
 internal interface TreeShape<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasObservationCount> {
 
-    /** The node as a split node, or null when it is a leaf. */
     fun asSplitNode(node: N): SN?
 
-    /** The node as an audit leaf, or null when it is a split or a terminal leaf. */
     fun asAuditLeaf(node: N): AL?
 
-    /** The leaf's live accumulator, or null when the node is a split (splits hold no live arm). */
     fun leafArm(node: N): SeriesStat<P>?
 
-    /** The split node's routing predicate. */
     fun splitOf(node: SN): S
 
-    /** The child taken when the predicate holds. */
     fun posOf(node: SN): N
 
-    /** The child taken when the predicate does not hold. */
     fun negOf(node: SN): N
 
-    /** Repoint the true-side child. */
     fun setPos(node: SN, child: N)
 
-    /** Repoint the false-side child. */
     fun setNeg(node: SN, child: N)
 
-    /** The split's orphan-aggregate arm, or null when it holds none. */
     fun carryoverOf(node: SN): SeriesStat<P>?
 
-    /** Install an orphan-aggregate arm on the split. */
     fun setCarryover(node: SN, arm: SeriesStat<P>)
 
-    /** The candidate splits this audit leaf is evaluating. */
     fun candidatesOf(leaf: AL): List<S>
 
-    /** Per-candidate accumulators for observations routing true. */
     fun posArmsOf(leaf: AL): List<SeriesStat<P>>
 
-    /** Per-candidate accumulators for observations routing false. */
     fun negArmsOf(leaf: AL): List<SeriesStat<P>>
 
-    /** The audit leaf's split-period tick counter. */
     fun ticksOf(leaf: AL): AtomicLong
 
-    /** Build a split node. */
     fun makeSplitNode(split: S, pos: N, neg: N, carryover: SeriesStat<P>?): SN
 
-    /** Build a leaf that will never be audited again. */
     fun makeTerminalLeaf(arm: SeriesStat<P>): N
 
-    /** Build a leaf that audits the given candidate subset. */
     fun makeAuditLeaf(arm: SeriesStat<P>, candidates: List<S>, pos: List<SeriesStat<P>>, neg: List<SeriesStat<P>>): N
 
-    /** A fresh, empty accumulator of the tree's payload type. */
     fun emptyArm(): SeriesStat<P>
 
-    /** Combine two payload aggregates. */
     fun mergePayload(a: P, b: P): P
 
-    /** Recover the other summand of a merge; the inverse of [mergePayload]. */
     fun subtractPayload(total: P, part: P): P
 
-    /** Aggregate over every observation routed through the subtree at this node. */
     fun aggregate(node: N): P
 
-    /** Score the candidates at a leaf under the tree's configured split criterion. */
     fun rank(total: P, pos: List<P>, neg: List<P>): SplitInfo
 
-    /** The `prettyPrint` text for a leaf holding this aggregate, without indent or newline. */
     fun leafLabel(arm: P): String
 }
 
-/**
- * The snapshot-shape SPI, used only by the snapshot-merge paths.
- *
- * Kept separate from [TreeShape] because the snapshot hierarchies are immutable, serializable, and only
- * ever seen over a dense vector row, while [TreeShape] describes live nodes over an arbitrary row type.
- */
+// Snapshot shapes are immutable and serializable over dense vector rows; live shapes support arbitrary rows.
 internal interface TreeResultShape<S, R : Any, RS : R, P : HasObservationCount> {
 
-    /** The snapshot node as a split snapshot, or null when it is a leaf snapshot. */
     fun asSplitResult(node: R): RS?
 
-    /** The split snapshot's routing predicate. */
     fun splitOf(node: RS): S
 
-    /** The subtree snapshot taken when the predicate holds. */
     fun posOf(node: RS): R
 
-    /** The subtree snapshot taken when the predicate does not hold. */
     fun negOf(node: RS): R
 
-    /** The aggregate this snapshot node records for its whole subtree. */
     fun valueOf(node: R): P
 }
 
-/**
- * Owns one tree: its root pointer, node count, split lock, PRNG and candidate pool, and every operation
- * that reads or rewrites its structure.
- *
- * Concurrency: leaf-arm updates run lock-free and honour whatever contract the arms were built with; the
- * split-conversion path, the only one that mutates structure, is serialised by a single per-tree lock and
- * fires only every `splitPeriod` observations per audit leaf. Pointer writes on the hot path are skipped
- * when the child reference is unchanged.
- */
+// Leaf updates follow the arm concurrency contract; structural mutations share a per-tree lock.
 internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasObservationCount>(
     private val shape: TreeShape<Row, S, N, SN, AL, P>,
     private val splitCandidates: List<S>,
@@ -203,12 +149,7 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
         }
     }
 
-    /**
-     * A newborn leaf at [depth]: an audit leaf if the tree may still grow there, a terminal leaf if not.
-     *
-     * The node ceiling is tested as `nbrNodes.load() + 1` rather than the two nodes a split actually adds,
-     * because it is checked at each leaf birth and the sibling's own birth checks it again.
-     */
+    // Each sibling checks the node ceiling at birth.
     private fun newLeaf(depth: Int): N {
         if (depth >= config.maxDepth || nbrNodes.load() + 1 > config.maxNodes || !canGrow) {
             return shape.makeTerminalLeaf(shape.emptyArm())
@@ -228,10 +169,6 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
         return 1 + countNodes(shape.posOf(split)) + countNodes(shape.negOf(split))
     }
 
-    /**
-     * Route one observation to its leaf and fold it in, returning the node that should sit in this slot
-     * afterwards - the same node, unless an audit leaf converted itself into a split.
-     */
     private fun updateNode(node: N, row: Row, value: Double, weight: Double, depth: Int): N {
         val split = shape.asSplitNode(node)
         if (split != null) {
@@ -252,12 +189,7 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
         return updateAuditLeaf(node, audit, arm, row, value, weight, depth)
     }
 
-    /**
-     * Fold the observation into every candidate's pos/neg sub-arm, then, on the observations that land on
-     * a split-period boundary, decide whether the leaf has earned a split.
-     *
-     * The leaf's own arm was already updated by [updateNode], which is shared with the terminal-leaf path.
-     */
+    // updateNode has already updated the leaf arm; this path updates candidate arms and audits splits.
     private fun updateAuditLeaf(
         node: N,
         leaf: AL,
@@ -286,13 +218,7 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
             if (ticks.load() < config.splitPeriod) return@guarded node
             ticks.store(0L)
 
-            // Every candidate partitions the same locally routed observations, so either side of the
-            // first one sums back to exactly what this leaf can attribute. That, not the leaf arm, is
-            // the evidence a split decision rests on: a merge folds mass into the arm that no
-            // candidate ever saw, and a larger n both shrinks the Hoeffding bound and clears the
-            // weight floor on data the comparison never examined.
-            // An audit leaf is only ever born with a non-empty candidate subset (canGrow gates that),
-            // but mtry is caller data, so index nothing without checking.
+            // Split evidence comes from locally routed candidate observations; merged arm mass lacks candidate data.
             if (candidates.isEmpty()) return@guarded node
             val posResults = posArms.map { it.read(0L) }
             val negResults = negArms.map { it.read(0L) }
@@ -381,13 +307,7 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
         return a
     }
 
-    /**
-     * Rebuild a live subtree from a snapshot.
-     *
-     * Deliberately unbounded by depth: [newLeaf] refuses to grow past `maxDepth`, but cloning honours the
-     * snapshot's shape whatever it is. A snapshot normally comes from a tree that already respected its own
-     * `maxDepth`, so the two only diverge when the two configs differ.
-     */
+    // Cloning preserves snapshot shape even when its depth exceeds this tree configuration.
     private fun <R : Any, RS : R> cloneFromResult(node: R, results: TreeResultShape<S, R, RS, P>, depth: Int): N {
         nbrNodes.addAndFetch(1)
         val split = results.asSplitResult(node)
@@ -407,7 +327,7 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
         return shape.makeSplitNode(results.splitOf(split), pos, neg, carry)
     }
 
-    /** What a split snapshot's own aggregate holds beyond the sum of its two children's. */
+    // Carryover is the split aggregate minus its child aggregates.
     private fun <R : Any, RS : R> residualOf(split: RS, results: TreeResultShape<S, R, RS, P>): P {
         val childSum = shape.mergePayload(
             results.valueOf(results.posOf(split)),

@@ -9,20 +9,7 @@ import com.eignex.kumulant.schema.expr.plus
 import com.eignex.kumulant.schema.expr.times
 import com.eignex.kumulant.schema.expr.unaryMinus
 
-// Convenience constructors for the common learning-rate schedules, expressed as
-// [ScalarExpr] over the step counter `X`. `RegressionStat` implementations evaluate
-// the expression at `step.toDouble()` per update, so any wire-portable scalar
-// function of the step works - these factories are just terse names for the three
-// recipes that occur in practice.
-//
-// A regression stat takes its schedule as a plain [ScalarExpr], so callers can pass
-// either a factory result or hand-build something arbitrary:
-//
-// ```kotlin
-// StochasticRegressionStat(featureSize = 16, optimizer = Sgd(ConstantRate(0.05)))
-// StochasticRegressionStat(featureSize = 16, learningRate = StepDecay(0.01, 1e-3))
-// StochasticRegressionStat(featureSize = 16, learningRate = 0.01 * Exp(-1e-5 * X))
-// ```
+// Learning-rate schedules evaluate ScalarExpr with the update step bound to X.
 
 /** Constant rate `eta`. */
 @Suppress("FunctionNaming") // PascalCase to read like a constructor at call sites

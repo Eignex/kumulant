@@ -122,22 +122,18 @@ class BayesianRegressionStat(
         }
     }
 
-    // Stored prior: caller-supplied or the default isotropic N(0, priorVariance * I).
-    // `initialCovariance` survives only so `create()` can hand a child the same prior it was
-    // given, rather than a round-tripped inverse of the precision.
+    // Keep the supplied covariance for replicas to preserve the prior without an inverse round-trip.
     private val initialWeights: DoubleArray = priorMean?.toDoubleArray() ?: DoubleArray(featureSize)
     private val initialCovariance: DenseMatrix = priorCovariance
         ?.copyDenseMatrix()
         ?: DenseMatrix.diagonal(featureSize, priorVariance)
 
-    // Prior precision H_prior = Sigma_prior^-1, cached so merge() can subtract one prior factor,
-    // and its factor, which is where every update starts.
+    // Cache prior precision and its factor for updates and prior-corrected merges.
     private val priorPrecisionMatrix: DenseMatrix
     private val initialPrecisionL: DenseMatrix
 
     init {
-        // Both factorizations are strict: a caller prior that cannot be inverted has to fail at
-        // construction, not silently become a regularised neighbour of itself.
+        // Caller priors must be positive definite; strict factorization preserves them exactly.
         try {
             priorPrecisionMatrix = initialCovariance.cholesky(CholeskyPolicy.Strict).choleskyInverse()
             initialPrecisionL = priorPrecisionMatrix.cholesky(CholeskyPolicy.Strict)
@@ -153,11 +149,8 @@ class BayesianRegressionStat(
 
     private val lock = concurrency.serializedLock()
 
-    // Scratch for the per-observation update and for the level-3 calls in merge, the two repeated paths
-    // that need any. A workspace refuses a buffer it did not lend, so sharing one across racing
-    // callers would break the no-throw contract. It is safe to own per stat because every level that admits
-    // concurrent use gives `serializedLock` a real mutex, and `Concurrency.None` puts a shared stat outside
-    // its contract to begin with. `create` builds a fresh stat, so replicas never share this one.
+    // Each stat owns a workspace protected by serializedLock under concurrent use; replicas have independent
+    // workspaces.
     private val workspace = Workspace()
     private val weights = DenseVector.wrap(initialWeights.copyOf())
     private val precisionL = DenseMatrix.wrap(featureSize, featureSize, initialPrecisionL.values.copyOf())
@@ -184,18 +177,13 @@ class BayesianRegressionStat(
             val curvature = link.curvature(etaPred)
             sse += link.loss(etaPred, y) * weight
 
-            // For canonical-link GLMs the per-observation precision is `weight * curvature`:
-            // 1 under Identity gives the exact conjugate update; for Logit / Log this is the local
-            // Laplace approximation around the current linear predictor (not the strict closed-form
-            // Bayesian update). `Link.Log.curvature` is `exp(eta)`, which overflows for a large
-            // linear predictor; an infinite w_c would write Infinity through the factor and take
-            // every later prediction with it, so the observation is skipped instead.
+            // Precision uses weight * curvature: exact under Identity, a local Laplace approximation under Logit/Log.
+            // Non-finite curvature is skipped to preserve the precision factor.
             val wc = weight * curvature
             if (!wc.isFinite()) return@guarded
 
-            // One buffer serves both halves of the update. The rank-1 update leaves its vector
-            // untouched, so the scattered x is still there for the solve afterwards; scattering
-            // also spares the update a binary search per coordinate when x arrives sparse.
+            // The rank-1 update preserves the scattered x for the following solve; scattering also speeds sparse
+            // access.
             workspace.borrow(featureSize) { hx ->
                 val solved = DenseVector.wrap(hx)
                 copy(x, solved)
@@ -373,19 +361,12 @@ class BayesianRegressionStat(
 
             // Sigma_pop = weighted mean of Sigma_i + weighted covariance of (mu_i - mu_pop).
             val sigmaPop = DenseMatrix.zero(n, n)
-            // One buffer for every snapshot's covariance: the inversion writes each entry, so it
-            // never sees what the previous instance left behind.
             val cov = DenseMatrix.zero(n, n)
-            // Both matrices are square, n by n, and column-major, so their flat backings line up
-            // entry for entry and the matrix add is a level-1 axpy over the whole of them.
             val sigmaFlat = DenseVector.wrap(sigmaPop.values)
             val covFlat = DenseVector.wrap(cov.values)
             val deviation = DoubleArray(n)
             val deviationVector = DenseVector.wrap(deviation)
-            // Local to this call and never escaping it, so the scratch the inversion asks for is
-            // allocated once for the whole population rather than once per snapshot. The inversion is
-            // reached through the factor rather than through `covarianceInto`, which is public and
-            // takes no workspace.
+            // A call-local workspace reuses inversion scratch across population snapshots.
             val scratch = Workspace()
             for (s in snapshots.indices) {
                 val wi = weights[s] / wTotal
@@ -395,9 +376,7 @@ class BayesianRegressionStat(
                 for (i in 0 until n) deviation[i] = mu[i] - muPop[i]
                 sigmaPop.syr(wi, deviationVector, workspace = scratch)
             }
-            // The axpy filled both triangles, since each Sigma_i is symmetric, but syr writes only
-            // the lower one. Reflecting once here rather than per snapshot is what keeps the
-            // published matrix symmetric, which callers reading either half depend on.
+            // Reflect the lower triangle after syr to publish a symmetric covariance.
             for (i in 0 until n) {
                 for (j in i + 1 until n) sigmaPop[i, j] = sigmaPop[j, i]
             }

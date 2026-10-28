@@ -61,11 +61,6 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
-/**
- * Registry of [StatSpec]s; one entry per univariate stat. Tests and benchmarks
- * iterate over [allSpecs] (or a category subset) so adding a new stat means adding
- * an entry here and nothing else.
- */
 
 private fun bernoulliWorkload(seed: Int, n: Int): Sequence<Update> = sequence {
     val rng = Random(seed)

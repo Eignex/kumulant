@@ -80,12 +80,7 @@ class CusumStat(
     private val cusumPos = streamMode.newDouble(0.0)
     private val cusumNeg = streamMode.newDouble(0.0)
 
-    /**
-     * Whether anything has landed yet, which the two cells cannot tell us on their own.
-     *
-     * `cusumPos` clamps at zero and `cusumNeg` at zero from below, so "no observation yet" and "the
-     * drift has walked back to zero" are the same pair of numbers. [merge] has to distinguish them.
-     */
+    // Distinguishes an empty stat from an observed trace whose drift returned to zero during merge.
     private val initialized = streamMode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {

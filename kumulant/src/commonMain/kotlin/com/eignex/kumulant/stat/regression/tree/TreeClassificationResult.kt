@@ -60,7 +60,6 @@ data class TreeClassificationLeafResult(override val value: ClassCountsResult) :
     override fun findLeaf(x: Vector): ClassCountsResult = value
 }
 
-/** Freeze a live classification-tree node into an immutable snapshot. */
 internal fun ClassificationNode.snapshot(): TreeClassificationNodeResult = when (this) {
     is ClassificationSplitNode -> {
         val p = pos.snapshot()

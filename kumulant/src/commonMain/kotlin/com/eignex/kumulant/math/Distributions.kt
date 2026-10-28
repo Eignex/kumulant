@@ -7,15 +7,8 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-/**
- * Random-variate generators for the distributions kumulant's bandit and regression
- * code needs. Implementations are textbook-standard: Ziggurat for Gaussian,
- * Marsaglia-Tsang for Gamma, two-gamma quotient for Beta.
- */
-
 private const val MIN_POS = Double.MIN_VALUE
 
-/** Skip exact zero so callers can take `ln(u)` without checking. */
 private fun Random.nextDoublePos(): Double {
     while (true) {
         val u = nextDouble()
@@ -45,13 +38,7 @@ private fun Random.standardNormal(): Double {
     while (true) {
         val hz = nextInt()
         val iz = hz and (ZIGGURAT_N - 1)
-        // -Int.MIN_VALUE is still Int.MIN_VALUE, so a plain `-hz` would leave absHz negative once every
-        // 2^32 draws, making the comparison below trivially true and taking the layer-0 inner-rectangle
-        // fast path where the tail sampler is required. Clamping that one input to Int.MAX_VALUE avoids
-        // widening to Long: every ZIGGURAT_KN entry is at most Int.MAX_VALUE, so both Int.MAX_VALUE and
-        // the true magnitude 2^31 fail the test identically and fall through to the tail. Widening is
-        // correct too, but Long arithmetic can require boxed allocations and a
-        // compare() call in the 97% fast path of every normal draw.
+        // Clamping abs(Int.MIN_VALUE) preserves the Ziggurat tail test using Int arithmetic on the fast path.
         val absHz = if (hz >= 0) {
             hz
         } else if (hz == Int.MIN_VALUE) {
@@ -119,11 +106,7 @@ private val ZIGGURAT_INIT = run {
 fun Random.nextLogNormal(mean: Double, variance: Double): Double {
     require(mean > 0.0) { "nextLogNormal requires mean > 0; got $mean" }
     require(variance >= 0.0) { "nextLogNormal requires variance >= 0; got $variance" }
-    // Derive sigma from the coefficient of variation rather than from phi/mean directly: squaring the
-    // mean underflows to 0.0 well inside the documented domain (mean > 0), which makes
-    // ln(phi^2 / mean^2) evaluate 0.0/0.0 and return NaN, and one exponent earlier yields a
-    // non-positive draw from a strictly positive distribution. variance / mean^2 is the same ratio
-    // with one fewer chance to underflow, and log1p keeps precision when it is small.
+    // The coefficient of variation avoids squaring a tiny mean; log1p preserves small-ratio precision.
     val cv2 = (variance / mean) / mean
     val sigma = sqrt(ln1p(cv2))
     val mu = ln(mean) - 0.5 * sigma * sigma

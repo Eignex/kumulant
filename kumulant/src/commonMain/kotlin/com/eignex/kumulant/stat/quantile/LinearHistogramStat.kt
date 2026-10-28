@@ -113,7 +113,6 @@ class LinearHistogramStat(
         }
     }
 
-    /** Index this bucket was emitted from, or [NO_BIN] when its edges do not match our layout. */
     private fun alignedBin(lo: Double, hi: Double): Int {
         val span = hi - lo
         if (abs(span - binWidth) > binWidth * 1e-12) return NO_BIN

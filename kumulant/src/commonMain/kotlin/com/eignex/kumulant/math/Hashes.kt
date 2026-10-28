@@ -3,14 +3,7 @@ package com.eignex.kumulant.math
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
-// 64-bit hashing primitives used by the cardinality and sketch families.
-//
-// Naming convention for additional algorithms: each algorithm exposes top-level
-// functions named `<algo>64`, e.g. [splitmix64], `xxhash64(ByteArray)`,
-// `wyhash64(ByteArray)`. The unqualified [hash64] is an alias for the library's
-// recommended default `ByteArray` hash; callers that don't care which algorithm
-// produces the bits should use it. Callers needing a stable byte stream across
-// library versions should pin to a specific named algorithm or [Hasher64].
+// Pin a named algorithm or Hasher64 when the byte stream must stay stable across library versions.
 
 /**
  * SplitMix64 - a fast, high-quality 64-bit mixer suitable for spreading sequential
@@ -25,18 +18,7 @@ fun splitmix64(value: Long): Long {
     return z xor (z ushr 31)
 }
 
-/**
- * Seed for the [ordinal]-th copy of a stat seeded with [seed].
- *
- * A stat that draws on its update path cannot hand its own seed to the copies
- * [Stat.create][com.eignex.kumulant.core.Stat.create] makes, or
- * every window slice replays one accept/reject sequence and an observation's fate depends only on its
- * position within its slice. Callers pass a counter as [ordinal]; mixing it before it reaches the seed
- * keeps a child seed from colliding with one of the parent's own draw inputs, which would overlap the
- * two streams rather than separate them.
- *
- * `internal` because it is a construction detail rather than something a caller composes with.
- */
+// Mixing the child ordinal separates replica streams from the parent draw sequence.
 internal fun deriveChildSeed(seed: Long, ordinal: Long): Long = splitmix64(seed xor splitmix64(ordinal))
 
 /**
@@ -82,7 +64,6 @@ interface LongHasher {
     fun mix(value: Long): Long
 }
 
-/** Canonical name of the default [LongHasher]; the wire default for the sketch specs. */
 private const val SPLIT_MIX64_NAME: String = "splitmix64"
 
 /** Default [LongHasher]: the library's [splitmix64] mixer. Pre-registered with [Hashers]. */

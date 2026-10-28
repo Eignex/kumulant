@@ -32,9 +32,8 @@ data class Exp3ArmResult(
  * on reward `r ∈ [0,1]` update `w(a) *= exp(eta * r / p(a))` using the
  * importance-sampling-corrected gain.
  *
- * Regret bound is `O(sqrt(T · K · ln K))` under default tunings. Standalone class (not a
- * [BanditPolicy] under [MultiArmedBandit]) because its sampling distribution
- * is computed across arms, not by independent-per-arm score + argmax.
+ * Computes a joint sampling distribution across arms, with regret bound
+ * `O(sqrt(T · K · ln K))` under default tunings.
  *
  * Rewards passed to [update] must lie in `[0, 1]` for the regret theory to
  * apply; outside-bound rewards are accepted but may destabilise the

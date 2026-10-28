@@ -136,11 +136,7 @@ class AucStat(
     }
 
     override fun read(timestampNanos: Long): AucResult {
-        // The totals are derived from the bin snapshot rather than tracked in their own
-        // cells. Separate total cells could be read out of step with the bins under a
-        // concurrent update, letting the cumulative count exceed the total and pushing
-        // tpr above 1.0 and the reported area above 1.0. Summing the snapshot makes the
-        // result self-consistent by construction, at whatever staleness the snapshot has.
+        // Deriving totals from the bin snapshot keeps cumulative rates within [0, 1] during concurrent updates.
         val posSnap = DoubleArray(numBins) { pos[it].load() }
         val negSnap = DoubleArray(numBins) { neg[it].load() }
         var tp = 0.0

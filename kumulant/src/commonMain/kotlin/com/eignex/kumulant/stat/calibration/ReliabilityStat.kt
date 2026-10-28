@@ -117,19 +117,11 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
-        // A NaN prediction belongs to no bin, so it is dropped rather than binned. coerceIn passes NaN
-        // straight through and NaN.toInt() is 0, which credited it to the first bin as though it were a
-        // confident zero - and while this stat's own mean and ECE would go NaN with it, sumO and sumW
-        // receive finite values, so the isotonic calibration outcome rate loses the NaN entirely and
-        // reports a bin trained on predictions that were never made. See Stat.
+        // NaN predictions have no bin; dropping them preserves calibration counts.
         if (x.isNaN()) return
         val clamped = x.coerceIn(0.0, 1.0)
         val bin = (clamped * numBins).toInt().coerceIn(0, numBins - 1)
-        // Denominator first, numerators after. Combined with read() loading sumW last,
-        // this keeps sumW >= sumO and sumW >= sumP for any interleaving, so a concurrent
-        // reader cannot pick up a sumO increment whose matching sumW increment has not landed
-        // and compute an outcome rate above 1.0, which isotonic calibration would carry
-        // through into a calibrated probability > 1.
+        // Write the denominator first and read it last to keep weights ahead of concurrent positive contributions.
         sumW[bin].add(weight)
         sumP[bin].add(clamped * weight)
         sumO[bin].add(y * weight)

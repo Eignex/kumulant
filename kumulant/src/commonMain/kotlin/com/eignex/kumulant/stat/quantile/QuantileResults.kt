@@ -140,22 +140,10 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
     )
 }
 
-/**
- * How close two sketch parameters must be before a merge is allowed.
- *
- * Approximate rather than exact because these are `Double`s that may have round-tripped through a wire
- * format, so a sketch must still merge with a re-decoded copy of itself. Not a tolerance on the estimate:
- * a genuinely different parameter means incompatible bucket layouts, and anything past this is refused.
- */
+// Allows sketch parameters to round-trip through serialization while retaining compatible layouts.
 internal const val PARAMETER_MATCH_TOLERANCE: Double = 1e-9
 
-/**
- * How closely an incoming bucket edge must land on a bin boundary to be merged into that bin.
- *
- * Distinct from [PARAMETER_MATCH_TOLERANCE] despite sharing its value: this bounds where an edge sits
- * after division, not whether two configurations match.
- */
+// Bounds bucket-edge alignment after division, independently of parameter matching.
 internal const val BIN_ALIGNMENT_TOLERANCE: Double = 1e-9
 
-/** No bucket of the receiving layout matches the incoming edges. */
 internal const val NO_BIN: Int = -1

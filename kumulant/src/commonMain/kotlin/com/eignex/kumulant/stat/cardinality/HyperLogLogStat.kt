@@ -71,7 +71,7 @@ data class HyperLogLogResult(
 /**
  * HyperLogLog cardinality estimator with a small-range linear-counting fallback.
  *
- * Allocates `m = 2^precision` byte-sized registers and uses the standard
+ * Allocates `m = 2^precision` registers and uses the standard
  * `alpha_m * m^2 / Sum 2^-Mj` estimator, switching to linear counting on small inputs
  * (`rawE <= 2.5*m` with at least one empty register) to eliminate the well-known
  * HLL bias near zero. Inputs are run through the [hasher] (default [SplitMix64]) before
@@ -80,14 +80,6 @@ data class HyperLogLogResult(
  * Memory: `m` Longs (registers) plus a counter. Standard error is ~ `1.04/sqrtm`
  * (~ 0.81% at the default `precision = 14`). 64-bit hashing makes the original
  * HLL large-range correction unnecessary.
- *
- * This is plain HLL with the standard small-range linear-counting fix; *not*
- * HLL++. The Heule et al. (2013) empirical bias-correction tables are not
- * implemented; empirically, with SplitMix64 prehashing the medium-range bias
- * stays inside `1.04/sqrtm` across `m ... 5*m` (see the accuracy test in
- * `HyperLogLogTest`). The sparse representation is also omitted; the
- * linear-counting fallback already gives near-exact estimates at low
- * cardinalities.
  *
  * **Use cases:** distinct-value estimation under tight memory (count unique
  * users, unique error fingerprints, unique IPs). Reach for [LinearCountingStat]

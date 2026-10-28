@@ -10,38 +10,18 @@ import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.monotonicMode
 import kotlin.time.Duration
 
-// Pre-update shift adapters: forward a value derived from the stream's recent history to the
-// delegate. Each operator keeps a tiny per-instance ring (or single-cell) buffer of past values
-// and emits the lagged value, the k-th difference, or the time-derivative.
-//
-// Until enough history accumulates the operators suppress forwarding entirely: the first k
-// (for lag/diff) or first single (for derivative) updates are absorbed silently while the
-// buffer warms up.
-//
-// An inert weight is dropped before the ring is touched. The ring is state, and it is state the
-// stream is read back out of: an observation admitted with no multiplicity would not merely be
-// absorbed, it would be forwarded to the delegate at a later update's weight. See [Stat].
-//
-// Concurrency: lag and diff serialise the ring update behind the level's lock, which is a noop only
-// under Concurrency.None. Claiming the tick, reading the ring slot and storing into it is one
-// indivisible step: split apart, a second writer reads a slot its writer has not filled yet and
-// forwards the ring's initial 0.0, an outlier the size of the stream itself rather than the bounded
-// drift the concurrent levels promise. Derivative keeps per-cell atomics (category 1); a torn read
-// there surfaces as a non-positive time delta, which it drops.
-//
-// The wire counterparts live in `schema/Operations.kt` (DiffSeries, LagSeries, DerivativeSeries).
+// Lag and diff warm the ring for k updates; derivative needs one previous sample.
+// Inert weights preserve the stored history.
+// Lag and diff serialize tick allocation, slot reads, and writes to keep history initialized.
+// Derivative uses per-cell atomics and drops non-positive time deltas.
 
-/** Forward the value seen [k] updates ago. The first [k] updates warm the ring and forward nothing. */
+// The first k updates warm the ring before forwarding begins.
 internal fun <R : Result> SeriesStat<R>.lag(k: Int): SeriesStat<R> = LagSeriesStat(this, k)
 
-/** Forward the k-th difference `value - value[t - k]`. The first [k] updates warm the ring and forward nothing. */
+// The first k updates warm the ring before forwarding begins.
 internal fun <R : Result> SeriesStat<R>.diff(k: Int = 1): SeriesStat<R> = DiffSeriesStat(this, k)
 
-/**
- * Forward the time derivative `(value - prev) / (timestampNanos - prevTimestampNanos)` expressed in
- * units-per-second. The first update warms the cell and forwards nothing. Coincident timestamps
- * are dropped (would otherwise produce infinity).
- */
+// Time differences are converted from nanoseconds to seconds; coincident timestamps are dropped.
 internal fun <R : Result> SeriesStat<R>.derivative(): SeriesStat<R> = DerivativeSeriesStat(this)
 
 private fun requireK(k: Int) = require(k >= 1) { "shift k must be >= 1, got $k" }

@@ -88,10 +88,7 @@ class RegressionAuditLeaf<Row>(
     val observationsSinceLastCheck: AtomicLong = AtomicLong(0L)
 }
 
-/** Inverse of [mergeWVR]: given a merged aggregate [total] and one summand [part],
- *  recover the other summand. Used when reconstructing carryover aggregates from
- *  snapshots that encode the sum but not the orphan portion explicitly. Returns a
- *  zero-weight result when the inverse is degenerate. */
+// Recovers carryover from an aggregate and one summand; degenerate inverses have zero weight.
 internal fun subtractWVR(total: WeightedVarianceResult, part: WeightedVarianceResult): WeightedVarianceResult {
     val wTotal = total.totalWeights
     val wPart = part.totalWeights
@@ -106,8 +103,7 @@ internal fun subtractWVR(total: WeightedVarianceResult, part: WeightedVarianceRe
     return WeightedVarianceResult(wOther, meanOther, varOther)
 }
 
-/** Chan-style parallel merge of two weighted-variance aggregates. Pure; allocation-free
- *  except for the returned [WeightedVarianceResult]. */
+// Chan parallel merge of weighted-variance aggregates.
 internal fun mergeWVR(a: WeightedVarianceResult, b: WeightedVarianceResult): WeightedVarianceResult {
     val w1 = a.totalWeights
     val w2 = b.totalWeights
@@ -130,9 +126,6 @@ internal fun mergeWVR(a: WeightedVarianceResult, b: WeightedVarianceResult): Wei
  */
 fun RegressionNode<*>.aggregate(): WeightedVarianceResult = subtreeAggregate()
 
-/** Recursive subtree aggregate; for leaves the arm's snapshot, for splits the merge of
- *  both children's aggregates plus any [RegressionSplitNode.carryover]. Called only on snapshot
- *  and merge paths, never on hot updates. */
 internal fun RegressionNode<*>.subtreeAggregate(): WeightedVarianceResult = when (this) {
     is RegressionLeafNode -> arm.read(0L)
 

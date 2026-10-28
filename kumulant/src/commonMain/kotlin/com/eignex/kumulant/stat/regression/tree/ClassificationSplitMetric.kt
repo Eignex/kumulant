@@ -38,10 +38,6 @@ data object InformationGain : ClassificationSplitMetric {
         }
 }
 
-/**
- * Mirror of [SplitMetric.rank] for classification: score every candidate and
- * return the top-two scores + index of the winner.
- */
 internal fun ClassificationSplitMetric.rank(
     total: ClassCountsResult,
     pos: List<ClassCountsResult>,

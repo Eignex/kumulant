@@ -72,12 +72,7 @@ class DDSketchStat(
     private val gamma: Double = (1.0 + relativeError) / (1.0 - relativeError)
     private val multiplier: Double = 1.0 / ln(gamma)
 
-    // Bin indices are clamped to the band spanned by the indexable range. Unclamped the index
-    // is unbounded: the bin array spans min..max observed index and allocates a cell per index
-    // in between, so a single denormal next to a single huge value forces an enormous array -
-    // 2.4 MiB at the default relativeError from two observations, 28 MiB at 0.001, 220 MiB at
-    // 1e-4. Far enough out the index overflows Int and the resize is skipped, silently dropping
-    // the bins already accumulated.
+    // Clamping bin indices to the indexable range bounds storage across widely separated values.
     private val minIndex: Int = ceil(ln(minIndexableValue) * multiplier).toInt()
     private val maxIndex: Int = ceil(ln(maxIndexableValue) * multiplier).toInt()
 

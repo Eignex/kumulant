@@ -24,10 +24,8 @@ import kotlin.random.Random
  * flattens the distribution toward uniform exploration; low temperature
  * sharpens toward greedy exploitation.
  *
- * The play distribution is a softmax over all arms, not an argmax over
- * independent per-arm scores; so this bandit doesn't expose
- * [com.eignex.kumulant.bandit.Scorable], but its per-arm
- * `(mean, totalWeights)` state still fits [PerArmBandit].
+ * Arm selection uses a joint softmax distribution. Per-arm `(mean, totalWeights)`
+ * state is available through [PerArmBandit].
  *
  * **Use cases:** stationary scalar-reward problems where smooth probabilistic
  * exploration is preferable to UCB's deterministic confidence bounds; any

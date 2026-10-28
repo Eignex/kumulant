@@ -147,20 +147,13 @@ class ClassCountsStat(
     override fun create(concurrency: Concurrency?) = ClassCountsStat(numClasses, concurrency ?: this.concurrency)
 }
 
-/** Chan-style parallel merge of two class-count aggregates: element-wise addition. */
 internal fun mergeCC(a: ClassCountsResult, b: ClassCountsResult): ClassCountsResult {
     require(a.numClasses == b.numClasses) { "numClasses mismatch: ${a.numClasses} vs ${b.numClasses}" }
     val out = DoubleArray(a.numClasses) { a.counts[it] + b.counts[it] }
     return ClassCountsResult(a.numClasses, out)
 }
 
-/**
- * Inverse of [mergeCC]: element-wise subtraction.
- *
- * Deliberately unclamped. A count cell downdates, so a class can legitimately hold a negative total,
- * and flooring each class separately would invent mass in one class to cancel a downdate in another.
- * Callers drop a residual with no weight left rather than relying on a per-class floor.
- */
+// Negative class counts are valid downdates; per-class floors would invent mass.
 internal fun subtractCC(total: ClassCountsResult, part: ClassCountsResult): ClassCountsResult {
     require(total.numClasses == part.numClasses) {
         "numClasses mismatch: ${total.numClasses} vs ${part.numClasses}"

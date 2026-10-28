@@ -17,8 +17,7 @@ import kotlin.math.sqrt
 // Apache-2.0.
 private const val CHOLESKY_BLOCK = 64
 
-// Pools the loans a call without a caller workspace repeats across its blocked steps. Up to one block there is
-// little or nothing to pool, so the workspace would cost more than the scratch it saves.
+// Pooling scratch pays off only above one block.
 internal fun callScratch(order: Int): Workspace? = if (order > CHOLESKY_BLOCK) Workspace() else null
 
 internal sealed interface CholeskyPolicy {
@@ -66,8 +65,7 @@ internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, works
     val ld = values
     val kernels = koblas.vectorKernels
     val scale = sqrt(sigma)
-    // The sweep consumes the vector it rotates against and the caller keeps reading theirs, so it works on
-    // a copy. Borrowed rather than allocated, because this runs once per observation.
+    // Borrow a copy because the rotation consumes its vector and callers retain the input.
     workspace.borrow(n) { x ->
         v.copyInto(x)
         if (scale != 1.0) kernels.scale(x, 0, scale, n)
@@ -81,8 +79,7 @@ internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, works
             if (r != 0.0) {
                 ld[base] = r
                 val len = n - k - 1
-                // Two divisions rather than a reciprocal and two multiplies: this rotation sets the
-                // factor's numerical quality, and an extra rounding per entry compounds across n of them.
+                // Direct divisions limit compounded rounding error in the factor rotations.
                 if (len > 0) kernels.rot(ld, base + 1, x, k + 1, len, diagonal / r, entry / r)
             }
         }
@@ -139,10 +136,7 @@ internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Workspa
 internal fun DenseMatrix.cholesky(policy: CholeskyPolicy = CholeskyPolicy.Strict): DenseMatrix =
     choleskyInto(DenseMatrix.zero(rows, cols), policy)
 
-/**
- * [workspace] is lent to the trailing update's `syrk` for the duration of each block step. A workspace
- * belongs to one call at a time, so a caller sharing one across threads has to serialize them itself.
- */
+// Workspace ownership spans the call; callers must serialize access to a shared workspace.
 internal fun DenseMatrix.choleskyInto(
     out: DenseMatrix,
     policy: CholeskyPolicy = CholeskyPolicy.Strict,
@@ -153,8 +147,7 @@ internal fun DenseMatrix.choleskyInto(
     val n = rows
     val kernels = koblas.vectorKernels
     val ld = out.values
-    // A reused destination arrives holding the previous factor where a fresh one arrives zeroed, so the
-    // strict upper triangle is cleared rather than inherited.
+    // Clear the upper triangle so reused destinations retain the lower-triangular factor invariant.
     for (j in 0 until n) {
         ld.fill(0.0, j * n, j * n + j)
         if (values !== ld) values.copyInto(ld, j + j * n, j + j * n, (j + 1) * n)
@@ -164,8 +157,7 @@ internal fun DenseMatrix.choleskyInto(
         return out
     }
     val block = min(CHOLESKY_BLOCK, n / 4)
-    // Every block step lends the trailing update scratch of the same shapes, so a call without a workspace
-    // pools it for its own duration rather than allocating it again at each step.
+    // Reuse scratch across blocked trailing updates.
     val scratch = workspace ?: Workspace()
     var start = 0
     while (start < n) {

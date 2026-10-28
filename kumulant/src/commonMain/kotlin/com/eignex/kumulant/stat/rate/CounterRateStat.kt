@@ -57,12 +57,7 @@ class CounterRateStat(
     private val lastTimestampNanos = mode.newLong(Long.MIN_VALUE)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        // Return before touching lastCounter: a weight that contributes no delta would still advance
-        // the high-water mark, destroying the increment for good so no later sample could recover it.
-        // A negative weight is dropped rather than downdated for the same reason - the mark has no
-        // inverse, and the clamp below would swallow the delta while the mark moved on anyway. NaN is
-        // dropped as it is everywhere; see Stat. Outside the lock, like every other stat's inert
-        // guard - a no-op has no state to protect.
+        // Only positive finite weights advance the high-water mark, preserving future counter deltas.
         if (weight.isNotPositiveWeight()) return
         lock.guarded { updateLocked(value, timestampNanos, weight) }
     }
@@ -90,15 +85,8 @@ class CounterRateStat(
             }
 
             treatDecreaseAsReset -> {
-                // Registered for any decrease, including a restart to exactly 0.0 - the most common
-                // one a *_total counter makes. Gating on post-reset progress would conflate "the
-                // reset has produced nothing yet" with "no reset happened", keeping every pre-reset
-                // increment and the old anchor while the high-water mark moved on regardless.
-                //
-                // Re-anchoring the window without clearing the total would divide every pre-reset
-                // increment by the short post-reset duration: a counter advancing 105 units over 11s
-                // would report 210/s. The window and the total describe the same span, so they have
-                // to be reset together.
+                // Every decrease, including a reset to zero, resets the total and time anchor together.
+                // Both describe the same post-reset interval.
                 totalDelta.store((value * weight).coerceAtLeast(0.0))
                 startTimestampNanos.store(timestampNanos)
                 lastCounter.store(value)

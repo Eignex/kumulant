@@ -35,11 +35,7 @@ sealed interface Penalty {
     ) : Penalty
 }
 
-// Soft-thresholding (the proximal operator of the L1 norm): shrink `w` toward zero by `threshold`,
-// stopping at zero rather than crossing it. [Penalty.L1] does not require a positive `lambda`, so a
-// negative threshold is reachable; without the non-positive guard the `when` reads inside out and
-// pushes weights *away* from zero. Shrinking by a negative amount is not shrinking, so the penalty
-// does nothing instead.
+// Non-positive thresholds leave weights unchanged; positive thresholds shrink toward zero.
 internal fun softThreshold(w: Double, threshold: Double): Double = when {
     threshold <= 0.0 -> w
     w > threshold -> w - threshold

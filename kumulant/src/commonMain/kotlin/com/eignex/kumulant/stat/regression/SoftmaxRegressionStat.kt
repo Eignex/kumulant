@@ -171,11 +171,7 @@ class SoftmaxRegressionStat(
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
 
-    // Scratch for the per-observation logits, owned only where updates cannot race over it. A workspace
-    // refuses a buffer it did not lend, so a level that admits concurrent writers without a real mutex
-    // would throw where it promised to drift. Asked of the lock rather than of a list of levels: a level
-    // added later takes `welfordLock`'s no-op default and so allocates per call until someone opts it in
-    // deliberately. `None` needs no lock because a shared `None` stat is outside its contract already.
+    // Scratch is shared only under serial use or a real update lock; racing writers allocate per call.
     private val workspace = if (concurrency == Concurrency.None || lock !is NoopMutex) Workspace() else null
 
     // Flat row-major K x p layout: weightsCell[k * p + i].

@@ -23,10 +23,7 @@ import kotlin.native.ref.createCleaner
 internal actual class PlatformMutex actual constructor() : Mutex {
     private val arena = Arena()
 
-    // Error-checking in a debug binary, the default type in a release one. Re-acquiring a lock this
-    // thread already holds is a defect either way, and a default mutex answers it by hanging with no
-    // stack to read; error-checking turns that into a thrown error naming the mistake. A release
-    // build pays nothing for a check whose whole value is at development time.
+    // Debug binaries use error-checking mutexes to diagnose re-entry; release binaries use the default type.
     private val attr = arena.alloc<pthread_mutexattr_t>().also {
         pthread_mutexattr_init(it.ptr)
         if (Platform.isDebugBinary) pthread_mutexattr_settype(it.ptr, ERRORCHECK_MUTEX_TYPE)

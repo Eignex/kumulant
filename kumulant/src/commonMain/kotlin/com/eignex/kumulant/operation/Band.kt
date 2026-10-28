@@ -11,7 +11,6 @@ import kotlin.time.Duration
 // delegate; read projects to [BandResult]. Merge approximates the missing evidence
 // with unit total weight split symmetrically around the remote center.
 
-/** Wrap this series stat to expose a `[lower, upper]` band of width [k] * scale around center. */
 internal fun <R> SeriesStat<R>.band(k: Double): SeriesStat<BandResult>
     where R : HasCenterScale =
     BandSeriesStat(this, k)

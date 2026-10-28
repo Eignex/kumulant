@@ -185,7 +185,6 @@ class TDigestStat(
         return idx
     }
 
-    /** Merge the snapshot into [means]/[weights] under the k1 difference rule. */
     private fun compressInto(bufVal: DoubleArray, bufW: DoubleArray, bufLen: Int) {
         if (bufLen == 0 && means.isEmpty()) return
 

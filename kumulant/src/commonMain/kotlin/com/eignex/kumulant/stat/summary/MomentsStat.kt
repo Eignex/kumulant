@@ -82,11 +82,8 @@ class MomentsStat(override val concurrency: Concurrency = Concurrency.None) : Se
             val deltaW2 = deltaW * deltaW
             val term1 = delta * deltaW * oldW
 
-            // Weighted Pebay recurrences: the leading coefficients are the merge formulas
-            // below specialised to a second sample of weight `weight` and zero moments.
-            // They reduce to the familiar (n - 2) and (n^2 - 3n + 3) only at weight == 1.
-            // Written as delta/nextW rather than deltaW/weight so a tiny weight doesn't
-            // divide out.
+            // Weighted Pebay recurrences specialize the merge formulas to a zero-moment sample.
+            // delta / nextW preserves tiny observation weights.
             val m4Delta = term1 * delta * delta * (oldW * oldW - oldW * weight + weight * weight) / (nextW * nextW) +
                 6 * deltaW2 * priorM2 -
                 4 * deltaW * priorM3

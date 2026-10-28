@@ -125,14 +125,8 @@ class PageHinkleyStat(
             (mean.load() * localCount + values.mean * incomingCount) / combinedCount.toDouble()
         count.store(combinedCount)
         mean.store(combinedMean)
-        // Adopt verbatim while empty, as the count-weighted mean above already does implicitly. Halving
-        // these would halve exactly the two quantities `alarmUp`/`alarmDown` threshold against.
-        //
-        // The running extremum averages the same way as the sum it is subtracted from. Taking the min
-        // of the two baselines while averaging the two signals leaves a pair neither trace ever held,
-        // and `cumPos - minPos` can then clear the threshold on two traces that each stayed well under
-        // it - a downward level shift merged with a flat trace alarms upward. Averaging both halves
-        // keeps the merged statistic the average of the two traces' statistics.
+        // An empty receiver adopts the trace. Otherwise, averaging both the signals and their extrema
+        // preserves the average drift used by the alarm thresholds.
         val empty = localCount == 0L
         cumPos.store(if (empty) values.cumulativePositive else 0.5 * (cumPos.load() + values.cumulativePositive))
         cumNeg.store(if (empty) values.cumulativeNegative else 0.5 * (cumNeg.load() + values.cumulativeNegative))
