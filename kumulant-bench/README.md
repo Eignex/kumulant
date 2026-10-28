@@ -97,12 +97,18 @@ limits and raw samples with each comparison.
 The SDK dependency `com.eignex:lab-bench:0.1.0` is confined to `jvmMain`; the
 existing JMH and kotlinx-benchmark engines continue to own measurement.
 
-To test an unpublished SDK, run
-`./gradlew :lab-bench:stageAdapterRepository -PbenchVersion=0.1.0` in the lab
-checkout, then build this checkout with
-`./gradlew :kumulant-bench:prepareBenchmark -PlabBenchRepository=file:///absolute/eignex-lab/lab-bench/build/adapter-repository`.
-The default repository uses public GitHub Release assets without credentials;
-`-PlabBenchVersion=VERSION` selects a release.
+The default dependency resolves [Lab Bench 0.1.0](https://github.com/Eignex/eignex-lab/releases/tag/lab-bench-v0.1.0)
+from public GitHub Release assets without a GitHub login or token. Prepare the adapter with:
+
+```sh
+./gradlew :kumulant-bench:prepareBenchmark
+```
+
+`-PlabBenchVersion=VERSION` selects a different SDK release. To develop against a
+local SDK checkout, run `./gradlew :lab-bench:stageAdapterRepository -PbenchVersion=0.1.0`
+in that checkout, then add
+`-PlabBenchRepository=file:///absolute/eignex-lab/lab-bench/build/adapter-repository`
+to the consumer build. Refresh dependencies when restaging the same version.
 
 A lab submission uses `repository: "Eignex/kumulant"` and
 `bench: {"manifest":"kumulant-bench/lab/bench.json","request":{"parameters":{"backends":"scalar,simd","smoke":"true"}}}`.
