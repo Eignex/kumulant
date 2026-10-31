@@ -6,7 +6,6 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.stat.regression.glm.*
 import com.eignex.kumulant.stat.regression.tree.*
-import com.eignex.skema.serialization.JsonNodeShape
 import com.eignex.skema.serialization.jsonNode
 import kotlinx.serialization.PolymorphicSerializer
 
