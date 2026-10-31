@@ -104,7 +104,7 @@ class CusumStat(
         initialized.store(1L)
     }
 
-    override fun merge(values: CusumResult) {
+    override fun merge(values: CusumResult, timestampNanos: Long) {
         // An untouched shard's zero sums are not evidence of zero drift; averaging them in would halve
         // the receiver's sums and could clear a live alarm.
         if (!values.hasObservation) return

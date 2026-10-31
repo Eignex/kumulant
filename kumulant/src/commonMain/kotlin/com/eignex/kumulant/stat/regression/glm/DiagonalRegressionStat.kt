@@ -147,7 +147,7 @@ class DiagonalRegressionStat(
      * independent normals). Cross-feature correlations are dropped, consistent
      * with the diagonal model.
      */
-    override fun merge(values: DiagonalRegressionResult) {
+    override fun merge(values: DiagonalRegressionResult, timestampNanos: Long) {
         validateMerge(values)
         lock.guarded {
             // Subtract one prior precision so pooled replicas retain a single prior.

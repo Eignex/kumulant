@@ -191,7 +191,7 @@ class ConfusionMatrixStat(
         }
     }
 
-    override fun merge(values: ConfusionMatrixResult) {
+    override fun merge(values: ConfusionMatrixResult, timestampNanos: Long) {
         validateMerge(values)
         for (i in cells.indices) cells[i].add(values.counts[i])
     }

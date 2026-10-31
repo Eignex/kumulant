@@ -242,7 +242,7 @@ class ReservoirHistogramStat(
         }
     }
 
-    override fun merge(values: ReservoirResult) {
+    override fun merge(values: ReservoirResult, timestampNanos: Long) {
         validateMerge(values)
         outerLock.guarded {
             for (i in values.values.indices) {

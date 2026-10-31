@@ -39,7 +39,7 @@ class PinballLossStat(val tau: Double, override val concurrency: Concurrency = C
     }
 
     override fun read(timestampNanos: Long) = inner.read(timestampNanos)
-    override fun merge(values: WeightedMeanResult) = inner.merge(
+    override fun merge(values: WeightedMeanResult, timestampNanos: Long) = inner.merge(
         values,
     )
     override fun reset() = inner.reset()

@@ -100,7 +100,7 @@ class DecayingSumStat(
 
     internal fun undecayed(): Undecayed = lock.guarded { Undecayed(landmarkNanos, sum) }
 
-    override fun merge(values: DecayingSumResult) {
+    override fun merge(values: DecayingSumResult, timestampNanos: Long) {
         if (values.sum == 0.0) return
         lock.guarded { addAt(values.sum, values.timestampNanos) }
     }

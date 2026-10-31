@@ -289,8 +289,8 @@ internal class PriorSeededStat<R : Result>(
         seed(delegate)
     }
 
-    override fun merge(values: R) {
-        delegate.merge(values)
+    override fun merge(values: R, timestampNanos: Long) {
+        delegate.merge(values, timestampNanos)
         unseed(delegate)
     }
 

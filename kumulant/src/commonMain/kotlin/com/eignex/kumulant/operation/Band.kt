@@ -31,13 +31,13 @@ internal class BandSeriesStat<R>(private val delegate: SeriesStat<R>, private va
         return BandResult(center = c, scale = s, k = k, lower = c - k * s, upper = c + k * s)
     }
 
-    override fun merge(values: BandResult) {
+    override fun merge(values: BandResult, timestampNanos: Long) {
         if (values.center.isNaN()) return
         if (values.scale.isNaN() || values.scale == 0.0) {
-            delegate.update(values.center)
+            delegate.update(values.center, timestampNanos)
         } else {
-            delegate.update(values.center - values.scale, weight = 0.5)
-            delegate.update(values.center + values.scale, weight = 0.5)
+            delegate.update(values.center - values.scale, timestampNanos, 0.5)
+            delegate.update(values.center + values.scale, timestampNanos, 0.5)
         }
     }
 

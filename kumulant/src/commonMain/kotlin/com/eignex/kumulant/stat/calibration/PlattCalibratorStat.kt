@@ -89,7 +89,7 @@ class PlattCalibratorStat(
      * totalWeights, step)` and delegating to the underlying merge. The residual
      * sum of squares is not carried.
      */
-    override fun merge(values: PlattCalibratorResult) {
+    override fun merge(values: PlattCalibratorResult, timestampNanos: Long) {
         val snapshot = StochasticRegressionResult(
             weights = DenseVector.of(doubleArrayOf(values.slope)),
             bias = values.intercept,
@@ -98,7 +98,7 @@ class PlattCalibratorStat(
             link = Link.Logit,
             sse = 0.0,
         )
-        inner.merge(snapshot)
+        inner.merge(snapshot, timestampNanos)
     }
 
     override fun reset() = inner.reset()

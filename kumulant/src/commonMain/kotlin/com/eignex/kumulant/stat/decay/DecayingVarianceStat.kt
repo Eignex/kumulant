@@ -131,7 +131,7 @@ class DecayingVarianceStat(
         DecayingVarianceResult(mean.load(), variance, w, snapshotTimestamp)
     }
 
-    override fun merge(values: DecayingVarianceResult) = lock.guarded {
+    override fun merge(values: DecayingVarianceResult, timestampNanos: Long) = lock.guarded {
         if (values.totalWeights <= 0.0) return@guarded
         if (totalWeights.load() == 0.0) {
             landmarkNanos.store(values.timestampNanos)

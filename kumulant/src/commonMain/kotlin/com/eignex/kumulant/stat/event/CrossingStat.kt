@@ -84,7 +84,7 @@ class CrossingStat(
         require(values.level == level) { "merge level ${values.level} != $level" }
     }
 
-    override fun merge(values: CrossingResult) {
+    override fun merge(values: CrossingResult, timestampNanos: Long) {
         validateMerge(values)
         ups.add(values.upCrossings)
         downs.add(values.downCrossings)

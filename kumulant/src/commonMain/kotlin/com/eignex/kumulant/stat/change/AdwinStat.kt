@@ -219,7 +219,7 @@ class AdwinStat(
         }
     }
 
-    override fun merge(values: AdwinResult) = lock.guarded {
+    override fun merge(values: AdwinResult, timestampNanos: Long) = lock.guarded {
         // No exact structural merge for the exponential histogram; carry over the change counter.
         changesDetected += values.changesDetected
     }

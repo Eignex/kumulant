@@ -54,7 +54,7 @@ class ArgMinStat(override val concurrency: Concurrency = Concurrency.None) : Ser
         }
     }
 
-    override fun merge(values: ArgMinResult) = lock.guarded {
+    override fun merge(values: ArgMinResult, timestampNanos: Long) = lock.guarded {
         if (values.min < value.load()) {
             value.store(values.min)
             at.store(values.atTimestampNanos)

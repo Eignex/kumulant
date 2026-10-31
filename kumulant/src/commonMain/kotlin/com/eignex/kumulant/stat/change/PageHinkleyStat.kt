@@ -115,7 +115,7 @@ class PageHinkleyStat(
         }
     }
 
-    override fun merge(values: PageHinkleyResult) = lock.guarded {
+    override fun merge(values: PageHinkleyResult, timestampNanos: Long) = lock.guarded {
         // Approximate merge: weighted-average mean, then average the cumulative-drift cells.
         val localCount = count.load()
         val incomingCount = values.count

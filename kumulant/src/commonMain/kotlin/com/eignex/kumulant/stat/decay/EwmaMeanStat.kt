@@ -64,7 +64,7 @@ class EwmaMeanStat(
         }
     }
 
-    override fun merge(values: WeightedMeanResult) = lock.guarded {
+    override fun merge(values: WeightedMeanResult, timestampNanos: Long) = lock.guarded {
         val localMean = this.mean
         val localWeight = totalWeights.load()
         val localEffectiveWeight = weighting.correction(localWeight)

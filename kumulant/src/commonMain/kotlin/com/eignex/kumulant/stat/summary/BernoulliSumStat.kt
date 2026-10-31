@@ -55,7 +55,7 @@ class BernoulliSumStat(override val concurrency: Concurrency = Concurrency.None)
 
     override fun read(timestampNanos: Long) = BernoulliSumResult(successes.load(), trials.load())
 
-    override fun merge(values: BernoulliSumResult) {
+    override fun merge(values: BernoulliSumResult, timestampNanos: Long) {
         successes.add(values.successes)
         trials.add(values.trials)
     }

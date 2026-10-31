@@ -210,7 +210,7 @@ class GaussianNaiveBayesStat(
      * Weight-pooled merge: combines per-class running means and M2 using Chan's
      * parallel-Welford formula. Exact under weighted updates.
      */
-    override fun merge(values: GaussianNaiveBayesResult) {
+    override fun merge(values: GaussianNaiveBayesResult, timestampNanos: Long) {
         validateMerge(values)
         lock.guarded {
             for (c in 0 until numClasses) {

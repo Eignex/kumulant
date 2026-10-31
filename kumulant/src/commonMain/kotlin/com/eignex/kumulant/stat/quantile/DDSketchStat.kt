@@ -109,7 +109,7 @@ class DDSketchStat(
         }
     }
 
-    override fun merge(values: SketchResult) {
+    override fun merge(values: SketchResult, timestampNanos: Long) {
         validateMerge(values)
         zeroCount.add(values.zeroCount)
 

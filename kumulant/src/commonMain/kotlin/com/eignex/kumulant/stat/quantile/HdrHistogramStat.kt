@@ -164,7 +164,7 @@ class HdrHistogramStat(
         }
     }
 
-    override fun merge(values: SparseHistogramResult) {
+    override fun merge(values: SparseHistogramResult, timestampNanos: Long) {
         validateMerge(values)
         for (i in values.lowerBounds.indices) {
             val weight = values.weights[i]

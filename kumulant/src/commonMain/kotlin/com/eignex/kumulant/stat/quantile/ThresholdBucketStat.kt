@@ -81,7 +81,7 @@ class ThresholdBucketStat(
         }
     }
 
-    override fun merge(values: ThresholdBucketResult) {
+    override fun merge(values: ThresholdBucketResult, timestampNanos: Long) {
         validateMerge(values)
         values.counts.forEachIndexed { i, c -> counts.add(i, c) }
     }

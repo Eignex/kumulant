@@ -95,7 +95,7 @@ class DecisionTreeRegressionStat(
 
     override fun read(timestampNanos: Long): TreeRegressionResult = TreeRegressionResult(tree.rootNode().snapshot())
 
-    override fun merge(values: TreeRegressionResult) {
+    override fun merge(values: TreeRegressionResult, timestampNanos: Long) {
         tree.mergeSnapshot(values.root)
     }
 

@@ -46,7 +46,7 @@ class SumStat(override val concurrency: Concurrency = Concurrency.None) : Series
 
     override fun read(timestampNanos: Long) = SumResult(value.load())
 
-    override fun merge(values: SumResult) {
+    override fun merge(values: SumResult, timestampNanos: Long) {
         value.add(values.sum)
     }
 

@@ -6,6 +6,7 @@ import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.seconds
 
 class BandTest {
 
@@ -68,5 +69,13 @@ class BandTest {
         fresh.update(5.0)
         assertEquals(5.0, fresh.read().center, DELTA)
         assertEquals(0.0, tpl.read().center, DELTA)
+    }
+
+    @Test
+    fun `band merge over a window lands at the caller timestamp`() {
+        val t = 1_700_000_000_000_000_000L
+        val stat = VarianceStat().band(k = 2.0).windowed(60.seconds)
+        stat.merge(BandResult(center = 10.0, scale = 3.0, k = 1.0, lower = 7.0, upper = 13.0), t)
+        assertEquals(10.0, stat.read(t).center, DELTA)
     }
 }

@@ -82,7 +82,7 @@ class FrugalQuantileStat(
         concurrency ?: this.concurrency,
     )
 
-    override fun merge(values: QuantileResult) = lock.guarded {
+    override fun merge(values: QuantileResult, timestampNanos: Long) = lock.guarded {
         if (!values.hasObservation) return@guarded
         val next = if (observed.load() == 0L) values.quantile else (quantile.load() + values.quantile) / 2.0
         quantile.store(next)

@@ -40,9 +40,9 @@ sealed class AbstractStatGroup<S : Stat<*>>(
         }
     }
 
-    final override fun merge(values: GroupResult) {
+    final override fun merge(values: GroupResult, timestampNanos: Long) {
         validateMerge(values)
-        for ((key, stat) in stats) mergeEntry(values, key, stat)
+        for ((key, stat) in stats) mergeEntry(values, key, stat, timestampNanos)
     }
 
     final override fun reset() {

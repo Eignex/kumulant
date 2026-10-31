@@ -117,7 +117,7 @@ class RandomForestClassifierStat(
         }
     }
 
-    override fun merge(values: ForestClassificationResult) {
+    override fun merge(values: ForestClassificationResult, timestampNanos: Long) {
         validateMerge(values)
         for (i in trees.indices) trees[i].mergeSnapshot(values.trees[i].root)
     }

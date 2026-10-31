@@ -252,7 +252,7 @@ class StochasticRegressionStat(
      * Step counts add, and the learning-rate schedules continue from the combined step;
      * adaptive optimizer accumulators are not in the snapshot and stay local.
      */
-    override fun merge(values: StochasticRegressionResult) {
+    override fun merge(values: StochasticRegressionResult, timestampNanos: Long) {
         validateMerge(values)
         lock.guarded {
             val w1 = totalWeightsCell.load()

@@ -54,9 +54,9 @@ internal class VectorizedStat<R : Result>(
         for (i in 0 until dimensions) stats[i].validateMerge(values.results[i])
     }
 
-    override fun merge(values: ResultList<R>) {
+    override fun merge(values: ResultList<R>, timestampNanos: Long) {
         validateMerge(values)
-        for (i in 0 until dimensions) stats[i].merge(values.results[i])
+        for (i in 0 until dimensions) stats[i].merge(values.results[i], timestampNanos)
     }
 
     override fun reset() {

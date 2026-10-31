@@ -147,7 +147,7 @@ class BloomFilterStat(
         }
     }
 
-    override fun merge(values: BloomFilterResult) {
+    override fun merge(values: BloomFilterResult, timestampNanos: Long) {
         validateMerge(values)
         for (i in 0 until wordCount) {
             val incoming = values.words[i]

@@ -69,7 +69,7 @@ class MeanStat(override val concurrency: Concurrency = Concurrency.None) : Serie
         WeightedMeanResult(totalWeights.load(), mean.load())
     }
 
-    override fun merge(values: WeightedMeanResult) = lock.guarded {
+    override fun merge(values: WeightedMeanResult, timestampNanos: Long) = lock.guarded {
         if (values.totalWeights <= 0.0) return@guarded
         val nextW = totalWeights.addAndGet(values.totalWeights)
         val delta = values.mean - mean.load()

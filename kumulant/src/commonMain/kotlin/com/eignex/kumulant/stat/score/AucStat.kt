@@ -175,7 +175,7 @@ class AucStat(
         }
     }
 
-    override fun merge(values: AucResult) {
+    override fun merge(values: AucResult, timestampNanos: Long) {
         validateMerge(values)
         // Only the bins are folded in; the incoming totals are the sum of its own bins,
         // so they are reconstructed on the next read.

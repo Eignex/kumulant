@@ -43,7 +43,7 @@ class MinStat(override val concurrency: Concurrency = Concurrency.None) : Series
         casMin(this.value, value)
     }
 
-    override fun merge(values: MinResult) {
+    override fun merge(values: MinResult, timestampNanos: Long) {
         casMin(value, values.min)
     }
 
