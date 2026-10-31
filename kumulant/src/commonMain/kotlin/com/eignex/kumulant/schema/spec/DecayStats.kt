@@ -1,6 +1,5 @@
 package com.eignex.kumulant.schema.spec
 
-import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.decay.DecayingMeanResult
 import com.eignex.kumulant.stat.decay.DecayingSumResult
@@ -15,44 +14,44 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/** Spec for `DecayingSumStat`: time-decayed running sum with [HalfLife] weighting. */
+/** Spec for `DecayingSumStat`: time-decayed running sum with half-life weighting. */
 @Serializable
 @SerialName("DecayingSum")
 data class DecayingSum(
-    /** Half-life schedule applied to past contributions. */
-    val weighting: HalfLife,
+    /** Half-life of past contributions, in milliseconds. */
+    val halfLifeMillis: Long,
 ) : SeriesStatSpec<DecayingSumResult>
 
-/** Spec for `DecayingMeanStat`: time-decayed running mean with [HalfLife] weighting. */
+/** Spec for `DecayingMeanStat`: time-decayed running mean with half-life weighting. */
 @Serializable
 @SerialName("DecayingMean")
 data class DecayingMean(
-    /** Half-life schedule applied to past contributions. */
-    val weighting: HalfLife,
+    /** Half-life of past contributions, in milliseconds. */
+    val halfLifeMillis: Long,
 ) : SeriesStatSpec<DecayingMeanResult>
 
-/** Spec for `DecayingVarianceStat`: time-decayed running variance with [HalfLife] weighting. */
+/** Spec for `DecayingVarianceStat`: time-decayed running variance with half-life weighting. */
 @Serializable
 @SerialName("DecayingVariance")
 data class DecayingVariance(
-    /** Half-life schedule applied to past contributions. */
-    val weighting: HalfLife,
+    /** Half-life of past contributions, in milliseconds. */
+    val halfLifeMillis: Long,
 ) : SeriesStatSpec<DecayingVarianceResult>
 
-/** Spec for `EwmaMeanStat`: exponentially-weighted moving average with per-observation [Alpha]. */
+/** Spec for `EwmaMeanStat`: exponentially-weighted moving average with per-observation alpha. */
 @Serializable
 @SerialName("EwmaMean")
 data class EwmaMean(
-    /** Per-observation smoothing factor. */
-    val weighting: Alpha,
+    /** Per-observation smoothing factor in `(0, 1]`. */
+    val alpha: Double,
 ) : SeriesStatSpec<WeightedMeanResult>
 
-/** Spec for `EwmaVarianceStat`: exponentially-weighted moving variance with per-observation [Alpha]. */
+/** Spec for `EwmaVarianceStat`: exponentially-weighted moving variance with per-observation alpha. */
 @Serializable
 @SerialName("EwmaVariance")
 data class EwmaVariance(
-    /** Per-observation smoothing factor. */
-    val weighting: Alpha,
+    /** Per-observation smoothing factor in `(0, 1]`. */
+    val alpha: Double,
 ) : SeriesStatSpec<WeightedVarianceResult>
 
 /** Spec for `HoltStat`: double exponential smoothing with optional trend damping. */
@@ -60,9 +59,9 @@ data class EwmaVariance(
 @SerialName("Holt")
 data class Holt(
     /** Per-observation smoothing factor for the level. */
-    val alphaWeighting: Alpha,
-    /** Per-observation smoothing factor for the trend; defaults to the level's [alphaWeighting]. */
-    val betaWeighting: Alpha = alphaWeighting,
+    val alpha: Double,
+    /** Per-observation smoothing factor for the trend; defaults to the level's [alpha]. */
+    val beta: Double = alpha,
     /** Trend damping in `(0, 1]`; `1.0` is plain Holt. */
     val phi: Double = StatDefaults.HOLT_PHI,
 ) : SeriesStatSpec<HoltResult>
@@ -72,11 +71,11 @@ data class Holt(
 @SerialName("SeasonalSmoothing")
 data class SeasonalSmoothing(
     /** Per-observation smoothing factor for the level. */
-    val alphaWeighting: Alpha,
+    val alpha: Double,
     /** Per-observation smoothing factor for the trend. */
-    val betaWeighting: Alpha,
+    val beta: Double,
     /** Per-observation smoothing factor for the seasonal vector. */
-    val gammaWeighting: Alpha,
+    val gamma: Double,
     /** Length of the seasonal cycle in updates. */
     val period: Int,
     /** Seasonal coupling. */

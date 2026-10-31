@@ -6,7 +6,6 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
-import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.ops.*
 import com.eignex.kumulant.schema.optimizer.*

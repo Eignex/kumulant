@@ -428,13 +428,6 @@ sealed interface com.eignex.kumulant.bandit.univariate/UnivariateBanditSpec { //
     }
 }
 
-sealed interface com.eignex.kumulant.schema.decay/DecayWeightingSpec { // com.eignex.kumulant.schema.decay/DecayWeightingSpec|null[0]
-    final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.decay/DecayWeightingSpec.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.decay/DecayWeightingSpec> // com.eignex.kumulant.schema.decay/DecayWeightingSpec.Companion.serializer|serializer(){}[0]
-        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.decay/DecayWeightingSpec.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
-    }
-}
-
 sealed interface com.eignex.kumulant.schema.expr/BoolExpr { // com.eignex.kumulant.schema.expr/BoolExpr|null[0]
     abstract fun eval(kotlin/Double, kotlin/Double = ..., kotlin/DoubleArray = ..., com.eignex.kumulant.core/Result? = ...): kotlin/Boolean // com.eignex.kumulant.schema.expr/BoolExpr.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
 
@@ -2278,60 +2271,6 @@ final class com.eignex.kumulant.math/SobolSequence { // com.eignex.kumulant.math
     }
 }
 
-final class com.eignex.kumulant.schema.decay/Alpha : com.eignex.kumulant.schema.decay/DecayWeightingSpec { // com.eignex.kumulant.schema.decay/Alpha|null[0]
-    constructor <init>(kotlin/Double) // com.eignex.kumulant.schema.decay/Alpha.<init>|<init>(kotlin.Double){}[0]
-
-    final val alpha // com.eignex.kumulant.schema.decay/Alpha.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.schema.decay/Alpha.alpha.<get-alpha>|<get-alpha>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.decay/Alpha.component1|component1(){}[0]
-    final fun copy(kotlin/Double = ...): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.decay/Alpha.copy|copy(kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.decay/Alpha.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.decay/Alpha.hashCode|hashCode(){}[0]
-    final fun toDecayWeighting(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.schema.decay/Alpha.toDecayWeighting|toDecayWeighting(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.decay/Alpha.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.decay/Alpha> { // com.eignex.kumulant.schema.decay/Alpha.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.decay/Alpha.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.decay/Alpha.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.decay/Alpha.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.decay/Alpha.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.decay/Alpha) // com.eignex.kumulant.schema.decay/Alpha.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.decay.Alpha){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.decay/Alpha.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.decay/Alpha> // com.eignex.kumulant.schema.decay/Alpha.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.schema.decay/HalfLife : com.eignex.kumulant.schema.decay/DecayWeightingSpec { // com.eignex.kumulant.schema.decay/HalfLife|null[0]
-    constructor <init>(kotlin/Long) // com.eignex.kumulant.schema.decay/HalfLife.<init>|<init>(kotlin.Long){}[0]
-
-    final val durationMillis // com.eignex.kumulant.schema.decay/HalfLife.durationMillis|{}durationMillis[0]
-        final fun <get-durationMillis>(): kotlin/Long // com.eignex.kumulant.schema.decay/HalfLife.durationMillis.<get-durationMillis>|<get-durationMillis>(){}[0]
-
-    final fun component1(): kotlin/Long // com.eignex.kumulant.schema.decay/HalfLife.component1|component1(){}[0]
-    final fun copy(kotlin/Long = ...): com.eignex.kumulant.schema.decay/HalfLife // com.eignex.kumulant.schema.decay/HalfLife.copy|copy(kotlin.Long){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.decay/HalfLife.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.decay/HalfLife.hashCode|hashCode(){}[0]
-    final fun toDecayWeighting(): com.eignex.kumulant.stat.decay/DecayWeighting.HalfLife // com.eignex.kumulant.schema.decay/HalfLife.toDecayWeighting|toDecayWeighting(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.decay/HalfLife.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.decay/HalfLife> { // com.eignex.kumulant.schema.decay/HalfLife.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.decay/HalfLife.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.decay/HalfLife.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.decay/HalfLife.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.decay/HalfLife // com.eignex.kumulant.schema.decay/HalfLife.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.decay/HalfLife) // com.eignex.kumulant.schema.decay/HalfLife.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.decay.HalfLife){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.decay/HalfLife.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.decay/HalfLife> // com.eignex.kumulant.schema.decay/HalfLife.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.schema.expr/Const : com.eignex.kumulant.schema.expr/ScalarExpr { // com.eignex.kumulant.schema.expr/Const|null[0]
     constructor <init>(kotlin/Double) // com.eignex.kumulant.schema.expr/Const.<init>|<init>(kotlin.Double){}[0]
 
@@ -3145,13 +3084,13 @@ final class com.eignex.kumulant.schema.spec/DDSketch : com.eignex.kumulant.schem
 }
 
 final class com.eignex.kumulant.schema.spec/DecayingMean : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.decay/DecayingMeanResult> { // com.eignex.kumulant.schema.spec/DecayingMean|null[0]
-    constructor <init>(com.eignex.kumulant.schema.decay/HalfLife) // com.eignex.kumulant.schema.spec/DecayingMean.<init>|<init>(com.eignex.kumulant.schema.decay.HalfLife){}[0]
+    constructor <init>(kotlin/Long) // com.eignex.kumulant.schema.spec/DecayingMean.<init>|<init>(kotlin.Long){}[0]
 
-    final val weighting // com.eignex.kumulant.schema.spec/DecayingMean.weighting|{}weighting[0]
-        final fun <get-weighting>(): com.eignex.kumulant.schema.decay/HalfLife // com.eignex.kumulant.schema.spec/DecayingMean.weighting.<get-weighting>|<get-weighting>(){}[0]
+    final val halfLifeMillis // com.eignex.kumulant.schema.spec/DecayingMean.halfLifeMillis|{}halfLifeMillis[0]
+        final fun <get-halfLifeMillis>(): kotlin/Long // com.eignex.kumulant.schema.spec/DecayingMean.halfLifeMillis.<get-halfLifeMillis>|<get-halfLifeMillis>(){}[0]
 
-    final fun component1(): com.eignex.kumulant.schema.decay/HalfLife // com.eignex.kumulant.schema.spec/DecayingMean.component1|component1(){}[0]
-    final fun copy(com.eignex.kumulant.schema.decay/HalfLife = ...): com.eignex.kumulant.schema.spec/DecayingMean // com.eignex.kumulant.schema.spec/DecayingMean.copy|copy(com.eignex.kumulant.schema.decay.HalfLife){}[0]
+    final fun component1(): kotlin/Long // com.eignex.kumulant.schema.spec/DecayingMean.component1|component1(){}[0]
+    final fun copy(kotlin/Long = ...): com.eignex.kumulant.schema.spec/DecayingMean // com.eignex.kumulant.schema.spec/DecayingMean.copy|copy(kotlin.Long){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/DecayingMean.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/DecayingMean.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/DecayingMean.toString|toString(){}[0]
@@ -3197,13 +3136,13 @@ final class com.eignex.kumulant.schema.spec/DecayingRate : com.eignex.kumulant.s
 }
 
 final class com.eignex.kumulant.schema.spec/DecayingSum : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.decay/DecayingSumResult> { // com.eignex.kumulant.schema.spec/DecayingSum|null[0]
-    constructor <init>(com.eignex.kumulant.schema.decay/HalfLife) // com.eignex.kumulant.schema.spec/DecayingSum.<init>|<init>(com.eignex.kumulant.schema.decay.HalfLife){}[0]
+    constructor <init>(kotlin/Long) // com.eignex.kumulant.schema.spec/DecayingSum.<init>|<init>(kotlin.Long){}[0]
 
-    final val weighting // com.eignex.kumulant.schema.spec/DecayingSum.weighting|{}weighting[0]
-        final fun <get-weighting>(): com.eignex.kumulant.schema.decay/HalfLife // com.eignex.kumulant.schema.spec/DecayingSum.weighting.<get-weighting>|<get-weighting>(){}[0]
+    final val halfLifeMillis // com.eignex.kumulant.schema.spec/DecayingSum.halfLifeMillis|{}halfLifeMillis[0]
+        final fun <get-halfLifeMillis>(): kotlin/Long // com.eignex.kumulant.schema.spec/DecayingSum.halfLifeMillis.<get-halfLifeMillis>|<get-halfLifeMillis>(){}[0]
 
-    final fun component1(): com.eignex.kumulant.schema.decay/HalfLife // com.eignex.kumulant.schema.spec/DecayingSum.component1|component1(){}[0]
-    final fun copy(com.eignex.kumulant.schema.decay/HalfLife = ...): com.eignex.kumulant.schema.spec/DecayingSum // com.eignex.kumulant.schema.spec/DecayingSum.copy|copy(com.eignex.kumulant.schema.decay.HalfLife){}[0]
+    final fun component1(): kotlin/Long // com.eignex.kumulant.schema.spec/DecayingSum.component1|component1(){}[0]
+    final fun copy(kotlin/Long = ...): com.eignex.kumulant.schema.spec/DecayingSum // com.eignex.kumulant.schema.spec/DecayingSum.copy|copy(kotlin.Long){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/DecayingSum.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/DecayingSum.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/DecayingSum.toString|toString(){}[0]
@@ -3223,13 +3162,13 @@ final class com.eignex.kumulant.schema.spec/DecayingSum : com.eignex.kumulant.sc
 }
 
 final class com.eignex.kumulant.schema.spec/DecayingVariance : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.decay/DecayingVarianceResult> { // com.eignex.kumulant.schema.spec/DecayingVariance|null[0]
-    constructor <init>(com.eignex.kumulant.schema.decay/HalfLife) // com.eignex.kumulant.schema.spec/DecayingVariance.<init>|<init>(com.eignex.kumulant.schema.decay.HalfLife){}[0]
+    constructor <init>(kotlin/Long) // com.eignex.kumulant.schema.spec/DecayingVariance.<init>|<init>(kotlin.Long){}[0]
 
-    final val weighting // com.eignex.kumulant.schema.spec/DecayingVariance.weighting|{}weighting[0]
-        final fun <get-weighting>(): com.eignex.kumulant.schema.decay/HalfLife // com.eignex.kumulant.schema.spec/DecayingVariance.weighting.<get-weighting>|<get-weighting>(){}[0]
+    final val halfLifeMillis // com.eignex.kumulant.schema.spec/DecayingVariance.halfLifeMillis|{}halfLifeMillis[0]
+        final fun <get-halfLifeMillis>(): kotlin/Long // com.eignex.kumulant.schema.spec/DecayingVariance.halfLifeMillis.<get-halfLifeMillis>|<get-halfLifeMillis>(){}[0]
 
-    final fun component1(): com.eignex.kumulant.schema.decay/HalfLife // com.eignex.kumulant.schema.spec/DecayingVariance.component1|component1(){}[0]
-    final fun copy(com.eignex.kumulant.schema.decay/HalfLife = ...): com.eignex.kumulant.schema.spec/DecayingVariance // com.eignex.kumulant.schema.spec/DecayingVariance.copy|copy(com.eignex.kumulant.schema.decay.HalfLife){}[0]
+    final fun component1(): kotlin/Long // com.eignex.kumulant.schema.spec/DecayingVariance.component1|component1(){}[0]
+    final fun copy(kotlin/Long = ...): com.eignex.kumulant.schema.spec/DecayingVariance // com.eignex.kumulant.schema.spec/DecayingVariance.copy|copy(kotlin.Long){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/DecayingVariance.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/DecayingVariance.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/DecayingVariance.toString|toString(){}[0]
@@ -3398,13 +3337,13 @@ final class com.eignex.kumulant.schema.spec/DiscreteGroupStatSpec : com.eignex.k
 }
 
 final class com.eignex.kumulant.schema.spec/EwmaMean : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.schema.spec/EwmaMean|null[0]
-    constructor <init>(com.eignex.kumulant.schema.decay/Alpha) // com.eignex.kumulant.schema.spec/EwmaMean.<init>|<init>(com.eignex.kumulant.schema.decay.Alpha){}[0]
+    constructor <init>(kotlin/Double) // com.eignex.kumulant.schema.spec/EwmaMean.<init>|<init>(kotlin.Double){}[0]
 
-    final val weighting // com.eignex.kumulant.schema.spec/EwmaMean.weighting|{}weighting[0]
-        final fun <get-weighting>(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/EwmaMean.weighting.<get-weighting>|<get-weighting>(){}[0]
+    final val alpha // com.eignex.kumulant.schema.spec/EwmaMean.alpha|{}alpha[0]
+        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.schema.spec/EwmaMean.alpha.<get-alpha>|<get-alpha>(){}[0]
 
-    final fun component1(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/EwmaMean.component1|component1(){}[0]
-    final fun copy(com.eignex.kumulant.schema.decay/Alpha = ...): com.eignex.kumulant.schema.spec/EwmaMean // com.eignex.kumulant.schema.spec/EwmaMean.copy|copy(com.eignex.kumulant.schema.decay.Alpha){}[0]
+    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/EwmaMean.component1|component1(){}[0]
+    final fun copy(kotlin/Double = ...): com.eignex.kumulant.schema.spec/EwmaMean // com.eignex.kumulant.schema.spec/EwmaMean.copy|copy(kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/EwmaMean.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/EwmaMean.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/EwmaMean.toString|toString(){}[0]
@@ -3424,13 +3363,13 @@ final class com.eignex.kumulant.schema.spec/EwmaMean : com.eignex.kumulant.schem
 }
 
 final class com.eignex.kumulant.schema.spec/EwmaVariance : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.summary/WeightedVarianceResult> { // com.eignex.kumulant.schema.spec/EwmaVariance|null[0]
-    constructor <init>(com.eignex.kumulant.schema.decay/Alpha) // com.eignex.kumulant.schema.spec/EwmaVariance.<init>|<init>(com.eignex.kumulant.schema.decay.Alpha){}[0]
+    constructor <init>(kotlin/Double) // com.eignex.kumulant.schema.spec/EwmaVariance.<init>|<init>(kotlin.Double){}[0]
 
-    final val weighting // com.eignex.kumulant.schema.spec/EwmaVariance.weighting|{}weighting[0]
-        final fun <get-weighting>(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/EwmaVariance.weighting.<get-weighting>|<get-weighting>(){}[0]
+    final val alpha // com.eignex.kumulant.schema.spec/EwmaVariance.alpha|{}alpha[0]
+        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.schema.spec/EwmaVariance.alpha.<get-alpha>|<get-alpha>(){}[0]
 
-    final fun component1(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/EwmaVariance.component1|component1(){}[0]
-    final fun copy(com.eignex.kumulant.schema.decay/Alpha = ...): com.eignex.kumulant.schema.spec/EwmaVariance // com.eignex.kumulant.schema.spec/EwmaVariance.copy|copy(com.eignex.kumulant.schema.decay.Alpha){}[0]
+    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/EwmaVariance.component1|component1(){}[0]
+    final fun copy(kotlin/Double = ...): com.eignex.kumulant.schema.spec/EwmaVariance // com.eignex.kumulant.schema.spec/EwmaVariance.copy|copy(kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/EwmaVariance.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/EwmaVariance.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/EwmaVariance.toString|toString(){}[0]
@@ -3600,19 +3539,19 @@ final class com.eignex.kumulant.schema.spec/HdrHistogram : com.eignex.kumulant.s
 }
 
 final class com.eignex.kumulant.schema.spec/Holt : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.forecast/HoltResult> { // com.eignex.kumulant.schema.spec/Holt|null[0]
-    constructor <init>(com.eignex.kumulant.schema.decay/Alpha, com.eignex.kumulant.schema.decay/Alpha = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.spec/Holt.<init>|<init>(com.eignex.kumulant.schema.decay.Alpha;com.eignex.kumulant.schema.decay.Alpha;kotlin.Double){}[0]
+    constructor <init>(kotlin/Double, kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.spec/Holt.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
 
-    final val alphaWeighting // com.eignex.kumulant.schema.spec/Holt.alphaWeighting|{}alphaWeighting[0]
-        final fun <get-alphaWeighting>(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/Holt.alphaWeighting.<get-alphaWeighting>|<get-alphaWeighting>(){}[0]
-    final val betaWeighting // com.eignex.kumulant.schema.spec/Holt.betaWeighting|{}betaWeighting[0]
-        final fun <get-betaWeighting>(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/Holt.betaWeighting.<get-betaWeighting>|<get-betaWeighting>(){}[0]
+    final val alpha // com.eignex.kumulant.schema.spec/Holt.alpha|{}alpha[0]
+        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.alpha.<get-alpha>|<get-alpha>(){}[0]
+    final val beta // com.eignex.kumulant.schema.spec/Holt.beta|{}beta[0]
+        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.beta.<get-beta>|<get-beta>(){}[0]
     final val phi // com.eignex.kumulant.schema.spec/Holt.phi|{}phi[0]
         final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.phi.<get-phi>|<get-phi>(){}[0]
 
-    final fun component1(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/Holt.component1|component1(){}[0]
-    final fun component2(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/Holt.component2|component2(){}[0]
+    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.component2|component2(){}[0]
     final fun component3(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.component3|component3(){}[0]
-    final fun copy(com.eignex.kumulant.schema.decay/Alpha = ..., com.eignex.kumulant.schema.decay/Alpha = ..., kotlin/Double = ...): com.eignex.kumulant.schema.spec/Holt // com.eignex.kumulant.schema.spec/Holt.copy|copy(com.eignex.kumulant.schema.decay.Alpha;com.eignex.kumulant.schema.decay.Alpha;kotlin.Double){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.schema.spec/Holt // com.eignex.kumulant.schema.spec/Holt.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/Holt.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/Holt.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/Holt.toString|toString(){}[0]
@@ -4125,14 +4064,14 @@ final class com.eignex.kumulant.schema.spec/ReservoirHistogram : com.eignex.kumu
 }
 
 final class com.eignex.kumulant.schema.spec/SeasonalSmoothing : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult> { // com.eignex.kumulant.schema.spec/SeasonalSmoothing|null[0]
-    constructor <init>(com.eignex.kumulant.schema.decay/Alpha, com.eignex.kumulant.schema.decay/Alpha, com.eignex.kumulant.schema.decay/Alpha, kotlin/Int, com.eignex.kumulant.stat.forecast/SeasonalMode = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.spec/SeasonalSmoothing.<init>|<init>(com.eignex.kumulant.schema.decay.Alpha;com.eignex.kumulant.schema.decay.Alpha;com.eignex.kumulant.schema.decay.Alpha;kotlin.Int;com.eignex.kumulant.stat.forecast.SeasonalMode;kotlin.Double){}[0]
+    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Int, com.eignex.kumulant.stat.forecast/SeasonalMode = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.spec/SeasonalSmoothing.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;com.eignex.kumulant.stat.forecast.SeasonalMode;kotlin.Double){}[0]
 
-    final val alphaWeighting // com.eignex.kumulant.schema.spec/SeasonalSmoothing.alphaWeighting|{}alphaWeighting[0]
-        final fun <get-alphaWeighting>(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/SeasonalSmoothing.alphaWeighting.<get-alphaWeighting>|<get-alphaWeighting>(){}[0]
-    final val betaWeighting // com.eignex.kumulant.schema.spec/SeasonalSmoothing.betaWeighting|{}betaWeighting[0]
-        final fun <get-betaWeighting>(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/SeasonalSmoothing.betaWeighting.<get-betaWeighting>|<get-betaWeighting>(){}[0]
-    final val gammaWeighting // com.eignex.kumulant.schema.spec/SeasonalSmoothing.gammaWeighting|{}gammaWeighting[0]
-        final fun <get-gammaWeighting>(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/SeasonalSmoothing.gammaWeighting.<get-gammaWeighting>|<get-gammaWeighting>(){}[0]
+    final val alpha // com.eignex.kumulant.schema.spec/SeasonalSmoothing.alpha|{}alpha[0]
+        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.alpha.<get-alpha>|<get-alpha>(){}[0]
+    final val beta // com.eignex.kumulant.schema.spec/SeasonalSmoothing.beta|{}beta[0]
+        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.beta.<get-beta>|<get-beta>(){}[0]
+    final val gamma // com.eignex.kumulant.schema.spec/SeasonalSmoothing.gamma|{}gamma[0]
+        final fun <get-gamma>(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.gamma.<get-gamma>|<get-gamma>(){}[0]
     final val mode // com.eignex.kumulant.schema.spec/SeasonalSmoothing.mode|{}mode[0]
         final fun <get-mode>(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.schema.spec/SeasonalSmoothing.mode.<get-mode>|<get-mode>(){}[0]
     final val period // com.eignex.kumulant.schema.spec/SeasonalSmoothing.period|{}period[0]
@@ -4140,13 +4079,13 @@ final class com.eignex.kumulant.schema.spec/SeasonalSmoothing : com.eignex.kumul
     final val phi // com.eignex.kumulant.schema.spec/SeasonalSmoothing.phi|{}phi[0]
         final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.phi.<get-phi>|<get-phi>(){}[0]
 
-    final fun component1(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component1|component1(){}[0]
-    final fun component2(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component2|component2(){}[0]
-    final fun component3(): com.eignex.kumulant.schema.decay/Alpha // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component3|component3(){}[0]
+    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component2|component2(){}[0]
+    final fun component3(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component3|component3(){}[0]
     final fun component4(): kotlin/Int // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component4|component4(){}[0]
     final fun component5(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component5|component5(){}[0]
     final fun component6(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component6|component6(){}[0]
-    final fun copy(com.eignex.kumulant.schema.decay/Alpha = ..., com.eignex.kumulant.schema.decay/Alpha = ..., com.eignex.kumulant.schema.decay/Alpha = ..., kotlin/Int = ..., com.eignex.kumulant.stat.forecast/SeasonalMode = ..., kotlin/Double = ...): com.eignex.kumulant.schema.spec/SeasonalSmoothing // com.eignex.kumulant.schema.spec/SeasonalSmoothing.copy|copy(com.eignex.kumulant.schema.decay.Alpha;com.eignex.kumulant.schema.decay.Alpha;com.eignex.kumulant.schema.decay.Alpha;kotlin.Int;com.eignex.kumulant.stat.forecast.SeasonalMode;kotlin.Double){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ..., com.eignex.kumulant.stat.forecast/SeasonalMode = ..., kotlin/Double = ...): com.eignex.kumulant.schema.spec/SeasonalSmoothing // com.eignex.kumulant.schema.spec/SeasonalSmoothing.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;com.eignex.kumulant.stat.forecast.SeasonalMode;kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/SeasonalSmoothing.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/SeasonalSmoothing.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/SeasonalSmoothing.toString|toString(){}[0]

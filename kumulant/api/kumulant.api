@@ -2109,70 +2109,6 @@ public class com/eignex/kumulant/schema/StatKey {
 	public final fun getName ()Ljava/lang/String;
 }
 
-public final class com/eignex/kumulant/schema/decay/Alpha : com/eignex/kumulant/schema/decay/DecayWeightingSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/decay/Alpha$Companion;
-	public fun <init> (D)V
-	public final fun component1 ()D
-	public final fun copy (D)Lcom/eignex/kumulant/schema/decay/Alpha;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/decay/Alpha;DILjava/lang/Object;)Lcom/eignex/kumulant/schema/decay/Alpha;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAlpha ()D
-	public fun hashCode ()I
-	public final fun toDecayWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/decay/Alpha$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/decay/Alpha$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/decay/Alpha;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/decay/Alpha;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/decay/Alpha$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public abstract interface class com/eignex/kumulant/schema/decay/DecayWeightingSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/decay/DecayWeightingSpec$Companion;
-}
-
-public final class com/eignex/kumulant/schema/decay/DecayWeightingSpec$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/decay/HalfLife : com/eignex/kumulant/schema/decay/DecayWeightingSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/decay/HalfLife$Companion;
-	public fun <init> (J)V
-	public final fun component1 ()J
-	public final fun copy (J)Lcom/eignex/kumulant/schema/decay/HalfLife;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/decay/HalfLife;JILjava/lang/Object;)Lcom/eignex/kumulant/schema/decay/HalfLife;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getDurationMillis ()J
-	public fun hashCode ()I
-	public final fun toDecayWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$HalfLife;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/decay/HalfLife$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/decay/HalfLife$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/decay/HalfLife;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/decay/HalfLife;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/decay/HalfLife$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public abstract interface class com/eignex/kumulant/schema/expr/BoolExpr {
 	public static final field Companion Lcom/eignex/kumulant/schema/expr/BoolExpr$Companion;
 	public abstract fun eval (DD[DLcom/eignex/kumulant/core/Result;)Z
@@ -3456,12 +3392,12 @@ public final class com/eignex/kumulant/schema/spec/DDSketch$Companion {
 
 public final class com/eignex/kumulant/schema/spec/DecayingMean : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/DecayingMean$Companion;
-	public fun <init> (Lcom/eignex/kumulant/schema/decay/HalfLife;)V
-	public final fun component1 ()Lcom/eignex/kumulant/schema/decay/HalfLife;
-	public final fun copy (Lcom/eignex/kumulant/schema/decay/HalfLife;)Lcom/eignex/kumulant/schema/spec/DecayingMean;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DecayingMean;Lcom/eignex/kumulant/schema/decay/HalfLife;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DecayingMean;
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lcom/eignex/kumulant/schema/spec/DecayingMean;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DecayingMean;JILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DecayingMean;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getWeighting ()Lcom/eignex/kumulant/schema/decay/HalfLife;
+	public final fun getHalfLifeMillis ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -3510,12 +3446,12 @@ public final class com/eignex/kumulant/schema/spec/DecayingRate$Companion {
 
 public final class com/eignex/kumulant/schema/spec/DecayingSum : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/DecayingSum$Companion;
-	public fun <init> (Lcom/eignex/kumulant/schema/decay/HalfLife;)V
-	public final fun component1 ()Lcom/eignex/kumulant/schema/decay/HalfLife;
-	public final fun copy (Lcom/eignex/kumulant/schema/decay/HalfLife;)Lcom/eignex/kumulant/schema/spec/DecayingSum;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DecayingSum;Lcom/eignex/kumulant/schema/decay/HalfLife;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DecayingSum;
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lcom/eignex/kumulant/schema/spec/DecayingSum;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DecayingSum;JILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DecayingSum;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getWeighting ()Lcom/eignex/kumulant/schema/decay/HalfLife;
+	public final fun getHalfLifeMillis ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -3537,12 +3473,12 @@ public final class com/eignex/kumulant/schema/spec/DecayingSum$Companion {
 
 public final class com/eignex/kumulant/schema/spec/DecayingVariance : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/DecayingVariance$Companion;
-	public fun <init> (Lcom/eignex/kumulant/schema/decay/HalfLife;)V
-	public final fun component1 ()Lcom/eignex/kumulant/schema/decay/HalfLife;
-	public final fun copy (Lcom/eignex/kumulant/schema/decay/HalfLife;)Lcom/eignex/kumulant/schema/spec/DecayingVariance;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DecayingVariance;Lcom/eignex/kumulant/schema/decay/HalfLife;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DecayingVariance;
+	public fun <init> (J)V
+	public final fun component1 ()J
+	public final fun copy (J)Lcom/eignex/kumulant/schema/spec/DecayingVariance;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/DecayingVariance;JILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/DecayingVariance;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getWeighting ()Lcom/eignex/kumulant/schema/decay/HalfLife;
+	public final fun getHalfLifeMillis ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -3709,12 +3645,12 @@ public final class com/eignex/kumulant/schema/spec/DiscreteStatSpec$Companion {
 
 public final class com/eignex/kumulant/schema/spec/EwmaMean : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/EwmaMean$Companion;
-	public fun <init> (Lcom/eignex/kumulant/schema/decay/Alpha;)V
-	public final fun component1 ()Lcom/eignex/kumulant/schema/decay/Alpha;
-	public final fun copy (Lcom/eignex/kumulant/schema/decay/Alpha;)Lcom/eignex/kumulant/schema/spec/EwmaMean;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/EwmaMean;Lcom/eignex/kumulant/schema/decay/Alpha;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/EwmaMean;
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public final fun copy (D)Lcom/eignex/kumulant/schema/spec/EwmaMean;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/EwmaMean;DILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/EwmaMean;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getWeighting ()Lcom/eignex/kumulant/schema/decay/Alpha;
+	public final fun getAlpha ()D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -3736,12 +3672,12 @@ public final class com/eignex/kumulant/schema/spec/EwmaMean$Companion {
 
 public final class com/eignex/kumulant/schema/spec/EwmaVariance : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/EwmaVariance$Companion;
-	public fun <init> (Lcom/eignex/kumulant/schema/decay/Alpha;)V
-	public final fun component1 ()Lcom/eignex/kumulant/schema/decay/Alpha;
-	public final fun copy (Lcom/eignex/kumulant/schema/decay/Alpha;)Lcom/eignex/kumulant/schema/spec/EwmaVariance;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/EwmaVariance;Lcom/eignex/kumulant/schema/decay/Alpha;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/EwmaVariance;
+	public fun <init> (D)V
+	public final fun component1 ()D
+	public final fun copy (D)Lcom/eignex/kumulant/schema/spec/EwmaVariance;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/EwmaVariance;DILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/EwmaVariance;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getWeighting ()Lcom/eignex/kumulant/schema/decay/Alpha;
+	public final fun getAlpha ()D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -3924,16 +3860,16 @@ public final class com/eignex/kumulant/schema/spec/HdrHistogram$Companion {
 
 public final class com/eignex/kumulant/schema/spec/Holt : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/Holt$Companion;
-	public fun <init> (Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;D)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/eignex/kumulant/schema/decay/Alpha;
-	public final fun component2 ()Lcom/eignex/kumulant/schema/decay/Alpha;
+	public fun <init> (DDD)V
+	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()D
 	public final fun component3 ()D
-	public final fun copy (Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;D)Lcom/eignex/kumulant/schema/spec/Holt;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/Holt;Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;DILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/Holt;
+	public final fun copy (DDD)Lcom/eignex/kumulant/schema/spec/Holt;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/Holt;DDDILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/Holt;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAlphaWeighting ()Lcom/eignex/kumulant/schema/decay/Alpha;
-	public final fun getBetaWeighting ()Lcom/eignex/kumulant/schema/decay/Alpha;
+	public final fun getAlpha ()D
+	public final fun getBeta ()D
 	public final fun getPhi ()D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -4577,20 +4513,20 @@ public final class com/eignex/kumulant/schema/spec/RunLength : com/eignex/kumula
 
 public final class com/eignex/kumulant/schema/spec/SeasonalSmoothing : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing$Companion;
-	public fun <init> (Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;ILcom/eignex/kumulant/stat/forecast/SeasonalMode;D)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;ILcom/eignex/kumulant/stat/forecast/SeasonalMode;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/eignex/kumulant/schema/decay/Alpha;
-	public final fun component2 ()Lcom/eignex/kumulant/schema/decay/Alpha;
-	public final fun component3 ()Lcom/eignex/kumulant/schema/decay/Alpha;
+	public fun <init> (DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;D)V
+	public synthetic fun <init> (DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
 	public final fun component4 ()I
 	public final fun component5 ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
 	public final fun component6 ()D
-	public final fun copy (Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;ILcom/eignex/kumulant/stat/forecast/SeasonalMode;D)Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;Lcom/eignex/kumulant/schema/decay/Alpha;ILcom/eignex/kumulant/stat/forecast/SeasonalMode;DILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;
+	public final fun copy (DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;D)Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;DILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAlphaWeighting ()Lcom/eignex/kumulant/schema/decay/Alpha;
-	public final fun getBetaWeighting ()Lcom/eignex/kumulant/schema/decay/Alpha;
-	public final fun getGammaWeighting ()Lcom/eignex/kumulant/schema/decay/Alpha;
+	public final fun getAlpha ()D
+	public final fun getBeta ()D
+	public final fun getGamma ()D
 	public final fun getMode ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
 	public final fun getPeriod ()I
 	public final fun getPhi ()D

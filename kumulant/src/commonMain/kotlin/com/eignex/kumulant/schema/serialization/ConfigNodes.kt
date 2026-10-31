@@ -3,20 +3,12 @@ package com.eignex.kumulant.schema.serialization
 import com.eignex.kumulant.bandit.contextual.*
 import com.eignex.kumulant.bandit.univariate.*
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.stat.regression.glm.*
 import com.eignex.kumulant.stat.regression.tree.*
 import com.eignex.skema.serialization.JsonNodeShape
 import com.eignex.skema.serialization.jsonNode
 import kotlinx.serialization.PolymorphicSerializer
-
-internal object DecayWeightingSpecSerializer : KumulantSerializer<DecayWeightingSpec>(DecayWeightingSpec::class, {
-    listOf(
-        jsonNode<HalfLife>("halfLife"),
-        jsonNode<Alpha>("alpha", JsonNodeShape.Operand, "alpha"),
-    )
-})
 
 internal object OptimizerSpecSerializer : KumulantSerializer<OptimizerSpec>(OptimizerSpec::class, {
     listOf(

@@ -1,7 +1,6 @@
 package com.eignex.kumulant.schema
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.ops.*
 import com.eignex.kumulant.schema.optimizer.*
@@ -116,14 +115,14 @@ class StatsRoundTripTest {
             Recency,
             Crossing(level = 3.5),
             Holt(
-                alphaWeighting = Alpha(0.3),
-                betaWeighting = Alpha(0.1),
+                alpha = 0.3,
+                beta = 0.1,
                 phi = 0.9,
             ),
             SeasonalSmoothing(
-                alphaWeighting = Alpha(0.3),
-                betaWeighting = Alpha(0.1),
-                gammaWeighting = Alpha(0.2),
+                alpha = 0.3,
+                beta = 0.1,
+                gamma = 0.2,
                 period = 7,
                 mode = SeasonalMode.Multiplicative,
                 phi = 0.95,
@@ -134,11 +133,11 @@ class StatsRoundTripTest {
             Adwin(delta = 0.005, maxBucketsPerSize = 8),
             Rate,
             CounterRate(false),
-            DecayingSum(HalfLife(60_000L)),
-            DecayingMean(HalfLife(120_000L)),
-            DecayingVariance(HalfLife(60_000L)),
-            EwmaMean(Alpha(0.1)),
-            EwmaVariance(Alpha(0.05)),
+            DecayingSum(60_000L),
+            DecayingMean(120_000L),
+            DecayingVariance(60_000L),
+            EwmaMean(0.1),
+            EwmaVariance(0.05),
             DecayingRate(halfLifeMillis = 5_000L),
         )
 

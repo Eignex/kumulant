@@ -1,7 +1,5 @@
 package com.eignex.kumulant.core
 
-import com.eignex.kumulant.schema.decay.Alpha
-import com.eignex.kumulant.schema.decay.HalfLife
 import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.schema.spec.Adwin
 import com.eignex.kumulant.schema.spec.ArgMax
@@ -84,13 +82,13 @@ class SeriesStatContractSweepTest {
         "ReservoirHistogram" to ReservoirHistogram(seed = 42L),
         "TDigest" to TDigest(),
         "PitHistogram" to PitHistogram(numBins = 8),
-        "DecayingSum" to DecayingSum(HalfLife(30_000L)),
-        "DecayingMean" to DecayingMean(HalfLife(30_000L)),
-        "DecayingVariance" to DecayingVariance(HalfLife(30_000L)),
-        "EwmaMean" to EwmaMean(Alpha(0.3)),
-        "EwmaVariance" to EwmaVariance(Alpha(0.3)),
-        "Holt" to Holt(Alpha(0.3)),
-        "SeasonalSmoothing" to SeasonalSmoothing(Alpha(0.3), Alpha(0.2), Alpha(0.1), period = 4),
+        "DecayingSum" to DecayingSum(30_000L),
+        "DecayingMean" to DecayingMean(30_000L),
+        "DecayingVariance" to DecayingVariance(30_000L),
+        "EwmaMean" to EwmaMean(0.3),
+        "EwmaVariance" to EwmaVariance(0.3),
+        "Holt" to Holt(0.3),
+        "SeasonalSmoothing" to SeasonalSmoothing(0.3, 0.2, 0.1, period = 4),
         "RecursiveVariance" to RecursiveVariance(omega = 0.1, alpha = 0.2, beta = 0.7),
         "DecayingRate" to DecayingRate(halfLifeMillis = 30_000L),
     )

@@ -18,7 +18,6 @@ object KumulantJson {
             ScalarExprSerializer,
             BoolExprSerializer,
             VectorExprSerializer,
-            DecayWeightingSpecSerializer,
             OptimizerSpecSerializer,
             UnivariateBanditSpecSerializer,
             ContextualBanditSpecSerializer,

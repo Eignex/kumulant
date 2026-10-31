@@ -5,7 +5,6 @@ import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.feat
-import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.ops.*
 import com.eignex.kumulant.schema.optimizer.*
