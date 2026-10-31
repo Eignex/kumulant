@@ -3,6 +3,12 @@ package com.eignex.kumulant.schema.runtime
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.feat
+import com.eignex.kumulant.schema.expr.Center
+import com.eignex.kumulant.schema.expr.Low
+import com.eignex.kumulant.schema.expr.MinMax
+import com.eignex.kumulant.schema.expr.Standardize
+import com.eignex.kumulant.schema.expr.V
+import com.eignex.kumulant.schema.expr.VIndex
 import com.eignex.kumulant.schema.expr.X
 import com.eignex.kumulant.schema.expr.div
 import com.eignex.kumulant.schema.expr.eq
@@ -10,15 +16,19 @@ import com.eignex.kumulant.schema.expr.minus
 import com.eignex.kumulant.schema.ops.band
 import com.eignex.kumulant.schema.ops.filter
 import com.eignex.kumulant.schema.ops.transform
+import com.eignex.kumulant.schema.ops.weightBy
+import com.eignex.kumulant.schema.ops.withFeedback
 import com.eignex.kumulant.schema.ops.withWeight
 import com.eignex.kumulant.schema.spec.ClassCounts
 import com.eignex.kumulant.schema.spec.DDSketch
 import com.eignex.kumulant.schema.spec.DecisionTreeClassifier
 import com.eignex.kumulant.schema.spec.DecisionTreeRegression
 import com.eignex.kumulant.schema.spec.GroupStatSpec
+import com.eignex.kumulant.schema.spec.Mean
 import com.eignex.kumulant.schema.spec.PairedSum
 import com.eignex.kumulant.schema.spec.RandomForestClassifier
 import com.eignex.kumulant.schema.spec.RandomForestRegression
+import com.eignex.kumulant.schema.spec.Range
 import com.eignex.kumulant.schema.spec.RegressionStatSpec
 import com.eignex.kumulant.schema.spec.SpaceSaving
 import com.eignex.kumulant.schema.spec.StatSpec
@@ -210,5 +220,46 @@ class StatPlanTest {
         stat.update(boundary, 0L)
 
         assertEquals(listOf(boundary), stat.read(0L).keys.toList())
+    }
+
+    @Test
+    fun `expressions reading inputs their context lacks are rejected before updates`() {
+        val cases = listOf(
+            Mean.transform(V(0)) to "expr: V",
+            Mean.filter(VIndex eq 0.0) to "pred: VIndex",
+            Mean.weightBy(Center) to "expr: Center",
+            Mean.withFeedback(Variance, VIndex) to "project: VIndex",
+            Mean.withFeedback(Variance, V(0)) to "project: V",
+            SpaceSaving(4).transform(Standardize) to "expr: Standardize",
+        )
+        for ((spec, node) in cases) {
+            val error = assertFailsWith<IllegalArgumentException>(spec.toString()) { spec.materialize() }
+
+            assertTrue(node in error.message.orEmpty(), error.message)
+        }
+    }
+
+    @Test
+    fun `feedback projections reject a primary without the traits they read`() {
+        val cases = listOf(
+            Mean.withFeedback(Sum, Standardize),
+            Mean.withFeedback(Variance, Low),
+            Mean.withFeedback(Range, Center),
+        )
+        for (spec in cases) {
+            val error = assertFailsWith<IllegalArgumentException>(spec.toString()) { spec.materialize() }
+
+            assertTrue("primary" in error.message.orEmpty(), error.message)
+        }
+    }
+
+    @Test
+    fun `feedback projections accept a primary with the traits they read`() {
+        val stat = Mean.withFeedback(Range, MinMax()).materialize()
+
+        stat.update(1.0, 0L)
+        stat.update(3.0, 1L)
+
+        assertEquals(0.5, stat.read(1L).mean)
     }
 }
