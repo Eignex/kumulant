@@ -38,7 +38,8 @@ data class BernoulliSumResult(
  *
  * **Concurrency:** Two independent additive cells. Concurrent modes preserve
  * per-cell updates; reads can observe successes and trials from different points
- * in the stream, but for indicators in `[0, 1]` never more successes than trials. [Concurrency.HighWrite] uses striped adders on the JVM.
+ * in the stream, but for indicators in `[0, 1]` never more successes than trials.
+ * [Concurrency.HighWrite] uses striped adders on the JVM.
  * [Concurrency.None] uses plain cells. Floating-point results depend on update order.
  */
 class BernoulliSumStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<BernoulliSumResult> {
