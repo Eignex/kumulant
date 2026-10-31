@@ -239,4 +239,14 @@ class CompositeArmTest {
 
         assertEquals(before, stat.read())
     }
+
+    @Test
+    fun `merging a fresh composite snapshot keeps a single copy of each sub-arm prior`() {
+        val stat = zilnArm().createStat()
+
+        stat.merge(zilnArm().createStat().read(0L))
+
+        val bern = stat.read(0L).results[0] as BernoulliSumResult
+        assertEquals(BernoulliArm().priorAlpha + BernoulliArm().priorBeta, bern.trials, 1e-9)
+    }
 }

@@ -1,6 +1,5 @@
 package com.eignex.kumulant.bandit.univariate
 
-import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
@@ -86,24 +85,8 @@ private fun CompositeSubArm.routedStat(): SeriesStat<Result> {
     valueExpr.requireBound("valueExpr")
     weightExpr.requireBound("weightExpr")
     filter?.requireBound("filter")
-    val accumulator = if (arm is CompositeArm) {
-        arm.compose() as SeriesStat<Result>
-    } else {
-        val leaf = arm.createStat() as SeriesStat<Result>
-        PriorSeriesStat(leaf, leaf.read(0L))
-    }
+    val accumulator = arm.createStat() as SeriesStat<Result>
     val transformed = TransformValueStat(accumulator) { arm.encode(valueExpr.eval(it)) }
     val weighted = transformed.weightBy { weightExpr.eval(it) }
     return filter?.let { predicate -> FilterSeriesStat(weighted) { predicate.eval(it) } } ?: weighted
-}
-
-private class PriorSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val prior: R) :
-    SeriesStat<R> by delegate {
-    override fun reset() {
-        delegate.reset()
-        delegate.merge(prior)
-    }
-
-    override fun create(concurrency: Concurrency?): SeriesStat<R> =
-        PriorSeriesStat(delegate.create(concurrency), prior).also { it.reset() }
 }

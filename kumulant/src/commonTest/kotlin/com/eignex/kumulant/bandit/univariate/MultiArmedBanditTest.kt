@@ -116,4 +116,13 @@ class MultiArmedBanditTest {
         mab.update(1, 1.0)
         assertEquals(1, mab.choose())
     }
+
+    @Test
+    fun `merging a fresh replica keeps a single copy of the arm prior`() {
+        val bandit = MultiArmedBandit(1, ThompsonSampling(BernoulliArm(50.0, 50.0), BetaPosterior), Random(0))
+
+        bandit.merge(bandit.create(Random(1)).snapshot())
+
+        assertEquals(100.0, bandit.armResult(0).trials)
+    }
 }

@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.schema.serialization.ArmSerializer
@@ -27,7 +28,9 @@ import kotlin.math.sqrt
  * - **Sufficient-statistic accumulation**: kumulant's [SeriesStat] families.
  * - **Prior pseudo-counts**: this spec's [createStat] seeds the accumulator
  *   so a posterior or UCB formula evaluated immediately at empty returns a
- *   well-defined finite score.
+ *   well-defined finite score. Every snapshot carries that prior, so merging
+ *   a snapshot into the accumulator removes one copy and pooled replicas
+ *   count the prior once.
  * - **Value transformation**: this spec's [encode] maps a raw observation
  *   onto the scale the stat accumulates. Identity for most arms;
  *   [LogNormalArm] overrides with `ln` so multiplicative rewards are
@@ -62,7 +65,8 @@ import kotlin.math.sqrt
 sealed interface Arm<R : Result> {
     /**
      * Allocate a fresh per-arm accumulator already seeded with this arm's
-     * prior pseudo-counts.
+     * prior pseudo-counts. Merging another snapshot of this arm removes the
+     * duplicate prior it carries, and reset reseeds the prior.
      */
     fun createStat(): SeriesStat<R>
 
@@ -96,11 +100,13 @@ data class BernoulliArm(
     /** Prior pseudo-count of failures. Higher = stronger belief that the arm is bad. */
     val priorBeta: Double = 1.0,
 ) : Arm<BernoulliSumResult> {
-    override fun createStat(): SeriesStat<BernoulliSumResult> {
-        val s = BernoulliSumStat()
-        if (priorAlpha > 0.0) s.update(1.0, 0L, priorAlpha)
-        if (priorBeta > 0.0) s.update(0.0, 0L, priorBeta)
-        return s
+    override fun createStat(): SeriesStat<BernoulliSumResult> =
+        PriorSeededStat(BernoulliSumStat(), { seed(it, 1.0) }, { seed(it, -1.0) })
+
+    // The sums are additive, so a removal is exact even when it leaves them negative.
+    private fun seed(stat: SeriesStat<BernoulliSumResult>, sign: Double) {
+        if (priorAlpha > 0.0) stat.update(1.0, 0L, sign * priorAlpha)
+        if (priorBeta > 0.0) stat.update(0.0, 0L, sign * priorBeta)
     }
 
     /** Factory entry-point for [BernoulliArm] (host for [warmStart]). */
@@ -131,11 +137,11 @@ data class MeanArm(
     /** Pseudo-weight of the prior seed; smaller = weaker prior. */
     val priorWeight: Double = 0.01,
 ) : Arm<WeightedMeanResult> {
-    override fun createStat(): SeriesStat<WeightedMeanResult> {
-        val s = MeanStat()
-        if (priorWeight > 0.0) s.update(priorMean, 0L, priorWeight)
-        return s
-    }
+    override fun createStat(): SeriesStat<WeightedMeanResult> = PriorSeededStat(
+        MeanStat(),
+        { if (priorWeight > 0.0) it.update(priorMean, 0L, priorWeight) },
+        { if (priorWeight > 0.0 && it.read(0L).totalWeights > priorWeight) it.update(priorMean, 0L, -priorWeight) },
+    )
 
     /** Factory entry-point for [MeanArm] (host for [warmStart]). */
     companion object
@@ -174,19 +180,25 @@ data class NormalArm(
     /** Prior sum of squared deviations; tightens the prior on the variance. */
     val priorSquaredDeviations: Double = 0.02,
 ) : Arm<WeightedVarianceResult> {
-    override fun createStat(): SeriesStat<WeightedVarianceResult> {
-        // The three seed points total 2 * priorWeight with squared deviations priorSquaredDeviations,
-        // giving variance priorSquaredDeviations / (2 * priorWeight).
-        val s = VarianceStat()
-        if (priorWeight > 0.0) {
-            s.update(priorMean, 0L, priorWeight)
-            if (priorSquaredDeviations > 0.0) {
-                val sigma = sqrt(priorSquaredDeviations / priorWeight)
-                s.update(priorMean + sigma, 0L, priorWeight / 2.0)
-                s.update(priorMean - sigma, 0L, priorWeight / 2.0)
-            }
+    override fun createStat(): SeriesStat<WeightedVarianceResult> =
+        PriorSeededStat(VarianceStat(), { seed(it, 1.0) }, ::unseed)
+
+    // The three seed points total 2 * priorWeight with squared deviations priorSquaredDeviations,
+    // giving variance priorSquaredDeviations / (2 * priorWeight).
+    private fun seed(stat: SeriesStat<WeightedVarianceResult>, sign: Double) {
+        if (priorWeight <= 0.0) return
+        stat.update(priorMean, 0L, sign * priorWeight)
+        if (priorSquaredDeviations > 0.0) {
+            val sigma = sqrt(priorSquaredDeviations / priorWeight)
+            stat.update(priorMean + sigma, 0L, sign * priorWeight / 2.0)
+            stat.update(priorMean - sigma, 0L, sign * priorWeight / 2.0)
         }
-        return s
+    }
+
+    // A snapshot that does not carry the prior would leave no positive weight to downdate against.
+    private fun unseed(stat: SeriesStat<WeightedVarianceResult>) {
+        val seededWeight = if (priorSquaredDeviations > 0.0) 2.0 * priorWeight else priorWeight
+        if (stat.read(0L).totalWeights > seededWeight) seed(stat, -1.0)
     }
 
     /** Factory entry-point for [NormalArm] (host for [warmStart]). */
@@ -253,14 +265,41 @@ data class MomentsArm(
     /** Pseudo-weight of the prior seed. */
     val priorWeight: Double = 0.02,
 ) : Arm<MomentsResult> {
-    override fun createStat(): SeriesStat<MomentsResult> {
-        val s = MomentsStat()
-        if (priorWeight > 0.0) s.update(priorMean, 0L, priorWeight)
-        return s
-    }
+    override fun createStat(): SeriesStat<MomentsResult> = PriorSeededStat(
+        MomentsStat(),
+        { if (priorWeight > 0.0) it.update(priorMean, 0L, priorWeight) },
+        { if (priorWeight > 0.0 && it.read(0L).totalWeights > priorWeight) it.update(priorMean, 0L, -priorWeight) },
+    )
 
     /** Factory entry-point for [MomentsArm] (host for [warmStart]). */
     companion object
+}
+
+// Each snapshot of a seeded arm carries its own copy of the prior pseudo-observations. Merge removes one
+// copy so pooled replicas count the prior once, as DiagonalRegressionStat does for its prior precision.
+// Welford arms skip the removal when the merged total could not have carried the prior, since the
+// downdate would otherwise leave no positive weight.
+internal class PriorSeededStat<R : Result>(
+    private val delegate: SeriesStat<R>,
+    private val seed: (SeriesStat<R>) -> Unit,
+    private val unseed: (SeriesStat<R>) -> Unit,
+) : SeriesStat<R> by delegate {
+    init {
+        seed(delegate)
+    }
+
+    override fun merge(values: R) {
+        delegate.merge(values)
+        unseed(delegate)
+    }
+
+    override fun reset() {
+        delegate.reset()
+        seed(delegate)
+    }
+
+    override fun create(concurrency: Concurrency?): SeriesStat<R> =
+        PriorSeededStat(delegate.create(concurrency), seed, unseed)
 }
 
 internal fun MomentsResult.meanOfSquares(): Double = if (totalWeights > 0.0) m2 / totalWeights + mean * mean else 0.0
