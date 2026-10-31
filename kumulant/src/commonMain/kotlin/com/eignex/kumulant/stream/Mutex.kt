@@ -4,9 +4,8 @@ import com.eignex.kumulant.core.Concurrency
 
 /**
  * Mutual-exclusion lock used by stats whose update logic spans multiple cells or
- * multiple steps and therefore can't be made elementwise atomic. Obtain one for a
- * given [Concurrency] level via [Concurrency.lock]: a no-op under [Concurrency.None]
- * (single-threaded, zero overhead), a platform mutex otherwise.
+ * multiple steps and therefore can't be made elementwise atomic. Create one with
+ * [Mutex].
  */
 interface Mutex {
     /** Run [block] holding the lock and return its result. */
@@ -14,13 +13,13 @@ interface Mutex {
 }
 
 /**
- * Create a no-op lock for [Concurrency.None], otherwise a platform mutex.
+ * Create a platform mutex, or a no-op lock with zero overhead when [concurrent] is false
+ * and a single thread owns the guarded state.
  * Do not re-enter the same mutex while holding it; re-entry is unsupported across platforms.
  */
-fun Concurrency.lock(): Mutex = when (this) {
-    Concurrency.None -> NoopMutex
-    else -> PlatformMutex()
-}
+fun Mutex(concurrent: Boolean = true): Mutex = if (concurrent) PlatformMutex() else NoopMutex
+
+internal fun Concurrency.lock(): Mutex = Mutex(concurrent = this != Concurrency.None)
 
 internal object NoopMutex : Mutex {
     override fun <R> withLock(block: () -> R): R = block()
@@ -43,7 +42,7 @@ internal inline fun <R> Mutex.guarded(block: () -> R): R {
     if (this === NoopMutex) return block()
     // All internal lock factories return one of these two implementations.
     check(this is PlatformMutex) {
-        "guarded expects a lock from Concurrency.lock(); got ${this::class.simpleName}"
+        "guarded expects a lock from Mutex(); got ${this::class.simpleName}"
     }
     enter()
     try {
