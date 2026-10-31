@@ -5,7 +5,6 @@ import com.eignex.kumulant.feat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
-import com.eignex.kumulant.stat.regression.tree.ThompsonForestPosterior
 import com.eignex.kumulant.stat.regression.tree.ThompsonTreePosterior
 import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
 import kotlin.random.Random
@@ -61,7 +60,7 @@ class RegressionContextualBanditTreeTest {
                 config = RegressionTreeConfig(splitPeriod = 4, minSamplesSplit = 4.0, minSamplesLeaf = 2.0),
                 randomSeed = 21,
             ),
-            posterior = ThompsonForestPosterior(priorWeight = 1.0, priorVariance = 1.0),
+            posterior = ThompsonTreePosterior(priorWeight = 1.0, priorVariance = 1.0),
             random = rng,
         )
         repeat(400) {

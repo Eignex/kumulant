@@ -42,15 +42,14 @@ pools leaf evidence with statistical weights for posterior-based online scoring.
 
 ## Posteriors
 
-[TreePosterior] (and its forest counterpart [ForestPosterior]) turn a
-[TreeRegressionResult] / [ForestRegressionResult] into a scalar score:
+[TreePosterior] turns a [TreeRegressionResult] or [ForestRegressionResult]
+into a scalar score. A forest scores the merged evidence of every tree's
+routed leaf.
 
-- [MeanTreePosterior] / [MeanForestPosterior]: deterministic leaf
-  mean.
-- [ThompsonTreePosterior] / [ThompsonForestPosterior]: Normal-Gamma
-  draw from the leaf's `(mean, variance, totalWeights)` triplet.
-- [UcbTreePosterior] / [UcbForestPosterior]: UCB-style
-  `mean + alpha * sqrt(variance / n)`.
+- [MeanTreePosterior]: deterministic leaf mean.
+- [ThompsonTreePosterior]: Normal-Gamma draw from the leaf's
+  `(mean, variance, totalWeights)` triplet.
+- [UcbTreePosterior]: UCB-style `mean + alpha * sqrt(variance / n)`.
 
 These plug into
 [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit] for

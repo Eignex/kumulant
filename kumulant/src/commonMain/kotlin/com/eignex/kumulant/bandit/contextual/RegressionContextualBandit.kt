@@ -27,7 +27,7 @@ import kotlin.random.Random
  *  - **Decision-tree bandit**: [com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat]
  *    + a [com.eignex.kumulant.stat.regression.tree.TreePosterior].
  *  - **Random-forest bandit**: [com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat]
- *    + a [com.eignex.kumulant.stat.regression.tree.ForestPosterior].
+ *    + a [com.eignex.kumulant.stat.regression.tree.TreePosterior].
  *
  * Per-arm regressors are constructed via `template.create(null)` so per-arm
  * state is independent. [exploration] scales the posterior's exploration

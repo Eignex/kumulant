@@ -1,8 +1,8 @@
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.koblas.Vector
+import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.math.nextNormal
-import com.eignex.kumulant.schema.serialization.ForestPosteriorSerializer
 import com.eignex.kumulant.schema.serialization.TreePosteriorSerializer
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -12,10 +12,14 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
- * RegressionTree-aware scorer: routes the query `x` to a leaf snapshot and turns its weighted-
- * variance summary into a single Double. Parallels the linear-side
- * [com.eignex.kumulant.stat.regression.glm.LinearPosterior] family for the tree regressor
- * shape.
+ * Tree- and forest-aware scorer: routes the query `x` to its leaf evidence and turns the
+ * weighted-variance summary into a single Double. Parallels the linear-side
+ * [com.eignex.kumulant.stat.regression.glm.LinearPosterior] family for tree regressors.
+ *
+ * A [TreeRegressionResult] scores the leaf `x` routes to. A [ForestRegressionResult] scores
+ * every tree's routed leaf merged with correlation-adjusted weight
+ * ([ForestRegressionResult.findLeafEvidence]), so the trees' shared data does not count once
+ * per tree. Any other snapshot is rejected.
  *
  * Concrete posteriors differ only in how they consume the leaf's `(mean, variance,
  * totalWeights)` triplet:
@@ -26,14 +30,22 @@ import kotlin.random.Random
  *    the leaf's sampling-distribution-of-the-mean.
  */
 @Serializable(with = TreePosteriorSerializer::class)
-sealed interface TreePosterior : RegressionPosterior<TreeRegressionResult>
+sealed interface TreePosterior : RegressionPosterior<Result>
+
+private fun Result.leafEvidence(x: Vector): WeightedVarianceResult = when (this) {
+    is TreeRegressionResult -> findLeaf(x)
+    is ForestRegressionResult -> findLeafEvidence(x)
+    else -> throw IllegalArgumentException(
+        "TreePosterior scores tree or forest snapshots, got ${this::class.simpleName}",
+    )
+}
 
 /** Score is the leaf's running mean; point estimate, no exploration. */
 @Serializable
 @SerialName("MeanTreePosterior")
 data object MeanTreePosterior : TreePosterior {
-    override fun evaluate(snapshot: TreeRegressionResult, x: Vector, rng: Random, exploration: Double): Double =
-        snapshot.findLeaf(x).mean
+    override fun evaluate(snapshot: Result, x: Vector, rng: Random, exploration: Double): Double =
+        snapshot.leafEvidence(x).mean
 }
 
 // Blending prior variance preserves exploration for singleton leaves with zero empirical variance.
@@ -58,8 +70,8 @@ data class ThompsonTreePosterior(
     /** Prior variance applied when the leaf has effectively no signal. */
     val priorVariance: Double = 1.0,
 ) : TreePosterior {
-    override fun evaluate(snapshot: TreeRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
-        val leaf = snapshot.findLeaf(x)
+    override fun evaluate(snapshot: Result, x: Vector, rng: Random, exploration: Double): Double {
+        val leaf = snapshot.leafEvidence(x)
         if (exploration <= 0.0) return leaf.mean
         val n = leaf.totalWeights + priorWeight
         val sd = sqrt(exploration * blendedVariance(leaf, priorWeight, priorVariance) / n)
@@ -80,55 +92,8 @@ data class UcbTreePosterior(
     /** Prior variance used when the leaf has no signal yet. */
     val priorVariance: Double = 1.0,
 ) : TreePosterior {
-    override fun evaluate(snapshot: TreeRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
-        val leaf = snapshot.findLeaf(x)
-        val n = leaf.totalWeights + priorWeight
-        return leaf.mean + exploration * sqrt(blendedVariance(leaf, priorWeight, priorVariance) / n)
-    }
-}
-
-/** [TreePosterior] family ported to forests: every leaf snapshot the query routes to
- *  is merged into a single weighted-variance result, then scored with the tree-posterior
- *  semantics. Same options, applied to the ensembled leaf. */
-@Serializable(with = ForestPosteriorSerializer::class)
-sealed interface ForestPosterior : RegressionPosterior<ForestRegressionResult>
-
-/** Forest counterpart to [MeanTreePosterior]. */
-@Serializable
-@SerialName("MeanForestPosterior")
-data object MeanForestPosterior : ForestPosterior {
-    override fun evaluate(snapshot: ForestRegressionResult, x: Vector, rng: Random, exploration: Double): Double =
-        snapshot.findLeafMerged(x).mean
-}
-
-/** Forest counterpart to [ThompsonTreePosterior]. */
-@Serializable
-@SerialName("ThompsonForestPosterior")
-data class ThompsonForestPosterior(
-    /** Pseudo-count added to the leaf's totalWeights; floor for empty leaves. */
-    val priorWeight: Double = 1.0,
-    /** Prior variance used when the leaf has no signal yet. */
-    val priorVariance: Double = 1.0,
-) : ForestPosterior {
-    override fun evaluate(snapshot: ForestRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
-        val leaf = snapshot.findLeafEvidence(x)
-        if (exploration <= 0.0) return leaf.mean
-        val n = leaf.totalWeights + priorWeight
-        return rng.nextNormal(leaf.mean, sqrt(exploration * blendedVariance(leaf, priorWeight, priorVariance) / n))
-    }
-}
-
-/** Forest counterpart to [UcbTreePosterior]. */
-@Serializable
-@SerialName("UcbForestPosterior")
-data class UcbForestPosterior(
-    /** Pseudo-count added to the leaf's totalWeights; floor for empty leaves. */
-    val priorWeight: Double = 1.0,
-    /** Prior variance used when the leaf has no signal yet. */
-    val priorVariance: Double = 1.0,
-) : ForestPosterior {
-    override fun evaluate(snapshot: ForestRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
-        val leaf = snapshot.findLeafEvidence(x)
+    override fun evaluate(snapshot: Result, x: Vector, rng: Random, exploration: Double): Double {
+        val leaf = snapshot.leafEvidence(x)
         val n = leaf.totalWeights + priorWeight
         return leaf.mean + exploration * sqrt(blendedVariance(leaf, priorWeight, priorVariance) / n)
     }

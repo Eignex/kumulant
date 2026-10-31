@@ -158,7 +158,7 @@ abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.cor
     open fun update(kotlin/DoubleArray, kotlin/Long, kotlin/Double = ...) // com.eignex.kumulant.core/VectorStat.update|update(kotlin.DoubleArray;kotlin.Long;kotlin.Double){}[0]
 }
 
-abstract interface <#A: com.eignex.kumulant.core/Result> com.eignex.kumulant.stat.regression/RegressionPosterior { // com.eignex.kumulant.stat.regression/RegressionPosterior|null[0]
+abstract interface <#A: in com.eignex.kumulant.core/Result> com.eignex.kumulant.stat.regression/RegressionPosterior { // com.eignex.kumulant.stat.regression/RegressionPosterior|null[0]
     abstract fun evaluate(#A, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double = ...): kotlin/Double // com.eignex.kumulant.stat.regression/RegressionPosterior.evaluate|evaluate(1:0;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
 
     final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression/RegressionPosterior.Companion|null[0]
@@ -639,13 +639,6 @@ sealed interface com.eignex.kumulant.stat.regression.tree/ClassificationSplitMet
     }
 }
 
-sealed interface com.eignex.kumulant.stat.regression.tree/ForestPosterior : com.eignex.kumulant.stat.regression/RegressionPosterior<com.eignex.kumulant.stat.regression.tree/ForestRegressionResult> { // com.eignex.kumulant.stat.regression.tree/ForestPosterior|null[0]
-    final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.tree/ForestPosterior.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/ForestPosterior> // com.eignex.kumulant.stat.regression.tree/ForestPosterior.Companion.serializer|serializer(){}[0]
-        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.tree/ForestPosterior.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
-    }
-}
-
 sealed interface com.eignex.kumulant.stat.regression.tree/SerializableSplit : com.eignex.kumulant.stat.regression.tree/Split<com.eignex.koblas/Vector> { // com.eignex.kumulant.stat.regression.tree/SerializableSplit|null[0]
     final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.tree/SerializableSplit.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/SerializableSplit> // com.eignex.kumulant.stat.regression.tree/SerializableSplit.Companion.serializer|serializer(){}[0]
@@ -686,7 +679,7 @@ sealed interface com.eignex.kumulant.stat.regression.tree/TreeNodeResult { // co
     }
 }
 
-sealed interface com.eignex.kumulant.stat.regression.tree/TreePosterior : com.eignex.kumulant.stat.regression/RegressionPosterior<com.eignex.kumulant.stat.regression.tree/TreeRegressionResult> { // com.eignex.kumulant.stat.regression.tree/TreePosterior|null[0]
+sealed interface com.eignex.kumulant.stat.regression.tree/TreePosterior : com.eignex.kumulant.stat.regression/RegressionPosterior<com.eignex.kumulant.core/Result> { // com.eignex.kumulant.stat.regression.tree/TreePosterior|null[0]
     final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.tree/TreePosterior.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/TreePosterior> // com.eignex.kumulant.stat.regression.tree/TreePosterior.Companion.serializer|serializer(){}[0]
         final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.tree/TreePosterior.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
@@ -6428,36 +6421,6 @@ final class com.eignex.kumulant.stat.regression.tree/SplitInfo { // com.eignex.k
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/SplitInfo.toString|toString(){}[0]
 }
 
-final class com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior : com.eignex.kumulant.stat.regression.tree/ForestPosterior { // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.<init>|<init>(kotlin.Double;kotlin.Double){}[0]
-
-    final val priorVariance // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.priorVariance|{}priorVariance[0]
-        final fun <get-priorVariance>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.priorVariance.<get-priorVariance>|<get-priorVariance>(){}[0]
-    final val priorWeight // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.priorWeight|{}priorWeight[0]
-        final fun <get-priorWeight>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.priorWeight.<get-priorWeight>|<get-priorWeight>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.component2|component2(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.copy|copy(kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.equals|equals(kotlin.Any?){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.regression.tree/ForestRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.ForestRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior> { // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior) // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.regression.tree.ThompsonForestPosterior){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior> // com.eignex.kumulant.stat.regression.tree/ThompsonForestPosterior.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior : com.eignex.kumulant.stat.regression.tree/TreePosterior { // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.<init>|<init>(kotlin.Double;kotlin.Double){}[0]
 
@@ -6470,7 +6433,7 @@ final class com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior : com
     final fun component2(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.component2|component2(){}[0]
     final fun copy(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.copy|copy(kotlin.Double;kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.equals|equals(kotlin.Any?){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.regression.tree/TreeRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.TreeRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
+    final fun evaluate(com.eignex.kumulant.core/Result, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.evaluate|evaluate(com.eignex.kumulant.core.Result;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/ThompsonTreePosterior.toString|toString(){}[0]
 
@@ -6717,36 +6680,6 @@ final class com.eignex.kumulant.stat.regression.tree/TreeSplitResult : com.eigne
     }
 }
 
-final class com.eignex.kumulant.stat.regression.tree/UcbForestPosterior : com.eignex.kumulant.stat.regression.tree/ForestPosterior { // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.<init>|<init>(kotlin.Double;kotlin.Double){}[0]
-
-    final val priorVariance // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.priorVariance|{}priorVariance[0]
-        final fun <get-priorVariance>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.priorVariance.<get-priorVariance>|<get-priorVariance>(){}[0]
-    final val priorWeight // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.priorWeight|{}priorWeight[0]
-        final fun <get-priorWeight>(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.priorWeight.<get-priorWeight>|<get-priorWeight>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.component2|component2(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.regression.tree/UcbForestPosterior // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.copy|copy(kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.equals|equals(kotlin.Any?){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.regression.tree/ForestRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.ForestRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.regression.tree/UcbForestPosterior> { // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.regression.tree/UcbForestPosterior // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.regression.tree/UcbForestPosterior) // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.regression.tree.UcbForestPosterior){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/UcbForestPosterior> // com.eignex.kumulant.stat.regression.tree/UcbForestPosterior.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.stat.regression.tree/UcbTreePosterior : com.eignex.kumulant.stat.regression.tree/TreePosterior { // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.<init>|<init>(kotlin.Double;kotlin.Double){}[0]
 
@@ -6759,7 +6692,7 @@ final class com.eignex.kumulant.stat.regression.tree/UcbTreePosterior : com.eign
     final fun component2(): kotlin/Double // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.component2|component2(){}[0]
     final fun copy(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.regression.tree/UcbTreePosterior // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.copy|copy(kotlin.Double;kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.equals|equals(kotlin.Any?){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.regression.tree/TreeRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.TreeRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
+    final fun evaluate(com.eignex.kumulant.core/Result, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.evaluate|evaluate(com.eignex.kumulant.core.Result;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/UcbTreePosterior.toString|toString(){}[0]
 
@@ -8649,18 +8582,9 @@ final object com.eignex.kumulant.stat.regression.tree/InformationGain : com.eign
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/InformationGain.toString|toString(){}[0]
 }
 
-final object com.eignex.kumulant.stat.regression.tree/MeanForestPosterior : com.eignex.kumulant.stat.regression.tree/ForestPosterior, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior|null[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.equals|equals(kotlin.Any?){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.regression.tree/ForestRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.ForestRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.hashCode|hashCode(){}[0]
-    final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/MeanForestPosterior> // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.serializer|serializer(){}[0]
-    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.tree/MeanForestPosterior.toString|toString(){}[0]
-}
-
 final object com.eignex.kumulant.stat.regression.tree/MeanTreePosterior : com.eignex.kumulant.stat.regression.tree/TreePosterior, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.equals|equals(kotlin.Any?){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.regression.tree/TreeRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.evaluate|evaluate(com.eignex.kumulant.stat.regression.tree.TreeRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
+    final fun evaluate(com.eignex.kumulant.core/Result, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.evaluate|evaluate(com.eignex.kumulant.core.Result;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.hashCode|hashCode(){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.tree/MeanTreePosterior> // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.tree/MeanTreePosterior.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]

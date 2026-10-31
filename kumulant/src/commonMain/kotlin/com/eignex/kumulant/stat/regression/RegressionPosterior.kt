@@ -22,7 +22,7 @@ import kotlin.random.Random
  * optimisation acquisition functions that need to score candidate points.
  */
 @Serializable(with = RegressionPosteriorSerializer::class)
-interface RegressionPosterior<R : Result> {
+interface RegressionPosterior<in R : Result> {
     /**
      * Score a query point [x] under the regression [snapshot]. [exploration] controls
      * the posterior-variance scale (Thompson) or the UCB width (LinUcb-style);

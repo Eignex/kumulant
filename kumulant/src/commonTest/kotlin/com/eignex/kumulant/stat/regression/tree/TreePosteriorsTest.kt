@@ -7,6 +7,7 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class TreePosteriorsTest {
 
@@ -92,25 +93,25 @@ class TreePosteriorsTest {
         ForestRegressionResult(values.map { TreeRegressionResult(TreeLeafResult(it)) })
 
     @Test
-    fun `MeanForestPosterior returns the weighted-average leaf mean`() {
+    fun `MeanTreePosterior scores a forest by its weighted-average leaf mean`() {
         val f = forestSnap(
             listOf(
                 WeightedVarianceResult(10.0, 1.0, 0.0),
                 WeightedVarianceResult(10.0, 3.0, 0.0),
             ),
         )
-        assertEquals(2.0, MeanForestPosterior.evaluate(f, feat(0.0), Random(0), 1.0), 1e-9)
+        assertEquals(2.0, MeanTreePosterior.evaluate(f, feat(0.0), Random(0), 1.0), 1e-9)
     }
 
     @Test
-    fun `ThompsonForestPosterior collapses to mean at zero exploration`() {
+    fun `ThompsonTreePosterior collapses a forest to its mean at zero exploration`() {
         val f = forestSnap(
             listOf(
                 WeightedVarianceResult(10.0, 1.0, 0.0),
                 WeightedVarianceResult(10.0, 3.0, 0.0),
             ),
         )
-        val s = ThompsonForestPosterior().evaluate(f, feat(0.0), Random(0), 0.0)
+        val s = ThompsonTreePosterior().evaluate(f, feat(0.0), Random(0), 0.0)
         assertEquals(2.0, s, 1e-9)
     }
 
@@ -130,16 +131,23 @@ class TreePosteriorsTest {
     }
 
     @Test
-    fun `UcbForestPosterior exceeds the merged mean`() {
+    fun `UcbTreePosterior scores a forest above its merged mean`() {
         val f = forestSnap(
             listOf(
                 WeightedVarianceResult(10.0, 1.0, 1.0),
                 WeightedVarianceResult(10.0, 1.0, 1.0),
             ),
         )
-        val s = UcbForestPosterior(priorWeight = 1.0, priorVariance = 1.0)
+        val s = UcbTreePosterior(priorWeight = 1.0, priorVariance = 1.0)
             .evaluate(f, feat(0.0), Random(0), 1.0)
         assertTrue(s > 1.0)
+    }
+
+    @Test
+    fun `tree posteriors reject a snapshot that is not a tree or forest`() {
+        assertFailsWith<IllegalArgumentException> {
+            MeanTreePosterior.evaluate(WeightedVarianceResult(1.0, 0.0, 0.0), feat(0.0), Random(0), 1.0)
+        }
     }
 
     @Test
@@ -147,7 +155,7 @@ class TreePosteriorsTest {
         val evidence = WeightedVarianceResult(1.0, 0.0, 0.0)
         val single = forestSnap(listOf(evidence))
         val duplicated = forestSnap(List(10) { evidence })
-        val posteriors = listOf(ThompsonForestPosterior(), UcbForestPosterior())
+        val posteriors = listOf(ThompsonTreePosterior(), UcbTreePosterior())
         for (posterior in posteriors) {
             assertEquals(
                 posterior.evaluate(single, feat(0.0), Random(7), 1.0),
