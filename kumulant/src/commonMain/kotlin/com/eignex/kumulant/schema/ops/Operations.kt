@@ -4,6 +4,8 @@ package com.eignex.kumulant.schema.ops
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
+import com.eignex.kumulant.operation.minMaxProjection
+import com.eignex.kumulant.operation.standardScalerProjection
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.spec.*
@@ -32,8 +34,7 @@ fun <R : Result> DiscreteStatSpec<R>.withWeight(weight: Double): DiscreteStatSpe
     WithWeightDiscrete(this, weight) as DiscreteStatSpec<R>
 
 /** Wrap this series spec so every update pushes the constant [value] regardless of input. */
-fun <R : Result> SeriesStatSpec<R>.withValue(value: Double): SeriesStatSpec<R> =
-    WithValueSeries(this, value) as SeriesStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.withValue(value: Double): SeriesStatSpec<R> = transform(Const(value))
 
 /** Wrap this discrete spec so every update pushes the constant [value] regardless of input. */
 fun <R : Result> DiscreteStatSpec<R>.withValue(value: Long): DiscreteStatSpec<R> =
@@ -46,17 +47,17 @@ fun <R : Result> DiscreteStatSpec<R>.asSeries(): SeriesStatSpec<R> = AsSeries(th
 fun <R : Result> SeriesStatSpec<R>.asDiscrete(): DiscreteStatSpec<R> = AsDiscrete(this) as DiscreteStatSpec<R>
 
 /** Adapt a series spec into a paired spec by consuming the `x` component of each pair. */
-fun <R : Result> SeriesStatSpec<R>.atX(): PairedStatSpec<R> = AtX(this) as PairedStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.atX(): PairedStatSpec<R> = foldPaired(X)
 
 /** Adapt a series spec into a paired spec by consuming the `y` component of each pair. */
-fun <R : Result> SeriesStatSpec<R>.atY(): PairedStatSpec<R> = AtY(this) as PairedStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.atY(): PairedStatSpec<R> = foldPaired(Y)
 
 /** Adapt a series spec into a vector spec by consuming the [index]-th coordinate of each vector. */
-fun <R : Result> SeriesStatSpec<R>.atIndex(index: Int): VectorStatSpec<R> = AtIndex(this, index) as VectorStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.atIndex(index: Int): VectorStatSpec<R> = foldVector(V(index))
 
 /** Adapt a paired spec into a vector spec by consuming the [indexX] / [indexY] coordinates. */
 fun <R : Result> PairedStatSpec<R>.atIndices(indexX: Int, indexY: Int): VectorStatSpec<R> =
-    AtIndices(this, indexX, indexY) as VectorStatSpec<R>
+    foldVector(V(indexX), V(indexY))
 
 /** Adapt a paired spec into a series spec by pinning `x` to [fixedX]. */
 fun <R : Result> PairedStatSpec<R>.withFixedX(fixedX: Double): SeriesStatSpec<R> =
@@ -242,7 +243,7 @@ fun <P : Result, R : Result> RegressionStatSpec<R>.withFeedback(
 
 /** Element-wise standardise a vector spec against a hidden per-coordinate [Variance] primary. */
 fun <R : Result> VectorStatSpec<R>.standardScaleFeatures(dimensions: Int): VectorStatSpec<R> =
-    StandardScalerVector(this, dimensions) as VectorStatSpec<R>
+    withFeedback(Variance.vectorized(dimensions), standardScalerProjection)
 
 /** Element-wise min-max scale a vector spec against a hidden per-coordinate [Range] primary. */
 fun <R : Result> VectorStatSpec<R>.minMaxScaleFeatures(
@@ -251,11 +252,12 @@ fun <R : Result> VectorStatSpec<R>.minMaxScaleFeatures(
     targetHigh: Double = DEFAULT_TARGET_HIGH,
 ): VectorStatSpec<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
-    return MinMaxScalerVector(this, dimensions, targetLow, targetHigh) as VectorStatSpec<R>
+    return withFeedback(Range.vectorized(dimensions), minMaxProjection(targetLow, targetHigh))
 }
 
 /** Z-score both axes of a paired spec against per-axis [Variance] primaries. */
-fun <R : Result> PairedStatSpec<R>.standardScaler(): PairedStatSpec<R> = StandardScalerPaired(this) as PairedStatSpec<R>
+fun <R : Result> PairedStatSpec<R>.standardScaler(): PairedStatSpec<R> =
+    withFeedback(Variance, Variance, standardScalerProjection)
 
 /** Min-max scale both axes of a paired spec against per-axis [Range] primaries. */
 fun <R : Result> PairedStatSpec<R>.minMaxScaler(
@@ -263,7 +265,7 @@ fun <R : Result> PairedStatSpec<R>.minMaxScaler(
     targetHigh: Double = DEFAULT_TARGET_HIGH,
 ): PairedStatSpec<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
-    return MinMaxScalerPaired(this, targetLow, targetHigh) as PairedStatSpec<R>
+    return withFeedback(Range, Range, minMaxProjection(targetLow, targetHigh))
 }
 
 /** Element-wise standardise a regression spec's feature vector. */
@@ -283,7 +285,8 @@ fun <R : Result> RegressionStatSpec<R>.minMaxScaleFeatures(
  * Z-score the input against a hidden [Variance] primary, then forward the standardized
  * value to this spec. Emits `0` while the running variance is still zero.
  */
-fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> = StandardScalerSeries(this) as SeriesStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> =
+    withFeedback(Variance, standardScalerProjection)
 
 /**
  * Min-max scale the input against a hidden [Range] primary into `[targetLow, targetHigh]`,
@@ -296,7 +299,7 @@ fun <R : Result> SeriesStatSpec<R>.minMaxScaler(
     targetHigh: Double = DEFAULT_TARGET_HIGH,
 ): SeriesStatSpec<R> {
     require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
-    return MinMaxScalerSeries(this, targetLow, targetHigh) as SeriesStatSpec<R>
+    return withFeedback(Range, minMaxProjection(targetLow, targetHigh))
 }
 
 /** Wrap this series spec to keep each update with probability [rate]; [seed] feeds the PRNG. */

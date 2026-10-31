@@ -81,26 +81,12 @@ internal class TransformLongStat<R : Result>(
         TransformLongStat(delegate.create(concurrency), transform)
 }
 
-internal fun <R : Result> SeriesStat<R>.withValue(value: Double): SeriesStat<R> = ConstantValueStat(this, value)
+internal fun <R : Result> SeriesStat<R>.withValue(value: Double): SeriesStat<R> = TransformValueStat(this) { value }
 
 internal fun <R : Result> DiscreteStat<R>.withValue(value: Long): DiscreteStat<R> = ConstantValueDiscreteStat(
     this,
     value,
 )
-
-internal class ConstantValueStat<R : Result>(private val delegate: SeriesStat<R>, private val value: Double) :
-    SeriesStat<R>,
-    WindowsInside<R, SeriesStat<R>>,
-    Stat<R> by delegate {
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(this.value, timestampNanos, weight)
-    }
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
-        ConstantValueStat(delegate.windowed(duration, slices, concurrency), value)
-
-    override fun create(concurrency: Concurrency?): SeriesStat<R> =
-        ConstantValueStat(delegate.create(concurrency), value)
-}
 
 internal class ConstantValueDiscreteStat<R : Result>(private val delegate: DiscreteStat<R>, private val value: Long) :
     DiscreteStat<R>,

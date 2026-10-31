@@ -39,7 +39,6 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
         jsonNode<TDigest>("tDigest"),
         jsonNode<PitHistogram>("pitHistogram"),
         jsonNode<WithWeightSeries>("withWeight"),
-        jsonNode<WithValueSeries>("withValue"),
         jsonNode<AsSeries>("asSeries"),
         jsonNode<WithFixedX>("withFixedX"),
         jsonNode<WithFixedY>("withFixedY"),
@@ -58,8 +57,6 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
         jsonNode<BandSeries>("band"),
         jsonNode<WithSelfLagSeries>("selfLag"),
         jsonNode<WithFeedbackSeries>("feedback"),
-        jsonNode<StandardScalerSeries>("standardScaler"),
-        jsonNode<MinMaxScalerSeries>("minMaxScaler"),
         jsonNode<SampleSeries>("sample"),
         jsonNode<GroupStatSpec>("group"),
         jsonNode<DecayingSum>("decayingSum"),
@@ -90,8 +87,6 @@ internal object PairedStatSpecSerializer : KumulantSerializer<PairedStatSpec<*>>
         jsonNode<ConfusionMatrix>("confusionMatrix"),
         jsonNode<Accuracy>("accuracy"),
         jsonNode<WithWeightPaired>("withWeight"),
-        jsonNode<AtX>("atX"),
-        jsonNode<AtY>("atY"),
         jsonNode<WindowedPaired>("window"),
         jsonNode<TransformPair>("transformPair"),
         jsonNode<FilterPaired>("filter"),
@@ -99,8 +94,6 @@ internal object PairedStatSpecSerializer : KumulantSerializer<PairedStatSpec<*>>
         jsonNode<WeightByValuePaired>("weightBy"),
         jsonNode<ThrottlePaired>("throttle"),
         jsonNode<WithFeedbackPaired>("feedback"),
-        jsonNode<StandardScalerPaired>("standardScaler"),
-        jsonNode<MinMaxScalerPaired>("minMaxScaler"),
         jsonNode<SamplePaired>("sample"),
     )
 })
@@ -109,8 +102,6 @@ internal object VectorStatSpecSerializer : KumulantSerializer<VectorStatSpec<*>>
     listOf(
         jsonNode<VectorGroupStatSpec>("vectorGroup"),
         jsonNode<WithWeightVector>("withWeight"),
-        jsonNode<AtIndex>("atIndex"),
-        jsonNode<AtIndices>("atIndices"),
         jsonNode<WindowedVector>("window"),
         jsonNode<Vectorized>("vectorize"),
         jsonNode<TransformVectorElement>("transformElements"),
@@ -121,8 +112,6 @@ internal object VectorStatSpecSerializer : KumulantSerializer<VectorStatSpec<*>>
         jsonNode<WeightByValueVector>("weightBy"),
         jsonNode<ThrottleVector>("throttle"),
         jsonNode<WithFeedbackVector>("feedback"),
-        jsonNode<StandardScalerVector>("standardScaler"),
-        jsonNode<MinMaxScalerVector>("minMaxScaler"),
         jsonNode<SampleVector>("sample"),
     )
 })

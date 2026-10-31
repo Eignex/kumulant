@@ -26,10 +26,6 @@ import com.eignex.kumulant.operation.VectorizedStat
 import com.eignex.kumulant.operation.WeightByVectorStat
 import com.eignex.kumulant.operation.asDiscrete
 import com.eignex.kumulant.operation.asSeries
-import com.eignex.kumulant.operation.atIndex
-import com.eignex.kumulant.operation.atIndices
-import com.eignex.kumulant.operation.atX
-import com.eignex.kumulant.operation.atY
 import com.eignex.kumulant.operation.band
 import com.eignex.kumulant.operation.derivative
 import com.eignex.kumulant.operation.diff
@@ -38,11 +34,9 @@ import com.eignex.kumulant.operation.foldRegression
 import com.eignex.kumulant.operation.hysteresis
 import com.eignex.kumulant.operation.lag
 import com.eignex.kumulant.operation.minMaxScaleFeatures
-import com.eignex.kumulant.operation.minMaxScaler
 import com.eignex.kumulant.operation.resampleByTime
 import com.eignex.kumulant.operation.sample
 import com.eignex.kumulant.operation.standardScaleFeatures
-import com.eignex.kumulant.operation.standardScaler
 import com.eignex.kumulant.operation.throttle
 import com.eignex.kumulant.operation.transformX
 import com.eignex.kumulant.operation.transformY
@@ -355,13 +349,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
         }
     }
 
-    is WithValueSeries -> {
-        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).withValue(value)
-        }
-    }
-
     is AsSeries -> {
         val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
@@ -499,20 +486,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
         }
     }
 
-    is StandardScalerSeries -> {
-        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).standardScaler(concurrency)
-        }
-    }
-
-    is MinMaxScalerSeries -> {
-        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).minMaxScaler(targetLow, targetHigh, concurrency)
-        }
-    }
-
     is BandSeries -> {
         val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
         require(innerPlan.hasCenterScale) {
@@ -577,20 +550,6 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
         val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             innerPlan.build(concurrency).withWeight(weight)
-        }
-    }
-
-    is AtX -> {
-        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).atX()
-        }
-    }
-
-    is AtY -> {
-        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).atY()
         }
     }
 
@@ -666,20 +625,6 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
             )
         }
     }
-
-    is StandardScalerPaired -> {
-        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).standardScaler(concurrency)
-        }
-    }
-
-    is MinMaxScalerPaired -> {
-        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).minMaxScaler(targetLow, targetHigh, concurrency)
-        }
-    }
 }
 
 @Suppress("UNCHECKED_CAST")
@@ -702,20 +647,6 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             innerPlan.build(concurrency).withWeight(weight)
-        }
-    }
-
-    is AtIndex -> {
-        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).atIndex(index)
-        }
-    }
-
-    is AtIndices -> {
-        val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).atIndices(indexX, indexY)
         }
     }
 
@@ -821,22 +752,6 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
             val primaryStat = primaryPlan.build(concurrency)
             require(primaryStat.read(0L) is ResultList<*>) { "$path.primary: expected per-coordinate results" }
             innerPlan.build(concurrency).withFeedback(primaryStat as VectorStat<ResultList<Result>>, project)
-        }
-    }
-
-    is StandardScalerVector -> {
-        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).standardScaleFeatures(dimensions, concurrency)
-        }
-    }
-
-    is MinMaxScalerVector -> {
-        val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan
-                .build(concurrency)
-                .minMaxScaleFeatures(dimensions, targetLow, targetHigh, concurrency)
         }
     }
 }

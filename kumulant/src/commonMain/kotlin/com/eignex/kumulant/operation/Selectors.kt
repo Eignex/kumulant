@@ -1,82 +1,16 @@
 package com.eignex.kumulant.operation
 
-import com.eignex.koblas.Vector
-import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.VectorStat
-import kotlin.time.Duration
 
-internal class AtXStat<R : Result>(private val delegate: SeriesStat<R>) :
-    PairedStat<R>,
-    WindowsInside<R, PairedStat<R>>,
-    Stat<R> by delegate {
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(x, timestampNanos, weight)
-    }
+internal fun <R : Result> SeriesStat<R>.atX(): PairedStat<R> = FoldPairedStat(this) { x, _ -> x }
 
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
-        AtXStat(delegate.windowed(duration, slices, concurrency))
+internal fun <R : Result> SeriesStat<R>.atY(): PairedStat<R> = FoldPairedStat(this) { _, y -> y }
 
-    override fun create(concurrency: Concurrency?): PairedStat<R> = AtXStat(delegate.create(concurrency))
-}
+internal fun <R : Result> SeriesStat<R>.atIndex(index: Int): VectorStat<R> =
+    FoldVectorStat.vector(this) { vector -> vector[index] }
 
-internal class AtYStat<R : Result>(private val delegate: SeriesStat<R>) :
-    PairedStat<R>,
-    WindowsInside<R, PairedStat<R>>,
-    Stat<R> by delegate {
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(y, timestampNanos, weight)
-    }
-
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
-        AtYStat(delegate.windowed(duration, slices, concurrency))
-
-    override fun create(concurrency: Concurrency?): PairedStat<R> = AtYStat(delegate.create(concurrency))
-}
-
-internal class AtIndexStat<R : Result>(private val delegate: SeriesStat<R>, private val index: Int) :
-    VectorStat<R>,
-    WindowsInside<R, VectorStat<R>>,
-    Stat<R> by delegate {
-    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
-        delegate.update(vector[index], timestampNanos, weight)
-    }
-
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
-        AtIndexStat(delegate.windowed(duration, slices, concurrency), index)
-
-    override fun create(concurrency: Concurrency?): VectorStat<R> = AtIndexStat(delegate.create(concurrency), index)
-}
-
-internal class AtIndicesStat<R : Result>(
-    private val delegate: PairedStat<R>,
-    private val indexX: Int,
-    private val indexY: Int,
-) : VectorStat<R>,
-    WindowsInside<R, VectorStat<R>>,
-    Stat<R> by delegate {
-    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
-        delegate.update(vector[indexX], vector[indexY], timestampNanos, weight)
-    }
-
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
-        AtIndicesStat(delegate.windowed(duration, slices, concurrency), indexX, indexY)
-
-    override fun create(concurrency: Concurrency?): VectorStat<R> =
-        AtIndicesStat(delegate.create(concurrency), indexX, indexY)
-}
-
-internal fun <R : Result> SeriesStat<R>.atX(): PairedStat<R> = AtXStat(this)
-
-internal fun <R : Result> SeriesStat<R>.atY(): PairedStat<R> = AtYStat(this)
-
-internal fun <R : Result> SeriesStat<R>.atIndex(index: Int): VectorStat<R> = AtIndexStat(this, index)
-
-internal fun <R : Result> PairedStat<R>.atIndices(indexX: Int, indexY: Int): VectorStat<R> = AtIndicesStat(
-    this,
-    indexX,
-    indexY,
-)
+internal fun <R : Result> PairedStat<R>.atIndices(indexX: Int, indexY: Int): VectorStat<R> =
+    FoldVectorPairedStat.vector(this, { vector -> vector[indexX] }, { vector -> vector[indexY] })
