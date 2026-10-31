@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.event
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
@@ -71,7 +71,9 @@ class ExcursionStat(override val concurrency: Concurrency = Concurrency.None) : 
     private val lastValue = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: an extremum or event trace has no inverse, so a
+        // downdate would run forwards as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         lock.guarded {
             lastValue.store(value)
             val seen = initialized.addAndGet(1L)

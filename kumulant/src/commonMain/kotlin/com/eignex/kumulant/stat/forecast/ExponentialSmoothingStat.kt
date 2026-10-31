@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.forecast
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stream.guarded
@@ -183,7 +183,9 @@ class ExponentialSmoothingStat(
     private val slot = streamMode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: this order-dependent recurrence has no inverse, so
+        // a downdate would run forwards as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         lock.guarded {
             val seen = initialized.addAndGet(1L)
             val currentSlot = (slot.load() % period).toInt()

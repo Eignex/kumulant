@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.casMin
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
@@ -37,7 +37,9 @@ class MinStat(override val concurrency: Concurrency = Concurrency.None) : Series
     private val value = mode.newDouble(Double.POSITIVE_INFINITY)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: an extremum or event trace has no inverse, so a
+        // downdate would run forwards as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         casMin(this.value, value)
     }
 

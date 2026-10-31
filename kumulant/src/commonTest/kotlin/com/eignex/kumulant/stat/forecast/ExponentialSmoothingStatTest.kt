@@ -162,6 +162,25 @@ class ExponentialSmoothingStatTest {
         s.update(2.0)
         assertTrue(s.read().level.isFinite())
     }
+
+    @Test
+    fun `a retraction leaves level and trend unchanged`() {
+        val s = ExponentialSmoothingStat(alpha = 0.5, beta = 0.5)
+        s.update(0.0)
+        s.update(10.0)
+        val before = s.read()
+        s.update(5.0, weight = -1.0)
+        assertEquals(before, s.read())
+    }
+
+    @Test
+    fun `a retraction does not advance the seasonal slot`() {
+        val s = ExponentialSmoothingStat(alpha = 0.5, beta = 0.5, gamma = 0.5, period = 3)
+        listOf(1.0, 5.0, 9.0, 1.0).forEach { s.update(it) }
+        val before = s.read()
+        s.update(5.0, weight = -1.0)
+        assertEquals(before.currentSlot, s.read().currentSlot)
+    }
 }
 
 class SeasonalForecastHorizonTest {

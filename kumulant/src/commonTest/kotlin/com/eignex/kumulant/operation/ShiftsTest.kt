@@ -107,4 +107,22 @@ class ShiftsTest {
         stat.update(value = 40.0, timestampNanos = 400L)
         assertEquals(2.5e8, stat.read().sum, DELTA)
     }
+
+    @Test
+    fun `lag ignores a retraction`() {
+        val stat = SumStat().lag(1)
+        stat.update(1.0)
+        stat.update(2.0)
+        stat.update(2.0, weight = -1.0)
+        assertEquals(1.0, stat.read().sum, DELTA)
+    }
+
+    @Test
+    fun `diff ignores a retraction`() {
+        val stat = SumStat().diff(1)
+        stat.update(1.0)
+        stat.update(4.0)
+        stat.update(9.0, weight = -1.0)
+        assertEquals(3.0, stat.read().sum, DELTA)
+    }
 }
