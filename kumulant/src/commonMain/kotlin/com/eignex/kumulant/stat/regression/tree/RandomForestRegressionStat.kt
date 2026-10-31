@@ -5,18 +5,13 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
-import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
-import com.eignex.kumulant.math.CounterRandom
-import com.eignex.kumulant.math.nextPoissonOne
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.concurrent.Volatile
 
 /**
  * Online random-forest regressor; a population of [RegressionTree]s sharing the candidate-split
@@ -62,44 +57,26 @@ class RandomForestRegressionStat(
 
     init {
         requirePositiveFeatureSize(featureSize)
-        require(nbrTrees > 0) { "nbrTrees must be positive, got $nbrTrees" }
     }
 
     /** [RegressionTreeConfig] with [RegressionTreeConfig.mtry] defaulted to `ceil(sqrt(p))` when null. */
     val config: RegressionTreeConfig = config.copy(mtry = config.mtry ?: defaultMtry(splitCandidates.size))
-
-    private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
 
     // Per-instance resolution binds leaf arms to each replica concurrency level.
     private val armFactory: () -> SeriesStat<WeightedVarianceResult> = {
         leafArmFactory?.invoke(concurrency) ?: VarianceStat(concurrency)
     }
 
-    private val baggingRng = CounterRandom(seedRng.childSeed(), concurrency)
-
-    // Volatile publication makes reset replacements visible to concurrent updates.
-    @Volatile
-    private var trees: Array<RegressionTree<Vector>> = Array(nbrTrees) { newTree() }
-
-    private fun newTree(): RegressionTree<Vector> = RegressionTree(
-        splitCandidates,
-        this.config,
-        concurrency,
-        armFactory,
-        seedRng.nextInt(),
-    )
+    private val forest = BaggedTrees(nbrTrees, bagging, concurrency, randomSeed) { seed ->
+        RegressionTree<Vector>(splitCandidates, this.config, concurrency, armFactory, seed)
+    }
+    private val trees: List<RegressionTree<Vector>> get() = forest.trees
 
     override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
-        // Bagging uses independent Poisson draws, so retractions cannot recover insertion weights.
-        // Drop rejected weights before drawing to preserve the sequence for later observations.
-        if (if (bagging) weight.isNotPositiveWeight() else weight.isInertWeight()) return
-        if (!bagging) {
-            for (t in trees) t.update(x, y, weight)
-            return
-        }
+        if (!forest.accepts(weight)) return
         for (t in trees) {
-            val k = baggingRng.nextPoissonOne()
+            val k = forest.multiplicity()
             if (k > 0) t.update(x, y, weight * k)
         }
     }
@@ -119,11 +96,7 @@ class RandomForestRegressionStat(
     }
 
     /** Restores empty state and restarts the seed streams for reproducible growth. */
-    override fun reset() {
-        seedRng.reset()
-        baggingRng.reset()
-        trees = Array(nbrTrees) { newTree() }
-    }
+    override fun reset() = forest.reset()
 
     override fun create(concurrency: Concurrency?): RandomForestRegressionStat = RandomForestRegressionStat(
         featureSize = featureSize,
@@ -133,7 +106,7 @@ class RandomForestRegressionStat(
         bagging = bagging,
         concurrency = concurrency ?: this.concurrency,
         leafArmFactory = leafArmFactory,
-        randomSeed = seedRng.childSeed().toInt(),
+        randomSeed = forest.childSeed(),
     )
 
     /** Live leaves reached by [x], in tree order; validates the feature dimension. */
@@ -146,7 +119,7 @@ class RandomForestRegressionStat(
     fun predict(x: Vector): Double = mergeForestEvidence(findLeaves(x).map { it.arm.read(0L) }).mean
 
     /** Live underlying trees. Use for inspection. */
-    fun trees(): List<RegressionTree<Vector>> = trees.toList()
+    fun trees(): List<RegressionTree<Vector>> = trees
 
     /** Live tree at [index], including any replacement installed by [reset]. */
     fun tree(index: Int): RegressionTree<Vector> = trees[index]
