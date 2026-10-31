@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.kumulant.core.Concurrency
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -124,5 +125,14 @@ class MultiArmedBanditTest {
         bandit.merge(bandit.create(Random(1)).snapshot())
 
         assertEquals(100.0, bandit.armResult(0).trials)
+    }
+
+    @Test
+    fun `create keeps the arm concurrency`() {
+        val bandit = MultiArmedBandit(2, NormalTS(), Random(0), Concurrency.Relaxed)
+
+        val replica = bandit.create(Random(1))
+
+        assertEquals(Concurrency.Relaxed, replica.armStat(0).concurrency)
     }
 }

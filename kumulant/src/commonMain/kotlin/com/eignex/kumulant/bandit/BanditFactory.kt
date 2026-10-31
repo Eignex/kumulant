@@ -96,7 +96,10 @@ fun <R : Result> BanditPolicySpec<R>.materialize(): BanditPolicy<R> = when (this
 }
 
 /** Build a live [UnivariateBandit] from its spec. */
-fun MultiArmedSpec<*>.materialize(random: Random = Random.Default): MultiArmedBandit<Result> {
+fun MultiArmedSpec<*>.materialize(
+    random: Random = Random.Default,
+    concurrency: Concurrency = Concurrency.None,
+): MultiArmedBandit<Result> {
     val moss = policy as? MossSpec
     require(moss == null || moss.nbrArms == nbrArms) {
         "MossSpec.nbrArms (${moss?.nbrArms}) must match MultiArmedSpec.nbrArms ($nbrArms)"
@@ -105,6 +108,7 @@ fun MultiArmedSpec<*>.materialize(random: Random = Random.Default): MultiArmedBa
         nbrArms = nbrArms,
         policy = policy.materialize() as BanditPolicy<Result>,
         random = random,
+        concurrency = concurrency,
     )
 }
 
@@ -125,14 +129,17 @@ fun Exp3Spec.materialize(random: Random = Random.Default): Exp3Bandit {
 }
 
 /** Build a live [TopTwoThompsonBandit] from its spec. */
-fun <R : Result> TopTwoThompsonSpec<R>.materialize(random: Random = Random.Default): TopTwoThompsonBandit<R> =
-    TopTwoThompsonBandit(
-        nbrArms = nbrArms,
-        policy = (policy as BanditPolicySpec<R>).materialize() as ThompsonSampling<R>,
-        beta = beta,
-        maxResamples = maxResamples,
-        random = random,
-    )
+fun <R : Result> TopTwoThompsonSpec<R>.materialize(
+    random: Random = Random.Default,
+    concurrency: Concurrency = Concurrency.None,
+): TopTwoThompsonBandit<R> = TopTwoThompsonBandit(
+    nbrArms = nbrArms,
+    policy = (policy as BanditPolicySpec<R>).materialize() as ThompsonSampling<R>,
+    beta = beta,
+    maxResamples = maxResamples,
+    random = random,
+    concurrency = concurrency,
+)
 
 /** Dispatch any [UnivariateBanditSpec] to its concrete bandit. */
 fun UnivariateBanditSpec.materialize(
@@ -141,11 +148,11 @@ fun UnivariateBanditSpec.materialize(
     nowNanos: () -> Long = { 0L },
 ): Bandit = when (this) {
     is TrackedUnivariateSpec -> materialize(random, concurrency, nowNanos)
-    is MultiArmedSpec<*> -> materialize(random)
+    is MultiArmedSpec<*> -> materialize(random, concurrency)
     is RouletteWheelSpec -> materialize(random)
     is BoltzmannSpec -> materialize(random)
     is Exp3Spec -> materialize(random)
-    is TopTwoThompsonSpec<*> -> (this as TopTwoThompsonSpec<Result>).materialize(random)
+    is TopTwoThompsonSpec<*> -> (this as TopTwoThompsonSpec<Result>).materialize(random, concurrency)
 }
 
 /** Build a live [RegressionContextualBandit] from its composed regression specs. */

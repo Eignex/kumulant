@@ -9,6 +9,7 @@ import com.eignex.kumulant.bandit.argmaxArm
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import kotlin.concurrent.atomics.AtomicLong
@@ -39,7 +40,8 @@ import kotlin.random.Random
  * **Randomness:** every `policy.evaluate` and `policy.update` receives the
  * caller-supplied [random]; reproducible under a fixed seed if the policy is.
  *
- * **Concurrency:** per-arm [SeriesStat] carries its own concurrency. The step
+ * **Concurrency:** per-arm [SeriesStat]s are built with [concurrency]; under
+ * [Concurrency.None] the bandit must have a single-threaded owner. The step
  * counter is an atomic so concurrent `choose`s see distinct `t` values;
  * racing `update`s on different arms never block. Cross-arm snapshot
  * consistency is best-effort; a concurrent update may interleave between
@@ -50,6 +52,8 @@ class MultiArmedBandit<R : Result>(
     /** Policy that owns the per-arm cumulators and the arm-selection rule. */
     val policy: BanditPolicy<R>,
     override val random: Random = Random.Default,
+    /** Thread-safety mode of every per-arm accumulator. */
+    val concurrency: Concurrency = Concurrency.None,
 ) : UnivariateBandit,
     PerArmBandit<R>,
     Scorable {
@@ -60,7 +64,7 @@ class MultiArmedBandit<R : Result>(
 
     private val step = AtomicLong(0L)
     private val arms: Array<SeriesStat<R>> = Array(nbrArms) {
-        val arm = policy.createArm()
+        val arm = policy.createArm(concurrency)
         policy.addArm(arm.read(0L))
         arm
     }
@@ -100,13 +104,18 @@ class MultiArmedBandit<R : Result>(
     override fun reset() {
         for (i in 0 until nbrArms) {
             policy.removeArm(arms[i].read(0L))
-            arms[i] = policy.createArm()
+            arms[i] = policy.createArm(concurrency)
             policy.addArm(arms[i].read(0L))
         }
         step.store(0L)
     }
 
-    override fun create(random: Random): MultiArmedBandit<R> = MultiArmedBandit(nbrArms, policy.createPolicy(), random)
+    override fun create(random: Random): MultiArmedBandit<R> = MultiArmedBandit(
+        nbrArms,
+        policy.createPolicy(),
+        random,
+        concurrency,
+    )
 
     /**
      * Live per-arm accumulator owned by this bandit. Exposed so callers can compose with

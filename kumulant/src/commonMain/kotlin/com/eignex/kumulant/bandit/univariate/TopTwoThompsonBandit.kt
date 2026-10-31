@@ -5,6 +5,7 @@ import com.eignex.kumulant.bandit.UnivariateBandit
 import com.eignex.kumulant.bandit.argmaxArm
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import kotlin.random.Random
@@ -43,8 +44,8 @@ import kotlin.random.Random
  * caller-supplied [random]; reproducible under a fixed seed if the policy
  * is.
  *
- * **Concurrency:** per-arm [com.eignex.kumulant.core.SeriesStat] carries its
- * own concurrency. The step counter is non-atomic; concurrent `choose`
+ * **Concurrency:** per-arm [com.eignex.kumulant.core.SeriesStat]s are built
+ * with [concurrency]. The step counter is non-atomic; concurrent `choose`
  * calls race on it. Cross-arm snapshot consistency during `choose` is
  * best-effort under racing updates.
  */
@@ -57,6 +58,8 @@ class TopTwoThompsonBandit<R : Result>(
     /** Cap on the resample loop when searching for a different second arm. */
     val maxResamples: Int = 32,
     override val random: Random = Random.Default,
+    /** Thread-safety mode of every per-arm accumulator. */
+    val concurrency: Concurrency = Concurrency.None,
 ) : UnivariateBandit,
     PerArmBandit<R> {
     init {
@@ -65,7 +68,7 @@ class TopTwoThompsonBandit<R : Result>(
         require(maxResamples > 0) { "maxResamples must be positive, got $maxResamples" }
     }
 
-    private val stats: Array<SeriesStat<R>> = Array(nbrArms) { policy.createArm() }
+    private val stats: Array<SeriesStat<R>> = Array(nbrArms) { policy.createArm(concurrency) }
     private var step: Long = 0L
 
     override fun choose(): Int {
@@ -97,7 +100,7 @@ class TopTwoThompsonBandit<R : Result>(
     }
 
     override fun reset() {
-        for (i in 0 until nbrArms) stats[i] = policy.createArm()
+        for (i in 0 until nbrArms) stats[i] = policy.createArm(concurrency)
         step = 0L
     }
 
@@ -107,5 +110,5 @@ class TopTwoThompsonBandit<R : Result>(
     }
 
     override fun create(random: Random): TopTwoThompsonBandit<R> =
-        TopTwoThompsonBandit(nbrArms, policy, beta, maxResamples, random)
+        TopTwoThompsonBandit(nbrArms, policy, beta, maxResamples, random, concurrency)
 }

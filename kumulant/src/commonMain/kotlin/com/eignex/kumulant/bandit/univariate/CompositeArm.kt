@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
 import com.eignex.kumulant.core.SeriesStat
@@ -50,7 +51,8 @@ data class CompositeArm(
         require(subArms.isNotEmpty()) { "CompositeArm requires at least one subArm" }
     }
 
-    override fun createStat(): SeriesStat<ResultList<Result>> = compose()
+    override fun createStat(concurrency: Concurrency): SeriesStat<ResultList<Result>> =
+        ListStats(subArms.mapIndexed { index, sub -> index.toString() to sub.routedStat(concurrency) })
 
     /** Companion host for factory helpers. */
     companion object
@@ -76,16 +78,12 @@ data class CompositeSubArm(
     val filter: BoolExpr? = null,
 )
 
-private fun CompositeArm.compose(): SeriesStat<ResultList<Result>> = ListStats(
-    subArms.mapIndexed { index, sub -> index.toString() to sub.routedStat() },
-)
-
 @Suppress("UNCHECKED_CAST")
-private fun CompositeSubArm.routedStat(): SeriesStat<Result> {
+private fun CompositeSubArm.routedStat(concurrency: Concurrency): SeriesStat<Result> {
     valueExpr.requireBound("valueExpr")
     weightExpr.requireBound("weightExpr")
     filter?.requireBound("filter")
-    val accumulator = arm.createStat() as SeriesStat<Result>
+    val accumulator = arm.createStat(concurrency) as SeriesStat<Result>
     val transformed = TransformValueStat(accumulator) { arm.encode(valueExpr.eval(it)) }
     val weighted = transformed.weightBy { weightExpr.eval(it) }
     return filter?.let { predicate -> FilterSeriesStat(weighted) { predicate.eval(it) } } ?: weighted

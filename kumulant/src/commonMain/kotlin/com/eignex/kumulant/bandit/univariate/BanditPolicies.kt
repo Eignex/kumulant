@@ -1,6 +1,7 @@
 package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.bandit.requireNbrArms
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
@@ -50,11 +51,11 @@ interface BanditPolicy<R : Result> {
     val arm: Arm<R>
 
     /**
-     * Allocate a fresh per-arm accumulator from the [arm] spec. Default
-     * delegates to `arm.createStat()`; override only if the policy needs a
-     * non-standard variant.
+     * Allocate a fresh per-arm accumulator from the [arm] spec with the given
+     * [concurrency]. Default delegates to `arm.createStat(concurrency)`;
+     * override only if the policy needs a non-standard variant.
      */
-    fun createArm(): SeriesStat<R> = arm.createStat()
+    fun createArm(concurrency: Concurrency = Concurrency.None): SeriesStat<R> = arm.createStat(concurrency)
 
     /**
      * Fold an observed reward [value] (with optional [weight]) into the
