@@ -51,7 +51,9 @@ import com.eignex.kumulant.operation.withTimeAsY
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.schema.*
+import com.eignex.kumulant.schema.expr.discretePredicate
 import com.eignex.kumulant.schema.expr.eval
+import com.eignex.kumulant.schema.expr.isDiscreteIdentity
 import com.eignex.kumulant.schema.expr.requireBound
 import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.calibration.PlattCalibratorStat
@@ -817,16 +819,16 @@ internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<Discret
         val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
-            TransformLongStat(m) { expr.eval(it.toDouble()).toLong() }
+            if (expr.isDiscreteIdentity()) m else TransformLongStat(m) { expr.eval(it.toDouble()) }
         }
     }
 
     is FilterValueDiscrete -> {
         pred.requireBound("$path.pred")
         val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")
+        val predicate = pred.discretePredicate()
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            val m = innerPlan.build(concurrency)
-            FilterDiscreteStat(m) { pred.eval(it.toDouble()) }
+            FilterDiscreteStat(innerPlan.build(concurrency), predicate)
         }
     }
 

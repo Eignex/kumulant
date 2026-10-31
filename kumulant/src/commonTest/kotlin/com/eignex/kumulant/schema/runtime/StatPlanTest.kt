@@ -3,7 +3,13 @@ package com.eignex.kumulant.schema.runtime
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.feat
+import com.eignex.kumulant.schema.expr.X
+import com.eignex.kumulant.schema.expr.div
+import com.eignex.kumulant.schema.expr.eq
+import com.eignex.kumulant.schema.expr.minus
 import com.eignex.kumulant.schema.ops.band
+import com.eignex.kumulant.schema.ops.filter
+import com.eignex.kumulant.schema.ops.transform
 import com.eignex.kumulant.schema.ops.withWeight
 import com.eignex.kumulant.schema.spec.ClassCounts
 import com.eignex.kumulant.schema.spec.DDSketch
@@ -14,6 +20,7 @@ import com.eignex.kumulant.schema.spec.PairedSum
 import com.eignex.kumulant.schema.spec.RandomForestClassifier
 import com.eignex.kumulant.schema.spec.RandomForestRegression
 import com.eignex.kumulant.schema.spec.RegressionStatSpec
+import com.eignex.kumulant.schema.spec.SpaceSaving
 import com.eignex.kumulant.schema.spec.StatSpec
 import com.eignex.kumulant.schema.spec.Sum
 import com.eignex.kumulant.schema.spec.Variance
@@ -173,5 +180,35 @@ class StatPlanTest {
         val error = assertFailsWith<IllegalArgumentException> { spec.materialize() }
 
         assertTrue("primary" in error.message.orEmpty(), error.message)
+    }
+
+    @Test
+    fun `discrete identity transform keeps ids above two to the 53 exact`() {
+        val id = (1L shl 53) + 1
+        val stat = SpaceSaving(4).transform(X).materialize()
+
+        stat.update(id, 0L)
+
+        assertEquals(listOf(id), stat.read(0L).keys.toList())
+    }
+
+    @Test
+    fun `discrete transform drops updates whose result names no id`() {
+        val stat = SpaceSaving(4).transform(X / 0.0 - X / 0.0).materialize()
+
+        stat.update(3L, 0L)
+
+        assertEquals(0L, stat.read(0L).totalSeen)
+    }
+
+    @Test
+    fun `discrete literal comparisons compare ids above two to the 53 exactly`() {
+        val boundary = 1L shl 53
+        val stat = SpaceSaving(4).filter(X eq boundary.toDouble()).materialize()
+
+        stat.update(boundary + 1, 0L)
+        stat.update(boundary, 0L)
+
+        assertEquals(listOf(boundary), stat.read(0L).keys.toList())
     }
 }

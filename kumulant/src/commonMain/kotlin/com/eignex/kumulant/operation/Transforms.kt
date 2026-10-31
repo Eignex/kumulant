@@ -65,14 +65,18 @@ internal class TransformVectorStat<R : Result>(
     }
 }
 
+private const val TWO_POW_63 = 9.223372036854775808E18
+
 internal class TransformLongStat<R : Result>(
     private val delegate: DiscreteStat<R>,
-    private val transform: (Long) -> Long,
+    private val transform: (Long) -> Double,
 ) : DiscreteStat<R>,
     WindowsInside<R, DiscreteStat<R>>,
     Stat<R> by delegate {
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        delegate.update(transform(value), timestampNanos, weight)
+        val mapped = transform(value)
+        // A NaN, infinite or out-of-range result names no ID; saturating it would invent one.
+        if (mapped >= -TWO_POW_63 && mapped < TWO_POW_63) delegate.update(mapped.toLong(), timestampNanos, weight)
     }
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): DiscreteStat<R> =
         TransformLongStat(delegate.windowed(duration, slices, concurrency), transform)
