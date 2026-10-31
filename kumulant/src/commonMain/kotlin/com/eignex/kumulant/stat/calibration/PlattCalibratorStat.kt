@@ -27,6 +27,8 @@ data class PlattCalibratorResult(
     /** Sigmoid intercept. */
     val intercept: Double,
     override val totalWeights: Double,
+    /** Optimizer steps taken, carried so a merged calibrator resumes its learning-rate schedule. */
+    val step: Long = 0L,
 ) : HasObservationCount {
 
     /** Calibrated probability for raw score [x] via `sigmoid(slope * x + intercept)`. */
@@ -77,20 +79,22 @@ class PlattCalibratorStat(
             slope = r.weights[0],
             intercept = r.bias,
             totalWeights = r.totalWeights,
+            step = r.step,
         )
     }
 
     /**
      * Folds another Platt result into this one by reconstructing a
      * [StochasticRegressionStat] snapshot from `(slope, intercept,
-     * totalWeights)` and delegating to the underlying merge.
+     * totalWeights, step)` and delegating to the underlying merge. The residual
+     * sum of squares is not carried.
      */
     override fun merge(values: PlattCalibratorResult) {
         val snapshot = StochasticRegressionResult(
             weights = DenseVector.of(doubleArrayOf(values.slope)),
             bias = values.intercept,
             totalWeights = values.totalWeights,
-            step = 0L,
+            step = values.step,
             link = Link.Logit,
             sse = 0.0,
         )
