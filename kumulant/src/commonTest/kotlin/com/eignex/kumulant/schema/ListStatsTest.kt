@@ -37,21 +37,6 @@ class ListStatsTest {
     }
 
     @Test
-    fun `auto-names entries by class simpleName`() {
-        val stats = seriesListStats<Result>(MeanStat(), SumStat())
-        val map = stats.read().toMap()
-        assertEquals(setOf("MeanStat", "SumStat"), map.keys)
-    }
-
-    @Test
-    fun `duplicate auto-names throw`() {
-        val ex = assertFailsWith<IllegalArgumentException> {
-            seriesListStats<SumResult>(SumStat(), SumStat())
-        }
-        check("Duplicate" in ex.message.orEmpty()) { "got: ${ex.message}" }
-    }
-
-    @Test
     fun `explicit names disambiguate same-type stats`() {
         val stats = ListStats("in" to MeanStat(), "out" to MeanStat())
         stats.update(5.0)
@@ -130,7 +115,7 @@ class ListStatsTest {
     fun `nested ListStats reflects nesting in toMap`() {
         val stats = ListStats<Result>(
             "top" to MeanStat(),
-            "nested" to seriesListStats<Result>(MeanStat(), VarianceStat()),
+            "nested" to ListStats<Result>("MeanStat" to MeanStat(), "VarianceStat" to VarianceStat()),
         )
         stats.update(2.0)
         stats.update(4.0)
