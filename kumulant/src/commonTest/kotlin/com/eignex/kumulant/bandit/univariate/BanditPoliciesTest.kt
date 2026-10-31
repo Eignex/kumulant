@@ -179,7 +179,12 @@ class EpsilonPolicyRandomnessTest {
         val mab = MultiArmedBandit(nbrArms = 3, policy = Boltzmann(decay = 0.5), random = Random(1))
         repeat(500) {
             val a = mab.choose()
-            mab.update(a, if (a == 1) 1.0 else if (a == 2) 0.5 else 0.0)
+            val reward = when (a) {
+                1 -> 1.0
+                2 -> 0.5
+                else -> 0.0
+            }
+            mab.update(a, reward)
         }
         val picks = IntArray(3)
         repeat(500) { picks[mab.choose()]++ }
