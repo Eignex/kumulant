@@ -183,4 +183,28 @@ class ArmsTest {
         assertEquals(3.0, arm.priorMean)
         assertEquals(40.0, arm.priorWeight)
     }
+
+    @Test
+    fun `merging a fresh NormalArm snapshot leaves the seeded prior unchanged`() {
+        val arm = NormalArm(priorMean = 1.0, priorWeight = 2.0, priorSquaredDeviations = 8.0)
+        val stat = arm.createStat()
+
+        stat.merge(arm.createStat().read(0L))
+
+        val expected = arm.createStat().read(0L)
+        val actual = stat.read(0L)
+        assertEquals(expected.totalWeights, actual.totalWeights, DELTA)
+        assertEquals(expected.mean, actual.mean, DELTA)
+        assertEquals(expected.variance, actual.variance, DELTA)
+    }
+
+    @Test
+    fun `merging an empty snapshot into a seeded NormalArm stat keeps its prior`() {
+        val arm = NormalArm(priorMean = 1.0, priorWeight = 2.0, priorSquaredDeviations = 8.0)
+        val stat = arm.createStat()
+
+        stat.merge(WeightedVarianceResult(0.0, 0.0, 0.0))
+
+        assertEquals(arm.createStat().read(0L), stat.read(0L))
+    }
 }

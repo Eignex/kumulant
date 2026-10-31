@@ -3,6 +3,7 @@ package com.eignex.kumulant.bandit.univariate
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class BoltzmannBanditTest {
@@ -56,6 +57,15 @@ class BoltzmannBanditTest {
         b.reset()
         b.playDistribution()
         assertTrue(abs(b.temperature() - 1.0) < 1e-9)
+    }
+
+    @Test
+    fun `merging a fresh replica keeps a single copy of the arm prior`() {
+        val bandit = BoltzmannBandit(nbrArms = 1, priorMean = 2.0, priorWeight = 50.0, random = Random(0))
+
+        bandit.merge(bandit.create(Random(1)).snapshot())
+
+        assertEquals(50.0, bandit.armResult(0).totalWeights)
     }
 }
 

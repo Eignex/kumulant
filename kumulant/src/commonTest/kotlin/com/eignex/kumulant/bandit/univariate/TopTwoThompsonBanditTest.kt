@@ -2,6 +2,7 @@ package com.eignex.kumulant.bandit.univariate
 
 import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
@@ -60,5 +61,14 @@ class TopTwoThompsonBanditTest {
         b.reset()
         val r0 = b.armResult(0)
         assertTrue(r0.totalWeights < 1.0, "expected reset to clear data, got totalWeights=${r0.totalWeights}")
+    }
+
+    @Test
+    fun `merging a fresh replica keeps a single copy of the arm prior`() {
+        val bandit = TopTwoThompsonBandit(2, BetaBernoulliTS(50.0, 50.0), random = Random(0))
+
+        bandit.merge(bandit.create(Random(1)).snapshot())
+
+        assertEquals(100.0, bandit.armResult(0).trials)
     }
 }
