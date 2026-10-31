@@ -20,5 +20,4 @@ class ForecastStatConcurrencyTest {
             assertEquals(ref.currentSlot, r.currentSlot, "Seasonal slot mode=$mode")
         }
     }
-
 }

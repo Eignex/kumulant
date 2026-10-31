@@ -2,7 +2,6 @@ package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
-import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.abs

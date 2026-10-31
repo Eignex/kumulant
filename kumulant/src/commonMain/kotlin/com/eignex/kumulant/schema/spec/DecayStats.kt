@@ -77,4 +77,3 @@ data class ExponentialSmoothing(
     /** Seasonal coupling. */
     val mode: SeasonalMode = StatDefaults.seasonalMode,
 ) : SeriesStatSpec<ExponentialSmoothingResult>
-
