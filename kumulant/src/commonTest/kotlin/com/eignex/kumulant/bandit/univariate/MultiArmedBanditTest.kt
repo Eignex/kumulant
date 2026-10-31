@@ -108,4 +108,12 @@ class MultiArmedBanditTest {
         repeat(100) { child.update(0, 1.0) }
         assertEquals(before, parent.evaluate(0))
     }
+
+    @Test
+    fun `a log-normal arm poisoned by a zero reward loses to a healthy arm`() {
+        val mab = MultiArmedBandit(nbrArms = 2, policy = LogNormalTS(), random = Random(0))
+        mab.update(0, 0.0)
+        mab.update(1, 1.0)
+        assertEquals(1, mab.choose())
+    }
 }
