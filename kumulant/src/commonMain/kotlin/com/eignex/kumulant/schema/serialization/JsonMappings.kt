@@ -17,13 +17,7 @@ internal class DecayMapping(private val field: String) : JsonPayloadMapping {
     override fun fieldPath(field: String, path: String): String = path
 
     override fun payloadSchema(body: JsonObject): JsonObject {
-        val parameter = buildJsonObject {
-            put("type", if (field == "alpha") "number" else "integer")
-            if (field != "alpha") {
-                put("minimum", Long.MIN_VALUE)
-                put("maximum", Long.MAX_VALUE)
-            }
-        }
+        val parameter = buildJsonObject { put("type", if (field == "alpha") "number" else "integer") }
         return JsonObject(
             body + mapOf(
                 "properties" to JsonObject(mapOf(field to parameter)),

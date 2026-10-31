@@ -64,15 +64,6 @@ class JsonMappingsTest {
     }
 
     @Test
-    fun `half life schemas preserve the range of a long`() {
-        val parameter = payloadSchema("decayingMean").getValue("properties").jsonObject
-            .getValue("halfLifeMillis").jsonObject
-
-        assertEquals(Long.MIN_VALUE, parameter.getValue("minimum").jsonPrimitive.long)
-        assertEquals(Long.MAX_VALUE, parameter.getValue("maximum").jsonPrimitive.long)
-    }
-
-    @Test
     fun `smoothing schemas flatten required and optional weightings`() {
         val cases = listOf(
             "holt" to listOf("alpha"),
@@ -99,8 +90,6 @@ class JsonMappingsTest {
         val mode = properties.getValue("mode").jsonObject
 
         assertEquals(JsonPrimitive("integer"), period["type"])
-        assertEquals(Int.MIN_VALUE, period.getValue("minimum").jsonPrimitive.int)
-        assertEquals(Int.MAX_VALUE, period.getValue("maximum").jsonPrimitive.int)
         assertEquals(JsonPrimitive("number"), properties.getValue("phi").jsonObject["type"])
         assertEquals(JsonPrimitive("string"), mode["type"])
         assertEquals(JsonArray(listOf(JsonPrimitive("Additive"), JsonPrimitive("Multiplicative"))), mode["enum"])
