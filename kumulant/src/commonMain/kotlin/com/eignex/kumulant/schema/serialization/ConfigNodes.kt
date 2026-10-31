@@ -46,12 +46,9 @@ internal object BanditPolicySpecSerializer : KumulantSerializer<BanditPolicySpec
     listOf(
         jsonNode("thompsonSampling") { ThompsonSamplingSpec.serializer(PolymorphicSerializer(Result::class)) },
         jsonNode<Ucb1Spec>("ucb1"),
-        jsonNode<Ucb1NormalSpec>("ucb1Normal"),
-        jsonNode<Ucb1TunedSpec>("ucb1Tuned"),
         jsonNode<GreedySpec>("greedy"),
         jsonNode<BoltzmannSpec>("boltzmann"),
         jsonNode<EpsilonGreedySpec>("epsilonGreedy"),
-        jsonNode<EpsilonDecreasingSpec>("epsilonDecreasing"),
         jsonNode<UniformSelectionSpec>("uniformSelection"),
         jsonNode<KlUcbSpec>("klUcb"),
         jsonNode<MossSpec>("moss"),
@@ -74,11 +71,9 @@ internal object PosteriorSerializer : KumulantSerializer<Posterior<*>>(Posterior
     listOf(
         jsonNode<BetaPosterior>("betaPosterior"),
         jsonNode<PoissonGammaPosterior>("poissonGammaPosterior"),
-        jsonNode<GeometricBetaPosterior>("geometricBetaPosterior"),
         jsonNode<ExponentialGammaPosterior>("exponentialGammaPosterior"),
         jsonNode<NormalGammaPosterior>("normalGammaPosterior"),
         jsonNode<LogNormalGammaPosterior>("logNormalGammaPosterior"),
-        jsonNode<GammaScalePosterior>("gammaScalePosterior"),
         jsonNode<CompositePosterior>("compositePosterior"),
     )
 })

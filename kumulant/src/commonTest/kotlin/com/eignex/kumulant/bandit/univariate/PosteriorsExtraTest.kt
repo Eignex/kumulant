@@ -45,15 +45,4 @@ class PosteriorsExtraTest {
         assertTrue(abs(avg - 5.0) < 0.5, "expected mean near 5, got $avg")
     }
 
-    @Test
-    fun `GammaScalePosterior fixedShape input is respected by sampler`() {
-        val snap = WeightedMeanResult(totalWeights = 50.0, mean = 2.0)
-        val rng = Random(7)
-        val pos1 = GammaScalePosterior(fixedShape = 1.0)
-        val pos2 = GammaScalePosterior(fixedShape = 5.0)
-        val a = pos1.sample(snap, rng)
-        val b = pos2.sample(snap, Random(7))
-        assertTrue(a != b)
-        assertTrue(a > 0.0 && b > 0.0)
-    }
 }

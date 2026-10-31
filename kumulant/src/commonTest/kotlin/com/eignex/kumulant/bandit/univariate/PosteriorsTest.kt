@@ -40,20 +40,6 @@ class PosteriorsTest {
     }
 
     @Test
-    fun `GeometricBetaPosterior samples center on the observed trial count`() {
-        val snap = WeightedMeanResult(totalWeights = 400.0, mean = 3.0)
-        val rng = Random(3)
-        var sum = 0.0
-        val n = 3000
-        repeat(n) {
-            val s = GeometricBetaPosterior.sample(snap, rng)
-            assertTrue(s.isFinite() && s > 1.0)
-            sum += s
-        }
-        assertTrue(abs(sum / n - 3.0) < 0.15)
-    }
-
-    @Test
     fun `ExponentialGammaPosterior samples center on the observed reward mean`() {
         val snap = WeightedMeanResult(totalWeights = 200.0, mean = 2.0)
         val rng = Random(4)
@@ -92,37 +78,11 @@ class PosteriorsTest {
     }
 
     @Test
-    fun `GammaScalePosterior samples center on the observed reward mean`() {
-        val pos = GammaScalePosterior(fixedShape = 2.0)
-        val snap = WeightedMeanResult(totalWeights = 200.0, mean = 1.0)
-        val rng = Random(7)
-        var sum = 0.0
-        val n = 2000
-        repeat(n) {
-            val s = pos.sample(snap, rng)
-            assertTrue(s.isFinite() && s > 0.0)
-            sum += s
-        }
-        assertTrue(abs(sum / n - 1.0) < 0.1)
-    }
-
-    @Test
     fun `ExponentialTS prefers the arm with the larger reward`() {
         val mab = MultiArmedBandit(nbrArms = 2, policy = ExponentialTS(), random = Random(11))
         repeat(200) {
             mab.update(0, 10.0)
             mab.update(1, 1.0)
-        }
-        val picks = (0 until 1000).count { mab.choose() == 0 }
-        assertTrue(picks > 900, "arm 0 chosen $picks/1000")
-    }
-
-    @Test
-    fun `GeometricTS prefers the arm with the larger reward`() {
-        val mab = MultiArmedBandit(nbrArms = 2, policy = GeometricTS(), random = Random(12))
-        repeat(200) {
-            mab.update(0, 8.0)
-            mab.update(1, 2.0)
         }
         val picks = (0 until 1000).count { mab.choose() == 0 }
         assertTrue(picks > 900, "arm 0 chosen $picks/1000")

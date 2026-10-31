@@ -29,7 +29,6 @@ class BanditPoliciesTest {
         val cases = listOf(
             drive(LogNormalTS(), listOf(1.5, 2.0, 0.5, 3.0)),
             drive(PoissonTS(), listOf(2.0, 3.0, 1.0, 4.0)),
-            drive(GammaScaleTS(fixedShape = 2.0), listOf(0.5, 1.0, 1.5, 2.0)),
         )
 
         for (bandit in cases) {
@@ -67,46 +66,14 @@ class BanditPoliciesTest {
     }
 
     @Test
-    fun `UCB1Normal returns infinity until enough samples`() {
-        val pol = UCB1Normal()
-        val mom = MomentsResult(
-            totalWeights = 1.0,
-            mean = 0.5,
-            m2 = 0.1,
-            m3 = 0.0,
-            m4 = 0.0,
-        )
-        assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(mom, 0L, Random(0)))
-        pol.addArm(mom)
-        pol.addArm(mom)
-        pol.addArm(mom)
-        assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(mom, 0L, Random(0)))
-        val big = mom.copy(totalWeights = 100.0, mean = 0.0, m2 = 25.0)
-        assertTrue(pol.evaluate(big, 0L, Random(0)).isFinite())
-        pol.removeArm(mom)
-    }
-
-    @Test
-    fun `UCB1Tuned returns infinity when totalWeights le 1`() {
-        val pol = UCB1Tuned()
-        val mom = MomentsResult(1.0, 0.5, 0.0, 0.0, 0.0)
-        assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(mom, 0L, Random(0)))
-        val bigger = mom.copy(totalWeights = 10.0, m2 = 1.0)
-        pol.addArm(mom)
-        pol.addArm(bigger)
-        assertTrue(pol.evaluate(bigger, 0L, Random(0)).isFinite())
-        pol.removeArm(mom)
-    }
-
-    @Test
     fun `EpsilonGreedy rejects out-of-range epsilon`() {
         assertFailsWith<IllegalArgumentException> { EpsilonGreedy(epsilon = -0.1) }
         assertFailsWith<IllegalArgumentException> { EpsilonGreedy(epsilon = 1.5) }
     }
 
     @Test
-    fun `EpsilonDecreasing falls back to mean as samples grow`() {
-        val pol = EpsilonDecreasing(epsilon = 2.0, decay = 0.5)
+    fun `annealed EpsilonGreedy falls back to the mean as samples grow`() {
+        val pol = EpsilonGreedy(epsilon = 2.0, decay = 0.5)
         val mab = MultiArmedBandit(nbrArms = 2, policy = pol, random = Random(0))
         repeat(200) {
             mab.update(0, 1.0)

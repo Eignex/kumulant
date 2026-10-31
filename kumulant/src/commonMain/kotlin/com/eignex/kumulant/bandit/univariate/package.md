@@ -27,10 +27,10 @@ The library ships every commonly-cited one:
 | Policy | Family |
 |--------|--------|
 | [Greedy] | Pure exploitation; argmax of point estimates. The baseline. |
-| [EpsilonGreedy], [EpsilonDecreasing] | Mix of exploitation and uniform-random exploration; epsilon either fixed or annealed. |
+| [EpsilonGreedy] | Mix of exploitation and uniform-random exploration; epsilon fixed, or annealed by `decay`. |
 | [UniformSelection] | Pure exploration, used as a baseline. |
 | [Boltzmann] | Softmax over per-arm means with a cooling temperature schedule. |
-| [UCB1], [UCB1Normal], [UCB1Tuned] | Upper-confidence-bound family; variants differ in confidence-interval shape. |
+| [UCB1] | Classical upper confidence bound for `[0, 1]`-bounded rewards. |
 | [KlUcb] | KL-UCB; tighter bound than UCB1 for Bernoulli arms. |
 | [Moss] | MOSS bound; near-optimal regret across stationary settings. |
 | [UcbV] | UCB-V; UCB with variance-aware confidence width. |

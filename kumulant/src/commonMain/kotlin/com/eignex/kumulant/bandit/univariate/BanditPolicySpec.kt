@@ -44,30 +44,6 @@ data class Ucb1Spec(
     val priorBeta: Double = 1.0,
 ) : BanditPolicySpec<BernoulliSumResult>
 
-/** Spec for [UCB1Normal]. */
-@Serializable
-@SerialName("UCB1Normal")
-data class Ucb1NormalSpec(
-    /** Exploration scale on the confidence-bound term. */
-    val alpha: Double = 1.0,
-    /** Per-arm prior on the running reward mean. */
-    val priorMean: Double = 0.0,
-    /** Per-arm prior pseudo-count. */
-    val priorWeight: Double = 0.02,
-) : BanditPolicySpec<MomentsResult>
-
-/** Spec for [UCB1Tuned]. */
-@Serializable
-@SerialName("UCB1Tuned")
-data class Ucb1TunedSpec(
-    /** Exploration scale on the confidence-bound term. */
-    val alpha: Double = 1.0,
-    /** Per-arm prior on the running reward mean. */
-    val priorMean: Double = 0.0,
-    /** Per-arm prior pseudo-count. */
-    val priorWeight: Double = 0.02,
-) : BanditPolicySpec<MomentsResult>
-
 /** Spec for [Greedy]. */
 @Serializable
 @SerialName("Greedy")
@@ -84,24 +60,10 @@ data class GreedySpec(
 @Serializable
 @SerialName("EpsilonGreedy")
 data class EpsilonGreedySpec(
-    /** Probability of exploring uniformly. */
+    /** Exploration probability at `decay = 0`; otherwise the scale of the annealed probability. */
     val epsilon: Double = 0.1,
-    /** Per-arm prior on the running reward mean. */
-    val priorMean: Double = 0.0,
-    /** Per-arm prior pseudo-count. */
-    val priorWeight: Double = 0.02,
-    /** Prior on `Sum (x - mean)^2 * w`. */
-    val priorSquaredDeviations: Double = 0.02,
-) : BanditPolicySpec<WeightedVarianceResult>
-
-/** Spec for [EpsilonDecreasing]. */
-@Serializable
-@SerialName("EpsilonDecreasing")
-data class EpsilonDecreasingSpec(
-    /** Initial exploration scale. */
-    val epsilon: Double = 2.0,
-    /** Decay exponent applied to the running sample count. */
-    val decay: Double = 0.5,
+    /** Decay exponent applied to the total sample count; `0.0` keeps exploration fixed. */
+    val decay: Double = 0.0,
     /** Per-arm prior on the running reward mean. */
     val priorMean: Double = 0.0,
     /** Per-arm prior pseudo-count. */
