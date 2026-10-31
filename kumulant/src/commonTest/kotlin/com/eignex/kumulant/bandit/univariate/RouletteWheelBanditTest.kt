@@ -82,6 +82,16 @@ class RouletteWheelBanditTest {
         }
         assertEquals(weightAfter(1.0), weightAfter(3.0))
     }
+
+    @Test
+    fun `a negative observation weight is ignored`() {
+        val bandit = RouletteWheelBandit(nbrArms = 2, segmentLength = 2, random = Random(1))
+
+        bandit.update(0, 5.0, -1.0)
+        bandit.update(0, 1.0)
+
+        assertEquals(RouletteWheelArmResult(1.0, 1.0, 1.0), bandit.snapshot()[0])
+    }
 }
 
 class RouletteWheelNonFiniteRewardTest {
