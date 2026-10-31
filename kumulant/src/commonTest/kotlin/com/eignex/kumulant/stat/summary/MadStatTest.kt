@@ -217,4 +217,12 @@ class MadStatTest {
             assertEquals(5.0, it.mad, DELTA)
         }
     }
+
+    @Test
+    fun `infinite observations leave the median finite`() {
+        val m = MadStat()
+        repeat(20_000) { m.update(it.toDouble()) }
+        repeat(200) { m.update(Double.POSITIVE_INFINITY) }
+        assertTrue(m.read().median.isFinite(), "median=${m.read().median}")
+    }
 }
