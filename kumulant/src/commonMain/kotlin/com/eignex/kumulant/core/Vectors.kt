@@ -1,12 +1,19 @@
 package com.eignex.kumulant.core
 
 import com.eignex.koblas.Vector
+import com.eignex.koblas.forEachStored
 
 // A short vector can produce a plausible prediction from only part of the model.
 // Avoid call overhead on targets without JIT inlining.
 @Suppress("NOTHING_TO_INLINE")
 internal inline fun Vector.requireFeatureSize(expected: Int) {
     require(size == expected) { "x.size=$size, expected $expected" }
+}
+
+internal fun Vector.hasNonFiniteStored(): Boolean {
+    var nonFinite = false
+    forEachStored { _, value -> if (!value.isFinite()) nonFinite = true }
+    return nonFinite
 }
 
 internal fun requirePositiveFeatureSize(featureSize: Int) {
