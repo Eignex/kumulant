@@ -4,7 +4,6 @@ import com.eignex.koblas.Vector
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
 import com.eignex.kumulant.bandit.univariate.BernoulliArm
 import com.eignex.kumulant.bandit.univariate.BetaPosterior
-import com.eignex.kumulant.bandit.univariate.BoltzmannBandit
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
@@ -28,7 +27,6 @@ class ArmIndexContractSweepTest {
     private fun probes(): List<Probe> {
         val multiArmed = MultiArmedBandit(ARMS, ThompsonSampling(BernoulliArm(), BetaPosterior), Random(0))
         val roulette = RouletteWheelBandit(ARMS, random = Random(0))
-        val boltzmann = BoltzmannBandit(ARMS, random = Random(0))
         val exp3 = Exp3Bandit(ARMS, random = Random(0))
         val topTwo = TopTwoThompsonBandit(ARMS, ThompsonSampling(BernoulliArm(), BetaPosterior), random = Random(0))
         val regression = RegressionContextualBandit(
@@ -53,13 +51,6 @@ class ArmIndexContractSweepTest {
                     "update" to { i -> roulette.update(i, 1.0) },
                     "evaluate" to { i -> roulette.evaluate(i) },
                     "armResult" to { i -> roulette.armResult(i) },
-                ),
-            ),
-            Probe(
-                "BoltzmannBandit",
-                listOf(
-                    "update" to { i -> boltzmann.update(i, 1.0) },
-                    "armResult" to { i -> boltzmann.armResult(i) },
                 ),
             ),
             Probe(

@@ -9,7 +9,6 @@ public final class com/eignex/kumulant/bandit/BanditFactoryKt {
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/contextual/RegressionContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/bandit/contextual/RegressionContextualBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;)Lcom/eignex/kumulant/bandit/TrackedContextualBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/BanditPolicySpec;)Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
-	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/Exp3Spec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/Exp3Bandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/MultiArmedSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/bandit/univariate/MultiArmedBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/RouletteWheelSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/RouletteWheelBandit;
@@ -19,7 +18,6 @@ public final class com/eignex/kumulant/bandit/BanditFactoryKt {
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/Bandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/RegressionContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/contextual/RegressionContextualBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/TrackedContextualBandit;
-	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/Exp3Spec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/Exp3Bandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/MultiArmedSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/MultiArmedBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/RouletteWheelSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/RouletteWheelBandit;
@@ -329,47 +327,43 @@ public final class com/eignex/kumulant/bandit/univariate/BetaPosterior : com/eig
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/eignex/kumulant/bandit/univariate/BoltzmannBandit : com/eignex/kumulant/bandit/PerArmBandit, com/eignex/kumulant/bandit/UnivariateBandit {
-	public fun <init> (IDDDDDLkotlin/random/Random;)V
-	public synthetic fun <init> (IDDDDDLkotlin/random/Random;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun armResult (I)Lcom/eignex/kumulant/core/Result;
-	public fun armResult (I)Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;
-	public fun choose ()I
-	public synthetic fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Snapshotable;
-	public fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannBandit;
+public final class com/eignex/kumulant/bandit/univariate/Boltzmann : com/eignex/kumulant/bandit/univariate/BanditPolicy {
+	public fun <init> ()V
+	public fun <init> (DDDDD)V
+	public synthetic fun <init> (DDDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
+	public fun addArm (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
+	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
+	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
+	public fun evaluate (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;JLkotlin/random/Random;)D
+	public synthetic fun getArm ()Lcom/eignex/kumulant/bandit/univariate/Arm;
+	public fun getArm ()Lcom/eignex/kumulant/bandit/univariate/MeanArm;
 	public final fun getDecay ()D
 	public final fun getInitialTau ()D
 	public final fun getMinTau ()D
-	public fun getNbrArms ()I
-	public fun getRandom ()Lkotlin/random/Random;
-	public synthetic fun merge (Ljava/lang/Object;)V
-	public fun merge (Ljava/util/List;)V
-	public final fun playDistribution ()[D
-	public fun reset ()V
-	public synthetic fun snapshot ()Ljava/lang/Object;
-	public fun snapshot ()Ljava/util/List;
-	public final fun temperature ()D
-	public fun update (IDD)V
-	public fun updateAll ([I[D[D)V
+	public synthetic fun removeArm (Lcom/eignex/kumulant/core/Result;)V
+	public fun removeArm (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
+	public final fun temperature (J)D
+	public fun update (Lcom/eignex/kumulant/core/SeriesStat;DD)V
 }
 
-public final class com/eignex/kumulant/bandit/univariate/BoltzmannSpec : com/eignex/kumulant/bandit/univariate/UnivariateBanditSpec {
+public final class com/eignex/kumulant/bandit/univariate/BoltzmannSpec : com/eignex/kumulant/bandit/univariate/BanditPolicySpec {
 	public static final field Companion Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec$Companion;
-	public fun <init> (IDDDDD)V
-	public synthetic fun <init> (IDDDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()I
+	public fun <init> ()V
+	public fun <init> (DDDDD)V
+	public synthetic fun <init> (DDDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
 	public final fun component2 ()D
 	public final fun component3 ()D
 	public final fun component4 ()D
 	public final fun component5 ()D
-	public final fun component6 ()D
-	public final fun copy (IDDDDD)Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;IDDDDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;
+	public final fun copy (DDDDD)Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;DDDDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDecay ()D
 	public final fun getInitialTau ()D
 	public final fun getMinTau ()D
-	public final fun getNbrArms ()I
 	public final fun getPriorMean ()D
 	public final fun getPriorWeight ()D
 	public fun hashCode ()I

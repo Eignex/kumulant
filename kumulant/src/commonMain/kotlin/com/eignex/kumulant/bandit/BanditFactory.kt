@@ -9,7 +9,7 @@ import com.eignex.kumulant.bandit.contextual.TrackedContextualSpec
 import com.eignex.kumulant.bandit.univariate.Arm
 import com.eignex.kumulant.bandit.univariate.BanditPolicy
 import com.eignex.kumulant.bandit.univariate.BanditPolicySpec
-import com.eignex.kumulant.bandit.univariate.BoltzmannBandit
+import com.eignex.kumulant.bandit.univariate.Boltzmann
 import com.eignex.kumulant.bandit.univariate.BoltzmannSpec
 import com.eignex.kumulant.bandit.univariate.EpsilonDecreasing
 import com.eignex.kumulant.bandit.univariate.EpsilonDecreasingSpec
@@ -79,6 +79,8 @@ fun <R : Result> BanditPolicySpec<R>.materialize(): BanditPolicy<R> = when (this
 
     is GreedySpec -> Greedy(priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
 
+    is BoltzmannSpec -> Boltzmann(initialTau, minTau, decay, priorMean, priorWeight) as BanditPolicy<R>
+
     is EpsilonGreedySpec ->
         EpsilonGreedy(epsilon, priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
 
@@ -116,10 +118,6 @@ fun MultiArmedSpec<*>.materialize(
 fun RouletteWheelSpec.materialize(random: Random = Random.Default): RouletteWheelBandit =
     RouletteWheelBandit(nbrArms, reactionFactor, segmentLength, initialWeight, minWeight, random)
 
-/** Build a live [BoltzmannBandit] from its spec. */
-fun BoltzmannSpec.materialize(random: Random = Random.Default): BoltzmannBandit =
-    BoltzmannBandit(nbrArms, priorMean, priorWeight, initialTau, minTau, decay, random)
-
 /** Build a live [Exp3Bandit] from its spec, resolving null `eta` / `gamma` to defaults. */
 fun Exp3Spec.materialize(random: Random = Random.Default): Exp3Bandit {
     val resolvedEta = eta ?: Exp3Bandit.defaultEta(nbrArms)
@@ -150,7 +148,6 @@ fun UnivariateBanditSpec.materialize(
     is TrackedUnivariateSpec -> materialize(random, concurrency, nowNanos)
     is MultiArmedSpec<*> -> materialize(random, concurrency)
     is RouletteWheelSpec -> materialize(random)
-    is BoltzmannSpec -> materialize(random)
     is Exp3Spec -> materialize(random)
     is TopTwoThompsonSpec<*> -> (this as TopTwoThompsonSpec<Result>).materialize(random, concurrency)
 }

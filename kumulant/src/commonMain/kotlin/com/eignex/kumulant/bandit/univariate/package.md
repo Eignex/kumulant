@@ -15,7 +15,6 @@ are just a policy swap on this shell.
 | Bandit | Selection rule |
 |--------|----------------|
 | [MultiArmedBandit] | Argmax over per-arm policy scores, or whatever else the policy implements (joint sampling, etc.). |
-| [BoltzmannBandit] | Softmax over per-arm means with a cooling temperature schedule. |
 | [Exp3Bandit] | Adversarial bandit with exponential-weights updates and a regret bound under non-stationary reward distributions. |
 | [RouletteWheelBandit] | Operator-selection roulette where arm probability is proportional to score. Used in meta-heuristics where each "arm" is a neighbourhood move and the score is the recent improvement rate. |
 | [TopTwoThompsonBandit] | Top-two Thompson sampling: draw two samples, play the second-best with probability `1 - beta`. Identifies the best arm faster than vanilla Thompson when many arms are competitive. |
@@ -30,6 +29,7 @@ The library ships every commonly-cited one:
 | [Greedy] | Pure exploitation; argmax of point estimates. The baseline. |
 | [EpsilonGreedy], [EpsilonDecreasing] | Mix of exploitation and uniform-random exploration; epsilon either fixed or annealed. |
 | [UniformSelection] | Pure exploration, used as a baseline. |
+| [Boltzmann] | Softmax over per-arm means with a cooling temperature schedule. |
 | [UCB1], [UCB1Normal], [UCB1Tuned] | Upper-confidence-bound family; variants differ in confidence-interval shape. |
 | [KlUcb] | KL-UCB; tighter bound than UCB1 for Bernoulli arms. |
 | [Moss] | MOSS bound; near-optimal regret across stationary settings. |
@@ -39,8 +39,7 @@ The library ships every commonly-cited one:
 Each policy reads its per-arm state through a [Posterior] adapter that
 projects the arm's [com.eignex.kumulant.core.Result] to whatever the
 scoring rule needs (a mean, a Beta posterior, a normal-gamma posterior,
-etc.). The [GammaScalePosterior] is the canonical example used by
-[BoltzmannBandit] for variance-scaled softmax temperatures.
+etc.).
 
 ## Arms
 

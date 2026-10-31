@@ -2,7 +2,6 @@ package com.eignex.kumulant.bandit
 
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.bandit.contextual.RegressionContextualBandit
-import com.eignex.kumulant.bandit.univariate.BoltzmannBandit
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.bandit.univariate.NormalTS
 import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
@@ -21,7 +20,6 @@ class BanditInterfaceTest {
         val bandits: List<PerArmBandit<*>> = listOf(
             MultiArmedBandit(nbrArms = 2, policy = NormalTS(), random = Random(1)),
             RouletteWheelBandit(nbrArms = 2),
-            BoltzmannBandit(nbrArms = 2),
             RegressionContextualBandit(
                 nbrArms = 2,
                 template = BayesianRegressionStat(featureSize = 1),

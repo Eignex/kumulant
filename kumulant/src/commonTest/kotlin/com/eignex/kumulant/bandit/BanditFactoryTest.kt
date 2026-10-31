@@ -50,8 +50,8 @@ class BanditFactoryTest {
     }
 
     @Test
-    fun `Boltzmann spec materialises`() {
-        val b = BoltzmannSpec(nbrArms = 3).materialize(Random(0))
+    fun `Boltzmann spec materialises as a multi-armed policy`() {
+        val b = MultiArmedSpec(nbrArms = 3, policy = BoltzmannSpec()).materialize(Random(0))
         assertEquals(3, b.nbrArms)
     }
 
