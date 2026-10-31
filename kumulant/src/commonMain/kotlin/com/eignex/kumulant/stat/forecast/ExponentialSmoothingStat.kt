@@ -227,6 +227,8 @@ class ExponentialSmoothingStat(
 
     override fun validateMerge(values: ExponentialSmoothingResult) {
         require(values.seasons.size == period) { "merge seasons size ${values.seasons.size} != period $period" }
+        // Additive factors sit around 0 and multiplicative ones around 1; their average is neither.
+        require(values.mode == mode) { "merge seasonal mode ${values.mode} != $mode" }
     }
 
     override fun merge(values: ExponentialSmoothingResult) = lock.guarded {
