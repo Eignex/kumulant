@@ -243,9 +243,12 @@ class TDigestStat(
             val nextW = combinedW[idx]
             val combinedQRight = qLeft + (curW + nextW) / total
             val kRight = k1(combinedQRight)
-            if (kRight - kLeft <= 1.0) {
+            // An infinite mean only merges with its own value: the weighted step would compute
+            // Inf - Inf, or -Inf + Inf, and leave a NaN centroid that breaks the sorted means.
+            val mergeable = nextM == curM || (curM.isFinite() && nextM.isFinite())
+            if (mergeable && kRight - kLeft <= 1.0) {
                 val mergedW = curW + nextW
-                curM = curM + (nextM - curM) * nextW / mergedW
+                if (nextM != curM) curM += (nextM - curM) * nextW / mergedW
                 curW = mergedW
             } else {
                 outM[outLen] = curM
@@ -362,7 +365,16 @@ class TDigestStat(
                 }
                 val span = centers[idx + 1] - centers[idx]
                 val frac = if (span <= 0.0) 0.0 else (targetRank - centers[idx]) / span
-                q = means[idx] + frac * (means[idx + 1] - means[idx])
+                val lo = means[idx]
+                val hi = means[idx + 1]
+                q = when {
+                    lo == hi -> lo
+
+                    // No interpolation toward an infinite centroid; take the nearer one.
+                    !lo.isFinite() || !hi.isFinite() -> if (frac < 0.5) lo else hi
+
+                    else -> lo + frac * (hi - lo)
+                }
             }
             computed[pi] = q
         }

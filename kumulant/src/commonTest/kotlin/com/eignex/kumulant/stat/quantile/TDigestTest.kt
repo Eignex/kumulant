@@ -159,4 +159,15 @@ class TDigestTest {
             assertEquals(h.upperBounds[i], h.lowerBounds[i + 1])
         }
     }
+
+    @Test
+    fun `infinite observations stay infinite centroids`() {
+        val t = TDigestStat(probabilities = doubleArrayOf(0.5, 1.0))
+        repeat(20_000) { t.update(it.toDouble()) }
+        repeat(500) { t.update(Double.POSITIVE_INFINITY) }
+        repeat(500) { t.update(Double.NEGATIVE_INFINITY) }
+        val r = t.read()
+        assertTrue(r.means.none { it.isNaN() }, "means=${r.means.toList().takeLast(4)}")
+        assertEquals(Double.POSITIVE_INFINITY, r.quantiles[1])
+    }
 }
