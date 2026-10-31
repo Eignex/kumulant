@@ -117,32 +117,27 @@ requirements, and vector coordinates retain bounds checks. A name such as `x` re
 a user-defined reference even when a built-in input source occurs in the same tree.
 Raw fragments can be decoded for a host to bind; statistical recipes with unresolved
 references are rejected when materialized.
+Materializing also rejects an expression that reads an input its context never
+supplies: a vector coordinate, fold or dot product outside vector and regression
+operations, [VIndex] outside element-wise feedback, or a feedback source outside
+feedback or over a primary whose result lacks the trait it reads.
 
 ## Embedding and JSON Schema
 
 [com.eignex.kumulant.schema.KumulantJson.serializers] exposes every vocabulary for
 composition with a host library's own compact serializers.
 [com.eignex.kumulant.schema.KumulantJson.catalog] describes nested stats, expressions,
-and their custom payload layouts. Use Skema's document-root decoder to retain error
-paths through the host model's records, maps, and lists:
+and their custom payload layouts for JSON Schema generation. Decoding needs no catalog:
+the compact serializers are attached to the types, so a host model decodes with plain
+kotlinx serialization:
 
 ```kotlin
-import com.eignex.skema.serialization.decodeFromJsonElement
+import com.eignex.skema.SchemaJson
 import com.eignex.skema.serialization.toJsonSchema
 
-val tree = SchemaJson.parseToJsonElement(payload)
-val model = SchemaJson.decodeFromJsonElement(Model.serializer(), tree, KumulantJson.catalog)
+val model = SchemaJson.decodeFromString(Model.serializer(), payload)
 val schema = Model.serializer().toJsonSchema(KumulantJson.catalog)
 ```
 
 A host with its own compact vocabulary can build a `JsonNodeCatalog` whose supplier
-returns its serializers plus `KumulantJson.serializers`. The upstream document-root
-decoder validates unknown fields even when JSON is configured to ignore them.
-
-## Migration
-
-Replace bare input strings such as `"x"` with `{"input":"x"}` and bare feedback
-strings such as `"center"` with `{"feedback":"center"}`. Use `{"ref":"name"}`
-with an explicit binding scope for portable fragments. Replace a named-field `if`
-payload with `[condition, then, otherwise]`. Integral constants encode as integer
-tokens. The previous spellings are rejected; there is one canonical expression format.
+returns its serializers plus `KumulantJson.serializers`.
