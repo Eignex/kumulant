@@ -34,61 +34,6 @@ class OptimizerDirectTest {
     }
 
     @Test
-    fun `Adagrad accumulates squared gradients per coordinate`() {
-        val opt = AdagradOptimizer(featureSize = 2, learningRate = ConstantRate(1.0), epsilon = 1e-10)
-        opt.advance()
-        val d1 = opt.computeDelta(0, gradient = 2.0, observationWeight = 1.0)
-        approx(-1.0 * 2.0 / sqrt(4.0 + 1e-10), d1)
-        val d2 = opt.computeDelta(0, gradient = 3.0, observationWeight = 1.0)
-        approx(-1.0 * 3.0 / sqrt(13.0 + 1e-10), d2)
-        val d3 = opt.computeDelta(1, gradient = 1.0, observationWeight = 1.0)
-        approx(-1.0 * 1.0 / sqrt(1.0 + 1e-10), d3)
-    }
-
-    @Test
-    fun `Adagrad reset clears accumulator`() {
-        val opt = AdagradOptimizer(featureSize = 1, learningRate = ConstantRate(1.0))
-        opt.advance()
-        opt.computeDelta(0, gradient = 5.0, observationWeight = 1.0)
-        opt.reset()
-        opt.advance()
-        val d = opt.computeDelta(0, gradient = 2.0, observationWeight = 1.0)
-        approx(-1.0 * 2.0 / sqrt(4.0 + 1e-10), d)
-    }
-
-    @Test
-    fun `Adagrad rejects invalid construction`() {
-        assertFailsWith<IllegalArgumentException> {
-            AdagradOptimizer(featureSize = 0, learningRate = ConstantRate(0.1))
-        }
-        assertFailsWith<IllegalArgumentException> {
-            AdagradOptimizer(featureSize = 1, learningRate = ConstantRate(0.1), epsilon = 0.0)
-        }
-    }
-
-    @Test
-    fun `RMSProp ema mixes prior and current squared gradient`() {
-        val rho = 0.9
-        val eps = 1e-8
-        val opt = RmspropOptimizer(featureSize = 1, learningRate = ConstantRate(0.1), rho = rho, epsilon = eps)
-        opt.advance()
-        val ema1 = (1.0 - rho) * 4.0
-        approx(-0.1 * 2.0 / sqrt(ema1 + eps), opt.computeDelta(0, gradient = 2.0, observationWeight = 1.0))
-        val ema2 = rho * ema1 + (1.0 - rho) * 9.0
-        approx(-0.1 * 3.0 / sqrt(ema2 + eps), opt.computeDelta(0, gradient = 3.0, observationWeight = 1.0))
-    }
-
-    @Test
-    fun `RMSProp validates rho range`() {
-        assertFailsWith<IllegalArgumentException> {
-            RmspropOptimizer(featureSize = 1, learningRate = ConstantRate(0.1), rho = -0.1)
-        }
-        assertFailsWith<IllegalArgumentException> {
-            RmspropOptimizer(featureSize = 1, learningRate = ConstantRate(0.1), rho = 1.5)
-        }
-    }
-
-    @Test
     fun `Adam bias-corrects first and second moments on step 1`() {
         val b1 = 0.9
         val b2 = 0.999

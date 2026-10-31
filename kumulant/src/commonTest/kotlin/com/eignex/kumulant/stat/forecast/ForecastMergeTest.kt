@@ -7,42 +7,6 @@ import kotlin.test.assertTrue
 class ForecastMergeTest {
 
     @Test
-    fun `a recursive variance snapshot merges into a fresh stat unchanged`() {
-        val source = RecursiveVarianceStat(omega = 0.1, alpha = 0.2, beta = 0.7)
-        source.update(3.0, 1L)
-        val expected = source.read().variance
-
-        val fresh = source.create()
-        fresh.merge(source.read())
-
-        assertEquals(expected, fresh.read().variance, 1e-12)
-    }
-
-    @Test
-    fun `rolling several recursive variance snapshots up does not shrink toward zero`() {
-        val source = RecursiveVarianceStat(omega = 0.1, alpha = 0.2, beta = 0.7)
-        repeat(5) { source.update(3.0, it.toLong()) }
-        val snapshot = source.read()
-
-        val coordinator = source.create()
-        repeat(20) { coordinator.merge(snapshot) }
-
-        assertEquals(snapshot.variance, coordinator.read().variance, 1e-9)
-    }
-
-    @Test
-    fun `a recursive variance stat still averages once it has data of its own`() {
-        val stat = RecursiveVarianceStat(omega = 0.1, alpha = 0.2, beta = 0.7)
-        stat.update(1.0, 1L)
-        val own = stat.read().variance
-        val remote = 100.0
-
-        stat.merge(RecursiveVarianceResult(remote, 0.1, 0.2, 0.7))
-
-        assertEquals(0.5 * (own + remote), stat.read().variance, 1e-9)
-    }
-
-    @Test
     fun `merging a seasonal trace brings its phase with its factors`() {
         val a = ExponentialSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4)
         val b = ExponentialSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4)

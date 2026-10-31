@@ -2331,36 +2331,6 @@ final class com.eignex.kumulant.schema.expr/V : com.eignex.kumulant.schema.expr/
     }
 }
 
-final class com.eignex.kumulant.schema.optimizer/Adagrad : com.eignex.kumulant.schema.optimizer/OptimizerSpec { // com.eignex.kumulant.schema.optimizer/Adagrad|null[0]
-    constructor <init>(com.eignex.kumulant.schema.expr/ScalarExpr = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.optimizer/Adagrad.<init>|<init>(com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.Double){}[0]
-
-    final val epsilon // com.eignex.kumulant.schema.optimizer/Adagrad.epsilon|{}epsilon[0]
-        final fun <get-epsilon>(): kotlin/Double // com.eignex.kumulant.schema.optimizer/Adagrad.epsilon.<get-epsilon>|<get-epsilon>(){}[0]
-    final val learningRate // com.eignex.kumulant.schema.optimizer/Adagrad.learningRate|{}learningRate[0]
-        final fun <get-learningRate>(): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.optimizer/Adagrad.learningRate.<get-learningRate>|<get-learningRate>(){}[0]
-
-    final fun component1(): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.optimizer/Adagrad.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.schema.optimizer/Adagrad.component2|component2(){}[0]
-    final fun copy(com.eignex.kumulant.schema.expr/ScalarExpr = ..., kotlin/Double = ...): com.eignex.kumulant.schema.optimizer/Adagrad // com.eignex.kumulant.schema.optimizer/Adagrad.copy|copy(com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.optimizer/Adagrad.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.optimizer/Adagrad.hashCode|hashCode(){}[0]
-    final fun materialize(kotlin/Int, com.eignex.kumulant.core/Concurrency): com.eignex.kumulant.stat.regression/Optimizer // com.eignex.kumulant.schema.optimizer/Adagrad.materialize|materialize(kotlin.Int;com.eignex.kumulant.core.Concurrency){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.optimizer/Adagrad.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.optimizer/Adagrad> { // com.eignex.kumulant.schema.optimizer/Adagrad.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.optimizer/Adagrad.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.optimizer/Adagrad.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.optimizer/Adagrad.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.optimizer/Adagrad // com.eignex.kumulant.schema.optimizer/Adagrad.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.optimizer/Adagrad) // com.eignex.kumulant.schema.optimizer/Adagrad.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.optimizer.Adagrad){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.optimizer/Adagrad.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.optimizer/Adagrad> // com.eignex.kumulant.schema.optimizer/Adagrad.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.schema.optimizer/Adam : com.eignex.kumulant.schema.optimizer/OptimizerSpec { // com.eignex.kumulant.schema.optimizer/Adam|null[0]
     constructor <init>(com.eignex.kumulant.schema.expr/ScalarExpr = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.optimizer/Adam.<init>|<init>(com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
 
@@ -2394,39 +2364,6 @@ final class com.eignex.kumulant.schema.optimizer/Adam : com.eignex.kumulant.sche
 
     final object Companion { // com.eignex.kumulant.schema.optimizer/Adam.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.optimizer/Adam> // com.eignex.kumulant.schema.optimizer/Adam.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.schema.optimizer/Rmsprop : com.eignex.kumulant.schema.optimizer/OptimizerSpec { // com.eignex.kumulant.schema.optimizer/Rmsprop|null[0]
-    constructor <init>(com.eignex.kumulant.schema.expr/ScalarExpr = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.optimizer/Rmsprop.<init>|<init>(com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.Double;kotlin.Double){}[0]
-
-    final val epsilon // com.eignex.kumulant.schema.optimizer/Rmsprop.epsilon|{}epsilon[0]
-        final fun <get-epsilon>(): kotlin/Double // com.eignex.kumulant.schema.optimizer/Rmsprop.epsilon.<get-epsilon>|<get-epsilon>(){}[0]
-    final val learningRate // com.eignex.kumulant.schema.optimizer/Rmsprop.learningRate|{}learningRate[0]
-        final fun <get-learningRate>(): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.optimizer/Rmsprop.learningRate.<get-learningRate>|<get-learningRate>(){}[0]
-    final val rho // com.eignex.kumulant.schema.optimizer/Rmsprop.rho|{}rho[0]
-        final fun <get-rho>(): kotlin/Double // com.eignex.kumulant.schema.optimizer/Rmsprop.rho.<get-rho>|<get-rho>(){}[0]
-
-    final fun component1(): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.optimizer/Rmsprop.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.schema.optimizer/Rmsprop.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.schema.optimizer/Rmsprop.component3|component3(){}[0]
-    final fun copy(com.eignex.kumulant.schema.expr/ScalarExpr = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.schema.optimizer/Rmsprop // com.eignex.kumulant.schema.optimizer/Rmsprop.copy|copy(com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.optimizer/Rmsprop.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.optimizer/Rmsprop.hashCode|hashCode(){}[0]
-    final fun materialize(kotlin/Int, com.eignex.kumulant.core/Concurrency): com.eignex.kumulant.stat.regression/Optimizer // com.eignex.kumulant.schema.optimizer/Rmsprop.materialize|materialize(kotlin.Int;com.eignex.kumulant.core.Concurrency){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.optimizer/Rmsprop.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.optimizer/Rmsprop> { // com.eignex.kumulant.schema.optimizer/Rmsprop.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.optimizer/Rmsprop.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.optimizer/Rmsprop.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.optimizer/Rmsprop.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.optimizer/Rmsprop // com.eignex.kumulant.schema.optimizer/Rmsprop.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.optimizer/Rmsprop) // com.eignex.kumulant.schema.optimizer/Rmsprop.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.optimizer.Rmsprop){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.optimizer/Rmsprop.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.optimizer/Rmsprop> // com.eignex.kumulant.schema.optimizer/Rmsprop.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -3371,38 +3308,6 @@ final class com.eignex.kumulant.schema.spec/GroupStatSpec : com.eignex.kumulant.
     }
 }
 
-final class com.eignex.kumulant.schema.spec/HdrHistogram : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.quantile/SparseHistogramResult> { // com.eignex.kumulant.schema.spec/HdrHistogram|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ...) // com.eignex.kumulant.schema.spec/HdrHistogram.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
-
-    final val initialHighestTrackableValue // com.eignex.kumulant.schema.spec/HdrHistogram.initialHighestTrackableValue|{}initialHighestTrackableValue[0]
-        final fun <get-initialHighestTrackableValue>(): kotlin/Double // com.eignex.kumulant.schema.spec/HdrHistogram.initialHighestTrackableValue.<get-initialHighestTrackableValue>|<get-initialHighestTrackableValue>(){}[0]
-    final val lowestDiscernibleValue // com.eignex.kumulant.schema.spec/HdrHistogram.lowestDiscernibleValue|{}lowestDiscernibleValue[0]
-        final fun <get-lowestDiscernibleValue>(): kotlin/Double // com.eignex.kumulant.schema.spec/HdrHistogram.lowestDiscernibleValue.<get-lowestDiscernibleValue>|<get-lowestDiscernibleValue>(){}[0]
-    final val significantDigits // com.eignex.kumulant.schema.spec/HdrHistogram.significantDigits|{}significantDigits[0]
-        final fun <get-significantDigits>(): kotlin/Int // com.eignex.kumulant.schema.spec/HdrHistogram.significantDigits.<get-significantDigits>|<get-significantDigits>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/HdrHistogram.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.schema.spec/HdrHistogram.component2|component2(){}[0]
-    final fun component3(): kotlin/Int // com.eignex.kumulant.schema.spec/HdrHistogram.component3|component3(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ...): com.eignex.kumulant.schema.spec/HdrHistogram // com.eignex.kumulant.schema.spec/HdrHistogram.copy|copy(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/HdrHistogram.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/HdrHistogram.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/HdrHistogram.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/HdrHistogram> { // com.eignex.kumulant.schema.spec/HdrHistogram.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.spec/HdrHistogram.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/HdrHistogram.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/HdrHistogram.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/HdrHistogram // com.eignex.kumulant.schema.spec/HdrHistogram.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/HdrHistogram) // com.eignex.kumulant.schema.spec/HdrHistogram.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.HdrHistogram){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.spec/HdrHistogram.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/HdrHistogram> // com.eignex.kumulant.schema.spec/HdrHistogram.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.schema.spec/HyperLogLog : com.eignex.kumulant.schema.spec/DiscreteStatSpec<com.eignex.kumulant.stat.cardinality/HyperLogLogResult> { // com.eignex.kumulant.schema.spec/HyperLogLog|null[0]
     constructor <init>(kotlin/Int = ..., com.eignex.kumulant.math/HasherRef = ...) // com.eignex.kumulant.schema.spec/HyperLogLog.<init>|<init>(kotlin.Int;com.eignex.kumulant.math.HasherRef){}[0]
 
@@ -3455,38 +3360,6 @@ final class com.eignex.kumulant.schema.spec/Mad : com.eignex.kumulant.schema.spe
 
     final object Companion { // com.eignex.kumulant.schema.spec/Mad.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/Mad> // com.eignex.kumulant.schema.spec/Mad.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.schema.spec/MinHash : com.eignex.kumulant.schema.spec/DiscreteStatSpec<com.eignex.kumulant.stat.sketch/MinHashResult> { // com.eignex.kumulant.schema.spec/MinHash|null[0]
-    constructor <init>(kotlin/Int = ..., kotlin/Long = ..., com.eignex.kumulant.math/HasherRef = ...) // com.eignex.kumulant.schema.spec/MinHash.<init>|<init>(kotlin.Int;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
-
-    final val hasher // com.eignex.kumulant.schema.spec/MinHash.hasher|{}hasher[0]
-        final fun <get-hasher>(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.schema.spec/MinHash.hasher.<get-hasher>|<get-hasher>(){}[0]
-    final val numHashes // com.eignex.kumulant.schema.spec/MinHash.numHashes|{}numHashes[0]
-        final fun <get-numHashes>(): kotlin/Int // com.eignex.kumulant.schema.spec/MinHash.numHashes.<get-numHashes>|<get-numHashes>(){}[0]
-    final val seed // com.eignex.kumulant.schema.spec/MinHash.seed|{}seed[0]
-        final fun <get-seed>(): kotlin/Long // com.eignex.kumulant.schema.spec/MinHash.seed.<get-seed>|<get-seed>(){}[0]
-
-    final fun component1(): kotlin/Int // com.eignex.kumulant.schema.spec/MinHash.component1|component1(){}[0]
-    final fun component2(): kotlin/Long // com.eignex.kumulant.schema.spec/MinHash.component2|component2(){}[0]
-    final fun component3(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.schema.spec/MinHash.component3|component3(){}[0]
-    final fun copy(kotlin/Int = ..., kotlin/Long = ..., com.eignex.kumulant.math/HasherRef = ...): com.eignex.kumulant.schema.spec/MinHash // com.eignex.kumulant.schema.spec/MinHash.copy|copy(kotlin.Int;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/MinHash.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/MinHash.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/MinHash.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/MinHash> { // com.eignex.kumulant.schema.spec/MinHash.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.spec/MinHash.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/MinHash.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/MinHash.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/MinHash // com.eignex.kumulant.schema.spec/MinHash.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/MinHash) // com.eignex.kumulant.schema.spec/MinHash.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.MinHash){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.spec/MinHash.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/MinHash> // com.eignex.kumulant.schema.spec/MinHash.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -3717,38 +3590,6 @@ final class com.eignex.kumulant.schema.spec/RandomForestRegression : com.eignex.
         final val $childSerializers // com.eignex.kumulant.schema.spec/RandomForestRegression.Companion.$childSerializers|{}$childSerializers[0]
 
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/RandomForestRegression> // com.eignex.kumulant.schema.spec/RandomForestRegression.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.schema.spec/RecursiveVariance : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.forecast/RecursiveVarianceResult> { // com.eignex.kumulant.schema.spec/RecursiveVariance|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double) // com.eignex.kumulant.schema.spec/RecursiveVariance.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-
-    final val alpha // com.eignex.kumulant.schema.spec/RecursiveVariance.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.schema.spec/RecursiveVariance.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val beta // com.eignex.kumulant.schema.spec/RecursiveVariance.beta|{}beta[0]
-        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.schema.spec/RecursiveVariance.beta.<get-beta>|<get-beta>(){}[0]
-    final val omega // com.eignex.kumulant.schema.spec/RecursiveVariance.omega|{}omega[0]
-        final fun <get-omega>(): kotlin/Double // com.eignex.kumulant.schema.spec/RecursiveVariance.omega.<get-omega>|<get-omega>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/RecursiveVariance.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.schema.spec/RecursiveVariance.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.schema.spec/RecursiveVariance.component3|component3(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.schema.spec/RecursiveVariance // com.eignex.kumulant.schema.spec/RecursiveVariance.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/RecursiveVariance.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/RecursiveVariance.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/RecursiveVariance.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/RecursiveVariance> { // com.eignex.kumulant.schema.spec/RecursiveVariance.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.spec/RecursiveVariance.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/RecursiveVariance.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/RecursiveVariance.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/RecursiveVariance // com.eignex.kumulant.schema.spec/RecursiveVariance.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/RecursiveVariance) // com.eignex.kumulant.schema.spec/RecursiveVariance.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.RecursiveVariance){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.spec/RecursiveVariance.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/RecursiveVariance> // com.eignex.kumulant.schema.spec/RecursiveVariance.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -4761,63 +4602,6 @@ final class com.eignex.kumulant.stat.event/CrossingStat : com.eignex.kumulant.co
     final fun validateMerge(com.eignex.kumulant.stat.event/CrossingResult) // com.eignex.kumulant.stat.event/CrossingStat.validateMerge|validateMerge(com.eignex.kumulant.stat.event.CrossingResult){}[0]
 }
 
-final class com.eignex.kumulant.stat.event/ExcursionResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.event/ExcursionResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Long, kotlin/Double, kotlin/Long, kotlin/Double, kotlin/Double, kotlin/Boolean = ...) // com.eignex.kumulant.stat.event/ExcursionResult.<init>|<init>(kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Double;kotlin.Boolean){}[0]
-
-    final val currentRecovery // com.eignex.kumulant.stat.event/ExcursionResult.currentRecovery|{}currentRecovery[0]
-        final fun <get-currentRecovery>(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.currentRecovery.<get-currentRecovery>|<get-currentRecovery>(){}[0]
-    final val hasObservation // com.eignex.kumulant.stat.event/ExcursionResult.hasObservation|{}hasObservation[0]
-        final fun <get-hasObservation>(): kotlin/Boolean // com.eignex.kumulant.stat.event/ExcursionResult.hasObservation.<get-hasObservation>|<get-hasObservation>(){}[0]
-    final val maxExcursion // com.eignex.kumulant.stat.event/ExcursionResult.maxExcursion|{}maxExcursion[0]
-        final fun <get-maxExcursion>(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.maxExcursion.<get-maxExcursion>|<get-maxExcursion>(){}[0]
-    final val peak // com.eignex.kumulant.stat.event/ExcursionResult.peak|{}peak[0]
-        final fun <get-peak>(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.peak.<get-peak>|<get-peak>(){}[0]
-    final val peakTimestampNanos // com.eignex.kumulant.stat.event/ExcursionResult.peakTimestampNanos|{}peakTimestampNanos[0]
-        final fun <get-peakTimestampNanos>(): kotlin/Long // com.eignex.kumulant.stat.event/ExcursionResult.peakTimestampNanos.<get-peakTimestampNanos>|<get-peakTimestampNanos>(){}[0]
-    final val trough // com.eignex.kumulant.stat.event/ExcursionResult.trough|{}trough[0]
-        final fun <get-trough>(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.trough.<get-trough>|<get-trough>(){}[0]
-    final val troughTimestampNanos // com.eignex.kumulant.stat.event/ExcursionResult.troughTimestampNanos|{}troughTimestampNanos[0]
-        final fun <get-troughTimestampNanos>(): kotlin/Long // com.eignex.kumulant.stat.event/ExcursionResult.troughTimestampNanos.<get-troughTimestampNanos>|<get-troughTimestampNanos>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.component1|component1(){}[0]
-    final fun component2(): kotlin/Long // com.eignex.kumulant.stat.event/ExcursionResult.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.component3|component3(){}[0]
-    final fun component4(): kotlin/Long // com.eignex.kumulant.stat.event/ExcursionResult.component4|component4(){}[0]
-    final fun component5(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.component5|component5(){}[0]
-    final fun component6(): kotlin/Double // com.eignex.kumulant.stat.event/ExcursionResult.component6|component6(){}[0]
-    final fun component7(): kotlin/Boolean // com.eignex.kumulant.stat.event/ExcursionResult.component7|component7(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Long = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Boolean = ...): com.eignex.kumulant.stat.event/ExcursionResult // com.eignex.kumulant.stat.event/ExcursionResult.copy|copy(kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Long;kotlin.Double;kotlin.Double;kotlin.Boolean){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.event/ExcursionResult.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.event/ExcursionResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.event/ExcursionResult.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.event/ExcursionResult> { // com.eignex.kumulant.stat.event/ExcursionResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.event/ExcursionResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.event/ExcursionResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.event/ExcursionResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.event/ExcursionResult // com.eignex.kumulant.stat.event/ExcursionResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.event/ExcursionResult) // com.eignex.kumulant.stat.event/ExcursionResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.event.ExcursionResult){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.event/ExcursionResult.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.event/ExcursionResult> // com.eignex.kumulant.stat.event/ExcursionResult.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.stat.event/ExcursionStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.event/ExcursionResult> { // com.eignex.kumulant.stat.event/ExcursionStat|null[0]
-    constructor <init>(com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.event/ExcursionStat.<init>|<init>(com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val concurrency // com.eignex.kumulant.stat.event/ExcursionStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.event/ExcursionStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.event/ExcursionStat // com.eignex.kumulant.stat.event/ExcursionStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.event/ExcursionResult, kotlin/Long) // com.eignex.kumulant.stat.event/ExcursionStat.merge|merge(com.eignex.kumulant.stat.event.ExcursionResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.event/ExcursionResult // com.eignex.kumulant.stat.event/ExcursionStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.event/ExcursionStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.event/ExcursionStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-}
-
 final class com.eignex.kumulant.stat.event/RecencyResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.event/RecencyResult|null[0]
     constructor <init>(kotlin/Long, kotlin/Long, kotlin/Boolean) // com.eignex.kumulant.stat.event/RecencyResult.<init>|<init>(kotlin.Long;kotlin.Long;kotlin.Boolean){}[0]
 
@@ -5056,60 +4840,6 @@ final class com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat : com.eig
     final fun validateMerge(com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult) // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.validateMerge|validateMerge(com.eignex.kumulant.stat.forecast.ExponentialSmoothingResult){}[0]
 }
 
-final class com.eignex.kumulant.stat.forecast/RecursiveVarianceResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-
-    final val alpha // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val beta // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.beta|{}beta[0]
-        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.beta.<get-beta>|<get-beta>(){}[0]
-    final val omega // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.omega|{}omega[0]
-        final fun <get-omega>(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.omega.<get-omega>|<get-omega>(){}[0]
-    final val variance // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.variance|{}variance[0]
-        final fun <get-variance>(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.variance.<get-variance>|<get-variance>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.component3|component3(){}[0]
-    final fun component4(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.component4|component4(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.forecast/RecursiveVarianceResult // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.forecast/RecursiveVarianceResult> { // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.forecast/RecursiveVarianceResult // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.forecast/RecursiveVarianceResult) // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.forecast.RecursiveVarianceResult){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.forecast/RecursiveVarianceResult> // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.stat.forecast/RecursiveVarianceStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.forecast/RecursiveVarianceResult> { // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val alpha // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val beta // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.beta|{}beta[0]
-        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.beta.<get-beta>|<get-beta>(){}[0]
-    final val concurrency // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val omega // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.omega|{}omega[0]
-        final fun <get-omega>(): kotlin/Double // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.omega.<get-omega>|<get-omega>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.forecast/RecursiveVarianceStat // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.forecast/RecursiveVarianceResult, kotlin/Long) // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.merge|merge(com.eignex.kumulant.stat.forecast.RecursiveVarianceResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.forecast/RecursiveVarianceResult // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-}
-
 final class com.eignex.kumulant.stat.quantile/BucketHistogramStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/SparseHistogramResult> { // com.eignex.kumulant.stat.quantile/BucketHistogramStat|null[0]
     constructor <init>(kotlin/DoubleArray, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.quantile/BucketHistogramStat.<init>|<init>(kotlin.DoubleArray;com.eignex.kumulant.core.Concurrency){}[0]
 
@@ -5168,26 +4898,6 @@ final class com.eignex.kumulant.stat.quantile/FrugalQuantileStat : com.eignex.ku
     final fun read(kotlin/Long): com.eignex.kumulant.stat.quantile/QuantileResult // com.eignex.kumulant.stat.quantile/FrugalQuantileStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.quantile/FrugalQuantileStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/FrugalQuantileStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.stat.quantile/HdrHistogramStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/SparseHistogramResult> { // com.eignex.kumulant.stat.quantile/HdrHistogramStat|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.quantile/HdrHistogramStat.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Int;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val concurrency // com.eignex.kumulant.stat.quantile/HdrHistogramStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.quantile/HdrHistogramStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val initialHighestTrackableValue // com.eignex.kumulant.stat.quantile/HdrHistogramStat.initialHighestTrackableValue|{}initialHighestTrackableValue[0]
-        final fun <get-initialHighestTrackableValue>(): kotlin/Double // com.eignex.kumulant.stat.quantile/HdrHistogramStat.initialHighestTrackableValue.<get-initialHighestTrackableValue>|<get-initialHighestTrackableValue>(){}[0]
-    final val lowestDiscernibleValue // com.eignex.kumulant.stat.quantile/HdrHistogramStat.lowestDiscernibleValue|{}lowestDiscernibleValue[0]
-        final fun <get-lowestDiscernibleValue>(): kotlin/Double // com.eignex.kumulant.stat.quantile/HdrHistogramStat.lowestDiscernibleValue.<get-lowestDiscernibleValue>|<get-lowestDiscernibleValue>(){}[0]
-    final val significantDigits // com.eignex.kumulant.stat.quantile/HdrHistogramStat.significantDigits|{}significantDigits[0]
-        final fun <get-significantDigits>(): kotlin/Int // com.eignex.kumulant.stat.quantile/HdrHistogramStat.significantDigits.<get-significantDigits>|<get-significantDigits>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.quantile/HdrHistogramStat // com.eignex.kumulant.stat.quantile/HdrHistogramStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.quantile/SparseHistogramResult, kotlin/Long) // com.eignex.kumulant.stat.quantile/HdrHistogramStat.merge|merge(com.eignex.kumulant.stat.quantile.SparseHistogramResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.quantile/SparseHistogramResult // com.eignex.kumulant.stat.quantile/HdrHistogramStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.quantile/HdrHistogramStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/HdrHistogramStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-    final fun validateMerge(com.eignex.kumulant.stat.quantile/SparseHistogramResult) // com.eignex.kumulant.stat.quantile/HdrHistogramStat.validateMerge|validateMerge(com.eignex.kumulant.stat.quantile.SparseHistogramResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.quantile/QuantileResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.quantile/QuantileResult|null[0]
@@ -6544,22 +6254,6 @@ final class com.eignex.kumulant.stat.regression.tree/UcbTreePosterior : com.eign
     }
 }
 
-final class com.eignex.kumulant.stat.regression/AdagradOptimizer : com.eignex.kumulant.stat.regression/Optimizer { // com.eignex.kumulant.stat.regression/AdagradOptimizer|null[0]
-    constructor <init>(kotlin/Int, com.eignex.kumulant.schema.expr/ScalarExpr, kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.regression/AdagradOptimizer.<init>|<init>(kotlin.Int;com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val epsilon // com.eignex.kumulant.stat.regression/AdagradOptimizer.epsilon|{}epsilon[0]
-        final fun <get-epsilon>(): kotlin/Double // com.eignex.kumulant.stat.regression/AdagradOptimizer.epsilon.<get-epsilon>|<get-epsilon>(){}[0]
-    final val featureSize // com.eignex.kumulant.stat.regression/AdagradOptimizer.featureSize|{}featureSize[0]
-        final fun <get-featureSize>(): kotlin/Int // com.eignex.kumulant.stat.regression/AdagradOptimizer.featureSize.<get-featureSize>|<get-featureSize>(){}[0]
-    final val learningRate // com.eignex.kumulant.stat.regression/AdagradOptimizer.learningRate|{}learningRate[0]
-        final fun <get-learningRate>(): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.stat.regression/AdagradOptimizer.learningRate.<get-learningRate>|<get-learningRate>(){}[0]
-
-    final fun advance() // com.eignex.kumulant.stat.regression/AdagradOptimizer.advance|advance(){}[0]
-    final fun computeDelta(kotlin/Int, kotlin/Double, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression/AdagradOptimizer.computeDelta|computeDelta(kotlin.Int;kotlin.Double;kotlin.Double){}[0]
-    final fun reset() // com.eignex.kumulant.stat.regression/AdagradOptimizer.reset|reset(){}[0]
-    final fun resumeAt(kotlin/Long) // com.eignex.kumulant.stat.regression/AdagradOptimizer.resumeAt|resumeAt(kotlin.Long){}[0]
-}
-
 final class com.eignex.kumulant.stat.regression/AdamOptimizer : com.eignex.kumulant.stat.regression/Optimizer { // com.eignex.kumulant.stat.regression/AdamOptimizer|null[0]
     constructor <init>(kotlin/Int, com.eignex.kumulant.schema.expr/ScalarExpr, kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.regression/AdamOptimizer.<init>|<init>(kotlin.Int;com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.Double;kotlin.Double;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
 
@@ -6708,24 +6402,6 @@ final class com.eignex.kumulant.stat.regression/GaussianNaiveBayesStat : com.eig
     final fun reset() // com.eignex.kumulant.stat.regression/GaussianNaiveBayesStat.reset|reset(){}[0]
     final fun update(com.eignex.koblas/Vector, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.regression/GaussianNaiveBayesStat.update|update(com.eignex.koblas.Vector;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
     final fun validateMerge(com.eignex.kumulant.stat.regression/GaussianNaiveBayesResult) // com.eignex.kumulant.stat.regression/GaussianNaiveBayesStat.validateMerge|validateMerge(com.eignex.kumulant.stat.regression.GaussianNaiveBayesResult){}[0]
-}
-
-final class com.eignex.kumulant.stat.regression/RmspropOptimizer : com.eignex.kumulant.stat.regression/Optimizer { // com.eignex.kumulant.stat.regression/RmspropOptimizer|null[0]
-    constructor <init>(kotlin/Int, com.eignex.kumulant.schema.expr/ScalarExpr, kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.regression/RmspropOptimizer.<init>|<init>(kotlin.Int;com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.Double;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val epsilon // com.eignex.kumulant.stat.regression/RmspropOptimizer.epsilon|{}epsilon[0]
-        final fun <get-epsilon>(): kotlin/Double // com.eignex.kumulant.stat.regression/RmspropOptimizer.epsilon.<get-epsilon>|<get-epsilon>(){}[0]
-    final val featureSize // com.eignex.kumulant.stat.regression/RmspropOptimizer.featureSize|{}featureSize[0]
-        final fun <get-featureSize>(): kotlin/Int // com.eignex.kumulant.stat.regression/RmspropOptimizer.featureSize.<get-featureSize>|<get-featureSize>(){}[0]
-    final val learningRate // com.eignex.kumulant.stat.regression/RmspropOptimizer.learningRate|{}learningRate[0]
-        final fun <get-learningRate>(): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.stat.regression/RmspropOptimizer.learningRate.<get-learningRate>|<get-learningRate>(){}[0]
-    final val rho // com.eignex.kumulant.stat.regression/RmspropOptimizer.rho|{}rho[0]
-        final fun <get-rho>(): kotlin/Double // com.eignex.kumulant.stat.regression/RmspropOptimizer.rho.<get-rho>|<get-rho>(){}[0]
-
-    final fun advance() // com.eignex.kumulant.stat.regression/RmspropOptimizer.advance|advance(){}[0]
-    final fun computeDelta(kotlin/Int, kotlin/Double, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression/RmspropOptimizer.computeDelta|computeDelta(kotlin.Int;kotlin.Double;kotlin.Double){}[0]
-    final fun reset() // com.eignex.kumulant.stat.regression/RmspropOptimizer.reset|reset(){}[0]
-    final fun resumeAt(kotlin/Long) // com.eignex.kumulant.stat.regression/RmspropOptimizer.resumeAt|resumeAt(kotlin.Long){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression/SgdOptimizer : com.eignex.kumulant.stat.regression/Optimizer { // com.eignex.kumulant.stat.regression/SgdOptimizer|null[0]
@@ -7192,66 +6868,6 @@ final class com.eignex.kumulant.stat.sketch/HeavyHittersResult : com.eignex.kumu
 
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.sketch/HeavyHittersResult> // com.eignex.kumulant.stat.sketch/HeavyHittersResult.Companion.serializer|serializer(){}[0]
     }
-}
-
-final class com.eignex.kumulant.stat.sketch/MinHashResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.sketch/MinHashResult|null[0]
-    constructor <init>(kotlin/Int, kotlin/Long, kotlin/LongArray, kotlin/Long, com.eignex.kumulant.math/HasherRef = ...) // com.eignex.kumulant.stat.sketch/MinHashResult.<init>|<init>(kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
-
-    final val hasher // com.eignex.kumulant.stat.sketch/MinHashResult.hasher|{}hasher[0]
-        final fun <get-hasher>(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.stat.sketch/MinHashResult.hasher.<get-hasher>|<get-hasher>(){}[0]
-    final val numHashes // com.eignex.kumulant.stat.sketch/MinHashResult.numHashes|{}numHashes[0]
-        final fun <get-numHashes>(): kotlin/Int // com.eignex.kumulant.stat.sketch/MinHashResult.numHashes.<get-numHashes>|<get-numHashes>(){}[0]
-    final val seed // com.eignex.kumulant.stat.sketch/MinHashResult.seed|{}seed[0]
-        final fun <get-seed>(): kotlin/Long // com.eignex.kumulant.stat.sketch/MinHashResult.seed.<get-seed>|<get-seed>(){}[0]
-    final val signatures // com.eignex.kumulant.stat.sketch/MinHashResult.signatures|{}signatures[0]
-        final fun <get-signatures>(): kotlin/LongArray // com.eignex.kumulant.stat.sketch/MinHashResult.signatures.<get-signatures>|<get-signatures>(){}[0]
-    final val totalSeen // com.eignex.kumulant.stat.sketch/MinHashResult.totalSeen|{}totalSeen[0]
-        final fun <get-totalSeen>(): kotlin/Long // com.eignex.kumulant.stat.sketch/MinHashResult.totalSeen.<get-totalSeen>|<get-totalSeen>(){}[0]
-    final val totalWeights // com.eignex.kumulant.stat.sketch/MinHashResult.totalWeights|{}totalWeights[0]
-        final fun <get-totalWeights>(): kotlin/Double // com.eignex.kumulant.stat.sketch/MinHashResult.totalWeights.<get-totalWeights>|<get-totalWeights>(){}[0]
-
-    final fun component1(): kotlin/Int // com.eignex.kumulant.stat.sketch/MinHashResult.component1|component1(){}[0]
-    final fun component2(): kotlin/Long // com.eignex.kumulant.stat.sketch/MinHashResult.component2|component2(){}[0]
-    final fun component3(): kotlin/LongArray // com.eignex.kumulant.stat.sketch/MinHashResult.component3|component3(){}[0]
-    final fun component4(): kotlin/Long // com.eignex.kumulant.stat.sketch/MinHashResult.component4|component4(){}[0]
-    final fun component5(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.stat.sketch/MinHashResult.component5|component5(){}[0]
-    final fun copy(kotlin/Int = ..., kotlin/Long = ..., kotlin/LongArray = ..., kotlin/Long = ..., com.eignex.kumulant.math/HasherRef = ...): com.eignex.kumulant.stat.sketch/MinHashResult // com.eignex.kumulant.stat.sketch/MinHashResult.copy|copy(kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.sketch/MinHashResult.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.sketch/MinHashResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.sketch/MinHashResult.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.sketch/MinHashResult> { // com.eignex.kumulant.stat.sketch/MinHashResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.sketch/MinHashResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.sketch/MinHashResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.sketch/MinHashResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.sketch/MinHashResult // com.eignex.kumulant.stat.sketch/MinHashResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.sketch/MinHashResult) // com.eignex.kumulant.stat.sketch/MinHashResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.sketch.MinHashResult){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.sketch/MinHashResult.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.sketch/MinHashResult> // com.eignex.kumulant.stat.sketch/MinHashResult.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.stat.sketch/MinHashStat : com.eignex.kumulant.core/DiscreteStat<com.eignex.kumulant.stat.sketch/MinHashResult> { // com.eignex.kumulant.stat.sketch/MinHashStat|null[0]
-    constructor <init>(kotlin/Int = ..., kotlin/Long = ..., com.eignex.kumulant.math/LongHasher = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.sketch/MinHashStat.<init>|<init>(kotlin.Int;kotlin.Long;com.eignex.kumulant.math.LongHasher;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val concurrency // com.eignex.kumulant.stat.sketch/MinHashStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.sketch/MinHashStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val hasher // com.eignex.kumulant.stat.sketch/MinHashStat.hasher|{}hasher[0]
-        final fun <get-hasher>(): com.eignex.kumulant.math/LongHasher // com.eignex.kumulant.stat.sketch/MinHashStat.hasher.<get-hasher>|<get-hasher>(){}[0]
-    final val numHashes // com.eignex.kumulant.stat.sketch/MinHashStat.numHashes|{}numHashes[0]
-        final fun <get-numHashes>(): kotlin/Int // com.eignex.kumulant.stat.sketch/MinHashStat.numHashes.<get-numHashes>|<get-numHashes>(){}[0]
-    final val seed // com.eignex.kumulant.stat.sketch/MinHashStat.seed|{}seed[0]
-        final fun <get-seed>(): kotlin/Long // com.eignex.kumulant.stat.sketch/MinHashStat.seed.<get-seed>|<get-seed>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.sketch/MinHashStat // com.eignex.kumulant.stat.sketch/MinHashStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.sketch/MinHashResult, kotlin/Long) // com.eignex.kumulant.stat.sketch/MinHashStat.merge|merge(com.eignex.kumulant.stat.sketch.MinHashResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.sketch/MinHashResult // com.eignex.kumulant.stat.sketch/MinHashStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.sketch/MinHashStat.reset|reset(){}[0]
-    final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.sketch/MinHashStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
-    final fun validateMerge(com.eignex.kumulant.stat.sketch/MinHashResult) // com.eignex.kumulant.stat.sketch/MinHashStat.validateMerge|validateMerge(com.eignex.kumulant.stat.sketch.MinHashResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.sketch/SpaceSavingStat : com.eignex.kumulant.core/DiscreteStat<com.eignex.kumulant.stat.sketch/HeavyHittersResult> { // com.eignex.kumulant.stat.sketch/SpaceSavingStat|null[0]
@@ -8202,14 +7818,6 @@ final object com.eignex.kumulant.schema.spec/Covariance : com.eignex.kumulant.sc
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/Covariance.toString|toString(){}[0]
 }
 
-final object com.eignex.kumulant.schema.spec/Excursion : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.event/ExcursionResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.spec/Excursion|null[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/Excursion.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/Excursion.hashCode|hashCode(){}[0]
-    final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/Excursion> // com.eignex.kumulant.schema.spec/Excursion.serializer|serializer(){}[0]
-    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.spec/Excursion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/Excursion.toString|toString(){}[0]
-}
-
 final object com.eignex.kumulant.schema.spec/LogLoss : com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.spec/LogLoss|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/LogLoss.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/LogLoss.hashCode|hashCode(){}[0]
@@ -8521,7 +8129,6 @@ final fun (com.eignex.kumulant.stat.regression.tree/RegressionTree<com.eignex.ko
 final fun (com.eignex.kumulant.stat.regression.tree/SplitMetric).com.eignex.kumulant.stat.regression.tree/rank(com.eignex.kumulant.stat.summary/WeightedVarianceResult, kotlin.collections/List<com.eignex.kumulant.stat.summary/WeightedVarianceResult>, kotlin.collections/List<com.eignex.kumulant.stat.summary/WeightedVarianceResult>, kotlin/Double, kotlin/Double): com.eignex.kumulant.stat.regression.tree/SplitInfo // com.eignex.kumulant.stat.regression.tree/rank|rank@com.eignex.kumulant.stat.regression.tree.SplitMetric(com.eignex.kumulant.stat.summary.WeightedVarianceResult;kotlin.collections.List<com.eignex.kumulant.stat.summary.WeightedVarianceResult>;kotlin.collections.List<com.eignex.kumulant.stat.summary.WeightedVarianceResult>;kotlin.Double;kotlin.Double){}[0]
 final fun (com.eignex.kumulant.stat.sketch/BloomFilterResult).com.eignex.kumulant.stat.sketch/contains(kotlin/Long): kotlin/Boolean // com.eignex.kumulant.stat.sketch/contains|contains@com.eignex.kumulant.stat.sketch.BloomFilterResult(kotlin.Long){}[0]
 final fun (com.eignex.kumulant.stat.sketch/CountMinSketchResult).com.eignex.kumulant.stat.sketch/estimate(kotlin/Long): kotlin/Long // com.eignex.kumulant.stat.sketch/estimate|estimate@com.eignex.kumulant.stat.sketch.CountMinSketchResult(kotlin.Long){}[0]
-final fun (com.eignex.kumulant.stat.sketch/MinHashResult).com.eignex.kumulant.stat.sketch/jaccard(com.eignex.kumulant.stat.sketch/MinHashResult): kotlin/Double // com.eignex.kumulant.stat.sketch/jaccard|jaccard@com.eignex.kumulant.stat.sketch.MinHashResult(com.eignex.kumulant.stat.sketch.MinHashResult){}[0]
 final fun (kotlin.random/Random).com.eignex.kumulant.math/nextBeta(kotlin/Double, kotlin/Double): kotlin/Double // com.eignex.kumulant.math/nextBeta|nextBeta@kotlin.random.Random(kotlin.Double;kotlin.Double){}[0]
 final fun (kotlin.random/Random).com.eignex.kumulant.math/nextGamma(kotlin/Double): kotlin/Double // com.eignex.kumulant.math/nextGamma|nextGamma@kotlin.random.Random(kotlin.Double){}[0]
 final fun (kotlin.random/Random).com.eignex.kumulant.math/nextLogNormal(kotlin/Double, kotlin/Double): kotlin/Double // com.eignex.kumulant.math/nextLogNormal|nextLogNormal@kotlin.random.Random(kotlin.Double;kotlin.Double){}[0]

@@ -12,8 +12,6 @@ import kotlinx.serialization.PolymorphicSerializer
 internal object OptimizerSpecSerializer : KumulantSerializer<OptimizerSpec>(OptimizerSpec::class, {
     listOf(
         jsonNode<Sgd>("sgd"),
-        jsonNode<Adagrad>("adagrad"),
-        jsonNode<Rmsprop>("rmsprop"),
         jsonNode<Adam>("adam"),
     )
 })

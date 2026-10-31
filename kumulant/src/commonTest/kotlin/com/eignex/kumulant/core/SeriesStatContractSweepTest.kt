@@ -16,11 +16,9 @@ import com.eignex.kumulant.schema.spec.DecayingSum
 import com.eignex.kumulant.schema.spec.DecayingVariance
 import com.eignex.kumulant.schema.spec.EwmaMean
 import com.eignex.kumulant.schema.spec.EwmaVariance
-import com.eignex.kumulant.schema.spec.Excursion
 import com.eignex.kumulant.schema.spec.ExponentialSmoothing
 import com.eignex.kumulant.schema.spec.FrugalMad
 import com.eignex.kumulant.schema.spec.FrugalQuantile
-import com.eignex.kumulant.schema.spec.HdrHistogram
 import com.eignex.kumulant.schema.spec.Mad
 import com.eignex.kumulant.schema.spec.Max
 import com.eignex.kumulant.schema.spec.Mean
@@ -31,7 +29,6 @@ import com.eignex.kumulant.schema.spec.PitHistogram
 import com.eignex.kumulant.schema.spec.Range
 import com.eignex.kumulant.schema.spec.Rate
 import com.eignex.kumulant.schema.spec.Recency
-import com.eignex.kumulant.schema.spec.RecursiveVariance
 import com.eignex.kumulant.schema.spec.ReservoirHistogram
 import com.eignex.kumulant.schema.spec.RunLength
 import com.eignex.kumulant.schema.spec.SeriesStatSpec
@@ -54,7 +51,6 @@ class SeriesStatContractSweepTest {
         "ArgMin" to ArgMin,
         "ArgMax" to ArgMax,
         "Range" to Range,
-        "Excursion" to Excursion,
         "RunLength" to RunLength,
         "Recency" to Recency,
         "Crossing" to Crossing(level = 5.0),
@@ -74,7 +70,6 @@ class SeriesStatContractSweepTest {
         "CounterRate" to CounterRate(),
         "DDSketch" to DDSketch(),
         "FrugalQuantile" to FrugalQuantile(q = 0.5),
-        "HdrHistogram" to HdrHistogram(),
         "ReservoirHistogram" to ReservoirHistogram(seed = 42L),
         "TDigest" to TDigest(),
         "PitHistogram" to PitHistogram(numBins = 8),
@@ -85,7 +80,6 @@ class SeriesStatContractSweepTest {
         "EwmaVariance" to EwmaVariance(0.3),
         "ExponentialSmoothing" to ExponentialSmoothing(0.3),
         "ExponentialSmoothing.seasonal" to ExponentialSmoothing(0.3, 0.2, period = 4, gamma = 0.1),
-        "RecursiveVariance" to RecursiveVariance(omega = 0.1, alpha = 0.2, beta = 0.7),
     )
 
     private val samples = doubleArrayOf(3.0, 7.5, 1.0, 12.0, 6.25, 9.0, 2.5, 11.0)
@@ -278,7 +272,6 @@ class SeriesStatContractSweepTest {
             "DDSketch",
             "DecayingVariance",
             "FrugalQuantile",
-            "HdrHistogram",
             "ReservoirHistogram",
             "TDigest",
         )

@@ -54,7 +54,6 @@ class StatsRoundTripTest {
             Mad(compression = 200.0),
             DDSketch(relativeError = 0.02, probabilities = listOf(0.5, 0.99)),
             FrugalQuantile(q = 0.5, stepSize = 0.02, initialEstimate = 1.0),
-            HdrHistogram(0.001, 1000.0, 4),
             ReservoirHistogram(capacity = 256, seed = 42L),
             TDigest(compression = 200.0, probabilities = listOf(0.5, 0.95)),
             PitHistogram(numBins = 20),
@@ -95,7 +94,6 @@ class StatsRoundTripTest {
             HyperLogLog(precision = 12),
             BloomFilter(bits = 1024, hashes = 4),
             CountMinSketch(depth = 4, width = 512, seed = 123L),
-            MinHash(numHashes = 64, seed = 99L),
             SpaceSaving(capacity = 32),
             Sojourn(states = listOf(0L, 1L, 2L)),
         )
@@ -108,7 +106,6 @@ class StatsRoundTripTest {
     @Test
     fun `temporal stat configurations round trip`() {
         val cases: List<StatSpec> = listOf(
-            Excursion,
             RunLength,
             Recency,
             Crossing(level = 3.5),
@@ -125,7 +122,6 @@ class StatsRoundTripTest {
                 gamma = 0.2,
                 mode = SeasonalMode.Multiplicative,
             ),
-            RecursiveVariance(omega = 0.1, alpha = 0.05, beta = 0.9),
             Cusum(target = 1.0, referenceValue = 0.25, threshold = 4.0),
             PageHinkley(delta = 0.01, threshold = 25.0),
             Adwin(delta = 0.005, maxBucketsPerSize = 8),

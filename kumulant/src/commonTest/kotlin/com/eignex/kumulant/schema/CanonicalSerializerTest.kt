@@ -152,7 +152,7 @@ class CanonicalSerializerTest {
 
     @Test
     fun `decay and optimizer configurations use stable operator keys`() {
-        val optimizers = listOf<OptimizerSpec>(Sgd(X + 1.0), Adagrad(), Rmsprop(), Adam())
+        val optimizers = listOf<OptimizerSpec>(Sgd(X + 1.0), Adam())
         for (spec in optimizers) {
             val encoded = Json.encodeToString(spec)
             assertEquals(spec, Json.decodeFromString<OptimizerSpec>(encoded))

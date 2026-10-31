@@ -12,7 +12,6 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
         jsonNode<ArgMin>("argMin"),
         jsonNode<ArgMax>("argMax"),
         jsonNode<Range>("range"),
-        jsonNode<Excursion>("excursion"),
         jsonNode<RunLength>("runLength"),
         jsonNode<Recency>("recency"),
         jsonNode<Crossing>("crossing"),
@@ -33,7 +32,6 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
         jsonNode<CounterRate>("counterRate"),
         jsonNode<DDSketch>("ddSketch"),
         jsonNode<FrugalQuantile>("frugalQuantile"),
-        jsonNode<HdrHistogram>("hdrHistogram"),
         jsonNode<ReservoirHistogram>("reservoirHistogram"),
         jsonNode<TDigest>("tDigest"),
         jsonNode<PitHistogram>("pitHistogram"),
@@ -64,7 +62,6 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
         jsonNode<EwmaMean>("ewma"),
         jsonNode<EwmaVariance>("ewmaVariance"),
         jsonNode<ExponentialSmoothing>("exponentialSmoothing"),
-        jsonNode<RecursiveVariance>("recursiveVariance"),
     )
 })
 
@@ -119,7 +116,6 @@ internal object DiscreteStatSpecSerializer : KumulantSerializer<DiscreteStatSpec
         jsonNode<HyperLogLog>("hyperLogLog"),
         jsonNode<BloomFilter>("bloomFilter"),
         jsonNode<CountMinSketch>("countMinSketch"),
-        jsonNode<MinHash>("minHash"),
         jsonNode<Sojourn>("sojourn"),
         jsonNode<SpaceSaving>("spaceSaving"),
         jsonNode<WithWeightDiscrete>("withWeight"),

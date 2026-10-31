@@ -13,7 +13,6 @@ import com.eignex.kumulant.stat.change.AdwinResult
 import com.eignex.kumulant.stat.change.CusumResult
 import com.eignex.kumulant.stat.change.PageHinkleyResult
 import com.eignex.kumulant.stat.event.CrossingResult
-import com.eignex.kumulant.stat.event.ExcursionResult
 import com.eignex.kumulant.stat.event.RecencyResult
 import com.eignex.kumulant.stat.event.RunLengthResult
 import com.eignex.kumulant.stat.event.SojournResult
@@ -45,7 +44,6 @@ import com.eignex.kumulant.stat.score.ConfusionMatrixResult
 import com.eignex.kumulant.stat.sketch.BloomFilterResult
 import com.eignex.kumulant.stat.sketch.CountMinSketchResult
 import com.eignex.kumulant.stat.sketch.HeavyHittersResult
-import com.eignex.kumulant.stat.sketch.MinHashResult
 import com.eignex.kumulant.stat.summary.ArgMaxResult
 import com.eignex.kumulant.stat.summary.ArgMinResult
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
@@ -99,11 +97,6 @@ data object ArgMax : SeriesStatSpec<ArgMaxResult>
 @Serializable
 @SerialName("Range")
 data object Range : SeriesStatSpec<RangeResult>
-
-/** Spec for `ExcursionStat`: running peak with the largest peak-to-trough excursion observed. */
-@Serializable
-@SerialName("Excursion")
-data object Excursion : SeriesStatSpec<ExcursionResult>
 
 /** Spec for `RunLengthStat`: current and longest consecutive truthy-run lengths. */
 @Serializable
@@ -264,18 +257,6 @@ data class FrugalQuantile(
     val initialEstimate: Double = StatDefaults.FRUGAL_QUANTILE_INITIAL_ESTIMATE,
 ) : SeriesStatSpec<QuantileResult>
 
-/** Spec for `HdrHistogramStat`: high-dynamic-range histogram. */
-@Serializable
-@SerialName("HdrHistogram")
-data class HdrHistogram(
-    /** Smallest value the histogram can distinguish. */
-    val lowestDiscernibleValue: Double = StatDefaults.HDR_HISTOGRAM_LOWEST_DISCERNIBLE_VALUE,
-    /** Initial upper bound; the histogram grows past this if needed. */
-    val initialHighestTrackableValue: Double = StatDefaults.HDR_HISTOGRAM_INITIAL_HIGHEST_TRACKABLE_VALUE,
-    /** Number of significant digits of precision (1..5). */
-    val significantDigits: Int = StatDefaults.HDR_HISTOGRAM_SIGNIFICANT_DIGITS,
-) : SeriesStatSpec<SparseHistogramResult>
-
 /**
  * Configuration for `ReservoirHistogramStat`. Seed has no default - the live constructor's
  * `Random.Default.nextLong()` is non-deterministic, which would silently produce
@@ -434,18 +415,6 @@ data class CountMinSketch(
     /** [HasherRef] for the mixer applied per row; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<CountMinSketchResult>
-
-/** Spec for `MinHashStat`: Jaccard-similarity signature over [numHashes] independent hash functions. */
-@Serializable
-@SerialName("MinHash")
-data class MinHash(
-    /** Signature length; higher means better Jaccard accuracy at more memory. */
-    val numHashes: Int = StatDefaults.MIN_HASH_NUM_HASHES,
-    /** PRNG seed used to derive the per-hash salts. */
-    val seed: Long = StatDefaults.MIN_HASH_SEED,
-    /** [HasherRef] for the mixer applied per signature slot; resolved via the Hashers registry. */
-    val hasher: HasherRef = HasherRef.SplitMix64,
-) : DiscreteStatSpec<MinHashResult>
 
 /** Spec for `SojournStat`: per-state time, transition counts, and current dwell over a declared alphabet. */
 @Serializable

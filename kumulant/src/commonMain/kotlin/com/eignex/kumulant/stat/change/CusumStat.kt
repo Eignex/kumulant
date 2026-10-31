@@ -108,9 +108,9 @@ class CusumStat(
         // An untouched shard's zero sums are not evidence of zero drift; averaging them in would halve
         // the receiver's sums and could clear a live alarm.
         if (!values.hasObservation) return
-        // Adopt the snapshot verbatim while empty, matching RecursiveVarianceStat.merge and
-        // ExponentialSmoothingStat.merge. Averaging against a fresh stat's zero would halve the incoming
-        // drift, and `alarmUp` thresholds on that sum directly, so the alarm would need twice the shift.
+        // Adopt the snapshot verbatim while empty, matching ExponentialSmoothingStat.merge. Averaging
+        // against a fresh stat's zero would halve the incoming drift, and `alarmUp` thresholds on that
+        // sum directly, so the alarm would need twice the shift.
         val empty = initialized.load() == 0L
         while (true) {
             val prev = cusumPos.load()

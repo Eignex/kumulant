@@ -1,7 +1,7 @@
 # Package com.eignex.kumulant.stat.sketch
 
 Structural queries on a stream that aren't shaped like a cardinality or
-a quantile. Four members; each answers a different question.
+a quantile. Three members; each answers a different question.
 
 ## Picking a sketch
 
@@ -10,9 +10,8 @@ a quantile. Four members; each answers a different question.
 | [BloomFilterStat] | [BloomFilterResult] | "Have I seen this key before?" Membership only, one-sided false positives, no per-key counts. |
 | [CountMinSketchStat] | [CountMinSketchResult] | "How many times has this key appeared?" Approximate per-key counts; biased upward by collisions, exact for heavy items. |
 | [SpaceSavingStat] | [HeavyHittersResult] | "What are the top K heaviest keys?" Long-tail problem: out of millions of distinct items, a handful might dominate volume. |
-| [MinHashStat] | [MinHashResult] | "How similar are two sets?" Jaccard similarity sketch; estimates overlap without comparing the sets directly. |
 
-All four take a stream of opaque `Long` keys through
+All three take a stream of opaque `Long` keys through
 [com.eignex.kumulant.core.DiscreteStat]. As with [com.eignex.kumulant.stat.cardinality],
 hash domain-specific keys through [com.eignex.kumulant.math.hash64]
 first so the input carries uniform 64-bit entropy.
@@ -31,9 +30,6 @@ first so the input carries uniform 64-bit entropy.
   hot database rows, top users. Cheaper than a full map: keeps K
   counters and guarantees that any key whose true frequency exceeds
   the K-th largest is in the retained set.
-- **MinHash** for near-duplicate detection over streams. Standard
-  Jaccard-similarity sketch; two sets' MinHash signatures collide on
-  hash `j` with probability equal to their Jaccard index.
 
 ## Merge
 
@@ -42,15 +38,13 @@ first so the input carries uniform 64-bit entropy.
 - [CountMinSketchStat] merges via cell-wise sum. Same-shape sketches
   required.
 - [SpaceSavingStat] merges by re-priority over the union of counters.
-- [MinHashStat] merges via cell-wise min over signature arrays. Exact
-  Jaccard reproduction.
 
-All four families work cleanly in distributed pipelines: workers track
+All three families work cleanly in distributed pipelines: workers track
 slices, ship snapshots, the coordinator merges.
 
 ## Concurrency
 
 Each family decomposes updates into independent atomic operations on
-single cells (BloomFilter / CountMin / MinHash) or a small bounded set
+single cells (BloomFilter / CountMin) or a small bounded set
 of cells (SpaceSaving). Lock-free and exact under every
 [com.eignex.kumulant.core.Concurrency] level.

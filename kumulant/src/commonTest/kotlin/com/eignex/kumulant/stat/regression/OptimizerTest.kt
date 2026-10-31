@@ -3,9 +3,7 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.fitLine
 import com.eignex.kumulant.schema.expr.Const
-import com.eignex.kumulant.schema.optimizer.Adagrad
 import com.eignex.kumulant.schema.optimizer.Adam
-import com.eignex.kumulant.schema.optimizer.Rmsprop
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import com.eignex.kumulant.stat.regression.glm.Penalty
@@ -34,24 +32,6 @@ class OptimizerTest {
             optimizer = Adam(learningRate = ConstantRate(0.05)),
         )
         assertConverges(stat, doubleArrayOf(1.5, -2.0, 0.5), intercept = 0.3, tol = 0.15)
-    }
-
-    @Test
-    fun `Adagrad converges on a small regression`() {
-        val stat = StochasticRegressionStat(
-            featureSize = 3,
-            optimizer = Adagrad(learningRate = ConstantRate(0.3)),
-        )
-        assertConverges(stat, doubleArrayOf(1.5, -2.0, 0.5), intercept = 0.3, tol = 0.15)
-    }
-
-    @Test
-    fun `RMSProp converges on a small regression`() {
-        val stat = StochasticRegressionStat(
-            featureSize = 3,
-            optimizer = Rmsprop(learningRate = ConstantRate(0.02)),
-        )
-        assertConverges(stat, doubleArrayOf(1.5, -2.0, 0.5), intercept = 0.3, tol = 0.2)
     }
 
     @Test
@@ -108,11 +88,6 @@ class OptimizerTest {
     @Test
     fun `Adam still accepts a beta of zero`() {
         AdamOptimizer(2, Const(0.1), beta1 = 0.0, beta2 = 0.0)
-    }
-
-    @Test
-    fun `RMSProp rejects a rho of one rather than diverging`() {
-        assertFailsWith<IllegalArgumentException> { RmspropOptimizer(2, Const(0.1), rho = 1.0) }
     }
 
     @Test

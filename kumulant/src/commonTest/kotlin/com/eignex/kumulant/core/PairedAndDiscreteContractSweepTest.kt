@@ -11,7 +11,6 @@ import com.eignex.kumulant.schema.spec.DiscreteStatSpec
 import com.eignex.kumulant.schema.spec.HyperLogLog
 import com.eignex.kumulant.schema.spec.LogLoss
 import com.eignex.kumulant.schema.spec.MaeLoss
-import com.eignex.kumulant.schema.spec.MinHash
 import com.eignex.kumulant.schema.spec.MseLoss
 import com.eignex.kumulant.schema.spec.PairedStatSpec
 import com.eignex.kumulant.schema.spec.PairedSum
@@ -43,7 +42,6 @@ class PairedAndDiscreteContractSweepTest {
         "HyperLogLog" to HyperLogLog(),
         "BloomFilter" to BloomFilter(),
         "CountMinSketch" to CountMinSketch(),
-        "MinHash" to MinHash(),
         "Sojourn" to Sojourn(states = listOf(0L, 1L, 2L)),
         "SpaceSaving" to SpaceSaving(capacity = 8),
     )

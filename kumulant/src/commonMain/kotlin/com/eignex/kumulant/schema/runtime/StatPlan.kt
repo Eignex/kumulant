@@ -75,16 +75,13 @@ import com.eignex.kumulant.stat.decay.DecayingVarianceStat
 import com.eignex.kumulant.stat.decay.EwmaMeanStat
 import com.eignex.kumulant.stat.decay.EwmaVarianceStat
 import com.eignex.kumulant.stat.event.CrossingStat
-import com.eignex.kumulant.stat.event.ExcursionStat
 import com.eignex.kumulant.stat.event.RecencyStat
 import com.eignex.kumulant.stat.event.RunLengthStat
 import com.eignex.kumulant.stat.event.SojournStat
 import com.eignex.kumulant.stat.forecast.ExponentialSmoothingStat
-import com.eignex.kumulant.stat.forecast.RecursiveVarianceStat
 import com.eignex.kumulant.stat.quantile.BucketHistogramStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.quantile.FrugalQuantileStat
-import com.eignex.kumulant.stat.quantile.HdrHistogramStat
 import com.eignex.kumulant.stat.quantile.ReservoirHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
@@ -112,7 +109,6 @@ import com.eignex.kumulant.stat.score.PinballLossStat
 import com.eignex.kumulant.stat.score.pitHistogram
 import com.eignex.kumulant.stat.sketch.BloomFilterStat
 import com.eignex.kumulant.stat.sketch.CountMinSketchStat
-import com.eignex.kumulant.stat.sketch.MinHashStat
 import com.eignex.kumulant.stat.sketch.SpaceSavingStat
 import com.eignex.kumulant.stat.summary.ArgMaxStat
 import com.eignex.kumulant.stat.summary.ArgMinStat
@@ -166,8 +162,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     ArgMax -> StatPlan(path) { concurrency -> ArgMaxStat(concurrency) }
 
     Range -> StatPlan(path) { concurrency -> RangeStat(concurrency) }
-
-    Excursion -> StatPlan(path) { concurrency -> ExcursionStat(concurrency) }
 
     RunLength -> StatPlan(path) { concurrency -> RunLengthStat(concurrency) }
 
@@ -240,17 +234,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
             FrugalQuantileStat(q, stepSize, initialEstimate, concurrency)
         }
 
-    is HdrHistogram -> {
-        StatPlan(path) { concurrency ->
-            HdrHistogramStat(
-                lowestDiscernibleValue,
-                initialHighestTrackableValue,
-                significantDigits,
-                concurrency,
-            )
-        }
-    }
-
     is ReservoirHistogram ->
         StatPlan(path) { concurrency ->
             ReservoirHistogramStat(capacity, seed, concurrency)
@@ -304,11 +287,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
             )
         }
     }
-
-    is RecursiveVariance ->
-        StatPlan(path) { concurrency ->
-            RecursiveVarianceStat(omega, alpha, beta, concurrency)
-        }
 
     is GroupStatSpec -> {
         val children = stats.map { (name, config) ->
@@ -774,11 +752,6 @@ internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<Discret
     is CountMinSketch ->
         StatPlan(path) { concurrency ->
             CountMinSketchStat(depth, width, seed, Hashers.resolve(hasher), concurrency)
-        }
-
-    is MinHash ->
-        StatPlan(path) { concurrency ->
-            MinHashStat(numHashes, seed, Hashers.resolve(hasher), concurrency)
         }
 
     is SpaceSaving -> StatPlan(path) { concurrency -> SpaceSavingStat(capacity, concurrency) }

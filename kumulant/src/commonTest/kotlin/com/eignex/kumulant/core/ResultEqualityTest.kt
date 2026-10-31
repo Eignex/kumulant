@@ -8,7 +8,6 @@ import com.eignex.kumulant.stat.quantile.TDigestResult
 import com.eignex.kumulant.stat.sketch.BloomFilterResult
 import com.eignex.kumulant.stat.sketch.CountMinSketchResult
 import com.eignex.kumulant.stat.sketch.HeavyHittersResult
-import com.eignex.kumulant.stat.sketch.MinHashResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -49,7 +48,6 @@ class ResultEqualityTest {
             BloomFilterResult(64, 3, longArrayOf(5L), 2L) to BloomFilterResult(64, 3, longArrayOf(5L), 2L),
             CountMinSketchResult(2, 4, 11L, longArrayOf(1L, 2L), 3L) to
                 CountMinSketchResult(2, 4, 11L, longArrayOf(1L, 2L), 3L),
-            MinHashResult(2, 7L, longArrayOf(9L, 8L), 5L) to MinHashResult(2, 7L, longArrayOf(9L, 8L), 5L),
             HeavyHittersResult(4, longArrayOf(1L), longArrayOf(2L), longArrayOf(0L), 2L) to
                 HeavyHittersResult(4, longArrayOf(1L), longArrayOf(2L), longArrayOf(0L), 2L),
         )
@@ -66,10 +64,6 @@ class ResultEqualityTest {
         assertNotEquals(
             HyperLogLogResult(1.5, 4, intArrayOf(1, 2, 3), 9L),
             HyperLogLogResult(1.5, 4, intArrayOf(1, 2, 4), 9L),
-        )
-        assertNotEquals(
-            MinHashResult(2, 7L, longArrayOf(9L, 8L), 5L),
-            MinHashResult(2, 7L, longArrayOf(9L, 7L), 5L),
         )
     }
 

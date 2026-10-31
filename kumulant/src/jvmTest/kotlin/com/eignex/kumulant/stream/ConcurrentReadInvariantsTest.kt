@@ -6,7 +6,6 @@ import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
 import com.eignex.kumulant.stat.calibration.isotonicCalibration
 import com.eignex.kumulant.stat.quantile.DDSketchStat
-import com.eignex.kumulant.stat.quantile.HdrHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.kumulant.stat.score.AucStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
@@ -75,27 +74,6 @@ class ConcurrentReadInvariantsTest {
                     abs(r.negatives.sum() - r.totalNegatives) < 1e-6,
                     "negatives sum ${r.negatives.sum()} vs total ${r.totalNegatives}",
                 )
-            }
-        }
-    }
-
-    @Test
-    fun `HdrHistogramStat read does not throw while buckets are being populated`() {
-        for (level in levels) {
-            // Spread values widely to force bucket creation while reads are in progress.
-            val stat = HdrHistogramStat(lowestDiscernibleValue = 1.0, concurrency = level)
-            assertReadInvariants("HdrHistogramStat[$level]", stat, iters = 100, write = { t, i ->
-                stat.update(1.0 + (t * 7919L + i * 104_729L) % 1_000_000L)
-            }) { r ->
-                assertTrue(
-                    r.lowerBounds.size == r.upperBounds.size,
-                    "lowers=${r.lowerBounds.size} uppers=${r.upperBounds.size}",
-                )
-                assertTrue(
-                    r.lowerBounds.size == r.weights.size,
-                    "lowers=${r.lowerBounds.size} weights=${r.weights.size}",
-                )
-                for (w in r.weights) assertTrue(w > 0.0, "non-positive weight $w in a populated-bucket list")
             }
         }
     }

@@ -19,11 +19,11 @@ import kotlin.math.nextUp
  *
  * Merge adds an interval of the incoming snapshot to the bucket holding its midpoint (or its
  * finite end, for an open interval). A snapshot over the same edges merges exactly; one from
- * another layout, such as [HdrHistogramStat], is rebinned approximately.
+ * another layout, such as [SketchResult.toSparseHistogram], is rebinned approximately.
  *
  * **Use cases:** distribution-shape monitoring with caller-chosen bin edges, SLO latency
  * buckets, calibration and probability histograms over a known range. Reach for
- * [HdrHistogramStat] or [DDSketchStat] for unbounded values with logarithmic resolution.
+ * [DDSketchStat] for unbounded values with logarithmic resolution.
  *
  * **Memory:** O(K); one double cell per bucket.
  *
