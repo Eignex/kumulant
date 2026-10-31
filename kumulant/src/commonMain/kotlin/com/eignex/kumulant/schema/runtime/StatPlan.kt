@@ -81,13 +81,12 @@ import com.eignex.kumulant.stat.event.RunLengthStat
 import com.eignex.kumulant.stat.event.SojournStat
 import com.eignex.kumulant.stat.forecast.ExponentialSmoothingStat
 import com.eignex.kumulant.stat.forecast.RecursiveVarianceStat
+import com.eignex.kumulant.stat.quantile.BucketHistogramStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.quantile.FrugalQuantileStat
 import com.eignex.kumulant.stat.quantile.HdrHistogramStat
-import com.eignex.kumulant.stat.quantile.LinearHistogramStat
 import com.eignex.kumulant.stat.quantile.ReservoirHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
-import com.eignex.kumulant.stat.quantile.ThresholdBucketStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.rate.RateStat
 import com.eignex.kumulant.stat.regression.CovarianceStat
@@ -176,9 +175,9 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
 
     is Crossing -> StatPlan(path) { concurrency -> CrossingStat(level, concurrency) }
 
-    is ThresholdBucket ->
+    is BucketHistogram ->
         StatPlan(path) { concurrency ->
-            ThresholdBucketStat(thresholds.toDoubleArray(), concurrency)
+            BucketHistogramStat(edges.toDoubleArray(), concurrency)
         }
 
     is Mad ->
@@ -251,11 +250,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
             )
         }
     }
-
-    is LinearHistogram ->
-        StatPlan(path) { concurrency ->
-            LinearHistogramStat(lowerBound, upperBound, binCount, concurrency)
-        }
 
     is ReservoirHistogram ->
         StatPlan(path) { concurrency ->

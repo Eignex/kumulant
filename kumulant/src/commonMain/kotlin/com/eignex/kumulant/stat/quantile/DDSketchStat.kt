@@ -199,7 +199,7 @@ class DDSketchStat(
         }
 
         return SketchResult(
-            // Copied on the way out, the way ThresholdBucketStat copies its thresholds: the array is a
+            // Copied on the way out, the way BucketHistogramStat copies its edges: the array is a
             // constructor property, so handing the same instance to every snapshot and every replica lets
             // one caller's edit re-label this stat's quantiles and those of every replica in a fan-out.
             probabilities = probabilities.copyOf(),

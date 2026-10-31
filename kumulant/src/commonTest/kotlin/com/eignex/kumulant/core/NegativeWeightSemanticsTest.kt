@@ -3,7 +3,7 @@ package com.eignex.kumulant.core
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.EwmaMeanStat
-import com.eignex.kumulant.stat.quantile.ThresholdBucketStat
+import com.eignex.kumulant.stat.quantile.BucketHistogramStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
@@ -67,11 +67,11 @@ class NegativeWeightSemanticsTest {
 
     @Test
     fun `a bucket count can go negative so callers must not read it as a population`() {
-        val buckets = ThresholdBucketStat(doubleArrayOf(5.0, 15.0, 25.0))
+        val buckets = BucketHistogramStat(doubleArrayOf(5.0, 15.0, 25.0))
         buckets.update(1.0, weight = -1.0)
-        assertEquals(-1.0, buckets.read().counts[0], 1e-9)
+        assertEquals(-1.0, buckets.read().weights.single(), 1e-9)
         buckets.update(1.0, weight = 1.0)
-        assertEquals(0.0, buckets.read().counts[0], 1e-9)
+        assertEquals(0, buckets.read().weights.size)
     }
 
     @Test

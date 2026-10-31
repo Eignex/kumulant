@@ -46,7 +46,6 @@ import com.eignex.kumulant.stat.event.RunLengthStat
 import com.eignex.kumulant.stat.event.SojournResult
 import com.eignex.kumulant.stat.event.SojournStat
 import com.eignex.kumulant.stat.summary.SumStat
-import com.eignex.kumulant.stat.quantile.ThresholdBucketStat
 import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.concurrent.atomics.AtomicLong
@@ -173,14 +172,6 @@ val rangeStatSpec = seriesStatSpec(
         }
         hi - lo
     },
-)
-
-val thresholdBucketStatSpec = seriesStatSpec(
-    name = "ThresholdBucketStat",
-    factory = { c -> ThresholdBucketStat(doubleArrayOf(0.25, 0.5, 0.75), c) },
-    updates = ::uniformUnitWeights,
-    scalar = { it.counts.sum() },
-    reference = { it.count().toDouble() },
 )
 
 val crossingStatSpec = seriesStatSpec(
@@ -811,10 +802,10 @@ val hdrHistogramStatSpec = seriesStatSpec(
     reference = { it.count().toDouble() },
 )
 
-val linearHistogramStatSpec = seriesStatSpec(
-    name = "LinearHistogramStat",
+val bucketHistogramStatSpec = seriesStatSpec(
+    name = "BucketHistogramStat",
     factory = { c ->
-        com.eignex.kumulant.stat.quantile.LinearHistogramStat(
+        com.eignex.kumulant.stat.quantile.BucketHistogramStat.linear(
             lowerBound = 0.0,
             upperBound = 1.0,
             binCount = 64,
@@ -1047,7 +1038,6 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     argMinStatSpec,
     argMaxStatSpec,
     rangeStatSpec,
-    thresholdBucketStatSpec,
     crossingStatSpec,
     runLengthStatSpec,
     excursionStatSpec,
@@ -1087,7 +1077,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     spaceSavingStatSpec,
     ddSketchStatSpec,
     hdrHistogramStatSpec,
-    linearHistogramStatSpec,
+    bucketHistogramStatSpec,
     reservoirHistogramStatSpec,
     tDigestStatSpec,
     frugalQuantileStatSpec,
