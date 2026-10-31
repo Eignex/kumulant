@@ -138,15 +138,15 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  * percentile lookups via the sample distribution, scratch-pad for
  * downstream analytics that need raw values rather than aggregates.
  *
- * **Memory:** O([capacity]) doubles for values + keys, plus a small RNG lock.
+ * **Memory:** O([capacity]) key/value slots, plus a small RNG lock.
  *
  * **Update:** O([capacity]) per admission attempt to scan for the minimum key;
  * CAS contention can require repeated scans.
  *
  * **Concurrency:** [Concurrency.Strict] and [Concurrency.HighWrite] use an outer
  * lock across updates, merges, reads, and resets. [Concurrency.Relaxed] uses CAS
- * admission and a separate RNG lock; reads can observe a key before its matching
- * value, and no sampling-error bound is guaranteed under contention.
+ * admission of each key/value pair and a separate RNG lock; reads are not an atomic
+ * snapshot across slots, and no sampling-error bound is guaranteed under contention.
  * [Concurrency.None] runs without synchronisation.
  */
 class ReservoirHistogramStat(
@@ -175,11 +175,15 @@ class ReservoirHistogramStat(
     // Copies made by `create`, so each gets its own admission stream. See `create`.
     private val copies = mode.newLong(0L)
 
-    // Sentinel key for "empty slot"; any real A-Res key (in (0, 1]) beats it.
-    private val emptyKey = Double.NEGATIVE_INFINITY
+    // Key and value live in one immutable slot swapped by a single CAS. Separate key and value cells
+    // let a delayed value store from one admission overwrite the value of a later admission that
+    // already replaced its key, permanently pairing a key with the wrong value.
+    private class Slot(val key: Double, val value: Double)
 
-    private val sampleKeys = mode.newDoubleArray(capacity) { emptyKey }
-    private val sampleValues = mode.newDoubleArray(capacity) { 0.0 }
+    // Sentinel for "empty slot"; any real A-Res key (in (0, 1]) beats its key.
+    private val emptySlot = Slot(Double.NEGATIVE_INFINITY, 0.0)
+
+    private val slots = Array(capacity) { mode.newReference(emptySlot) }
     private val totalSeenCell = mode.newLong(0L)
     private val totalWeightCell = mode.newDouble(0.0)
 
@@ -190,22 +194,20 @@ class ReservoirHistogramStat(
 
     private fun admit(value: Double, key: Double) {
         // Scan for the min-key slot; CAS-replace. Retry on lost CAS.
+        var admitted: Slot? = null
         while (true) {
             var minIdx = 0
-            var minKey = sampleKeys.load(0)
+            var minSlot = slots[0].load()
             for (i in 1 until capacity) {
-                val k = sampleKeys.load(i)
-                if (k < minKey) {
-                    minKey = k
+                val slot = slots[i].load()
+                if (slot.key < minSlot.key) {
+                    minSlot = slot
                     minIdx = i
                 }
             }
-            if (key <= minKey) return // not admit-worthy
-            if (sampleKeys.compareAndSet(minIdx, minKey, key)) {
-                // Relaxed readers can observe the new key before its matching value.
-                sampleValues.store(minIdx, value)
-                return
-            }
+            if (key <= minSlot.key) return // not admit-worthy
+            val next = admitted ?: Slot(key, value).also { admitted = it }
+            if (slots[minIdx].compareAndSet(minSlot, next)) return
             // Lost the CAS; re-scan against the updated state.
         }
     }
@@ -253,10 +255,7 @@ class ReservoirHistogramStat(
 
     override fun reset() {
         outerLock.guarded {
-            for (i in 0 until capacity) {
-                sampleKeys.store(i, emptyKey)
-                sampleValues.store(i, 0.0)
-            }
+            for (slot in slots) slot.store(emptySlot)
             totalSeenCell.store(0L)
             totalWeightCell.store(0.0)
         }
@@ -265,18 +264,14 @@ class ReservoirHistogramStat(
     override fun read(timestampNanos: Long): ReservoirResult = outerLock.guarded {
         // Snapshot under outerLock (strict) or best-effort (relaxed). Filter
         // out unfilled slots by sentinel key.
-        var filled = 0
-        for (i in 0 until capacity) {
-            if (sampleKeys.load(i) != emptyKey) filled++
-        }
-        val outVals = DoubleArray(filled)
-        val outKeys = DoubleArray(filled)
+        val outVals = DoubleArray(capacity)
+        val outKeys = DoubleArray(capacity)
         var cursor = 0
-        for (i in 0 until capacity) {
-            val k = sampleKeys.load(i)
-            if (k != emptyKey && cursor < filled) {
-                outKeys[cursor] = k
-                outVals[cursor] = sampleValues.load(i)
+        for (cell in slots) {
+            val slot = cell.load()
+            if (slot !== emptySlot) {
+                outKeys[cursor] = slot.key
+                outVals[cursor] = slot.value
                 cursor++
             }
         }
