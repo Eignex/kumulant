@@ -91,7 +91,10 @@ class TopTwoThompsonBandit<R : Result>(
 
     override fun snapshot(): List<R> = stats.map { it.read(0L) }
 
-    override fun armResult(armIndex: Int): R = stats[armIndex].read(0L)
+    override fun armResult(armIndex: Int): R {
+        requireArmIndex(armIndex, nbrArms)
+        return stats[armIndex].read(0L)
+    }
 
     override fun reset() {
         for (i in 0 until nbrArms) stats[i] = policy.createArm()

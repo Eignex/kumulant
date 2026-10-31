@@ -94,7 +94,10 @@ class BoltzmannBandit(
         stats[armIndex].update(value, 0L, weight)
     }
 
-    override fun armResult(armIndex: Int): WeightedMeanResult = stats[armIndex].read(0L)
+    override fun armResult(armIndex: Int): WeightedMeanResult {
+        requireArmIndex(armIndex, nbrArms)
+        return stats[armIndex].read(0L)
+    }
 
     override fun snapshot(): List<WeightedMeanResult> = stats.map { it.read(0L) }
 
