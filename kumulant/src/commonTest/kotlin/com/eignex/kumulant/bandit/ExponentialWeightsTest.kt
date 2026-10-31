@@ -9,79 +9,40 @@ import kotlin.test.assertTrue
 class ExponentialWeightsTest {
 
     @Test
-    fun `weights inside the usable range are left alone`() {
-        val w = doubleArrayOf(1.0, 2.0, 0.5)
+    fun `normalising shifts the largest log weight to zero and keeps every difference`() {
+        val w = doubleArrayOf(800.0, 750.0, 900.0)
 
-        w.renormaliseExponentialWeights()
+        w.normaliseLogWeights()
 
-        assertEquals(1.0, w[0], DELTA)
-        assertEquals(2.0, w[1], DELTA)
-        assertEquals(0.5, w[2], DELTA)
-    }
-
-    @Test
-    fun `an overflowing array is rescaled and keeps every ratio`() {
-        val w = doubleArrayOf(1e200, 5e199, 2e200)
-        val ratioBefore = w[0] / w[2]
-
-        w.renormaliseExponentialWeights()
-
-        assertTrue(w.all { it <= 1.0 }, "not brought back into range: ${w.toList()}")
-        assertEquals(1.0, w[2], DELTA, "the maximum should land on exactly one")
-        assertEquals(ratioBefore, w[0] / w[2], DELTA, "the rescale changed an arm's relative standing")
-    }
-
-    @Test
-    fun `an underflowing array is rescaled rather than left to die`() {
-        val w = doubleArrayOf(1e-200, 5e-201, 2e-200)
-        val ratioBefore = w[0] / w[2]
-
-        w.renormaliseExponentialWeights()
-
-        assertTrue(w.all { it >= 1e-100 }, "still in the underflow band: ${w.toList()}")
-        assertEquals(1.0, w[2], DELTA, "the maximum should land on exactly one")
-        assertEquals(ratioBefore, w[0] / w[2], DELTA, "the rescale changed an arm's relative standing")
-    }
-
-    @Test
-    fun `a fully collapsed array resets to uniform`() {
-        val w = doubleArrayOf(0.0, 0.0, 0.0)
-
-        w.renormaliseExponentialWeights()
-
-        assertTrue(w.all { it == 1.0 }, "expected a uniform reset: ${w.toList()}")
-    }
-
-    @Test
-    fun `a partly collapsed array survives on its remaining mass`() {
-        val w = doubleArrayOf(0.0, 1e-200, 0.0)
-
-        w.renormaliseExponentialWeights()
-
-        assertEquals(0.0, w[0], DELTA)
-        assertEquals(1.0, w[1], DELTA)
+        assertEquals(-100.0, w[0], DELTA)
+        assertEquals(-150.0, w[1], DELTA)
         assertEquals(0.0, w[2], DELTA)
     }
 
     @Test
-    fun `rescaling is idempotent`() {
-        val w = doubleArrayOf(1e200, 5e199, 2e200)
+    fun `normalising keeps a far-behind log weight finite`() {
+        val w = doubleArrayOf(-Double.MAX_VALUE, Double.MAX_VALUE)
 
-        w.renormaliseExponentialWeights()
+        w.normaliseLogWeights()
+
+        assertTrue(w[0].isFinite(), "log weight left the finite range: ${w.toList()}")
+        assertEquals(0.0, w[1], DELTA)
+    }
+
+    @Test
+    fun `normalising is idempotent`() {
+        val w = doubleArrayOf(800.0, 750.0, 900.0)
+
+        w.normaliseLogWeights()
         val once = w.copyOf()
-        w.renormaliseExponentialWeights()
+        w.normaliseLogWeights()
 
         for (i in w.indices) assertEquals(once[i], w[i], DELTA, "coordinate $i moved on the second pass")
     }
 
     @Test
     fun `an empty array is handled`() {
-        DoubleArray(0).renormaliseExponentialWeights()
-    }
-
-    private fun DoubleArray.all(predicate: (Double) -> Boolean): Boolean {
-        for (v in this) if (!predicate(v)) return false
-        return true
+        DoubleArray(0).normaliseLogWeights()
     }
 
     @Test

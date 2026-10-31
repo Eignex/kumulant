@@ -3,7 +3,8 @@ package com.eignex.kumulant.bandit.univariate
 import com.eignex.kumulant.bandit.MIN_PLAY_PROB
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.UnivariateBandit
-import com.eignex.kumulant.bandit.renormaliseExponentialWeights
+import com.eignex.kumulant.bandit.clampLogWeight
+import com.eignex.kumulant.bandit.normaliseLogWeights
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
@@ -21,8 +22,10 @@ import kotlin.random.Random
 @Serializable
 @SerialName("Exp3ArmResult")
 data class Exp3ArmResult(
-    /** Unnormalised exponential weight `exp(eta * cumulative gain)`. */
-    val weight: Double,
+    /**
+     * Log of the exponential weight, `eta * cumulative gain`, shifted so the largest arm sits at zero.
+     */
+    val logWeight: Double,
 ) : Result
 
 /**
@@ -30,7 +33,8 @@ data class Exp3ArmResult(
  * bandit over a fixed pool of [nbrArms]. Each round: compute play
  * distribution `p(a) = (1 - gamma) * w(a) / sum(w) + gamma/K`, sample `a ~ p`, then
  * on reward `r ∈ [0,1]` update `w(a) *= exp(eta * r / p(a))` using the
- * importance-sampling-corrected gain.
+ * importance-sampling-corrected gain. Weights are held as logs, so no gain overflows or
+ * permanently zeroes an arm's weight.
  *
  * Computes a joint sampling distribution across arms, with regret bound
  * `O(sqrt(T · K · ln K))` under default tunings.
@@ -50,7 +54,7 @@ data class Exp3ArmResult(
  *
  * **Choose:** O(nbrArms); build the play distribution, inverse-CDF sample.
  *
- * **Update:** O(nbrArms); multiplicative update and a scan for weight rescaling.
+ * **Update:** O(nbrArms); additive update of the log weight and a shift so the largest is zero.
  * Uses the arm's most recently recorded play probability while feedback is pending,
  * otherwise recomputes the current distribution.
  *
@@ -76,7 +80,7 @@ class Exp3Bandit(
         require(gamma in 0.0..1.0) { "gamma must lie in [0, 1], got $gamma" }
     }
 
-    private val weights: DoubleArray = DoubleArray(nbrArms) { 1.0 }
+    private val logWeights: DoubleArray = DoubleArray(nbrArms)
 
     // Delayed feedback must use a recorded play probability because other updates move the distribution.
     // Repeated outstanding pulls of one arm share its most recently recorded probability.
@@ -93,17 +97,13 @@ class Exp3Bandit(
 
     /** Current play distribution: weight-normalised softmax blended with uniform [gamma]. */
     fun playDistribution(): DoubleArray {
-        var sumW = 0.0
-        for (w in weights) sumW += w
-        // Invalid or underflowed totals cannot be normalised; uniform sampling keeps every arm reachable.
+        val w = relativeWeights()
+        val sumW = w.sum()
+        // Invalid totals cannot be normalised; uniform sampling keeps every arm reachable.
         if (!(sumW > 0.0) || !sumW.isFinite()) return DoubleArray(nbrArms) { 1.0 / nbrArms }
-        val out = DoubleArray(nbrArms)
         val uniform = gamma / nbrArms
-        for (a in 0 until nbrArms) {
-            val w = weights[a]
-            out[a] = (1.0 - gamma) * (if (w.isFinite()) w / sumW else 0.0) + uniform
-        }
-        return out
+        for (a in 0 until nbrArms) w[a] = (1.0 - gamma) * (w[a] / sumW) + uniform
+        return w
     }
 
     override fun update(armIndex: Int, value: Double, weight: Double) {
@@ -111,9 +111,11 @@ class Exp3Bandit(
         // Inert feedback must not consume a pending pull's recorded probability.
         if (weight.isInertWeight()) return
         val p = propensityOf(armIndex).coerceAtLeast(MIN_PLAY_PROB)
-        val gain = (value * weight) / p
-        weights[armIndex] *= exp(eta * gain)
-        weights.renormaliseExponentialWeights()
+        val logGain = eta * (value * weight) / p
+        // A NaN gain carries no evidence and would poison every later normalisation.
+        if (logGain.isNaN()) return
+        logWeights[armIndex] = (logWeights[armIndex] + logGain).clampLogWeight()
+        logWeights.normaliseLogWeights()
     }
 
     // Off-policy updates without a pending pull use the current distribution as an estimate.
@@ -125,26 +127,33 @@ class Exp3Bandit(
 
     /** Current per-arm weights, normalised to sum to 1. */
     fun armWeights(): DoubleArray {
-        val out = weights.copyOf()
+        val out = relativeWeights()
         val s = out.sum()
         if (s > 0.0) for (i in out.indices) out[i] /= s
         return out
     }
 
-    override fun snapshot(): List<Exp3ArmResult> = List(nbrArms) { Exp3ArmResult(weights[it]) }
+    // The largest log weight is zero, so the largest relative weight is one and the sum cannot overflow.
+    private fun relativeWeights(): DoubleArray = DoubleArray(nbrArms) { exp(logWeights[it]) }
+
+    override fun snapshot(): List<Exp3ArmResult> = List(nbrArms) { Exp3ArmResult(logWeights[it]) }
 
     /**
-     * Approximate pooling by multiplying corresponding arm weights and rescaling.
+     * Approximate pooling by multiplying corresponding arm weights, adding their logs.
+     * Non-finite log weights carry no usable evidence and are skipped.
      * Pending play probabilities and pull counts are not included in the snapshot.
      */
     override fun merge(other: List<Exp3ArmResult>) {
         requireMergeSize(other.size, nbrArms)
-        for (i in 0 until nbrArms) weights[i] *= other[i].weight
-        weights.renormaliseExponentialWeights()
+        for (i in 0 until nbrArms) {
+            val logWeight = other[i].logWeight
+            if (logWeight.isFinite()) logWeights[i] = (logWeights[i] + logWeight).clampLogWeight()
+        }
+        logWeights.normaliseLogWeights()
     }
 
     override fun reset() {
-        for (i in weights.indices) weights[i] = 1.0
+        logWeights.fill(0.0)
         pendingPropensity.fill(0.0)
         pendingPulls.fill(0)
     }

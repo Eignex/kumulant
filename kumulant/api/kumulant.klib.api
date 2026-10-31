@@ -1454,8 +1454,8 @@ final class com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec : com.eignex
 final class com.eignex.kumulant.bandit.univariate/Exp3ArmResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.bandit.univariate/Exp3ArmResult|null[0]
     constructor <init>(kotlin/Double) // com.eignex.kumulant.bandit.univariate/Exp3ArmResult.<init>|<init>(kotlin.Double){}[0]
 
-    final val weight // com.eignex.kumulant.bandit.univariate/Exp3ArmResult.weight|{}weight[0]
-        final fun <get-weight>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Exp3ArmResult.weight.<get-weight>|<get-weight>(){}[0]
+    final val logWeight // com.eignex.kumulant.bandit.univariate/Exp3ArmResult.logWeight|{}logWeight[0]
+        final fun <get-logWeight>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Exp3ArmResult.logWeight.<get-logWeight>|<get-logWeight>(){}[0]
 
     final fun component1(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Exp3ArmResult.component1|component1(){}[0]
     final fun copy(kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/Exp3ArmResult // com.eignex.kumulant.bandit.univariate/Exp3ArmResult.copy|copy(kotlin.Double){}[0]

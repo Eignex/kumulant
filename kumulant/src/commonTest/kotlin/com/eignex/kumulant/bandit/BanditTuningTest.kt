@@ -61,10 +61,10 @@ class BanditTuningTest {
     }
 
     @Test
-    fun `EXP3 survives merging all-zero arm results`() {
+    fun `EXP3 survives merging non-finite arm results`() {
         val bandit = Exp3Bandit(nbrArms = 2, gamma = 0.1, random = Random(5))
 
-        bandit.merge(listOf(Exp3ArmResult(0.0), Exp3ArmResult(0.0)))
+        bandit.merge(listOf(Exp3ArmResult(Double.NEGATIVE_INFINITY), Exp3ArmResult(Double.NaN)))
 
         val p = bandit.playDistribution()
         assertTrue(p.all { it.isFinite() }, "distribution went non-finite: ${p.toList()}")

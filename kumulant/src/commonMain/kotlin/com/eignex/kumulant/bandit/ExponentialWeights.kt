@@ -6,22 +6,16 @@ import kotlin.random.Random
 // The probability floor bounds reward / p during importance weighting.
 internal const val MIN_PLAY_PROB: Double = 1e-12
 
-// Rescale before exp overflows.
-internal const val RENORM_THRESHOLD: Double = 1e100
+// Exponential weights are held as logs: exp(eta * gain) overflows for eta * gain above ~709, and a
+// weight underflowed to zero can never recover. Clamping keeps every log weight finite.
+internal fun Double.clampLogWeight(): Double = coerceIn(-Double.MAX_VALUE, Double.MAX_VALUE)
 
-// Rescale before all weights underflow to zero.
-internal const val RENORM_FLOOR: Double = 1e-100
-
-// Scaling by the maximum preserves probability ratios; fully collapsed weights reset to uniform.
-internal fun DoubleArray.renormaliseExponentialWeights() {
-    var maxW = 0.0
-    for (w in this) if (w > maxW) maxW = w
-    when {
-        maxW > RENORM_THRESHOLD || (maxW > 0.0 && maxW < RENORM_FLOOR) ->
-            for (i in indices) this[i] /= maxW
-
-        maxW == 0.0 -> for (i in indices) this[i] = 1.0
-    }
+// Shifting by the maximum preserves probability ratios and keeps the largest exp(logWeight) at one.
+internal fun DoubleArray.normaliseLogWeights() {
+    var maxLog = Double.NEGATIVE_INFINITY
+    for (w in this) if (w > maxLog) maxLog = w
+    if (!maxLog.isFinite()) return
+    for (i in indices) this[i] = (this[i] - maxLog).clampLogWeight()
 }
 
 // Floating-point normalization can leave a remainder, assigned to the last index.

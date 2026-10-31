@@ -598,7 +598,7 @@ public final class com/eignex/kumulant/bandit/univariate/Exp3ArmResult : com/eig
 	public final fun copy (D)Lcom/eignex/kumulant/bandit/univariate/Exp3ArmResult;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/Exp3ArmResult;DILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/Exp3ArmResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getWeight ()D
+	public final fun getLogWeight ()D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
