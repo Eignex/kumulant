@@ -24,7 +24,6 @@ internal object StatDefaults {
     const val COUNT_MIN_SKETCH_SEED: Long = -7046029254386353133L
     const val BLOOM_FILTER_BITS: Int = 1 shl 16
     const val BLOOM_FILTER_HASHES: Int = 7
-    const val LINEAR_COUNTING_BITS: Int = 4096
     const val HYPER_LOG_LOG_PRECISION: Int = 14
     const val AUC_NUM_BINS: Int = 256
     const val AUC_LOWER_BOUND: Double = 0.0
@@ -48,8 +47,8 @@ internal object StatDefaults {
     const val CUSUM_REFERENCE_VALUE: Double = 0.5
     const val CUSUM_THRESHOLD: Double = 5.0
     val seasonalMode: SeasonalMode = SeasonalMode.Additive
-    const val SEASONAL_SMOOTHING_PHI: Double = 1.0
-    const val HOLT_PHI: Double = 1.0
+    const val SMOOTHING_PHI: Double = 1.0
+    const val SMOOTHING_PERIOD: Int = 1
 
     fun diagonalLearningRate(): ScalarExpr = ConstantRate(1.0)
     fun regressionOptimizer(): OptimizerSpec = Sgd()

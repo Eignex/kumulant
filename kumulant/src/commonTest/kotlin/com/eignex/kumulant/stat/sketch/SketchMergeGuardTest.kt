@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.sketch
 import com.eignex.kumulant.math.Hashers
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
-import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -69,14 +68,10 @@ class SketchMergeGuardTest {
     }
 
     @Test
-    fun `HyperLogLog LinearCounting and MinHash refuse a merge from a different mixer`() {
+    fun `HyperLogLog and MinHash refuse a merge from a different mixer`() {
         val hll = HyperLogLogStat(precision = 12)
         assertFailsWith<IllegalArgumentException> {
             hll.merge(HyperLogLogStat(precision = 12, hasher = OtherHasher).also { it.update(1L) }.read())
-        }
-        val lc = LinearCountingStat(bits = 4096)
-        assertFailsWith<IllegalArgumentException> {
-            lc.merge(LinearCountingStat(bits = 4096, hasher = OtherHasher).also { it.update(1L) }.read())
         }
         val mh = MinHashStat(numHashes = 64)
         assertFailsWith<IllegalArgumentException> {

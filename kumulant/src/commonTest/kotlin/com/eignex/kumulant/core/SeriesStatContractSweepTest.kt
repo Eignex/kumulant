@@ -17,10 +17,10 @@ import com.eignex.kumulant.schema.spec.DecayingVariance
 import com.eignex.kumulant.schema.spec.EwmaMean
 import com.eignex.kumulant.schema.spec.EwmaVariance
 import com.eignex.kumulant.schema.spec.Excursion
+import com.eignex.kumulant.schema.spec.ExponentialSmoothing
 import com.eignex.kumulant.schema.spec.FrugalMad
 import com.eignex.kumulant.schema.spec.FrugalQuantile
 import com.eignex.kumulant.schema.spec.HdrHistogram
-import com.eignex.kumulant.schema.spec.Holt
 import com.eignex.kumulant.schema.spec.LinearHistogram
 import com.eignex.kumulant.schema.spec.Mad
 import com.eignex.kumulant.schema.spec.Max
@@ -35,7 +35,6 @@ import com.eignex.kumulant.schema.spec.Recency
 import com.eignex.kumulant.schema.spec.RecursiveVariance
 import com.eignex.kumulant.schema.spec.ReservoirHistogram
 import com.eignex.kumulant.schema.spec.RunLength
-import com.eignex.kumulant.schema.spec.SeasonalSmoothing
 import com.eignex.kumulant.schema.spec.SeriesStatSpec
 import com.eignex.kumulant.schema.spec.Sum
 import com.eignex.kumulant.schema.spec.Summary
@@ -87,8 +86,8 @@ class SeriesStatContractSweepTest {
         "DecayingVariance" to DecayingVariance(30_000L),
         "EwmaMean" to EwmaMean(0.3),
         "EwmaVariance" to EwmaVariance(0.3),
-        "Holt" to Holt(0.3),
-        "SeasonalSmoothing" to SeasonalSmoothing(0.3, 0.2, 0.1, period = 4),
+        "ExponentialSmoothing" to ExponentialSmoothing(0.3),
+        "ExponentialSmoothing.seasonal" to ExponentialSmoothing(0.3, 0.2, period = 4, gamma = 0.1),
         "RecursiveVariance" to RecursiveVariance(omega = 0.1, alpha = 0.2, beta = 0.7),
         "DecayingRate" to DecayingRate(halfLifeMillis = 30_000L),
     )

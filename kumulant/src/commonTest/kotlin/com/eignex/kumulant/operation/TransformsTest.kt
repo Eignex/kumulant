@@ -2,7 +2,6 @@ package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
-import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,7 +19,7 @@ class TransformsTest {
 
     @Test
     fun `discrete withValue replaces input with constant`() {
-        val stat = LinearCountingStat(bits = 1024).withValue(7L)
+        val stat = HyperLogLogStat(precision = 10).withValue(7L)
         for (i in 1L..100L) stat.update(i)
         val seen = stat.read().estimate
         assertTrue(seen in 0.5..2.0, "estimate=$seen")

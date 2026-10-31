@@ -63,7 +63,6 @@ import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.calibration.PlattCalibratorStat
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
-import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.change.AdwinStat
 import com.eignex.kumulant.stat.change.CusumStat
 import com.eignex.kumulant.stat.change.PageHinkleyStat
@@ -78,9 +77,8 @@ import com.eignex.kumulant.stat.event.ExcursionStat
 import com.eignex.kumulant.stat.event.RecencyStat
 import com.eignex.kumulant.stat.event.RunLengthStat
 import com.eignex.kumulant.stat.event.SojournStat
-import com.eignex.kumulant.stat.forecast.HoltStat
+import com.eignex.kumulant.stat.forecast.ExponentialSmoothingStat
 import com.eignex.kumulant.stat.forecast.RecursiveVarianceStat
-import com.eignex.kumulant.stat.forecast.SeasonalSmoothingStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.quantile.FrugalQuantileStat
 import com.eignex.kumulant.stat.quantile.HdrHistogramStat
@@ -298,26 +296,15 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
             EwmaVarianceStat(DecayWeighting.Alpha(alpha), concurrency)
         }
 
-    is Holt -> {
+    is ExponentialSmoothing -> {
         StatPlan(path) { concurrency ->
-            HoltStat(
+            ExponentialSmoothingStat(
                 alphaWeighting = DecayWeighting.Alpha(alpha),
                 betaWeighting = DecayWeighting.Alpha(beta),
                 phi = phi,
-                concurrency = concurrency,
-            )
-        }
-    }
-
-    is SeasonalSmoothing -> {
-        StatPlan(path) { concurrency ->
-            SeasonalSmoothingStat(
-                alphaWeighting = DecayWeighting.Alpha(alpha),
-                betaWeighting = DecayWeighting.Alpha(beta),
-                gammaWeighting = DecayWeighting.Alpha(gamma),
                 period = period,
+                gammaWeighting = DecayWeighting.Alpha(gamma),
                 mode = mode,
-                phi = phi,
                 concurrency = concurrency,
             )
         }
@@ -859,11 +846,6 @@ internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<Discret
     is HyperLogLog ->
         StatPlan(path) { concurrency ->
             HyperLogLogStat(precision, Hashers.resolve(hasher), concurrency)
-        }
-
-    is LinearCounting ->
-        StatPlan(path) { concurrency ->
-            LinearCountingStat(bits, Hashers.resolve(hasher), concurrency)
         }
 
     is BloomFilter ->

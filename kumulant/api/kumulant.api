@@ -3705,6 +3705,44 @@ public final class com/eignex/kumulant/schema/spec/Excursion : com/eignex/kumula
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/eignex/kumulant/schema/spec/ExponentialSmoothing : com/eignex/kumulant/schema/spec/SeriesStatSpec {
+	public static final field Companion Lcom/eignex/kumulant/schema/spec/ExponentialSmoothing$Companion;
+	public fun <init> (DDDIDLcom/eignex/kumulant/stat/forecast/SeasonalMode;)V
+	public synthetic fun <init> (DDDIDLcom/eignex/kumulant/stat/forecast/SeasonalMode;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun component3 ()D
+	public final fun component4 ()I
+	public final fun component5 ()D
+	public final fun component6 ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
+	public final fun copy (DDDIDLcom/eignex/kumulant/stat/forecast/SeasonalMode;)Lcom/eignex/kumulant/schema/spec/ExponentialSmoothing;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/ExponentialSmoothing;DDDIDLcom/eignex/kumulant/stat/forecast/SeasonalMode;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/ExponentialSmoothing;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlpha ()D
+	public final fun getBeta ()D
+	public final fun getGamma ()D
+	public final fun getMode ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
+	public final fun getPeriod ()I
+	public final fun getPhi ()D
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/schema/spec/ExponentialSmoothing$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/ExponentialSmoothing$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/ExponentialSmoothing;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/ExponentialSmoothing;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/ExponentialSmoothing$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class com/eignex/kumulant/schema/spec/FrugalMad : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/FrugalMad$Companion;
 	public fun <init> ()V
@@ -3858,38 +3896,6 @@ public final class com/eignex/kumulant/schema/spec/HdrHistogram$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/schema/spec/Holt : com/eignex/kumulant/schema/spec/SeriesStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/Holt$Companion;
-	public fun <init> (DDD)V
-	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun component3 ()D
-	public final fun copy (DDD)Lcom/eignex/kumulant/schema/spec/Holt;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/Holt;DDDILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/Holt;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAlpha ()D
-	public final fun getBeta ()D
-	public final fun getPhi ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/Holt$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/Holt$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/Holt;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/Holt;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/Holt$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class com/eignex/kumulant/schema/spec/HyperLogLog : com/eignex/kumulant/schema/spec/DiscreteStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/HyperLogLog$Companion;
 	public fun <init> ()V
@@ -3918,37 +3924,6 @@ public final synthetic class com/eignex/kumulant/schema/spec/HyperLogLog$$serial
 }
 
 public final class com/eignex/kumulant/schema/spec/HyperLogLog$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/LinearCounting : com/eignex/kumulant/schema/spec/DiscreteStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/LinearCounting$Companion;
-	public fun <init> ()V
-	public synthetic fun <init> (ILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (ILjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()I
-	public final fun component2-W9PbAR8 ()Ljava/lang/String;
-	public final fun copy-BzgUv3k (ILjava/lang/String;)Lcom/eignex/kumulant/schema/spec/LinearCounting;
-	public static synthetic fun copy-BzgUv3k$default (Lcom/eignex/kumulant/schema/spec/LinearCounting;ILjava/lang/String;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/LinearCounting;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getBits ()I
-	public final fun getHasher-W9PbAR8 ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/LinearCounting$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/LinearCounting$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/LinearCounting;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/LinearCounting;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/LinearCounting$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -4511,44 +4486,6 @@ public final class com/eignex/kumulant/schema/spec/RunLength : com/eignex/kumula
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/eignex/kumulant/schema/spec/SeasonalSmoothing : com/eignex/kumulant/schema/spec/SeriesStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing$Companion;
-	public fun <init> (DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;D)V
-	public synthetic fun <init> (DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun component3 ()D
-	public final fun component4 ()I
-	public final fun component5 ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
-	public final fun component6 ()D
-	public final fun copy (DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;D)Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;DILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAlpha ()D
-	public final fun getBeta ()D
-	public final fun getGamma ()D
-	public final fun getMode ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
-	public final fun getPeriod ()I
-	public final fun getPhi ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/SeasonalSmoothing$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/SeasonalSmoothing;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/SeasonalSmoothing$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public abstract interface class com/eignex/kumulant/schema/spec/SeriesStatSpec : com/eignex/kumulant/schema/spec/StatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/SeriesStatSpec$Companion;
 }
@@ -5054,67 +4991,6 @@ public final class com/eignex/kumulant/stat/cardinality/HyperLogLogStat : com/ei
 	public fun update (JJD)V
 	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
 	public fun validateMerge (Lcom/eignex/kumulant/stat/cardinality/HyperLogLogResult;)V
-}
-
-public final class com/eignex/kumulant/stat/cardinality/LinearCountingResult : com/eignex/kumulant/core/HasObservationCount {
-	public static final field Companion Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult$Companion;
-	public synthetic fun <init> (DIJ[JJLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (DIJ[JJLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()D
-	public final fun component2 ()I
-	public final fun component3 ()J
-	public final fun component4 ()[J
-	public final fun component5 ()J
-	public final fun component6-W9PbAR8 ()Ljava/lang/String;
-	public final fun copy-_HhiAPQ (DIJ[JJLjava/lang/String;)Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;
-	public static synthetic fun copy-_HhiAPQ$default (Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;DIJ[JJLjava/lang/String;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getBits ()I
-	public final fun getEstimate ()D
-	public final fun getHasher-W9PbAR8 ()Ljava/lang/String;
-	public final fun getTotalSeen ()J
-	public fun getTotalWeights ()D
-	public final fun getUnsetBits ()J
-	public final fun getWords ()[J
-	public fun hashCode ()I
-	public fun isEmpty ()Z
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/stat/cardinality/LinearCountingResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/cardinality/LinearCountingResult$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/cardinality/LinearCountingStat : com/eignex/kumulant/core/DiscreteStat {
-	public fun <init> ()V
-	public fun <init> (ILcom/eignex/kumulant/math/LongHasher;Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (ILcom/eignex/kumulant/math/LongHasher;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/DiscreteStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/cardinality/LinearCountingStat;
-	public final fun getBits ()I
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public final fun getHasher ()Lcom/eignex/kumulant/math/LongHasher;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;
-	public fun reset ()V
-	public fun update (JD)V
-	public fun update (JJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/cardinality/LinearCountingResult;)V
 }
 
 public final class com/eignex/kumulant/stat/change/AdwinResult : com/eignex/kumulant/core/Result {
@@ -5812,61 +5688,72 @@ public final class com/eignex/kumulant/stat/event/SojournStat : com/eignex/kumul
 	public fun validateMerge (Lcom/eignex/kumulant/stat/event/SojournResult;)V
 }
 
-public final class com/eignex/kumulant/stat/forecast/HoltResult : com/eignex/kumulant/core/Result {
-	public static final field Companion Lcom/eignex/kumulant/stat/forecast/HoltResult$Companion;
-	public fun <init> (DDD)V
+public final class com/eignex/kumulant/stat/forecast/ExponentialSmoothingResult : com/eignex/kumulant/core/Result {
+	public static final field Companion Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingResult$Companion;
+	public fun <init> (DDLjava/util/List;IDLcom/eignex/kumulant/stat/forecast/SeasonalMode;)V
 	public final fun component1 ()D
 	public final fun component2 ()D
-	public final fun component3 ()D
-	public final fun copy (DDD)Lcom/eignex/kumulant/stat/forecast/HoltResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/forecast/HoltResult;DDDILjava/lang/Object;)Lcom/eignex/kumulant/stat/forecast/HoltResult;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()I
+	public final fun component5 ()D
+	public final fun component6 ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
+	public final fun copy (DDLjava/util/List;IDLcom/eignex/kumulant/stat/forecast/SeasonalMode;)Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingResult;DDLjava/util/List;IDLcom/eignex/kumulant/stat/forecast/SeasonalMode;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun forecast (I)D
+	public final fun getCurrentSlot ()I
 	public final fun getLevel ()D
+	public final fun getMode ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
+	public final fun getPeriod ()I
 	public final fun getPhi ()D
+	public final fun getSeasons ()Ljava/util/List;
 	public final fun getTrend ()D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
-public final synthetic class com/eignex/kumulant/stat/forecast/HoltResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/forecast/HoltResult$$serializer;
+public final synthetic class com/eignex/kumulant/stat/forecast/ExponentialSmoothingResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingResult$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/forecast/HoltResult;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingResult;
 	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/forecast/HoltResult;)V
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingResult;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
 	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/forecast/HoltResult$Companion {
+public final class com/eignex/kumulant/stat/forecast/ExponentialSmoothingResult$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/forecast/HoltStat : com/eignex/kumulant/core/SeriesStat {
-	public fun <init> (DDDLcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (DDDLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;DLcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;DLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+public final class com/eignex/kumulant/stat/forecast/ExponentialSmoothingStat : com/eignex/kumulant/core/SeriesStat {
+	public fun <init> (DDDIDLcom/eignex/kumulant/stat/forecast/SeasonalMode;Lcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> (DDDIDLcom/eignex/kumulant/stat/forecast/SeasonalMode;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;DILcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/forecast/SeasonalMode;Lcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> (Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;DILcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/forecast/SeasonalMode;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/forecast/HoltStat;
+	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingStat;
 	public final fun getAlpha ()D
 	public final fun getAlphaWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
 	public final fun getBeta ()D
 	public final fun getBetaWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
 	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public final fun getGamma ()D
+	public final fun getGammaWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
+	public final fun getMode ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
+	public final fun getPeriod ()I
 	public final fun getPhi ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/forecast/HoltResult;)V
+	public fun merge (Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingResult;)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/forecast/HoltResult;
+	public fun read (J)Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingResult;
 	public fun reset ()V
 	public fun update (DD)V
 	public fun update (DJD)V
 	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/forecast/HoltResult;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/forecast/ExponentialSmoothingResult;)V
 }
 
 public final class com/eignex/kumulant/stat/forecast/RecursiveVarianceResult : com/eignex/kumulant/core/Result {
@@ -5934,74 +5821,6 @@ public final class com/eignex/kumulant/stat/forecast/SeasonalMode : java/lang/En
 
 public final class com/eignex/kumulant/stat/forecast/SeasonalMode$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/forecast/SeasonalSmoothingResult : com/eignex/kumulant/core/Result {
-	public static final field Companion Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult$Companion;
-	public fun <init> (DDLjava/util/List;IDLcom/eignex/kumulant/stat/forecast/SeasonalMode;)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun component3 ()Ljava/util/List;
-	public final fun component4 ()I
-	public final fun component5 ()D
-	public final fun component6 ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
-	public final fun copy (DDLjava/util/List;IDLcom/eignex/kumulant/stat/forecast/SeasonalMode;)Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;DDLjava/util/List;IDLcom/eignex/kumulant/stat/forecast/SeasonalMode;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun forecast (I)D
-	public final fun getCurrentSlot ()I
-	public final fun getLevel ()D
-	public final fun getMode ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
-	public final fun getPeriod ()I
-	public final fun getPhi ()D
-	public final fun getSeasons ()Ljava/util/List;
-	public final fun getTrend ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/stat/forecast/SeasonalSmoothingResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/forecast/SeasonalSmoothingResult$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/forecast/SeasonalSmoothingStat : com/eignex/kumulant/core/SeriesStat {
-	public fun <init> (DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;DLcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (DDDILcom/eignex/kumulant/stat/forecast/SeasonalMode;DLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;ILcom/eignex/kumulant/stat/forecast/SeasonalMode;DLcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;ILcom/eignex/kumulant/stat/forecast/SeasonalMode;DLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingStat;
-	public final fun getAlpha ()D
-	public final fun getAlphaWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
-	public final fun getBeta ()D
-	public final fun getBetaWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public final fun getGamma ()D
-	public final fun getGammaWeighting ()Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
-	public final fun getMode ()Lcom/eignex/kumulant/stat/forecast/SeasonalMode;
-	public final fun getPeriod ()I
-	public final fun getPhi ()D
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;)V
-	public fun merge (Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;
-	public fun reset ()V
-	public fun update (DD)V
-	public fun update (DJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/forecast/SeasonalSmoothingResult;)V
 }
 
 public final class com/eignex/kumulant/stat/quantile/DDSketchStat : com/eignex/kumulant/core/SeriesStat {
@@ -9167,33 +8986,6 @@ public final class com/eignex/kumulant/stat/summary/MeanEstimateKt {
 	public static final fun estimateMean (Lcom/eignex/koblas/Vector;Lcom/eignex/koblas/Vector;Lcom/eignex/koblas/Vector;)Lcom/eignex/kumulant/stat/summary/MeanEstimate;
 	public static synthetic fun estimateMean$default (Lcom/eignex/koblas/Vector;Lcom/eignex/koblas/Vector;Lcom/eignex/koblas/Vector;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/summary/MeanEstimate;
 	public static final fun pairedMeanDifference (Lcom/eignex/koblas/Vector;Lcom/eignex/koblas/Vector;)Lcom/eignex/kumulant/stat/summary/MeanEstimate;
-}
-
-public final class com/eignex/kumulant/stat/summary/MeanResult : com/eignex/kumulant/core/Result {
-	public static final field Companion Lcom/eignex/kumulant/stat/summary/MeanResult$Companion;
-	public fun <init> (D)V
-	public final fun component1 ()D
-	public final fun copy (D)Lcom/eignex/kumulant/stat/summary/MeanResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/summary/MeanResult;DILjava/lang/Object;)Lcom/eignex/kumulant/stat/summary/MeanResult;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getMean ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/stat/summary/MeanResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/summary/MeanResult$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/summary/MeanResult;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/summary/MeanResult;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/summary/MeanResult$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/eignex/kumulant/stat/summary/MeanStat : com/eignex/kumulant/core/SeriesStat {

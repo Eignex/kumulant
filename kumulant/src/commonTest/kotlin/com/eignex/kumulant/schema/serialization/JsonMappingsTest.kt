@@ -45,9 +45,9 @@ class JsonMappingsTest {
         val specs = listOf<StatSpec>(
             DecayingSum(1_000),
             EwmaVariance(0.1),
-            Holt(0.2),
-            Holt(0.2, 0.3, phi = 0.9),
-            SeasonalSmoothing(0.1, 0.2, 0.3, period = 4),
+            ExponentialSmoothing(0.2),
+            ExponentialSmoothing(0.2, 0.3, phi = 0.9),
+            ExponentialSmoothing(0.1, 0.2, period = 4, gamma = 0.3),
         )
 
         for (spec in specs) {
@@ -93,8 +93,7 @@ class JsonMappingsTest {
             "decayingVariance",
             "ewma",
             "ewmaVariance",
-            "holt",
-            "seasonalSmoothing",
+            "exponentialSmoothing",
         )
         val shorthands = (alternatives(statSchema) + alternatives(exprSchema))
             .flatMap { it["anyOf"]?.jsonArray.orEmpty() }

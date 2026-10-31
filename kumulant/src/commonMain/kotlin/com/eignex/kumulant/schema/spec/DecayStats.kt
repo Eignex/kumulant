@@ -4,10 +4,9 @@ import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.decay.DecayingMeanResult
 import com.eignex.kumulant.stat.decay.DecayingSumResult
 import com.eignex.kumulant.stat.decay.DecayingVarianceResult
-import com.eignex.kumulant.stat.forecast.HoltResult
+import com.eignex.kumulant.stat.forecast.ExponentialSmoothingResult
 import com.eignex.kumulant.stat.forecast.RecursiveVarianceResult
 import com.eignex.kumulant.stat.forecast.SeasonalMode
-import com.eignex.kumulant.stat.forecast.SeasonalSmoothingResult
 import com.eignex.kumulant.stat.rate.DecayingRateResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -54,35 +53,26 @@ data class EwmaVariance(
     val alpha: Double,
 ) : SeriesStatSpec<WeightedVarianceResult>
 
-/** Spec for `HoltStat`: double exponential smoothing with optional trend damping. */
+/**
+ * Spec for `ExponentialSmoothingStat`: exponential smoothing with a damped trend and optional
+ * seasonality. [period] `1` is Holt's method; a longer period adds a Holt-Winters seasonal cycle.
+ */
 @Serializable
-@SerialName("Holt")
-data class Holt(
+@SerialName("ExponentialSmoothing")
+data class ExponentialSmoothing(
     /** Per-observation smoothing factor for the level. */
     val alpha: Double,
     /** Per-observation smoothing factor for the trend; defaults to the level's [alpha]. */
     val beta: Double = alpha,
-    /** Trend damping in `(0, 1]`; `1.0` is plain Holt. */
-    val phi: Double = StatDefaults.HOLT_PHI,
-) : SeriesStatSpec<HoltResult>
-
-/** Spec for `SeasonalSmoothingStat`: triple exponential smoothing (Holt-Winters). */
-@Serializable
-@SerialName("SeasonalSmoothing")
-data class SeasonalSmoothing(
-    /** Per-observation smoothing factor for the level. */
-    val alpha: Double,
-    /** Per-observation smoothing factor for the trend. */
-    val beta: Double,
-    /** Per-observation smoothing factor for the seasonal vector. */
-    val gamma: Double,
-    /** Length of the seasonal cycle in updates. */
-    val period: Int,
+    /** Trend damping in `(0, 1]`; `1.0` is an undamped trend. */
+    val phi: Double = StatDefaults.SMOOTHING_PHI,
+    /** Length of the seasonal cycle in updates; `1` disables seasonality. */
+    val period: Int = StatDefaults.SMOOTHING_PERIOD,
+    /** Per-observation smoothing factor for the seasonal vector; defaults to the level's [alpha]. */
+    val gamma: Double = alpha,
     /** Seasonal coupling. */
     val mode: SeasonalMode = StatDefaults.seasonalMode,
-    /** Trend damping in `(0, 1]`. */
-    val phi: Double = StatDefaults.SEASONAL_SMOOTHING_PHI,
-) : SeriesStatSpec<SeasonalSmoothingResult>
+) : SeriesStatSpec<ExponentialSmoothingResult>
 
 /** Spec for `RecursiveVarianceStat`: `sigma^2_t = omega + alpha * value^2 + beta * sigma^2_{t-1}`. */
 @Serializable

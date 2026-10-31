@@ -162,7 +162,7 @@ class WindowedStatsTest {
 
     @Test
     fun `discrete windowed only counts in-window keys`() {
-        val w = com.eignex.kumulant.stat.cardinality.LinearCountingStat(bits = 4096)
+        val w = com.eignex.kumulant.stat.cardinality.HyperLogLogStat(precision = 10)
             .windowed(duration = 10.seconds)
         w.update(1L, T0)
         w.update(2L, T3)

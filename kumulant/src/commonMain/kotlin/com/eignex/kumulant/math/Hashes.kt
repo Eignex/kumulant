@@ -47,7 +47,7 @@ fun interface Hasher64 {
 
 /**
  * Pluggable `Long -> Long` mixer used by the discrete sketch family (HyperLogLog,
- * LinearCounting, MinHash, BloomFilter, CountMinSketch) to spread a key's bits across
+ * MinHash, BloomFilter, CountMinSketch) to spread a key's bits across
  * the full 64-bit range before bucketing. Distinct from [Hasher64] (`ByteArray -> Long`):
  * callers reduce a domain key to a `Long` first (e.g. via [hash64]), and the sketch then
  * mixes that `Long` through here.

@@ -20,10 +20,9 @@ import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceStat
 import com.eignex.kumulant.stat.decay.EwmaMeanStat
 import com.eignex.kumulant.stat.decay.EwmaVarianceStat
-import com.eignex.kumulant.stat.forecast.HoltStat
+import com.eignex.kumulant.stat.forecast.ExponentialSmoothingStat
 import com.eignex.kumulant.stat.forecast.RecursiveVarianceStat
 import com.eignex.kumulant.stat.forecast.SeasonalMode
-import com.eignex.kumulant.stat.forecast.SeasonalSmoothingStat
 import com.eignex.kumulant.stat.change.AdwinStat
 import com.eignex.kumulant.stat.change.CusumStat
 import com.eignex.kumulant.stat.change.PageHinkleyStat
@@ -563,9 +562,11 @@ private fun holtLevelReference(seq: Sequence<Update>): Double {
     return level
 }
 
-val holtStatSpec = seriesStatSpec(
-    name = "HoltStat",
-    factory = { c -> HoltStat(holtAlpha, holtBeta, phi = 1.0, concurrency = c) },
+val exponentialSmoothingStatSpec = seriesStatSpec(
+    name = "ExponentialSmoothingStat",
+    factory = { c ->
+        ExponentialSmoothingStat(alphaWeighting = holtAlpha, betaWeighting = holtBeta, phi = 1.0, concurrency = c)
+    },
     updates = ::uniformVariableWeights,
     scalar = { it.level },
     reference = ::holtLevelReference,
@@ -621,16 +622,16 @@ private fun seasonalLevelReference(seq: Sequence<Update>): Double {
     return level
 }
 
-val seasonalSmoothingStatSpec = seriesStatSpec(
-    name = "SeasonalSmoothingStat",
+val seasonalExponentialSmoothingStatSpec = seriesStatSpec(
+    name = "ExponentialSmoothingStat.seasonal",
     factory = { c ->
-        SeasonalSmoothingStat(
+        ExponentialSmoothingStat(
             alphaWeighting = seasonalAlpha,
             betaWeighting = seasonalBeta,
-            gammaWeighting = seasonalGamma,
-            period = SEASONAL_PERIOD,
-            mode = SeasonalMode.Additive,
             phi = 1.0,
+            period = SEASONAL_PERIOD,
+            gammaWeighting = seasonalGamma,
+            mode = SeasonalMode.Additive,
             concurrency = c,
         )
     },
@@ -789,18 +790,6 @@ val spaceSavingStatSpec = discreteStatSpec(
     updates = ::uniformUnitWeights,
     scalar = { it.totalSeen.toDouble() },
     reference = { it.count().toDouble() },
-)
-
-val linearCountingStatSpec = discreteStatSpec(
-    name = "LinearCountingStat",
-    factory = { c ->
-        com.eignex.kumulant.stat.cardinality.LinearCountingStat(bits = 1 shl 16, concurrency = c)
-    },
-    updates = ::uniformUnitWeights,
-    scalar = { it.estimate },
-    reference = { seq -> seq.map { it.value.toRawBits() }.toSet().size.toDouble() },
-    // 64K-bit bitset over 5000 distinct IDs: load ~7.6%, bias is small and the
-    // estimator converges quickly. Allow 50 to be safe.
 )
 
 // Quantile stats check "no update was lost" via totalWeights / totalSeen. Frugal
@@ -1086,14 +1075,13 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     decayingVarianceStatSpec,
     ewmaMeanStatSpec,
     ewmaVarianceStatSpec,
-    holtStatSpec,
+    exponentialSmoothingStatSpec,
     recursiveVarianceStatSpec,
-    seasonalSmoothingStatSpec,
+    seasonalExponentialSmoothingStatSpec,
     rateStatSpec,
     decayingRateStatSpec,
     counterRateStatSpec,
     hyperLogLogStatSpec,
-    linearCountingStatSpec,
     bloomFilterStatSpec,
     countMinSketchStatSpec,
     minHashStatSpec,

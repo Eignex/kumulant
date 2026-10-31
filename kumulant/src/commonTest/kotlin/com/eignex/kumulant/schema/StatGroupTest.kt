@@ -20,13 +20,13 @@ import com.eignex.kumulant.schema.runtime.*
 import com.eignex.kumulant.schema.spec.*
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
-import com.eignex.kumulant.stat.cardinality.LinearCountingResult
-import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.CovarianceStat
 import com.eignex.kumulant.stat.regression.glm.Penalty
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionStat
+import com.eignex.kumulant.stat.sketch.BloomFilterResult
+import com.eignex.kumulant.stat.sketch.BloomFilterStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
@@ -768,15 +768,15 @@ class DiscreteStatGroupTest {
     @Test
     fun `update fans out to all child stats`() {
         val hllKey = StatKey<HyperLogLogResult>("hll") to HyperLogLogStat(precision = 10)
-        val lcKey = StatKey<LinearCountingResult>("lc") to LinearCountingStat(bits = 1024)
+        val bloomKey = StatKey<BloomFilterResult>("bloom") to BloomFilterStat(bits = 1024)
 
-        val group = DiscreteStatGroup(hllKey, lcKey)
+        val group = DiscreteStatGroup(hllKey, bloomKey)
         for (i in 1L..100L) group.update(i)
 
         val result = group.read()
         assertEquals(2, result.results.size)
         assertTrue(result[hllKey.first].estimate > 50.0)
-        assertTrue(result[lcKey.first].estimate > 50.0)
+        assertEquals(100L, result[bloomKey.first].totalSeen)
     }
 
     @Test
@@ -852,14 +852,14 @@ class DiscreteStatGroupTest {
     fun `StatSchema discrete delegate exposes typed keys`() {
         class Schema : StatSchema() {
             val users by discrete(HyperLogLog(precision = 10))
-            val sessions by discrete(LinearCounting(bits = 1024))
+            val sessions by discrete(BloomFilter(bits = 1024))
         }
 
         val schema = Schema()
         val group = DiscreteStatGroup(schema)
         for (i in 1L..50L) group.update(i)
         assertTrue(group.read()[schema.users].estimate > 30.0)
-        assertTrue(group.read()[schema.sessions].estimate > 30.0)
+        assertEquals(50L, group.read()[schema.sessions].totalSeen)
     }
 }
 
@@ -869,14 +869,14 @@ class DiscreteListStatsTest {
     fun `update forwards to all child stats`() {
         val stats = DiscreteListStats<Result>(
             "hll" to HyperLogLogStat(precision = 10),
-            "lc" to LinearCountingStat(bits = 1024),
+            "bloom" to BloomFilterStat(bits = 1024),
         )
         for (i in 1L..100L) stats.update(i)
 
         val r = stats.read()
-        assertEquals(listOf("hll", "lc"), r.names)
+        assertEquals(listOf("hll", "bloom"), r.names)
         assertTrue(assertIs<HyperLogLogResult>(r.results[0]).estimate > 50.0)
-        assertTrue(assertIs<LinearCountingResult>(r.results[1]).estimate > 50.0)
+        assertEquals(100L, assertIs<BloomFilterResult>(r.results[1]).totalSeen)
     }
 
     @Test
@@ -893,10 +893,10 @@ class DiscreteListStatsTest {
     fun `discreteListStats factory auto-names by simpleName`() {
         val stats = discreteListStats<Result>(
             HyperLogLogStat(precision = 10),
-            LinearCountingStat(bits = 1024),
+            BloomFilterStat(bits = 1024),
         )
         val map = stats.read().toMap()
-        assertEquals(setOf("HyperLogLogStat", "LinearCountingStat"), map.keys)
+        assertEquals(setOf("HyperLogLogStat", "BloomFilterStat"), map.keys)
     }
 
     @Test

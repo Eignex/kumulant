@@ -44,8 +44,8 @@ class ForecastMergeTest {
 
     @Test
     fun `merging a seasonal trace brings its phase with its factors`() {
-        val a = SeasonalSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4)
-        val b = SeasonalSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4)
+        val a = ExponentialSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4)
+        val b = ExponentialSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4)
         repeat(9) { a.update(it.toDouble()) }
         repeat(6) { b.update(it.toDouble()) }
         val target = b.read().currentSlot
@@ -57,7 +57,7 @@ class ForecastMergeTest {
 
     @Test
     fun `a damped forecast far ahead converges instead of stalling`() {
-        val stat = HoltStat(alpha = 0.5, beta = 0.5, phi = 0.9)
+        val stat = ExponentialSmoothingStat(alpha = 0.5, beta = 0.5, phi = 0.9)
         stat.update(1.0)
         stat.update(2.0)
         val r = stat.read()
@@ -69,7 +69,7 @@ class ForecastMergeTest {
 
     @Test
     fun `an undamped forecast is still linear in the horizon`() {
-        val stat = HoltStat(alpha = 0.5, beta = 0.5)
+        val stat = ExponentialSmoothingStat(alpha = 0.5, beta = 0.5)
         stat.update(1.0)
         stat.update(2.0)
         val r = stat.read()
@@ -79,7 +79,7 @@ class ForecastMergeTest {
 
     @Test
     fun `a seasonal forecast far ahead stays finite`() {
-        val stat = SeasonalSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4, phi = 0.9)
+        val stat = ExponentialSmoothingStat(alpha = 0.3, beta = 0.2, gamma = 0.1, period = 4, phi = 0.9)
         repeat(12) { stat.update(it.toDouble()) }
 
         assertTrue(stat.read().forecast(1_000_000).isFinite())
