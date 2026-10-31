@@ -66,7 +66,6 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
         jsonNode<EwmaVariance>("ewmaVariance"),
         jsonNode<ExponentialSmoothing>("exponentialSmoothing"),
         jsonNode<RecursiveVariance>("recursiveVariance"),
-        jsonNode<DecayingRate>("decayingRate"),
     )
 })
 

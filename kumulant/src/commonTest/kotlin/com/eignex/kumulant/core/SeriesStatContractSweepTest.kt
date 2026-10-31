@@ -11,7 +11,6 @@ import com.eignex.kumulant.schema.spec.Crossing
 import com.eignex.kumulant.schema.spec.Cusum
 import com.eignex.kumulant.schema.spec.DDSketch
 import com.eignex.kumulant.schema.spec.DecayingMean
-import com.eignex.kumulant.schema.spec.DecayingRate
 import com.eignex.kumulant.schema.spec.DecayingSum
 import com.eignex.kumulant.schema.spec.DecayingVariance
 import com.eignex.kumulant.schema.spec.EwmaMean
@@ -89,7 +88,6 @@ class SeriesStatContractSweepTest {
         "ExponentialSmoothing" to ExponentialSmoothing(0.3),
         "ExponentialSmoothing.seasonal" to ExponentialSmoothing(0.3, 0.2, period = 4, gamma = 0.1),
         "RecursiveVariance" to RecursiveVariance(omega = 0.1, alpha = 0.2, beta = 0.7),
-        "DecayingRate" to DecayingRate(halfLifeMillis = 30_000L),
     )
 
     private val samples = doubleArrayOf(3.0, 7.5, 1.0, 12.0, 6.25, 9.0, 2.5, 11.0)

@@ -45,7 +45,7 @@ class DecayingSumRotationTest {
                     val timestamp = if (thread == 0) 0L else (i / size) * 51L
                     val value = exp(alpha * (finalTimestamp - timestamp))
                     val stat = stats[i % size]
-                    if (merge) stat.merge(DecayingSumResult(value, timestamp)) else stat.update(value, timestamp)
+                    if (merge) stat.merge(DecayingSumResult(value, timestamp, 1L)) else stat.update(value, timestamp)
                 }
 
                 stats.forEachIndexed { index, stat ->

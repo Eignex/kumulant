@@ -8,7 +8,7 @@ by elapsed time; EWMA stats discount history by cumulative observation weight.
 
 | Stat | Clock | Reach for it when |
 |------|-------|-------------------|
-| [DecayingSumStat] | Event timestamps | Accumulate a total whose contributions fade with age, or build a time-decayed rate. |
+| [DecayingSumStat] | Event timestamps | Accumulate a total whose contributions fade with age, or read a time-decayed rate. |
 | [DecayingMeanStat] | Event timestamps | Estimate a recent weighted mean when observation intervals vary. |
 | [DecayingVarianceStat] | Event timestamps | Track recent dispersion with a coupled mean and variance. |
 | [EwmaMeanStat] | Observation weight | Smooth a signal according to how much evidence arrives, independent of elapsed time. |
@@ -41,7 +41,7 @@ elapsed time should determine how quickly evidence fades.
 
 | Result | Produced by | Fields |
 |--------|-------------|--------|
-| [DecayingSumResult] | [DecayingSumStat] | Sum and snapshot timestamp. |
+| [DecayingSumResult] | [DecayingSumStat] | Sum, snapshot timestamp, and half-life; derives the decayed `rate`. |
 | [DecayingMeanResult] | [DecayingMeanStat] | Mean, decayed total weight, and snapshot timestamp. |
 | [DecayingVarianceResult] | [DecayingVarianceStat] | Mean, variance, decayed total weight, and snapshot timestamp; derives `stdDev`. |
 | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | [EwmaMeanStat] | Bias-corrected mean and cumulative observation weight. |

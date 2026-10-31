@@ -37,8 +37,8 @@ data class RateResult(val startTimestampNanos: Long, val totalValue: Double, val
  * Cumulative rate: total accumulated value divided by elapsed time since the
  * first update.
  *
- * For time-decaying rates that weight recent observations more heavily, see
- * [DecayingRateStat]. Use [withValue][com.eignex.kumulant.schema.ops.withValue] on
+ * For time-decaying rates that weight recent observations more heavily, read
+ * [DecayingSumResult.rate][com.eignex.kumulant.stat.decay.DecayingSumResult.rate]. Use [withValue][com.eignex.kumulant.schema.ops.withValue] on
  * the [Rate][com.eignex.kumulant.schema.spec.Rate] spec to count each update as 1.
  *
  * **Use cases:** lifetime throughput (requests/sec since start, total bytes

@@ -4,7 +4,6 @@ import com.eignex.kumulant.assertModesAgree
 import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.seconds
 
 class RateStatConcurrencyTest {
 
@@ -30,19 +29,5 @@ class RateStatConcurrencyTest {
             s.read(timestamps.last())
         }
         assertModesAgree("CounterRateStat", reads)
-    }
-
-    @Test
-    fun `DecayingRateStat sequential math equal across modes`() {
-        val reads = Concurrency.entries.associateWith { mode ->
-            val s = DecayingRateStat(halfLife = 2.seconds, concurrency = mode)
-            for (i in values.indices) s.update(values[i], timestamps[i])
-            s.read(timestamps.last())
-        }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) {
-            assertEquals(ref.rate, r.rate, 1e-12, "DecayingRate rate mode=$mode")
-            assertEquals(ref.timestampNanos, r.timestampNanos, "DecayingRate timestampNanos mode=$mode")
-        }
     }
 }

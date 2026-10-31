@@ -96,8 +96,9 @@ class DecayingMeanStat(
 
     override fun merge(values: DecayingMeanResult, timestampNanos: Long) {
         if (values.totalWeights <= 0.0) return
-        sumX.merge(DecayingSumResult(values.mean * values.totalWeights, values.timestampNanos), timestampNanos)
-        sumW.merge(DecayingSumResult(values.totalWeights, values.timestampNanos), timestampNanos)
+        val halfLifeNanos = weighting.halfLife.inWholeNanoseconds
+        sumX.merge(DecayingSumResult(values.mean * values.totalWeights, values.timestampNanos, halfLifeNanos), timestampNanos)
+        sumW.merge(DecayingSumResult(values.totalWeights, values.timestampNanos, halfLifeNanos), timestampNanos)
     }
 
     override fun reset() {
