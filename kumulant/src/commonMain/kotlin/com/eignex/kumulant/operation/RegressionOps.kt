@@ -76,9 +76,8 @@ internal class TransformXRegressionStat<R : Result>(
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     // The width expected in `x`, which is what RegressionStat.featureSize means - not the inner
-    // regressor's. A transform that changes the length made the wrapper advertise the post-transform
-    // width, so a caller sizing its input from this sent the wrong number of coordinates and the extras
-    // were silently dropped, while RegressionListStats rejected the honest pairing as a mismatch.
+    // regressor's. Advertising the post-transform width would make a caller sizing its input from this
+    // send the wrong number of coordinates.
     override val featureSize: Int = inputFeatureSize ?: delegate.featureSize
 
     override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {

@@ -34,7 +34,7 @@ import com.eignex.skema.Schema
  * round-trips through the wire - no live-stat back-door.
  *
  * A schema describes stats and nothing else. [com.eignex.kumulant.core.Concurrency] is a deployment
- * choice, so it is supplied where the stats are built - the [StatGroup] / `*ListStats` constructor -
+ * choice, so it is supplied where the stats are built - the [StatGroup] constructor -
  * and applies to the whole tree, nested groups included. One schema can therefore back a sharded
  * worker and its coordinator at different levels.
  *
