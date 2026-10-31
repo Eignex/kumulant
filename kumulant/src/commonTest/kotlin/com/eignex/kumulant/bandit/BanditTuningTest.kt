@@ -2,9 +2,9 @@ package com.eignex.kumulant.bandit
 
 import com.eignex.kumulant.bandit.univariate.Exp3ArmResult
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
+import com.eignex.kumulant.bandit.univariate.Greedy
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
-import com.eignex.kumulant.bandit.univariate.UCB1Normal
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -72,50 +72,6 @@ class BanditTuningTest {
     }
 
     @Test
-    fun `UCB1Normal scores finitely and prefers the best arm`() {
-        val bandit = MultiArmedBandit(3, UCB1Normal(), Random(7))
-        repeat(30) {
-            bandit.update(0, 1.0)
-            bandit.update(1, 2.0)
-            bandit.update(2, 3.0)
-        }
-
-        val scores = (0 until 3).map { bandit.evaluate(it) }
-        assertTrue(scores.all { it.isFinite() }, "scores were not finite: $scores")
-        assertTrue(scores[2] > scores[0], "arm 2 has the best mean but scores $scores")
-
-        val counts = IntArray(3)
-        repeat(300) { counts[bandit.choose()]++ }
-        assertTrue(counts[2] > counts[0], "arm 2 has the best mean but was chosen ${counts.toList()}")
-    }
-
-    @Test
-    fun `UCB1Normal still explores the losing arm at two arms`() {
-        // Constant rewards would give zero variance and hide a broken exploration bonus.
-        val bandit = MultiArmedBandit(2, UCB1Normal(), Random(7))
-        repeat(50) { i ->
-            bandit.update(0, if (i % 2 == 0) 0.0 else 2.0)
-            bandit.update(1, if (i % 2 == 0) 4.0 else 6.0)
-        }
-
-        val scores = (0 until 2).map { bandit.evaluate(it) }
-        assertTrue(scores.all { it.isFinite() }, "scores were not finite: $scores")
-        assertTrue(scores[0] > 1.0, "arm 0 has mean ~1.0 but scores ${scores[0]}, so the bonus is missing")
-        assertTrue(scores[1] > 5.0, "arm 1 has mean ~5.0 but scores ${scores[1]}, so the bonus is missing")
-    }
-
-    @Test
-    fun `UCB1Normal reports zero variance rather than NaN for identical samples`() {
-        val bandit = MultiArmedBandit(2, UCB1Normal(), Random(7))
-        repeat(30) {
-            bandit.update(0, 5.0)
-            bandit.update(1, 5.0)
-        }
-
-        assertTrue(bandit.evaluate(0).isFinite(), "a zero-variance arm scored ${bandit.evaluate(0)}")
-    }
-
-    @Test
     fun `a zero weight does not move a roulette wheel arm`() {
         val touched = RouletteWheelBandit(nbrArms = 2, random = Random(11))
         val untouched = RouletteWheelBandit(nbrArms = 2, random = Random(11))
@@ -128,7 +84,7 @@ class BanditTuningTest {
 
     @Test
     fun `an out-of-bounds arm index is rejected with a message`() {
-        val bandit = MultiArmedBandit(2, UCB1Normal(), Random(1))
+        val bandit = MultiArmedBandit(2, Greedy(), Random(1))
 
         assertFailsWith<IllegalArgumentException> { bandit.update(5, 1.0) }
         assertFailsWith<IllegalArgumentException> { RouletteWheelBandit(nbrArms = 2).update(-1, 1.0) }

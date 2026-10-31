@@ -11,8 +11,6 @@ import com.eignex.kumulant.bandit.univariate.BanditPolicy
 import com.eignex.kumulant.bandit.univariate.BanditPolicySpec
 import com.eignex.kumulant.bandit.univariate.Boltzmann
 import com.eignex.kumulant.bandit.univariate.BoltzmannSpec
-import com.eignex.kumulant.bandit.univariate.EpsilonDecreasing
-import com.eignex.kumulant.bandit.univariate.EpsilonDecreasingSpec
 import com.eignex.kumulant.bandit.univariate.EpsilonGreedy
 import com.eignex.kumulant.bandit.univariate.EpsilonGreedySpec
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
@@ -34,11 +32,7 @@ import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonSpec
 import com.eignex.kumulant.bandit.univariate.TrackedUnivariateSpec
 import com.eignex.kumulant.bandit.univariate.UCB1
-import com.eignex.kumulant.bandit.univariate.UCB1Normal
-import com.eignex.kumulant.bandit.univariate.UCB1Tuned
-import com.eignex.kumulant.bandit.univariate.Ucb1NormalSpec
 import com.eignex.kumulant.bandit.univariate.Ucb1Spec
-import com.eignex.kumulant.bandit.univariate.Ucb1TunedSpec
 import com.eignex.kumulant.bandit.univariate.UcbV
 import com.eignex.kumulant.bandit.univariate.UcbVSpec
 import com.eignex.kumulant.bandit.univariate.UniformSelection
@@ -72,19 +66,12 @@ fun <R : Result> BanditPolicySpec<R>.materialize(): BanditPolicy<R> = when (this
 
     is Ucb1Spec -> UCB1(alpha, priorAlpha, priorBeta) as BanditPolicy<R>
 
-    is Ucb1NormalSpec -> UCB1Normal(alpha, priorMean, priorWeight) as BanditPolicy<R>
-
-    is Ucb1TunedSpec -> UCB1Tuned(alpha, priorMean, priorWeight) as BanditPolicy<R>
-
     is GreedySpec -> Greedy(priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
 
     is BoltzmannSpec -> Boltzmann(initialTau, minTau, decay, priorMean, priorWeight) as BanditPolicy<R>
 
     is EpsilonGreedySpec ->
-        EpsilonGreedy(epsilon, priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
-
-    is EpsilonDecreasingSpec ->
-        EpsilonDecreasing(epsilon, decay, priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
+        EpsilonGreedy(epsilon, decay, priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
 
     is UniformSelectionSpec ->
         UniformSelection(priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>

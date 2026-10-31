@@ -242,10 +242,6 @@ public final class com/eignex/kumulant/bandit/univariate/BanditPoliciesKt {
 	public static synthetic fun BetaBernoulliTS$default (DDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
 	public static final fun ExponentialTS (DD)Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
 	public static synthetic fun ExponentialTS$default (DDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
-	public static final fun GammaScaleTS (DDD)Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
-	public static synthetic fun GammaScaleTS$default (DDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
-	public static final fun GeometricTS (DD)Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
-	public static synthetic fun GeometricTS$default (DDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
 	public static final fun LogNormalTS (DDD)Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
 	public static synthetic fun LogNormalTS$default (DDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
 	public static final fun NormalTS (DDD)Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
@@ -479,7 +475,7 @@ public final class com/eignex/kumulant/bandit/univariate/CompositeSubArm$Compani
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/bandit/univariate/EpsilonDecreasing : com/eignex/kumulant/bandit/univariate/BanditPolicy {
+public final class com/eignex/kumulant/bandit/univariate/EpsilonGreedy : com/eignex/kumulant/bandit/univariate/BanditPolicy {
 	public fun <init> ()V
 	public fun <init> (DDDDD)V
 	public synthetic fun <init> (DDDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -487,67 +483,12 @@ public final class com/eignex/kumulant/bandit/univariate/EpsilonDecreasing : com
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
 	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
-	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/EpsilonDecreasing;
+	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/EpsilonGreedy;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;JLkotlin/random/Random;)D
 	public synthetic fun getArm ()Lcom/eignex/kumulant/bandit/univariate/Arm;
 	public fun getArm ()Lcom/eignex/kumulant/bandit/univariate/NormalArm;
 	public final fun getDecay ()D
-	public final fun getEpsilon ()D
-	public synthetic fun removeArm (Lcom/eignex/kumulant/core/Result;)V
-	public fun removeArm (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
-	public fun update (Lcom/eignex/kumulant/core/SeriesStat;DD)V
-}
-
-public final class com/eignex/kumulant/bandit/univariate/EpsilonDecreasingSpec : com/eignex/kumulant/bandit/univariate/BanditPolicySpec {
-	public static final field Companion Lcom/eignex/kumulant/bandit/univariate/EpsilonDecreasingSpec$Companion;
-	public fun <init> ()V
-	public fun <init> (DDDDD)V
-	public synthetic fun <init> (DDDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun component3 ()D
-	public final fun component4 ()D
-	public final fun component5 ()D
-	public final fun copy (DDDDD)Lcom/eignex/kumulant/bandit/univariate/EpsilonDecreasingSpec;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/EpsilonDecreasingSpec;DDDDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/EpsilonDecreasingSpec;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getDecay ()D
-	public final fun getEpsilon ()D
-	public final fun getPriorMean ()D
-	public final fun getPriorSquaredDeviations ()D
-	public final fun getPriorWeight ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/bandit/univariate/EpsilonDecreasingSpec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/bandit/univariate/EpsilonDecreasingSpec$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/bandit/univariate/EpsilonDecreasingSpec;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/bandit/univariate/EpsilonDecreasingSpec;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/bandit/univariate/EpsilonDecreasingSpec$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/bandit/univariate/EpsilonGreedy : com/eignex/kumulant/bandit/univariate/BanditPolicy {
-	public fun <init> ()V
-	public fun <init> (DDDD)V
-	public synthetic fun <init> (DDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
-	public fun addArm (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
-	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
-	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;JLkotlin/random/Random;)D
-	public synthetic fun getArm ()Lcom/eignex/kumulant/bandit/univariate/Arm;
-	public fun getArm ()Lcom/eignex/kumulant/bandit/univariate/NormalArm;
 	public final fun getEpsilon ()D
 	public synthetic fun removeArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun removeArm (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
@@ -557,15 +498,17 @@ public final class com/eignex/kumulant/bandit/univariate/EpsilonGreedy : com/eig
 public final class com/eignex/kumulant/bandit/univariate/EpsilonGreedySpec : com/eignex/kumulant/bandit/univariate/BanditPolicySpec {
 	public static final field Companion Lcom/eignex/kumulant/bandit/univariate/EpsilonGreedySpec$Companion;
 	public fun <init> ()V
-	public fun <init> (DDDD)V
-	public synthetic fun <init> (DDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (DDDDD)V
+	public synthetic fun <init> (DDDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()D
 	public final fun component2 ()D
 	public final fun component3 ()D
 	public final fun component4 ()D
-	public final fun copy (DDDD)Lcom/eignex/kumulant/bandit/univariate/EpsilonGreedySpec;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/EpsilonGreedySpec;DDDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/EpsilonGreedySpec;
+	public final fun component5 ()D
+	public final fun copy (DDDDD)Lcom/eignex/kumulant/bandit/univariate/EpsilonGreedySpec;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/EpsilonGreedySpec;DDDDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/EpsilonGreedySpec;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDecay ()D
 	public final fun getEpsilon ()D
 	public final fun getPriorMean ()D
 	public final fun getPriorSquaredDeviations ()D
@@ -679,45 +622,6 @@ public final class com/eignex/kumulant/bandit/univariate/Exp3Spec$Companion {
 
 public final class com/eignex/kumulant/bandit/univariate/ExponentialGammaPosterior : com/eignex/kumulant/bandit/univariate/Posterior {
 	public static final field INSTANCE Lcom/eignex/kumulant/bandit/univariate/ExponentialGammaPosterior;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public synthetic fun sample (Lcom/eignex/kumulant/core/Result;Lkotlin/random/Random;)D
-	public fun sample (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;Lkotlin/random/Random;)D
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/eignex/kumulant/bandit/univariate/GammaScalePosterior : com/eignex/kumulant/bandit/univariate/Posterior {
-	public static final field Companion Lcom/eignex/kumulant/bandit/univariate/GammaScalePosterior$Companion;
-	public fun <init> (D)V
-	public final fun component1 ()D
-	public final fun copy (D)Lcom/eignex/kumulant/bandit/univariate/GammaScalePosterior;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/GammaScalePosterior;DILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/GammaScalePosterior;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getFixedShape ()D
-	public fun hashCode ()I
-	public synthetic fun sample (Lcom/eignex/kumulant/core/Result;Lkotlin/random/Random;)D
-	public fun sample (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;Lkotlin/random/Random;)D
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/bandit/univariate/GammaScalePosterior$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/bandit/univariate/GammaScalePosterior$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/bandit/univariate/GammaScalePosterior;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/bandit/univariate/GammaScalePosterior;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/bandit/univariate/GammaScalePosterior$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/bandit/univariate/GeometricBetaPosterior : com/eignex/kumulant/bandit/univariate/Posterior {
-	public static final field INSTANCE Lcom/eignex/kumulant/bandit/univariate/GeometricBetaPosterior;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public synthetic fun sample (Lcom/eignex/kumulant/core/Result;Lkotlin/random/Random;)D
@@ -1353,77 +1257,6 @@ public final class com/eignex/kumulant/bandit/univariate/UCB1 : com/eignex/kumul
 	public fun update (Lcom/eignex/kumulant/core/SeriesStat;DD)V
 }
 
-public final class com/eignex/kumulant/bandit/univariate/UCB1Normal : com/eignex/kumulant/bandit/univariate/BanditPolicy {
-	public fun <init> ()V
-	public fun <init> (DDD)V
-	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
-	public fun addArm (Lcom/eignex/kumulant/stat/summary/MomentsResult;)V
-	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
-	public synthetic fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
-	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/UCB1Normal;
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/summary/MomentsResult;JLkotlin/random/Random;)D
-	public final fun getAlpha ()D
-	public synthetic fun getArm ()Lcom/eignex/kumulant/bandit/univariate/Arm;
-	public fun getArm ()Lcom/eignex/kumulant/bandit/univariate/MomentsArm;
-	public synthetic fun removeArm (Lcom/eignex/kumulant/core/Result;)V
-	public fun removeArm (Lcom/eignex/kumulant/stat/summary/MomentsResult;)V
-	public fun update (Lcom/eignex/kumulant/core/SeriesStat;DD)V
-}
-
-public final class com/eignex/kumulant/bandit/univariate/UCB1Tuned : com/eignex/kumulant/bandit/univariate/BanditPolicy {
-	public fun <init> ()V
-	public fun <init> (DDD)V
-	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
-	public fun addArm (Lcom/eignex/kumulant/stat/summary/MomentsResult;)V
-	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
-	public synthetic fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
-	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/UCB1Tuned;
-	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
-	public fun evaluate (Lcom/eignex/kumulant/stat/summary/MomentsResult;JLkotlin/random/Random;)D
-	public final fun getAlpha ()D
-	public synthetic fun getArm ()Lcom/eignex/kumulant/bandit/univariate/Arm;
-	public fun getArm ()Lcom/eignex/kumulant/bandit/univariate/MomentsArm;
-	public synthetic fun removeArm (Lcom/eignex/kumulant/core/Result;)V
-	public fun removeArm (Lcom/eignex/kumulant/stat/summary/MomentsResult;)V
-	public fun update (Lcom/eignex/kumulant/core/SeriesStat;DD)V
-}
-
-public final class com/eignex/kumulant/bandit/univariate/Ucb1NormalSpec : com/eignex/kumulant/bandit/univariate/BanditPolicySpec {
-	public static final field Companion Lcom/eignex/kumulant/bandit/univariate/Ucb1NormalSpec$Companion;
-	public fun <init> ()V
-	public fun <init> (DDD)V
-	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun component3 ()D
-	public final fun copy (DDD)Lcom/eignex/kumulant/bandit/univariate/Ucb1NormalSpec;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/Ucb1NormalSpec;DDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/Ucb1NormalSpec;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAlpha ()D
-	public final fun getPriorMean ()D
-	public final fun getPriorWeight ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/bandit/univariate/Ucb1NormalSpec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/bandit/univariate/Ucb1NormalSpec$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/bandit/univariate/Ucb1NormalSpec;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/bandit/univariate/Ucb1NormalSpec;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/bandit/univariate/Ucb1NormalSpec$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class com/eignex/kumulant/bandit/univariate/Ucb1Spec : com/eignex/kumulant/bandit/univariate/BanditPolicySpec {
 	public static final field Companion Lcom/eignex/kumulant/bandit/univariate/Ucb1Spec$Companion;
 	public fun <init> ()V
@@ -1454,39 +1287,6 @@ public final synthetic class com/eignex/kumulant/bandit/univariate/Ucb1Spec$$ser
 }
 
 public final class com/eignex/kumulant/bandit/univariate/Ucb1Spec$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/bandit/univariate/Ucb1TunedSpec : com/eignex/kumulant/bandit/univariate/BanditPolicySpec {
-	public static final field Companion Lcom/eignex/kumulant/bandit/univariate/Ucb1TunedSpec$Companion;
-	public fun <init> ()V
-	public fun <init> (DDD)V
-	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun component3 ()D
-	public final fun copy (DDD)Lcom/eignex/kumulant/bandit/univariate/Ucb1TunedSpec;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/Ucb1TunedSpec;DDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/Ucb1TunedSpec;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAlpha ()D
-	public final fun getPriorMean ()D
-	public final fun getPriorWeight ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/bandit/univariate/Ucb1TunedSpec$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/bandit/univariate/Ucb1TunedSpec$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/bandit/univariate/Ucb1TunedSpec;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/bandit/univariate/Ucb1TunedSpec;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/bandit/univariate/Ucb1TunedSpec$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 

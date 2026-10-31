@@ -53,16 +53,6 @@ data object PoissonGammaPosterior : Posterior<WeightedMeanResult> {
     }
 }
 
-/** Beta posterior over a Geometric success probability, reported as the mean trial count `1/p`. */
-@Serializable
-@SerialName("GeometricBetaPosterior")
-data object GeometricBetaPosterior : Posterior<WeightedMeanResult> {
-    override fun sample(snapshot: WeightedMeanResult, rng: Random): Double {
-        val sum = snapshot.mean * snapshot.totalWeights
-        return 1.0 / rng.nextBeta(snapshot.totalWeights, sum - snapshot.totalWeights)
-    }
-}
-
 /** Gamma posterior over an Exponential rate, reported as the mean inter-arrival time `1/lambda`. */
 @Serializable
 @SerialName("ExponentialGammaPosterior")
@@ -127,22 +117,5 @@ data object LogNormalGammaPosterior : Posterior<WeightedVarianceResult> {
             if (value.isFinite()) return value
         }
         return Double.NaN
-    }
-}
-
-/**
- * Gamma posterior over the *scale* of a Gamma likelihood with fixed shape, reported as the
- * mean `fixedShape * scale`. The shape is a posterior parameter rather than something we
- * infer from data, so this is not an `object`.
- */
-@Serializable
-@SerialName("GammaScalePosterior")
-data class GammaScalePosterior(
-    /** Known shape parameter of the Gamma likelihood. */
-    val fixedShape: Double,
-) : Posterior<WeightedMeanResult> {
-    override fun sample(snapshot: WeightedMeanResult, rng: Random): Double {
-        val sum = snapshot.mean * snapshot.totalWeights
-        return fixedShape * sum / rng.nextGamma(snapshot.totalWeights * fixedShape)
     }
 }

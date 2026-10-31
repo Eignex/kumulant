@@ -35,7 +35,7 @@ import kotlin.random.Random
  *   its conjugate [Posterior] given the snapshot. Exploration is implicit
  *   in posterior variance: under-explored arms have wider posteriors and
  *   draw higher scores more often.
- * - **UCB-based** ([UCB1], [UCB1Normal], [UCB1Tuned], [UcbV], [KlUcb], [Moss])
+ * - **UCB-based** ([UCB1], [UcbV], [KlUcb], [Moss])
  *   score is `mean + alpha * confidence-bound` derived from the snapshot
  *   directly. Exploration is explicit in the confidence width.
  *
@@ -79,7 +79,7 @@ interface BanditPolicy<R : Result> {
     /**
      * Hook called when a new arm joins the population. Lets stateful
      * policies fold the new arm's snapshot into their global counters
-     * (UCB's total-samples, UCB1Normal's arm count). Default no-op.
+     * (UCB's total-samples). Default no-op.
      */
     fun addArm(snapshot: R) {}
 
@@ -110,9 +110,8 @@ interface BanditPolicy<R : Result> {
  * - [BernoulliArm] + [BetaPosterior]: see [BetaBernoulliTS].
  * - [NormalArm] + [NormalGammaPosterior]: see [NormalTS].
  * - [LogNormalArm] + [LogNormalGammaPosterior]: see [LogNormalTS].
- * - [MeanArm] + [PoissonGammaPosterior] / [GeometricBetaPosterior] /
- *   [ExponentialGammaPosterior] / [GammaScalePosterior]; see [PoissonTS],
- *   [GeometricTS], [ExponentialTS], [GammaScaleTS].
+ * - [MeanArm] + [PoissonGammaPosterior] / [ExponentialGammaPosterior]; see
+ *   [PoissonTS], [ExponentialTS].
  *
  * Stateless across arms; [addArm] / [removeArm] are no-ops because no
  * global counter is involved.
@@ -145,20 +144,10 @@ fun LogNormalTS(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquare
 fun PoissonTS(priorMean: Double = 1.0, priorWeight: Double = 0.01) =
     ThompsonSampling(MeanArm(priorMean, priorWeight), PoissonGammaPosterior)
 
-/** Thompson sampling over a geometric reward with a Beta prior on the success probability. */
-@Suppress("FunctionNaming")
-fun GeometricTS(priorMean: Double = 2.0, priorWeight: Double = 1.0) =
-    ThompsonSampling(MeanArm(priorMean, priorWeight), GeometricBetaPosterior)
-
 /** Thompson sampling over an exponential reward with a Gamma prior on the rate. */
 @Suppress("FunctionNaming")
 fun ExponentialTS(priorMean: Double = 1.0, priorWeight: Double = 0.01) =
     ThompsonSampling(MeanArm(priorMean, priorWeight), ExponentialGammaPosterior)
-
-/** Thompson sampling over a Gamma reward with known shape and Gamma prior on the scale. */
-@Suppress("FunctionNaming")
-fun GammaScaleTS(fixedShape: Double, priorMean: Double = 1.0, priorWeight: Double = 0.1) =
-    ThompsonSampling(MeanArm(priorMean, priorWeight), GammaScalePosterior(fixedShape))
 
 /**
  * Classical UCB1 (Auer, Cesa-Bianchi, Fischer 2002). Score is
@@ -206,94 +195,6 @@ class UCB1(
 }
 
 /**
- * UCB1-Normal (Auer et al. 2002). Variance-aware UCB for Gaussian rewards;
- * uses the sample variance derived from the [MomentsResult] snapshot to
- * scale the confidence bound. Reach for it when rewards are roughly
- * Gaussian and unbounded; [UCB1]'s `[0, 1]` assumption doesn't hold.
- *
- * Forces exploration until each arm has at least `8 * ln(K)` pulls (`K` is
- * the arm count), then switches to the variance-aware score
- * `mean + alpha * sqrt(16 * variance * ln(n - 1) / armSamples)`, where `n` is
- * the total pull count across all arms.
- */
-class UCB1Normal(
-    /** Exploration scale on the confidence-bound term. */
-    val alpha: Double = 1.0,
-    priorMean: Double = 0.0,
-    priorWeight: Double = 0.02,
-) : BanditPolicy<MomentsResult> {
-    override val arm = MomentsArm(priorMean, priorWeight)
-    private var nbrArms = 0
-    override fun createPolicy() = UCB1Normal(alpha, arm.priorMean, arm.priorWeight)
-
-    override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
-        val nj = snapshot.totalWeights
-        // The arm count bounds forced warm-up because choose calls and reward updates can advance independently.
-        // The confidence term continues exploration using accumulated reward weight.
-        val totalPulls = maxOf(step.toDouble(), nj)
-        if (nbrArms <= 1 || nj < 8 * ln(nbrArms.toDouble())) return Double.POSITIVE_INFINITY
-        // Auer et al. subtract `n * mean^2` from the SUM of squares, and meanOfSquares() is the
-        // MEAN of squares, so this has to scale up by `nj` first. Subtracting from `E[x^2]` instead
-        // drives p1 negative for every arm with a non-zero mean, and the sqrt below turns NaN, which
-        // `choose` resolves to always picking arm 0 (`NaN > -Inf` is false).
-        val sumOfSquares = snapshot.meanOfSquares() * nj
-        val p1 = ((sumOfSquares - nj * snapshot.mean * snapshot.mean) / (nj - 1)).coerceAtLeast(0.0)
-        // `step` carries the round count, which is why it is a parameter; this arm's own pulls floor it,
-        // since they are part of any total and `step` stays 0 for a caller that drives update()
-        // directly without choose().
-        return snapshot.mean + alpha * sqrt(16 * p1 * (ln((totalPulls - 1.0).coerceAtLeast(1.0)) / nj))
-    }
-    override fun addArm(snapshot: MomentsResult) {
-        nbrArms++
-    }
-    override fun removeArm(snapshot: MomentsResult) {
-        nbrArms--
-    }
-}
-
-/**
- * UCB1-Tuned (Auer et al. 2002). Same shape as [UCB1] but the confidence
- * bound multiplier uses an upper bound on the variance: `min(0.25, v)`
- * where `v` is the sample variance plus a small padding term. Tighter
- * bound than plain [UCB1] when the empirical variance is well below
- * `0.25`; degrades gracefully to [UCB1] when the variance is uninformative.
- *
- * Designed for `[0, 1]`-bounded rewards (the `0.25` ceiling assumes
- * variance can't exceed `1/4`). For Gaussian unbounded rewards reach for
- * [UCB1Normal] instead.
- */
-class UCB1Tuned(
-    /** Exploration scale on the confidence-bound term. */
-    val alpha: Double = 1.0,
-    priorMean: Double = 0.0,
-    priorWeight: Double = 0.02,
-) : BanditPolicy<MomentsResult> {
-    override val arm = MomentsArm(priorMean, priorWeight)
-
-    // Policies share this counter across arms, so concurrent updates require atomic addition.
-    private val totalSamples = AtomicMode.newDouble(0.0)
-    override fun createPolicy() = UCB1Tuned(alpha, arm.priorMean, arm.priorWeight)
-
-    override fun update(stat: SeriesStat<MomentsResult>, value: Double, weight: Double) {
-        stat.update(arm.encode(value), 0L, weight)
-        totalSamples.add(weight)
-    }
-    override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
-        val nj = snapshot.totalWeights
-        if (nj <= 1.0) return Double.POSITIVE_INFINITY
-        val padding = ln(totalSamples.load()) / nj
-        val v = snapshot.meanOfSquares() - snapshot.mean * snapshot.mean + sqrt(2.0 * padding)
-        return snapshot.mean + alpha * sqrt(padding * min(0.25, v))
-    }
-    override fun addArm(snapshot: MomentsResult) {
-        totalSamples.add(snapshot.totalWeights)
-    }
-    override fun removeArm(snapshot: MomentsResult) {
-        totalSamples.add(-snapshot.totalWeights)
-    }
-}
-
-/**
  * Pure-exploitation policy: always picks the arm with the highest posterior
  * mean. No exploration at all; converges fastest to the apparent best arm
  * but can lock into a suboptimal arm forever if early rewards mislead it.
@@ -327,60 +228,31 @@ internal class RoundCoin {
 }
 
 /**
- * Epsilon-greedy: with probability [epsilon] pick a uniformly random arm
+ * Epsilon-greedy: with probability `eps` pick a uniformly random arm
  * (explore), otherwise pick the arm with the highest mean (exploit).
- * The simplest exploration scheme that actually works; no math machinery,
- * tune one knob.
+ * The simplest exploration scheme that actually works; no math machinery.
  *
- * Sensitive to the epsilon value: too low and you under-explore (regret
- * scales linearly in horizon for the wrong arm); too high and you waste
- * pulls on known-bad arms. Typical good values are `0.05`–`0.2`. For
- * automatic tuning use [EpsilonDecreasing], which anneals epsilon toward
- * zero as samples accumulate.
+ * The exploration probability is `eps(n) = min(1, epsilon / n^decay)` over the total
+ * sample count `n`. At the default `decay = 0` it is the fixed [epsilon]; typical good
+ * values are `0.05`-`0.2`. A positive [decay] anneals exploration toward zero as samples
+ * accumulate, exploring aggressively early and converging to greedy once the arms are
+ * well separated; `decay = 0.5` with `epsilon` around `2.0` gives Auer et al.'s
+ * `sqrt(T)` regret bound.
  */
 class EpsilonGreedy(
-    /** Probability of exploring uniformly instead of exploiting the best mean. */
+    /** Exploration probability at `decay = 0`; otherwise the scale of the annealed probability. */
     val epsilon: Double = 0.1,
+    /** Decay exponent applied to the total sample count; `0.0` keeps exploration fixed. */
+    val decay: Double = 0.0,
     priorMean: Double = 0.0,
     priorWeight: Double = 0.02,
     priorSquaredDeviations: Double = 0.02,
 ) : BanditPolicy<WeightedVarianceResult> {
     init {
-        require(epsilon in 0.0..1.0) { "epsilon must be in 0..1, got $epsilon" }
-    }
-    override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
-
-    private val coin = RoundCoin()
-
-    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double =
-        if (coin.explores(step, rng, epsilon)) {
-            rng.nextDouble()
-        } else {
-            snapshot.mean
+        require(decay >= 0.0) { "decay must be non-negative, got $decay" }
+        require(epsilon >= 0.0 && (decay > 0.0 || epsilon <= 1.0)) {
+            "epsilon must be in 0..1 at decay 0, or non-negative with a positive decay, got $epsilon"
         }
-}
-
-/**
- * Annealed epsilon-greedy. Effective exploration probability decreases as
- * sample count accumulates: `eps(t) = min(1, epsilon / totalSamples^decay)`.
- *
- * Solves [EpsilonGreedy]'s fixed-epsilon trade-off: explore aggressively
- * early, then converge to mostly-greedy once the per-arm posteriors are
- * well-separated. Theoretical defaults give `decay = 0.5` (Auer et al.
- * 2002) for a `sqrt(T)` regret bound; lower `decay` keeps exploring
- * longer, higher `decay` converges to greedy faster.
- */
-class EpsilonDecreasing(
-    /** Initial exploration scale; effective epsilon decays as samples accumulate. */
-    val epsilon: Double = 2.0,
-    /** Decay exponent applied to the running sample count. */
-    val decay: Double = 0.5,
-    priorMean: Double = 0.0,
-    priorWeight: Double = 0.02,
-    priorSquaredDeviations: Double = 0.02,
-) : BanditPolicy<WeightedVarianceResult> {
-    init {
-        require(epsilon > 0.0) { "epsilon must be positive, got $epsilon" }
     }
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
 
@@ -388,23 +260,22 @@ class EpsilonDecreasing(
     private val totalSamples = AtomicMode.newDouble(0.0)
     private val coin = RoundCoin()
     override fun createPolicy() =
-        EpsilonDecreasing(epsilon, decay, arm.priorMean, arm.priorWeight, arm.priorSquaredDeviations)
+        EpsilonGreedy(epsilon, decay, arm.priorMean, arm.priorWeight, arm.priorSquaredDeviations)
 
     override fun update(stat: SeriesStat<WeightedVarianceResult>, value: Double, weight: Double) {
         stat.update(arm.encode(value), 0L, weight)
         totalSamples.add(weight)
     }
+
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double {
-        val eps = min(1.0, epsilon / totalSamples.load().pow(decay))
-        return if (coin.explores(step, rng, eps)) {
-            rng.nextDouble()
-        } else {
-            snapshot.mean
-        }
+        val eps = if (decay == 0.0) epsilon else min(1.0, epsilon / totalSamples.load().pow(decay))
+        return if (coin.explores(step, rng, eps)) rng.nextDouble() else snapshot.mean
     }
+
     override fun addArm(snapshot: WeightedVarianceResult) {
         totalSamples.add(snapshot.totalWeights)
     }
+
     override fun removeArm(snapshot: WeightedVarianceResult) {
         totalSamples.add(-snapshot.totalWeights)
     }
@@ -468,7 +339,7 @@ class Boltzmann(
  * Useful as a regret-comparison baseline (any policy worth its salt
  * should beat uniform), as a data-collection scheme before switching to
  * a real policy, and as the inner uniformly-random arm in
- * [EpsilonGreedy] / [EpsilonDecreasing]. Not a real online-learning
+ * [EpsilonGreedy]. Not a real online-learning
  * choice on its own.
  */
 class UniformSelection(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDeviations: Double = 0.02) :
@@ -614,11 +485,11 @@ class Moss(
  * `mean + sqrt(2 * V * zeta * ln(t) / n) + 3 * c * zeta * ln(t) / n`,
  * where `V` is the running variance from the [MomentsResult] snapshot.
  *
- * The third term; a bias correction scaled by [c]; is what distinguishes
- * UCB-V from [UCB1Tuned]: the bound is honest at finite sample sizes
- * rather than only asymptotically. Reach for it when sample sizes per arm
- * stay small (early stopping, expensive arms) and the asymptotic
- * tightness of [UCB1Tuned] / [KlUcb] doesn't materialise.
+ * The third term, a bias correction scaled by [c], keeps the bound honest at
+ * finite sample sizes rather than only asymptotically. Reach for it when
+ * rewards are not `[0, 1]`-bounded, or when sample sizes per arm stay small
+ * (early stopping, expensive arms) and the asymptotic tightness of [KlUcb]
+ * doesn't materialise.
  *
  * Audibert et al. recommend `zeta in [1, 1.2]`; defaults are at the upper
  * end of that range.

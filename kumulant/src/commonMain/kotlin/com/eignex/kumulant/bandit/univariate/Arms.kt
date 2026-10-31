@@ -45,21 +45,18 @@ import kotlin.math.sqrt
  *
  * - [BernoulliArm]: binary reward; result is [BernoulliSumResult]; pairs
  *   with [BetaPosterior] (Thompson) or [UCB1].
- * - [MeanArm]: single-moment likelihoods (Poisson, Geometric, Exponential,
- *   GammaScale); result is [WeightedMeanResult]; pairs with one of the
- *   single-moment posteriors ([PoissonGammaPosterior],
- *   [GeometricBetaPosterior], [ExponentialGammaPosterior],
- *   [GammaScalePosterior]).
+ * - [MeanArm]: single-moment likelihoods (Poisson, Exponential); result is
+ *   [WeightedMeanResult]; pairs with one of the single-moment posteriors
+ *   ([PoissonGammaPosterior], [ExponentialGammaPosterior]).
  * - [NormalArm]: Gaussian reward with unknown mean and variance; result is
  *   [WeightedVarianceResult]; pairs with [NormalGammaPosterior] (Thompson)
  *   or the mean-based policies ([Greedy], [EpsilonGreedy],
- *   [EpsilonDecreasing], [UniformSelection]).
+ *   [UniformSelection]).
  * - [LogNormalArm]: multiplicative reward (revenue, latency); result is
  *   [WeightedVarianceResult] on the log scale; pairs with
  *   [LogNormalGammaPosterior].
  * - [MomentsArm]: Gaussian with second-moment tracking; result is
- *   [MomentsResult]; pairs with the variance-aware UCB family
- *   ([UCB1Normal], [UCB1Tuned], [UcbV]).
+ *   [MomentsResult]; pairs with the variance-aware [UcbV].
  */
 @Serializable(with = ArmSerializer::class)
 sealed interface Arm<R : Result> {
@@ -120,11 +117,8 @@ data class BernoulliArm(
  * equivalently a running mean × count):
  *
  * - **Poisson reward** (count data): pair with [PoissonGammaPosterior].
- * - **Geometric reward** (trials until success): pair with
- *   [GeometricBetaPosterior].
  * - **Exponential reward** (inter-arrival time): pair with
  *   [ExponentialGammaPosterior].
- * - **Gamma reward with known shape**: pair with [GammaScalePosterior].
  *
  * The prior is a pseudo-observation of value [priorMean] with weight
  * [priorWeight]. Tiny `priorWeight` (default 0.01) makes the prior a soft
@@ -246,13 +240,8 @@ data class LogNormalArm(
 /**
  * Moments-tracking arm. Backs [MomentsStat] under the hood, which means the
  * snapshot exposes the raw second moment `m2` (in addition to mean and
- * variance); required by the variance-aware UCB policies that need
- * `mean-of-squares` directly:
- *
- * - [UCB1Normal]: Auer et al.'s variance-aware UCB for Gaussian rewards.
- * - [UCB1Tuned]: sample-variance-aware UCB; typically tighter bound than
- *   plain [UCB1].
- * - [UcbV]: variance-aware UCB with an explicit exploration constant.
+ * variance); required by [UcbV], the variance-aware UCB policy that needs
+ * `mean-of-squares` directly.
  *
  * For pure Thompson sampling on Gaussian rewards, [NormalArm] + the
  * Normal-Gamma posterior is the right pick; [MomentsArm] earns its place

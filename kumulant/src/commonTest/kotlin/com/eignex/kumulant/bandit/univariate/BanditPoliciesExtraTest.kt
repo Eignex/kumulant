@@ -153,19 +153,8 @@ class BanditPoliciesExtraTest {
     }
 
     @Test
-    fun `EpsilonDecreasing rejects bad params`() {
-        assertFailsWith<IllegalArgumentException> { EpsilonDecreasing(epsilon = -0.1) }
-        assertFailsWith<IllegalArgumentException> { EpsilonDecreasing(epsilon = 0.0) }
-    }
-
-    @Test
-    fun `UCB1Tuned grows bound with totalSamples`() {
-        val pol = UCB1Tuned()
-        pol.update(pol.arm.createStat(), 1.0)
-        repeat(100) { pol.update(pol.arm.createStat(), 1.0) }
-        val snap = MomentsResult(totalWeights = 2.0, mean = 0.5, m2 = 0.5, m3 = 0.0, m4 = 0.0)
-        val s = pol.evaluate(snap, 0L, Random(0))
-        assertTrue(s > 0.5 && s.isFinite())
+    fun `annealed EpsilonGreedy rejects a negative decay`() {
+        assertFailsWith<IllegalArgumentException> { EpsilonGreedy(epsilon = 2.0, decay = -0.5) }
     }
 
     @Test

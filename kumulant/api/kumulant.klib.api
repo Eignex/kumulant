@@ -1336,75 +1336,28 @@ final class com.eignex.kumulant.bandit.univariate/CompositeSubArm { // com.eigne
     }
 }
 
-final class com.eignex.kumulant.bandit.univariate/EpsilonDecreasing : com.eignex.kumulant.bandit.univariate/BanditPolicy<com.eignex.kumulant.stat.summary/WeightedVarianceResult> { // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-
-    final val arm // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.arm|{}arm[0]
-        final fun <get-arm>(): com.eignex.kumulant.bandit.univariate/NormalArm // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.arm.<get-arm>|<get-arm>(){}[0]
-    final val decay // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.decay|{}decay[0]
-        final fun <get-decay>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.decay.<get-decay>|<get-decay>(){}[0]
-    final val epsilon // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.epsilon|{}epsilon[0]
-        final fun <get-epsilon>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.epsilon.<get-epsilon>|<get-epsilon>(){}[0]
-
-    final fun addArm(com.eignex.kumulant.stat.summary/WeightedVarianceResult) // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.addArm|addArm(com.eignex.kumulant.stat.summary.WeightedVarianceResult){}[0]
-    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/EpsilonDecreasing // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.createPolicy|createPolicy(){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.summary/WeightedVarianceResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.evaluate|evaluate(com.eignex.kumulant.stat.summary.WeightedVarianceResult;kotlin.Long;kotlin.random.Random){}[0]
-    final fun removeArm(com.eignex.kumulant.stat.summary/WeightedVarianceResult) // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.removeArm|removeArm(com.eignex.kumulant.stat.summary.WeightedVarianceResult){}[0]
-    final fun update(com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/WeightedVarianceResult>, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/EpsilonDecreasing.update|update(com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.WeightedVarianceResult>;kotlin.Double;kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec : com.eignex.kumulant.bandit.univariate/BanditPolicySpec<com.eignex.kumulant.stat.summary/WeightedVarianceResult> { // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-
-    final val decay // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.decay|{}decay[0]
-        final fun <get-decay>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.decay.<get-decay>|<get-decay>(){}[0]
-    final val epsilon // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.epsilon|{}epsilon[0]
-        final fun <get-epsilon>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.epsilon.<get-epsilon>|<get-epsilon>(){}[0]
-    final val priorMean // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.priorMean|{}priorMean[0]
-        final fun <get-priorMean>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.priorMean.<get-priorMean>|<get-priorMean>(){}[0]
-    final val priorSquaredDeviations // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.priorSquaredDeviations|{}priorSquaredDeviations[0]
-        final fun <get-priorSquaredDeviations>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.priorSquaredDeviations.<get-priorSquaredDeviations>|<get-priorSquaredDeviations>(){}[0]
-    final val priorWeight // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.priorWeight|{}priorWeight[0]
-        final fun <get-priorWeight>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.priorWeight.<get-priorWeight>|<get-priorWeight>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.component3|component3(){}[0]
-    final fun component4(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.component4|component4(){}[0]
-    final fun component5(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.component5|component5(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec> { // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec) // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.bandit.univariate.EpsilonDecreasingSpec){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec> // com.eignex.kumulant.bandit.univariate/EpsilonDecreasingSpec.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.bandit.univariate/EpsilonGreedy : com.eignex.kumulant.bandit.univariate/BanditPolicy<com.eignex.kumulant.stat.summary/WeightedVarianceResult> { // com.eignex.kumulant.bandit.univariate/EpsilonGreedy|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
 
     final val arm // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.arm|{}arm[0]
         final fun <get-arm>(): com.eignex.kumulant.bandit.univariate/NormalArm // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.arm.<get-arm>|<get-arm>(){}[0]
+    final val decay // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.decay|{}decay[0]
+        final fun <get-decay>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.decay.<get-decay>|<get-decay>(){}[0]
     final val epsilon // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.epsilon|{}epsilon[0]
         final fun <get-epsilon>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.epsilon.<get-epsilon>|<get-epsilon>(){}[0]
 
+    final fun addArm(com.eignex.kumulant.stat.summary/WeightedVarianceResult) // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.addArm|addArm(com.eignex.kumulant.stat.summary.WeightedVarianceResult){}[0]
+    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/EpsilonGreedy // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.createPolicy|createPolicy(){}[0]
     final fun evaluate(com.eignex.kumulant.stat.summary/WeightedVarianceResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.evaluate|evaluate(com.eignex.kumulant.stat.summary.WeightedVarianceResult;kotlin.Long;kotlin.random.Random){}[0]
+    final fun removeArm(com.eignex.kumulant.stat.summary/WeightedVarianceResult) // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.removeArm|removeArm(com.eignex.kumulant.stat.summary.WeightedVarianceResult){}[0]
+    final fun update(com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/WeightedVarianceResult>, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/EpsilonGreedy.update|update(com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.WeightedVarianceResult>;kotlin.Double;kotlin.Double){}[0]
 }
 
 final class com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec : com.eignex.kumulant.bandit.univariate/BanditPolicySpec<com.eignex.kumulant.stat.summary/WeightedVarianceResult> { // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
 
+    final val decay // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.decay|{}decay[0]
+        final fun <get-decay>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.decay.<get-decay>|<get-decay>(){}[0]
     final val epsilon // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.epsilon|{}epsilon[0]
         final fun <get-epsilon>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.epsilon.<get-epsilon>|<get-epsilon>(){}[0]
     final val priorMean // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.priorMean|{}priorMean[0]
@@ -1418,7 +1371,8 @@ final class com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec : com.eignex
     final fun component2(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.component2|component2(){}[0]
     final fun component3(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.component3|component3(){}[0]
     final fun component4(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.component4|component4(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+    final fun component5(): kotlin/Double // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.component5|component5(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/EpsilonGreedySpec.toString|toString(){}[0]
@@ -1519,33 +1473,6 @@ final class com.eignex.kumulant.bandit.univariate/Exp3Spec : com.eignex.kumulant
 
     final object Companion { // com.eignex.kumulant.bandit.univariate/Exp3Spec.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.univariate/Exp3Spec> // com.eignex.kumulant.bandit.univariate/Exp3Spec.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.bandit.univariate/GammaScalePosterior : com.eignex.kumulant.bandit.univariate/Posterior<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.bandit.univariate/GammaScalePosterior|null[0]
-    constructor <init>(kotlin/Double) // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.<init>|<init>(kotlin.Double){}[0]
-
-    final val fixedShape // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.fixedShape|{}fixedShape[0]
-        final fun <get-fixedShape>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.fixedShape.<get-fixedShape>|<get-fixedShape>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.component1|component1(){}[0]
-    final fun copy(kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/GammaScalePosterior // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.copy|copy(kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.hashCode|hashCode(){}[0]
-    final fun sample(com.eignex.kumulant.stat.summary/WeightedMeanResult, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.sample|sample(com.eignex.kumulant.stat.summary.WeightedMeanResult;kotlin.random.Random){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.univariate/GammaScalePosterior> { // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.bandit.univariate/GammaScalePosterior // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.bandit.univariate/GammaScalePosterior) // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.bandit.univariate.GammaScalePosterior){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.univariate/GammaScalePosterior> // com.eignex.kumulant.bandit.univariate/GammaScalePosterior.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -1963,67 +1890,6 @@ final class com.eignex.kumulant.bandit.univariate/UCB1 : com.eignex.kumulant.ban
     final fun update(com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/BernoulliSumResult>, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/UCB1.update|update(com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.BernoulliSumResult>;kotlin.Double;kotlin.Double){}[0]
 }
 
-final class com.eignex.kumulant.bandit.univariate/UCB1Normal : com.eignex.kumulant.bandit.univariate/BanditPolicy<com.eignex.kumulant.stat.summary/MomentsResult> { // com.eignex.kumulant.bandit.univariate/UCB1Normal|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/UCB1Normal.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-
-    final val alpha // com.eignex.kumulant.bandit.univariate/UCB1Normal.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/UCB1Normal.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val arm // com.eignex.kumulant.bandit.univariate/UCB1Normal.arm|{}arm[0]
-        final fun <get-arm>(): com.eignex.kumulant.bandit.univariate/MomentsArm // com.eignex.kumulant.bandit.univariate/UCB1Normal.arm.<get-arm>|<get-arm>(){}[0]
-
-    final fun addArm(com.eignex.kumulant.stat.summary/MomentsResult) // com.eignex.kumulant.bandit.univariate/UCB1Normal.addArm|addArm(com.eignex.kumulant.stat.summary.MomentsResult){}[0]
-    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/UCB1Normal // com.eignex.kumulant.bandit.univariate/UCB1Normal.createPolicy|createPolicy(){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.summary/MomentsResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/UCB1Normal.evaluate|evaluate(com.eignex.kumulant.stat.summary.MomentsResult;kotlin.Long;kotlin.random.Random){}[0]
-    final fun removeArm(com.eignex.kumulant.stat.summary/MomentsResult) // com.eignex.kumulant.bandit.univariate/UCB1Normal.removeArm|removeArm(com.eignex.kumulant.stat.summary.MomentsResult){}[0]
-}
-
-final class com.eignex.kumulant.bandit.univariate/UCB1Tuned : com.eignex.kumulant.bandit.univariate/BanditPolicy<com.eignex.kumulant.stat.summary/MomentsResult> { // com.eignex.kumulant.bandit.univariate/UCB1Tuned|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/UCB1Tuned.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-
-    final val alpha // com.eignex.kumulant.bandit.univariate/UCB1Tuned.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/UCB1Tuned.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val arm // com.eignex.kumulant.bandit.univariate/UCB1Tuned.arm|{}arm[0]
-        final fun <get-arm>(): com.eignex.kumulant.bandit.univariate/MomentsArm // com.eignex.kumulant.bandit.univariate/UCB1Tuned.arm.<get-arm>|<get-arm>(){}[0]
-
-    final fun addArm(com.eignex.kumulant.stat.summary/MomentsResult) // com.eignex.kumulant.bandit.univariate/UCB1Tuned.addArm|addArm(com.eignex.kumulant.stat.summary.MomentsResult){}[0]
-    final fun createPolicy(): com.eignex.kumulant.bandit.univariate/UCB1Tuned // com.eignex.kumulant.bandit.univariate/UCB1Tuned.createPolicy|createPolicy(){}[0]
-    final fun evaluate(com.eignex.kumulant.stat.summary/MomentsResult, kotlin/Long, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/UCB1Tuned.evaluate|evaluate(com.eignex.kumulant.stat.summary.MomentsResult;kotlin.Long;kotlin.random.Random){}[0]
-    final fun removeArm(com.eignex.kumulant.stat.summary/MomentsResult) // com.eignex.kumulant.bandit.univariate/UCB1Tuned.removeArm|removeArm(com.eignex.kumulant.stat.summary.MomentsResult){}[0]
-    final fun update(com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/MomentsResult>, kotlin/Double, kotlin/Double) // com.eignex.kumulant.bandit.univariate/UCB1Tuned.update|update(com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.MomentsResult>;kotlin.Double;kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec : com.eignex.kumulant.bandit.univariate/BanditPolicySpec<com.eignex.kumulant.stat.summary/MomentsResult> { // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-
-    final val alpha // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val priorMean // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.priorMean|{}priorMean[0]
-        final fun <get-priorMean>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.priorMean.<get-priorMean>|<get-priorMean>(){}[0]
-    final val priorWeight // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.priorWeight|{}priorWeight[0]
-        final fun <get-priorWeight>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.priorWeight.<get-priorWeight>|<get-priorWeight>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.component3|component3(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec> { // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec) // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.bandit.univariate.Ucb1NormalSpec){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec> // com.eignex.kumulant.bandit.univariate/Ucb1NormalSpec.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.bandit.univariate/Ucb1Spec : com.eignex.kumulant.bandit.univariate/BanditPolicySpec<com.eignex.kumulant.stat.summary/BernoulliSumResult> { // com.eignex.kumulant.bandit.univariate/Ucb1Spec|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/Ucb1Spec.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
 
@@ -2053,38 +1919,6 @@ final class com.eignex.kumulant.bandit.univariate/Ucb1Spec : com.eignex.kumulant
 
     final object Companion { // com.eignex.kumulant.bandit.univariate/Ucb1Spec.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.univariate/Ucb1Spec> // com.eignex.kumulant.bandit.univariate/Ucb1Spec.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec : com.eignex.kumulant.bandit.univariate/BanditPolicySpec<com.eignex.kumulant.stat.summary/MomentsResult> { // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec|null[0]
-    constructor <init>(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-
-    final val alpha // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val priorMean // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.priorMean|{}priorMean[0]
-        final fun <get-priorMean>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.priorMean.<get-priorMean>|<get-priorMean>(){}[0]
-    final val priorWeight // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.priorWeight|{}priorWeight[0]
-        final fun <get-priorWeight>(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.priorWeight.<get-priorWeight>|<get-priorWeight>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.component3|component3(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec> { // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec) // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.bandit.univariate.Ucb1TunedSpec){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec> // com.eignex.kumulant.bandit.univariate/Ucb1TunedSpec.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -8220,15 +8054,6 @@ final object com.eignex.kumulant.bandit.univariate/ExponentialGammaPosterior : c
     final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/ExponentialGammaPosterior.toString|toString(){}[0]
 }
 
-final object com.eignex.kumulant.bandit.univariate/GeometricBetaPosterior : com.eignex.kumulant.bandit.univariate/Posterior<com.eignex.kumulant.stat.summary/WeightedMeanResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.bandit.univariate/GeometricBetaPosterior|null[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.univariate/GeometricBetaPosterior.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/GeometricBetaPosterior.hashCode|hashCode(){}[0]
-    final fun sample(com.eignex.kumulant.stat.summary/WeightedMeanResult, kotlin.random/Random): kotlin/Double // com.eignex.kumulant.bandit.univariate/GeometricBetaPosterior.sample|sample(com.eignex.kumulant.stat.summary.WeightedMeanResult;kotlin.random.Random){}[0]
-    final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.bandit.univariate/GeometricBetaPosterior> // com.eignex.kumulant.bandit.univariate/GeometricBetaPosterior.serializer|serializer(){}[0]
-    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.bandit.univariate/GeometricBetaPosterior.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.bandit.univariate/GeometricBetaPosterior.toString|toString(){}[0]
-}
-
 final object com.eignex.kumulant.bandit.univariate/LogNormalGammaPosterior : com.eignex.kumulant.bandit.univariate/Posterior<com.eignex.kumulant.stat.summary/WeightedVarianceResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.bandit.univariate/LogNormalGammaPosterior|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.bandit.univariate/LogNormalGammaPosterior.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.bandit.univariate/LogNormalGammaPosterior.hashCode|hashCode(){}[0]
@@ -8802,8 +8627,6 @@ final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec
 final fun <#A: com.eignex.kumulant.core/Result> (com.eignex.kumulant.schema.spec/VectorStatSpec<#A>).com.eignex.kumulant.schema.runtime/materialize(com.eignex.kumulant.core/Concurrency = ...): com.eignex.kumulant.core/VectorStat<#A> // com.eignex.kumulant.schema.runtime/materialize|materialize@com.eignex.kumulant.schema.spec.VectorStatSpec<0:0>(com.eignex.kumulant.core.Concurrency){0§<com.eignex.kumulant.core.Result>}[0]
 final fun com.eignex.kumulant.bandit.univariate/BetaBernoulliTS(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/ThompsonSampling<com.eignex.kumulant.stat.summary/BernoulliSumResult> // com.eignex.kumulant.bandit.univariate/BetaBernoulliTS|BetaBernoulliTS(kotlin.Double;kotlin.Double){}[0]
 final fun com.eignex.kumulant.bandit.univariate/ExponentialTS(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/ThompsonSampling<com.eignex.kumulant.stat.summary/WeightedMeanResult> // com.eignex.kumulant.bandit.univariate/ExponentialTS|ExponentialTS(kotlin.Double;kotlin.Double){}[0]
-final fun com.eignex.kumulant.bandit.univariate/GammaScaleTS(kotlin/Double, kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/ThompsonSampling<com.eignex.kumulant.stat.summary/WeightedMeanResult> // com.eignex.kumulant.bandit.univariate/GammaScaleTS|GammaScaleTS(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-final fun com.eignex.kumulant.bandit.univariate/GeometricTS(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/ThompsonSampling<com.eignex.kumulant.stat.summary/WeightedMeanResult> // com.eignex.kumulant.bandit.univariate/GeometricTS|GeometricTS(kotlin.Double;kotlin.Double){}[0]
 final fun com.eignex.kumulant.bandit.univariate/LogNormalTS(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/ThompsonSampling<com.eignex.kumulant.stat.summary/WeightedVarianceResult> // com.eignex.kumulant.bandit.univariate/LogNormalTS|LogNormalTS(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
 final fun com.eignex.kumulant.bandit.univariate/NormalTS(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/ThompsonSampling<com.eignex.kumulant.stat.summary/WeightedVarianceResult> // com.eignex.kumulant.bandit.univariate/NormalTS|NormalTS(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
 final fun com.eignex.kumulant.bandit.univariate/PoissonTS(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.bandit.univariate/ThompsonSampling<com.eignex.kumulant.stat.summary/WeightedMeanResult> // com.eignex.kumulant.bandit.univariate/PoissonTS|PoissonTS(kotlin.Double;kotlin.Double){}[0]
