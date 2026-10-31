@@ -162,7 +162,10 @@ class CanonicalSerializerTest {
             """{"decayingMean":{"halfLifeMillis":1000}}""",
             Json.encodeToString<StatSpec>(DecayingMean(1000)),
         )
-        assertEquals("""{"holt":{"alpha":0.2}}""", Json.encodeToString<StatSpec>(Holt(0.2)))
+        assertEquals(
+            """{"exponentialSmoothing":{"alpha":0.2}}""",
+            Json.encodeToString<StatSpec>(ExponentialSmoothing(0.2)),
+        )
     }
 
     @Test
@@ -191,10 +194,13 @@ class CanonicalSerializerTest {
     @Test
     fun `JSON settings control default fields without changing operator shapes`() {
         val defaults = Json { encodeDefaults = true }
-        val spec: StatSpec = Holt(0.2)
+        val spec: StatSpec = ExponentialSmoothing(0.2)
 
-        assertEquals("""{"holt":{"alpha":0.2}}""", Json.encodeToString(spec))
-        assertEquals("""{"holt":{"alpha":0.2,"beta":0.2,"phi":1.0}}""", defaults.encodeToString(spec))
+        assertEquals("""{"exponentialSmoothing":{"alpha":0.2}}""", Json.encodeToString(spec))
+        assertEquals(
+            """{"exponentialSmoothing":{"alpha":0.2,"beta":0.2,"phi":1.0,"period":1,"gamma":0.2,"mode":"Additive"}}""",
+            defaults.encodeToString(spec),
+        )
         assertEquals(spec, Json.decodeFromString<StatSpec>(defaults.encodeToString(spec)))
     }
 
@@ -253,7 +259,7 @@ class CanonicalSerializerTest {
             """{"filter":{"pred":"allFinite","inner":{"transform":{"expr":{"input":"x"},"inner":1}}}}""",
             """{"transform":{"expr":{"input":"x"},"inner":"missing"}}""",
             """{"transform":{"expr":{"input":"x"},"inner":{"bayesianRegression":{"featureSize":2}}}}""",
-            """{"holt":{"alphaWeighting":{"alpha":0.2}}}""",
+            """{"exponentialSmoothing":{"alphaWeighting":{"alpha":0.2}}}""",
             """{"stochasticRegression":{"featureSize":1,"optimizer":{"adam":{"learningRate":null}}}}""",
             """{"transform":{"expr":{"missing":[]},"inner":"mean"}}""",
         )

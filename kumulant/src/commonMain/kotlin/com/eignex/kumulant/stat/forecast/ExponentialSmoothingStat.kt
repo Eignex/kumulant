@@ -22,19 +22,22 @@ enum class SeasonalMode {
     Multiplicative,
 }
 
-/** Snapshot from a [SeasonalSmoothingStat]: level, trend, seasonal factors, and forecast machinery. */
+/**
+ * Snapshot from an [ExponentialSmoothingStat]: level, trend, seasonal factors, and forecast machinery.
+ * A stat without seasonality reports a single identity factor.
+ */
 @Serializable
-@SerialName("SeasonalSmoothingResult")
-data class SeasonalSmoothingResult(
-    /** Smoothed level. */
+@SerialName("ExponentialSmoothingResult")
+data class ExponentialSmoothingResult(
+    /** Smoothed level (one-step-ahead estimate at the current moment). */
     val level: Double,
-    /** Smoothed trend. */
+    /** Smoothed per-update trend. */
     val trend: Double,
     /** Seasonal factors; length equals the configured period and wraps around at horizon h. */
     val seasons: List<Double>,
     /** Index `0..period-1` of the next seasonal slot to consume. */
     val currentSlot: Int,
-    /** Trend damping factor in `(0, 1]`. */
+    /** Damping factor applied to the trend each step (`1.0` for an undamped trend). */
     val phi: Double,
     /** Seasonal coupling. */
     val mode: SeasonalMode,
@@ -49,13 +52,13 @@ data class SeasonalSmoothingResult(
         }
     }
 
-    /** Length of the seasonal cycle. */
+    /** Length of the seasonal cycle; `1` when the stat has no seasonality. */
     val period: Int get() = seasons.size
 
     /**
-     * Project [steps] updates ahead using the same recurrence shape as the stat:
-     * `trend` contribution is geometrically damped by `phi`, seasonal contribution
-     * wraps around the [seasons] vector.
+     * Project [steps] updates ahead using the same recurrence shape as the stat. The trend
+     * contribution is the damped sum `level + (phi + phi^2 + ... + phi^steps) * trend`, which is
+     * `level + steps * trend` at `phi == 1.0`; the seasonal contribution wraps around [seasons].
      */
     fun forecast(steps: Int): Double {
         requireForecastSteps(steps)
@@ -76,8 +79,8 @@ data class SeasonalSmoothingResult(
 }
 
 /**
- * Triple exponential smoothing (Holt-Winters): adds a seasonal component of [period] to
- * [HoltStat]'s level/trend recurrence. Supports additive and multiplicative seasonality.
+ * Exponential smoothing with a damped trend and optional seasonality: Holt's method at
+ * [period] `1`, Holt-Winters with a seasonal cycle of [period] updates otherwise.
  *
  * Additive recurrence (with `a = correction(alpha, weight)` and analogous `b`, `g`,
  * and `k` the current seasonal-slot index):
@@ -93,77 +96,82 @@ data class SeasonalSmoothingResult(
  *
  * Multiplicative is the same shape with subtraction replaced by division and addition by
  * multiplication; a zero season falls back to `1.0` and a zero level leaves the season as it was, so
- * neither path divides by zero.
+ * neither path divides by zero. At [period] `1` the single season stays at its identity and the
+ * recurrence reduces to Holt's level and trend.
  *
- * The first update seeds the level and leaves the seasonal vector at its identity (0 additive, 1
- * multiplicative); every later update runs the recurrence above. Nothing seeds the seasonal vector
- * separately, so the first cycle carries little seasonal signal.
+ * With `phi == 1.0` the trend is undamped; with `phi < 1.0` it is geometrically damped.
+ * [com.eignex.kumulant.stat.decay.EwmaMeanStat] is the trend-free special case `beta == 0`.
+ *
+ * The first update seeds the level, a zero trend, and leaves the seasonal vector at its identity
+ * (0 additive, 1 multiplicative); every later update runs the recurrence above. Nothing seeds the
+ * seasonal vector separately, so the first cycle carries little seasonal signal.
  *
  * Merge adopts a remote state while empty and otherwise averages level, trend, and
  * seasonal factors, using the remote seasonal phase.
  * This is an approximate roll-up, not replay of the combined ordered observations.
  *
- * **Use cases:** short-horizon forecasting of streams with a recurring cycle on top
- * of a level and trend; pairs with [HoltStat] when no seasonal component is present.
+ * **Use cases:** smoothing a noisy series and producing short-horizon forecasts when a local trend,
+ * a recurring cycle, or both are expected.
  *
  * **Memory:** O(period); three scalar cells plus a season array plus a lock.
  *
  * **Update:** O(1); single seasonal slot touched per update.
  *
- * **Concurrency:** Order-dependent recurrence, same model as [HoltStat] and
+ * **Concurrency:** Order-dependent recurrence, same model as
  * [com.eignex.kumulant.stat.decay.EwmaMeanStat]. [Concurrency.Strict] and
- * [Concurrency.HighWrite] lock the body so each update is atomic;
- * [Concurrency.Relaxed] drops the lock and the level/trend/seasonal cells race independently
- * with bounded drift; never throws.
+ * [Concurrency.HighWrite] lock the body so each update is atomic but the lock serialises
+ * arrival, not order; [Concurrency.Relaxed] drops the lock and the level/trend/seasonal cells race
+ * independently with bounded drift; never throws.
  */
-class SeasonalSmoothingStat(
+class ExponentialSmoothingStat(
     /** Per-observation smoothing schedule for the level. */
     val alphaWeighting: DecayWeighting.Alpha,
-    /** Per-observation smoothing schedule for the trend. */
-    val betaWeighting: DecayWeighting.Alpha,
-    /** Per-observation smoothing schedule for the seasonal vector. */
-    val gammaWeighting: DecayWeighting.Alpha,
-    /** Length of the seasonal cycle in updates. */
-    val period: Int,
+    /** Per-observation smoothing schedule for the trend. Defaults to the level's [alphaWeighting]. */
+    val betaWeighting: DecayWeighting.Alpha = alphaWeighting,
+    /** Trend damping factor in `(0, 1]`; `1.0` is an undamped trend. */
+    val phi: Double = StatDefaults.SMOOTHING_PHI,
+    /** Length of the seasonal cycle in updates; `1` disables seasonality. */
+    val period: Int = StatDefaults.SMOOTHING_PERIOD,
+    /** Per-observation smoothing schedule for the seasonal vector. Defaults to the level's [alphaWeighting]. */
+    val gammaWeighting: DecayWeighting.Alpha = alphaWeighting,
     /** Seasonal coupling; defaults to [SeasonalMode.Additive]. */
     val mode: SeasonalMode = StatDefaults.seasonalMode,
-    /** Trend damping factor in `(0, 1]`; `1.0` is plain Holt-Winters. */
-    val phi: Double = StatDefaults.SEASONAL_SMOOTHING_PHI,
     override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<SeasonalSmoothingResult> {
+) : SeriesStat<ExponentialSmoothingResult> {
 
     constructor(
         alpha: Double,
-        beta: Double,
-        gamma: Double,
-        period: Int,
-        mode: SeasonalMode = SeasonalMode.Additive,
-        phi: Double = 1.0,
+        beta: Double = alpha,
+        phi: Double = StatDefaults.SMOOTHING_PHI,
+        period: Int = StatDefaults.SMOOTHING_PERIOD,
+        gamma: Double = alpha,
+        mode: SeasonalMode = StatDefaults.seasonalMode,
         concurrency: Concurrency = Concurrency.None,
     ) : this(
         DecayWeighting.Alpha(alpha),
         DecayWeighting.Alpha(beta),
-        DecayWeighting.Alpha(gamma),
-        period,
-        mode,
         phi,
+        period,
+        DecayWeighting.Alpha(gamma),
+        mode,
         concurrency,
     )
 
     init {
-        require(period >= 2) { "period must be >= 2, got $period" }
+        require(period >= 1) { "period must be >= 1, got $period" }
         requirePhi(phi)
     }
 
-    /** Level smoothing factor. */
+    /** Level smoothing factor; larger weights recent samples more. */
     val alpha: Double get() = alphaWeighting.alpha
 
-    /** Trend smoothing factor. */
+    /** Trend smoothing factor; larger weights recent slopes more. */
     val beta: Double get() = betaWeighting.alpha
 
     /** Seasonal smoothing factor. */
     val gamma: Double get() = gammaWeighting.alpha
 
+    private val seasonal = period > 1
     private val streamMode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
     private val initialized = streamMode.newLong(0L)
@@ -188,37 +196,38 @@ class SeasonalSmoothingStat(
             }
             val a = alphaWeighting.correction(weight)
             val b = betaWeighting.correction(weight)
-            val g = gammaWeighting.correction(weight)
             val prevLevel = level.load()
             val prevTrend = trend.load()
             val sOld = seasons.load(currentSlot)
-            val newLevel: Double
-            val newSeason: Double
-            when (mode) {
-                SeasonalMode.Additive -> {
-                    newLevel = a * (value - sOld) + (1.0 - a) * (prevLevel + phi * prevTrend)
-                    newSeason = g * (value - newLevel) + (1.0 - g) * sOld
-                }
+            val newLevel = when (mode) {
+                SeasonalMode.Additive -> a * (value - sOld) + (1.0 - a) * (prevLevel + phi * prevTrend)
 
                 SeasonalMode.Multiplicative -> {
                     val effectiveSOld = if (sOld == 0.0) 1.0 else sOld
-                    newLevel = a * (value / effectiveSOld) + (1.0 - a) * (prevLevel + phi * prevTrend)
-                    newSeason = if (newLevel == 0.0) sOld else g * (value / newLevel) + (1.0 - g) * sOld
+                    a * (value / effectiveSOld) + (1.0 - a) * (prevLevel + phi * prevTrend)
                 }
             }
             val newTrend = b * (newLevel - prevLevel) + (1.0 - b) * phi * prevTrend
             level.store(newLevel)
             trend.store(newTrend)
-            seasons.store(currentSlot, newSeason)
+            if (seasonal) seasons.store(currentSlot, nextSeason(value, newLevel, sOld, weight))
             slot.store((currentSlot + 1).toLong() % period)
         }
     }
 
-    override fun validateMerge(values: SeasonalSmoothingResult) {
+    private fun nextSeason(value: Double, newLevel: Double, sOld: Double, weight: Double): Double {
+        val g = gammaWeighting.correction(weight)
+        return when (mode) {
+            SeasonalMode.Additive -> g * (value - newLevel) + (1.0 - g) * sOld
+            SeasonalMode.Multiplicative -> if (newLevel == 0.0) sOld else g * (value / newLevel) + (1.0 - g) * sOld
+        }
+    }
+
+    override fun validateMerge(values: ExponentialSmoothingResult) {
         require(values.seasons.size == period) { "merge seasons size ${values.seasons.size} != period $period" }
     }
 
-    override fun merge(values: SeasonalSmoothingResult) = lock.guarded {
+    override fun merge(values: ExponentialSmoothingResult) = lock.guarded {
         validateMerge(values)
         if (initialized.addAndGet(1L) == 1L) {
             level.store(values.level)
@@ -247,7 +256,7 @@ class SeasonalSmoothingStat(
     }
 
     override fun read(timestampNanos: Long) = lock.guarded {
-        SeasonalSmoothingResult(
+        ExponentialSmoothingResult(
             level = level.load(),
             trend = trend.load(),
             seasons = List(period) { seasons.load(it) },
@@ -257,13 +266,13 @@ class SeasonalSmoothingStat(
         )
     }
 
-    override fun create(concurrency: Concurrency?) = SeasonalSmoothingStat(
+    override fun create(concurrency: Concurrency?) = ExponentialSmoothingStat(
         alphaWeighting = alphaWeighting,
         betaWeighting = betaWeighting,
-        gammaWeighting = gammaWeighting,
-        period = period,
-        mode = mode,
         phi = phi,
+        period = period,
+        gammaWeighting = gammaWeighting,
+        mode = mode,
         concurrency = concurrency ?: this.concurrency,
     )
 }

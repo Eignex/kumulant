@@ -1,7 +1,6 @@
 package com.eignex.kumulant.core
 
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
-import com.eignex.kumulant.stat.cardinality.LinearCountingResult
 import com.eignex.kumulant.stat.quantile.ReservoirResult
 import com.eignex.kumulant.stat.quantile.SketchResult
 import com.eignex.kumulant.stat.quantile.SparseHistogramResult
@@ -33,8 +32,6 @@ class ResultEqualityTest {
         val pairs: List<Pair<Result, Result>> = listOf(
             HyperLogLogResult(1.5, 4, intArrayOf(1, 2, 3), 9L) to
                 HyperLogLogResult(1.5, 4, intArrayOf(1, 2, 3), 9L),
-            LinearCountingResult(2.0, 64, 60L, longArrayOf(7L), 4L) to
-                LinearCountingResult(2.0, 64, 60L, longArrayOf(7L), 4L),
             sketch(doubleArrayOf(1.0, 9.0)) to sketch(doubleArrayOf(1.0, 9.0)),
             SparseHistogramResult(doubleArrayOf(0.0), doubleArrayOf(1.0), doubleArrayOf(3.0)) to
                 SparseHistogramResult(doubleArrayOf(0.0), doubleArrayOf(1.0), doubleArrayOf(3.0)),

@@ -8,19 +8,9 @@ import kotlin.test.assertEquals
 class ForecastStatConcurrencyTest {
 
     @Test
-    fun `HoltStat sequential math equal across modes`() {
-        val reads = timedReads { HoltStat(alpha = 0.3, beta = 0.1, phi = 0.9, concurrency = it) }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) {
-            assertEquals(ref.level, r.level, 1e-9, "Holt level mode=$mode")
-            assertEquals(ref.trend, r.trend, 1e-9, "Holt trend mode=$mode")
-        }
-    }
-
-    @Test
-    fun `SeasonalSmoothingStat sequential math equal across modes`() {
+    fun `ExponentialSmoothingStat sequential math equal across modes`() {
         val reads = timedReads {
-            SeasonalSmoothingStat(alpha = 0.3, beta = 0.1, gamma = 0.2, period = 3, concurrency = it)
+            ExponentialSmoothingStat(alpha = 0.3, beta = 0.1, gamma = 0.2, period = 3, concurrency = it)
         }
         val ref = reads.getValue(Concurrency.None)
         for ((mode, r) in reads) {

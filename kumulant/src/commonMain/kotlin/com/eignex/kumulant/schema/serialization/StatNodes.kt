@@ -67,8 +67,7 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
         jsonNode<DecayingVariance>("decayingVariance"),
         jsonNode<EwmaMean>("ewma"),
         jsonNode<EwmaVariance>("ewmaVariance"),
-        jsonNode<Holt>("holt"),
-        jsonNode<SeasonalSmoothing>("seasonalSmoothing"),
+        jsonNode<ExponentialSmoothing>("exponentialSmoothing"),
         jsonNode<RecursiveVariance>("recursiveVariance"),
         jsonNode<DecayingRate>("decayingRate"),
     )
@@ -131,7 +130,6 @@ internal object DiscreteStatSpecSerializer : KumulantSerializer<DiscreteStatSpec
     listOf(
         jsonNode<DiscreteGroupStatSpec>("discreteGroup"),
         jsonNode<HyperLogLog>("hyperLogLog"),
-        jsonNode<LinearCounting>("linearCounting"),
         jsonNode<BloomFilter>("bloomFilter"),
         jsonNode<CountMinSketch>("countMinSketch"),
         jsonNode<MinHash>("minHash"),

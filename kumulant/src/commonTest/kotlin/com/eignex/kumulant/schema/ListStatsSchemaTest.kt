@@ -45,7 +45,7 @@ class ListStatsSchemaTest {
     @Test fun `discreteListStats from schema preserves order`() {
         val schema = object : StatSchema() {
             val a by discrete(HyperLogLog(precision = 10))
-            val b by discrete(LinearCounting(bits = 1024))
+            val b by discrete(BloomFilter(bits = 1024))
         }
         val list = DiscreteListStats<Result>(schema)
         for (i in 1L..50L) list.update(i)

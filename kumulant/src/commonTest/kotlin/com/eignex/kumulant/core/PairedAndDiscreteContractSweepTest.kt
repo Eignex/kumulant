@@ -9,7 +9,6 @@ import com.eignex.kumulant.schema.spec.CountMinSketch
 import com.eignex.kumulant.schema.spec.Covariance
 import com.eignex.kumulant.schema.spec.DiscreteStatSpec
 import com.eignex.kumulant.schema.spec.HyperLogLog
-import com.eignex.kumulant.schema.spec.LinearCounting
 import com.eignex.kumulant.schema.spec.LogLoss
 import com.eignex.kumulant.schema.spec.MaeLoss
 import com.eignex.kumulant.schema.spec.MinHash
@@ -42,7 +41,6 @@ class PairedAndDiscreteContractSweepTest {
 
     private val discreteSpecs: List<Pair<String, DiscreteStatSpec<*>>> = listOf(
         "HyperLogLog" to HyperLogLog(),
-        "LinearCounting" to LinearCounting(),
         "BloomFilter" to BloomFilter(),
         "CountMinSketch" to CountMinSketch(),
         "MinHash" to MinHash(),

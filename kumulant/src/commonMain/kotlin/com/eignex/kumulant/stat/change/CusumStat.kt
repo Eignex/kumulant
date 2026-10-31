@@ -103,8 +103,8 @@ class CusumStat(
     }
 
     override fun merge(values: CusumResult) {
-        // Adopt the snapshot verbatim while empty, matching RecursiveVarianceStat.merge, HoltStat.merge
-        // and SeasonalSmoothingStat.merge. Averaging against a fresh stat's zero would halve the incoming
+        // Adopt the snapshot verbatim while empty, matching RecursiveVarianceStat.merge and
+        // ExponentialSmoothingStat.merge. Averaging against a fresh stat's zero would halve the incoming
         // drift, and `alarmUp` thresholds on that sum directly, so the alarm would need twice the shift.
         val empty = initialized.load() == 0L
         while (true) {

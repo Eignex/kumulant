@@ -55,7 +55,7 @@ sealed interface DecayWeighting {
     class Alpha(override val alpha: Double) : DecayWeighting {
         init {
             // A negative alpha is not a slow decay but exponential growth, and NaN poisons every
-            // later term. Zero is allowed and means "never move": HoltStat passes `beta = 0.0` to
+            // later term. Zero is allowed and means "never move": ExponentialSmoothingStat takes `beta = 0.0` to
             // disable trend smoothing, where the correction is a multiplier rather than a divisor.
             require(alpha >= 0.0 && alpha.isFinite()) {
                 "alpha must be non-negative and finite, got $alpha"

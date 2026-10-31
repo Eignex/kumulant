@@ -84,8 +84,8 @@ class RecursiveVarianceStat(
     override fun merge(values: RecursiveVarianceResult) {
         while (true) {
             val current = variance.load()
-            // Adopt the snapshot verbatim while empty, matching HoltStat.merge and
-            // SeasonalSmoothingStat.merge. Averaging against a fresh stat's 0.0 would halve the
+            // Adopt the snapshot verbatim while empty, matching ExponentialSmoothingStat.merge.
+            // Averaging against a fresh stat's 0.0 would halve the
             // first contribution, so a roll-up merging N worker snapshots into a new coordinator
             // would systematically understate the first one.
             val next = if (initialized.load() == 0L) {

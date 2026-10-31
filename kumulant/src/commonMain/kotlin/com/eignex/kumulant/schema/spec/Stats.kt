@@ -9,7 +9,6 @@ import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.calibration.PlattCalibratorResult
 import com.eignex.kumulant.stat.calibration.ReliabilityResult
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
-import com.eignex.kumulant.stat.cardinality.LinearCountingResult
 import com.eignex.kumulant.stat.change.AdwinResult
 import com.eignex.kumulant.stat.change.CusumResult
 import com.eignex.kumulant.stat.change.PageHinkleyResult
@@ -419,16 +418,6 @@ data class HyperLogLog(
     /** [HasherRef] for the mixer applied before bucketing; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<HyperLogLogResult>
-
-/** Spec for `LinearCountingStat`: cardinality estimator backed by a bitset of [bits] cells. */
-@Serializable
-@SerialName("LinearCounting")
-data class LinearCounting(
-    /** Bitset size; trade-off between memory and accuracy near the saturation cap. */
-    val bits: Int = StatDefaults.LINEAR_COUNTING_BITS,
-    /** [HasherRef] for the mixer applied before indexing; resolved via the Hashers registry. */
-    val hasher: HasherRef = HasherRef.SplitMix64,
-) : DiscreteStatSpec<LinearCountingResult>
 
 /** Spec for `BloomFilterStat`: probabilistic set membership. */
 @Serializable

@@ -3388,6 +3388,49 @@ final class com.eignex.kumulant.schema.spec/EwmaVariance : com.eignex.kumulant.s
     }
 }
 
+final class com.eignex.kumulant.schema.spec/ExponentialSmoothing : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult> { // com.eignex.kumulant.schema.spec/ExponentialSmoothing|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ..., kotlin/Double = ..., com.eignex.kumulant.stat.forecast/SeasonalMode = ...) // com.eignex.kumulant.schema.spec/ExponentialSmoothing.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;kotlin.Double;com.eignex.kumulant.stat.forecast.SeasonalMode){}[0]
+
+    final val alpha // com.eignex.kumulant.schema.spec/ExponentialSmoothing.alpha|{}alpha[0]
+        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.schema.spec/ExponentialSmoothing.alpha.<get-alpha>|<get-alpha>(){}[0]
+    final val beta // com.eignex.kumulant.schema.spec/ExponentialSmoothing.beta|{}beta[0]
+        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.schema.spec/ExponentialSmoothing.beta.<get-beta>|<get-beta>(){}[0]
+    final val gamma // com.eignex.kumulant.schema.spec/ExponentialSmoothing.gamma|{}gamma[0]
+        final fun <get-gamma>(): kotlin/Double // com.eignex.kumulant.schema.spec/ExponentialSmoothing.gamma.<get-gamma>|<get-gamma>(){}[0]
+    final val mode // com.eignex.kumulant.schema.spec/ExponentialSmoothing.mode|{}mode[0]
+        final fun <get-mode>(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.schema.spec/ExponentialSmoothing.mode.<get-mode>|<get-mode>(){}[0]
+    final val period // com.eignex.kumulant.schema.spec/ExponentialSmoothing.period|{}period[0]
+        final fun <get-period>(): kotlin/Int // com.eignex.kumulant.schema.spec/ExponentialSmoothing.period.<get-period>|<get-period>(){}[0]
+    final val phi // com.eignex.kumulant.schema.spec/ExponentialSmoothing.phi|{}phi[0]
+        final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.schema.spec/ExponentialSmoothing.phi.<get-phi>|<get-phi>(){}[0]
+
+    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/ExponentialSmoothing.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.eignex.kumulant.schema.spec/ExponentialSmoothing.component2|component2(){}[0]
+    final fun component3(): kotlin/Double // com.eignex.kumulant.schema.spec/ExponentialSmoothing.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // com.eignex.kumulant.schema.spec/ExponentialSmoothing.component4|component4(){}[0]
+    final fun component5(): kotlin/Double // com.eignex.kumulant.schema.spec/ExponentialSmoothing.component5|component5(){}[0]
+    final fun component6(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.schema.spec/ExponentialSmoothing.component6|component6(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ..., kotlin/Double = ..., com.eignex.kumulant.stat.forecast/SeasonalMode = ...): com.eignex.kumulant.schema.spec/ExponentialSmoothing // com.eignex.kumulant.schema.spec/ExponentialSmoothing.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;kotlin.Double;com.eignex.kumulant.stat.forecast.SeasonalMode){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/ExponentialSmoothing.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/ExponentialSmoothing.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/ExponentialSmoothing.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/ExponentialSmoothing> { // com.eignex.kumulant.schema.spec/ExponentialSmoothing.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.schema.spec/ExponentialSmoothing.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/ExponentialSmoothing.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/ExponentialSmoothing.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/ExponentialSmoothing // com.eignex.kumulant.schema.spec/ExponentialSmoothing.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/ExponentialSmoothing) // com.eignex.kumulant.schema.spec/ExponentialSmoothing.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.ExponentialSmoothing){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.schema.spec/ExponentialSmoothing.Companion|null[0]
+        final val $childSerializers // com.eignex.kumulant.schema.spec/ExponentialSmoothing.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/ExponentialSmoothing> // com.eignex.kumulant.schema.spec/ExponentialSmoothing.Companion.serializer|serializer(){}[0]
+    }
+}
+
 final class com.eignex.kumulant.schema.spec/FrugalMad : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.summary/MadResult> { // com.eignex.kumulant.schema.spec/FrugalMad|null[0]
     constructor <init>(kotlin/Double = ...) // com.eignex.kumulant.schema.spec/FrugalMad.<init>|<init>(kotlin.Double){}[0]
 
@@ -3538,38 +3581,6 @@ final class com.eignex.kumulant.schema.spec/HdrHistogram : com.eignex.kumulant.s
     }
 }
 
-final class com.eignex.kumulant.schema.spec/Holt : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.forecast/HoltResult> { // com.eignex.kumulant.schema.spec/Holt|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.spec/Holt.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-
-    final val alpha // com.eignex.kumulant.schema.spec/Holt.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val beta // com.eignex.kumulant.schema.spec/Holt.beta|{}beta[0]
-        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.beta.<get-beta>|<get-beta>(){}[0]
-    final val phi // com.eignex.kumulant.schema.spec/Holt.phi|{}phi[0]
-        final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.phi.<get-phi>|<get-phi>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.schema.spec/Holt.component3|component3(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.schema.spec/Holt // com.eignex.kumulant.schema.spec/Holt.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/Holt.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/Holt.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/Holt.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/Holt> { // com.eignex.kumulant.schema.spec/Holt.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.spec/Holt.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/Holt.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/Holt.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/Holt // com.eignex.kumulant.schema.spec/Holt.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/Holt) // com.eignex.kumulant.schema.spec/Holt.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.Holt){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.spec/Holt.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/Holt> // com.eignex.kumulant.schema.spec/Holt.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.schema.spec/HyperLogLog : com.eignex.kumulant.schema.spec/DiscreteStatSpec<com.eignex.kumulant.stat.cardinality/HyperLogLogResult> { // com.eignex.kumulant.schema.spec/HyperLogLog|null[0]
     constructor <init>(kotlin/Int = ..., com.eignex.kumulant.math/HasherRef = ...) // com.eignex.kumulant.schema.spec/HyperLogLog.<init>|<init>(kotlin.Int;com.eignex.kumulant.math.HasherRef){}[0]
 
@@ -3596,35 +3607,6 @@ final class com.eignex.kumulant.schema.spec/HyperLogLog : com.eignex.kumulant.sc
 
     final object Companion { // com.eignex.kumulant.schema.spec/HyperLogLog.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/HyperLogLog> // com.eignex.kumulant.schema.spec/HyperLogLog.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.schema.spec/LinearCounting : com.eignex.kumulant.schema.spec/DiscreteStatSpec<com.eignex.kumulant.stat.cardinality/LinearCountingResult> { // com.eignex.kumulant.schema.spec/LinearCounting|null[0]
-    constructor <init>(kotlin/Int = ..., com.eignex.kumulant.math/HasherRef = ...) // com.eignex.kumulant.schema.spec/LinearCounting.<init>|<init>(kotlin.Int;com.eignex.kumulant.math.HasherRef){}[0]
-
-    final val bits // com.eignex.kumulant.schema.spec/LinearCounting.bits|{}bits[0]
-        final fun <get-bits>(): kotlin/Int // com.eignex.kumulant.schema.spec/LinearCounting.bits.<get-bits>|<get-bits>(){}[0]
-    final val hasher // com.eignex.kumulant.schema.spec/LinearCounting.hasher|{}hasher[0]
-        final fun <get-hasher>(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.schema.spec/LinearCounting.hasher.<get-hasher>|<get-hasher>(){}[0]
-
-    final fun component1(): kotlin/Int // com.eignex.kumulant.schema.spec/LinearCounting.component1|component1(){}[0]
-    final fun component2(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.schema.spec/LinearCounting.component2|component2(){}[0]
-    final fun copy(kotlin/Int = ..., com.eignex.kumulant.math/HasherRef = ...): com.eignex.kumulant.schema.spec/LinearCounting // com.eignex.kumulant.schema.spec/LinearCounting.copy|copy(kotlin.Int;com.eignex.kumulant.math.HasherRef){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/LinearCounting.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/LinearCounting.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/LinearCounting.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/LinearCounting> { // com.eignex.kumulant.schema.spec/LinearCounting.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.spec/LinearCounting.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/LinearCounting.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/LinearCounting.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/LinearCounting // com.eignex.kumulant.schema.spec/LinearCounting.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/LinearCounting) // com.eignex.kumulant.schema.spec/LinearCounting.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.LinearCounting){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.spec/LinearCounting.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/LinearCounting> // com.eignex.kumulant.schema.spec/LinearCounting.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -4060,49 +4042,6 @@ final class com.eignex.kumulant.schema.spec/ReservoirHistogram : com.eignex.kumu
 
     final object Companion { // com.eignex.kumulant.schema.spec/ReservoirHistogram.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/ReservoirHistogram> // com.eignex.kumulant.schema.spec/ReservoirHistogram.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.schema.spec/SeasonalSmoothing : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult> { // com.eignex.kumulant.schema.spec/SeasonalSmoothing|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Int, com.eignex.kumulant.stat.forecast/SeasonalMode = ..., kotlin/Double = ...) // com.eignex.kumulant.schema.spec/SeasonalSmoothing.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;com.eignex.kumulant.stat.forecast.SeasonalMode;kotlin.Double){}[0]
-
-    final val alpha // com.eignex.kumulant.schema.spec/SeasonalSmoothing.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val beta // com.eignex.kumulant.schema.spec/SeasonalSmoothing.beta|{}beta[0]
-        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.beta.<get-beta>|<get-beta>(){}[0]
-    final val gamma // com.eignex.kumulant.schema.spec/SeasonalSmoothing.gamma|{}gamma[0]
-        final fun <get-gamma>(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.gamma.<get-gamma>|<get-gamma>(){}[0]
-    final val mode // com.eignex.kumulant.schema.spec/SeasonalSmoothing.mode|{}mode[0]
-        final fun <get-mode>(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.schema.spec/SeasonalSmoothing.mode.<get-mode>|<get-mode>(){}[0]
-    final val period // com.eignex.kumulant.schema.spec/SeasonalSmoothing.period|{}period[0]
-        final fun <get-period>(): kotlin/Int // com.eignex.kumulant.schema.spec/SeasonalSmoothing.period.<get-period>|<get-period>(){}[0]
-    final val phi // com.eignex.kumulant.schema.spec/SeasonalSmoothing.phi|{}phi[0]
-        final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.phi.<get-phi>|<get-phi>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component3|component3(){}[0]
-    final fun component4(): kotlin/Int // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component4|component4(){}[0]
-    final fun component5(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component5|component5(){}[0]
-    final fun component6(): kotlin/Double // com.eignex.kumulant.schema.spec/SeasonalSmoothing.component6|component6(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ..., com.eignex.kumulant.stat.forecast/SeasonalMode = ..., kotlin/Double = ...): com.eignex.kumulant.schema.spec/SeasonalSmoothing // com.eignex.kumulant.schema.spec/SeasonalSmoothing.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;com.eignex.kumulant.stat.forecast.SeasonalMode;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/SeasonalSmoothing.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/SeasonalSmoothing.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/SeasonalSmoothing.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/SeasonalSmoothing> { // com.eignex.kumulant.schema.spec/SeasonalSmoothing.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.spec/SeasonalSmoothing.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/SeasonalSmoothing.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/SeasonalSmoothing.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/SeasonalSmoothing // com.eignex.kumulant.schema.spec/SeasonalSmoothing.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/SeasonalSmoothing) // com.eignex.kumulant.schema.spec/SeasonalSmoothing.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.SeasonalSmoothing){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.spec/SeasonalSmoothing.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.spec/SeasonalSmoothing.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/SeasonalSmoothing> // com.eignex.kumulant.schema.spec/SeasonalSmoothing.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -4613,67 +4552,6 @@ final class com.eignex.kumulant.stat.cardinality/HyperLogLogStat : com.eignex.ku
     final fun reset() // com.eignex.kumulant.stat.cardinality/HyperLogLogStat.reset|reset(){}[0]
     final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.cardinality/HyperLogLogStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
     final fun validateMerge(com.eignex.kumulant.stat.cardinality/HyperLogLogResult) // com.eignex.kumulant.stat.cardinality/HyperLogLogStat.validateMerge|validateMerge(com.eignex.kumulant.stat.cardinality.HyperLogLogResult){}[0]
-}
-
-final class com.eignex.kumulant.stat.cardinality/LinearCountingResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.cardinality/LinearCountingResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Int, kotlin/Long, kotlin/LongArray, kotlin/Long, com.eignex.kumulant.math/HasherRef = ...) // com.eignex.kumulant.stat.cardinality/LinearCountingResult.<init>|<init>(kotlin.Double;kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
-
-    final val bits // com.eignex.kumulant.stat.cardinality/LinearCountingResult.bits|{}bits[0]
-        final fun <get-bits>(): kotlin/Int // com.eignex.kumulant.stat.cardinality/LinearCountingResult.bits.<get-bits>|<get-bits>(){}[0]
-    final val estimate // com.eignex.kumulant.stat.cardinality/LinearCountingResult.estimate|{}estimate[0]
-        final fun <get-estimate>(): kotlin/Double // com.eignex.kumulant.stat.cardinality/LinearCountingResult.estimate.<get-estimate>|<get-estimate>(){}[0]
-    final val hasher // com.eignex.kumulant.stat.cardinality/LinearCountingResult.hasher|{}hasher[0]
-        final fun <get-hasher>(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.stat.cardinality/LinearCountingResult.hasher.<get-hasher>|<get-hasher>(){}[0]
-    final val totalSeen // com.eignex.kumulant.stat.cardinality/LinearCountingResult.totalSeen|{}totalSeen[0]
-        final fun <get-totalSeen>(): kotlin/Long // com.eignex.kumulant.stat.cardinality/LinearCountingResult.totalSeen.<get-totalSeen>|<get-totalSeen>(){}[0]
-    final val totalWeights // com.eignex.kumulant.stat.cardinality/LinearCountingResult.totalWeights|{}totalWeights[0]
-        final fun <get-totalWeights>(): kotlin/Double // com.eignex.kumulant.stat.cardinality/LinearCountingResult.totalWeights.<get-totalWeights>|<get-totalWeights>(){}[0]
-    final val unsetBits // com.eignex.kumulant.stat.cardinality/LinearCountingResult.unsetBits|{}unsetBits[0]
-        final fun <get-unsetBits>(): kotlin/Long // com.eignex.kumulant.stat.cardinality/LinearCountingResult.unsetBits.<get-unsetBits>|<get-unsetBits>(){}[0]
-    final val words // com.eignex.kumulant.stat.cardinality/LinearCountingResult.words|{}words[0]
-        final fun <get-words>(): kotlin/LongArray // com.eignex.kumulant.stat.cardinality/LinearCountingResult.words.<get-words>|<get-words>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.cardinality/LinearCountingResult.component1|component1(){}[0]
-    final fun component2(): kotlin/Int // com.eignex.kumulant.stat.cardinality/LinearCountingResult.component2|component2(){}[0]
-    final fun component3(): kotlin/Long // com.eignex.kumulant.stat.cardinality/LinearCountingResult.component3|component3(){}[0]
-    final fun component4(): kotlin/LongArray // com.eignex.kumulant.stat.cardinality/LinearCountingResult.component4|component4(){}[0]
-    final fun component5(): kotlin/Long // com.eignex.kumulant.stat.cardinality/LinearCountingResult.component5|component5(){}[0]
-    final fun component6(): com.eignex.kumulant.math/HasherRef // com.eignex.kumulant.stat.cardinality/LinearCountingResult.component6|component6(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Int = ..., kotlin/Long = ..., kotlin/LongArray = ..., kotlin/Long = ..., com.eignex.kumulant.math/HasherRef = ...): com.eignex.kumulant.stat.cardinality/LinearCountingResult // com.eignex.kumulant.stat.cardinality/LinearCountingResult.copy|copy(kotlin.Double;kotlin.Int;kotlin.Long;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.cardinality/LinearCountingResult.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.cardinality/LinearCountingResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.cardinality/LinearCountingResult.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.cardinality/LinearCountingResult> { // com.eignex.kumulant.stat.cardinality/LinearCountingResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.cardinality/LinearCountingResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.cardinality/LinearCountingResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.cardinality/LinearCountingResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.cardinality/LinearCountingResult // com.eignex.kumulant.stat.cardinality/LinearCountingResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.cardinality/LinearCountingResult) // com.eignex.kumulant.stat.cardinality/LinearCountingResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.cardinality.LinearCountingResult){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.cardinality/LinearCountingResult.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.cardinality/LinearCountingResult> // com.eignex.kumulant.stat.cardinality/LinearCountingResult.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.stat.cardinality/LinearCountingStat : com.eignex.kumulant.core/DiscreteStat<com.eignex.kumulant.stat.cardinality/LinearCountingResult> { // com.eignex.kumulant.stat.cardinality/LinearCountingStat|null[0]
-    constructor <init>(kotlin/Int = ..., com.eignex.kumulant.math/LongHasher = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.cardinality/LinearCountingStat.<init>|<init>(kotlin.Int;com.eignex.kumulant.math.LongHasher;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val bits // com.eignex.kumulant.stat.cardinality/LinearCountingStat.bits|{}bits[0]
-        final fun <get-bits>(): kotlin/Int // com.eignex.kumulant.stat.cardinality/LinearCountingStat.bits.<get-bits>|<get-bits>(){}[0]
-    final val concurrency // com.eignex.kumulant.stat.cardinality/LinearCountingStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.cardinality/LinearCountingStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val hasher // com.eignex.kumulant.stat.cardinality/LinearCountingStat.hasher|{}hasher[0]
-        final fun <get-hasher>(): com.eignex.kumulant.math/LongHasher // com.eignex.kumulant.stat.cardinality/LinearCountingStat.hasher.<get-hasher>|<get-hasher>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.cardinality/LinearCountingStat // com.eignex.kumulant.stat.cardinality/LinearCountingStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.cardinality/LinearCountingResult) // com.eignex.kumulant.stat.cardinality/LinearCountingStat.merge|merge(com.eignex.kumulant.stat.cardinality.LinearCountingResult){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.cardinality/LinearCountingResult // com.eignex.kumulant.stat.cardinality/LinearCountingStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.cardinality/LinearCountingStat.reset|reset(){}[0]
-    final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.cardinality/LinearCountingStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
-    final fun validateMerge(com.eignex.kumulant.stat.cardinality/LinearCountingResult) // com.eignex.kumulant.stat.cardinality/LinearCountingStat.validateMerge|validateMerge(com.eignex.kumulant.stat.cardinality.LinearCountingResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.change/AdwinResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.change/AdwinResult|null[0]
@@ -5326,61 +5204,83 @@ final class com.eignex.kumulant.stat.event/SojournStat : com.eignex.kumulant.cor
     final fun validateMerge(com.eignex.kumulant.stat.event/SojournResult) // com.eignex.kumulant.stat.event/SojournStat.validateMerge|validateMerge(com.eignex.kumulant.stat.event.SojournResult){}[0]
 }
 
-final class com.eignex.kumulant.stat.forecast/HoltResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.forecast/HoltResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.forecast/HoltResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+final class com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult|null[0]
+    constructor <init>(kotlin/Double, kotlin/Double, kotlin.collections/List<kotlin/Double>, kotlin/Int, kotlin/Double, com.eignex.kumulant.stat.forecast/SeasonalMode) // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.collections.List<kotlin.Double>;kotlin.Int;kotlin.Double;com.eignex.kumulant.stat.forecast.SeasonalMode){}[0]
 
-    final val level // com.eignex.kumulant.stat.forecast/HoltResult.level|{}level[0]
-        final fun <get-level>(): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltResult.level.<get-level>|<get-level>(){}[0]
-    final val phi // com.eignex.kumulant.stat.forecast/HoltResult.phi|{}phi[0]
-        final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltResult.phi.<get-phi>|<get-phi>(){}[0]
-    final val trend // com.eignex.kumulant.stat.forecast/HoltResult.trend|{}trend[0]
-        final fun <get-trend>(): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltResult.trend.<get-trend>|<get-trend>(){}[0]
+    final val currentSlot // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.currentSlot|{}currentSlot[0]
+        final fun <get-currentSlot>(): kotlin/Int // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.currentSlot.<get-currentSlot>|<get-currentSlot>(){}[0]
+    final val level // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.level|{}level[0]
+        final fun <get-level>(): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.level.<get-level>|<get-level>(){}[0]
+    final val mode // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.mode|{}mode[0]
+        final fun <get-mode>(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.mode.<get-mode>|<get-mode>(){}[0]
+    final val period // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.period|{}period[0]
+        final fun <get-period>(): kotlin/Int // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.period.<get-period>|<get-period>(){}[0]
+    final val phi // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.phi|{}phi[0]
+        final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.phi.<get-phi>|<get-phi>(){}[0]
+    final val seasons // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.seasons|{}seasons[0]
+        final fun <get-seasons>(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.seasons.<get-seasons>|<get-seasons>(){}[0]
+    final val trend // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.trend|{}trend[0]
+        final fun <get-trend>(): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.trend.<get-trend>|<get-trend>(){}[0]
 
-    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltResult.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltResult.component2|component2(){}[0]
-    final fun component3(): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltResult.component3|component3(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.forecast/HoltResult // com.eignex.kumulant.stat.forecast/HoltResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.forecast/HoltResult.equals|equals(kotlin.Any?){}[0]
-    final fun forecast(kotlin/Int): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltResult.forecast|forecast(kotlin.Int){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.forecast/HoltResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.forecast/HoltResult.toString|toString(){}[0]
+    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.component1|component1(){}[0]
+    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.component4|component4(){}[0]
+    final fun component5(): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.component5|component5(){}[0]
+    final fun component6(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.component6|component6(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin.collections/List<kotlin/Double> = ..., kotlin/Int = ..., kotlin/Double = ..., com.eignex.kumulant.stat.forecast/SeasonalMode = ...): com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.collections.List<kotlin.Double>;kotlin.Int;kotlin.Double;com.eignex.kumulant.stat.forecast.SeasonalMode){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.equals|equals(kotlin.Any?){}[0]
+    final fun forecast(kotlin/Int): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.forecast|forecast(kotlin.Int){}[0]
+    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.toString|toString(){}[0]
 
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.forecast/HoltResult> { // com.eignex.kumulant.stat.forecast/HoltResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.forecast/HoltResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.forecast/HoltResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult> { // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
 
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.forecast/HoltResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.forecast/HoltResult // com.eignex.kumulant.stat.forecast/HoltResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.forecast/HoltResult) // com.eignex.kumulant.stat.forecast/HoltResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.forecast.HoltResult){}[0]
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult) // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.forecast.ExponentialSmoothingResult){}[0]
     }
 
-    final object Companion { // com.eignex.kumulant.stat.forecast/HoltResult.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.forecast/HoltResult> // com.eignex.kumulant.stat.forecast/HoltResult.Companion.serializer|serializer(){}[0]
+    final object Companion { // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.Companion|null[0]
+        final val $childSerializers // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult> // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult.Companion.serializer|serializer(){}[0]
     }
 }
 
-final class com.eignex.kumulant.stat.forecast/HoltStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.forecast/HoltResult> { // com.eignex.kumulant.stat.forecast/HoltStat|null[0]
-    constructor <init>(com.eignex.kumulant.stat.decay/DecayWeighting.Alpha, com.eignex.kumulant.stat.decay/DecayWeighting.Alpha = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/HoltStat.<init>|<init>(com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
-    constructor <init>(kotlin/Double, kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/HoltStat.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
+final class com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult> { // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat|null[0]
+    constructor <init>(com.eignex.kumulant.stat.decay/DecayWeighting.Alpha, com.eignex.kumulant.stat.decay/DecayWeighting.Alpha = ..., kotlin/Double = ..., kotlin/Int = ..., com.eignex.kumulant.stat.decay/DecayWeighting.Alpha = ..., com.eignex.kumulant.stat.forecast/SeasonalMode = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.<init>|<init>(com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;kotlin.Double;kotlin.Int;com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;com.eignex.kumulant.stat.forecast.SeasonalMode;com.eignex.kumulant.core.Concurrency){}[0]
+    constructor <init>(kotlin/Double, kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ..., kotlin/Double = ..., com.eignex.kumulant.stat.forecast/SeasonalMode = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;kotlin.Double;com.eignex.kumulant.stat.forecast.SeasonalMode;com.eignex.kumulant.core.Concurrency){}[0]
 
-    final val alpha // com.eignex.kumulant.stat.forecast/HoltStat.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltStat.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val alphaWeighting // com.eignex.kumulant.stat.forecast/HoltStat.alphaWeighting|{}alphaWeighting[0]
-        final fun <get-alphaWeighting>(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.forecast/HoltStat.alphaWeighting.<get-alphaWeighting>|<get-alphaWeighting>(){}[0]
-    final val beta // com.eignex.kumulant.stat.forecast/HoltStat.beta|{}beta[0]
-        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltStat.beta.<get-beta>|<get-beta>(){}[0]
-    final val betaWeighting // com.eignex.kumulant.stat.forecast/HoltStat.betaWeighting|{}betaWeighting[0]
-        final fun <get-betaWeighting>(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.forecast/HoltStat.betaWeighting.<get-betaWeighting>|<get-betaWeighting>(){}[0]
-    final val concurrency // com.eignex.kumulant.stat.forecast/HoltStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.forecast/HoltStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val phi // com.eignex.kumulant.stat.forecast/HoltStat.phi|{}phi[0]
-        final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.stat.forecast/HoltStat.phi.<get-phi>|<get-phi>(){}[0]
+    final val alpha // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.alpha|{}alpha[0]
+        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.alpha.<get-alpha>|<get-alpha>(){}[0]
+    final val alphaWeighting // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.alphaWeighting|{}alphaWeighting[0]
+        final fun <get-alphaWeighting>(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.alphaWeighting.<get-alphaWeighting>|<get-alphaWeighting>(){}[0]
+    final val beta // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.beta|{}beta[0]
+        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.beta.<get-beta>|<get-beta>(){}[0]
+    final val betaWeighting // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.betaWeighting|{}betaWeighting[0]
+        final fun <get-betaWeighting>(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.betaWeighting.<get-betaWeighting>|<get-betaWeighting>(){}[0]
+    final val concurrency // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.concurrency|{}concurrency[0]
+        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
+    final val gamma // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.gamma|{}gamma[0]
+        final fun <get-gamma>(): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.gamma.<get-gamma>|<get-gamma>(){}[0]
+    final val gammaWeighting // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.gammaWeighting|{}gammaWeighting[0]
+        final fun <get-gammaWeighting>(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.gammaWeighting.<get-gammaWeighting>|<get-gammaWeighting>(){}[0]
+    final val mode // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.mode|{}mode[0]
+        final fun <get-mode>(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.mode.<get-mode>|<get-mode>(){}[0]
+    final val period // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.period|{}period[0]
+        final fun <get-period>(): kotlin/Int // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.period.<get-period>|<get-period>(){}[0]
+    final val phi // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.phi|{}phi[0]
+        final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.phi.<get-phi>|<get-phi>(){}[0]
 
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.forecast/HoltStat // com.eignex.kumulant.stat.forecast/HoltStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.forecast/HoltResult) // com.eignex.kumulant.stat.forecast/HoltStat.merge|merge(com.eignex.kumulant.stat.forecast.HoltResult){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.forecast/HoltResult // com.eignex.kumulant.stat.forecast/HoltStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.forecast/HoltStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.forecast/HoltStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
+    final fun merge(com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult) // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.merge|merge(com.eignex.kumulant.stat.forecast.ExponentialSmoothingResult){}[0]
+    final fun read(kotlin/Long): com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.read|read(kotlin.Long){}[0]
+    final fun reset() // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.reset|reset(){}[0]
+    final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+    final fun validateMerge(com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult) // com.eignex.kumulant.stat.forecast/ExponentialSmoothingStat.validateMerge|validateMerge(com.eignex.kumulant.stat.forecast.ExponentialSmoothingResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.forecast/RecursiveVarianceResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.forecast/RecursiveVarianceResult|null[0]
@@ -5435,85 +5335,6 @@ final class com.eignex.kumulant.stat.forecast/RecursiveVarianceStat : com.eignex
     final fun read(kotlin/Long): com.eignex.kumulant.stat.forecast/RecursiveVarianceResult // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin.collections/List<kotlin/Double>, kotlin/Int, kotlin/Double, com.eignex.kumulant.stat.forecast/SeasonalMode) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.collections.List<kotlin.Double>;kotlin.Int;kotlin.Double;com.eignex.kumulant.stat.forecast.SeasonalMode){}[0]
-
-    final val currentSlot // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.currentSlot|{}currentSlot[0]
-        final fun <get-currentSlot>(): kotlin/Int // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.currentSlot.<get-currentSlot>|<get-currentSlot>(){}[0]
-    final val level // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.level|{}level[0]
-        final fun <get-level>(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.level.<get-level>|<get-level>(){}[0]
-    final val mode // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.mode|{}mode[0]
-        final fun <get-mode>(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.mode.<get-mode>|<get-mode>(){}[0]
-    final val period // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.period|{}period[0]
-        final fun <get-period>(): kotlin/Int // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.period.<get-period>|<get-period>(){}[0]
-    final val phi // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.phi|{}phi[0]
-        final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.phi.<get-phi>|<get-phi>(){}[0]
-    final val seasons // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.seasons|{}seasons[0]
-        final fun <get-seasons>(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.seasons.<get-seasons>|<get-seasons>(){}[0]
-    final val trend // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.trend|{}trend[0]
-        final fun <get-trend>(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.trend.<get-trend>|<get-trend>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.component2|component2(){}[0]
-    final fun component3(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.component3|component3(){}[0]
-    final fun component4(): kotlin/Int // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.component4|component4(){}[0]
-    final fun component5(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.component5|component5(){}[0]
-    final fun component6(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.component6|component6(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin.collections/List<kotlin/Double> = ..., kotlin/Int = ..., kotlin/Double = ..., com.eignex.kumulant.stat.forecast/SeasonalMode = ...): com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.collections.List<kotlin.Double>;kotlin.Int;kotlin.Double;com.eignex.kumulant.stat.forecast.SeasonalMode){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.equals|equals(kotlin.Any?){}[0]
-    final fun forecast(kotlin/Int): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.forecast|forecast(kotlin.Int){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult> { // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.forecast.SeasonalSmoothingResult){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult> // com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult> { // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat|null[0]
-    constructor <init>(com.eignex.kumulant.stat.decay/DecayWeighting.Alpha, com.eignex.kumulant.stat.decay/DecayWeighting.Alpha, com.eignex.kumulant.stat.decay/DecayWeighting.Alpha, kotlin/Int, com.eignex.kumulant.stat.forecast/SeasonalMode = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.<init>|<init>(com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;com.eignex.kumulant.stat.decay.DecayWeighting.Alpha;kotlin.Int;com.eignex.kumulant.stat.forecast.SeasonalMode;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Int, com.eignex.kumulant.stat.forecast/SeasonalMode = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Int;com.eignex.kumulant.stat.forecast.SeasonalMode;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val alpha // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.alpha|{}alpha[0]
-        final fun <get-alpha>(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.alpha.<get-alpha>|<get-alpha>(){}[0]
-    final val alphaWeighting // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.alphaWeighting|{}alphaWeighting[0]
-        final fun <get-alphaWeighting>(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.alphaWeighting.<get-alphaWeighting>|<get-alphaWeighting>(){}[0]
-    final val beta // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.beta|{}beta[0]
-        final fun <get-beta>(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.beta.<get-beta>|<get-beta>(){}[0]
-    final val betaWeighting // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.betaWeighting|{}betaWeighting[0]
-        final fun <get-betaWeighting>(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.betaWeighting.<get-betaWeighting>|<get-betaWeighting>(){}[0]
-    final val concurrency // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val gamma // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.gamma|{}gamma[0]
-        final fun <get-gamma>(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.gamma.<get-gamma>|<get-gamma>(){}[0]
-    final val gammaWeighting // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.gammaWeighting|{}gammaWeighting[0]
-        final fun <get-gammaWeighting>(): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.gammaWeighting.<get-gammaWeighting>|<get-gammaWeighting>(){}[0]
-    final val mode // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.mode|{}mode[0]
-        final fun <get-mode>(): com.eignex.kumulant.stat.forecast/SeasonalMode // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.mode.<get-mode>|<get-mode>(){}[0]
-    final val period // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.period|{}period[0]
-        final fun <get-period>(): kotlin/Int // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.period.<get-period>|<get-period>(){}[0]
-    final val phi // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.phi|{}phi[0]
-        final fun <get-phi>(): kotlin/Double // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.phi.<get-phi>|<get-phi>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.merge|merge(com.eignex.kumulant.stat.forecast.SeasonalSmoothingResult){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-    final fun validateMerge(com.eignex.kumulant.stat.forecast/SeasonalSmoothingResult) // com.eignex.kumulant.stat.forecast/SeasonalSmoothingStat.validateMerge|validateMerge(com.eignex.kumulant.stat.forecast.SeasonalSmoothingResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.quantile/DDSketchStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/SketchResult> { // com.eignex.kumulant.stat.quantile/DDSketchStat|null[0]
@@ -8112,32 +7933,6 @@ final class com.eignex.kumulant.stat.summary/MeanEstimate { // com.eignex.kumula
     final fun lowerBound(kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.summary/MeanEstimate.lowerBound|lowerBound(kotlin.Double){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.summary/MeanEstimate.toString|toString(){}[0]
     final fun upperBound(kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.summary/MeanEstimate.upperBound|upperBound(kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.stat.summary/MeanResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.summary/MeanResult|null[0]
-    constructor <init>(kotlin/Double) // com.eignex.kumulant.stat.summary/MeanResult.<init>|<init>(kotlin.Double){}[0]
-
-    final val mean // com.eignex.kumulant.stat.summary/MeanResult.mean|{}mean[0]
-        final fun <get-mean>(): kotlin/Double // com.eignex.kumulant.stat.summary/MeanResult.mean.<get-mean>|<get-mean>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.stat.summary/MeanResult.component1|component1(){}[0]
-    final fun copy(kotlin/Double = ...): com.eignex.kumulant.stat.summary/MeanResult // com.eignex.kumulant.stat.summary/MeanResult.copy|copy(kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.summary/MeanResult.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.summary/MeanResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.summary/MeanResult.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.summary/MeanResult> { // com.eignex.kumulant.stat.summary/MeanResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.summary/MeanResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.summary/MeanResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.summary/MeanResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.summary/MeanResult // com.eignex.kumulant.stat.summary/MeanResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.summary/MeanResult) // com.eignex.kumulant.stat.summary/MeanResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.summary.MeanResult){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.summary/MeanResult.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.summary/MeanResult> // com.eignex.kumulant.stat.summary/MeanResult.Companion.serializer|serializer(){}[0]
-    }
 }
 
 final class com.eignex.kumulant.stat.summary/MeanStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.stat.summary/MeanStat|null[0]

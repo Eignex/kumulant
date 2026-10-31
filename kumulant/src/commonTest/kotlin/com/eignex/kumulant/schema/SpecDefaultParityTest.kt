@@ -17,7 +17,6 @@ import com.eignex.kumulant.schema.spec.FrugalMad
 import com.eignex.kumulant.schema.spec.FrugalQuantile
 import com.eignex.kumulant.schema.spec.HdrHistogram
 import com.eignex.kumulant.schema.spec.HyperLogLog
-import com.eignex.kumulant.schema.spec.LinearCounting
 import com.eignex.kumulant.schema.spec.Mad
 import com.eignex.kumulant.schema.spec.MinHash
 import com.eignex.kumulant.schema.spec.PageHinkley
@@ -27,7 +26,6 @@ import com.eignex.kumulant.schema.spec.SeriesStatSpec
 import com.eignex.kumulant.schema.spec.TDigest
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
-import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.change.AdwinStat
 import com.eignex.kumulant.stat.change.CusumStat
 import com.eignex.kumulant.stat.change.PageHinkleyStat
@@ -115,7 +113,6 @@ class SpecDefaultParityTest {
     fun `every discrete spec default matches the stat it materialises`() {
         val pairs = listOf(
             discrete("HyperLogLog", HyperLogLog(), HyperLogLogStat()),
-            discrete("LinearCounting", LinearCounting(), LinearCountingStat()),
             discrete("BloomFilter", BloomFilter(), BloomFilterStat()),
             discrete("CountMinSketch", CountMinSketch(), CountMinSketchStat()),
             discrete("MinHash", MinHash(), MinHashStat()),

@@ -94,7 +94,6 @@ class StatsRoundTripTest {
     fun `discrete stat configurations round trip`() {
         val cases: List<StatSpec> = listOf(
             HyperLogLog(precision = 12),
-            LinearCounting(bits = 2048),
             BloomFilter(bits = 1024, hashes = 4),
             CountMinSketch(depth = 4, width = 512, seed = 123L),
             MinHash(numHashes = 64, seed = 99L),
@@ -114,18 +113,18 @@ class StatsRoundTripTest {
             RunLength,
             Recency,
             Crossing(level = 3.5),
-            Holt(
+            ExponentialSmoothing(
                 alpha = 0.3,
                 beta = 0.1,
                 phi = 0.9,
             ),
-            SeasonalSmoothing(
+            ExponentialSmoothing(
                 alpha = 0.3,
                 beta = 0.1,
-                gamma = 0.2,
-                period = 7,
-                mode = SeasonalMode.Multiplicative,
                 phi = 0.95,
+                period = 7,
+                gamma = 0.2,
+                mode = SeasonalMode.Multiplicative,
             ),
             RecursiveVariance(omega = 0.1, alpha = 0.05, beta = 0.9),
             Cusum(target = 1.0, referenceValue = 0.25, threshold = 4.0),

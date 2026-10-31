@@ -1,20 +1,19 @@
 # Package com.eignex.kumulant.stat.forecast
 
-Predictive recurrences over ordered observations. Holt and seasonal smoothing
-expose `forecast(steps)` projections; recursive variance tracks volatility.
+Predictive recurrences over ordered observations. Exponential smoothing
+exposes `forecast(steps)` projections; recursive variance tracks volatility.
 Each implements [com.eignex.kumulant.core.SeriesStat].
 
 ## Picking a forecaster
 
 | Stat | Output shape | Reach for it when |
 |------|--------------|-------------------|
-| [HoltStat] | Level + trend + damped forecast | The stream has a slow-moving trend on top of noise and you want a short-horizon forecast. |
-| [SeasonalSmoothingStat] | Level + trend + seasonal factor vector (length `period`) | The stream has a repeating cycle (daily, weekly, anything periodic) on top of level and trend. The classical Holt-Winters method, additive or multiplicative. |
+| [ExponentialSmoothingStat] | Level + trend + seasonal factor vector (length `period`) + damped forecast | The stream has a slow-moving trend on top of noise (Holt, `period = 1`), optionally with a repeating cycle such as daily or weekly (Holt-Winters, additive or multiplicative). |
 | [RecursiveVarianceStat] | GARCH-style volatility tracker `sigma² = omega + alpha * value² + beta * sigma²` | Volatility tracking where a long-run baseline matters; compared with [EwmaVarianceStat][com.eignex.kumulant.stat.decay.EwmaVarianceStat] it adds `omega` and decouples the shock and persistence coefficients. |
 
-## Holt's method
+## Exponential smoothing
 
-[HoltStat] tracks two coupled cells:
+[ExponentialSmoothingStat] tracks two coupled cells:
 
 - `level`: the smoothed running level, updated as
   `level = alpha * value + (1 - alpha) * (priorLevel + priorTrend)`.
@@ -29,10 +28,10 @@ classical undamped Holt. Pick `phi` close to 1 for streams with
 sustained trends, lower (~0.8) for streams where the trend tends to
 revert.
 
-## Seasonal smoothing (Holt-Winters)
+## Seasonality (Holt-Winters)
 
-[SeasonalSmoothingStat] adds a `seasonal[period]` vector to Holt's
-shape. Each update applies one of two compositions:
+A `period` above 1 adds a `seasonal[period]` vector, smoothed by `gamma`.
+Each update applies one of two compositions:
 
 - **Additive**: `level + seasonal[t mod period]` (use when the
   seasonal amplitude is independent of level).
@@ -40,8 +39,9 @@ shape. Each update applies one of two compositions:
   seasonal amplitude scales with level; typical for ratios, sales,
   anything where seasonal effects multiply rather than add).
 
-The result exposes the same `forecast(steps)` projection, now factoring
-in the appropriate seasonal slot for each step.
+`forecast(steps)` then factors in the appropriate seasonal slot for each step.
+At `period = 1` the single seasonal factor stays at its identity and the
+stat is plain Holt.
 
 ## Recursive variance (GARCH-1,1)
 
@@ -60,15 +60,15 @@ persistence.
 
 ## Merge
 
-All three forecasters support approximate merges. An empty accumulator adopts
-the remote state; a populated one averages its level/trend, seasonal factors, or
-variance with the remote estimate. [SeasonalSmoothingStat] uses the remote phase.
-These roll-ups enable composition and merge-based windowing, but do not reproduce
-processing the combined observations in order.
+Both forecasters support approximate merges. An empty accumulator adopts
+the remote state; a populated one averages its level/trend and seasonal factors,
+or its variance, with the remote estimate. [ExponentialSmoothingStat] uses the
+remote phase. These roll-ups enable composition and merge-based windowing, but do
+not reproduce processing the combined observations in order.
 
 ## Concurrency
 
-[HoltStat] and [SeasonalSmoothingStat] lock their coupled updates under
+[ExponentialSmoothingStat] locks its coupled updates under
 [com.eignex.kumulant.core.Concurrency.Strict] and
 [com.eignex.kumulant.core.Concurrency.HighWrite]; relaxed cells can drift.
 [RecursiveVarianceStat] uses a single-cell CAS recurrence under concurrent

@@ -82,8 +82,7 @@ data class HyperLogLogResult(
  * HLL large-range correction unnecessary.
  *
  * **Use cases:** distinct-value estimation under tight memory (count unique
- * users, unique error fingerprints, unique IPs). Reach for [LinearCountingStat]
- * instead when cardinality is bounded and known to stay below the bitset size.
+ * users, unique error fingerprints, unique IPs).
  *
  * **Memory:** O(m) = O(2^precision) bytes, plus a `totalSeen` counter.
  *
