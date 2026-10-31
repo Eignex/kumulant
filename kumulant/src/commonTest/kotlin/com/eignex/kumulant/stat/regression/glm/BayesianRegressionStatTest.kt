@@ -165,6 +165,34 @@ class BayesianRegressionStatTest {
     }
 
     @Test
+    fun `an observation with a non-finite feature is dropped whole`() {
+        for (bad in listOf(Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.NaN)) {
+            val stat = BayesianRegressionStat(featureSize = 2)
+            val reference = BayesianRegressionStat(featureSize = 2)
+            stat.update(doubleArrayOf(1.0, 1.0), 1.0)
+            reference.update(doubleArrayOf(1.0, 1.0), 1.0)
+
+            stat.update(doubleArrayOf(bad, 1.0), 1.0)
+
+            val r = stat.read()
+            val expected = reference.read()
+            assertEquals(expected.precisionL.values.toList(), r.precisionL.values.toList(), "feature $bad")
+            assertEquals(expected.weights.values.toList(), r.weights.values.toList(), "feature $bad")
+            assertEquals(
+                listOf(
+                    expected.bias,
+                    expected.biasPrecision,
+                    expected.totalWeights,
+                    expected.sse,
+                    expected.step.toDouble(),
+                ),
+                listOf(r.bias, r.biasPrecision, r.totalWeights, r.sse, r.step.toDouble()),
+                "feature $bad",
+            )
+        }
+    }
+
+    @Test
     fun `the posterior matches the covariance-form reference`() {
         val references = listOf(
             CovarianceFormReference(

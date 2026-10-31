@@ -20,6 +20,7 @@ import com.eignex.koblas.syr
 import com.eignex.koblas.trmv
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.core.hasNonFiniteStored
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requireMergeFeatureSize
@@ -61,6 +62,10 @@ private fun Matrix.copyDenseMatrix(): DenseMatrix = DenseMatrix.wrap(
  * every canonical link, so the rank-1 update can never leave the positive-definite
  * cone, and the same event expressed on the covariance would be a Sherman-Morrison
  * downdate that can. There is no repair path because there is nothing to repair.
+ *
+ * An observation with a non-finite feature is skipped whole, since it would leave the
+ * factor non-finite and every later merge unable to factor it. Non-finite targets follow
+ * the arithmetic: the factor stays finite while weights, bias and `sse` become `NaN`.
  *
  * Under [Link.Identity] this is the strict closed-form conjugate Gaussian posterior
  * (`curvature = 1`). Under [Link.Logit] / [Link.Log] it is the online Laplace
@@ -168,19 +173,19 @@ class BayesianRegressionStat(
     private fun updateInternal(x: Vector, y: Double, _timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
         if (weight.isNotPositiveWeight()) return
+        if (x.hasNonFiniteStored()) return
         lock.guarded {
-            step++
-
             val etaPred = bias + (x dot weights)
-            val mu = link.invMean(etaPred)
-            val residual = y - mu
             val curvature = link.curvature(etaPred)
-            sse += link.loss(etaPred, y) * weight
 
             // Precision uses weight * curvature: exact under Identity, a local Laplace approximation under Logit/Log.
-            // Non-finite curvature is skipped to preserve the precision factor.
+            // Non-finite curvature is skipped whole to preserve the precision factor.
             val wc = weight * curvature
             if (!wc.isFinite()) return@guarded
+
+            step++
+            val residual = y - link.invMean(etaPred)
+            sse += link.loss(etaPred, y) * weight
 
             // The rank-1 update preserves the scattered x for the following solve; scattering also speeds sparse
             // access.
