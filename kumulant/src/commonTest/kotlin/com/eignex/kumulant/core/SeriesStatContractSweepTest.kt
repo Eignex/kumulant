@@ -3,6 +3,7 @@ package com.eignex.kumulant.core
 import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.schema.spec.Adwin
 import com.eignex.kumulant.schema.spec.ArgMax
+import com.eignex.kumulant.schema.spec.BucketHistogram
 import com.eignex.kumulant.schema.spec.ArgMin
 import com.eignex.kumulant.schema.spec.BernoulliSum
 import com.eignex.kumulant.schema.spec.Count
@@ -20,7 +21,6 @@ import com.eignex.kumulant.schema.spec.ExponentialSmoothing
 import com.eignex.kumulant.schema.spec.FrugalMad
 import com.eignex.kumulant.schema.spec.FrugalQuantile
 import com.eignex.kumulant.schema.spec.HdrHistogram
-import com.eignex.kumulant.schema.spec.LinearHistogram
 import com.eignex.kumulant.schema.spec.Mad
 import com.eignex.kumulant.schema.spec.Max
 import com.eignex.kumulant.schema.spec.Mean
@@ -38,7 +38,6 @@ import com.eignex.kumulant.schema.spec.SeriesStatSpec
 import com.eignex.kumulant.schema.spec.Sum
 import com.eignex.kumulant.schema.spec.Summary
 import com.eignex.kumulant.schema.spec.TDigest
-import com.eignex.kumulant.schema.spec.ThresholdBucket
 import com.eignex.kumulant.schema.spec.TotalWeights
 import com.eignex.kumulant.schema.spec.Variance
 import kotlin.test.Test
@@ -63,7 +62,7 @@ class SeriesStatContractSweepTest {
         "PageHinkley" to PageHinkley(),
         "Adwin" to Adwin(),
         "Mad" to Mad(),
-        "ThresholdBucket" to ThresholdBucket(thresholds = listOf(1.0, 5.0, 10.0)),
+        "BucketHistogram" to BucketHistogram(edges = listOf(1.0, 5.0, 10.0)),
         "Variance" to Variance,
         "Moments" to Moments,
         "FrugalMad" to FrugalMad(),
@@ -76,7 +75,6 @@ class SeriesStatContractSweepTest {
         "DDSketch" to DDSketch(),
         "FrugalQuantile" to FrugalQuantile(q = 0.5),
         "HdrHistogram" to HdrHistogram(),
-        "LinearHistogram" to LinearHistogram(lowerBound = 0.0, upperBound = 100.0, binCount = 10),
         "ReservoirHistogram" to ReservoirHistogram(seed = 42L),
         "TDigest" to TDigest(),
         "PitHistogram" to PitHistogram(numBins = 8),
@@ -281,7 +279,6 @@ class SeriesStatContractSweepTest {
             "DecayingVariance",
             "FrugalQuantile",
             "HdrHistogram",
-            "LinearHistogram",
             "ReservoirHistogram",
             "TDigest",
         )

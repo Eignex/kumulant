@@ -2,7 +2,7 @@ package com.eignex.kumulant.stat.score
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stat.quantile.LinearHistogramStat
+import com.eignex.kumulant.stat.quantile.BucketHistogramStat
 import com.eignex.kumulant.stat.quantile.SparseHistogramResult
 
 /**
@@ -12,7 +12,7 @@ import com.eignex.kumulant.stat.quantile.SparseHistogramResult
  * forecaster; concentrated mass indicates miscalibration.
  *
  * Caller computes `pit = forecast.cdf(y)` upstream and feeds it as the value.
- * Backed by [LinearHistogramStat] with bounds pinned to `[0, 1]`.
+ * Backed by [BucketHistogramStat.linear] over `[0, 1]`; buckets include their upper edge.
  */
 fun pitHistogram(numBins: Int, concurrency: Concurrency = Concurrency.None): SeriesStat<SparseHistogramResult> =
-    LinearHistogramStat(0.0, 1.0, numBins, concurrency)
+    BucketHistogramStat.linear(0.0, 1.0, numBins, concurrency)

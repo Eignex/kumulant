@@ -50,12 +50,11 @@ class StatsRoundTripTest {
     fun `quantile stat configurations round trip`() {
         val cases: List<StatSpec> = listOf(
             FrugalMad(stepSize = 0.5),
-            ThresholdBucket(thresholds = listOf(0.0, 10.0, 100.0)),
+            BucketHistogram(edges = listOf(0.0, 10.0, 100.0)),
             Mad(compression = 200.0),
             DDSketch(relativeError = 0.02, probabilities = listOf(0.5, 0.99)),
             FrugalQuantile(q = 0.5, stepSize = 0.02, initialEstimate = 1.0),
             HdrHistogram(0.001, 1000.0, 4),
-            LinearHistogram(0.0, 100.0, 50),
             ReservoirHistogram(capacity = 256, seed = 42L),
             TDigest(compression = 200.0, probabilities = listOf(0.5, 0.95)),
             PitHistogram(numBins = 20),

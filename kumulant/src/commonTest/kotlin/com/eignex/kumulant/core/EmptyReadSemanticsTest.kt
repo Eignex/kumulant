@@ -2,7 +2,7 @@ package com.eignex.kumulant.core
 
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.quantile.HdrHistogramStat
-import com.eignex.kumulant.stat.quantile.LinearHistogramStat
+import com.eignex.kumulant.stat.quantile.BucketHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.kumulant.stat.score.AucStat
 import com.eignex.kumulant.stat.summary.CountStat
@@ -28,7 +28,7 @@ class EmptyReadSemanticsTest {
     @Test
     fun `array-backed histograms report no buckets`() {
         assertEquals(0, HdrHistogramStat().read().weights.size)
-        assertEquals(0, LinearHistogramStat(0.0, 10.0, 4).read().weights.size)
+        assertEquals(0, BucketHistogramStat.linear(0.0, 10.0, 4).read().weights.size)
     }
 
     @Test

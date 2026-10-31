@@ -22,7 +22,6 @@ import com.eignex.kumulant.stat.quantile.ReservoirResult
 import com.eignex.kumulant.stat.quantile.SketchResult
 import com.eignex.kumulant.stat.quantile.SparseHistogramResult
 import com.eignex.kumulant.stat.quantile.TDigestResult
-import com.eignex.kumulant.stat.quantile.ThresholdBucketResult
 import com.eignex.kumulant.stat.rate.RateResult
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesResult
@@ -172,13 +171,16 @@ data class FrugalMad(
     val stepSize: Double = StatDefaults.FRUGAL_QUANTILE_STEP_SIZE,
 ) : SeriesStatSpec<MadResult>
 
-/** Spec for `ThresholdBucketStat`: weighted counts per user-defined value bucket. */
+/**
+ * Spec for `BucketHistogramStat`: weighted counts over caller-chosen bucket edges, each bucket
+ * including its upper edge. Build evenly spaced edges with `linearEdges`.
+ */
 @Serializable
-@SerialName("ThresholdBucket")
-data class ThresholdBucket(
-    /** Strictly increasing thresholds defining the bucket edges. */
-    val thresholds: List<Double>,
-) : SeriesStatSpec<ThresholdBucketResult>
+@SerialName("BucketHistogram")
+data class BucketHistogram(
+    /** Strictly increasing, finite bucket edges. */
+    val edges: List<Double>,
+) : SeriesStatSpec<SparseHistogramResult>
 
 /** Spec for `VarianceStat`: weighted running variance (Welford). */
 @Serializable
@@ -272,18 +274,6 @@ data class HdrHistogram(
     val initialHighestTrackableValue: Double = StatDefaults.HDR_HISTOGRAM_INITIAL_HIGHEST_TRACKABLE_VALUE,
     /** Number of significant digits of precision (1..5). */
     val significantDigits: Int = StatDefaults.HDR_HISTOGRAM_SIGNIFICANT_DIGITS,
-) : SeriesStatSpec<SparseHistogramResult>
-
-/** Spec for `LinearHistogramStat`: fixed-width bins over `[lowerBound, upperBound)`. */
-@Serializable
-@SerialName("LinearHistogram")
-data class LinearHistogram(
-    /** Inclusive lower bound of the histogram's covered range. */
-    val lowerBound: Double,
-    /** Exclusive upper bound of the histogram's covered range. */
-    val upperBound: Double,
-    /** Number of equal-width bins between the bounds. */
-    val binCount: Int,
 ) : SeriesStatSpec<SparseHistogramResult>
 
 /**

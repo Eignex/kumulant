@@ -64,7 +64,7 @@ The PIT (probability integral transform) family covers calibration of
 distributional forecasts:
 
 - `pitHistogram(numBins)` (factory in `PitHistogram.kt`): feeds PIT
-  values into an equiprobable [LinearHistogramStat][com.eignex.kumulant.stat.quantile.LinearHistogramStat]
+  values into an equiprobable [BucketHistogramStat][com.eignex.kumulant.stat.quantile.BucketHistogramStat]
   over `[0, 1]`. Under correct distributional forecasts the histogram
   should be uniform; deviations diagnose under- or over-coverage and
   tail mis-specifications.

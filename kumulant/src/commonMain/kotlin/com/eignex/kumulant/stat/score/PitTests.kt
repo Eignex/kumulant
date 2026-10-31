@@ -10,7 +10,7 @@ import kotlin.math.abs
  * sums `(observed - expected)^2 / expected` over all [numBins] bins.
  *
  * The histogram is the sparse output of `pitHistogram(numBins)` (or any
- * equal-width LinearHistogramStat over `[0, 1]`); pass the same [numBins] used to
+ * equal-width BucketHistogramStat over `[0, 1]`); pass the same [numBins] used to
  * configure it so empty bins are accounted for. Underflow / overflow rows are
  * excluded - observations outside `[0, 1]` shouldn't count toward a uniformity
  * test on `[0, 1]`. Returns 0 if total finite weight is non-positive.
@@ -21,8 +21,8 @@ fun SparseHistogramResult.pitChiSquared(numBins: Int): Double {
     val weightPerBin = DoubleArray(numBins)
     var total = 0.0
     for (i in lowerBounds.indices) {
-        if (isTopEdgeRow(lowerBounds[i], upperBounds[i])) {
-            weightPerBin[numBins - 1] += weights[i]
+        if (isBottomEdgeRow(lowerBounds[i], upperBounds[i])) {
+            weightPerBin[0] += weights[i]
             total += weights[i]
             continue
         }
@@ -57,8 +57,8 @@ fun SparseHistogramResult.pitKsDistance(numBins: Int): Double {
     val weightPerBin = DoubleArray(numBins)
     var total = 0.0
     for (i in lowerBounds.indices) {
-        if (isTopEdgeRow(lowerBounds[i], upperBounds[i])) {
-            weightPerBin[numBins - 1] += weights[i]
+        if (isBottomEdgeRow(lowerBounds[i], upperBounds[i])) {
+            weightPerBin[0] += weights[i]
             total += weights[i]
             continue
         }
@@ -82,8 +82,8 @@ fun SparseHistogramResult.pitKsDistance(numBins: Int): Double {
     return ks
 }
 
-// True for the histogram's `[1.0, +Inf)` overflow row. A PIT of exactly 1.0 is legitimate but
-// `pitHistogram` is bounded `[0, 1)`, so it lands there; both tests fold the row into the top bin
-// rather than skipping it with the other non-finite-bound rows, which would drop exactly the
-// over-confident forecaster they exist to catch.
-private fun isTopEdgeRow(lower: Double, upper: Double): Boolean = lower == 1.0 && upper == Double.POSITIVE_INFINITY
+// True for the histogram's `(-Inf, 0.0]` underflow row. A PIT of exactly 0.0 is legitimate but
+// `pitHistogram` buckets include their upper edge, so it lands there; both tests fold the row into
+// the bottom bin rather than skipping it with the other non-finite-bound rows, which would drop
+// exactly the over-confident forecaster they exist to catch.
+private fun isBottomEdgeRow(lower: Double, upper: Double): Boolean = lower == Double.NEGATIVE_INFINITY && upper == 0.0

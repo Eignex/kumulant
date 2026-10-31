@@ -102,7 +102,7 @@ identity element:
 |--------|--------------------|
 | Sum, Count, TotalWeights, BernoulliSum | `0.0`, the additive identity |
 | Min, Max | `+Infinity` / `-Infinity`, the comparison identities |
-| HdrHistogram, LinearHistogram, Reservoir | empty arrays |
+| HdrHistogram, BucketHistogram, Reservoir | empty arrays |
 | DDSketch, TDigest, Mad | `NaN` per quantile |
 | Auc | `NaN` |
 | Mean, Variance, Moments | `0.0` for every field |
