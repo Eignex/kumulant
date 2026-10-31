@@ -7,7 +7,7 @@ import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.random.Random
@@ -40,7 +40,8 @@ data class RouletteWheelArmResult(
  * and continuous updates would thrash. Only meaningful for
  * reward-maximisation: the weight increase is asymmetric and has no clean
  * "minimise" dual; callers wanting to minimise should negate the reward
- * before [update].
+ * before [update]. Non-positive observation weights are ignored because a
+ * rebalanced segment cannot be downdated.
  *
  * Implemented as a direct [UnivariateBandit] rather than a [BanditPolicy]
  * plugged into [MultiArmedBandit] because the re-balance is a global
@@ -115,10 +116,10 @@ class RouletteWheelBandit(
 
     override fun update(armIndex: Int, value: Double, weight: Double) {
         requireArmIndex(armIndex, nbrArms)
-        // Return before the counter and the segment clock, not just before the score: advancing them
-        // on a zero-weight observation would dilute the arm's average and could trip a rebalance.
-        // Zero weight means "ignore this observation" library-wide.
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: a segment folded into the weights has no inverse, so
+        // a downdate cannot be undone after a rebalance. See Stat. Return before the counter and the
+        // segment clock: advancing them on an ignored observation could trip a rebalance.
+        if (weight.isNotPositiveWeight()) return
         accumulatedScores[armIndex] += value * weight
         segmentWeights[armIndex] += weight
         picksThisSegment++
