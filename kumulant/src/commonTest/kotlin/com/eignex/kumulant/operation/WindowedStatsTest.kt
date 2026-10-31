@@ -287,7 +287,7 @@ class WindowedStatsTest {
     fun `discrete decorators preserve differences across window slices`() {
         val stat = TransformLongStat(
             FilterDiscreteStat(SumStat().diff().asDiscrete()) { true },
-        ) { it }.withWeight(1.0).weightBy { 1.0 }.sample(1.0, 42L).windowed(60.seconds)
+        ) { it.toDouble() }.withWeight(1.0).weightBy { 1.0 }.sample(1.0, 42L).windowed(60.seconds)
         repeat(6) { stat.update(it.toLong(), it * 8_000_000_000L) }
 
         assertEquals(5.0, stat.read(40_000_000_000L).sum, DELTA)

@@ -107,7 +107,13 @@ fun <R : Result> SeriesStatSpec<R>.vectorized(
 fun <R : Result> SeriesStatSpec<R>.transform(expr: ScalarExpr): SeriesStatSpec<R> =
     TransformValueSeries(this, expr) as SeriesStatSpec<R>
 
-/** Wrap this discrete spec to apply [expr] to every update before the inner stat sees it. */
+/**
+ * Wrap this discrete spec to apply [expr] to every update before the inner stat sees it.
+ *
+ * A bare [X] passes every ID through exactly. Any other expression evaluates in binary64, so IDs
+ * beyond magnitude 2^53 may round, and a fractional result truncates toward zero. An update whose
+ * result is NaN, infinite or outside the Long range is dropped rather than mapped to an ID.
+ */
 fun <R : Result> DiscreteStatSpec<R>.transform(expr: ScalarExpr): DiscreteStatSpec<R> =
     TransformValueDiscrete(this, expr) as DiscreteStatSpec<R>
 
@@ -115,7 +121,13 @@ fun <R : Result> DiscreteStatSpec<R>.transform(expr: ScalarExpr): DiscreteStatSp
 fun <R : Result> SeriesStatSpec<R>.filter(pred: BoolExpr): SeriesStatSpec<R> =
     FilterValueSeries(this, pred) as SeriesStatSpec<R>
 
-/** Wrap this discrete spec so updates are forwarded only when [pred] evaluates true. */
+/**
+ * Wrap this discrete spec so updates are forwarded only when [pred] evaluates true.
+ *
+ * Comparisons and `In` tests between [X] and a literal compare the ID exactly, combined through
+ * `and`, `or` and `not`. Any other predicate node evaluates in binary64, where IDs beyond
+ * magnitude 2^53 may round.
+ */
 fun <R : Result> DiscreteStatSpec<R>.filter(pred: BoolExpr): DiscreteStatSpec<R> =
     FilterValueDiscrete(this, pred) as DiscreteStatSpec<R>
 
