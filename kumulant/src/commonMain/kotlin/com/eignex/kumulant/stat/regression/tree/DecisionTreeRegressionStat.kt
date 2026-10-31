@@ -59,7 +59,7 @@ class DecisionTreeRegressionStat(
     /** Tunables shared with the underlying [RegressionTree]. */
     val config: RegressionTreeConfig = RegressionTreeConfig(),
     override val concurrency: Concurrency = Concurrency.None,
-    private val leafArmFactory: (() -> SeriesStat<WeightedVarianceResult>)? = null,
+    private val leafArmFactory: ((Concurrency) -> SeriesStat<WeightedVarianceResult>)? = null,
     randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStat<TreeRegressionResult> {
 
@@ -69,8 +69,10 @@ class DecisionTreeRegressionStat(
 
     private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
 
-    // Per-instance resolution binds default arms to each replica concurrency level.
-    private val armFactory: () -> SeriesStat<WeightedVarianceResult> = leafArmFactory ?: { VarianceStat(concurrency) }
+    // Per-instance resolution binds leaf arms to each replica concurrency level.
+    private val armFactory: () -> SeriesStat<WeightedVarianceResult> = {
+        leafArmFactory?.invoke(concurrency) ?: VarianceStat(concurrency)
+    }
 
     // Volatile publication makes reset replacements visible to concurrent updates.
     @Volatile

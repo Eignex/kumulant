@@ -53,7 +53,7 @@ class RandomForestClassifierStat(
     /** Oza & Russell online bagging: per-tree Poisson(1) reweighting at update time. */
     val bagging: Boolean = StatDefaults.FOREST_BAGGING,
     override val concurrency: Concurrency = Concurrency.None,
-    private val leafArmFactory: (() -> SeriesStat<ClassCountsResult>)? = null,
+    private val leafArmFactory: ((Concurrency) -> SeriesStat<ClassCountsResult>)? = null,
     randomSeed: Int = StatDefaults.TREE_RANDOM_SEED,
 ) : RegressionStat<ForestClassificationResult> {
 
@@ -68,12 +68,9 @@ class RandomForestClassifierStat(
 
     private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
 
-    // Per-instance resolution binds default arms to each replica concurrency level.
-    private val armFactory: () -> SeriesStat<ClassCountsResult> = leafArmFactory ?: {
-        ClassCountsStat(
-            numClasses,
-            concurrency,
-        )
+    // Per-instance resolution binds leaf arms to each replica concurrency level.
+    private val armFactory: () -> SeriesStat<ClassCountsResult> = {
+        leafArmFactory?.invoke(concurrency) ?: ClassCountsStat(numClasses, concurrency)
     }
 
     private val baggingRng = CounterRandom(seedRng.childSeed(), concurrency)
