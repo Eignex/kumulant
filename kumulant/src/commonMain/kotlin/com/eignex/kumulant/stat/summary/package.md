@@ -100,11 +100,10 @@ stats:
   [Covariance][com.eignex.kumulant.schema.spec.Covariance]`.withSelfLag(k)`
   self-pairs each input with the value seen `k` updates ago; the Pearson
   correlation falls out of the running covariance.
-- **Standardised input**: feed any series stat through the
-  [StandardScalerSeries][com.eignex.kumulant.schema.spec.StandardScalerSeries]
-  spec or its modality siblings; the scaler reads `center` and `scale`
-  off a [VarianceStat] / [MomentsStat] / [MadStat] / [SummaryStat]
-  primary on every update.
+- **Standardised input**: `.standardScaler()` z-scores each input against a
+  hidden [VarianceStat]. For another center/scale, use `.withFeedback` with a
+  [MomentsStat] / [MadStat] / [SummaryStat] primary; the projection reads
+  `center` and `scale` off its snapshot on every update.
 
 ## Batch mean estimates
 

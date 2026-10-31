@@ -164,7 +164,7 @@ class OperationsRoundTripTest {
     }
 
     @Test fun `materialize should reject inner with wrong modality`() {
-        val bad = AtIndices(Sum, indexX = 0, indexY = 1)
+        val bad = FoldVectorPaired(Sum, V(0), V(1))
         assertFailsWith<IllegalArgumentException> {
             bad.materialize(Concurrency.None)
         }

@@ -30,10 +30,6 @@ internal data class WithWeightVector(val inner: StatSpec, val weight: Double) : 
 internal data class WithWeightDiscrete(val inner: StatSpec, val weight: Double) : DiscreteStatSpec<Result>
 
 @Serializable
-@SerialName("WithValueSeries")
-internal data class WithValueSeries(val inner: StatSpec, val value: Double) : SeriesStatSpec<Result>
-
-@Serializable
 @SerialName("WithValueDiscrete")
 internal data class WithValueDiscrete(val inner: StatSpec, val value: Long) : DiscreteStatSpec<Result>
 
@@ -44,22 +40,6 @@ internal data class AsSeries(val inner: StatSpec) : SeriesStatSpec<Result>
 @Serializable
 @SerialName("AsDiscrete")
 internal data class AsDiscrete(val inner: StatSpec) : DiscreteStatSpec<Result>
-
-@Serializable
-@SerialName("AtX")
-internal data class AtX(val inner: StatSpec) : PairedStatSpec<Result>
-
-@Serializable
-@SerialName("AtY")
-internal data class AtY(val inner: StatSpec) : PairedStatSpec<Result>
-
-@Serializable
-@SerialName("AtIndex")
-internal data class AtIndex(val inner: StatSpec, val index: Int) : VectorStatSpec<Result>
-
-@Serializable
-@SerialName("AtIndices")
-internal data class AtIndices(val inner: StatSpec, val indexX: Int, val indexY: Int) : VectorStatSpec<Result>
 
 @Serializable
 @SerialName("WithFixedX")
@@ -253,19 +233,6 @@ internal data class WithFeedbackRegression(val inner: StatSpec, val primary: Sta
     RegressionStatSpec<Result>
 
 @Serializable
-@SerialName("StandardScalerVector")
-internal data class StandardScalerVector(val inner: StatSpec, val dimensions: Int) : VectorStatSpec<Result>
-
-@Serializable
-@SerialName("MinMaxScalerVector")
-internal data class MinMaxScalerVector(
-    val inner: StatSpec,
-    val dimensions: Int,
-    val targetLow: Double = DEFAULT_TARGET_LOW,
-    val targetHigh: Double = DEFAULT_TARGET_HIGH,
-) : VectorStatSpec<Result>
-
-@Serializable
 @SerialName("StandardScalerRegression")
 internal data class StandardScalerRegression(val inner: StatSpec) : RegressionStatSpec<Result>
 
@@ -276,30 +243,6 @@ internal data class MinMaxScalerRegression(
     val targetLow: Double = DEFAULT_TARGET_LOW,
     val targetHigh: Double = DEFAULT_TARGET_HIGH,
 ) : RegressionStatSpec<Result>
-
-@Serializable
-@SerialName("StandardScalerPaired")
-internal data class StandardScalerPaired(val inner: StatSpec) : PairedStatSpec<Result>
-
-@Serializable
-@SerialName("MinMaxScalerPaired")
-internal data class MinMaxScalerPaired(
-    val inner: StatSpec,
-    val targetLow: Double = DEFAULT_TARGET_LOW,
-    val targetHigh: Double = DEFAULT_TARGET_HIGH,
-) : PairedStatSpec<Result>
-
-@Serializable
-@SerialName("StandardScaler")
-internal data class StandardScalerSeries(val inner: StatSpec) : SeriesStatSpec<Result>
-
-@Serializable
-@SerialName("MinMaxScaler")
-internal data class MinMaxScalerSeries(
-    val inner: StatSpec,
-    val targetLow: Double = DEFAULT_TARGET_LOW,
-    val targetHigh: Double = DEFAULT_TARGET_HIGH,
-) : SeriesStatSpec<Result>
 
 @Serializable
 @SerialName("SampleSeries")

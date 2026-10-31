@@ -99,7 +99,7 @@ class StatSchemaDefSerializationTest {
 
         assertTrue(encoded.contains("\"requests\":\"sum\""))
         assertTrue(encoded.contains("\"withWeight\":"))
-        assertTrue(encoded.contains("\"withValue\":"))
+        assertTrue(encoded.contains("\"transform\":"))
         assertTrue(encoded.contains("\"withFixedX\":"))
     }
 
