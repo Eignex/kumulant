@@ -333,7 +333,7 @@ public final class com/eignex/kumulant/bandit/univariate/Boltzmann : com/eignex/
 	public synthetic fun <init> (DDDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;JLkotlin/random/Random;)D
