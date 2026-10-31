@@ -165,7 +165,11 @@ interface PerArmBandit<R : Result> : Snapshotable<List<R>> {
      * the full [snapshot]; implementations may override to avoid building
      * the entire list when only one arm is needed.
      */
-    fun armResult(armIndex: Int): R = snapshot()[armIndex]
+    fun armResult(armIndex: Int): R {
+        val arms = snapshot()
+        requireArmIndex(armIndex, arms.size)
+        return arms[armIndex]
+    }
 }
 
 /**

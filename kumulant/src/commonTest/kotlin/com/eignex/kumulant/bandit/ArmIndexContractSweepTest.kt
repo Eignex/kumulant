@@ -52,24 +52,28 @@ class ArmIndexContractSweepTest {
                 listOf(
                     "update" to { i -> roulette.update(i, 1.0) },
                     "evaluate" to { i -> roulette.evaluate(i) },
+                    "armResult" to { i -> roulette.armResult(i) },
                 ),
             ),
             Probe(
                 "BoltzmannBandit",
                 listOf(
                     "update" to { i -> boltzmann.update(i, 1.0) },
+                    "armResult" to { i -> boltzmann.armResult(i) },
                 ),
             ),
             Probe(
                 "Exp3Bandit",
                 listOf(
                     "update" to { i -> exp3.update(i, 1.0) },
+                    "armResult" to { i -> exp3.armResult(i) },
                 ),
             ),
             Probe(
                 "TopTwoThompsonBandit",
                 listOf(
                     "update" to { i -> topTwo.update(i, 1.0) },
+                    "armResult" to { i -> topTwo.armResult(i) },
                 ),
             ),
             Probe(
