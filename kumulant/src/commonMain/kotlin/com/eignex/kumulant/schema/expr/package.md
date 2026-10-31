@@ -56,7 +56,7 @@ The common numeric domain consists of finite integral literals in Klause's signe
 Klause evaluates integer expressions exactly; Kumulant evaluates each node in binary64.
 Integers through magnitude `2^53` are exactly representable in binary64. Beyond that,
 rounding can change a value. Both environments encode integral literal values with no
-fraction part. Kumulant preserves negative zero as `-0`.
+fraction part. Kumulant encodes negative zero as `-0.0` so its sign survives the round trip.
 
 Kumulant retains every binary grouping and evaluates operands in their written order.
 For example, adding two small numbers before a large one can produce a different
