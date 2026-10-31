@@ -2868,6 +2868,34 @@ final class com.eignex.kumulant.schema.spec/BloomFilter : com.eignex.kumulant.sc
     }
 }
 
+final class com.eignex.kumulant.schema.spec/BucketHistogram : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.quantile/SparseHistogramResult> { // com.eignex.kumulant.schema.spec/BucketHistogram|null[0]
+    constructor <init>(kotlin.collections/List<kotlin/Double>) // com.eignex.kumulant.schema.spec/BucketHistogram.<init>|<init>(kotlin.collections.List<kotlin.Double>){}[0]
+
+    final val edges // com.eignex.kumulant.schema.spec/BucketHistogram.edges|{}edges[0]
+        final fun <get-edges>(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.schema.spec/BucketHistogram.edges.<get-edges>|<get-edges>(){}[0]
+
+    final fun component1(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.schema.spec/BucketHistogram.component1|component1(){}[0]
+    final fun copy(kotlin.collections/List<kotlin/Double> = ...): com.eignex.kumulant.schema.spec/BucketHistogram // com.eignex.kumulant.schema.spec/BucketHistogram.copy|copy(kotlin.collections.List<kotlin.Double>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/BucketHistogram.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/BucketHistogram.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/BucketHistogram.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/BucketHistogram> { // com.eignex.kumulant.schema.spec/BucketHistogram.$serializer|null[0]
+        final val descriptor // com.eignex.kumulant.schema.spec/BucketHistogram.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/BucketHistogram.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/BucketHistogram.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/BucketHistogram // com.eignex.kumulant.schema.spec/BucketHistogram.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/BucketHistogram) // com.eignex.kumulant.schema.spec/BucketHistogram.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.BucketHistogram){}[0]
+    }
+
+    final object Companion { // com.eignex.kumulant.schema.spec/BucketHistogram.Companion|null[0]
+        final val $childSerializers // com.eignex.kumulant.schema.spec/BucketHistogram.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/BucketHistogram> // com.eignex.kumulant.schema.spec/BucketHistogram.Companion.serializer|serializer(){}[0]
+    }
+}
+
 final class com.eignex.kumulant.schema.spec/ClassCounts : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.regression.tree/ClassCountsResult> { // com.eignex.kumulant.schema.spec/ClassCounts|null[0]
     constructor <init>(kotlin/Int) // com.eignex.kumulant.schema.spec/ClassCounts.<init>|<init>(kotlin.Int){}[0]
 
@@ -3577,38 +3605,6 @@ final class com.eignex.kumulant.schema.spec/HyperLogLog : com.eignex.kumulant.sc
     }
 }
 
-final class com.eignex.kumulant.schema.spec/LinearHistogram : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.quantile/SparseHistogramResult> { // com.eignex.kumulant.schema.spec/LinearHistogram|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Int) // com.eignex.kumulant.schema.spec/LinearHistogram.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
-
-    final val binCount // com.eignex.kumulant.schema.spec/LinearHistogram.binCount|{}binCount[0]
-        final fun <get-binCount>(): kotlin/Int // com.eignex.kumulant.schema.spec/LinearHistogram.binCount.<get-binCount>|<get-binCount>(){}[0]
-    final val lowerBound // com.eignex.kumulant.schema.spec/LinearHistogram.lowerBound|{}lowerBound[0]
-        final fun <get-lowerBound>(): kotlin/Double // com.eignex.kumulant.schema.spec/LinearHistogram.lowerBound.<get-lowerBound>|<get-lowerBound>(){}[0]
-    final val upperBound // com.eignex.kumulant.schema.spec/LinearHistogram.upperBound|{}upperBound[0]
-        final fun <get-upperBound>(): kotlin/Double // com.eignex.kumulant.schema.spec/LinearHistogram.upperBound.<get-upperBound>|<get-upperBound>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/LinearHistogram.component1|component1(){}[0]
-    final fun component2(): kotlin/Double // com.eignex.kumulant.schema.spec/LinearHistogram.component2|component2(){}[0]
-    final fun component3(): kotlin/Int // com.eignex.kumulant.schema.spec/LinearHistogram.component3|component3(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Int = ...): com.eignex.kumulant.schema.spec/LinearHistogram // com.eignex.kumulant.schema.spec/LinearHistogram.copy|copy(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/LinearHistogram.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/LinearHistogram.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/LinearHistogram.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/LinearHistogram> { // com.eignex.kumulant.schema.spec/LinearHistogram.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.spec/LinearHistogram.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/LinearHistogram.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/LinearHistogram.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/LinearHistogram // com.eignex.kumulant.schema.spec/LinearHistogram.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/LinearHistogram) // com.eignex.kumulant.schema.spec/LinearHistogram.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.LinearHistogram){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.spec/LinearHistogram.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/LinearHistogram> // com.eignex.kumulant.schema.spec/LinearHistogram.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.schema.spec/Mad : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.summary/MadResult> { // com.eignex.kumulant.schema.spec/Mad|null[0]
     constructor <init>(kotlin/Double = ...) // com.eignex.kumulant.schema.spec/Mad.<init>|<init>(kotlin.Double){}[0]
 
@@ -4167,34 +4163,6 @@ final class com.eignex.kumulant.schema.spec/TDigest : com.eignex.kumulant.schema
         final val $childSerializers // com.eignex.kumulant.schema.spec/TDigest.Companion.$childSerializers|{}$childSerializers[0]
 
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/TDigest> // com.eignex.kumulant.schema.spec/TDigest.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.schema.spec/ThresholdBucket : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.quantile/ThresholdBucketResult> { // com.eignex.kumulant.schema.spec/ThresholdBucket|null[0]
-    constructor <init>(kotlin.collections/List<kotlin/Double>) // com.eignex.kumulant.schema.spec/ThresholdBucket.<init>|<init>(kotlin.collections.List<kotlin.Double>){}[0]
-
-    final val thresholds // com.eignex.kumulant.schema.spec/ThresholdBucket.thresholds|{}thresholds[0]
-        final fun <get-thresholds>(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.schema.spec/ThresholdBucket.thresholds.<get-thresholds>|<get-thresholds>(){}[0]
-
-    final fun component1(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.schema.spec/ThresholdBucket.component1|component1(){}[0]
-    final fun copy(kotlin.collections/List<kotlin/Double> = ...): com.eignex.kumulant.schema.spec/ThresholdBucket // com.eignex.kumulant.schema.spec/ThresholdBucket.copy|copy(kotlin.collections.List<kotlin.Double>){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/ThresholdBucket.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/ThresholdBucket.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/ThresholdBucket.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/ThresholdBucket> { // com.eignex.kumulant.schema.spec/ThresholdBucket.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.spec/ThresholdBucket.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/ThresholdBucket.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/ThresholdBucket.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/ThresholdBucket // com.eignex.kumulant.schema.spec/ThresholdBucket.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/ThresholdBucket) // com.eignex.kumulant.schema.spec/ThresholdBucket.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.ThresholdBucket){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.spec/ThresholdBucket.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.spec/ThresholdBucket.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/ThresholdBucket> // com.eignex.kumulant.schema.spec/ThresholdBucket.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -5315,6 +5283,25 @@ final class com.eignex.kumulant.stat.forecast/RecursiveVarianceStat : com.eignex
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.forecast/RecursiveVarianceStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
 }
 
+final class com.eignex.kumulant.stat.quantile/BucketHistogramStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/SparseHistogramResult> { // com.eignex.kumulant.stat.quantile/BucketHistogramStat|null[0]
+    constructor <init>(kotlin/DoubleArray, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.quantile/BucketHistogramStat.<init>|<init>(kotlin.DoubleArray;com.eignex.kumulant.core.Concurrency){}[0]
+
+    final val bucketEdges // com.eignex.kumulant.stat.quantile/BucketHistogramStat.bucketEdges|{}bucketEdges[0]
+        final fun <get-bucketEdges>(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.stat.quantile/BucketHistogramStat.bucketEdges.<get-bucketEdges>|<get-bucketEdges>(){}[0]
+    final val concurrency // com.eignex.kumulant.stat.quantile/BucketHistogramStat.concurrency|{}concurrency[0]
+        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.quantile/BucketHistogramStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
+
+    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.quantile/BucketHistogramStat // com.eignex.kumulant.stat.quantile/BucketHistogramStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
+    final fun merge(com.eignex.kumulant.stat.quantile/SparseHistogramResult, kotlin/Long) // com.eignex.kumulant.stat.quantile/BucketHistogramStat.merge|merge(com.eignex.kumulant.stat.quantile.SparseHistogramResult;kotlin.Long){}[0]
+    final fun read(kotlin/Long): com.eignex.kumulant.stat.quantile/SparseHistogramResult // com.eignex.kumulant.stat.quantile/BucketHistogramStat.read|read(kotlin.Long){}[0]
+    final fun reset() // com.eignex.kumulant.stat.quantile/BucketHistogramStat.reset|reset(){}[0]
+    final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/BucketHistogramStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
+
+    final object Companion { // com.eignex.kumulant.stat.quantile/BucketHistogramStat.Companion|null[0]
+        final fun linear(kotlin/Double, kotlin/Double, kotlin/Int, com.eignex.kumulant.core/Concurrency = ...): com.eignex.kumulant.stat.quantile/BucketHistogramStat // com.eignex.kumulant.stat.quantile/BucketHistogramStat.Companion.linear|linear(kotlin.Double;kotlin.Double;kotlin.Int;com.eignex.kumulant.core.Concurrency){}[0]
+    }
+}
+
 final class com.eignex.kumulant.stat.quantile/DDSketchStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/SketchResult> { // com.eignex.kumulant.stat.quantile/DDSketchStat|null[0]
     constructor <init>(kotlin/Double = ..., kotlin/DoubleArray = ..., kotlin/Double = ..., kotlin/Double = ..., com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.quantile/DDSketchStat.<init>|<init>(kotlin.Double;kotlin.DoubleArray;kotlin.Double;kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
 
@@ -5374,25 +5361,6 @@ final class com.eignex.kumulant.stat.quantile/HdrHistogramStat : com.eignex.kumu
     final fun reset() // com.eignex.kumulant.stat.quantile/HdrHistogramStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/HdrHistogramStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
     final fun validateMerge(com.eignex.kumulant.stat.quantile/SparseHistogramResult) // com.eignex.kumulant.stat.quantile/HdrHistogramStat.validateMerge|validateMerge(com.eignex.kumulant.stat.quantile.SparseHistogramResult){}[0]
-}
-
-final class com.eignex.kumulant.stat.quantile/LinearHistogramStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/SparseHistogramResult> { // com.eignex.kumulant.stat.quantile/LinearHistogramStat|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Int, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.quantile/LinearHistogramStat.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Int;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val binCount // com.eignex.kumulant.stat.quantile/LinearHistogramStat.binCount|{}binCount[0]
-        final fun <get-binCount>(): kotlin/Int // com.eignex.kumulant.stat.quantile/LinearHistogramStat.binCount.<get-binCount>|<get-binCount>(){}[0]
-    final val concurrency // com.eignex.kumulant.stat.quantile/LinearHistogramStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.quantile/LinearHistogramStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val lowerBound // com.eignex.kumulant.stat.quantile/LinearHistogramStat.lowerBound|{}lowerBound[0]
-        final fun <get-lowerBound>(): kotlin/Double // com.eignex.kumulant.stat.quantile/LinearHistogramStat.lowerBound.<get-lowerBound>|<get-lowerBound>(){}[0]
-    final val upperBound // com.eignex.kumulant.stat.quantile/LinearHistogramStat.upperBound|{}upperBound[0]
-        final fun <get-upperBound>(): kotlin/Double // com.eignex.kumulant.stat.quantile/LinearHistogramStat.upperBound.<get-upperBound>|<get-upperBound>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.quantile/LinearHistogramStat // com.eignex.kumulant.stat.quantile/LinearHistogramStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.quantile/SparseHistogramResult, kotlin/Long) // com.eignex.kumulant.stat.quantile/LinearHistogramStat.merge|merge(com.eignex.kumulant.stat.quantile.SparseHistogramResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.quantile/SparseHistogramResult // com.eignex.kumulant.stat.quantile/LinearHistogramStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.quantile/LinearHistogramStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/LinearHistogramStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
 }
 
 final class com.eignex.kumulant.stat.quantile/QuantileResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.quantile/QuantileResult|null[0]
@@ -5622,53 +5590,6 @@ final class com.eignex.kumulant.stat.quantile/TDigestStat : com.eignex.kumulant.
     final fun reset() // com.eignex.kumulant.stat.quantile/TDigestStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/TDigestStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
     final fun validateMerge(com.eignex.kumulant.stat.quantile/TDigestResult) // com.eignex.kumulant.stat.quantile/TDigestStat.validateMerge|validateMerge(com.eignex.kumulant.stat.quantile.TDigestResult){}[0]
-}
-
-final class com.eignex.kumulant.stat.quantile/ThresholdBucketResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.quantile/ThresholdBucketResult|null[0]
-    constructor <init>(kotlin.collections/List<kotlin/Double>, kotlin.collections/List<kotlin/Double>) // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.<init>|<init>(kotlin.collections.List<kotlin.Double>;kotlin.collections.List<kotlin.Double>){}[0]
-
-    final val counts // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.counts|{}counts[0]
-        final fun <get-counts>(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.counts.<get-counts>|<get-counts>(){}[0]
-    final val thresholds // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.thresholds|{}thresholds[0]
-        final fun <get-thresholds>(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.thresholds.<get-thresholds>|<get-thresholds>(){}[0]
-
-    final fun component1(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.component1|component1(){}[0]
-    final fun component2(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.component2|component2(){}[0]
-    final fun copy(kotlin.collections/List<kotlin/Double> = ..., kotlin.collections/List<kotlin/Double> = ...): com.eignex.kumulant.stat.quantile/ThresholdBucketResult // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.copy|copy(kotlin.collections.List<kotlin.Double>;kotlin.collections.List<kotlin.Double>){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.quantile/ThresholdBucketResult> { // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.quantile/ThresholdBucketResult // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.quantile/ThresholdBucketResult) // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.quantile.ThresholdBucketResult){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.quantile/ThresholdBucketResult> // com.eignex.kumulant.stat.quantile/ThresholdBucketResult.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.stat.quantile/ThresholdBucketStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.quantile/ThresholdBucketResult> { // com.eignex.kumulant.stat.quantile/ThresholdBucketStat|null[0]
-    constructor <init>(kotlin/DoubleArray, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.<init>|<init>(kotlin.DoubleArray;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val concurrency // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val thresholds // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.thresholds|{}thresholds[0]
-        final fun <get-thresholds>(): kotlin/DoubleArray // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.thresholds.<get-thresholds>|<get-thresholds>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.quantile/ThresholdBucketStat // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.quantile/ThresholdBucketResult, kotlin/Long) // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.merge|merge(com.eignex.kumulant.stat.quantile.ThresholdBucketResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.quantile/ThresholdBucketResult // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-    final fun validateMerge(com.eignex.kumulant.stat.quantile/ThresholdBucketResult) // com.eignex.kumulant.stat.quantile/ThresholdBucketStat.validateMerge|validateMerge(com.eignex.kumulant.stat.quantile.ThresholdBucketResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.rate/CounterRateStat : com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.rate/RateResult> { // com.eignex.kumulant.stat.rate/CounterRateStat|null[0]
@@ -8978,6 +8899,7 @@ final fun com.eignex.kumulant.schema.expr/vectorOf(kotlin.collections/List<com.e
 final fun com.eignex.kumulant.schema.expr/vectorOf(kotlin/Array<out com.eignex.kumulant.schema.expr/ScalarExpr>...): com.eignex.kumulant.schema.expr/VectorExpr // com.eignex.kumulant.schema.expr/vectorOf|vectorOf(kotlin.Array<out|com.eignex.kumulant.schema.expr.ScalarExpr>...){}[0]
 final fun com.eignex.kumulant.stat.decay/alpha(kotlin/Double): com.eignex.kumulant.stat.decay/DecayWeighting.Alpha // com.eignex.kumulant.stat.decay/alpha|alpha(kotlin.Double){}[0]
 final fun com.eignex.kumulant.stat.decay/halfLife(kotlin.time/Duration): com.eignex.kumulant.stat.decay/DecayWeighting.HalfLife // com.eignex.kumulant.stat.decay/halfLife|halfLife(kotlin.time.Duration){}[0]
+final fun com.eignex.kumulant.stat.quantile/linearEdges(kotlin/Double, kotlin/Double, kotlin/Int): kotlin/DoubleArray // com.eignex.kumulant.stat.quantile/linearEdges|linearEdges(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
 final fun com.eignex.kumulant.stat.regression.glm/ConstantRate(kotlin/Double = ...): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.stat.regression.glm/ConstantRate|ConstantRate(kotlin.Double){}[0]
 final fun com.eignex.kumulant.stat.regression.glm/ExponentialDecay(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.stat.regression.glm/ExponentialDecay|ExponentialDecay(kotlin.Double;kotlin.Double){}[0]
 final fun com.eignex.kumulant.stat.regression.glm/StepDecay(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.stat.regression.glm/StepDecay|StepDecay(kotlin.Double;kotlin.Double){}[0]

@@ -71,7 +71,7 @@ class BucketHistogramStat(
         return lo
     }
 
-    override fun merge(values: SparseHistogramResult) {
+    override fun merge(values: SparseHistogramResult, timestampNanos: Long) {
         for (i in values.weights.indices) {
             val w = values.weights[i]
             if (w.isInertWeight()) continue
