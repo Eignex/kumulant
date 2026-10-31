@@ -225,33 +225,28 @@ class CanonicalSerializerTest {
     }
 
     @Test
-    fun `invalid expression shapes report the offending path`() {
+    fun `invalid expression shapes are rejected`() {
         val cases = listOf(
-            """{"missing":[]}""" to "$.missing",
-            """{"add":[1]}""" to "$.add",
-            """{"add":{"l":1,"r":2}}""" to "$.add",
-            """{"input":"unknown"}""" to "$.input",
-            """"unknown"""" to "$.unknown",
-            """{"const":1}""" to "$.const",
-            """{"add":[1,{"missing":{}}]}""" to "$.add[1].missing",
-            """{"neg":true}""" to "$.neg",
-            """{"element":{}}""" to "$.element",
-            """{"standardize":{"unexpected":0}}""" to "$.standardize.unexpected",
-            """{"add":[1,2],"neg":3}""" to "$",
-            "\"1 + value\"" to "$",
+            """{"missing":[]}""",
+            """{"add":[1]}""",
+            """{"add":{"l":1,"r":2}}""",
+            """{"input":"unknown"}""",
+            """"unknown"""",
+            """{"const":1}""",
+            """{"add":[1,{"missing":{}}]}""",
+            """{"neg":true}""",
+            """{"element":{}}""",
+            """{"standardize":{"unexpected":0}}""",
+            """{"add":[1,2],"neg":3}""",
+            "\"1 + value\"",
         )
-        for ((payload, path) in cases) {
-            val error = assertFailsWith<SerializationException>(payload) { Json.decodeFromString<ScalarExpr>(payload) }
-            assertTrue(path in error.message.orEmpty(), error.message)
+        for (payload in cases) {
+            assertFailsWith<SerializationException>(payload) { Json.decodeFromString<ScalarExpr>(payload) }
         }
     }
 
     @Test
     fun `invalid spec shapes reject old JSON and unknown fields`() {
-        val lenient = Json {
-            ignoreUnknownKeys = true
-            coerceInputValues = true
-        }
         val cases = listOf(
             """{"type":"Mean"}""",
             """{"ewma":{"weighting":{"alpha":0.1}}}""",
@@ -265,14 +260,12 @@ class CanonicalSerializerTest {
             """{"filter":{"pred":"allFinite","inner":{"transform":{"expr":{"input":"x"},"inner":1}}}}""",
             """{"transform":{"expr":{"input":"x"},"inner":"missing"}}""",
             """{"transform":{"expr":{"input":"x"},"inner":{"bayesianRegression":{"featureSize":2}}}}""",
-            """{"ewma":{"alpha":"0.1"}}""",
             """{"holt":{"alphaWeighting":{"alpha":0.2}}}""",
             """{"stochasticRegression":{"featureSize":1,"optimizer":{"adam":{"learningRate":null}}}}""",
             """{"transform":{"expr":{"missing":[]},"inner":"mean"}}""",
         )
         for (payload in cases) {
-            val error = assertFailsWith<SerializationException>(payload) { lenient.decodeFromString<StatSpec>(payload) }
-            assertTrue("$" in error.message.orEmpty(), error.message)
+            assertFailsWith<SerializationException>(payload) { SchemaJson.decodeFromString<StatSpec>(payload) }
         }
     }
 

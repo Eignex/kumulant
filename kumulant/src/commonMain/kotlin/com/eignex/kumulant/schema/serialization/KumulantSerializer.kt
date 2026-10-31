@@ -10,19 +10,19 @@ import kotlin.reflect.KClass
 internal abstract class KumulantSerializer<T : Any>(base: KClass<T>, nodes: () -> List<JsonNode>) :
     CompactSerializer<T>(base.qualifiedName!!, base, KumulantJson.catalog, nodes)
 
-internal fun resolveKumulantNode(candidates: List<JsonNode>, payload: JsonElement, path: String): JsonNode {
+internal fun resolveKumulantNode(candidates: List<JsonNode>, payload: JsonElement): JsonNode {
     val source = candidates.filter { it.mapping is InputMapping }
     if (source.isNotEmpty()) {
         return source.singleOrNull { (it.mapping as InputMapping).token == payload }
-            ?: invalid(path, "unknown input or feedback source")
+            ?: invalid("unknown input or feedback source $payload")
     }
-    val innerPath = "$path.inner"
-    val inner = payload.objectAt(path)["inner"] ?: invalid(innerPath, "missing inner spec")
-    val innerNode = StatSpecSerializer.selectNode(inner, innerPath)
+    val operator = candidates.first().name
+    val inner = payload.asObject()["inner"] ?: invalid("'$operator' is missing its inner spec")
+    val innerNode = StatSpecSerializer.selectNode(inner)
     return candidates.singleOrNull { statModalities[it.type] == statModalities[innerNode.type] }
-        ?: invalid(innerPath, "operator '${candidates.first().name}' does not support this input modality")
+        ?: invalid("'$operator' does not support the input modality of '${innerNode.name}'")
 }
 
-internal fun JsonElement.objectAt(path: String): JsonObject = this as? JsonObject ?: invalid(path, "expected an object")
+internal fun JsonElement.asObject(): JsonObject = this as? JsonObject ?: invalid("expected an object, got $this")
 
-internal fun invalid(path: String, message: String): Nothing = throw SerializationException("$path: $message")
+internal fun invalid(message: String): Nothing = throw SerializationException(message)
