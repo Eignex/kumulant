@@ -33,9 +33,16 @@ internal value class DoubleAdder(val ref: JDoubleAdder) : StreamDouble {
     override fun load(): Double = ref.sum()
 
     // Resetting stripes can discard racing adds; a relative add preserves their contributions.
-    // Concurrent stores and the intermediate sum remain best-effort.
+    // Concurrent stores and the intermediate sum remain best-effort. A non-finite current sum or
+    // target has no finite delta to add, so that case resets the stripes and accepts the race.
     override fun store(value: Double) {
-        ref.add(value - ref.sum())
+        val delta = value - ref.sum()
+        if (delta.isFinite()) {
+            ref.add(delta)
+        } else {
+            ref.reset()
+            ref.add(value)
+        }
     }
 
     override fun add(delta: Double) {

@@ -1,6 +1,7 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.schema.spec.ResampleAggregator
 import com.eignex.kumulant.stat.summary.SumStat
 import kotlin.test.Test
@@ -140,6 +141,25 @@ class ResampleTest {
         stat.update(value = 4.0, timestampNanos = 2_500_000_000L)
         stat.update(value = 5.0, timestampNanos = 3_000_000_000L)
         assertEquals(5.0, stat.read().sum, DELTA)
+    }
+
+    @Test
+    fun `min and max aggregators forward the bucket extremes at every concurrency`() {
+        for (concurrency in Concurrency.entries) {
+            val min = SumStat(
+                concurrency,
+            ).resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Min)
+            val max = SumStat(
+                concurrency,
+            ).resampleByTime(bucket = 100.milliseconds, aggregator = ResampleAggregator.Max)
+            for (stat in listOf(min, max)) {
+                stat.update(value = 5.0, timestampNanos = 10_000_000L)
+                stat.update(value = 3.0, timestampNanos = 20_000_000L)
+                stat.update(value = 7.0, timestampNanos = 150_000_000L)
+            }
+            assertEquals(3.0, min.read().sum, DELTA, "$concurrency")
+            assertEquals(5.0, max.read().sum, DELTA, "$concurrency")
+        }
     }
 }
 

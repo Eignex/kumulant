@@ -7,8 +7,8 @@ import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.schema.spec.ResampleAggregator
-import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.guarded
+import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
 import kotlin.math.max
 import kotlin.math.min
@@ -38,7 +38,9 @@ internal class ResampleByTimeStat<R : Result>(
         require(bucketNanos > 0L) { "resampleByTime requires a positive bucket duration" }
     }
 
-    private val streamMode = delegate.concurrency.additiveMode()
+    // Every cell is touched only under the lock and most are not additive, so striped adders would
+    // only turn the min/max stores into relative adds that go NaN at an infinite seed.
+    private val streamMode = delegate.concurrency.monotonicMode()
     private val lock = delegate.concurrency.serializedLock()
     private val currentBucket = streamMode.newLong(NO_BUCKET)
     private val count = streamMode.newLong(0L)

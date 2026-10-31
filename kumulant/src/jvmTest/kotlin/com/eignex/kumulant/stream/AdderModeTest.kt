@@ -91,4 +91,18 @@ class AdderModeTest {
         val result = hll.read()
         assert(result.estimate > 0.0) { "expected non-zero estimate, got ${result.estimate}" }
     }
+
+    @Test
+    fun `DoubleAdder store recovers from an infinite sum`() {
+        val d = AdderMode.newDouble(Double.POSITIVE_INFINITY)
+        d.store(0.0)
+        assertEquals(0.0, d.load())
+    }
+
+    @Test
+    fun `DoubleAdder store assigns an infinite value`() {
+        val d = AdderMode.newDouble(Double.NEGATIVE_INFINITY)
+        d.store(Double.POSITIVE_INFINITY)
+        assertEquals(Double.POSITIVE_INFINITY, d.load())
+    }
 }
