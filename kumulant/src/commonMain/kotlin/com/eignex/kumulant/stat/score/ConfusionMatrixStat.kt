@@ -32,7 +32,7 @@ data class ConfusionMatrixResult(
 ) : Result {
 
     init {
-        requireAtLeastTwoClasses(numClasses)
+        requireConfusionMatrixClasses(numClasses)
         require(counts.size == numClasses * numClasses) {
             "counts must be numClasses^2 = ${numClasses * numClasses}; got ${counts.size}"
         }
@@ -164,7 +164,7 @@ class ConfusionMatrixStat(
 ) : PairedStat<ConfusionMatrixResult> {
 
     init {
-        requireAtLeastTwoClasses(numClasses)
+        requireConfusionMatrixClasses(numClasses)
     }
 
     private val mode = concurrency.additiveMode()
@@ -201,4 +201,14 @@ class ConfusionMatrixStat(
     }
 
     override fun create(concurrency: Concurrency?) = ConfusionMatrixStat(numClasses, concurrency ?: this.concurrency)
+}
+
+// The square matrix is indexed with Int arithmetic, so numClasses^2 must not overflow it.
+private const val MAX_CONFUSION_MATRIX_CLASSES = 46_340
+
+private fun requireConfusionMatrixClasses(numClasses: Int) {
+    requireAtLeastTwoClasses(numClasses)
+    require(numClasses <= MAX_CONFUSION_MATRIX_CLASSES) {
+        "numClasses must be <= $MAX_CONFUSION_MATRIX_CLASSES; got $numClasses"
+    }
 }
