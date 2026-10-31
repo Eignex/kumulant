@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.event
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.monotonicMode
 import kotlinx.serialization.SerialName
@@ -59,7 +59,9 @@ class RunLengthStat(override val concurrency: Concurrency = Concurrency.None) : 
     private val anyFalsy = mode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: an extremum or event trace has no inverse, so a
+        // downdate would run forwards as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         // This stat's input is a predicate projected onto 0.0 / 1.0 rather than a measurement, so a
         // NaN reads as "not satisfied" and breaks the run. That is propagation, not filtering: a run
         // length stays a well-defined integer whatever arrives, so there is no NaN to carry forward.

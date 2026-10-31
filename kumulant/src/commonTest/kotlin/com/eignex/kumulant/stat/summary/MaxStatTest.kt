@@ -44,4 +44,12 @@ class MaxStatTest {
         m.update(Double.POSITIVE_INFINITY)
         assertTrue(m.read().max.isInfinite() && m.read().max > 0.0)
     }
+
+    @Test
+    fun `MaxStat ignores a retraction`() {
+        val m = MaxStat()
+        m.update(1.0)
+        m.update(999.0, weight = -1.0)
+        assertEquals(1.0, m.read().max, DELTA)
+    }
 }

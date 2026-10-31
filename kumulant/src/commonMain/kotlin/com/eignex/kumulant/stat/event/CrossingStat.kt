@@ -3,7 +3,7 @@ package com.eignex.kumulant.stat.event
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.monotonicMode
@@ -63,7 +63,9 @@ class CrossingStat(
     private val downs = additive.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: an extremum or event trace has no inverse, so a
+        // downdate would run forwards as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         val side = if (value >= level) 1L else 0L
         if (initialized.addAndGet(1L) == 1L) {
             lastSide.store(side)

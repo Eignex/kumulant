@@ -4,7 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.monotonicMode
 import kotlin.time.Duration
 
@@ -31,7 +31,9 @@ internal class HysteresisSeriesStat<R : Result>(
     private val state = mode.newLong(STATE_UNSET)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: the latched state has no inverse, so a downdate
+        // would move it as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         val current = state.load()
         val next = when {
             value > high -> STATE_HIGH

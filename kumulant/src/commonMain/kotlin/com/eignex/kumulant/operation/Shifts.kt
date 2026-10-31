@@ -4,7 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.Stat
-import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.monotonicMode
@@ -86,7 +86,9 @@ internal class DerivativeSeriesStat<R : Result>(private val delegate: SeriesStat
     private val lastTimestamp = tsMode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
+        // Non-positive rather than merely inert: the reference point has no inverse, so a downdate
+        // would replace it and forward a rate as an ordinary observation. See Stat.
+        if (weight.isNotPositiveWeight()) return
         val seen = initialized.addAndGet(1L)
         val prevValue = lastValue.load()
         val prevTs = lastTimestamp.load()

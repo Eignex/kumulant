@@ -61,4 +61,12 @@ class RecencyStatTest {
         assertEquals(1_000L, r.lastObservedTimestampNanos)
         assertTrue(r.hasObservation)
     }
+
+    @Test
+    fun `a retraction does not move the last observation`() {
+        val s = RecencyStat()
+        s.update(1.0, timestampNanos = 100L)
+        s.update(1.0, timestampNanos = 500L, weight = -1.0)
+        assertEquals(400L, s.read(timestampNanos = 500L).elapsedNanos)
+    }
 }
