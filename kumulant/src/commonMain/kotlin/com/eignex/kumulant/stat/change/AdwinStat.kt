@@ -55,7 +55,7 @@ data class AdwinResult(
  * nor a fixed window is known up front (CUSUM and Page-Hinkley sit alongside).
  *
  * **Memory:** O(log n) buckets in the steady state; each bucket holds a
- * `count / sum / sumSquares` triplet.
+ * `count / mean / m2` triplet.
  *
  * **Update:** O(log n) amortised; the inner change-test loop scans the bucket
  * adjacencies.
@@ -77,7 +77,10 @@ class AdwinStat(
         require(maxBucketsPerSize >= 1) { "maxBucketsPerSize must be >= 1, got $maxBucketsPerSize" }
     }
 
-    private class Bucket(var n: Long, var sum: Double, var sumSquares: Double)
+    // Mean and centred second moment rather than raw power sums: `sumSquares / n - mean^2` cancels
+    // catastrophically once |mean| >> sigma, the collapsed variance shrinks eps_cut to its bare
+    // 2/(3m) term, and a stationary stream with a large offset raises a stream of false alarms.
+    private class Bucket(val n: Long, val mean: Double, val m2: Double)
 
     private val lock = concurrency.serializedLock()
 
@@ -85,8 +88,8 @@ class AdwinStat(
     // Across rows, the highest-k row holds the oldest buckets; row 0 holds the newest.
     private val rows: MutableList<ArrayDeque<Bucket>> = mutableListOf(ArrayDeque())
     private var totalN: Long = 0L
-    private var totalSum: Double = 0.0
-    private var totalSumSquares: Double = 0.0
+    private var totalMean: Double = 0.0
+    private var totalM2: Double = 0.0
     private var changesDetected: Long = 0L
     private var lastUpdateRaisedAlarm: Boolean = false
 
@@ -96,10 +99,11 @@ class AdwinStat(
         // downdate forwards, as an ordinary observation. See Stat.
         if (weight.isNotPositiveWeight()) return
         lock.guarded {
-            rows[0].addLast(Bucket(n = 1L, sum = value, sumSquares = value * value))
+            rows[0].addLast(Bucket(n = 1L, mean = value, m2 = 0.0))
             totalN += 1L
-            totalSum += value
-            totalSumSquares += value * value
+            val diff = value - totalMean
+            totalMean += diff / totalN.toDouble()
+            totalM2 += diff * (value - totalMean)
             compress()
             // Repeat the cut test until no significant change is found - matches Bifet's outer loop.
             var anyShrink = false
@@ -115,7 +119,7 @@ class AdwinStat(
             val row = rows[k]
             val b1 = row.removeFirst()
             val b2 = row.removeFirst()
-            val merged = Bucket(n = b1.n + b2.n, sum = b1.sum + b2.sum, sumSquares = b1.sumSquares + b2.sumSquares)
+            val merged = combine(b1, b2)
             if (k + 1 >= rows.size) rows.add(ArrayDeque())
             // addLast, not addFirst: `merged` came from the two OLDEST buckets of row k, and row
             // k + 1 holds buckets older still, so within that row the merged one is the newest and
@@ -124,6 +128,17 @@ class AdwinStat(
             rows[k + 1].addLast(merged)
             k++
         }
+    }
+
+    private fun combine(a: Bucket, b: Bucket): Bucket {
+        val n = a.n + b.n
+        val gap = b.mean - a.mean
+        val bShare = b.n.toDouble() / n.toDouble()
+        return Bucket(
+            n = n,
+            mean = a.mean + gap * bShare,
+            m2 = a.m2 + b.m2 + gap * gap * a.n.toDouble() * bShare,
+        )
     }
 
     // Scratch buffer for the oldest-to-newest bucket walk, reused across updates. The walk runs at
@@ -145,22 +160,21 @@ class AdwinStat(
         val ordered = bucketsOldestToNewest()
         if (ordered.size < 2 || totalN <= 1L) return false
         val deltaPrime = delta / ln(max(2.0, totalN.toDouble()))
-        val n = totalN.toDouble()
-        val mean = totalSum / n
-        val variance = max(0.0, totalSumSquares / n - mean * mean)
+        val variance = max(0.0, totalM2 / totalN.toDouble())
         // Loop-invariant: depends only on deltaPrime, so hoisting it keeps a wide window from
         // paying one `ln` per candidate cut.
         val logTerm = ln(2.0 / deltaPrime)
         var n0 = 0L
-        var sum0 = 0.0
+        var mean0 = 0.0
         for (i in 0 until ordered.size - 1) {
             val b = ordered[i]
             n0 += b.n
-            sum0 += b.sum
+            mean0 += (b.mean - mean0) * b.n.toDouble() / n0.toDouble()
             val n1 = totalN - n0
             if (n0 == 0L || n1 == 0L) continue
-            val mean0 = sum0 / n0.toDouble()
-            val mean1 = (totalSum - sum0) / n1.toDouble()
+            // Suffix mean from the identity n * mean = n0 * mean0 + n1 * mean1, arranged to avoid
+            // differencing two large sums.
+            val mean1 = totalMean + (totalMean - mean0) * n0.toDouble() / n1.toDouble()
             val m = 1.0 / (1.0 / n0.toDouble() + 1.0 / n1.toDouble())
             val epsCut = sqrt(2.0 / m * variance * logTerm) + (2.0 / (3.0 * m)) * logTerm
             if (abs(mean0 - mean1) > epsCut) {
@@ -176,15 +190,33 @@ class AdwinStat(
         for (k in rows.indices.reversed()) {
             val row = rows[k]
             while (remaining > 0 && row.isNotEmpty()) {
-                val b = row.removeFirst()
-                totalN -= b.n
-                totalSum -= b.sum
-                totalSumSquares -= b.sumSquares
+                row.removeFirst()
                 remaining -= 1
             }
             if (remaining == 0) break
         }
         while (rows.size > 1 && rows.last().isEmpty()) rows.removeAt(rows.size - 1)
+        // Refold the surviving buckets instead of subtracting the dropped ones: there are only
+        // O(log n) of them, and a reverse Chan combine reintroduces the cancellation buckets avoid.
+        totalN = 0L
+        totalMean = 0.0
+        totalM2 = 0.0
+        for (k in rows.indices) {
+            val row = rows[k]
+            for (i in 0 until row.size) {
+                val b = row[i]
+                if (totalN == 0L) {
+                    totalN = b.n
+                    totalMean = b.mean
+                    totalM2 = b.m2
+                } else {
+                    val folded = combine(Bucket(totalN, totalMean, totalM2), b)
+                    totalN = folded.n
+                    totalMean = folded.mean
+                    totalM2 = folded.m2
+                }
+            }
+        }
     }
 
     override fun merge(values: AdwinResult) = lock.guarded {
@@ -196,16 +228,16 @@ class AdwinStat(
         rows.clear()
         rows.add(ArrayDeque())
         totalN = 0L
-        totalSum = 0.0
-        totalSumSquares = 0.0
+        totalMean = 0.0
+        totalM2 = 0.0
         changesDetected = 0L
         lastUpdateRaisedAlarm = false
     }
 
     override fun read(timestampNanos: Long) = lock.guarded {
         val n = totalN
-        val mean = if (n > 0L) totalSum / n.toDouble() else 0.0
-        val variance = if (n > 0L) max(0.0, totalSumSquares / n.toDouble() - mean * mean) else 0.0
+        val mean = if (n > 0L) totalMean else 0.0
+        val variance = if (n > 0L) max(0.0, totalM2 / n.toDouble()) else 0.0
         AdwinResult(
             delta = delta,
             windowLength = n,
