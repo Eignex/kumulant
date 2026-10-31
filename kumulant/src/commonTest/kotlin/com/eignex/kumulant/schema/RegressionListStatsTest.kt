@@ -7,7 +7,6 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.feat
 import com.eignex.kumulant.operation.foldRegression
-import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.ops.*
 import com.eignex.kumulant.schema.optimizer.*

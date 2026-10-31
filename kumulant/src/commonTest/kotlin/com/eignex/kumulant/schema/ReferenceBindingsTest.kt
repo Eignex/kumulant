@@ -119,11 +119,11 @@ class ReferenceBindingsTest {
     }
 
     @Test
-    fun `integral encoding preserves negative zero`() {
+    fun `negative zero keeps its sign on the wire`() {
         val expr: ScalarExpr = Const(-0.0)
         val encoded = Json.encodeToString(expr)
 
-        assertEquals("-0", encoded)
+        assertEquals("-0.0", encoded)
         assertEquals((-0.0).toBits(), Json.decodeFromString<ScalarExpr>(encoded).eval(0.0).toBits())
     }
 

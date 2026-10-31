@@ -1,5 +1,3 @@
-@file:OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
-
 package com.eignex.kumulant.schema.serialization
 
 import com.eignex.skema.serialization.JsonPayloadMapping
@@ -19,15 +17,11 @@ internal class InputMapping(name: String) : JsonPayloadMapping {
 }
 
 internal object NumberMapping : JsonPayloadMapping {
+    // Whole numbers print without a trailing ".0".
     override fun encode(body: JsonObject): JsonElement {
         val literal = body.getValue("v").jsonPrimitive
-        val value = literal.double
-        if (!value.isFinite() || value % 1.0 != 0.0) return literal
-        if (value.toBits() == (-0.0).toBits()) return JsonUnquotedLiteral("-0")
-        if (value >= Long.MIN_VALUE.toDouble() && value < Long.MAX_VALUE.toDouble()) {
-            return JsonPrimitive(value.toLong())
-        }
-        return JsonUnquotedLiteral(value.toString().replace(".0E", "E").removeSuffix(".0"))
+        val whole = literal.double.toLong()
+        return if (whole.toDouble().toBits() == literal.double.toBits()) JsonPrimitive(whole) else literal
     }
 
     override fun decode(payload: JsonElement): JsonObject = JsonObject(mapOf("v" to payload))

@@ -8,7 +8,6 @@ import com.eignex.kumulant.bandit.contextual.ContextualBanditSpec
 import com.eignex.kumulant.bandit.contextual.RegressionContextualSpec
 import com.eignex.kumulant.bandit.contextual.TrackedContextualSpec
 import com.eignex.kumulant.bandit.univariate.*
-import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.ops.*
 import com.eignex.kumulant.schema.optimizer.*
@@ -33,7 +32,7 @@ import kotlin.test.assertTrue
 class CanonicalSerializerTest {
     @Test
     fun `ewma uses the canonical shape through standard JSON entry points`() {
-        val spec: StatSpec = EwmaMean(Alpha(0.1))
+        val spec: StatSpec = EwmaMean(0.1)
 
         assertEquals("""{"ewma":{"alpha":0.1}}""", Json.encodeToString(spec))
         assertEquals(spec, Json.decodeFromString<StatSpec>("""{"ewma":{"alpha":0.1}}"""))
@@ -41,7 +40,7 @@ class CanonicalSerializerTest {
 
     @Test
     fun `transformed ewma uses structured arithmetic through schema JSON`() {
-        val spec: StatSpec = EwmaMean(Alpha(0.1)).transform(X + 1.0)
+        val spec: StatSpec = EwmaMean(0.1).transform(X + 1.0)
         val expected = """{"transform":{"expr":{"add":[{"input":"x"},1]},"inner":{"ewma":{"alpha":0.1}}}}"""
 
         val encoded = SchemaJson.encodeToString(spec)
@@ -145,7 +144,7 @@ class CanonicalSerializerTest {
 
     @Test
     fun `typed modality roots use the same codec as StatSpec`() {
-        val spec: SeriesStatSpec<WeightedMeanResult> = EwmaMean(Alpha(0.1))
+        val spec: SeriesStatSpec<WeightedMeanResult> = EwmaMean(0.1)
 
         assertEquals("""{"ewma":{"alpha":0.1}}""", Json.encodeToString(spec))
         assertEquals(spec, Json.decodeFromString<SeriesStatSpec<WeightedMeanResult>>(Json.encodeToString(spec)))
@@ -153,13 +152,7 @@ class CanonicalSerializerTest {
 
     @Test
     fun `decay and optimizer configurations use stable operator keys`() {
-        val decay = listOf<DecayWeightingSpec>(Alpha(0.2), HalfLife(1000))
         val optimizers = listOf<OptimizerSpec>(Sgd(X + 1.0), Adagrad(), Rmsprop(), Adam())
-        for (spec in decay) {
-            val encoded = Json.encodeToString(spec)
-            assertEquals(spec, Json.decodeFromString<DecayWeightingSpec>(encoded))
-            assertFalse("type" in encoded)
-        }
         for (spec in optimizers) {
             val encoded = Json.encodeToString(spec)
             assertEquals(spec, Json.decodeFromString<OptimizerSpec>(encoded))
@@ -167,9 +160,9 @@ class CanonicalSerializerTest {
         }
         assertEquals(
             """{"decayingMean":{"halfLifeMillis":1000}}""",
-            Json.encodeToString<StatSpec>(DecayingMean(HalfLife(1000))),
+            Json.encodeToString<StatSpec>(DecayingMean(1000)),
         )
-        assertEquals("""{"holt":{"alpha":0.2}}""", Json.encodeToString<StatSpec>(Holt(Alpha(0.2))))
+        assertEquals("""{"holt":{"alpha":0.2}}""", Json.encodeToString<StatSpec>(Holt(0.2)))
     }
 
     @Test
@@ -198,7 +191,7 @@ class CanonicalSerializerTest {
     @Test
     fun `JSON settings control default fields without changing operator shapes`() {
         val defaults = Json { encodeDefaults = true }
-        val spec: StatSpec = Holt(Alpha(0.2))
+        val spec: StatSpec = Holt(0.2)
 
         assertEquals("""{"holt":{"alpha":0.2}}""", Json.encodeToString(spec))
         assertEquals("""{"holt":{"alpha":0.2,"beta":0.2,"phi":1.0}}""", defaults.encodeToString(spec))
@@ -272,7 +265,7 @@ class CanonicalSerializerTest {
     @Test
     fun `formats round trip composed specs across modalities`() {
         val specs: List<StatSpec> = listOf(
-            EwmaMean(Alpha(0.1)).transform(X + 1.0).filter(X gt 0.0),
+            EwmaMean(0.1).transform(X + 1.0).filter(X gt 0.0),
             UnivariateRegression().filter(X gt 0.0),
             Mean.vectorized(2).transformVector(vectorOf(V(1), V(0))),
             HyperLogLog().filter(X.isFinite()),
@@ -363,7 +356,7 @@ class CanonicalSerializerTest {
         assertTrue("Add" in text)
         assertTrue("Const" in text)
         assertEquals(expr, ProtoBuf.decodeFromByteArray<ScalarExpr>(encoded))
-        val spec: StatSpec = EwmaMean(Alpha(0.1)).transform(expr)
+        val spec: StatSpec = EwmaMean(0.1).transform(expr)
         assertEquals(spec, ProtoBuf.decodeFromByteArray<StatSpec>(ProtoBuf.encodeToByteArray(spec)))
     }
 }

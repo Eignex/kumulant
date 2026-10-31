@@ -67,6 +67,7 @@ import com.eignex.kumulant.stat.cardinality.LinearCountingStat
 import com.eignex.kumulant.stat.change.AdwinStat
 import com.eignex.kumulant.stat.change.CusumStat
 import com.eignex.kumulant.stat.change.PageHinkleyStat
+import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceStat
@@ -271,22 +272,22 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
 
     is DecayingSum ->
         StatPlan(path) { concurrency ->
-            DecayingSumStat(weighting.toDecayWeighting(), concurrency)
+            DecayingSumStat(DecayWeighting.HalfLife(halfLifeMillis.milliseconds), concurrency)
         }
 
     is DecayingMean ->
         StatPlan(path) { concurrency ->
-            DecayingMeanStat(weighting.toDecayWeighting(), concurrency)
+            DecayingMeanStat(DecayWeighting.HalfLife(halfLifeMillis.milliseconds), concurrency)
         }
 
     is DecayingVariance ->
         StatPlan(path) { concurrency ->
-            DecayingVarianceStat(weighting.toDecayWeighting(), concurrency)
+            DecayingVarianceStat(DecayWeighting.HalfLife(halfLifeMillis.milliseconds), concurrency)
         }
 
     is EwmaMean ->
         StatPlan(path) { concurrency ->
-            EwmaMeanStat(weighting.toDecayWeighting(), concurrency)
+            EwmaMeanStat(DecayWeighting.Alpha(alpha), concurrency)
         }
 
     is EwmaVariance ->
@@ -294,14 +295,14 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
             path,
             true,
         ) { concurrency ->
-            EwmaVarianceStat(weighting.toDecayWeighting(), concurrency)
+            EwmaVarianceStat(DecayWeighting.Alpha(alpha), concurrency)
         }
 
     is Holt -> {
         StatPlan(path) { concurrency ->
             HoltStat(
-                alphaWeighting = alphaWeighting.toDecayWeighting(),
-                betaWeighting = betaWeighting.toDecayWeighting(),
+                alphaWeighting = DecayWeighting.Alpha(alpha),
+                betaWeighting = DecayWeighting.Alpha(beta),
                 phi = phi,
                 concurrency = concurrency,
             )
@@ -311,9 +312,9 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     is SeasonalSmoothing -> {
         StatPlan(path) { concurrency ->
             SeasonalSmoothingStat(
-                alphaWeighting = alphaWeighting.toDecayWeighting(),
-                betaWeighting = betaWeighting.toDecayWeighting(),
-                gammaWeighting = gammaWeighting.toDecayWeighting(),
+                alphaWeighting = DecayWeighting.Alpha(alpha),
+                betaWeighting = DecayWeighting.Alpha(beta),
+                gammaWeighting = DecayWeighting.Alpha(gamma),
                 period = period,
                 mode = mode,
                 phi = phi,

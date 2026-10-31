@@ -31,7 +31,6 @@ operators; decorators retain an explicit `inner` tree. Defaults follow
 The catalog also holds the composed specs. The wrappers behind the
 operators in [com.eignex.kumulant.schema.ops] are spec variants too, so a
 filtered or windowed stat serializes as one tree, and
-[GroupStatSpec] nests a whole sub-schema as a single entry. Weighting
-strategies live in [com.eignex.kumulant.schema.decay] and optimizer
-strategies in [com.eignex.kumulant.schema.optimizer]; the specs here
+[GroupStatSpec] nests a whole sub-schema as a single entry. Optimizer
+strategies live in [com.eignex.kumulant.schema.optimizer]; the specs here
 reference those as configuration.

@@ -36,10 +36,8 @@ The rest of the layer is split into focused subpackages:
 - [com.eignex.kumulant.schema.expr] is the serializable expression AST
   those operators carry when a projection or predicate has to travel on
   the wire instead of as a live lambda.
-- [com.eignex.kumulant.schema.optimizer] and
-  [com.eignex.kumulant.schema.decay] are the optimizer and
-  decay-weighting strategy configurations that the regression and decay
-  specs reference.
+- [com.eignex.kumulant.schema.optimizer] holds the optimizer strategy
+  configurations that the regression specs reference.
 - [com.eignex.kumulant.schema.runtime] is the materialization and
   grouping layer: the `StatSchema` you subclass to declare a bag, the
   `StatGroup` it materializes into, and the materialize functions that

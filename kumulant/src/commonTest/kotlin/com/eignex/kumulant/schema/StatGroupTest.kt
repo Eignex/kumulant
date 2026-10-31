@@ -13,7 +13,6 @@ import com.eignex.kumulant.feat
 import com.eignex.kumulant.operation.VectorizedStat
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
-import com.eignex.kumulant.schema.decay.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.ops.*
 import com.eignex.kumulant.schema.optimizer.*
