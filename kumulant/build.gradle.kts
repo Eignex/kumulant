@@ -38,8 +38,8 @@ kotlin {
             api("com.eignex:koblas:0.1.1-20261028.123205-277") {
                 version { strictly("0.1.1-20261028.123205-277") }
             }
-            api("com.eignex:skema:0.3.1-20261030.230110-39") {
-                version { strictly("0.3.1-20261030.230110-39") }
+            api("com.eignex:skema:0.3.1-20261031.083244-40") {
+                version { strictly("0.3.1-20261031.083244-40") }
             }
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
@@ -79,10 +79,10 @@ dependencies {
                 "macosarm64" to "0.1.1-20261028.120512-299",
             ),
             "skema" to mapOf(
-                "jvm" to "0.3.1-20261030.230110-39",
-                "linuxx64" to "0.3.1-20261030.230110-39",
-                "linuxarm64" to "0.3.1-20261030.230110-39",
-                "macosarm64" to "0.3.1-20261030.230110-39",
+                "jvm" to "0.3.1-20261031.083244-40",
+                "linuxx64" to "0.3.1-20261031.083244-40",
+                "linuxarm64" to "0.3.1-20261031.083244-40",
+                "macosarm64" to "0.3.1-20261031.083244-40",
             ),
         )) {
             for ((module, pinned) in platforms) {
