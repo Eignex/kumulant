@@ -4834,16 +4834,19 @@ public final class com/eignex/kumulant/stat/calibration/IsotonicCalibratorResult
 
 public final class com/eignex/kumulant/stat/calibration/PlattCalibratorResult : com/eignex/kumulant/core/HasObservationCount {
 	public static final field Companion Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult$Companion;
-	public fun <init> (DDD)V
+	public fun <init> (DDDJ)V
+	public synthetic fun <init> (DDDJILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun calibrate (D)D
 	public final fun component1 ()D
 	public final fun component2 ()D
 	public final fun component3 ()D
-	public final fun copy (DDD)Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;DDDILjava/lang/Object;)Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;
+	public final fun component4 ()J
+	public final fun copy (DDDJ)Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;DDDJILjava/lang/Object;)Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getIntercept ()D
 	public final fun getSlope ()D
+	public final fun getStep ()J
 	public fun getTotalWeights ()D
 	public fun hashCode ()I
 	public fun isEmpty ()Z
@@ -5059,7 +5062,8 @@ public final class com/eignex/kumulant/stat/change/AdwinStat : com/eignex/kumula
 
 public final class com/eignex/kumulant/stat/change/CusumResult : com/eignex/kumulant/core/Result {
 	public static final field Companion Lcom/eignex/kumulant/stat/change/CusumResult$Companion;
-	public fun <init> (DDDDDZZ)V
+	public fun <init> (DDDDDZZZ)V
+	public synthetic fun <init> (DDDDDZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()D
 	public final fun component2 ()D
 	public final fun component3 ()D
@@ -5067,14 +5071,16 @@ public final class com/eignex/kumulant/stat/change/CusumResult : com/eignex/kumu
 	public final fun component5 ()D
 	public final fun component6 ()Z
 	public final fun component7 ()Z
-	public final fun copy (DDDDDZZ)Lcom/eignex/kumulant/stat/change/CusumResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/change/CusumResult;DDDDDZZILjava/lang/Object;)Lcom/eignex/kumulant/stat/change/CusumResult;
+	public final fun component8 ()Z
+	public final fun copy (DDDDDZZZ)Lcom/eignex/kumulant/stat/change/CusumResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/change/CusumResult;DDDDDZZZILjava/lang/Object;)Lcom/eignex/kumulant/stat/change/CusumResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAlarm ()Z
 	public final fun getAlarmDown ()Z
 	public final fun getAlarmUp ()Z
 	public final fun getCusumNegative ()D
 	public final fun getCusumPositive ()D
+	public final fun getHasObservation ()Z
 	public final fun getReferenceValue ()D
 	public final fun getTarget ()D
 	public final fun getThreshold ()D
@@ -5918,12 +5924,15 @@ public final class com/eignex/kumulant/stat/quantile/LinearHistogramStat : com/e
 
 public final class com/eignex/kumulant/stat/quantile/QuantileResult : com/eignex/kumulant/core/Result {
 	public static final field Companion Lcom/eignex/kumulant/stat/quantile/QuantileResult$Companion;
-	public fun <init> (DD)V
+	public fun <init> (DDZ)V
+	public synthetic fun <init> (DDZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()D
 	public final fun component2 ()D
-	public final fun copy (DD)Lcom/eignex/kumulant/stat/quantile/QuantileResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/quantile/QuantileResult;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/quantile/QuantileResult;
+	public final fun component3 ()Z
+	public final fun copy (DDZ)Lcom/eignex/kumulant/stat/quantile/QuantileResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/quantile/QuantileResult;DDZILjava/lang/Object;)Lcom/eignex/kumulant/stat/quantile/QuantileResult;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHasObservation ()Z
 	public final fun getProbability ()D
 	public final fun getQuantile ()D
 	public fun hashCode ()I
@@ -6324,6 +6333,7 @@ public final class com/eignex/kumulant/stat/regression/AdagradOptimizer : com/ei
 	public fun getFeatureSize ()I
 	public final fun getLearningRate ()Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public fun reset ()V
+	public fun resumeAt (J)V
 }
 
 public final class com/eignex/kumulant/stat/regression/AdamOptimizer : com/eignex/kumulant/stat/regression/Optimizer {
@@ -6337,6 +6347,7 @@ public final class com/eignex/kumulant/stat/regression/AdamOptimizer : com/eigne
 	public fun getFeatureSize ()I
 	public final fun getLearningRate ()Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public fun reset ()V
+	public fun resumeAt (J)V
 }
 
 public final class com/eignex/kumulant/stat/regression/CovarianceResult : com/eignex/kumulant/core/HasObservationCount {
@@ -6468,10 +6479,12 @@ public abstract interface class com/eignex/kumulant/stat/regression/Optimizer {
 	public abstract fun computeDelta (IDD)D
 	public abstract fun getFeatureSize ()I
 	public abstract fun reset ()V
+	public fun resumeAt (J)V
 }
 
 public final class com/eignex/kumulant/stat/regression/Optimizer$DefaultImpls {
 	public static fun advance (Lcom/eignex/kumulant/stat/regression/Optimizer;)V
+	public static fun resumeAt (Lcom/eignex/kumulant/stat/regression/Optimizer;J)V
 }
 
 public abstract interface class com/eignex/kumulant/stat/regression/RegressionPosterior {
@@ -6507,6 +6520,7 @@ public final class com/eignex/kumulant/stat/regression/RmspropOptimizer : com/ei
 	public final fun getLearningRate ()Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public final fun getRho ()D
 	public fun reset ()V
+	public fun resumeAt (J)V
 }
 
 public final class com/eignex/kumulant/stat/regression/SgdOptimizer : com/eignex/kumulant/stat/regression/Optimizer {
@@ -6518,6 +6532,7 @@ public final class com/eignex/kumulant/stat/regression/SgdOptimizer : com/eignex
 	public final fun getLearningRate ()Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public final fun getStep ()J
 	public fun reset ()V
+	public fun resumeAt (J)V
 }
 
 public final class com/eignex/kumulant/stat/regression/SoftmaxRegressionResult : com/eignex/kumulant/core/HasObservationCount {
@@ -7355,8 +7370,8 @@ public final class com/eignex/kumulant/stat/regression/tree/ClassificationTreeCo
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/DecisionTreeClassifierStat : com/eignex/kumulant/core/RegressionStat {
-	public fun <init> (IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;I)V
-	public synthetic fun <init> (IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function1;I)V
+	public synthetic fun <init> (IILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function1;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/RegressionStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/regression/tree/DecisionTreeClassifierStat;
@@ -7380,8 +7395,8 @@ public final class com/eignex/kumulant/stat/regression/tree/DecisionTreeClassifi
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/DecisionTreeRegressionStat : com/eignex/kumulant/core/RegressionStat {
-	public fun <init> (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;I)V
-	public synthetic fun <init> (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function1;I)V
+	public synthetic fun <init> (ILjava/util/List;Lcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function1;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/RegressionStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/regression/tree/DecisionTreeRegressionStat;
@@ -7576,8 +7591,8 @@ public final class com/eignex/kumulant/stat/regression/tree/MeanTreePosterior : 
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/RandomForestClassifierStat : com/eignex/kumulant/core/RegressionStat {
-	public fun <init> (IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZLcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;I)V
-	public synthetic fun <init> (IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZLcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZLcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function1;I)V
+	public synthetic fun <init> (IILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/ClassificationTreeConfig;ZLcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function1;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/RegressionStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/regression/tree/RandomForestClassifierStat;
@@ -7603,8 +7618,8 @@ public final class com/eignex/kumulant/stat/regression/tree/RandomForestClassifi
 }
 
 public final class com/eignex/kumulant/stat/regression/tree/RandomForestRegressionStat : com/eignex/kumulant/core/RegressionStat {
-	public fun <init> (ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZLcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;I)V
-	public synthetic fun <init> (ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZLcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZLcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function1;I)V
+	public synthetic fun <init> (ILjava/util/List;ILcom/eignex/kumulant/stat/regression/tree/RegressionTreeConfig;ZLcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function1;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/RegressionStat;
 	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
 	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/regression/tree/RandomForestRegressionStat;
