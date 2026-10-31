@@ -16,4 +16,23 @@ class ForestPredictionTest {
         )
         assertEquals(ForestPrediction(2.0, 1.0), forest.predictDistribution(feat(0.0)))
     }
+
+    @Test
+    fun `forest distribution skips trees whose routed leaf is empty`() {
+        val forest = ForestRegressionResult(
+            listOf(
+                TreeRegressionResult(TreeLeafResult(WeightedVarianceResult(1.0, 10.0, 0.0))),
+                TreeRegressionResult(TreeLeafResult(WeightedVarianceResult(0.0, 0.0, 0.0))),
+            ),
+        )
+        assertEquals(ForestPrediction(10.0, 0.0), forest.predictDistribution(feat(0.0)))
+    }
+
+    @Test
+    fun `forest distribution over only empty leaves is zero`() {
+        val forest = ForestRegressionResult(
+            listOf(TreeRegressionResult(TreeLeafResult(WeightedVarianceResult(0.0, 0.0, 0.0)))),
+        )
+        assertEquals(ForestPrediction(0.0, 0.0), forest.predictDistribution(feat(0.0)))
+    }
 }
