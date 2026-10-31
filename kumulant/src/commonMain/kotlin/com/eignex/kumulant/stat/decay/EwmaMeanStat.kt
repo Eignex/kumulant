@@ -42,7 +42,7 @@ class EwmaMeanStat(
     constructor(alpha: Double, concurrency: Concurrency = Concurrency.None) :
         this(DecayWeighting.Alpha(alpha), concurrency)
 
-    /** Smoothing factor; larger = more weight on recent samples. */
+    /** Decay rate per unit of observation weight; each update steps by `1 - exp(-alpha * weight)`. */
     val alpha: Double get() = weighting.alpha
 
     private val mode = concurrency.welfordMode()

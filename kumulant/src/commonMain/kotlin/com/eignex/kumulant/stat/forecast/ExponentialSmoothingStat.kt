@@ -162,13 +162,13 @@ class ExponentialSmoothingStat(
         requirePhi(phi)
     }
 
-    /** Level smoothing factor; larger weights recent samples more. */
+    /** Level decay rate; each update steps the level by `1 - exp(-alpha * weight)`. */
     val alpha: Double get() = alphaWeighting.alpha
 
-    /** Trend smoothing factor; larger weights recent slopes more. */
+    /** Trend decay rate; each update steps the trend by `1 - exp(-beta * weight)`. */
     val beta: Double get() = betaWeighting.alpha
 
-    /** Seasonal smoothing factor. */
+    /** Seasonal decay rate; each update steps the current season by `1 - exp(-gamma * weight)`. */
     val gamma: Double get() = gammaWeighting.alpha
 
     private val seasonal = period > 1
