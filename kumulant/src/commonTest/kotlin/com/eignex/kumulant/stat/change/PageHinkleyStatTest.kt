@@ -86,4 +86,14 @@ class PageHinkleyMergeAlarmTest {
         upwardShift.merge(flat.read())
         assertFalse(upwardShift.read().alarmDown, "merging two quiet traces manufactured a downward alarm")
     }
+
+    @Test
+    fun `merging an empty snapshot keeps the drift`() {
+        val s = PageHinkleyStat(delta = 0.0, threshold = 5.0)
+        repeat(20) { s.update(0.0) }
+        repeat(20) { s.update(10.0) }
+        val before = s.read()
+        s.merge(PageHinkleyStat(delta = 0.0, threshold = 5.0).read())
+        assertEquals(before, s.read())
+    }
 }
