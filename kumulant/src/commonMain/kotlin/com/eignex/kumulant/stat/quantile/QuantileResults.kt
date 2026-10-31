@@ -15,6 +15,8 @@ data class QuantileResult(
     val probability: Double,
     /** Estimated quantile value at [probability]. */
     val quantile: Double,
+    /** False for an estimator that has seen no observation; its [quantile] is only the seed. */
+    val hasObservation: Boolean = true,
 ) : Result
 
 /** DDSketch snapshot: logarithmic bins plus precomputed [quantiles] for [probabilities]. */

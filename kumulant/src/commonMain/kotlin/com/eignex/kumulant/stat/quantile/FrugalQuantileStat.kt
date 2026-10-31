@@ -19,7 +19,8 @@ import com.eignex.kumulant.stream.welfordMode
  * weight); scaling the step by raw weight would let a single high-weight
  * observation overshoot the target catastrophically. [merge] averages two
  * estimates as a coarse approximation; frugal sketches do not admit a true
- * associative combine.
+ * associative combine. An estimator that has seen nothing adopts the incoming
+ * estimate, and an empty incoming snapshot is skipped, so neither seed is averaged in.
  *
  * **Use cases:** memory-constrained tracking of a single quantile with no
  * accuracy guarantee; IoT-class deployments, debug-only monitoring. For
@@ -53,6 +54,7 @@ class FrugalQuantileStat(
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
     private val quantile = mode.newDouble(initialEstimate)
+    private val observed = mode.newLong(0L)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isNotPositiveWeight()) return
@@ -69,6 +71,7 @@ class FrugalQuantileStat(
             if (delta != 0.0) {
                 quantile.add(delta)
             }
+            observed.store(1L)
         }
     }
 
@@ -80,13 +83,16 @@ class FrugalQuantileStat(
     )
 
     override fun merge(values: QuantileResult) = lock.guarded {
-        val current = quantile.load()
-        quantile.store((current + values.quantile) / 2.0)
+        if (!values.hasObservation) return@guarded
+        val next = if (observed.load() == 0L) values.quantile else (quantile.load() + values.quantile) / 2.0
+        quantile.store(next)
+        observed.store(1L)
     }
 
     override fun reset() = lock.guarded {
         quantile.store(initialEstimate)
+        observed.store(0L)
     }
 
-    override fun read(timestampNanos: Long) = QuantileResult(q, quantile.load())
+    override fun read(timestampNanos: Long) = QuantileResult(q, quantile.load(), observed.load() != 0L)
 }
