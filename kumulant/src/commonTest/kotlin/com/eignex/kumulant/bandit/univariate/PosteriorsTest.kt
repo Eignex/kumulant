@@ -6,6 +6,7 @@ import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class PosteriorsTest {
@@ -125,5 +126,18 @@ class PosteriorsTest {
         }
         val picks = (0 until 1000).count { mab.choose() == 0 }
         assertTrue(picks > 900, "arm 0 chosen $picks/1000")
+    }
+
+    @Test
+    fun `Normal-Gamma posteriors score a snapshot with a non-finite moment as NaN`() {
+        val snaps = listOf(
+            WeightedVarianceResult(totalWeights = 3.0, mean = Double.NaN, variance = 1.0),
+            WeightedVarianceResult(totalWeights = 3.0, mean = 1.0, variance = Double.POSITIVE_INFINITY),
+            WeightedVarianceResult(totalWeights = 3.0, mean = Double.NEGATIVE_INFINITY, variance = 1.0),
+        )
+        for (snap in snaps) {
+            assertEquals(Double.NaN, NormalGammaPosterior.sample(snap, Random(0)))
+            assertEquals(Double.NaN, LogNormalGammaPosterior.sample(snap, Random(0)))
+        }
     }
 }
