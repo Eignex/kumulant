@@ -27,7 +27,6 @@ import com.eignex.kumulant.stat.change.AdwinStat
 import com.eignex.kumulant.stat.change.CusumStat
 import com.eignex.kumulant.stat.change.PageHinkleyStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
-import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
 import com.eignex.kumulant.stat.summary.ArgMaxStat
 import com.eignex.kumulant.stat.summary.ArgMinStat
@@ -671,7 +670,7 @@ private fun readAtFor(n: Int): Long = timeProgressingElapsedNanos(n)
 
 private val decayingRateHalfLife = 30.minutes
 
-// DecayingRateStat exposes `decayedSum * ln(2)/halfLifeSec`. With our half-life
+// DecayingSumResult.rate is `decayedSum * ln(2)/halfLifeSec`. With our half-life
 // (30 minutes) far exceeding the workload's elapsed window (~5–10s), the decay
 // factor is ~1 so the snapshot tracks `totalValue * ln(2)/halfLifeSec`.
 private fun decayingRateReference(seq: Sequence<Update>): Double {
@@ -693,9 +692,9 @@ val rateStatSpec = seriesStatSpec(
     // sample than the actual first, slightly shrinking the elapsed denominator.
 )
 
-val decayingRateStatSpec = seriesStatSpec(
-    name = "DecayingRateStat",
-    factory = { c -> DecayingRateStat(decayingRateHalfLife, c) },
+val decayingSumRateStatSpec = seriesStatSpec(
+    name = "DecayingSumStat.rate",
+    factory = { c -> DecayingSumStat(decayingRateHalfLife, c) },
     updates = ::timeProgressingUnitWeights,
     scalar = { it.rate },
     reference = ::decayingRateReference,
@@ -1079,7 +1078,7 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     recursiveVarianceStatSpec,
     seasonalExponentialSmoothingStatSpec,
     rateStatSpec,
-    decayingRateStatSpec,
+    decayingSumRateStatSpec,
     counterRateStatSpec,
     hyperLogLogStatSpec,
     bloomFilterStatSpec,

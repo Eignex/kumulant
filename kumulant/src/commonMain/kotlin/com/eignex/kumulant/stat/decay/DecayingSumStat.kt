@@ -1,18 +1,25 @@
 package com.eignex.kumulant.stat.decay
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.core.HasRate
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
+import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import com.eignex.kumulant.stream.currentTimeNanos
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.exp
+import kotlin.math.ln
 import kotlin.time.Duration
 
-/** Snapshot of an exponentially time-decayed sum at [timestampNanos]. */
+/**
+ * Snapshot of an exponentially time-decayed sum at [timestampNanos].
+ *
+ * [rate] reads the sum as a decayed throughput, `sum * ln(2) / halfLife` per second: for
+ * unit values that is events per second, weighted toward the last few half-lives.
+ */
 @Serializable
 @SerialName("DecayingSumResult")
 data class DecayingSumResult(
@@ -20,7 +27,13 @@ data class DecayingSumResult(
     val sum: Double,
     /** Wall-clock timestamp (nanoseconds) at which the snapshot was taken. */
     val timestampNanos: Long,
-) : Result
+    /** Half-life of past contributions, in nanoseconds. */
+    val halfLifeNanos: Long,
+) : HasRate {
+    override val rate: Double get() = sum * LN_2 / halfLifeNanos * NANOS_PER_SECOND
+}
+
+private val LN_2 = ln(2.0)
 
 /**
  * Exponentially decaying sum driven by wall-clock elapsed time.
@@ -31,10 +44,9 @@ data class DecayingSumResult(
  * bounded numerical range even after many half-lives of activity.
  *
  * **Use cases:** time-windowed event totals (requests in the last 30s),
- * recency-weighted aggregation for monitoring dashboards. The core time-decay
- * primitive; pair with another [DecayingSumStat] for ratios via
- * [DecayingMeanStat], or with `ln(2)/halfLife` for per-second rates via
- * [com.eignex.kumulant.stat.rate.DecayingRateStat].
+ * recency-weighted aggregation for monitoring dashboards, and recent throughput through
+ * [DecayingSumResult.rate] (request rate over the last 30 s, recent error rate). The core
+ * time-decay primitive; pair with another [DecayingSumStat] for ratios via [DecayingMeanStat].
  *
  * **Memory:** O(1); a landmark, a sum, and a lock.
  *
@@ -55,6 +67,7 @@ class DecayingSumStat(
 
     /** Wall-clock half-life of past contributions. */
     val halfLife: Duration get() = weighting.halfLife
+    private val halfLifeNanos = weighting.halfLife.inWholeNanoseconds
     private val alpha = weighting.alpha
 
     // A wrapped negative threshold would rotate on ordinary late arrivals.
@@ -87,7 +100,7 @@ class DecayingSumStat(
     }
 
     override fun read(timestampNanos: Long): DecayingSumResult = lock.guarded {
-        DecayingSumResult(decayedSum(timestampNanos), timestampNanos)
+        DecayingSumResult(decayedSum(timestampNanos), timestampNanos, halfLifeNanos)
     }
 
     private fun decayedSum(timestampNanos: Long): Double {

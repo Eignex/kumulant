@@ -137,7 +137,6 @@ class StatsRoundTripTest {
             DecayingVariance(60_000L),
             EwmaMean(0.1),
             EwmaVariance(0.05),
-            DecayingRate(halfLifeMillis = 5_000L),
         )
 
         for (config in cases) {

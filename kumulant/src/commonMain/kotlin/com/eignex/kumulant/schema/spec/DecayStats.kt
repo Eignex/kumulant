@@ -7,7 +7,6 @@ import com.eignex.kumulant.stat.decay.DecayingVarianceResult
 import com.eignex.kumulant.stat.forecast.ExponentialSmoothingResult
 import com.eignex.kumulant.stat.forecast.RecursiveVarianceResult
 import com.eignex.kumulant.stat.forecast.SeasonalMode
-import com.eignex.kumulant.stat.rate.DecayingRateResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlinx.serialization.SerialName
@@ -91,11 +90,3 @@ data class RecursiveVariance(
     /** Persistence coefficient applied to the previous variance. */
     val beta: Double,
 ) : SeriesStatSpec<RecursiveVarianceResult>
-
-/** Spec for `DecayingRateStat`: events-per-second with exponential time decay. */
-@Serializable
-@SerialName("DecayingRate")
-data class DecayingRate(
-    /** Half-life of the rate's memory, in milliseconds. */
-    val halfLifeMillis: Long,
-) : SeriesStatSpec<DecayingRateResult>

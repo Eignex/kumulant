@@ -89,7 +89,6 @@ import com.eignex.kumulant.stat.quantile.ReservoirHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.kumulant.stat.quantile.ThresholdBucketStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
-import com.eignex.kumulant.stat.rate.DecayingRateStat
 import com.eignex.kumulant.stat.rate.RateStat
 import com.eignex.kumulant.stat.regression.CovarianceStat
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
@@ -315,11 +314,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     is RecursiveVariance ->
         StatPlan(path) { concurrency ->
             RecursiveVarianceStat(omega, alpha, beta, concurrency)
-        }
-
-    is DecayingRate ->
-        StatPlan(path) { concurrency ->
-            DecayingRateStat(halfLifeMillis.milliseconds, concurrency)
         }
 
     is GroupStatSpec -> {

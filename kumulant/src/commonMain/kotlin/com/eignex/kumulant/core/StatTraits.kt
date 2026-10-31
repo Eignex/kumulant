@@ -15,7 +15,7 @@ import kotlin.time.DurationUnit
  * underlying mechanism; uniform-over-window
  * ([com.eignex.kumulant.stat.rate.RateStat]), counter-differentiated
  * ([com.eignex.kumulant.stat.rate.CounterRateStat]), or exponentially-decayed
- * ([com.eignex.kumulant.stat.rate.DecayingRateStat]).
+ * ([com.eignex.kumulant.stat.decay.DecayingSumStat]).
  */
 interface HasRate : Result {
     /** Normalised rate in events per second (Hz). Zero when no observations have arrived. */

@@ -22,6 +22,13 @@ class DecayingSumStatTest {
     }
 
     @Test
+    fun `rate scales the decayed sum by ln 2 over the half-life`() {
+        val s = DecayingSumStat(halfLife = 2.seconds)
+        s.update(4.0, T0)
+        assertEquals(4.0 * kotlin.math.ln(2.0) / 2.0, s.read(T0).rate, 1e-12)
+    }
+
+    @Test
     fun `sum decays to half after one half-life`() {
         val s = DecayingSumStat(halfLife = 1.seconds)
         s.update(8.0, T0)
