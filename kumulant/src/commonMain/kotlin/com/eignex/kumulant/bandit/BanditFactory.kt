@@ -55,7 +55,6 @@ import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
 import com.eignex.kumulant.stat.regression.glm.PointPosterior
 import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
-import com.eignex.kumulant.stat.regression.tree.ForestPosterior
 import com.eignex.kumulant.stat.regression.tree.ForestRegressionResult
 import com.eignex.kumulant.stat.regression.tree.TreePosterior
 import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult
@@ -182,8 +181,7 @@ private fun RegressionPosterior<*>.requireCompatible(snapshot: Result, path: Str
         PointPosterior -> snapshot is StochasticRegressionResult
         FactorisedGaussian -> snapshot is DiagonalRegressionResult
         MultivariateGaussian, LinUcb -> snapshot is PrecisionRegressionResult
-        is TreePosterior -> snapshot is TreeRegressionResult
-        is ForestPosterior -> snapshot is ForestRegressionResult
+        is TreePosterior -> snapshot is TreeRegressionResult || snapshot is ForestRegressionResult
         else -> true
     }
     require(compatible) { "$path: ${snapshot::class.simpleName} is incompatible with ${this::class.simpleName}" }

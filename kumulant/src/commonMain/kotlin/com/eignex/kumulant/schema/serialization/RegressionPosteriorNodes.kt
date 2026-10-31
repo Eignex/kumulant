@@ -22,15 +22,7 @@ internal object TreePosteriorSerializer : KumulantSerializer<TreePosterior>(Tree
     )
 })
 
-internal object ForestPosteriorSerializer : KumulantSerializer<ForestPosterior>(ForestPosterior::class, {
-    listOf(
-        jsonNode<MeanForestPosterior>("meanForestPosterior"),
-        jsonNode<ThompsonForestPosterior>("thompsonForestPosterior"),
-        jsonNode<UcbForestPosterior>("ucbForestPosterior"),
-    )
-})
-
 internal object CanonicalRegressionPosteriorSerializer : KumulantSerializer<RegressionPosterior<*>>(
     RegressionPosterior::class,
-    { LinearPosteriorSerializer.nodes + TreePosteriorSerializer.nodes + ForestPosteriorSerializer.nodes },
+    { LinearPosteriorSerializer.nodes + TreePosteriorSerializer.nodes },
 )

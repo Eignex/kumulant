@@ -54,7 +54,7 @@ class ContextualBanditSpecTest {
             RegressionContextualSpec(
                 2,
                 RandomForestRegression(1, emptyList(), 2, bagging = false),
-                ThompsonForestPosterior(2.0, 3.0),
+                ThompsonTreePosterior(2.0, 3.0),
             ),
         )
         for (spec in specs) {
@@ -113,7 +113,6 @@ class ContextualBanditSpecTest {
         val posteriors: List<RegressionPosterior<*>> = listOf(
             PointPosterior, FactorisedGaussian, MultivariateGaussian, LinUcb,
             MeanTreePosterior, ThompsonTreePosterior(2.0, 3.0), UcbTreePosterior(2.0, 3.0),
-            MeanForestPosterior, ThompsonForestPosterior(2.0, 3.0), UcbForestPosterior(2.0, 3.0),
         )
         val json = Json { classDiscriminator = "kind" }
         for (posterior in posteriors) {

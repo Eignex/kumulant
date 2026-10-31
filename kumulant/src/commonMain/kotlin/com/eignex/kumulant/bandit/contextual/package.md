@@ -29,7 +29,7 @@ Common combinations:
   [FactorisedGaussian][com.eignex.kumulant.stat.regression.glm.FactorisedGaussian]
   posterior; trades the joint posterior for per-coordinate uncertainty.
 - **Non-linear**: `RandomForestRegressionStat` per arm +
-  `ThompsonForestPosterior` or `UcbForestPosterior`.
+  `ThompsonTreePosterior` or `UcbTreePosterior`.
 - **Cheap point estimates**: `StochasticRegressionStat` per arm +
   [PointPosterior][com.eignex.kumulant.stat.regression.glm.PointPosterior]
   (no exploration; pure greedy). Useful when paired with an explicit

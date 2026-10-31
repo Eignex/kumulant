@@ -61,14 +61,14 @@ Concrete posteriors live with their model families:
   [FactorisedGaussian][com.eignex.kumulant.stat.regression.glm.FactorisedGaussian],
   [MultivariateGaussian][com.eignex.kumulant.stat.regression.glm.MultivariateGaussian],
   [LinUcb][com.eignex.kumulant.stat.regression.glm.LinUcb].
-- `TreePosterior` and `ForestPosterior` for trees: see
+- `TreePosterior` for trees and forests: see
   [com.eignex.kumulant.stat.regression.tree].
 
 The posterior interface is intentionally minimal so a downstream
 contextual bandit can mix-and-match: one bandit might score arms with a
 GLM under [LinUcb][com.eignex.kumulant.stat.regression.glm.LinUcb] and
 another with a forest under
-`ThompsonForestPosterior`: same code path, different model and
+`ThompsonTreePosterior`: same code path, different model and
 scoring rule.
 
 ## When to reach into which subfamily

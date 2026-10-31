@@ -31,7 +31,6 @@ object KumulantJson {
             ClassificationSplitMetricSerializer,
             LinearPosteriorSerializer,
             TreePosteriorSerializer,
-            ForestPosteriorSerializer,
             CanonicalRegressionPosteriorSerializer,
         )
 
