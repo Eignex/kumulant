@@ -3163,6 +3163,33 @@ public final class com/eignex/kumulant/schema/spec/BloomFilter$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public final class com/eignex/kumulant/schema/spec/BucketHistogram : com/eignex/kumulant/schema/spec/SeriesStatSpec {
+	public static final field Companion Lcom/eignex/kumulant/schema/spec/BucketHistogram$Companion;
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/eignex/kumulant/schema/spec/BucketHistogram;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/BucketHistogram;Ljava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/BucketHistogram;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEdges ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/schema/spec/BucketHistogram$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/BucketHistogram$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/BucketHistogram;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/BucketHistogram;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/schema/spec/BucketHistogram$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
 public final class com/eignex/kumulant/schema/spec/ClassCounts : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/ClassCounts$Companion;
 	public fun <init> (I)V
@@ -3902,37 +3929,6 @@ public final class com/eignex/kumulant/schema/spec/HyperLogLog$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/schema/spec/LinearHistogram : com/eignex/kumulant/schema/spec/SeriesStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/LinearHistogram$Companion;
-	public fun <init> (DDI)V
-	public final fun component1 ()D
-	public final fun component2 ()D
-	public final fun component3 ()I
-	public final fun copy (DDI)Lcom/eignex/kumulant/schema/spec/LinearHistogram;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/LinearHistogram;DDIILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/LinearHistogram;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getBinCount ()I
-	public final fun getLowerBound ()D
-	public final fun getUpperBound ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/LinearHistogram$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/LinearHistogram$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/LinearHistogram;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/LinearHistogram;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/LinearHistogram$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class com/eignex/kumulant/schema/spec/LogLoss : com/eignex/kumulant/schema/spec/PairedStatSpec {
 	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/LogLoss;
 	public fun equals (Ljava/lang/Object;)Z
@@ -4645,33 +4641,6 @@ public final synthetic class com/eignex/kumulant/schema/spec/TDigest$$serializer
 }
 
 public final class com/eignex/kumulant/schema/spec/TDigest$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/ThresholdBucket : com/eignex/kumulant/schema/spec/SeriesStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/ThresholdBucket$Companion;
-	public fun <init> (Ljava/util/List;)V
-	public final fun component1 ()Ljava/util/List;
-	public final fun copy (Ljava/util/List;)Lcom/eignex/kumulant/schema/spec/ThresholdBucket;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/ThresholdBucket;Ljava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/ThresholdBucket;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getThresholds ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/ThresholdBucket$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/ThresholdBucket$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/ThresholdBucket;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/ThresholdBucket;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/ThresholdBucket$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -5808,6 +5777,35 @@ public final class com/eignex/kumulant/stat/forecast/SeasonalMode$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public final class com/eignex/kumulant/stat/quantile/BucketHistogramStat : com/eignex/kumulant/core/SeriesStat {
+	public static final field Companion Lcom/eignex/kumulant/stat/quantile/BucketHistogramStat$Companion;
+	public fun <init> ([DLcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> ([DLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
+	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
+	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/quantile/BucketHistogramStat;
+	public final fun getBucketEdges ()Ljava/util/List;
+	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
+	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
+	public fun merge (Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;J)V
+	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
+	public fun read (J)Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;
+	public fun reset ()V
+	public fun update (DD)V
+	public fun update (DJD)V
+	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
+	public fun validateMerge (Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;)V
+}
+
+public final class com/eignex/kumulant/stat/quantile/BucketHistogramStat$Companion {
+	public final fun linear (DDILcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/quantile/BucketHistogramStat;
+	public static synthetic fun linear$default (Lcom/eignex/kumulant/stat/quantile/BucketHistogramStat$Companion;DDILcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/quantile/BucketHistogramStat;
+}
+
+public final class com/eignex/kumulant/stat/quantile/BucketHistogramStatKt {
+	public static final fun linearEdges (DDI)[D
+}
+
 public final class com/eignex/kumulant/stat/quantile/DDSketchStat : com/eignex/kumulant/core/SeriesStat {
 	public fun <init> ()V
 	public fun <init> (D[DDDLcom/eignex/kumulant/core/Concurrency;)V
@@ -5863,27 +5861,6 @@ public final class com/eignex/kumulant/stat/quantile/HdrHistogramStat : com/eign
 	public final fun getInitialHighestTrackableValue ()D
 	public final fun getLowestDiscernibleValue ()D
 	public final fun getSignificantDigits ()I
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;
-	public fun reset ()V
-	public fun update (DD)V
-	public fun update (DJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;)V
-}
-
-public final class com/eignex/kumulant/stat/quantile/LinearHistogramStat : com/eignex/kumulant/core/SeriesStat {
-	public fun <init> (DDILcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (DDILcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/quantile/LinearHistogramStat;
-	public final fun getBinCount ()I
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public final fun getLowerBound ()D
-	public final fun getUpperBound ()D
 	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
 	public fun merge (Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;J)V
 	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
@@ -6127,54 +6104,6 @@ public final class com/eignex/kumulant/stat/quantile/TDigestStat : com/eignex/ku
 
 public final class com/eignex/kumulant/stat/quantile/TDigestStatKt {
 	public static final fun toSparseHistogram (Lcom/eignex/kumulant/stat/quantile/TDigestResult;)Lcom/eignex/kumulant/stat/quantile/SparseHistogramResult;
-}
-
-public final class com/eignex/kumulant/stat/quantile/ThresholdBucketResult : com/eignex/kumulant/core/Result {
-	public static final field Companion Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult$Companion;
-	public fun <init> (Ljava/util/List;Ljava/util/List;)V
-	public final fun component1 ()Ljava/util/List;
-	public final fun component2 ()Ljava/util/List;
-	public final fun copy (Ljava/util/List;Ljava/util/List;)Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCounts ()Ljava/util/List;
-	public final fun getThresholds ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/stat/quantile/ThresholdBucketResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/quantile/ThresholdBucketResult$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/quantile/ThresholdBucketStat : com/eignex/kumulant/core/SeriesStat {
-	public fun <init> ([DLcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> ([DLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/quantile/ThresholdBucketStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public final fun getThresholds ()[D
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult;
-	public fun reset ()V
-	public fun update (DD)V
-	public fun update (DJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/quantile/ThresholdBucketResult;)V
 }
 
 public final class com/eignex/kumulant/stat/rate/CounterRateStat : com/eignex/kumulant/core/SeriesStat {
