@@ -47,6 +47,26 @@ class Exp3BanditTest {
     }
 
     @Test
+    fun `a gain beyond the exp overflow range keeps the rewarded arm ahead`() {
+        val b = Exp3Bandit(nbrArms = 2, eta = 1.0, gamma = 0.5, random = Random(0))
+
+        b.update(0, 1.0, 1000.0)
+        b.update(1, 0.0)
+
+        assertTrue(b.playDistribution()[0] > 0.7, "evidence was lost: ${b.playDistribution().toList()}")
+    }
+
+    @Test
+    fun `an arm pushed far below the others recovers on later gains`() {
+        val b = Exp3Bandit(nbrArms = 2, eta = 1.0, gamma = 0.5, random = Random(0))
+
+        b.update(0, -1000.0)
+        repeat(2) { b.update(0, 1.0, 1000.0) }
+
+        assertTrue(b.playDistribution()[0] > 0.7, "arm 0 stayed extinguished: ${b.playDistribution().toList()}")
+    }
+
+    @Test
     fun `feedback order does not change the weight an arm earns`() {
         fun weightsAfter(delayed: Boolean): List<Double> {
             val bandit = Exp3Bandit(nbrArms = 2, random = Random(1))
