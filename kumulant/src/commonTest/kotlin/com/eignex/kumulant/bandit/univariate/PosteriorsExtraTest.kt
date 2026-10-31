@@ -1,7 +1,6 @@
 package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
-import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.abs
 import kotlin.random.Random
@@ -44,5 +43,4 @@ class PosteriorsExtraTest {
         val avg = draws.average()
         assertTrue(abs(avg - 5.0) < 0.5, "expected mean near 5, got $avg")
     }
-
 }
