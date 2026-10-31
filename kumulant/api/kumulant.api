@@ -9339,6 +9339,7 @@ public abstract interface class com/eignex/kumulant/stream/Mutex {
 }
 
 public final class com/eignex/kumulant/stream/MutexKt {
-	public static final fun lock (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stream/Mutex;
+	public static final fun Mutex (Z)Lcom/eignex/kumulant/stream/Mutex;
+	public static synthetic fun Mutex$default (ZILjava/lang/Object;)Lcom/eignex/kumulant/stream/Mutex;
 }
 
