@@ -162,4 +162,21 @@ class StochasticRegressionStatTest {
         val w = stat.read().weights.toDoubleArray()
         for (v in w) assertTrue(v.isFinite(), "weight $v not finite")
     }
+
+    @Test
+    fun `a stat merged into a fresh one resumes the learning rate schedule`() {
+        val optimizer = Sgd(StepDecay(eta = 1.0, k = 1.0))
+        val trained = StochasticRegressionStat(featureSize = 1, optimizer = optimizer)
+        val rng = Random(3)
+        repeat(500) {
+            val x = rng.nextDouble()
+            trained.update(DenseVector.of(doubleArrayOf(x)), 2.0 * x + 1.0)
+        }
+        val merged = StochasticRegressionStat(featureSize = 1, optimizer = optimizer)
+        merged.merge(trained.read())
+        val x = DenseVector.of(doubleArrayOf(0.5))
+        trained.update(x, 10.0)
+        merged.update(x, 10.0)
+        assertEquals(trained.read().weights[0], merged.read().weights[0], 1e-12)
+    }
 }

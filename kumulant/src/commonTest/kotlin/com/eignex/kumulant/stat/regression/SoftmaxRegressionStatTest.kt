@@ -7,6 +7,7 @@ import com.eignex.koblas.StridedVector
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
+import com.eignex.kumulant.stat.regression.glm.StepDecay
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
@@ -170,5 +171,22 @@ class SoftmaxRegressionStatTest {
         val r = a.read()
         assertEquals(200.0, r.totalWeights, 1e-9)
         assertTrue(abs(r.crossEntropy) > 0.0)
+    }
+
+    @Test
+    fun `a stat merged into a fresh one resumes the learning rate schedule`() {
+        val optimizer = Sgd(StepDecay(eta = 1.0, k = 1.0))
+        val trained = SoftmaxRegressionStat(featureSize = 1, numClasses = 2, optimizer = optimizer)
+        val rng = Random(3)
+        repeat(500) {
+            val x = rng.nextDouble()
+            trained.update(DenseVector.of(doubleArrayOf(x)), if (x > 0.5) 1.0 else 0.0)
+        }
+        val merged = SoftmaxRegressionStat(featureSize = 1, numClasses = 2, optimizer = optimizer)
+        merged.merge(trained.read())
+        val x = DenseVector.of(doubleArrayOf(0.9))
+        trained.update(x, 0.0)
+        merged.update(x, 0.0)
+        assertEquals(trained.read().weights[0, 0], merged.read().weights[0, 0], 1e-12)
     }
 }

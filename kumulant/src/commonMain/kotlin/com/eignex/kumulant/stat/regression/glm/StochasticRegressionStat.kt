@@ -249,6 +249,8 @@ class StochasticRegressionStat(
     /**
      * Sample-weighted blend of weights and bias. SGD has no second-moment information,
      * so this is an approximation; for principled merges use [BayesianRegressionStat].
+     * Step counts add, and the learning-rate schedules continue from the combined step;
+     * adaptive optimizer accumulators are not in the snapshot and stay local.
      */
     override fun merge(values: StochasticRegressionResult) {
         validateMerge(values)
@@ -266,7 +268,9 @@ class StochasticRegressionStat(
                 biasCell.store((biasCell.load() * w1 + values.bias * w2) / wNew)
             }
             totalWeightsCell.store(wNew)
-            stepCell.add(values.step)
+            val step = stepCell.addAndGet(values.step)
+            weightOpt.resumeAt(step)
+            biasOpt.resumeAt(step)
             sseCell.add(values.sse)
         }
     }

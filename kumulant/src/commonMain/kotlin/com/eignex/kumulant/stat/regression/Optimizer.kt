@@ -33,6 +33,12 @@ sealed interface Optimizer {
     fun advance() {}
 
     /**
+     * Moves the step counter to [step] so the next [advance] continues the schedule from there.
+     * Called after a merge combines step counts; per-coordinate accumulators are left as they are.
+     */
+    fun resumeAt(step: Long) {}
+
+    /**
      * Per-coordinate update. Reads/writes any auxiliary state owned by the optimizer,
      * then returns the delta the caller should add to `w[coordIndex]`.
      */
@@ -63,6 +69,10 @@ class SgdOptimizer(
 
     /** Live view of the per-update step counter; drives the schedule. */
     val step: Long by stepCell
+
+    override fun resumeAt(step: Long) {
+        stepCell.store(step)
+    }
 
     override fun advance() {
         val t = stepCell.addAndGet(1L)
@@ -102,6 +112,10 @@ class AdagradOptimizer(
     private val stepCell: StreamLong = mode.newLong(0L)
     private val cachedLr: StreamDouble = mode.newDouble(0.0)
     private val sumG2: StreamDoubleArray = mode.newDoubleArray(featureSize)
+
+    override fun resumeAt(step: Long) {
+        stepCell.store(step)
+    }
 
     override fun advance() {
         val t = stepCell.addAndGet(1L)
@@ -150,6 +164,10 @@ class RmspropOptimizer(
     private val stepCell: StreamLong = mode.newLong(0L)
     private val cachedLr: StreamDouble = mode.newDouble(0.0)
     private val emaG2: StreamDoubleArray = mode.newDoubleArray(featureSize)
+
+    override fun resumeAt(step: Long) {
+        stepCell.store(step)
+    }
 
     override fun advance() {
         val t = stepCell.addAndGet(1L)
@@ -205,6 +223,10 @@ class AdamOptimizer(
     private val cachedBc2: StreamDouble = mode.newDouble(1.0)
     private val m: StreamDoubleArray = mode.newDoubleArray(featureSize)
     private val v: StreamDoubleArray = mode.newDoubleArray(featureSize)
+
+    override fun resumeAt(step: Long) {
+        stepCell.store(step)
+    }
 
     override fun advance() {
         val t = stepCell.addAndGet(1L)

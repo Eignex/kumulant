@@ -274,7 +274,9 @@ class SoftmaxRegressionStat(
                 }
             }
             totalWeightsCell.store(wNew)
-            stepCell.add(values.step)
+            val step = stepCell.addAndGet(values.step)
+            biasOpt.resumeAt(step)
+            for (opt in weightOptimizers) opt.resumeAt(step)
             crossEntropyCell.add(values.crossEntropy)
         }
     }
