@@ -4,6 +4,7 @@ import com.eignex.kumulant.DELTA
 import kotlin.math.sqrt
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class ConfusionMatrixStatTest {
 
@@ -102,5 +103,10 @@ class ConfusionMatrixStatTest {
         }
         s.reset()
         assertEquals(0.0, s.read().totalWeights, DELTA)
+    }
+
+    @Test
+    fun `a class count whose square overflows Int is rejected`() {
+        assertFailsWith<IllegalArgumentException> { ConfusionMatrixStat(numClasses = 65_536) }
     }
 }
