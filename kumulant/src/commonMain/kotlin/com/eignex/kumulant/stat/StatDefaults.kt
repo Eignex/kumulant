@@ -17,8 +17,6 @@ internal object StatDefaults {
     val regressionLink: Link = Link.Identity
     const val GAUSSIAN_NAIVE_BAYES_VARIANCE_FLOOR: Double = 1e-9
     const val BAYESIAN_REGRESSION_PRIOR_VARIANCE: Double = 1.0
-    const val MIN_HASH_NUM_HASHES: Int = 128
-    const val MIN_HASH_SEED: Long = -3724518991637283867L
     const val COUNT_MIN_SKETCH_DEPTH: Int = 5
     const val COUNT_MIN_SKETCH_WIDTH: Int = 1024
     const val COUNT_MIN_SKETCH_SEED: Long = -7046029254386353133L
@@ -30,9 +28,6 @@ internal object StatDefaults {
     const val AUC_UPPER_BOUND: Double = 1.0
     const val TDIGEST_COMPRESSION: Double = 100.0
     const val RESERVOIR_HISTOGRAM_CAPACITY: Int = 1024
-    const val HDR_HISTOGRAM_LOWEST_DISCERNIBLE_VALUE: Double = 0.001
-    const val HDR_HISTOGRAM_INITIAL_HIGHEST_TRACKABLE_VALUE: Double = 100.0
-    const val HDR_HISTOGRAM_SIGNIFICANT_DIGITS: Int = 3
     const val FRUGAL_QUANTILE_STEP_SIZE: Double = 0.01
     const val FRUGAL_QUANTILE_INITIAL_ESTIMATE: Double = 0.0
     const val DD_SKETCH_RELATIVE_ERROR: Double = 0.01

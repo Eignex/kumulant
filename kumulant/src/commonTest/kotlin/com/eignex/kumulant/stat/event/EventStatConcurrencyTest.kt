@@ -9,12 +9,6 @@ import kotlin.test.Test
 class EventStatConcurrencyTest {
 
     @Test
-    fun `ExcursionStat sequential math equal across modes`() {
-        val reads = weightedReads { ExcursionStat(concurrency = it) }
-        assertModesAgree("ExcursionStat", reads)
-    }
-
-    @Test
     fun `RunLengthStat sequential math equal across modes`() {
         val flagValues = doubleArrayOf(1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0)
         val reads = Concurrency.entries.associateWith { mode ->

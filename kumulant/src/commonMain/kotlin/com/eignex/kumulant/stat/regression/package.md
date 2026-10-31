@@ -28,19 +28,16 @@ metrics).
 ### Optimizer strategy
 
 [Optimizer] is the per-coordinate update rule that single-output and
-multinomial linear models share. The runtime API has four
+multinomial linear models share. The runtime API has two
 implementations:
 
 - [SgdOptimizer]: stateless; `delta = -lr * weight * gradient`.
-- [AdagradOptimizer]: accumulates squared gradients per coordinate.
-- [RmspropOptimizer]: exponential moving average of squared gradients.
 - [AdamOptimizer]: bias-corrected first and second moments
   (Kingma & Ba 2015).
 
 Wire-portable counterparts live in
 [com.eignex.kumulant.schema.optimizer.OptimizerSpec]:
-[com.eignex.kumulant.schema.optimizer.Sgd], [com.eignex.kumulant.schema.optimizer.Adagrad],
-[com.eignex.kumulant.schema.optimizer.Rmsprop], [com.eignex.kumulant.schema.optimizer.Adam].
+[com.eignex.kumulant.schema.optimizer.Sgd] and [com.eignex.kumulant.schema.optimizer.Adam].
 Stats accept the spec and materialise their own optimizer instances
 per-feature-set; per-coordinate aux state honours the stat's
 [com.eignex.kumulant.core.Concurrency] level.

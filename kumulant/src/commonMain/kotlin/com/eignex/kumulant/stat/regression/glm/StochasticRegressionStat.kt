@@ -27,8 +27,8 @@ import kotlin.math.pow
  * [Link]'s negative log-likelihood plus optional [Penalty]. The cheapest of the
  * multivariate regressors; point estimates only, no posterior, fast updates.
  *
- * The per-coordinate update rule is owned by [optimizer] ([Sgd] / [com.eignex.kumulant.schema.optimizer.Adagrad] /
- * [com.eignex.kumulant.schema.optimizer.Rmsprop] / [com.eignex.kumulant.schema.optimizer.Adam]). The bias has its own
+ * The per-coordinate update rule is owned by [optimizer] ([Sgd] /
+ * [com.eignex.kumulant.schema.optimizer.Adam]). The bias has its own
  * [biasOptimizer] schedule because the intercept usually wants a different cadence than
  * the coefficients.
  *

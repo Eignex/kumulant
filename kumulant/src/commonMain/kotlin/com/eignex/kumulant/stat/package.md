@@ -62,12 +62,12 @@ univariate fit and a multivariate one.
 | Subpackage | Family |
 |-----------|--------|
 | [com.eignex.kumulant.stat.summary] | Mean / variance / moments / running sum / count / min / max / range / MAD |
-| [com.eignex.kumulant.stat.event] | Excursion / run length / level crossings / recency / sojourn |
+| [com.eignex.kumulant.stat.event] | Run length / level crossings / recency / sojourn |
 | [com.eignex.kumulant.stat.rate] | Rate / counter rate / decaying rate |
 | [com.eignex.kumulant.stat.change] | CUSUM / Page-Hinkley / ADWIN drift detectors |
 | [com.eignex.kumulant.stat.quantile] | DDSketch / t-digest / HDR / reservoir / frugal / linear histograms |
 | [com.eignex.kumulant.stat.cardinality] | HyperLogLog |
-| [com.eignex.kumulant.stat.sketch] | Bloom / count-min / space-saving / MinHash |
+| [com.eignex.kumulant.stat.sketch] | Bloom / count-min / space-saving |
 | [com.eignex.kumulant.stat.decay] | Decaying / EWMA mean / variance / sum |
 | [com.eignex.kumulant.stat.forecast] | Exponential smoothing (Holt / Holt-Winters) / recursive variance |
 | [com.eignex.kumulant.stat.regression] | Covariance, Softmax, Naive Bayes; see [glm][com.eignex.kumulant.stat.regression.glm] and [tree][com.eignex.kumulant.stat.regression.tree] for the model families |

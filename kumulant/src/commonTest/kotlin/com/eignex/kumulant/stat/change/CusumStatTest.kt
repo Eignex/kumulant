@@ -1,7 +1,6 @@
 package com.eignex.kumulant.stat.change
 
 import com.eignex.kumulant.DELTA
-import com.eignex.kumulant.stat.forecast.RecursiveVarianceStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -80,15 +79,6 @@ class ChangeDetectorNegativeWeightTest {
         val before = s.read().windowLength
         s.update(3.0, weight = -1.0)
         assertEquals(before, s.read().windowLength)
-    }
-
-    @Test
-    fun `a retraction does not raise the recursive variance`() {
-        val s = RecursiveVarianceStat(omega = 0.0, alpha = 0.1, beta = 0.9)
-        repeat(10) { s.update(0.0) }
-        val before = s.read().variance
-        s.update(10.0, weight = -1.0)
-        assertTrue(s.read().variance <= before, "variance rose from $before to ${s.read().variance}")
     }
 
     @Test

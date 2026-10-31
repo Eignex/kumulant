@@ -68,14 +68,10 @@ class SketchMergeGuardTest {
     }
 
     @Test
-    fun `HyperLogLog and MinHash refuse a merge from a different mixer`() {
+    fun `HyperLogLog refuses a merge from a different mixer`() {
         val hll = HyperLogLogStat(precision = 12)
         assertFailsWith<IllegalArgumentException> {
             hll.merge(HyperLogLogStat(precision = 12, hasher = OtherHasher).also { it.update(1L) }.read())
-        }
-        val mh = MinHashStat(numHashes = 64)
-        assertFailsWith<IllegalArgumentException> {
-            mh.merge(MinHashStat(numHashes = 64, hasher = OtherHasher).also { it.update(1L) }.read())
         }
     }
 

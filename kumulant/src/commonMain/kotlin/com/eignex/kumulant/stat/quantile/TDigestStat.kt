@@ -97,8 +97,7 @@ fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
  * **Use cases:** approximate percentile estimation with adaptive resolution;
  * tighter near the tails (0.001 / 0.999 percentiles), looser in the middle.
  * Reach for this over [DDSketchStat] when you want extreme-quantile accuracy
- * without committing to a relative-error parameter, and over
- * [HdrHistogramStat] when the value range isn't known in advance.
+ * without committing to a relative-error parameter.
  *
  * **Memory:** O([compression]) centroids (~6 · delta) plus a fixed-size buffer.
  *

@@ -2,7 +2,6 @@ package com.eignex.kumulant.core
 
 import com.eignex.kumulant.stat.quantile.BucketHistogramStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
-import com.eignex.kumulant.stat.quantile.HdrHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.kumulant.stat.score.AucStat
 import com.eignex.kumulant.stat.summary.CountStat
@@ -23,12 +22,6 @@ class EmptyReadSemanticsTest {
         assertEquals(0.0, CountStat().read().sum, "an empty count is genuinely zero")
         assertEquals(Double.POSITIVE_INFINITY, MinStat().read().min)
         assertEquals(Double.NEGATIVE_INFINITY, MaxStat().read().max)
-    }
-
-    @Test
-    fun `array-backed histograms report no buckets`() {
-        assertEquals(0, HdrHistogramStat().read().weights.size)
-        assertEquals(0, BucketHistogramStat.linear(0.0, 10.0, 4).read().weights.size)
     }
 
     @Test

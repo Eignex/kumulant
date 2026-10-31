@@ -12,13 +12,9 @@ than stored on the wire.
 
 [Sgd] is plain stochastic gradient descent: the cheapest path, stateless
 apart from the step counter, and the only optimizer that supports the
-L1/L2 penalties on the regression stats. [Adagrad] gives each coordinate
-its own adaptive rate, which suits sparse, power-law features where rare
-features should learn faster than common ones. [Rmsprop] replaces
-Adagrad's monotonically shrinking rate with an exponential moving average
-of squared gradients, so learning doesn't stall on long streams. [Adam]
-is the general-purpose default, combining bias-corrected first and second
-moment estimates.
+L1/L2 penalties on the regression stats. [Adam] is the general-purpose
+default, giving each coordinate its own adaptive rate from bias-corrected
+first and second moment estimates.
 
 All four are consumed by
 [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat] and

@@ -5,7 +5,6 @@ import com.eignex.kumulant.stat.decay.DecayingMeanResult
 import com.eignex.kumulant.stat.decay.DecayingSumResult
 import com.eignex.kumulant.stat.decay.DecayingVarianceResult
 import com.eignex.kumulant.stat.forecast.ExponentialSmoothingResult
-import com.eignex.kumulant.stat.forecast.RecursiveVarianceResult
 import com.eignex.kumulant.stat.forecast.SeasonalMode
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -79,14 +78,3 @@ data class ExponentialSmoothing(
     val mode: SeasonalMode = StatDefaults.seasonalMode,
 ) : SeriesStatSpec<ExponentialSmoothingResult>
 
-/** Spec for `RecursiveVarianceStat`: `sigma^2_t = omega + alpha * value^2 + beta * sigma^2_{t-1}`. */
-@Serializable
-@SerialName("RecursiveVariance")
-data class RecursiveVariance(
-    /** Long-run baseline term. */
-    val omega: Double,
-    /** Shock coefficient applied to `value^2`. */
-    val alpha: Double,
-    /** Persistence coefficient applied to the previous variance. */
-    val beta: Double,
-) : SeriesStatSpec<RecursiveVarianceResult>

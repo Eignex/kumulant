@@ -20,9 +20,8 @@ import kotlin.math.pow
  * tightening [relativeError] grows bin count roughly as `1/epsilon`.
  *
  * **Use cases:** quantile / percentile monitoring of any positive-skewed
- * scalar (latencies, payload sizes). Reach for this over [HdrHistogramStat]
- * when the value range is unbounded; over [TDigestStat] when relative-error
- * guarantees are required.
+ * scalar (latencies, payload sizes). Reach for this over [TDigestStat] when
+ * relative-error guarantees are required.
  *
  * **Memory:** bounded by the indexable range, at
  * `log([maxIndexableValue] / [minIndexableValue]) / log(1 + [relativeError])` bins;

@@ -14,7 +14,7 @@ import kotlin.math.sqrt
 /**
  * Online optimizer strategy. Given a per-coordinate raw gradient, returns the
  * delta to add to that weight cell. Owns any per-coordinate auxiliary state
- * (Adam's first/second moments, Adagrad's running squared gradient, etc.).
+ * (Adam's first and second moments).
  *
  * Lifecycle, called by the host stat once per `update`:
  *  1. [advance]; bump per-update counters (Adam's step `t`).
@@ -87,105 +87,6 @@ class SgdOptimizer(
     override fun reset() {
         stepCell.store(0L)
         cachedLr.store(0.0)
-    }
-}
-
-/**
- * Adagrad: accumulates squared gradients per coordinate; the effective per-coord
- * learning rate is `lr / sqrt(sumG2[i] + epsilon)`. Adapts faster on rare features.
- */
-class AdagradOptimizer(
-    override val featureSize: Int,
-    /** Base learning-rate schedule. */
-    val learningRate: ScalarExpr,
-    /** Numerical-stability epsilon added under the square root. */
-    val epsilon: Double = 1e-10,
-    concurrency: Concurrency = Concurrency.None,
-) : Optimizer {
-
-    init {
-        requirePositiveFeatureSize(featureSize)
-        require(epsilon > 0.0) { "epsilon must be positive" }
-    }
-
-    private val mode = concurrency.welfordMode()
-    private val stepCell: StreamLong = mode.newLong(0L)
-    private val cachedLr: StreamDouble = mode.newDouble(0.0)
-    private val sumG2: StreamDoubleArray = mode.newDoubleArray(featureSize)
-
-    override fun resumeAt(step: Long) {
-        stepCell.store(step)
-    }
-
-    override fun advance() {
-        val t = stepCell.addAndGet(1L)
-        cachedLr.store(learningRate.eval(t.toDouble()))
-    }
-
-    override fun computeDelta(coordIndex: Int, gradient: Double, observationWeight: Double): Double {
-        val g = observationWeight * gradient
-        val acc = sumG2.load(coordIndex) + g * g
-        sumG2.store(coordIndex, acc)
-        val lr = cachedLr.load()
-        return -lr * g / sqrt(acc + epsilon)
-    }
-
-    override fun reset() {
-        stepCell.store(0L)
-        cachedLr.store(0.0)
-        for (i in 0 until featureSize) sumG2.store(i, 0.0)
-    }
-}
-
-/**
- * RMSProp: exponential moving average of squared gradients with decay [rho];
- * effective per-coord learning rate is `lr / sqrt(emaG2[i] + epsilon)`.
- */
-class RmspropOptimizer(
-    override val featureSize: Int,
-    /** Base learning-rate schedule. */
-    val learningRate: ScalarExpr,
-    /** EMA decay for the squared gradient. */
-    val rho: Double = 0.9,
-    /** Numerical-stability epsilon. */
-    val epsilon: Double = 1e-8,
-    concurrency: Concurrency = Concurrency.None,
-) : Optimizer {
-
-    init {
-        requirePositiveFeatureSize(featureSize)
-        // Half-open at the top: rho == 1.0 freezes emaG2 at its initial zero, so the effective
-        // learning rate becomes lr / sqrt(epsilon) on every step and the weights diverge.
-        require(rho >= 0.0 && rho < 1.0) { "rho must be in [0, 1); got $rho" }
-        require(epsilon > 0.0) { "epsilon must be positive" }
-    }
-
-    private val mode = concurrency.welfordMode()
-    private val stepCell: StreamLong = mode.newLong(0L)
-    private val cachedLr: StreamDouble = mode.newDouble(0.0)
-    private val emaG2: StreamDoubleArray = mode.newDoubleArray(featureSize)
-
-    override fun resumeAt(step: Long) {
-        stepCell.store(step)
-    }
-
-    override fun advance() {
-        val t = stepCell.addAndGet(1L)
-        cachedLr.store(learningRate.eval(t.toDouble()))
-    }
-
-    override fun computeDelta(coordIndex: Int, gradient: Double, observationWeight: Double): Double {
-        val g = observationWeight * gradient
-        val ema = rho * emaG2.load(coordIndex) + (1.0 - rho) * g * g
-        emaG2.store(coordIndex, ema)
-        val lr = cachedLr.load()
-        return -lr * g / sqrt(ema + epsilon)
-    }
-
-    override fun reset() {
-        stepCell.store(0L)
-        cachedLr.store(0.0)
-        for (i in 0 until featureSize) emaG2.store(i, 0.0)
     }
 }
 

@@ -15,10 +15,8 @@ import com.eignex.kumulant.schema.spec.DDSketch
 import com.eignex.kumulant.schema.spec.DiscreteStatSpec
 import com.eignex.kumulant.schema.spec.FrugalMad
 import com.eignex.kumulant.schema.spec.FrugalQuantile
-import com.eignex.kumulant.schema.spec.HdrHistogram
 import com.eignex.kumulant.schema.spec.HyperLogLog
 import com.eignex.kumulant.schema.spec.Mad
-import com.eignex.kumulant.schema.spec.MinHash
 import com.eignex.kumulant.schema.spec.PageHinkley
 import com.eignex.kumulant.schema.spec.PairedStatSpec
 import com.eignex.kumulant.schema.spec.Reliability
@@ -31,13 +29,11 @@ import com.eignex.kumulant.stat.change.CusumStat
 import com.eignex.kumulant.stat.change.PageHinkleyStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.quantile.FrugalQuantileStat
-import com.eignex.kumulant.stat.quantile.HdrHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.score.AucStat
 import com.eignex.kumulant.stat.sketch.BloomFilterStat
 import com.eignex.kumulant.stat.sketch.CountMinSketchStat
-import com.eignex.kumulant.stat.sketch.MinHashStat
 import com.eignex.kumulant.stat.summary.FrugalMadStat
 import com.eignex.kumulant.stat.summary.MadStat
 import kotlin.test.Test
@@ -92,7 +88,6 @@ class SpecDefaultParityTest {
             series("FrugalMad", FrugalMad(), FrugalMadStat()),
             series("DDSketch", DDSketch(), DDSketchStat()),
             series("TDigest", TDigest(), TDigestStat()),
-            series("HdrHistogram", HdrHistogram(), HdrHistogramStat()),
             series("CounterRate", CounterRate(), CounterRateStat()),
             series("FrugalQuantile", FrugalQuantile(q = 0.9), FrugalQuantileStat(q = 0.9)),
         )
@@ -115,7 +110,6 @@ class SpecDefaultParityTest {
             discrete("HyperLogLog", HyperLogLog(), HyperLogLogStat()),
             discrete("BloomFilter", BloomFilter(), BloomFilterStat()),
             discrete("CountMinSketch", CountMinSketch(), CountMinSketchStat()),
-            discrete("MinHash", MinHash(), MinHashStat()),
         )
         val violations = mutableListOf<String>()
         for ((name, fromSpec, direct) in pairs) {

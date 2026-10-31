@@ -21,7 +21,6 @@ import com.eignex.kumulant.stat.decay.DecayingVarianceStat
 import com.eignex.kumulant.stat.decay.EwmaMeanStat
 import com.eignex.kumulant.stat.decay.EwmaVarianceStat
 import com.eignex.kumulant.stat.forecast.ExponentialSmoothingStat
-import com.eignex.kumulant.stat.forecast.RecursiveVarianceStat
 import com.eignex.kumulant.stat.forecast.SeasonalMode
 import com.eignex.kumulant.stat.change.AdwinStat
 import com.eignex.kumulant.stat.change.CusumStat
@@ -35,7 +34,6 @@ import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.FrugalMadStat
 import com.eignex.kumulant.stat.summary.MadStat
 import com.eignex.kumulant.stat.event.CrossingStat
-import com.eignex.kumulant.stat.event.ExcursionStat
 import com.eignex.kumulant.stat.summary.MaxStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MinStat
@@ -203,14 +201,6 @@ val runLengthStatSpec = seriesStatSpec(
     // uniformUnitWeights yields strictly positive values, so every update is truthy
     // and the longest run equals the stream length.
     reference = { it.count().toDouble() },
-)
-
-val excursionStatSpec = seriesStatSpec(
-    name = "ExcursionStat",
-    factory = { c -> ExcursionStat(c) },
-    updates = ::uniformUnitWeights,
-    scalar = { it.peak },
-    reference = { seq -> seq.fold(Double.NEGATIVE_INFINITY) { acc, u -> max(acc, u.value) } },
 )
 
 val cusumStatSpec = seriesStatSpec(
@@ -562,24 +552,6 @@ val exponentialSmoothingStatSpec = seriesStatSpec(
     reference = ::holtLevelReference,
 )
 
-private const val RV_OMEGA = 0.01
-private const val RV_ALPHA = 0.1
-private const val RV_BETA = 0.85
-
-private fun recursiveVarianceReference(seq: Sequence<Update>): Double {
-    var v = 0.0
-    for (u in seq) v = RV_OMEGA + RV_ALPHA * u.value * u.value + RV_BETA * v
-    return v
-}
-
-val recursiveVarianceStatSpec = seriesStatSpec(
-    name = "RecursiveVarianceStat",
-    factory = { c -> RecursiveVarianceStat(RV_OMEGA, RV_ALPHA, RV_BETA, c) },
-    updates = ::uniformUnitWeights,
-    scalar = { it.variance },
-    reference = ::recursiveVarianceReference,
-)
-
 private val seasonalAlpha = DecayWeighting.Alpha(0.3)
 private val seasonalBeta = DecayWeighting.Alpha(0.05)
 private val seasonalGamma = DecayWeighting.Alpha(0.4)
@@ -766,14 +738,6 @@ val countMinSketchStatSpec = discreteStatSpec(
     reference = { it.count().toDouble() },
 )
 
-val minHashStatSpec = discreteStatSpec(
-    name = "MinHashStat",
-    factory = { c -> com.eignex.kumulant.stat.sketch.MinHashStat(concurrency = c) },
-    updates = ::uniformUnitWeights,
-    scalar = { it.totalSeen.toDouble() },
-    reference = { it.count().toDouble() },
-)
-
 val spaceSavingStatSpec = discreteStatSpec(
     name = "SpaceSavingStat",
     factory = { c -> com.eignex.kumulant.stat.sketch.SpaceSavingStat(capacity = 128, concurrency = c) },
@@ -791,14 +755,6 @@ val ddSketchStatSpec = seriesStatSpec(
     factory = { c -> com.eignex.kumulant.stat.quantile.DDSketchStat(concurrency = c) },
     updates = ::uniformUnitWeights,
     scalar = { it.totalWeights },
-    reference = { it.count().toDouble() },
-)
-
-val hdrHistogramStatSpec = seriesStatSpec(
-    name = "HdrHistogramStat",
-    factory = { c -> com.eignex.kumulant.stat.quantile.HdrHistogramStat(concurrency = c) },
-    updates = ::uniformUnitWeights,
-    scalar = { snap -> snap.weights.sum() },
     reference = { it.count().toDouble() },
 )
 
@@ -1040,7 +996,6 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     rangeStatSpec,
     crossingStatSpec,
     runLengthStatSpec,
-    excursionStatSpec,
     recencyStatSpec,
     sojournStatSpec,
     autocorrelationStatSpec,
@@ -1065,7 +1020,6 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     ewmaMeanStatSpec,
     ewmaVarianceStatSpec,
     exponentialSmoothingStatSpec,
-    recursiveVarianceStatSpec,
     seasonalExponentialSmoothingStatSpec,
     rateStatSpec,
     decayingSumRateStatSpec,
@@ -1073,10 +1027,8 @@ val allSpecs: List<StatSpec<*, *>> = listOf(
     hyperLogLogStatSpec,
     bloomFilterStatSpec,
     countMinSketchStatSpec,
-    minHashStatSpec,
     spaceSavingStatSpec,
     ddSketchStatSpec,
-    hdrHistogramStatSpec,
     bucketHistogramStatSpec,
     reservoirHistogramStatSpec,
     tDigestStatSpec,

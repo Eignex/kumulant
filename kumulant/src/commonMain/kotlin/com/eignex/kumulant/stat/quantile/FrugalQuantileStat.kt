@@ -24,8 +24,7 @@ import com.eignex.kumulant.stream.welfordMode
  *
  * **Use cases:** memory-constrained tracking of a single quantile with no
  * accuracy guarantee; IoT-class deployments, debug-only monitoring. For
- * production quantile work prefer [DDSketchStat], [TDigestStat], or
- * [HdrHistogramStat].
+ * production quantile work prefer [DDSketchStat] or [TDigestStat].
  *
  * **Memory:** O(1); one double estimate plus a lock.
  *

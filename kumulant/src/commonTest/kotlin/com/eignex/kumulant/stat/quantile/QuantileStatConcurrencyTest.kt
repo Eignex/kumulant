@@ -40,19 +40,6 @@ class QuantileStatConcurrencyTest {
     }
 
     @Test
-    fun `HdrHistogramStat sequential math equal across modes`() {
-        val reads = Concurrency.entries.associateWith { mode ->
-            val s = HdrHistogramStat(concurrency = mode)
-            for (v in values) s.update(v)
-            s.read(0L)
-        }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) {
-            assertTrue(ref.weights.contentEquals(r.weights), "HdrHistogram weights mode=$mode")
-        }
-    }
-
-    @Test
     fun `FrugalQuantileStat sequential math equal across modes`() {
         val reads = Concurrency.entries.associateWith { mode ->
             val s = FrugalQuantileStat(q = 0.5, concurrency = mode)

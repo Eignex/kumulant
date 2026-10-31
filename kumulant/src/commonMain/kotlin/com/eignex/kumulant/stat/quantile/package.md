@@ -11,7 +11,6 @@ back, or constant memory at the cost of accuracy.
 |------|--------|-----------|-------------------|
 | [DDSketchStat] | O(log(maxIndexableValue / minIndexableValue) / relativeError) | Relative value error within the indexable range; out-of-range values fold into edge bins | Values spanning orders of magnitude with a configured range and error target. |
 | [TDigestStat] | O(compression) | Adaptive resolution, finer near the tails; no relative-error guarantee | You care about extreme percentiles without choosing a relative-error parameter. |
-| [HdrHistogramStat] | O(precision · log(range)) | Strictest precision in a bounded range | The value range is known up front (e.g. latencies between 1 µs and 1 hr) and you want guaranteed precision in that range. |
 | [BucketHistogramStat] | O(edges) | Caller-supplied edges | You know the meaningful value buckets ahead of time (SLO latency buckets, a probability range split evenly with [BucketHistogramStat.linear]) and want per-bucket counts. |
 | [ReservoirHistogramStat] | O(capacity) | Raw values back | Downstream needs the actual observations (to feed another stat or compute quantities the sketches don't expose). |
 | [FrugalQuantileStat] | O(1); one estimate | Coarse, single-quantile | You can fit only a few bytes per stat and only care about one percentile. |
@@ -23,7 +22,7 @@ back, or constant memory at the cost of accuracy.
 | [SketchResult] | DDSketch snapshot: log-spaced bin map + precomputed quantiles at the configured probabilities |
 | [QuantileResult] | FrugalQuantileStat single-quantile scalar |
 | [TDigestResult] | t-digest centroids + precomputed quantiles |
-| [SparseHistogramResult] | Parallel lower/upper bound arrays with weights; produced by [HdrHistogramStat], [BucketHistogramStat], and [SketchResult.toSparseHistogram] |
+| [SparseHistogramResult] | Parallel lower/upper bound arrays with weights; produced by [BucketHistogramStat] and [SketchResult.toSparseHistogram] |
 | [ReservoirResult] | Bounded reservoir sample of raw values + the sampling weight |
 
 [SketchResult] and [TDigestResult] include quantiles at configured probabilities.
@@ -43,8 +42,6 @@ the deviation from uniformity that the corresponding PIT test consumes.
 
 - **DDSketch** adds matching logarithmic bins. Incoming indices outside the
   receiver's indexable range fold into its edge bins.
-- **HDR** assigns each incoming bin's weight using its lower bound; this
-  preserves matching layouts and approximates other non-negative layouts.
 - **BucketHistogram** adds each incoming interval to the bucket holding its
   midpoint; matching edges merge exactly and other layouts are approximated.
 - **t-digest** combines centroids and recompresses; the result remains approximate
@@ -57,8 +54,8 @@ the deviation from uniformity that the corresponding PIT test consumes.
 
 ## Concurrency
 
-Histogram-shaped stats ([DDSketchStat], [HdrHistogramStat],
-[BucketHistogramStat]) use independent additive cells.
+Histogram-shaped stats ([DDSketchStat], [BucketHistogramStat]) use
+independent additive cells.
 Concurrent modes preserve per-cell updates, with JVM striped adders under
 [com.eignex.kumulant.core.Concurrency.HighWrite]; multi-bin reads are not atomic.
 [ReservoirHistogramStat] locks updates, merges, and reads under Strict and

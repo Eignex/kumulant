@@ -27,7 +27,6 @@ internal fun deriveChildSeed(seed: Long, ordinal: Long): Long = splitmix64(seed 
  * stable byte stream across library versions.
  *
  * Prefer this over `value.hashCode().toLong()` when feeding HLL,
- * [MinHashStat][com.eignex.kumulant.stat.sketch.MinHashStat],
  * [BloomFilterStat][com.eignex.kumulant.stat.sketch.BloomFilterStat], or
  * [CountMinSketchStat][com.eignex.kumulant.stat.sketch.CountMinSketchStat] - those rely on
  * uniform 64-bit entropy, and JVM `hashCode` only provides 32 bits.
@@ -47,7 +46,7 @@ fun interface Hasher64 {
 
 /**
  * Pluggable `Long -> Long` mixer used by the discrete sketch family (HyperLogLog,
- * MinHash, BloomFilter, CountMinSketch) to spread a key's bits across
+ * BloomFilter, CountMinSketch) to spread a key's bits across
  * the full 64-bit range before bucketing. Distinct from [Hasher64] (`ByteArray -> Long`):
  * callers reduce a domain key to a `Long` first (e.g. via [hash64]), and the sketch then
  * mixes that `Long` through here.

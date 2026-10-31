@@ -3,18 +3,16 @@ package com.eignex.kumulant.schema.optimizer
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.serialization.OptimizerSpecSerializer
-import com.eignex.kumulant.stat.regression.AdagradOptimizer
 import com.eignex.kumulant.stat.regression.AdamOptimizer
 import com.eignex.kumulant.stat.regression.Optimizer
-import com.eignex.kumulant.stat.regression.RmspropOptimizer
 import com.eignex.kumulant.stat.regression.SgdOptimizer
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Wire-portable optimizer strategy. Sealed root of [Sgd] / [Adagrad] /
- * [Rmsprop] / [Adam]; consumed by the online linear-model stats
+ * Wire-portable optimizer strategy. Sealed root of [Sgd] / [Adam]; consumed by
+ * the online linear-model stats
  * ([com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat],
  * [com.eignex.kumulant.stat.regression.SoftmaxRegressionStat]) to pick the
  * per-coordinate update rule.
@@ -29,10 +27,6 @@ import kotlinx.serialization.Serializable
  *
  * - [Sgd] when the per-coordinate update rate is stable and you don't need
  *   adaptive learning rates. The cheapest path; stateless.
- * - [Adagrad] when feature occurrence is sparse / power-law and rare
- *   features should learn faster than common ones. Per-coord adaptive rate.
- * - [Rmsprop] when [Adagrad]'s monotone-decreasing learning rate decays too
- *   aggressively. Exponential moving average of squared gradients.
  * - [Adam] for the general-purpose default in modern online learning.
  *   Bias-corrected first / second moments; the closest thing to "just works
  *   on most problems."
@@ -89,58 +83,6 @@ data class Sgd(
 }
 
 /**
- * Adagrad. Per-coordinate adaptive learning rate via accumulated squared
- * gradients: `w[i] -= lr * grad[i] / sqrt(sumG2[i] + epsilon)`.
- *
- * Reach for [Adagrad] when feature occurrence is sparse and uneven;
- * power-law-distributed categorical features, rarely-seen tokens, anything
- * where you want rare features to take big steps and common features to
- * settle into small ones. The accumulating denominator makes Adagrad's
- * effective learning rate monotonically non-increasing, which is the
- * limitation [Rmsprop] addresses.
- */
-@Serializable
-@SerialName("Adagrad")
-data class Adagrad(
-    /** Base learning rate, multiplied by the per-coord `1 / sqrt(sumG2 + eps)` factor. */
-    val learningRate: ScalarExpr = ConstantRate(0.01),
-    /** Numerical-stability epsilon added under the square root to keep the divisor non-zero. */
-    val epsilon: Double = 1e-10,
-) : OptimizerSpec {
-    override fun materialize(featureSize: Int, concurrency: Concurrency): Optimizer {
-        learningRate.requireBound("learningRate")
-        return AdagradOptimizer(featureSize, learningRate, epsilon, concurrency)
-    }
-}
-
-/**
- * RMSProp. Per-coordinate adaptive learning rate via an exponential moving
- * average of squared gradients: the same shape as [Adagrad] but with a
- * sliding window instead of a monotone accumulator.
- *
- * Reach for [Rmsprop] when [Adagrad]'s effective learning rate decays
- * faster than you want; non-stationary streams, online problems where the
- * data distribution drifts over the lifetime of the optimizer. [rho] near 1
- * gives a long memory (close to [Adagrad]); [rho] near 0 gives a short
- * memory.
- */
-@Serializable
-@SerialName("Rmsprop")
-data class Rmsprop(
-    /** Base learning rate, multiplied by the per-coord `1 / sqrt(emaG2 + eps)` factor. */
-    val learningRate: ScalarExpr = ConstantRate(0.01),
-    /** EMA decay for the squared gradient; the memory horizon is roughly `1 / (1 - rho)`. */
-    val rho: Double = 0.9,
-    /** Numerical-stability epsilon added under the square root. */
-    val epsilon: Double = 1e-8,
-) : OptimizerSpec {
-    override fun materialize(featureSize: Int, concurrency: Concurrency): Optimizer {
-        learningRate.requireBound("learningRate")
-        return RmspropOptimizer(featureSize, learningRate, rho, epsilon, concurrency)
-    }
-}
-
-/**
  * Adam. Bias-corrected first and second moments per coordinate
  * (Kingma & Ba 2015); the general-purpose default in modern online
  * learning. Per-coordinate update:
@@ -158,8 +100,8 @@ data class Rmsprop(
  * callers touch is [learningRate].
  *
  * Memory cost is two state arrays of `featureSize` doubles per optimizer;
- * heavier than [Sgd] / [Adagrad] / [Rmsprop] but typically negligible
- * relative to the parameter vector itself.
+ * heavier than [Sgd] but typically negligible relative to the parameter
+ * vector itself.
  */
 @Serializable
 @SerialName("Adam")

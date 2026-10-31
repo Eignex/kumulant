@@ -37,19 +37,6 @@ class SketchStatConcurrencyTest {
     }
 
     @Test
-    fun `MinHashStat sequential math equal across modes`() {
-        val reads = Concurrency.entries.associateWith { mode ->
-            val s = MinHashStat(numHashes = 32, concurrency = mode)
-            for (k in keys) s.update(k)
-            s.read(0L)
-        }
-        val ref = reads.getValue(Concurrency.None)
-        for ((mode, r) in reads) {
-            assertTrue(ref.signatures.contentEquals(r.signatures), "MinHash signatures mode=$mode")
-        }
-    }
-
-    @Test
     fun `SpaceSavingStat classic modes agree on sequential math`() {
         // Relaxed uses Misra-Gries rather than classic Space-Saving and is checked separately.
         val classicModes = listOf(Concurrency.None, Concurrency.Strict, Concurrency.HighWrite)
