@@ -3,9 +3,9 @@ package com.eignex.kumulant.core
 import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.schema.spec.Adwin
 import com.eignex.kumulant.schema.spec.ArgMax
-import com.eignex.kumulant.schema.spec.BucketHistogram
 import com.eignex.kumulant.schema.spec.ArgMin
 import com.eignex.kumulant.schema.spec.BernoulliSum
+import com.eignex.kumulant.schema.spec.BucketHistogram
 import com.eignex.kumulant.schema.spec.Count
 import com.eignex.kumulant.schema.spec.CounterRate
 import com.eignex.kumulant.schema.spec.Crossing
