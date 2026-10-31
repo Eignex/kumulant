@@ -29,6 +29,8 @@ data class CusumResult(
     val alarmUp: Boolean,
     /** True when the negative side has crossed `-threshold`. */
     val alarmDown: Boolean,
+    /** False for a detector that has seen no observation; [CusumStat.merge] skips such a snapshot. */
+    val hasObservation: Boolean = true,
 ) : Result {
     /** True when either side has crossed the threshold. */
     val alarm: Boolean get() = alarmUp || alarmDown
@@ -103,6 +105,9 @@ class CusumStat(
     }
 
     override fun merge(values: CusumResult) {
+        // An untouched shard's zero sums are not evidence of zero drift; averaging them in would halve
+        // the receiver's sums and could clear a live alarm.
+        if (!values.hasObservation) return
         // Adopt the snapshot verbatim while empty, matching RecursiveVarianceStat.merge and
         // ExponentialSmoothingStat.merge. Averaging against a fresh stat's zero would halve the incoming
         // drift, and `alarmUp` thresholds on that sum directly, so the alarm would need twice the shift.
@@ -137,6 +142,7 @@ class CusumStat(
             cusumNegative = neg,
             alarmUp = pos > threshold,
             alarmDown = -neg > threshold,
+            hasObservation = initialized.load() != 0L,
         )
     }
 

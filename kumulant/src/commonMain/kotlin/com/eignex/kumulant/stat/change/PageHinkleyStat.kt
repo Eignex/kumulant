@@ -119,8 +119,9 @@ class PageHinkleyStat(
         // Approximate merge: weighted-average mean, then average the cumulative-drift cells.
         val localCount = count.load()
         val incomingCount = values.count
+        // An untouched shard carries no drift; averaging its zero cells in would halve the receiver's.
+        if (incomingCount == 0L) return@guarded
         val combinedCount = localCount + incomingCount
-        if (combinedCount == 0L) return@guarded
         val combinedMean =
             (mean.load() * localCount + values.mean * incomingCount) / combinedCount.toDouble()
         count.store(combinedCount)

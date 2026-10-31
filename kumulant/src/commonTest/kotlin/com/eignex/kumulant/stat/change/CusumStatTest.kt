@@ -90,4 +90,12 @@ class ChangeDetectorNegativeWeightTest {
         s.update(10.0, weight = -1.0)
         assertTrue(s.read().variance <= before, "variance rose from $before to ${s.read().variance}")
     }
+
+    @Test
+    fun `merging an empty Cusum snapshot keeps the alarm`() {
+        val s = CusumStat(threshold = 5.0)
+        repeat(4) { s.update(3.0) }
+        s.merge(CusumStat(threshold = 5.0).read())
+        assertEquals(10.0, s.read().cusumPositive, DELTA)
+    }
 }
