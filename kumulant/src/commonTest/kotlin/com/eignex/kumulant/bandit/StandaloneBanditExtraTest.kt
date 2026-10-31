@@ -6,7 +6,6 @@ import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
 import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class StandaloneBanditExtraTest {
