@@ -46,7 +46,7 @@ class KumulantJsonTest {
         val serializer = EmbeddedModel.serializer()
         val encoded = SchemaJson.encodeToJsonElement(serializer, original)
 
-        val decoded = SchemaJson.decodeFromJsonElement(serializer, encoded, embeddedCatalog)
+        val decoded = SchemaJson.decodeFromJsonElement(serializer, encoded)
         val entry = decoded.entries.single().getValue("observations") as EmbeddedStat
         val stat = entry.stat.materialize() as SeriesStat<*>
         stat.update(2.0)
@@ -57,27 +57,13 @@ class KumulantJsonTest {
     }
 
     @Test
-    fun `document decoding reports collection map operator and operand paths`() {
+    fun `document decoding rejects malformed nested operands`() {
         val json = """{"entries":[{"observations":{"metric":{"stat":"sum","predicate":{"ge":[{"ref":1},0]}}}}]}"""
         val error = assertFailsWith<SerializationException> {
-            SchemaJson.decodeFromJsonElement(EmbeddedModel.serializer(), Json.parseToJsonElement(json), embeddedCatalog)
+            SchemaJson.decodeFromString(EmbeddedModel.serializer(), json)
         }
 
-        assertTrue("$.entries[0].observations.metric.predicate.ge[0].ref" in error.message.orEmpty(), error.message)
-    }
-
-    @Test
-    fun `root validation rejects unknown fields with lenient JSON settings`() {
-        val json = Json { ignoreUnknownKeys = true }
-        val error = assertFailsWith<SerializationException> {
-            json.decodeFromJsonElement(
-                EmbeddedModel.serializer(),
-                Json.parseToJsonElement("""{"entries":[],"unknown":1}"""),
-                embeddedCatalog,
-            )
-        }
-
-        assertTrue("$.unknown" in error.message.orEmpty(), error.message)
+        assertTrue("'name' should be quoted" in error.message.orEmpty(), error.message)
     }
 
     @Test

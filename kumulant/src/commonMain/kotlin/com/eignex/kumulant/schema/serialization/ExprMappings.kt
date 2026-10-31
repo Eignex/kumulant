@@ -10,8 +10,8 @@ internal class InputMapping(name: String) : JsonPayloadMapping {
 
     override fun encode(body: JsonObject): JsonElement = token
 
-    override fun decode(payload: JsonElement, path: String): JsonObject {
-        if (payload != token) invalid(path, "unknown input or feedback source")
+    override fun decode(payload: JsonElement): JsonObject {
+        if (payload != token) invalid("unknown input or feedback source $payload")
         return JsonObject(emptyMap())
     }
 
@@ -30,9 +30,7 @@ internal object NumberMapping : JsonPayloadMapping {
         return JsonUnquotedLiteral(value.toString().replace(".0E", "E").removeSuffix(".0"))
     }
 
-    override fun decode(payload: JsonElement, path: String): JsonObject = JsonObject(mapOf("v" to payload))
-
-    override fun fieldPath(field: String, path: String): String = path
+    override fun decode(payload: JsonElement): JsonObject = JsonObject(mapOf("v" to payload))
 
     override fun payloadSchema(body: JsonObject): JsonObject =
         body.getValue("properties").jsonObject.getValue("v").jsonObject
