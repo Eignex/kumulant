@@ -169,7 +169,7 @@ class CountMinSketchStat(
         }
     }
 
-    override fun merge(values: CountMinSketchResult) {
+    override fun merge(values: CountMinSketchResult, timestampNanos: Long) {
         validateMerge(values)
         for (i in 0 until counterCount) {
             val incoming = values.counters[i]

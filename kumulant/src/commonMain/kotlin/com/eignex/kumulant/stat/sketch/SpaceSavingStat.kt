@@ -251,7 +251,7 @@ class SpaceSavingStat(
         }
     }
 
-    override fun merge(values: HeavyHittersResult) {
+    override fun merge(values: HeavyHittersResult, timestampNanos: Long) {
         validateMerge(values)
         // Mixed-policy merges add shortfall and report the weaker policy.
         // The lock keeps deficit and policy consistent across reads and resets.

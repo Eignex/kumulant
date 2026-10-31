@@ -303,4 +303,22 @@ class WindowedStatsTest {
             assertEquals(5.0, stat.read(T0).sum, DELTA, "weight=$weight")
         }
     }
+
+    @Test
+    fun `a merge at a caller timestamp is visible to a read at that timestamp`() {
+        val t = 1_700_000_000_000_000_000L
+        val windowed = SumStat().windowed(60.seconds)
+        windowed.update(1.0, t)
+        windowed.merge(SumResult(5.0), t)
+        assertEquals(6.0, windowed.read(t).sum, DELTA)
+    }
+
+    @Test
+    fun `a merge older than the window is not counted`() {
+        val t = 1_700_000_000_000_000_000L
+        val windowed = SumStat().windowed(60.seconds)
+        windowed.update(1.0, t)
+        windowed.merge(SumResult(5.0), t - 120.seconds.inWholeNanoseconds)
+        assertEquals(1.0, windowed.read(t).sum, DELTA)
+    }
 }

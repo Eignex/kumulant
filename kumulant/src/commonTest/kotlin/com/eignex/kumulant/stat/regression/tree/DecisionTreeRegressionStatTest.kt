@@ -21,7 +21,7 @@ class DecisionTreeRegressionStatTest {
             delegate.update(value, timestampNanos, weight)
         }
 
-        override fun merge(values: WeightedVarianceResult) {
+        override fun merge(values: WeightedVarianceResult, timestampNanos: Long) {
             delegate.merge(values)
         }
 

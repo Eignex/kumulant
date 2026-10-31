@@ -156,7 +156,7 @@ class MinHashStat(
         }
     }
 
-    override fun merge(values: MinHashResult) {
+    override fun merge(values: MinHashResult, timestampNanos: Long) {
         validateMerge(values)
         for (i in 0 until numHashes) {
             val incoming = values.signatures[i]

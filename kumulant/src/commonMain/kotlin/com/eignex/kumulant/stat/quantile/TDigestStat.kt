@@ -290,7 +290,7 @@ class TDigestStat(
         }
     }
 
-    override fun merge(values: TDigestResult) {
+    override fun merge(values: TDigestResult, timestampNanos: Long) {
         validateMerge(values)
         lock.guarded {
             drainLocked()

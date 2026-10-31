@@ -47,7 +47,7 @@ class RangeStat(override val concurrency: Concurrency = Concurrency.None) : Seri
         casMax(max, value)
     }
 
-    override fun merge(values: RangeResult) {
+    override fun merge(values: RangeResult, timestampNanos: Long) {
         casMin(min, values.min)
         casMax(max, values.max)
     }

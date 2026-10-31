@@ -141,7 +141,7 @@ class HyperLogLogStat(
         }
     }
 
-    override fun merge(values: HyperLogLogResult) {
+    override fun merge(values: HyperLogLogResult, timestampNanos: Long) {
         validateMerge(values)
         for (i in 0 until m) {
             val incoming = values.registers[i].toLong()

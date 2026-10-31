@@ -69,7 +69,7 @@ class FrugalMadStat(
 
     override fun read(timestampNanos: Long): MadResult = lock.guarded { MadResult(median, deviation) }
 
-    override fun merge(values: MadResult) = lock.guarded {
+    override fun merge(values: MadResult, timestampNanos: Long) = lock.guarded {
         if (values.median.isNaN()) return@guarded
         val incomingDeviation = if (values.mad.isNaN()) 0.0 else values.mad
         if (!initialized) {

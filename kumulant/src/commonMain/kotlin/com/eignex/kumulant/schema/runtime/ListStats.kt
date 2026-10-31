@@ -51,9 +51,9 @@ internal sealed class AbstractListStats<R : Result, S : Stat<out R>>(
     }
 
     @Suppress("UNCHECKED_CAST")
-    final override fun merge(values: ResultList<R>) {
+    final override fun merge(values: ResultList<R>, timestampNanos: Long) {
         validateMerge(values)
-        for (i in entries.indices) (entries[i].second as Stat<R>).merge(values.results[i])
+        for (i in entries.indices) (entries[i].second as Stat<R>).merge(values.results[i], timestampNanos)
     }
 }
 

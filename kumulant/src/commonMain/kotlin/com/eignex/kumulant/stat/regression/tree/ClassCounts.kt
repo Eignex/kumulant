@@ -135,7 +135,7 @@ class ClassCountsStat(
         }
     }
 
-    override fun merge(values: ClassCountsResult) {
+    override fun merge(values: ClassCountsResult, timestampNanos: Long) {
         validateMerge(values)
         for (k in 0 until numClasses) cells.add(k, values.counts[k])
     }

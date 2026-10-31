@@ -257,7 +257,7 @@ class SoftmaxRegressionStat(
         }
     }
 
-    override fun merge(values: SoftmaxRegressionResult) {
+    override fun merge(values: SoftmaxRegressionResult, timestampNanos: Long) {
         validateMerge(values)
         lock.guarded {
             val w1 = totalWeightsCell.load()

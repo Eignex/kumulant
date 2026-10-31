@@ -94,7 +94,7 @@ class RateStat(override val concurrency: Concurrency = Concurrency.None) : Serie
         )
     }
 
-    override fun merge(values: RateResult) {
+    override fun merge(values: RateResult, timestampNanos: Long) {
         totalValues.add(values.totalValue)
 
         // An untouched shard has zero total and reports its read timestamp as the start. A nonzero

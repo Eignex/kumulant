@@ -97,7 +97,7 @@ class DecisionTreeClassifierStat(
         }
     }
 
-    override fun merge(values: TreeClassificationResult) {
+    override fun merge(values: TreeClassificationResult, timestampNanos: Long) {
         validateMerge(values)
         tree.mergeSnapshot(values.root)
     }

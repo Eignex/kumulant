@@ -55,7 +55,7 @@ class RecencyStat(override val concurrency: Concurrency = Concurrency.None) : Se
         seen.store(1L)
     }
 
-    override fun merge(values: RecencyResult) {
+    override fun merge(values: RecencyResult, timestampNanos: Long) {
         if (values.hasObservation) {
             casMax(lastObserved, values.lastObservedTimestampNanos)
             seen.store(1L)

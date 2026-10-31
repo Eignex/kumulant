@@ -81,7 +81,7 @@ class RecursiveVarianceStat(
         }
     }
 
-    override fun merge(values: RecursiveVarianceResult) {
+    override fun merge(values: RecursiveVarianceResult, timestampNanos: Long) {
         while (true) {
             val current = variance.load()
             // Adopt the snapshot verbatim while empty, matching ExponentialSmoothingStat.merge.

@@ -140,7 +140,7 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
         }
     }
 
-    override fun merge(values: ReliabilityResult) {
+    override fun merge(values: ReliabilityResult, timestampNanos: Long) {
         validateMerge(values)
         // Denominator first, matching update(), so a concurrent reader cannot observe a
         // folded-in outcome whose weight has not landed yet.

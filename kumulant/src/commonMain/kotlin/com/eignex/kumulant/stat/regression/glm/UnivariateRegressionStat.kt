@@ -135,7 +135,7 @@ class UnivariateRegressionStat(
         }
     }
 
-    override fun merge(values: UnivariateRegressionResult) = lock.guarded {
+    override fun merge(values: UnivariateRegressionResult, timestampNanos: Long) = lock.guarded {
         val w2 = values.totalWeights
         if (w2 <= 0.0) return@guarded
 

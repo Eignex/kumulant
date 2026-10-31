@@ -11,6 +11,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.feat
 import com.eignex.kumulant.operation.VectorizedStat
+import com.eignex.kumulant.operation.windowed
 import com.eignex.kumulant.operation.withValue
 import com.eignex.kumulant.operation.withWeight
 import com.eignex.kumulant.schema.expr.*
@@ -38,6 +39,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 private fun sumVector(d: Int) = VectorizedStat(d, SumStat())
 private fun meanVector(d: Int) = VectorizedStat(d, MeanStat())
@@ -49,7 +51,7 @@ class StatGroupTest {
 
         override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
 
-        override fun merge(values: SumResult) = Unit
+        override fun merge(values: SumResult, timestampNanos: Long) = Unit
 
         override fun reset() = Unit
 
@@ -217,7 +219,7 @@ class StatGroupTest {
         val tracking = object : SeriesStat<SumResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: SumResult) = Unit
+            override fun merge(values: SumResult, timestampNanos: Long) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = SumResult(0.0)
             override fun create(concurrency: Concurrency?): SeriesStat<SumResult> {
@@ -322,6 +324,15 @@ class StatGroupTest {
             StatGroup(StatKey<SumResult>("hits") to SumStat(), StatKey<SumResult>("hits") to SumStat())
         }
     }
+
+    @Test
+    fun `group merge places a windowed child at the caller timestamp`() {
+        val t = 1_700_000_000_000_000_000L
+        val key = StatKey<SumResult>("sum")
+        val group = StatGroup(key to SumStat().windowed(60.seconds))
+        group.merge(GroupResult(results = mapOf("sum" to SumResult(5.0))), t)
+        assertEquals(5.0, group.read(t)[key].sum, DELTA)
+    }
 }
 
 class PairedStatGroupTest {
@@ -400,7 +411,7 @@ class PairedStatGroupTest {
         val tracking = object : PairedStat<UnivariateRegressionResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: UnivariateRegressionResult) = Unit
+            override fun merge(values: UnivariateRegressionResult, timestampNanos: Long) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = UnivariateRegressionResult(
                 Penalty.None,
@@ -523,7 +534,7 @@ class PairedListStatsTest {
         val tracking = object : PairedStat<UnivariateRegressionResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: UnivariateRegressionResult) = Unit
+            override fun merge(values: UnivariateRegressionResult, timestampNanos: Long) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = UnivariateRegressionResult(
                 Penalty.None,
@@ -632,7 +643,7 @@ class VectorStatGroupTest {
         val tracking = object : VectorStat<ResultList<SumResult>> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(vector: Vector, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: ResultList<SumResult>) = Unit
+            override fun merge(values: ResultList<SumResult>, timestampNanos: Long) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())
             override fun create(concurrency: Concurrency?): VectorStat<ResultList<SumResult>> {
@@ -749,7 +760,7 @@ class VectorListStatsTest {
         val tracking = object : VectorStat<ResultList<SumResult>> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(vector: Vector, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: ResultList<SumResult>) = Unit
+            override fun merge(values: ResultList<SumResult>, timestampNanos: Long) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = ResultList<SumResult>(emptyList())
             override fun create(concurrency: Concurrency?): VectorStat<ResultList<SumResult>> {
@@ -831,7 +842,7 @@ class DiscreteStatGroupTest {
         val tracking = object : DiscreteStat<HyperLogLogResult> {
             override val concurrency: Concurrency = Concurrency.None
             override fun update(value: Long, timestampNanos: Long, weight: Double) = Unit
-            override fun merge(values: HyperLogLogResult) = Unit
+            override fun merge(values: HyperLogLogResult, timestampNanos: Long) = Unit
             override fun reset() = Unit
             override fun read(timestampNanos: Long) = HyperLogLogResult(0.0, 10, IntArray(0), 0L)
             override fun create(concurrency: Concurrency?): DiscreteStat<HyperLogLogResult> {

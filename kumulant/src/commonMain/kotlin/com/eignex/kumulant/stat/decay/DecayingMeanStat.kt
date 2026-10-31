@@ -94,10 +94,10 @@ class DecayingMeanStat(
         return if (ratio.isFinite()) ratio else 0.0
     }
 
-    override fun merge(values: DecayingMeanResult) {
+    override fun merge(values: DecayingMeanResult, timestampNanos: Long) {
         if (values.totalWeights <= 0.0) return
-        sumX.merge(DecayingSumResult(values.mean * values.totalWeights, values.timestampNanos))
-        sumW.merge(DecayingSumResult(values.totalWeights, values.timestampNanos))
+        sumX.merge(DecayingSumResult(values.mean * values.totalWeights, values.timestampNanos), timestampNanos)
+        sumW.merge(DecayingSumResult(values.totalWeights, values.timestampNanos), timestampNanos)
     }
 
     override fun reset() {

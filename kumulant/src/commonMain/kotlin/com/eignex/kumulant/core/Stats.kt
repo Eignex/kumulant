@@ -50,11 +50,15 @@ interface Stat<R : Result> {
     fun validateMerge(values: R) = Unit
 
     /**
-     * Fold a compatible snapshot [values] into this accumulator.
+     * Fold a compatible snapshot [values] into this accumulator at [timestampNanos].
      * Implementations document whether the combine is exact or approximate and which
      * state the snapshot omits. The source accumulator is unaffected.
+     *
+     * Time-dependent statistics, such as windows, place the snapshot at [timestampNanos], which
+     * must share the clock the caller uses for updates and reads. Time-independent statistics
+     * ignore it.
      */
-    fun merge(values: R)
+    fun merge(values: R, timestampNanos: Long = currentTimeNanos())
 
     /**
      * Restore the configured baseline, including any prior seed.

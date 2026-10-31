@@ -118,13 +118,13 @@ class MadStat(
         values.digest?.let { valueDigest.validateMerge(it) }
     }
 
-    override fun merge(values: MadResult) {
+    override fun merge(values: MadResult, timestampNanos: Long) {
         val digest = values.digest
         if (digest != null) {
-            valueDigest.merge(digest)
+            valueDigest.merge(digest, timestampNanos)
         } else if (!values.median.isNaN()) {
             val deviation = if (values.mad.isNaN()) 0.0 else values.mad
-            valueDigest.update(values.median - deviation, weight = 0.5)
+            valueDigest.update(values.median - deviation, timestampNanos, 0.5)
             valueDigest.update(values.median + deviation, weight = 0.5)
         }
     }

@@ -246,7 +246,7 @@ class BayesianRegressionStat(
      * matrix rather than returning NaNs. Bias is merged the same way, treating
      * the intercept as a scalar Gaussian with zero prior mean.
      */
-    override fun merge(values: PrecisionRegressionResult) = mergeInternal(values)
+    override fun merge(values: PrecisionRegressionResult, timestampNanos: Long) = mergeInternal(values)
 
     private fun mergeInternal(values: PrecisionRegressionResult) {
         validateMerge(values)

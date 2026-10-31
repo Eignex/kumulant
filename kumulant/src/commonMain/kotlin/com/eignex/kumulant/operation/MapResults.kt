@@ -38,7 +38,7 @@ private class MappedResultCore<R1 : Result, R2 : Result>(
 ) : Stat<R2> {
     override val concurrency: Concurrency get() = delegate.concurrency
     override fun validateMerge(values: R2) = delegate.validateMerge(reverse(values))
-    override fun merge(values: R2) = delegate.merge(reverse(values))
+    override fun merge(values: R2, timestampNanos: Long) = delegate.merge(reverse(values), timestampNanos)
     override fun reset() = delegate.reset()
     override fun read(timestampNanos: Long): R2 = forward(delegate.read(timestampNanos))
     override fun create(concurrency: Concurrency?): Stat<R2> =

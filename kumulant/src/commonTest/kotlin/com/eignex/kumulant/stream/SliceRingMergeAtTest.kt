@@ -16,7 +16,7 @@ class SliceRingMergeAtTest {
 
         override fun update(value: Double, timestampNanos: Long, weight: Double) = Unit
 
-        override fun merge(values: SumResult) = Unit
+        override fun merge(values: SumResult, timestampNanos: Long) = Unit
 
         override fun reset() = Unit
 

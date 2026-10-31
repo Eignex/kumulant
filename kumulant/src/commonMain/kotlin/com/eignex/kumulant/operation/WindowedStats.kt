@@ -85,9 +85,9 @@ internal class WindowedSeriesStat<R : Result>(
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
     override fun validateMerge(values: R) = template.validateMerge(values)
-    override fun merge(values: R) {
+    override fun merge(values: R, timestampNanos: Long) {
         validateMerge(values)
-        ring.mergeNow(values)
+        ring.mergeAt(timestampNanos, values)
     }
     override fun reset() = ring.reset()
 }
@@ -112,9 +112,9 @@ internal class WindowedPairedStat<R : Result>(
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
     override fun validateMerge(values: R) = template.validateMerge(values)
-    override fun merge(values: R) {
+    override fun merge(values: R, timestampNanos: Long) {
         validateMerge(values)
-        ring.mergeNow(values)
+        ring.mergeAt(timestampNanos, values)
     }
     override fun reset() = ring.reset()
 }
@@ -143,9 +143,9 @@ internal class WindowedDiscreteStat<R : Result>(
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
     override fun validateMerge(values: R) = template.validateMerge(values)
-    override fun merge(values: R) {
+    override fun merge(values: R, timestampNanos: Long) {
         validateMerge(values)
-        ring.mergeNow(values)
+        ring.mergeAt(timestampNanos, values)
     }
     override fun reset() = ring.reset()
 }
@@ -170,9 +170,9 @@ internal class WindowedVectorStat<R : Result>(
 
     override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
     override fun validateMerge(values: R) = template.validateMerge(values)
-    override fun merge(values: R) {
+    override fun merge(values: R, timestampNanos: Long) {
         validateMerge(values)
-        ring.mergeNow(values)
+        ring.mergeAt(timestampNanos, values)
     }
     override fun reset() = ring.reset()
 }

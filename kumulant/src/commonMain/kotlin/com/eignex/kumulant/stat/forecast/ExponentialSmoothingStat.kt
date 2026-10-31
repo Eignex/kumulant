@@ -231,7 +231,7 @@ class ExponentialSmoothingStat(
         require(values.mode == mode) { "merge seasonal mode ${values.mode} != $mode" }
     }
 
-    override fun merge(values: ExponentialSmoothingResult) = lock.guarded {
+    override fun merge(values: ExponentialSmoothingResult, timestampNanos: Long) = lock.guarded {
         validateMerge(values)
         if (initialized.addAndGet(1L) == 1L) {
             level.store(values.level)
