@@ -64,7 +64,7 @@ family implements exactly the pieces that fit.
   an argmax over independent per-arm scores. `ContextualScorable` is
   the contextual analogue.
 
-Joint-sampling bandits (Boltzmann, top-two Thompson) do not expose
+Joint-sampling bandits (top-two Thompson) do not expose
 `Scorable` because no per-arm score is meaningful in isolation. Exp3
 does not fit `PerArmBandit` because its snapshot stores joint sampling state. Each
 concrete bandit's KDoc states which interfaces it implements and why.

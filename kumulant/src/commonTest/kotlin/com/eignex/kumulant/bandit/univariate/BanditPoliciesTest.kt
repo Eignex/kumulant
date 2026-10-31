@@ -3,8 +3,10 @@ package com.eignex.kumulant.bandit.univariate
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.MomentsResult
+import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.abs
+import kotlin.math.ln
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -152,5 +154,56 @@ class EpsilonPolicyRandomnessTest {
                 "arms in one round disagreed on exploring, seed=$seed",
             )
         }
+    }
+
+    @Test
+    fun `Boltzmann rejects bad temperature settings`() {
+        assertFailsWith<IllegalArgumentException> { Boltzmann(initialTau = 0.0) }
+        assertFailsWith<IllegalArgumentException> { Boltzmann(minTau = 0.0) }
+        assertFailsWith<IllegalArgumentException> { Boltzmann(decay = -1.0) }
+    }
+
+    @Test
+    fun `Boltzmann plays arms with softmax probabilities`() {
+        val pol = Boltzmann(initialTau = 1.0, decay = 0.0)
+        val low = WeightedMeanResult(1.0, 0.0)
+        val high = WeightedMeanResult(1.0, ln(3.0))
+        val rng = Random(7)
+        val trials = 20_000
+        val highWins = (0 until trials).count { pol.evaluate(high, 0L, rng) > pol.evaluate(low, 0L, rng) }
+        assertEquals(0.75, highWins.toDouble() / trials, 0.02)
+    }
+
+    @Test
+    fun `Boltzmann concentrates on the best arm as temperature cools`() {
+        val mab = MultiArmedBandit(nbrArms = 3, policy = Boltzmann(decay = 0.5), random = Random(1))
+        repeat(500) {
+            val a = mab.choose()
+            mab.update(a, if (a == 1) 1.0 else if (a == 2) 0.5 else 0.0)
+        }
+        val picks = IntArray(3)
+        repeat(500) { picks[mab.choose()]++ }
+        assertTrue(picks[1] > picks[0] && picks[1] > picks[2], "arm 1 should dominate: ${picks.toList()}")
+    }
+
+    @Test
+    fun `Boltzmann temperature follows the cooling schedule`() {
+        assertEquals(1.0 / 3.0, Boltzmann(initialTau = 1.0, decay = 1.0).temperature(2L), 1e-9)
+    }
+
+    @Test
+    fun `Boltzmann temperature respects its floor`() {
+        assertEquals(0.5, Boltzmann(initialTau = 1.0, minTau = 0.5, decay = 5.0).temperature(49L), 1e-9)
+    }
+
+    @Test
+    fun `Boltzmann temperature is fixed when decay is zero`() {
+        assertEquals(2.5, Boltzmann(initialTau = 2.5, decay = 0.0).temperature(1L), 1e-9)
+    }
+
+    @Test
+    fun `Boltzmann scores a NaN mean as a finite draw`() {
+        val score = Boltzmann().evaluate(WeightedMeanResult(1.0, Double.NaN), 0L, Random(0))
+        assertTrue(score.isFinite(), "score=$score")
     }
 }

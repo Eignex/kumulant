@@ -1,6 +1,5 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.kumulant.bandit.univariate.BoltzmannBandit
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
 import com.eignex.kumulant.bandit.univariate.NormalTS
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonBandit
@@ -36,27 +35,6 @@ class StandaloneBanditExtraTest {
         val large = Exp3Bandit.defaultEta(10)
         assertTrue(small > 0.0 && large > 0.0)
         assertTrue(small.isFinite() && large.isFinite())
-    }
-
-    @Test
-    fun `Boltzmann temperature respects floor`() {
-        val b = BoltzmannBandit(
-            nbrArms = 2,
-            initialTau = 1.0,
-            minTau = 0.5,
-            decay = 5.0,
-            random = Random(0),
-        )
-        repeat(50) { b.playDistribution() }
-        assertEquals(0.5, b.temperature(), 1e-9)
-    }
-
-    @Test
-    fun `Boltzmann fixed temperature when decay is zero`() {
-        val b = BoltzmannBandit(nbrArms = 2, initialTau = 2.5, decay = 0.0, random = Random(0))
-        b.playDistribution()
-        b.playDistribution()
-        assertEquals(2.5, b.temperature(), 1e-9)
     }
 
     @Test

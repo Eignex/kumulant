@@ -13,7 +13,7 @@ import kotlin.random.Random
  *
  * [Scorable] and [ContextualScorable] expose independent per-arm scores for inspection
  * or custom selection. Policies that sample a joint arm distribution, such as
- * Boltzmann, Top-Two Thompson, and EXP3, do not expose independent scores.
+ * Top-Two Thompson and EXP3, do not expose independent scores.
  */
 interface Bandit {
     /** Number of arms in the population. Fixed at construction; arm indices are `[0, nbrArms)`. */
@@ -178,11 +178,9 @@ interface PerArmBandit<R : Result> : Snapshotable<List<R>> {
  * per-arm scores expose this; UCB1, Thompson, epsilon-greedy, etc.
  *
  * Joint-sampling bandits don't implement [Scorable]: their selection rule
- * doesn't decompose into a per-arm score. Boltzmann samples from a softmax
- * over arms (the score of any one arm depends on every other arm's score),
- * Top-Two Thompson samples twice and picks conditionally, Exp3 samples from
- * a weight distribution. For those, use the bandit's [Snapshotable.snapshot]
- * to read the underlying state directly.
+ * doesn't decompose into a per-arm score. Top-Two Thompson samples twice and
+ * picks conditionally, Exp3 samples from a weight distribution. For those, use
+ * the bandit's [Snapshotable.snapshot] to read the underlying state directly.
  */
 interface Scorable {
     /**

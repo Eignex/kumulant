@@ -45,24 +45,6 @@ data class RouletteWheelSpec(
     val minWeight: Double = 0.01,
 ) : UnivariateBanditSpec
 
-/** Spec for [BoltzmannBandit]. */
-@Serializable
-@SerialName("Boltzmann")
-data class BoltzmannSpec(
-    /** Number of arms in the population. */
-    val nbrArms: Int,
-    /** Per-arm prior on the running reward mean. */
-    val priorMean: Double = 0.0,
-    /** Per-arm prior pseudo-count. */
-    val priorWeight: Double = 0.02,
-    /** Initial softmax temperature. */
-    val initialTau: Double = 1.0,
-    /** Floor on the temperature schedule. */
-    val minTau: Double = 1e-3,
-    /** Cooling decay exponent: `tau(t) = initialTau / t^decay`. */
-    val decay: Double = 1.0,
-) : UnivariateBanditSpec
-
 /** Spec for [Exp3Bandit]. Pass `null` for [eta] / [gamma] to use the algorithm's defaults. */
 @Serializable
 @SerialName("Exp3")

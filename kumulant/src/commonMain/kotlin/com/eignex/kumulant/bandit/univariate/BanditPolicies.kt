@@ -411,6 +411,56 @@ class EpsilonDecreasing(
 }
 
 /**
+ * Boltzmann exploration (softmax bandit): plays arm `a` with probability proportional to
+ * `exp(mean(a) / tau(t))`, where the temperature cools as
+ * `tau(t) = max(minTau, initialTau / t^decay)` over the 1-based round `t`; `decay = 1`
+ * is Cesa-Bianchi & Fischer's classical recipe and `decay = 0` a fixed temperature.
+ * High temperature flattens play toward uniform exploration; low temperature sharpens
+ * it toward greedy exploitation.
+ *
+ * The softmax draw is the argmax of `mean / tau` plus independent standard Gumbel noise
+ * per arm, which samples the softmax distribution exactly, so the policy scores arms
+ * independently inside [MultiArmedBandit]. A non-finite mean scores as logit `0`, so a
+ * corrupt arm stays playable without dominating.
+ *
+ * **Use cases:** stationary scalar-reward problems where smooth probabilistic
+ * exploration is preferable to UCB's deterministic confidence bounds; any setting
+ * where a tunable cooling schedule is convenient.
+ *
+ * **Randomness:** one `rng.nextDouble()` per arm per evaluation.
+ */
+class Boltzmann(
+    /** Initial temperature; the schedule cools from here. */
+    val initialTau: Double = 1.0,
+    /** Floor on the temperature so the softmax never collapses to a delta. */
+    val minTau: Double = 1e-3,
+    /** Cooling decay exponent: `tau(t) = initialTau / t^decay`. `0.0` is fixed-temperature. */
+    val decay: Double = 1.0,
+    priorMean: Double = 0.0,
+    priorWeight: Double = 0.02,
+) : BanditPolicy<WeightedMeanResult> {
+    init {
+        require(initialTau > 0.0) { "initialTau must be positive, got $initialTau" }
+        require(minTau > 0.0) { "minTau must be positive, got $minTau" }
+        require(decay >= 0.0) { "decay must be non-negative, got $decay" }
+    }
+
+    override val arm = MeanArm(priorMean, priorWeight)
+
+    /** Temperature at the 0-based [step] the bandit passes to [evaluate]. */
+    fun temperature(step: Long): Double {
+        if (decay == 0.0) return initialTau
+        val round = (step + 1L).coerceAtLeast(1L).toDouble()
+        return maxOf(minTau, initialTau / round.pow(decay))
+    }
+
+    override fun evaluate(snapshot: WeightedMeanResult, step: Long, rng: Random): Double {
+        val logit = (snapshot.mean / temperature(step)).takeIf { it.isFinite() } ?: 0.0
+        return logit - ln(-ln(rng.nextDouble()))
+    }
+}
+
+/**
  * Pure-exploration policy: every evaluate returns a fresh uniform draw,
  * so the bandit picks arms uniformly at random regardless of observations.
  * No exploitation at all; the opposite extreme of [Greedy].

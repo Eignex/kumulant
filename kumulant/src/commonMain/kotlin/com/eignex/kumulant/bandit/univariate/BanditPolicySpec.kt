@@ -110,6 +110,22 @@ data class EpsilonDecreasingSpec(
     val priorSquaredDeviations: Double = 0.02,
 ) : BanditPolicySpec<WeightedVarianceResult>
 
+/** Spec for [Boltzmann]. */
+@Serializable
+@SerialName("Boltzmann")
+data class BoltzmannSpec(
+    /** Initial softmax temperature. */
+    val initialTau: Double = 1.0,
+    /** Floor on the temperature schedule. */
+    val minTau: Double = 1e-3,
+    /** Cooling decay exponent: `tau(t) = initialTau / t^decay`. */
+    val decay: Double = 1.0,
+    /** Per-arm prior on the running reward mean. */
+    val priorMean: Double = 0.0,
+    /** Per-arm prior pseudo-count. */
+    val priorWeight: Double = 0.02,
+) : BanditPolicySpec<WeightedMeanResult>
+
 /** Spec for [UniformSelection]. */
 @Serializable
 @SerialName("UniformSelection")

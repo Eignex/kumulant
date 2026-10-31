@@ -22,7 +22,6 @@ internal object UnivariateBanditSpecSerializer : KumulantSerializer<UnivariateBa
     listOf(
         jsonNode("multiArmed") { MultiArmedSpec.serializer(PolymorphicSerializer(Result::class)) },
         jsonNode<RouletteWheelSpec>("rouletteWheel"),
-        jsonNode<BoltzmannSpec>("boltzmann"),
         jsonNode<Exp3Spec>("exp3"),
         jsonNode<TrackedUnivariateSpec>("tracked"),
         jsonNode("topTwoThompson") { TopTwoThompsonSpec.serializer(PolymorphicSerializer(Result::class)) },
@@ -50,6 +49,7 @@ internal object BanditPolicySpecSerializer : KumulantSerializer<BanditPolicySpec
         jsonNode<Ucb1NormalSpec>("ucb1Normal"),
         jsonNode<Ucb1TunedSpec>("ucb1Tuned"),
         jsonNode<GreedySpec>("greedy"),
+        jsonNode<BoltzmannSpec>("boltzmann"),
         jsonNode<EpsilonGreedySpec>("epsilonGreedy"),
         jsonNode<EpsilonDecreasingSpec>("epsilonDecreasing"),
         jsonNode<UniformSelectionSpec>("uniformSelection"),
