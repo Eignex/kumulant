@@ -16,9 +16,13 @@ Each implements [com.eignex.kumulant.core.SeriesStat].
 [ExponentialSmoothingStat] tracks two coupled cells:
 
 - `level`: the smoothed running level, updated as
-  `level = alpha * value + (1 - alpha) * (priorLevel + priorTrend)`.
+  `level = a * value + (1 - a) * (priorLevel + phi * priorTrend)`.
 - `trend`: the smoothed level-to-level change, updated as
-  `trend = beta * (level - priorLevel) + (1 - beta) * priorTrend`.
+  `trend = b * (level - priorLevel) + (1 - b) * phi * priorTrend`.
+
+`alpha` and `beta` are decay rates per unit of weight, not smoothing factors:
+the steps are `a = 1 - exp(-alpha * weight)` and `b = 1 - exp(-beta * weight)`,
+so any finite rate `>= 0` is valid.
 
 The result exposes `forecast(steps)` which projects the level forward
 by a damped trend: `forecast(h) = level + phi * (1 - phi^h) / (1 - phi) * trend`.

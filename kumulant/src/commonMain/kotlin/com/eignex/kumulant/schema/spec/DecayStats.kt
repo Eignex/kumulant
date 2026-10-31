@@ -41,7 +41,10 @@ data class DecayingVariance(
 @Serializable
 @SerialName("EwmaMean")
 data class EwmaMean(
-    /** Per-observation smoothing factor in `(0, 1]`. */
+    /**
+     * Decay rate per unit of observation weight: each update moves the mean by `1 - exp(-alpha * weight)`.
+     * Any finite value `>= 0`; `0` keeps the mean where it is.
+     */
     val alpha: Double,
 ) : SeriesStatSpec<WeightedMeanResult>
 
@@ -49,7 +52,10 @@ data class EwmaMean(
 @Serializable
 @SerialName("EwmaVariance")
 data class EwmaVariance(
-    /** Per-observation smoothing factor in `(0, 1]`. */
+    /**
+     * Decay rate per unit of observation weight: each update moves the estimates by `1 - exp(-alpha * weight)`.
+     * Any finite value `>= 0`; `0` keeps them where they are.
+     */
     val alpha: Double,
 ) : SeriesStatSpec<WeightedVarianceResult>
 
@@ -60,15 +66,15 @@ data class EwmaVariance(
 @Serializable
 @SerialName("ExponentialSmoothing")
 data class ExponentialSmoothing(
-    /** Per-observation smoothing factor for the level. */
+    /** Level decay rate per unit of weight; the level step is `1 - exp(-alpha * weight)`. Finite and `>= 0`. */
     val alpha: Double,
-    /** Per-observation smoothing factor for the trend; defaults to the level's [alpha]. */
+    /** Trend decay rate per unit of weight, stepping by `1 - exp(-beta * weight)`; defaults to [alpha]. */
     val beta: Double = alpha,
     /** Trend damping in `(0, 1]`; `1.0` is an undamped trend. */
     val phi: Double = StatDefaults.SMOOTHING_PHI,
     /** Length of the seasonal cycle in updates; `1` disables seasonality. */
     val period: Int = StatDefaults.SMOOTHING_PERIOD,
-    /** Per-observation smoothing factor for the seasonal vector; defaults to the level's [alpha]. */
+    /** Seasonal decay rate per unit of weight, stepping by `1 - exp(-gamma * weight)`; defaults to [alpha]. */
     val gamma: Double = alpha,
     /** Seasonal coupling. */
     val mode: SeasonalMode = StatDefaults.seasonalMode,
