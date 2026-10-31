@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.rate
 import com.eignex.kumulant.assertModesAgree
 import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
-import kotlin.test.assertEquals
 
 class RateStatConcurrencyTest {
 
