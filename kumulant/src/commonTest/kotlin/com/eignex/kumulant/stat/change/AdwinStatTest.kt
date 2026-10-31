@@ -40,6 +40,14 @@ class AdwinStatTest {
     }
 
     @Test
+    fun `stationary stream with a large offset raises no alarm`() {
+        val s = AdwinStat()
+        val rng = Random(7)
+        repeat(20_000) { s.update(1e9 + rng.nextDouble(-1.0, 1.0)) }
+        assertEquals(0L, s.read().changesDetected)
+    }
+
+    @Test
     fun `sudden mean shift triggers a change and shrinks the window`() {
         val s = AdwinStat()
         val rng = Random(7)
