@@ -36,7 +36,6 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
@@ -656,7 +655,6 @@ class DiscreteStatGroupTest {
         assertEquals(50L, group.read()[schema.sessions].totalSeen)
     }
 }
-
 
 class GroupMergeAtomicityTest {
 

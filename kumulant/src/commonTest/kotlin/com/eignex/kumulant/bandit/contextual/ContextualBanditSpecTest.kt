@@ -111,8 +111,13 @@ class ContextualBanditSpecTest {
     @Test
     fun `regression posteriors round trip through JSON and binary formats`() {
         val posteriors: List<RegressionPosterior<*>> = listOf(
-            PointPosterior, FactorisedGaussian, MultivariateGaussian, LinUcb,
-            MeanTreePosterior, ThompsonTreePosterior(2.0, 3.0), UcbTreePosterior(2.0, 3.0),
+            PointPosterior,
+            FactorisedGaussian,
+            MultivariateGaussian,
+            LinUcb,
+            MeanTreePosterior,
+            ThompsonTreePosterior(2.0, 3.0),
+            UcbTreePosterior(2.0, 3.0),
         )
         val json = Json { classDiscriminator = "kind" }
         for (posterior in posteriors) {

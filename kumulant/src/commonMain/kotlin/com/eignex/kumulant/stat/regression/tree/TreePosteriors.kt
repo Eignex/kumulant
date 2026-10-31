@@ -34,7 +34,9 @@ sealed interface TreePosterior : RegressionPosterior<Result>
 
 private fun Result.leafEvidence(x: Vector): WeightedVarianceResult = when (this) {
     is TreeRegressionResult -> findLeaf(x)
+
     is ForestRegressionResult -> findLeafEvidence(x)
+
     else -> throw IllegalArgumentException(
         "TreePosterior scores tree or forest snapshots, got ${this::class.simpleName}",
     )
