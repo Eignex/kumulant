@@ -181,6 +181,14 @@ class ExponentialSmoothingStatTest {
         s.update(5.0, weight = -1.0)
         assertEquals(before.currentSlot, s.read().currentSlot)
     }
+
+    @Test
+    fun `merge rejects a snapshot with a different seasonal mode`() {
+        val additive = ExponentialSmoothingStat(alpha = 0.5, period = 3)
+        val multiplicative = ExponentialSmoothingStat(alpha = 0.5, period = 3, mode = SeasonalMode.Multiplicative)
+        listOf(1.0, 2.0, 3.0).forEach { multiplicative.update(it) }
+        assertFailsWith<IllegalArgumentException> { additive.merge(multiplicative.read()) }
+    }
 }
 
 class SeasonalForecastHorizonTest {
