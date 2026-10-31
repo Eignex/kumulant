@@ -38,7 +38,7 @@ data class BernoulliSumResult(
  *
  * **Concurrency:** Two independent additive cells. Concurrent modes preserve
  * per-cell updates; reads can observe successes and trials from different points
- * in the stream. [Concurrency.HighWrite] uses striped adders on the JVM.
+ * in the stream, but for indicators in `[0, 1]` never more successes than trials. [Concurrency.HighWrite] uses striped adders on the JVM.
  * [Concurrency.None] uses plain cells. Floating-point results depend on update order.
  */
 class BernoulliSumStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<BernoulliSumResult> {
@@ -47,17 +47,23 @@ class BernoulliSumStat(override val concurrency: Concurrency = Concurrency.None)
     private val successes = mode.newDouble(0.0)
     private val trials = mode.newDouble(0.0)
 
+    // Trials are added before successes and read after them, so for indicators in [0, 1] a
+    // concurrent reader never sees more successes than trials; a Beta posterior built from the
+    // snapshot would otherwise get a non-positive second parameter and throw.
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
-        successes.add(value * weight)
         trials.add(weight)
+        successes.add(value * weight)
     }
 
-    override fun read(timestampNanos: Long) = BernoulliSumResult(successes.load(), trials.load())
+    override fun read(timestampNanos: Long): BernoulliSumResult {
+        val s = successes.load()
+        return BernoulliSumResult(s, trials.load())
+    }
 
     override fun merge(values: BernoulliSumResult, timestampNanos: Long) {
-        successes.add(values.successes)
         trials.add(values.trials)
+        successes.add(values.successes)
     }
 
     override fun reset() {

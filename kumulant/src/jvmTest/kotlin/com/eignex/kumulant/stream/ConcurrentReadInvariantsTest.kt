@@ -9,6 +9,7 @@ import com.eignex.kumulant.stat.quantile.DDSketchStat
 import com.eignex.kumulant.stat.quantile.HdrHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.kumulant.stat.score.AucStat
+import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
@@ -152,6 +153,18 @@ class ConcurrentReadInvariantsTest {
                     val c = r.isotonicCalibration().calibrate(p)
                     assertTrue(!c.isNaN() && c in 0.0..1.0, "calibrate($p)=$c")
                 }
+            }
+        }
+    }
+
+    @Test
+    fun `BernoulliSumStat never reports more successes than trials`() {
+        for (level in levels) {
+            val stat = BernoulliSumStat(level)
+            assertReadInvariants("BernoulliSumStat[$level]", stat, write = { _, _ ->
+                stat.update(1.0)
+            }) { r ->
+                assertTrue(r.successes <= r.trials, "successes ${r.successes} > trials ${r.trials}")
             }
         }
     }
