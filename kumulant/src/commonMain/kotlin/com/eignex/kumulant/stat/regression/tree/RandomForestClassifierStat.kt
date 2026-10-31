@@ -6,18 +6,13 @@ import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.asClassLabel
-import com.eignex.kumulant.core.isInertWeight
-import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
-import com.eignex.kumulant.math.CounterRandom
 import com.eignex.kumulant.math.argMaxOf
-import com.eignex.kumulant.math.nextPoissonOne
 import com.eignex.kumulant.stat.StatDefaults
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.concurrent.Volatile
 
 /**
  * Online random-forest classifier; the classification counterpart of
@@ -60,47 +55,35 @@ class RandomForestClassifierStat(
     init {
         requirePositiveFeatureSize(featureSize)
         requireAtLeastTwoClasses(numClasses)
-        require(nbrTrees > 0) { "nbrTrees must be positive, got $nbrTrees" }
     }
 
     /** [ClassificationTreeConfig] with [ClassificationTreeConfig.mtry] defaulted to `ceil(sqrt(p))` when null. */
     val config: ClassificationTreeConfig = config.copy(mtry = config.mtry ?: defaultMtry(splitCandidates.size))
-
-    private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
 
     // Per-instance resolution binds leaf arms to each replica concurrency level.
     private val armFactory: () -> SeriesStat<ClassCountsResult> = {
         leafArmFactory?.invoke(concurrency) ?: ClassCountsStat(numClasses, concurrency)
     }
 
-    private val baggingRng = CounterRandom(seedRng.childSeed(), concurrency)
-
-    // Volatile publication makes reset replacements visible to concurrent updates.
-    @Volatile
-    private var trees: Array<ClassificationTree> = Array(nbrTrees) { newTree() }
-
-    private fun newTree(): ClassificationTree = ClassificationTree(
-        numClasses = numClasses,
-        splitCandidates = splitCandidates,
-        config = this.config,
-        concurrency = concurrency,
-        leafArmFactory = armFactory,
-        randomSeed = seedRng.nextInt(),
-    )
+    private val forest = BaggedTrees(nbrTrees, bagging, concurrency, randomSeed) { seed ->
+        ClassificationTree(
+            numClasses = numClasses,
+            splitCandidates = splitCandidates,
+            config = this.config,
+            concurrency = concurrency,
+            leafArmFactory = armFactory,
+            randomSeed = seed,
+        )
+    }
+    private val trees: List<ClassificationTree> get() = forest.trees
 
     override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)
-        // Bagging uses independent Poisson draws, so retractions cannot recover insertion weights.
-        // Drop rejected weights before drawing to preserve the sequence for later observations.
-        if (if (bagging) weight.isNotPositiveWeight() else weight.isInertWeight()) return
+        if (!forest.accepts(weight)) return
         val c = y.asClassLabel(numClasses)
         if (c < 0) return
-        if (!bagging) {
-            for (t in trees) t.update(x, c, weight)
-            return
-        }
         for (t in trees) {
-            val k = baggingRng.nextPoissonOne()
+            val k = forest.multiplicity()
             if (k > 0) t.update(x, c, weight * k)
         }
     }
@@ -123,11 +106,7 @@ class RandomForestClassifierStat(
     }
 
     /** Restores empty state and restarts the seed streams for reproducible growth. */
-    override fun reset() {
-        seedRng.reset()
-        baggingRng.reset()
-        trees = Array(nbrTrees) { newTree() }
-    }
+    override fun reset() = forest.reset()
 
     override fun create(concurrency: Concurrency?): RandomForestClassifierStat = RandomForestClassifierStat(
         featureSize = featureSize,
@@ -138,11 +117,11 @@ class RandomForestClassifierStat(
         bagging = bagging,
         concurrency = concurrency ?: this.concurrency,
         leafArmFactory = leafArmFactory,
-        randomSeed = seedRng.childSeed().toInt(),
+        randomSeed = forest.childSeed(),
     )
 
     /** Live underlying classification trees. Use for inspection. */
-    fun trees(): List<ClassificationTree> = trees.toList()
+    fun trees(): List<ClassificationTree> = trees
 }
 
 /** Snapshot of a [RandomForestClassifierStat]: per-tree immutable snapshots plus
