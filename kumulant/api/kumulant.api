@@ -11,9 +11,9 @@ public final class com/eignex/kumulant/bandit/BanditFactoryKt {
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/BanditPolicySpec;)Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/Exp3Spec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/Exp3Bandit;
-	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/MultiArmedSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/MultiArmedBandit;
+	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/MultiArmedSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/bandit/univariate/MultiArmedBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/RouletteWheelSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/RouletteWheelBandit;
-	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonSpec;Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonBandit;
+	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;)Lcom/eignex/kumulant/bandit/TrackedUnivariateBandit;
 	public static final fun materialize (Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;)Lcom/eignex/kumulant/bandit/Bandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/ContextualBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/Bandit;
@@ -21,9 +21,9 @@ public final class com/eignex/kumulant/bandit/BanditFactoryKt {
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/contextual/TrackedContextualSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/TrackedContextualBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/BoltzmannSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/BoltzmannBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/Exp3Spec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/Exp3Bandit;
-	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/MultiArmedSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/MultiArmedBandit;
+	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/MultiArmedSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/MultiArmedBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/RouletteWheelSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/RouletteWheelBandit;
-	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonSpec;Lkotlin/random/Random;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonBandit;
+	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/TrackedUnivariateSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/TrackedUnivariateBandit;
 	public static synthetic fun materialize$default (Lcom/eignex/kumulant/bandit/univariate/UnivariateBanditSpec;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/Bandit;
 }
@@ -212,7 +212,8 @@ public final class com/eignex/kumulant/bandit/contextual/TrackedContextualSpec$C
 
 public abstract interface class com/eignex/kumulant/bandit/univariate/Arm {
 	public static final field Companion Lcom/eignex/kumulant/bandit/univariate/Arm$Companion;
-	public abstract fun createStat ()Lcom/eignex/kumulant/core/SeriesStat;
+	public abstract fun createStat (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
+	public static synthetic fun createStat$default (Lcom/eignex/kumulant/bandit/univariate/Arm;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun encode (D)D
 }
 
@@ -221,6 +222,7 @@ public final class com/eignex/kumulant/bandit/univariate/Arm$Companion {
 }
 
 public final class com/eignex/kumulant/bandit/univariate/Arm$DefaultImpls {
+	public static synthetic fun createStat$default (Lcom/eignex/kumulant/bandit/univariate/Arm;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/core/SeriesStat;
 	public static fun encode (Lcom/eignex/kumulant/bandit/univariate/Arm;D)D
 }
 
@@ -256,7 +258,8 @@ public final class com/eignex/kumulant/bandit/univariate/BanditPoliciesKt {
 
 public abstract interface class com/eignex/kumulant/bandit/univariate/BanditPolicy {
 	public fun addArm (Lcom/eignex/kumulant/core/Result;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
+	public static synthetic fun createArm$default (Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public abstract fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
 	public abstract fun getArm ()Lcom/eignex/kumulant/bandit/univariate/Arm;
@@ -267,7 +270,8 @@ public abstract interface class com/eignex/kumulant/bandit/univariate/BanditPoli
 
 public final class com/eignex/kumulant/bandit/univariate/BanditPolicy$DefaultImpls {
 	public static fun addArm (Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;Lcom/eignex/kumulant/core/Result;)V
-	public static fun createArm (Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;)Lcom/eignex/kumulant/core/SeriesStat;
+	public static fun createArm (Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
+	public static synthetic fun createArm$default (Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/core/SeriesStat;
 	public static fun createPolicy (Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;)Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public static fun removeArm (Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;Lcom/eignex/kumulant/core/Result;)V
 	public static fun update (Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;Lcom/eignex/kumulant/core/SeriesStat;DD)V
@@ -291,7 +295,7 @@ public final class com/eignex/kumulant/bandit/univariate/BernoulliArm : com/eign
 	public final fun component2 ()D
 	public final fun copy (DD)Lcom/eignex/kumulant/bandit/univariate/BernoulliArm;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/BernoulliArm;DDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/BernoulliArm;
-	public fun createStat ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createStat (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun encode (D)D
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getPriorAlpha ()D
@@ -393,7 +397,7 @@ public final class com/eignex/kumulant/bandit/univariate/CompositeArm : com/eign
 	public final fun component1 ()Ljava/util/List;
 	public final fun copy (Ljava/util/List;)Lcom/eignex/kumulant/bandit/univariate/CompositeArm;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/CompositeArm;Ljava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/CompositeArm;
-	public fun createStat ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createStat (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun encode (D)D
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getSubArms ()Ljava/util/List;
@@ -487,7 +491,7 @@ public final class com/eignex/kumulant/bandit/univariate/EpsilonDecreasing : com
 	public synthetic fun <init> (DDDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/EpsilonDecreasing;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
@@ -544,7 +548,7 @@ public final class com/eignex/kumulant/bandit/univariate/EpsilonGreedy : com/eig
 	public synthetic fun <init> (DDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;JLkotlin/random/Random;)D
@@ -734,7 +738,7 @@ public final class com/eignex/kumulant/bandit/univariate/Greedy : com/eignex/kum
 	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;JLkotlin/random/Random;)D
@@ -785,7 +789,7 @@ public final class com/eignex/kumulant/bandit/univariate/KlUcb : com/eignex/kumu
 	public synthetic fun <init> (DDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/BernoulliSumResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/KlUcb;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
@@ -849,7 +853,7 @@ public final class com/eignex/kumulant/bandit/univariate/LogNormalArm : com/eign
 	public final fun component3 ()D
 	public final fun copy (DDD)Lcom/eignex/kumulant/bandit/univariate/LogNormalArm;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/LogNormalArm;DDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/LogNormalArm;
-	public fun createStat ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createStat (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun encode (D)D
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getPriorMean ()D
@@ -893,7 +897,7 @@ public final class com/eignex/kumulant/bandit/univariate/MeanArm : com/eignex/ku
 	public final fun component2 ()D
 	public final fun copy (DD)Lcom/eignex/kumulant/bandit/univariate/MeanArm;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/MeanArm;DDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/MeanArm;
-	public fun createStat ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createStat (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun encode (D)D
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getPriorMean ()D
@@ -926,7 +930,7 @@ public final class com/eignex/kumulant/bandit/univariate/MomentsArm : com/eignex
 	public final fun component2 ()D
 	public final fun copy (DD)Lcom/eignex/kumulant/bandit/univariate/MomentsArm;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/MomentsArm;DDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/MomentsArm;
-	public fun createStat ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createStat (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun encode (D)D
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getPriorMean ()D
@@ -955,7 +959,7 @@ public final class com/eignex/kumulant/bandit/univariate/Moss : com/eignex/kumul
 	public synthetic fun <init> (IDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/Moss;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
@@ -1001,14 +1005,15 @@ public final class com/eignex/kumulant/bandit/univariate/MossSpec$Companion {
 }
 
 public final class com/eignex/kumulant/bandit/univariate/MultiArmedBandit : com/eignex/kumulant/bandit/PerArmBandit, com/eignex/kumulant/bandit/Scorable, com/eignex/kumulant/bandit/UnivariateBandit {
-	public fun <init> (ILcom/eignex/kumulant/bandit/univariate/BanditPolicy;Lkotlin/random/Random;)V
-	public synthetic fun <init> (ILcom/eignex/kumulant/bandit/univariate/BanditPolicy;Lkotlin/random/Random;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILcom/eignex/kumulant/bandit/univariate/BanditPolicy;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> (ILcom/eignex/kumulant/bandit/univariate/BanditPolicy;Lkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun armResult (I)Lcom/eignex/kumulant/core/Result;
 	public final fun armStat (I)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun choose ()I
 	public synthetic fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Snapshotable;
 	public fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/MultiArmedBandit;
 	public fun evaluate (I)D
+	public final fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public fun getNbrArms ()I
 	public final fun getPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public fun getRandom ()Lkotlin/random/Random;
@@ -1060,7 +1065,7 @@ public final class com/eignex/kumulant/bandit/univariate/NormalArm : com/eignex/
 	public final fun component3 ()D
 	public final fun copy (DDD)Lcom/eignex/kumulant/bandit/univariate/NormalArm;
 	public static synthetic fun copy$default (Lcom/eignex/kumulant/bandit/univariate/NormalArm;DDDILjava/lang/Object;)Lcom/eignex/kumulant/bandit/univariate/NormalArm;
-	public fun createStat ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createStat (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun encode (D)D
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getPriorMean ()D
@@ -1208,7 +1213,7 @@ public final class com/eignex/kumulant/bandit/univariate/RouletteWheelSpec$Compa
 public final class com/eignex/kumulant/bandit/univariate/ThompsonSampling : com/eignex/kumulant/bandit/univariate/BanditPolicy {
 	public fun <init> (Lcom/eignex/kumulant/bandit/univariate/Arm;Lcom/eignex/kumulant/bandit/univariate/Posterior;)V
 	public fun addArm (Lcom/eignex/kumulant/core/Result;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
 	public fun getArm ()Lcom/eignex/kumulant/bandit/univariate/Arm;
@@ -1247,13 +1252,14 @@ public final class com/eignex/kumulant/bandit/univariate/ThompsonSamplingSpec$Co
 }
 
 public final class com/eignex/kumulant/bandit/univariate/TopTwoThompsonBandit : com/eignex/kumulant/bandit/PerArmBandit, com/eignex/kumulant/bandit/UnivariateBandit {
-	public fun <init> (ILcom/eignex/kumulant/bandit/univariate/ThompsonSampling;DILkotlin/random/Random;)V
-	public synthetic fun <init> (ILcom/eignex/kumulant/bandit/univariate/ThompsonSampling;DILkotlin/random/Random;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILcom/eignex/kumulant/bandit/univariate/ThompsonSampling;DILkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;)V
+	public synthetic fun <init> (ILcom/eignex/kumulant/bandit/univariate/ThompsonSampling;DILkotlin/random/Random;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun armResult (I)Lcom/eignex/kumulant/core/Result;
 	public fun choose ()I
 	public synthetic fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/Snapshotable;
 	public fun create (Lkotlin/random/Random;)Lcom/eignex/kumulant/bandit/univariate/TopTwoThompsonBandit;
 	public final fun getBeta ()D
+	public final fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
 	public final fun getMaxResamples ()I
 	public fun getNbrArms ()I
 	public final fun getPolicy ()Lcom/eignex/kumulant/bandit/univariate/ThompsonSampling;
@@ -1340,7 +1346,7 @@ public final class com/eignex/kumulant/bandit/univariate/UCB1 : com/eignex/kumul
 	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/BernoulliSumResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/UCB1;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
@@ -1359,7 +1365,7 @@ public final class com/eignex/kumulant/bandit/univariate/UCB1Normal : com/eignex
 	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/MomentsResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/UCB1Normal;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
@@ -1378,7 +1384,7 @@ public final class com/eignex/kumulant/bandit/univariate/UCB1Tuned : com/eignex/
 	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/MomentsResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/UCB1Tuned;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
@@ -1496,7 +1502,7 @@ public final class com/eignex/kumulant/bandit/univariate/UcbV : com/eignex/kumul
 	public synthetic fun <init> (DDDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/MomentsResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public synthetic fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/UcbV;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
@@ -1551,7 +1557,7 @@ public final class com/eignex/kumulant/bandit/univariate/UniformSelection : com/
 	public synthetic fun <init> (DDDILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun addArm (Lcom/eignex/kumulant/core/Result;)V
 	public fun addArm (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;)V
-	public fun createArm ()Lcom/eignex/kumulant/core/SeriesStat;
+	public fun createArm (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
 	public fun createPolicy ()Lcom/eignex/kumulant/bandit/univariate/BanditPolicy;
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;JLkotlin/random/Random;)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/summary/WeightedVarianceResult;JLkotlin/random/Random;)D

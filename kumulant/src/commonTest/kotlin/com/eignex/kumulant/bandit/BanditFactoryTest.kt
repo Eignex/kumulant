@@ -14,6 +14,7 @@ import com.eignex.kumulant.bandit.univariate.RouletteWheelSpec
 import com.eignex.kumulant.bandit.univariate.ThompsonSamplingSpec
 import com.eignex.kumulant.bandit.univariate.TopTwoThompsonSpec
 import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec
+import com.eignex.kumulant.core.Concurrency
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -31,6 +32,15 @@ class BanditFactoryTest {
         val b = (spec as UnivariateBanditSpec).materialize(Random(0))
         assertTrue(b is MultiArmedBandit<*>)
         assertEquals(3, b.nbrArms)
+    }
+
+    @Test
+    fun `a MultiArmed spec builds its arm stats with the requested concurrency`() {
+        val spec = MultiArmedSpec(nbrArms = 2, policy = ThompsonSamplingSpec(NormalArm(), NormalGammaPosterior))
+
+        val b = (spec as UnivariateBanditSpec).materialize(Random(0), Concurrency.Strict)
+
+        assertEquals(Concurrency.Strict, (b as MultiArmedBandit<*>).armStat(0).concurrency)
     }
 
     @Test
