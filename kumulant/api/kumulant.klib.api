@@ -700,6 +700,7 @@ sealed interface com.eignex.kumulant.stat.regression/Optimizer { // com.eignex.k
     abstract fun computeDelta(kotlin/Int, kotlin/Double, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression/Optimizer.computeDelta|computeDelta(kotlin.Int;kotlin.Double;kotlin.Double){}[0]
     abstract fun reset() // com.eignex.kumulant.stat.regression/Optimizer.reset|reset(){}[0]
     open fun advance() // com.eignex.kumulant.stat.regression/Optimizer.advance|advance(){}[0]
+    open fun resumeAt(kotlin/Long) // com.eignex.kumulant.stat.regression/Optimizer.resumeAt|resumeAt(kotlin.Long){}[0]
 }
 
 abstract class com.eignex.kumulant.schema.runtime/StatSchema : com.eignex.skema/Schema<com.eignex.kumulant.schema.spec/StatSpec> { // com.eignex.kumulant.schema.runtime/StatSchema|null[0]
@@ -4397,12 +4398,14 @@ final class com.eignex.kumulant.stat.calibration/IsotonicCalibratorResult : com.
 }
 
 final class com.eignex.kumulant.stat.calibration/PlattCalibratorResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.calibration/PlattCalibratorResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Long = ...) // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Long){}[0]
 
     final val intercept // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.intercept|{}intercept[0]
         final fun <get-intercept>(): kotlin/Double // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.intercept.<get-intercept>|<get-intercept>(){}[0]
     final val slope // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.slope|{}slope[0]
         final fun <get-slope>(): kotlin/Double // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.slope.<get-slope>|<get-slope>(){}[0]
+    final val step // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.step|{}step[0]
+        final fun <get-step>(): kotlin/Long // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.step.<get-step>|<get-step>(){}[0]
     final val totalWeights // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.totalWeights|{}totalWeights[0]
         final fun <get-totalWeights>(): kotlin/Double // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.totalWeights.<get-totalWeights>|<get-totalWeights>(){}[0]
 
@@ -4410,7 +4413,8 @@ final class com.eignex.kumulant.stat.calibration/PlattCalibratorResult : com.eig
     final fun component1(): kotlin/Double // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.component1|component1(){}[0]
     final fun component2(): kotlin/Double // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.component2|component2(){}[0]
     final fun component3(): kotlin/Double // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.component3|component3(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.calibration/PlattCalibratorResult // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double){}[0]
+    final fun component4(): kotlin/Long // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.component4|component4(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Long = ...): com.eignex.kumulant.stat.calibration/PlattCalibratorResult // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Long){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.calibration/PlattCalibratorResult.toString|toString(){}[0]
@@ -4617,7 +4621,7 @@ final class com.eignex.kumulant.stat.change/AdwinStat : com.eignex.kumulant.core
 }
 
 final class com.eignex.kumulant.stat.change/CusumResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.change/CusumResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Boolean, kotlin/Boolean) // com.eignex.kumulant.stat.change/CusumResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Boolean;kotlin.Boolean){}[0]
+    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Double, kotlin/Boolean, kotlin/Boolean, kotlin/Boolean = ...) // com.eignex.kumulant.stat.change/CusumResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Boolean;kotlin.Boolean;kotlin.Boolean){}[0]
 
     final val alarm // com.eignex.kumulant.stat.change/CusumResult.alarm|{}alarm[0]
         final fun <get-alarm>(): kotlin/Boolean // com.eignex.kumulant.stat.change/CusumResult.alarm.<get-alarm>|<get-alarm>(){}[0]
@@ -4629,6 +4633,8 @@ final class com.eignex.kumulant.stat.change/CusumResult : com.eignex.kumulant.co
         final fun <get-cusumNegative>(): kotlin/Double // com.eignex.kumulant.stat.change/CusumResult.cusumNegative.<get-cusumNegative>|<get-cusumNegative>(){}[0]
     final val cusumPositive // com.eignex.kumulant.stat.change/CusumResult.cusumPositive|{}cusumPositive[0]
         final fun <get-cusumPositive>(): kotlin/Double // com.eignex.kumulant.stat.change/CusumResult.cusumPositive.<get-cusumPositive>|<get-cusumPositive>(){}[0]
+    final val hasObservation // com.eignex.kumulant.stat.change/CusumResult.hasObservation|{}hasObservation[0]
+        final fun <get-hasObservation>(): kotlin/Boolean // com.eignex.kumulant.stat.change/CusumResult.hasObservation.<get-hasObservation>|<get-hasObservation>(){}[0]
     final val referenceValue // com.eignex.kumulant.stat.change/CusumResult.referenceValue|{}referenceValue[0]
         final fun <get-referenceValue>(): kotlin/Double // com.eignex.kumulant.stat.change/CusumResult.referenceValue.<get-referenceValue>|<get-referenceValue>(){}[0]
     final val target // com.eignex.kumulant.stat.change/CusumResult.target|{}target[0]
@@ -4643,7 +4649,8 @@ final class com.eignex.kumulant.stat.change/CusumResult : com.eignex.kumulant.co
     final fun component5(): kotlin/Double // com.eignex.kumulant.stat.change/CusumResult.component5|component5(){}[0]
     final fun component6(): kotlin/Boolean // com.eignex.kumulant.stat.change/CusumResult.component6|component6(){}[0]
     final fun component7(): kotlin/Boolean // com.eignex.kumulant.stat.change/CusumResult.component7|component7(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Boolean = ..., kotlin/Boolean = ...): com.eignex.kumulant.stat.change/CusumResult // com.eignex.kumulant.stat.change/CusumResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun component8(): kotlin/Boolean // com.eignex.kumulant.stat.change/CusumResult.component8|component8(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Double = ..., kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Boolean = ...): com.eignex.kumulant.stat.change/CusumResult // com.eignex.kumulant.stat.change/CusumResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Double;kotlin.Boolean;kotlin.Boolean;kotlin.Boolean){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.change/CusumResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.change/CusumResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.change/CusumResult.toString|toString(){}[0]
@@ -5422,8 +5429,10 @@ final class com.eignex.kumulant.stat.quantile/LinearHistogramStat : com.eignex.k
 }
 
 final class com.eignex.kumulant.stat.quantile/QuantileResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.quantile/QuantileResult|null[0]
-    constructor <init>(kotlin/Double, kotlin/Double) // com.eignex.kumulant.stat.quantile/QuantileResult.<init>|<init>(kotlin.Double;kotlin.Double){}[0]
+    constructor <init>(kotlin/Double, kotlin/Double, kotlin/Boolean = ...) // com.eignex.kumulant.stat.quantile/QuantileResult.<init>|<init>(kotlin.Double;kotlin.Double;kotlin.Boolean){}[0]
 
+    final val hasObservation // com.eignex.kumulant.stat.quantile/QuantileResult.hasObservation|{}hasObservation[0]
+        final fun <get-hasObservation>(): kotlin/Boolean // com.eignex.kumulant.stat.quantile/QuantileResult.hasObservation.<get-hasObservation>|<get-hasObservation>(){}[0]
     final val probability // com.eignex.kumulant.stat.quantile/QuantileResult.probability|{}probability[0]
         final fun <get-probability>(): kotlin/Double // com.eignex.kumulant.stat.quantile/QuantileResult.probability.<get-probability>|<get-probability>(){}[0]
     final val quantile // com.eignex.kumulant.stat.quantile/QuantileResult.quantile|{}quantile[0]
@@ -5431,7 +5440,8 @@ final class com.eignex.kumulant.stat.quantile/QuantileResult : com.eignex.kumula
 
     final fun component1(): kotlin/Double // com.eignex.kumulant.stat.quantile/QuantileResult.component1|component1(){}[0]
     final fun component2(): kotlin/Double // com.eignex.kumulant.stat.quantile/QuantileResult.component2|component2(){}[0]
-    final fun copy(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.stat.quantile/QuantileResult // com.eignex.kumulant.stat.quantile/QuantileResult.copy|copy(kotlin.Double;kotlin.Double){}[0]
+    final fun component3(): kotlin/Boolean // com.eignex.kumulant.stat.quantile/QuantileResult.component3|component3(){}[0]
+    final fun copy(kotlin/Double = ..., kotlin/Double = ..., kotlin/Boolean = ...): com.eignex.kumulant.stat.quantile/QuantileResult // com.eignex.kumulant.stat.quantile/QuantileResult.copy|copy(kotlin.Double;kotlin.Double;kotlin.Boolean){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.quantile/QuantileResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.quantile/QuantileResult.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.quantile/QuantileResult.toString|toString(){}[0]
@@ -6296,7 +6306,7 @@ final class com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig : 
 }
 
 final class com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat : com.eignex.kumulant.core/RegressionStat<com.eignex.kumulant.stat.regression.tree/TreeClassificationResult> { // com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat|null[0]
-    constructor <init>(kotlin/Int, kotlin/Int, kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/SerializableSplit>, com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig = ..., com.eignex.kumulant.core/Concurrency = ..., kotlin/Function0<com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.regression.tree/ClassCountsResult>>? = ..., kotlin/Int = ...) // com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.collections.List<com.eignex.kumulant.stat.regression.tree.SerializableSplit>;com.eignex.kumulant.stat.regression.tree.ClassificationTreeConfig;com.eignex.kumulant.core.Concurrency;kotlin.Function0<com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.regression.tree.ClassCountsResult>>?;kotlin.Int){}[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/SerializableSplit>, com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig = ..., com.eignex.kumulant.core/Concurrency = ..., kotlin/Function1<com.eignex.kumulant.core/Concurrency, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.regression.tree/ClassCountsResult>>? = ..., kotlin/Int = ...) // com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.collections.List<com.eignex.kumulant.stat.regression.tree.SerializableSplit>;com.eignex.kumulant.stat.regression.tree.ClassificationTreeConfig;com.eignex.kumulant.core.Concurrency;kotlin.Function1<com.eignex.kumulant.core.Concurrency,com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.regression.tree.ClassCountsResult>>?;kotlin.Int){}[0]
 
     final val concurrency // com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
@@ -6319,7 +6329,7 @@ final class com.eignex.kumulant.stat.regression.tree/DecisionTreeClassifierStat 
 }
 
 final class com.eignex.kumulant.stat.regression.tree/DecisionTreeRegressionStat : com.eignex.kumulant.core/RegressionStat<com.eignex.kumulant.stat.regression.tree/TreeRegressionResult> { // com.eignex.kumulant.stat.regression.tree/DecisionTreeRegressionStat|null[0]
-    constructor <init>(kotlin/Int, kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/SerializableSplit>, com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig = ..., com.eignex.kumulant.core/Concurrency = ..., kotlin/Function0<com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/WeightedVarianceResult>>? = ..., kotlin/Int = ...) // com.eignex.kumulant.stat.regression.tree/DecisionTreeRegressionStat.<init>|<init>(kotlin.Int;kotlin.collections.List<com.eignex.kumulant.stat.regression.tree.SerializableSplit>;com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig;com.eignex.kumulant.core.Concurrency;kotlin.Function0<com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.WeightedVarianceResult>>?;kotlin.Int){}[0]
+    constructor <init>(kotlin/Int, kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/SerializableSplit>, com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig = ..., com.eignex.kumulant.core/Concurrency = ..., kotlin/Function1<com.eignex.kumulant.core/Concurrency, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/WeightedVarianceResult>>? = ..., kotlin/Int = ...) // com.eignex.kumulant.stat.regression.tree/DecisionTreeRegressionStat.<init>|<init>(kotlin.Int;kotlin.collections.List<com.eignex.kumulant.stat.regression.tree.SerializableSplit>;com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig;com.eignex.kumulant.core.Concurrency;kotlin.Function1<com.eignex.kumulant.core.Concurrency,com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.WeightedVarianceResult>>?;kotlin.Int){}[0]
 
     final val concurrency // com.eignex.kumulant.stat.regression.tree/DecisionTreeRegressionStat.concurrency|{}concurrency[0]
         final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.regression.tree/DecisionTreeRegressionStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
@@ -6450,7 +6460,7 @@ final class com.eignex.kumulant.stat.regression.tree/ForestRegressionResult : co
 }
 
 final class com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat : com.eignex.kumulant.core/RegressionStat<com.eignex.kumulant.stat.regression.tree/ForestClassificationResult> { // com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat|null[0]
-    constructor <init>(kotlin/Int, kotlin/Int, kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/SerializableSplit>, kotlin/Int = ..., com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig = ..., kotlin/Boolean = ..., com.eignex.kumulant.core/Concurrency = ..., kotlin/Function0<com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.regression.tree/ClassCountsResult>>? = ..., kotlin/Int = ...) // com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.collections.List<com.eignex.kumulant.stat.regression.tree.SerializableSplit>;kotlin.Int;com.eignex.kumulant.stat.regression.tree.ClassificationTreeConfig;kotlin.Boolean;com.eignex.kumulant.core.Concurrency;kotlin.Function0<com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.regression.tree.ClassCountsResult>>?;kotlin.Int){}[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/SerializableSplit>, kotlin/Int = ..., com.eignex.kumulant.stat.regression.tree/ClassificationTreeConfig = ..., kotlin/Boolean = ..., com.eignex.kumulant.core/Concurrency = ..., kotlin/Function1<com.eignex.kumulant.core/Concurrency, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.regression.tree/ClassCountsResult>>? = ..., kotlin/Int = ...) // com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.collections.List<com.eignex.kumulant.stat.regression.tree.SerializableSplit>;kotlin.Int;com.eignex.kumulant.stat.regression.tree.ClassificationTreeConfig;kotlin.Boolean;com.eignex.kumulant.core.Concurrency;kotlin.Function1<com.eignex.kumulant.core.Concurrency,com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.regression.tree.ClassCountsResult>>?;kotlin.Int){}[0]
 
     final val bagging // com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat.bagging|{}bagging[0]
         final fun <get-bagging>(): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat.bagging.<get-bagging>|<get-bagging>(){}[0]
@@ -6477,7 +6487,7 @@ final class com.eignex.kumulant.stat.regression.tree/RandomForestClassifierStat 
 }
 
 final class com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat : com.eignex.kumulant.core/RegressionStat<com.eignex.kumulant.stat.regression.tree/ForestRegressionResult> { // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat|null[0]
-    constructor <init>(kotlin/Int, kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/SerializableSplit>, kotlin/Int = ..., com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig = ..., kotlin/Boolean = ..., com.eignex.kumulant.core/Concurrency = ..., kotlin/Function0<com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/WeightedVarianceResult>>? = ..., kotlin/Int = ...) // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.<init>|<init>(kotlin.Int;kotlin.collections.List<com.eignex.kumulant.stat.regression.tree.SerializableSplit>;kotlin.Int;com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig;kotlin.Boolean;com.eignex.kumulant.core.Concurrency;kotlin.Function0<com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.WeightedVarianceResult>>?;kotlin.Int){}[0]
+    constructor <init>(kotlin/Int, kotlin.collections/List<com.eignex.kumulant.stat.regression.tree/SerializableSplit>, kotlin/Int = ..., com.eignex.kumulant.stat.regression.tree/RegressionTreeConfig = ..., kotlin/Boolean = ..., com.eignex.kumulant.core/Concurrency = ..., kotlin/Function1<com.eignex.kumulant.core/Concurrency, com.eignex.kumulant.core/SeriesStat<com.eignex.kumulant.stat.summary/WeightedVarianceResult>>? = ..., kotlin/Int = ...) // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.<init>|<init>(kotlin.Int;kotlin.collections.List<com.eignex.kumulant.stat.regression.tree.SerializableSplit>;kotlin.Int;com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig;kotlin.Boolean;com.eignex.kumulant.core.Concurrency;kotlin.Function1<com.eignex.kumulant.core.Concurrency,com.eignex.kumulant.core.SeriesStat<com.eignex.kumulant.stat.summary.WeightedVarianceResult>>?;kotlin.Int){}[0]
 
     final val bagging // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.bagging|{}bagging[0]
         final fun <get-bagging>(): kotlin/Boolean // com.eignex.kumulant.stat.regression.tree/RandomForestRegressionStat.bagging.<get-bagging>|<get-bagging>(){}[0]
@@ -6938,6 +6948,7 @@ final class com.eignex.kumulant.stat.regression/AdagradOptimizer : com.eignex.ku
     final fun advance() // com.eignex.kumulant.stat.regression/AdagradOptimizer.advance|advance(){}[0]
     final fun computeDelta(kotlin/Int, kotlin/Double, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression/AdagradOptimizer.computeDelta|computeDelta(kotlin.Int;kotlin.Double;kotlin.Double){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression/AdagradOptimizer.reset|reset(){}[0]
+    final fun resumeAt(kotlin/Long) // com.eignex.kumulant.stat.regression/AdagradOptimizer.resumeAt|resumeAt(kotlin.Long){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression/AdamOptimizer : com.eignex.kumulant.stat.regression/Optimizer { // com.eignex.kumulant.stat.regression/AdamOptimizer|null[0]
@@ -6957,6 +6968,7 @@ final class com.eignex.kumulant.stat.regression/AdamOptimizer : com.eignex.kumul
     final fun advance() // com.eignex.kumulant.stat.regression/AdamOptimizer.advance|advance(){}[0]
     final fun computeDelta(kotlin/Int, kotlin/Double, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression/AdamOptimizer.computeDelta|computeDelta(kotlin.Int;kotlin.Double;kotlin.Double){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression/AdamOptimizer.reset|reset(){}[0]
+    final fun resumeAt(kotlin/Long) // com.eignex.kumulant.stat.regression/AdamOptimizer.resumeAt|resumeAt(kotlin.Long){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression/CovarianceResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.regression/CovarianceResult|null[0]
@@ -7104,6 +7116,7 @@ final class com.eignex.kumulant.stat.regression/RmspropOptimizer : com.eignex.ku
     final fun advance() // com.eignex.kumulant.stat.regression/RmspropOptimizer.advance|advance(){}[0]
     final fun computeDelta(kotlin/Int, kotlin/Double, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression/RmspropOptimizer.computeDelta|computeDelta(kotlin.Int;kotlin.Double;kotlin.Double){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression/RmspropOptimizer.reset|reset(){}[0]
+    final fun resumeAt(kotlin/Long) // com.eignex.kumulant.stat.regression/RmspropOptimizer.resumeAt|resumeAt(kotlin.Long){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression/SgdOptimizer : com.eignex.kumulant.stat.regression/Optimizer { // com.eignex.kumulant.stat.regression/SgdOptimizer|null[0]
@@ -7119,6 +7132,7 @@ final class com.eignex.kumulant.stat.regression/SgdOptimizer : com.eignex.kumula
     final fun advance() // com.eignex.kumulant.stat.regression/SgdOptimizer.advance|advance(){}[0]
     final fun computeDelta(kotlin/Int, kotlin/Double, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression/SgdOptimizer.computeDelta|computeDelta(kotlin.Int;kotlin.Double;kotlin.Double){}[0]
     final fun reset() // com.eignex.kumulant.stat.regression/SgdOptimizer.reset|reset(){}[0]
+    final fun resumeAt(kotlin/Long) // com.eignex.kumulant.stat.regression/SgdOptimizer.resumeAt|resumeAt(kotlin.Long){}[0]
 }
 
 final class com.eignex.kumulant.stat.regression/SoftmaxRegressionResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.regression/SoftmaxRegressionResult|null[0]
