@@ -923,7 +923,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
                 config = config,
                 concurrency = concurrency,
                 randomSeed = randomSeed,
-                leafArmFactory = leafArm?.leafFactory(concurrency, "$path.leafArm"),
+                leafArmFactory = leafArm?.leafFactory("$path.leafArm"),
             )
         }
     }
@@ -938,7 +938,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
                 bagging = bagging,
                 concurrency = concurrency,
                 randomSeed = randomSeed,
-                leafArmFactory = leafArm?.leafFactory(concurrency, "$path.leafArm"),
+                leafArmFactory = leafArm?.leafFactory("$path.leafArm"),
             )
         }
     }
@@ -952,7 +952,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
                 config = config,
                 concurrency = concurrency,
                 randomSeed = randomSeed,
-                leafArmFactory = leafArm?.leafFactory(concurrency, "$path.leafArm", numClasses),
+                leafArmFactory = leafArm?.leafFactory("$path.leafArm", numClasses),
             )
         }
     }
@@ -968,7 +968,7 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
                 bagging = bagging,
                 concurrency = concurrency,
                 randomSeed = randomSeed,
-                leafArmFactory = leafArm?.leafFactory(concurrency, "$path.leafArm", numClasses),
+                leafArmFactory = leafArm?.leafFactory("$path.leafArm", numClasses),
             )
         }
     }
@@ -1071,12 +1071,11 @@ internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<Reg
 
 @Suppress("UNCHECKED_CAST")
 private inline fun <reified R : Result> SeriesStatSpec<R>.leafFactory(
-    concurrency: Concurrency,
     path: String,
     numClasses: Int? = null,
-): () -> SeriesStat<R> {
+): (Concurrency) -> SeriesStat<R> {
     val plan = compileSeries(path)
-    return {
+    return { concurrency ->
         val stat = plan.build(concurrency)
         val result = stat.read(0L)
         require(result is R) { "$path: incompatible leaf result" }

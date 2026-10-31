@@ -1,15 +1,27 @@
 package com.eignex.kumulant.schema.runtime
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.core.RegressionStat
+import com.eignex.kumulant.feat
 import com.eignex.kumulant.schema.ops.band
 import com.eignex.kumulant.schema.ops.withWeight
+import com.eignex.kumulant.schema.spec.ClassCounts
 import com.eignex.kumulant.schema.spec.DDSketch
+import com.eignex.kumulant.schema.spec.DecisionTreeClassifier
+import com.eignex.kumulant.schema.spec.DecisionTreeRegression
 import com.eignex.kumulant.schema.spec.GroupStatSpec
 import com.eignex.kumulant.schema.spec.PairedSum
+import com.eignex.kumulant.schema.spec.RandomForestClassifier
+import com.eignex.kumulant.schema.spec.RandomForestRegression
+import com.eignex.kumulant.schema.spec.RegressionStatSpec
 import com.eignex.kumulant.schema.spec.StatSpec
 import com.eignex.kumulant.schema.spec.Sum
 import com.eignex.kumulant.schema.spec.Variance
 import com.eignex.kumulant.schema.spec.WithWeightSeries
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeClassifierStat
+import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
+import com.eignex.kumulant.stat.regression.tree.RandomForestClassifierStat
+import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import com.eignex.skema.SchemaJson
 import kotlin.test.Test
@@ -104,6 +116,30 @@ class StatPlanTest {
             val error = assertFailsWith<IllegalArgumentException> { spec.materialize() }
 
             assertTrue("leafArm" in error.message.orEmpty(), error.message)
+        }
+    }
+
+    @Test
+    fun `replicas of spec built trees grow leaf arms at the replica concurrency`() {
+        val x = feat(0.0)
+        val cases: List<Pair<RegressionStatSpec<*>, (RegressionStat<*>) -> Concurrency>> = listOf(
+            DecisionTreeRegression(1, emptyList(), leafArm = Variance) to { stat ->
+                (stat as DecisionTreeRegressionStat).tree().findLeaf(x).arm.concurrency
+            },
+            RandomForestRegression(1, emptyList(), nbrTrees = 1, leafArm = Variance) to { stat ->
+                (stat as RandomForestRegressionStat).findLeaves(x).single().arm.concurrency
+            },
+            DecisionTreeClassifier(1, 2, emptyList(), leafArm = ClassCounts(2)) to { stat ->
+                (stat as DecisionTreeClassifierStat).tree().findLeaf(x).arm.concurrency
+            },
+            RandomForestClassifier(1, 2, emptyList(), nbrTrees = 1, leafArm = ClassCounts(2)) to { stat ->
+                (stat as RandomForestClassifierStat).trees().single().findLeaf(x).arm.concurrency
+            },
+        )
+        for ((spec, leafConcurrency) in cases) {
+            val replica = spec.materialize(Concurrency.None).create(Concurrency.Strict)
+
+            assertEquals(Concurrency.Strict, leafConcurrency(replica), spec.toString())
         }
     }
 
