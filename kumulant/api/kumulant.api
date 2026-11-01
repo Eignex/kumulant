@@ -6064,17 +6064,12 @@ public final class com/eignex/kumulant/stat/regression/glm/LearningRatesKt {
 	public static synthetic fun StepDecay$default (DDILjava/lang/Object;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 }
 
-public final class com/eignex/kumulant/stat/regression/glm/LinUcb : com/eignex/kumulant/stat/regression/glm/LinearPosterior {
+public final class com/eignex/kumulant/stat/regression/glm/LinUcb : com/eignex/kumulant/stat/regression/RegressionPosterior {
 	public static final field INSTANCE Lcom/eignex/kumulant/stat/regression/glm/LinUcb;
 	public fun equals (Ljava/lang/Object;)Z
 	public synthetic fun evaluate (Lcom/eignex/kumulant/core/Result;Lcom/eignex/koblas/Vector;Lkotlin/random/Random;D)D
-	public synthetic fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lcom/eignex/koblas/Vector;Lkotlin/random/Random;D)D
 	public fun evaluate (Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;Lcom/eignex/koblas/Vector;Lkotlin/random/Random;D)D
 	public fun hashCode ()I
-	public synthetic fun sample (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/Vector;
-	public fun sample (Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;Lkotlin/random/Random;D)Lcom/eignex/koblas/Vector;
-	public synthetic fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/LinearRegressionResult;Lkotlin/random/Random;[DD)V
-	public fun sampleInto (Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;Lkotlin/random/Random;[DD)V
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
 }

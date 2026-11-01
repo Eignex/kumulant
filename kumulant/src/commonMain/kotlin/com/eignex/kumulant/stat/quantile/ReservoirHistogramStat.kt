@@ -64,7 +64,11 @@ data class ReservoirResult(
         "totalWeight=$totalWeight)"
 }
 
-/** Linear-interpolated quantile at [probability] from a reservoir sample (treats sample as unweighted). */
+/**
+ * Linear-interpolated quantile at [probability] from the reservoir sample. Each retained value
+ * counts once: A-Res admission already favours heavier observations, so the sample stands for
+ * the weighted stream and reweighting it would count the weights twice.
+ */
 fun ReservoirResult.quantile(probability: Double): Double {
     require(probability in 0.0..1.0) { "Probability must be between 0.0 and 1.0" }
     if (values.isEmpty()) return Double.NaN

@@ -10,7 +10,6 @@ internal object LinearPosteriorSerializer : KumulantSerializer<LinearPosterior<*
         jsonNode<PointPosterior>("pointPosterior"),
         jsonNode<FactorisedGaussian>("factorisedGaussian"),
         jsonNode<MultivariateGaussian>("multivariateGaussian"),
-        jsonNode<LinUcb>("linUcb"),
     )
 })
 
@@ -24,5 +23,5 @@ internal object TreePosteriorSerializer : KumulantSerializer<TreePosterior>(Tree
 
 internal object CanonicalRegressionPosteriorSerializer : KumulantSerializer<RegressionPosterior<*>>(
     RegressionPosterior::class,
-    { LinearPosteriorSerializer.nodes + TreePosteriorSerializer.nodes },
+    { LinearPosteriorSerializer.nodes + listOf(jsonNode<LinUcb>("linUcb")) + TreePosteriorSerializer.nodes },
 )

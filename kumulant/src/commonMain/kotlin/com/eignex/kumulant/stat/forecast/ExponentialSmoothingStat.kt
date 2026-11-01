@@ -100,7 +100,9 @@ data class ExponentialSmoothingResult(
  * recurrence reduces to Holt's level and trend.
  *
  * With `phi == 1.0` the trend is undamped; with `phi < 1.0` it is geometrically damped.
- * [com.eignex.kumulant.stat.decay.EwmaMeanStat] is the trend-free special case `beta == 0`.
+ * At `beta == 0` the level is an exponentially weighted mean seeded by the first value; it is
+ * not [com.eignex.kumulant.stat.decay.EwmaMeanStat], which bias-corrects a zero seed instead, so
+ * the two differ from the second update on.
  *
  * The first update seeds the level, a zero trend, and leaves the seasonal vector at its identity
  * (0 additive, 1 multiplicative); every later update runs the recurrence above. Nothing seeds the
