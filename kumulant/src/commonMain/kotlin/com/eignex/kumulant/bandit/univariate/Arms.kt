@@ -48,8 +48,7 @@ import kotlin.math.sqrt
  *   ([PoissonGammaPosterior], [ExponentialGammaPosterior]).
  * - [NormalArm]: Gaussian reward with unknown mean and variance; result is
  *   [WeightedVarianceResult]; pairs with [NormalGammaPosterior] (Thompson)
- *   or the mean- and variance-based policies ([Greedy], [EpsilonGreedy], [UcbV],
- *   [UniformSelection]).
+ *   or the mean- and variance-based policies ([EpsilonGreedy], [UcbV]).
  * - [LogNormalArm]: multiplicative reward (revenue, latency); result is
  *   [WeightedVarianceResult] on the log scale; pairs with
  *   [LogNormalGammaPosterior].

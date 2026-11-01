@@ -44,10 +44,8 @@ internal object BanditPolicySpecSerializer : KumulantSerializer<BanditPolicySpec
     listOf(
         jsonNode("thompsonSampling") { ThompsonSamplingSpec.serializer(PolymorphicSerializer(Result::class)) },
         jsonNode<Ucb1Spec>("ucb1"),
-        jsonNode<GreedySpec>("greedy"),
         jsonNode<BoltzmannSpec>("boltzmann"),
         jsonNode<EpsilonGreedySpec>("epsilonGreedy"),
-        jsonNode<UniformSelectionSpec>("uniformSelection"),
         jsonNode<KlUcbSpec>("klUcb"),
         jsonNode<MossSpec>("moss"),
         jsonNode<UcbVSpec>("ucbV"),

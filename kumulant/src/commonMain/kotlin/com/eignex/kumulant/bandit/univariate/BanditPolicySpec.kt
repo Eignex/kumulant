@@ -43,16 +43,6 @@ data class Ucb1Spec(
     val priorBeta: Double = 1.0,
 ) : BanditPolicySpec<BernoulliSumResult>
 
-/** Spec for [Greedy]. */
-@Serializable
-@SerialName("Greedy")
-data class GreedySpec(
-    /** Per-arm prior on the running reward mean. */
-    val priorMean: Double = 0.0,
-    /** Per-arm prior pseudo-count. */
-    val priorWeight: Double = 0.02,
-) : BanditPolicySpec<WeightedVarianceResult>
-
 /** Spec for [EpsilonGreedy]. */
 @Serializable
 @SerialName("EpsilonGreedy")
@@ -82,11 +72,6 @@ data class BoltzmannSpec(
     /** Per-arm prior pseudo-count. */
     val priorWeight: Double = 0.02,
 ) : BanditPolicySpec<WeightedMeanResult>
-
-/** Spec for [UniformSelection]. */
-@Serializable
-@SerialName("UniformSelection")
-data object UniformSelectionSpec : BanditPolicySpec<WeightedVarianceResult>
 
 /** Spec for [KlUcb]. */
 @Serializable

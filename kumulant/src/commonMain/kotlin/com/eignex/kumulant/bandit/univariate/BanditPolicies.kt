@@ -213,21 +213,6 @@ class UCB1(
     }
 }
 
-/**
- * Pure-exploitation policy: always picks the arm with the highest posterior
- * mean. No exploration at all; converges fastest to the apparent best arm
- * but can lock into a suboptimal arm forever if early rewards mislead it.
- *
- * Useful as a baseline (regret comparison against random / UCB / Thompson)
- * and as a quick-and-dirty starting policy when prior beliefs are already
- * good. For real online learning use one of the exploration-bearing
- * policies instead.
- */
-class Greedy(priorMean: Double = 0.0, priorWeight: Double = 0.02) : BanditPolicy<WeightedVarianceResult> {
-    override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations = 0.0)
-    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) = snapshot.mean
-}
-
 // Share one exploration decision across all arms in a round so argmax cannot mix
 // exploration scores with exploitation means. Draw from the caller's RNG rather
 // than seeding by step, which would make different seeds explore in lockstep.
@@ -330,22 +315,6 @@ class Boltzmann(
         val logit = (snapshot.mean / temperature(step)).takeIf { it.isFinite() } ?: 0.0
         return logit - ln(-ln(rng.nextDouble()))
     }
-}
-
-/**
- * Pure-exploration policy: every evaluate returns a fresh uniform draw,
- * so the bandit picks arms uniformly at random regardless of observations.
- * No exploitation at all; the opposite extreme of [Greedy].
- *
- * Useful as a regret-comparison baseline (any policy worth its salt
- * should beat uniform), as a data-collection scheme before switching to
- * a real policy, and as the inner uniformly-random arm in
- * [EpsilonGreedy]. Not a real online-learning
- * choice on its own.
- */
-class UniformSelection : BanditPolicy<WeightedVarianceResult> {
-    override val arm = NormalArm(priorSquaredDeviations = 0.0)
-    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) = rng.nextDouble()
 }
 
 /**
