@@ -1,11 +1,9 @@
 package com.eignex.kumulant.bandit.univariate
 
-import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
-import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import com.eignex.kumulant.stream.AtomicMode
@@ -276,8 +274,7 @@ class EpsilonGreedy(
     override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations = 0.0)
 
     private val coin = RoundCoin()
-    override fun createPolicy() =
-        EpsilonGreedy(epsilon, decay, arm.priorMean, arm.priorWeight)
+    override fun createPolicy() = EpsilonGreedy(epsilon, decay, arm.priorMean, arm.priorWeight)
 
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double {
         val eps = if (decay == 0.0) epsilon else min(1.0, epsilon / totalSamples.pow(decay))
@@ -431,10 +428,8 @@ class KlUcb(
  * matters. For Bernoulli rewards specifically, [KlUcb] is asymptotically
  * tighter.
  */
-class Moss(
-    priorMean: Double = 0.0,
-    priorWeight: Double = 0.02,
-) : SampleCountingPolicy<WeightedMeanResult>({ it.totalWeights }) {
+class Moss(priorMean: Double = 0.0, priorWeight: Double = 0.02) :
+    SampleCountingPolicy<WeightedMeanResult>({ it.totalWeights }) {
     override val arm = MeanArm(priorMean, priorWeight)
 
     override fun createPolicy() = Moss(arm.priorMean, arm.priorWeight)
