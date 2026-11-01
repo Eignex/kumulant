@@ -7,8 +7,6 @@ import com.eignex.kumulant.schema.serialization.ArmSerializer
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.MeanStat
-import com.eignex.kumulant.stat.summary.MomentsResult
-import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
@@ -50,13 +48,11 @@ import kotlin.math.sqrt
  *   ([PoissonGammaPosterior], [ExponentialGammaPosterior]).
  * - [NormalArm]: Gaussian reward with unknown mean and variance; result is
  *   [WeightedVarianceResult]; pairs with [NormalGammaPosterior] (Thompson)
- *   or the mean-based policies ([Greedy], [EpsilonGreedy],
+ *   or the mean- and variance-based policies ([Greedy], [EpsilonGreedy], [UcbV],
  *   [UniformSelection]).
  * - [LogNormalArm]: multiplicative reward (revenue, latency); result is
  *   [WeightedVarianceResult] on the log scale; pairs with
  *   [LogNormalGammaPosterior].
- * - [MomentsArm]: Gaussian with second-moment tracking; result is
- *   [MomentsResult]; pairs with the variance-aware [UcbV].
  */
 @Serializable(with = ArmSerializer::class)
 sealed interface Arm<R : Result> {
@@ -106,9 +102,6 @@ data class BernoulliArm(
         if (priorAlpha > 0.0) stat.update(1.0, 0L, sign * priorAlpha)
         if (priorBeta > 0.0) stat.update(0.0, 0L, sign * priorBeta)
     }
-
-    /** Factory entry-point for [BernoulliArm] (host for [warmStart]). */
-    companion object
 }
 
 /**
@@ -137,9 +130,6 @@ data class MeanArm(
         { if (priorWeight > 0.0) it.update(priorMean, 0L, priorWeight) },
         { if (priorWeight > 0.0 && it.read(0L).totalWeights > priorWeight) it.update(priorMean, 0L, -priorWeight) },
     )
-
-    /** Factory entry-point for [MeanArm] (host for [warmStart]). */
-    companion object
 }
 
 /**
@@ -195,9 +185,6 @@ data class NormalArm(
         val seededWeight = if (priorSquaredDeviations > 0.0) 2.0 * priorWeight else priorWeight
         if (stat.read(0L).totalWeights > seededWeight) seed(stat, -1.0)
     }
-
-    /** Factory entry-point for [NormalArm] (host for [warmStart]). */
-    companion object
 }
 
 /**
@@ -232,37 +219,6 @@ data class LogNormalArm(
     override fun createStat(concurrency: Concurrency): SeriesStat<WeightedVarianceResult> =
         NormalArm(priorMean, priorWeight, priorSquaredDeviations).createStat(concurrency)
     override fun encode(value: Double): Double = ln(value)
-
-    /** Factory entry-point for [LogNormalArm] (host for [warmStart]). */
-    companion object
-}
-
-/**
- * Moments-tracking arm. Backs [MomentsStat] under the hood, which means the
- * snapshot exposes the raw second moment `m2` (in addition to mean and
- * variance); required by [UcbV], the variance-aware UCB policy that needs
- * `mean-of-squares` directly.
- *
- * For pure Thompson sampling on Gaussian rewards, [NormalArm] + the
- * Normal-Gamma posterior is the right pick; [MomentsArm] earns its place
- * specifically when the policy needs `m2`.
- */
-@Serializable
-@SerialName("MomentsArm")
-data class MomentsArm(
-    /** Prior mean reward. */
-    val priorMean: Double = 0.0,
-    /** Pseudo-weight of the prior seed. */
-    val priorWeight: Double = 0.02,
-) : Arm<MomentsResult> {
-    override fun createStat(concurrency: Concurrency): SeriesStat<MomentsResult> = PriorSeededStat(
-        MomentsStat(concurrency),
-        { if (priorWeight > 0.0) it.update(priorMean, 0L, priorWeight) },
-        { if (priorWeight > 0.0 && it.read(0L).totalWeights > priorWeight) it.update(priorMean, 0L, -priorWeight) },
-    )
-
-    /** Factory entry-point for [MomentsArm] (host for [warmStart]). */
-    companion object
 }
 
 // Each snapshot of a seeded arm carries its own copy of the prior pseudo-observations. Merge removes one
@@ -290,72 +246,4 @@ internal class PriorSeededStat<R : Result>(
 
     override fun create(concurrency: Concurrency?): SeriesStat<R> =
         PriorSeededStat(delegate.create(concurrency), seed, unseed)
-}
-
-internal fun MomentsResult.meanOfSquares(): Double = if (totalWeights > 0.0) m2 / totalWeights + mean * mean else 0.0
-
-/**
- * Warm-started [BernoulliArm] from a global Bernoulli snapshot.
- *
- * Builds an Arm spec from a pooled global snapshot. [shrinkage] in `[0, 1]`
- * scales how much of the global evidence is counted as the arm's prior
- * pseudo-count: `0` collapses to the bare prior; `1` treats every global
- * observation as if it had been seen by this arm. The same convention applies
- * to every `warmStart` overload below.
- *
- * Univariate hierarchical pooling has no clean general API (see the discussion
- * next to [com.eignex.kumulant.bandit.contextual.RegressionContextualBandit] for the
- * contextual case); these per-arm-type helpers cover the Result types where
- * shrinkage has a uniform pseudo-count interpretation.
- */
-fun BernoulliArm.Companion.warmStart(global: BernoulliSumResult, shrinkage: Double = 1.0): BernoulliArm {
-    require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
-    return BernoulliArm(
-        priorAlpha = global.successes * shrinkage,
-        priorBeta = (global.trials - global.successes) * shrinkage,
-    )
-}
-
-/** Warm-started [MeanArm] from a global weighted-mean snapshot. */
-fun MeanArm.Companion.warmStart(global: WeightedMeanResult, shrinkage: Double = 1.0): MeanArm {
-    require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
-    return MeanArm(
-        priorMean = global.mean,
-        priorWeight = global.totalWeights * shrinkage,
-    )
-}
-
-/** Warm-started [NormalArm] from a global weighted-variance snapshot. The arm's prior
- *  variance is preserved from the global; only the prior weight is shrunk. */
-fun NormalArm.Companion.warmStart(global: WeightedVarianceResult, shrinkage: Double = 1.0): NormalArm {
-    require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
-    // Match NormalArm's two-part variance seed to preserve the pooled evidence and spread.
-    val seededWeight = global.totalWeights * shrinkage
-    return NormalArm(
-        priorMean = global.mean,
-        priorWeight = seededWeight / 2.0,
-        priorSquaredDeviations = global.variance * seededWeight,
-    )
-}
-
-/** Warm-started [LogNormalArm] from a global weighted-variance snapshot on the log
- *  scale (caller is responsible for ensuring the snapshot is over `ln(reward)`). */
-fun LogNormalArm.Companion.warmStart(global: WeightedVarianceResult, shrinkage: Double = 1.0): LogNormalArm {
-    require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
-    // Match NormalArm's two-part variance seed to preserve the pooled evidence and spread.
-    val seededWeight = global.totalWeights * shrinkage
-    return LogNormalArm(
-        priorMean = global.mean,
-        priorWeight = seededWeight / 2.0,
-        priorSquaredDeviations = global.variance * seededWeight,
-    )
-}
-
-/** Warm-started [MomentsArm] from a global moments snapshot. */
-fun MomentsArm.Companion.warmStart(global: MomentsResult, shrinkage: Double = 1.0): MomentsArm {
-    require(shrinkage in 0.0..1.0) { "shrinkage must be in [0, 1], got $shrinkage" }
-    return MomentsArm(
-        priorMean = global.mean,
-        priorWeight = global.totalWeights * shrinkage,
-    )
 }

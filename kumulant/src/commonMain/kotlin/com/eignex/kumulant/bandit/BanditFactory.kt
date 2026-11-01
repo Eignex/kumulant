@@ -66,19 +66,18 @@ fun <R : Result> BanditPolicySpec<R>.materialize(): BanditPolicy<R> = when (this
 
     is Ucb1Spec -> UCB1(alpha, priorAlpha, priorBeta) as BanditPolicy<R>
 
-    is GreedySpec -> Greedy(priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
+    is GreedySpec -> Greedy(priorMean, priorWeight) as BanditPolicy<R>
 
     is BoltzmannSpec -> Boltzmann(initialTau, minTau, decay, priorMean, priorWeight) as BanditPolicy<R>
 
     is EpsilonGreedySpec ->
-        EpsilonGreedy(epsilon, decay, priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
+        EpsilonGreedy(epsilon, decay, priorMean, priorWeight) as BanditPolicy<R>
 
-    is UniformSelectionSpec ->
-        UniformSelection(priorMean, priorWeight, priorSquaredDeviations) as BanditPolicy<R>
+    UniformSelectionSpec -> UniformSelection() as BanditPolicy<R>
 
     is KlUcbSpec -> KlUcb(c, tolerance, priorAlpha, priorBeta) as BanditPolicy<R>
 
-    is MossSpec -> Moss(nbrArms, priorMean, priorWeight) as BanditPolicy<R>
+    is MossSpec -> Moss(priorMean, priorWeight) as BanditPolicy<R>
 
     is UcbVSpec -> UcbV(zeta, c, priorMean, priorWeight) as BanditPolicy<R>
 }
@@ -88,10 +87,6 @@ fun MultiArmedSpec<*>.materialize(
     random: Random = Random.Default,
     concurrency: Concurrency = Concurrency.None,
 ): MultiArmedBandit<Result> {
-    val moss = policy as? MossSpec
-    require(moss == null || moss.nbrArms == nbrArms) {
-        "MossSpec.nbrArms (${moss?.nbrArms}) must match MultiArmedSpec.nbrArms ($nbrArms)"
-    }
     return MultiArmedBandit(
         nbrArms = nbrArms,
         policy = policy.materialize() as BanditPolicy<Result>,

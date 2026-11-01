@@ -60,7 +60,6 @@ internal object ArmSerializer : KumulantSerializer<Arm<*>>(Arm::class, {
         jsonNode<MeanArm>("meanArm"),
         jsonNode<NormalArm>("normalArm"),
         jsonNode<LogNormalArm>("logNormalArm"),
-        jsonNode<MomentsArm>("momentsArm"),
         jsonNode<CompositeArm>("compositeArm"),
     )
 })

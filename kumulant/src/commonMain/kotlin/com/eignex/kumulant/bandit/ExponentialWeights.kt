@@ -1,6 +1,5 @@
 package com.eignex.kumulant.bandit
 
-import com.eignex.kumulant.math.argMaxOf
 import kotlin.random.Random
 
 // The probability floor bounds reward / p during importance weighting.
@@ -27,5 +26,3 @@ internal fun Random.sampleFromDistribution(p: DoubleArray): Int {
     }
     return p.size - 1
 }
-
-internal inline fun argmaxArm(nbrArms: Int, score: (Int) -> Double): Int = argMaxOf(nbrArms, score)

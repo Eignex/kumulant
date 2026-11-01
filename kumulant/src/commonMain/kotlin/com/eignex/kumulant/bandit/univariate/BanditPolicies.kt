@@ -100,6 +100,39 @@ interface BanditPolicy<R : Result> {
 }
 
 /**
+ * Base for policies whose score depends on the population's total sample weight (the UCB family
+ * and annealed epsilon-greedy). Tracks that total and the arm count through [update], [addArm]
+ * and [removeArm]; [sampleWeight] reads an arm snapshot's share of the total.
+ *
+ * The counters are shared across arms, so concurrent updates use atomic cells.
+ */
+abstract class SampleCountingPolicy<R : Result>(private val sampleWeight: (R) -> Double) : BanditPolicy<R> {
+    private val samples = AtomicMode.newDouble(0.0)
+    private val arms = AtomicMode.newLong(0L)
+
+    /** Total sample weight across every arm, priors included. */
+    protected val totalSamples: Double get() = samples.load()
+
+    /** Number of arms currently in the population. */
+    protected val armCount: Int get() = arms.load().toInt()
+
+    override fun update(stat: SeriesStat<R>, value: Double, weight: Double) {
+        super.update(stat, value, weight)
+        samples.add(weight)
+    }
+
+    override fun addArm(snapshot: R) {
+        samples.add(sampleWeight(snapshot))
+        arms.add(1L)
+    }
+
+    override fun removeArm(snapshot: R) {
+        samples.add(-sampleWeight(snapshot))
+        arms.add(-1L)
+    }
+}
+
+/**
  * Thompson sampling: score each arm by a draw from its conjugate
  * [posterior] given the snapshot. The bandit then picks the arm with the
  * highest sample; no explicit exploration knob, the exploration falls out
@@ -169,28 +202,16 @@ class UCB1(
     val alpha: Double = 1.0,
     priorAlpha: Double = 1.0,
     priorBeta: Double = 1.0,
-) : BanditPolicy<BernoulliSumResult> {
+) : SampleCountingPolicy<BernoulliSumResult>({ it.trials }) {
     override val arm = BernoulliArm(priorAlpha, priorBeta)
 
-    // Policies share this counter across arms, so concurrent updates require atomic addition.
-    private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = UCB1(alpha, arm.priorAlpha, arm.priorBeta)
 
-    override fun update(stat: SeriesStat<BernoulliSumResult>, value: Double, weight: Double) {
-        stat.update(arm.encode(value), 0L, weight)
-        totalSamples.add(weight)
-    }
     override fun evaluate(snapshot: BernoulliSumResult, step: Long, rng: Random): Double {
         val n = snapshot.trials
         if (n < 1.0) return Double.POSITIVE_INFINITY
         val mean = snapshot.successes / n
-        return mean + alpha * sqrt(2 * ln(totalSamples.load()) / n)
-    }
-    override fun addArm(snapshot: BernoulliSumResult) {
-        totalSamples.add(snapshot.trials)
-    }
-    override fun removeArm(snapshot: BernoulliSumResult) {
-        totalSamples.add(-snapshot.trials)
+        return mean + alpha * sqrt(2 * ln(totalSamples) / n)
     }
 }
 
@@ -204,9 +225,8 @@ class UCB1(
  * good. For real online learning use one of the exploration-bearing
  * policies instead.
  */
-class Greedy(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDeviations: Double = 0.02) :
-    BanditPolicy<WeightedVarianceResult> {
-    override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
+class Greedy(priorMean: Double = 0.0, priorWeight: Double = 0.02) : BanditPolicy<WeightedVarianceResult> {
+    override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations = 0.0)
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) = snapshot.mean
 }
 
@@ -246,38 +266,22 @@ class EpsilonGreedy(
     val decay: Double = 0.0,
     priorMean: Double = 0.0,
     priorWeight: Double = 0.02,
-    priorSquaredDeviations: Double = 0.02,
-) : BanditPolicy<WeightedVarianceResult> {
+) : SampleCountingPolicy<WeightedVarianceResult>({ it.totalWeights }) {
     init {
         require(decay >= 0.0) { "decay must be non-negative, got $decay" }
         require(epsilon >= 0.0 && (decay > 0.0 || epsilon <= 1.0)) {
             "epsilon must be in 0..1 at decay 0, or non-negative with a positive decay, got $epsilon"
         }
     }
-    override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
+    override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations = 0.0)
 
-    // Policies share this counter across arms, so concurrent updates require atomic addition.
-    private val totalSamples = AtomicMode.newDouble(0.0)
     private val coin = RoundCoin()
     override fun createPolicy() =
-        EpsilonGreedy(epsilon, decay, arm.priorMean, arm.priorWeight, arm.priorSquaredDeviations)
-
-    override fun update(stat: SeriesStat<WeightedVarianceResult>, value: Double, weight: Double) {
-        stat.update(arm.encode(value), 0L, weight)
-        totalSamples.add(weight)
-    }
+        EpsilonGreedy(epsilon, decay, arm.priorMean, arm.priorWeight)
 
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double {
-        val eps = if (decay == 0.0) epsilon else min(1.0, epsilon / totalSamples.load().pow(decay))
+        val eps = if (decay == 0.0) epsilon else min(1.0, epsilon / totalSamples.pow(decay))
         return if (coin.explores(step, rng, eps)) rng.nextDouble() else snapshot.mean
-    }
-
-    override fun addArm(snapshot: WeightedVarianceResult) {
-        totalSamples.add(snapshot.totalWeights)
-    }
-
-    override fun removeArm(snapshot: WeightedVarianceResult) {
-        totalSamples.add(-snapshot.totalWeights)
     }
 }
 
@@ -319,7 +323,7 @@ class Boltzmann(
     override val arm = MeanArm(priorMean, priorWeight)
 
     /** Temperature at the 0-based [step] the bandit passes to [evaluate]. */
-    fun temperature(step: Long): Double {
+    internal fun temperature(step: Long): Double {
         if (decay == 0.0) return initialTau
         val round = (step + 1L).coerceAtLeast(1L).toDouble()
         return maxOf(minTau, initialTau / round.pow(decay))
@@ -342,9 +346,8 @@ class Boltzmann(
  * [EpsilonGreedy]. Not a real online-learning
  * choice on its own.
  */
-class UniformSelection(priorMean: Double = 0.0, priorWeight: Double = 0.02, priorSquaredDeviations: Double = 0.02) :
-    BanditPolicy<WeightedVarianceResult> {
-    override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations)
+class UniformSelection : BanditPolicy<WeightedVarianceResult> {
+    override val arm = NormalArm(priorSquaredDeviations = 0.0)
     override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random) = rng.nextDouble()
 }
 
@@ -371,37 +374,23 @@ class KlUcb(
     val tolerance: Double = 1e-6,
     priorAlpha: Double = 1.0,
     priorBeta: Double = 1.0,
-) : BanditPolicy<BernoulliSumResult> {
+) : SampleCountingPolicy<BernoulliSumResult>({ it.trials }) {
     override val arm = BernoulliArm(priorAlpha, priorBeta)
 
-    // Policies share this counter across arms, so concurrent updates require atomic addition.
-    private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = KlUcb(c, tolerance, arm.priorAlpha, arm.priorBeta)
-
-    override fun update(stat: SeriesStat<BernoulliSumResult>, value: Double, weight: Double) {
-        stat.update(arm.encode(value), 0L, weight)
-        totalSamples.add(weight)
-    }
 
     override fun evaluate(snapshot: BernoulliSumResult, step: Long, rng: Random): Double {
         val n = snapshot.trials
-        if (n < 1.0 || totalSamples.load() <= 1.0) return Double.POSITIVE_INFINITY
+        if (n < 1.0 || totalSamples <= 1.0) return Double.POSITIVE_INFINITY
         val mean = (snapshot.successes / n).coerceIn(0.0, 1.0)
-        val bound = (ln(totalSamples.load()) + c * ln(ln(totalSamples.load()).coerceAtLeast(1.0))) / n
+        val bound = (ln(totalSamples) + c * ln(ln(totalSamples).coerceAtLeast(1.0))) / n
         return klBernoulliUpper(mean, bound, tolerance)
-    }
-
-    override fun addArm(snapshot: BernoulliSumResult) {
-        totalSamples.add(snapshot.trials)
-    }
-    override fun removeArm(snapshot: BernoulliSumResult) {
-        totalSamples.add(-snapshot.trials)
     }
 
     /** Bernoulli KL utilities used by [KlUcb]. */
     companion object {
         /** `sup { q in [p, 1] : KL(p, q) <= bound }` via bisection. */
-        fun klBernoulliUpper(p: Double, bound: Double, tol: Double): Double {
+        internal fun klBernoulliUpper(p: Double, bound: Double, tol: Double): Double {
             if (bound <= 0.0) return p
             var lo = p
             var hi = 1.0
@@ -413,7 +402,7 @@ class KlUcb(
         }
 
         /** KL divergence between two Bernoulli distributions with means [p] and [q]. */
-        fun klBernoulli(p: Double, q: Double): Double {
+        internal fun klBernoulli(p: Double, q: Double): Double {
             if (q <= 0.0 || q >= 1.0) return Double.POSITIVE_INFINITY
             var s = 0.0
             if (p > 0.0) s += p * ln(p / q)
@@ -434,9 +423,8 @@ class KlUcb(
  * the bandit could face. Eliminates the `log(t)` slack term once an arm
  * is sampled enough.
  *
- * Uses the anytime form (no fixed horizon argument). [nbrArms] is needed
- * to compute the `t / K` denominator; pass the same arm count the
- * containing [MultiArmedBandit] uses.
+ * Uses the anytime form (no fixed horizon argument). The arm count `K` in the
+ * `t / K` denominator comes from the bandit's [addArm] / [removeArm] calls.
  *
  * Reach for it when minimax regret matters more than asymptotic optimality
  *; adversarial reward distributions, settings where the worst case
@@ -444,38 +432,19 @@ class KlUcb(
  * tighter.
  */
 class Moss(
-    /** Number of arms in the population; used in the bound's `t / (K * n)` term. */
-    val nbrArms: Int,
     priorMean: Double = 0.0,
     priorWeight: Double = 0.02,
-) : BanditPolicy<WeightedMeanResult> {
-    init {
-        requireNbrArms(nbrArms)
-    }
+) : SampleCountingPolicy<WeightedMeanResult>({ it.totalWeights }) {
     override val arm = MeanArm(priorMean, priorWeight)
 
-    // Policies share this counter across arms, so concurrent updates require atomic addition.
-    private val totalSamples = AtomicMode.newDouble(0.0)
-    override fun createPolicy() = Moss(nbrArms, arm.priorMean, arm.priorWeight)
-
-    override fun update(stat: SeriesStat<WeightedMeanResult>, value: Double, weight: Double) {
-        stat.update(arm.encode(value), 0L, weight)
-        totalSamples.add(weight)
-    }
+    override fun createPolicy() = Moss(arm.priorMean, arm.priorWeight)
 
     override fun evaluate(snapshot: WeightedMeanResult, step: Long, rng: Random): Double {
         val n = snapshot.totalWeights
         if (n < 1.0) return Double.POSITIVE_INFINITY
-        val arg = totalSamples.load() / (nbrArms * n)
+        val arg = totalSamples / (armCount.coerceAtLeast(1) * n)
         val padding = ln(arg.coerceAtLeast(1.0))
         return snapshot.mean + sqrt(padding / n)
-    }
-
-    override fun addArm(snapshot: WeightedMeanResult) {
-        totalSamples.add(snapshot.totalWeights)
-    }
-    override fun removeArm(snapshot: WeightedMeanResult) {
-        totalSamples.add(-snapshot.totalWeights)
     }
 }
 
@@ -483,7 +452,7 @@ class Moss(
  * UCB-V; variance-aware UCB with finite-sample honesty (Audibert, Munos,
  * Szepesvári 2009). Score is
  * `mean + sqrt(2 * V * zeta * ln(t) / n) + 3 * c * zeta * ln(t) / n`,
- * where `V` is the running variance from the [MomentsResult] snapshot.
+ * where `V` is the running variance from the [WeightedVarianceResult] snapshot.
  *
  * The third term, a bias correction scaled by [c], keeps the bound honest at
  * finite sample sizes rather than only asymptotically. Reach for it when
@@ -501,33 +470,19 @@ class UcbV(
     val c: Double = 1.0,
     priorMean: Double = 0.0,
     priorWeight: Double = 0.02,
-) : BanditPolicy<MomentsResult> {
+) : SampleCountingPolicy<WeightedVarianceResult>({ it.totalWeights }) {
     init {
         require(zeta > 0.0) { "zeta must be positive, got $zeta" }
     }
-    override val arm = MomentsArm(priorMean, priorWeight)
+    override val arm = NormalArm(priorMean, priorWeight, priorSquaredDeviations = 0.0)
 
-    // Policies share this counter across arms, so concurrent updates require atomic addition.
-    private val totalSamples = AtomicMode.newDouble(0.0)
     override fun createPolicy() = UcbV(zeta, c, arm.priorMean, arm.priorWeight)
 
-    override fun update(stat: SeriesStat<MomentsResult>, value: Double, weight: Double) {
-        stat.update(arm.encode(value), 0L, weight)
-        totalSamples.add(weight)
-    }
-
-    override fun evaluate(snapshot: MomentsResult, step: Long, rng: Random): Double {
+    override fun evaluate(snapshot: WeightedVarianceResult, step: Long, rng: Random): Double {
         val n = snapshot.totalWeights
         if (n < 1.0) return Double.POSITIVE_INFINITY
-        val v = (snapshot.meanOfSquares() - snapshot.mean * snapshot.mean).coerceAtLeast(0.0)
-        val logT = ln(totalSamples.load().coerceAtLeast(2.0))
+        val v = snapshot.variance.coerceAtLeast(0.0)
+        val logT = ln(totalSamples.coerceAtLeast(2.0))
         return snapshot.mean + sqrt(2.0 * v * zeta * logT / n) + 3.0 * c * zeta * logT / n
-    }
-
-    override fun addArm(snapshot: MomentsResult) {
-        totalSamples.add(snapshot.totalWeights)
-    }
-    override fun removeArm(snapshot: MomentsResult) {
-        totalSamples.add(-snapshot.totalWeights)
     }
 }
