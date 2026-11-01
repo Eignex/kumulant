@@ -15,8 +15,6 @@ import com.eignex.kumulant.bandit.univariate.EpsilonGreedy
 import com.eignex.kumulant.bandit.univariate.EpsilonGreedySpec
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
 import com.eignex.kumulant.bandit.univariate.Exp3Spec
-import com.eignex.kumulant.bandit.univariate.Greedy
-import com.eignex.kumulant.bandit.univariate.GreedySpec
 import com.eignex.kumulant.bandit.univariate.KlUcb
 import com.eignex.kumulant.bandit.univariate.KlUcbSpec
 import com.eignex.kumulant.bandit.univariate.Moss
@@ -35,8 +33,6 @@ import com.eignex.kumulant.bandit.univariate.UCB1
 import com.eignex.kumulant.bandit.univariate.Ucb1Spec
 import com.eignex.kumulant.bandit.univariate.UcbV
 import com.eignex.kumulant.bandit.univariate.UcbVSpec
-import com.eignex.kumulant.bandit.univariate.UniformSelection
-import com.eignex.kumulant.bandit.univariate.UniformSelectionSpec
 import com.eignex.kumulant.bandit.univariate.UnivariateBanditSpec
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
@@ -66,14 +62,12 @@ fun <R : Result> BanditPolicySpec<R>.materialize(): BanditPolicy<R> = when (this
 
     is Ucb1Spec -> UCB1(alpha, priorAlpha, priorBeta) as BanditPolicy<R>
 
-    is GreedySpec -> Greedy(priorMean, priorWeight) as BanditPolicy<R>
 
     is BoltzmannSpec -> Boltzmann(initialTau, minTau, decay, priorMean, priorWeight) as BanditPolicy<R>
 
     is EpsilonGreedySpec ->
         EpsilonGreedy(epsilon, decay, priorMean, priorWeight) as BanditPolicy<R>
 
-    UniformSelectionSpec -> UniformSelection() as BanditPolicy<R>
 
     is KlUcbSpec -> KlUcb(c, tolerance, priorAlpha, priorBeta) as BanditPolicy<R>
 

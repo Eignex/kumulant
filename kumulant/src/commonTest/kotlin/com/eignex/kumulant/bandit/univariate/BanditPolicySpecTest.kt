@@ -26,8 +26,6 @@ class BanditPolicySpecTest {
         val cases: List<BanditPolicySpec<*>> = listOf(
             EpsilonGreedySpec(epsilon = 0.2, priorMean = 0.5, priorWeight = 0.1),
             EpsilonGreedySpec(epsilon = 1.5, decay = 0.7),
-            GreedySpec(priorMean = 0.25, priorWeight = 0.05),
-            UniformSelectionSpec,
             KlUcbSpec(c = 3.0, tolerance = 1e-5, priorAlpha = 2.0, priorBeta = 3.0),
             Ucb1Spec(alpha = 1.5),
             UcbVSpec(zeta = 1.0, c = 0.5),

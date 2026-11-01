@@ -2,7 +2,7 @@ package com.eignex.kumulant.bandit
 
 import com.eignex.kumulant.bandit.univariate.Exp3ArmResult
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
-import com.eignex.kumulant.bandit.univariate.Greedy
+import com.eignex.kumulant.bandit.univariate.EpsilonGreedy
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
 import kotlin.random.Random
@@ -84,7 +84,7 @@ class BanditTuningTest {
 
     @Test
     fun `an out-of-bounds arm index is rejected with a message`() {
-        val bandit = MultiArmedBandit(2, Greedy(), Random(1))
+        val bandit = MultiArmedBandit(2, EpsilonGreedy(epsilon = 0.0), Random(1))
 
         assertFailsWith<IllegalArgumentException> { bandit.update(5, 1.0) }
         assertFailsWith<IllegalArgumentException> { RouletteWheelBandit(nbrArms = 2).update(-1, 1.0) }

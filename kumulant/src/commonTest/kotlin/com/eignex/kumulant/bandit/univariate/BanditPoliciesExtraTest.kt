@@ -109,22 +109,14 @@ class BanditPoliciesExtraTest {
     }
 
     @Test
-    fun `UniformSelection draws every score from rng without inspecting snapshot`() {
-        val pol = UniformSelection()
+    fun `EpsilonGreedy at full epsilon draws every score from rng without inspecting snapshot`() {
+        val pol = EpsilonGreedy(epsilon = 1.0)
         val snap = WeightedVarianceResult(10.0, 999.0, 1.0)
         val rng = Random(0)
         val a = pol.evaluate(snap, 0L, rng)
         val b = pol.evaluate(snap, 0L, rng)
         assertTrue(a in 0.0..1.0 && b in 0.0..1.0)
         assertTrue(a != b, "two draws should differ under non-degenerate rng")
-    }
-
-    @Test
-    fun `Greedy returns snapshot mean ignoring rng`() {
-        val pol = Greedy()
-        val snap = WeightedVarianceResult(5.0, 7.0, 0.1)
-        assertEquals(7.0, pol.evaluate(snap, 0L, Random(0)))
-        assertEquals(7.0, pol.evaluate(snap, 100L, Random(999)))
     }
 
     @Test
