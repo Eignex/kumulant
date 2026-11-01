@@ -8,6 +8,14 @@ internal fun casMax(cell: StreamLong, candidate: Long) {
     }
 }
 
+internal fun casMin(cell: StreamLong, candidate: Long) {
+    while (true) {
+        val current = cell.load()
+        if (candidate >= current) return
+        if (cell.compareAndSet(current, candidate)) return
+    }
+}
+
 internal fun casMax(cell: StreamDouble, candidate: Double) {
     if (candidate.isNaN()) return
     while (true) {

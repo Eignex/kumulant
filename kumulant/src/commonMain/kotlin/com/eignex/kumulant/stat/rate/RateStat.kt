@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.casMin
 import com.eignex.kumulant.stream.firstWriterMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -59,31 +60,22 @@ data class RateResult(val startTimestampNanos: Long, val totalValue: Double, val
 class RateStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<RateResult> {
 
     private val totalValues = concurrency.additiveMode().newDouble(0.0)
-    private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MIN_VALUE)
+    // Long.MAX_VALUE marks an unset start, so electing the earliest stamp is a plain CAS-min.
+    private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MAX_VALUE)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // Return before the CAS loop, not just before the accumulator: a zero-weight observation must
         // not anchor the rate window either, or the denominator would count time the numerator never
         // saw. See Stat.
         if (weight.isInertWeight()) return
-        advanceStartTimestampDown(timestampNanos)
+        casMin(startTimestampNanos, timestampNanos)
         totalValues.add(value * weight)
-    }
-
-    private fun advanceStartTimestampDown(timestampNanos: Long) {
-        // Updates and merges share the CAS loop so an interleaved later stamp cannot overwrite
-        // an earlier one elected by another writer.
-        var current = startTimestampNanos.load()
-        while (current == Long.MIN_VALUE || current > timestampNanos) {
-            if (startTimestampNanos.compareAndSet(current, timestampNanos)) break
-            current = startTimestampNanos.load()
-        }
     }
 
     override fun create(concurrency: Concurrency?) = RateStat(concurrency ?: this.concurrency)
 
     override fun read(timestampNanos: Long): RateResult {
-        val start = if (startTimestampNanos.load() == Long.MIN_VALUE) {
+        val start = if (startTimestampNanos.load() == Long.MAX_VALUE) {
             timestampNanos
         } else {
             startTimestampNanos.load()
@@ -103,11 +95,11 @@ class RateStat(override val concurrency: Concurrency = Concurrency.None) : Serie
         // Zero-valued observations over a positive span also contribute their window.
         if (values.totalValue == 0.0 && values.startTimestampNanos >= values.timestampNanos) return
 
-        advanceStartTimestampDown(values.startTimestampNanos)
+        casMin(startTimestampNanos, values.startTimestampNanos)
     }
 
     override fun reset() {
-        startTimestampNanos.store(Long.MIN_VALUE)
+        startTimestampNanos.store(Long.MAX_VALUE)
         totalValues.store(0.0)
     }
 }

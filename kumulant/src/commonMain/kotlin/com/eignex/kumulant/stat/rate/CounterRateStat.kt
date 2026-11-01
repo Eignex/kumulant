@@ -5,6 +5,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.casMin
 import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
@@ -52,7 +53,8 @@ class CounterRateStat(
     private val lock = concurrency.serializedLock()
     private val mode = concurrency.welfordMode()
     private val totalDelta = concurrency.additiveMode().newDouble(0.0)
-    private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MIN_VALUE)
+    // Long.MAX_VALUE marks an unset start, so electing the earliest stamp is a plain CAS-min.
+    private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MAX_VALUE)
     private val lastCounter = mode.newDouble(Double.NaN)
     private val lastTimestampNanos = mode.newLong(Long.MIN_VALUE)
 
@@ -69,7 +71,7 @@ class CounterRateStat(
         if (previousCounter.isNaN()) {
             lastCounter.store(value)
             lastTimestampNanos.store(timestampNanos)
-            advanceStartTimestampDown(timestampNanos)
+            casMin(startTimestampNanos, timestampNanos)
             return
         }
 
@@ -78,7 +80,7 @@ class CounterRateStat(
                 val scaledDelta = ((value - previousCounter) * weight).coerceAtLeast(0.0)
                 if (scaledDelta > 0.0) {
                     totalDelta.add(scaledDelta)
-                    advanceStartTimestampDown(previousTimestamp)
+                    casMin(startTimestampNanos, previousTimestamp)
                 }
                 lastCounter.store(value)
                 lastTimestampNanos.store(timestampNanos)
@@ -98,19 +100,11 @@ class CounterRateStat(
         }
     }
 
-    private fun advanceStartTimestampDown(candidate: Long) {
-        while (true) {
-            val current = startTimestampNanos.load()
-            if (current != Long.MIN_VALUE && current <= candidate) return
-            if (startTimestampNanos.compareAndSet(current, candidate)) return
-        }
-    }
-
     override fun create(concurrency: Concurrency?) =
         CounterRateStat(concurrency ?: this.concurrency, treatDecreaseAsReset)
 
     override fun read(timestampNanos: Long): RateResult = lock.guarded {
-        val start = if (startTimestampNanos.load() == Long.MIN_VALUE) {
+        val start = if (startTimestampNanos.load() == Long.MAX_VALUE) {
             timestampNanos
         } else {
             startTimestampNanos.load()
@@ -129,16 +123,13 @@ class CounterRateStat(
         // window to adopt, but a zero total does not imply an untouched shard.
         if (values.totalValue == 0.0 && values.startTimestampNanos >= values.timestampNanos) return@guarded
 
-        val currentStart = startTimestampNanos.load()
-        if (currentStart == Long.MIN_VALUE || values.startTimestampNanos < currentStart) {
-            startTimestampNanos.store(values.startTimestampNanos)
-        }
+        casMin(startTimestampNanos, values.startTimestampNanos)
     }
 
     override fun reset() = lock.guarded {
         totalDelta.store(0.0)
         lastCounter.store(Double.NaN)
         lastTimestampNanos.store(Long.MIN_VALUE)
-        startTimestampNanos.store(Long.MIN_VALUE)
+        startTimestampNanos.store(Long.MAX_VALUE)
     }
 }
