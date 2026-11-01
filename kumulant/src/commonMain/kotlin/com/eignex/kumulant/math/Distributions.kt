@@ -2,7 +2,6 @@ package com.eignex.kumulant.math
 
 import kotlin.math.exp
 import kotlin.math.ln
-import kotlin.math.ln1p
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random

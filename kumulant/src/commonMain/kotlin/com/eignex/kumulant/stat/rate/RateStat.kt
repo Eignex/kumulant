@@ -60,6 +60,7 @@ data class RateResult(val startTimestampNanos: Long, val totalValue: Double, val
 class RateStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<RateResult> {
 
     private val totalValues = concurrency.additiveMode().newDouble(0.0)
+
     // Long.MAX_VALUE marks an unset start, so electing the earliest stamp is a plain CAS-min.
     private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MAX_VALUE)
 
