@@ -53,6 +53,7 @@ class CounterRateStat(
     private val lock = concurrency.serializedLock()
     private val mode = concurrency.welfordMode()
     private val totalDelta = concurrency.additiveMode().newDouble(0.0)
+
     // Long.MAX_VALUE marks an unset start, so electing the earliest stamp is a plain CAS-min.
     private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MAX_VALUE)
     private val lastCounter = mode.newDouble(Double.NaN)
