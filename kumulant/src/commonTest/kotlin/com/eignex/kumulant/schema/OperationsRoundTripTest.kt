@@ -13,6 +13,7 @@ import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
 import com.eignex.kumulant.stat.summary.SumResult
+import com.eignex.kumulant.stat.summary.RangeStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.skema.SchemaJson
@@ -32,9 +33,7 @@ import com.eignex.kumulant.operation.derivative as liveDerivative
 import com.eignex.kumulant.operation.diff as liveDiff
 import com.eignex.kumulant.operation.hysteresis as liveHysteresis
 import com.eignex.kumulant.operation.lag as liveLag
-import com.eignex.kumulant.operation.minMaxScaler as liveMinMaxScaler
 import com.eignex.kumulant.operation.resampleByTime as liveResampleByTime
-import com.eignex.kumulant.operation.standardScaler as liveStandardScaler
 import com.eignex.kumulant.operation.withFeedback as liveWithFeedback
 import com.eignex.kumulant.operation.withFixedX as liveWithFixedX
 import com.eignex.kumulant.operation.withFixedY as liveWithFixedY
@@ -465,7 +464,7 @@ class OperationsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        val live = SumStat().liveStandardScaler()
+        val live = SumStat().liveWithFeedback(VarianceStat(), Standardize)
         for (x in doubleArrayOf(1.0, 2.0, 3.0, 4.0, 5.0)) {
             rebuilt.update(x)
             live.update(x)
@@ -478,7 +477,7 @@ class OperationsRoundTripTest {
         val json = SchemaJson.encodeToString(StatSpec.serializer(), cfg)
         val decoded = SchemaJson.decodeFromString(StatSpec.serializer(), json)
         val rebuilt = (decoded as SeriesStatSpec<*>).materialize(Concurrency.None)
-        val live = SumStat().liveMinMaxScaler(targetLow = -1.0, targetHigh = 1.0)
+        val live = SumStat().liveWithFeedback(RangeStat(), MinMax(-1.0, 1.0))
         for (x in doubleArrayOf(2.0, 8.0, 5.0, 4.0)) {
             rebuilt.update(x)
             live.update(x)

@@ -44,26 +44,20 @@ internal class FilterPairedStat<R : Result>(
 
 internal class FilterVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
-    private val predicate: (DoubleArray) -> Boolean = { true },
-    private val vectorPredicate: ((Vector) -> Boolean)? = null,
+    private val predicate: (Vector) -> Boolean,
 ) : VectorStat<R>,
     WindowsInside<R, VectorStat<R>>,
     Stat<R> by delegate {
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
-        if (vectorPredicate?.invoke(vector) ?: predicate(vector.toDoubleArray())) {
+        if (predicate(vector)) {
             delegate.update(vector, timestampNanos, weight)
         }
     }
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
-        FilterVectorStat(delegate.windowed(duration, slices, concurrency), predicate, vectorPredicate)
+        FilterVectorStat(delegate.windowed(duration, slices, concurrency), predicate)
 
     override fun create(concurrency: Concurrency?): VectorStat<R> =
-        FilterVectorStat(delegate.create(concurrency), predicate, vectorPredicate)
-
-    companion object {
-        fun <R : Result> vector(delegate: VectorStat<R>, predicate: (Vector) -> Boolean): FilterVectorStat<R> =
-            FilterVectorStat(delegate, vectorPredicate = predicate)
-    }
+        FilterVectorStat(delegate.create(concurrency), predicate)
 }
 
 internal class FilterDiscreteStat<R : Result>(

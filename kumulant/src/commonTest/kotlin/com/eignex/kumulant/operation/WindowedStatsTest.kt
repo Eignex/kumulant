@@ -243,7 +243,6 @@ class WindowedStatsTest {
             { it.atX().withFixedY(0.0) },
             { it.atY().withFixedX(0.0) },
             { FoldPairedStat(it) { x, _ -> x }.withFixedY(0.0) },
-            { it.mapResult({ result -> result }, { result -> result }) },
             { it.sample(1.0, 42L) },
         )
         for ((index, decorate) in decorators.withIndex()) {
@@ -256,10 +255,9 @@ class WindowedStatsTest {
 
     @Test
     fun `vector decorators preserve differences across window slices`() {
-        val stat = TransformVectorStat(
-            FilterVectorStat(SumStat().diff().atIndex(0)) { true },
-            transform = { it },
-        ).withWeight(1.0).weightBy { 1.0 }.sample(1.0, 42L).windowed(60.seconds)
+        val stat = TransformVectorStat(FilterVectorStat(SumStat().diff().atIndex(0)) { true }) {
+            it.toDoubleArray()
+        }.withWeight(1.0).weightBy { 1.0 }.sample(1.0, 42L).windowed(60.seconds)
         repeat(6) { stat.update(doubleArrayOf(it.toDouble()), it * 8_000_000_000L) }
 
         assertEquals(5.0, stat.read(40_000_000_000L).sum, DELTA)

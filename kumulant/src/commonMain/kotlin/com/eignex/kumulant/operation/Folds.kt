@@ -11,24 +11,18 @@ import kotlin.time.Duration
 
 internal class FoldVectorStat<R : Result>(
     private val delegate: SeriesStat<R>,
-    private val transform: (DoubleArray) -> Double = { 0.0 },
-    private val vectorTransform: ((Vector) -> Double)? = null,
+    private val transform: (Vector) -> Double,
 ) : VectorStat<R>,
     WindowsInside<R, VectorStat<R>>,
     Stat<R> by delegate {
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
-        delegate.update(vectorTransform?.invoke(vector) ?: transform(vector.toDoubleArray()), timestampNanos, weight)
+        delegate.update(transform(vector), timestampNanos, weight)
     }
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
-        FoldVectorStat(delegate.windowed(duration, slices, concurrency), transform, vectorTransform)
+        FoldVectorStat(delegate.windowed(duration, slices, concurrency), transform)
 
     override fun create(concurrency: Concurrency?): VectorStat<R> =
-        FoldVectorStat(delegate.create(concurrency), transform, vectorTransform)
-
-    companion object {
-        fun <R : Result> vector(delegate: SeriesStat<R>, transform: (Vector) -> Double): FoldVectorStat<R> =
-            FoldVectorStat(delegate, vectorTransform = transform)
-    }
+        FoldVectorStat(delegate.create(concurrency), transform)
 }
 
 internal class FoldPairedStat<R : Result>(
@@ -49,32 +43,17 @@ internal class FoldPairedStat<R : Result>(
 
 internal class FoldVectorPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
-    private val foldX: (DoubleArray) -> Double = { 0.0 },
-    private val foldY: (DoubleArray) -> Double = { 0.0 },
-    private val vectorFoldX: ((Vector) -> Double)? = null,
-    private val vectorFoldY: ((Vector) -> Double)? = null,
+    private val foldX: (Vector) -> Double,
+    private val foldY: (Vector) -> Double,
 ) : VectorStat<R>,
     WindowsInside<R, VectorStat<R>>,
     Stat<R> by delegate {
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
-        if (vectorFoldX != null && vectorFoldY != null) {
-            delegate.update(vectorFoldX(vector), vectorFoldY(vector), timestampNanos, weight)
-        } else {
-            val materialized = vector.toDoubleArray()
-            delegate.update(foldX(materialized), foldY(materialized), timestampNanos, weight)
-        }
+        delegate.update(foldX(vector), foldY(vector), timestampNanos, weight)
     }
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
-        FoldVectorPairedStat(delegate.windowed(duration, slices, concurrency), foldX, foldY, vectorFoldX, vectorFoldY)
+        FoldVectorPairedStat(delegate.windowed(duration, slices, concurrency), foldX, foldY)
 
     override fun create(concurrency: Concurrency?): VectorStat<R> =
-        FoldVectorPairedStat(delegate.create(concurrency), foldX, foldY, vectorFoldX, vectorFoldY)
-
-    companion object {
-        fun <R : Result> vector(
-            delegate: PairedStat<R>,
-            foldX: (Vector) -> Double,
-            foldY: (Vector) -> Double,
-        ): FoldVectorPairedStat<R> = FoldVectorPairedStat(delegate, vectorFoldX = foldX, vectorFoldY = foldY)
-    }
+        FoldVectorPairedStat(delegate.create(concurrency), foldX, foldY)
 }

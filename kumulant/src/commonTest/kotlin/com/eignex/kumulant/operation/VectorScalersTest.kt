@@ -1,7 +1,11 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.DELTA
-import com.eignex.kumulant.stat.summary.SumStat
+import com.eignex.kumulant.schema.ops.minMaxScaleFeatures
+import com.eignex.kumulant.schema.ops.standardScaleFeatures
+import com.eignex.kumulant.schema.ops.vectorized
+import com.eignex.kumulant.schema.runtime.materialize
+import com.eignex.kumulant.schema.spec.Sum
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -13,8 +17,7 @@ class VectorScalersTest {
     @Test
     fun `standardScaleFeatures matches hand-rolled per-coordinate z-scores`() {
         val dimensions = 3
-        val tpl = VectorizedStat(dimensions, SumStat())
-        val scaled = tpl.standardScaleFeatures(dimensions)
+        val scaled = Sum.vectorized(dimensions).standardScaleFeatures(dimensions).materialize()
 
         val updates = listOf(
             doubleArrayOf(1.0, 10.0, 100.0),
@@ -42,8 +45,7 @@ class VectorScalersTest {
     @Test
     fun `minMaxScaleFeatures maps each coordinate to the configured range`() {
         val dimensions = 2
-        val tpl = VectorizedStat(dimensions, SumStat())
-        val scaled = tpl.minMaxScaleFeatures(dimensions, targetLow = 0.0, targetHigh = 1.0)
+        val scaled = Sum.vectorized(dimensions).minMaxScaleFeatures(dimensions, targetLow = 0.0, targetHigh = 1.0).materialize()
         scaled.update(doubleArrayOf(0.0, 100.0))
         scaled.update(doubleArrayOf(10.0, 200.0))
         scaled.update(doubleArrayOf(5.0, 150.0))
@@ -54,16 +56,14 @@ class VectorScalersTest {
 
     @Test
     fun `minMaxScaleFeatures rejects inverted range`() {
-        val tpl = VectorizedStat(2, SumStat())
         assertFailsWith<IllegalArgumentException> {
-            tpl.minMaxScaleFeatures(2, targetLow = 1.0, targetHigh = 0.0)
+            Sum.vectorized(2).minMaxScaleFeatures(2, targetLow = 1.0, targetHigh = 0.0)
         }
     }
 
     @Test
     fun `reset clears both primary fan-out and inner`() {
-        val tpl = VectorizedStat(2, SumStat())
-        val scaled = tpl.standardScaleFeatures(2)
+        val scaled = Sum.vectorized(2).standardScaleFeatures(2).materialize()
         scaled.update(doubleArrayOf(1.0, 10.0))
         scaled.update(doubleArrayOf(2.0, 20.0))
         scaled.reset()
@@ -75,7 +75,7 @@ class VectorScalersTest {
 
     @Test
     fun `create produces an independent stat`() {
-        val tpl = VectorizedStat(2, SumStat()).standardScaleFeatures(2)
+        val tpl = Sum.vectorized(2).standardScaleFeatures(2).materialize()
         tpl.update(doubleArrayOf(1.0, 10.0))
         tpl.update(doubleArrayOf(3.0, 30.0))
         val fresh = tpl.create()

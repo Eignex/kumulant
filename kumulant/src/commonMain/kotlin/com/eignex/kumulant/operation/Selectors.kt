@@ -10,7 +10,7 @@ internal fun <R : Result> SeriesStat<R>.atX(): PairedStat<R> = FoldPairedStat(th
 internal fun <R : Result> SeriesStat<R>.atY(): PairedStat<R> = FoldPairedStat(this) { _, y -> y }
 
 internal fun <R : Result> SeriesStat<R>.atIndex(index: Int): VectorStat<R> =
-    FoldVectorStat.vector(this) { vector -> vector[index] }
+    FoldVectorStat(this) { vector -> vector[index] }
 
 internal fun <R : Result> PairedStat<R>.atIndices(indexX: Int, indexY: Int): VectorStat<R> =
-    FoldVectorPairedStat.vector(this, { vector -> vector[indexX] }, { vector -> vector[indexY] })
+    FoldVectorPairedStat(this, { vector -> vector[indexX] }, { vector -> vector[indexY] })

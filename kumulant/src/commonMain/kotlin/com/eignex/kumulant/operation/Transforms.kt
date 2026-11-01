@@ -45,24 +45,18 @@ internal class TransformPairStat<R : Result>(
 
 internal class TransformVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
-    private val transform: (DoubleArray) -> DoubleArray = { it },
-    private val vectorTransform: ((Vector) -> DoubleArray)? = null,
+    private val transform: (Vector) -> DoubleArray,
 ) : VectorStat<R>,
     WindowsInside<R, VectorStat<R>>,
     Stat<R> by delegate {
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
-        delegate.update(vectorTransform?.invoke(vector) ?: transform(vector.toDoubleArray()), timestampNanos, weight)
+        delegate.update(transform(vector), timestampNanos, weight)
     }
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
-        TransformVectorStat(delegate.windowed(duration, slices, concurrency), transform, vectorTransform)
+        TransformVectorStat(delegate.windowed(duration, slices, concurrency), transform)
 
     override fun create(concurrency: Concurrency?): VectorStat<R> =
-        TransformVectorStat(delegate.create(concurrency), transform, vectorTransform)
-
-    companion object {
-        fun <R : Result> vector(delegate: VectorStat<R>, transform: (Vector) -> DoubleArray): TransformVectorStat<R> =
-            TransformVectorStat(delegate, vectorTransform = transform)
-    }
+        TransformVectorStat(delegate.create(concurrency), transform)
 }
 
 private const val TWO_POW_63 = 9.223372036854775808E18
