@@ -57,24 +57,19 @@ sealed interface ScalarExpr {
      * Evaluate this expression against the per-update inputs. See the class
      * KDoc for the input-environment convention.
      */
-    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Double
+    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Double =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /** Refers to the primary scalar input `x`. */
 @Serializable
 @SerialName("X")
-data object X : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+data object X : ScalarExpr
 
 /** Refers to the secondary scalar input `y` (paired stats only). */
 @Serializable
 @SerialName("Y")
-data object Y : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+data object Y : ScalarExpr
 
 /**
  * Reads the `center` field of the feedback primary's snapshot. Requires the primary's
@@ -83,10 +78,7 @@ data object Y : ScalarExpr {
  */
 @Serializable
 @SerialName("Center")
-data object Center : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+data object Center : ScalarExpr
 
 /**
  * Reads the `scale` field of the feedback primary's snapshot. Requires the primary's
@@ -95,10 +87,7 @@ data object Center : ScalarExpr {
  */
 @Serializable
 @SerialName("Scale")
-data object Scale : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+data object Scale : ScalarExpr
 
 /**
  * Reads the `min` field of the feedback primary's snapshot. Requires the primary's
@@ -107,10 +96,7 @@ data object Scale : ScalarExpr {
  */
 @Serializable
 @SerialName("Low")
-data object Low : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+data object Low : ScalarExpr
 
 /**
  * Reads the `max` field of the feedback primary's snapshot. Requires the primary's
@@ -119,10 +105,7 @@ data object Low : ScalarExpr {
  */
 @Serializable
 @SerialName("High")
-data object High : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+data object High : ScalarExpr
 
 /**
  * In element-wise feedback contexts (vector / regression / paired), returns the
@@ -134,10 +117,7 @@ data object High : ScalarExpr {
  */
 @Serializable
 @SerialName("VIndex")
-data object VIndex : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+data object VIndex : ScalarExpr
 
 /** `v[index]` - out-of-bounds throws at eval time. */
 @Serializable
@@ -145,10 +125,7 @@ data object VIndex : ScalarExpr {
 data class V(
     /** Vector coordinate to read. */
     val index: Int,
-) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+) : ScalarExpr
 
 /** Wire spec for a constant scalar. */
 @Serializable
@@ -156,94 +133,55 @@ data class V(
 data class Const(
     /** Literal value returned by [eval]. */
     val v: Double,
-) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+) : ScalarExpr
 
 @Serializable
 @SerialName("Add")
-internal data class Add(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Add(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("Sub")
-internal data class Sub(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Sub(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("Mul")
-internal data class Mul(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Mul(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("Div")
-internal data class Div(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Div(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("Neg")
-internal data class Neg(val a: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Neg(val a: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("Abs")
-internal data class Abs(val a: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Abs(val a: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("Log")
-internal data class Log(val a: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Log(val a: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("Exp")
-internal data class Exp(val a: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Exp(val a: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("Sqrt")
-internal data class Sqrt(val a: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Sqrt(val a: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("Pow")
-internal data class Pow(val a: ScalarExpr, val b: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Pow(val a: ScalarExpr, val b: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("MinExpr")
-internal data class MinExpr(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class MinExpr(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr
 
 @Serializable
 @SerialName("MaxExpr")
-internal data class MaxExpr(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class MaxExpr(val l: ScalarExpr, val r: ScalarExpr) : ScalarExpr
 
 /** Wire spec for a ternary `if (cond) then else otherwise`. */
 @Serializable
@@ -255,10 +193,7 @@ data class IfExpr(
     val then: ScalarExpr,
     /** Branch returned when [cond] is false. */
     val otherwise: ScalarExpr,
-) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+) : ScalarExpr
 
 /**
  * One case of a [Switch] expression: when `on` evaluates to [value] (exact equality),
@@ -288,10 +223,7 @@ data class Switch(
     val cases: List<SwitchCase>,
     /** Returned when no case matches. */
     val otherwise: ScalarExpr,
-) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+) : ScalarExpr
 
 /**
  * Membership test: `of in values` (exact equality). Use it to flatten chains of
@@ -304,10 +236,7 @@ data class In(
     val of: ScalarExpr,
     /** Allowed values; exact equality. */
     val values: List<Double>,
-) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+) : BoolExpr
 
 /**
  * Z-score projection: `(X - Center) / Scale`, emitting `0` when [Scale] is still zero.
@@ -315,10 +244,7 @@ data class In(
  */
 @Serializable
 @SerialName("Standardize")
-data object Standardize : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+data object Standardize : ScalarExpr
 
 /**
  * Min-max projection mapping `X` from `[primary.min, primary.max]` to `[targetLow, targetHigh]`,
@@ -336,9 +262,6 @@ data class MinMax(
     init {
         require(targetHigh > targetLow) { "MinMax targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
     }
-
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -369,17 +292,11 @@ enum class VFoldOp {
 
 @Serializable
 @SerialName("VFold")
-internal data class VFold(val op: VFoldOp) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class VFold(val op: VFoldOp) : ScalarExpr
 
 @Serializable
 @SerialName("VDot")
-internal data class VDot(val weights: List<Double>) : ScalarExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Double =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class VDot(val weights: List<Double>) : ScalarExpr
 
 /**
  * Wire-serialisable AST for boolean predicates over the same input
@@ -408,93 +325,58 @@ sealed interface BoolExpr {
      * to keep an observation under `filter` or to take the `then` branch
      * under `IfExpr`.
      */
-    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Boolean
+    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Boolean =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 @Serializable
 @SerialName("Gt")
-internal data class Gt(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Gt(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr
 
 @Serializable
 @SerialName("Ge")
-internal data class Ge(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Ge(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr
 
 @Serializable
 @SerialName("Lt")
-internal data class Lt(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Lt(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr
 
 @Serializable
 @SerialName("Le")
-internal data class Le(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Le(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr
 
 @Serializable
 @SerialName("Eq")
-internal data class Eq(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Eq(val l: ScalarExpr, val r: ScalarExpr) : BoolExpr
 
 @Serializable
 @SerialName("And")
-internal data class And(val l: BoolExpr, val r: BoolExpr) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class And(val l: BoolExpr, val r: BoolExpr) : BoolExpr
 
 @Serializable
 @SerialName("Or")
-internal data class Or(val l: BoolExpr, val r: BoolExpr) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Or(val l: BoolExpr, val r: BoolExpr) : BoolExpr
 
 @Serializable
 @SerialName("Not")
-internal data class Not(val a: BoolExpr) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class Not(val a: BoolExpr) : BoolExpr
 
 @Serializable
 @SerialName("IsNaN")
-internal data class IsNaN(val of: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class IsNaN(val of: ScalarExpr) : BoolExpr
 
 @Serializable
 @SerialName("IsFinite")
-internal data class IsFinite(val of: ScalarExpr) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class IsFinite(val of: ScalarExpr) : BoolExpr
 
 // Unused input slots default to finite values, allowing one finiteness check across all modalities.
 @Serializable
 @SerialName("AllFinite")
-internal data object AllFinite : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data object AllFinite : BoolExpr
 
 @Serializable
 @SerialName("InRange")
-internal data class InRange(val a: ScalarExpr, val min: Double, val max: Double) : BoolExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): Boolean =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class InRange(val a: ScalarExpr, val min: Double, val max: Double) : BoolExpr
 
 /**
  * Wire-serialisable AST for vector-valued expressions over the same input
@@ -518,7 +400,8 @@ sealed interface VectorExpr {
      * downstream `transformVector(VectorExpr)` propagates it as the new
      * vector dimensionality.
      */
-    fun eval(x: Double = 0.0, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): DoubleArray
+    fun eval(x: Double = 0.0, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): DoubleArray =
+        evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**
@@ -871,10 +754,7 @@ private fun sparseMax(v: SparseVector): Double {
 
 @Serializable
 @SerialName("VElements")
-internal data class VElements(val exprs: List<ScalarExpr>) : VectorExpr {
-    override fun eval(x: Double, y: Double, v: DoubleArray, primary: Result?): DoubleArray =
-        evaluate(x, y, v, primary, ArrayInput)
-}
+internal data class VElements(val exprs: List<ScalarExpr>) : VectorExpr
 
 /** Build [Add] of two expressions. */
 operator fun ScalarExpr.plus(rhs: ScalarExpr): ScalarExpr = Add(this, rhs)
