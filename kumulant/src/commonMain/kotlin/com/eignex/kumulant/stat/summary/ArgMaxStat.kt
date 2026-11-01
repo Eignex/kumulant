@@ -4,9 +4,6 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
-import com.eignex.kumulant.stream.guarded
-import com.eignex.kumulant.stream.monotonicMode
-import com.eignex.kumulant.stream.serializedLock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -37,38 +34,20 @@ data class ArgMaxResult(
  */
 class ArgMaxStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<ArgMaxResult> {
 
-    private val mode = concurrency.monotonicMode()
-    private val lock = concurrency.serializedLock()
-    private val value = mode.newDouble(Double.NEGATIVE_INFINITY)
-    private val at = mode.newLong(0L)
+    private val extremum = ArgExtremum(concurrency, Double.NEGATIVE_INFINITY) { candidate, current -> candidate > current }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // Non-positive rather than merely inert: an extremum or event trace has no inverse, so a
         // downdate would run forwards as an ordinary observation. See Stat.
         if (weight.isNotPositiveWeight()) return
-        lock.guarded {
-            if (value > this.value.load()) {
-                this.value.store(value)
-                at.store(timestampNanos)
-            }
-        }
+        extremum.offer(value, timestampNanos)
     }
 
-    override fun merge(values: ArgMaxResult, timestampNanos: Long) = lock.guarded {
-        if (values.max > value.load()) {
-            value.store(values.max)
-            at.store(values.atTimestampNanos)
-        }
-    }
+    override fun merge(values: ArgMaxResult, timestampNanos: Long) = extremum.offer(values.max, values.atTimestampNanos)
 
-    override fun reset() = lock.guarded {
-        value.store(Double.NEGATIVE_INFINITY)
-        at.store(0L)
-    }
+    override fun reset() = extremum.reset()
 
-    override fun read(timestampNanos: Long) = lock.guarded {
-        ArgMaxResult(value.load(), at.load())
-    }
+    override fun read(timestampNanos: Long) = extremum.read(::ArgMaxResult)
 
     override fun create(concurrency: Concurrency?) = ArgMaxStat(concurrency ?: this.concurrency)
 }
