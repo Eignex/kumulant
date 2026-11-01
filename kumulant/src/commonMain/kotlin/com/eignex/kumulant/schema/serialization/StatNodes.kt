@@ -26,7 +26,6 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
         jsonNode<ClassCounts>("classCounts"),
         jsonNode<Summary>("summary"),
         jsonNode<BernoulliSum>("bernoulliSum"),
-        jsonNode<TotalWeights>("totalWeights"),
         jsonNode<Count>("count"),
         jsonNode<Rate>("rate"),
         jsonNode<CounterRate>("counterRate"),

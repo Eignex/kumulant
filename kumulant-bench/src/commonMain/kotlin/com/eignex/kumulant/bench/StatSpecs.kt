@@ -44,7 +44,6 @@ import com.eignex.kumulant.stat.event.RunLengthStat
 import com.eignex.kumulant.stat.event.SojournResult
 import com.eignex.kumulant.stat.event.SojournStat
 import com.eignex.kumulant.stat.summary.SumStat
-import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -90,14 +89,6 @@ val countStatSpec = seriesStatSpec(
     updates = ::uniformVariableWeights,
     scalar = { it.sum },
     reference = { it.count().toDouble() },
-)
-
-val totalWeightsStatSpec = seriesStatSpec(
-    name = "TotalWeightsStat",
-    factory = { c -> TotalWeightsStat(c) },
-    updates = ::uniformVariableWeights,
-    scalar = { it.sum },
-    reference = { it.sumOf { u -> u.weight } },
 )
 
 val meanStatSpec = seriesStatSpec(
@@ -985,7 +976,6 @@ val randomForestRegressionStatSpec = regressionStatSpec(
 val allSpecs: List<StatSpec<*, *>> = listOf(
     sumStatSpec,
     countStatSpec,
-    totalWeightsStatSpec,
     meanStatSpec,
     varianceStatSpec,
     momentsStatSpec,

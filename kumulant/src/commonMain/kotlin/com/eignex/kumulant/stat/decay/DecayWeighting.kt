@@ -64,12 +64,6 @@ sealed interface DecayWeighting {
     }
 }
 
-/** Shorthand for [DecayWeighting.HalfLife] - usable as a shared weighting across stats. */
-fun halfLife(halfLife: Duration): DecayWeighting.HalfLife = DecayWeighting.HalfLife(halfLife)
-
-/** Shorthand for [DecayWeighting.Alpha] - usable as a shared weighting across stats. */
-fun alpha(alpha: Double): DecayWeighting.Alpha = DecayWeighting.Alpha(alpha)
-
 // At alpha == 0 the accumulator stays zero; return it directly to avoid 0/0 during debiasing.
 internal fun DecayWeighting.debias(biased: Double, totalWeight: Double): Double {
     val correction = correction(totalWeight)

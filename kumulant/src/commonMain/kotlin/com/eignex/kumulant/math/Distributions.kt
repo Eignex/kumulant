@@ -16,9 +16,6 @@ private fun Random.nextDoublePos(): Double {
     }
 }
 
-/** Float overload of [nextNormal]; widens to Double, samples, narrows back. */
-fun Random.nextNormal(mean: Float, std: Float): Float = nextNormal(mean.toDouble(), std.toDouble()).toFloat()
-
 /**
  * Draw from `N(mean, std^2)` via Marsaglia & Tsang's Ziggurat algorithm. The fast
  * path is one `nextInt()` + table lookup + comparison; ~97% of draws complete there.
@@ -95,22 +92,6 @@ private val ZIGGURAT_INIT = run {
         ZIGGURAT_FN[i] = exp(-0.5 * dn * dn)
     }
     Unit
-}
-
-/**
- * Draw from a log-normal distribution parameterised by real-scale [mean] and
- * [variance] (not the underlying Normal's mu/sigma). Used by log-normal posteriors
- * where the bandit observes positive-valued rewards under a multiplicative noise
- * model.
- */
-fun Random.nextLogNormal(mean: Double, variance: Double): Double {
-    require(mean > 0.0) { "nextLogNormal requires mean > 0; got $mean" }
-    require(variance >= 0.0) { "nextLogNormal requires variance >= 0; got $variance" }
-    // The coefficient of variation avoids squaring a tiny mean; log1p preserves small-ratio precision.
-    val cv2 = (variance / mean) / mean
-    val sigma = sqrt(ln1p(cv2))
-    val mu = ln(mean) - 0.5 * sigma * sigma
-    return exp(nextNormal(mu, sigma))
 }
 
 /**

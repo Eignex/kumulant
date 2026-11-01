@@ -37,7 +37,6 @@ class StatsRoundTripTest {
             Moments,
             Summary,
             BernoulliSum,
-            TotalWeights,
             Count,
         )
 

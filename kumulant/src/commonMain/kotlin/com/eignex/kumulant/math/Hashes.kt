@@ -3,8 +3,6 @@ package com.eignex.kumulant.math
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
-// Pin a named algorithm or Hasher64 when the byte stream must stay stable across library versions.
-
 /**
  * SplitMix64 - a fast, high-quality 64-bit mixer suitable for spreading sequential
  * or low-entropy keys into a uniform 64-bit hash before feeding them to cardinality
@@ -22,9 +20,10 @@ fun splitmix64(value: Long): Long {
 internal fun deriveChildSeed(seed: Long, ordinal: Long): Long = splitmix64(seed xor splitmix64(ordinal))
 
 /**
- * Default 64-bit hash of [bytes] for cardinality / sketch families. Currently
- * delegates to [SplitMixChunkHasher] - pin to that hasher directly if you need a
- * stable byte stream across library versions.
+ * 64-bit hash of [bytes] for cardinality / sketch families: SplitMix64 over 8-byte
+ * little-endian chunks, folding tail bytes in last and seeding with the input length so
+ * zero-prefixed inputs of different lengths hash distinctly. Stable byte-for-byte across
+ * platforms.
  *
  * Prefer this over `value.hashCode().toLong()` when feeding HLL,
  * [BloomFilterStat][com.eignex.kumulant.stat.sketch.BloomFilterStat], or
@@ -33,21 +32,37 @@ internal fun deriveChildSeed(seed: Long, ordinal: Long): Long = splitmix64(seed 
  *
  * Not collision-resistant. Use a cryptographic hash for adversarial input.
  */
-fun hash64(bytes: ByteArray): Long = SplitMixChunkHasher.hash(bytes)
+fun hash64(bytes: ByteArray): Long {
+    var h = bytes.size.toLong()
+    var i = 0
+    while (i + 8 <= bytes.size) {
+        var chunk = 0L
+        for (j in 0 until 8) {
+            chunk = chunk or ((bytes[i + j].toLong() and 0xFF) shl (j * 8))
+        }
+        h = splitmix64(h xor chunk)
+        i += 8
+    }
+    // Always finalize with a tail mix - even when bytes.size is a multiple of 8 -
+    // so chunk-aligned and unaligned inputs that happen to reach the same
+    // intermediate state cannot collide.
+    var tail = 0L
+    var shift = 0
+    while (i < bytes.size) {
+        tail = tail or ((bytes[i].toLong() and 0xFF) shl shift)
+        shift += 8
+        i++
+    }
+    return splitmix64(h xor tail)
+}
 
 /** UTF-8 byte hash convenience over [hash64]. */
 fun hash64(value: String): Long = hash64(value.encodeToByteArray())
 
-/** Pluggable 64-bit byte hash. Implementations must be deterministic and pure. */
-fun interface Hasher64 {
-    /** Return a 64-bit hash of [bytes]. Equal byte arrays must return equal hashes. */
-    fun hash(bytes: ByteArray): Long
-}
-
 /**
  * Pluggable `Long -> Long` mixer used by the discrete sketch family (HyperLogLog,
  * BloomFilter, CountMinSketch) to spread a key's bits across
- * the full 64-bit range before bucketing. Distinct from [Hasher64] (`ByteArray -> Long`):
+ * the full 64-bit range before bucketing. Distinct from [hash64] (`ByteArray -> Long`):
  * callers reduce a domain key to a `Long` first (e.g. via [hash64]), and the sketch then
  * mixes that `Long` through here.
  *
@@ -108,36 +123,4 @@ object Hashers {
     /** Resolve the [LongHasher] named by [ref], or throw if no mixer was registered under it. */
     fun resolve(ref: HasherRef): LongHasher =
         registry[ref.name] ?: error("Unknown LongHasher '${ref.name}'; register it via Hashers.register before use")
-}
-
-/**
- * Hashes byte arrays by feeding 8-byte little-endian chunks through [splitmix64]
- * and folding tail bytes in last. The starting state is the input length, so
- * different-length zero-prefixed inputs hash distinctly. Stable byte-for-byte
- * across platforms; currently the default for [hash64].
- */
-object SplitMixChunkHasher : Hasher64 {
-    override fun hash(bytes: ByteArray): Long {
-        var h = bytes.size.toLong()
-        var i = 0
-        while (i + 8 <= bytes.size) {
-            var chunk = 0L
-            for (j in 0 until 8) {
-                chunk = chunk or ((bytes[i + j].toLong() and 0xFF) shl (j * 8))
-            }
-            h = splitmix64(h xor chunk)
-            i += 8
-        }
-        // Always finalize with a tail mix - even when bytes.size is a multiple of 8 -
-        // so chunk-aligned and unaligned inputs that happen to reach the same
-        // intermediate state cannot collide.
-        var tail = 0L
-        var shift = 0
-        while (i < bytes.size) {
-            tail = tail or ((bytes[i].toLong() and 0xFF) shl shift)
-            shift += 8
-            i++
-        }
-        return splitmix64(h xor tail)
-    }
 }

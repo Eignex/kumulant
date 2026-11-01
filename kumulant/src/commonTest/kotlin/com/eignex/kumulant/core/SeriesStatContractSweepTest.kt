@@ -35,7 +35,6 @@ import com.eignex.kumulant.schema.spec.SeriesStatSpec
 import com.eignex.kumulant.schema.spec.Sum
 import com.eignex.kumulant.schema.spec.Summary
 import com.eignex.kumulant.schema.spec.TDigest
-import com.eignex.kumulant.schema.spec.TotalWeights
 import com.eignex.kumulant.schema.spec.Variance
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -64,7 +63,6 @@ class SeriesStatContractSweepTest {
         "FrugalMad" to FrugalMad(),
         "Summary" to Summary,
         "BernoulliSum" to BernoulliSum,
-        "TotalWeights" to TotalWeights,
         "Count" to Count,
         "Rate" to Rate,
         "CounterRate" to CounterRate(),
