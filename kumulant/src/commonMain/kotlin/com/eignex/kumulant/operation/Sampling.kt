@@ -13,13 +13,25 @@ import kotlin.time.Duration
 
 // Inert weights are dropped before advancing a gate, preserving the phase of later updates.
 
-internal fun <R : Result> SeriesStat<R>.throttle(every: Int): SeriesStat<R> = GatedSeriesStat(this, ThrottlePolicy(every))
+internal fun <R : Result> SeriesStat<R>.throttle(every: Int): SeriesStat<R> = GatedSeriesStat(
+    this,
+    ThrottlePolicy(every),
+)
 
-internal fun <R : Result> PairedStat<R>.throttle(every: Int): PairedStat<R> = GatedPairedStat(this, ThrottlePolicy(every))
+internal fun <R : Result> PairedStat<R>.throttle(every: Int): PairedStat<R> = GatedPairedStat(
+    this,
+    ThrottlePolicy(every),
+)
 
-internal fun <R : Result> VectorStat<R>.throttle(every: Int): VectorStat<R> = GatedVectorStat(this, ThrottlePolicy(every))
+internal fun <R : Result> VectorStat<R>.throttle(every: Int): VectorStat<R> = GatedVectorStat(
+    this,
+    ThrottlePolicy(every),
+)
 
-internal fun <R : Result> DiscreteStat<R>.throttle(every: Int): DiscreteStat<R> = GatedDiscreteStat(this, ThrottlePolicy(every))
+internal fun <R : Result> DiscreteStat<R>.throttle(every: Int): DiscreteStat<R> = GatedDiscreteStat(
+    this,
+    ThrottlePolicy(every),
+)
 
 internal fun <R : Result> SeriesStat<R>.sample(rate: Double, seed: Long): SeriesStat<R> =
     GatedSeriesStat(this, SamplePolicy(rate, seed))
@@ -50,7 +62,10 @@ internal class GatedSeriesStat<R : Result>(private val delegate: SeriesStat<R>, 
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
         GatedSeriesStat(delegate.windowed(duration, slices, concurrency), policy)
 
-    override fun create(concurrency: Concurrency?): SeriesStat<R> = GatedSeriesStat(delegate.create(concurrency), gate.childPolicy())
+    override fun create(concurrency: Concurrency?): SeriesStat<R> = GatedSeriesStat(
+        delegate.create(concurrency),
+        gate.childPolicy(),
+    )
 }
 
 internal class GatedPairedStat<R : Result>(private val delegate: PairedStat<R>, private val policy: GatePolicy) :
@@ -70,7 +85,10 @@ internal class GatedPairedStat<R : Result>(private val delegate: PairedStat<R>, 
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
         GatedPairedStat(delegate.windowed(duration, slices, concurrency), policy)
 
-    override fun create(concurrency: Concurrency?): PairedStat<R> = GatedPairedStat(delegate.create(concurrency), gate.childPolicy())
+    override fun create(concurrency: Concurrency?): PairedStat<R> = GatedPairedStat(
+        delegate.create(concurrency),
+        gate.childPolicy(),
+    )
 }
 
 internal class GatedVectorStat<R : Result>(private val delegate: VectorStat<R>, private val policy: GatePolicy) :
@@ -90,7 +108,10 @@ internal class GatedVectorStat<R : Result>(private val delegate: VectorStat<R>, 
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
         GatedVectorStat(delegate.windowed(duration, slices, concurrency), policy)
 
-    override fun create(concurrency: Concurrency?): VectorStat<R> = GatedVectorStat(delegate.create(concurrency), gate.childPolicy())
+    override fun create(concurrency: Concurrency?): VectorStat<R> = GatedVectorStat(
+        delegate.create(concurrency),
+        gate.childPolicy(),
+    )
 }
 
 internal class GatedDiscreteStat<R : Result>(private val delegate: DiscreteStat<R>, private val policy: GatePolicy) :
@@ -110,5 +131,8 @@ internal class GatedDiscreteStat<R : Result>(private val delegate: DiscreteStat<
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): DiscreteStat<R> =
         GatedDiscreteStat(delegate.windowed(duration, slices, concurrency), policy)
 
-    override fun create(concurrency: Concurrency?): DiscreteStat<R> = GatedDiscreteStat(delegate.create(concurrency), gate.childPolicy())
+    override fun create(concurrency: Concurrency?): DiscreteStat<R> = GatedDiscreteStat(
+        delegate.create(concurrency),
+        gate.childPolicy(),
+    )
 }
