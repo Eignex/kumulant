@@ -62,12 +62,10 @@ fun <R : Result> BanditPolicySpec<R>.materialize(): BanditPolicy<R> = when (this
 
     is Ucb1Spec -> UCB1(alpha, priorAlpha, priorBeta) as BanditPolicy<R>
 
-
     is BoltzmannSpec -> Boltzmann(initialTau, minTau, decay, priorMean, priorWeight) as BanditPolicy<R>
 
     is EpsilonGreedySpec ->
         EpsilonGreedy(epsilon, decay, priorMean, priorWeight) as BanditPolicy<R>
-
 
     is KlUcbSpec -> KlUcb(c, tolerance, priorAlpha, priorBeta) as BanditPolicy<R>
 

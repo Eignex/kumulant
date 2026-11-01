@@ -18,10 +18,10 @@ import com.eignex.kumulant.stat.summary.MinResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.skema.SchemaJson
+import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlinx.serialization.encodeToString
 class StatsRoundTripTest {
 
     private fun roundTrip(config: StatSpec): StatSpec {
