@@ -4,8 +4,6 @@ package com.eignex.kumulant.schema.ops
 
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.ResultList
-import com.eignex.kumulant.operation.minMaxProjection
-import com.eignex.kumulant.operation.standardScalerProjection
 import com.eignex.kumulant.schema.*
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.spec.*
@@ -205,10 +203,10 @@ fun <R : Result> DiscreteStatSpec<R>.throttle(every: Int): DiscreteStatSpec<R> =
     ThrottleDiscrete(this, every) as DiscreteStatSpec<R>
 
 /** Wrap this series spec to forward the value seen [k] updates ago. */
-fun <R : Result> SeriesStatSpec<R>.lag(k: Int): SeriesStatSpec<R> = LagSeries(this, k) as SeriesStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.lag(k: Int): SeriesStatSpec<R> = foldPaired(Y).withSelfLag(k)
 
 /** Wrap this series spec to forward the k-th difference `value - value[t - k]`. */
-fun <R : Result> SeriesStatSpec<R>.diff(k: Int = 1): SeriesStatSpec<R> = DiffSeries(this, k) as SeriesStatSpec<R>
+fun <R : Result> SeriesStatSpec<R>.diff(k: Int = 1): SeriesStatSpec<R> = foldPaired(X - Y).withSelfLag(k)
 
 /** Wrap this series spec to forward the per-second time derivative of the value stream. */
 fun <R : Result> SeriesStatSpec<R>.derivative(): SeriesStatSpec<R> = DerivativeSeries(this) as SeriesStatSpec<R>
@@ -255,7 +253,7 @@ fun <P : Result, R : Result> RegressionStatSpec<R>.withFeedback(
 
 /** Element-wise standardise a vector spec against a hidden per-coordinate [Variance] primary. */
 fun <R : Result> VectorStatSpec<R>.standardScaleFeatures(dimensions: Int): VectorStatSpec<R> =
-    withFeedback(Variance.vectorized(dimensions), standardScalerProjection)
+    withFeedback(Variance.vectorized(dimensions), Standardize)
 
 /** Element-wise min-max scale a vector spec against a hidden per-coordinate [Range] primary. */
 fun <R : Result> VectorStatSpec<R>.minMaxScaleFeatures(
@@ -263,21 +261,19 @@ fun <R : Result> VectorStatSpec<R>.minMaxScaleFeatures(
     targetLow: Double = DEFAULT_TARGET_LOW,
     targetHigh: Double = DEFAULT_TARGET_HIGH,
 ): VectorStatSpec<R> {
-    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
-    return withFeedback(Range.vectorized(dimensions), minMaxProjection(targetLow, targetHigh))
+    return withFeedback(Range.vectorized(dimensions), MinMax(targetLow, targetHigh))
 }
 
 /** Z-score both axes of a paired spec against per-axis [Variance] primaries. */
 fun <R : Result> PairedStatSpec<R>.standardScaler(): PairedStatSpec<R> =
-    withFeedback(Variance, Variance, standardScalerProjection)
+    withFeedback(Variance, Variance, Standardize)
 
 /** Min-max scale both axes of a paired spec against per-axis [Range] primaries. */
 fun <R : Result> PairedStatSpec<R>.minMaxScaler(
     targetLow: Double = DEFAULT_TARGET_LOW,
     targetHigh: Double = DEFAULT_TARGET_HIGH,
 ): PairedStatSpec<R> {
-    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
-    return withFeedback(Range, Range, minMaxProjection(targetLow, targetHigh))
+    return withFeedback(Range, Range, MinMax(targetLow, targetHigh))
 }
 
 /** Element-wise standardise a regression spec's feature vector. */
@@ -289,7 +285,6 @@ fun <R : Result> RegressionStatSpec<R>.minMaxScaleFeatures(
     targetLow: Double = DEFAULT_TARGET_LOW,
     targetHigh: Double = DEFAULT_TARGET_HIGH,
 ): RegressionStatSpec<R> {
-    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
     return MinMaxScalerRegression(this, targetLow, targetHigh) as RegressionStatSpec<R>
 }
 
@@ -298,7 +293,7 @@ fun <R : Result> RegressionStatSpec<R>.minMaxScaleFeatures(
  * value to this spec. Emits `0` while the running variance is still zero.
  */
 fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> =
-    withFeedback(Variance, standardScalerProjection)
+    withFeedback(Variance, Standardize)
 
 /**
  * Min-max scale the input against a hidden [Range] primary into `[targetLow, targetHigh]`,
@@ -310,8 +305,7 @@ fun <R : Result> SeriesStatSpec<R>.minMaxScaler(
     targetLow: Double = DEFAULT_TARGET_LOW,
     targetHigh: Double = DEFAULT_TARGET_HIGH,
 ): SeriesStatSpec<R> {
-    require(targetHigh > targetLow) { "targetHigh ($targetHigh) must be > targetLow ($targetLow)" }
-    return withFeedback(Range, minMaxProjection(targetLow, targetHigh))
+    return withFeedback(Range, MinMax(targetLow, targetHigh))
 }
 
 /** Wrap this series spec to keep each update with probability [rate]; [seed] feeds the PRNG. */

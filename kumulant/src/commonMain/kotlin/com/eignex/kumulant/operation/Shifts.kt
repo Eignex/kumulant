@@ -10,69 +10,18 @@ import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.monotonicMode
 import kotlin.time.Duration
 
-// Lag and diff warm the ring for k updates; derivative needs one previous sample.
-// Inert weights preserve the stored history.
-// Lag and diff serialize tick allocation, slot reads, and writes to keep history initialized.
-// Derivative uses per-cell atomics and drops non-positive time deltas.
+// Lag and diff are a fold over the self-lagged pair (value, value k updates ago): the first k
+// updates warm the ring before forwarding begins. Derivative needs one previous sample, uses
+// per-cell atomics, and drops non-positive time deltas. Inert weights preserve the stored history.
 
-// The first k updates warm the ring before forwarding begins.
-internal fun <R : Result> SeriesStat<R>.lag(k: Int): SeriesStat<R> = LagSeriesStat(this, k)
+internal fun <R : Result> SeriesStat<R>.lag(k: Int): SeriesStat<R> =
+    FoldPairedStat(this) { _, past -> past }.withSelfLag(k)
 
-// The first k updates warm the ring before forwarding begins.
-internal fun <R : Result> SeriesStat<R>.diff(k: Int = 1): SeriesStat<R> = DiffSeriesStat(this, k)
+internal fun <R : Result> SeriesStat<R>.diff(k: Int = 1): SeriesStat<R> =
+    FoldPairedStat(this) { value, past -> value - past }.withSelfLag(k)
 
 // Time differences are converted from nanoseconds to seconds; coincident timestamps are dropped.
 internal fun <R : Result> SeriesStat<R>.derivative(): SeriesStat<R> = DerivativeSeriesStat(this)
-
-private fun requireK(k: Int) = require(k >= 1) { "shift k must be >= 1, got $k" }
-
-internal class LagSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val k: Int) :
-    SeriesStat<R>,
-    WindowsInside<R, SeriesStat<R>>,
-    Stat<R> by delegate {
-    init {
-        requireK(k)
-    }
-
-    private val history = LagBuffer(k, delegate.concurrency)
-
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        history.update(value, weight) { past ->
-            delegate.update(past, timestampNanos, weight)
-        }
-    }
-
-    override fun reset() = history.reset { delegate.reset() }
-
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
-        LagSeriesStat(delegate.windowed(duration, slices, concurrency), k)
-
-    override fun create(concurrency: Concurrency?): SeriesStat<R> = LagSeriesStat(delegate.create(concurrency), k)
-}
-
-internal class DiffSeriesStat<R : Result>(private val delegate: SeriesStat<R>, private val k: Int) :
-    SeriesStat<R>,
-    WindowsInside<R, SeriesStat<R>>,
-    Stat<R> by delegate {
-    init {
-        requireK(k)
-    }
-
-    private val history = LagBuffer(k, delegate.concurrency)
-
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        history.update(value, weight) { past ->
-            delegate.update(value - past, timestampNanos, weight)
-        }
-    }
-
-    override fun reset() = history.reset { delegate.reset() }
-
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
-        DiffSeriesStat(delegate.windowed(duration, slices, concurrency), k)
-
-    override fun create(concurrency: Concurrency?): SeriesStat<R> = DiffSeriesStat(delegate.create(concurrency), k)
-}
 
 internal class DerivativeSeriesStat<R : Result>(private val delegate: SeriesStat<R>) :
     SeriesStat<R>,

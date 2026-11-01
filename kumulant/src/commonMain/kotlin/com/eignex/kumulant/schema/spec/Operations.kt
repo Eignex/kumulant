@@ -177,14 +177,6 @@ internal data class ThrottleVector(val inner: StatSpec, val every: Int) : Vector
 internal data class ThrottleDiscrete(val inner: StatSpec, val every: Int) : DiscreteStatSpec<Result>
 
 @Serializable
-@SerialName("LagSeries")
-internal data class LagSeries(val inner: StatSpec, val k: Int) : SeriesStatSpec<Result>
-
-@Serializable
-@SerialName("DiffSeries")
-internal data class DiffSeries(val inner: StatSpec, val k: Int = 1) : SeriesStatSpec<Result>
-
-@Serializable
 @SerialName("DerivativeSeries")
 internal data class DerivativeSeries(val inner: StatSpec) : SeriesStatSpec<Result>
 

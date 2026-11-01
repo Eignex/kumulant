@@ -28,11 +28,9 @@ import com.eignex.kumulant.operation.asDiscrete
 import com.eignex.kumulant.operation.asSeries
 import com.eignex.kumulant.operation.band
 import com.eignex.kumulant.operation.derivative
-import com.eignex.kumulant.operation.diff
 import com.eignex.kumulant.operation.filter
 import com.eignex.kumulant.operation.foldRegression
 import com.eignex.kumulant.operation.hysteresis
-import com.eignex.kumulant.operation.lag
 import com.eignex.kumulant.operation.minMaxScaleFeatures
 import com.eignex.kumulant.operation.resampleByTime
 import com.eignex.kumulant.operation.sample
@@ -391,20 +389,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
         }
     }
 
-    is LagSeries -> {
-        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).lag(k)
-        }
-    }
-
-    is DiffSeries -> {
-        val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
-        StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            innerPlan.build(concurrency).diff(k)
-        }
-    }
-
     is DerivativeSeries -> {
         val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
@@ -636,7 +620,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
-            TransformVectorStat.vector(m) { vec ->
+            TransformVectorStat(m) { vec ->
                 DoubleArray(vec.size) { i -> expr.eval(vec[i], 0.0, vec) }
             }
         }
@@ -647,7 +631,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
-            FilterVectorStat.vector(m) { vec -> pred.eval(0.0, 0.0, vec) }
+            FilterVectorStat(m) { vec -> pred.eval(0.0, 0.0, vec) }
         }
     }
 
@@ -656,7 +640,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         val innerPlan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
-            FoldVectorStat.vector(m) { vec -> expr.eval(0.0, 0.0, vec) }
+            FoldVectorStat(m) { vec -> expr.eval(0.0, 0.0, vec) }
         }
     }
 
@@ -666,7 +650,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
-            FoldVectorPairedStat.vector(
+            FoldVectorPairedStat(
                 m,
                 foldX = { vec -> xExpr.eval(0.0, 0.0, vec) },
                 foldY = { vec -> yExpr.eval(0.0, 0.0, vec) },
@@ -679,7 +663,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
             val m = innerPlan.build(concurrency)
-            TransformVectorStat.vector(m) { vec -> expr.eval(0.0, 0.0, vec) }
+            TransformVectorStat(m) { vec -> expr.eval(0.0, 0.0, vec) }
         }
     }
 
@@ -687,7 +671,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         expr.requireInputs("$path.expr", Scope.Vector)
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            WeightByVectorStat.vector(innerPlan.build(concurrency)) { vec ->
+            WeightByVectorStat(innerPlan.build(concurrency)) { vec ->
                 expr.eval(0.0, 0.0, vec)
             }
         }

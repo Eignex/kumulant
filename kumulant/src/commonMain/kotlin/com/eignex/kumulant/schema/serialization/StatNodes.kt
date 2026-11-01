@@ -45,8 +45,6 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
         jsonNode<FilterValueSeries>("filter"),
         jsonNode<WeightByValueSeries>("weightBy"),
         jsonNode<ThrottleSeries>("throttle"),
-        jsonNode<LagSeries>("lag"),
-        jsonNode<DiffSeries>("diff"),
         jsonNode<DerivativeSeries>("derivative"),
         jsonNode<HysteresisSeries>("hysteresis"),
         jsonNode<ResampleByTimeSeries>("resampleByTime"),

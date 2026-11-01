@@ -95,7 +95,7 @@ internal fun <R : Result> SeriesStat<R>.weightBy(weighter: (Double) -> Double): 
 internal fun <R : Result> PairedStat<R>.weightBy(weighter: (Double, Double) -> Double): PairedStat<R> =
     WeightByPairedStat(this, weighter)
 
-internal fun <R : Result> VectorStat<R>.weightBy(weighter: (DoubleArray) -> Double): VectorStat<R> =
+internal fun <R : Result> VectorStat<R>.weightBy(weighter: (Vector) -> Double): VectorStat<R> =
     WeightByVectorStat(this, weighter)
 
 internal fun <R : Result> DiscreteStat<R>.weightBy(weighter: (Long) -> Double): DiscreteStat<R> =
@@ -135,28 +135,18 @@ internal class WeightByPairedStat<R : Result>(
 
 internal class WeightByVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
-    private val weighter: (DoubleArray) -> Double = { 1.0 },
-    private val vectorWeighter: ((Vector) -> Double)? = null,
+    private val weighter: (Vector) -> Double,
 ) : VectorStat<R>,
     WindowsInside<R, VectorStat<R>>,
     Stat<R> by delegate {
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
-        delegate.update(
-            vector,
-            timestampNanos,
-            weight * (vectorWeighter?.invoke(vector) ?: weighter(vector.toDoubleArray())),
-        )
+        delegate.update(vector, timestampNanos, weight * weighter(vector))
     }
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
-        WeightByVectorStat(delegate.windowed(duration, slices, concurrency), weighter, vectorWeighter)
+        WeightByVectorStat(delegate.windowed(duration, slices, concurrency), weighter)
 
     override fun create(concurrency: Concurrency?): VectorStat<R> =
-        WeightByVectorStat(delegate.create(concurrency), weighter, vectorWeighter)
-
-    companion object {
-        fun <R : Result> vector(delegate: VectorStat<R>, weighter: (Vector) -> Double): WeightByVectorStat<R> =
-            WeightByVectorStat(delegate, vectorWeighter = weighter)
-    }
+        WeightByVectorStat(delegate.create(concurrency), weighter)
 }
 
 internal class WeightByDiscreteStat<R : Result>(
