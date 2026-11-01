@@ -11,156 +11,104 @@ import com.eignex.kumulant.core.VectorStat
 import com.eignex.kumulant.core.isInertWeight
 import kotlin.time.Duration
 
-// Inert caller weights pass through unchanged to preserve the no-op contract.
-internal fun <R : Result> SeriesStat<R>.withWeight(weight: Double): SeriesStat<R> = WithWeightStat(this, weight)
-
-internal fun <R : Result> PairedStat<R>.withWeight(weight: Double): PairedStat<R> = WithWeightPairedStat(this, weight)
-
-internal fun <R : Result> VectorStat<R>.withWeight(weight: Double): VectorStat<R> = WithWeightVectorStat(this, weight)
-
-internal fun <R : Result> DiscreteStat<R>.withWeight(weight: Double): DiscreteStat<R> = WithWeightDiscreteStat(
-    this,
-    weight,
-)
-
 /**
  * An inert weight stays inert; see [withWeight]. `internal` rather than file-private so every
- * modality adapter shares one definition, including `WithWeightRegressionStat` in `RegressionOps.kt`.
+ * modality adapter shares one definition, including the regression adapter in `RegressionOps.kt`.
  */
 @Suppress("NOTHING_TO_INLINE") // as with isInertWeight; the non-JVM targets pay for the call
 internal inline fun Double.orInert(replacement: Double): Double = if (isInertWeight()) this else replacement
 
-internal class WithWeightStat<R : Result>(private val delegate: SeriesStat<R>, private val weight: Double) :
-    SeriesStat<R>,
-    WindowsInside<R, SeriesStat<R>>,
-    Stat<R> by delegate {
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(value, timestampNanos, weight.orInert(this.weight))
-    }
+// withWeight replaces the caller weight, except that an inert caller weight passes through unchanged to
+// preserve the no-op contract. weightBy scales the caller weight by a function of the input.
 
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
-        WithWeightStat(delegate.windowed(duration, slices, concurrency), weight)
+internal fun <R : Result> SeriesStat<R>.withWeight(weight: Double): SeriesStat<R> =
+    ReweightSeriesStat(this) { callerWeight, _ -> callerWeight.orInert(weight) }
 
-    override fun create(concurrency: Concurrency?): SeriesStat<R> = WithWeightStat(delegate.create(concurrency), weight)
-}
+internal fun <R : Result> PairedStat<R>.withWeight(weight: Double): PairedStat<R> =
+    ReweightPairedStat(this) { callerWeight, _, _ -> callerWeight.orInert(weight) }
 
-internal class WithWeightPairedStat<R : Result>(private val delegate: PairedStat<R>, private val weight: Double) :
-    PairedStat<R>,
-    WindowsInside<R, PairedStat<R>>,
-    Stat<R> by delegate {
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(x, y, timestampNanos, weight.orInert(this.weight))
-    }
+internal fun <R : Result> VectorStat<R>.withWeight(weight: Double): VectorStat<R> =
+    ReweightVectorStat(this) { callerWeight, _ -> callerWeight.orInert(weight) }
 
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
-        WithWeightPairedStat(delegate.windowed(duration, slices, concurrency), weight)
-
-    override fun create(concurrency: Concurrency?): PairedStat<R> =
-        WithWeightPairedStat(delegate.create(concurrency), weight)
-}
-
-internal class WithWeightVectorStat<R : Result>(private val delegate: VectorStat<R>, private val weight: Double) :
-    VectorStat<R>,
-    WindowsInside<R, VectorStat<R>>,
-    Stat<R> by delegate {
-    override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
-        delegate.update(vector, timestampNanos, weight.orInert(this.weight))
-    }
-
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
-        WithWeightVectorStat(delegate.windowed(duration, slices, concurrency), weight)
-
-    override fun create(concurrency: Concurrency?): VectorStat<R> =
-        WithWeightVectorStat(delegate.create(concurrency), weight)
-}
-
-internal class WithWeightDiscreteStat<R : Result>(private val delegate: DiscreteStat<R>, private val weight: Double) :
-    DiscreteStat<R>,
-    WindowsInside<R, DiscreteStat<R>>,
-    Stat<R> by delegate {
-    override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        delegate.update(value, timestampNanos, weight.orInert(this.weight))
-    }
-
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): DiscreteStat<R> =
-        WithWeightDiscreteStat(delegate.windowed(duration, slices, concurrency), weight)
-
-    override fun create(concurrency: Concurrency?): DiscreteStat<R> =
-        WithWeightDiscreteStat(delegate.create(concurrency), weight)
-}
+internal fun <R : Result> DiscreteStat<R>.withWeight(weight: Double): DiscreteStat<R> =
+    ReweightDiscreteStat(this) { callerWeight, _ -> callerWeight.orInert(weight) }
 
 internal fun <R : Result> SeriesStat<R>.weightBy(weighter: (Double) -> Double): SeriesStat<R> =
-    WeightBySeriesStat(this, weighter)
+    ReweightSeriesStat(this) { callerWeight, input -> callerWeight * weighter(input) }
 
 internal fun <R : Result> PairedStat<R>.weightBy(weighter: (Double, Double) -> Double): PairedStat<R> =
-    WeightByPairedStat(this, weighter)
+    ReweightPairedStat(this) { callerWeight, x, y -> callerWeight * weighter(x, y) }
 
 internal fun <R : Result> VectorStat<R>.weightBy(weighter: (Vector) -> Double): VectorStat<R> =
-    WeightByVectorStat(this, weighter)
+    ReweightVectorStat(this) { callerWeight, input -> callerWeight * weighter(input) }
 
 internal fun <R : Result> DiscreteStat<R>.weightBy(weighter: (Long) -> Double): DiscreteStat<R> =
-    WeightByDiscreteStat(this, weighter)
+    ReweightDiscreteStat(this) { callerWeight, input -> callerWeight * weighter(input) }
 
-internal class WeightBySeriesStat<R : Result>(
+// reweight maps (caller weight, input) to the weight the delegate sees.
+internal class ReweightSeriesStat<R : Result>(
     private val delegate: SeriesStat<R>,
-    private val weighter: (Double) -> Double,
+    private val reweight: (Double, Double) -> Double,
 ) : SeriesStat<R>,
     WindowsInside<R, SeriesStat<R>>,
     Stat<R> by delegate {
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(value, timestampNanos, weight * weighter(value))
+        delegate.update(value, timestampNanos, reweight(weight, value))
     }
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
-        WeightBySeriesStat(delegate.windowed(duration, slices, concurrency), weighter)
 
-    override fun create(concurrency: Concurrency?): SeriesStat<R> =
-        WeightBySeriesStat(delegate.create(concurrency), weighter)
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
+        ReweightSeriesStat(delegate.windowed(duration, slices, concurrency), reweight)
+
+    override fun create(concurrency: Concurrency?): SeriesStat<R> = ReweightSeriesStat(delegate.create(concurrency), reweight)
 }
 
-internal class WeightByPairedStat<R : Result>(
+// reweight maps (caller weight, input) to the weight the delegate sees.
+internal class ReweightPairedStat<R : Result>(
     private val delegate: PairedStat<R>,
-    private val weighter: (Double, Double) -> Double,
+    private val reweight: (Double, Double, Double) -> Double,
 ) : PairedStat<R>,
     WindowsInside<R, PairedStat<R>>,
     Stat<R> by delegate {
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(x, y, timestampNanos, weight * weighter(x, y))
+        delegate.update(x, y, timestampNanos, reweight(weight, x, y))
     }
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
-        WeightByPairedStat(delegate.windowed(duration, slices, concurrency), weighter)
 
-    override fun create(concurrency: Concurrency?): PairedStat<R> =
-        WeightByPairedStat(delegate.create(concurrency), weighter)
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
+        ReweightPairedStat(delegate.windowed(duration, slices, concurrency), reweight)
+
+    override fun create(concurrency: Concurrency?): PairedStat<R> = ReweightPairedStat(delegate.create(concurrency), reweight)
 }
 
-internal class WeightByVectorStat<R : Result>(
+// reweight maps (caller weight, input) to the weight the delegate sees.
+internal class ReweightVectorStat<R : Result>(
     private val delegate: VectorStat<R>,
-    private val weighter: (Vector) -> Double,
+    private val reweight: (Double, Vector) -> Double,
 ) : VectorStat<R>,
     WindowsInside<R, VectorStat<R>>,
     Stat<R> by delegate {
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
-        delegate.update(vector, timestampNanos, weight * weighter(vector))
+        delegate.update(vector, timestampNanos, reweight(weight, vector))
     }
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
-        WeightByVectorStat(delegate.windowed(duration, slices, concurrency), weighter)
 
-    override fun create(concurrency: Concurrency?): VectorStat<R> =
-        WeightByVectorStat(delegate.create(concurrency), weighter)
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
+        ReweightVectorStat(delegate.windowed(duration, slices, concurrency), reweight)
+
+    override fun create(concurrency: Concurrency?): VectorStat<R> = ReweightVectorStat(delegate.create(concurrency), reweight)
 }
 
-internal class WeightByDiscreteStat<R : Result>(
+// reweight maps (caller weight, input) to the weight the delegate sees.
+internal class ReweightDiscreteStat<R : Result>(
     private val delegate: DiscreteStat<R>,
-    private val weighter: (Long) -> Double,
+    private val reweight: (Double, Long) -> Double,
 ) : DiscreteStat<R>,
     WindowsInside<R, DiscreteStat<R>>,
     Stat<R> by delegate {
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
-        delegate.update(value, timestampNanos, weight * weighter(value))
+        delegate.update(value, timestampNanos, reweight(weight, value))
     }
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): DiscreteStat<R> =
-        WeightByDiscreteStat(delegate.windowed(duration, slices, concurrency), weighter)
 
-    override fun create(concurrency: Concurrency?): DiscreteStat<R> =
-        WeightByDiscreteStat(delegate.create(concurrency), weighter)
+    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): DiscreteStat<R> =
+        ReweightDiscreteStat(delegate.windowed(duration, slices, concurrency), reweight)
+
+    override fun create(concurrency: Concurrency?): DiscreteStat<R> = ReweightDiscreteStat(delegate.create(concurrency), reweight)
 }

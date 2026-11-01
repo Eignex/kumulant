@@ -25,18 +25,16 @@ internal fun <R : Result> RegressionStat<R>.transformX(
 
 // Inert caller weights pass through unchanged to preserve the no-op contract.
 internal fun <R : Result> RegressionStat<R>.withWeight(weight: Double): RegressionStat<R> =
-    WithWeightRegressionStat(this, weight)
+    ReweightRegressionStat(this) { callerWeight, _, _ -> callerWeight.orInert(weight) }
 
 internal fun <R : Result> RegressionStat<R>.weightBy(weighter: (Vector, Double) -> Double): RegressionStat<R> =
-    WeightByRegressionStat(this, weighter)
+    ReweightRegressionStat(this) { callerWeight, x, y -> callerWeight * weighter(x, y) }
 
-internal fun <R : Result> RegressionStat<R>.throttle(every: Int): RegressionStat<R> = ThrottleRegressionStat(
-    this,
-    every,
-)
+internal fun <R : Result> RegressionStat<R>.throttle(every: Int): RegressionStat<R> =
+    GatedRegressionStat(this, ThrottlePolicy(every))
 
 internal fun <R : Result> RegressionStat<R>.sample(rate: Double, seed: Long): RegressionStat<R> =
-    SampleRegressionStat(this, rate, seed)
+    GatedRegressionStat(this, SamplePolicy(rate, seed))
 
 internal fun <R : Result> SeriesStat<R>.foldRegression(
     featureSize: Int,
@@ -89,39 +87,24 @@ internal class TransformXRegressionStat<R : Result>(
         TransformXRegressionStat(delegate.create(concurrency), inputFeatureSize, transform)
 }
 
-internal class WithWeightRegressionStat<R : Result>(
+internal class ReweightRegressionStat<R : Result>(
     private val delegate: RegressionStat<R>,
-    private val weight: Double,
+    private val reweight: (Double, Vector, Double) -> Double,
 ) : RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
-        // `orInert` covers NaN as well as zero, so an inert caller weight stays a no-op rather than
-        // being replaced by the constant and becoming a real observation.
-        delegate.update(x, y, timestampNanos, weight.orInert(this.weight))
+        delegate.update(x, y, timestampNanos, reweight(weight, x, y))
     }
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
-        WithWeightRegressionStat(delegate.create(concurrency), weight)
+        ReweightRegressionStat(delegate.create(concurrency), reweight)
 }
 
-internal class WeightByRegressionStat<R : Result>(
-    private val delegate: RegressionStat<R>,
-    private val weighter: (Vector, Double) -> Double,
-) : RegressionStat<R>,
-    Stat<R> by delegate {
-    override val featureSize: Int = delegate.featureSize
-    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(x, y, timestampNanos, weight * weighter(x, y))
-    }
-    override fun create(concurrency: Concurrency?): RegressionStat<R> =
-        WeightByRegressionStat(delegate.create(concurrency), weighter)
-}
-
-internal class ThrottleRegressionStat<R : Result>(private val delegate: RegressionStat<R>, private val every: Int) :
+internal class GatedRegressionStat<R : Result>(private val delegate: RegressionStat<R>, private val policy: GatePolicy) :
     RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
-    private val gate = ThrottleGate(every, delegate.concurrency)
+    private val gate = policy.open(delegate.concurrency)
     override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
         if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
@@ -132,29 +115,7 @@ internal class ThrottleRegressionStat<R : Result>(private val delegate: Regressi
     }
 
     override fun create(concurrency: Concurrency?): RegressionStat<R> =
-        ThrottleRegressionStat(delegate.create(concurrency), every)
-}
-
-internal class SampleRegressionStat<R : Result>(
-    private val delegate: RegressionStat<R>,
-    private val rate: Double,
-    private val seed: Long,
-) : RegressionStat<R>,
-    Stat<R> by delegate {
-    private val gate = SampleGate(rate, seed, delegate.concurrency)
-    override val featureSize: Int = delegate.featureSize
-    override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
-        if (weight.isInertWeight()) return
-        if (gate.pass()) delegate.update(x, y, timestampNanos, weight)
-    }
-
-    override fun reset() {
-        gate.reset()
-        delegate.reset()
-    }
-
-    override fun create(concurrency: Concurrency?): RegressionStat<R> =
-        SampleRegressionStat(delegate.create(concurrency), rate, gate.childSeed())
+        GatedRegressionStat(delegate.create(concurrency), gate.childPolicy())
 }
 
 internal class FoldRegressionStat<R : Result>(

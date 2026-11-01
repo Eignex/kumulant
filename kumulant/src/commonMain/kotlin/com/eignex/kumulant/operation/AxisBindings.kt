@@ -5,77 +5,33 @@ import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import kotlin.time.Duration
 
 // Event timestamps are converted to seconds.
-internal fun <R : Result> PairedStat<R>.withTimeAsX(): SeriesStat<R> = WithTimeAsXStat(this)
+internal fun <R : Result> PairedStat<R>.withTimeAsX(): SeriesStat<R> =
+    SeriesToPairedStat(this, x = { _, timestampNanos -> timestampNanos / NANOS_PER_SECOND }, y = { value, _ -> value })
 
 // Event timestamps are converted to seconds.
-internal fun <R : Result> PairedStat<R>.withTimeAsY(): SeriesStat<R> = WithTimeAsYStat(this)
+internal fun <R : Result> PairedStat<R>.withTimeAsY(): SeriesStat<R> =
+    SeriesToPairedStat(this, x = { value, _ -> value }, y = { _, timestampNanos -> timestampNanos / NANOS_PER_SECOND })
 
-internal fun <R : Result> PairedStat<R>.withFixedX(fixedX: Double): SeriesStat<R> = WithFixedXStat(this, fixedX)
+internal fun <R : Result> PairedStat<R>.withFixedX(fixedX: Double): SeriesStat<R> =
+    SeriesToPairedStat(this, x = { _, _ -> fixedX }, y = { value, _ -> value })
 
-internal fun <R : Result> PairedStat<R>.withFixedY(fixedY: Double): SeriesStat<R> = WithFixedYStat(this, fixedY)
+internal fun <R : Result> PairedStat<R>.withFixedY(fixedY: Double): SeriesStat<R> =
+    SeriesToPairedStat(this, x = { value, _ -> value }, y = { _, _ -> fixedY })
 
-internal class WithTimeAsXStat<R : Result>(private val delegate: PairedStat<R>) :
-    SeriesStat<R>,
+// Binds a series value to a paired delegate; x and y map (value, timestampNanos) to each axis.
+internal class SeriesToPairedStat<R : Result>(
+    private val delegate: PairedStat<R>,
+    private val x: (Double, Long) -> Double,
+    private val y: (Double, Long) -> Double,
+) : SeriesStat<R>,
     WindowsInside<R, SeriesStat<R>>,
     Stat<R> by delegate {
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(
-            x = timestampNanos / NANOS_PER_SECOND,
-            y = value,
-            timestampNanos,
-            weight,
-        )
+        delegate.update(x(value, timestampNanos), y(value, timestampNanos), timestampNanos, weight)
     }
 
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
-        WithTimeAsXStat(delegate.windowed(duration, slices, concurrency))
+        SeriesToPairedStat(delegate.windowed(duration, slices, concurrency), x, y)
 
-    override fun create(concurrency: Concurrency?): SeriesStat<R> = WithTimeAsXStat(delegate.create(concurrency))
-}
-
-internal class WithTimeAsYStat<R : Result>(private val delegate: PairedStat<R>) :
-    SeriesStat<R>,
-    WindowsInside<R, SeriesStat<R>>,
-    Stat<R> by delegate {
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(
-            x = value,
-            y = timestampNanos / NANOS_PER_SECOND,
-            timestampNanos,
-            weight,
-        )
-    }
-
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
-        WithTimeAsYStat(delegate.windowed(duration, slices, concurrency))
-
-    override fun create(concurrency: Concurrency?): SeriesStat<R> = WithTimeAsYStat(delegate.create(concurrency))
-}
-
-internal class WithFixedXStat<R : Result>(private val delegate: PairedStat<R>, private val fixedX: Double) :
-    SeriesStat<R>,
-    WindowsInside<R, SeriesStat<R>>,
-    Stat<R> by delegate {
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(x = fixedX, y = value, timestampNanos, weight)
-    }
-
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
-        WithFixedXStat(delegate.windowed(duration, slices, concurrency), fixedX)
-
-    override fun create(concurrency: Concurrency?): SeriesStat<R> = WithFixedXStat(delegate.create(concurrency), fixedX)
-}
-
-internal class WithFixedYStat<R : Result>(private val delegate: PairedStat<R>, private val fixedY: Double) :
-    SeriesStat<R>,
-    WindowsInside<R, SeriesStat<R>>,
-    Stat<R> by delegate {
-    override fun update(value: Double, timestampNanos: Long, weight: Double) {
-        delegate.update(x = value, y = fixedY, timestampNanos, weight)
-    }
-
-    override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
-        WithFixedYStat(delegate.windowed(duration, slices, concurrency), fixedY)
-
-    override fun create(concurrency: Concurrency?): SeriesStat<R> = WithFixedYStat(delegate.create(concurrency), fixedY)
+    override fun create(concurrency: Concurrency?): SeriesStat<R> = SeriesToPairedStat(delegate.create(concurrency), x, y)
 }

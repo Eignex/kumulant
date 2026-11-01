@@ -23,7 +23,6 @@ import com.eignex.kumulant.operation.TransformPairStat
 import com.eignex.kumulant.operation.TransformValueStat
 import com.eignex.kumulant.operation.TransformVectorStat
 import com.eignex.kumulant.operation.VectorizedStat
-import com.eignex.kumulant.operation.WeightByVectorStat
 import com.eignex.kumulant.operation.asDiscrete
 import com.eignex.kumulant.operation.asSeries
 import com.eignex.kumulant.operation.band
@@ -671,9 +670,7 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
         expr.requireInputs("$path.expr", Scope.Vector)
         val innerPlan = requireVector(inner, "$path.inner").compileVector("$path.inner")
         StatPlan(path, hasCenterScale = innerPlan.hasCenterScale) { concurrency ->
-            WeightByVectorStat(innerPlan.build(concurrency)) { vec ->
-                expr.eval(0.0, 0.0, vec)
-            }
+            innerPlan.build(concurrency).weightBy { vec -> expr.eval(0.0, 0.0, vec) }
         }
     }
 
