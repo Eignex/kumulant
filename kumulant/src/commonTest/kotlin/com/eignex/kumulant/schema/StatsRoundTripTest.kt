@@ -3,6 +3,10 @@ package com.eignex.kumulant.schema
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.schema.expr.*
 import com.eignex.kumulant.schema.ops.*
+import com.eignex.kumulant.schema.ops.logLoss
+import com.eignex.kumulant.schema.ops.maeLoss
+import com.eignex.kumulant.schema.ops.mseLoss
+import com.eignex.kumulant.schema.ops.pinballLoss
 import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.schema.runtime.*
 import com.eignex.kumulant.schema.spec.*
@@ -14,10 +18,10 @@ import com.eignex.kumulant.stat.summary.MinResult
 import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.skema.SchemaJson
-import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlinx.serialization.encodeToString
 class StatsRoundTripTest {
 
     private fun roundTrip(config: StatSpec): StatSpec {
@@ -71,10 +75,10 @@ class StatsRoundTripTest {
             Covariance,
             UnivariateRegression(Penalty.L1(lambda = 0.1)),
             UnivariateRegression(Penalty.L2(lambda = 0.5)),
-            MseLoss,
-            MaeLoss,
-            LogLoss,
-            PinballLoss(tau = 0.9),
+            mseLoss(),
+            maeLoss(),
+            logLoss(),
+            pinballLoss(tau = 0.9),
             Auc(numBins = 128, lowerBound = -1.0, upperBound = 1.0),
             Reliability(numBins = 16),
             PlattCalibrator(),

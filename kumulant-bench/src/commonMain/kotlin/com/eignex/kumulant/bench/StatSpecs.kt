@@ -885,8 +885,8 @@ val aucStatSpec = pairedStatSpec(
 )
 
 val pinballLossStatSpec = pairedStatSpec(
-    name = "PinballLossStat",
-    factory = { c -> com.eignex.kumulant.stat.score.PinballLossStat(tau = 0.5, concurrency = c) },
+    name = "PinballLoss",
+    factory = { c -> com.eignex.kumulant.schema.ops.pinballLoss(tau = 0.5).materialize(c) },
     updates = ::uniformUnitWeights,
     scalar = { it.totalWeights },
     reference = { it.count().toDouble() },
@@ -894,8 +894,8 @@ val pinballLossStatSpec = pairedStatSpec(
 )
 
 val logLossStatSpec = pairedStatSpec(
-    name = "LogLossStat",
-    factory = { c -> com.eignex.kumulant.stat.score.LogLossStat(concurrency = c) },
+    name = "LogLoss",
+    factory = { c -> com.eignex.kumulant.schema.ops.logLoss().materialize(c) },
     updates = ::uniformUnitWeights,
     scalar = { it.totalWeights },
     reference = { it.count().toDouble() },
@@ -904,16 +904,16 @@ val logLossStatSpec = pairedStatSpec(
 )
 
 val maeLossStatSpec = pairedStatSpec(
-    name = "MaeLossStat",
-    factory = { c -> com.eignex.kumulant.stat.score.MaeLossStat(concurrency = c) },
+    name = "MaeLoss",
+    factory = { c -> com.eignex.kumulant.schema.ops.maeLoss().materialize(c) },
     updates = ::uniformUnitWeights,
     scalar = { it.totalWeights },
     reference = { it.count().toDouble() },
 )
 
 val mseLossStatSpec = pairedStatSpec(
-    name = "MseLossStat",
-    factory = { c -> com.eignex.kumulant.stat.score.MseLossStat(concurrency = c) },
+    name = "MseLoss",
+    factory = { c -> com.eignex.kumulant.schema.ops.mseLoss().materialize(c) },
     updates = ::uniformUnitWeights,
     scalar = { it.totalWeights },
     reference = { it.count().toDouble() },

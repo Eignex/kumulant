@@ -1,5 +1,9 @@
 package com.eignex.kumulant.core
 
+import com.eignex.kumulant.schema.ops.logLoss
+import com.eignex.kumulant.schema.ops.maeLoss
+import com.eignex.kumulant.schema.ops.mseLoss
+import com.eignex.kumulant.schema.ops.pinballLoss
 import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.schema.spec.Accuracy
 import com.eignex.kumulant.schema.spec.Auc
@@ -9,12 +13,8 @@ import com.eignex.kumulant.schema.spec.CountMinSketch
 import com.eignex.kumulant.schema.spec.Covariance
 import com.eignex.kumulant.schema.spec.DiscreteStatSpec
 import com.eignex.kumulant.schema.spec.HyperLogLog
-import com.eignex.kumulant.schema.spec.LogLoss
-import com.eignex.kumulant.schema.spec.MaeLoss
-import com.eignex.kumulant.schema.spec.MseLoss
 import com.eignex.kumulant.schema.spec.PairedStatSpec
 import com.eignex.kumulant.schema.spec.PairedSum
-import com.eignex.kumulant.schema.spec.PinballLoss
 import com.eignex.kumulant.schema.spec.PlattCalibrator
 import com.eignex.kumulant.schema.spec.Reliability
 import com.eignex.kumulant.schema.spec.Sojourn
@@ -27,10 +27,10 @@ class PairedAndDiscreteContractSweepTest {
     private val pairedSpecs: List<Pair<String, PairedStatSpec<*>>> = listOf(
         "PairedSum" to PairedSum,
         "Covariance" to Covariance,
-        "MseLoss" to MseLoss,
-        "MaeLoss" to MaeLoss,
-        "LogLoss" to LogLoss,
-        "PinballLoss" to PinballLoss(tau = 0.5),
+        "MseLoss" to mseLoss(),
+        "MaeLoss" to maeLoss(),
+        "LogLoss" to logLoss(),
+        "PinballLoss" to pinballLoss(tau = 0.5),
         "Auc" to Auc(),
         "Reliability" to Reliability(numBins = 8),
         "PlattCalibrator" to PlattCalibrator(),

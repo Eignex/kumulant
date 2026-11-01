@@ -14,16 +14,19 @@ forecast diagnostics.
 
 | Stat | Result | Use |
 |------|--------|-----|
-| `MseLoss` (in `Loss.kt`) | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Mean squared error; weights large errors quadratically. |
-| `MaeLoss` (in `Loss.kt`) | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Mean absolute error; robust median-error-style alternative. |
-| [PinballLossStat] | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Quantile (pinball) loss at quantile `tau`. The right pick when the model emits a quantile rather than a mean. |
+| [mseLoss][com.eignex.kumulant.schema.ops.mseLoss] | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Mean squared error; weights large errors quadratically. |
+| [maeLoss][com.eignex.kumulant.schema.ops.maeLoss] | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Mean absolute error; robust median-error-style alternative. |
+| [pinballLoss][com.eignex.kumulant.schema.ops.pinballLoss] | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Quantile (pinball) loss at quantile `tau`. The right pick when the model emits a quantile rather than a mean. |
+
+The losses are spec builders: each is `Mean.foldPaired(score)` for its per-pair score, so they
+compose, window and serialize like any other paired spec.
 
 ## Binary proper scoring rules
 
 | Stat | Result | Use |
 |------|--------|-----|
-| `LogLoss` (in `Loss.kt`) | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Cross-entropy / log-likelihood. Log-likelihood-shaped objectives. |
-| [MseLossStat] | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Binary Brier score when inputs are probabilities and outcomes are in `{0, 1}`. |
+| [logLoss][com.eignex.kumulant.schema.ops.logLoss] | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Cross-entropy / log-likelihood. Log-likelihood-shaped objectives. |
+| [mseLoss][com.eignex.kumulant.schema.ops.mseLoss] | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Binary Brier score when inputs are probabilities and outcomes are in `{0, 1}`. |
 
 LogLoss penalises confident-wrong predictions much more harshly than
 Brier. Pick LogLoss when you want a likelihood-shaped objective; pick
@@ -77,8 +80,8 @@ empirical one.
 
 ## Compose patterns
 
-- `MseLoss.windowed(window)` for windowed regression error.
-- `MseLoss.transform(...)` after a [Platt][com.eignex.kumulant.stat.calibration.PlattCalibratorStat]
+- `mseLoss().windowed(window)` for windowed regression error.
+- `mseLoss().transformX(...)` after a [Platt][com.eignex.kumulant.stat.calibration.PlattCalibratorStat]
   or [isotonic calibration][com.eignex.kumulant.stat.calibration.isotonicCalibration]
   step to score calibrated probabilities.
 - `Auc` + [Reliability][com.eignex.kumulant.stat.calibration.ReliabilityStat]
@@ -88,16 +91,14 @@ empirical one.
 
 ## Merge
 
-All paired-mean-shaped metrics (`MseLoss`, `MaeLoss`, `LogLoss`,
-`PinballLoss`, `Accuracy`) merge via the underlying
+All paired-mean-shaped metrics (the losses and `Accuracy`) merge via the underlying
 [MeanStat][com.eignex.kumulant.stat.summary.MeanStat]'s Chan-style
 parallel formula; exact across replicas. [AucStat] and
 [ConfusionMatrixStat] merge via cell-wise bin / matrix addition.
 
 ## Concurrency
 
-The mean-shaped metrics ([AccuracyStat], [PinballLossStat],
-and the `MseLoss` / `MaeLoss` / `LogLoss` stats in `Loss.kt`) inherit
+The mean-shaped metrics ([AccuracyStat] and the losses) inherit
 [MeanStat][com.eignex.kumulant.stat.summary.MeanStat]'s Welford-coupled model:
 locked under [com.eignex.kumulant.core.Concurrency.Strict] /
 [com.eignex.kumulant.core.Concurrency.HighWrite]. Under

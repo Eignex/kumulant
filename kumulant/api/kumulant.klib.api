@@ -3280,32 +3280,6 @@ final class com.eignex.kumulant.schema.spec/PairedGroupStatSpec : com.eignex.kum
     }
 }
 
-final class com.eignex.kumulant.schema.spec/PinballLoss : com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.schema.spec/PinballLoss|null[0]
-    constructor <init>(kotlin/Double) // com.eignex.kumulant.schema.spec/PinballLoss.<init>|<init>(kotlin.Double){}[0]
-
-    final val tau // com.eignex.kumulant.schema.spec/PinballLoss.tau|{}tau[0]
-        final fun <get-tau>(): kotlin/Double // com.eignex.kumulant.schema.spec/PinballLoss.tau.<get-tau>|<get-tau>(){}[0]
-
-    final fun component1(): kotlin/Double // com.eignex.kumulant.schema.spec/PinballLoss.component1|component1(){}[0]
-    final fun copy(kotlin/Double = ...): com.eignex.kumulant.schema.spec/PinballLoss // com.eignex.kumulant.schema.spec/PinballLoss.copy|copy(kotlin.Double){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/PinballLoss.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/PinballLoss.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/PinballLoss.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/PinballLoss> { // com.eignex.kumulant.schema.spec/PinballLoss.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.spec/PinballLoss.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/PinballLoss.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/PinballLoss.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/PinballLoss // com.eignex.kumulant.schema.spec/PinballLoss.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/PinballLoss) // com.eignex.kumulant.schema.spec/PinballLoss.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.PinballLoss){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.spec/PinballLoss.Companion|null[0]
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/PinballLoss> // com.eignex.kumulant.schema.spec/PinballLoss.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.schema.spec/PitHistogram : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.quantile/SparseHistogramResult> { // com.eignex.kumulant.schema.spec/PitHistogram|null[0]
     constructor <init>(kotlin/Int) // com.eignex.kumulant.schema.spec/PitHistogram.<init>|<init>(kotlin.Int){}[0]
 
@@ -6503,60 +6477,6 @@ final class com.eignex.kumulant.stat.score/ConfusionMatrixStat : com.eignex.kumu
     final fun validateMerge(com.eignex.kumulant.stat.score/ConfusionMatrixResult) // com.eignex.kumulant.stat.score/ConfusionMatrixStat.validateMerge|validateMerge(com.eignex.kumulant.stat.score.ConfusionMatrixResult){}[0]
 }
 
-final class com.eignex.kumulant.stat.score/LogLossStat : com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.stat.score/LogLossStat|null[0]
-    constructor <init>(com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.score/LogLossStat.<init>|<init>(com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val concurrency // com.eignex.kumulant.stat.score/LogLossStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.score/LogLossStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.score/LogLossStat // com.eignex.kumulant.stat.score/LogLossStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.summary/WeightedMeanResult, kotlin/Long) // com.eignex.kumulant.stat.score/LogLossStat.merge|merge(com.eignex.kumulant.stat.summary.WeightedMeanResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.summary/WeightedMeanResult // com.eignex.kumulant.stat.score/LogLossStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.score/LogLossStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.score/LogLossStat.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.stat.score/MaeLossStat : com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.stat.score/MaeLossStat|null[0]
-    constructor <init>(com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.score/MaeLossStat.<init>|<init>(com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val concurrency // com.eignex.kumulant.stat.score/MaeLossStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.score/MaeLossStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.score/MaeLossStat // com.eignex.kumulant.stat.score/MaeLossStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.summary/WeightedMeanResult, kotlin/Long) // com.eignex.kumulant.stat.score/MaeLossStat.merge|merge(com.eignex.kumulant.stat.summary.WeightedMeanResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.summary/WeightedMeanResult // com.eignex.kumulant.stat.score/MaeLossStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.score/MaeLossStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.score/MaeLossStat.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.stat.score/MseLossStat : com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.stat.score/MseLossStat|null[0]
-    constructor <init>(com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.score/MseLossStat.<init>|<init>(com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val concurrency // com.eignex.kumulant.stat.score/MseLossStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.score/MseLossStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.score/MseLossStat // com.eignex.kumulant.stat.score/MseLossStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.summary/WeightedMeanResult, kotlin/Long) // com.eignex.kumulant.stat.score/MseLossStat.merge|merge(com.eignex.kumulant.stat.summary.WeightedMeanResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.summary/WeightedMeanResult // com.eignex.kumulant.stat.score/MseLossStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.score/MseLossStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.score/MseLossStat.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.stat.score/PinballLossStat : com.eignex.kumulant.core/PairedStat<com.eignex.kumulant.stat.summary/WeightedMeanResult> { // com.eignex.kumulant.stat.score/PinballLossStat|null[0]
-    constructor <init>(kotlin/Double, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.score/PinballLossStat.<init>|<init>(kotlin.Double;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val concurrency // com.eignex.kumulant.stat.score/PinballLossStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.score/PinballLossStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val tau // com.eignex.kumulant.stat.score/PinballLossStat.tau|{}tau[0]
-        final fun <get-tau>(): kotlin/Double // com.eignex.kumulant.stat.score/PinballLossStat.tau.<get-tau>|<get-tau>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.score/PinballLossStat // com.eignex.kumulant.stat.score/PinballLossStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.summary/WeightedMeanResult, kotlin/Long) // com.eignex.kumulant.stat.score/PinballLossStat.merge|merge(com.eignex.kumulant.stat.summary.WeightedMeanResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.summary/WeightedMeanResult // com.eignex.kumulant.stat.score/PinballLossStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.score/PinballLossStat.reset|reset(){}[0]
-    final fun update(kotlin/Double, kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.score/PinballLossStat.update|update(kotlin.Double;kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-}
-
 final class com.eignex.kumulant.stat.sketch/BloomFilterResult : com.eignex.kumulant.core/HasObservationCount { // com.eignex.kumulant.stat.sketch/BloomFilterResult|null[0]
     constructor <init>(kotlin/Int, kotlin/Int, kotlin/LongArray, kotlin/Long, com.eignex.kumulant.math/HasherRef = ...) // com.eignex.kumulant.stat.sketch/BloomFilterResult.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.LongArray;kotlin.Long;com.eignex.kumulant.math.HasherRef){}[0]
 
@@ -7651,22 +7571,6 @@ final object com.eignex.kumulant.schema.spec/Covariance : com.eignex.kumulant.sc
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/Covariance.toString|toString(){}[0]
 }
 
-final object com.eignex.kumulant.schema.spec/LogLoss : com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.spec/LogLoss|null[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/LogLoss.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/LogLoss.hashCode|hashCode(){}[0]
-    final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/LogLoss> // com.eignex.kumulant.schema.spec/LogLoss.serializer|serializer(){}[0]
-    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.spec/LogLoss.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/LogLoss.toString|toString(){}[0]
-}
-
-final object com.eignex.kumulant.schema.spec/MaeLoss : com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.spec/MaeLoss|null[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/MaeLoss.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/MaeLoss.hashCode|hashCode(){}[0]
-    final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/MaeLoss> // com.eignex.kumulant.schema.spec/MaeLoss.serializer|serializer(){}[0]
-    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.spec/MaeLoss.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/MaeLoss.toString|toString(){}[0]
-}
-
 final object com.eignex.kumulant.schema.spec/Max : com.eignex.kumulant.schema.spec/SeriesStatSpec<com.eignex.kumulant.stat.summary/MaxResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.spec/Max|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/Max.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/Max.hashCode|hashCode(){}[0]
@@ -7697,14 +7601,6 @@ final object com.eignex.kumulant.schema.spec/Moments : com.eignex.kumulant.schem
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/Moments> // com.eignex.kumulant.schema.spec/Moments.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.spec/Moments.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/Moments.toString|toString(){}[0]
-}
-
-final object com.eignex.kumulant.schema.spec/MseLoss : com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.spec/MseLoss|null[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/MseLoss.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/MseLoss.hashCode|hashCode(){}[0]
-    final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/MseLoss> // com.eignex.kumulant.schema.spec/MseLoss.serializer|serializer(){}[0]
-    final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.spec/MseLoss.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/MseLoss.toString|toString(){}[0]
 }
 
 final object com.eignex.kumulant.schema.spec/PairedSum : com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/PairedSumResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.spec/PairedSum|null[0]
@@ -8063,6 +7959,10 @@ final fun com.eignex.kumulant.schema.expr/vDot(kotlin/DoubleArray...): com.eigne
 final fun com.eignex.kumulant.schema.expr/vFold(com.eignex.kumulant.schema.expr/VFoldOp): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/vFold|vFold(com.eignex.kumulant.schema.expr.VFoldOp){}[0]
 final fun com.eignex.kumulant.schema.expr/vectorOf(kotlin.collections/List<com.eignex.kumulant.schema.expr/ScalarExpr>): com.eignex.kumulant.schema.expr/VectorExpr // com.eignex.kumulant.schema.expr/vectorOf|vectorOf(kotlin.collections.List<com.eignex.kumulant.schema.expr.ScalarExpr>){}[0]
 final fun com.eignex.kumulant.schema.expr/vectorOf(kotlin/Array<out com.eignex.kumulant.schema.expr/ScalarExpr>...): com.eignex.kumulant.schema.expr/VectorExpr // com.eignex.kumulant.schema.expr/vectorOf|vectorOf(kotlin.Array<out|com.eignex.kumulant.schema.expr.ScalarExpr>...){}[0]
+final fun com.eignex.kumulant.schema.ops/logLoss(): com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult> // com.eignex.kumulant.schema.ops/logLoss|logLoss(){}[0]
+final fun com.eignex.kumulant.schema.ops/maeLoss(): com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult> // com.eignex.kumulant.schema.ops/maeLoss|maeLoss(){}[0]
+final fun com.eignex.kumulant.schema.ops/mseLoss(): com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult> // com.eignex.kumulant.schema.ops/mseLoss|mseLoss(){}[0]
+final fun com.eignex.kumulant.schema.ops/pinballLoss(kotlin/Double): com.eignex.kumulant.schema.spec/PairedStatSpec<com.eignex.kumulant.stat.summary/WeightedMeanResult> // com.eignex.kumulant.schema.ops/pinballLoss|pinballLoss(kotlin.Double){}[0]
 final fun com.eignex.kumulant.stat.quantile/linearEdges(kotlin/Double, kotlin/Double, kotlin/Int): kotlin/DoubleArray // com.eignex.kumulant.stat.quantile/linearEdges|linearEdges(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
 final fun com.eignex.kumulant.stat.regression.glm/ConstantRate(kotlin/Double = ...): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.stat.regression.glm/ConstantRate|ConstantRate(kotlin.Double){}[0]
 final fun com.eignex.kumulant.stat.regression.glm/ExponentialDecay(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.stat.regression.glm/ExponentialDecay|ExponentialDecay(kotlin.Double;kotlin.Double){}[0]
