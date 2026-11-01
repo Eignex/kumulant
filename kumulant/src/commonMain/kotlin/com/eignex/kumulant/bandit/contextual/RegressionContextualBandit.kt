@@ -4,7 +4,7 @@ import com.eignex.koblas.Vector
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
-import com.eignex.kumulant.bandit.argmaxArm
+import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
@@ -102,7 +102,7 @@ class RegressionContextualBandit<R : Result>(
 
     override fun choose(x: Vector): Int {
         val gMean = globalMean(x)
-        return argmaxArm(
+        return argMaxOf(
             nbrArms,
         ) { i -> gMean + posterior.evaluate(arms[i].read(0L), x, random, exploration) }
     }
@@ -145,7 +145,7 @@ class RegressionContextualBandit<R : Result>(
     fun globalSnapshot(): R? = global?.read(0L)
 
     /** Live global pooling regressor, or `null` if pooling is disabled. */
-    fun globalStat(): RegressionStat<R>? = global
+    internal fun globalStat(): RegressionStat<R>? = global
 
     override fun merge(other: List<R>) {
         requireMergeSize(other.size, nbrArms)

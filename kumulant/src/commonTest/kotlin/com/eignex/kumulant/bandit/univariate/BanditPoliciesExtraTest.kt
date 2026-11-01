@@ -1,7 +1,6 @@
 package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
-import com.eignex.kumulant.stat.summary.MomentsResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.ln
@@ -69,14 +68,9 @@ class BanditPoliciesExtraTest {
     }
 
     @Test
-    fun `MOSS rejects non-positive nbrArms`() {
-        assertFailsWith<IllegalArgumentException> { Moss(nbrArms = 0) }
-    }
-
-    @Test
     fun `MOSS drives MultiArmedBandit to the best arm`() {
         val rng = Random(2)
-        val bandit = MultiArmedBandit(nbrArms = 3, policy = Moss(nbrArms = 3), random = rng)
+        val bandit = MultiArmedBandit(nbrArms = 3, policy = Moss(), random = rng)
         repeat(1000) {
             val a = bandit.choose()
             val reward = when (a) {
@@ -166,7 +160,7 @@ class BanditPoliciesExtraTest {
 
     @Test
     fun `MOSS returns infinity for untried arm`() {
-        val pol = Moss(nbrArms = 3)
+        val pol = Moss()
         val snap = WeightedMeanResult(0.0, 0.0)
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(snap, 0L, Random(0)))
     }
@@ -174,7 +168,7 @@ class BanditPoliciesExtraTest {
     @Test
     fun `UCB-V returns infinity for untried arm`() {
         val pol = UcbV()
-        val snap = MomentsResult(0.0, 0.0, 0.0, 0.0, 0.0)
+        val snap = WeightedVarianceResult(0.0, 0.0, 0.0)
         assertEquals(Double.POSITIVE_INFINITY, pol.evaluate(snap, 0L, Random(0)))
     }
 
@@ -182,8 +176,8 @@ class BanditPoliciesExtraTest {
     fun `UCB-V score grows with empirical variance at fixed mean`() {
         val pol = UcbV(zeta = 1.2, c = 1.0)
         repeat(100) { pol.update(pol.arm.createStat(), 1.0) }
-        val low = MomentsResult(totalWeights = 10.0, mean = 1.0, m2 = 10.0, m3 = 0.0, m4 = 0.0)
-        val high = MomentsResult(totalWeights = 10.0, mean = 1.0, m2 = 30.0, m3 = 0.0, m4 = 0.0)
+        val low = WeightedVarianceResult(totalWeights = 10.0, mean = 1.0, variance = 1.0)
+        val high = WeightedVarianceResult(totalWeights = 10.0, mean = 1.0, variance = 3.0)
         assertTrue(pol.evaluate(high, 0L, Random(0)) > pol.evaluate(low, 0L, Random(0)))
     }
 }

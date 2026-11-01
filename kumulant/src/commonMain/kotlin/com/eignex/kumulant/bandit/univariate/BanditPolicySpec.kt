@@ -52,8 +52,6 @@ data class GreedySpec(
     val priorMean: Double = 0.0,
     /** Per-arm prior pseudo-count. */
     val priorWeight: Double = 0.02,
-    /** Prior on `Sum (x - mean)^2 * w`. */
-    val priorSquaredDeviations: Double = 0.02,
 ) : BanditPolicySpec<WeightedVarianceResult>
 
 /** Spec for [EpsilonGreedy]. */
@@ -68,8 +66,6 @@ data class EpsilonGreedySpec(
     val priorMean: Double = 0.0,
     /** Per-arm prior pseudo-count. */
     val priorWeight: Double = 0.02,
-    /** Prior on `Sum (x - mean)^2 * w`. */
-    val priorSquaredDeviations: Double = 0.02,
 ) : BanditPolicySpec<WeightedVarianceResult>
 
 /** Spec for [Boltzmann]. */
@@ -91,14 +87,7 @@ data class BoltzmannSpec(
 /** Spec for [UniformSelection]. */
 @Serializable
 @SerialName("UniformSelection")
-data class UniformSelectionSpec(
-    /** Per-arm prior on the running reward mean. */
-    val priorMean: Double = 0.0,
-    /** Per-arm prior pseudo-count. */
-    val priorWeight: Double = 0.02,
-    /** Prior on `Sum (x - mean)^2 * w`. */
-    val priorSquaredDeviations: Double = 0.02,
-) : BanditPolicySpec<WeightedVarianceResult>
+data object UniformSelectionSpec : BanditPolicySpec<WeightedVarianceResult>
 
 /** Spec for [KlUcb]. */
 @Serializable
@@ -118,8 +107,6 @@ data class KlUcbSpec(
 @Serializable
 @SerialName("Moss")
 data class MossSpec(
-    /** Number of arms in the population. */
-    val nbrArms: Int,
     /** Per-arm prior on the running reward mean. */
     val priorMean: Double = 0.0,
     /** Per-arm prior pseudo-count. */
@@ -138,4 +125,4 @@ data class UcbVSpec(
     val priorMean: Double = 0.0,
     /** Per-arm prior pseudo-count. */
     val priorWeight: Double = 0.02,
-) : BanditPolicySpec<MomentsResult>
+) : BanditPolicySpec<WeightedVarianceResult>

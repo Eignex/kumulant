@@ -70,6 +70,23 @@ private const val MAX_POSTERIOR_REDRAWS = 64
 private fun WeightedVarianceResult.isSampleable(): Boolean =
     totalWeights > 0.0 && totalWeights.isFinite() && mean.isFinite() && variance.isFinite()
 
+// Draws (variance, mean) from the Normal-Gamma posterior and maps the draw through [toReward],
+// re-drawing on non-finite intermediates a bounded number of times before giving up with NaN.
+private inline fun WeightedVarianceResult.drawNormalGamma(
+    rng: Random,
+    toReward: (mean: Double, variance: Double) -> Double,
+): Double {
+    if (!isSampleable()) return Double.NaN
+    repeat(MAX_POSTERIOR_REDRAWS) {
+        val n = totalWeights
+        val sampleVariance = (variance * n / 2.0) / rng.nextGamma(n / 2.0)
+        if (!sampleVariance.isFinite()) return@repeat
+        val value = toReward(rng.nextNormal(mean, sqrt(sampleVariance / n)), sampleVariance)
+        if (value.isFinite()) return value
+    }
+    return Double.NaN
+}
+
 /**
  * Normal-Gamma posterior over a normal mean/variance. Draws (variance, mean) jointly:
  * variance ~ Inverse-Gamma(n/2, n*s^2/2), mean | variance ~ Normal(snapshot.mean, sigma^2/n).
@@ -81,19 +98,8 @@ private fun WeightedVarianceResult.isSampleable(): Boolean =
 @Serializable
 @SerialName("NormalGammaPosterior")
 data object NormalGammaPosterior : Posterior<WeightedVarianceResult> {
-    override fun sample(snapshot: WeightedVarianceResult, rng: Random): Double {
-        if (!snapshot.isSampleable()) return Double.NaN
-        repeat(MAX_POSTERIOR_REDRAWS) {
-            val n = snapshot.totalWeights
-            val alpha = n / 2.0
-            val beta = snapshot.variance * n / 2.0
-            val sampleVariance = beta / rng.nextGamma(alpha)
-            if (!sampleVariance.isFinite()) return@repeat
-            val value = rng.nextNormal(snapshot.mean, sqrt(sampleVariance / n))
-            if (value.isFinite()) return value
-        }
-        return Double.NaN
-    }
+    override fun sample(snapshot: WeightedVarianceResult, rng: Random): Double =
+        snapshot.drawNormalGamma(rng) { mean, _ -> mean }
 }
 
 /**
@@ -104,18 +110,6 @@ data object NormalGammaPosterior : Posterior<WeightedVarianceResult> {
 @Serializable
 @SerialName("LogNormalGammaPosterior")
 data object LogNormalGammaPosterior : Posterior<WeightedVarianceResult> {
-    override fun sample(snapshot: WeightedVarianceResult, rng: Random): Double {
-        if (!snapshot.isSampleable()) return Double.NaN
-        repeat(MAX_POSTERIOR_REDRAWS) {
-            val n = snapshot.totalWeights
-            val alpha = n / 2.0
-            val beta = snapshot.variance * n / 2.0
-            val sampleVariance = beta / rng.nextGamma(alpha)
-            if (!sampleVariance.isFinite()) return@repeat
-            val sampleMean = rng.nextNormal(snapshot.mean, sqrt(sampleVariance / n))
-            val value = exp(sampleMean + sampleVariance / 2.0)
-            if (value.isFinite()) return value
-        }
-        return Double.NaN
-    }
+    override fun sample(snapshot: WeightedVarianceResult, rng: Random): Double =
+        snapshot.drawNormalGamma(rng) { mean, variance -> exp(mean + variance / 2.0) }
 }

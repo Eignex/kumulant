@@ -2,12 +2,8 @@ package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.UnivariateBandit
-import com.eignex.kumulant.bandit.argmaxArm
-import com.eignex.kumulant.bandit.requireArmIndex
-import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.core.SeriesStat
 import kotlin.random.Random
 
 /**
@@ -32,8 +28,7 @@ import kotlin.random.Random
  * **Arms:** indexless, `nbrArms ≥ 2` fixed at construction; each arm owns
  * one posterior cell from `policy.createArm()`.
  *
- * **Memory:** O(nbrArms · arm-state); per-arm posterior plus a step
- * counter.
+ * **Memory:** O(nbrArms · arm-state); one inner [MultiArmedBandit] over [policy].
  *
  * **Choose:** O(nbrArms) expected; O([maxResamples] · nbrArms) worst case
  * when the second-arm resample loop spins to the cap.
@@ -45,9 +40,8 @@ import kotlin.random.Random
  * is.
  *
  * **Concurrency:** per-arm [com.eignex.kumulant.core.SeriesStat]s are built
- * with [concurrency]. The step counter is non-atomic; concurrent `choose`
- * calls race on it. Cross-arm snapshot consistency during `choose` is
- * best-effort under racing updates.
+ * with [concurrency], as in [MultiArmedBandit]. Cross-arm snapshot consistency
+ * during `choose` is best-effort under racing updates.
  */
 class TopTwoThompsonBandit<R : Result>(
     override val nbrArms: Int,
@@ -68,46 +62,29 @@ class TopTwoThompsonBandit<R : Result>(
         require(maxResamples > 0) { "maxResamples must be positive, got $maxResamples" }
     }
 
-    private val stats: Array<SeriesStat<R>> = Array(nbrArms) { policy.createArm(concurrency) }
-    private var step: Long = 0L
+    // Arm storage, updates and snapshots are a multi-armed Thompson bandit's; sharing its random
+    // keeps the draw sequence of a top-two round identical to sampling each arm here.
+    private val bandit = MultiArmedBandit(nbrArms, policy, random, concurrency)
 
     override fun choose(): Int {
-        val arm1 = sampleArgmax()
+        val arm1 = bandit.choose()
         if (random.nextDouble() < beta) return arm1
         repeat(maxResamples) {
-            val candidate = sampleArgmax()
+            val candidate = bandit.choose()
             if (candidate != arm1) return candidate
         }
         return arm1
     }
 
-    /** Single posterior sample per arm; return the argmax. */
-    fun sampleArgmax(): Int {
-        val t = step++
-        return argmaxArm(nbrArms) { a -> policy.evaluate(stats[a].read(0L), t, random) }
-    }
+    override fun update(armIndex: Int, value: Double, weight: Double) = bandit.update(armIndex, value, weight)
 
-    override fun update(armIndex: Int, value: Double, weight: Double) {
-        requireArmIndex(armIndex, nbrArms)
-        policy.update(stats[armIndex], value, weight)
-    }
+    override fun snapshot(): List<R> = bandit.snapshot()
 
-    override fun snapshot(): List<R> = stats.map { it.read(0L) }
+    override fun armResult(armIndex: Int): R = bandit.armResult(armIndex)
 
-    override fun armResult(armIndex: Int): R {
-        requireArmIndex(armIndex, nbrArms)
-        return stats[armIndex].read(0L)
-    }
+    override fun reset() = bandit.reset()
 
-    override fun reset() {
-        for (i in 0 until nbrArms) stats[i] = policy.createArm(concurrency)
-        step = 0L
-    }
-
-    override fun merge(other: List<R>) {
-        requireMergeSize(other.size, nbrArms)
-        for (i in 0 until nbrArms) stats[i].merge(other[i])
-    }
+    override fun merge(other: List<R>) = bandit.merge(other)
 
     override fun create(random: Random): TopTwoThompsonBandit<R> =
         TopTwoThompsonBandit(nbrArms, policy, beta, maxResamples, random, concurrency)

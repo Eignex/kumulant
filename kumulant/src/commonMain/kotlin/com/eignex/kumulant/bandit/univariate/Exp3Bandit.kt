@@ -126,7 +126,7 @@ class Exp3Bandit(
     }
 
     /** Current per-arm weights, normalised to sum to 1. */
-    fun armWeights(): DoubleArray {
+    internal fun armWeights(): DoubleArray {
         val out = relativeWeights()
         val s = out.sum()
         if (s > 0.0) for (i in out.indices) out[i] /= s

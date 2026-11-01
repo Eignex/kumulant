@@ -82,11 +82,4 @@ class BanditFactoryTest {
         ).materialize(Random(0))
         assertEquals(3, b.nbrArms)
     }
-
-    @Test
-    fun `MultiArmedSpec rejects a Moss policy with a different arm count`() {
-        assertFailsWith<IllegalArgumentException> {
-            MultiArmedSpec(nbrArms = 3, policy = MossSpec(nbrArms = 5)).materialize()
-        }
-    }
 }

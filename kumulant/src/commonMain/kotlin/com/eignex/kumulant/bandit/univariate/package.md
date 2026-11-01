@@ -52,7 +52,6 @@ etc.).
 | [MeanArm] | [com.eignex.kumulant.stat.summary.MeanStat] | Continuous rewards where mean suffices. |
 | [NormalArm] | [com.eignex.kumulant.stat.summary.VarianceStat] | Continuous rewards with normally-distributed noise; carries enough state for UCB-V and Thompson with normal-gamma. |
 | [LogNormalArm] | Welford over `log(value)` | Multiplicative rewards (revenue, latency). |
-| [MomentsArm] | [com.eignex.kumulant.stat.summary.MomentsStat] | Higher-order shape matters (skewness / kurtosis aware scoring). |
 
 [CompositeArm] (and [CompositeSubArm]) model multi-component rewards
 like zero-inflated lognormal revenue, without writing a per-shape arm

@@ -37,15 +37,6 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
      *  `exploration = 0.0` collapses to the point estimate; `1.0` is the calibrated posterior. */
     fun sample(snapshot: R, rng: Random, exploration: Double = 1.0): Vector
 
-    /** Writes an owned posterior draw into [destination]. */
-    fun sampleInto(snapshot: R, rng: Random, destination: DoubleArray, exploration: Double = 1.0) {
-        require(destination.size == snapshot.weights.size) {
-            "destination size ${destination.size} must match weights size ${snapshot.weights.size}"
-        }
-        val sample = sample(snapshot, rng, exploration)
-        for (i in destination.indices) destination[i] = sample[i]
-    }
-
     /**
      * Score a query point [x] under a fresh posterior draw. Parallels
      * [com.eignex.kumulant.bandit.univariate.BanditPolicy.evaluate] for the multivariate
@@ -73,28 +64,8 @@ sealed interface LinearPosterior<R : LinearRegressionResult> : RegressionPosteri
 data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
     override fun sample(snapshot: StochasticRegressionResult, rng: Random, exploration: Double): Vector {
         if (exploration <= 0.0) return snapshot.weights
-        return DenseVector.wrap(
-            DoubleArray(snapshot.weights.size).also { destination ->
-                sampleInto(snapshot, rng, destination, exploration)
-            },
-        )
-    }
-
-    override fun sampleInto(
-        snapshot: StochasticRegressionResult,
-        rng: Random,
-        destination: DoubleArray,
-        exploration: Double,
-    ) {
-        require(
-            destination.size == snapshot.weights.size,
-        ) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
-        if (exploration <= 0.0) {
-            for (i in destination.indices) destination[i] = snapshot.weights[i]
-        } else {
-            val sd = sqrt(exploration)
-            for (i in destination.indices) destination[i] = rng.nextNormal(snapshot.weights[i], sd)
-        }
+        val sd = sqrt(exploration)
+        return DenseVector.wrap(DoubleArray(snapshot.weights.size) { rng.nextNormal(snapshot.weights[it], sd) })
     }
 
     /** Closes to `invMean(eta(x) + sd * ||x|| * N(0,1))` since the per-coord noise terms
@@ -116,27 +87,10 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
 data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
     override fun sample(snapshot: DiagonalRegressionResult, rng: Random, exploration: Double): Vector =
         DenseVector.wrap(
-            DoubleArray(snapshot.weights.size).also { destination ->
-                sampleInto(snapshot, rng, destination, exploration)
+            DoubleArray(snapshot.weights.size) {
+                rng.nextNormal(snapshot.weights[it], sqrt(exploration / snapshot.precision[it]))
             },
         )
-
-    override fun sampleInto(
-        snapshot: DiagonalRegressionResult,
-        rng: Random,
-        destination: DoubleArray,
-        exploration: Double,
-    ) {
-        require(
-            destination.size == snapshot.weights.size,
-        ) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
-        for (i in destination.indices) {
-            destination[i] = rng.nextNormal(
-                snapshot.weights[i],
-                sqrt(exploration / snapshot.precision[i]),
-            )
-        }
-    }
 
     /** Sum of independent normals: `invMean(eta(x) + sqrt(exploration * Sum x_i^2 / precision[i]) * N(0,1))`. */
     override fun evaluate(snapshot: DiagonalRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
@@ -174,21 +128,6 @@ data object MultivariateGaussian : LinearPosterior<PrecisionRegressionResult> {
         val u = DoubleArray(n) { rng.nextNormal(0.0, sd) }
         snapshot.precisionL.trsv(u, lower = true, transpose = true)
         return DenseVector.wrap(u).also { it.axpy(1.0, snapshot.weights) }
-    }
-
-    override fun sampleInto(
-        snapshot: PrecisionRegressionResult,
-        rng: Random,
-        destination: DoubleArray,
-        exploration: Double,
-    ) {
-        require(
-            destination.size == snapshot.weights.size,
-        ) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
-        val sd = sqrt(exploration)
-        for (i in destination.indices) destination[i] = rng.nextNormal(0.0, sd)
-        snapshot.precisionL.trsv(destination, lower = true, transpose = true)
-        for (i in destination.indices) destination[i] += snapshot.weights[i]
     }
 
     /** Closes to `invMean(eta(x) + sqrt(exploration) * ||L^-1 x|| * N(0,1))`; one triangular
