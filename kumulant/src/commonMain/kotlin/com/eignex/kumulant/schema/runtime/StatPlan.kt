@@ -124,7 +124,6 @@ import com.eignex.kumulant.stat.summary.PairedSumStat
 import com.eignex.kumulant.stat.summary.RangeStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.SummaryStat
-import com.eignex.kumulant.stat.summary.TotalWeightsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -205,8 +204,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     is ClassCounts -> StatPlan(path) { concurrency -> ClassCountsStat(numClasses, concurrency) }
 
     BernoulliSum -> StatPlan(path) { concurrency -> BernoulliSumStat(concurrency) }
-
-    TotalWeights -> StatPlan(path) { concurrency -> TotalWeightsStat(concurrency) }
 
     Count -> StatPlan(path) { concurrency -> CountStat(concurrency) }
 

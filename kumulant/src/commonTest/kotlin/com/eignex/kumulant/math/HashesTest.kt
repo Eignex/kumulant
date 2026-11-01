@@ -90,10 +90,4 @@ class Hash64Test {
             assertTrue(ratio in 0.7..1.3, "bucket $b count=${counts[b]} ratio=$ratio")
         }
     }
-
-    @Test
-    fun `SplitMixChunkHasher matches hash64 default`() {
-        val sample = "the quick brown fox".encodeToByteArray()
-        assertEquals(hash64(sample), SplitMixChunkHasher.hash(sample))
-    }
 }

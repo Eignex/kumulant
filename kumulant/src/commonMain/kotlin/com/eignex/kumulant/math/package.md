@@ -25,8 +25,6 @@ Convenience extensions on `kotlin.random.Random`:
 
 - `nextNormal(mean, std)`: Gaussian. Used by Thompson-sampling
   posteriors throughout the bandit and regression layers.
-- `nextLogNormal(mean, variance)`: log-normal. Used by composite arms
-  modelling multiplicative reward.
 - `nextGamma(alpha)`: gamma. Building block for Beta / Dirichlet.
 - `nextBeta(alpha, beta)`: beta. Used by Beta-Bernoulli posteriors.
 - `nextPoissonOne()`: Poisson(1). Used by Oza & Russell online
@@ -73,9 +71,7 @@ opaque keys into those sketches.
 
 | Function / type | Role |
 |-----------------|------|
-| [hash64] | Default 64-bit hash of a `ByteArray` (or `String` via UTF-8). Currently delegates to [SplitMixChunkHasher]. The unqualified entry; downstream code that doesn't care which algorithm should use this. |
-| [Hasher64] | Pluggable 64-bit byte-hash interface. Implementations must be deterministic and pure. Implement a custom one to pin a specific hash variant. |
-| [SplitMixChunkHasher] | The current default implementation: SplitMix64 over 8-byte chunks. Pin to this directly when stability across library versions matters. |
+| [hash64] | 64-bit hash of a `ByteArray` (or `String` via UTF-8): SplitMix64 over 8-byte chunks, stable across platforms. |
 | [splitmix64] | Bit-mixing 64-bit integer transform. Used internally and exposed for completeness. |
 
 Note that these are *non-cryptographic*; passes BigCrush but is not

@@ -23,12 +23,6 @@ class SummaryStatConcurrencyTest {
     }
 
     @Test
-    fun `TotalWeightsStat sequential math equal across modes`() {
-        val reads = weightedReads { TotalWeightsStat(concurrency = it) }
-        assertModesAgree("TotalWeightsStat", reads)
-    }
-
-    @Test
     fun `ArgMinStat sequential math equal across modes`() {
         val reads = Concurrency.entries.associateWith { mode ->
             val s = ArgMinStat(concurrency = mode)

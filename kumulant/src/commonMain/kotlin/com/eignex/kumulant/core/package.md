@@ -100,7 +100,7 @@ identity element:
 
 | Family | Empty read reports |
 |--------|--------------------|
-| Sum, Count, TotalWeights, BernoulliSum | `0.0`, the additive identity |
+| Sum, Count, BernoulliSum | `0.0`, the additive identity |
 | Min, Max, Range | `+Infinity` / `-Infinity`, the comparison identities |
 | BucketHistogram, Reservoir | empty arrays |
 | DDSketch, TDigest, Mad | `NaN` per quantile |

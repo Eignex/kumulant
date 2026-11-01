@@ -165,25 +165,6 @@ class DistributionsTest {
     }
 
     @Test
-    fun `nextLogNormal rejects bad inputs`() {
-        val rng = Random(0)
-        assertFailsWith<IllegalArgumentException> { rng.nextLogNormal(0.0, 1.0) }
-        assertFailsWith<IllegalArgumentException> { rng.nextLogNormal(-1.0, 1.0) }
-        assertFailsWith<IllegalArgumentException> { rng.nextLogNormal(1.0, -1.0) }
-    }
-
-    @Test
-    fun `nextLogNormal matches analytic mean`() {
-        val rng = Random(31)
-        val n = 20_000
-        val mean = 2.0
-        val variance = 0.5
-        var s = 0.0
-        repeat(n) { s += rng.nextLogNormal(mean, variance) }
-        assertTrue(abs(s / n - mean) < 0.1, "mean=${s / n}")
-    }
-
-    @Test
     fun `nextGamma rejects bad alpha`() {
         val rng = Random(0)
         assertFailsWith<IllegalArgumentException> { rng.nextGamma(0.0) }

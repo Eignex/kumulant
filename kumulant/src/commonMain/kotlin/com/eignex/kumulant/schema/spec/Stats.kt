@@ -204,11 +204,6 @@ data object Summary : SeriesStatSpec<SummaryResult>
 @SerialName("BernoulliSum")
 data object BernoulliSum : SeriesStatSpec<BernoulliSumResult>
 
-/** Spec for `TotalWeightsStat`: cumulative observation weight. */
-@Serializable
-@SerialName("TotalWeights")
-data object TotalWeights : SeriesStatSpec<SumResult>
-
 /** Spec for `CountStat`: unweighted observation count. */
 @Serializable
 @SerialName("Count")

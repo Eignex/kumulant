@@ -23,11 +23,12 @@ timestamp at which the extreme was observed. An internal lock keeps the
 coupled (value, timestamp) pair consistent under concurrency. Merge keeps the pair from
 the smaller (larger) value.
 
-[CountStat], [TotalWeightsStat], and [BernoulliSumStat] look similar but
-answer different questions. [CountStat] counts updates, ignoring weight.
-[TotalWeightsStat] sums weight, ignoring the value. [BernoulliSumStat]
+[CountStat] and [BernoulliSumStat] look similar but answer different
+questions. [CountStat] counts updates, ignoring weight. [BernoulliSumStat]
 tracks weighted successes (`sum(weight * value)`) and trials (`sum(weight)`),
-supporting both binary outcomes and soft probabilities. All three are
+supporting both binary outcomes and soft probabilities. Summed weight alone is
+`Sum.withValue(1.0)`, and every result with an observation count reports it as
+`totalWeights`. Both are
 additive and gain a striped-adder JVM path under
 [com.eignex.kumulant.core.Concurrency.HighWrite].
 
@@ -121,7 +122,7 @@ variance is conditional on that covariance; it does not include covariance-estim
 ## Merge
 
 The additive stats ([SumStat],
-[CountStat], [TotalWeightsStat], [BernoulliSumStat]) sum cell-wise; [MinStat],
+[CountStat], [BernoulliSumStat]) sum cell-wise; [MinStat],
 [MaxStat], and [RangeStat] take cell-wise min/max; [ArgMinStat] and
 [ArgMaxStat] keep the (value, timestamp) pair from the smaller (larger)
 value; the Welford family
@@ -137,7 +138,7 @@ a remote pair while empty and otherwise averages both estimates equally.
 
 | Stat | Memory | Update | Concurrency |
 |------|--------|--------|-------------|
-| [SumStat], [CountStat], [TotalWeightsStat], [BernoulliSumStat] | O(1) | O(1) | JVM striped adders under HighWrite; atomic under other concurrent modes |
+| [SumStat], [CountStat], [BernoulliSumStat] | O(1) | O(1) | JVM striped adders under HighWrite; atomic under other concurrent modes |
 | [MinStat], [MaxStat], [RangeStat] | O(1) | O(1) | per-cell CAS; Range reads min and max independently |
 | [ArgMinStat], [ArgMaxStat] | O(1) | O(1) | internal lock keeps the (value, timestamp) pair consistent |
 | [MeanStat] | O(1) | O(1) | Welford-coupled; locked under Strict / HighWrite, racing under Relaxed |

@@ -4,7 +4,7 @@ Approximate distinct-count estimation. [HyperLogLogStat] takes a stream of
 opaque `Long` keys ([com.eignex.kumulant.core.DiscreteStat]) and answers
 "how many distinct keys have I seen?" in bounded memory. The right
 pre-step is to hash domain-specific keys through
-[com.eignex.kumulant.math.hash64] / [com.eignex.kumulant.math.Hasher64]
+[com.eignex.kumulant.math.hash64]
 so the input has uniform 64-bit entropy; `value.hashCode().toLong()`
 only provides 32 bits and skews the estimator on low-cardinality
 domains.
