@@ -2,7 +2,8 @@ package com.eignex.kumulant.bench
 
 import com.eignex.kumulant.math.SobolSequence
 import com.eignex.kumulant.math.nextNormal
-import com.eignex.kumulant.stat.score.MseLossStat
+import com.eignex.kumulant.schema.ops.mseLoss
+import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.stat.summary.MeanStat
 import kotlin.math.cos
 import kotlin.math.exp
@@ -15,7 +16,7 @@ internal fun analyzeNormalSamplingQuality() {
         val expected = exp(-0.02 * dimensions)
         for (samples in listOf(256, 1024, 4096)) {
             for (sobol in listOf(false, true)) {
-                val error = MseLossStat()
+                val error = mseLoss().materialize()
                 repeat(8) { seed ->
                     val random = Random(seed)
                     val sequence = SobolSequence(dimensions, seed.toLong())

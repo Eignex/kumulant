@@ -99,10 +99,6 @@ import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
 import com.eignex.kumulant.stat.score.AccuracyStat
 import com.eignex.kumulant.stat.score.AucStat
 import com.eignex.kumulant.stat.score.ConfusionMatrixStat
-import com.eignex.kumulant.stat.score.LogLossStat
-import com.eignex.kumulant.stat.score.MaeLossStat
-import com.eignex.kumulant.stat.score.MseLossStat
-import com.eignex.kumulant.stat.score.PinballLossStat
 import com.eignex.kumulant.stat.score.pitHistogram
 import com.eignex.kumulant.stat.sketch.BloomFilterStat
 import com.eignex.kumulant.stat.sketch.CountMinSketchStat
@@ -464,14 +460,6 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
         }
 
     Covariance -> StatPlan(path) { concurrency -> CovarianceStat(concurrency) }
-
-    MseLoss -> StatPlan(path) { concurrency -> MseLossStat(concurrency) }
-
-    MaeLoss -> StatPlan(path) { concurrency -> MaeLossStat(concurrency) }
-
-    LogLoss -> StatPlan(path) { concurrency -> LogLossStat(concurrency) }
-
-    is PinballLoss -> StatPlan(path) { concurrency -> PinballLossStat(tau, concurrency) }
 
     is Auc ->
         StatPlan(path) { concurrency ->

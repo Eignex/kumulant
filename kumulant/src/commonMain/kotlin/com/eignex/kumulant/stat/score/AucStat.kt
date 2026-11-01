@@ -89,8 +89,8 @@ data class AucResult(
  * raw classifier margins, pass a wider range or pre-sigmoid the score.
  *
  * **Use cases:** binary classifier discrimination monitoring; ranking
- * quality independent of threshold choice. Pair with [MseLossStat] or
- * [LogLossStat] for proper-scoring complements.
+ * quality independent of threshold choice. Pair with [com.eignex.kumulant.schema.ops.mseLoss] or
+ * [com.eignex.kumulant.schema.ops.logLoss] for proper-scoring complements.
  *
  * **Memory:** O([numBins]); two parallel double-cell arrays for positives and
  * negatives.

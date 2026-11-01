@@ -2172,6 +2172,13 @@ public final class com/eignex/kumulant/schema/expr/Y : com/eignex/kumulant/schem
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class com/eignex/kumulant/schema/ops/LossesKt {
+	public static final fun logLoss ()Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static final fun maeLoss ()Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static final fun mseLoss ()Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static final fun pinballLoss (D)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+}
+
 public final class com/eignex/kumulant/schema/ops/OperationsKt {
 	public static final fun asDiscrete (Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;)Lcom/eignex/kumulant/schema/spec/DiscreteStatSpec;
 	public static final fun asSeries (Lcom/eignex/kumulant/schema/spec/DiscreteStatSpec;)Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
@@ -3440,14 +3447,6 @@ public final class com/eignex/kumulant/schema/spec/HyperLogLog$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/schema/spec/LogLoss : com/eignex/kumulant/schema/spec/PairedStatSpec {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/LogLoss;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/eignex/kumulant/schema/spec/Mad : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/Mad$Companion;
 	public fun <init> ()V
@@ -3477,14 +3476,6 @@ public final class com/eignex/kumulant/schema/spec/Mad$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/schema/spec/MaeLoss : com/eignex/kumulant/schema/spec/PairedStatSpec {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/MaeLoss;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/eignex/kumulant/schema/spec/Max : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/Max;
 	public fun equals (Ljava/lang/Object;)Z
@@ -3511,14 +3502,6 @@ public final class com/eignex/kumulant/schema/spec/Min : com/eignex/kumulant/sch
 
 public final class com/eignex/kumulant/schema/spec/Moments : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/Moments;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/eignex/kumulant/schema/spec/MseLoss : com/eignex/kumulant/schema/spec/PairedStatSpec {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/MseLoss;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
@@ -3597,33 +3580,6 @@ public final class com/eignex/kumulant/schema/spec/PairedSum : com/eignex/kumula
 	public fun hashCode ()I
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/eignex/kumulant/schema/spec/PinballLoss : com/eignex/kumulant/schema/spec/PairedStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/PinballLoss$Companion;
-	public fun <init> (D)V
-	public final fun component1 ()D
-	public final fun copy (D)Lcom/eignex/kumulant/schema/spec/PinballLoss;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/PinballLoss;DILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/PinballLoss;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getTau ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/PinballLoss$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/PinballLoss$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/PinballLoss;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/PinballLoss;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/PinballLoss$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
 public final class com/eignex/kumulant/schema/spec/PitHistogram : com/eignex/kumulant/schema/spec/SeriesStatSpec {
@@ -7347,82 +7303,6 @@ public final class com/eignex/kumulant/stat/score/ConfusionMatrixStat : com/eign
 	public fun update (DDJD)V
 	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
 	public fun validateMerge (Lcom/eignex/kumulant/stat/score/ConfusionMatrixResult;)V
-}
-
-public final class com/eignex/kumulant/stat/score/LogLossStat : com/eignex/kumulant/core/PairedStat {
-	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/LogLossStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;
-	public fun reset ()V
-	public fun update (DDD)V
-	public fun update (DDJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
-}
-
-public final class com/eignex/kumulant/stat/score/MaeLossStat : com/eignex/kumulant/core/PairedStat {
-	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/MaeLossStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;
-	public fun reset ()V
-	public fun update (DDD)V
-	public fun update (DDJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
-}
-
-public final class com/eignex/kumulant/stat/score/MseLossStat : com/eignex/kumulant/core/PairedStat {
-	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/MseLossStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;
-	public fun reset ()V
-	public fun update (DDD)V
-	public fun update (DDJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
-}
-
-public final class com/eignex/kumulant/stat/score/PinballLossStat : com/eignex/kumulant/core/PairedStat {
-	public fun <init> (DLcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (DLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/PinballLossStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public final fun getTau ()D
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;
-	public fun reset ()V
-	public fun update (DDD)V
-	public fun update (DDJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
 }
 
 public final class com/eignex/kumulant/stat/score/PitHistogramKt {

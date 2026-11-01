@@ -302,29 +302,6 @@ data class UnivariateRegression(
 @SerialName("Covariance")
 data object Covariance : PairedStatSpec<CovarianceResult>
 
-/** Spec for `MseLossStat`: mean squared error `(y - yhat)^2`. */
-@Serializable
-@SerialName("MseLoss")
-data object MseLoss : PairedStatSpec<WeightedMeanResult>
-
-/** Spec for `MaeLossStat`: mean absolute error `|y - yhat|`. */
-@Serializable
-@SerialName("MaeLoss")
-data object MaeLoss : PairedStatSpec<WeightedMeanResult>
-
-/** Spec for `LogLossStat`: mean negative log-likelihood for binary `y` with predicted probability `x`. */
-@Serializable
-@SerialName("LogLoss")
-data object LogLoss : PairedStatSpec<WeightedMeanResult>
-
-/** Spec for `PinballLossStat`: quantile (pinball) loss at quantile [tau]. */
-@Serializable
-@SerialName("PinballLoss")
-data class PinballLoss(
-    /** Target quantile in `(0, 1)`. */
-    val tau: Double,
-) : PairedStatSpec<WeightedMeanResult>
-
 /** Spec for `AucStat`: streaming AUC over a fixed-resolution score histogram. */
 @Serializable
 @SerialName("Auc")
