@@ -1636,15 +1636,9 @@ public final class com/eignex/kumulant/math/CholeskyFactorKt {
 public final class com/eignex/kumulant/math/DistributionsKt {
 	public static final fun nextBeta (Lkotlin/random/Random;DD)D
 	public static final fun nextGamma (Lkotlin/random/Random;D)D
-	public static final fun nextLogNormal (Lkotlin/random/Random;DD)D
 	public static final fun nextNormal (Lkotlin/random/Random;DD)D
-	public static final fun nextNormal (Lkotlin/random/Random;FF)F
 	public static synthetic fun nextNormal$default (Lkotlin/random/Random;DDILjava/lang/Object;)D
 	public static final fun nextPoissonOne (Lkotlin/random/Random;)I
-}
-
-public abstract interface class com/eignex/kumulant/math/Hasher64 {
-	public abstract fun hash ([B)J
 }
 
 public final class com/eignex/kumulant/math/HasherRef {
@@ -1718,11 +1712,6 @@ public final class com/eignex/kumulant/math/SobolSequence {
 }
 
 public final class com/eignex/kumulant/math/SobolSequence$Companion {
-}
-
-public final class com/eignex/kumulant/math/SplitMixChunkHasher : com/eignex/kumulant/math/Hasher64 {
-	public static final field INSTANCE Lcom/eignex/kumulant/math/SplitMixChunkHasher;
-	public fun hash ([B)J
 }
 
 public final class com/eignex/kumulant/schema/BandResult : com/eignex/kumulant/core/Result {
@@ -4170,14 +4159,6 @@ public final class com/eignex/kumulant/schema/spec/TDigest$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/schema/spec/TotalWeights : com/eignex/kumulant/schema/spec/SeriesStatSpec {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/TotalWeights;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/eignex/kumulant/schema/spec/UnivariateRegression : com/eignex/kumulant/schema/spec/PairedStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/UnivariateRegression$Companion;
 	public fun <init> ()V
@@ -4676,11 +4657,6 @@ public final class com/eignex/kumulant/stat/decay/DecayWeighting$HalfLife : com/
 	public fun correction (D)D
 	public fun getAlpha ()D
 	public final fun getHalfLife-UwyO8pc ()J
-}
-
-public final class com/eignex/kumulant/stat/decay/DecayWeightingKt {
-	public static final fun alpha (D)Lcom/eignex/kumulant/stat/decay/DecayWeighting$Alpha;
-	public static final fun halfLife-LRDsOJo (J)Lcom/eignex/kumulant/stat/decay/DecayWeighting$HalfLife;
 }
 
 public final class com/eignex/kumulant/stat/decay/DecayingMeanResult : com/eignex/kumulant/core/HasObservationCount {
@@ -8398,24 +8374,6 @@ public final class com/eignex/kumulant/stat/summary/SummaryStat : com/eignex/kum
 	public fun update (DJD)V
 	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
 	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/SummaryResult;)V
-}
-
-public final class com/eignex/kumulant/stat/summary/TotalWeightsStat : com/eignex/kumulant/core/SeriesStat {
-	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/summary/SumResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/summary/SumResult;
-	public fun reset ()V
-	public fun update (DD)V
-	public fun update (DJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/SumResult;)V
 }
 
 public final class com/eignex/kumulant/stat/summary/VarianceResult : com/eignex/kumulant/core/Result {
