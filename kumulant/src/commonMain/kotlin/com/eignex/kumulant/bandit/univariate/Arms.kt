@@ -135,7 +135,7 @@ data class MeanArm(
  * Gaussian arm with a Normal-Gamma prior (unknown mean and variance).
  * Tracks both the running mean and the sum of squared deviations, which
  * gives [NormalGammaPosterior] enough to draw `(mean, variance)` jointly
- * and gives the variance-aware policies ([Greedy], [EpsilonGreedy]) a
+ * and gives the variance-aware policy [UcbV] a
  * reasonable variance estimate.
  *
  * The prior is parameterised as a Normal-Gamma:
