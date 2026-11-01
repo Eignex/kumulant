@@ -204,28 +204,15 @@ data object MultivariateGaussian : LinearPosterior<PrecisionRegressionResult> {
  * LinUCB-style confidence-bound scoring: `invMean(eta(x) + exploration * sqrt(xT * Sigma * x))`.
  * Deterministic given the snapshot; no random draw at evaluate time; so the
  * `exploration` parameter here plays the role of LinUCB's `alpha` (confidence-bound
- * width), not the variance scale used by Thompson-style posteriors. [sample] returns
- * the snapshot's mean weights since UCB has no per-arm randomization; callers that
- * want sampled weights should pair with [MultivariateGaussian] instead.
+ * width), not the variance scale used by Thompson-style posteriors.
+ *
+ * A [RegressionPosterior] rather than a [LinearPosterior]: a confidence bound has no weight
+ * draw, so a caller that samples weights would silently lose all exploration. Pair with
+ * [MultivariateGaussian] where sampled weights are needed.
  */
 @Serializable
 @SerialName("LinUcb")
-data object LinUcb : LinearPosterior<PrecisionRegressionResult> {
-    override fun sample(snapshot: PrecisionRegressionResult, rng: Random, exploration: Double): Vector =
-        snapshot.weights
-
-    override fun sampleInto(
-        snapshot: PrecisionRegressionResult,
-        rng: Random,
-        destination: DoubleArray,
-        exploration: Double,
-    ) {
-        require(
-            destination.size == snapshot.weights.size,
-        ) { "destination size ${destination.size} must match weights size ${snapshot.weights.size}" }
-        for (i in destination.indices) destination[i] = snapshot.weights[i]
-    }
-
+data object LinUcb : RegressionPosterior<PrecisionRegressionResult> {
     override fun evaluate(snapshot: PrecisionRegressionResult, x: Vector, rng: Random, exploration: Double): Double =
         snapshot.link.invMean(
             snapshot.linearPredictor(x) + exploration * snapshot.predictiveDeviation(x),

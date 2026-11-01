@@ -101,11 +101,11 @@ identity element:
 | Family | Empty read reports |
 |--------|--------------------|
 | Sum, Count, TotalWeights, BernoulliSum | `0.0`, the additive identity |
-| Min, Max | `+Infinity` / `-Infinity`, the comparison identities |
+| Min, Max, Range | `+Infinity` / `-Infinity`, the comparison identities |
 | BucketHistogram, Reservoir | empty arrays |
 | DDSketch, TDigest, Mad | `NaN` per quantile |
 | Auc | `NaN` |
-| Mean, Variance, Moments | `0.0` for every field |
+| Mean, Variance, Moments, Summary | `0.0` for every field, including Summary's min and max |
 
 Sums and extrema report their identity elements. Quantile sketches and AUC
 report `NaN` when no estimate exists. Mean, variance, and moments use zero-valued

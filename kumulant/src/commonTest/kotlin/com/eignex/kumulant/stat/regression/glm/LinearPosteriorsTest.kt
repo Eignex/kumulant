@@ -239,16 +239,6 @@ class LinearPosteriorsTest {
     }
 
     @Test
-    fun `LinUcb sample returns mean weights without randomization`() {
-        val snap = bayesianSnapshot()
-        val draw1 = LinUcb.sample(snap, Random(0)).toDoubleArray()
-        val draw2 = LinUcb.sample(snap, Random(99)).toDoubleArray()
-        assertTrue(draw1.contentEquals(draw2), "LinUcb sample is deterministic")
-        val w = snap.weights.toDoubleArray()
-        assertTrue(draw1.contentEquals(w), "LinUcb sample returns snap.weights")
-    }
-
-    @Test
     fun `predict throws on wrong feature size`() {
         val snap = sgdSnapshot()
         assertTrue(snap.featureSize == 2)

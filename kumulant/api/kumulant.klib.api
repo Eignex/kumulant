@@ -7964,12 +7964,10 @@ final object com.eignex.kumulant.stat.regression.glm/FactorisedGaussian : com.ei
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/FactorisedGaussian.toString|toString(){}[0]
 }
 
-final object com.eignex.kumulant.stat.regression.glm/LinUcb : com.eignex.kumulant.stat.regression.glm/LinearPosterior<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.glm/LinUcb|null[0]
+final object com.eignex.kumulant.stat.regression.glm/LinUcb : com.eignex.kumulant.stat.regression/RegressionPosterior<com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult>, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.stat.regression.glm/LinUcb|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.regression.glm/LinUcb.equals|equals(kotlin.Any?){}[0]
     final fun evaluate(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, com.eignex.koblas/Vector, kotlin.random/Random, kotlin/Double): kotlin/Double // com.eignex.kumulant.stat.regression.glm/LinUcb.evaluate|evaluate(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult;com.eignex.koblas.Vector;kotlin.random.Random;kotlin.Double){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.regression.glm/LinUcb.hashCode|hashCode(){}[0]
-    final fun sample(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, kotlin.random/Random, kotlin/Double): com.eignex.koblas/Vector // com.eignex.kumulant.stat.regression.glm/LinUcb.sample|sample(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult;kotlin.random.Random;kotlin.Double){}[0]
-    final fun sampleInto(com.eignex.kumulant.stat.regression.glm/PrecisionRegressionResult, kotlin.random/Random, kotlin/DoubleArray, kotlin/Double) // com.eignex.kumulant.stat.regression.glm/LinUcb.sampleInto|sampleInto(com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult;kotlin.random.Random;kotlin.DoubleArray;kotlin.Double){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.regression.glm/LinUcb> // com.eignex.kumulant.stat.regression.glm/LinUcb.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.stat.regression.glm/LinUcb.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.stat.regression.glm/LinUcb.toString|toString(){}[0]
