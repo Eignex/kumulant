@@ -30,68 +30,34 @@ fun StatSchemaDef.materialize(concurrency: Concurrency = Concurrency.None): List
         .map { (name, plan) -> bind(name, plan.build(concurrency)) }
 
 /** Materialize series-modality entries only; throws if any entry isn't series. */
-fun StatSchemaDef.materializeSeries(
-    concurrency: Concurrency = Concurrency.None,
-): List<BoundStat<*, out SeriesStat<*>, *>> = stats.map { (name, config) ->
-    require(config is SeriesStatSpec<*>) {
-        "Entry '$name' has config ${config::class.simpleName}, expected a SeriesStatSpec"
-    }
-    name to config.compileSeries(name)
-}.map { (name, plan) -> bindSeries(name, plan.build(concurrency)) }
+fun StatSchemaDef.materializeSeries(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, out SeriesStat<*>, *>> =
+    materializeAs(concurrency, SeriesStatSpec<*>::compileSeries)
 
 /** Materialize paired-modality entries only; throws if any entry isn't paired. */
-fun StatSchemaDef.materializePaired(
-    concurrency: Concurrency = Concurrency.None,
-): List<BoundStat<*, out PairedStat<*>, *>> = stats.map { (name, config) ->
-    require(config is PairedStatSpec<*>) {
-        "Entry '$name' has config ${config::class.simpleName}, expected a PairedStatSpec"
-    }
-    name to config.compilePaired(name)
-}.map { (name, plan) -> bindPaired(name, plan.build(concurrency)) }
+fun StatSchemaDef.materializePaired(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, out PairedStat<*>, *>> =
+    materializeAs(concurrency, PairedStatSpec<*>::compilePaired)
 
 /** Materialize vector-modality entries only; throws if any entry isn't vector. */
-fun StatSchemaDef.materializeVector(
-    concurrency: Concurrency = Concurrency.None,
-): List<BoundStat<*, out VectorStat<*>, *>> = stats.map { (name, config) ->
-    require(config is VectorStatSpec<*>) {
-        "Entry '$name' has config ${config::class.simpleName}, expected a VectorStatSpec"
-    }
-    name to config.compileVector(name)
-}.map { (name, plan) -> bindVector(name, plan.build(concurrency)) }
+fun StatSchemaDef.materializeVector(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, out VectorStat<*>, *>> =
+    materializeAs(concurrency, VectorStatSpec<*>::compileVector)
 
 /** Materialize discrete-modality entries only; throws if any entry isn't discrete. */
-fun StatSchemaDef.materializeDiscrete(
-    concurrency: Concurrency = Concurrency.None,
-): List<BoundStat<*, out DiscreteStat<*>, *>> = stats.map { (name, config) ->
-    require(config is DiscreteStatSpec<*>) {
-        "Entry '$name' has config ${config::class.simpleName}, expected a DiscreteStatSpec"
-    }
-    name to config.compileDiscrete(name)
-}.map { (name, plan) -> bindDiscrete(name, plan.build(concurrency)) }
+fun StatSchemaDef.materializeDiscrete(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, out DiscreteStat<*>, *>> =
+    materializeAs(concurrency, DiscreteStatSpec<*>::compileDiscrete)
 
 /** Materialize regression-modality entries only; throws if any entry isn't regression. */
-fun StatSchemaDef.materializeRegression(
-    concurrency: Concurrency = Concurrency.None,
-): List<BoundStat<*, out RegressionStat<*>, *>> = stats.map { (name, config) ->
-    require(config is RegressionStatSpec<*>) {
-        "Entry '$name' has config ${config::class.simpleName}, expected a RegressionStatSpec"
+fun StatSchemaDef.materializeRegression(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, out RegressionStat<*>, *>> =
+    materializeAs(concurrency, RegressionStatSpec<*>::compileRegression)
+
+// Every entry compiles before any accumulator is built, so a bad entry fails the schema without side effects.
+private inline fun <reified C : StatSpec, S : Stat<*>> StatSchemaDef.materializeAs(
+    concurrency: Concurrency,
+    compile: C.(String) -> StatPlan<S>,
+): List<BoundStat<*, out S, *>> = stats.map { (name, config) ->
+    require(config is C) {
+        "Entry '$name' has config ${config::class.simpleName}, expected a ${C::class.simpleName}"
     }
-    name to config.compileRegression(name)
-}.map { (name, plan) -> bindRegression(name, plan.build(concurrency)) }
+    name to config.compile(name)
+}.map { (name, plan) -> bind(name, plan.build(concurrency)) }
 
-private fun bind(name: String, stat: Stat<*>): BoundStat<*, *, *> = toSpec(StatKey<Result>(name), stat)
-
-private fun bindSeries(name: String, stat: SeriesStat<*>): BoundStat<*, out SeriesStat<*>, *> =
-    toSpec(StatKey<Result>(name), stat)
-
-private fun bindPaired(name: String, stat: PairedStat<*>): BoundStat<*, out PairedStat<*>, *> =
-    toSpec(StatKey<Result>(name), stat)
-
-private fun bindVector(name: String, stat: VectorStat<*>): BoundStat<*, out VectorStat<*>, *> =
-    toSpec(StatKey<Result>(name), stat)
-
-private fun bindDiscrete(name: String, stat: DiscreteStat<*>): BoundStat<*, out DiscreteStat<*>, *> =
-    toSpec(StatKey<Result>(name), stat)
-
-private fun bindRegression(name: String, stat: RegressionStat<*>): BoundStat<*, out RegressionStat<*>, *> =
-    toSpec(StatKey<Result>(name), stat)
+private fun <S : Stat<*>> bind(name: String, stat: S): BoundStat<*, out S, *> = toSpec(StatKey<Result>(name), stat)
