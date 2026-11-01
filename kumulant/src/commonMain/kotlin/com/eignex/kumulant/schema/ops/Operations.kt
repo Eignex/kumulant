@@ -260,21 +260,16 @@ fun <R : Result> VectorStatSpec<R>.minMaxScaleFeatures(
     dimensions: Int,
     targetLow: Double = DEFAULT_TARGET_LOW,
     targetHigh: Double = DEFAULT_TARGET_HIGH,
-): VectorStatSpec<R> {
-    return withFeedback(Range.vectorized(dimensions), MinMax(targetLow, targetHigh))
-}
+): VectorStatSpec<R> = withFeedback(Range.vectorized(dimensions), MinMax(targetLow, targetHigh))
 
 /** Z-score both axes of a paired spec against per-axis [Variance] primaries. */
-fun <R : Result> PairedStatSpec<R>.standardScaler(): PairedStatSpec<R> =
-    withFeedback(Variance, Variance, Standardize)
+fun <R : Result> PairedStatSpec<R>.standardScaler(): PairedStatSpec<R> = withFeedback(Variance, Variance, Standardize)
 
 /** Min-max scale both axes of a paired spec against per-axis [Range] primaries. */
 fun <R : Result> PairedStatSpec<R>.minMaxScaler(
     targetLow: Double = DEFAULT_TARGET_LOW,
     targetHigh: Double = DEFAULT_TARGET_HIGH,
-): PairedStatSpec<R> {
-    return withFeedback(Range, Range, MinMax(targetLow, targetHigh))
-}
+): PairedStatSpec<R> = withFeedback(Range, Range, MinMax(targetLow, targetHigh))
 
 /** Element-wise standardise a regression spec's feature vector. */
 fun <R : Result> RegressionStatSpec<R>.standardScaleFeatures(): RegressionStatSpec<R> =
@@ -284,16 +279,13 @@ fun <R : Result> RegressionStatSpec<R>.standardScaleFeatures(): RegressionStatSp
 fun <R : Result> RegressionStatSpec<R>.minMaxScaleFeatures(
     targetLow: Double = DEFAULT_TARGET_LOW,
     targetHigh: Double = DEFAULT_TARGET_HIGH,
-): RegressionStatSpec<R> {
-    return MinMaxScalerRegression(this, targetLow, targetHigh) as RegressionStatSpec<R>
-}
+): RegressionStatSpec<R> = MinMaxScalerRegression(this, targetLow, targetHigh) as RegressionStatSpec<R>
 
 /**
  * Z-score the input against a hidden [Variance] primary, then forward the standardized
  * value to this spec. Emits `0` while the running variance is still zero.
  */
-fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> =
-    withFeedback(Variance, Standardize)
+fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> = withFeedback(Variance, Standardize)
 
 /**
  * Min-max scale the input against a hidden [Range] primary into `[targetLow, targetHigh]`,
@@ -304,9 +296,7 @@ fun <R : Result> SeriesStatSpec<R>.standardScaler(): SeriesStatSpec<R> =
 fun <R : Result> SeriesStatSpec<R>.minMaxScaler(
     targetLow: Double = DEFAULT_TARGET_LOW,
     targetHigh: Double = DEFAULT_TARGET_HIGH,
-): SeriesStatSpec<R> {
-    return withFeedback(Range, MinMax(targetLow, targetHigh))
-}
+): SeriesStatSpec<R> = withFeedback(Range, MinMax(targetLow, targetHigh))
 
 /** Wrap this series spec to keep each update with probability [rate]; [seed] feeds the PRNG. */
 fun <R : Result> SeriesStatSpec<R>.sample(rate: Double, seed: Long): SeriesStatSpec<R> =

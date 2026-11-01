@@ -12,8 +12,8 @@ import com.eignex.kumulant.schema.spec.ResampleAggregator
 import com.eignex.kumulant.stat.cardinality.HyperLogLogResult
 import com.eignex.kumulant.stat.regression.CovarianceResult
 import com.eignex.kumulant.stat.regression.glm.UnivariateRegressionResult
-import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.RangeStat
+import com.eignex.kumulant.stat.summary.SumResult
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.skema.SchemaJson

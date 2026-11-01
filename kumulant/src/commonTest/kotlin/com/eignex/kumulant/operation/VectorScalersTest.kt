@@ -45,7 +45,9 @@ class VectorScalersTest {
     @Test
     fun `minMaxScaleFeatures maps each coordinate to the configured range`() {
         val dimensions = 2
-        val scaled = Sum.vectorized(dimensions).minMaxScaleFeatures(dimensions, targetLow = 0.0, targetHigh = 1.0).materialize()
+        val scaled = Sum.vectorized(dimensions)
+            .minMaxScaleFeatures(dimensions, targetLow = 0.0, targetHigh = 1.0)
+            .materialize()
         scaled.update(doubleArrayOf(0.0, 100.0))
         scaled.update(doubleArrayOf(10.0, 200.0))
         scaled.update(doubleArrayOf(5.0, 150.0))
