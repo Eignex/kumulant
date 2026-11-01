@@ -14,6 +14,12 @@ by elapsed time; EWMA stats discount history by cumulative observation weight.
 | [EwmaMeanStat] | Observation weight | Smooth a signal according to how much evidence arrives, independent of elapsed time. |
 | [EwmaVarianceStat] | Observation weight | Track dispersion using the same weight-based smoothing clock. |
 
+Both families estimate the same exponentially weighted moments and differ only in the clock. With
+unit weights, a bias-corrected EWMA equals a ratio of decayed sums on an observation-count clock.
+They stay separate classes because the implementations do not share a cost: the timestamp stats
+carry landmark rotation and underflow recovery, while EWMA is a two-cell update cheap enough for
+per-event hot paths.
+
 ## Timestamp-based decay
 
 [DecayWeighting.HalfLife] takes a `Duration` and sets
