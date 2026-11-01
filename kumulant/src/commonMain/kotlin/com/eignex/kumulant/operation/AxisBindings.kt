@@ -33,5 +33,9 @@ internal class SeriesToPairedStat<R : Result>(
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
         SeriesToPairedStat(delegate.windowed(duration, slices, concurrency), x, y)
 
-    override fun create(concurrency: Concurrency?): SeriesStat<R> = SeriesToPairedStat(delegate.create(concurrency), x, y)
+    override fun create(concurrency: Concurrency?): SeriesStat<R> = SeriesToPairedStat(
+        delegate.create(concurrency),
+        x,
+        y,
+    )
 }

@@ -59,7 +59,10 @@ internal class ReweightSeriesStat<R : Result>(
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): SeriesStat<R> =
         ReweightSeriesStat(delegate.windowed(duration, slices, concurrency), reweight)
 
-    override fun create(concurrency: Concurrency?): SeriesStat<R> = ReweightSeriesStat(delegate.create(concurrency), reweight)
+    override fun create(concurrency: Concurrency?): SeriesStat<R> = ReweightSeriesStat(
+        delegate.create(concurrency),
+        reweight,
+    )
 }
 
 // reweight maps (caller weight, input) to the weight the delegate sees.
@@ -76,7 +79,10 @@ internal class ReweightPairedStat<R : Result>(
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): PairedStat<R> =
         ReweightPairedStat(delegate.windowed(duration, slices, concurrency), reweight)
 
-    override fun create(concurrency: Concurrency?): PairedStat<R> = ReweightPairedStat(delegate.create(concurrency), reweight)
+    override fun create(concurrency: Concurrency?): PairedStat<R> = ReweightPairedStat(
+        delegate.create(concurrency),
+        reweight,
+    )
 }
 
 // reweight maps (caller weight, input) to the weight the delegate sees.
@@ -93,7 +99,10 @@ internal class ReweightVectorStat<R : Result>(
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): VectorStat<R> =
         ReweightVectorStat(delegate.windowed(duration, slices, concurrency), reweight)
 
-    override fun create(concurrency: Concurrency?): VectorStat<R> = ReweightVectorStat(delegate.create(concurrency), reweight)
+    override fun create(concurrency: Concurrency?): VectorStat<R> = ReweightVectorStat(
+        delegate.create(concurrency),
+        reweight,
+    )
 }
 
 // reweight maps (caller weight, input) to the weight the delegate sees.
@@ -110,5 +119,8 @@ internal class ReweightDiscreteStat<R : Result>(
     override fun windowedInside(duration: Duration, slices: Int, concurrency: Concurrency): DiscreteStat<R> =
         ReweightDiscreteStat(delegate.windowed(duration, slices, concurrency), reweight)
 
-    override fun create(concurrency: Concurrency?): DiscreteStat<R> = ReweightDiscreteStat(delegate.create(concurrency), reweight)
+    override fun create(concurrency: Concurrency?): DiscreteStat<R> = ReweightDiscreteStat(
+        delegate.create(concurrency),
+        reweight,
+    )
 }

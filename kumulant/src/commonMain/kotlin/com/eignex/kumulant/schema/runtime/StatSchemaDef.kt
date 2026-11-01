@@ -30,24 +30,29 @@ fun StatSchemaDef.materialize(concurrency: Concurrency = Concurrency.None): List
         .map { (name, plan) -> bind(name, plan.build(concurrency)) }
 
 /** Materialize series-modality entries only; throws if any entry isn't series. */
-fun StatSchemaDef.materializeSeries(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, out SeriesStat<*>, *>> =
-    materializeAs(concurrency, SeriesStatSpec<*>::compileSeries)
+fun StatSchemaDef.materializeSeries(
+    concurrency: Concurrency = Concurrency.None,
+): List<BoundStat<*, out SeriesStat<*>, *>> = materializeAs(concurrency, SeriesStatSpec<*>::compileSeries)
 
 /** Materialize paired-modality entries only; throws if any entry isn't paired. */
-fun StatSchemaDef.materializePaired(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, out PairedStat<*>, *>> =
-    materializeAs(concurrency, PairedStatSpec<*>::compilePaired)
+fun StatSchemaDef.materializePaired(
+    concurrency: Concurrency = Concurrency.None,
+): List<BoundStat<*, out PairedStat<*>, *>> = materializeAs(concurrency, PairedStatSpec<*>::compilePaired)
 
 /** Materialize vector-modality entries only; throws if any entry isn't vector. */
-fun StatSchemaDef.materializeVector(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, out VectorStat<*>, *>> =
-    materializeAs(concurrency, VectorStatSpec<*>::compileVector)
+fun StatSchemaDef.materializeVector(
+    concurrency: Concurrency = Concurrency.None,
+): List<BoundStat<*, out VectorStat<*>, *>> = materializeAs(concurrency, VectorStatSpec<*>::compileVector)
 
 /** Materialize discrete-modality entries only; throws if any entry isn't discrete. */
-fun StatSchemaDef.materializeDiscrete(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, out DiscreteStat<*>, *>> =
-    materializeAs(concurrency, DiscreteStatSpec<*>::compileDiscrete)
+fun StatSchemaDef.materializeDiscrete(
+    concurrency: Concurrency = Concurrency.None,
+): List<BoundStat<*, out DiscreteStat<*>, *>> = materializeAs(concurrency, DiscreteStatSpec<*>::compileDiscrete)
 
 /** Materialize regression-modality entries only; throws if any entry isn't regression. */
-fun StatSchemaDef.materializeRegression(concurrency: Concurrency = Concurrency.None): List<BoundStat<*, out RegressionStat<*>, *>> =
-    materializeAs(concurrency, RegressionStatSpec<*>::compileRegression)
+fun StatSchemaDef.materializeRegression(
+    concurrency: Concurrency = Concurrency.None,
+): List<BoundStat<*, out RegressionStat<*>, *>> = materializeAs(concurrency, RegressionStatSpec<*>::compileRegression)
 
 // Every entry compiles before any accumulator is built, so a bad entry fails the schema without side effects.
 private inline fun <reified C : StatSpec, S : Stat<*>> StatSchemaDef.materializeAs(

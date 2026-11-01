@@ -100,8 +100,10 @@ internal class ReweightRegressionStat<R : Result>(
         ReweightRegressionStat(delegate.create(concurrency), reweight)
 }
 
-internal class GatedRegressionStat<R : Result>(private val delegate: RegressionStat<R>, private val policy: GatePolicy) :
-    RegressionStat<R>,
+internal class GatedRegressionStat<R : Result>(
+    private val delegate: RegressionStat<R>,
+    private val policy: GatePolicy,
+) : RegressionStat<R>,
     Stat<R> by delegate {
     override val featureSize: Int = delegate.featureSize
     private val gate = policy.open(delegate.concurrency)
