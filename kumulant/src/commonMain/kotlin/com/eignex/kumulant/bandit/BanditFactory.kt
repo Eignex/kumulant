@@ -86,14 +86,12 @@ fun <R : Result> BanditPolicySpec<R>.materialize(): BanditPolicy<R> = when (this
 fun MultiArmedSpec<*>.materialize(
     random: Random = Random.Default,
     concurrency: Concurrency = Concurrency.None,
-): MultiArmedBandit<Result> {
-    return MultiArmedBandit(
-        nbrArms = nbrArms,
-        policy = policy.materialize() as BanditPolicy<Result>,
-        random = random,
-        concurrency = concurrency,
-    )
-}
+): MultiArmedBandit<Result> = MultiArmedBandit(
+    nbrArms = nbrArms,
+    policy = policy.materialize() as BanditPolicy<Result>,
+    random = random,
+    concurrency = concurrency,
+)
 
 /** Build a live [RouletteWheelBandit] from its spec. */
 fun RouletteWheelSpec.materialize(random: Random = Random.Default): RouletteWheelBandit =

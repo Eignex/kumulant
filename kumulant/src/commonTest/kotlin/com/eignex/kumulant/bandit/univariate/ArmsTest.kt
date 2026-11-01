@@ -1,15 +1,11 @@
 package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.DELTA
-import com.eignex.kumulant.stat.summary.BernoulliSumResult
-import com.eignex.kumulant.stat.summary.MomentsResult
-import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 class ArmsTest {
 

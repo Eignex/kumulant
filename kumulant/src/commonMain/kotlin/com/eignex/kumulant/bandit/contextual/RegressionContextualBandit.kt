@@ -4,12 +4,12 @@ import com.eignex.koblas.Vector
 import com.eignex.kumulant.bandit.ContextualBandit
 import com.eignex.kumulant.bandit.ContextualScorable
 import com.eignex.kumulant.bandit.PerArmBandit
-import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.bandit.requireArmIndex
 import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
+import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import kotlin.random.Random
 

@@ -5,7 +5,6 @@ import com.eignex.kumulant.bandit.univariate.BetaPosterior
 import com.eignex.kumulant.bandit.univariate.BoltzmannSpec
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
 import com.eignex.kumulant.bandit.univariate.Exp3Spec
-import com.eignex.kumulant.bandit.univariate.MossSpec
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.bandit.univariate.MultiArmedSpec
 import com.eignex.kumulant.bandit.univariate.NormalArm
@@ -18,7 +17,6 @@ import com.eignex.kumulant.core.Concurrency
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class BanditFactoryTest {
