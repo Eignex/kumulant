@@ -34,7 +34,10 @@ data class ArgMaxResult(
  */
 class ArgMaxStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<ArgMaxResult> {
 
-    private val extremum = ArgExtremum(concurrency, Double.NEGATIVE_INFINITY) { candidate, current -> candidate > current }
+    private val extremum = ArgExtremum(
+        concurrency,
+        Double.NEGATIVE_INFINITY,
+    ) { candidate, current -> candidate > current }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // Non-positive rather than merely inert: an extremum or event trace has no inverse, so a

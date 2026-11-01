@@ -1,8 +1,8 @@
 package com.eignex.kumulant.bandit
 
+import com.eignex.kumulant.bandit.univariate.EpsilonGreedy
 import com.eignex.kumulant.bandit.univariate.Exp3ArmResult
 import com.eignex.kumulant.bandit.univariate.Exp3Bandit
-import com.eignex.kumulant.bandit.univariate.EpsilonGreedy
 import com.eignex.kumulant.bandit.univariate.MultiArmedBandit
 import com.eignex.kumulant.bandit.univariate.RouletteWheelBandit
 import kotlin.random.Random
