@@ -424,7 +424,7 @@ sealed interface com.eignex.kumulant.bandit.univariate/UnivariateBanditSpec { //
 }
 
 sealed interface com.eignex.kumulant.schema.expr/BoolExpr { // com.eignex.kumulant.schema.expr/BoolExpr|null[0]
-    abstract fun eval(kotlin/Double, kotlin/Double = ..., kotlin/DoubleArray = ..., com.eignex.kumulant.core/Result? = ...): kotlin/Boolean // com.eignex.kumulant.schema.expr/BoolExpr.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
+    open fun eval(kotlin/Double, kotlin/Double = ..., kotlin/DoubleArray = ..., com.eignex.kumulant.core/Result? = ...): kotlin/Boolean // com.eignex.kumulant.schema.expr/BoolExpr.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
 
     final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/BoolExpr.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/BoolExpr> // com.eignex.kumulant.schema.expr/BoolExpr.Companion.serializer|serializer(){}[0]
@@ -433,7 +433,7 @@ sealed interface com.eignex.kumulant.schema.expr/BoolExpr { // com.eignex.kumula
 }
 
 sealed interface com.eignex.kumulant.schema.expr/ScalarExpr { // com.eignex.kumulant.schema.expr/ScalarExpr|null[0]
-    abstract fun eval(kotlin/Double, kotlin/Double = ..., kotlin/DoubleArray = ..., com.eignex.kumulant.core/Result? = ...): kotlin/Double // com.eignex.kumulant.schema.expr/ScalarExpr.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
+    open fun eval(kotlin/Double, kotlin/Double = ..., kotlin/DoubleArray = ..., com.eignex.kumulant.core/Result? = ...): kotlin/Double // com.eignex.kumulant.schema.expr/ScalarExpr.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
 
     final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/ScalarExpr.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/ScalarExpr> // com.eignex.kumulant.schema.expr/ScalarExpr.Companion.serializer|serializer(){}[0]
@@ -442,7 +442,7 @@ sealed interface com.eignex.kumulant.schema.expr/ScalarExpr { // com.eignex.kumu
 }
 
 sealed interface com.eignex.kumulant.schema.expr/VectorExpr { // com.eignex.kumulant.schema.expr/VectorExpr|null[0]
-    abstract fun eval(kotlin/Double = ..., kotlin/Double = ..., kotlin/DoubleArray = ..., com.eignex.kumulant.core/Result? = ...): kotlin/DoubleArray // com.eignex.kumulant.schema.expr/VectorExpr.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
+    open fun eval(kotlin/Double = ..., kotlin/Double = ..., kotlin/DoubleArray = ..., com.eignex.kumulant.core/Result? = ...): kotlin/DoubleArray // com.eignex.kumulant.schema.expr/VectorExpr.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
 
     final object Companion : kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/VectorExpr.Companion|null[0]
         final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/VectorExpr> // com.eignex.kumulant.schema.expr/VectorExpr.Companion.serializer|serializer(){}[0]
@@ -2013,7 +2013,6 @@ final class com.eignex.kumulant.schema.expr/Const : com.eignex.kumulant.schema.e
     final fun component1(): kotlin/Double // com.eignex.kumulant.schema.expr/Const.component1|component1(){}[0]
     final fun copy(kotlin/Double = ...): com.eignex.kumulant.schema.expr/Const // com.eignex.kumulant.schema.expr/Const.copy|copy(kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/Const.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/Const.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/Const.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.expr/Const.toString|toString(){}[0]
 
@@ -2046,7 +2045,6 @@ final class com.eignex.kumulant.schema.expr/IfExpr : com.eignex.kumulant.schema.
     final fun component3(): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/IfExpr.component3|component3(){}[0]
     final fun copy(com.eignex.kumulant.schema.expr/BoolExpr = ..., com.eignex.kumulant.schema.expr/ScalarExpr = ..., com.eignex.kumulant.schema.expr/ScalarExpr = ...): com.eignex.kumulant.schema.expr/IfExpr // com.eignex.kumulant.schema.expr/IfExpr.copy|copy(com.eignex.kumulant.schema.expr.BoolExpr;com.eignex.kumulant.schema.expr.ScalarExpr;com.eignex.kumulant.schema.expr.ScalarExpr){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/IfExpr.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/IfExpr.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/IfExpr.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.expr/IfExpr.toString|toString(){}[0]
 
@@ -2076,7 +2074,6 @@ final class com.eignex.kumulant.schema.expr/In : com.eignex.kumulant.schema.expr
     final fun component2(): kotlin.collections/List<kotlin/Double> // com.eignex.kumulant.schema.expr/In.component2|component2(){}[0]
     final fun copy(com.eignex.kumulant.schema.expr/ScalarExpr = ..., kotlin.collections/List<kotlin/Double> = ...): com.eignex.kumulant.schema.expr/In // com.eignex.kumulant.schema.expr/In.copy|copy(com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.collections.List<kotlin.Double>){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/In.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Boolean // com.eignex.kumulant.schema.expr/In.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/In.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.expr/In.toString|toString(){}[0]
 
@@ -2108,7 +2105,6 @@ final class com.eignex.kumulant.schema.expr/MinMax : com.eignex.kumulant.schema.
     final fun component2(): kotlin/Double // com.eignex.kumulant.schema.expr/MinMax.component2|component2(){}[0]
     final fun copy(kotlin/Double = ..., kotlin/Double = ...): com.eignex.kumulant.schema.expr/MinMax // com.eignex.kumulant.schema.expr/MinMax.copy|copy(kotlin.Double;kotlin.Double){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/MinMax.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/MinMax.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/MinMax.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.expr/MinMax.toString|toString(){}[0]
 
@@ -2168,7 +2164,6 @@ final class com.eignex.kumulant.schema.expr/Switch : com.eignex.kumulant.schema.
     final fun component3(): com.eignex.kumulant.schema.expr/ScalarExpr // com.eignex.kumulant.schema.expr/Switch.component3|component3(){}[0]
     final fun copy(com.eignex.kumulant.schema.expr/ScalarExpr = ..., kotlin.collections/List<com.eignex.kumulant.schema.expr/SwitchCase> = ..., com.eignex.kumulant.schema.expr/ScalarExpr = ...): com.eignex.kumulant.schema.expr/Switch // com.eignex.kumulant.schema.expr/Switch.copy|copy(com.eignex.kumulant.schema.expr.ScalarExpr;kotlin.collections.List<com.eignex.kumulant.schema.expr.SwitchCase>;com.eignex.kumulant.schema.expr.ScalarExpr){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/Switch.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/Switch.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/Switch.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.expr/Switch.toString|toString(){}[0]
 
@@ -2226,7 +2221,6 @@ final class com.eignex.kumulant.schema.expr/V : com.eignex.kumulant.schema.expr/
     final fun component1(): kotlin/Int // com.eignex.kumulant.schema.expr/V.component1|component1(){}[0]
     final fun copy(kotlin/Int = ...): com.eignex.kumulant.schema.expr/V // com.eignex.kumulant.schema.expr/V.copy|copy(kotlin.Int){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/V.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/V.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/V.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // com.eignex.kumulant.schema.expr/V.toString|toString(){}[0]
 
@@ -7610,7 +7604,6 @@ final object com.eignex.kumulant.math/Hashers { // com.eignex.kumulant.math/Hash
 
 final object com.eignex.kumulant.schema.expr/Center : com.eignex.kumulant.schema.expr/ScalarExpr, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/Center|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/Center.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/Center.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/Center.hashCode|hashCode(){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/Center> // com.eignex.kumulant.schema.expr/Center.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.expr/Center.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
@@ -7619,7 +7612,6 @@ final object com.eignex.kumulant.schema.expr/Center : com.eignex.kumulant.schema
 
 final object com.eignex.kumulant.schema.expr/High : com.eignex.kumulant.schema.expr/ScalarExpr, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/High|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/High.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/High.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/High.hashCode|hashCode(){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/High> // com.eignex.kumulant.schema.expr/High.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.expr/High.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
@@ -7628,7 +7620,6 @@ final object com.eignex.kumulant.schema.expr/High : com.eignex.kumulant.schema.e
 
 final object com.eignex.kumulant.schema.expr/Low : com.eignex.kumulant.schema.expr/ScalarExpr, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/Low|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/Low.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/Low.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/Low.hashCode|hashCode(){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/Low> // com.eignex.kumulant.schema.expr/Low.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.expr/Low.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
@@ -7637,7 +7628,6 @@ final object com.eignex.kumulant.schema.expr/Low : com.eignex.kumulant.schema.ex
 
 final object com.eignex.kumulant.schema.expr/Scale : com.eignex.kumulant.schema.expr/ScalarExpr, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/Scale|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/Scale.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/Scale.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/Scale.hashCode|hashCode(){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/Scale> // com.eignex.kumulant.schema.expr/Scale.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.expr/Scale.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
@@ -7646,7 +7636,6 @@ final object com.eignex.kumulant.schema.expr/Scale : com.eignex.kumulant.schema.
 
 final object com.eignex.kumulant.schema.expr/Standardize : com.eignex.kumulant.schema.expr/ScalarExpr, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/Standardize|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/Standardize.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/Standardize.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/Standardize.hashCode|hashCode(){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/Standardize> // com.eignex.kumulant.schema.expr/Standardize.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.expr/Standardize.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
@@ -7655,7 +7644,6 @@ final object com.eignex.kumulant.schema.expr/Standardize : com.eignex.kumulant.s
 
 final object com.eignex.kumulant.schema.expr/VIndex : com.eignex.kumulant.schema.expr/ScalarExpr, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/VIndex|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/VIndex.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/VIndex.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/VIndex.hashCode|hashCode(){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/VIndex> // com.eignex.kumulant.schema.expr/VIndex.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.expr/VIndex.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
@@ -7664,7 +7652,6 @@ final object com.eignex.kumulant.schema.expr/VIndex : com.eignex.kumulant.schema
 
 final object com.eignex.kumulant.schema.expr/X : com.eignex.kumulant.schema.expr/ScalarExpr, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/X|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/X.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/X.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/X.hashCode|hashCode(){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/X> // com.eignex.kumulant.schema.expr/X.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.expr/X.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
@@ -7673,7 +7660,6 @@ final object com.eignex.kumulant.schema.expr/X : com.eignex.kumulant.schema.expr
 
 final object com.eignex.kumulant.schema.expr/Y : com.eignex.kumulant.schema.expr/ScalarExpr, kotlinx.serialization.internal/SerializerFactory { // com.eignex.kumulant.schema.expr/Y|null[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.expr/Y.equals|equals(kotlin.Any?){}[0]
-    final fun eval(kotlin/Double, kotlin/Double, kotlin/DoubleArray, com.eignex.kumulant.core/Result?): kotlin/Double // com.eignex.kumulant.schema.expr/Y.eval|eval(kotlin.Double;kotlin.Double;kotlin.DoubleArray;com.eignex.kumulant.core.Result?){}[0]
     final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.expr/Y.hashCode|hashCode(){}[0]
     final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.expr/Y> // com.eignex.kumulant.schema.expr/Y.serializer|serializer(){}[0]
     final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // com.eignex.kumulant.schema.expr/Y.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]

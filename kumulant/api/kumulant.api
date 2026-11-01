@@ -1799,7 +1799,7 @@ public class com/eignex/kumulant/schema/StatKey {
 
 public abstract interface class com/eignex/kumulant/schema/expr/BoolExpr {
 	public static final field Companion Lcom/eignex/kumulant/schema/expr/BoolExpr$Companion;
-	public abstract fun eval (DD[DLcom/eignex/kumulant/core/Result;)Z
+	public fun eval (DD[DLcom/eignex/kumulant/core/Result;)Z
 	public static synthetic fun eval$default (Lcom/eignex/kumulant/schema/expr/BoolExpr;DD[DLcom/eignex/kumulant/core/Result;ILjava/lang/Object;)Z
 }
 
@@ -1808,6 +1808,7 @@ public final class com/eignex/kumulant/schema/expr/BoolExpr$Companion {
 }
 
 public final class com/eignex/kumulant/schema/expr/BoolExpr$DefaultImpls {
+	public static fun eval (Lcom/eignex/kumulant/schema/expr/BoolExpr;DD[DLcom/eignex/kumulant/core/Result;)Z
 	public static synthetic fun eval$default (Lcom/eignex/kumulant/schema/expr/BoolExpr;DD[DLcom/eignex/kumulant/core/Result;ILjava/lang/Object;)Z
 }
 
@@ -2063,7 +2064,7 @@ public final class com/eignex/kumulant/schema/expr/ReferenceBindingsKt {
 
 public abstract interface class com/eignex/kumulant/schema/expr/ScalarExpr {
 	public static final field Companion Lcom/eignex/kumulant/schema/expr/ScalarExpr$Companion;
-	public abstract fun eval (DD[DLcom/eignex/kumulant/core/Result;)D
+	public fun eval (DD[DLcom/eignex/kumulant/core/Result;)D
 	public static synthetic fun eval$default (Lcom/eignex/kumulant/schema/expr/ScalarExpr;DD[DLcom/eignex/kumulant/core/Result;ILjava/lang/Object;)D
 }
 
@@ -2072,6 +2073,7 @@ public final class com/eignex/kumulant/schema/expr/ScalarExpr$Companion {
 }
 
 public final class com/eignex/kumulant/schema/expr/ScalarExpr$DefaultImpls {
+	public static fun eval (Lcom/eignex/kumulant/schema/expr/ScalarExpr;DD[DLcom/eignex/kumulant/core/Result;)D
 	public static synthetic fun eval$default (Lcom/eignex/kumulant/schema/expr/ScalarExpr;DD[DLcom/eignex/kumulant/core/Result;ILjava/lang/Object;)D
 }
 
@@ -2210,7 +2212,7 @@ public final class com/eignex/kumulant/schema/expr/VIndex : com/eignex/kumulant/
 
 public abstract interface class com/eignex/kumulant/schema/expr/VectorExpr {
 	public static final field Companion Lcom/eignex/kumulant/schema/expr/VectorExpr$Companion;
-	public abstract fun eval (DD[DLcom/eignex/kumulant/core/Result;)[D
+	public fun eval (DD[DLcom/eignex/kumulant/core/Result;)[D
 	public static synthetic fun eval$default (Lcom/eignex/kumulant/schema/expr/VectorExpr;DD[DLcom/eignex/kumulant/core/Result;ILjava/lang/Object;)[D
 }
 
@@ -2219,6 +2221,7 @@ public final class com/eignex/kumulant/schema/expr/VectorExpr$Companion {
 }
 
 public final class com/eignex/kumulant/schema/expr/VectorExpr$DefaultImpls {
+	public static fun eval (Lcom/eignex/kumulant/schema/expr/VectorExpr;DD[DLcom/eignex/kumulant/core/Result;)[D
 	public static synthetic fun eval$default (Lcom/eignex/kumulant/schema/expr/VectorExpr;DD[DLcom/eignex/kumulant/core/Result;ILjava/lang/Object;)[D
 }
 
