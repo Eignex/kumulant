@@ -8,15 +8,15 @@ import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Matrix
+import com.eignex.koblas.Scratch
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
-import com.eignex.koblas.copy
+import com.eignex.koblas.copyFrom
+import com.eignex.koblas.dense.gemv
+import com.eignex.koblas.dense.syr
 import com.eignex.koblas.dot
-import com.eignex.koblas.gemvInto
 import com.eignex.koblas.koblas
-import com.eignex.koblas.syr
 import com.eignex.koblas.trmv
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
@@ -149,14 +149,14 @@ class BayesianRegressionStat(
 
     // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
     private val priorInfo = DoubleArray(featureSize).also {
-        priorPrecisionMatrix.gemvInto(1.0, DenseVector.wrap(initialWeights), 0.0, it)
+        koblas.gemv(1.0, priorPrecisionMatrix, initialWeights, 0.0, it)
     }
 
     private val lock = concurrency.serializedLock()
 
     // Each stat owns a workspace protected by serializedLock under concurrent use; replicas have independent
     // workspaces.
-    private val workspace = Workspace()
+    private val workspace = Scratch()
     private val weights = DenseVector.wrap(initialWeights.copyOf())
     private val precisionL = DenseMatrix.wrap(featureSize, featureSize, initialPrecisionL.values.copyOf())
 
@@ -191,7 +191,7 @@ class BayesianRegressionStat(
             // access.
             workspace.borrow(featureSize) { hx ->
                 val solved = DenseVector.wrap(hx)
-                copy(x, solved)
+                solved.copyFrom(x)
 
                 // H <- H + w_c * x xT, as a rank-1 update of its factor; a zero w_c leaves it alone.
                 if (wc > 0.0) precisionL.choleskyRankUpdate(hx, wc, workspace)
@@ -258,8 +258,8 @@ class BayesianRegressionStat(
             // it depends on the strict upper triangle being zero. Factorization clears it, and
             // rank-1 updates preserve it.
             val hNew = DenseMatrix.zero(n, n)
-            koblas.syrk(1.0, precisionL, transpose = false, 0.0, hNew, lower = true, workspace = workspace)
-            koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true, workspace = workspace)
+            koblas.syrk(1.0, precisionL, transpose = false, 0.0, hNew, lower = true, scratch = workspace)
+            koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true, scratch = workspace)
             for (j in 0 until n) {
                 for (i in j until n) hNew[i, j] = hNew[i, j] - priorPrecisionMatrix[i, j]
             }
@@ -268,12 +268,12 @@ class BayesianRegressionStat(
             // L * (LT * mu) so the precision never has to be formed for it.
             workspace.borrow(n) { b ->
                 for (i in 0 until n) b[i] = weights[i]
-                precisionL.trmv(b, lower = true, transpose = true, workspace = workspace)
-                precisionL.trmv(b, lower = true, workspace = workspace)
+                koblas.trmv(precisionL, b, lower = true, transpose = true, scratch = workspace)
+                koblas.trmv(precisionL, b, lower = true, scratch = workspace)
                 workspace.borrow(n) { other ->
                     for (i in 0 until n) other[i] = values.weights[i]
-                    values.precisionL.trmv(other, lower = true, transpose = true, workspace = workspace)
-                    values.precisionL.trmv(other, lower = true, workspace = workspace)
+                    koblas.trmv(values.precisionL, other, lower = true, transpose = true, scratch = workspace)
+                    koblas.trmv(values.precisionL, other, lower = true, scratch = workspace)
                     for (i in 0 until n) b[i] += other[i] - priorInfo[i]
                 }
 
@@ -372,14 +372,14 @@ class BayesianRegressionStat(
             val deviation = DoubleArray(n)
             val deviationVector = DenseVector.wrap(deviation)
             // A call-local workspace reuses inversion scratch across population snapshots.
-            val scratch = Workspace()
+            val scratch = Scratch()
             for (s in snapshots.indices) {
                 val wi = weights[s] / wTotal
                 snapshots[s].precisionL.choleskyInvertInto(cov, scratch)
                 val mu = snapshots[s].weights
                 sigmaFlat.axpy(wi, covFlat)
                 for (i in 0 until n) deviation[i] = mu[i] - muPop[i]
-                sigmaPop.syr(wi, deviationVector, workspace = scratch)
+                koblas.syr(wi, deviationVector, sigmaPop, scratch = scratch)
             }
             // Reflect the lower triangle after syr to publish a symmetric covariance.
             for (i in 0 until n) {

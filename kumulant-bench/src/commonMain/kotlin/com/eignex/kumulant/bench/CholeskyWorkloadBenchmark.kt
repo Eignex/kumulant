@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.Workspace
+import com.eignex.koblas.Scratch
 import com.eignex.kumulant.math.factorCholesky
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.Blackhole
@@ -20,7 +20,7 @@ open class CholeskyWorkloadBenchmark {
     private lateinit var fittingMatrices: List<DenseMatrix>
     private lateinit var right: DoubleArray
     private lateinit var out: DoubleArray
-    private val workspace = Workspace()
+    private val workspace = Scratch()
 
     @Setup
     fun setup() {

@@ -11,7 +11,7 @@ class CholeskyNativeLabProfileTest {
         val root = Files.createTempDirectory("native prepared ")
         try {
             val quality = root.resolve("quality.kexe").toFile().apply {
-                writeText("#!/bin/bash\necho 'Cholesky backend: KoblasEngine(scalar/)'\n")
+                writeText("#!/bin/bash\necho 'Cholesky backend: scalar'\n")
                 setExecutable(true)
             }
             val executable = root.resolve("bench.kexe").toFile().apply {

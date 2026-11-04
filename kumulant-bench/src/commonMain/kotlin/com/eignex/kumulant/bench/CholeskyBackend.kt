@@ -3,8 +3,8 @@ package com.eignex.kumulant.bench
 import com.eignex.koblas.koblas
 
 internal fun reportCholeskyBackend() {
-    println("Cholesky backend: $koblas")
-    val vendor = koblas.vendor
+    println("Cholesky backend: ${koblas.name}")
+    val vendor = koblas.providers.firstOrNull { it.vendor != null }
     if (vendor == null) {
         println("Cholesky vendor: none")
     } else {

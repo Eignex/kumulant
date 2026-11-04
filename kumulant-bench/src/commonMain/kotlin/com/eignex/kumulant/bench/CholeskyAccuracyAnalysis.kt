@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.Workspace
+import com.eignex.koblas.Scratch
 import com.eignex.koblas.koblas
 import com.eignex.kumulant.math.CholeskyFactor
 import com.eignex.kumulant.math.factorCholesky
@@ -39,7 +39,7 @@ internal fun analyzeCholeskyAccuracy() {
     analyzeExtensions()
     println("retry,scenario,attempts,diagonal_shift,succeeded")
     for (scenario in listOf("success", "retry", "exhaustion")) {
-        val result = retryFactor(retryMatrix(scenario), Workspace())
+        val result = retryFactor(retryMatrix(scenario), Scratch())
         check((result.factor != null) == (scenario != "exhaustion"))
         println("retry,$scenario,${result.attempts},${result.shift},${result.factor != null}")
     }
@@ -47,7 +47,7 @@ internal fun analyzeCholeskyAccuracy() {
 
 private fun analyzeUpdates() {
     println("update,size,scale,reconstruction,backward_error,relative_solution_error,absolute_logdet_error")
-    val workspace = Workspace()
+    val workspace = Scratch()
     for (size in listOf(8, 32, 128, 512)) {
         for (scale in listOf(1e-100, 1.0, 1e100)) {
             val matrix = CholeskyFixtures.precision(size)
@@ -70,7 +70,7 @@ private fun analyzeUpdates() {
 
 private fun analyzeExtensions() {
     println("extension,kernel,size,appended,scale,reconstruction,backward_error,relative_solution_error,absolute_logdet_error,forward_tolerance")
-    val workspace = Workspace()
+    val workspace = Scratch()
     for (kind in listOf("rbf", "matern")) {
         for (size in listOf(63, 64, 65, 127, 128, 129)) {
             for (added in listOf(1, 4, 16)) {
@@ -95,7 +95,7 @@ internal fun analyzeCholeskyStress(order: Int) {
     println("Cholesky stress: seed=${CholeskyFixtures.SEED}, order=$order, backend=$koblas")
     println("noiseVariance=${CholeskyFixtures.NOISE_VARIANCE}, jitter=${CholeskyFixtures.JITTER}, matrixBytes=${8L * order * order}")
     println("stress_factor,kernel,order,relative_reconstruction,solve_backward_error,into_backward_error,aliased_backward_error,workspace_factor_difference")
-    val workspace = Workspace()
+    val workspace = Scratch()
     for (kind in listOf("rbf", "matern")) {
         val errors = stressFactor(kind, order, workspace)
         check(errors.all { it < 1e-13 }) { "stress $kind:$order errors=${errors.toList()}" }
@@ -122,7 +122,7 @@ internal fun analyzeCholeskyStress(order: Int) {
 
 private const val STRESS_APPENDED = 16
 
-private fun stressFactor(kind: String, order: Int, workspace: Workspace): DoubleArray {
+private fun stressFactor(kind: String, order: Int, workspace: Scratch): DoubleArray {
     val matrix = CholeskyFixtures.matrix("$kind:$order")
     val factor = matrix.factorCholesky()
     val lower = factor.lowerFactor()
@@ -168,7 +168,7 @@ private fun compareFactors(matrix: DenseMatrix, factor: CholeskyFactor): DoubleA
     val right = CholeskyFixtures.right(matrix.rows, 4)
     val expected = reference.solve(right)
     val out = DenseMatrix.zero(right.rows, right.cols)
-    val solution = factor.solveInto(right, out, Workspace())
+    val solution = factor.solveInto(right, out, Scratch())
     var difference = 0.0
     var magnitude = 0.0
     for (i in solution.values.indices) {

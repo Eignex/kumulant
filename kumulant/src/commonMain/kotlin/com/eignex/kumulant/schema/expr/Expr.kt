@@ -594,7 +594,7 @@ private object ArrayInput : ExprInput<DoubleArray> {
     override fun get(v: DoubleArray, index: Int): Double = v[index]
 
     override fun fold(v: DoubleArray, op: VFoldOp): Double = when (op) {
-        VFoldOp.Sum -> koblas.vectorKernels.sum(v, 0, v.size)
+        VFoldOp.Sum -> koblas.sum(v, 0, v.size)
 
         VFoldOp.Product -> {
             var p = 1.0
@@ -604,7 +604,7 @@ private object ArrayInput : ExprInput<DoubleArray> {
 
         VFoldOp.Mean -> {
             require(v.isNotEmpty()) { "VFold.Mean on empty vector" }
-            koblas.vectorKernels.sum(v, 0, v.size) / v.size
+            koblas.sum(v, 0, v.size) / v.size
         }
 
         VFoldOp.Min -> {

@@ -1,7 +1,7 @@
 package com.eignex.kumulant.math
 
 import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.Workspace
+import com.eignex.koblas.Scratch
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.test.Test
@@ -19,7 +19,7 @@ class CholeskyFactorTest {
             val right = doubleArrayOf(8.0, 12.0)
             val out = if (inPlace) right else DoubleArray(2) { Double.NaN }
 
-            val result = factor.solveInto(right, out, Workspace())
+            val result = factor.solveInto(right, out, Scratch())
 
             assertSame(out, result)
             assertContentEquals(doubleArrayOf(1.0, 2.0), result)
@@ -33,7 +33,7 @@ class CholeskyFactorTest {
             val right = DenseMatrix.wrap(2, 2, doubleArrayOf(8.0, 12.0, -8.0, -12.0))
             val out = if (inPlace) DenseMatrix.wrap(2, 2, right.values) else DenseMatrix.zero(2, 2)
 
-            val result = factor.solveInto(right, out, Workspace())
+            val result = factor.solveInto(right, out, Scratch())
 
             assertSame(out, result)
             assertContentEquals(doubleArrayOf(1.0, 2.0, -1.0, -2.0), result.values)
@@ -43,7 +43,7 @@ class CholeskyFactorTest {
     @Test
     fun `reusable triangular destinations support both orientations`() {
         val factor = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, 2.0, 5.0)).factorCholesky()
-        val workspace = Workspace()
+        val workspace = Scratch()
         val out = DenseMatrix.zero(2, 1)
         for (transpose in listOf(false, true)) {
             val right = DenseMatrix.wrap(2, 1, if (transpose) doubleArrayOf(4.0, 4.0) else doubleArrayOf(2.0, 5.0))
@@ -73,7 +73,7 @@ class CholeskyFactorTest {
     fun `rank update factors the outer product added to the original matrix`() {
         val factor = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, 2.0, 5.0)).factorCholesky()
 
-        val updated = factor.rankUpdated(doubleArrayOf(1.0, -2.0), Workspace())
+        val updated = factor.rankUpdated(doubleArrayOf(1.0, -2.0), Scratch())
 
         val solution = updated.solve(doubleArrayOf(5.0, 18.0))
         assertEquals(1.0, solution[0], 1e-13)
@@ -100,7 +100,7 @@ class CholeskyFactorTest {
 
     @Test
     fun `extension recovers a known factor across block boundaries`() {
-        val workspaces = listOf(Workspace(), null)
+        val workspaces = listOf(Scratch(), null)
         for ((size, added) in listOf(
             0 to 0,
             0 to 4,
@@ -177,7 +177,7 @@ class CholeskyFactorTest {
         val cross = DenseMatrix.wrap(2, 1, doubleArrayOf(0.5, 0.25))
         val diagonal = DenseMatrix.diagonal(1, 2.0)
 
-        factor.extended(cross, diagonal, Workspace())
+        factor.extended(cross, diagonal, Scratch())
 
         assertContentEquals(doubleArrayOf(0.5, 0.25), cross.values)
         assertContentEquals(doubleArrayOf(2.0), diagonal.values)
@@ -197,7 +197,7 @@ class CholeskyFactorTest {
 
     @Test
     fun `workspace remains reusable after a rejected extension`() {
-        val workspace = Workspace()
+        val workspace = Scratch()
         val factor = DenseMatrix.diagonal(2, 1.0).factorCholesky()
         val cross = DenseMatrix.zero(2, 1)
         assertFailsWith<NotPositiveDefinite> { factor.extended(cross, DenseMatrix.diagonal(1, -1.0), workspace) }
@@ -257,7 +257,7 @@ class CholeskyFactorTest {
     @Test
     fun `workspace factorization preserves its input and returns an owned factor`() {
         val matrix = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, Double.NaN, 5.0))
-        val workspace = Workspace()
+        val workspace = Scratch()
 
         val factor = matrix.factorCholesky(workspace)
         matrix.factorCholesky(workspace)
@@ -341,9 +341,9 @@ class CholeskyFactorTest {
                 factor.solveLower(right, transpose = true).values,
             )
             val destinations = listOf(
-                factor.solveInto(right, out, Workspace()).values.copyOf(),
-                factor.solveLowerInto(right, out, workspace = Workspace()).values.copyOf(),
-                factor.solveLowerInto(right, out, true, Workspace()).values.copyOf(),
+                factor.solveInto(right, out, Scratch()).values.copyOf(),
+                factor.solveLowerInto(right, out, workspace = Scratch()).values.copyOf(),
+                factor.solveLowerInto(right, out, true, Scratch()).values.copyOf(),
             )
 
             var error = 0.0
@@ -364,10 +364,10 @@ class CholeskyFactorTest {
         assertTrue(factor.solve(doubleArrayOf()).isEmpty())
         assertEquals(3, factor.solve(DenseMatrix.zero(0, 3)).cols)
         val destination = DenseMatrix.zero(0, 3)
-        assertSame(destination, factor.solveInto(DenseMatrix.zero(0, 3), destination, Workspace()))
-        assertSame(destination, factor.solveLowerInto(destination, destination, workspace = Workspace()))
-        assertTrue(factor.solveInto(doubleArrayOf(), doubleArrayOf(), Workspace()).isEmpty())
-        assertEquals(0, factor.rankUpdated(doubleArrayOf(), Workspace()).size)
+        assertSame(destination, factor.solveInto(DenseMatrix.zero(0, 3), destination, Scratch()))
+        assertSame(destination, factor.solveLowerInto(destination, destination, workspace = Scratch()))
+        assertTrue(factor.solveInto(doubleArrayOf(), doubleArrayOf(), Scratch()).isEmpty())
+        assertEquals(0, factor.rankUpdated(doubleArrayOf(), Scratch()).size)
         assertEquals(0, DenseMatrix.diagonal(2, 4.0).factorCholesky().solve(DenseMatrix.zero(2, 0)).cols)
     }
 

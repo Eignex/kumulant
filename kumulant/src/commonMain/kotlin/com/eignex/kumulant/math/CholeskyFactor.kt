@@ -1,7 +1,7 @@
 package com.eignex.kumulant.math
 
 import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.Workspace
+import com.eignex.koblas.Scratch
 import com.eignex.koblas.borrow
 import com.eignex.koblas.koblas
 import com.eignex.koblas.trsm
@@ -39,7 +39,7 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
      * Both vectors must have [size] entries. Other inputs and the factor are unchanged.
      * [workspace] belongs to this invocation; concurrent calls must use separate workspaces.
      */
-    fun solveInto(right: DoubleArray, out: DoubleArray, workspace: Workspace? = null): DoubleArray =
+    fun solveInto(right: DoubleArray, out: DoubleArray, workspace: Scratch? = null): DoubleArray =
         lower.choleskySolveInto(right, out, workspace)
 
     /** Solve `A X = right`, with one right-hand side per column. */
@@ -47,7 +47,7 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
         // Both substitutions lend scratch of the same shapes, so one call-local workspace serves them.
         val scratch = callScratch(size)
         val result = solveLowerCopy(right, transpose = false, scratch)
-        lower.trsm(result, lower = true, transpose = true, workspace = scratch)
+        koblas.trsm(lower, result, lower = true, transpose = true, scratch = scratch)
         return result
     }
 
@@ -57,7 +57,7 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
      * Both matrices must have [size] rows and the same column count. The factor is unchanged.
      * [workspace] belongs to this invocation; concurrent calls must use separate workspaces.
      */
-    fun solveInto(right: DenseMatrix, out: DenseMatrix, workspace: Workspace? = null): DenseMatrix {
+    fun solveInto(right: DenseMatrix, out: DenseMatrix, workspace: Scratch? = null): DenseMatrix {
         solveLowerInto(right, out, workspace = workspace)
         solveTriangular(out, transpose = true, workspace)
         return out
@@ -68,10 +68,10 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
         solveLowerCopy(right, transpose, callScratch(size))
 
     // The substitution's windows lend scratch of repeating shapes, which a workspace pools across them.
-    private fun solveLowerCopy(right: DenseMatrix, transpose: Boolean, workspace: Workspace?): DenseMatrix {
+    private fun solveLowerCopy(right: DenseMatrix, transpose: Boolean, workspace: Scratch?): DenseMatrix {
         require(right.rows == size) { "right-hand side has ${right.rows} rows, expected $size" }
         val result = DenseMatrix.wrap(right.rows, right.cols, right.values.copyOf())
-        lower.trsm(result, lower = true, transpose = transpose, workspace = workspace)
+        koblas.trsm(lower, result, lower = true, transpose = transpose, scratch = workspace)
         return result
     }
 
@@ -85,7 +85,7 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
         right: DenseMatrix,
         out: DenseMatrix,
         transpose: Boolean = false,
-        workspace: Workspace? = null,
+        workspace: Scratch? = null,
     ): DenseMatrix {
         require(right.rows == size) { "right-hand side has ${right.rows} rows, expected $size" }
         require(out.rows == size && out.cols == right.cols) { "solve destination must be ${size}x${right.cols}" }
@@ -94,11 +94,11 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
         return out
     }
 
-    private fun solveTriangular(out: DenseMatrix, transpose: Boolean, workspace: Workspace?) {
+    private fun solveTriangular(out: DenseMatrix, transpose: Boolean, workspace: Scratch?) {
         if (out.cols == 1) {
-            lower.trsv(out.values, lower = true, transpose = transpose, workspace = workspace)
+            koblas.trsv(lower, out.values, lower = true, transpose = transpose, scratch = workspace)
         } else {
-            lower.trsm(out, lower = true, transpose = transpose, workspace = workspace)
+            koblas.trsm(lower, out, lower = true, transpose = transpose, scratch = workspace)
         }
     }
 
@@ -111,7 +111,7 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
      * @throws IllegalArgumentException If the update has the wrong size or nonfinite entries.
      * @throws NotPositiveDefinite If the updated factor cannot be represented with finite entries.
      */
-    fun rankUpdated(update: DoubleArray, workspace: Workspace? = null): CholeskyFactor {
+    fun rankUpdated(update: DoubleArray, workspace: Scratch? = null): CholeskyFactor {
         require(update.size == size) { "update vector has ${update.size} entries, expected $size" }
         require(update.all { it.isFinite() }) { "rank update requires a finite vector" }
         val result = lowerFactor()
@@ -131,7 +131,7 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
      * @throws NotPositiveDefinite If the Schur complement is not positive definite or its factor is
      * nonfinite. The failing pivot index refers to the enlarged matrix.
      */
-    fun extended(cross: DenseMatrix, diagonal: DenseMatrix, workspace: Workspace? = null): CholeskyFactor {
+    fun extended(cross: DenseMatrix, diagonal: DenseMatrix, workspace: Scratch? = null): CholeskyFactor {
         require(cross.rows == size) { "cross block has ${cross.rows} rows, expected $size" }
         require(
             diagonal.rows == cross.cols && diagonal.cols == cross.cols,
@@ -148,7 +148,7 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
             scratch.borrow(added * added) { schurValues ->
                 diagonal.values.copyInto(schurValues)
                 val schur = DenseMatrix.wrap(added, added, schurValues)
-                koblas.syrk(-1.0, projected, transpose = true, 1.0, schur, lower = true, workspace = scratch)
+                koblas.syrk(-1.0, projected, transpose = true, 1.0, schur, lower = true, scratch = scratch)
                 try {
                     schur.choleskyInto(schur, workspace = scratch)
                     schur.requireFiniteCholeskyFactor()
@@ -189,9 +189,9 @@ fun DenseMatrix.factorCholesky(): CholeskyFactor = factorCholeskyWithWorkspace(n
  * The input and failure contracts are those of [factorCholesky]. The result owns its storage;
  * [workspace] only lends scratch and belongs to one invocation at a time.
  */
-fun DenseMatrix.factorCholesky(workspace: Workspace): CholeskyFactor = factorCholeskyWithWorkspace(workspace)
+fun DenseMatrix.factorCholesky(workspace: Scratch): CholeskyFactor = factorCholeskyWithWorkspace(workspace)
 
-private fun DenseMatrix.factorCholeskyWithWorkspace(workspace: Workspace?): CholeskyFactor {
+private fun DenseMatrix.factorCholeskyWithWorkspace(workspace: Scratch?): CholeskyFactor {
     requireCholeskyInput()
     val factor = choleskyInto(DenseMatrix.zero(rows, cols), workspace = workspace)
     factor.requireFiniteCholeskyFactor()

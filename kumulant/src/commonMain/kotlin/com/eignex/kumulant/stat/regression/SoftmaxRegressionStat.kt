@@ -3,11 +3,11 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
+import com.eignex.koblas.Scratch
 import com.eignex.koblas.Vector
-import com.eignex.koblas.Workspace
 import com.eignex.koblas.borrow
 import com.eignex.koblas.forEachStored
-import com.eignex.koblas.gemvInto
+import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.RegressionStat
@@ -80,9 +80,9 @@ data class SoftmaxRegressionResult(
             "destination size ${destination.size} must match numClasses $numClasses"
         }
         if (x is DenseVector) {
-            // gemvInto rather than the raw-array gemv: a DenseVector may be strided, and only the typed
-            // entry point carries its origin and step through to the library.
-            weights.gemvInto(1.0, x, 0.0, destination)
+            // A DenseVector may be strided, so its origin and step go to the windowed gemv rather than a
+            // whole-array call.
+            koblas.gemv(1.0, weights, x.values, x.offset, x.stride, 0.0, destination, 0, 1)
         } else {
             // A sparse or custom x has no increment to hand a library, and walking what it stores beats
             // materialising a dense copy of it per call.
@@ -172,7 +172,7 @@ class SoftmaxRegressionStat(
     private val lock = concurrency.welfordLock()
 
     // Scratch is shared only under serial use or a real update lock; racing writers allocate per call.
-    private val workspace = if (concurrency == Concurrency.None || lock !is NoopMutex) Workspace() else null
+    private val workspace = if (concurrency == Concurrency.None || lock !is NoopMutex) Scratch() else null
 
     // Flat row-major K x p layout: weightsCell[k * p + i].
     private val weightsCell: StreamDoubleArray = mode.newDoubleArray(numClasses * featureSize)
