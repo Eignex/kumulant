@@ -3,9 +3,9 @@
 package com.eignex.kumulant.math
 
 import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.Workspace
+import com.eignex.koblas.KoblasEngine
+import com.eignex.koblas.Scratch
 import com.eignex.koblas.borrow
-import com.eignex.koblas.dense.DenseVectorKernels
 import com.eignex.koblas.koblas
 import com.eignex.koblas.trsv
 import kotlin.math.abs
@@ -18,7 +18,7 @@ import kotlin.math.sqrt
 private const val CHOLESKY_BLOCK = 64
 
 // Pooling scratch pays off only above one block.
-internal fun callScratch(order: Int): Workspace? = if (order > CHOLESKY_BLOCK) Workspace() else null
+internal fun callScratch(order: Int): Scratch? = if (order > CHOLESKY_BLOCK) Scratch() else null
 
 internal sealed interface CholeskyPolicy {
     data object Strict : CholeskyPolicy
@@ -56,14 +56,14 @@ class NotPositiveDefinite private constructor(
     )
 }
 
-internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, workspace: Workspace? = null) {
+internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, workspace: Scratch? = null) {
     require(rows == cols) { "cholesky factor must be square" }
     require(v.size == rows) { "update vector has ${v.size} entries, expected $rows" }
     require(sigma >= 0.0 && sigma.isFinite()) { "sigma must be non-negative and finite, got $sigma" }
     val n = rows
     if (n == 0 || sigma == 0.0) return
     val ld = values
-    val kernels = koblas.vectorKernels
+    val kernels = koblas
     val scale = sqrt(sigma)
     // Borrow a copy because the rotation consumes its vector and callers retain the input.
     workspace.borrow(n) { x ->
@@ -86,29 +86,25 @@ internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, works
     }
 }
 
-internal fun DenseMatrix.choleskySolveInto(
-    b: DoubleArray,
-    out: DoubleArray,
-    workspace: Workspace? = null,
-): DoubleArray {
+internal fun DenseMatrix.choleskySolveInto(b: DoubleArray, out: DoubleArray, workspace: Scratch? = null): DoubleArray {
     require(rows == cols) { "cholesky factor must be square" }
     require(b.size == rows && out.size == rows) { "solve requires vectors of size $rows" }
     if (out !== b) b.copyInto(out)
-    trsv(out, lower = true, workspace = workspace)
-    trsv(out, lower = true, transpose = true, workspace = workspace)
+    koblas.trsv(this, out, lower = true, scratch = workspace)
+    koblas.trsv(this, out, lower = true, transpose = true, scratch = workspace)
     return out
 }
 
-internal fun DenseMatrix.choleskyInverse(workspace: Workspace? = null): DenseMatrix =
+internal fun DenseMatrix.choleskyInverse(workspace: Scratch? = null): DenseMatrix =
     choleskyInvertInto(DenseMatrix.zero(rows, cols), workspace)
 
-internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Workspace? = null): DenseMatrix {
+internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Scratch? = null): DenseMatrix {
     require(rows == cols) { "cholesky factor must be square" }
     require(out.rows == rows && out.cols == rows) { "inverse destination must be ${rows}x$rows" }
     require(out.values !== values) { "inverse destination must not share the factor's storage" }
     val n = rows
     val ld = values
-    val kernels = koblas.vectorKernels
+    val kernels = koblas
     val invd = out.values
     workspace.borrow(n) { y ->
         for (j in 0 until n) {
@@ -136,16 +132,16 @@ internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Workspa
 internal fun DenseMatrix.cholesky(policy: CholeskyPolicy = CholeskyPolicy.Strict): DenseMatrix =
     choleskyInto(DenseMatrix.zero(rows, cols), policy)
 
-// Workspace ownership spans the call; callers must serialize access to a shared workspace.
+// Scratch ownership spans the call; callers must serialize access to a shared scratch.
 internal fun DenseMatrix.choleskyInto(
     out: DenseMatrix,
     policy: CholeskyPolicy = CholeskyPolicy.Strict,
-    workspace: Workspace? = null,
+    workspace: Scratch? = null,
 ): DenseMatrix {
     require(rows == cols) { "cholesky requires a square matrix" }
     require(out.rows == rows && out.cols == rows) { "cholesky destination must be ${rows}x$rows" }
     val n = rows
-    val kernels = koblas.vectorKernels
+    val kernels = koblas
     val ld = out.values
     // Clear the upper triangle so reused destinations retain the lower-triangular factor invariant.
     for (j in 0 until n) {
@@ -158,7 +154,7 @@ internal fun DenseMatrix.choleskyInto(
     }
     val block = min(CHOLESKY_BLOCK, n / 4)
     // Reuse scratch across blocked trailing updates.
-    val scratch = workspace ?: Workspace()
+    val scratch = workspace ?: Scratch()
     var start = 0
     while (start < n) {
         val width = min(block, n - start)
@@ -183,7 +179,7 @@ private fun columnsAreFinite(values: DoubleArray, n: Int, start: Int, width: Int
     return true
 }
 
-private fun subtractTrailingColumns(kernels: DenseVectorKernels, values: DoubleArray, n: Int, start: Int, width: Int) {
+private fun subtractTrailingColumns(kernels: KoblasEngine, values: DoubleArray, n: Int, start: Int, width: Int) {
     for (p in start until start + width) {
         for (j in start + width until n) {
             val value = values[j + p * n]
@@ -193,7 +189,7 @@ private fun subtractTrailingColumns(kernels: DenseVectorKernels, values: DoubleA
 }
 
 private fun factorBlockColumn(
-    kernels: DenseVectorKernels,
+    kernels: KoblasEngine,
     ld: DoubleArray,
     n: Int,
     start: Int,

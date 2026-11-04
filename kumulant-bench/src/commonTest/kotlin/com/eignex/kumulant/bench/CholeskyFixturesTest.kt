@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.Workspace
+import com.eignex.koblas.Scratch
 import com.eignex.kumulant.math.NotPositiveDefinite
 import com.eignex.kumulant.math.factorCholesky
 import kotlin.math.abs
@@ -35,7 +35,7 @@ class CholeskyFixturesTest {
 
     @Test
     fun `reusable factorization reconstructs benchmark matrices across block boundaries`() {
-        val workspace = Workspace()
+        val workspace = Scratch()
         for (size in listOf(63, 64, 65, 127, 128, 129)) {
             for (kind in listOf("precision", "rbf", "matern")) {
                 val matrix = CholeskyFixtures.matrix("$kind:$size")
@@ -59,7 +59,7 @@ class CholeskyFixturesTest {
 
     @Test
     fun `rank updates agree with full factorization across scales`() {
-        val workspace = Workspace()
+        val workspace = Scratch()
         for (size in listOf(8, 32, 65)) {
             for (scale in listOf(1e-100, 1.0, 1e100)) {
                 val matrix = CholeskyFixtures.precision(size)
@@ -88,7 +88,7 @@ class CholeskyFixturesTest {
 
     @Test
     fun `covariance extensions agree across scales and block boundaries`() {
-        val workspace = Workspace()
+        val workspace = Scratch()
         for (kind in listOf("rbf", "matern")) {
             for (size in listOf(63, 65)) {
                 for (scale in listOf(1e-100, 1.0, 1e100)) {

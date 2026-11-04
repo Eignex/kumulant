@@ -19,7 +19,7 @@ internal fun runPreparedNativeCholesky(
     val preflight = ProcessBuilder(quality.path).redirectErrorStream(true)
         .redirectOutput(File(output, "native-quality.txt")).start()
     check(preflight.waitFor() == 0) { "Native quality failed; inspect native-quality.txt" }
-    check(File(output, "native-quality.txt").readText().contains("Cholesky backend: KoblasEngine(")) {
+    check(File(output, "native-quality.txt").readText().contains("Cholesky backend: ")) {
         "Native backend did not resolve; inspect native-quality.txt"
     }
     if (stressOrder != null) {

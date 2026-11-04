@@ -1,6 +1,6 @@
 package com.eignex.kumulant.bench
 
-import com.eignex.koblas.Workspace
+import com.eignex.koblas.Scratch
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -9,7 +9,7 @@ import kotlin.test.assertNull
 class CholeskyRetryBenchmarkTest {
     @Test
     fun `positive definite fixture succeeds without a diagonal shift`() {
-        val result = retryFactor(retryMatrix("success"), Workspace())
+        val result = retryFactor(retryMatrix("success"), Scratch())
 
         assertNotNull(result.factor)
         assertEquals(1, result.attempts)
@@ -18,7 +18,7 @@ class CholeskyRetryBenchmarkTest {
 
     @Test
     fun `retry fixture records the first successful diagonal shift`() {
-        val result = retryFactor(retryMatrix("retry"), Workspace())
+        val result = retryFactor(retryMatrix("retry"), Scratch())
 
         assertNotNull(result.factor)
         assertEquals(4, result.attempts)
@@ -27,7 +27,7 @@ class CholeskyRetryBenchmarkTest {
 
     @Test
     fun `exhaustion fixture records the last failed diagonal shift`() {
-        val result = retryFactor(retryMatrix("exhaustion"), Workspace())
+        val result = retryFactor(retryMatrix("exhaustion"), Scratch())
 
         assertNull(result.factor)
         assertEquals(4, result.attempts)

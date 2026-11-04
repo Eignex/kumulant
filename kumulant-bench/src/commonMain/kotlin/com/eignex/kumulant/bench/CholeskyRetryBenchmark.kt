@@ -1,7 +1,7 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.koblas.DenseMatrix
-import com.eignex.koblas.Workspace
+import com.eignex.koblas.Scratch
 import com.eignex.kumulant.math.CholeskyFactor
 import com.eignex.kumulant.math.NotPositiveDefinite
 import com.eignex.kumulant.math.factorCholesky
@@ -18,7 +18,7 @@ open class CholeskyRetryBenchmark {
     lateinit var scenario: String
 
     private lateinit var matrix: DenseMatrix
-    private val workspace = Workspace()
+    private val workspace = Scratch()
 
     @Setup
     fun setup() {
@@ -48,7 +48,7 @@ internal fun retryMatrix(scenario: String): DenseMatrix = DenseMatrix.diagonal(6
     }
 }
 
-internal fun retryFactor(matrix: DenseMatrix, workspace: Workspace): CholeskyRetryResult {
+internal fun retryFactor(matrix: DenseMatrix, workspace: Scratch): CholeskyRetryResult {
     for ((attempt, shift) in RETRY_SHIFTS.withIndex()) {
         val shifted = DenseMatrix.wrap(matrix.rows, matrix.cols, matrix.values.copyOf())
         for (i in 0 until matrix.rows) shifted[i, i] += shift
