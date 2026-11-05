@@ -7,7 +7,6 @@ import com.eignex.koblas.KoblasEngine
 import com.eignex.koblas.Scratch
 import com.eignex.koblas.borrow
 import com.eignex.koblas.koblas
-import com.eignex.koblas.trsv
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.min
@@ -90,8 +89,8 @@ internal fun DenseMatrix.choleskySolveInto(b: DoubleArray, out: DoubleArray, wor
     require(rows == cols) { "cholesky factor must be square" }
     require(b.size == rows && out.size == rows) { "solve requires vectors of size $rows" }
     if (out !== b) b.copyInto(out)
-    koblas.trsv(this, out, lower = true, scratch = workspace)
-    koblas.trsv(this, out, lower = true, transpose = true, scratch = workspace)
+    koblas.trsv(this, out, 0, 1, lower = true, scratch = workspace)
+    koblas.trsv(this, out, 0, 1, lower = true, transpose = true, scratch = workspace)
     return out
 }
 

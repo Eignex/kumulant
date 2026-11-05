@@ -4,8 +4,6 @@ import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.Scratch
 import com.eignex.koblas.borrow
 import com.eignex.koblas.koblas
-import com.eignex.koblas.trsm
-import com.eignex.koblas.trsv
 import kotlin.math.ln
 
 /**
@@ -96,7 +94,7 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
 
     private fun solveTriangular(out: DenseMatrix, transpose: Boolean, workspace: Scratch?) {
         if (out.cols == 1) {
-            koblas.trsv(lower, out.values, lower = true, transpose = transpose, scratch = workspace)
+            koblas.trsv(lower, out.values, 0, 1, lower = true, transpose = transpose, scratch = workspace)
         } else {
             koblas.trsm(lower, out, lower = true, transpose = transpose, scratch = workspace)
         }
