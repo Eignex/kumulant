@@ -1,9 +1,11 @@
 package com.eignex.kumulant.schema.expr
 
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.Vector
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.koblas
+import com.eignex.koblas.norm2
 import com.eignex.koblas.sum
 import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasMinMax
@@ -18,6 +20,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 import kotlin.math.exp
+import kotlin.math.hypot
 import kotlin.math.ln
 import kotlin.math.max
 import kotlin.math.min
@@ -621,11 +624,7 @@ private object ArrayInput : ExprInput<DoubleArray> {
             m
         }
 
-        VFoldOp.Norm2 -> {
-            var s = 0.0
-            for (e in v) s += e * e
-            sqrt(s)
-        }
+        VFoldOp.Norm2 -> koblas.nrm2(v, 0, v.size)
     }
 
     override fun dot(v: DoubleArray, weights: List<Double>): Double {
@@ -650,11 +649,10 @@ private object VectorInput : ExprInput<Vector> {
 
                 VFoldOp.Max -> return sparseMax(v)
 
-                VFoldOp.Norm2 -> return sparseNorm2(v)
-
                 VFoldOp.Sum,
                 VFoldOp.Mean,
                 VFoldOp.Product,
+                VFoldOp.Norm2,
                 -> Unit
             }
         }
@@ -682,7 +680,10 @@ private object VectorInput : ExprInput<Vector> {
                 maximum
             }
 
-            VFoldOp.Norm2 -> sqrt((0 until v.size).sumOf { v[it] * v[it] })
+            VFoldOp.Norm2 -> when (v) {
+                is DenseVector, is SparseVector -> v.norm2()
+                else -> borrowedNorm2(v)
+            }
         }
     }
 
@@ -702,10 +703,14 @@ private object VectorInput : ExprInput<Vector> {
     }
 }
 
-private fun sparseNorm2(v: SparseVector): Double {
-    var sum = 0.0
-    v.forEachStored { _, value -> sum += value * value }
-    return sqrt(sum)
+private fun borrowedNorm2(v: Vector): Double {
+    var norm = 0.0
+    for (i in 0 until v.size) {
+        val value = v[i]
+        if (value.isNaN()) return Double.NaN
+        norm = hypot(norm, value)
+    }
+    return norm
 }
 
 private fun sparseDot(v: SparseVector, weights: List<Double>): Double {
