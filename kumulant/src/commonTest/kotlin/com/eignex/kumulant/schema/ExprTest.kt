@@ -554,7 +554,7 @@ class ExprTest {
 
     // Dense Sum/Mean reductions reassociate across SIMD lanes, so they need rounding slack.
     // Other folds must agree exactly across storage types.
-    private val reassociating = setOf(VFoldOp.Sum, VFoldOp.Mean)
+    private val reassociating = setOf(VFoldOp.Sum, VFoldOp.Mean, VFoldOp.Norm2)
 
     private val reassociationTolerance = 1e-12
 
@@ -601,6 +601,43 @@ class ExprTest {
         live.update(doubleArrayOf(0.0, 0.0))
         val r = live.read() as WeightedMeanResult
         assertEquals(2.5, r.mean, DELTA)
+    }
+
+    @Test fun `vector norm preserves finite magnitudes across storage representations`() {
+        val expression = VFold(VFoldOp.Norm2)
+        for (scale in listOf(0.0, 1e-200, 1.0, 1e200)) {
+            val values = doubleArrayOf(3.0 * scale, 0.0, -4.0 * scale)
+            val inputs = listOf<Vector>(
+                DenseVector.of(values),
+                sparse(values),
+                StridedVector(doubleArrayOf(values[2], 9.0, 0.0, 9.0, values[0]), 4, 3, -2),
+                NoMaterializeVector(values),
+            )
+            val expected = 5.0 * scale
+
+            assertEquals(expected, expression.eval(0.0, 0.0, values), expected * reassociationTolerance)
+            for (input in inputs) {
+                assertEquals(expected, expression.eval(v = input), expected * reassociationTolerance)
+            }
+        }
+    }
+
+    @Test fun `vector norm visits only stored sparse entries`() {
+        val input = SparseVector.of(Int.MAX_VALUE, intArrayOf(1, Int.MAX_VALUE - 1), doubleArrayOf(3.0, 4.0))
+
+        assertEquals(5.0, VFold(VFoldOp.Norm2).eval(v = input), DELTA)
+    }
+
+    @Test fun `vector norm handles non finite entries across storage representations`() {
+        val expression = VFold(VFoldOp.Norm2)
+        for (value in listOf(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY)) {
+            val values = doubleArrayOf(0.0, value)
+            val inputs = listOf<Vector>(DenseVector.of(values), sparse(values), NoMaterializeVector(values))
+            val expected = if (value.isNaN()) Double.NaN else Double.POSITIVE_INFINITY
+
+            assertEquals(expected, expression.eval(0.0, 0.0, values))
+            for (input in inputs) assertEquals(expected, expression.eval(v = input))
+        }
     }
 
     @Test fun `schema paired vector fold borrows custom input`() {
