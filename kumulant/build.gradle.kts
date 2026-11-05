@@ -35,8 +35,8 @@ kotlin {
         appleMain.get().dependsOn(posixMain)
         linuxMain.get().dependsOn(posixMain)
         commonMain.dependencies {
-            api("com.eignex:koblas:0.1.1-20261104.113808-308") {
-                version { strictly("0.1.1-20261104.113808-308") }
+            api("com.eignex:koblas:0.1.1-20261105.140327-312") {
+                version { strictly("0.1.1-20261105.140327-312") }
             }
             api("com.eignex:skema:0.4.0")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
@@ -71,10 +71,10 @@ dependencies {
     constraints {
         for ((library, platforms) in mapOf(
             "koblas" to mapOf(
-                "jvm" to "0.1.1-20261104.113808-311",
-                "linuxx64" to "0.1.1-20261104.113808-306",
-                "linuxarm64" to "0.1.1-20261104.113808-308",
-                "macosarm64" to "0.1.1-20261104.113808-330",
+                "jvm" to "0.1.1-20261105.140327-315",
+                "linuxx64" to "0.1.1-20261105.140327-310",
+                "linuxarm64" to "0.1.1-20261105.140327-312",
+                "macosarm64" to "0.1.1-20261105.140327-334",
             ),
         )) {
             for ((module, pinned) in platforms) {
