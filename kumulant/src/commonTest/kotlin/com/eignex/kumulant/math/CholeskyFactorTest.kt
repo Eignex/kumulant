@@ -186,7 +186,7 @@ class CholeskyFactorTest {
     @Test
     fun `extension reports the failing pivot in the enlarged matrix`() {
         val factor = DenseMatrix.diagonal(2, 1.0).factorCholesky()
-        val diagonal = DenseMatrix.diagonal(doubleArrayOf(1.0, -1.0))
+        val diagonal = DenseMatrix.wrap(2, 2, doubleArrayOf(1.0, 0.0, 0.0, -1.0))
 
         val error = assertFailsWith<NotPositiveDefinite> { factor.extended(DenseMatrix.zero(2, 2), diagonal) }
 

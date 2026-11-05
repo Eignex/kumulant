@@ -8,7 +8,6 @@ import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.koblas
 import com.eignex.koblas.norm2
-import com.eignex.koblas.trsv
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.serialization.LinearPosteriorSerializer
 import com.eignex.kumulant.stat.regression.RegressionPosterior
@@ -107,7 +106,7 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
 private fun PrecisionRegressionResult.predictiveDeviation(x: Vector): Double {
     val v = DoubleArray(featureSize)
     DenseVector.wrap(v).copyFrom(x)
-    koblas.trsv(precisionL, v, lower = true)
+    koblas.trsv(precisionL, v, 0, 1, lower = true)
     return DenseVector.wrap(v).norm2()
 }
 
@@ -127,7 +126,7 @@ data object MultivariateGaussian : LinearPosterior<PrecisionRegressionResult> {
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
         val u = DoubleArray(n) { rng.nextNormal(0.0, sd) }
-        koblas.trsv(snapshot.precisionL, u, lower = true, transpose = true)
+        koblas.trsv(snapshot.precisionL, u, 0, 1, lower = true, transpose = true)
         return DenseVector.wrap(u).also { it.axpy(1.0, snapshot.weights) }
     }
 

@@ -13,11 +13,8 @@ import com.eignex.koblas.Vector
 import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
 import com.eignex.koblas.copyFrom
-import com.eignex.koblas.dense.gemv
-import com.eignex.koblas.dense.syr
 import com.eignex.koblas.dot
 import com.eignex.koblas.koblas
-import com.eignex.koblas.trmv
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.hasNonFiniteStored
@@ -149,7 +146,7 @@ class BayesianRegressionStat(
 
     // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
     private val priorInfo = DoubleArray(featureSize).also {
-        koblas.gemv(1.0, priorPrecisionMatrix, initialWeights, 0.0, it)
+        koblas.gemv(1.0, priorPrecisionMatrix, initialWeights, 0, 1, 0.0, it, 0, 1)
     }
 
     private val lock = concurrency.serializedLock()
@@ -268,12 +265,12 @@ class BayesianRegressionStat(
             // L * (LT * mu) so the precision never has to be formed for it.
             workspace.borrow(n) { b ->
                 for (i in 0 until n) b[i] = weights[i]
-                koblas.trmv(precisionL, b, lower = true, transpose = true, scratch = workspace)
-                koblas.trmv(precisionL, b, lower = true, scratch = workspace)
+                koblas.trmv(precisionL, b, 0, 1, lower = true, transpose = true, scratch = workspace)
+                koblas.trmv(precisionL, b, 0, 1, lower = true, scratch = workspace)
                 workspace.borrow(n) { other ->
                     for (i in 0 until n) other[i] = values.weights[i]
-                    koblas.trmv(values.precisionL, other, lower = true, transpose = true, scratch = workspace)
-                    koblas.trmv(values.precisionL, other, lower = true, scratch = workspace)
+                    koblas.trmv(values.precisionL, other, 0, 1, lower = true, transpose = true, scratch = workspace)
+                    koblas.trmv(values.precisionL, other, 0, 1, lower = true, scratch = workspace)
                     for (i in 0 until n) b[i] += other[i] - priorInfo[i]
                 }
 
@@ -370,7 +367,6 @@ class BayesianRegressionStat(
             val sigmaFlat = DenseVector.wrap(sigmaPop.values)
             val covFlat = DenseVector.wrap(cov.values)
             val deviation = DoubleArray(n)
-            val deviationVector = DenseVector.wrap(deviation)
             // A call-local workspace reuses inversion scratch across population snapshots.
             val scratch = Scratch()
             for (s in snapshots.indices) {
@@ -379,7 +375,14 @@ class BayesianRegressionStat(
                 val mu = snapshots[s].weights
                 sigmaFlat.axpy(wi, covFlat)
                 for (i in 0 until n) deviation[i] = mu[i] - muPop[i]
-                koblas.syr(wi, deviationVector, sigmaPop, scratch = scratch)
+                koblas.syr(
+                    wi,
+                    deviation,
+                    0,
+                    1,
+                    sigmaPop,
+                    scratch = scratch,
+                )
             }
             // Reflect the lower triangle after syr to publish a symmetric covariance.
             for (i in 0 until n) {
