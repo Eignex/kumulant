@@ -6,7 +6,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
-import com.eignex.kumulant.stream.AtomicMode
+import com.eignex.util.concurrent.AtomicCells
 import kotlin.math.ln
 import kotlin.math.min
 import kotlin.math.pow
@@ -105,8 +105,8 @@ interface BanditPolicy<R : Result> {
  * The counters are shared across arms, so concurrent updates use atomic cells.
  */
 abstract class SampleCountingPolicy<R : Result>(private val sampleWeight: (R) -> Double) : BanditPolicy<R> {
-    private val samples = AtomicMode.newDouble(0.0)
-    private val arms = AtomicMode.newLong(0L)
+    private val samples = AtomicCells.newDouble(0.0)
+    private val arms = AtomicCells.newLong(0L)
 
     /** Total sample weight across every arm, priors included. */
     protected val totalSamples: Double get() = samples.load()

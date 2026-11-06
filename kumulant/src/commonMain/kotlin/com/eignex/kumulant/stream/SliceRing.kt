@@ -3,6 +3,8 @@ package com.eignex.kumulant.stream
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.Stat
+import com.eignex.util.concurrent.CellMode
+import com.eignex.util.concurrent.ReferenceCell
 import kotlin.time.Duration
 
 // Window reads merge per-slice accumulators, bounding storage and expiration granularity.
@@ -16,7 +18,7 @@ internal class SliceRing<R : Result, S : Stat<R>>(
     private val sliceDurationNanos: Long
     val windowDurationNanos: Long
 
-    private val ringMode: StreamMode = concurrency.additiveMode()
+    private val ringMode: CellMode = concurrency.monotonicMode()
 
     init {
         require(slices > 0) { "SliceRing requires at least 1 slice" }
@@ -30,7 +32,7 @@ internal class SliceRing<R : Result, S : Stat<R>>(
 
     internal class Slot<R : Result, S : Stat<R>>(val startNanos: Long, val stat: S)
 
-    private val buckets: Array<StreamRef<Slot<R, S>>> = Array(slices) {
+    private val buckets: Array<ReferenceCell<Slot<R, S>>> = Array(slices) {
         ringMode.newReference(Slot(Long.MIN_VALUE, factory(concurrency)))
     }
 

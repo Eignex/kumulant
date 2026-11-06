@@ -6,8 +6,8 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import com.eignex.kumulant.stream.currentTimeNanos
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.util.concurrent.guarded
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.exp

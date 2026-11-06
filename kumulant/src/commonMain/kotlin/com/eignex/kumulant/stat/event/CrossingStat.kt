@@ -5,8 +5,8 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.additiveMode
-import com.eignex.kumulant.stream.casMax
 import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.util.concurrent.casMax
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

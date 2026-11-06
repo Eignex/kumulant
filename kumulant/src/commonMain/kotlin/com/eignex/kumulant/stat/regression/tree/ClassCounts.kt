@@ -7,8 +7,8 @@ import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.math.argMaxOf
-import com.eignex.kumulant.stream.StreamDoubleArray
-import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.util.concurrent.DoubleCellArray
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.ln
@@ -111,8 +111,8 @@ class ClassCountsStat(
         requireAtLeastTwoClasses(numClasses)
     }
 
-    private val mode = concurrency.additiveMode()
-    private val cells: StreamDoubleArray = mode.newDoubleArray(numClasses)
+    private val mode = concurrency.monotonicMode()
+    private val cells: DoubleCellArray = mode.newDoubleArray(numClasses)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         // isInertWeight, not `weight == 0.0`, which is false for NaN: a NaN weight would reach

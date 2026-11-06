@@ -8,10 +8,10 @@ class PlatformMutexReentryTest {
     // Requires assertions enabled with -ea, as in the Gradle test task.
     @Test
     fun `re-acquiring a held lock is reported rather than granted`() {
-        val mutex = PlatformMutex()
+        val mutex = Mutex()
         assertFailsWith<AssertionError> {
-            mutex.guarded {
-                mutex.guarded { }
+            mutex.withLock {
+                mutex.withLock { }
             }
         }
     }

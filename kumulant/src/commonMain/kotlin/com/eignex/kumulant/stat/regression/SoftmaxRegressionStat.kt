@@ -21,13 +21,12 @@ import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.NoopMutex
-import com.eignex.kumulant.stream.StreamDouble
-import com.eignex.kumulant.stream.StreamDoubleArray
-import com.eignex.kumulant.stream.getValue
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
+import com.eignex.util.concurrent.DoubleCell
+import com.eignex.util.concurrent.DoubleCellArray
+import com.eignex.util.concurrent.getValue
+import com.eignex.util.concurrent.guarded
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.ln
@@ -172,14 +171,14 @@ class SoftmaxRegressionStat(
     private val lock = concurrency.welfordLock()
 
     // Scratch is shared only under serial use or a real update lock; racing writers allocate per call.
-    private val workspace = if (concurrency == Concurrency.None || lock !is NoopMutex) Scratch() else null
+    private val workspace = if (concurrency != Concurrency.Relaxed) Scratch() else null
 
     // Flat row-major K x p layout: weightsCell[k * p + i].
-    private val weightsCell: StreamDoubleArray = mode.newDoubleArray(numClasses * featureSize)
-    private val biasCell: StreamDoubleArray = mode.newDoubleArray(numClasses)
-    private val totalWeightsCell: StreamDouble = mode.newDouble(0.0)
+    private val weightsCell: DoubleCellArray = mode.newDoubleArray(numClasses * featureSize)
+    private val biasCell: DoubleCellArray = mode.newDoubleArray(numClasses)
+    private val totalWeightsCell: DoubleCell = mode.newDouble(0.0)
     private val stepCell = mode.newLong(0L)
-    private val crossEntropyCell: StreamDouble = mode.newDouble(0.0)
+    private val crossEntropyCell: DoubleCell = mode.newDouble(0.0)
 
     private val weightOptimizers: Array<Optimizer> = Array(numClasses) {
         optimizer.materialize(featureSize, concurrency)

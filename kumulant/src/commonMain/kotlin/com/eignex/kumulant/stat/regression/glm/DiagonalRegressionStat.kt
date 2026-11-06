@@ -12,8 +12,8 @@ import com.eignex.kumulant.core.requireMergeFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.util.concurrent.guarded
 
 /**
  * Generalised linear regression with a *factorised* Gaussian posterior - each

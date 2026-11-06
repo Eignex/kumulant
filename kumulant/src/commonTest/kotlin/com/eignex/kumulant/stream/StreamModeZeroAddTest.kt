@@ -24,8 +24,8 @@ class StreamModeZeroAddTest {
 
     @Test
     fun `adding zero to an array cell leaves the sign alone at every level`() {
-        for (level in levelsThatCanSignZero) {
-            val cells = level.additiveMode().newDoubleArray(1) { -0.0 }
+        for (level in Concurrency.entries) {
+            val cells = level.monotonicMode().newDoubleArray(1) { -0.0 }
             cells.add(0, 0.0)
             assertEquals(
                 (-0.0).toRawBits(),

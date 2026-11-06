@@ -7,11 +7,11 @@ import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.math.deriveChildSeed
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.NoopMutex
-import com.eignex.kumulant.stream.PlatformMutex
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
+import com.eignex.util.arrays.emptyDoubleArray
+import com.eignex.util.concurrent.Mutex
+import com.eignex.util.concurrent.guarded
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.pow
@@ -92,7 +92,7 @@ private fun nextUp(d: Double): Double {
 fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
     require(binCount > 0) { "binCount must be > 0" }
     if (values.isEmpty()) {
-        return SparseHistogramResult(DoubleArray(0), DoubleArray(0), DoubleArray(0))
+        return SparseHistogramResult(emptyDoubleArray(), emptyDoubleArray(), emptyDoubleArray())
     }
     var lo = values[0]
     var hi = values[0]
@@ -170,10 +170,7 @@ class ReservoirHistogramStat(
     private val outerLock = concurrency.welfordLock()
 
     // Relaxed admission has no outer lock, so its mutable RNG needs a separate one.
-    private val rngLock = when (concurrency) {
-        Concurrency.Relaxed, Concurrency.HighWrite -> PlatformMutex()
-        else -> NoopMutex
-    }
+    private val rngLock = Mutex(concurrent = concurrency == Concurrency.Relaxed || concurrency == Concurrency.HighWrite)
     private val random = Random(seed)
 
     // Copies made by `create`, so each gets its own admission stream. See `create`.

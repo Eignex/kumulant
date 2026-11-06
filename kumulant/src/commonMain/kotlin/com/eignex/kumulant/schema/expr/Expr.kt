@@ -16,6 +16,7 @@ import com.eignex.kumulant.schema.serialization.ScalarExprSerializer
 import com.eignex.kumulant.schema.serialization.VectorExprSerializer
 import com.eignex.kumulant.stream.DEFAULT_TARGET_HIGH
 import com.eignex.kumulant.stream.DEFAULT_TARGET_LOW
+import com.eignex.util.arrays.emptyDoubleArray
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
@@ -26,8 +27,6 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.sqrt
-
-private val EMPTY_VECTOR = DoubleArray(0)
 
 // Per-coordinate feedback boxes its primary in IndexedResult; trait checks apply to the inner result.
 private inline fun <reified T> Result?.feedbackPrimary(node: String): T {
@@ -60,7 +59,7 @@ sealed interface ScalarExpr {
      * Evaluate this expression against the per-update inputs. See the class
      * KDoc for the input-environment convention.
      */
-    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Double =
+    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = emptyDoubleArray(), primary: Result? = null): Double =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
@@ -328,7 +327,7 @@ sealed interface BoolExpr {
      * to keep an observation under `filter` or to take the `then` branch
      * under `IfExpr`.
      */
-    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): Boolean =
+    fun eval(x: Double, y: Double = 0.0, v: DoubleArray = emptyDoubleArray(), primary: Result? = null): Boolean =
         evaluate(x, y, v, primary, ArrayInput)
 }
 
@@ -403,8 +402,12 @@ sealed interface VectorExpr {
      * downstream `transformVector(VectorExpr)` propagates it as the new
      * vector dimensionality.
      */
-    fun eval(x: Double = 0.0, y: Double = 0.0, v: DoubleArray = EMPTY_VECTOR, primary: Result? = null): DoubleArray =
-        evaluate(x, y, v, primary, ArrayInput)
+    fun eval(
+        x: Double = 0.0,
+        y: Double = 0.0,
+        v: DoubleArray = emptyDoubleArray(),
+        primary: Result? = null,
+    ): DoubleArray = evaluate(x, y, v, primary, ArrayInput)
 }
 
 /**

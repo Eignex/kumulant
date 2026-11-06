@@ -14,12 +14,12 @@ import com.eignex.kumulant.schema.optimizer.OptimizerSpec
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.regression.Optimizer
-import com.eignex.kumulant.stream.StreamDouble
-import com.eignex.kumulant.stream.StreamDoubleArray
-import com.eignex.kumulant.stream.getValue
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
+import com.eignex.util.concurrent.DoubleCell
+import com.eignex.util.concurrent.DoubleCellArray
+import com.eignex.util.concurrent.getValue
+import com.eignex.util.concurrent.guarded
 import kotlin.math.pow
 
 /**
@@ -88,11 +88,11 @@ class StochasticRegressionStat(
     private val sseCell = mode.newDouble(0.0)
 
     // Logical w_i = stored[i] * scale.
-    private val l2ScaleCell: StreamDouble? = if (penalty is Penalty.L2) mode.newDouble(1.0) else null
+    private val l2ScaleCell: DoubleCell? = if (penalty is Penalty.L2) mode.newDouble(1.0) else null
 
     // Logical w_i = softThreshold(stored[i], pendingThreshold - lastApplied[i]).
-    private val l1PendingCell: StreamDouble? = if (penalty is Penalty.L1) mode.newDouble(0.0) else null
-    private val l1LastApplied: StreamDoubleArray? =
+    private val l1PendingCell: DoubleCell? = if (penalty is Penalty.L1) mode.newDouble(0.0) else null
+    private val l1LastApplied: DoubleCellArray? =
         if (penalty is Penalty.L1) mode.newDoubleArray(featureSize) else null
 
     /** Live view of the running intercept. */
@@ -118,10 +118,9 @@ class StochasticRegressionStat(
         }
     }
 
-    private fun requireL2Scale(): StreamDouble = l2ScaleCell ?: error("l2ScaleCell only under Penalty.L2")
-    private fun requireL1Pending(): StreamDouble = l1PendingCell ?: error("l1PendingCell only under Penalty.L1")
-    private fun requireL1LastApplied(): StreamDoubleArray =
-        l1LastApplied ?: error("l1LastApplied only under Penalty.L1")
+    private fun requireL2Scale(): DoubleCell = l2ScaleCell ?: error("l2ScaleCell only under Penalty.L2")
+    private fun requireL1Pending(): DoubleCell = l1PendingCell ?: error("l1PendingCell only under Penalty.L1")
+    private fun requireL1LastApplied(): DoubleCellArray = l1LastApplied ?: error("l1LastApplied only under Penalty.L1")
     private fun requireSgdLearningRate(): ScalarExpr = sgdLearningRate ?: error("Sgd learning rate required")
     private fun requireSgdBiasRate(): ScalarExpr = sgdBiasRate ?: error("Sgd bias rate required")
 
@@ -179,7 +178,7 @@ class StochasticRegressionStat(
         }
     }
 
-    private fun casMultiply(cell: StreamDouble, factor: Double): Double {
+    private fun casMultiply(cell: DoubleCell, factor: Double): Double {
         while (true) {
             val current = cell.load()
             val next = current * factor

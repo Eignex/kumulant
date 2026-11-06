@@ -10,10 +10,10 @@ import com.eignex.kumulant.math.Hashers
 import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.StreamLong
-import com.eignex.kumulant.stream.StreamLongArray
-import com.eignex.kumulant.stream.casOr
 import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.util.concurrent.LongCell
+import com.eignex.util.concurrent.LongCellArray
+import com.eignex.util.concurrent.casOr
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -117,8 +117,8 @@ class BloomFilterStat(
     private val wordCount: Int = bits / 64
     private val mask: Long = (bits - 1).toLong()
     private val mode = concurrency.monotonicMode()
-    private val words: StreamLongArray = mode.newLongArray(wordCount)
-    private val totalSeen: StreamLong = mode.newLong(0L)
+    private val words: LongCellArray = mode.newLongArray(wordCount)
+    private val totalSeen: LongCell = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         if (weight.isNotPositiveWeight()) return

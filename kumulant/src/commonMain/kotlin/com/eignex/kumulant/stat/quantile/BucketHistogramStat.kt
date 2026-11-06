@@ -3,7 +3,8 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
-import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.util.collections.IntArrayList
 import kotlin.math.nextUp
 
 /**
@@ -54,7 +55,7 @@ class BucketHistogramStat(
     /** Bucket edges, in increasing order. */
     val bucketEdges: List<Double> get() = edges.toList()
 
-    private val counts = concurrency.additiveMode().newDoubleArray(edges.size + 1)
+    private val counts = concurrency.monotonicMode().newDoubleArray(edges.size + 1)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
@@ -93,7 +94,8 @@ class BucketHistogramStat(
 
     override fun read(timestampNanos: Long): SparseHistogramResult {
         val snapshot = DoubleArray(edges.size + 1) { counts.load(it) }
-        val populated = snapshot.indices.filter { snapshot[it] != 0.0 }
+        val populated = IntArrayList()
+        for (index in snapshot.indices) if (snapshot[index] != 0.0) populated.add(index)
         return SparseHistogramResult(
             lowerBounds = DoubleArray(populated.size) { lowerEdge(populated[it]) },
             upperBounds = DoubleArray(populated.size) { upperEdge(populated[it]) },

@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.quantile.ReservoirHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.kumulant.stat.sketch.SpaceSavingStat
@@ -20,47 +21,11 @@ import kotlin.test.assertTrue
 class ConcurrentStreamModesTest {
 
     @Test
-    fun `AtomicMode double sum is exact under contention`() {
-        val d = AtomicMode.newDouble(0.0)
-        val threads = 8
-        val iters = 10_000
-        runConcurrently(threads, iters) { _, _ ->
-            d.add(1.0)
-        }
-        assertEquals((threads * iters).toDouble(), d.load(), 1e-9)
-    }
-
-    @Test
-    fun `AtomicMode long sum is exact under contention`() {
-        val l = AtomicMode.newLong(0L)
-        val threads = 8
-        val iters = 10_000
-        runConcurrently(threads, iters) { _, _ ->
-            l.add(1L)
-        }
-        assertEquals((threads * iters).toLong(), l.load())
-    }
-
-    @Test
-    fun `AtomicMode addAndGet always returns a monotonic sequence of snapshots`() {
-        val l = AtomicMode.newLong(0L)
-        val threads = 4
-        val iters = 2_000
-        runConcurrently(threads, iters) { _, _ ->
-            val seen = l.addAndGet(1L)
-            check(seen >= 1L) { "addAndGet returned $seen but all prior adds should have made it >= 1" }
-        }
-        assertEquals((threads * iters).toLong(), l.load())
-    }
-
-    @Test
-    fun `AtomicDouble add to NaN cell publishes the result through CAS`() {
-        val d = AtomicMode.newDouble(Double.NaN)
-        d.add(1.0)
-        assertTrue(d.load().isNaN(), "NaN + 1.0 should still be NaN")
-        val d2 = AtomicMode.newDouble(Double.POSITIVE_INFINITY)
-        d2.add(1.0)
-        assertEquals(Double.POSITIVE_INFINITY, d2.load(), 0.0)
+    fun `HyperLogLogStat runs under HighWrite concurrency`() {
+        val hll = HyperLogLogStat(precision = 10, concurrency = Concurrency.HighWrite)
+        for (i in 1..1000L) hll.update(i)
+        val result = hll.read()
+        assert(result.estimate > 0.0) { "expected non-zero estimate, got ${result.estimate}" }
     }
 
     @Test
@@ -141,7 +106,7 @@ class ConcurrentStreamModesTest {
 
     @Test
     fun `ArrayBins adds from many threads preserve total weight`() {
-        val bins = ArrayBins(AtomicMode)
+        val bins = ArrayBins(Concurrency.Strict)
         val threads = 4
         val iters = 5_000
         runConcurrently(threads, iters) { _, i ->

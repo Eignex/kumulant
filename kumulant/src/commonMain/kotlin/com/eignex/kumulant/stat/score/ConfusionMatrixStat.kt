@@ -7,8 +7,8 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
-import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
+import com.eignex.util.concurrent.DoubleCounter
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt
@@ -168,7 +168,7 @@ class ConfusionMatrixStat(
     }
 
     private val mode = concurrency.additiveMode()
-    private val cells: Array<StreamDouble> = Array(numClasses * numClasses) { mode.newDouble(0.0) }
+    private val cells: Array<DoubleCounter> = Array(numClasses * numClasses) { mode.newDouble(0.0) }
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return

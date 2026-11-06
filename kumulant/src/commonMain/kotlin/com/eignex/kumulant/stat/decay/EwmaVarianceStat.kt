@@ -4,9 +4,9 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
+import com.eignex.util.concurrent.guarded
 
 /**
  * Exponentially weighted moving variance driven by cumulative observation weight.

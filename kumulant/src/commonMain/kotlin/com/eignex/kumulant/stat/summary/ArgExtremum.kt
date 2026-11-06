@@ -1,9 +1,9 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.util.concurrent.guarded
 
 // The (value, timestamp) pair cannot be made elementwise atomic with a single-cell CAS, so a lock
 // keeps the pair consistent under every concurrency level. Ties keep the first occurrence.

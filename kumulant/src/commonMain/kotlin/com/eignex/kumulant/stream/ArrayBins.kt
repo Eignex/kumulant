@@ -1,15 +1,18 @@
 package com.eignex.kumulant.stream
 
+import com.eignex.kumulant.core.Concurrency
+import com.eignex.util.concurrent.DoubleCounter
 import kotlin.math.max
 import kotlin.math.min
 
 // Resizing reuses existing cells so writers holding an older array still update the live bins.
-// Each cell follows its StreamMode's guarantees; a multi-bin snapshot is not atomic.
-internal class ArrayBins(private val mode: StreamMode) {
+// Each counter follows the concurrency policy; a multi-bin snapshot is not atomic.
+internal class ArrayBins(concurrency: Concurrency) {
+    private val mode = concurrency.additiveMode()
 
-    private class State(val offset: Int, val bins: Array<StreamDouble>)
+    private class State(val offset: Int, val bins: Array<DoubleCounter>)
 
-    private val stateRef = mode.newReference(State(0, emptyArray()))
+    private val stateRef = concurrency.monotonicMode().newReference(State(0, emptyArray()))
 
     fun add(index: Int, weight: Double) {
         while (true) {

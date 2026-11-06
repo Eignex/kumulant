@@ -5,10 +5,8 @@ package com.eignex.kumulant.stat.regression.tree
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.stream.Mutex
-import com.eignex.kumulant.stream.NoopMutex
-import com.eignex.kumulant.stream.PlatformMutex
-import com.eignex.kumulant.stream.guarded
+import com.eignex.util.concurrent.Mutex
+import com.eignex.util.concurrent.guarded
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.AtomicLong
@@ -93,7 +91,7 @@ internal class TreeGrowth<Row, S : Split<Row>, N : Any, SN : N, AL : N, P : HasO
     private val canGrow: Boolean = splitCandidates.isNotEmpty()
 
     /** Serialises split conversions and structural merges. */
-    val splitLock: Mutex = if (concurrency == Concurrency.None) NoopMutex else PlatformMutex()
+    val splitLock: Mutex = Mutex(concurrent = concurrency != Concurrency.None)
 
     /** Internal plus leaf nodes currently in the tree. */
     val nbrNodes: AtomicInt = AtomicInt(1)

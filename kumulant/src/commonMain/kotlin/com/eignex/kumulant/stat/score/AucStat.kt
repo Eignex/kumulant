@@ -6,8 +6,8 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requirePositiveBins
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
+import com.eignex.util.concurrent.DoubleCounter
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -119,8 +119,8 @@ class AucStat(
     }
 
     private val mode = concurrency.additiveMode()
-    private val pos: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
-    private val neg: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
+    private val pos: Array<DoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
+    private val neg: Array<DoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
     private val binWidth: Double = (upperBound - lowerBound) / numBins
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {

@@ -7,8 +7,8 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.NANOS_PER_SECOND
 import com.eignex.kumulant.stream.additiveMode
-import com.eignex.kumulant.stream.casMin
 import com.eignex.kumulant.stream.firstWriterMode
+import com.eignex.util.concurrent.casMin
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

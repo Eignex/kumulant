@@ -11,9 +11,10 @@ import com.eignex.kumulant.math.LongHasher
 import com.eignex.kumulant.math.SplitMix64
 import com.eignex.kumulant.math.splitmix64
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.StreamLong
-import com.eignex.kumulant.stream.StreamLongArray
 import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.util.concurrent.LongCellArray
+import com.eignex.util.concurrent.LongCounter
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -135,8 +136,8 @@ class CountMinSketchStat(
     private val rowSalts: LongArray = LongArray(depth) { splitmix64(seed + it.toLong()) }
     private val counterCount: Int = depth * width
     private val mode = concurrency.additiveMode()
-    private val counters: StreamLongArray = mode.newLongArray(counterCount)
-    private val totalSeen: StreamLong = mode.newLong(0L)
+    private val counters: LongCellArray = concurrency.monotonicMode().newLongArray(counterCount)
+    private val totalSeen: LongCounter = mode.newLong(0L)
 
     override fun update(value: Long, timestampNanos: Long, weight: Double) {
         // `weight <= 0.0` is false for NaN, and `ceil(NaN).toLong()` is 0, which the coerce below

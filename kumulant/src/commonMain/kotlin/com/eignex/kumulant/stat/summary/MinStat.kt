@@ -4,8 +4,8 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
-import com.eignex.kumulant.stream.casMin
 import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.util.concurrent.casMin
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

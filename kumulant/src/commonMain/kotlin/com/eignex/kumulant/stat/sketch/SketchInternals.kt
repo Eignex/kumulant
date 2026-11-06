@@ -1,7 +1,7 @@
 package com.eignex.kumulant.stat.sketch
 
 import com.eignex.kumulant.math.HasherRef
-import com.eignex.kumulant.stream.StreamLongArray
+import com.eignex.util.concurrent.LongCellArray
 import kotlin.math.ceil
 
 // Bounds individual increments to preserve the sketch counter guarantees.
@@ -11,7 +11,7 @@ internal const val MAX_COUNTER_STEP: Long = Long.MAX_VALUE / 1024
 internal fun saturatingPlus(a: Long, b: Long): Long = if (b > 0L && a > Long.MAX_VALUE - b) Long.MAX_VALUE else a + b
 
 // HighWrite array cells use the atomic backing, so CAS is available in every mode.
-internal fun StreamLongArray.addSaturating(index: Int, delta: Long) {
+internal fun LongCellArray.addSaturating(index: Int, delta: Long) {
     while (true) {
         val current = load(index)
         val next = saturatingPlus(current, delta)
