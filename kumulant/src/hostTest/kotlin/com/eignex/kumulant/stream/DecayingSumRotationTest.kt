@@ -1,3 +1,5 @@
+@file:Suppress("UndocumentedPublicClass", "UndocumentedPublicFunction", "FunctionNaming")
+
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.core.Concurrency

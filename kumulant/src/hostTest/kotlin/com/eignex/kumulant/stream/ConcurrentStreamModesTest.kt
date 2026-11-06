@@ -1,3 +1,5 @@
+@file:Suppress("UndocumentedPublicClass", "UndocumentedPublicFunction", "FunctionNaming")
+
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.core.Concurrency
@@ -10,10 +12,8 @@ import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MinStat
 import com.eignex.kumulant.stat.summary.RangeStat
 import com.eignex.kumulant.stat.summary.VarianceStat
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
+import com.eignex.util.concurrent.AtomicCells
+import com.eignex.util.concurrent.parallelRun
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,7 +25,7 @@ class ConcurrentStreamModesTest {
         val hll = HyperLogLogStat(precision = 10, concurrency = Concurrency.HighWrite)
         for (i in 1..1000L) hll.update(i)
         val result = hll.read()
-        assert(result.estimate > 0.0) { "expected non-zero estimate, got ${result.estimate}" }
+        assertTrue(result.estimate > 0.0, "expected non-zero estimate, got ${result.estimate}")
     }
 
     @Test
@@ -279,26 +279,23 @@ class ConcurrentStreamModesTest {
     }
 
     private fun <R> runWithReader(read: () -> R, block: () -> Unit) {
-        val stop = AtomicBoolean(false)
-        val pool = Executors.newSingleThreadExecutor()
-        val started = CountDownLatch(1)
-        val readerError = arrayOf<Throwable?>(null)
-        try {
-            pool.submit {
-                started.countDown()
-                try {
-                    while (!stop.get()) read()
-                } catch (t: Throwable) {
-                    readerError[0] = t
-                }
-            }
-            started.await()
-            block()
-        } finally {
-            stop.set(true)
-            pool.shutdown()
-            check(pool.awaitTermination(10, TimeUnit.SECONDS)) { "reader did not stop in time" }
-        }
-        readerError[0]?.let { throw AssertionError("reader thread failed", it) }
+        val stop = AtomicCells.newLong()
+        val started = AtomicCells.newLong()
+        parallelRun(
+            listOf(
+                {
+                    started.store(1)
+                    while (stop.load() == 0L) read()
+                },
+                {
+                    try {
+                        awaitConcurrent { started.load() == 1L }
+                        block()
+                    } finally {
+                        stop.store(1)
+                    }
+                },
+            ),
+        )
     }
 }

@@ -11,3 +11,6 @@ are evaluation outcomes, not JSON literals.
 
 A case with `dsl` records the Klause Kotlin DSL construction that emits its expression.
 Kumulant evaluates those cases like any other.
+
+The build embeds this JSON as a common Kotlin test fixture so every target uses
+the same cases without platform resource loaders.

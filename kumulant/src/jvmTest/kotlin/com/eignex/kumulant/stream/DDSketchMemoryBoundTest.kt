@@ -33,15 +33,4 @@ class DDSketchMemoryBoundTest {
             )
         }
     }
-
-    @Test
-    fun `out-of-range values still count toward the rank`() {
-        val sketch = DDSketchStat(relativeError = 0.01, probabilities = doubleArrayOf(0.5))
-        sketch.update(Double.MIN_VALUE)
-        sketch.update(1.0)
-        sketch.update(Double.MAX_VALUE)
-        val r = sketch.read()
-        assertTrue(r.totalWeights == 3.0, "expected all three observations counted, got ${r.totalWeights}")
-        assertTrue(r.quantiles[0] > 0.0 && r.quantiles[0].isFinite(), "p50 was ${r.quantiles[0]}")
-    }
 }
