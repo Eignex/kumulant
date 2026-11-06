@@ -11,10 +11,9 @@ class DDSketchMemoryBoundTest {
     private val bean = ManagementFactory.getThreadMXBean() as ThreadMXBean
 
     private fun heapGrowth(body: () -> Unit): Long {
-        val id = Thread.currentThread().threadId()
-        val before = bean.getThreadAllocatedBytes(id)
+        val before = bean.currentThreadAllocatedBytes
         body()
-        return bean.getThreadAllocatedBytes(id) - before
+        return bean.currentThreadAllocatedBytes - before
     }
 
     @Test

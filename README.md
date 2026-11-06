@@ -28,8 +28,8 @@ contextual bandits, anomaly scoring, post-hoc calibration, and the
 streaming-statistics surface underneath: running summaries, quantile
 sketches, cardinality estimators, heavy-hitter sketches, time-decayed
 averages, change detection, and a scoring-metric family for evaluating
-predictions as they come in. Everything runs on the JVM and on native
-Linux (x64 and Arm64) and macOS Arm64.
+predictions as they come in. Everything runs on the JVM (Java 17+) and on native
+Linux (x64 and Arm64), macOS Arm64, Windows x64 and iOS Arm64.
 
 The [API site](https://eignex.com/docs/kumulant) is the canonical
 reference.

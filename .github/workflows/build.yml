@@ -2,14 +2,25 @@ name: build
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      fullTargets:
+        description: Validate all targets on Linux, macOS and Windows
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       ref:
         type: string
         default: ''
+      ciVersion:
+        type: string
+        default: '0.0.0-ci'
+      fullTargets:
+        type: boolean
+        default: false
     secrets:
       GRADLE_ENCRYPTION_KEY:
         required: false
@@ -19,66 +30,87 @@ on:
 permissions:
   contents: read
 
-# A newer push supersedes any in-flight run for the same ref.
 concurrency:
   group: build-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   test:
-    name: Run tests and collect coverage
-    runs-on: ubuntu-latest
+    name: ${{ matrix.os == 'ubuntu-latest' && 'Run tests and collect coverage' || format('Native tests ({0})', matrix.os) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.fullTargets && '["ubuntu-latest","macos-15","windows-latest"]' || '["ubuntu-latest"]') }}
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 45
-
+    defaults:
+      run:
+        shell: bash
+    env:
+      HAS_CONFIGURATION_CACHE: ${{ secrets.GRADLE_ENCRYPTION_KEY != '' }}
+      FULL_TARGETS: ${{ inputs.fullTargets || false }}
+      CI_VERSION: ${{ inputs.ciVersion || '0.0.0-ci' }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.sha }}
           persist-credentials: false
-          fetch-depth: 2
-
-      - name: Set up JDK
-        uses: actions/setup-java@v6
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: 25
-
-      # Build jobs persist dependency and encrypted configuration caches.
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v6
+          # Gradle uses 25 for kbuild; library tests use 17 and SIMD benchmarks use 25.
+          java-version: |
+            17
+            25
+      - uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: false
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
-
-      - name: Cache Kotlin/Native toolchain
+      - name: Cache Kotlin Native
         uses: actions/cache@v6
         with:
           path: ~/.konan
-          key: ${{ runner.os }}-${{ runner.arch }}-konan-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties', '**/*.versions.toml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-konan-${{ inputs.fullTargets && 'full' || 'default' }}-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-${{ runner.arch }}-konan-
-
-      - name: Grant execute permission for Gradle
-        run: chmod +x gradlew
-
-      - name: Run linter
-        run: ./gradlew lintDocs
-
-      - name: Run tests with coverage
-        run: ./gradlew check koverXmlReport
-
+      - name: Cache encrypted configuration state
+        if: env.HAS_CONFIGURATION_CACHE == 'true'
+        uses: actions/cache@v6
+        with:
+          path: .gradle/configuration-cache
+          key: ${{ runner.os }}-${{ runner.arch }}-configuration-${{ inputs.fullTargets && 'full' || 'default' }}-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties') }}-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}-configuration-${{ inputs.fullTargets && 'full' || 'default' }}-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties') }}-
+      - name: Build and test
+        run: |
+          case "$RUNNER_OS" in
+            Linux) tasks=(check lintDocs koverXmlReport) ;;
+            macOS) tasks=(:kumulant:macosArm64Test) ;;
+            Windows) tasks=(:kumulant:mingwX64Test) ;;
+          esac
+          args=(-PciVersion="$CI_VERSION")
+          if [[ "$FULL_TARGETS" == true ]]; then args+=(-Ptargets.full); fi
+          if [[ "$RUNNER_OS" != Linux ]]; then
+            args+=(--max-workers=2 -Pkotlin.native.parallelThreads=2)
+          fi
+          ./gradlew "${tasks[@]}" "${args[@]}"
+      - name: Test iOS simulator
+        if: runner.os == 'macOS'
+        run: |
+          device=$(xcrun simctl list devices available --json | jq -er '
+            [.devices | to_entries[] | select(.key | contains(".iOS-")) | .value[] |
+             select(.name | startswith("iPhone")) | .udid][0] // error("No iPhone simulator available")')
+          ./gradlew :kumulant:iosSimulatorArm64Test -Ptargets.full -PciVersion="$CI_VERSION" \
+            --max-workers=2 -Pkotlin.native.parallelThreads=2 -PiosSimulatorDevice="$device"
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: test-reports
+          name: test-reports-${{ runner.os }}
           path: |
-            kumulant/build/reports/tests/
-            kumulant/build/test-results/
+            **/build/reports/tests/
+            **/build/test-results/
           if-no-files-found: ignore
-
-      - name: Upload results to Codecov (main only)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Upload coverage
+        if: runner.os == 'Linux' && github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

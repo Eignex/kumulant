@@ -1,6 +1,7 @@
 plugins {
-    id("com.eignex.kmp") version "1.3.5"
-    kotlin("plugin.serialization") version "2.4.21"
+    id("com.eignex.kmp")
+    id("com.eignex.publish.github")
+    kotlin("plugin.serialization")
 }
 
 eignexPublish {
@@ -9,6 +10,12 @@ eignexPublish {
 }
 
 repositories {
+    ivy {
+        url = uri("https://github.com/Eignex/kbuild/releases/download")
+        patternLayout { artifact("v[revision]/[artifact]-[revision](-[classifier]).[ext]") }
+        metadataSources { gradleMetadata() }
+        content { includeModule("com.eignex", "kbuild-platform") }
+    }
     maven("https://central.sonatype.com/repository/maven-snapshots/") {
         mavenContent { snapshotsOnly() }
     }
@@ -16,13 +23,22 @@ repositories {
 
 val utilPin = "0.0.1-20261105.215902-10"
 
+// Routine checks cover JVM + Linux x64; release validation opts into every supported target.
+val fullTargets = providers.gradleProperty("targets.full").isPresent
+
+eignexBuild {
+    jvmToolchain.set(17)
+    abiValidationEnabled.set(fullTargets)
+}
+
 kotlin {
-    applyDefaultHierarchyTemplate()
-    jvmToolchain(25)
-    jvm {
-        compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
+    jvm()
+    linuxX64()
+    if (fullTargets) {
+        linuxArm64()
+        macosArm64(); mingwX64()
+        iosArm64(); iosSimulatorArm64()
     }
-    linuxX64(); linuxArm64(); macosArm64()
 
     sourceSets {
         commonMain.dependencies {
@@ -33,17 +49,14 @@ kotlin {
                 version { strictly("0.1.1-20261105.140327-312") }
             }
             api("com.eignex:skema:0.4.0")
-            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
-            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
-        }
-        jvmMain.dependencies {
-            implementation(kotlin("reflect"))
+            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core")
+            compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json")
         }
         commonTest.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.12.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.12.0")
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor:1.12.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-core")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-cbor")
         }
     }
 }
@@ -63,9 +76,17 @@ kover {
 // Gradle consumers resolve the same binaries as this build.
 dependencies {
     constraints {
-        for (module in listOf("jvm", "linuxx64", "linuxarm64", "macosarm64")) {
-            add("commonMainImplementation", "com.eignex:util-$module:$utilPin") {
-                version { strictly(utilPin) }
+        for ((module, pinned) in mapOf(
+            "jvm" to utilPin,
+            "linuxx64" to utilPin,
+            "linuxarm64" to utilPin,
+            "macosarm64" to utilPin,
+            "mingwx64" to utilPin,
+            "iosarm64" to "0.0.1-20261105.215902-11",
+            "iossimulatorarm64" to "0.0.1-20261105.215902-11",
+        )) {
+            add("commonMainImplementation", "com.eignex:util-$module:$pinned") {
+                version { strictly(pinned) }
             }
         }
         for ((library, platforms) in mapOf(
@@ -74,6 +95,9 @@ dependencies {
                 "linuxx64" to "0.1.1-20261105.140327-310",
                 "linuxarm64" to "0.1.1-20261105.140327-312",
                 "macosarm64" to "0.1.1-20261105.140327-334",
+                "mingwx64" to "0.1.1-20261105.140327-138",
+                "iosarm64" to "0.1.1-20261105.140327-159",
+                "iossimulatorarm64" to "0.1.1-20261105.140327-159",
             ),
         )) {
             for ((module, pinned) in platforms) {
@@ -134,11 +158,7 @@ dokka {
     }
 }
 
-// koblas's JVM SIMD kernels load only when the incubator Vector API module is open, so without this
-// the tests cover its scalar fallback instead. `-Pkumulant.noSimd=true` drops it to reach that path.
-tasks.withType<Test>().configureEach {
-    jvmArgs("--enable-native-access=ALL-UNNAMED")
-    if (project.findProperty("kumulant.noSimd") != "true") {
-        jvmArgs("--add-modules=jdk.incubator.vector")
-    }
+// Select an installed simulator in CI rather than relying on a particular iPhone model.
+tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest>().configureEach {
+    providers.gradleProperty("iosSimulatorDevice").orNull?.let { device.set(it) }
 }

@@ -77,8 +77,8 @@ for ((pass=1; pass<=repetitions; pass++)); do
     if ((repetitions > 1)); then output="$base_output/pass-$pass"; mkdir "$output"; fi
     printf 'status=incomplete\n' > "$output/status.txt"
     "${runner[@]}" --quality > "$output/quality.txt" 2>&1
-    expected='backend=simd('
-    [[ $scalar == false ]] || expected='backend=scalar/'
+    expected='; simd=true;'
+    [[ $scalar == false ]] || expected='; simd=false;'
     resolved_backend() { [[ $(<"$1") == *"$expected"* ]]; }
     [[ $native == true ]] || resolved_backend "$output/quality.txt" || { echo 'Requested backend did not resolve; inspect quality.txt.' >&2; exit 1; }
     if [[ -n $stress ]]; then
