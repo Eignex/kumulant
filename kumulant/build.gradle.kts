@@ -31,6 +31,33 @@ eignexBuild {
     abiValidationEnabled.set(fullTargets)
 }
 
+@CacheableTask
+abstract class GenerateConformanceFixture : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val fixture: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val outputDirectory: DirectoryProperty
+
+    @TaskAction
+    fun generate() {
+        val literal = fixture.get().asFile.readText().replace("$", "\${'$'}")
+        val output = outputDirectory.get().file("com/eignex/kumulant/schema/PortableExpressionFixture.kt").asFile
+        output.parentFile.mkdirs()
+        output.writeText(
+            "@file:Suppress(\"MaxLineLength\")\n\n" +
+                "package com.eignex.kumulant.schema\n\n" +
+                "internal const val PORTABLE_EXPRESSION_FIXTURE: String = \"\"\"$literal\"\"\"\n",
+        )
+    }
+}
+
+val generateConformanceFixture = tasks.register<GenerateConformanceFixture>("generateConformanceFixture") {
+    fixture.set(layout.projectDirectory.file("src/commonTest/resources/portable-expression/conformance.json"))
+    outputDirectory.set(layout.buildDirectory.dir("generated/conformanceFixture/kotlin"))
+}
+
 kotlin {
     jvm()
     linuxX64()
@@ -40,7 +67,12 @@ kotlin {
         iosArm64(); iosSimulatorArm64()
     }
 
+    applyDefaultHierarchyTemplate()
     sourceSets {
+        commonTest.get().kotlin.srcDir(generateConformanceFixture.flatMap { it.outputDirectory })
+        val hostTest = create("hostTest") { dependsOn(commonTest.get()) }
+        jvmTest.get().dependsOn(hostTest)
+        nativeTest.get().dependsOn(hostTest)
         commonMain.dependencies {
             implementation("com.eignex:util:$utilPin") {
                 version { strictly(utilPin) }

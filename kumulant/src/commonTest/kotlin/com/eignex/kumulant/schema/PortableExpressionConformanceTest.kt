@@ -9,8 +9,7 @@ import kotlin.test.assertTrue
 
 class PortableExpressionConformanceTest {
     private val cases = Json.parseToJsonElement(
-        requireNotNull(javaClass.getResourceAsStream("/portable-expression/conformance.json"))
-            .bufferedReader().use { it.readText() },
+        PORTABLE_EXPRESSION_FIXTURE,
     ).jsonObject.getValue("cases").jsonArray.map { it.jsonObject }
 
     @Test

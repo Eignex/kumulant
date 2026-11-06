@@ -1,9 +1,10 @@
+@file:Suppress("UndocumentedPublicClass", "UndocumentedPublicFunction", "FunctionNaming")
+
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.stat.summary.MeanStat
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
+import com.eignex.util.concurrent.parallelRun
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -27,14 +28,8 @@ class GuardedLockReleaseTest {
         mean.update(10.0, weight = 1.0)
         assertFailsWith<IllegalArgumentException> { mean.update(10.0, weight = -1.0) }
 
-        // A leaked ReentrantLock only blocks a different thread; re-entry by its owner would pass.
-        val pool = Executors.newSingleThreadExecutor()
-        try {
-            val future = pool.submit { mean.update(30.0, weight = 1.0) }
-            future.get(5, TimeUnit.SECONDS)
-        } finally {
-            pool.shutdownNow()
-        }
+        // Same-thread re-entry can hide a leaked lock.
+        parallelRun(listOf({ mean.update(30.0, weight = 1.0) }, {}))
         assertEquals(2.0, mean.read().totalWeights, 1e-9)
     }
 
@@ -43,12 +38,7 @@ class GuardedLockReleaseTest {
         val mean = MeanStat(Concurrency.Strict)
         mean.update(5.0, weight = 1.0)
         assertFailsWith<IllegalArgumentException> { mean.update(5.0, weight = -2.0) }
-        val pool = Executors.newSingleThreadExecutor()
-        try {
-            val future = pool.submit<Double> { mean.read().mean }
-            assertTrue(future.get(5, TimeUnit.SECONDS).isFinite())
-        } finally {
-            pool.shutdownNow()
-        }
+        val result = parallelRun(listOf({ mean.read().mean }, { Double.NaN })).first()
+        assertTrue(result.isFinite())
     }
 }

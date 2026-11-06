@@ -1,3 +1,5 @@
+@file:Suppress("UndocumentedPublicClass", "UndocumentedPublicFunction", "FunctionNaming", "TooGenericExceptionCaught")
+
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.core.Concurrency
@@ -12,7 +14,6 @@ import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.VarianceStat
-import java.util.Collections
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -29,14 +30,15 @@ class ConcurrentReadInvariantsTest {
         write: (threadId: Int, iter: Int) -> Unit,
         invariants: (R) -> Unit,
     ) {
-        val failures: MutableList<Throwable> = Collections.synchronizedList(mutableListOf())
+        val workerFailures = List(writers + 1) { mutableListOf<Throwable>() }
         runConcurrently(writers + 1, iters) { t, i ->
             try {
                 if (t == 0) invariants(stat.read()) else write(t, i)
             } catch (e: Throwable) {
-                failures.add(e)
+                workerFailures[t].add(e)
             }
         }
+        val failures = workerFailures.flatten().toMutableList()
         try {
             invariants(stat.read())
         } catch (e: Throwable) {
