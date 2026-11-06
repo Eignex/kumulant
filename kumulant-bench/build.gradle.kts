@@ -5,9 +5,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
-    kotlin("multiplatform") version "2.4.21"
-    kotlin("plugin.allopen") version "2.4.21"
-    id("org.jetbrains.kotlinx.benchmark") version "0.4.17"
+    kotlin("multiplatform")
+    kotlin("plugin.allopen")
+    id("org.jetbrains.kotlinx.benchmark")
 }
 
 repositories {
@@ -18,8 +18,7 @@ repositories {
     }
 }
 
-// :kumulant gets its toolchain from the com.eignex.kmp convention plugin, which this module does not
-// apply (it publishes nothing). Keep the benchmark runtime on the library's JDK.
+// SIMD benchmarks require Java 25; the published library uses the shared Java 17 baseline.
 val benchJdk = 25
 
 repositories {
@@ -40,9 +39,6 @@ val labBenchVersion = providers.gradleProperty("labBenchVersion").getOrElse("0.1
 
 kotlin {
     applyDefaultHierarchyTemplate()
-    compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
-    }
     jvmToolchain(benchJdk)
 
     jvm()

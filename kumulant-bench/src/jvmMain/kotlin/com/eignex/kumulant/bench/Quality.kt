@@ -8,7 +8,8 @@ import kotlin.math.sqrt
 
 internal fun analyzeQuality() {
     analyzeNormalSamplingQuality()
-    println("backend=${koblas.name}; stat seed=0; updates=$STAT_BENCHMARK_BATCH_SIZE")
+    val simd = koblas.providers.any { it.id == "jvm-simd" }
+    println("backend=${koblas.name}; simd=$simd; stat seed=0; updates=$STAT_BENCHMARK_BATCH_SIZE")
     println("stat,actual,reference,scaled_error")
     allSpecs.forEach { statQuality(it) }
     println("bandit,mean_pseudo_regret,standard_error; seeds=0..4; rounds=512")
