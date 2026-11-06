@@ -15,11 +15,11 @@ import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.math.softmaxInPlace
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.StreamDouble
-import com.eignex.kumulant.stream.StreamDoubleArray
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.kumulant.stream.welfordMode
+import com.eignex.util.concurrent.DoubleCell
+import com.eignex.util.concurrent.DoubleCellArray
+import com.eignex.util.concurrent.guarded
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.ln
@@ -149,10 +149,10 @@ class GaussianNaiveBayesStat(
 
     private val mode = concurrency.welfordMode()
     private val lock = concurrency.welfordLock()
-    private val meanCell: StreamDoubleArray = mode.newDoubleArray(numClasses * featureSize)
-    private val m2Cell: StreamDoubleArray = mode.newDoubleArray(numClasses * featureSize)
-    private val classWeightCell: StreamDoubleArray = mode.newDoubleArray(numClasses)
-    private val totalWeightCell: StreamDouble = mode.newDouble(0.0)
+    private val meanCell: DoubleCellArray = mode.newDoubleArray(numClasses * featureSize)
+    private val m2Cell: DoubleCellArray = mode.newDoubleArray(numClasses * featureSize)
+    private val classWeightCell: DoubleCellArray = mode.newDoubleArray(numClasses)
+    private val totalWeightCell: DoubleCell = mode.newDouble(0.0)
 
     override fun update(x: Vector, y: Double, timestampNanos: Long, weight: Double) {
         x.requireFeatureSize(featureSize)

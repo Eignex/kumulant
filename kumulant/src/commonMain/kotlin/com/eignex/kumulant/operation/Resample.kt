@@ -7,9 +7,9 @@ import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireLiveWeight
 import com.eignex.kumulant.schema.spec.ResampleAggregator
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.util.concurrent.guarded
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration

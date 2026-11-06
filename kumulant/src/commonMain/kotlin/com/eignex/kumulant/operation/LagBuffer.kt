@@ -2,9 +2,9 @@ package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.isNotPositiveWeight
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.util.concurrent.guarded
 
 internal class LagBuffer(private val k: Int, concurrency: Concurrency) {
     private val mode = concurrency.monotonicMode()

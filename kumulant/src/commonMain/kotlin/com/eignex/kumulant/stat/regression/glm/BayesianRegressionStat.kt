@@ -34,8 +34,8 @@ import com.eignex.kumulant.math.choleskyInvertInto
 import com.eignex.kumulant.math.choleskyRankUpdate
 import com.eignex.kumulant.math.choleskySolveInto
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.util.concurrent.guarded
 import kotlinx.serialization.Serializable
 
 private fun Matrix.copyDenseMatrix(): DenseMatrix = DenseMatrix.wrap(

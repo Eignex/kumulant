@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.DELTA
+import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -9,13 +10,13 @@ class ArrayBinsTest {
 
     @Test
     fun `snapshot is empty before any add`() {
-        val bins = ArrayBins(SerialMode)
+        val bins = ArrayBins(Concurrency.None)
         assertTrue(bins.snapshot().isEmpty())
     }
 
     @Test
     fun `single add produces single entry in snapshot`() {
-        val bins = ArrayBins(SerialMode)
+        val bins = ArrayBins(Concurrency.None)
         bins.add(0, 1.5)
         val snap = bins.snapshot()
         assertEquals(mapOf(0 to 1.5), snap)
@@ -23,7 +24,7 @@ class ArrayBinsTest {
 
     @Test
     fun `multiple adds to the same index accumulate weight`() {
-        val bins = ArrayBins(SerialMode)
+        val bins = ArrayBins(Concurrency.None)
         bins.add(5, 1.0)
         bins.add(5, 2.0)
         bins.add(5, 0.5)
@@ -32,7 +33,7 @@ class ArrayBinsTest {
 
     @Test
     fun `supports negative indices`() {
-        val bins = ArrayBins(SerialMode)
+        val bins = ArrayBins(Concurrency.None)
         bins.add(-10, 2.0)
         bins.add(-5, 3.0)
         val snap = bins.snapshot()
@@ -42,7 +43,7 @@ class ArrayBinsTest {
 
     @Test
     fun `grows to accommodate index below initial offset`() {
-        val bins = ArrayBins(SerialMode)
+        val bins = ArrayBins(Concurrency.None)
         bins.add(0, 1.0)
         bins.add(-200, 2.0)
         val snap = bins.snapshot()
@@ -52,7 +53,7 @@ class ArrayBinsTest {
 
     @Test
     fun `grows to accommodate index above initial offset plus length`() {
-        val bins = ArrayBins(SerialMode)
+        val bins = ArrayBins(Concurrency.None)
         bins.add(0, 1.0)
         bins.add(10_000, 2.0)
         val snap = bins.snapshot()
@@ -61,8 +62,8 @@ class ArrayBinsTest {
     }
 
     @Test
-    fun `existing StreamDouble instances are preserved across resize`() {
-        val bins = ArrayBins(SerialMode)
+    fun `existing DoubleCell instances are preserved across resize`() {
+        val bins = ArrayBins(Concurrency.None)
         bins.add(0, 1.0)
         bins.add(1, 2.0)
 
@@ -78,7 +79,7 @@ class ArrayBinsTest {
 
     @Test
     fun `snapshot excludes zero-weight entries`() {
-        val bins = ArrayBins(SerialMode)
+        val bins = ArrayBins(Concurrency.None)
         bins.add(0, 1.0)
 
         val snap = bins.snapshot()
@@ -87,7 +88,7 @@ class ArrayBinsTest {
 
     @Test
     fun `clear empties the snapshot`() {
-        val bins = ArrayBins(SerialMode)
+        val bins = ArrayBins(Concurrency.None)
         bins.add(0, 1.0)
         bins.add(50, 2.0)
         bins.clear()
@@ -96,7 +97,7 @@ class ArrayBinsTest {
 
     @Test
     fun `clear followed by add starts from scratch`() {
-        val bins = ArrayBins(SerialMode)
+        val bins = ArrayBins(Concurrency.None)
         bins.add(0, 1.0)
         bins.clear()
         bins.add(7, 2.0)
@@ -105,7 +106,7 @@ class ArrayBinsTest {
 
     @Test
     fun `repeated resizes accumulate correctly`() {
-        val bins = ArrayBins(SerialMode)
+        val bins = ArrayBins(Concurrency.None)
 
         bins.add(0, 1.0)
         bins.add(500, 1.0)

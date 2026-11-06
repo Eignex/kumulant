@@ -5,11 +5,11 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.additiveMode
-import com.eignex.kumulant.stream.casMin
 import com.eignex.kumulant.stream.firstWriterMode
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
 import com.eignex.kumulant.stream.welfordMode
+import com.eignex.util.concurrent.casMin
+import com.eignex.util.concurrent.guarded
 
 /**
  * Rate derived from a monotonic counter stream.

@@ -4,8 +4,8 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.util.concurrent.guarded
 import kotlin.math.abs
 
 /**

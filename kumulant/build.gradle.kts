@@ -14,11 +14,10 @@ repositories {
     }
 }
 
+val utilPin = "0.0.1-20261105.215902-10"
+
 kotlin {
     applyDefaultHierarchyTemplate()
-    compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
-    }
     jvmToolchain(25)
     jvm {
         compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25)
@@ -26,15 +25,10 @@ kotlin {
     linuxX64(); linuxArm64(); macosArm64()
 
     sourceSets {
-        val nonJvmMain = create("nonJvmMain") {
-            dependsOn(commonMain.get())
-        }
-        nativeMain.get().dependsOn(nonJvmMain)
-
-        val posixMain = create("posixMain") { dependsOn(nativeMain.get()) }
-        appleMain.get().dependsOn(posixMain)
-        linuxMain.get().dependsOn(posixMain)
         commonMain.dependencies {
+            implementation("com.eignex:util:$utilPin") {
+                version { strictly(utilPin) }
+            }
             api("com.eignex:koblas:0.1.1-20261105.140327-312") {
                 version { strictly("0.1.1-20261105.140327-312") }
             }
@@ -69,6 +63,11 @@ kover {
 // Gradle consumers resolve the same binaries as this build.
 dependencies {
     constraints {
+        for (module in listOf("jvm", "linuxx64", "linuxarm64", "macosarm64")) {
+            add("commonMainImplementation", "com.eignex:util-$module:$utilPin") {
+                version { strictly(utilPin) }
+            }
+        }
         for ((library, platforms) in mapOf(
             "koblas" to mapOf(
                 "jvm" to "0.1.1-20261105.140327-315",

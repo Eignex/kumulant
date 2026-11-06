@@ -5,8 +5,8 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requirePositiveBins
-import com.eignex.kumulant.stream.StreamDouble
 import com.eignex.kumulant.stream.additiveMode
+import com.eignex.util.concurrent.DoubleCounter
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
@@ -111,9 +111,9 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
     }
 
     private val mode = concurrency.additiveMode()
-    private val sumP: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
-    private val sumO: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
-    private val sumW: Array<StreamDouble> = Array(numBins) { mode.newDouble(0.0) }
+    private val sumP: Array<DoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
+    private val sumO: Array<DoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
+    private val sumW: Array<DoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return

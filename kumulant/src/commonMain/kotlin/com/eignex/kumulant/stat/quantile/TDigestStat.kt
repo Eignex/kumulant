@@ -6,8 +6,11 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.guarded
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.util.arrays.argsortBy
+import com.eignex.util.arrays.emptyDoubleArray
+import com.eignex.util.arrays.emptyIntArray
+import com.eignex.util.concurrent.guarded
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.PI
@@ -67,7 +70,7 @@ data class TDigestResult(
 /** Convert centroids to a sparse histogram with bins centered on each centroid. */
 fun TDigestResult.toSparseHistogram(): SparseHistogramResult {
     val n = means.size
-    if (n == 0) return SparseHistogramResult(DoubleArray(0), DoubleArray(0), DoubleArray(0))
+    if (n == 0) return SparseHistogramResult(emptyDoubleArray(), emptyDoubleArray(), emptyDoubleArray())
     if (n == 1) {
         return SparseHistogramResult(
             doubleArrayOf(means[0]),
@@ -131,8 +134,8 @@ class TDigestStat(
     private val buffer = DoubleArray(bufferCap)
     private val bufferWeights = DoubleArray(bufferCap)
     private var totalWeight = 0.0
-    private var means = DoubleArray(0)
-    private var weights = DoubleArray(0)
+    private var means = emptyDoubleArray()
+    private var weights = emptyDoubleArray()
 
     private fun k1(q: Double): Double = compression / (2.0 * PI) * asin(2.0 * q.coerceIn(0.0, 1.0) - 1.0)
 
@@ -148,40 +151,18 @@ class TDigestStat(
 
     // Scratch buffers for the buffer-ordering sort, reused across compressions. Only ever
     // touched under the lock, so no synchronisation of their own is needed.
-    private var sortIdx: IntArray = IntArray(0)
-    private var sortTmp: IntArray = IntArray(0)
+    private var sortIdx: IntArray = emptyIntArray()
+    private var sortTmp: IntArray = emptyIntArray()
 
-    // Bottom-up merge sort of the buffer indices keyed on `bufVal`: stable, `O(n log n)`, and
-    // allocation-free after the first call. A comparator sort over an index list would box every
-    // index (~8 KiB per flush at the default compression), and an insertion sort would be `O(n^2)`
-    // over a 500-entry buffer.
     private fun sortedBufferIndices(bufVal: DoubleArray, bufLen: Int): IntArray {
         if (sortIdx.size < bufLen) {
             sortIdx = IntArray(bufLen)
             sortTmp = IntArray(bufLen)
         }
-        val idx = sortIdx
-        for (i in 0 until bufLen) idx[i] = i
-        var width = 1
-        while (width < bufLen) {
-            var lo = 0
-            while (lo < bufLen) {
-                val mid = minOf(lo + width, bufLen)
-                val hi = minOf(lo + 2 * width, bufLen)
-                var a = lo
-                var b = mid
-                var k = lo
-                while (a < mid && b < hi) {
-                    sortTmp[k++] = if (bufVal[idx[a]] <= bufVal[idx[b]]) idx[a++] else idx[b++]
-                }
-                while (a < mid) sortTmp[k++] = idx[a++]
-                while (b < hi) sortTmp[k++] = idx[b++]
-                lo += 2 * width
-            }
-            sortTmp.copyInto(idx, 0, 0, bufLen)
-            width *= 2
+        // Preserve IEEE <= ordering: signed zeros tie and an unordered NaN selects the right run.
+        return argsortBy(bufLen, sortIdx, sortTmp) { a, b ->
+            if (bufVal[a] <= bufVal[b]) -1 else 1
         }
-        return idx
     }
 
     private fun compressInto(bufVal: DoubleArray, bufW: DoubleArray, bufLen: Int) {
@@ -223,8 +204,8 @@ class TDigestStat(
 
         val total = totalWeight
         if (total <= 0.0) {
-            means = DoubleArray(0)
-            weights = DoubleArray(0)
+            means = emptyDoubleArray()
+            weights = emptyDoubleArray()
             return
         }
 
@@ -313,8 +294,8 @@ class TDigestStat(
     override fun reset() = lock.guarded {
         bufferSize = 0
         totalWeight = 0.0
-        means = DoubleArray(0)
-        weights = DoubleArray(0)
+        means = emptyDoubleArray()
+        weights = emptyDoubleArray()
     }
 
     override fun read(timestampNanos: Long): TDigestResult = lock.guarded {

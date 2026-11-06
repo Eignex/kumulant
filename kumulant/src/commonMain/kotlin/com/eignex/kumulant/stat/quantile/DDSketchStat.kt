@@ -80,8 +80,8 @@ class DDSketchStat(
     private val mode = concurrency.additiveMode()
     private val zeroCount = mode.newDouble(0.0)
 
-    private val positiveBins = ArrayBins(mode)
-    private val negativeBins = ArrayBins(mode)
+    private val positiveBins = ArrayBins(concurrency)
+    private val negativeBins = ArrayBins(concurrency)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isNotPositiveWeight()) return

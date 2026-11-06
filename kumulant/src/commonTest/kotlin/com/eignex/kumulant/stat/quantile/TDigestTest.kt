@@ -2,11 +2,35 @@ package com.eignex.kumulant.stat.quantile
 
 import kotlin.math.abs
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class TDigestTest {
+
+    @Test
+    fun `signed zero centroids retain observation order across buffer sizes`() {
+        for (size in listOf(1, 2, 3, 4, 5, 9, 17)) {
+            val values = DoubleArray(size) { if (it % 2 == 0) 0.0 else -0.0 }
+            val td = TDigestStat(compression = 100.0)
+            for (value in values) td.update(value)
+
+            val means = td.read().means
+
+            assertContentEquals(values.map { it.toRawBits() }, means.map { it.toRawBits() }, "size=$size")
+        }
+    }
+
+    @Test
+    fun `NaN centroids retain IEEE merge ordering`() {
+        val td = TDigestStat(compression = 100.0)
+        for (value in doubleArrayOf(2.0, Double.NaN, -1.0, Double.NaN, 1.0)) td.update(value)
+
+        val means = td.read().means
+
+        assertContentEquals(doubleArrayOf(1.0, Double.NaN, -1.0, Double.NaN, 2.0), means)
+    }
 
     @Test
     fun `empty digest returns NaN quantiles`() {

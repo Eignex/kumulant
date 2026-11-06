@@ -3,11 +3,11 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.requirePositiveFeatureSize
 import com.eignex.kumulant.schema.expr.ScalarExpr
-import com.eignex.kumulant.stream.StreamDouble
-import com.eignex.kumulant.stream.StreamDoubleArray
-import com.eignex.kumulant.stream.StreamLong
-import com.eignex.kumulant.stream.getValue
 import com.eignex.kumulant.stream.welfordMode
+import com.eignex.util.concurrent.DoubleCell
+import com.eignex.util.concurrent.DoubleCellArray
+import com.eignex.util.concurrent.LongCell
+import com.eignex.util.concurrent.getValue
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -64,8 +64,8 @@ class SgdOptimizer(
     }
 
     private val mode = concurrency.welfordMode()
-    private val stepCell: StreamLong = mode.newLong(0L)
-    private val cachedLr: StreamDouble = mode.newDouble(0.0)
+    private val stepCell: LongCell = mode.newLong(0L)
+    private val cachedLr: DoubleCell = mode.newDouble(0.0)
 
     /** Live view of the per-update step counter; drives the schedule. */
     val step: Long by stepCell
@@ -118,12 +118,12 @@ class AdamOptimizer(
     }
 
     private val mode = concurrency.welfordMode()
-    private val stepCell: StreamLong = mode.newLong(0L)
-    private val cachedLr: StreamDouble = mode.newDouble(0.0)
-    private val cachedBc1: StreamDouble = mode.newDouble(1.0)
-    private val cachedBc2: StreamDouble = mode.newDouble(1.0)
-    private val m: StreamDoubleArray = mode.newDoubleArray(featureSize)
-    private val v: StreamDoubleArray = mode.newDoubleArray(featureSize)
+    private val stepCell: LongCell = mode.newLong(0L)
+    private val cachedLr: DoubleCell = mode.newDouble(0.0)
+    private val cachedBc1: DoubleCell = mode.newDouble(1.0)
+    private val cachedBc2: DoubleCell = mode.newDouble(1.0)
+    private val m: DoubleCellArray = mode.newDoubleArray(featureSize)
+    private val v: DoubleCellArray = mode.newDoubleArray(featureSize)
 
     override fun resumeAt(step: Long) {
         stepCell.store(step)
