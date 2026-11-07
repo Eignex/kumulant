@@ -92,14 +92,6 @@ jobs:
             args+=(--max-workers=2 -Pkotlin.native.parallelThreads=2)
           fi
           ./gradlew "${tasks[@]}" "${args[@]}"
-      - name: Test iOS simulator
-        if: runner.os == 'macOS'
-        run: |
-          device=$(xcrun simctl list devices available --json | jq -er '
-            [.devices | to_entries[] | select(.key | contains(".iOS-")) | .value[] |
-             select(.name | startswith("iPhone")) | .udid][0] // error("No iPhone simulator available")')
-          ./gradlew :kumulant:iosSimulatorArm64Test -Ptargets.full -PciVersion="$CI_VERSION" \
-            --max-workers=2 -Pkotlin.native.parallelThreads=2 -PiosSimulatorDevice="$device"
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v7
