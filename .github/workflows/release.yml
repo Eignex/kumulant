@@ -7,12 +7,6 @@ on:
     branches: [main]
   push:
     tags: ['v*']
-  workflow_dispatch:
-    inputs:
-      dryRun:
-        description: Run full release validation and publish nothing
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -35,7 +29,6 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       is_snapshot: ${{ steps.version.outputs.is_snapshot }}
       test_release: ${{ steps.version.outputs.test_release }}
-      dry_run: ${{ steps.version.outputs.dry_run }}
       revision: ${{ steps.version.outputs.revision }}
     steps:
       - uses: actions/checkout@v7
@@ -46,21 +39,11 @@ jobs:
       - name: Resolve publication version
         id: version
         shell: bash
-        env:
-          DRY_RUN: ${{ inputs.dryRun || false }}
         run: |
           core='(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)'
           is_snapshot=false
           test_release=false
-          if [[ "$DRY_RUN" == true ]]; then
-            version=0.0.1
-            while IFS= read -r tag; do
-              if [[ "$tag" =~ ^v${core}$ ]]; then
-                version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
-                break
-              fi
-            done < <(git tag --list 'v*' --sort=-v:refname)
-          elif [[ "$GITHUB_REF_TYPE" == tag ]]; then
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
             if [[ ! "$GITHUB_REF_NAME" =~ ^v${core}(-rc\.(0|[1-9][0-9]*))?$ ]]; then
               echo '::error::Use a vX.Y.Z or vX.Y.Z-rc.N release tag' >&2
               exit 1
@@ -84,11 +67,10 @@ jobs:
             echo "version=$version"
             echo "is_snapshot=$is_snapshot"
             echo "test_release=$test_release"
-            echo "dry_run=$DRY_RUN"
             echo "revision=$(git rev-parse HEAD)"
           } >> "$GITHUB_OUTPUT"
 
-  # Tagged releases rerun Linux checks alongside Windows and macOS/iOS.
+  # Tagged releases rerun Linux checks alongside Windows and macOS.
   validate:
     if: github.event_name != 'workflow_run'
     needs: prepare
@@ -116,7 +98,6 @@ jobs:
       RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
       IS_SNAPSHOT: ${{ needs.prepare.outputs.is_snapshot }}
       IS_TEST_RELEASE: ${{ needs.prepare.outputs.test_release }}
-      DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -146,16 +127,13 @@ jobs:
           path: .gradle/configuration-cache
           key: ${{ runner.os }}-${{ runner.arch }}-configuration-full-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties') }}-${{ github.sha }}
           restore-keys: ${{ runner.os }}-${{ runner.arch }}-configuration-full-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', '**/gradle-wrapper.properties') }}-
-      - name: Build release without publishing
-        if: env.DRY_RUN == 'true'
-        run: ./gradlew build -Ptargets.full -PciVersion="$RELEASE_VERSION"
       - name: Publish RC to GitHub only
-        if: env.IS_TEST_RELEASE == 'true' && env.DRY_RUN != 'true'
+        if: env.IS_TEST_RELEASE == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: ./gradlew publishToGitHubRelease -Ptargets.full -PciVersion="$RELEASE_VERSION"
       - name: Publish stable release to Maven Central
-        if: env.IS_SNAPSHOT == 'false' && env.IS_TEST_RELEASE != 'true' && env.DRY_RUN != 'true'
+        if: env.IS_SNAPSHOT == 'false' && env.IS_TEST_RELEASE != 'true'
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.CENTRAL_PORTAL_USER }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
@@ -163,7 +141,7 @@ jobs:
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew publishToMavenCentral -Ptargets.full -PciVersion="$RELEASE_VERSION"
       - name: Publish snapshot to Sonatype
-        if: env.IS_SNAPSHOT == 'true' && env.DRY_RUN != 'true'
+        if: env.IS_SNAPSHOT == 'true'
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.CENTRAL_PORTAL_USER }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.CENTRAL_PORTAL_PASSWORD }}
@@ -171,7 +149,7 @@ jobs:
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.SIGNING_PASSWORD }}
         run: ./gradlew publishAllPublicationsToSonatypeSnapshotsRepository -Ptargets.full -PciVersion="$RELEASE_VERSION"
       - name: Create GitHub release
-        if: github.ref_type == 'tag' && env.IS_SNAPSHOT == 'false' && env.IS_TEST_RELEASE != 'true' && env.DRY_RUN != 'true'
+        if: github.ref_type == 'tag' && env.IS_SNAPSHOT == 'false' && env.IS_TEST_RELEASE != 'true'
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true

@@ -23,7 +23,7 @@ repositories {
 
 val utilPin = "0.0.1-20261105.215902-10"
 
-// Routine checks cover JVM + Linux x64; release validation opts into every supported target.
+// Routine checks cover JVM + Linux x64; release validation opts into all desktop and cloud targets.
 val fullTargets = providers.gradleProperty("targets.full").isPresent
 
 eignexBuild {
@@ -64,7 +64,6 @@ kotlin {
     if (fullTargets) {
         linuxArm64()
         macosArm64(); mingwX64()
-        iosArm64(); iosSimulatorArm64()
     }
 
     applyDefaultHierarchyTemplate()
@@ -114,8 +113,6 @@ dependencies {
             "linuxarm64" to utilPin,
             "macosarm64" to utilPin,
             "mingwx64" to utilPin,
-            "iosarm64" to "0.0.1-20261105.215902-11",
-            "iossimulatorarm64" to "0.0.1-20261105.215902-11",
         )) {
             add("commonMainImplementation", "com.eignex:util-$module:$pinned") {
                 version { strictly(pinned) }
@@ -128,8 +125,6 @@ dependencies {
                 "linuxarm64" to "0.1.1-20261105.140327-312",
                 "macosarm64" to "0.1.1-20261105.140327-334",
                 "mingwx64" to "0.1.1-20261105.140327-138",
-                "iosarm64" to "0.1.1-20261105.140327-159",
-                "iossimulatorarm64" to "0.1.1-20261105.140327-159",
             ),
         )) {
             for ((module, pinned) in platforms) {
@@ -188,9 +183,4 @@ dokka {
         )
         samples.from("src/commonMain/kotlin/com/eignex/kumulant/samples")
     }
-}
-
-// Select an installed simulator in CI rather than relying on a particular iPhone model.
-tasks.withType<org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeSimulatorTest>().configureEach {
-    providers.gradleProperty("iosSimulatorDevice").orNull?.let { device.set(it) }
 }
