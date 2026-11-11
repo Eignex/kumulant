@@ -17,7 +17,6 @@ import com.eignex.kumulant.stat.change.PageHinkleyResult
 import com.eignex.kumulant.stat.event.CrossingResult
 import com.eignex.kumulant.stat.event.RecencyResult
 import com.eignex.kumulant.stat.event.RunLengthResult
-import com.eignex.kumulant.stat.event.SojournResult
 import com.eignex.kumulant.stat.quantile.QuantileResult
 import com.eignex.kumulant.stat.quantile.ReservoirResult
 import com.eignex.kumulant.stat.quantile.SketchResult
@@ -383,14 +382,6 @@ data class CountMinSketch(
     /** [HasherRef] for the mixer applied per row; resolved via the Hashers registry. */
     val hasher: HasherRef = HasherRef.SplitMix64,
 ) : DiscreteStatSpec<CountMinSketchResult>
-
-/** Spec for `SojournStat`: per-state time, transition counts, and current dwell over a declared alphabet. */
-@Serializable
-@SerialName("Sojourn")
-data class Sojourn(
-    /** Declared categorical state alphabet, in order. Must be non-empty and unique. */
-    val states: List<Long>,
-) : DiscreteStatSpec<SojournResult>
 
 /** Spec for `SpaceSavingStat`: top-[capacity] heavy-hitters tracker. */
 @Serializable

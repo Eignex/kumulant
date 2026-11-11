@@ -88,9 +88,8 @@ class CrossingStat(
         validateMerge(values)
         ups.add(values.upCrossings)
         downs.add(values.downCrossings)
-        // Adopt the baseline only when there is none, the way SojournStat keeps its own current state
-        // over an incoming one: with a baseline already established, the local stream's side is the
-        // live one and the snapshot's is a parallel shard's, which nothing here can order against it.
+        // An established baseline belongs to the live stream. The snapshot belongs to a parallel
+        // shard, whose ending side cannot be ordered against the local one.
         val endedAbove = values.endedAtOrAboveLevel ?: return
         if (initialized.load() == 0L) {
             lastSide.store(if (endedAbove) 1L else 0L)

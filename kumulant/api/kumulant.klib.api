@@ -3545,34 +3545,6 @@ final class com.eignex.kumulant.schema.spec/SoftmaxRegression : com.eignex.kumul
     }
 }
 
-final class com.eignex.kumulant.schema.spec/Sojourn : com.eignex.kumulant.schema.spec/DiscreteStatSpec<com.eignex.kumulant.stat.event/SojournResult> { // com.eignex.kumulant.schema.spec/Sojourn|null[0]
-    constructor <init>(kotlin.collections/List<kotlin/Long>) // com.eignex.kumulant.schema.spec/Sojourn.<init>|<init>(kotlin.collections.List<kotlin.Long>){}[0]
-
-    final val states // com.eignex.kumulant.schema.spec/Sojourn.states|{}states[0]
-        final fun <get-states>(): kotlin.collections/List<kotlin/Long> // com.eignex.kumulant.schema.spec/Sojourn.states.<get-states>|<get-states>(){}[0]
-
-    final fun component1(): kotlin.collections/List<kotlin/Long> // com.eignex.kumulant.schema.spec/Sojourn.component1|component1(){}[0]
-    final fun copy(kotlin.collections/List<kotlin/Long> = ...): com.eignex.kumulant.schema.spec/Sojourn // com.eignex.kumulant.schema.spec/Sojourn.copy|copy(kotlin.collections.List<kotlin.Long>){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.schema.spec/Sojourn.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.schema.spec/Sojourn.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.schema.spec/Sojourn.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.schema.spec/Sojourn> { // com.eignex.kumulant.schema.spec/Sojourn.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.schema.spec/Sojourn.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.schema.spec/Sojourn.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.schema.spec/Sojourn.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.schema.spec/Sojourn // com.eignex.kumulant.schema.spec/Sojourn.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.schema.spec/Sojourn) // com.eignex.kumulant.schema.spec/Sojourn.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.schema.spec.Sojourn){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.schema.spec/Sojourn.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.schema.spec/Sojourn.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.schema.spec/Sojourn> // com.eignex.kumulant.schema.spec/Sojourn.Companion.serializer|serializer(){}[0]
-    }
-}
-
 final class com.eignex.kumulant.schema.spec/SpaceSaving : com.eignex.kumulant.schema.spec/DiscreteStatSpec<com.eignex.kumulant.stat.sketch/HeavyHittersResult> { // com.eignex.kumulant.schema.spec/SpaceSaving|null[0]
     constructor <init>(kotlin/Int) // com.eignex.kumulant.schema.spec/SpaceSaving.<init>|<init>(kotlin.Int){}[0]
 
@@ -4529,70 +4501,6 @@ final class com.eignex.kumulant.stat.event/RunLengthStat : com.eignex.kumulant.c
     final fun read(kotlin/Long): com.eignex.kumulant.stat.event/RunLengthResult // com.eignex.kumulant.stat.event/RunLengthStat.read|read(kotlin.Long){}[0]
     final fun reset() // com.eignex.kumulant.stat.event/RunLengthStat.reset|reset(){}[0]
     final fun update(kotlin/Double, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.event/RunLengthStat.update|update(kotlin.Double;kotlin.Long;kotlin.Double){}[0]
-}
-
-final class com.eignex.kumulant.stat.event/SojournResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.event/SojournResult|null[0]
-    constructor <init>(kotlin.collections/List<kotlin/Long>, kotlin.collections/List<kotlin/Long>, kotlin.collections/List<kotlin/Long>, kotlin/Long, kotlin/Long, kotlin/Long, kotlin/Boolean) // com.eignex.kumulant.stat.event/SojournResult.<init>|<init>(kotlin.collections.List<kotlin.Long>;kotlin.collections.List<kotlin.Long>;kotlin.collections.List<kotlin.Long>;kotlin.Long;kotlin.Long;kotlin.Long;kotlin.Boolean){}[0]
-
-    final val currentDwellNanos // com.eignex.kumulant.stat.event/SojournResult.currentDwellNanos|{}currentDwellNanos[0]
-        final fun <get-currentDwellNanos>(): kotlin/Long // com.eignex.kumulant.stat.event/SojournResult.currentDwellNanos.<get-currentDwellNanos>|<get-currentDwellNanos>(){}[0]
-    final val currentState // com.eignex.kumulant.stat.event/SojournResult.currentState|{}currentState[0]
-        final fun <get-currentState>(): kotlin/Long // com.eignex.kumulant.stat.event/SojournResult.currentState.<get-currentState>|<get-currentState>(){}[0]
-    final val currentStateEnterTimestampNanos // com.eignex.kumulant.stat.event/SojournResult.currentStateEnterTimestampNanos|{}currentStateEnterTimestampNanos[0]
-        final fun <get-currentStateEnterTimestampNanos>(): kotlin/Long // com.eignex.kumulant.stat.event/SojournResult.currentStateEnterTimestampNanos.<get-currentStateEnterTimestampNanos>|<get-currentStateEnterTimestampNanos>(){}[0]
-    final val hasState // com.eignex.kumulant.stat.event/SojournResult.hasState|{}hasState[0]
-        final fun <get-hasState>(): kotlin/Boolean // com.eignex.kumulant.stat.event/SojournResult.hasState.<get-hasState>|<get-hasState>(){}[0]
-    final val states // com.eignex.kumulant.stat.event/SojournResult.states|{}states[0]
-        final fun <get-states>(): kotlin.collections/List<kotlin/Long> // com.eignex.kumulant.stat.event/SojournResult.states.<get-states>|<get-states>(){}[0]
-    final val timestampNanos // com.eignex.kumulant.stat.event/SojournResult.timestampNanos|{}timestampNanos[0]
-        final fun <get-timestampNanos>(): kotlin/Long // com.eignex.kumulant.stat.event/SojournResult.timestampNanos.<get-timestampNanos>|<get-timestampNanos>(){}[0]
-    final val totalNanosByState // com.eignex.kumulant.stat.event/SojournResult.totalNanosByState|{}totalNanosByState[0]
-        final fun <get-totalNanosByState>(): kotlin.collections/List<kotlin/Long> // com.eignex.kumulant.stat.event/SojournResult.totalNanosByState.<get-totalNanosByState>|<get-totalNanosByState>(){}[0]
-    final val transitionsByState // com.eignex.kumulant.stat.event/SojournResult.transitionsByState|{}transitionsByState[0]
-        final fun <get-transitionsByState>(): kotlin.collections/List<kotlin/Long> // com.eignex.kumulant.stat.event/SojournResult.transitionsByState.<get-transitionsByState>|<get-transitionsByState>(){}[0]
-
-    final fun component1(): kotlin.collections/List<kotlin/Long> // com.eignex.kumulant.stat.event/SojournResult.component1|component1(){}[0]
-    final fun component2(): kotlin.collections/List<kotlin/Long> // com.eignex.kumulant.stat.event/SojournResult.component2|component2(){}[0]
-    final fun component3(): kotlin.collections/List<kotlin/Long> // com.eignex.kumulant.stat.event/SojournResult.component3|component3(){}[0]
-    final fun component4(): kotlin/Long // com.eignex.kumulant.stat.event/SojournResult.component4|component4(){}[0]
-    final fun component5(): kotlin/Long // com.eignex.kumulant.stat.event/SojournResult.component5|component5(){}[0]
-    final fun component6(): kotlin/Long // com.eignex.kumulant.stat.event/SojournResult.component6|component6(){}[0]
-    final fun component7(): kotlin/Boolean // com.eignex.kumulant.stat.event/SojournResult.component7|component7(){}[0]
-    final fun copy(kotlin.collections/List<kotlin/Long> = ..., kotlin.collections/List<kotlin/Long> = ..., kotlin.collections/List<kotlin/Long> = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ..., kotlin/Boolean = ...): com.eignex.kumulant.stat.event/SojournResult // com.eignex.kumulant.stat.event/SojournResult.copy|copy(kotlin.collections.List<kotlin.Long>;kotlin.collections.List<kotlin.Long>;kotlin.collections.List<kotlin.Long>;kotlin.Long;kotlin.Long;kotlin.Long;kotlin.Boolean){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // com.eignex.kumulant.stat.event/SojournResult.equals|equals(kotlin.Any?){}[0]
-    final fun hashCode(): kotlin/Int // com.eignex.kumulant.stat.event/SojournResult.hashCode|hashCode(){}[0]
-    final fun toString(): kotlin/String // com.eignex.kumulant.stat.event/SojournResult.toString|toString(){}[0]
-
-    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<com.eignex.kumulant.stat.event/SojournResult> { // com.eignex.kumulant.stat.event/SojournResult.$serializer|null[0]
-        final val descriptor // com.eignex.kumulant.stat.event/SojournResult.$serializer.descriptor|{}descriptor[0]
-            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // com.eignex.kumulant.stat.event/SojournResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
-
-        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // com.eignex.kumulant.stat.event/SojournResult.$serializer.childSerializers|childSerializers(){}[0]
-        final fun deserialize(kotlinx.serialization.encoding/Decoder): com.eignex.kumulant.stat.event/SojournResult // com.eignex.kumulant.stat.event/SojournResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
-        final fun serialize(kotlinx.serialization.encoding/Encoder, com.eignex.kumulant.stat.event/SojournResult) // com.eignex.kumulant.stat.event/SojournResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;com.eignex.kumulant.stat.event.SojournResult){}[0]
-    }
-
-    final object Companion { // com.eignex.kumulant.stat.event/SojournResult.Companion|null[0]
-        final val $childSerializers // com.eignex.kumulant.stat.event/SojournResult.Companion.$childSerializers|{}$childSerializers[0]
-
-        final fun serializer(): kotlinx.serialization/KSerializer<com.eignex.kumulant.stat.event/SojournResult> // com.eignex.kumulant.stat.event/SojournResult.Companion.serializer|serializer(){}[0]
-    }
-}
-
-final class com.eignex.kumulant.stat.event/SojournStat : com.eignex.kumulant.core/DiscreteStat<com.eignex.kumulant.stat.event/SojournResult> { // com.eignex.kumulant.stat.event/SojournStat|null[0]
-    constructor <init>(kotlin.collections/List<kotlin/Long>, com.eignex.kumulant.core/Concurrency = ...) // com.eignex.kumulant.stat.event/SojournStat.<init>|<init>(kotlin.collections.List<kotlin.Long>;com.eignex.kumulant.core.Concurrency){}[0]
-
-    final val concurrency // com.eignex.kumulant.stat.event/SojournStat.concurrency|{}concurrency[0]
-        final fun <get-concurrency>(): com.eignex.kumulant.core/Concurrency // com.eignex.kumulant.stat.event/SojournStat.concurrency.<get-concurrency>|<get-concurrency>(){}[0]
-    final val states // com.eignex.kumulant.stat.event/SojournStat.states|{}states[0]
-        final fun <get-states>(): kotlin.collections/List<kotlin/Long> // com.eignex.kumulant.stat.event/SojournStat.states.<get-states>|<get-states>(){}[0]
-
-    final fun create(com.eignex.kumulant.core/Concurrency?): com.eignex.kumulant.stat.event/SojournStat // com.eignex.kumulant.stat.event/SojournStat.create|create(com.eignex.kumulant.core.Concurrency?){}[0]
-    final fun merge(com.eignex.kumulant.stat.event/SojournResult, kotlin/Long) // com.eignex.kumulant.stat.event/SojournStat.merge|merge(com.eignex.kumulant.stat.event.SojournResult;kotlin.Long){}[0]
-    final fun read(kotlin/Long): com.eignex.kumulant.stat.event/SojournResult // com.eignex.kumulant.stat.event/SojournStat.read|read(kotlin.Long){}[0]
-    final fun reset() // com.eignex.kumulant.stat.event/SojournStat.reset|reset(){}[0]
-    final fun update(kotlin/Long, kotlin/Long, kotlin/Double) // com.eignex.kumulant.stat.event/SojournStat.update|update(kotlin.Long;kotlin.Long;kotlin.Double){}[0]
-    final fun validateMerge(com.eignex.kumulant.stat.event/SojournResult) // com.eignex.kumulant.stat.event/SojournStat.validateMerge|validateMerge(com.eignex.kumulant.stat.event.SojournResult){}[0]
 }
 
 final class com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult : com.eignex.kumulant.core/Result { // com.eignex.kumulant.stat.forecast/ExponentialSmoothingResult|null[0]
