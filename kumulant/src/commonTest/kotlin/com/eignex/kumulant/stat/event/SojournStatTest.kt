@@ -45,6 +45,33 @@ class SojournStatTest {
     }
 
     @Test
+    fun `state lookup preserves alphabet order for extreme long keys`() {
+        val alphabet = listOf(Long.MAX_VALUE, 0L, Long.MIN_VALUE, -1L)
+        val s = SojournStat(alphabet)
+        alphabet.forEachIndexed { index, state -> s.update(state, timestampNanos = index.toLong()) }
+
+        val r = s.read(4L)
+
+        assertEquals(alphabet, r.states)
+        assertEquals(listOf(1L, 1L, 1L, 0L), r.totalNanosByState)
+        assertEquals(listOf(1L, 1L, 1L, 1L), r.transitionsByState)
+        assertEquals(-1L, r.currentState)
+    }
+
+    @Test
+    fun `changing the supplied alphabet does not change declared states`() {
+        val alphabet = mutableListOf(0L, 1L, 2L)
+        val s = SojournStat(alphabet)
+        alphabet[1] = 99L
+
+        s.update(1L, timestampNanos = 100L)
+        val r = s.read(200L)
+
+        assertEquals(states, r.states)
+        assertEquals(1L, r.currentState)
+    }
+
+    @Test
     fun `same-state update does not add a transition or interrupt dwell`() {
         val s = SojournStat(states)
         s.update(value = 2L, timestampNanos = 100L)

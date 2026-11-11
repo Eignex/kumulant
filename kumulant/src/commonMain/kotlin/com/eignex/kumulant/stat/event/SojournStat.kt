@@ -6,6 +6,7 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.serializedLock
+import com.eignex.util.collections.MutableLongIntMap
 import com.eignex.util.concurrent.guarded
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -43,23 +44,28 @@ data class SojournResult(
  * **Use cases:** uptime / availability breakdowns by state, dwell-time
  * accounting, transition counters.
  *
- * **Memory:** O(states); three arrays of length `states.size` plus a handful of cells.
+ * **Memory:** O(states); a state index, three arrays of length `states.size` and a handful of cells.
  *
- * **Update:** O(states) on transitions for the [Long]-to-index lookup
- * (linear scan over the declared alphabet); O(1) when the state does not change.
+ * **Update:** Expected O(1) for state lookup and dwell accounting.
  *
  * **Concurrency:** Coupled current-state / enter-timestamp / per-state totals
  * (category 3). The internal lock keeps the multi-cell update consistent.
  */
-class SojournStat(
-    /** Declared state alphabet; must be non-empty and contain no duplicates. */
-    val states: List<Long>,
-    override val concurrency: Concurrency = Concurrency.None,
-) : DiscreteStat<SojournResult> {
+class SojournStat(states: List<Long>, override val concurrency: Concurrency = Concurrency.None) :
+    DiscreteStat<SojournResult> {
+
+    /** Owned declared state alphabet; non-empty and without duplicates, in caller-supplied order. */
+    val states: List<Long> = states.toList()
 
     init {
-        require(states.isNotEmpty()) { "SojournStat requires at least one declared state" }
-        require(states.distinct().size == states.size) { "SojournStat states must be unique" }
+        require(this.states.isNotEmpty()) { "SojournStat requires at least one declared state" }
+    }
+
+    private val stateIndices = MutableLongIntMap(this.states.size).apply {
+        this@SojournStat.states.forEachIndexed { index, state ->
+            require(!containsKey(state)) { "SojournStat states must be unique" }
+            put(state, index)
+        }
     }
 
     private val streamMode = concurrency.monotonicMode()
@@ -71,7 +77,7 @@ class SojournStat(
     private val enterTimestamp = streamMode.newLong(0L)
 
     private fun indexOfState(state: Long): Int {
-        val idx = states.indexOf(state)
+        val idx = stateIndices.getOrDefault(state, -1)
         require(idx >= 0) { "SojournStat received undeclared state $state (declared: $states)" }
         return idx
     }
@@ -119,7 +125,7 @@ class SojournStat(
         val incomingEnter = values.currentStateEnterTimestampNanos
         val localEnter = enterTimestamp.load()
         if (currentStateIndex.load() == NO_STATE || incomingEnter > localEnter) {
-            currentStateIndex.store(states.indexOf(values.currentState).toLong())
+            currentStateIndex.store(stateIndices.getOrDefault(values.currentState, -1).toLong())
             enterTimestamp.store(incomingEnter)
         }
     }
