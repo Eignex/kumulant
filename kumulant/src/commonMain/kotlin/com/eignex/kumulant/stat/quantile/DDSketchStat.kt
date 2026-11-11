@@ -163,14 +163,14 @@ class DDSketchStat(
             )
         }
 
-        val sortedNeg = negSnap.entries.sortedByDescending { it.key }
-        val sortedPos = posSnap.entries.sortedBy { it.key }
+        val sortedNeg = SortedBins(negSnap)
+        val sortedPos = SortedBins(posSnap)
 
         fun computeQuantile(targetRank: Double): Double {
             var currentRank = 0.0
-            for ((index, weight) in sortedNeg) {
-                currentRank += weight
-                if (currentRank >= targetRank) return -valueFromIndex(index)
+            for (position in sortedNeg.size - 1 downTo 0) {
+                currentRank += sortedNeg.weightAt(position)
+                if (currentRank >= targetRank) return -valueFromIndex(sortedNeg.indexAt(position))
             }
             // Only claim the zero bucket when something actually landed in it; an empty zeroSnap
             // would satisfy `0.0 >= 0.0` and make p0 report 0.0 on all-positive data, a value not
@@ -179,17 +179,17 @@ class DDSketchStat(
                 currentRank += zeroSnap
                 if (currentRank >= targetRank) return 0.0
             }
-            for ((index, weight) in sortedPos) {
-                currentRank += weight
-                if (currentRank >= targetRank) return valueFromIndex(index)
+            for (position in 0 until sortedPos.size) {
+                currentRank += sortedPos.weightAt(position)
+                if (currentRank >= targetRank) return valueFromIndex(sortedPos.indexAt(position))
             }
             // The per-bin weights sum to `total` by construction, so the loops above cover
             // every reachable rank. Falling through means floating-point summation left
             // the running rank a hair under the target, which is a rounding artefact
             // rather than a missing bin: report the largest populated bucket.
-            sortedPos.lastOrNull()?.let { return valueFromIndex(it.key) }
+            if (sortedPos.size > 0) return valueFromIndex(sortedPos.indexAt(sortedPos.size - 1))
             if (zeroSnap > 0.0) return 0.0
-            sortedNeg.lastOrNull()?.let { return -valueFromIndex(it.key) }
+            if (sortedNeg.size > 0) return -valueFromIndex(sortedNeg.indexAt(0))
             return Double.NaN
         }
 
