@@ -9,6 +9,25 @@ import kotlin.test.assertFailsWith
 class ConfusionMatrixStatTest {
 
     @Test
+    fun `matrix reductions respect predicted rows and true columns`() {
+        val result = ConfusionMatrixResult(3, DoubleArray(9) { it + 1.0 })
+
+        assertEquals(15.0, result.correct, DELTA)
+        for (c in 0 until 3) {
+            assertEquals(6.0 + 9.0 * c, result.predictedTotal(c), DELTA)
+            assertEquals(12.0 + 3.0 * c, result.actualTotal(c), DELTA)
+        }
+    }
+
+    @Test
+    fun `mcc combines asymmetric multiclass margins`() {
+        val result = ConfusionMatrixResult(3, DoubleArray(9) { it + 1.0 })
+        val expected = -54.0 / sqrt(1188.0 * 1332.0)
+
+        assertEquals(expected, result.mcc, DELTA)
+    }
+
+    @Test
     fun `counts pair into the predicted-by-truth cell`() {
         val s = ConfusionMatrixStat(numClasses = 3)
         s.update(0.0, 0.0)

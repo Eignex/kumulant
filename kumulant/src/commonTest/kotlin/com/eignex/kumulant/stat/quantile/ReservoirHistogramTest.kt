@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -7,6 +8,75 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ReservoirHistogramTest {
+
+    @Test
+    fun `weighted admission matches sequential scan across modes`() {
+        val reference = ReservoirHistogramStat(capacity = 17, seed = 42, concurrency = Concurrency.Relaxed)
+        val stats = Concurrency.entries.map { ReservoirHistogramStat(capacity = 17, seed = 42, concurrency = it) }
+        for (i in 1..500) {
+            val weight = (i % 7 + 1).toDouble()
+            reference.update(i.toDouble(), weight = weight)
+            for (stat in stats) stat.update(i.toDouble(), weight = weight)
+        }
+
+        for (stat in stats) assertEquals(reference.read(), stat.read(), "mode=${stat.concurrency}")
+    }
+
+    @Test
+    fun `equal minimum priorities evict the lowest slot`() {
+        for (mode in Concurrency.entries) {
+            val stat = ReservoirHistogramStat(capacity = 4, concurrency = mode)
+            stat.merge(
+                ReservoirResult(
+                    doubleArrayOf(10.0, 20.0, 30.0, 40.0),
+                    doubleArrayOf(0.9, 0.1, 0.1, 0.2),
+                    4,
+                    4L,
+                    4.0,
+                ),
+            )
+
+            stat.merge(ReservoirResult(doubleArrayOf(50.0, 60.0, 70.0), doubleArrayOf(0.3, 0.1, 0.4), 4, 3L, 3.0))
+
+            assertTrue(stat.read().values.contentEquals(doubleArrayOf(10.0, 50.0, 70.0, 40.0)), "mode=$mode")
+        }
+    }
+
+    @Test
+    fun `nonfinite merged priorities preserve sequential scan selection`() {
+        for (keys in listOf(
+            doubleArrayOf(0.0, -0.0, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY, 0.5, 0.75),
+            doubleArrayOf(Double.NaN, 0.3, 0.2, 0.9, 0.8, 0.7),
+            doubleArrayOf(0.1, Double.NaN, 0.2, 0.9, 0.8, 0.7),
+        )) {
+            val reference = ReservoirHistogramStat(capacity = 3, concurrency = Concurrency.Relaxed)
+            val snapshot = ReservoirResult(DoubleArray(keys.size) { it.toDouble() }, keys, 3, keys.size.toLong(), 6.0)
+            reference.merge(snapshot)
+            for (mode in Concurrency.entries) {
+                val stat = ReservoirHistogramStat(capacity = 3, concurrency = mode)
+
+                stat.merge(snapshot)
+
+                assertEquals(reference.read(), stat.read(), "mode=$mode keys=${keys.toList()}")
+            }
+        }
+    }
+
+    @Test
+    fun `reset clears retained priorities before subsequent merges`() {
+        for (mode in Concurrency.entries) {
+            val stat = ReservoirHistogramStat(capacity = 2, concurrency = mode)
+            stat.merge(ReservoirResult(doubleArrayOf(1.0, 2.0), doubleArrayOf(Double.NaN, 1.0), 2, 2L, 2.0))
+            stat.reset()
+            val snapshot = ReservoirResult(doubleArrayOf(3.0, 4.0, 5.0), doubleArrayOf(0.3, 0.2, 0.4), 2, 3L, 3.0)
+            val fresh = ReservoirHistogramStat(capacity = 2, concurrency = mode)
+            fresh.merge(snapshot)
+
+            stat.merge(snapshot)
+
+            assertEquals(fresh.read(), stat.read(), "mode=$mode")
+        }
+    }
 
     @Test
     fun `create produces independent stat`() {

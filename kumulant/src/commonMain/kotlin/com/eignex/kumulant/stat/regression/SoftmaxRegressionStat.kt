@@ -88,7 +88,14 @@ data class SoftmaxRegressionResult(
             destination.fill(0.0)
             x.forEachStored { column, value ->
                 if (value != 0.0) {
-                    for (row in 0 until numClasses) destination[row] += weights[row, column] * value
+                    koblas.axpy(
+                        y = destination,
+                        yOff = 0,
+                        alpha = value,
+                        x = weights.values,
+                        xOff = weights.offset + column * weights.leadingDimension,
+                        len = numClasses,
+                    )
                 }
             }
         }
@@ -235,15 +242,17 @@ class SoftmaxRegressionStat(
     }
 
     override fun read(timestampNanos: Long): SoftmaxRegressionResult = lock.guarded {
-        val w = DoubleArray(numClasses * featureSize) { weightsCell.load(it) }
+        val w = DoubleArray(numClasses * featureSize) { index ->
+            val row = index % numClasses
+            val column = index / numClasses
+            weightsCell.load(row * featureSize + column)
+        }
         val b = DoubleArray(numClasses) { biasCell.load(it) }
         SoftmaxRegressionResult(
             featureSize = featureSize,
             numClasses = numClasses,
-            weights = DenseMatrix.ofRows(
-                Array(numClasses) { k -> w.copyOfRange(k * featureSize, (k + 1) * featureSize) },
-            ),
-            biases = DenseVector.of(b),
+            weights = DenseMatrix.wrap(numClasses, featureSize, w),
+            biases = DenseVector.wrap(b),
             totalWeights = totalWeightsCell.load(),
             step = stepCell.load(),
             crossEntropy = crossEntropyCell.load(),

@@ -27,6 +27,9 @@ open class PredictionKernelBenchmark {
     @Param("1", "10", "100")
     var densityPercent: Int = 1
 
+    @Param("4", "16", "64")
+    var numClasses: Int = 4
+
     private lateinit var x: Vector
     private lateinit var linear: StochasticRegressionResult
     private lateinit var softmax: SoftmaxRegressionResult
@@ -47,21 +50,24 @@ open class PredictionKernelBenchmark {
         linear = StochasticRegressionResult(weights, 0.25, 0.0, 0L, Link.Identity)
         softmax = SoftmaxRegressionResult(
             featureSize,
-            4,
-            DenseMatrix.ofRows(Array(4) { k -> DoubleArray(featureSize) { i -> (k - i % 5) * 0.1 } }),
-            DenseVector.of(doubleArrayOf(-0.2, 0.0, 0.1, 0.3)),
+            numClasses,
+            DenseMatrix.ofRows(Array(numClasses) { k -> DoubleArray(featureSize) { i -> (k - i % 5) * 0.1 } }),
+            DenseVector.of(DoubleArray(numClasses) { k -> (k - numClasses / 2) * 0.1 }),
             0.0,
             0L,
             0.0,
         )
         val identity = DenseMatrix.diagonal(featureSize, 1.0)
         posterior = PrecisionRegressionResult(weights, 0.25, 1.0, 0.0, 0L, identity)
-        val naiveBayes = GaussianNaiveBayesStat(featureSize, 4)
-        repeat(16) { sample ->
-            naiveBayes.update(DenseVector.of(DoubleArray(featureSize) { i -> (sample - i % 7) * 0.1 }), (sample % 4).toDouble())
+        val naiveBayes = GaussianNaiveBayesStat(featureSize, numClasses)
+        repeat(maxOf(16, numClasses)) { sample ->
+            naiveBayes.update(
+                DenseVector.of(DoubleArray(featureSize) { i -> (sample - i % 7) * 0.1 }),
+                (sample % numClasses).toDouble(),
+            )
         }
         gaussianNaiveBayes = naiveBayes.read()
-        probabilities = DoubleArray(4)
+        probabilities = DoubleArray(numClasses)
     }
 
     @Benchmark

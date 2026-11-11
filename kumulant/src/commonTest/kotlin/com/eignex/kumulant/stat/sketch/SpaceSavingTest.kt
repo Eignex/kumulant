@@ -9,6 +9,74 @@ import kotlin.test.assertTrue
 class SpaceSavingTest {
 
     @Test
+    fun `replacing an inactive merged slot preserves an active copy of its key`() {
+        for (mode in listOf(Concurrency.None, Concurrency.Strict, Concurrency.HighWrite)) {
+            val stat = SpaceSavingStat(capacity = 2, concurrency = mode)
+            stat.merge(HeavyHittersResult(2, longArrayOf(7L), longArrayOf(-1L), longArrayOf(0L), 0L))
+            stat.update(7L)
+
+            stat.update(8L)
+            stat.update(7L)
+
+            val result = stat.read()
+            assertTrue(result.keys.contentEquals(longArrayOf(7L)), "mode=$mode")
+            assertTrue(result.counts.contentEquals(longArrayOf(2L)), "mode=$mode")
+        }
+    }
+
+    @Test
+    fun `an evicted key can be admitted without updating its replacement`() {
+        for (mode in listOf(Concurrency.None, Concurrency.Strict, Concurrency.HighWrite)) {
+            val stat = SpaceSavingStat(capacity = 2, concurrency = mode)
+            for (key in longArrayOf(Long.MIN_VALUE, Long.MAX_VALUE, 0L)) stat.update(key)
+
+            stat.update(Long.MIN_VALUE)
+            stat.update(0L)
+
+            val result = stat.read()
+            assertTrue(result.keys.contentEquals(longArrayOf(0L, Long.MIN_VALUE)), "mode=$mode")
+            assertTrue(result.counts.contentEquals(longArrayOf(3L, 2L)), "mode=$mode")
+            assertTrue(result.errors.contentEquals(longArrayOf(1L, 1L)), "mode=$mode")
+        }
+    }
+
+    @Test
+    fun `reset removes tracked keys before subsequent updates`() {
+        for (mode in Concurrency.entries) {
+            val stat = SpaceSavingStat(capacity = 2, concurrency = mode)
+            stat.update(1L)
+            stat.update(2L)
+            stat.reset()
+
+            stat.update(2L)
+            stat.update(3L)
+
+            val result = stat.read()
+            assertTrue(result.keys.contentEquals(longArrayOf(2L, 3L)), "mode=$mode")
+            assertTrue(result.counts.contentEquals(longArrayOf(1L, 1L)), "mode=$mode")
+            assertEquals(2L, result.totalSeen)
+        }
+    }
+
+    @Test
+    fun `merged keys remain tracked when updated after eviction`() {
+        for (mode in listOf(Concurrency.None, Concurrency.Strict, Concurrency.HighWrite)) {
+            val stat = SpaceSavingStat(capacity = 2, concurrency = mode)
+            stat.update(1L)
+            stat.update(2L)
+            val snapshot = HeavyHittersResult(2, longArrayOf(3L, 2L), longArrayOf(4L, 2L), longArrayOf(1L, 0L), 6L)
+
+            stat.merge(snapshot)
+            stat.update(3L)
+
+            val result = stat.read()
+            assertTrue(result.keys.contentEquals(longArrayOf(3L, 2L)), "mode=$mode")
+            assertTrue(result.counts.contentEquals(longArrayOf(6L, 3L)), "mode=$mode")
+            assertTrue(result.errors.contentEquals(longArrayOf(2L, 0L)), "mode=$mode")
+        }
+    }
+
+    @Test
     fun `empty snapshot is well-formed`() {
         val ss = SpaceSavingStat(capacity = 10)
         val r = ss.read()
