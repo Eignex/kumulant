@@ -7,6 +7,7 @@ import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
+import com.eignex.util.collections.MutableLongIntMap
 import com.eignex.util.concurrent.guarded
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -96,10 +97,10 @@ data class HeavyHittersResult(
  * users, top error fingerprints, hot cache keys. Pair with [CountMinSketchStat]
  * if you need point-frequency lookups on arbitrary keys, not just the top set.
  *
- * **Memory:** O([capacity]) Longs (keys + counts + errors).
+ * **Memory:** O([capacity]) keys, counts and errors, plus a key-to-slot index in classic mode.
  *
- * **Update:** O(1) per observation when the key is tracked; O([capacity]) on
- * a miss when the table is full (linear scan to find the minimum-count slot).
+ * **Update:** Expected O(1) for a tracked key in classic mode; O([capacity]) on a miss.
+ * Relaxed mode scans the slots and may retry under contention.
  *
  * **Concurrency:** Two algorithms run depending on level:
  *
@@ -138,6 +139,7 @@ class SpaceSavingStat(
     private val policy: AdmissionPolicy =
         if (concurrency == Concurrency.Relaxed) AdmissionPolicy.MisraGries else AdmissionPolicy.Classic
     private val useMisraGries: Boolean = policy == AdmissionPolicy.MisraGries
+    private val slotsByKey = if (useMisraGries) null else MutableLongIntMap(capacity)
 
     // Accumulated Misra-Gries shortfall remains part of the error bound after policy changes.
     private val deficitCell = mode.newLong(0L)
@@ -150,18 +152,20 @@ class SpaceSavingStat(
 
     // The caller serializes admission and reads through outerLock in concurrent modes.
     private fun admitClassic(key: Long, addCount: Long, addError: Long) {
-        for (i in 0 until capacity) {
-            if (counts.load(i) > 0L && keys.load(i) == key) {
-                counts.addSaturating(i, addCount)
-                errors.addSaturating(i, addError)
-                return
-            }
+        val index = checkNotNull(slotsByKey)
+        val tracked = index.getOrDefault(key, -1)
+        if (tracked >= 0) {
+            counts.addSaturating(tracked, addCount)
+            errors.addSaturating(tracked, addError)
+            if (counts.load(tracked) <= 0L) index.remove(key)
+            return
         }
         for (i in 0 until capacity) {
             if (counts.load(i) == 0L) {
                 keys.store(i, key)
                 counts.store(i, addCount)
                 errors.store(i, addError)
+                if (addCount > 0L) index.put(key, i)
                 return
             }
         }
@@ -174,9 +178,12 @@ class SpaceSavingStat(
                 minIdx = i
             }
         }
+        if (minCount > 0L) index.remove(keys.load(minIdx))
         keys.store(minIdx, key)
-        counts.store(minIdx, saturatingPlus(minCount, addCount))
+        val nextCount = saturatingPlus(minCount, addCount)
+        counts.store(minIdx, nextCount)
         errors.store(minIdx, saturatingPlus(minCount, addError))
+        if (nextCount > 0L) index.put(key, minIdx)
     }
 
     // Concurrent admission permits bounded drift from a brief (newCount, staleKey) view.
@@ -277,6 +284,7 @@ class SpaceSavingStat(
 
     override fun reset() {
         outerLock.guarded {
+            slotsByKey?.clear()
             for (i in 0 until capacity) {
                 keys.store(i, 0L)
                 counts.store(i, 0L)

@@ -10,6 +10,26 @@ import kotlin.test.assertFailsWith
 
 class SoftmaxRegressionResultTest {
 
+    @Test
+    fun `sparse logits skip zero features with nonfinite coefficients`() {
+        val r = result(
+            arrayOf(doubleArrayOf(2.0, Double.NaN), doubleArrayOf(-1.0, Double.POSITIVE_INFINITY)),
+            doubleArrayOf(0.5, -0.25),
+        )
+        for (x in listOf<Vector>(
+            SparseVector.of(2, intArrayOf(0), doubleArrayOf(3.0)),
+            SparseVector.of(2, intArrayOf(0, 1), doubleArrayOf(3.0, 0.0)),
+            StridedVector(doubleArrayOf(3.0, 9.0, 0.0, 9.0)),
+        )) {
+            val logits = DoubleArray(2)
+
+            r.logitsInto(x, logits)
+
+            assertEquals(6.5, logits[0], 1e-12)
+            assertEquals(-3.25, logits[1], 1e-12)
+        }
+    }
+
     private class StridedVector(private val backing: DoubleArray) : Vector {
         override val size: Int get() = backing.size / 2
         override fun get(i: Int): Double = backing[i * 2]

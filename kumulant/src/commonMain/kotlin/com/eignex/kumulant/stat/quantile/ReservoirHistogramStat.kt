@@ -10,6 +10,8 @@ import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
 import com.eignex.util.arrays.emptyDoubleArray
+import com.eignex.util.collections.IndexedMaxHeap
+import com.eignex.util.collections.MutableLongIntMap
 import com.eignex.util.concurrent.Mutex
 import com.eignex.util.concurrent.guarded
 import kotlinx.serialization.SerialName
@@ -142,10 +144,11 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
  * percentile lookups via the sample distribution, scratch-pad for
  * downstream analytics that need raw values rather than aggregates.
  *
- * **Memory:** O([capacity]) key/value slots, plus a small RNG lock.
+ * **Memory:** O([capacity]) key/value slots and, outside relaxed mode, a priority index.
  *
- * **Update:** O([capacity]) per admission attempt to scan for the minimum key;
- * CAS contention can require repeated scans.
+ * **Update:** O(1) to reject a key and O(log [capacity]) to replace one with the priority index.
+ * Equal minimum priorities or a merged NaN priority require O([capacity]) scans to preserve slot
+ * selection. Relaxed mode scans per CAS attempt and can retry under contention.
  *
  * **Concurrency:** [Concurrency.Strict] and [Concurrency.HighWrite] use an outer
  * lock across updates, merges, reads, and resets. [Concurrency.Relaxed] uses CAS
@@ -185,6 +188,7 @@ class ReservoirHistogramStat(
     private val emptySlot = Slot(Double.NEGATIVE_INFINITY, 0.0)
 
     private val slots = Array(capacity) { mode.newReference(emptySlot) }
+    private val priorityIndex = if (concurrency == Concurrency.Relaxed) null else ReservoirPriorityIndex(capacity)
     private val totalSeenCell = mode.newLong(0L)
     private val totalWeightCell = mode.newDouble(0.0)
 
@@ -194,6 +198,32 @@ class ReservoirHistogramStat(
     }
 
     private fun admit(value: Double, key: Double) {
+        val index = priorityIndex
+        if (index != null && index.accepts(key)) {
+            admitIndexed(value, key, index)
+        } else {
+            admitByScan(value, key)
+        }
+    }
+
+    private fun admitIndexed(value: Double, key: Double, index: ReservoirPriorityIndex) {
+        var minIdx = index.minimumSlot()
+        val minKey = slots[minIdx].load().key
+        if (key <= minKey) return
+        // The heap orders priorities only; ties retain the scan's lowest-slot choice.
+        if (index.hasTies(minKey)) {
+            for (i in 0 until minIdx) {
+                if (slots[i].load().key == minKey) {
+                    minIdx = i
+                    break
+                }
+            }
+        }
+        slots[minIdx].store(Slot(key, value))
+        index.replace(minIdx, minKey, key)
+    }
+
+    private fun admitByScan(value: Double, key: Double) {
         // Scan for the min-key slot; CAS-replace. Retry on lost CAS.
         var admitted: Slot? = null
         while (true) {
@@ -257,6 +287,7 @@ class ReservoirHistogramStat(
     override fun reset() {
         outerLock.guarded {
             for (slot in slots) slot.store(emptySlot)
+            priorityIndex?.reset()
             totalSeenCell.store(0L)
             totalWeightCell.store(0.0)
         }
@@ -284,4 +315,44 @@ class ReservoirHistogramStat(
             totalWeight = totalWeightCell.load(),
         )
     }
+}
+
+private class ReservoirPriorityIndex(capacity: Int) {
+    private val heap = IndexedMaxHeap(capacity).apply {
+        for (i in 0 until capacity) insert(i, Double.POSITIVE_INFINITY)
+    }
+    private val counts = MutableLongIntMap(capacity).apply {
+        put(Double.NEGATIVE_INFINITY.toRawBits(), capacity)
+    }
+    private var usable = true
+
+    fun accepts(key: Double): Boolean {
+        // NaN comparisons in scan admission depend on slot order, which a heap cannot represent.
+        usable = usable && !key.isNaN()
+        return usable
+    }
+
+    fun minimumSlot(): Int {
+        val empty = counts.getOrDefault(Double.NEGATIVE_INFINITY.toRawBits(), 0)
+        return if (empty > 0) heap.capacity - empty else heap.peekMax()
+    }
+
+    fun hasTies(key: Double): Boolean = key != Double.NEGATIVE_INFINITY && counts.getOrDefault(priorityBits(key), 0) > 1
+
+    fun replace(slot: Int, previous: Double, next: Double) {
+        val previousBits = priorityBits(previous)
+        if (counts.addTo(previousBits, -1) == 0) counts.remove(previousBits)
+        counts.addTo(priorityBits(next), 1)
+        heap.updateKey(slot, -next)
+    }
+
+    fun reset() {
+        heap.resetAllKeysInIdOrder(Double.POSITIVE_INFINITY)
+        counts.clear()
+        counts.put(Double.NEGATIVE_INFINITY.toRawBits(), heap.capacity)
+        usable = true
+    }
+
+    // Signed zeros compare equal during minimum selection.
+    private fun priorityBits(key: Double): Long = if (key == 0.0) 0L else key.toRawBits()
 }

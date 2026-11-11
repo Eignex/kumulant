@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.summary
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
 import com.eignex.koblas.dot
+import com.eignex.koblas.forEachStored
 import com.eignex.koblas.scale
 import com.eignex.koblas.sum
 import kotlin.math.sqrt
@@ -48,10 +49,13 @@ data class MeanEstimate(
 fun estimateMean(values: Vector, weights: Vector? = null, noiseVariances: Vector? = null): MeanEstimate {
     require(values.size > 0 && (weights == null || weights.size == values.size))
     require(noiseVariances == null || noiseVariances.size == values.size)
-    require(values.toDoubleArray().all { it.isFinite() })
-    val normalized = DenseVector.of(weights?.toDoubleArray() ?: DoubleArray(values.size) { 1.0 })
-    require(normalized.toDoubleArray().all { it >= 0.0 && it.isFinite() })
-    val maximum = normalized.toDoubleArray().max()
+    values.forEachStored { _, value -> require(value.isFinite()) }
+    val normalized = DenseVector.wrap(weights?.toDoubleArray() ?: DoubleArray(values.size) { 1.0 })
+    var maximum = 0.0
+    normalized.forEachStored { _, value ->
+        require(value >= 0.0 && value.isFinite())
+        if (value > maximum) maximum = value
+    }
     require(maximum > 0.0)
     for (i in 0 until normalized.size) normalized[i] = normalized[i] / maximum
     normalized.scale(1.0 / normalized.sum())

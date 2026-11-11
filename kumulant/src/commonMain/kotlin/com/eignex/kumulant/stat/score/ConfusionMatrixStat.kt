@@ -45,11 +45,7 @@ data class ConfusionMatrixResult(
     val totalWeights: Double get() = koblas.sum(counts, 0, counts.size)
 
     /** Sum of the diagonal (correctly classified weight). */
-    val correct: Double get() {
-        var s = 0.0
-        for (i in 0 until numClasses) s += count(i, i)
-        return s
-    }
+    val correct: Double get() = koblas.sum(counts, 0, numClasses, numClasses + 1)
 
     /** Fraction of correctly classified weight; 0 on an empty stream. */
     val accuracy: Double get() = totalWeights.let { if (it > 0.0) correct / it else 0.0 }
@@ -57,17 +53,8 @@ data class ConfusionMatrixResult(
     /** Predicted-class total: weight of all rows where prediction = [c]. */
     fun predictedTotal(c: Int): Double = koblas.sum(counts, c * numClasses, numClasses)
 
-    /**
-     * True-class total: weight of all columns where truth = [c].
-     *
-     * A column is `numClasses` apart in this row-major backing, and the summation kernel takes a
-     * length but no stride, so this stays an indexed walk while [predictedTotal] does not.
-     */
-    fun actualTotal(c: Int): Double {
-        var s = 0.0
-        for (p in 0 until numClasses) s += count(p, c)
-        return s
-    }
+    /** True-class total: weight of all columns where truth = [c]. */
+    fun actualTotal(c: Int): Double = koblas.sum(counts, c, numClasses, numClasses)
 
     /** Per-class precision: `TP / (TP + FP)`; 0 when no predictions for class [c]. */
     fun precision(c: Int): Double {
@@ -119,19 +106,9 @@ data class ConfusionMatrixResult(
         if (n <= 0.0) return 0.0
         val tk = DoubleArray(numClasses) { actualTotal(it) }
         val pk = DoubleArray(numClasses) { predictedTotal(it) }
-        var dot = 0.0
-        for (c in 0 until numClasses) dot += count(c, c)
-        val numerator = dot * n - run {
-            var s = 0.0
-            for (k in 0 until numClasses) s += tk[k] * pk[k]
-            s
-        }
-        var sumPk2 = 0.0
-        var sumTk2 = 0.0
-        for (k in 0 until numClasses) {
-            sumPk2 += pk[k] * pk[k]
-            sumTk2 += tk[k] * tk[k]
-        }
+        val numerator = correct * n - koblas.dot(tk, 0, pk, 0, numClasses)
+        val sumPk2 = koblas.dot(pk, 0, pk, 0, numClasses)
+        val sumTk2 = koblas.dot(tk, 0, tk, 0, numClasses)
         val denom = sqrt((n * n - sumPk2) * (n * n - sumTk2))
         return if (denom > 0.0) numerator / denom else 0.0
     }

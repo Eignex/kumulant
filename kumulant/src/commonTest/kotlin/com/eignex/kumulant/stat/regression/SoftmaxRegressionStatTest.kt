@@ -17,6 +17,36 @@ import kotlin.test.assertTrue
 
 class SoftmaxRegressionStatTest {
 
+    @Test
+    fun `rectangular snapshots preserve coefficients for every class and feature`() {
+        val stat = SoftmaxRegressionStat(featureSize = 2, numClasses = 3, optimizer = Sgd(ConstantRate(0.3)))
+
+        stat.update(doubleArrayOf(2.0, -3.0), 1.0)
+        val result = stat.read()
+
+        for (c in 0 until 3) {
+            val bias = if (c == 1) 0.2 else -0.1
+            assertEquals(bias, result.biases[c], 1e-12)
+            assertEquals(2.0 * bias, result.weights[c, 0], 1e-12)
+            assertEquals(-3.0 * bias, result.weights[c, 1], 1e-12)
+        }
+    }
+
+    @Test
+    fun `snapshots remain independent of subsequent updates and reset`() {
+        val stat = SoftmaxRegressionStat(featureSize = 2, numClasses = 3)
+        stat.update(doubleArrayOf(2.0, -3.0), 1.0)
+        val snapshot = stat.read()
+        val weights = snapshot.weights.values.copyOf()
+        val biases = snapshot.biases.values.copyOf()
+
+        stat.update(doubleArrayOf(-1.0, 4.0), 2.0)
+        stat.reset()
+
+        assertTrue(snapshot.weights.values.contentEquals(weights))
+        assertTrue(snapshot.biases.values.contentEquals(biases))
+    }
+
     private class CustomVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]

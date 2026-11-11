@@ -1,12 +1,54 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.koblas.DenseVector
+import com.eignex.koblas.SparseVector
+import com.eignex.koblas.StridedVector
+import com.eignex.koblas.Vector
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MeanEstimateTest {
+    @Test
+    fun `sparse and strided observations produce the same weighted estimate`() {
+        val expected = estimateMean(
+            DenseVector.of(doubleArrayOf(1.0, 0.0, 3.0)),
+            DenseVector.of(doubleArrayOf(1.0, 0.0, 2.0)),
+        )
+        for (values in listOf<Vector>(
+            SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(1.0, 3.0)),
+            StridedVector(doubleArrayOf(9.0, 1.0, 9.0, 0.0, 9.0, 3.0), offset = 1, size = 3, stride = 2),
+        )) {
+            val weights = SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(1.0, 2.0))
+
+            val actual = estimateMean(values, weights)
+
+            assertEquals(expected, actual)
+        }
+    }
+
+    @Test
+    fun `normalizing weights leaves caller storage unchanged`() {
+        val values = DenseVector.wrap(doubleArrayOf(1.0, 3.0))
+        val weights = DenseVector.wrap(doubleArrayOf(2.0, 4.0))
+
+        estimateMean(values, weights)
+
+        assertTrue(values.values.contentEquals(doubleArrayOf(1.0, 3.0)))
+        assertTrue(weights.values.contentEquals(doubleArrayOf(2.0, 4.0)))
+    }
+
+    @Test
+    fun `nonfinite stored observations are rejected`() {
+        for (value in listOf(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)) {
+            val values = SparseVector.of(3, intArrayOf(1), doubleArrayOf(value))
+
+            assertFailsWith<IllegalArgumentException> { estimateMean(values) }
+        }
+    }
+
     @Test
     fun `known noise propagates to a singleton mean without empirical dispersion`() {
         val result = estimateMean(
