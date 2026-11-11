@@ -3,6 +3,7 @@ package com.eignex.kumulant.stat.quantile
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.preview
+import com.eignex.util.arrays.argsortByIntKey
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.pow
@@ -114,10 +115,12 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
     var cursor = 0
 
     // Negative bins: most-negative first (descending index) so the output remains ordered low-to-high.
-    negativeBins.entries.sortedByDescending { it.key }.forEach { (index, weight) ->
+    val negatives = SortedBins(negativeBins)
+    for (position in negatives.size - 1 downTo 0) {
+        val index = negatives.indexAt(position)
         lowers[cursor] = -(gamma.pow(index))
         uppers[cursor] = -(gamma.pow(index - 1))
-        weights[cursor] = weight
+        weights[cursor] = negatives.weightAt(position)
         cursor++
     }
 
@@ -128,10 +131,12 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
         cursor++
     }
 
-    positiveBins.entries.sortedBy { it.key }.forEach { (index, weight) ->
+    val positives = SortedBins(positiveBins)
+    for (position in 0 until positives.size) {
+        val index = positives.indexAt(position)
         lowers[cursor] = gamma.pow(index - 1)
         uppers[cursor] = gamma.pow(index)
-        weights[cursor] = weight
+        weights[cursor] = positives.weightAt(position)
         cursor++
     }
 
@@ -140,6 +145,28 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
         upperBounds = uppers,
         weights = weights,
     )
+}
+
+internal class SortedBins(bins: Map<Int, Double>) {
+    private val indices = IntArray(bins.size)
+    private val weights = DoubleArray(bins.size)
+    private val order: IntArray
+
+    val size: Int get() = indices.size
+
+    init {
+        var position = 0
+        for ((index, weight) in bins) {
+            indices[position] = index
+            weights[position] = weight
+            position++
+        }
+        order = argsortByIntKey(size) { indices[it] }
+    }
+
+    fun indexAt(position: Int): Int = indices[order[position]]
+
+    fun weightAt(position: Int): Double = weights[order[position]]
 }
 
 // Allows sketch parameters to round-trip through serialization while retaining compatible layouts.

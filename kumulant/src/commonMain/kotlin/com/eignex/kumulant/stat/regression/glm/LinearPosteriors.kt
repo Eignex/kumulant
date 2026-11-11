@@ -73,8 +73,7 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
     override fun evaluate(snapshot: StochasticRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
         val eta = snapshot.linearPredictor(x)
         if (exploration <= 0.0) return snapshot.link.invMean(eta)
-        val xNormSq = x dot x
-        return snapshot.link.invMean(eta + sqrt(exploration * xNormSq) * rng.nextNormal())
+        return snapshot.link.invMean(eta + sqrt(exploration) * x.norm2() * rng.nextNormal())
     }
 }
 

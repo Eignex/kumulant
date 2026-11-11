@@ -16,6 +16,20 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class SoftmaxRegressionStatTest {
+    @Test
+    fun `editing snapshot parameters does not change the model`() {
+        val stat = SoftmaxRegressionStat(featureSize = 2, numClasses = 3)
+        stat.update(DenseVector.of(doubleArrayOf(2.0, -3.0)), 1.0)
+        val expected = stat.read()
+        val edited = stat.read()
+
+        edited.weights[1, 0] = 100.0
+        edited.biases[1] = 100.0
+
+        val actual = stat.read()
+        assertTrue(expected.weights.values.contentEquals(actual.weights.values))
+        assertTrue(expected.biases.toDoubleArray().contentEquals(actual.biases.toDoubleArray()))
+    }
 
     @Test
     fun `rectangular snapshots preserve coefficients for every class and feature`() {

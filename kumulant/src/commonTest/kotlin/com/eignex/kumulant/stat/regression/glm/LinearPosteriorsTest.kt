@@ -47,6 +47,27 @@ class LinearPosteriorsTest {
     )
 
     @Test
+    fun `point posterior preserves finite deviation for extreme feature magnitudes`() {
+        val snapshot = sgdSnapshot().copy(weights = DenseVector.zero(2), bias = 0.0)
+        for (scale in listOf(1e200, 1e-200)) {
+            val exploration = 1.0 / scale
+            val expected = sqrt(exploration) * (5.0 * scale) * Random(7).nextNormal()
+            val variants = listOf(
+                DenseVector.of(doubleArrayOf(3.0 * scale, 4.0 * scale)),
+                SparseVector.of(2, intArrayOf(0, 1), doubleArrayOf(3.0 * scale, 4.0 * scale)),
+                StridedVector(doubleArrayOf(3.0 * scale, 9.0, 4.0 * scale, 9.0), 0, 2, 2),
+                CustomVector(doubleArrayOf(3.0 * scale, 4.0 * scale)),
+            )
+
+            for (x in variants) {
+                val score = PointPosterior.evaluate(snapshot, x, Random(7), exploration)
+
+                assertEquals(1.0, score / expected, 1e-12)
+            }
+        }
+    }
+
+    @Test
     fun `posterior scores use the predictive variance`() {
         val x = DenseVector.of(doubleArrayOf(3.0, 4.0))
         val noise = Random(7).nextNormal()

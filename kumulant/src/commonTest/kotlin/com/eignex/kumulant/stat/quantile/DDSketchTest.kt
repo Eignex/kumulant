@@ -2,12 +2,61 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.DELTA
 import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class DDSketchTest {
+    @Test
+    fun `quantiles follow weighted order across signed bin indices and zero`() {
+        val sketch = DDSketchStat(
+            relativeError = 1.0 / 3.0,
+            probabilities = doubleArrayOf(0.0, 0.25, 8.0 / 28.0, 13.0 / 28.0, 24.0 / 28.0, 1.0),
+        )
+        val empty = sketch.read()
+        val gamma = empty.gamma
+        sketch.merge(
+            empty.copy(
+                totalWeights = 28.0,
+                zeroCount = 11.0,
+                positiveBins = mapOf(3 to 2.0, -2 to 3.0),
+                negativeBins = mapOf(-1 to 5.0, 2 to 7.0),
+            ),
+        )
+        val expected = doubleArrayOf(
+            -2.0 * gamma.pow(2) / (1.0 + gamma),
+            -2.0 * gamma.pow(2) / (1.0 + gamma),
+            -2.0 * gamma.pow(-1) / (1.0 + gamma),
+            0.0,
+            2.0 * gamma.pow(-2) / (1.0 + gamma),
+            2.0 * gamma.pow(3) / (1.0 + gamma),
+        )
+
+        val result = sketch.read()
+
+        for (i in expected.indices) assertEquals(expected[i], result.quantiles[i], 1e-12)
+    }
+
+    @Test
+    fun `histogram orders shuffled bins with their original weights`() {
+        val result = SketchResult(
+            probabilities = doubleArrayOf(),
+            quantiles = doubleArrayOf(),
+            gamma = 2.0,
+            totalWeights = 28.0,
+            zeroCount = 11.0,
+            positiveBins = mapOf(3 to 2.0, -2 to 3.0),
+            negativeBins = mapOf(-1 to 5.0, 2 to 7.0),
+        )
+
+        val histogram = result.toSparseHistogram()
+
+        assertTrue(histogram.lowerBounds.contentEquals(doubleArrayOf(-4.0, -0.5, 0.0, 0.125, 4.0)))
+        assertTrue(histogram.upperBounds.contentEquals(doubleArrayOf(-2.0, -0.25, 0.0, 0.25, 8.0)))
+        assertTrue(histogram.weights.contentEquals(doubleArrayOf(7.0, 5.0, 11.0, 3.0, 2.0)))
+    }
 
     @Test
     fun `empty sketch returns NaN quantiles`() {

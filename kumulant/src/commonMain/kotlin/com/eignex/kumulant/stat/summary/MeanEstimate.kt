@@ -90,5 +90,5 @@ fun estimateMean(values: Vector, weights: Vector? = null, noiseVariances: Vector
 /** Estimate paired left-minus-right differences without assuming independent responses within a pair. */
 fun pairedMeanDifference(left: Vector, right: Vector): MeanEstimate {
     require(left.size == right.size)
-    return estimateMean(DenseVector.of(DoubleArray(left.size) { left[it] - right[it] }))
+    return estimateMean(DenseVector.wrap(DoubleArray(left.size) { left[it] - right[it] }))
 }

@@ -7,6 +7,38 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class SpaceSavingTest {
+    @Test
+    fun `evicted keys can return without updating their replacement`() {
+        for (concurrency in listOf(Concurrency.None, Concurrency.Strict, Concurrency.HighWrite)) {
+            val stat = SpaceSavingStat(capacity = 2, concurrency = concurrency)
+            stat.update(0L, weight = 3.0)
+            stat.update(Long.MIN_VALUE)
+            stat.update(Long.MAX_VALUE)
+            stat.update(Long.MIN_VALUE)
+            stat.update(Long.MIN_VALUE)
+
+            val result = stat.read()
+            val counts = result.keys.zip(result.counts.toList()).toMap()
+
+            assertEquals(mapOf(0L to 3L, Long.MIN_VALUE to 4L), counts)
+        }
+    }
+
+    @Test
+    fun `reset allows tracked keys to be admitted into fresh slots`() {
+        for (concurrency in listOf(Concurrency.None, Concurrency.Strict, Concurrency.HighWrite)) {
+            val stat = SpaceSavingStat(capacity = 2, concurrency = concurrency)
+            stat.update(1L, weight = 5.0)
+            stat.update(2L, weight = 3.0)
+
+            stat.reset()
+            stat.update(2L)
+            stat.update(1L)
+
+            val result = stat.read()
+            assertEquals(mapOf(1L to 1L, 2L to 1L), result.keys.zip(result.counts.toList()).toMap())
+        }
+    }
 
     @Test
     fun `replacing an inactive merged slot preserves an active copy of its key`() {

@@ -12,6 +12,24 @@ import kotlin.test.assertTrue
 
 class MeanEstimateTest {
     @Test
+    fun `estimating with sparse and strided weights leaves caller storage unchanged`() {
+        val values = DenseVector.of(doubleArrayOf(1.0, 3.0, 5.0))
+        val expected = estimateMean(values, DenseVector.of(doubleArrayOf(1.0, 0.0, 2.0)))
+        val variants = listOf(
+            DenseVector.of(doubleArrayOf(1.0, 0.0, 2.0)),
+            SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(1.0, 2.0)),
+            StridedVector(doubleArrayOf(1.0, 9.0, 0.0, 9.0, 2.0, 9.0), 0, 3, 2),
+        )
+
+        for (weights in variants) {
+            val result = estimateMean(values, weights)
+
+            assertEquals(expected, result)
+            assertTrue(weights.toDoubleArray().contentEquals(doubleArrayOf(1.0, 0.0, 2.0)))
+        }
+    }
+
+    @Test
     fun `sparse and strided observations produce the same weighted estimate`() {
         val expected = estimateMean(
             DenseVector.of(doubleArrayOf(1.0, 0.0, 3.0)),
