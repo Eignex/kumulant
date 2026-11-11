@@ -69,9 +69,6 @@ kotlin {
     applyDefaultHierarchyTemplate()
     sourceSets {
         commonTest.get().kotlin.srcDir(generateConformanceFixture.flatMap { it.outputDirectory })
-        val hostTest = create("hostTest") { dependsOn(commonTest.get()) }
-        jvmTest.get().dependsOn(hostTest)
-        nativeTest.get().dependsOn(hostTest)
         commonMain.dependencies {
             implementation("com.eignex:util:$utilPin") {
                 version { strictly(utilPin) }
