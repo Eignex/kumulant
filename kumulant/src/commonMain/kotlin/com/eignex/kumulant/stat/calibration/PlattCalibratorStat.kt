@@ -1,39 +1,12 @@
 package com.eignex.kumulant.stat.calibration
 
-import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.schema.optimizer.OptimizerSpec
+import com.eignex.kumulant.schema.runtime.materialize
+import com.eignex.kumulant.schema.spec.PlattCalibrator
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stat.regression.glm.Link
-import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
-import com.eignex.kumulant.stat.regression.glm.sigmoid
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-
-/**
- * Snapshot from [PlattCalibratorStat]: the learned sigmoid parameters and a
- * helper that maps a raw classifier score to a calibrated probability.
- *
- * The calibration map is `1 / (1 + exp(-(slope * x + intercept)))`.
- */
-@Serializable
-@SerialName("PlattCalibratorResult")
-data class PlattCalibratorResult(
-    /** Sigmoid slope; positive when higher raw scores correlate with positive labels. */
-    val slope: Double,
-    /** Sigmoid intercept. */
-    val intercept: Double,
-    override val totalWeights: Double,
-    /** Optimizer steps taken, carried so a merged calibrator resumes its learning-rate schedule. */
-    val step: Long = 0L,
-) : HasObservationCount {
-
-    /** Calibrated probability for raw score [x] via `sigmoid(slope * x + intercept)`. */
-    fun calibrate(x: Double): Double = sigmoid(slope * x + intercept)
-}
 
 /**
  * Online Platt scaling: fits a one-feature logistic regression
@@ -46,6 +19,9 @@ data class PlattCalibratorResult(
  * `Link.Logit`. The runtime cost matches a one-dimensional GLM-SGD update per
  * observation.
  *
+ * Merge blends sample-weighted parameters and retains the optimizer step for its
+ * learning-rate schedule. Residual sums of squares and optimizer moments are omitted.
+ *
  * **Use cases:** post-hoc calibration of tree / SVM / naive-Bayes outputs;
  * pair with [ReliabilityStat] to monitor the gap before and after applying
  * the learned mapping.
@@ -56,52 +32,8 @@ data class PlattCalibratorResult(
  *
  * **Concurrency:** Inherits [StochasticRegressionStat]'s concurrency model.
  */
-class PlattCalibratorStat(
-    /** Optimizer driving the underlying logistic regression. */
-    val optimizer: OptimizerSpec = StatDefaults.plattOptimizer(),
-    override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<PlattCalibratorResult> {
-
-    private val inner = StochasticRegressionStat(
-        featureSize = 1,
-        optimizer = optimizer,
-        link = Link.Logit,
-        concurrency = concurrency,
-    )
-
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        inner.update(DenseVector.of(doubleArrayOf(x)), y, timestampNanos, weight)
-    }
-
-    override fun read(timestampNanos: Long): PlattCalibratorResult {
-        val r = inner.read(timestampNanos)
-        return PlattCalibratorResult(
-            slope = r.weights[0],
-            intercept = r.bias,
-            totalWeights = r.totalWeights,
-            step = r.step,
-        )
-    }
-
-    /**
-     * Folds another Platt result into this one by reconstructing a
-     * [StochasticRegressionStat] snapshot from `(slope, intercept,
-     * totalWeights, step)` and delegating to the underlying merge. The residual
-     * sum of squares is not carried.
-     */
-    override fun merge(values: PlattCalibratorResult, timestampNanos: Long) {
-        val snapshot = StochasticRegressionResult(
-            weights = DenseVector.of(doubleArrayOf(values.slope)),
-            bias = values.intercept,
-            totalWeights = values.totalWeights,
-            step = values.step,
-            link = Link.Logit,
-            sse = 0.0,
-        )
-        inner.merge(snapshot, timestampNanos)
-    }
-
-    override fun reset() = inner.reset()
-
-    override fun create(concurrency: Concurrency?) = PlattCalibratorStat(optimizer, concurrency ?: this.concurrency)
-}
+@Suppress("FunctionNaming")
+fun PlattCalibratorStat(
+    optimizer: OptimizerSpec = StatDefaults.plattOptimizer(),
+    concurrency: Concurrency = Concurrency.None,
+): PairedStat<PlattCalibratorResult> = PlattCalibrator(optimizer).materialize(concurrency)

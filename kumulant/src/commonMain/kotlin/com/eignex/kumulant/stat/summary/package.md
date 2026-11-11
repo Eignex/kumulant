@@ -63,7 +63,7 @@ the standardize and min-max projections downstream.
 
 ## Robust dispersion
 
-[MadStat] retains a single raw-value t-digest. At read time it computes the
+[MadStat] constructs a named composition over a single raw-value t-digest. At read time it computes the
 weighted median of centroid locations and their absolute deviations from that
 same center. Both estimates approximate the original observations because
 compression loses within-centroid spread. [medianAbsoluteDeviation] also

@@ -145,6 +145,8 @@ internal class ExprInputs {
 
             is IsFinite -> scalar(expr.of)
 
+            is IsInteger -> scalar(expr.of)
+
             is InRange -> scalar(expr.a)
 
             AllFinite -> Unit

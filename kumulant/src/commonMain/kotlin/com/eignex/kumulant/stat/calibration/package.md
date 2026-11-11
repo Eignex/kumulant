@@ -31,7 +31,8 @@ path or separate lifecycle.
 [ReliabilityStat] adds per-bin sums, retaining the evidence across workers.
 Merge those snapshots before calling [isotonicCalibration]; fitting each
 shard and averaging curves loses the bin weights and pooling constraints.
-[PlattCalibratorStat] merges sample-weighted parameter vectors through its
+[PlattCalibratorStat] composes a paired-input adapter and a result projection over
+a one-feature logit model. It merges sample-weighted parameter vectors through its
 [com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat], an
 approximation to training on the combined observations.
 

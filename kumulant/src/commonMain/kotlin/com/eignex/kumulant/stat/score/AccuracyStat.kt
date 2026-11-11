@@ -3,15 +3,15 @@ package com.eignex.kumulant.stat.score
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.asClassLabel
-import com.eignex.kumulant.core.requireAtLeastTwoClasses
+import com.eignex.kumulant.schema.runtime.materialize
+import com.eignex.kumulant.schema.spec.Accuracy
 import com.eignex.kumulant.stat.summary.MeanStat
-import com.eignex.kumulant.stat.summary.WeightedMeanResult
 
 /**
  * Streaming classification accuracy: paired `(predictedClass, trueClass)` aggregated as the weighted
  * mean of `1[predicted == truth]`.
  *
- * Labels are resolved by [asClassLabel], the same rule [ConfusionMatrixStat] applies, so a pair either
+ * Labels follow the [asClassLabel] rule used by [ConfusionMatrixStat], so a pair either
  * names two classes in `[0, numClasses)` or is ignored entirely.
  *
  * That agreement is why [numClasses] is required: [ConfusionMatrixResult.accuracy] exists so a caller can
@@ -27,33 +27,6 @@ import com.eignex.kumulant.stat.summary.WeightedMeanResult
  *
  * **Concurrency:** Inherits [MeanStat]'s concurrency model.
  */
-class AccuracyStat(
-    /** Number of classes; class indices are `[0, numClasses)`. Pairs naming anything else are ignored. */
-    val numClasses: Int,
-    override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<WeightedMeanResult> {
-
-    init {
-        requireAtLeastTwoClasses(numClasses)
-    }
-
-    private val inner = MeanStat(concurrency)
-
-    override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
-        // No separate NaN guard: asClassLabel already rejects NaN, because `NaN.toInt()` is 0 and
-        // `0.0 == NaN` is false, so the round-trip check fails.
-        val predicted = x.asClassLabel(numClasses)
-        val truth = y.asClassLabel(numClasses)
-        if (predicted < 0 || truth < 0) return
-
-        val match = if (predicted == truth) 1.0 else 0.0
-        inner.update(match, timestampNanos, weight)
-    }
-
-    override fun read(timestampNanos: Long) = inner.read(timestampNanos)
-    override fun merge(values: WeightedMeanResult, timestampNanos: Long) = inner.merge(
-        values,
-    )
-    override fun reset() = inner.reset()
-    override fun create(concurrency: Concurrency?) = AccuracyStat(numClasses, concurrency ?: this.concurrency)
-}
+@Suppress("FunctionNaming")
+fun AccuracyStat(numClasses: Int, concurrency: Concurrency = Concurrency.None): PairedStat<AccuracyResult> =
+    Accuracy(numClasses).materialize(concurrency)

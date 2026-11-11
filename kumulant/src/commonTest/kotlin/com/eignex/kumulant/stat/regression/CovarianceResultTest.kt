@@ -1,5 +1,7 @@
 package com.eignex.kumulant.stat.regression
 
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -25,5 +27,21 @@ class CovarianceResultTest {
     fun `correlation is zero when either denominator factor is zero`() {
         val r = CovarianceResult(totalWeights = 4.0, meanX = 0.0, meanY = 0.0, sxy = 1.0, sxx = 0.0, syy = 4.0)
         assertEquals(0.0, r.correlation, 1e-12)
+    }
+
+    @Test
+    fun `serialized snapshots retain covariance evidence for continued updates`() {
+        val source = CovarianceStat().apply {
+            update(1.0, 2.0)
+            update(3.0, 5.0, weight = 2.0)
+        }
+        val snapshot = Json.decodeFromString<CovarianceResult>(Json.encodeToString(source.read()))
+        val restored = CovarianceStat().apply { merge(snapshot) }
+
+        source.update(8.0, 11.0)
+        restored.update(8.0, 11.0)
+
+        assertEquals(source.read().covariance, restored.read().covariance, 1e-12)
+        assertEquals(source.read().correlation, restored.read().correlation, 1e-12)
     }
 }

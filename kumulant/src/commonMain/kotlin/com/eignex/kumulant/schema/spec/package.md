@@ -26,6 +26,15 @@ or a modality root. Expressions use numeric literals and structured
 operators; decorators retain an explicit `inner` tree. Defaults follow
 `encodeDefaults`. Non-JSON formats retain generated serial names and field layouts.
 
+## Named factories
+
+[Mad], [Covariance], [PlattCalibrator], and [Accuracy] are composition factories.
+They return named, serializable recipes using the operators in
+[com.eignex.kumulant.schema.ops]; they have no independent accumulator implementation.
+[Accuracy] reports [com.eignex.kumulant.stat.score.AccuracyResult] with `accuracy`
+and `totalWeights`. The other projections retain their family-specific result types.
+Callers can name other recipes with [com.eignex.kumulant.schema.ops.named] too.
+
 ## Beyond the leaf specs
 
 The catalog also holds the composed specs. The wrappers behind the

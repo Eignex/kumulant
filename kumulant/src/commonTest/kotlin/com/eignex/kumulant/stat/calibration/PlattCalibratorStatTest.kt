@@ -3,6 +3,8 @@ package com.eignex.kumulant.stat.calibration
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.StepDecay
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlin.math.exp
 import kotlin.random.Random
 import kotlin.test.Test
@@ -43,7 +45,8 @@ class PlattCalibratorStatTest {
             trained.update(x, if (rng.nextDouble() < 1 / (1 + exp(-2 * x))) 1.0 else 0.0)
         }
         val merged = PlattCalibratorStat(optimizer)
-        merged.merge(trained.read())
+        val snapshot = Json.decodeFromString<PlattCalibratorResult>(Json.encodeToString(trained.read()))
+        merged.merge(snapshot)
         trained.update(2.0, 0.0)
         merged.update(2.0, 0.0)
         assertEquals(trained.read().slope, merged.read().slope, DELTA)

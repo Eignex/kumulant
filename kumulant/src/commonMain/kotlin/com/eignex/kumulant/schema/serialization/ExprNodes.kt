@@ -52,6 +52,7 @@ internal object BoolExprSerializer : KumulantSerializer<BoolExpr>(BoolExpr::clas
         jsonNode<Not>("not", JsonNodeShape.Operand, "a"),
         jsonNode<IsNaN>("isNaN", JsonNodeShape.Operand, "of"),
         jsonNode<IsFinite>("isFinite", JsonNodeShape.Operand, "of"),
+        jsonNode<IsInteger>("isInteger", JsonNodeShape.Operand, "of"),
         jsonNode<AllFinite>("allFinite"),
         jsonNode<InRange>("inRange"),
     )

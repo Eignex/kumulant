@@ -45,7 +45,7 @@ have mediocre AUC.
 
 | Stat | Result | Use |
 |------|--------|-----|
-| [AccuracyStat] | [com.eignex.kumulant.stat.summary.WeightedMeanResult] | Weighted classification accuracy: fraction of `predicted == truth`. |
+| [AccuracyStat] | [AccuracyResult] | Weighted classification accuracy: fraction of `predicted == truth`. |
 | [ConfusionMatrixStat] | [ConfusionMatrixResult] | K-by-K confusion matrix with per-class precision / recall / F1, macro / micro averages, multiclass MCC. |
 
 [AccuracyStat] is the O(1) shortcut when only the scalar accuracy
@@ -56,7 +56,7 @@ class-imbalance effects.
 Both take a `numClasses` and resolve labels the same way: a pair is
 scored only if both sides are exactly an integer in `[0, numClasses)`,
 and is ignored otherwise. That is what makes
-[ConfusionMatrixResult.accuracy] and [AccuracyStat]'s mean comparable on
+[ConfusionMatrixResult.accuracy] and [AccuracyResult.accuracy] comparable on
 the same stream. A fractional label such as `1.5`, an out-of-range one,
 and `NaN` are all ignored by both rather than truncated into a class by
 one and refused by the other.
