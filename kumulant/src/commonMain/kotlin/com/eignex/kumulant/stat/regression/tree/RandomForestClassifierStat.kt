@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.koblas.Vector
+import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
@@ -144,10 +145,10 @@ data class ForestClassificationResult(
         val acc = DoubleArray(numClasses)
         for (t in trees) {
             val p = t.probabilities(x)
-            for (k in 0 until numClasses) acc[k] += p[k]
+            koblas.axpy(acc, 0, 1.0, p, 0, numClasses)
         }
         val inv = 1.0 / trees.size
-        for (k in 0 until numClasses) acc[k] *= inv
+        koblas.scale(acc, 0, inv, numClasses)
         return acc
     }
 

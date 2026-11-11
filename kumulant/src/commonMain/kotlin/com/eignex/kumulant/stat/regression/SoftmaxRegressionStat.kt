@@ -99,7 +99,7 @@ data class SoftmaxRegressionResult(
                 }
             }
         }
-        for (k in 0 until numClasses) destination[k] += biases[k]
+        koblas.axpy(destination, 0, 1.0, biases.values, 0, numClasses)
     }
 
     /** Softmax probabilities across all classes for [x]; length [numClasses]. */

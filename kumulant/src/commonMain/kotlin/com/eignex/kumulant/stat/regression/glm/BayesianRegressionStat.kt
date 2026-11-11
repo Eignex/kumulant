@@ -258,30 +258,30 @@ class BayesianRegressionStat(
             koblas.syrk(1.0, precisionL, transpose = false, 0.0, hNew, lower = true, scratch = workspace)
             koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true, scratch = workspace)
             for (j in 0 until n) {
-                for (i in j until n) hNew[i, j] = hNew[i, j] - priorPrecisionMatrix[i, j]
+                val offset = j * n + j
+                koblas.axpy(hNew.values, offset, -1.0, priorPrecisionMatrix.values, offset, n - j)
             }
 
             // b = H_self * mu_self + H_other * mu_other - H_prior * mu_prior, each product taken as
             // L * (LT * mu) so the precision never has to be formed for it.
             workspace.borrow(n) { b ->
-                for (i in 0 until n) b[i] = weights[i]
+                DenseVector.wrap(b).copyFrom(weights)
                 koblas.trmv(precisionL, b, 0, 1, lower = true, transpose = true, scratch = workspace)
                 koblas.trmv(precisionL, b, 0, 1, lower = true, scratch = workspace)
                 workspace.borrow(n) { other ->
-                    for (i in 0 until n) other[i] = values.weights[i]
+                    DenseVector.wrap(other).copyFrom(values.weights)
                     koblas.trmv(values.precisionL, other, 0, 1, lower = true, transpose = true, scratch = workspace)
                     koblas.trmv(values.precisionL, other, 0, 1, lower = true, scratch = workspace)
-                    for (i in 0 until n) b[i] += other[i] - priorInfo[i]
+                    koblas.axpy(other, 0, -1.0, priorInfo, 0, n)
+                    koblas.axpy(b, 0, 1.0, other, 0, n)
                 }
 
                 // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
                 hNew.choleskyInto(hNew, CholeskyPolicy.Regularize(), workspace)
                 hNew.choleskySolveInto(b, b, workspace)
 
-                for (i in 0 until n) {
-                    weights[i] = b[i]
-                    for (j in 0 until n) precisionL[i, j] = hNew[i, j]
-                }
+                weights.copyFrom(DenseVector.wrap(b))
+                hNew.values.copyInto(precisionL.values)
             }
 
             // Scalar bias: same precision-weighted combine, subtract one prior precision.
@@ -300,8 +300,8 @@ class BayesianRegressionStat(
     }
 
     override fun reset() = lock.guarded {
-        for (i in 0 until featureSize) weights[i] = initialWeights[i]
-        for (k in precisionL.values.indices) precisionL.values[k] = initialPrecisionL.values[k]
+        initialWeights.copyInto(weights.values)
+        initialPrecisionL.values.copyInto(precisionL.values)
         bias = 0.0
         biasPrecision = 1.0 / priorVariance
         totalWeights = 0.0
