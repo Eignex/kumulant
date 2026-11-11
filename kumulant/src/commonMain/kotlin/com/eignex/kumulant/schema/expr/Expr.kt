@@ -21,6 +21,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
 import kotlin.math.exp
+import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.ln
 import kotlin.math.max
@@ -373,6 +374,10 @@ internal data class IsFinite(val of: ScalarExpr) : BoolExpr
 
 // Unused input slots default to finite values, allowing one finiteness check across all modalities.
 @Serializable
+@SerialName("IsInteger")
+internal data class IsInteger(val of: ScalarExpr) : BoolExpr
+
+@Serializable
 @SerialName("AllFinite")
 internal data object AllFinite : BoolExpr
 
@@ -574,6 +579,8 @@ private fun <T> BoolExpr.evaluate(x: Double, y: Double, v: T, primary: Result?, 
         is IsNaN -> of.evaluate(x, y, v, primary, input).isNaN()
 
         is IsFinite -> of.evaluate(x, y, v, primary, input).isFinite()
+
+        is IsInteger -> of.evaluate(x, y, v, primary, input).let { it.isFinite() && it == floor(it) }
 
         AllFinite -> x.isFinite() && y.isFinite() && input.allFinite(v)
 
@@ -893,6 +900,9 @@ fun ScalarExpr.isNaN(): BoolExpr = IsNaN(this)
  * ```
  */
 fun ScalarExpr.isFinite(): BoolExpr = IsFinite(this)
+
+/** True for finite integer-valued inputs, including signed zero. */
+fun ScalarExpr.isInteger(): BoolExpr = IsInteger(this)
 
 /**
  * True when every input to the update is finite, whichever modality the stat is.

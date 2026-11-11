@@ -136,6 +136,7 @@ private class ReferenceResolver(private val bindings: Map<String, ScalarExpr>) {
         is In -> expr.copy(of = scalar(expr.of))
         is IsNaN -> expr.copy(of = scalar(expr.of))
         is IsFinite -> expr.copy(of = scalar(expr.of))
+        is IsInteger -> expr.copy(of = scalar(expr.of))
         is InRange -> expr.copy(a = scalar(expr.a))
         AllFinite, is BoundBoolExpr -> expr
     }

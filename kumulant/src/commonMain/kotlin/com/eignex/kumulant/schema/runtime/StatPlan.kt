@@ -18,6 +18,7 @@ import com.eignex.kumulant.operation.FilterVectorStat
 import com.eignex.kumulant.operation.FoldPairedStat
 import com.eignex.kumulant.operation.FoldVectorPairedStat
 import com.eignex.kumulant.operation.FoldVectorStat
+import com.eignex.kumulant.operation.RegressionAsPairedStat
 import com.eignex.kumulant.operation.TransformLongStat
 import com.eignex.kumulant.operation.TransformPairStat
 import com.eignex.kumulant.operation.TransformValueStat
@@ -31,6 +32,7 @@ import com.eignex.kumulant.operation.filter
 import com.eignex.kumulant.operation.foldRegression
 import com.eignex.kumulant.operation.hysteresis
 import com.eignex.kumulant.operation.minMaxScaleFeatures
+import com.eignex.kumulant.operation.project
 import com.eignex.kumulant.operation.resampleByTime
 import com.eignex.kumulant.operation.sample
 import com.eignex.kumulant.operation.standardScaleFeatures
@@ -59,7 +61,6 @@ import com.eignex.kumulant.schema.expr.inputs
 import com.eignex.kumulant.schema.expr.isDiscreteIdentity
 import com.eignex.kumulant.schema.expr.requireBound
 import com.eignex.kumulant.schema.spec.*
-import com.eignex.kumulant.stat.calibration.PlattCalibratorStat
 import com.eignex.kumulant.stat.calibration.ReliabilityStat
 import com.eignex.kumulant.stat.cardinality.HyperLogLogStat
 import com.eignex.kumulant.stat.change.AdwinStat
@@ -83,7 +84,6 @@ import com.eignex.kumulant.stat.quantile.ReservoirHistogramStat
 import com.eignex.kumulant.stat.quantile.TDigestStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.rate.RateStat
-import com.eignex.kumulant.stat.regression.CovarianceStat
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
 import com.eignex.kumulant.stat.regression.SoftmaxRegressionStat
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
@@ -96,7 +96,6 @@ import com.eignex.kumulant.stat.regression.tree.DecisionTreeClassifierStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestClassifierStat
 import com.eignex.kumulant.stat.regression.tree.RandomForestRegressionStat
-import com.eignex.kumulant.stat.score.AccuracyStat
 import com.eignex.kumulant.stat.score.AucStat
 import com.eignex.kumulant.stat.score.ConfusionMatrixStat
 import com.eignex.kumulant.stat.score.pitHistogram
@@ -108,7 +107,6 @@ import com.eignex.kumulant.stat.summary.ArgMinStat
 import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.FrugalMadStat
-import com.eignex.kumulant.stat.summary.MadStat
 import com.eignex.kumulant.stat.summary.MaxStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MinStat
@@ -141,6 +139,17 @@ internal fun StatSpec.compile(path: String): StatPlan<Stat<*>> = when (this) {
 }
 
 internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<*>> = when (this) {
+    is NamedSeries -> requireSeries(inner, "$path.$name").compileSeries("$path.$name")
+
+    is ProjectSeries -> {
+        require(projection == ResultProjection.Mad) { "$path: $projection is not a series projection" }
+        val plan = requireSeries(inner, "$path.inner").compileSeries("$path.inner")
+        StatPlan(path, hasCenterScale = true) { concurrency ->
+            @Suppress("UNCHECKED_CAST")
+            (plan.build(concurrency) as SeriesStat<Result>).project(projection)
+        }
+    }
+
     Mean -> StatPlan(path) { concurrency -> MeanStat(concurrency) }
 
     Sum -> StatPlan(path) { concurrency -> SumStat(concurrency) }
@@ -164,11 +173,6 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
     is BucketHistogram ->
         StatPlan(path) { concurrency ->
             BucketHistogramStat(edges.toDoubleArray(), concurrency)
-        }
-
-    is Mad ->
-        StatPlan(path, hasCenterScale = true) { concurrency ->
-            MadStat(compression, concurrency)
         }
 
     is FrugalMad ->
@@ -438,6 +442,27 @@ internal fun SeriesStatSpec<*>.compileSeries(path: String): StatPlan<SeriesStat<
 
 @Suppress("UNCHECKED_CAST")
 internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<*>> = when (this) {
+    is NamedPaired -> requirePaired(inner, "$path.$name").compilePaired("$path.$name")
+
+    is ProjectPaired -> {
+        require(projection != ResultProjection.Mad) { "$path: $projection is not a paired projection" }
+        val plan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
+        StatPlan(path) { concurrency -> (plan.build(concurrency) as PairedStat<Result>).project(projection) }
+    }
+
+    is RegressionAsPaired -> {
+        features.requireInputs("$path.features", Scope.Scalar)
+        response.requireInputs("$path.response", Scope.Scalar)
+        val plan = requireRegression(inner, "$path.inner").compileRegression("$path.inner")
+        StatPlan(path) { concurrency ->
+            val stat = plan.build(concurrency)
+            require(
+                features.eval(0.0).size == stat.featureSize,
+            ) { "feature expression size must match ${stat.featureSize}" }
+            RegressionAsPairedStat(stat, features, response)
+        }
+    }
+
     is PairedGroupStatSpec -> {
         val plans = stats.map { (name, spec) ->
             name to requirePaired(spec, "$path.$name").compilePaired("$path.$name")
@@ -459,8 +484,6 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
             UnivariateRegressionStat(penalty, concurrency)
         }
 
-    Covariance -> StatPlan(path) { concurrency -> CovarianceStat(concurrency) }
-
     is Auc ->
         StatPlan(path) { concurrency ->
             AucStat(numBins, lowerBound, upperBound, concurrency)
@@ -468,13 +491,8 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
 
     is Reliability -> StatPlan(path) { concurrency -> ReliabilityStat(numBins, concurrency) }
 
-    is PlattCalibrator ->
-        StatPlan(path) { concurrency -> PlattCalibratorStat(optimizer, concurrency) }
-
     is ConfusionMatrix ->
         StatPlan(path) { concurrency -> ConfusionMatrixStat(numClasses, concurrency) }
-
-    is Accuracy -> StatPlan(path) { concurrency -> AccuracyStat(numClasses, concurrency) }
 
     is WithWeightPaired -> {
         val innerPlan = requirePaired(inner, "$path.inner").compilePaired("$path.inner")
@@ -563,6 +581,8 @@ internal fun PairedStatSpec<*>.compilePaired(path: String): StatPlan<PairedStat<
 
 @Suppress("UNCHECKED_CAST")
 internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<*>> = when (this) {
+    is NamedVector -> requireVector(inner, "$path.$name").compileVector("$path.$name")
+
     is VectorGroupStatSpec -> {
         val plans = stats.map { (name, spec) ->
             name to requireVector(spec, "$path.$name").compileVector("$path.$name")
@@ -691,6 +711,8 @@ internal fun VectorStatSpec<*>.compileVector(path: String): StatPlan<VectorStat<
 }
 
 internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<DiscreteStat<*>> = when (this) {
+    is NamedDiscrete -> requireDiscrete(inner, "$path.$name").compileDiscrete("$path.$name")
+
     is DiscreteGroupStatSpec -> {
         val plans = stats.map { (name, spec) ->
             name to requireDiscrete(spec, "$path.$name").compileDiscrete("$path.$name")
@@ -797,6 +819,8 @@ internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<Discret
 
 @Suppress("UNCHECKED_CAST")
 internal fun RegressionStatSpec<*>.compileRegression(path: String): StatPlan<RegressionStat<*>> = when (this) {
+    is NamedRegression -> requireRegression(inner, "$path.$name").compileRegression("$path.$name")
+
     is RegressionGroupStatSpec -> {
         val plans = stats.map { (name, spec) ->
             name to requireRegression(spec, "$path.$name").compileRegression("$path.$name")

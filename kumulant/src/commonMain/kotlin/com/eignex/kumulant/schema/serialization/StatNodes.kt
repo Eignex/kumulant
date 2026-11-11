@@ -5,6 +5,8 @@ import com.eignex.skema.serialization.jsonNode
 
 internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>(SeriesStatSpec::class, {
     listOf(
+        jsonNode<NamedSeries>("named"),
+        jsonNode<ProjectSeries>("project"),
         jsonNode<Mean>("mean"),
         jsonNode<Sum>("sum"),
         jsonNode<Min>("min"),
@@ -18,7 +20,6 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
         jsonNode<Cusum>("cusum"),
         jsonNode<PageHinkley>("pageHinkley"),
         jsonNode<Adwin>("adwin"),
-        jsonNode<Mad>("mad"),
         jsonNode<FrugalMad>("frugalMad"),
         jsonNode<BucketHistogram>("bucketHistogram"),
         jsonNode<Variance>("variance"),
@@ -64,15 +65,15 @@ internal object SeriesStatSpecSerializer : KumulantSerializer<SeriesStatSpec<*>>
 
 internal object PairedStatSpecSerializer : KumulantSerializer<PairedStatSpec<*>>(PairedStatSpec::class, {
     listOf(
+        jsonNode<NamedPaired>("named"),
+        jsonNode<ProjectPaired>("project"),
+        jsonNode<RegressionAsPaired>("asPaired"),
         jsonNode<PairedGroupStatSpec>("pairedGroup"),
         jsonNode<PairedSum>("pairedSum"),
         jsonNode<UnivariateRegression>("univariateRegression"),
-        jsonNode<Covariance>("covariance"),
         jsonNode<Auc>("auc"),
         jsonNode<Reliability>("reliability"),
-        jsonNode<PlattCalibrator>("plattCalibrator"),
         jsonNode<ConfusionMatrix>("confusionMatrix"),
-        jsonNode<Accuracy>("accuracy"),
         jsonNode<WithWeightPaired>("withWeight"),
         jsonNode<WindowedPaired>("window"),
         jsonNode<TransformPair>("transformPair"),
@@ -87,6 +88,7 @@ internal object PairedStatSpecSerializer : KumulantSerializer<PairedStatSpec<*>>
 
 internal object VectorStatSpecSerializer : KumulantSerializer<VectorStatSpec<*>>(VectorStatSpec::class, {
     listOf(
+        jsonNode<NamedVector>("named"),
         jsonNode<VectorGroupStatSpec>("vectorGroup"),
         jsonNode<WithWeightVector>("withWeight"),
         jsonNode<WindowedVector>("window"),
@@ -105,6 +107,7 @@ internal object VectorStatSpecSerializer : KumulantSerializer<VectorStatSpec<*>>
 
 internal object DiscreteStatSpecSerializer : KumulantSerializer<DiscreteStatSpec<*>>(DiscreteStatSpec::class, {
     listOf(
+        jsonNode<NamedDiscrete>("named"),
         jsonNode<DiscreteGroupStatSpec>("discreteGroup"),
         jsonNode<HyperLogLog>("hyperLogLog"),
         jsonNode<BloomFilter>("bloomFilter"),
@@ -125,6 +128,7 @@ internal object DiscreteStatSpecSerializer : KumulantSerializer<DiscreteStatSpec
 
 internal object RegressionStatSpecSerializer : KumulantSerializer<RegressionStatSpec<*>>(RegressionStatSpec::class, {
     listOf(
+        jsonNode<NamedRegression>("named"),
         jsonNode<RegressionGroupStatSpec>("regressionGroup"),
         jsonNode<BayesianRegression>("bayesianRegression"),
         jsonNode<StochasticRegression>("stochasticRegression"),

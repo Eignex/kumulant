@@ -15,7 +15,7 @@ class AccuracyStatTest {
         s.update(1.0, 0.0)
         s.update(2.0, 2.0)
         s.update(0.0, 1.0)
-        assertEquals(3.0 / 5.0, s.read().mean, DELTA)
+        assertEquals(3.0 / 5.0, s.read().accuracy, DELTA)
     }
 
     @Test
@@ -23,7 +23,7 @@ class AccuracyStatTest {
         val s = AccuracyStat(numClasses = 8)
         s.update(7.0, 7.0)
         s.update(2.0, 3.0)
-        assertEquals(0.5, s.read().mean, DELTA)
+        assertEquals(0.5, s.read().accuracy, DELTA)
     }
 
     @Test
@@ -32,7 +32,7 @@ class AccuracyStatTest {
         s.update(1.0, 1.0)
         s.update(1.5, 1.9)
 
-        assertEquals(1.0, s.read().mean, DELTA, "a fractional label was scored as a class")
+        assertEquals(1.0, s.read().accuracy, DELTA, "a fractional label was scored as a class")
         assertEquals(1.0, s.read().totalWeights, DELTA, "a fractional label was counted as an observation")
     }
 
@@ -52,7 +52,7 @@ class AccuracyStatTest {
         s.update(0.0, 1.0)
         s.update(Double.NaN, Double.NaN)
 
-        assertEquals(0.0, s.read().mean, DELTA, "a NaN pair was scored as a match")
+        assertEquals(0.0, s.read().accuracy, DELTA, "a NaN pair was scored as a match")
         assertEquals(1.0, s.read().totalWeights, DELTA, "a NaN pair was counted as an observation")
     }
 
@@ -69,7 +69,7 @@ class AccuracyStatTest {
             matrix.update(p, t)
         }
 
-        assertEquals(matrix.read().accuracy, accuracy.read().mean, DELTA, "the two disagree on accuracy")
+        assertEquals(matrix.read().accuracy, accuracy.read().accuracy, DELTA, "the two disagree on accuracy")
     }
 
     @Test

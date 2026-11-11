@@ -2,8 +2,10 @@ package com.eignex.kumulant.schema.spec
 
 import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
+import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.schema.expr.*
+import com.eignex.kumulant.schema.ops.*
 import com.eignex.kumulant.schema.optimizer.*
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.calibration.PlattCalibratorResult
@@ -39,6 +41,7 @@ import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
 import com.eignex.kumulant.stat.regression.tree.SerializableSplit
 import com.eignex.kumulant.stat.regression.tree.TreeClassificationResult
 import com.eignex.kumulant.stat.regression.tree.TreeRegressionResult
+import com.eignex.kumulant.stat.score.AccuracyResult
 import com.eignex.kumulant.stat.score.AucResult
 import com.eignex.kumulant.stat.score.ConfusionMatrixResult
 import com.eignex.kumulant.stat.sketch.BloomFilterResult
@@ -148,13 +151,10 @@ data class Adwin(
     val maxBucketsPerSize: Int = StatDefaults.ADWIN_MAX_BUCKETS_PER_SIZE,
 ) : SeriesStatSpec<AdwinResult>
 
-/** Spec for `MadStat`: streaming median and median absolute deviation from one raw-value t-digest. */
-@Serializable
-@SerialName("Mad")
-data class Mad(
-    /** T-digest compression; larger values retain more centroids and finer detail. */
-    val compression: Double = StatDefaults.TDIGEST_COMPRESSION,
-) : SeriesStatSpec<MadResult>
+/** Named t-digest composition reporting median and unscaled median absolute deviation. */
+@Suppress("FunctionNaming")
+fun Mad(compression: Double = StatDefaults.TDIGEST_COMPRESSION): SeriesStatSpec<MadResult> =
+    TDigest(compression).medianAbsoluteDeviation().named("Mad")
 
 /** Spec for `FrugalMadStat`: constant-memory adaptive median and MAD estimates. */
 @Serializable
@@ -297,10 +297,8 @@ data class UnivariateRegression(
     val penalty: Penalty = StatDefaults.regressionPenalty,
 ) : PairedStatSpec<UnivariateRegressionResult>
 
-/** Spec for `CovarianceStat`: weighted covariance and Pearson correlation between two streams. */
-@Serializable
-@SerialName("Covariance")
-data object Covariance : PairedStatSpec<CovarianceResult>
+/** Named univariate-regression composition reporting covariance and correlation. */
+val Covariance: PairedStatSpec<CovarianceResult> = UnivariateRegression().covariance().named("Covariance")
 
 /** Spec for `AucStat`: streaming AUC over a fixed-resolution score histogram. */
 @Serializable
@@ -322,13 +320,13 @@ data class Reliability(
     val numBins: Int,
 ) : PairedStatSpec<ReliabilityResult>
 
-/** Spec for `PlattCalibratorStat`: one-feature logistic regression fitting `sigmoid(a*x + b)`. */
-@Serializable
-@SerialName("PlattCalibrator")
-data class PlattCalibrator(
-    /** Optimizer driving the underlying logistic regression. */
-    val optimizer: OptimizerSpec = StatDefaults.plattOptimizer(),
-) : PairedStatSpec<PlattCalibratorResult>
+/** Named one-feature logistic-regression composition fitting `sigmoid(a*x + b)`. */
+@Suppress("FunctionNaming")
+fun PlattCalibrator(optimizer: OptimizerSpec = StatDefaults.plattOptimizer()): PairedStatSpec<PlattCalibratorResult> =
+    StochasticRegression(featureSize = 1, optimizer = optimizer, link = Link.Logit)
+        .asPaired(vectorOf(X))
+        .plattCalibration()
+        .named("PlattCalibrator")
 
 /** Spec for `ConfusionMatrixStat`: K-by-K weighted confusion matrix over (predictedClass, trueClass). */
 @Serializable
@@ -338,19 +336,17 @@ data class ConfusionMatrix(
     val numClasses: Int,
 ) : PairedStatSpec<ConfusionMatrixResult>
 
-/**
- * Spec for `AccuracyStat`: weighted classification accuracy over (predictedClass, trueClass).
- *
- * [numClasses] is required rather than defaulted: accuracy is only comparable with `ConfusionMatrix` over
- * the same stream if both bound the labels the same way, and defaulting a bound would silently score
- * labels the author never declared.
- */
-@Serializable
-@SerialName("Accuracy")
-data class Accuracy(
-    /** Number of classes; class indices are `[0, numClasses)`. */
-    val numClasses: Int,
-) : PairedStatSpec<WeightedMeanResult>
+/** Named weighted-mean composition scoring exact integer labels in `[0, numClasses)`. */
+@Suppress("FunctionNaming")
+fun Accuracy(numClasses: Int): PairedStatSpec<AccuracyResult> {
+    requireAtLeastTwoClasses(numClasses)
+    val validX = X.isInteger() and (X ge 0.0) and (X lt numClasses.toDouble())
+    val validY = Y.isInteger() and (Y ge 0.0) and (Y lt numClasses.toDouble())
+    return Mean.foldPaired(ifThenElse(X eq Y, 1.0, 0.0))
+        .filter(validX and validY)
+        .classificationAccuracy()
+        .named("Accuracy")
+}
 
 /** Spec for `HyperLogLogStat`: cardinality sketch with controllable [precision]. */
 @Serializable
