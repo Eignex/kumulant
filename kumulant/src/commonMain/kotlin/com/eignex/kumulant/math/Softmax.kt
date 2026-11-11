@@ -1,5 +1,6 @@
 package com.eignex.kumulant.math
 
+import com.eignex.koblas.koblas
 import kotlin.math.exp
 
 // Max subtraction prevents exponent overflow for finite logits. NaN propagates through normalization,
@@ -15,7 +16,7 @@ internal fun DoubleArray.softmaxInPlace(): Boolean {
     }
     if (z <= 0.0) return false
     val invZ = 1.0 / z
-    for (i in indices) this[i] *= invZ
+    koblas.scale(this, 0, invZ, size)
     return true
 }
 

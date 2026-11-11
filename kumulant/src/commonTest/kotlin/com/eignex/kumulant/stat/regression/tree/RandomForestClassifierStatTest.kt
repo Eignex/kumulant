@@ -14,6 +14,27 @@ class RandomForestClassifierStatTest {
     )
 
     @Test
+    fun `forest probabilities give equal weight to trees with different observation counts`() {
+        val result = ForestClassificationResult(
+            numClasses = 3,
+            trees = listOf(
+                TreeClassificationResult(
+                    TreeClassificationLeafResult(ClassCountsResult(3, doubleArrayOf(90.0, 10.0, 0.0))),
+                ),
+                TreeClassificationResult(
+                    TreeClassificationLeafResult(ClassCountsResult(3, doubleArrayOf(0.0, 1.0, 3.0))),
+                ),
+            ),
+        )
+
+        val probabilities = result.probabilities(DenseVector.zero(1))
+
+        assertEquals(0.45, probabilities[0], 1e-12)
+        assertEquals(0.175, probabilities[1], 1e-12)
+        assertEquals(0.375, probabilities[2], 1e-12)
+    }
+
+    @Test
     fun `learns a separable problem and probabilities sum to one`() {
         val stat = RandomForestClassifierStat(
             featureSize = 2,

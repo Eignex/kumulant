@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
@@ -34,11 +35,7 @@ data class ClassCountsResult(
     }
 
     /** Total weight summed across all classes. */
-    override val totalWeights: Double get() {
-        var s = 0.0
-        for (c in counts) s += c
-        return s
-    }
+    override val totalWeights: Double get() = koblas.sum(counts, 0, numClasses)
 
     /** Class probabilities; uniform when no observations have been seen yet. */
     fun probabilities(): DoubleArray {
