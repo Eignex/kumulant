@@ -98,7 +98,6 @@ class StatsRoundTripTest {
             BloomFilter(bits = 1024, hashes = 4),
             CountMinSketch(depth = 4, width = 512, seed = 123L),
             SpaceSaving(capacity = 32),
-            Sojourn(states = listOf(0L, 1L, 2L)),
         )
 
         for (config in cases) {

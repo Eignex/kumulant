@@ -3902,33 +3902,6 @@ public final class com/eignex/kumulant/schema/spec/SoftmaxRegression$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/schema/spec/Sojourn : com/eignex/kumulant/schema/spec/DiscreteStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/Sojourn$Companion;
-	public fun <init> (Ljava/util/List;)V
-	public final fun component1 ()Ljava/util/List;
-	public final fun copy (Ljava/util/List;)Lcom/eignex/kumulant/schema/spec/Sojourn;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/Sojourn;Ljava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/Sojourn;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getStates ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/Sojourn$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/Sojourn$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/Sojourn;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/Sojourn;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/Sojourn$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class com/eignex/kumulant/schema/spec/SpaceSaving : com/eignex/kumulant/schema/spec/DiscreteStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/SpaceSaving$Companion;
 	public fun <init> (I)V
@@ -4912,65 +4885,6 @@ public final class com/eignex/kumulant/stat/event/RunLengthStat : com/eignex/kum
 	public fun update (DJD)V
 	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
 	public fun validateMerge (Lcom/eignex/kumulant/stat/event/RunLengthResult;)V
-}
-
-public final class com/eignex/kumulant/stat/event/SojournResult : com/eignex/kumulant/core/Result {
-	public static final field Companion Lcom/eignex/kumulant/stat/event/SojournResult$Companion;
-	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/List;JJJZ)V
-	public final fun component1 ()Ljava/util/List;
-	public final fun component2 ()Ljava/util/List;
-	public final fun component3 ()Ljava/util/List;
-	public final fun component4 ()J
-	public final fun component5 ()J
-	public final fun component6 ()J
-	public final fun component7 ()Z
-	public final fun copy (Ljava/util/List;Ljava/util/List;Ljava/util/List;JJJZ)Lcom/eignex/kumulant/stat/event/SojournResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/event/SojournResult;Ljava/util/List;Ljava/util/List;Ljava/util/List;JJJZILjava/lang/Object;)Lcom/eignex/kumulant/stat/event/SojournResult;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCurrentDwellNanos ()J
-	public final fun getCurrentState ()J
-	public final fun getCurrentStateEnterTimestampNanos ()J
-	public final fun getHasState ()Z
-	public final fun getStates ()Ljava/util/List;
-	public final fun getTimestampNanos ()J
-	public final fun getTotalNanosByState ()Ljava/util/List;
-	public final fun getTransitionsByState ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/stat/event/SojournResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/stat/event/SojournResult$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/event/SojournResult;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/event/SojournResult;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/event/SojournResult$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/stat/event/SojournStat : com/eignex/kumulant/core/DiscreteStat {
-	public fun <init> (Ljava/util/List;Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Ljava/util/List;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/DiscreteStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/event/SojournStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public final fun getStates ()Ljava/util/List;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/event/SojournResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/event/SojournResult;
-	public fun reset ()V
-	public fun update (JD)V
-	public fun update (JJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/event/SojournResult;)V
 }
 
 public final class com/eignex/kumulant/stat/forecast/ExponentialSmoothingResult : com/eignex/kumulant/core/Result {

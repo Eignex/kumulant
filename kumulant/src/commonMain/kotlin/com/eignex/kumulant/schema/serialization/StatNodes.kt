@@ -112,7 +112,6 @@ internal object DiscreteStatSpecSerializer : KumulantSerializer<DiscreteStatSpec
         jsonNode<HyperLogLog>("hyperLogLog"),
         jsonNode<BloomFilter>("bloomFilter"),
         jsonNode<CountMinSketch>("countMinSketch"),
-        jsonNode<Sojourn>("sojourn"),
         jsonNode<SpaceSaving>("spaceSaving"),
         jsonNode<WithWeightDiscrete>("withWeight"),
         jsonNode<WithValueDiscrete>("withValue"),

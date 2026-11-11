@@ -75,7 +75,6 @@ import com.eignex.kumulant.stat.decay.EwmaVarianceStat
 import com.eignex.kumulant.stat.event.CrossingStat
 import com.eignex.kumulant.stat.event.RecencyStat
 import com.eignex.kumulant.stat.event.RunLengthStat
-import com.eignex.kumulant.stat.event.SojournStat
 import com.eignex.kumulant.stat.forecast.ExponentialSmoothingStat
 import com.eignex.kumulant.stat.quantile.BucketHistogramStat
 import com.eignex.kumulant.stat.quantile.DDSketchStat
@@ -743,8 +742,6 @@ internal fun DiscreteStatSpec<*>.compileDiscrete(path: String): StatPlan<Discret
         }
 
     is SpaceSaving -> StatPlan(path) { concurrency -> SpaceSavingStat(capacity, concurrency) }
-
-    is Sojourn -> StatPlan(path) { concurrency -> SojournStat(states, concurrency) }
 
     is WithWeightDiscrete -> {
         val innerPlan = requireDiscrete(inner, "$path.inner").compileDiscrete("$path.inner")

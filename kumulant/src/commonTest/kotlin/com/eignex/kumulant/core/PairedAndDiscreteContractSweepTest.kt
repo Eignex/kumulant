@@ -17,7 +17,6 @@ import com.eignex.kumulant.schema.spec.PairedStatSpec
 import com.eignex.kumulant.schema.spec.PairedSum
 import com.eignex.kumulant.schema.spec.PlattCalibrator
 import com.eignex.kumulant.schema.spec.Reliability
-import com.eignex.kumulant.schema.spec.Sojourn
 import com.eignex.kumulant.schema.spec.SpaceSaving
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -42,7 +41,6 @@ class PairedAndDiscreteContractSweepTest {
         "HyperLogLog" to HyperLogLog(),
         "BloomFilter" to BloomFilter(),
         "CountMinSketch" to CountMinSketch(),
-        "Sojourn" to Sojourn(states = listOf(0L, 1L, 2L)),
         "SpaceSaving" to SpaceSaving(capacity = 8),
     )
 
@@ -156,8 +154,6 @@ class PairedAndDiscreteContractSweepTest {
     fun `a negative weight is a no-op for every discrete sketch`() {
         val violations = mutableListOf<String>()
         for ((name, spec) in discreteSpecs) {
-            if (name in DOWNDATES) continue
-
             val absorbing = spec.materialize()
             keys.forEachIndexed { i, k -> absorbing.update(k, i.toLong() * 1_000_000_000L, 1.0) }
             val baseline = absorbing.read(readAt)
@@ -273,8 +269,6 @@ class PairedAndDiscreteContractSweepTest {
     }
 
     private companion object {
-        val DOWNDATES = setOf("Sojourn")
-
         // Use an unseen key so a live-weight probe visibly changes every sketch.
         const val PROBE_KEY = 97L
     }
