@@ -50,4 +50,5 @@ Run `./gradlew check lintDocs`.
 - Don't edit anything under `.github/` unless asked directly.
 - Single-line conventional commits, no scope, no body/trailers:
   `feat: `, `fix: `, `chore: `, `refactor: `, `docs: `, `test: `.
-- PR body: follow `.github/pull_request_template.md`, with `Closes #NN` on its own line at the top.
+- PR body: follow `.github/pull_request_template.md`. Issues are optional; put `Closes #NN`
+  on its own line at the top only when the session was created to close that issue.
