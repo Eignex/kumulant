@@ -391,6 +391,35 @@ class CholeskyTest {
     }
 
     @Test
+    fun `inverse respects factor and destination matrix views`() {
+        for (n in listOf(2, 65)) {
+            val parent = DenseMatrix.wrap(n + 2, n + 2, DoubleArray((n + 2) * (n + 2)) { Double.NaN })
+            val factor = parent.view(1, 1, n, n)
+            for (j in 0 until n) {
+                for (i in j until n) factor[i, j] = if (i == j) 2.0 else 0.0
+            }
+            factor[n - 1, 0] = 1.0
+            val destination = DenseMatrix.wrap(n + 2, n + 2, DoubleArray((n + 2) * (n + 2)) { 7.0 })
+            val out = destination.view(1, 1, n, n)
+
+            factor.choleskyInvertInto(out)
+
+            for (j in 0 until n + 2) {
+                for (i in 0 until n + 2) {
+                    val expected = when {
+                        i == 0 || j == 0 || i == n + 1 || j == n + 1 -> 7.0
+                        i == 1 && j == 1 -> 0.3125
+                        i == j -> 0.25
+                        (i == n && j == 1) || (i == 1 && j == n) -> -0.125
+                        else -> 0.0
+                    }
+                    assertEquals(expected, destination[i, j], 1e-15)
+                }
+            }
+        }
+    }
+
+    @Test
     fun `inverse rejects a destination sharing factor storage`() {
         val factor = DenseMatrix.diagonal(2, 1.0).cholesky()
         val alias = DenseMatrix.wrap(2, 2, factor.values)

@@ -6,7 +6,7 @@ import com.eignex.koblas.Vector
 import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.koblas
-import com.eignex.koblas.norm2
+import com.eignex.koblas.norm
 import com.eignex.koblas.sum
 import com.eignex.kumulant.core.HasCenterScale
 import com.eignex.kumulant.core.HasMinMax
@@ -615,7 +615,7 @@ private object ArrayInput : ExprInput<DoubleArray> {
     override fun get(v: DoubleArray, index: Int): Double = v[index]
 
     override fun fold(v: DoubleArray, op: VFoldOp): Double = when (op) {
-        VFoldOp.Sum -> koblas.sum(v, 0, v.size)
+        VFoldOp.Sum -> koblas.sum(DenseVector.wrap(v))
 
         VFoldOp.Product -> {
             var p = 1.0
@@ -625,7 +625,7 @@ private object ArrayInput : ExprInput<DoubleArray> {
 
         VFoldOp.Mean -> {
             require(v.isNotEmpty()) { "VFold.Mean on empty vector" }
-            koblas.sum(v, 0, v.size) / v.size
+            koblas.sum(DenseVector.wrap(v)) / v.size
         }
 
         VFoldOp.Min -> {
@@ -642,12 +642,12 @@ private object ArrayInput : ExprInput<DoubleArray> {
             m
         }
 
-        VFoldOp.Norm2 -> koblas.nrm2(v, 0, v.size)
+        VFoldOp.Norm2 -> koblas.nrm2(DenseVector.wrap(v))
     }
 
     override fun dot(v: DoubleArray, expression: VDot): Double {
         expression.requireSize(v.size)
-        return koblas.dot(expression.coefficients, 0, v, 0, v.size)
+        return koblas.dot(DenseVector.wrap(expression.coefficients, 0, v.size), DenseVector.wrap(v))
     }
 
     override fun allFinite(v: DoubleArray): Boolean = v.all { it.isFinite() }
@@ -695,7 +695,7 @@ private object VectorInput : ExprInput<Vector> {
             }
 
             VFoldOp.Norm2 -> when (v) {
-                is DenseVector, is SparseVector -> v.norm2()
+                is DenseVector, is SparseVector -> v.norm()
                 else -> borrowedNorm2(v)
             }
         }
@@ -705,7 +705,10 @@ private object VectorInput : ExprInput<Vector> {
         expression.requireSize(v.size)
         val weights = expression.coefficients
         return when {
-            v is DenseVector -> koblas.dot(weights, 0, v.values, v.offset, v.size, 1, v.stride)
+            v is DenseVector -> koblas.dot(
+                DenseVector.wrap(weights, 0, v.size),
+                DenseVector.wrap(v.values, v.offset, v.size, v.stride),
+            )
 
             // Implicit zeros must still multiply nonfinite coefficients to produce NaN.
             v is SparseVector && expression.finiteCoefficients ->

@@ -4,7 +4,7 @@ import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
 import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
-import com.eignex.koblas.scale
+import com.eignex.koblas.koblas
 import com.eignex.koblas.sum
 import kotlin.math.sqrt
 
@@ -58,7 +58,7 @@ fun estimateMean(values: Vector, weights: Vector? = null, noiseVariances: Vector
     }
     require(maximum > 0.0)
     for (i in 0 until normalized.size) normalized[i] = normalized[i] / maximum
-    normalized.scale(1.0 / normalized.sum())
+    koblas.scale(normalized, 1.0 / normalized.sum())
     val squareSum = normalized dot normalized
     val moments = VarianceStat()
     for (i in 0 until values.size) moments.update(values[i], 0L, normalized[i])

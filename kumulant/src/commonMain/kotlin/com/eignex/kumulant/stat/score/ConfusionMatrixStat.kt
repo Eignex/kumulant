@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.score
 
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
@@ -42,19 +43,19 @@ data class ConfusionMatrixResult(
     fun count(predicted: Int, truth: Int): Double = counts[predicted * numClasses + truth]
 
     /** Total weight across all cells. */
-    val totalWeights: Double get() = koblas.sum(counts, 0, counts.size)
+    val totalWeights: Double get() = koblas.sum(DenseVector.wrap(counts))
 
     /** Sum of the diagonal (correctly classified weight). */
-    val correct: Double get() = koblas.sum(counts, 0, numClasses, numClasses + 1)
+    val correct: Double get() = koblas.sum(DenseVector.wrap(counts, 0, numClasses, numClasses + 1))
 
     /** Fraction of correctly classified weight; 0 on an empty stream. */
     val accuracy: Double get() = totalWeights.let { if (it > 0.0) correct / it else 0.0 }
 
     /** Predicted-class total: weight of all rows where prediction = [c]. */
-    fun predictedTotal(c: Int): Double = koblas.sum(counts, c * numClasses, numClasses)
+    fun predictedTotal(c: Int): Double = koblas.sum(DenseVector.wrap(counts, c * numClasses, numClasses))
 
     /** True-class total: weight of all columns where truth = [c]. */
-    fun actualTotal(c: Int): Double = koblas.sum(counts, c, numClasses, numClasses)
+    fun actualTotal(c: Int): Double = koblas.sum(DenseVector.wrap(counts, c, numClasses, numClasses))
 
     /** Per-class precision: `TP / (TP + FP)`; 0 when no predictions for class [c]. */
     fun precision(c: Int): Double {
@@ -106,9 +107,12 @@ data class ConfusionMatrixResult(
         if (n <= 0.0) return 0.0
         val tk = DoubleArray(numClasses) { actualTotal(it) }
         val pk = DoubleArray(numClasses) { predictedTotal(it) }
-        val numerator = correct * n - koblas.dot(tk, 0, pk, 0, numClasses)
-        val sumPk2 = koblas.dot(pk, 0, pk, 0, numClasses)
-        val sumTk2 = koblas.dot(tk, 0, tk, 0, numClasses)
+        val numerator = correct * n - koblas.dot(
+            DenseVector.wrap(tk, 0, numClasses),
+            DenseVector.wrap(pk, 0, numClasses),
+        )
+        val sumPk2 = koblas.dot(DenseVector.wrap(pk, 0, numClasses), DenseVector.wrap(pk, 0, numClasses))
+        val sumTk2 = koblas.dot(DenseVector.wrap(tk, 0, numClasses), DenseVector.wrap(tk, 0, numClasses))
         val denom = sqrt((n * n - sumPk2) * (n * n - sumTk2))
         return if (denom > 0.0) numerator / denom else 0.0
     }

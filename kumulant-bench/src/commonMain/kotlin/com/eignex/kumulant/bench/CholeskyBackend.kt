@@ -11,6 +11,6 @@ internal fun reportCholeskyBackend() {
         println("Cholesky vendor: ${vendor.vendor}")
         println("Cholesky library: ${vendor.libraryPath}")
         println("Cholesky version: ${vendor.version}")
-        println("Cholesky threads: ${vendor.threadEvidence.label}")
+        println("Cholesky threads: ${vendor.threadEvidence}")
     }
 }

@@ -1,7 +1,7 @@
 package com.eignex.kumulant.schema.spec
 
-import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.math.HasherRef
 import com.eignex.kumulant.schema.expr.*
@@ -402,7 +402,7 @@ data class BayesianRegression(
     /** GLM link function; `Link.Identity` keeps the strict closed-form Gaussian posterior. */
     val link: Link = StatDefaults.regressionLink,
     /** Prior coefficient mean; null uses the zero vector. */
-    val priorMean: ContiguousVector? = null,
+    val priorMean: DenseVector? = null,
     /** Prior coefficient covariance; null uses [priorVariance] times the identity. */
     val priorCovariance: DenseMatrix? = null,
 ) : RegressionStatSpec<PrecisionRegressionResult>

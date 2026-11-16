@@ -1,6 +1,5 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Scratch
@@ -47,7 +46,7 @@ data class SoftmaxRegressionResult(
     /** K-by-p weight matrix; `weights[k][i]` is the coefficient on feature `i` for class `k`. */
     val weights: DenseMatrix,
     /** Per-class intercept; length [numClasses]. */
-    val biases: ContiguousVector,
+    val biases: DenseVector,
     override val totalWeights: Double,
     /** Number of `update` calls absorbed. */
     val step: Long,
@@ -79,27 +78,18 @@ data class SoftmaxRegressionResult(
             "destination size ${destination.size} must match numClasses $numClasses"
         }
         if (x is DenseVector) {
-            // A DenseVector may be strided, so its origin and step go to the windowed gemv rather than a
-            // whole-array call.
-            koblas.gemv(1.0, weights, x.values, x.offset, x.stride, 0.0, destination, 0, 1)
+            koblas.gemv(1.0, weights, x, 0.0, DenseVector.wrap(destination))
         } else {
             // A sparse or custom x has no increment to hand a library, and walking what it stores beats
             // materialising a dense copy of it per call.
             destination.fill(0.0)
             x.forEachStored { column, value ->
                 if (value != 0.0) {
-                    koblas.axpy(
-                        y = destination,
-                        yOff = 0,
-                        alpha = value,
-                        x = weights.values,
-                        xOff = weights.offset + column * weights.leadingDimension,
-                        len = numClasses,
-                    )
+                    koblas.axpy(value, weights.columnView(column), DenseVector.wrap(destination))
                 }
             }
         }
-        koblas.axpy(destination, 0, 1.0, biases.values, 0, numClasses)
+        koblas.axpy(1.0, biases, DenseVector.wrap(destination))
     }
 
     /** Softmax probabilities across all classes for [x]; length [numClasses]. */

@@ -4,13 +4,11 @@
 
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Matrix
 import com.eignex.koblas.Scratch
 import com.eignex.koblas.Vector
-import com.eignex.koblas.axpy
 import com.eignex.koblas.borrow
 import com.eignex.koblas.copyFrom
 import com.eignex.koblas.dot
@@ -146,7 +144,7 @@ class BayesianRegressionStat(
 
     // priorInfo = H_prior * mu_prior, the natural-form contribution from the prior.
     private val priorInfo = DoubleArray(featureSize).also {
-        koblas.gemv(1.0, priorPrecisionMatrix, initialWeights, 0, 1, 0.0, it, 0, 1)
+        koblas.gemv(1.0, priorPrecisionMatrix, DenseVector.wrap(initialWeights), 0.0, DenseVector.wrap(it))
     }
 
     private val lock = concurrency.serializedLock()
@@ -196,7 +194,7 @@ class BayesianRegressionStat(
                 // Posterior mean update: w += (weight * residual) * H_new^-1 * x, solved against
                 // the factor just updated rather than through a materialised covariance.
                 precisionL.choleskySolveInto(hx, hx, workspace)
-                weights.axpy(weight * residual, solved)
+                koblas.axpy(weight * residual, solved, weights)
             }
 
             biasPrecision += wc
@@ -259,21 +257,42 @@ class BayesianRegressionStat(
             koblas.syrk(1.0, values.precisionL, transpose = false, 1.0, hNew, lower = true, scratch = workspace)
             for (j in 0 until n) {
                 val offset = j * n + j
-                koblas.axpy(hNew.values, offset, -1.0, priorPrecisionMatrix.values, offset, n - j)
+                koblas.axpy(
+                    -1.0,
+                    DenseVector.wrap(priorPrecisionMatrix.values, offset, n - j),
+                    DenseVector.wrap(hNew.values, offset, n - j),
+                )
             }
 
             // b = H_self * mu_self + H_other * mu_other - H_prior * mu_prior, each product taken as
             // L * (LT * mu) so the precision never has to be formed for it.
             workspace.borrow(n) { b ->
                 DenseVector.wrap(b).copyFrom(weights)
-                koblas.trmv(precisionL, b, 0, 1, lower = true, transpose = true, scratch = workspace)
-                koblas.trmv(precisionL, b, 0, 1, lower = true, scratch = workspace)
+                koblas.trmv(
+                    precisionL,
+                    DenseVector.wrap(b, 0, precisionL.rows),
+                    lower = true,
+                    transpose = true,
+                    scratch = workspace,
+                )
+                koblas.trmv(precisionL, DenseVector.wrap(b, 0, precisionL.rows), lower = true, scratch = workspace)
                 workspace.borrow(n) { other ->
                     DenseVector.wrap(other).copyFrom(values.weights)
-                    koblas.trmv(values.precisionL, other, 0, 1, lower = true, transpose = true, scratch = workspace)
-                    koblas.trmv(values.precisionL, other, 0, 1, lower = true, scratch = workspace)
-                    koblas.axpy(other, 0, -1.0, priorInfo, 0, n)
-                    koblas.axpy(b, 0, 1.0, other, 0, n)
+                    koblas.trmv(
+                        values.precisionL,
+                        DenseVector.wrap(other),
+                        lower = true,
+                        transpose = true,
+                        scratch = workspace,
+                    )
+                    koblas.trmv(
+                        values.precisionL,
+                        DenseVector.wrap(other, 0, values.precisionL.rows),
+                        lower = true,
+                        scratch = workspace,
+                    )
+                    koblas.axpy(-1.0, DenseVector.wrap(priorInfo, 0, n), DenseVector.wrap(other, 0, n))
+                    koblas.axpy(1.0, DenseVector.wrap(other, 0, n), DenseVector.wrap(b, 0, n))
                 }
 
                 // Solve H_new * mu_new = b via chol(H_new); that factor is the merged state.
@@ -349,7 +368,7 @@ class BayesianRegressionStat(
             }
 
             val weights = DoubleArray(snapshots.size) { weight(snapshots[it]) }
-            val wTotal = koblas.sum(weights, 0, weights.size)
+            val wTotal = koblas.sum(DenseVector.wrap(weights))
             require(wTotal > 0.0) { "fitPopulationPrior: sum of weights must be positive, got $wTotal" }
 
             // mu_pop = weighted mean of per-instance posterior means.
@@ -361,12 +380,12 @@ class BayesianRegressionStat(
                     // BLAS skips a zero multiplier, but zero times a nonfinite mean must propagate NaN.
                     for (i in 0 until n) muPop[i] += wi * w[i]
                 } else {
-                    DenseVector.wrap(muPop).axpy(wi, w)
+                    koblas.axpy(wi, w, DenseVector.wrap(muPop))
                 }
             }
             val inverseWeight = 1.0 / wTotal
             if (inverseWeight.isFinite()) {
-                koblas.scale(muPop, 0, inverseWeight, n)
+                koblas.scale(DenseVector.wrap(muPop, 0, n), inverseWeight)
             } else {
                 for (i in 0 until n) muPop[i] /= wTotal
             }
@@ -383,14 +402,12 @@ class BayesianRegressionStat(
                 val wi = weights[s] / wTotal
                 snapshots[s].precisionL.choleskyInvertInto(cov, scratch)
                 val mu = snapshots[s].weights
-                sigmaFlat.axpy(wi, covFlat)
+                koblas.axpy(wi, covFlat, sigmaFlat)
                 DenseVector.wrap(deviation).copyFrom(mu)
-                koblas.axpy(deviation, 0, -1.0, muPop, 0, n)
+                koblas.axpy(-1.0, DenseVector.wrap(muPop, 0, n), DenseVector.wrap(deviation, 0, n))
                 koblas.syr(
                     wi,
-                    deviation,
-                    0,
-                    1,
+                    DenseVector.wrap(deviation),
                     sigmaPop,
                     scratch = scratch,
                 )
@@ -417,7 +434,7 @@ class BayesianRegressionStat(
 @Serializable
 data class PopulationPrior(
     /** Population mean of the per-instance posterior means. */
-    val mean: ContiguousVector,
+    val mean: DenseVector,
     /** Population covariance: within-instance posterior + between-instance mean spread. */
     val covariance: DenseMatrix,
     /** Number of per-instance posteriors that contributed to this prior. */

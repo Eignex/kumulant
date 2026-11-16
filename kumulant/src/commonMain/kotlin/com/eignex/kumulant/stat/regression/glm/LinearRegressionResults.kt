@@ -1,6 +1,5 @@
 package com.eignex.kumulant.stat.regression.glm
 
-import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
@@ -66,7 +65,7 @@ sealed interface LinearRegressionResult :
 @Serializable
 @SerialName("StochasticRegressionResult")
 data class StochasticRegressionResult(
-    override val weights: ContiguousVector,
+    override val weights: DenseVector,
     override val bias: Double,
     override val totalWeights: Double,
     override val step: Long,
@@ -84,14 +83,14 @@ data class StochasticRegressionResult(
 @Serializable
 @SerialName("DiagonalRegressionResult")
 data class DiagonalRegressionResult(
-    override val weights: ContiguousVector,
+    override val weights: DenseVector,
     override val bias: Double,
     /** Posterior precision (inverse variance) on the bias term. */
     val biasPrecision: Double,
     override val totalWeights: Double,
     override val step: Long,
     /** Per-coefficient precision (inverse variance). Same length as [weights]. */
-    val precision: ContiguousVector,
+    val precision: DenseVector,
     override val link: Link = Link.Identity,
     override val sse: Double = 0.0,
 ) : LinearRegressionResult
@@ -108,7 +107,7 @@ data class DiagonalRegressionResult(
 @Serializable
 @SerialName("PrecisionRegressionResult")
 data class PrecisionRegressionResult(
-    override val weights: ContiguousVector,
+    override val weights: DenseVector,
     override val bias: Double,
     /** Posterior precision (inverse variance) on the bias term. */
     val biasPrecision: Double,

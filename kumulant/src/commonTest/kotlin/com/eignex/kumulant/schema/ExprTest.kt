@@ -2,7 +2,6 @@ package com.eignex.kumulant.schema
 
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.StridedVector
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
@@ -28,6 +27,9 @@ class ExprTest {
     private class NoMaterializeVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
+        override fun set(i: Int, v: Double) {
+            values[i] = v
+        }
         override fun toDoubleArray(): DoubleArray = error("expression materialised its vector input")
     }
 
@@ -42,7 +44,7 @@ class ExprTest {
         val inputs = listOf(
             DenseVector.of(values),
             SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(2.0, -3.0)),
-            StridedVector(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -3.0, 9.0), 0, 3, 2),
+            DenseVector.wrap(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -3.0, 9.0), 0, 3, 2),
             NoMaterializeVector(values),
         )
 
@@ -110,7 +112,7 @@ class ExprTest {
     @Test fun `vector aware expressions agree across vector representations`() {
         val dense = DenseVector.of(doubleArrayOf(2.0, 0.0, -3.0))
         val sparse = SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(2.0, -3.0))
-        val strided = StridedVector(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -3.0, 9.0), 0, 3, 2)
+        val strided = DenseVector.wrap(doubleArrayOf(2.0, 9.0, 0.0, 9.0, -3.0, 9.0), 0, 3, 2)
         val custom = NoMaterializeVector(doubleArrayOf(2.0, 0.0, -3.0))
         val scalar = V(0) * V(2) + VFold(VFoldOp.Sum)
         val predicate = (V(0) gt 0.0) and (V(2) lt 0.0)
@@ -435,7 +437,7 @@ class ExprTest {
             val representations = listOf<Vector>(
                 DenseVector.of(array),
                 sparse(array),
-                StridedVector(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
+                DenseVector.wrap(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
                 NoMaterializeVector(array),
             )
             for (fold in folds) {
@@ -469,7 +471,7 @@ class ExprTest {
 
     @Test fun `vdot reads offset strided inputs without padding`() {
         val expression = vDot(1.0, 2.0, -3.0)
-        val input = StridedVector(doubleArrayOf(Double.NaN, 4.0, Double.NaN, 5.0, Double.NaN, 6.0), 1, 3, 2)
+        val input = DenseVector.wrap(doubleArrayOf(Double.NaN, 4.0, Double.NaN, 5.0, Double.NaN, 6.0), 1, 3, 2)
 
         assertEquals(-4.0, expression.eval(v = input))
     }
@@ -498,7 +500,7 @@ class ExprTest {
             for (input in listOf<Vector>(
                 DenseVector.of(array),
                 sparse(array),
-                StridedVector(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
+                DenseVector.wrap(DoubleArray(array.size * 2) { array[it / 2] }, 0, array.size, 2),
                 NoMaterializeVector(array),
             )) {
                 assertEquals(expected.toBits(), expr.eval(v = input).toBits())
@@ -555,6 +557,9 @@ class ExprTest {
             var reads = 0
             override val size: Int get() = values.size
             override fun get(i: Int): Double = values[i].also { reads++ }
+            override fun set(i: Int, v: Double) {
+                values[i] = v
+            }
             override fun toDoubleArray(): DoubleArray = error("expression materialised its vector input")
         }
 
@@ -627,7 +632,7 @@ class ExprTest {
             val inputs = listOf<Vector>(
                 DenseVector.of(values),
                 sparse(values),
-                StridedVector(doubleArrayOf(values[2], 9.0, 0.0, 9.0, values[0]), 4, 3, -2),
+                DenseVector.wrap(doubleArrayOf(values[2], 9.0, 0.0, 9.0, values[0]), 4, 3, -2),
                 NoMaterializeVector(values),
             )
             val expected = 5.0 * scale

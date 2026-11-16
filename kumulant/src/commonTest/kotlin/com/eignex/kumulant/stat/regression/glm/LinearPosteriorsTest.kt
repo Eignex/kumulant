@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.regression.glm
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.StridedVector
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.math.nextNormal
 import kotlin.math.abs
@@ -18,6 +17,9 @@ class LinearPosteriorsTest {
     private class CustomVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
+        override fun set(i: Int, v: Double) {
+            values[i] = v
+        }
         override fun toDoubleArray(): DoubleArray = values.copyOf()
     }
 
@@ -55,7 +57,7 @@ class LinearPosteriorsTest {
             val variants = listOf(
                 DenseVector.of(doubleArrayOf(3.0 * scale, 4.0 * scale)),
                 SparseVector.of(2, intArrayOf(0, 1), doubleArrayOf(3.0 * scale, 4.0 * scale)),
-                StridedVector(doubleArrayOf(3.0 * scale, 9.0, 4.0 * scale, 9.0), 0, 2, 2),
+                DenseVector.wrap(doubleArrayOf(3.0 * scale, 9.0, 4.0 * scale, 9.0), 0, 2, 2),
                 CustomVector(doubleArrayOf(3.0 * scale, 4.0 * scale)),
             )
 
@@ -86,7 +88,7 @@ class LinearPosteriorsTest {
     fun `covariance evaluation accepts strided and custom vectors`() {
         val snapshot = bayesianSnapshot()
         val dense = DenseVector.of(doubleArrayOf(0.3, -0.2))
-        val strided = StridedVector(doubleArrayOf(0.3, 7.0, -0.2, 7.0), 0, 2, 2)
+        val strided = DenseVector.wrap(doubleArrayOf(0.3, 7.0, -0.2, 7.0), 0, 2, 2)
         val custom = CustomVector(doubleArrayOf(0.3, -0.2))
 
         val expected = LinUcb.evaluate(snapshot, dense, Random(0), exploration = 0.7)

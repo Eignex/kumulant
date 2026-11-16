@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.calibration
 
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.requirePositiveBins
@@ -80,7 +81,7 @@ fun ReliabilityResult.isotonicCalibration(): IsotonicCalibratorResult = Isotonic
     numBins = numBins,
     binMidpoints = DoubleArray(numBins) { (it + 0.5) / numBins },
     probabilities = poolAdjacentViolators(outcomeRate, totalWeights),
-    totalWeights = koblas.sum(totalWeights, 0, totalWeights.size),
+    totalWeights = koblas.sum(DenseVector.wrap(totalWeights)),
 )
 
 private fun poolAdjacentViolators(values: DoubleArray, weights: DoubleArray): DoubleArray {

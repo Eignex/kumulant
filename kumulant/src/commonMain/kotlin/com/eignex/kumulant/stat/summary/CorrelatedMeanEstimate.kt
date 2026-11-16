@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stat.summary
 
 import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
 import com.eignex.koblas.koblas
 import com.eignex.kumulant.math.CholeskyFactor
@@ -33,9 +34,11 @@ fun estimateCorrelatedMean(values: Vector, covariance: CholeskyFactor): Correlat
         },
     )
     val whitened = covariance.solveLower(right).values
-    val precision = koblas.dot(whitened, 0, whitened, 0, values.size)
+    val ones = DenseVector.wrap(whitened, 0, values.size)
+    val centered = DenseVector.wrap(whitened, values.size, values.size)
+    val precision = koblas.dot(ones, ones)
     require(precision > 0.0 && precision.isFinite()) { "Mean precision must be positive and finite" }
-    val correction = koblas.dot(whitened, 0, whitened, values.size, values.size) / precision
+    val correction = koblas.dot(ones, centered) / precision
     val mean = anchor + correction
     val variance = 1.0 / precision
     require(mean.isFinite() && variance.isFinite()) { "Mean estimate is not finite; rescale observations" }

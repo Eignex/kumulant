@@ -2,12 +2,11 @@ package com.eignex.kumulant.stat.regression.glm
 
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
-import com.eignex.koblas.axpy
 import com.eignex.koblas.copyFrom
 import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.koblas
-import com.eignex.koblas.norm2
+import com.eignex.koblas.norm
 import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.serialization.LinearPosteriorSerializer
 import com.eignex.kumulant.stat.regression.RegressionPosterior
@@ -73,7 +72,7 @@ data object PointPosterior : LinearPosterior<StochasticRegressionResult> {
     override fun evaluate(snapshot: StochasticRegressionResult, x: Vector, rng: Random, exploration: Double): Double {
         val eta = snapshot.linearPredictor(x)
         if (exploration <= 0.0) return snapshot.link.invMean(eta)
-        return snapshot.link.invMean(eta + sqrt(exploration) * x.norm2() * rng.nextNormal())
+        return snapshot.link.invMean(eta + sqrt(exploration) * x.norm() * rng.nextNormal())
     }
 }
 
@@ -105,8 +104,8 @@ data object FactorisedGaussian : LinearPosterior<DiagonalRegressionResult> {
 private fun PrecisionRegressionResult.predictiveDeviation(x: Vector): Double {
     val v = DoubleArray(featureSize)
     DenseVector.wrap(v).copyFrom(x)
-    koblas.trsv(precisionL, v, 0, 1, lower = true)
-    return DenseVector.wrap(v).norm2()
+    koblas.trsv(precisionL, DenseVector.wrap(v, 0, precisionL.rows), lower = true)
+    return DenseVector.wrap(v).norm()
 }
 
 /**
@@ -125,8 +124,13 @@ data object MultivariateGaussian : LinearPosterior<PrecisionRegressionResult> {
         val n = snapshot.weights.size
         val sd = sqrt(exploration)
         val u = DoubleArray(n) { rng.nextNormal(0.0, sd) }
-        koblas.trsv(snapshot.precisionL, u, 0, 1, lower = true, transpose = true)
-        return DenseVector.wrap(u).also { it.axpy(1.0, snapshot.weights) }
+        koblas.trsv(
+            snapshot.precisionL,
+            DenseVector.wrap(u, 0, snapshot.precisionL.rows),
+            lower = true,
+            transpose = true,
+        )
+        return DenseVector.wrap(u).also { koblas.axpy(1.0, snapshot.weights, it) }
     }
 
     /** Closes to `invMean(eta(x) + sqrt(exploration) * ||L^-1 x|| * N(0,1))`; one triangular

@@ -33,6 +33,9 @@ class SoftmaxRegressionResultTest {
     private class StridedVector(private val backing: DoubleArray) : Vector {
         override val size: Int get() = backing.size / 2
         override fun get(i: Int): Double = backing[i * 2]
+        override fun set(i: Int, v: Double) {
+            backing[i * 2] = v
+        }
         override fun toDoubleArray(): DoubleArray = DoubleArray(size) { this[it] }
     }
 

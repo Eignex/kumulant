@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.Result
@@ -180,7 +181,7 @@ internal class SortedBins {
 
     val size: Int get() = indices.size
 
-    val totalWeights: Double get() = koblas.sum(weights, 0, size)
+    val totalWeights: Double get() = koblas.sum(DenseVector.wrap(weights, 0, size))
 
     fun indexAt(position: Int): Int = indices[order[position]]
 

@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.regression.tree
 
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
@@ -35,7 +36,7 @@ data class ClassCountsResult(
     }
 
     /** Total weight summed across all classes. */
-    override val totalWeights: Double get() = koblas.sum(counts, 0, numClasses)
+    override val totalWeights: Double get() = koblas.sum(DenseVector.wrap(counts, 0, numClasses))
 
     /** Class probabilities; uniform when no observations have been seen yet. */
     fun probabilities(): DoubleArray {
@@ -44,7 +45,7 @@ data class ClassCountsResult(
         val out = counts.copyOf()
         val inverseWeight = 1.0 / w
         if (inverseWeight.isFinite()) {
-            koblas.scale(out, 0, inverseWeight, numClasses)
+            koblas.scale(DenseVector.wrap(out, 0, numClasses), inverseWeight)
         } else {
             for (i in out.indices) out[i] /= w
         }
@@ -154,7 +155,7 @@ class ClassCountsStat(
 internal fun mergeCC(a: ClassCountsResult, b: ClassCountsResult): ClassCountsResult {
     require(a.numClasses == b.numClasses) { "numClasses mismatch: ${a.numClasses} vs ${b.numClasses}" }
     val out = a.counts.copyOf()
-    koblas.axpy(out, 0, 1.0, b.counts, 0, a.numClasses)
+    koblas.axpy(1.0, DenseVector.wrap(b.counts, 0, a.numClasses), DenseVector.wrap(out, 0, a.numClasses))
     return ClassCountsResult(a.numClasses, out)
 }
 
@@ -164,6 +165,6 @@ internal fun subtractCC(total: ClassCountsResult, part: ClassCountsResult): Clas
         "numClasses mismatch: ${total.numClasses} vs ${part.numClasses}"
     }
     val out = total.counts.copyOf()
-    koblas.axpy(out, 0, -1.0, part.counts, 0, total.numClasses)
+    koblas.axpy(-1.0, DenseVector.wrap(part.counts, 0, total.numClasses), DenseVector.wrap(out, 0, total.numClasses))
     return ClassCountsResult(total.numClasses, out)
 }
