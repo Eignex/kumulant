@@ -11,7 +11,7 @@ import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.kumulant.math.argMaxOf
+import com.eignex.util.arrays.argMaxOf
 import kotlin.concurrent.atomics.AtomicLong
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.random.Random

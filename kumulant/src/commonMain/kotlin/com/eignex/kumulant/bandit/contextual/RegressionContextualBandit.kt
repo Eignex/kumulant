@@ -9,8 +9,8 @@ import com.eignex.kumulant.bandit.requireMergeSize
 import com.eignex.kumulant.bandit.requireNbrArms
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.stat.regression.RegressionPosterior
+import com.eignex.util.arrays.argMaxOf
 import kotlin.random.Random
 
 /**

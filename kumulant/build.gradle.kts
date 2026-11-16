@@ -21,7 +21,7 @@ repositories {
     }
 }
 
-val utilPin = "0.0.1-20261105.215902-10"
+val utilPin = "0.0.1-20261116.094126-18"
 
 // Routine checks cover JVM + Linux x64; release validation opts into all desktop and cloud targets.
 val fullTargets = providers.gradleProperty("targets.full").isPresent
