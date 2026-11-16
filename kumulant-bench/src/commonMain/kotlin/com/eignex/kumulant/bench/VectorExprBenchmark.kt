@@ -4,8 +4,8 @@ import com.eignex.koblas.DenseVector
 import com.eignex.koblas.KoblasEngine
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.Vector
-import com.eignex.kumulant.schema.expr.V
 import com.eignex.kumulant.schema.expr.ScalarExpr
+import com.eignex.kumulant.schema.expr.V
 import com.eignex.kumulant.schema.expr.VFoldOp
 import com.eignex.kumulant.schema.expr.eval
 import com.eignex.kumulant.schema.expr.gt
@@ -71,23 +71,37 @@ open class VectorExprBenchmark {
     }
 
     @Benchmark fun scalar(): Double = scalar.eval(v = input)
+
     @Benchmark fun predicate(): Boolean = predicate.eval(v = input)
+
     @Benchmark fun vector(): DoubleArray = vector.eval(v = input)
+
     @Benchmark fun sum(): Double = sum.eval(v = input)
+
     @Benchmark fun mean(): Double = mean.eval(v = input)
+
     @Benchmark fun minimum(): Double = minimum.eval(v = input)
+
     @Benchmark fun maximum(): Double = maximum.eval(v = input)
+
     @Benchmark fun norm2(): Double = norm2.eval(v = input)
+
     @Benchmark fun dot(): Double = dot.eval(v = input)
+
     @Benchmark fun scalarDot(): Double = scalarDotCall()
+
     @Benchmark fun materializedScalar(): Double = scalar.eval(0.0, 0.0, input.toDoubleArray())
+
     @Benchmark fun materializedPredicate(): Boolean = predicate.eval(0.0, 0.0, input.toDoubleArray())
+
     @Benchmark fun materializedVector(): DoubleArray = vector.eval(0.0, 0.0, input.toDoubleArray())
 
     private class CustomVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
-        override fun set(i: Int, v: Double) { values[i] = v }
+        override fun set(i: Int, v: Double) {
+            values[i] = v
+        }
         override fun toDoubleArray(): DoubleArray = values.copyOf()
     }
 }

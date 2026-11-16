@@ -1,8 +1,9 @@
 package com.eignex.kumulant.bench
 
 internal class NativeBenchmarkSettings(arguments: List<String>, smoke: Boolean) {
-    private val parameterNames = setOf("name", "policy", "concurrency", "featureSize", "densityPercent", "representation",
-        "samples", "dimensions", "sampling", "historySize", "shape", "scenario", "matrixCase", "extensionShape")
+    private val parameterNames =
+        setOf("name", "policy", "concurrency", "featureSize", "densityPercent", "representation",
+            "samples", "dimensions", "sampling", "historySize", "shape", "scenario", "matrixCase", "extensionShape")
     private val properties = linkedMapOf(
         "filter" to ".*(UpdateThroughputBenchmark.update|BanditBenchmark.cycle)",
         "param.name" to if (smoke) "SumStat" else allSpecs.joinToString(",") { it.name },
@@ -22,7 +23,9 @@ internal class NativeBenchmarkSettings(arguments: List<String>, smoke: Boolean) 
             }
             val key = argument.substringAfter("-Pbench.").substringBefore('=')
             val value = argument.substringAfter('=')
-            require(key in properties || key in setOf("stats", "policies", "mode", "timeUnit") || (key.startsWith("param.") && key.removePrefix("param.") in parameterNames)) {
+            require(
+                key in properties || key in setOf("stats", "policies", "mode", "timeUnit") ||
+                    (key.startsWith("param.") && key.removePrefix("param.") in parameterNames)) {
                 "Unsupported prepared Native property: $key"
             }
             require(value.isNotBlank() && supplied.add(key)) { "Blank or duplicate Native property: $key" }
@@ -36,15 +39,25 @@ internal class NativeBenchmarkSettings(arguments: List<String>, smoke: Boolean) 
             require("param.policy" !in supplied) { "Use policies or param.policy, not both" }
             properties["param.policy"] = it
         }
-        require(properties.getValue("warmups").toIntOrNull()?.let { it > 0 } == true) { "Native warmups must be positive because the engine calibrates iterations during warmup" }
+        require(properties.getValue("warmups").toIntOrNull()?.let {
+            it > 0
+        } == true) { "Native warmups must be positive because the engine calibrates iterations during warmup" }
         for (key in listOf("iterations", "iterationTime")) {
             require(properties.getValue(key).toIntOrNull()?.let { it > 0 } == true) { "$key must be positive" }
         }
-        require(properties.getValue("iterationTimeUnit") in setOf("ns", "us", "ms", "s", "m")) { "Unsupported Native iterationTimeUnit" }
-        require(properties["mode"] == null || properties["mode"] in setOf("avgt", "thrpt")) { "Native supports avgt and thrpt" }
-        require(properties["timeUnit"] == null || properties["timeUnit"] in setOf("ns", "us", "ms", "s", "m")) { "Unsupported Native timeUnit" }
+        require(properties.getValue("iterationTimeUnit") in setOf("ns", "us", "ms", "s", "m")) {
+            "Unsupported Native iterationTimeUnit"
+        }
+        require(properties["mode"] == null || properties["mode"] in setOf("avgt", "thrpt")) {
+            "Native supports avgt and thrpt"
+        }
+        require(properties["timeUnit"] == null || properties["timeUnit"] in setOf("ns", "us", "ms", "s", "m")) {
+            "Unsupported Native timeUnit"
+        }
         require(properties.getValue("param.concurrency") == "None") { "Native shared concurrency is unsupported" }
-        require(properties.filterKeys { it.startsWith("param.") }.values.all { value -> value.split(',').none(String::isBlank) }) { "Empty Native parameter value" }
+        require(properties.filterKeys {
+            it.startsWith("param.")
+        }.values.all { value -> value.split(',').none(String::isBlank) }) { "Empty Native parameter value" }
         Regex(properties.getValue("filter"))
     }
 

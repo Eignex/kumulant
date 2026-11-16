@@ -64,11 +64,14 @@ fun main(arguments: Array<String>) {
             val stress = ProcessBuilder(command + listOf("--cholesky-stress", "$stressOrder")).redirectErrorStream(true)
                 .redirectOutput(File(directory, "stress.txt")).start()
             check(stress.waitFor() == 0) { "$backend stress failed; inspect stress.txt" }
-            check(File(directory, "stress.txt").readText().contains(expected)) { "$backend stress backend did not resolve" }
+            check(File(directory, "stress.txt").readText().contains(expected)) {
+                "$backend stress backend did not resolve"
+            }
         }
         val profiler = if (recording) listOf("-prof", "jfr:dir=${File(directory, "jfr").absolutePath}") else emptyList()
-        val benchmark = ProcessBuilder(command + listOf(selection, "-bm", "avgt", "-tu", "us", "-prof", "gc") + profiler +
-            parameters + listOf("-rf", "json", "-rff", File(directory, "results.json").absolutePath))
+        val benchmark = ProcessBuilder(
+            command + listOf(selection, "-bm", "avgt", "-tu", "us", "-prof", "gc") + profiler +
+                parameters + listOf("-rf", "json", "-rff", File(directory, "results.json").absolutePath))
             .redirectErrorStream(true).redirectOutput(File(directory, "benchmark.txt")).start()
         check(benchmark.waitFor() == 0) { "$backend benchmark failed" }
         println("Completed $backend")

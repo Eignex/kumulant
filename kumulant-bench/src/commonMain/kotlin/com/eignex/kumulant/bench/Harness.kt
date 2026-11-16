@@ -1,12 +1,12 @@
 package com.eignex.kumulant.bench
 
+import com.eignex.koblas.DenseVector
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.DiscreteStat
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.RegressionStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
-import com.eignex.koblas.DenseVector
 import kotlin.random.Random
 
 internal const val STAT_BENCHMARK_BATCH_SIZE = 4096

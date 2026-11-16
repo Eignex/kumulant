@@ -46,7 +46,8 @@ open class CholeskySolveBenchmark {
     fun solveLowerTranspose(): DenseMatrix = factor.solveLower(right, transpose = true)
 
     @Benchmark
-    fun solveLowerTransposeInto(): DenseMatrix = factor.solveLowerInto(right, out, transpose = true, workspace = workspace)
+    fun solveLowerTransposeInto(): DenseMatrix =
+        factor.solveLowerInto(right, out, transpose = true, workspace = workspace)
 
     @Benchmark
     fun copyRightInto(): DenseMatrix {

@@ -13,9 +13,13 @@ internal fun runPreparedNativeCholesky(
     val settings = NativeBenchmarkSettings(arguments, smoke)
     require(repetitions > 0)
     val executable = worktree.resolve(benchmarkPath).absoluteFile
-    if (!qualityOnly) check(executable.isFile && executable.setExecutable(true)) { "Native benchmark must be linked during preparation" }
+    if (!qualityOnly) check(executable.isFile && executable.setExecutable(true)) {
+        "Native benchmark must be linked during preparation"
+    }
     val quality = worktree.resolve(qualityPath).absoluteFile
-    check(quality.isFile && quality.setExecutable(true)) { "Native quality executable must be linked during preparation" }
+    check(quality.isFile && quality.setExecutable(true)) {
+        "Native quality executable must be linked during preparation"
+    }
     val preflight = ProcessBuilder(quality.path).redirectErrorStream(true)
         .redirectOutput(File(output, "native-quality.txt")).start()
     check(preflight.waitFor() == 0) { "Native quality failed; inspect native-quality.txt" }
@@ -59,8 +63,11 @@ internal fun runPreparedNativeCholesky(
             configurations.forEachIndexed { index, case ->
                 val samples = File(directory, "samples-$index.txt")
                 execute("--benchmark", case.absolutePath, samples.absolutePath)
-                check(samples.isFile && samples.readText().isNotBlank()) { "Native benchmark produced no samples: $case" }
-                results.appendText((if (results.length() > 0) "\n" else "") + "${case.absolutePath}: ${samples.readText().trim()}")
+                check(samples.isFile && samples.readText().isNotBlank()) {
+                    "Native benchmark produced no samples: $case"
+                }
+                results.appendText(
+                    (if (results.length() > 0) "\n" else "") + "${case.absolutePath}: ${samples.readText().trim()}")
                 println("Prepared Native repetition $repetition: ${index + 1}/${configurations.size} cases")
             }
         } catch (error: Exception) {

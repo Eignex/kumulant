@@ -71,5 +71,4 @@ open class CholeskyUpdateBenchmark {
             blackhole.consume(updated.factorCholesky(workspace).solveInto(information, out, workspace))
         }
     }
-
 }

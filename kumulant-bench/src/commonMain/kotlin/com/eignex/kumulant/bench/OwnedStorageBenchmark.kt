@@ -30,7 +30,10 @@ open class OwnedStorageBenchmark {
     }
 
     @Benchmark fun stochasticRead() = stochastic.read()
+
     @Benchmark fun diagonalRead() = diagonal.read()
+
     @Benchmark fun bayesianRead() = bayesian.read()
+
     @Benchmark fun gaussianNaiveBayesRead() = naiveBayes.read()
 }

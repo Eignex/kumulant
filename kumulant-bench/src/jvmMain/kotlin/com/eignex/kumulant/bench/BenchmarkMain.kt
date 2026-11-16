@@ -8,31 +8,46 @@ import org.openjdk.jmh.runner.options.TimeValue
 
 fun main(args: Array<String>) {
     when (args.firstOrNull()) {
-        "--quality" -> { analyzeQuality(); analyzeCholeskyAccuracy() }
+        "--quality" -> {
+            analyzeQuality()
+            analyzeCholeskyAccuracy()
+        }
         "--concurrency" -> analyzeConcurrency()
-        "--cholesky-stress" -> analyzeCholeskyStress(args.getOrNull(1)?.toIntOrNull() ?: error("Usage: --cholesky-stress ORDER"))
+        "--cholesky-stress" -> analyzeCholeskyStress(
+            args.getOrNull(1)?.toIntOrNull() ?: error("Usage: --cholesky-stress ORDER"))
         "--parameters" -> {
             println(allSpecs.joinToString(",") { it.name })
             println(allBanditSpecs.joinToString(",") { it.name })
         }
         else -> {
             val options = CommandLineOptions(*args)
-            if (options.shouldHelp() || options.shouldList() || options.shouldListWithParams() || options.shouldListProfilers() || options.shouldListResultFormats()) {
+            if (options.shouldHelp() || options.shouldList() || options.shouldListWithParams() ||
+                options.shouldListProfilers() ||
+                options.shouldListResultFormats()) {
                 org.openjdk.jmh.Main.main(args)
             } else Runner(benchmarkOptions(options)).run()
         }
     }
 }
 
-internal fun benchmarkOptions(options: CommandLineOptions, smoke: Boolean = java.lang.Boolean.getBoolean("bench.smoke")): Options {
+internal fun benchmarkOptions(
+    options: CommandLineOptions, smoke: Boolean = java.lang.Boolean.getBoolean("bench.smoke"),
+): Options {
     val concurrent = options.threads.orElse(1) != 1
     val names = options.getParameter("name").orElse(
-        if (smoke) listOf("SumStat") else if (concurrent) listOf("SumStat", "MeanStat", "VarianceStat") else allSpecs.map { it.name },
+        if (smoke) listOf("SumStat") else if (concurrent) listOf("SumStat", "MeanStat", "VarianceStat")
+        else allSpecs.map {
+            it.name
+        },
     )
     val levels = options.getParameter("concurrency").orElse(listOf(if (concurrent) "Strict" else "None"))
     if (concurrent) {
-        require(options.includes.isEmpty()) { "Concurrent timing selects shared stat updates; omit the benchmark filter" }
-        require(names.all { it in listOf("SumStat", "MeanStat", "VarianceStat") } && levels.all { it in listOf("Strict", "Relaxed", "HighWrite") }) {
+        require(options.includes.isEmpty()) {
+            "Concurrent timing selects shared stat updates; omit the benchmark filter"
+        }
+        require(
+            names.all { it in listOf("SumStat", "MeanStat", "VarianceStat") } &&
+                levels.all { it in listOf("Strict", "Relaxed", "HighWrite") }) {
             "Concurrent timing requires sum/mean/variance and synchronized concurrency levels"
         }
     }
@@ -46,7 +61,12 @@ internal fun benchmarkOptions(options: CommandLineOptions, smoke: Boolean = java
         .shouldFailOnError(true)
         .param("name", *names.toTypedArray())
         .param("concurrency", *levels.toTypedArray())
-        .param("policy", *options.getParameter("policy").orElse(if (smoke) listOf("MultiArmed/Thompson") else allBanditSpecs.map { it.name }).toTypedArray())
-    if (options.includes.isEmpty()) builder.include(if (concurrent) ".*UpdateThroughputBenchmark.update" else ".*(UpdateThroughputBenchmark.update|BanditBenchmark.cycle)")
+        .param("policy", *options.getParameter("policy").orElse(
+            if (smoke) listOf("MultiArmed/Thompson") else allBanditSpecs.map {
+                it.name
+            }).toTypedArray())
+    if (options.includes.isEmpty()) builder.include(
+        if (concurrent) ".*UpdateThroughputBenchmark.update"
+        else ".*(UpdateThroughputBenchmark.update|BanditBenchmark.cycle)")
     return builder.build()
 }

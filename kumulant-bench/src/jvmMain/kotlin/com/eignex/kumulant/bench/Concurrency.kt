@@ -21,9 +21,12 @@ internal fun analyzeConcurrency() {
     println("stat,level,operation,threads,count_error,scaled_drift,snapshot_reads")
     for (spec in listOf(sumStatSpec, meanStatSpec, varianceStatSpec)) {
         for (level in listOf(Concurrency.Strict, Concurrency.Relaxed, Concurrency.HighWrite)) {
-            for (threads in listOf(1, 4)) for (merge in listOf(false, true)) {
-                val result = measureConcurrency(spec, level, threads, merge)
-                println("${spec.name},$level,${if (merge) "merge" else "update"},$threads,${result.countError},${result.drift},${result.reads}")
+            for (threads in listOf(1, 4)) {
+                for (merge in listOf(false, true)) {
+                    val result = measureConcurrency(spec, level, threads, merge)
+                    println("${spec.name},$level,${if (merge) "merge" else "update"},$threads," +
+                        "${result.countError},${result.drift},${result.reads}")
+                }
             }
         }
     }
@@ -59,12 +62,18 @@ internal fun <S, R : Result> measureConcurrency(
         val snapshot = spec.readSnapshot(stat, 0L)
         check(spec.scalar(snapshot).isFinite()) { "Nonfinite snapshot during concurrent writes" }
         if (snapshot is HasObservationCount) {
-            check(snapshot.totalWeights in previousCount..count.toDouble()) { "Corrupt or decreasing observation count" }
+            check(snapshot.totalWeights in previousCount..count.toDouble()) {
+                "Corrupt or decreasing observation count"
+            }
             previousCount = snapshot.totalWeights
         }
-        if (snapshot is WeightedVarianceResult) check(snapshot.mean.isFinite() && snapshot.variance.isFinite()) { "Nonfinite variance snapshot" }
+        if (snapshot is WeightedVarianceResult) check(snapshot.mean.isFinite() && snapshot.variance.isFinite()) {
+            "Nonfinite variance snapshot"
+        }
         if (level != Concurrency.Relaxed) {
-            if (snapshot is WeightedMeanResult) check(snapshot.mean in -1e-12..(1.0 + 1e-12)) { "Mean outside input range" }
+            if (snapshot is WeightedMeanResult) check(snapshot.mean in -1e-12..(1.0 + 1e-12)) {
+                "Mean outside input range"
+            }
             if (snapshot is WeightedVarianceResult) {
                 check(snapshot.mean in -1e-12..(1.0 + 1e-12)) { "Mean outside input range" }
                 check(snapshot.variance in -1e-12..(0.25 + 1e-12)) { "Variance outside bounded-input range" }
@@ -96,18 +105,24 @@ internal fun runWorkers(actions: List<() -> Unit>, reader: (() -> Unit)? = null,
     val stop = AtomicBoolean()
     val deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis)
     try {
-        actions.forEach { action -> completed.submit {
-            ready.countDown()
-            start.await()
-            action()
-            false
-        } }
-        val observer = reader?.let { observe -> completed.submit {
-            ready.countDown()
-            start.await()
-            do { observe() } while (!stop.get())
-            true
-        } }
+        actions.forEach { action ->
+            completed.submit {
+                ready.countDown()
+                start.await()
+                action()
+                false
+            }
+        }
+        val observer = reader?.let { observe ->
+            completed.submit {
+                ready.countDown()
+                start.await()
+                do {
+                    observe()
+                } while (!stop.get())
+                true
+            }
+        }
         check(ready.await(timeoutMillis, TimeUnit.MILLISECONDS)) { "Workers failed to become ready" }
         start.countDown()
         var finished = 0
