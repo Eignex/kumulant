@@ -3,8 +3,9 @@ package com.eignex.kumulant.bench
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.StridedVector
+import com.eignex.koblas.UnsafeKoblasApi
 import com.eignex.koblas.Vector
-import com.eignex.koblas.forEachStored
+import com.eignex.koblas.engine.BuiltinEngines
 import com.eignex.kumulant.schema.expr.V
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.expr.VFoldOp
@@ -41,8 +42,9 @@ open class VectorExprBenchmark {
     private val maximum = vFold(VFoldOp.Max)
     private val norm2 = vFold(VFoldOp.Norm2)
     private lateinit var dot: ScalarExpr
-    private lateinit var weights: List<Double>
+    private lateinit var scalarDotCall: () -> Double
 
+    @OptIn(UnsafeKoblasApi::class)
     @Setup
     fun setup() {
         val values = DoubleArray(featureSize) { if (it % 3 == 0) 1.0 else 0.0 }
@@ -55,8 +57,20 @@ open class VectorExprBenchmark {
             "strided" -> StridedVector(DoubleArray(featureSize * 2) { values[it / 2] }, 0, featureSize, 2)
             else -> CustomVector(values)
         }
-        weights = List(featureSize) { if (it % 2 == 0) 1.0 else -1.0 }
-        dot = vDot(weights)
+        val weights = DoubleArray(featureSize) { if (it % 2 == 0) 1.0 else -1.0 }
+        dot = vDot(*weights)
+        val engine = BuiltinEngines.scalar
+        scalarDotCall = when (val source = input) {
+            is DenseVector -> {
+                { engine.dot(weights, 0, source.values, source.offset, source.size, 1, source.stride) }
+            }
+            is SparseVector -> source.indices.let { indices ->
+                { engine.dot(indices, 0, source.values, 0, source.nnz, weights) }
+            }
+            else -> source.toDoubleArray().let { features ->
+                { engine.dot(weights, 0, features, 0, features.size) }
+            }
+        }
     }
 
     @Benchmark fun scalar(): Double = scalar.eval(v = input)
@@ -68,14 +82,7 @@ open class VectorExprBenchmark {
     @Benchmark fun maximum(): Double = maximum.eval(v = input)
     @Benchmark fun norm2(): Double = norm2.eval(v = input)
     @Benchmark fun dot(): Double = dot.eval(v = input)
-    @Benchmark fun scalarDot(): Double {
-        if (input is SparseVector && weights.all { it.isFinite() }) {
-            var sum = 0.0
-            input.forEachStored { index, value -> sum += weights[index] * value }
-            return sum
-        }
-        return (0 until input.size).sumOf { weights[it] * input[it] }
-    }
+    @Benchmark fun scalarDot(): Double = scalarDotCall()
     @Benchmark fun materializedScalar(): Double = scalar.eval(0.0, 0.0, input.toDoubleArray())
     @Benchmark fun materializedPredicate(): Boolean = predicate.eval(0.0, 0.0, input.toDoubleArray())
     @Benchmark fun materializedVector(): DoubleArray = vector.eval(0.0, 0.0, input.toDoubleArray())
