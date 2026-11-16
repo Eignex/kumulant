@@ -11,9 +11,6 @@ import kotlin.jvm.JvmInline
  */
 fun splitmix64(value: Long): Long = com.eignex.util.hash.splitmix64(value)
 
-// Mixing the child ordinal separates replica streams from the parent draw sequence.
-internal fun deriveChildSeed(seed: Long, ordinal: Long): Long = splitmix64(seed xor splitmix64(ordinal))
-
 /**
  * 64-bit hash of [bytes] for cardinality / sketch families: SplitMix64 over 8-byte
  * little-endian chunks, folding tail bytes in last and seeding with the input length so

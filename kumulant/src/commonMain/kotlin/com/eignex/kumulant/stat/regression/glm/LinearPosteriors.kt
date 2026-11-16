@@ -7,9 +7,9 @@ import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.koblas
 import com.eignex.koblas.norm
-import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.serialization.LinearPosteriorSerializer
 import com.eignex.kumulant.stat.regression.RegressionPosterior
+import com.eignex.util.random.nextNormal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt

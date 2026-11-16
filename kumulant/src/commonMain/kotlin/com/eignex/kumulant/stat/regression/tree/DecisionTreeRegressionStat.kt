@@ -7,10 +7,11 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
-import com.eignex.kumulant.math.CounterRandom
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stat.summary.VarianceStat
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.util.random.CounterRandom
 import kotlin.concurrent.Volatile
 
 /**
@@ -67,7 +68,7 @@ class DecisionTreeRegressionStat(
         requirePositiveFeatureSize(featureSize)
     }
 
-    private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
+    private val seedRng = CounterRandom(randomSeed.toLong(), concurrency.monotonicMode())
 
     // Per-instance resolution binds leaf arms to each replica concurrency level.
     private val armFactory: () -> SeriesStat<WeightedVarianceResult> = {

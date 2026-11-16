@@ -3,8 +3,9 @@ package com.eignex.kumulant.stat.regression.tree
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.isNotPositiveWeight
-import com.eignex.kumulant.math.CounterRandom
-import com.eignex.kumulant.math.nextPoissonOne
+import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.util.random.CounterRandom
+import com.eignex.util.random.nextPoissonOne
 import kotlin.concurrent.Volatile
 
 // Tree population shared by both random forests: Oza & Russell online bagging over trees whose
@@ -21,8 +22,8 @@ internal class BaggedTrees<T>(
     }
 
     // The bagging stream is drawn from the seed stream before any tree seed; keep that order.
-    private val seedRng = CounterRandom(randomSeed.toLong(), concurrency)
-    private val baggingRng = CounterRandom(seedRng.childSeed(), concurrency)
+    private val seedRng = CounterRandom(randomSeed.toLong(), concurrency.monotonicMode())
+    private val baggingRng = CounterRandom(seedRng.childSeed(), concurrency.monotonicMode())
 
     // Volatile publication makes reset replacements visible to concurrent updates.
     @Volatile
