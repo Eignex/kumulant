@@ -2,10 +2,10 @@ package com.eignex.kumulant.stat.regression.tree
 
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.serialization.TreePosteriorSerializer
 import com.eignex.kumulant.stat.regression.RegressionPosterior
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import com.eignex.util.random.nextNormal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.sqrt

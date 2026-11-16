@@ -21,7 +21,7 @@ Factorization adds no jitter or regularization;
 
 ## Distribution sampling
 
-Convenience extensions on `kotlin.random.Random`:
+Convenience extensions on `kotlin.random.Random`, delegating to util's shared samplers:
 
 - `nextNormal(mean, std)`: Gaussian. Used by Thompson-sampling
   posteriors throughout the bandit and regression layers.
@@ -58,7 +58,7 @@ Direction numbers are the first 1,024 coordinates of the
 [Joe-Kuo D(6) table](https://web.maths.unsw.edu.au/~fkuo/sobol/).
 Normal quantiles use Wichura's AS 241 coefficients from
 [John Burkardt's ASA241 distribution](https://people.sc.fsu.edu/~jburkardt/f_src/asa241/asa241.html).
-Their BSD and MIT notices are included under `META-INF/LICENSES` in the JVM artifact and source distribution.
+The implementation and its BSD and MIT notices are provided by the util dependency.
 
 ## Hash functions
 

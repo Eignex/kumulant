@@ -5,7 +5,6 @@ import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.core.preview
-import com.eignex.kumulant.math.deriveChildSeed
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.monotonicMode
 import com.eignex.kumulant.stream.welfordLock
@@ -14,6 +13,7 @@ import com.eignex.util.collections.IndexedMaxHeap
 import com.eignex.util.collections.MutableLongIntMap
 import com.eignex.util.concurrent.Mutex
 import com.eignex.util.concurrent.guarded
+import com.eignex.util.random.deriveChildSeed
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.pow

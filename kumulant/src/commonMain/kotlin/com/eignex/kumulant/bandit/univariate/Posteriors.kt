@@ -1,13 +1,13 @@
 package com.eignex.kumulant.bandit.univariate
 
 import com.eignex.kumulant.core.Result
-import com.eignex.kumulant.math.nextBeta
-import com.eignex.kumulant.math.nextGamma
-import com.eignex.kumulant.math.nextNormal
 import com.eignex.kumulant.schema.serialization.PosteriorSerializer
 import com.eignex.kumulant.stat.summary.BernoulliSumResult
 import com.eignex.kumulant.stat.summary.WeightedMeanResult
 import com.eignex.kumulant.stat.summary.WeightedVarianceResult
+import com.eignex.util.random.nextBeta
+import com.eignex.util.random.nextGamma
+import com.eignex.util.random.nextNormal
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.exp

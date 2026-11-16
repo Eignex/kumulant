@@ -1,9 +1,9 @@
 package com.eignex.kumulant.operation
 
 import com.eignex.kumulant.core.Concurrency
-import com.eignex.kumulant.math.deriveChildSeed
 import com.eignex.kumulant.math.splitmix64
 import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.util.random.deriveChildSeed
 
 internal fun checkEvery(every: Int) = require(every >= 1) { "throttle every must be >= 1, got $every" }
 
