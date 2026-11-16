@@ -83,7 +83,10 @@ class SeriesStatContractSweepTest {
     private val samples = doubleArrayOf(3.0, 7.5, 1.0, 12.0, 6.25, 9.0, 2.5, 11.0)
     private val readAt = 8_000_000_000L
 
-    private fun primed(spec: SeriesStatSpec<*>): SeriesStat<*> = spec.materialize().also { stat ->
+    private fun primed(
+        spec: SeriesStatSpec<*>,
+        concurrency: Concurrency = Concurrency.None,
+    ): SeriesStat<*> = spec.materialize(concurrency).also { stat ->
         samples.forEachIndexed { i, v -> stat.update(v, i.toLong() * 1_000_000_000L, 1.0) }
     }
 
@@ -222,11 +225,16 @@ class SeriesStatContractSweepTest {
     @Test
     fun `reset returns every series stat to its fresh state`() {
         for ((name, spec) in specs) {
-            val stat = primed(spec)
+            for (concurrency in Concurrency.entries) {
+                val stat = primed(spec, concurrency)
 
-            stat.reset()
+                stat.reset()
 
-            assertEquals(spec.materialize().read(readAt), stat.read(readAt), "$name did not reset cleanly")
+                assertEquals(
+                    spec.materialize(concurrency).read(readAt), stat.read(readAt),
+                    "$name did not reset cleanly in $concurrency",
+                )
+            }
         }
     }
 

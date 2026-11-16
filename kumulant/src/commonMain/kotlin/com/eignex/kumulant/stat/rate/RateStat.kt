@@ -6,8 +6,8 @@ import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.stream.NANOS_PER_SECOND
-import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.firstWriterMode
+import com.eignex.kumulant.stream.resettableMode
 import com.eignex.util.concurrent.casMin
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -59,7 +59,7 @@ data class RateResult(val startTimestampNanos: Long, val totalValue: Double, val
  */
 class RateStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<RateResult> {
 
-    private val totalValues = concurrency.additiveMode().newDouble(0.0)
+    private val totalValues = concurrency.resettableMode().newDouble(0.0)
 
     // Long.MAX_VALUE marks an unset start, so electing the earliest stamp is a plain CAS-min.
     private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MAX_VALUE)
@@ -101,6 +101,6 @@ class RateStat(override val concurrency: Concurrency = Concurrency.None) : Serie
 
     override fun reset() {
         startTimestampNanos.store(Long.MAX_VALUE)
-        totalValues.store(0.0)
+        totalValues.reset()
     }
 }

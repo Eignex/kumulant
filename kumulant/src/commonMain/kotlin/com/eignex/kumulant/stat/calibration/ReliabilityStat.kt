@@ -7,8 +7,8 @@ import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requirePositiveBins
-import com.eignex.kumulant.stream.additiveMode
-import com.eignex.util.concurrent.DoubleCounter
+import com.eignex.kumulant.stream.ResettableDoubleCounter
+import com.eignex.kumulant.stream.resettableMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.abs
@@ -111,10 +111,10 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
         requirePositiveBins(numBins)
     }
 
-    private val mode = concurrency.additiveMode()
-    private val sumP: Array<DoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
-    private val sumO: Array<DoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
-    private val sumW: Array<DoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
+    private val mode = concurrency.resettableMode()
+    private val sumP: Array<ResettableDoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
+    private val sumO: Array<ResettableDoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
+    private val sumW: Array<ResettableDoubleCounter> = Array(numBins) { mode.newDouble(0.0) }
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
@@ -154,9 +154,9 @@ class ReliabilityStat(val numBins: Int, override val concurrency: Concurrency = 
 
     override fun reset() {
         for (i in 0 until numBins) {
-            sumP[i].store(0.0)
-            sumO[i].store(0.0)
-            sumW[i].store(0.0)
+            sumP[i].reset()
+            sumO[i].reset()
+            sumW[i].reset()
         }
     }
 
