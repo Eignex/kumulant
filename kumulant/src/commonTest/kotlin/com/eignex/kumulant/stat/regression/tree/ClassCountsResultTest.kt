@@ -18,6 +18,16 @@ class ClassCountsResultTest {
     }
 
     @Test
+    fun `probabilities normalise subnormal counts`() {
+        val result = ClassCountsResult(2, doubleArrayOf(Double.MIN_VALUE, Double.MIN_VALUE))
+
+        val probabilities = result.probabilities()
+
+        assertEquals(0.5, probabilities[0])
+        assertEquals(0.5, probabilities[1])
+    }
+
+    @Test
     fun `predict returns the majority class`() {
         val r = ClassCountsResult(numClasses = 4, counts = doubleArrayOf(1.0, 4.0, 2.0, 3.0))
         assertEquals(1, r.predict())

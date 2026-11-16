@@ -197,6 +197,23 @@ class BayesianRegressionStatPriorTest {
     }
 
     @Test
+    fun `fitPopulationPrior normalises subnormal instance weights`() {
+        val snapshot = PrecisionRegressionResult(
+            weights = DenseVector.of(doubleArrayOf(1.0, -1.0)),
+            bias = 0.0,
+            biasPrecision = 1.0,
+            totalWeights = 1.0,
+            step = 1L,
+            precisionL = DenseMatrix.diagonal(2, 1.0),
+        )
+
+        val prior = BayesianRegressionStat.fitPopulationPrior(listOf(snapshot)) { Double.MIN_VALUE }
+
+        assertEquals(1.0, prior.mean[0])
+        assertEquals(-1.0, prior.mean[1])
+    }
+
+    @Test
     fun `fitPopulationPrior returns a symmetric covariance with off-diagonal spread`() {
         val sqrt01 = sqrt(0.01)
         fun snap(mu: DoubleArray) = PrecisionRegressionResult(

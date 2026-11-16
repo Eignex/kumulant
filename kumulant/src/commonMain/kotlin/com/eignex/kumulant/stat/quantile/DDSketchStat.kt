@@ -135,16 +135,14 @@ class DDSketchStat(
     override fun read(timestampNanos: Long): SketchResult {
         val computedQuantiles = DoubleArray(probabilities.size)
 
-        val posSnap = positiveBins.snapshot()
-        val negSnap = negativeBins.snapshot()
+        val sortedPos = SortedBins(positiveBins.snapshotEntries())
+        val sortedNeg = SortedBins(negativeBins.snapshotEntries())
         val zeroSnap = zeroCount.load()
 
         // Derive the total from the snapshot rather than from a separate weight cell: any cell
         // updated out of step with the bins lets a concurrent reader see a total the bins do not
         // account for, and walk off the end of the bin list or report all-zero quantiles.
-        var total = zeroSnap
-        for (w in negSnap.values) total += w
-        for (w in posSnap.values) total += w
+        val total = zeroSnap + sortedNeg.totalWeights + sortedPos.totalWeights
 
         if (total <= 0.0) {
             // NaN per quantile rather than 0.0: a zero-filled array is indistinguishable from a
@@ -158,13 +156,10 @@ class DDSketchStat(
                 gamma = gamma,
                 totalWeights = total,
                 zeroCount = zeroSnap,
-                positiveBins = posSnap,
-                negativeBins = negSnap,
+                positiveBins = sortedPos.toMap(),
+                negativeBins = sortedNeg.toMap(),
             )
         }
-
-        val sortedNeg = SortedBins(negSnap)
-        val sortedPos = SortedBins(posSnap)
 
         fun computeQuantile(targetRank: Double): Double {
             var currentRank = 0.0
@@ -206,8 +201,8 @@ class DDSketchStat(
             gamma = gamma,
             totalWeights = total,
             zeroCount = zeroSnap,
-            positiveBins = posSnap,
-            negativeBins = negSnap,
+            positiveBins = sortedPos.toMap(),
+            negativeBins = sortedNeg.toMap(),
         )
     }
 }

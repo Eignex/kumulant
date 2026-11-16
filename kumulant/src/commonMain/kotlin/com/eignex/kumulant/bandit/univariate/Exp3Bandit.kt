@@ -1,5 +1,6 @@
 package com.eignex.kumulant.bandit.univariate
 
+import com.eignex.koblas.koblas
 import com.eignex.kumulant.bandit.MIN_PLAY_PROB
 import com.eignex.kumulant.bandit.PerArmBandit
 import com.eignex.kumulant.bandit.UnivariateBandit
@@ -98,7 +99,7 @@ class Exp3Bandit(
     /** Current play distribution: weight-normalised softmax blended with uniform [gamma]. */
     fun playDistribution(): DoubleArray {
         val w = relativeWeights()
-        val sumW = w.sum()
+        val sumW = koblas.sum(w, 0, w.size)
         // Invalid totals cannot be normalised; uniform sampling keeps every arm reachable.
         if (!(sumW > 0.0) || !sumW.isFinite()) return DoubleArray(nbrArms) { 1.0 / nbrArms }
         val uniform = gamma / nbrArms
@@ -128,8 +129,8 @@ class Exp3Bandit(
     /** Current per-arm weights, normalised to sum to 1. */
     internal fun armWeights(): DoubleArray {
         val out = relativeWeights()
-        val s = out.sum()
-        if (s > 0.0) for (i in out.indices) out[i] /= s
+        val s = koblas.sum(out, 0, out.size)
+        if (s > 0.0) koblas.scale(out, 0, 1.0 / s, out.size)
         return out
     }
 

@@ -1,9 +1,11 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.preview
 import com.eignex.util.arrays.argsortByIntKey
+import com.eignex.util.collections.MutableIntDoubleMap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.math.pow
@@ -147,26 +149,46 @@ fun SketchResult.toSparseHistogram(): SparseHistogramResult {
     )
 }
 
-internal class SortedBins(bins: Map<Int, Double>) {
-    private val indices = IntArray(bins.size)
-    private val weights = DoubleArray(bins.size)
+internal class SortedBins {
+    private val indices: IntArray
+    private val weights: DoubleArray
     private val order: IntArray
 
-    val size: Int get() = indices.size
-
-    init {
+    constructor(bins: Map<Int, Double>) {
+        indices = IntArray(bins.size)
+        weights = DoubleArray(bins.size)
         var position = 0
         for ((index, weight) in bins) {
             indices[position] = index
             weights[position] = weight
             position++
         }
-        order = argsortByIntKey(size) { indices[it] }
+        order = argsortByIntKey(indices.size) { indices[it] }
     }
+
+    constructor(bins: MutableIntDoubleMap) {
+        indices = IntArray(bins.size)
+        weights = DoubleArray(bins.size)
+        var position = 0
+        bins.forEach { index, weight ->
+            indices[position] = index
+            weights[position] = weight
+            position++
+        }
+        order = argsortByIntKey(indices.size) { indices[it] }
+    }
+
+    val size: Int get() = indices.size
+
+    val totalWeights: Double get() = koblas.sum(weights, 0, size)
 
     fun indexAt(position: Int): Int = indices[order[position]]
 
     fun weightAt(position: Int): Double = weights[order[position]]
+
+    fun toMap(): Map<Int, Double> = buildMap {
+        for (position in 0 until this@SortedBins.size) put(indexAt(position), weightAt(position))
+    }
 }
 
 // Allows sketch parameters to round-trip through serialization while retaining compatible layouts.

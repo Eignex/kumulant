@@ -102,6 +102,7 @@ internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Scratch
     require(out.rows == rows && out.cols == rows) { "inverse destination must be ${rows}x$rows" }
     require(out.values !== values) { "inverse destination must not share the factor's storage" }
     val n = rows
+    if (n > CHOLESKY_BLOCK) return invertCholeskyPanels(out, workspace ?: Scratch())
     val ld = values
     val kernels = koblas
     val invd = out.values
