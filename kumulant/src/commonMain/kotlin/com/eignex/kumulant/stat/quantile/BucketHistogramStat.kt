@@ -79,9 +79,16 @@ class BucketHistogramStat(
             val lo = values.lowerBounds[i]
             val hi = values.upperBounds[i]
             val representative = when {
-                lo.isFinite() && hi.isFinite() -> lo + (hi - lo) / 2.0
+                lo.isFinite() && hi.isFinite() -> {
+                    val midpoint = if (lo < 0.0 && hi > 0.0) (lo + hi) / 2.0 else lo + (hi - lo) / 2.0
+                    // Buckets exclude their lower edge, even when no representable midpoint exists.
+                    if (midpoint == lo && lo < hi) lo.nextUp() else midpoint
+                }
+
                 hi.isFinite() -> hi
+
                 lo.isFinite() -> lo.nextUp()
+
                 else -> continue
             }
             counts.add(bucketFor(representative), w)

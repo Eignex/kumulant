@@ -214,6 +214,16 @@ class ReservoirHistogramTest {
     }
 
     @Test
+    fun `toSparseHistogram contains the largest sample in its last bucket`() {
+        val res = ReservoirHistogramStat(capacity = 10, seed = 1)
+        listOf(0.0, 1.0, 2.0, 3.0).forEach { res.update(it) }
+
+        val h = res.read().toSparseHistogram(binCount = 4)
+
+        assertTrue(3.0 >= h.lowerBounds.last() && 3.0 < h.upperBounds.last())
+    }
+
+    @Test
     fun `toSparseHistogram rejects non-positive bin count`() {
         val r = ReservoirHistogramStat(capacity = 10).read()
         assertFailsWith<IllegalArgumentException> { r.toSparseHistogram(binCount = 0) }
@@ -237,5 +247,35 @@ class ReservoirHistogramTest {
         val res = ReservoirHistogramStat(capacity = 10, seed = 1)
         res.update(42.0)
         assertEquals(42.0, res.read().quantile(0.5))
+    }
+
+    @Test
+    fun `quantile endpoints preserve infinite samples`() {
+        val res = ReservoirHistogramStat(capacity = 10, seed = 1)
+        listOf(Double.NEGATIVE_INFINITY, 0.0, Double.POSITIVE_INFINITY).forEach { res.update(it) }
+        val result = res.read()
+
+        for ((probability, expected) in listOf(0.0 to Double.NEGATIVE_INFINITY, 1.0 to Double.POSITIVE_INFINITY)) {
+            assertEquals(expected, result.quantile(probability))
+        }
+    }
+
+    @Test
+    fun `quantile between equal infinite samples preserves their value`() {
+        for (value in listOf(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY)) {
+            val res = ReservoirHistogramStat(capacity = 10, seed = 1)
+            repeat(2) { res.update(value) }
+
+            assertEquals(value, res.read().quantile(0.5))
+        }
+    }
+
+    @Test
+    fun `quantile interpolation does not overflow across finite extremes`() {
+        val res = ReservoirHistogramStat(capacity = 10, seed = 1)
+        res.update(-Double.MAX_VALUE)
+        res.update(Double.MAX_VALUE)
+
+        assertEquals(0.0, res.read().quantile(0.5))
     }
 }
