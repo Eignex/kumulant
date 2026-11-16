@@ -3,6 +3,7 @@ package com.eignex.kumulant.math
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.Scratch
 import com.eignex.koblas.borrow
+import com.eignex.koblas.copyFrom
 import com.eignex.koblas.koblas
 import kotlin.math.ln
 
@@ -68,7 +69,7 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
     // The substitution's windows lend scratch of repeating shapes, which a workspace pools across them.
     private fun solveLowerCopy(right: DenseMatrix, transpose: Boolean, workspace: Scratch?): DenseMatrix {
         require(right.rows == size) { "right-hand side has ${right.rows} rows, expected $size" }
-        val result = DenseMatrix.wrap(right.rows, right.cols, right.values.copyOf())
+        val result = DenseMatrix.zero(right.rows, right.cols).also { it.copyFrom(right) }
         koblas.trsm(lower, result, lower = true, transpose = transpose, scratch = workspace)
         return result
     }
@@ -87,14 +88,14 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
     ): DenseMatrix {
         require(right.rows == size) { "right-hand side has ${right.rows} rows, expected $size" }
         require(out.rows == size && out.cols == right.cols) { "solve destination must be ${size}x${right.cols}" }
-        if (out.values !== right.values) right.values.copyInto(out.values)
+        out.copyFrom(right)
         solveTriangular(out, transpose, workspace)
         return out
     }
 
     private fun solveTriangular(out: DenseMatrix, transpose: Boolean, workspace: Scratch?) {
         if (out.cols == 1) {
-            koblas.trsv(lower, out.values, 0, 1, lower = true, transpose = transpose, scratch = workspace)
+            koblas.trsv(lower, out.columnView(0), lower = true, transpose = transpose, scratch = workspace)
         } else {
             koblas.trsm(lower, out, lower = true, transpose = transpose, scratch = workspace)
         }
@@ -134,7 +135,11 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
         require(
             diagonal.rows == cross.cols && diagonal.cols == cross.cols,
         ) { "diagonal block must be ${cross.cols}x${cross.cols}" }
-        require(cross.values.all { it.isFinite() }) { "extension requires a finite cross block" }
+        for (column in 0 until cross.cols) {
+            for (row in 0 until cross.rows) {
+                require(cross[row, column].isFinite()) { "extension requires a finite cross block" }
+            }
+        }
         diagonal.requireCholeskyInput()
         val added = cross.cols
         // The projection, Schur update and Schur factorization lend overlapping shapes, so a call without a
@@ -144,8 +149,7 @@ class CholeskyFactor internal constructor(private val lower: DenseMatrix) {
             val projected = DenseMatrix.wrap(size, added, projectedValues)
             solveLowerInto(cross, projected, workspace = scratch)
             scratch.borrow(added * added) { schurValues ->
-                diagonal.values.copyInto(schurValues)
-                val schur = DenseMatrix.wrap(added, added, schurValues)
+                val schur = DenseMatrix.wrap(added, added, schurValues).also { it.copyFrom(diagonal) }
                 koblas.syrk(-1.0, projected, transpose = true, 1.0, schur, lower = true, scratch = scratch)
                 try {
                     schur.choleskyInto(schur, workspace = scratch)

@@ -13,6 +13,49 @@ import kotlin.test.assertTrue
 
 class CholeskyFactorTest {
     @Test
+    fun `factorization reads only the logical lower triangle of a matrix view`() {
+        val parent = DenseMatrix.wrap(4, 4, DoubleArray(16) { Double.NaN })
+        val matrix = parent.view(1, 1, 2, 2)
+        matrix[0, 0] = 4.0
+        matrix[1, 0] = 2.0
+        matrix[1, 1] = 5.0
+
+        val factor = matrix.factorCholesky()
+
+        assertContentEquals(doubleArrayOf(1.0, 2.0), factor.solve(doubleArrayOf(8.0, 12.0)))
+    }
+
+    @Test
+    fun `matrix solves address borrowed destination views`() {
+        val factor = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, 2.0, 5.0)).factorCholesky()
+        val parent = DenseMatrix.wrap(4, 2, DoubleArray(8) { Double.NaN })
+        val right = parent.view(1, 0, 2, 1)
+        right[0, 0] = 8.0
+        right[1, 0] = 12.0
+        val out = parent.view(1, 1, 2, 1)
+
+        factor.solveInto(right, out)
+
+        assertContentEquals(
+            doubleArrayOf(Double.NaN, 8.0, 12.0, Double.NaN, Double.NaN, 1.0, 2.0, Double.NaN),
+            parent.values,
+        )
+    }
+
+    @Test
+    fun `extension reads logical entries from borrowed block views`() {
+        val factor = DenseMatrix.diagonal(1, 4.0).factorCholesky()
+        val cross = DenseMatrix.wrap(3, 3, DoubleArray(9) { Double.NaN }).view(1, 1, 1, 1)
+        val diagonal = DenseMatrix.wrap(3, 3, DoubleArray(9) { Double.NaN }).view(1, 1, 1, 1)
+        cross[0, 0] = 2.0
+        diagonal[0, 0] = 5.0
+
+        val result = factor.extended(cross, diagonal)
+
+        assertContentEquals(doubleArrayOf(2.0, 1.0, 0.0, 2.0), result.lowerFactor().values)
+    }
+
+    @Test
     fun `vector destinations support independent and shared storage`() {
         val factor = DenseMatrix.wrap(2, 2, doubleArrayOf(4.0, 2.0, 2.0, 5.0)).factorCholesky()
         for (inPlace in listOf(false, true)) {

@@ -2,7 +2,6 @@ package com.eignex.kumulant.stat.summary
 
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.StridedVector
 import com.eignex.koblas.Vector
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,7 +17,7 @@ class MeanEstimateTest {
         val variants = listOf(
             DenseVector.of(doubleArrayOf(1.0, 0.0, 2.0)),
             SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(1.0, 2.0)),
-            StridedVector(doubleArrayOf(1.0, 9.0, 0.0, 9.0, 2.0, 9.0), 0, 3, 2),
+            DenseVector.wrap(doubleArrayOf(1.0, 9.0, 0.0, 9.0, 2.0, 9.0), 0, 3, 2),
         )
 
         for (weights in variants) {
@@ -37,7 +36,7 @@ class MeanEstimateTest {
         )
         for (values in listOf<Vector>(
             SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(1.0, 3.0)),
-            StridedVector(doubleArrayOf(9.0, 1.0, 9.0, 0.0, 9.0, 3.0), offset = 1, size = 3, stride = 2),
+            DenseVector.wrap(doubleArrayOf(9.0, 1.0, 9.0, 0.0, 9.0, 3.0), offset = 1, size = 3, stride = 2),
         )) {
             val weights = SparseVector.of(3, intArrayOf(0, 2), doubleArrayOf(1.0, 2.0))
 

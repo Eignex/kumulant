@@ -1,5 +1,6 @@
 package com.eignex.kumulant.math
 
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.koblas
 import kotlin.math.exp
 
@@ -16,7 +17,7 @@ internal fun DoubleArray.softmaxInPlace(): Boolean {
     }
     if (z <= 0.0) return false
     val invZ = 1.0 / z
-    koblas.scale(this, 0, invZ, size)
+    koblas.scale(DenseVector.wrap(this, 0, size), invZ)
     return true
 }
 

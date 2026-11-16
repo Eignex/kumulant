@@ -3,9 +3,11 @@
 package com.eignex.kumulant.math
 
 import com.eignex.koblas.DenseMatrix
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.KoblasEngine
 import com.eignex.koblas.Scratch
 import com.eignex.koblas.borrow
+import com.eignex.koblas.copyFrom
 import com.eignex.koblas.koblas
 import kotlin.math.abs
 import kotlin.math.hypot
@@ -67,7 +69,7 @@ internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, works
     // Borrow a copy because the rotation consumes its vector and callers retain the input.
     workspace.borrow(n) { x ->
         v.copyInto(x)
-        if (scale != 1.0) kernels.scale(x, 0, scale, n)
+        if (scale != 1.0) kernels.scale(DenseVector.wrap(x, 0, n), scale)
         for (k in 0 until n) {
             val base = k + k * n
             val diagonal = ld[base]
@@ -79,7 +81,14 @@ internal fun DenseMatrix.choleskyRankUpdate(v: DoubleArray, sigma: Double, works
                 ld[base] = r
                 val len = n - k - 1
                 // Direct divisions limit compounded rounding error in the factor rotations.
-                if (len > 0) kernels.rot(ld, base + 1, x, k + 1, len, diagonal / r, entry / r)
+                if (len > 0) {
+                    kernels.rot(
+                        DenseVector.wrap(ld, base + 1, len),
+                        DenseVector.wrap(x, k + 1, len),
+                        diagonal / r,
+                        entry / r,
+                    )
+                }
             }
         }
     }
@@ -89,8 +98,8 @@ internal fun DenseMatrix.choleskySolveInto(b: DoubleArray, out: DoubleArray, wor
     require(rows == cols) { "cholesky factor must be square" }
     require(b.size == rows && out.size == rows) { "solve requires vectors of size $rows" }
     if (out !== b) b.copyInto(out)
-    koblas.trsv(this, out, 0, 1, lower = true, scratch = workspace)
-    koblas.trsv(this, out, 0, 1, lower = true, transpose = true, scratch = workspace)
+    koblas.trsv(this, DenseVector.wrap(out, 0, this.rows), lower = true, scratch = workspace)
+    koblas.trsv(this, DenseVector.wrap(out, 0, this.rows), lower = true, transpose = true, scratch = workspace)
     return out
 }
 
@@ -102,6 +111,15 @@ internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Scratch
     require(out.rows == rows && out.cols == rows) { "inverse destination must be ${rows}x$rows" }
     require(out.values !== values) { "inverse destination must not share the factor's storage" }
     val n = rows
+    if (offset != 0 || leadingDimension != n || values.size != n * n) {
+        val factor = DenseMatrix.zero(n, n).also { it.copyFrom(this) }
+        return factor.choleskyInvertInto(out, workspace)
+    }
+    if (out.offset != 0 || out.leadingDimension != n || out.values.size != n * n) {
+        val inverse = choleskyInverse(workspace)
+        out.copyFrom(inverse)
+        return out
+    }
     if (n > CHOLESKY_BLOCK) return invertCholeskyPanels(out, workspace ?: Scratch())
     val ld = values
     val kernels = koblas
@@ -114,11 +132,22 @@ internal fun DenseMatrix.choleskyInvertInto(out: DenseMatrix, workspace: Scratch
                 val base = c + c * n
                 val yc = y[c] / ld[base]
                 y[c] = yc
-                if (yc != 0.0) kernels.axpy(y, c + 1, -yc, ld, base + 1, n - c - 1)
+                if (yc != 0.0) {
+                    kernels.axpy(
+                        -yc,
+                        DenseVector.wrap(ld, base + 1, n - c - 1),
+                        DenseVector.wrap(y, c + 1, n - c - 1),
+                    )
+                }
             }
             for (i in n - 1 downTo j) {
                 val base = i + i * n
-                y[i] = (y[i] - kernels.dot(ld, base + 1, y, i + 1, n - i - 1)) / ld[base]
+                y[i] = (
+                    y[i] - kernels.dot(
+                        DenseVector.wrap(ld, base + 1, n - i - 1),
+                        DenseVector.wrap(y, i + 1, n - i - 1),
+                    )
+                    ) / ld[base]
             }
             for (i in j until n) {
                 invd[i + j * n] = y[i]
@@ -146,7 +175,10 @@ internal fun DenseMatrix.choleskyInto(
     // Clear the upper triangle so reused destinations retain the lower-triangular factor invariant.
     for (j in 0 until n) {
         ld.fill(0.0, j * n, j * n + j)
-        if (values !== ld) values.copyInto(ld, j + j * n, j + j * n, (j + 1) * n)
+        if (values !== ld) {
+            val source = offset + j * leadingDimension + j
+            values.copyInto(ld, j + j * n, source, source + n - j)
+        }
     }
     if (n <= CHOLESKY_BLOCK) {
         factorBlockColumn(kernels, ld, n, 0, n, policy)
@@ -183,7 +215,13 @@ private fun subtractTrailingColumns(kernels: KoblasEngine, values: DoubleArray, 
     for (p in start until start + width) {
         for (j in start + width until n) {
             val value = values[j + p * n]
-            if (value != 0.0) kernels.axpy(values, j + j * n, -value, values, j + p * n, n - j)
+            if (value != 0.0) {
+                kernels.axpy(
+                    -value,
+                    DenseVector.wrap(values, j + p * n, n - j),
+                    DenseVector.wrap(values, j + j * n, n - j),
+                )
+            }
         }
     }
 }
@@ -201,7 +239,7 @@ private fun factorBlockColumn(
         val len = n - j
         for (p in start until j) {
             val f = ld[j + p * n]
-            if (f != 0.0) kernels.axpy(ld, base, -f, ld, j + p * n, len)
+            if (f != 0.0) kernels.axpy(-f, DenseVector.wrap(ld, j + p * n, len), DenseVector.wrap(ld, base, len))
         }
         val pivot = ld[base]
         // A NaN is corrupt input, not indefiniteness, and no floor repairs it: the tail stays NaN while the

@@ -1807,6 +1807,7 @@ public final class com/eignex/kumulant/schema/expr/ExprKt {
 	public static final fun ifThenElse (Lcom/eignex/kumulant/schema/expr/BoolExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/ScalarExpr;
 	public static final fun inRange (Lcom/eignex/kumulant/schema/expr/ScalarExpr;DD)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun isFinite (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
+	public static final fun isInteger (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun isNaN (Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun le (DLcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/expr/BoolExpr;
 	public static final fun le (Lcom/eignex/kumulant/schema/expr/ScalarExpr;D)Lcom/eignex/kumulant/schema/expr/BoolExpr;
@@ -2170,6 +2171,20 @@ public final class com/eignex/kumulant/schema/expr/Y : com/eignex/kumulant/schem
 	public fun hashCode ()I
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/eignex/kumulant/schema/ops/CompositionsKt {
+	public static final fun asPaired (Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/expr/VectorExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static synthetic fun asPaired$default (Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Lcom/eignex/kumulant/schema/expr/VectorExpr;Lcom/eignex/kumulant/schema/expr/ScalarExpr;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static final fun classificationAccuracy (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static final fun covariance (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static final fun medianAbsoluteDeviation (Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;)Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public static final fun named (Lcom/eignex/kumulant/schema/spec/DiscreteStatSpec;Ljava/lang/String;)Lcom/eignex/kumulant/schema/spec/DiscreteStatSpec;
+	public static final fun named (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;Ljava/lang/String;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static final fun named (Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;Ljava/lang/String;)Lcom/eignex/kumulant/schema/spec/RegressionStatSpec;
+	public static final fun named (Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;Ljava/lang/String;)Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public static final fun named (Lcom/eignex/kumulant/schema/spec/VectorStatSpec;Ljava/lang/String;)Lcom/eignex/kumulant/schema/spec/VectorStatSpec;
+	public static final fun plattCalibration (Lcom/eignex/kumulant/schema/spec/PairedStatSpec;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
 }
 
 public final class com/eignex/kumulant/schema/ops/LossesKt {
@@ -2538,33 +2553,6 @@ public final class com/eignex/kumulant/schema/runtime/VectorStatGroup : com/eign
 	public fun update ([DJD)V
 }
 
-public final class com/eignex/kumulant/schema/spec/Accuracy : com/eignex/kumulant/schema/spec/PairedStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/Accuracy$Companion;
-	public fun <init> (I)V
-	public final fun component1 ()I
-	public final fun copy (I)Lcom/eignex/kumulant/schema/spec/Accuracy;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/Accuracy;IILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/Accuracy;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getNumClasses ()I
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/Accuracy$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/Accuracy$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/Accuracy;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/Accuracy;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/Accuracy$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class com/eignex/kumulant/schema/spec/Adwin : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/Adwin$Companion;
 	public fun <init> ()V
@@ -2647,20 +2635,20 @@ public final class com/eignex/kumulant/schema/spec/Auc$Companion {
 
 public final class com/eignex/kumulant/schema/spec/BayesianRegression : com/eignex/kumulant/schema/spec/RegressionStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/BayesianRegression$Companion;
-	public fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;)V
-	public synthetic fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;)V
+	public synthetic fun <init> (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()I
 	public final fun component2 ()D
 	public final fun component3 ()Lcom/eignex/kumulant/stat/regression/glm/Link;
-	public final fun component4 ()Lcom/eignex/koblas/ContiguousVector;
+	public final fun component4 ()Lcom/eignex/koblas/DenseVector;
 	public final fun component5 ()Lcom/eignex/koblas/DenseMatrix;
-	public final fun copy (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;)Lcom/eignex/kumulant/schema/spec/BayesianRegression;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/BayesianRegression;IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/BayesianRegression;
+	public final fun copy (IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;)Lcom/eignex/kumulant/schema/spec/BayesianRegression;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/BayesianRegression;IDLcom/eignex/kumulant/stat/regression/glm/Link;Lcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/BayesianRegression;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getFeatureSize ()I
 	public final fun getLink ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public final fun getPriorCovariance ()Lcom/eignex/koblas/DenseMatrix;
-	public final fun getPriorMean ()Lcom/eignex/koblas/ContiguousVector;
+	public final fun getPriorMean ()Lcom/eignex/koblas/DenseVector;
 	public final fun getPriorVariance ()D
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -2873,14 +2861,6 @@ public final synthetic class com/eignex/kumulant/schema/spec/CounterRate$$serial
 
 public final class com/eignex/kumulant/schema/spec/CounterRate$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/Covariance : com/eignex/kumulant/schema/spec/PairedStatSpec {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/Covariance;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/eignex/kumulant/schema/spec/Crossing : com/eignex/kumulant/schema/spec/SeriesStatSpec {
@@ -3447,35 +3427,6 @@ public final class com/eignex/kumulant/schema/spec/HyperLogLog$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/schema/spec/Mad : com/eignex/kumulant/schema/spec/SeriesStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/Mad$Companion;
-	public fun <init> ()V
-	public fun <init> (D)V
-	public synthetic fun <init> (DILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()D
-	public final fun copy (D)Lcom/eignex/kumulant/schema/spec/Mad;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/Mad;DILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/Mad;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getCompression ()D
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/Mad$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/Mad$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/Mad;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/Mad;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/Mad$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
 public final class com/eignex/kumulant/schema/spec/Max : com/eignex/kumulant/schema/spec/SeriesStatSpec {
 	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/Max;
 	public fun equals (Ljava/lang/Object;)Z
@@ -3606,35 +3557,6 @@ public final synthetic class com/eignex/kumulant/schema/spec/PitHistogram$$seria
 }
 
 public final class com/eignex/kumulant/schema/spec/PitHistogram$Companion {
-	public final fun serializer ()Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/PlattCalibrator : com/eignex/kumulant/schema/spec/PairedStatSpec {
-	public static final field Companion Lcom/eignex/kumulant/schema/spec/PlattCalibrator$Companion;
-	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;
-	public final fun copy (Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;)Lcom/eignex/kumulant/schema/spec/PlattCalibrator;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/schema/spec/PlattCalibrator;Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/PlattCalibrator;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getOptimizer ()Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final synthetic class com/eignex/kumulant/schema/spec/PlattCalibrator$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
-	public static final field INSTANCE Lcom/eignex/kumulant/schema/spec/PlattCalibrator$$serializer;
-	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
-	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/schema/spec/PlattCalibrator;
-	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
-	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
-	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/schema/spec/PlattCalibrator;)V
-	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
-	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
-}
-
-public final class com/eignex/kumulant/schema/spec/PlattCalibrator$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
@@ -3937,6 +3859,15 @@ public final class com/eignex/kumulant/schema/spec/StatSpec$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public final class com/eignex/kumulant/schema/spec/StatsKt {
+	public static final fun Accuracy (I)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static final fun Mad (D)Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public static synthetic fun Mad$default (DILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/SeriesStatSpec;
+	public static final fun PlattCalibrator (Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static synthetic fun PlattCalibrator$default (Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;ILjava/lang/Object;)Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+	public static final fun getCovariance ()Lcom/eignex/kumulant/schema/spec/PairedStatSpec;
+}
+
 public final class com/eignex/kumulant/schema/spec/StochasticRegression : com/eignex/kumulant/schema/spec/RegressionStatSpec {
 	public static final field Companion Lcom/eignex/kumulant/schema/spec/StochasticRegression$Companion;
 	public fun <init> (ILcom/eignex/kumulant/schema/optimizer/OptimizerSpec;Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;Lcom/eignex/kumulant/stat/regression/glm/Penalty;Lcom/eignex/kumulant/stat/regression/glm/Link;)V
@@ -4174,24 +4105,9 @@ public final class com/eignex/kumulant/stat/calibration/PlattCalibratorResult$Co
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/calibration/PlattCalibratorStat : com/eignex/kumulant/core/PairedStat {
-	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/calibration/PlattCalibratorStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public final fun getOptimizer ()Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;
-	public fun reset ()V
-	public fun update (DDD)V
-	public fun update (DDJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/calibration/PlattCalibratorResult;)V
+public final class com/eignex/kumulant/stat/calibration/PlattCalibratorStatKt {
+	public static final fun PlattCalibratorStat (Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
+	public static synthetic fun PlattCalibratorStat$default (Lcom/eignex/kumulant/schema/optimizer/OptimizerSpec;Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/core/PairedStat;
 }
 
 public final class com/eignex/kumulant/stat/calibration/ReliabilityResult : com/eignex/kumulant/core/Result {
@@ -5403,37 +5319,24 @@ public final class com/eignex/kumulant/stat/regression/CovarianceResult$Companio
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/regression/CovarianceStat : com/eignex/kumulant/core/PairedStat {
-	public fun <init> ()V
-	public fun <init> (Lcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (Lcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/regression/CovarianceResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/regression/CovarianceResult;
-	public fun reset ()V
-	public fun update (DDD)V
-	public fun update (DDJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/regression/CovarianceResult;)V
+public final class com/eignex/kumulant/stat/regression/CovarianceStatKt {
+	public static final fun CovarianceStat (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
+	public static synthetic fun CovarianceStat$default (Lcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/core/PairedStat;
 }
 
 public final class com/eignex/kumulant/stat/regression/GaussianNaiveBayesResult : com/eignex/kumulant/core/HasObservationCount {
-	public fun <init> (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/ContiguousVector;DD)V
+	public fun <init> (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DD)V
 	public final fun component1 ()I
 	public final fun component2 ()I
 	public final fun component3 ()Lcom/eignex/koblas/DenseMatrix;
 	public final fun component4 ()Lcom/eignex/koblas/DenseMatrix;
-	public final fun component5 ()Lcom/eignex/koblas/ContiguousVector;
+	public final fun component5 ()Lcom/eignex/koblas/DenseVector;
 	public final fun component6 ()D
 	public final fun component7 ()D
-	public final fun copy (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/ContiguousVector;DD)Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/ContiguousVector;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;
+	public final fun copy (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DD)Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/GaussianNaiveBayesResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getClassWeights ()Lcom/eignex/koblas/ContiguousVector;
+	public final fun getClassWeights ()Lcom/eignex/koblas/DenseVector;
 	public final fun getFeatureSize ()I
 	public final fun getMeans ()Lcom/eignex/koblas/DenseMatrix;
 	public final fun getNumClasses ()I
@@ -5535,18 +5438,18 @@ public final class com/eignex/kumulant/stat/regression/SgdOptimizer : com/eignex
 
 public final class com/eignex/kumulant/stat/regression/SoftmaxRegressionResult : com/eignex/kumulant/core/HasObservationCount {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult$Companion;
-	public fun <init> (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/ContiguousVector;DJD)V
+	public fun <init> (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DJD)V
 	public final fun component1 ()I
 	public final fun component2 ()I
 	public final fun component3 ()Lcom/eignex/koblas/DenseMatrix;
-	public final fun component4 ()Lcom/eignex/koblas/ContiguousVector;
+	public final fun component4 ()Lcom/eignex/koblas/DenseVector;
 	public final fun component5 ()D
 	public final fun component6 ()J
 	public final fun component7 ()D
-	public final fun copy (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/ContiguousVector;DJD)Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/ContiguousVector;DJDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;
+	public final fun copy (IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DJD)Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;IILcom/eignex/koblas/DenseMatrix;Lcom/eignex/koblas/DenseVector;DJDILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/SoftmaxRegressionResult;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getBiases ()Lcom/eignex/koblas/ContiguousVector;
+	public final fun getBiases ()Lcom/eignex/koblas/DenseVector;
 	public final fun getCrossEntropy ()D
 	public final fun getFeatureSize ()I
 	public final fun getNumClasses ()I
@@ -5636,25 +5539,25 @@ public final class com/eignex/kumulant/stat/regression/glm/BayesianRegressionSta
 
 public final class com/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult : com/eignex/kumulant/stat/regression/glm/LinearRegressionResult {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult$Companion;
-	public fun <init> (Lcom/eignex/koblas/ContiguousVector;DDDJLcom/eignex/koblas/ContiguousVector;Lcom/eignex/kumulant/stat/regression/glm/Link;D)V
-	public synthetic fun <init> (Lcom/eignex/koblas/ContiguousVector;DDDJLcom/eignex/koblas/ContiguousVector;Lcom/eignex/kumulant/stat/regression/glm/Link;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/eignex/koblas/ContiguousVector;
+	public fun <init> (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;D)V
+	public synthetic fun <init> (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/eignex/koblas/DenseVector;
 	public final fun component2 ()D
 	public final fun component3 ()D
 	public final fun component4 ()D
 	public final fun component5 ()J
-	public final fun component6 ()Lcom/eignex/koblas/ContiguousVector;
+	public final fun component6 ()Lcom/eignex/koblas/DenseVector;
 	public final fun component7 ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public final fun component8 ()D
-	public final fun copy (Lcom/eignex/koblas/ContiguousVector;DDDJLcom/eignex/koblas/ContiguousVector;Lcom/eignex/kumulant/stat/regression/glm/Link;D)Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lcom/eignex/koblas/ContiguousVector;DDDJLcom/eignex/koblas/ContiguousVector;Lcom/eignex/kumulant/stat/regression/glm/Link;DILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;
+	public final fun copy (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;D)Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseVector;Lcom/eignex/kumulant/stat/regression/glm/Link;DILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/DiagonalRegressionResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getBias ()D
 	public final fun getBiasPrecision ()D
 	public fun getFeatureSize ()I
 	public fun getLink ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public fun getMse ()D
-	public final fun getPrecision ()Lcom/eignex/koblas/ContiguousVector;
+	public final fun getPrecision ()Lcom/eignex/koblas/DenseVector;
 	public fun getRSquared ()D
 	public fun getRmse ()D
 	public fun getSampleStdDev ()D
@@ -5666,7 +5569,7 @@ public final class com/eignex/kumulant/stat/regression/glm/DiagonalRegressionRes
 	public fun getStep ()J
 	public fun getTotalWeights ()D
 	public fun getVariance ()D
-	public fun getWeights ()Lcom/eignex/koblas/ContiguousVector;
+	public fun getWeights ()Lcom/eignex/koblas/DenseVector;
 	public synthetic fun getWeights ()Lcom/eignex/koblas/Vector;
 	public fun hashCode ()I
 	public fun isEmpty ()Z
@@ -5937,16 +5840,16 @@ public final class com/eignex/kumulant/stat/regression/glm/PointPosterior : com/
 
 public final class com/eignex/kumulant/stat/regression/glm/PopulationPrior {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior$Companion;
-	public fun <init> (Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;I)V
-	public final fun component1 ()Lcom/eignex/koblas/ContiguousVector;
+	public fun <init> (Lcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;I)V
+	public final fun component1 ()Lcom/eignex/koblas/DenseVector;
 	public final fun component2 ()Lcom/eignex/koblas/DenseMatrix;
 	public final fun component3 ()I
-	public final fun copy (Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;I)Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;Lcom/eignex/koblas/ContiguousVector;Lcom/eignex/koblas/DenseMatrix;IILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;
+	public final fun copy (Lcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;I)Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;Lcom/eignex/koblas/DenseVector;Lcom/eignex/koblas/DenseMatrix;IILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/PopulationPrior;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCovariance ()Lcom/eignex/koblas/DenseMatrix;
 	public final fun getInstanceCount ()I
-	public final fun getMean ()Lcom/eignex/koblas/ContiguousVector;
+	public final fun getMean ()Lcom/eignex/koblas/DenseVector;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -5968,9 +5871,9 @@ public final class com/eignex/kumulant/stat/regression/glm/PopulationPrior$Compa
 
 public final class com/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult : com/eignex/kumulant/stat/regression/glm/LinearRegressionResult {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult$Companion;
-	public fun <init> (Lcom/eignex/koblas/ContiguousVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;D)V
-	public synthetic fun <init> (Lcom/eignex/koblas/ContiguousVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/eignex/koblas/ContiguousVector;
+	public fun <init> (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;D)V
+	public synthetic fun <init> (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;DILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/eignex/koblas/DenseVector;
 	public final fun component2 ()D
 	public final fun component3 ()D
 	public final fun component4 ()D
@@ -5978,8 +5881,8 @@ public final class com/eignex/kumulant/stat/regression/glm/PrecisionRegressionRe
 	public final fun component6 ()Lcom/eignex/koblas/DenseMatrix;
 	public final fun component7 ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public final fun component8 ()D
-	public final fun copy (Lcom/eignex/koblas/ContiguousVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;D)Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;Lcom/eignex/koblas/ContiguousVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;DILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;
+	public final fun copy (Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;D)Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;Lcom/eignex/koblas/DenseVector;DDDJLcom/eignex/koblas/DenseMatrix;Lcom/eignex/kumulant/stat/regression/glm/Link;DILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/PrecisionRegressionResult;
 	public final fun covariance ()Lcom/eignex/koblas/DenseMatrix;
 	public final fun covarianceInto (Lcom/eignex/koblas/DenseMatrix;)Lcom/eignex/koblas/DenseMatrix;
 	public fun equals (Ljava/lang/Object;)Z
@@ -6000,7 +5903,7 @@ public final class com/eignex/kumulant/stat/regression/glm/PrecisionRegressionRe
 	public fun getStep ()J
 	public fun getTotalWeights ()D
 	public fun getVariance ()D
-	public fun getWeights ()Lcom/eignex/koblas/ContiguousVector;
+	public fun getWeights ()Lcom/eignex/koblas/DenseVector;
 	public synthetic fun getWeights ()Lcom/eignex/koblas/Vector;
 	public fun hashCode ()I
 	public fun isEmpty ()Z
@@ -6026,17 +5929,17 @@ public final class com/eignex/kumulant/stat/regression/glm/PrecisionRegressionRe
 
 public final class com/eignex/kumulant/stat/regression/glm/StochasticRegressionResult : com/eignex/kumulant/stat/regression/glm/LinearRegressionResult {
 	public static final field Companion Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult$Companion;
-	public fun <init> (Lcom/eignex/koblas/ContiguousVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;)V
-	public synthetic fun <init> (Lcom/eignex/koblas/ContiguousVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/eignex/koblas/ContiguousVector;
+	public fun <init> (Lcom/eignex/koblas/DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;)V
+	public synthetic fun <init> (Lcom/eignex/koblas/DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lcom/eignex/koblas/DenseVector;
 	public final fun component2 ()D
 	public final fun component3 ()D
 	public final fun component4 ()J
 	public final fun component5 ()Lcom/eignex/kumulant/stat/regression/glm/Link;
 	public final fun component6 ()D
 	public final fun component7 ()Ljava/util/List;
-	public final fun copy (Lcom/eignex/koblas/ContiguousVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;)Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;
-	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lcom/eignex/koblas/ContiguousVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;
+	public final fun copy (Lcom/eignex/koblas/DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;)Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;Lcom/eignex/koblas/DenseVector;DDJLcom/eignex/kumulant/stat/regression/glm/Link;DLjava/util/List;ILjava/lang/Object;)Lcom/eignex/kumulant/stat/regression/glm/StochasticRegressionResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun getBias ()D
 	public fun getFeatureSize ()I
@@ -6054,7 +5957,7 @@ public final class com/eignex/kumulant/stat/regression/glm/StochasticRegressionR
 	public fun getTotalWeights ()D
 	public final fun getUpdaterState ()Ljava/util/List;
 	public fun getVariance ()D
-	public fun getWeights ()Lcom/eignex/koblas/ContiguousVector;
+	public fun getWeights ()Lcom/eignex/koblas/DenseVector;
 	public synthetic fun getWeights ()Lcom/eignex/koblas/Vector;
 	public fun hashCode ()I
 	public fun isEmpty ()Z
@@ -7077,23 +6980,39 @@ public final class com/eignex/kumulant/stat/regression/tree/VarianceReduction : 
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class com/eignex/kumulant/stat/score/AccuracyStat : com/eignex/kumulant/core/PairedStat {
-	public fun <init> (ILcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (ILcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/score/AccuracyStat;
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public final fun getNumClasses ()I
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;
-	public fun reset ()V
-	public fun update (DDD)V
-	public fun update (DDJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/WeightedMeanResult;)V
+public final class com/eignex/kumulant/stat/score/AccuracyResult : com/eignex/kumulant/core/HasObservationCount {
+	public static final field Companion Lcom/eignex/kumulant/stat/score/AccuracyResult$Companion;
+	public fun <init> (DD)V
+	public final fun component1 ()D
+	public final fun component2 ()D
+	public final fun copy (DD)Lcom/eignex/kumulant/stat/score/AccuracyResult;
+	public static synthetic fun copy$default (Lcom/eignex/kumulant/stat/score/AccuracyResult;DDILjava/lang/Object;)Lcom/eignex/kumulant/stat/score/AccuracyResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAccuracy ()D
+	public fun getTotalWeights ()D
+	public fun hashCode ()I
+	public fun isEmpty ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class com/eignex/kumulant/stat/score/AccuracyResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lcom/eignex/kumulant/stat/score/AccuracyResult$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lcom/eignex/kumulant/stat/score/AccuracyResult;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lcom/eignex/kumulant/stat/score/AccuracyResult;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/stat/score/AccuracyResult$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class com/eignex/kumulant/stat/score/AccuracyStatKt {
+	public static final fun AccuracyStat (ILcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/PairedStat;
+	public static synthetic fun AccuracyStat$default (ILcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/core/PairedStat;
 }
 
 public final class com/eignex/kumulant/stat/score/AucResult : com/eignex/kumulant/core/Result {
@@ -7667,28 +7586,13 @@ public final class com/eignex/kumulant/stat/summary/MadResult$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class com/eignex/kumulant/stat/summary/MadStat : com/eignex/kumulant/core/SeriesStat {
-	public fun <init> ()V
-	public fun <init> (DLcom/eignex/kumulant/core/Concurrency;)V
-	public synthetic fun <init> (DLcom/eignex/kumulant/core/Concurrency;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
-	public synthetic fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/Stat;
-	public fun create (Lcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/stat/summary/MadStat;
-	public final fun getCompression ()D
-	public fun getConcurrency ()Lcom/eignex/kumulant/core/Concurrency;
-	public synthetic fun merge (Lcom/eignex/kumulant/core/Result;J)V
-	public fun merge (Lcom/eignex/kumulant/stat/summary/MadResult;J)V
-	public synthetic fun read (J)Lcom/eignex/kumulant/core/Result;
-	public fun read (J)Lcom/eignex/kumulant/stat/summary/MadResult;
-	public fun reset ()V
-	public fun update (DD)V
-	public fun update (DJD)V
-	public synthetic fun validateMerge (Lcom/eignex/kumulant/core/Result;)V
-	public fun validateMerge (Lcom/eignex/kumulant/stat/summary/MadResult;)V
+public final class com/eignex/kumulant/stat/summary/MadResultKt {
+	public static final fun medianAbsoluteDeviation (Lcom/eignex/kumulant/stat/quantile/TDigestResult;)Lcom/eignex/kumulant/stat/summary/MadResult;
 }
 
 public final class com/eignex/kumulant/stat/summary/MadStatKt {
-	public static final fun medianAbsoluteDeviation (Lcom/eignex/kumulant/stat/quantile/TDigestResult;)Lcom/eignex/kumulant/stat/summary/MadResult;
+	public static final fun MadStat (DLcom/eignex/kumulant/core/Concurrency;)Lcom/eignex/kumulant/core/SeriesStat;
+	public static synthetic fun MadStat$default (DLcom/eignex/kumulant/core/Concurrency;ILjava/lang/Object;)Lcom/eignex/kumulant/core/SeriesStat;
 }
 
 public final class com/eignex/kumulant/stat/summary/MaxResult : com/eignex/kumulant/core/Result {

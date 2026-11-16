@@ -3,7 +3,6 @@ package com.eignex.kumulant.stat.regression
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.StridedVector
 import com.eignex.koblas.Vector
 import com.eignex.kumulant.schema.optimizer.Sgd
 import com.eignex.kumulant.stat.regression.glm.ConstantRate
@@ -64,6 +63,9 @@ class SoftmaxRegressionStatTest {
     private class CustomVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
+        override fun set(i: Int, v: Double) {
+            values[i] = v
+        }
         override fun toDoubleArray(): DoubleArray = values.copyOf()
     }
 
@@ -130,7 +132,7 @@ class SoftmaxRegressionStatTest {
         )
         val dense = DenseVector.of(doubleArrayOf(0.25, -0.5))
         val sparse = SparseVector.of(2, intArrayOf(0, 1), doubleArrayOf(0.25, -0.5))
-        val strided = StridedVector(doubleArrayOf(0.25, 9.0, -0.5, 9.0), 0, 2, 2)
+        val strided = DenseVector.wrap(doubleArrayOf(0.25, 9.0, -0.5, 9.0), 0, 2, 2)
         val custom = CustomVector(doubleArrayOf(0.25, -0.5))
         val expected = result.probabilities(dense)
 

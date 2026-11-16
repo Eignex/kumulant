@@ -1,11 +1,9 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.koblas.DenseVector
+import com.eignex.koblas.KoblasEngine
 import com.eignex.koblas.SparseVector
-import com.eignex.koblas.StridedVector
-import com.eignex.koblas.UnsafeKoblasApi
 import com.eignex.koblas.Vector
-import com.eignex.koblas.engine.BuiltinEngines
 import com.eignex.kumulant.schema.expr.V
 import com.eignex.kumulant.schema.expr.ScalarExpr
 import com.eignex.kumulant.schema.expr.VFoldOp
@@ -44,7 +42,6 @@ open class VectorExprBenchmark {
     private lateinit var dot: ScalarExpr
     private lateinit var scalarDotCall: () -> Double
 
-    @OptIn(UnsafeKoblasApi::class)
     @Setup
     fun setup() {
         val values = DoubleArray(featureSize) { if (it % 3 == 0) 1.0 else 0.0 }
@@ -54,21 +51,21 @@ open class VectorExprBenchmark {
                 val nnz = (featureSize * densityPercent / 100).coerceAtLeast(1)
                 SparseVector.of(featureSize, IntArray(nnz) { it * featureSize / nnz }, DoubleArray(nnz) { 1.0 })
             }
-            "strided" -> StridedVector(DoubleArray(featureSize * 2) { values[it / 2] }, 0, featureSize, 2)
+            "strided" -> DenseVector.wrap(DoubleArray(featureSize * 2) { values[it / 2] }, 0, featureSize, 2)
             else -> CustomVector(values)
         }
-        val weights = DoubleArray(featureSize) { if (it % 2 == 0) 1.0 else -1.0 }
-        dot = vDot(*weights)
-        val engine = BuiltinEngines.scalar
+        val weights = DenseVector.of(DoubleArray(featureSize) { if (it % 2 == 0) 1.0 else -1.0 })
+        dot = vDot(*weights.values)
+        val engine = KoblasEngine.scalar
         scalarDotCall = when (val source = input) {
             is DenseVector -> {
-                { engine.dot(weights, 0, source.values, source.offset, source.size, 1, source.stride) }
+                { engine.dot(weights, source) }
             }
-            is SparseVector -> source.indices.let { indices ->
-                { engine.dot(indices, 0, source.values, 0, source.nnz, weights) }
+            is SparseVector -> {
+                { engine.dot(weights, source) }
             }
-            else -> source.toDoubleArray().let { features ->
-                { engine.dot(weights, 0, features, 0, features.size) }
+            else -> DenseVector.wrap(source.toDoubleArray()).let { features ->
+                { engine.dot(weights, features) }
             }
         }
     }
@@ -90,6 +87,7 @@ open class VectorExprBenchmark {
     private class CustomVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
+        override fun set(i: Int, v: Double) { values[i] = v }
         override fun toDoubleArray(): DoubleArray = values.copyOf()
     }
 }

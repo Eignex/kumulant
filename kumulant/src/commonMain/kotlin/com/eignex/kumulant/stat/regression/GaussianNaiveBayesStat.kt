@@ -1,6 +1,5 @@
 package com.eignex.kumulant.stat.regression
 
-import com.eignex.koblas.ContiguousVector
 import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.Vector
@@ -48,7 +47,7 @@ data class GaussianNaiveBayesResult(
     /** K-by-p matrix of per-class running variances (population, weight-normalised). */
     val variances: DenseMatrix,
     /** Cumulative observation weight per class; length [numClasses]. */
-    val classWeights: ContiguousVector,
+    val classWeights: DenseVector,
     /** Total cumulative observation weight across all classes. */
     override val totalWeights: Double,
     /** Lower bound applied to per-class variances at predict time. */

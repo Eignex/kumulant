@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.quantile
 
+import com.eignex.koblas.DenseVector
 import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
@@ -143,7 +144,7 @@ class TDigestStat(
     private fun drainLocked() {
         val size = bufferSize
         if (size == 0) return
-        val bufferedWeight = koblas.sum(bufferWeights, 0, size)
+        val bufferedWeight = koblas.sum(DenseVector.wrap(bufferWeights, 0, size))
         totalWeight += bufferedWeight
         compressInto(buffer, bufferWeights, size)
         bufferSize = 0

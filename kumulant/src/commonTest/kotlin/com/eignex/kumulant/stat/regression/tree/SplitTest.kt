@@ -64,6 +64,9 @@ class SplitTest {
     private class NoMaterializeVector(private val values: DoubleArray) : Vector {
         override val size: Int get() = values.size
         override fun get(i: Int): Double = values[i]
+        override fun set(i: Int, v: Double) {
+            values[i] = v
+        }
         override fun toDoubleArray(): DoubleArray = error("split materialised its context")
     }
 }
