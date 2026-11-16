@@ -21,7 +21,8 @@ repositories {
     }
 }
 
-val utilPin = "0.0.1-20261116.094126-18"
+val utilPin = "0.0.1-ci.43969094073.1-20261116.222329-1"
+val skemaPin = "0.4.1-20261116.152019-3"
 
 // Routine checks cover JVM + Linux x64; release validation opts into all desktop and cloud targets.
 val fullTargets = providers.gradleProperty("targets.full").isPresent
@@ -73,10 +74,12 @@ kotlin {
             implementation("com.eignex:util:$utilPin") {
                 version { strictly(utilPin) }
             }
-            api("com.eignex:koblas:0.1.1-20261116.090003-339") {
-                version { strictly("0.1.1-20261116.090003-339") }
+            api("com.eignex:koblas:0.1.1-20261116.224320-351") {
+                version { strictly("0.1.1-20261116.224320-351") }
             }
-            api("com.eignex:skema:0.4.0")
+            api("com.eignex:skema:$skemaPin") {
+                version { strictly(skemaPin) }
+            }
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-core")
             compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json")
         }
@@ -116,12 +119,19 @@ dependencies {
             }
         }
         for ((library, platforms) in mapOf(
+            "skema" to mapOf(
+                "jvm" to skemaPin,
+                "linuxx64" to skemaPin,
+                "linuxarm64" to skemaPin,
+                "macosarm64" to skemaPin,
+                "mingwx64" to skemaPin,
+            ),
             "koblas" to mapOf(
-                "jvm" to "0.1.1-20261116.090003-342",
-                "linuxx64" to "0.1.1-20261116.090003-337",
-                "linuxarm64" to "0.1.1-20261116.090003-339",
-                "macosarm64" to "0.1.1-20261116.090003-361",
-                "mingwx64" to "0.1.1-20261116.090003-165",
+                "jvm" to "0.1.1-20261116.224320-354",
+                "linuxx64" to "0.1.1-20261116.224320-349",
+                "linuxarm64" to "0.1.1-20261116.224320-351",
+                "macosarm64" to "0.1.1-20261116.224320-373",
+                "mingwx64" to "0.1.1-20261116.224320-177",
             ),
         )) {
             for ((module, pinned) in platforms) {
