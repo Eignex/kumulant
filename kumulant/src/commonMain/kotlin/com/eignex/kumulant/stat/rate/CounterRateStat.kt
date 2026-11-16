@@ -51,6 +51,7 @@ class CounterRateStat(
 
     private val lock = concurrency.serializedLock()
     private val mode = concurrency.welfordMode()
+
     // All access is under lock, and counter decreases require exact replacement.
     private val totalDelta = mode.newDouble(0.0)
 
