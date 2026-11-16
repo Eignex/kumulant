@@ -34,6 +34,7 @@ private fun <S, R : Result> statQuality(spec: StatSpec<S, R>) {
     val expected = spec.reference(updates.asSequence())
     val error = abs(actual - expected) / maxOf(1.0, abs(expected))
     check(actual.isFinite() && expected.isFinite() && error.isFinite()) { "${spec.name}: nonfinite quality result" }
-    if (spec.name in listOf("SumStat", "MeanStat", "VarianceStat")) check(error <= 1e-10) { "${spec.name}: error=$error" }
+    if (spec.name in
+        listOf("SumStat", "MeanStat", "VarianceStat")) check(error <= 1e-10) { "${spec.name}: error=$error" }
     println("${spec.name},$actual,$expected,$error")
 }

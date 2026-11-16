@@ -47,13 +47,15 @@ open class CholeskyInverseBenchmark {
                 work[column] = coefficient
                 if (coefficient != 0.0) {
                     val tail = n - column - 1
-                    kernels.axpy(-coefficient, DenseVector.wrap(lower, base + 1, tail), DenseVector.wrap(work, column + 1, tail))
+                    kernels.axpy(-coefficient, DenseVector.wrap(lower, base + 1, tail), DenseVector.wrap(work,
+                        column + 1, tail))
                 }
             }
             for (i in n - 1 downTo j) {
                 val base = i + i * n
                 val tail = n - i - 1
-                val correction = kernels.dot(DenseVector.wrap(lower, base + 1, tail), DenseVector.wrap(work, i + 1, tail))
+                val correction = kernels.dot(
+                    DenseVector.wrap(lower, base + 1, tail), DenseVector.wrap(work, i + 1, tail))
                 work[i] = (work[i] - correction) / lower[base]
             }
             for (i in j until n) {

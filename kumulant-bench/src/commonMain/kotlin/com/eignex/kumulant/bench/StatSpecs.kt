@@ -2,29 +2,32 @@
 
 package com.eignex.kumulant.bench
 
-import com.eignex.kumulant.schema.spec.Covariance
-import com.eignex.kumulant.schema.spec.ResampleAggregator
-import com.eignex.kumulant.schema.spec.Sum
-import com.eignex.kumulant.schema.spec.Variance
 import com.eignex.kumulant.schema.ops.band
 import com.eignex.kumulant.schema.ops.derivative
 import com.eignex.kumulant.schema.ops.diff
 import com.eignex.kumulant.schema.ops.hysteresis
 import com.eignex.kumulant.schema.ops.lag
-import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.schema.ops.resampleByTime
 import com.eignex.kumulant.schema.ops.withSelfLag
+import com.eignex.kumulant.schema.runtime.materialize
+import com.eignex.kumulant.schema.spec.Covariance
+import com.eignex.kumulant.schema.spec.ResampleAggregator
+import com.eignex.kumulant.schema.spec.Sum
+import com.eignex.kumulant.schema.spec.Variance
+import com.eignex.kumulant.stat.change.AdwinStat
+import com.eignex.kumulant.stat.change.CusumStat
+import com.eignex.kumulant.stat.change.PageHinkleyStat
 import com.eignex.kumulant.stat.decay.DecayWeighting
 import com.eignex.kumulant.stat.decay.DecayingMeanStat
 import com.eignex.kumulant.stat.decay.DecayingSumStat
 import com.eignex.kumulant.stat.decay.DecayingVarianceStat
 import com.eignex.kumulant.stat.decay.EwmaMeanStat
 import com.eignex.kumulant.stat.decay.EwmaVarianceStat
+import com.eignex.kumulant.stat.event.CrossingStat
+import com.eignex.kumulant.stat.event.RecencyStat
+import com.eignex.kumulant.stat.event.RunLengthStat
 import com.eignex.kumulant.stat.forecast.ExponentialSmoothingStat
 import com.eignex.kumulant.stat.forecast.SeasonalMode
-import com.eignex.kumulant.stat.change.AdwinStat
-import com.eignex.kumulant.stat.change.CusumStat
-import com.eignex.kumulant.stat.change.PageHinkleyStat
 import com.eignex.kumulant.stat.rate.CounterRateStat
 import com.eignex.kumulant.stat.rate.RateStat
 import com.eignex.kumulant.stat.summary.ArgMaxStat
@@ -33,14 +36,11 @@ import com.eignex.kumulant.stat.summary.BernoulliSumStat
 import com.eignex.kumulant.stat.summary.CountStat
 import com.eignex.kumulant.stat.summary.FrugalMadStat
 import com.eignex.kumulant.stat.summary.MadStat
-import com.eignex.kumulant.stat.event.CrossingStat
 import com.eignex.kumulant.stat.summary.MaxStat
 import com.eignex.kumulant.stat.summary.MeanStat
 import com.eignex.kumulant.stat.summary.MinStat
 import com.eignex.kumulant.stat.summary.MomentsStat
 import com.eignex.kumulant.stat.summary.RangeStat
-import com.eignex.kumulant.stat.event.RecencyStat
-import com.eignex.kumulant.stat.event.RunLengthStat
 import com.eignex.kumulant.stat.summary.SumStat
 import com.eignex.kumulant.stat.summary.VarianceStat
 import kotlin.concurrent.atomics.AtomicLong
@@ -52,7 +52,6 @@ import kotlin.math.min
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
-
 
 private fun bernoulliWorkload(seed: Int, n: Int): Sequence<Update> = sequence {
     val rng = Random(seed)
@@ -70,7 +69,10 @@ private fun twoPassVariance(data: List<Update>): Double {
     val totW = data.sumOf { it.weight }
     if (totW == 0.0) return 0.0
     val mean = data.sumOf { it.value * it.weight } / totW
-    return data.sumOf { val d = it.value - mean; it.weight * d * d } / totW
+    return data.sumOf {
+        val d = it.value - mean
+        it.weight * d * d
+    } / totW
 }
 
 val sumStatSpec = seriesStatSpec(
@@ -795,7 +797,10 @@ val covarianceStatSpec = pairedStatSpec(
         val data = seq.toList()
         val totW = data.sumOf { it.weight }
         val meanX = data.sumOf { it.value * it.weight } / totW
-        val varX = data.sumOf { val d = it.value - meanX; it.weight * d * d } / totW
+        val varX = data.sumOf {
+            val d = it.value - meanX
+            it.weight * d * d
+        } / totW
         2.0 * varX
     },
 )

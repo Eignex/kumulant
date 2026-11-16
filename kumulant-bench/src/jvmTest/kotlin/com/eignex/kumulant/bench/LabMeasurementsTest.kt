@@ -1,10 +1,10 @@
 package com.eignex.kumulant.bench
 
 import com.eignex.lab.bench.MetricDirection
-import java.nio.file.Files
-import java.nio.file.Path
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import java.nio.file.Files
+import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -12,7 +12,11 @@ import kotlin.test.assertTrue
 class LabMeasurementsTest {
     private fun reports(action: (Path) -> Unit) {
         val root = Files.createTempDirectory("kumulant-reports")
-        try { action(root) } finally { root.toFile().deleteRecursively() }
+        try {
+            action(root)
+        } finally {
+            root.toFile().deleteRecursively()
+        }
     }
 
     @Test fun `nested JMH reports preserve secondary metrics units directions and provenance`() = reports { root ->
@@ -39,7 +43,9 @@ class LabMeasurementsTest {
     @Test fun `malformed later reports retain earlier native measurements`() = reports { root ->
         val first = Files.createDirectories(root.resolve("native-0"))
         val second = Files.createDirectories(root.resolve("native-1"))
-        Files.writeString(first.resolve("results.json"), """[{"benchmark":"factor","mode":"avgt","primaryMetric":{"score":2.5,"scoreUnit":"us/op","rawData":[[2.0,3.0]]}}]""")
+        Files.writeString(first.resolve("results.json"),
+            """[{"benchmark":"factor","mode":"avgt","primaryMetric":""" +
+                """{"score":2.5,"scoreUnit":"us/op","rawData":[[2.0,3.0]]}}]""")
         Files.writeString(second.resolve("results.json"), "[")
         val result = labMeasurements(root)
         assertEquals(2.5, result.metrics.single().value)
@@ -66,14 +72,23 @@ class LabMeasurementsTest {
             retry,scenario,attempts,diagonal_shift,succeeded
             retry,exhaustion,3,1e-8,false
         """.trimIndent())
-        Files.writeString(root.resolve("concurrency.txt"), "stat,level,operation,threads,count_error,scaled_drift,snapshot_reads\nMeanStat,Relaxed,merge,4,0,0.02,50\n")
-        Files.writeString(root.resolve("native-stress.txt"), "stress_factor,kernel,order,relative_reconstruction,solve_backward_error\nstress_factor,rbf,32,1e-16,2e-17\n")
+        Files.writeString(root.resolve("concurrency.txt"),
+            "stat,level,operation,threads,count_error,scaled_drift,snapshot_reads\n" +
+                "MeanStat,Relaxed,merge,4,0,0.02,50\n")
+        Files.writeString(root.resolve("native-stress.txt"),
+            "stress_factor,kernel,order,relative_reconstruction,solve_backward_error\n" +
+                "stress_factor,rbf,32,1e-16,2e-17\n")
         val result = labMeasurements(root)
         assertTrue(result.errors.isEmpty())
         assertEquals(26, result.metrics.size)
         assertEquals(0.02, result.metrics.single { it.name.endsWith("/scaled_drift") }.value)
         assertEquals("reads", result.metrics.single { it.name.endsWith("/snapshot_reads") }.unit)
-        assertTrue(result.metrics.filter { it.name.endsWith("error") && !it.name.endsWith("standard_error") }.all { it.direction == MetricDirection.LOWER })
+        assertTrue(result.metrics.filter {
+            it.name.endsWith("error") && !it.name.endsWith("standard_error")
+        }.all {
+            it.direction ==
+                MetricDirection.LOWER
+        })
         assertEquals(0.0, result.metrics.single { it.name.endsWith("/succeeded") }.value)
     }
 }

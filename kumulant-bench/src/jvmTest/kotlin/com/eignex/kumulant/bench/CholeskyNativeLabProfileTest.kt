@@ -45,6 +45,8 @@ class CholeskyNativeLabProfileTest {
             assertEquals("1.0, 2.0\n", repetition.resolve("samples-1.txt").readText())
             assertTrue(repetition.resolve("benchmark.txt").readText().contains("failure-log"))
             assertEquals(1.5, labMeasurements(output.toPath()).metrics.single().value)
-        } finally { root.toFile().deleteRecursively() }
+        } finally {
+            root.toFile().deleteRecursively()
+        }
     }
 }

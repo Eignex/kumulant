@@ -18,7 +18,9 @@ open class BanditBenchmark {
     private lateinit var workload: BanditWorkload
 
     @Setup
-    fun setup() { workload = BanditWorkload(allBanditSpecs.single { it.name == policy }, 0) }
+    fun setup() {
+        workload = BanditWorkload(allBanditSpecs.single { it.name == policy }, 0)
+    }
 
     @Benchmark
     fun cycle(blackhole: Blackhole) {
@@ -36,14 +38,17 @@ internal class BanditWorkload(spec: BanditSpec<*>, seed: Int, rounds: Int = 512)
     }
     val rewards = List(rounds) { round ->
         DoubleArray(spec.nbrArms) { arm ->
-            if (spec.featureSize == 0) { if (random.nextDouble() < expected[round][arm]) 1.0 else 0.0 }
-            else expected[round][arm] + random.nextDouble() * 0.1
+            if (spec.featureSize == 0) {
+                if (random.nextDouble() < expected[round][arm]) 1.0 else 0.0
+            } else expected[round][arm] + random.nextDouble() * 0.1
         }
     }
 
     fun play(round: Int): Int = when (val policy = bandit) {
         is UnivariateBandit -> policy.choose().also { policy.update(it, rewards[round][it]) }
-        is ContextualBandit -> policy.choose(contexts[round]).also { policy.update(it, contexts[round], rewards[round][it]) }
+        is ContextualBandit -> policy.choose(contexts[round]).also {
+            policy.update(it, contexts[round], rewards[round][it])
+        }
         else -> error("Unsupported bandit")
     }
 }

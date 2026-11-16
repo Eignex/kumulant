@@ -11,8 +11,8 @@ import com.eignex.kumulant.stat.regression.glm.PointPosterior
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionStat
 import com.eignex.kumulant.stat.regression.tree.DecisionTreeRegressionStat
 import com.eignex.kumulant.stat.regression.tree.MeanTreePosterior
-import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
 import com.eignex.kumulant.stat.regression.tree.RegressionTreeConfig
+import com.eignex.kumulant.stat.regression.tree.ThresholdSplit
 import kotlin.random.Random
 
 internal class BanditSpec<B : Bandit>(

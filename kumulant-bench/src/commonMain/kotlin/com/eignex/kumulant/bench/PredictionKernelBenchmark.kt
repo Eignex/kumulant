@@ -4,12 +4,12 @@ import com.eignex.koblas.DenseMatrix
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.Vector
-import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.GaussianNaiveBayesStat
-import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
+import com.eignex.kumulant.stat.regression.SoftmaxRegressionResult
 import com.eignex.kumulant.stat.regression.glm.BayesianRegressionStat
 import com.eignex.kumulant.stat.regression.glm.Link
 import com.eignex.kumulant.stat.regression.glm.MultivariateGaussian
+import com.eignex.kumulant.stat.regression.glm.PrecisionRegressionResult
 import com.eignex.kumulant.stat.regression.glm.StochasticRegressionResult
 import kotlinx.benchmark.Benchmark
 import kotlinx.benchmark.Param
@@ -86,14 +86,15 @@ open class PredictionKernelBenchmark {
     fun gaussianNaiveBayesProbabilities(): DoubleArray = gaussianNaiveBayes.probabilities(x)
 
     @Benchmark
-    fun gaussianNaiveBayesProbabilitiesInto(): DoubleArray = probabilities.also { gaussianNaiveBayes.probabilitiesInto(x, it) }
+    fun gaussianNaiveBayesProbabilitiesInto(): DoubleArray = probabilities.also {
+        gaussianNaiveBayes.probabilitiesInto(x, it)
+    }
 
     @Benchmark
     fun multivariateSample(): Vector = MultivariateGaussian.sample(posterior, Random(1234), 1.0)
 
     @Benchmark
     fun multivariateEvaluate(): Double = MultivariateGaussian.evaluate(posterior, x, Random(1234), 1.0)
-
 
     @Benchmark
     fun bayesianPrior(): PrecisionRegressionResult = BayesianRegressionStat(

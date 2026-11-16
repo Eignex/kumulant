@@ -23,7 +23,9 @@ internal fun analyzeCholeskyAccuracy() {
                 val solution = factor.solve(right)
                 val reconstruction = relativeReconstructionError(matrix, factor.lowerFactor())
                 val backward = solveBackwardError(matrix, right, solution)
-                check(reconstruction < 1e-13 && backward < 1e-13) { "$kind:$size at $scale: reconstruction=$reconstruction, backward=$backward" }
+                check(reconstruction < 1e-13 && backward < 1e-13) {
+                    "$kind:$size at $scale: reconstruction=$reconstruction, backward=$backward"
+                }
                 println("$kind,$size,$scale,$reconstruction,$backward")
             }
         }
@@ -69,20 +71,22 @@ private fun analyzeUpdates() {
 }
 
 private fun analyzeExtensions() {
-    println("extension,kernel,size,appended,scale,reconstruction,backward_error,relative_solution_error,absolute_logdet_error,forward_tolerance")
+    println("extension,kernel,size,appended,scale,reconstruction,backward_error," +
+        "relative_solution_error,absolute_logdet_error,forward_tolerance")
     val workspace = Scratch()
     for (kind in listOf("rbf", "matern")) {
         for (size in listOf(63, 64, 65, 127, 128, 129)) {
             for (added in listOf(1, 4, 16)) {
                 for (scale in listOf(1e-100, 1.0, 1e100)) {
                     val fixture = CholeskyFixtures.extension(size, added, kind, scale)
-                    val factor = fixture.base.factorCholesky(workspace).extended(fixture.cross, fixture.diagonal, workspace)
+                    val factor = fixture.base.factorCholesky(workspace)
+                        .extended(fixture.cross, fixture.diagonal, workspace)
                     val errors = compareFactors(fixture.full, factor)
                     val tolerance = 64 * 2.220446049250313e-16 * (size + added) / CholeskyFixtures.NOISE_VARIANCE
                     check(errors[0] < 1e-13 && errors[1] < 1e-13 && errors[2] < tolerance && errors[3] < tolerance) {
                         "extension $kind:$size+$added scale=$scale errors=${errors.toList()} tolerance=$tolerance"
                     }
-                    println("extension,$kind,$size,$added,$scale,${errors.joinToString(",")},${tolerance}")
+                    println("extension,$kind,$size,$added,$scale,${errors.joinToString(",")},$tolerance")
                 }
             }
         }
@@ -93,15 +97,18 @@ internal fun analyzeCholeskyStress(order: Int) {
     require(order > STRESS_APPENDED) { "Stress order must exceed $STRESS_APPENDED" }
     val tolerance = 64 * 2.220446049250313e-16 * order / CholeskyFixtures.NOISE_VARIANCE
     println("Cholesky stress: seed=${CholeskyFixtures.SEED}, order=$order, backend=$koblas")
-    println("noiseVariance=${CholeskyFixtures.NOISE_VARIANCE}, jitter=${CholeskyFixtures.JITTER}, matrixBytes=${8L * order * order}")
-    println("stress_factor,kernel,order,relative_reconstruction,solve_backward_error,into_backward_error,aliased_backward_error,workspace_factor_difference")
+    println("noiseVariance=${CholeskyFixtures.NOISE_VARIANCE}, jitter=${CholeskyFixtures.JITTER}, " +
+        "matrixBytes=${8L * order * order}")
+    println("stress_factor,kernel,order,relative_reconstruction,solve_backward_error," +
+        "into_backward_error,aliased_backward_error,workspace_factor_difference")
     val workspace = Scratch()
     for (kind in listOf("rbf", "matern")) {
         val errors = stressFactor(kind, order, workspace)
         check(errors.all { it < 1e-13 }) { "stress $kind:$order errors=${errors.toList()}" }
         println("stress_factor,$kind,$order,${errors.joinToString(",")}")
     }
-    println("stress_sequence,operation,kernel,order,reconstruction,backward_error,relative_solution_error,absolute_logdet_error,forward_tolerance")
+    println("stress_sequence,operation,kernel,order,reconstruction,backward_error," +
+        "relative_solution_error,absolute_logdet_error,forward_tolerance")
     for (kind in listOf("rbf", "matern")) {
         val fixture = CholeskyFixtures.extension(order - STRESS_APPENDED, STRESS_APPENDED, kind)
         val extended = fixture.base.factorCholesky(workspace).extended(fixture.cross, fixture.diagonal, workspace)
@@ -136,7 +143,9 @@ private fun stressFactor(kind: String, order: Int, workspace: Scratch): DoubleAr
     val aliased = DenseMatrix.wrap(order, 16, right.values.copyOf())
     check(factor.solveInto(aliased, aliased, workspace) === aliased) { "aliased solveInto must return its destination" }
     check(right.values.contentEquals(CholeskyFixtures.right(order, 16).values)) { "solve modified its right-hand side" }
-    check(matrix.values.contentEquals(CholeskyFixtures.matrix("$kind:$order").values)) { "factorization modified its input" }
+    check(matrix.values.contentEquals(CholeskyFixtures.matrix("$kind:$order").values)) {
+        "factorization modified its input"
+    }
     return doubleArrayOf(
         reconstruction,
         solveBackwardError(matrix, right, solution),

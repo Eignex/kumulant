@@ -36,6 +36,8 @@ class BenchmarkMainTest {
             arrayOf("-t", "4", "-p", "concurrency=None"),
             arrayOf("-t", "4", "-p", "name=RateStat"),
             arrayOf("-t", "4", "BanditBenchmark"),
-        )) assertFailsWith<IllegalArgumentException> { benchmarkOptions(CommandLineOptions(*args)) }
+        )) {
+            assertFailsWith<IllegalArgumentException> { benchmarkOptions(CommandLineOptions(*args)) }
+        }
     }
 }

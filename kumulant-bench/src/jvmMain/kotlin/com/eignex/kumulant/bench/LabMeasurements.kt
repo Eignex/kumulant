@@ -3,11 +3,13 @@ package com.eignex.kumulant.bench
 import com.eignex.lab.bench.BenchMetric
 import com.eignex.lab.bench.BenchProtocol
 import com.eignex.lab.bench.MetricDirection
+import kotlinx.serialization.json.*
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlinx.serialization.json.*
 
-internal data class LabMeasurements(val metrics: List<BenchMetric>, val details: JsonObject, val errors: List<String>, val primaryCount: Int)
+internal data class LabMeasurements(
+    val metrics: List<BenchMetric>, val details: JsonObject, val errors: List<String>, val primaryCount: Int,
+)
 
 internal fun labMeasurements(report: Path): LabMeasurements {
     val metrics = mutableListOf<BenchMetric>()
@@ -30,9 +32,15 @@ internal fun labMeasurements(report: Path): LabMeasurements {
                             val row = element.jsonObject
                             val mode = row["mode"]?.jsonPrimitive?.content
                             val source = buildJsonObject {
-                                put("report", relative); put("row", rowIndex)
+                                put("report", relative)
+                                put("row", rowIndex)
                                 put("engine", if ("jmhVersion" in row) "JMH" else "kotlinx-benchmark")
-                                for (key in listOf("benchmark", "mode", "params", "threads", "forks", "jvmArgs", "jdkVersion", "compilationMode")) row[key]?.let { put(key, it) }
+                                for (key in listOf("benchmark", "mode", "params", "threads", "forks",
+                                    "jvmArgs", "jdkVersion", "compilationMode")) {
+                                    row[key]?.let {
+                                        put(key, it)
+                                    }
+                                }
                                 val benchmark = row["benchmark"]?.jsonPrimitive?.content.orEmpty()
                                 put("operationsPerInvocation", when {
                                     benchmark.endsWith("UpdateThroughputBenchmark.update") -> STAT_BENCHMARK_BATCH_SIZE
@@ -40,7 +48,8 @@ internal fun labMeasurements(report: Path): LabMeasurements {
                                     else -> 1
                                 })
                             }
-                            val primary = row["primaryMetric"]?.jsonObject ?: error("Missing primaryMetric at row $rowIndex")
+                            val primary =
+                                row["primaryMetric"]?.jsonObject ?: error("Missing primaryMetric at row $rowIndex")
                             val score = primary["score"]?.jsonPrimitive?.doubleOrNull
                             require(score != null && score.isFinite()) { "Nonfinite primary score at row $rowIndex" }
                             primaryCount++
@@ -49,7 +58,9 @@ internal fun labMeasurements(report: Path): LabMeasurements {
                                 "avgt", "ss", "sample" -> MetricDirection.LOWER
                                 else -> MetricDirection.NONE
                             }
-                            val all = listOf("primary" to primary) + row["secondaryMetrics"]?.jsonObject.orEmpty().map { it.key to it.value.jsonObject }
+                            val all =
+                                listOf("primary" to primary) +
+                                    row["secondaryMetrics"]?.jsonObject.orEmpty().map { it.key to it.value.jsonObject }
                             for ((label, metric) in all) {
                                 val unit = metric["scoreUnit"]?.jsonPrimitive?.content ?: error("Missing scoreUnit")
                                 val metricDirection = if (label == "primary") direction else when {
@@ -58,7 +69,8 @@ internal fun labMeasurements(report: Path): LabMeasurements {
                                 }
                                 val name = "$relative/$rowIndex/$label"
                                 add(name, metric["score"]?.jsonPrimitive?.doubleOrNull, unit, metricDirection, source)
-                                add("$name/error", metric["scoreError"]?.jsonPrimitive?.doubleOrNull, unit, MetricDirection.NONE, source)
+                                add("$name/error", metric["scoreError"]?.jsonPrimitive?.doubleOrNull,
+                                    unit, MetricDirection.NONE, source)
                             }
                         }
                     }
@@ -78,17 +90,42 @@ internal fun labMeasurements(report: Path): LabMeasurements {
                                 "stress_sequence" -> 4
                                 else -> 0
                             }
-                            if (identityCount > 0 && fields.getOrNull(1) in setOf("actual", "level", "mean_pseudo_regret", "samples", "size", "kernel", "scenario", "operation")) {
+                            if (identityCount > 0 &&
+                                fields.getOrNull(1) in
+                                setOf("actual", "level", "mean_pseudo_regret", "samples", "size", "kernel",
+                                    "scenario", "operation")) {
                                 columns = fields
-                                identities = if (fields.first() == "stat" && fields.getOrNull(1) == "level") 4 else identityCount
+                                identities =
+                                    if (fields.first() == "stat" && fields.getOrNull(1) == "level") 4 else identityCount
                             } else if (fields.size == columns.size && columns.isNotEmpty()) {
-                                val source = buildJsonObject { put("report", relative); put("line", lineIndex + 1); put("columns", JsonArray(columns.map(::JsonPrimitive))); put("values", JsonArray(fields.map(::JsonPrimitive))) }
+                                val source = buildJsonObject {
+                                    put("report", relative)
+                                    put("line", lineIndex + 1)
+                                    put("columns", JsonArray(columns.map(::JsonPrimitive)))
+                                    put("values", JsonArray(fields.map(::JsonPrimitive)))
+                                }
                                 for (index in identities until columns.size) {
                                     val column = columns[index]
-                                    val value = fields[index].toDoubleOrNull() ?: fields[index].toBooleanStrictOrNull()?.let { if (it) 1.0 else 0.0 }
-                                    val direction = if (column != "standard_error" && (column.contains("error") || column.contains("drift") || column.contains("reconstruction") || column.contains("regret") || column == "rmse" || column.endsWith("difference"))) MetricDirection.LOWER else MetricDirection.NONE
-                                    val unit = when (column) { "snapshot_reads" -> "reads"; "count_error" -> "observations"; "mean_pseudo_regret", "standard_error" -> "reward"; "attempts" -> "attempts"; else -> "1" }
-                                    add("$relative/${lineIndex + 1}/${fields.take(identities).joinToString("/")}/$column", value, unit, direction, source)
+                                    val value =
+                                        fields[index].toDoubleOrNull()
+                                            ?: fields[index].toBooleanStrictOrNull()?.let { if (it) 1.0 else 0.0 }
+                                    val direction = if (column != "standard_error" &&
+                                        (column.contains("error") || column.contains("drift") ||
+                                            column.contains("reconstruction") ||
+                                            column.contains("regret") ||
+                                            column == "rmse" ||
+                                            column.endsWith("difference"))) MetricDirection.LOWER
+                                    else MetricDirection.NONE
+                                    val unit = when (column) {
+                                        "snapshot_reads" -> "reads"
+                                        "count_error" -> "observations"
+                                        "mean_pseudo_regret", "standard_error" -> "reward"
+                                        "attempts" -> "attempts"
+                                        else -> "1"
+                                    }
+                                    add("$relative/${lineIndex + 1}/" +
+                                        "${fields.take(identities).joinToString("/")}/$column",
+                                        value, unit, direction, source)
                                 }
                             }
                         }
@@ -97,5 +134,7 @@ internal fun labMeasurements(report: Path): LabMeasurements {
             }.exceptionOrNull()?.let { errors += "$relative: ${it.message ?: it.javaClass.name}" }
         }
     }
-    return LabMeasurements(metrics, buildJsonObject { put("metricSources", JsonObject(provenance)) }, errors, primaryCount)
+    return LabMeasurements(metrics, buildJsonObject {
+        put("metricSources", JsonObject(provenance))
+    }, errors, primaryCount)
 }
