@@ -4,7 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.HasObservationCount
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.isInertWeight
-import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.resettableMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -45,7 +45,7 @@ data class PairedSumResult(
  */
 class PairedSumStat(override val concurrency: Concurrency = Concurrency.None) : PairedStat<PairedSumResult> {
 
-    private val mode = concurrency.additiveMode()
+    private val mode = concurrency.resettableMode()
     private val totalWeights = mode.newDouble(0.0)
     private val sumX = mode.newDouble(0.0)
     private val sumY = mode.newDouble(0.0)
@@ -66,9 +66,9 @@ class PairedSumStat(override val concurrency: Concurrency = Concurrency.None) : 
     }
 
     override fun reset() {
-        totalWeights.store(0.0)
-        sumX.store(0.0)
-        sumY.store(0.0)
+        totalWeights.reset()
+        sumX.reset()
+        sumY.reset()
     }
 
     override fun create(concurrency: Concurrency?) = PairedSumStat(concurrency ?: this.concurrency)

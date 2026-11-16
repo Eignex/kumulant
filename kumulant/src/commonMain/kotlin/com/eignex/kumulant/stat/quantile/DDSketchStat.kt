@@ -5,7 +5,7 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stat.StatDefaults
 import com.eignex.kumulant.stream.ArrayBins
-import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.resettableMode
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.ln
@@ -77,7 +77,7 @@ class DDSketchStat(
 
     private fun indexOf(magnitude: Double): Int = ceil(ln(magnitude) * multiplier).toInt().coerceIn(minIndex, maxIndex)
 
-    private val mode = concurrency.additiveMode()
+    private val mode = concurrency.resettableMode()
     private val zeroCount = mode.newDouble(0.0)
 
     private val positiveBins = ArrayBins(concurrency)
@@ -125,7 +125,7 @@ class DDSketchStat(
     }
 
     override fun reset() {
-        zeroCount.store(0.0)
+        zeroCount.reset()
         positiveBins.clear()
         negativeBins.clear()
     }

@@ -4,7 +4,6 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
 import com.eignex.kumulant.stat.StatDefaults
-import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.firstWriterMode
 import com.eignex.kumulant.stream.serializedLock
 import com.eignex.kumulant.stream.welfordMode
@@ -52,7 +51,8 @@ class CounterRateStat(
 
     private val lock = concurrency.serializedLock()
     private val mode = concurrency.welfordMode()
-    private val totalDelta = concurrency.additiveMode().newDouble(0.0)
+    // All access is under lock, and counter decreases require exact replacement.
+    private val totalDelta = mode.newDouble(0.0)
 
     // Long.MAX_VALUE marks an unset start, so electing the earliest stamp is a plain CAS-min.
     private val startTimestampNanos = concurrency.firstWriterMode().newLong(Long.MAX_VALUE)

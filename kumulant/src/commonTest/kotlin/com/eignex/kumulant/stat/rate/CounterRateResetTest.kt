@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.rate
 
+import com.eignex.kumulant.core.Concurrency
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -7,6 +8,23 @@ import kotlin.test.assertTrue
 class CounterRateResetTest {
 
     private val second = 1_000_000_000L
+
+    @Test
+    fun `reset and counter decreases replace accumulated totals in every mode`() {
+        for (concurrency in Concurrency.entries) {
+            val stat = CounterRateStat(concurrency)
+            stat.update(0.0, 0L)
+            stat.update(100.0, second)
+            stat.update(5.0, 2 * second)
+            stat.update(25.0, 3 * second)
+            assertEquals(25.0, stat.read(3 * second).totalValue, "mode=$concurrency")
+            assertEquals(2 * second, stat.read(3 * second).startTimestampNanos, "mode=$concurrency")
+            stat.reset()
+            stat.update(500.0, 4 * second)
+            stat.update(510.0, 5 * second)
+            assertEquals(10.0, stat.read(5 * second).totalValue, "mode=$concurrency")
+        }
+    }
 
     @Test
     fun `a counter reset re-anchors the window and the total together`() {

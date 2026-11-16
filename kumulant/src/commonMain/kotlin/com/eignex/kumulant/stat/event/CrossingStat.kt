@@ -4,8 +4,8 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isNotPositiveWeight
-import com.eignex.kumulant.stream.additiveMode
 import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.kumulant.stream.resettableMode
 import com.eignex.util.concurrent.casMax
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -56,7 +56,7 @@ class CrossingStat(
 ) : SeriesStat<CrossingResult> {
 
     private val mode = concurrency.monotonicMode()
-    private val additive = concurrency.additiveMode()
+    private val additive = concurrency.resettableMode()
     private val initialized = mode.newLong(0L)
     private val lastSide = mode.newLong(0L)
     private val ups = additive.newLong(0L)
@@ -100,8 +100,8 @@ class CrossingStat(
     override fun reset() {
         initialized.store(0L)
         lastSide.store(0L)
-        ups.store(0L)
-        downs.store(0L)
+        ups.reset()
+        downs.reset()
     }
 
     override fun read(timestampNanos: Long) = CrossingResult(

@@ -4,7 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
-import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.resettableMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -29,14 +29,14 @@ data class SumResult(
  *
  * **Update:** O(1) per observation.
  *
- * **Concurrency:** Single atomic add per update; exact under every
+ * **Concurrency:** Single counter add per update; exact under every
  * [Concurrency] level. [Concurrency.HighWrite] switches the cell to a striped
  * adder (`DoubleAdder` on JVM) for higher throughput under heavy write
  * contention, trading a slower `read()` that sweeps all stripes.
  */
 class SumStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<SumResult> {
 
-    private val mode = concurrency.additiveMode()
+    private val mode = concurrency.resettableMode()
     private val value = mode.newDouble(0.0)
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
@@ -51,7 +51,7 @@ class SumStat(override val concurrency: Concurrency = Concurrency.None) : Series
     }
 
     override fun reset() {
-        value.store(0.0)
+        value.reset()
     }
 
     override fun create(concurrency: Concurrency?) = SumStat(concurrency ?: this.concurrency)

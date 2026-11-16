@@ -4,7 +4,7 @@ import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.Result
 import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.isInertWeight
-import com.eignex.kumulant.stream.additiveMode
+import com.eignex.kumulant.stream.resettableMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -44,7 +44,7 @@ data class BernoulliSumResult(
  */
 class BernoulliSumStat(override val concurrency: Concurrency = Concurrency.None) : SeriesStat<BernoulliSumResult> {
 
-    private val mode = concurrency.additiveMode()
+    private val mode = concurrency.resettableMode()
     private val successes = mode.newDouble(0.0)
     private val trials = mode.newDouble(0.0)
 
@@ -68,8 +68,8 @@ class BernoulliSumStat(override val concurrency: Concurrency = Concurrency.None)
     }
 
     override fun reset() {
-        successes.store(0.0)
-        trials.store(0.0)
+        successes.reset()
+        trials.reset()
     }
 
     override fun create(concurrency: Concurrency?) = BernoulliSumStat(concurrency ?: this.concurrency)
