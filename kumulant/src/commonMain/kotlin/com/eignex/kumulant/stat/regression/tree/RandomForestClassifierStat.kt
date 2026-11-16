@@ -10,8 +10,8 @@ import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
 import com.eignex.kumulant.core.requireFeatureSize
 import com.eignex.kumulant.core.requirePositiveFeatureSize
-import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.stat.StatDefaults
+import com.eignex.util.arrays.argMaxOf
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

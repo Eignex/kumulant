@@ -7,8 +7,8 @@ import com.eignex.kumulant.core.SeriesStat
 import com.eignex.kumulant.core.asClassLabel
 import com.eignex.kumulant.core.isInertWeight
 import com.eignex.kumulant.core.requireAtLeastTwoClasses
-import com.eignex.kumulant.math.argMaxOf
 import com.eignex.kumulant.stream.monotonicMode
+import com.eignex.util.arrays.argMaxOf
 import com.eignex.util.concurrent.DoubleCellArray
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
