@@ -1,5 +1,6 @@
 package com.eignex.kumulant.stat.calibration
 
+import com.eignex.koblas.koblas
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.PairedStat
 import com.eignex.kumulant.core.Result
@@ -57,8 +58,7 @@ data class ReliabilityResult(
      * `|meanProbability[i] - outcomeRate[i]|`. Empty bins contribute 0.
      */
     fun expectedCalibrationError(): Double {
-        var totalW = 0.0
-        for (w in totalWeights) totalW += w
+        val totalW = koblas.sum(totalWeights, 0, totalWeights.size)
         if (totalW <= 0.0) return 0.0
         var ece = 0.0
         for (i in 0 until numBins) {

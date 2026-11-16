@@ -346,6 +346,51 @@ class CholeskyTest {
     }
 
     @Test
+    fun `inverse reconstructs identity across panel boundaries`() {
+        for (n in listOf(64, 65, 127, 129)) {
+            val matrix = DenseMatrix.diagonal(n, 4.0)
+            for (i in 1 until n) {
+                matrix[i, i - 1] = 1.0
+                matrix[i - 1, i] = 1.0
+            }
+            val factor = matrix.cholesky()
+            val inverse = factor.choleskyInverse()
+
+            for (j in 0 until n) {
+                for (i in 0 until n) {
+                    var product = 4.0 * inverse[i, j]
+                    if (i > 0) product += inverse[i - 1, j]
+                    if (i + 1 < n) product += inverse[i + 1, j]
+                    assertEquals(if (i == j) 1.0 else 0.0, product, 1e-12, "n=$n entry=$i,$j")
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `panel inverse overwrites a reused destination with symmetric entries`() {
+        val factor = DenseMatrix.diagonal(65, 2.0)
+        factor[64, 0] = 1.0
+        val out = DenseMatrix.wrap(65, 65, DoubleArray(65 * 65) { Double.NaN })
+
+        repeat(2) {
+            factor.choleskyInvertInto(out)
+
+            for (j in 0 until 65) {
+                for (i in 0 until 65) {
+                    val expected = when {
+                        i == 0 && j == 0 -> 0.3125
+                        i == j -> 0.25
+                        (i == 64 && j == 0) || (i == 0 && j == 64) -> -0.125
+                        else -> 0.0
+                    }
+                    assertEquals(expected, out[i, j], 1e-15)
+                }
+            }
+        }
+    }
+
+    @Test
     fun `inverse rejects a destination sharing factor storage`() {
         val factor = DenseMatrix.diagonal(2, 1.0).cholesky()
         val alias = DenseMatrix.wrap(2, 2, factor.values)

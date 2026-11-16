@@ -41,7 +41,14 @@ data class ClassCountsResult(
     fun probabilities(): DoubleArray {
         val w = totalWeights
         if (w <= 0.0) return DoubleArray(numClasses) { 1.0 / numClasses }
-        return DoubleArray(numClasses) { counts[it] / w }
+        val out = counts.copyOf()
+        val inverseWeight = 1.0 / w
+        if (inverseWeight.isFinite()) {
+            koblas.scale(out, 0, inverseWeight, numClasses)
+        } else {
+            for (i in out.indices) out[i] /= w
+        }
+        return out
     }
 
     /** Argmax class index; ties resolve to the lowest index. */
@@ -146,7 +153,8 @@ class ClassCountsStat(
 
 internal fun mergeCC(a: ClassCountsResult, b: ClassCountsResult): ClassCountsResult {
     require(a.numClasses == b.numClasses) { "numClasses mismatch: ${a.numClasses} vs ${b.numClasses}" }
-    val out = DoubleArray(a.numClasses) { a.counts[it] + b.counts[it] }
+    val out = a.counts.copyOf()
+    koblas.axpy(out, 0, 1.0, b.counts, 0, a.numClasses)
     return ClassCountsResult(a.numClasses, out)
 }
 
@@ -155,6 +163,7 @@ internal fun subtractCC(total: ClassCountsResult, part: ClassCountsResult): Clas
     require(total.numClasses == part.numClasses) {
         "numClasses mismatch: ${total.numClasses} vs ${part.numClasses}"
     }
-    val out = DoubleArray(total.numClasses) { total.counts[it] - part.counts[it] }
+    val out = total.counts.copyOf()
+    koblas.axpy(out, 0, -1.0, part.counts, 0, total.numClasses)
     return ClassCountsResult(total.numClasses, out)
 }

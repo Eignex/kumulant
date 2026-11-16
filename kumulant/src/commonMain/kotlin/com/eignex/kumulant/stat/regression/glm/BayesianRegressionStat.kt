@@ -349,7 +349,7 @@ class BayesianRegressionStat(
             }
 
             val weights = DoubleArray(snapshots.size) { weight(snapshots[it]) }
-            val wTotal = weights.sum()
+            val wTotal = koblas.sum(weights, 0, weights.size)
             require(wTotal > 0.0) { "fitPopulationPrior: sum of weights must be positive, got $wTotal" }
 
             // mu_pop = weighted mean of per-instance posterior means.
@@ -357,9 +357,19 @@ class BayesianRegressionStat(
             for (s in snapshots.indices) {
                 val wi = weights[s]
                 val w = snapshots[s].weights
-                for (i in 0 until n) muPop[i] += wi * w[i]
+                if (wi == 0.0) {
+                    // BLAS skips a zero multiplier, but zero times a nonfinite mean must propagate NaN.
+                    for (i in 0 until n) muPop[i] += wi * w[i]
+                } else {
+                    DenseVector.wrap(muPop).axpy(wi, w)
+                }
             }
-            for (i in 0 until n) muPop[i] /= wTotal
+            val inverseWeight = 1.0 / wTotal
+            if (inverseWeight.isFinite()) {
+                koblas.scale(muPop, 0, inverseWeight, n)
+            } else {
+                for (i in 0 until n) muPop[i] /= wTotal
+            }
 
             // Sigma_pop = weighted mean of Sigma_i + weighted covariance of (mu_i - mu_pop).
             val sigmaPop = DenseMatrix.zero(n, n)
@@ -374,7 +384,8 @@ class BayesianRegressionStat(
                 snapshots[s].precisionL.choleskyInvertInto(cov, scratch)
                 val mu = snapshots[s].weights
                 sigmaFlat.axpy(wi, covFlat)
-                for (i in 0 until n) deviation[i] = mu[i] - muPop[i]
+                DenseVector.wrap(deviation).copyFrom(mu)
+                koblas.axpy(deviation, 0, -1.0, muPop, 0, n)
                 koblas.syr(
                     wi,
                     deviation,

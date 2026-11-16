@@ -1,6 +1,7 @@
 package com.eignex.kumulant.stream
 
 import com.eignex.kumulant.core.Concurrency
+import com.eignex.util.collections.MutableIntDoubleMap
 import com.eignex.util.concurrent.DoubleCounter
 import kotlin.math.max
 import kotlin.math.min
@@ -58,13 +59,17 @@ internal class ArrayBins(concurrency: Concurrency) {
         }
     }
 
-    fun snapshot(): Map<Int, Double> {
+    fun snapshot(): Map<Int, Double> = buildMap {
+        snapshotEntries().forEach { index, weight -> put(index, weight) }
+    }
+
+    fun snapshotEntries(): MutableIntDoubleMap {
         val state = stateRef.load()
-        val result = mutableMapOf<Int, Double>()
+        val result = MutableIntDoubleMap()
         for (i in state.bins.indices) {
             val w = state.bins[i].load()
             if (w > 0.0) {
-                result[state.offset + i] = w
+                result.put(state.offset + i, w)
             }
         }
         return result

@@ -457,6 +457,23 @@ class ExprTest {
         }
     }
 
+    @Test fun `vdot snapshots caller weights before repeated evaluation`() {
+        val weights = mutableListOf(1.0, 2.0)
+        val expression = vDot(weights)
+        weights[0] = 9.0
+
+        repeat(2) {
+            assertEquals(5.0, expression.eval(v = DenseVector.of(doubleArrayOf(1.0, 2.0))))
+        }
+    }
+
+    @Test fun `vdot reads offset strided inputs without padding`() {
+        val expression = vDot(1.0, 2.0, -3.0)
+        val input = StridedVector(doubleArrayOf(Double.NaN, 4.0, Double.NaN, 5.0, Double.NaN, 6.0), 1, 3, 2)
+
+        assertEquals(-4.0, expression.eval(v = input))
+    }
+
     @Test fun `vector vdot matches double arrays for sparse edge cases`() {
         val cases = listOf(
             doubleArrayOf(),

@@ -3,6 +3,7 @@ package com.eignex.kumulant.schema.expr
 import com.eignex.koblas.DenseVector
 import com.eignex.koblas.SparseVector
 import com.eignex.koblas.Vector
+import com.eignex.koblas.dot
 import com.eignex.koblas.forEachStored
 import com.eignex.koblas.koblas
 import com.eignex.koblas.norm2
@@ -299,7 +300,14 @@ internal data class VFold(val op: VFoldOp) : ScalarExpr
 
 @Serializable
 @SerialName("VDot")
-internal data class VDot(val weights: List<Double>) : ScalarExpr
+internal data class VDot(val weights: List<Double>) : ScalarExpr {
+    val coefficients: DoubleArray by lazy { weights.toDoubleArray() }
+    val finiteCoefficients: Boolean by lazy { coefficients.all { it.isFinite() } }
+
+    fun requireSize(size: Int) {
+        require(size == weights.size) { "VDot length mismatch: weights=${weights.size}, v=$size" }
+    }
+}
 
 /**
  * Wire-serialisable AST for boolean predicates over the same input
@@ -540,7 +548,7 @@ private fun <T> ScalarExpr.evaluate(x: Double, y: Double, v: T, primary: Result?
 
         is VFold -> input.fold(v, op)
 
-        is VDot -> input.dot(v, weights)
+        is VDot -> input.dot(v, this)
     }
 
 private fun <T> BoolExpr.evaluate(x: Double, y: Double, v: T, primary: Result?, input: ExprInput<T>): Boolean =
@@ -598,7 +606,7 @@ private interface ExprInput<T> {
 
     fun fold(v: T, op: VFoldOp): Double
 
-    fun dot(v: T, weights: List<Double>): Double
+    fun dot(v: T, expression: VDot): Double
 
     fun allFinite(v: T): Boolean
 }
@@ -637,13 +645,9 @@ private object ArrayInput : ExprInput<DoubleArray> {
         VFoldOp.Norm2 -> koblas.nrm2(v, 0, v.size)
     }
 
-    override fun dot(v: DoubleArray, weights: List<Double>): Double {
-        require(v.size == weights.size) {
-            "VDot length mismatch: weights=${weights.size}, v=${v.size}"
-        }
-        var s = 0.0
-        for (i in 0 until v.size) s += weights[i] * v[i]
-        return s
+    override fun dot(v: DoubleArray, expression: VDot): Double {
+        expression.requireSize(v.size)
+        return koblas.dot(expression.coefficients, 0, v, 0, v.size)
     }
 
     override fun allFinite(v: DoubleArray): Boolean = v.all { it.isFinite() }
@@ -697,13 +701,18 @@ private object VectorInput : ExprInput<Vector> {
         }
     }
 
-    override fun dot(v: Vector, weights: List<Double>): Double {
-        require(v.size == weights.size) {
-            "VDot length mismatch: weights=${weights.size}, v=${v.size}"
+    override fun dot(v: Vector, expression: VDot): Double {
+        expression.requireSize(v.size)
+        val weights = expression.coefficients
+        return when {
+            v is DenseVector -> koblas.dot(weights, 0, v.values, v.offset, v.size, 1, v.stride)
+
+            // Implicit zeros must still multiply nonfinite coefficients to produce NaN.
+            v is SparseVector && expression.finiteCoefficients ->
+                v dot DenseVector.wrap(weights)
+
+            else -> (0 until v.size).sumOf { weights[it] * v[it] }
         }
-        // Skipping implicit zeros is valid only when multiplying them cannot produce NaN.
-        if (v is SparseVector && weights.all { it.isFinite() }) return sparseDot(v, weights)
-        return (0 until v.size).sumOf { weights[it] * v[it] }
     }
 
     override fun allFinite(v: Vector): Boolean {
@@ -721,12 +730,6 @@ private fun borrowedNorm2(v: Vector): Double {
         norm = hypot(norm, value)
     }
     return norm
-}
-
-private fun sparseDot(v: SparseVector, weights: List<Double>): Double {
-    var sum = 0.0
-    v.forEachStored { index, value -> sum += weights[index] * value }
-    return sum
 }
 
 private fun sparseMin(v: SparseVector): Double {
@@ -980,8 +983,11 @@ fun ScalarExpr.inRange(min: Double, max: Double): BoolExpr = InRange(this, min, 
  */
 fun vFold(op: VFoldOp): ScalarExpr = VFold(op)
 
-/** Weighted sum of the feature vector. [weights] must match the vector length at evaluation time. */
-fun vDot(weights: List<Double>): ScalarExpr = VDot(weights)
+/**
+ * Weighted sum of the feature vector. Copies [weights] at construction;
+ * its length must match the vector length at evaluation time.
+ */
+fun vDot(weights: List<Double>): ScalarExpr = VDot(weights.toList())
 
 /** Weighted sum of the feature vector, varargs form. */
 fun vDot(vararg weights: Double): ScalarExpr = VDot(weights.toList())
