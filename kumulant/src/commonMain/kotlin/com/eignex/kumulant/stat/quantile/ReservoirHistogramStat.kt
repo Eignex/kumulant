@@ -80,7 +80,11 @@ fun ReservoirResult.quantile(probability: Double): Double {
     val lo = rank.toInt()
     val hi = (lo + 1).coerceAtMost(sorted.size - 1)
     val frac = rank - lo
-    return sorted[lo] + frac * (sorted[hi] - sorted[lo])
+    val lower = sorted[lo]
+    val upper = sorted[hi]
+    if (frac == 0.0 || lower == upper) return lower
+    val span = upper - lower
+    return if (span.isFinite()) lower + frac * span else (1.0 - frac) * lower + frac * upper
 }
 
 private fun nextUp(d: Double): Double {
@@ -126,7 +130,7 @@ fun ReservoirResult.toSparseHistogram(binCount: Int): SparseHistogramResult {
     for (i in 0 until binCount) {
         if (counts[i] > 0.0) {
             lowers[cursor] = lo + i * width
-            uppers[cursor] = lo + (i + 1) * width
+            uppers[cursor] = if (i == binCount - 1) nextUp(hi) else lo + (i + 1) * width
             weights[cursor] = counts[i]
             cursor++
         }

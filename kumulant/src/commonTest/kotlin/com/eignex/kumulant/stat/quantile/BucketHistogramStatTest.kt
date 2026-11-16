@@ -2,6 +2,7 @@ package com.eignex.kumulant.stat.quantile
 
 import com.eignex.kumulant.assertModesAgree
 import com.eignex.kumulant.core.Concurrency
+import kotlin.math.nextUp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -66,6 +67,35 @@ class BucketHistogramStatTest {
             listOf(Triple(0.0, 10.0, 3.0), Triple(10.0, Double.POSITIVE_INFINITY, 5.0)),
             target.rows(),
         )
+    }
+
+    @Test
+    fun `merging a snapshot preserves buckets between adjacent doubles`() {
+        for (lower in listOf(1.0, -1.0, 0.0)) {
+            val upper = lower.nextUp()
+            val source = BucketHistogramStat(doubleArrayOf(lower, upper))
+            source.update(upper)
+            val target = source.create()
+
+            target.merge(source.read())
+
+            assertEquals(source.read(), target.read(), "lower=$lower")
+        }
+    }
+
+    @Test
+    fun `merging a wide finite interval uses its finite midpoint`() {
+        val target = BucketHistogramStat(doubleArrayOf(0.0, 1.0))
+
+        target.merge(
+            SparseHistogramResult(
+                doubleArrayOf(-Double.MAX_VALUE),
+                doubleArrayOf(Double.MAX_VALUE),
+                doubleArrayOf(2.0),
+            ),
+        )
+
+        assertEquals(listOf(Triple(Double.NEGATIVE_INFINITY, 0.0, 2.0)), target.rows())
     }
 
     @Test
