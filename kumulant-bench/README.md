@@ -94,10 +94,10 @@ limits and raw samples with each comparison.
 
 `lab/bench.json` owns the prepared JVM adapter's build and launch recipe.
 `lab/native-linux-x64.json` also runs the Native bench tests and links the benchmark and quality executables.
-The SDK dependency `com.eignex:lab-bench:0.1.0` is confined to `jvmMain`; the
+The SDK dependency `com.eignex:lab-bench:0.1.1` is confined to `jvmMain`; the
 existing JMH and kotlinx-benchmark engines continue to own measurement.
 
-The default dependency resolves [Lab Bench 0.1.0](https://github.com/Eignex/eignex-lab/releases/tag/lab-bench-v0.1.0)
+The default dependency resolves [Lab Bench 0.1.1](https://github.com/Eignex/eignex-lab/releases/tag/lab-bench-v0.1.1)
 from public GitHub Release assets without a GitHub login or token. Prepare the adapter with:
 
 ```sh
@@ -105,7 +105,7 @@ from public GitHub Release assets without a GitHub login or token. Prepare the a
 ```
 
 `-PlabBenchVersion=VERSION` selects a different SDK release. To develop against a
-local SDK checkout, run `./gradlew :lab-bench:stageAdapterRepository -PbenchVersion=0.1.0`
+local SDK checkout, run `./gradlew :lab-bench:stageAdapterRepository -PbenchVersion=0.1.1`
 in that checkout, then add
 `-PlabBenchRepository=file:///absolute/eignex-lab/lab-bench/build/adapter-repository`
 to the consumer build. Refresh dependencies when restaging the same version.
