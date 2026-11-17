@@ -16,23 +16,7 @@ import kotlin.math.abs
  * test on `[0, 1]`. Returns 0 if total finite weight is non-positive.
  */
 fun SparseHistogramResult.pitChiSquared(numBins: Int): Double {
-    requirePositiveBins(numBins)
-    val width = 1.0 / numBins
-    val weightPerBin = DoubleArray(numBins)
-    var total = 0.0
-    for (i in lowerBounds.indices) {
-        if (isBottomEdgeRow(lowerBounds[i], upperBounds[i])) {
-            weightPerBin[0] += weights[i]
-            total += weights[i]
-            continue
-        }
-        if (!lowerBounds[i].isFinite() || !upperBounds[i].isFinite()) continue
-        // Map a finite bin to its slot via its upper bound, with a small ulp guard so the
-        // top edge (upperBounds == 1.0) doesn't round into a non-existent bin numBins.
-        val idx = ((upperBounds[i] - 1e-12) / width).toInt().coerceIn(0, numBins - 1)
-        weightPerBin[idx] += weights[i]
-        total += weights[i]
-    }
+    val (weightPerBin, total) = pitBins(numBins)
     if (total <= 0.0) return 0.0
     val expected = total / numBins
     var x2 = 0.0
@@ -52,6 +36,23 @@ fun SparseHistogramResult.pitChiSquared(numBins: Int): Double {
  * overflow rows are excluded. Returns 0 when total finite weight is non-positive.
  */
 fun SparseHistogramResult.pitKsDistance(numBins: Int): Double {
+    val (weightPerBin, total) = pitBins(numBins)
+    if (total <= 0.0) return 0.0
+    var cum = 0.0
+    var ks = 0.0
+    for (i in 0 until numBins) {
+        cum += weightPerBin[i]
+        val empCdf = cum / total
+        val uniform = (i + 1).toDouble() / numBins
+        val gap = abs(empCdf - uniform)
+        if (gap > ks) ks = gap
+    }
+    return ks
+}
+
+private data class PitBins(val weights: DoubleArray, val total: Double)
+
+private fun SparseHistogramResult.pitBins(numBins: Int): PitBins {
     requirePositiveBins(numBins)
     val width = 1.0 / numBins
     val weightPerBin = DoubleArray(numBins)
@@ -69,17 +70,7 @@ fun SparseHistogramResult.pitKsDistance(numBins: Int): Double {
         weightPerBin[idx] += weights[i]
         total += weights[i]
     }
-    if (total <= 0.0) return 0.0
-    var cum = 0.0
-    var ks = 0.0
-    for (i in 0 until numBins) {
-        cum += weightPerBin[i]
-        val empCdf = cum / total
-        val uniform = (i + 1).toDouble() / numBins
-        val gap = abs(empCdf - uniform)
-        if (gap > ks) ks = gap
-    }
-    return ks
+    return PitBins(weightPerBin, total)
 }
 
 // True for the histogram's `(-Inf, 0.0]` underflow row. A PIT of exactly 0.0 is legitimate but
