@@ -3,6 +3,7 @@ package com.eignex.kumulant.operation
 import com.eignex.kumulant.DELTA
 import com.eignex.kumulant.core.Concurrency
 import com.eignex.kumulant.core.SeriesStat
+import com.eignex.kumulant.core.Stat
 import com.eignex.kumulant.schema.expr.X
 import com.eignex.kumulant.schema.runtime.materialize
 import com.eignex.kumulant.schema.spec.Sum
@@ -318,5 +319,21 @@ class WindowedStatsTest {
         windowed.update(1.0, t)
         windowed.merge(SumResult(5.0), t - 120.seconds.inWholeNanoseconds)
         assertEquals(1.0, windowed.read(t).sum, DELTA)
+    }
+
+    @Test
+    fun `merged snapshots expire in every window modality`() {
+        val windows = listOf<Stat<SumResult>>(
+            WindowedSeriesStat(10.seconds, 10, SumStat()),
+            WindowedPairedStat(10.seconds, 10, SumStat().atX()),
+            WindowedVectorStat(10.seconds, 10, SumStat().atIndex(0)),
+            WindowedDiscreteStat(10.seconds, 10, SumStat().asDiscrete()),
+        )
+        for (window in windows) {
+            window.merge(SumResult(5.0), T3)
+
+            assertEquals(5.0, window.read(T9).sum, DELTA)
+            assertEquals(0.0, window.read(T20).sum, DELTA)
+        }
     }
 }

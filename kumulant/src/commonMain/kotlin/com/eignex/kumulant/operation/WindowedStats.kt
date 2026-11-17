@@ -59,10 +59,24 @@ private inline fun <R : Result, S : Stat<R>> S.windowedOutsideOrInside(
     outside()
 }
 
-private fun <R : Result, S : Stat<R>> windowedRead(template: S, ring: SliceRing<R, S>, timestampNanos: Long): R {
-    val acc = template.create(concurrency = Concurrency.None)
-    ring.forEachActive(timestampNanos) { acc.merge(it.read(timestampNanos)) }
-    return acc.read(timestampNanos)
+internal abstract class WindowedStat<R : Result, S : Stat<R>> : Stat<R> {
+    protected abstract val template: S
+    protected abstract val ring: SliceRing<R, S>
+
+    final override fun read(timestampNanos: Long): R {
+        val acc = template.create(concurrency = Concurrency.None)
+        ring.forEachActive(timestampNanos) { acc.merge(it.read(timestampNanos)) }
+        return acc.read(timestampNanos)
+    }
+
+    final override fun validateMerge(values: R) = template.validateMerge(values)
+
+    final override fun merge(values: R, timestampNanos: Long) {
+        validateMerge(values)
+        ring.mergeAt(timestampNanos, values)
+    }
+
+    final override fun reset() = ring.reset()
 }
 
 internal class WindowedSeriesStat<R : Result>(
@@ -70,10 +84,14 @@ internal class WindowedSeriesStat<R : Result>(
     private val slices: Int,
     template: SeriesStat<R>,
     override val concurrency: Concurrency = Concurrency.None,
-) : SeriesStat<R> {
+) : WindowedStat<R, SeriesStat<R>>(), SeriesStat<R> {
 
-    private val template = template.create(concurrency = this.concurrency)
-    private val ring = SliceRing<R, SeriesStat<R>>(windowDuration, slices, concurrency) { c -> this.template.create(c) }
+    protected override val template = template.create(concurrency = this.concurrency)
+    protected override val ring = SliceRing<R, SeriesStat<R>>(
+        windowDuration,
+        slices,
+        concurrency,
+    ) { c -> this.template.create(c) }
 
     override fun update(value: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
@@ -82,14 +100,6 @@ internal class WindowedSeriesStat<R : Result>(
 
     override fun create(concurrency: Concurrency?): SeriesStat<R> =
         WindowedSeriesStat(windowDuration, slices, template, concurrency ?: this.concurrency)
-
-    override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun validateMerge(values: R) = template.validateMerge(values)
-    override fun merge(values: R, timestampNanos: Long) {
-        validateMerge(values)
-        ring.mergeAt(timestampNanos, values)
-    }
-    override fun reset() = ring.reset()
 }
 
 internal class WindowedPairedStat<R : Result>(
@@ -97,10 +107,14 @@ internal class WindowedPairedStat<R : Result>(
     private val slices: Int,
     template: PairedStat<R>,
     override val concurrency: Concurrency = Concurrency.None,
-) : PairedStat<R> {
+) : WindowedStat<R, PairedStat<R>>(), PairedStat<R> {
 
-    private val template = template.create(concurrency = this.concurrency)
-    private val ring = SliceRing<R, PairedStat<R>>(windowDuration, slices, concurrency) { c -> this.template.create(c) }
+    protected override val template = template.create(concurrency = this.concurrency)
+    protected override val ring = SliceRing<R, PairedStat<R>>(
+        windowDuration,
+        slices,
+        concurrency,
+    ) { c -> this.template.create(c) }
 
     override fun update(x: Double, y: Double, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
@@ -109,14 +123,6 @@ internal class WindowedPairedStat<R : Result>(
 
     override fun create(concurrency: Concurrency?): PairedStat<R> =
         WindowedPairedStat(windowDuration, slices, template, concurrency ?: this.concurrency)
-
-    override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun validateMerge(values: R) = template.validateMerge(values)
-    override fun merge(values: R, timestampNanos: Long) {
-        validateMerge(values)
-        ring.mergeAt(timestampNanos, values)
-    }
-    override fun reset() = ring.reset()
 }
 
 internal class WindowedDiscreteStat<R : Result>(
@@ -124,10 +130,10 @@ internal class WindowedDiscreteStat<R : Result>(
     private val slices: Int,
     template: DiscreteStat<R>,
     override val concurrency: Concurrency = Concurrency.None,
-) : DiscreteStat<R> {
+) : WindowedStat<R, DiscreteStat<R>>(), DiscreteStat<R> {
 
-    private val template = template.create(concurrency = this.concurrency)
-    private val ring = SliceRing<R, DiscreteStat<R>>(
+    protected override val template = template.create(concurrency = this.concurrency)
+    protected override val ring = SliceRing<R, DiscreteStat<R>>(
         windowDuration,
         slices,
         concurrency,
@@ -140,14 +146,6 @@ internal class WindowedDiscreteStat<R : Result>(
 
     override fun create(concurrency: Concurrency?): DiscreteStat<R> =
         WindowedDiscreteStat(windowDuration, slices, template, concurrency ?: this.concurrency)
-
-    override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun validateMerge(values: R) = template.validateMerge(values)
-    override fun merge(values: R, timestampNanos: Long) {
-        validateMerge(values)
-        ring.mergeAt(timestampNanos, values)
-    }
-    override fun reset() = ring.reset()
 }
 
 internal class WindowedVectorStat<R : Result>(
@@ -155,10 +153,14 @@ internal class WindowedVectorStat<R : Result>(
     private val slices: Int,
     template: VectorStat<R>,
     override val concurrency: Concurrency = Concurrency.None,
-) : VectorStat<R> {
+) : WindowedStat<R, VectorStat<R>>(), VectorStat<R> {
 
-    private val template = template.create(concurrency = this.concurrency)
-    private val ring = SliceRing<R, VectorStat<R>>(windowDuration, slices, concurrency) { c -> this.template.create(c) }
+    protected override val template = template.create(concurrency = this.concurrency)
+    protected override val ring = SliceRing<R, VectorStat<R>>(
+        windowDuration,
+        slices,
+        concurrency,
+    ) { c -> this.template.create(c) }
 
     override fun update(vector: Vector, timestampNanos: Long, weight: Double) {
         if (weight.isInertWeight()) return
@@ -167,12 +169,4 @@ internal class WindowedVectorStat<R : Result>(
 
     override fun create(concurrency: Concurrency?): VectorStat<R> =
         WindowedVectorStat(windowDuration, slices, template, concurrency ?: this.concurrency)
-
-    override fun read(timestampNanos: Long): R = windowedRead(template, ring, timestampNanos)
-    override fun validateMerge(values: R) = template.validateMerge(values)
-    override fun merge(values: R, timestampNanos: Long) {
-        validateMerge(values)
-        ring.mergeAt(timestampNanos, values)
-    }
-    override fun reset() = ring.reset()
 }

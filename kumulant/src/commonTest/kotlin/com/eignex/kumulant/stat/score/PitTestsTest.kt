@@ -58,4 +58,31 @@ class PitTestsTest {
         val res = h.read(0L)
         assertEquals(0.0, res.pitChiSquared(2), DELTA)
     }
+
+    @Test
+    fun `zero pit values contribute to the bottom bin`() {
+        val histogram = pitHistogram(4)
+        repeat(100) { histogram.update(0.0) }
+        val result = histogram.read(0L)
+
+        for ((score, expected) in listOf(
+            SparseHistogramResult::pitChiSquared to 300.0,
+            SparseHistogramResult::pitKsDistance to 0.75,
+        )) {
+            assertEquals(expected, score(result, 4), DELTA)
+        }
+    }
+
+    @Test
+    fun `nonfinite rows outside the bottom edge do not affect uniformity`() {
+        val result = SparseHistogramResult(
+            lowerBounds = doubleArrayOf(Double.NEGATIVE_INFINITY, 0.0, 0.5, 1.0, Double.NaN),
+            upperBounds = doubleArrayOf(-0.1, 0.5, 1.0, Double.POSITIVE_INFINITY, Double.NaN),
+            weights = doubleArrayOf(99.0, 10.0, 10.0, 99.0, 99.0),
+        )
+
+        for (score in listOf(SparseHistogramResult::pitChiSquared, SparseHistogramResult::pitKsDistance)) {
+            assertEquals(0.0, score(result, 2), DELTA)
+        }
+    }
 }
